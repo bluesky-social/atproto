@@ -239,8 +239,8 @@ function resolveRefUris(obj: any, baseUri: string, root?: boolean): any {
   }
   if (root && obj?.defs?.main?.type === 'subscription') {
     const sub = obj.defs.main as LexXrpcSubscription
-    if (sub.output?.codes) {
-      sub.output.codes = Object.entries(sub.output.codes).reduce(
+    if (sub.message?.codes) {
+      sub.message.codes = Object.entries(sub.message.codes).reduce(
         (acc, [key, code]) => {
           return Object.assign(acc, { [toLexUri(key, baseUri)]: code })
         },

@@ -1,19 +1,19 @@
 import * as cborx from 'cbor-x'
 import * as uint8arrays from 'uint8arrays'
-import { DataFrame, ErrorFrame, Frame, FrameType, InfoFrame } from '../src'
+import { MessageFrame, ErrorFrame, Frame, FrameType, InfoFrame } from '../src'
 
 describe('Frames', () => {
   it('creates and parses message frame.', async () => {
-    const messageFrame = new DataFrame({
+    const messageFrame = new MessageFrame({
       type: 2,
       body: { a: 'b', c: [1, 2, 3] },
     })
 
     expect(messageFrame.header).toEqual({
-      op: FrameType.Data,
+      op: FrameType.Message,
       t: 2,
     })
-    expect(messageFrame.op).toEqual(FrameType.Data)
+    expect(messageFrame.op).toEqual(FrameType.Message)
     expect(messageFrame.type).toEqual(2)
     expect(messageFrame.body).toEqual({ a: 'b', c: [1, 2, 3] })
 
@@ -24,8 +24,8 @@ describe('Frames', () => {
     ])
 
     const parsedFrame = Frame.fromBytes(bytes)
-    if (!(parsedFrame instanceof DataFrame)) {
-      throw new Error('Did not parse as data frame')
+    if (!(parsedFrame instanceof MessageFrame)) {
+      throw new Error('Did not parse as message frame')
     }
 
     expect(parsedFrame.header).toEqual(messageFrame.header)
@@ -121,7 +121,7 @@ describe('Frames', () => {
   })
 
   it('parsing fails when frame is missing body.', async () => {
-    const messageFrame = new DataFrame({
+    const messageFrame = new MessageFrame({
       type: 2,
       body: { a: 'b', c: [1, 2, 3] },
     })
@@ -132,7 +132,7 @@ describe('Frames', () => {
   })
 
   it('parsing fails when frame has too many data items.', async () => {
-    const messageFrame = new DataFrame({
+    const messageFrame = new MessageFrame({
       type: 2,
       body: { a: 'b', c: [1, 2, 3] },
     })

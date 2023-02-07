@@ -523,7 +523,7 @@ function genServerXrpcStreaming(
     isExported: true,
     name: 'HandlerOutput',
     type: `HandlerInfo | HandlerError | ${
-      def.output?.schema ? 'OutputSchema' : 'void'
+      def.message?.schema ? 'OutputSchema' : 'void'
     }`,
   })
 

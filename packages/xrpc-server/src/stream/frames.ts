@@ -5,7 +5,7 @@ import {
   FrameHeader,
   FrameType,
   InfoFrameHeader,
-  DataFrameHeader,
+  MessageFrameHeader,
   ErrorFrameHeader,
   infoFrameBody,
   InfoFrameBody,
@@ -47,8 +47,8 @@ export abstract class Frame {
       throw new Error('Missing frame body')
     }
     const frameOp = parsedHeader.data.op
-    if (frameOp === FrameType.Data) {
-      return new DataFrame({
+    if (frameOp === FrameType.Message) {
+      return new MessageFrame({
         type: parsedHeader.data.t,
         body,
       })
@@ -75,11 +75,11 @@ export abstract class Frame {
   }
 }
 
-export class DataFrame extends Frame {
-  header: DataFrameHeader
+export class MessageFrame extends Frame {
+  header: MessageFrameHeader
   constructor(opts: { type?: number; body: unknown }) {
     super()
-    this.header = { op: FrameType.Data, t: opts.type }
+    this.header = { op: FrameType.Message, t: opts.type }
     this.body = opts.body
   }
   get type() {

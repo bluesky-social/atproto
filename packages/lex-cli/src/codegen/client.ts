@@ -527,15 +527,13 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
         const def = lexiconDoc.defs[defId]
         const lexUri = `${lexiconDoc.id}#${defId}`
         if (defId === 'main') {
-          if (
-            def.type === 'query' ||
-            def.type === 'subscription' ||
-            def.type === 'procedure'
-          ) {
+          if (def.type === 'query' || def.type === 'procedure') {
             genXrpcParams(file, lexicons, lexUri)
             genXrpcInput(file, imports, lexicons, lexUri)
             genXrpcOutput(file, imports, lexicons, lexUri)
             genClientXrpcCommon(file, lexicons, lexUri)
+          } else if (def.type === 'subscription') {
+            continue
           } else if (def.type === 'record') {
             genClientRecord(file, imports, lexicons, lexUri)
           } else {
@@ -554,11 +552,9 @@ function genClientXrpcCommon(
   lexicons: Lexicons,
   lexUri: string,
 ) {
-  const def = lexicons.getDefOrThrow(lexUri, [
-    'query',
-    'subscription',
-    'procedure',
-  ]) as LexXrpcQuery | LexXrpcSubscription | LexXrpcProcedure
+  const def = lexicons.getDefOrThrow(lexUri, ['query', 'procedure']) as
+    | LexXrpcQuery
+    | LexXrpcProcedure
 
   //= export interface CallOptions {...}
   const opts = file.addInterface({

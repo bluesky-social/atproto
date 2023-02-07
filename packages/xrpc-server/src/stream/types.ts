@@ -1,16 +1,16 @@
 import { z } from 'zod'
 
 export enum FrameType {
-  Data = 1,
+  Message = 1,
   Info = 2,
   Error = -1,
 }
 
-export const dataFrameHeader = z.object({
-  op: z.literal(FrameType.Data), // Frame op
+export const messageFrameHeader = z.object({
+  op: z.literal(FrameType.Message), // Frame op
   t: z.number().int().optional(), // Message body type discriminator
 })
-export type DataFrameHeader = z.infer<typeof dataFrameHeader>
+export type MessageFrameHeader = z.infer<typeof messageFrameHeader>
 
 export const infoFrameHeader = z.object({
   op: z.literal(FrameType.Info),
@@ -37,7 +37,7 @@ export type ErrorFrameBody<T extends string = string> = { error: T } & z.infer<
 >
 
 export const frameHeader = z.union([
-  dataFrameHeader,
+  messageFrameHeader,
   infoFrameHeader,
   errorFrameHeader,
 ])

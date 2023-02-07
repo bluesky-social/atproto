@@ -1,6 +1,6 @@
 import * as http from 'http'
 import { WebSocket, createWebSocketStream } from 'ws'
-import { byFrame, DataFrame, ErrorFrame, Frame } from '../src'
+import { byFrame, MessageFrame, ErrorFrame, Frame } from '../src'
 import {
   createServer,
   closeServer,
@@ -23,8 +23,7 @@ const LEXICONS = [
             countdown: { type: 'integer' },
           },
         },
-        output: {
-          encoding: 'application/cbor',
+        message: {
           schema: {
             type: 'object',
             required: ['count'],
@@ -47,14 +46,14 @@ const LEXICONS = [
             countdown: { type: 'integer' },
           },
         },
-        output: {
-          codes: {
-            '#even': 0,
-            'io.example.stream2#odd': 1,
-          },
+        message: {
           schema: {
             type: 'union',
             refs: ['#even', '#odd'],
+          },
+          codes: {
+            '#even': 0,
+            'io.example.stream2#odd': 1,
           },
         },
       },
@@ -129,12 +128,12 @@ describe('Subscriptions', () => {
     }
 
     expect(frames).toEqual([
-      new DataFrame({ body: { count: 5 } }),
-      new DataFrame({ body: { count: 4 } }),
-      new DataFrame({ body: { count: 3 } }),
-      new DataFrame({ body: { count: 2 } }),
-      new DataFrame({ body: { count: 1 } }),
-      new DataFrame({ body: { count: 0 } }),
+      new MessageFrame({ body: { count: 5 } }),
+      new MessageFrame({ body: { count: 4 } }),
+      new MessageFrame({ body: { count: 3 } }),
+      new MessageFrame({ body: { count: 2 } }),
+      new MessageFrame({ body: { count: 1 } }),
+      new MessageFrame({ body: { count: 0 } }),
     ])
   })
 
@@ -149,13 +148,13 @@ describe('Subscriptions', () => {
     }
 
     expect(frames).toEqual([
-      new DataFrame({ type: 1, body: { count: 5 } }),
-      new DataFrame({ type: 0, body: { count: 4 } }),
-      new DataFrame({ type: 1, body: { count: 3 } }),
-      new DataFrame({ type: 0, body: { count: 2 } }),
-      new DataFrame({ type: 1, body: { count: 1 } }),
-      new DataFrame({ type: 0, body: { count: 0 } }),
-      new DataFrame({ body: { $type: 'io.example.stream2#done' } }),
+      new MessageFrame({ type: 1, body: { count: 5 } }),
+      new MessageFrame({ type: 0, body: { count: 4 } }),
+      new MessageFrame({ type: 1, body: { count: 3 } }),
+      new MessageFrame({ type: 0, body: { count: 2 } }),
+      new MessageFrame({ type: 1, body: { count: 1 } }),
+      new MessageFrame({ type: 0, body: { count: 0 } }),
+      new MessageFrame({ body: { $type: 'io.example.stream2#done' } }),
     ])
   })
 
@@ -173,7 +172,7 @@ describe('Subscriptions', () => {
     }
 
     expect(frames).toEqual([
-      new DataFrame({
+      new MessageFrame({
         body: {
           credentials: {
             username: 'admin',

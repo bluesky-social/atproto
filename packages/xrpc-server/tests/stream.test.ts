@@ -6,7 +6,7 @@ import {
   ErrorFrame,
   Frame,
   InfoFrame,
-  DataFrame,
+  MessageFrame,
   XrpcStreamServer,
   byFrame,
 } from '../src'
@@ -19,12 +19,12 @@ describe('Stream', () => {
       server: httpServer,
       handler: async function* () {
         await wait(1)
-        yield new DataFrame({ body: 1 })
+        yield new MessageFrame({ body: 1 })
         await wait(1)
-        yield new DataFrame({ body: 2 })
+        yield new MessageFrame({ body: 2 })
         await wait(1)
         yield new InfoFrame({ body: { info: 'SomeDiagnostic' } }), await wait(1)
-        yield new DataFrame({ body: 3 })
+        yield new MessageFrame({ body: 3 })
         return
       },
     })
@@ -39,10 +39,10 @@ describe('Stream', () => {
     }
 
     expect(frames).toEqual([
-      new DataFrame({ body: 1 }),
-      new DataFrame({ body: 2 }),
+      new MessageFrame({ body: 1 }),
+      new MessageFrame({ body: 2 }),
       new InfoFrame({ body: { info: 'SomeDiagnostic' } }),
-      new DataFrame({ body: 3 }),
+      new MessageFrame({ body: 3 }),
     ])
 
     httpServer.close()
@@ -55,14 +55,14 @@ describe('Stream', () => {
       server: httpServer,
       handler: async function* () {
         await wait(1)
-        yield new DataFrame({ body: 1 })
+        yield new MessageFrame({ body: 1 })
         await wait(1)
-        yield new DataFrame({ body: 2 })
+        yield new MessageFrame({ body: 2 })
         await wait(1)
         yield new ErrorFrame({ body: { error: 'BadOops' } })
         proceededAfterError = true
         await wait(1)
-        yield new DataFrame({ body: 3 })
+        yield new MessageFrame({ body: 3 })
         return
       },
     })
@@ -80,8 +80,8 @@ describe('Stream', () => {
     expect(proceededAfterError).toEqual(false)
 
     expect(frames).toEqual([
-      new DataFrame({ body: 1 }),
-      new DataFrame({ body: 2 }),
+      new MessageFrame({ body: 1 }),
+      new MessageFrame({ body: 2 }),
       new ErrorFrame({ body: { error: 'BadOops' } }),
     ])
 

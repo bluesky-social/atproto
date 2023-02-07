@@ -186,13 +186,14 @@ export const lexXrpcBody = z.object({
 })
 export type LexXrpcBody = z.infer<typeof lexXrpcBody>
 
-export const lexXrpcSubscriptionBody = lexXrpcBody.merge(
-  z.object({
-    encoding: z.literal('application/cbor').optional(),
-    codes: z.record(z.number().int()).optional(),
-  }),
-)
-export type LexXrpcSubscriptionBody = z.infer<typeof lexXrpcSubscriptionBody>
+export const lexXrpcSubscriptionMessage = z.object({
+  description: z.string().optional(),
+  schema: z.union([lexRefVariant, lexObject]).optional(),
+  codes: z.record(z.number().int()).optional(),
+})
+export type LexXrpcSubscriptionMessage = z.infer<
+  typeof lexXrpcSubscriptionMessage
+>
 
 export const lexXrpcError = z.object({
   name: z.string(),
@@ -223,7 +224,7 @@ export const lexXrpcSubscription = z.object({
   type: z.literal('subscription'),
   description: z.string().optional(),
   parameters: lexXrpcParameters.optional(),
-  output: lexXrpcSubscriptionBody.optional(),
+  message: lexXrpcSubscriptionMessage.optional(),
   infos: lexXrpcError.array().optional(),
   errors: lexXrpcError.array().optional(),
 })

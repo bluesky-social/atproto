@@ -1,4 +1,3 @@
-import http from 'http'
 import { Readable } from 'stream'
 import express, {
   ErrorRequestHandler,
@@ -11,7 +10,7 @@ import {
   LexXrpcQuery,
   LexXrpcSubscription,
 } from '@atproto/lexicon'
-import { ErrorFrame, Frame, DataFrame, XrpcStreamServer } from './stream'
+import { ErrorFrame, Frame, MessageFrame, XrpcStreamServer } from './stream'
 import {
   XRPCHandler,
   XRPCError,
@@ -278,19 +277,19 @@ export class Server {
                 yield item
               } else if (
                 typeof item?.['$type'] === 'string' &&
-                def.output?.codes
+                def.message?.codes
               ) {
                 const typeUri = resolveLexUri(item['$type'])
-                if (def.output.codes[typeUri] !== undefined) {
-                  const code = def.output.codes[typeUri]
+                if (def.message.codes[typeUri] !== undefined) {
+                  const code = def.message.codes[typeUri]
                   const clone = { ...item }
                   delete clone['$type']
-                  yield new DataFrame({ type: code, body: clone })
+                  yield new MessageFrame({ type: code, body: clone })
                 } else {
-                  yield new DataFrame({ body: item })
+                  yield new MessageFrame({ body: item })
                 }
               } else {
-                yield new DataFrame({ body: item })
+                yield new MessageFrame({ body: item })
               }
             }
           } catch (err) {
