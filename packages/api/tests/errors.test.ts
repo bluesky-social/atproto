@@ -4,7 +4,6 @@ import {
   TestServerInfo,
 } from '@atproto/pds/tests/_util'
 import { AtpAgent, ComAtprotoAccountCreate } from '..'
-import { fetchHandler } from './_util'
 
 describe('errors', () => {
   let server: TestServerInfo
@@ -15,7 +14,6 @@ describe('errors', () => {
     server = await runTestServer({
       dbPostgresSchema: 'known_errors',
     })
-    AtpAgent.configure({ fetch: fetchHandler })
     client = new AtpAgent({ service: server.url })
     close = server.close
   })

@@ -1,4 +1,5 @@
 import { ErrorResponseBody, errorResponseBody } from '@atproto/xrpc'
+import { defaultFetchHandler } from '@atproto/xrpc'
 import {
   AtpBaseClient,
   AtpServiceClient,
@@ -36,7 +37,7 @@ export class AtpAgent {
   /**
    * The `fetch` implementation; must be implemented for your platform.
    */
-  static fetch: AptAgentFetchHandler | undefined
+  static fetch: AptAgentFetchHandler | undefined = defaultFetchHandler
 
   /**
    * Configures the API globally.

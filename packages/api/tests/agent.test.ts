@@ -1,3 +1,4 @@
+import { defaultFetchHandler } from '@atproto/xrpc'
 import {
   CloseFn,
   runTestServer,
@@ -9,7 +10,6 @@ import {
   AtpSessionEvent,
   AtpSessionData,
 } from '..'
-import { fetchHandler } from './_util'
 
 describe('agent', () => {
   let server: TestServerInfo
@@ -19,7 +19,6 @@ describe('agent', () => {
     server = await runTestServer({
       dbPostgresSchema: 'session',
     })
-    AtpAgent.configure({ fetch: fetchHandler })
     close = server.close
   })
 
@@ -183,13 +182,13 @@ describe('agent', () => {
           body: { error: 'ExpiredToken' },
         }
       }
-      return fetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody)
+      return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody)
     }
 
     // put the agent through the auth flow
     AtpAgent.configure({ fetch: tokenExpiredFetchHandler })
     const res1 = await agent.api.app.bsky.feed.getTimeline()
-    AtpAgent.configure({ fetch: fetchHandler })
+    AtpAgent.configure({ fetch: defaultFetchHandler })
 
     expect(res1.success).toEqual(true)
     expect(agent.hasSession).toEqual(true)
@@ -252,7 +251,7 @@ describe('agent', () => {
       if (httpUri.includes('com.atproto.session.refresh')) {
         refreshCalls++
       }
-      return fetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody)
+      return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody)
     }
 
     // put the agent through the auth flow
@@ -262,7 +261,7 @@ describe('agent', () => {
       agent.api.app.bsky.feed.getTimeline(),
       agent.api.app.bsky.feed.getTimeline(),
     ])
-    AtpAgent.configure({ fetch: fetchHandler })
+    AtpAgent.configure({ fetch: defaultFetchHandler })
 
     expect(expiredCalls).toEqual(3)
     expect(refreshCalls).toEqual(1)
@@ -366,7 +365,7 @@ describe('agent', () => {
           body: undefined,
         }
       }
-      return fetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody)
+      return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody)
     }
 
     // put the agent through the auth flow
@@ -379,7 +378,7 @@ describe('agent', () => {
       expect(e.status).toEqual(400)
       expect(e.error).toEqual('ExpiredToken')
     }
-    AtpAgent.configure({ fetch: fetchHandler })
+    AtpAgent.configure({ fetch: defaultFetchHandler })
 
     // still has session because it wasn't invalidated
     expect(agent.hasSession).toEqual(true)
