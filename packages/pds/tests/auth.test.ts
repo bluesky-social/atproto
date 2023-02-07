@@ -1,4 +1,4 @@
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
 import * as CreateSession from '@atproto/api/src/client/types/com/atproto/session/create'
 import * as RefreshSession from '@atproto/api/src/client/types/com/atproto/session/refresh'
@@ -7,14 +7,14 @@ import { adminAuth, CloseFn, runTestServer, TestServerInfo } from './_util'
 
 describe('auth', () => {
   let server: TestServerInfo
-  let client: AtpServiceClient
+  let agent: AtpAgent
   let close: CloseFn
 
   beforeAll(async () => {
     server = await runTestServer({
       dbPostgresSchema: 'auth',
     })
-    client = AtpApi.service(server.url)
+    agent = new AtpAgent({ service: server.url })
     close = server.close
   })
 
@@ -23,11 +23,11 @@ describe('auth', () => {
   })
 
   const createAccount = async (info) => {
-    const { data } = await client.com.atproto.account.create(info)
+    const { data } = await agent.api.com.atproto.account.create(info)
     return data
   }
   const getSession = async (jwt) => {
-    const { data } = await client.com.atproto.session.get(
+    const { data } = await agent.api.com.atproto.session.get(
       {},
       {
         headers: SeedClient.getHeaders(jwt),
@@ -36,16 +36,16 @@ describe('auth', () => {
     return data
   }
   const createSession = async (info) => {
-    const { data } = await client.com.atproto.session.create(info)
+    const { data } = await agent.api.com.atproto.session.create(info)
     return data
   }
   const deleteSession = async (jwt) => {
-    await client.com.atproto.session.delete(undefined, {
+    await agent.api.com.atproto.session.delete(undefined, {
       headers: SeedClient.getHeaders(jwt),
     })
   }
   const refreshSession = async (jwt) => {
-    const { data } = await client.com.atproto.session.refresh(undefined, {
+    const { data } = await agent.api.com.atproto.session.refresh(undefined, {
       headers: SeedClient.getHeaders(jwt),
     })
     return data
@@ -198,7 +198,7 @@ describe('auth', () => {
       email: 'iris@test.com',
       password: 'password',
     })
-    await client.com.atproto.admin.takeModerationAction(
+    await agent.api.com.atproto.admin.takeModerationAction(
       {
         action: TAKEDOWN,
         subject: {
@@ -224,7 +224,7 @@ describe('auth', () => {
       email: 'jared@test.com',
       password: 'password',
     })
-    await client.com.atproto.admin.takeModerationAction(
+    await agent.api.com.atproto.admin.takeModerationAction(
       {
         action: TAKEDOWN,
         subject: {

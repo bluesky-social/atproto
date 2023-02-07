@@ -1,5 +1,5 @@
 import { AtUri } from '@atproto/uri'
-import { ServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import {
   SPAM,
   OTHER,
@@ -54,7 +54,7 @@ export async function generateMockSetup(env: DevEnv) {
     declarationCid: string
     handle: string
     password: string
-    api: ServiceClient
+    agent: AtpAgent
   }
   const users: User[] = [
     {
@@ -63,7 +63,7 @@ export async function generateMockSetup(env: DevEnv) {
       declarationCid: '',
       handle: `alice.test`,
       password: 'hunter2',
-      api: clients.alice,
+      agent: clients.alice,
     },
     {
       email: 'bob@test.com',
@@ -71,7 +71,7 @@ export async function generateMockSetup(env: DevEnv) {
       declarationCid: '',
       handle: `bob.test`,
       password: 'hunter2',
-      api: clients.bob,
+      agent: clients.bob,
     },
     {
       email: 'carla@test.com',
@@ -79,7 +79,7 @@ export async function generateMockSetup(env: DevEnv) {
       declarationCid: '',
       handle: `carla.test`,
       password: 'hunter2',
-      api: clients.carla,
+      agent: clients.carla,
     },
   ]
   const alice = users[0]
@@ -88,18 +88,18 @@ export async function generateMockSetup(env: DevEnv) {
 
   let _i = 1
   for (const user of users) {
-    const res = await clients.loggedout.com.atproto.account.create({
+    const res = await clients.loggedout.api.com.atproto.account.create({
       email: user.email,
       handle: user.handle,
       password: user.password,
     })
-    user.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)
-    const { data: profile } = await user.api.app.bsky.actor.getProfile({
+    user.agent.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)
+    const { data: profile } = await user.agent.api.app.bsky.actor.getProfile({
       actor: user.handle,
     })
     user.did = res.data.did
     user.declarationCid = profile.declaration.cid
-    await user.api.app.bsky.actor.profile.create(
+    await user.agent.api.app.bsky.actor.profile.create(
       { did: user.did },
       {
         displayName: ucfirst(user.handle).slice(0, -5),
@@ -110,7 +110,7 @@ export async function generateMockSetup(env: DevEnv) {
 
   // Report one user
   const reporter = picka(users)
-  await reporter.api.com.atproto.report.create({
+  await reporter.agent.api.com.atproto.report.create({
     reasonType: picka([SPAM, OTHER]),
     reason: picka(["Didn't look right to me", undefined, undefined]),
     subject: {
@@ -121,7 +121,7 @@ export async function generateMockSetup(env: DevEnv) {
 
   // everybody follows everybody
   const follow = async (author: User, subject: User) => {
-    await author.api.app.bsky.graph.follow.create(
+    await author.agent.api.app.bsky.graph.follow.create(
       { did: author.did },
       {
         subject: {
@@ -143,7 +143,7 @@ export async function generateMockSetup(env: DevEnv) {
   const posts: { uri: string; cid: string }[] = []
   for (let i = 0; i < postTexts.length; i++) {
     const author = picka(users)
-    const post = await author.api.app.bsky.feed.post.create(
+    const post = await author.agent.api.app.bsky.feed.post.create(
       { did: author.did },
       {
         text: postTexts[i],
@@ -153,7 +153,7 @@ export async function generateMockSetup(env: DevEnv) {
     posts.push(post)
     if (rand(10) === 0) {
       const reposter = picka(users)
-      await reposter.api.app.bsky.feed.repost.create(
+      await reposter.agent.api.app.bsky.feed.repost.create(
         { did: reposter.did },
         {
           subject: picka(posts),
@@ -163,7 +163,7 @@ export async function generateMockSetup(env: DevEnv) {
     }
     if (rand(6) === 0) {
       const reporter = picka(users)
-      await reporter.api.com.atproto.report.create({
+      await reporter.agent.api.com.atproto.report.create({
         reasonType: picka([SPAM, OTHER]),
         reason: picka(["Didn't look right to me", undefined, undefined]),
         subject: {
@@ -178,13 +178,13 @@ export async function generateMockSetup(env: DevEnv) {
   for (let i = 0; i < 100; i++) {
     const targetUri = picka(posts).uri
     const urip = new AtUri(targetUri)
-    const target = await alice.api.app.bsky.feed.post.get({
+    const target = await alice.agent.api.app.bsky.feed.post.get({
       user: urip.host,
       rkey: urip.rkey,
     })
     const author = picka(users)
     posts.push(
-      await author.api.app.bsky.feed.post.create(
+      await author.agent.api.app.bsky.feed.post.create(
         { did: author.did },
         {
           text: picka(replyTexts),
@@ -202,7 +202,7 @@ export async function generateMockSetup(env: DevEnv) {
   for (const post of posts) {
     for (const user of users) {
       if (rand(3) === 0) {
-        await user.api.app.bsky.feed.vote.create(
+        await user.agent.api.app.bsky.feed.vote.create(
           { did: user.did },
           {
             direction: rand(3) !== 0 ? 'up' : 'down',

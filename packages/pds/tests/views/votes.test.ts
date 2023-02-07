@@ -1,7 +1,4 @@
-import AtpApi, {
-  AppBskyFeedGetPostThread,
-  ServiceClient as AtpServiceClient,
-} from '@atproto/api'
+import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
 import { SeedClient } from '../seeds/client'
 import votesSeed from '../seeds/votes'
 import {
@@ -13,7 +10,7 @@ import {
 } from '../_util'
 
 describe('pds vote views', () => {
-  let client: AtpServiceClient
+  let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
 
@@ -26,8 +23,8 @@ describe('pds vote views', () => {
       dbPostgresSchema: 'views_votes',
     })
     close = server.close
-    client = AtpApi.service(server.url)
-    sc = new SeedClient(client)
+    agent = new AtpAgent({ service: server.url })
+    sc = new SeedClient(agent)
     await votesSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -46,7 +43,7 @@ describe('pds vote views', () => {
   const tstamp = (x: string) => new Date(x).getTime()
 
   it('fetches post votes', async () => {
-    const alicePost = await client.app.bsky.feed.getVotes(
+    const alicePost = await agent.api.app.bsky.feed.getVotes(
       { uri: sc.posts[alice][1].ref.uriStr },
       { headers: sc.getHeaders(alice) },
     )
@@ -58,7 +55,7 @@ describe('pds vote views', () => {
   })
 
   it('fetches reply votes', async () => {
-    const bobReply = await client.app.bsky.feed.getVotes(
+    const bobReply = await agent.api.app.bsky.feed.getVotes(
       { uri: sc.replies[bob][0].ref.uriStr },
       { headers: sc.getHeaders(alice) },
     )
@@ -72,7 +69,7 @@ describe('pds vote views', () => {
   it('paginates', async () => {
     const results = (results) => results.flatMap((res) => res.votes)
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.feed.getVotes(
+      const res = await agent.api.app.bsky.feed.getVotes(
         {
           uri: sc.posts[alice][1].ref.uriStr,
           before: cursor,
@@ -88,7 +85,7 @@ describe('pds vote views', () => {
       expect(res.votes.length).toBeLessThanOrEqual(2),
     )
 
-    const full = await client.app.bsky.feed.getVotes(
+    const full = await agent.api.app.bsky.feed.getVotes(
       { uri: sc.posts[alice][1].ref.uriStr },
       { headers: sc.getHeaders(alice) },
     )
@@ -98,14 +95,14 @@ describe('pds vote views', () => {
   })
 
   it('filters by direction', async () => {
-    const full = await client.app.bsky.feed.getVotes(
+    const full = await agent.api.app.bsky.feed.getVotes(
       {
         uri: sc.posts[alice][1].ref.uriStr,
       },
       { headers: sc.getHeaders(alice) },
     )
 
-    const upvotes = await client.app.bsky.feed.getVotes(
+    const upvotes = await agent.api.app.bsky.feed.getVotes(
       {
         uri: sc.posts[alice][1].ref.uriStr,
         direction: 'up',
@@ -113,7 +110,7 @@ describe('pds vote views', () => {
       { headers: sc.getHeaders(alice) },
     )
 
-    const downvotes = await client.app.bsky.feed.getVotes(
+    const downvotes = await agent.api.app.bsky.feed.getVotes(
       {
         uri: sc.posts[alice][1].ref.uriStr,
         direction: 'down',
@@ -150,7 +147,7 @@ describe('pds vote views', () => {
 
       let post: AppBskyFeedGetPostThread.OutputSchema
       const getPost = async () => {
-        const result = await client.app.bsky.feed.getPostThread(
+        const result = await agent.api.app.bsky.feed.getPostThread(
           {
             uri: sc.posts[bob][0].ref.uriStr,
             depth: 0,
@@ -170,7 +167,7 @@ describe('pds vote views', () => {
       ).toEqual({})
 
       // Upvote
-      const { data: upvoted } = await client.app.bsky.feed.setVote(
+      const { data: upvoted } = await agent.api.app.bsky.feed.setVote(
         {
           direction: 'up',
           subject: {
@@ -196,7 +193,7 @@ describe('pds vote views', () => {
       ).toEqual(upvoted)
 
       // Downvote
-      const { data: downvoted } = await client.app.bsky.feed.setVote(
+      const { data: downvoted } = await agent.api.app.bsky.feed.setVote(
         {
           direction: 'down',
           subject: {
@@ -222,7 +219,7 @@ describe('pds vote views', () => {
       ).toEqual(downvoted)
 
       // No vote
-      const { data: novoted } = await client.app.bsky.feed.setVote(
+      const { data: novoted } = await agent.api.app.bsky.feed.setVote(
         {
           direction: 'none',
           subject: {
@@ -254,7 +251,7 @@ describe('pds vote views', () => {
         headers: sc.getHeaders(alice),
       } as const
 
-      const { data: upvotedA } = await client.app.bsky.feed.setVote(
+      const { data: upvotedA } = await agent.api.app.bsky.feed.setVote(
         {
           direction: 'up',
           subject: {
@@ -265,7 +262,7 @@ describe('pds vote views', () => {
         asAlice,
       )
 
-      const { data: upvotedB } = await client.app.bsky.feed.setVote(
+      const { data: upvotedB } = await agent.api.app.bsky.feed.setVote(
         {
           direction: 'up',
           subject: {

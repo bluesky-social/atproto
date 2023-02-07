@@ -1,4 +1,4 @@
-import AtpApi from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { Database } from '../../src'
 import { Kysely } from 'kysely'
 import { CloseFn, runTestServer } from '../_util'
@@ -17,8 +17,8 @@ describe('repo sync data migration', () => {
     db = server.ctx.db
     rawDb = db.db
     close = server.close
-    const client = AtpApi.service(server.url)
-    const sc = new SeedClient(client)
+    const agent = new AtpAgent({ service: server.url })
+    const sc = new SeedClient(agent)
     await basicSeed(sc)
   })
 

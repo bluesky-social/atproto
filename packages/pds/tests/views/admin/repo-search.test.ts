@@ -1,4 +1,4 @@
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
 import {
   runTestServer,
@@ -12,7 +12,7 @@ import usersBulkSeed from '../../seeds/users-bulk'
 import { Database } from '../../../src'
 
 describe('pds admin repo search view', () => {
-  let client: AtpServiceClient
+  let agent: AtpAgent
   let db: Database
   let close: CloseFn
   let sc: SeedClient
@@ -24,8 +24,8 @@ describe('pds admin repo search view', () => {
     })
     close = server.close
     db = server.ctx.db
-    client = AtpApi.service(server.url)
-    sc = new SeedClient(client)
+    agent = new AtpAgent({ service: server.url })
+    sc = new SeedClient(agent)
     await usersBulkSeed(sc)
     headers = { authorization: adminAuth() }
   })
@@ -45,7 +45,7 @@ describe('pds admin repo search view', () => {
   })
 
   it('gives relevant results', async () => {
-    const result = await client.com.atproto.admin.searchRepos(
+    const result = await agent.api.com.atproto.admin.searchRepos(
       { term: 'car' },
       { headers },
     )
@@ -91,7 +91,7 @@ describe('pds admin repo search view', () => {
   it('paginates with term', async () => {
     const results = (results) => results.flatMap((res) => res.users)
     const paginator = async (cursor?: string) => {
-      const res = await client.com.atproto.admin.searchRepos(
+      const res = await agent.api.com.atproto.admin.searchRepos(
         { term: 'p', before: cursor, limit: 3 },
         { headers },
       )
@@ -103,7 +103,7 @@ describe('pds admin repo search view', () => {
       expect(res.repos.length).toBeLessThanOrEqual(3),
     )
 
-    const full = await client.com.atproto.admin.searchRepos(
+    const full = await agent.api.com.atproto.admin.searchRepos(
       { term: 'p' },
       { headers },
     )
@@ -115,7 +115,7 @@ describe('pds admin repo search view', () => {
   it('paginates without term', async () => {
     const results = (results) => results.flatMap((res) => res.repos)
     const paginator = async (cursor?: string) => {
-      const res = await client.com.atproto.admin.searchRepos(
+      const res = await agent.api.com.atproto.admin.searchRepos(
         { before: cursor, limit: 3 },
         { headers },
       )
@@ -127,7 +127,7 @@ describe('pds admin repo search view', () => {
       expect(res.repos.length).toBeLessThanOrEqual(3),
     )
 
-    const full = await client.com.atproto.admin.searchRepos(
+    const full = await agent.api.com.atproto.admin.searchRepos(
       { limit: 15 },
       { headers },
     )

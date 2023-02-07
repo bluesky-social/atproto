@@ -1,4 +1,4 @@
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
 import {
   runTestServer,
@@ -12,7 +12,7 @@ import { SeedClient } from '../seeds/client'
 import followsSeed from '../seeds/follows'
 
 describe('pds follow views', () => {
-  let client: AtpServiceClient
+  let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
 
@@ -24,8 +24,8 @@ describe('pds follow views', () => {
       dbPostgresSchema: 'views_follows',
     })
     close = server.close
-    client = AtpApi.service(server.url)
-    sc = new SeedClient(client)
+    agent = new AtpAgent({ service: server.url })
+    sc = new SeedClient(agent)
     await followsSeed(sc)
     alice = sc.dids.alice
   })
@@ -43,7 +43,7 @@ describe('pds follow views', () => {
   const tstamp = (x: string) => new Date(x).getTime()
 
   it('fetches followers', async () => {
-    const aliceFollowers = await client.app.bsky.graph.getFollowers(
+    const aliceFollowers = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.alice },
       { headers: sc.getHeaders(alice) },
     )
@@ -53,7 +53,7 @@ describe('pds follow views', () => {
       getSortedCursors(aliceFollowers.data.followers),
     )
 
-    const bobFollowers = await client.app.bsky.graph.getFollowers(
+    const bobFollowers = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.bob },
       { headers: sc.getHeaders(alice) },
     )
@@ -63,7 +63,7 @@ describe('pds follow views', () => {
       getSortedCursors(bobFollowers.data.followers),
     )
 
-    const carolFollowers = await client.app.bsky.graph.getFollowers(
+    const carolFollowers = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.carol },
       { headers: sc.getHeaders(alice) },
     )
@@ -73,7 +73,7 @@ describe('pds follow views', () => {
       getSortedCursors(carolFollowers.data.followers),
     )
 
-    const danFollowers = await client.app.bsky.graph.getFollowers(
+    const danFollowers = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.dan },
       { headers: sc.getHeaders(alice) },
     )
@@ -83,7 +83,7 @@ describe('pds follow views', () => {
       getSortedCursors(danFollowers.data.followers),
     )
 
-    const eveFollowers = await client.app.bsky.graph.getFollowers(
+    const eveFollowers = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.eve },
       { headers: sc.getHeaders(alice) },
     )
@@ -95,11 +95,11 @@ describe('pds follow views', () => {
   })
 
   it('fetches followers by handle', async () => {
-    const byDid = await client.app.bsky.graph.getFollowers(
+    const byDid = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.alice },
       { headers: sc.getHeaders(alice) },
     )
-    const byHandle = await client.app.bsky.graph.getFollowers(
+    const byHandle = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.accounts[alice].handle },
       { headers: sc.getHeaders(alice) },
     )
@@ -109,7 +109,7 @@ describe('pds follow views', () => {
   it('paginates followers', async () => {
     const results = (results) => results.flatMap((res) => res.followers)
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.graph.getFollowers(
+      const res = await agent.api.app.bsky.graph.getFollowers(
         {
           user: sc.dids.alice,
           before: cursor,
@@ -125,7 +125,7 @@ describe('pds follow views', () => {
       expect(res.followers.length).toBeLessThanOrEqual(2),
     )
 
-    const full = await client.app.bsky.graph.getFollowers(
+    const full = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.alice },
       { headers: sc.getHeaders(alice) },
     )
@@ -136,7 +136,7 @@ describe('pds follow views', () => {
 
   it('blocks followers by actor takedown', async () => {
     const { data: modAction } =
-      await client.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.takeModerationAction(
         {
           action: TAKEDOWN,
           subject: {
@@ -152,14 +152,14 @@ describe('pds follow views', () => {
         },
       )
 
-    const aliceFollowers = await client.app.bsky.graph.getFollowers(
+    const aliceFollowers = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.alice },
       { headers: sc.getHeaders(alice) },
     )
 
     expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
 
-    await client.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: modAction.id,
         createdBy: 'X',
@@ -173,7 +173,7 @@ describe('pds follow views', () => {
   })
 
   it('fetches follows', async () => {
-    const aliceFollowers = await client.app.bsky.graph.getFollows(
+    const aliceFollowers = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.alice },
       { headers: sc.getHeaders(alice) },
     )
@@ -183,7 +183,7 @@ describe('pds follow views', () => {
       getSortedCursors(aliceFollowers.data.follows),
     )
 
-    const bobFollowers = await client.app.bsky.graph.getFollows(
+    const bobFollowers = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.bob },
       { headers: sc.getHeaders(alice) },
     )
@@ -193,7 +193,7 @@ describe('pds follow views', () => {
       getSortedCursors(bobFollowers.data.follows),
     )
 
-    const carolFollowers = await client.app.bsky.graph.getFollows(
+    const carolFollowers = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.carol },
       { headers: sc.getHeaders(alice) },
     )
@@ -203,7 +203,7 @@ describe('pds follow views', () => {
       getSortedCursors(carolFollowers.data.follows),
     )
 
-    const danFollowers = await client.app.bsky.graph.getFollows(
+    const danFollowers = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.dan },
       { headers: sc.getHeaders(alice) },
     )
@@ -213,7 +213,7 @@ describe('pds follow views', () => {
       getSortedCursors(danFollowers.data.follows),
     )
 
-    const eveFollowers = await client.app.bsky.graph.getFollows(
+    const eveFollowers = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.eve },
       { headers: sc.getHeaders(alice) },
     )
@@ -225,11 +225,11 @@ describe('pds follow views', () => {
   })
 
   it('fetches follows by handle', async () => {
-    const byDid = await client.app.bsky.graph.getFollows(
+    const byDid = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.alice },
       { headers: sc.getHeaders(alice) },
     )
-    const byHandle = await client.app.bsky.graph.getFollows(
+    const byHandle = await agent.api.app.bsky.graph.getFollows(
       { user: sc.accounts[alice].handle },
       { headers: sc.getHeaders(alice) },
     )
@@ -239,7 +239,7 @@ describe('pds follow views', () => {
   it('paginates follows', async () => {
     const results = (results) => results.flatMap((res) => res.follows)
     const paginator = async (cursor?: string) => {
-      const res = await client.app.bsky.graph.getFollows(
+      const res = await agent.api.app.bsky.graph.getFollows(
         {
           user: sc.dids.alice,
           before: cursor,
@@ -255,7 +255,7 @@ describe('pds follow views', () => {
       expect(res.follows.length).toBeLessThanOrEqual(2),
     )
 
-    const full = await client.app.bsky.graph.getFollows(
+    const full = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.alice },
       { headers: sc.getHeaders(alice) },
     )
@@ -266,7 +266,7 @@ describe('pds follow views', () => {
 
   it('blocks follows by actor takedown', async () => {
     const { data: modAction } =
-      await client.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.takeModerationAction(
         {
           action: TAKEDOWN,
           subject: {
@@ -282,14 +282,14 @@ describe('pds follow views', () => {
         },
       )
 
-    const aliceFollows = await client.app.bsky.graph.getFollows(
+    const aliceFollows = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.alice },
       { headers: sc.getHeaders(alice) },
     )
 
     expect(forSnapshot(aliceFollows.data)).toMatchSnapshot()
 
-    await client.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: modAction.id,
         createdBy: 'X',

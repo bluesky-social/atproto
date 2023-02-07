@@ -1,5 +1,5 @@
 import fs from 'fs/promises'
-import { ServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/takeModerationAction'
 import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/report/create'
 import { AtUri } from '@atproto/uri'
@@ -94,7 +94,7 @@ export class SeedClient {
   reposts: Record<string, RecordRef[]>
   dids: Record<string, string>
 
-  constructor(public client: ServiceClient) {
+  constructor(public agent: AtpAgent) {
     this.accounts = {}
     this.profiles = {}
     this.follows = {}
@@ -113,10 +113,10 @@ export class SeedClient {
       password: string
     },
   ) {
-    const { data: account } = await this.client.com.atproto.account.create(
+    const { data: account } = await this.agent.api.com.atproto.account.create(
       params,
     )
-    const { data: profile } = await this.client.app.bsky.actor.getProfile(
+    const { data: profile } = await this.agent.api.app.bsky.actor.getProfile(
       {
         actor: params.handle,
       },
@@ -144,7 +144,7 @@ export class SeedClient {
 
     let avatarCid
     {
-      const res = await this.client.com.atproto.blob.upload(AVATAR_IMG, {
+      const res = await this.agent.api.com.atproto.blob.upload(AVATAR_IMG, {
         encoding: 'image/jpeg',
         headers: this.getHeaders(fromUser || by),
       } as any)
@@ -152,7 +152,7 @@ export class SeedClient {
     }
 
     {
-      const res = await this.client.app.bsky.actor.profile.create(
+      const res = await this.agent.api.app.bsky.actor.profile.create(
         { did: by },
         {
           displayName,
@@ -172,7 +172,7 @@ export class SeedClient {
   }
 
   async follow(from: string, to: ActorRef) {
-    const res = await this.client.app.bsky.graph.follow.create(
+    const res = await this.agent.api.app.bsky.graph.follow.create(
       { did: from },
       {
         subject: to.raw,
@@ -192,7 +192,7 @@ export class SeedClient {
           images,
         }
       : undefined
-    const res = await this.client.app.bsky.feed.post.create(
+    const res = await this.agent.api.app.bsky.feed.post.create(
       { did: by },
       {
         text: text,
@@ -213,7 +213,7 @@ export class SeedClient {
   }
 
   async deletePost(by: string, uri: AtUri) {
-    await this.client.app.bsky.feed.post.delete(
+    await this.agent.api.app.bsky.feed.post.delete(
       {
         did: by,
         rkey: uri.rkey,
@@ -228,7 +228,7 @@ export class SeedClient {
     encoding: string,
   ): Promise<ImageRef> {
     const file = await fs.readFile(filePath)
-    const res = await this.client.com.atproto.blob.upload(file, {
+    const res = await this.agent.api.com.atproto.blob.upload(file, {
       headers: this.getHeaders(by),
       encoding,
     } as any)
@@ -236,7 +236,7 @@ export class SeedClient {
   }
 
   async vote(direction: 'up' | 'down', by: string, subject: RecordRef) {
-    const res = await this.client.app.bsky.feed.vote.create(
+    const res = await this.agent.api.app.bsky.feed.vote.create(
       { did: by },
       { direction, subject: subject.raw, createdAt: new Date().toISOString() },
       this.getHeaders(by),
@@ -260,7 +260,7 @@ export class SeedClient {
           images,
         }
       : undefined
-    const res = await this.client.app.bsky.feed.post.create(
+    const res = await this.agent.api.app.bsky.feed.post.create(
       { did: by },
       {
         text: text,
@@ -284,7 +284,7 @@ export class SeedClient {
   }
 
   async repost(by: string, subject: RecordRef) {
-    const res = await this.client.app.bsky.feed.repost.create(
+    const res = await this.agent.api.app.bsky.feed.repost.create(
       { did: by },
       { subject: subject.raw, createdAt: new Date().toISOString() },
       this.getHeaders(by),
@@ -306,7 +306,7 @@ export class SeedClient {
     createdBy?: string
   }) {
     const { action, subject, reason = 'X', createdBy = 'Y' } = opts
-    const result = await this.client.com.atproto.admin.takeModerationAction(
+    const result = await this.agent.api.com.atproto.admin.takeModerationAction(
       { action, subject, createdBy, reason },
       {
         encoding: 'application/json',
@@ -322,13 +322,14 @@ export class SeedClient {
     createdBy?: string
   }) {
     const { id, reason = 'X', createdBy = 'Y' } = opts
-    const result = await this.client.com.atproto.admin.reverseModerationAction(
-      { id, reason, createdBy },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
+    const result =
+      await this.agent.api.com.atproto.admin.reverseModerationAction(
+        { id, reason, createdBy },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
     return result.data
   }
 
@@ -338,13 +339,14 @@ export class SeedClient {
     createdBy?: string
   }) {
     const { actionId, reportIds, createdBy = 'Y' } = opts
-    const result = await this.client.com.atproto.admin.resolveModerationReports(
-      { actionId, createdBy, reportIds },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
+    const result =
+      await this.agent.api.com.atproto.admin.resolveModerationReports(
+        { actionId, createdBy, reportIds },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
     return result.data
   }
 
@@ -355,7 +357,7 @@ export class SeedClient {
     reportedByDid: string
   }) {
     const { reasonType, subject, reason, reportedByDid } = opts
-    const result = await this.client.com.atproto.report.create(
+    const result = await this.agent.api.com.atproto.report.create(
       { reasonType, subject, reason },
       {
         encoding: 'application/json',

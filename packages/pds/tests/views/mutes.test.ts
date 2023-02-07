@@ -1,4 +1,4 @@
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import {
   runTestServer,
   forSnapshot,
@@ -10,7 +10,7 @@ import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
 
 describe('mute views', () => {
-  let client: AtpServiceClient
+  let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
   let silas: string
@@ -20,8 +20,8 @@ describe('mute views', () => {
       dbPostgresSchema: 'views_mutes',
     })
     close = server.close
-    client = AtpApi.service(server.url)
-    sc = new SeedClient(client)
+    agent = new AtpAgent({ service: server.url })
+    sc = new SeedClient(agent)
     await usersBulkSeed(sc, 10)
     silas = sc.dids['silas77.test']
     const mutes = [
@@ -33,7 +33,7 @@ describe('mute views', () => {
       'elta48.test',
     ]
     for (const did of mutes) {
-      await client.app.bsky.graph.mute(
+      await agent.api.app.bsky.graph.mute(
         { user: did },
         { headers: sc.getHeaders(silas), encoding: 'application/json' },
       )
@@ -53,7 +53,7 @@ describe('mute views', () => {
   const tstamp = (x: string) => new Date(x).getTime()
 
   it('fetches mutes for the logged-in user.', async () => {
-    const { data: view } = await client.app.bsky.graph.getMutes(
+    const { data: view } = await agent.api.app.bsky.graph.getMutes(
       {},
       { headers: sc.getHeaders(silas) },
     )
@@ -64,7 +64,7 @@ describe('mute views', () => {
   it('paginates.', async () => {
     const results = (results) => results.flatMap((res) => res.mutes)
     const paginator = async (cursor?: string) => {
-      const { data: view } = await client.app.bsky.graph.getMutes(
+      const { data: view } = await agent.api.app.bsky.graph.getMutes(
         { before: cursor, limit: 2 },
         { headers: sc.getHeaders(silas) },
       )
@@ -76,7 +76,7 @@ describe('mute views', () => {
       expect(res.mutes.length).toBeLessThanOrEqual(2),
     )
 
-    const full = await client.app.bsky.graph.getMutes(
+    const full = await agent.api.app.bsky.graph.getMutes(
       {},
       { headers: sc.getHeaders(silas) },
     )
@@ -86,33 +86,33 @@ describe('mute views', () => {
   })
 
   it('removes mute.', async () => {
-    const { data: initial } = await client.app.bsky.graph.getMutes(
+    const { data: initial } = await agent.api.app.bsky.graph.getMutes(
       {},
       { headers: sc.getHeaders(silas) },
     )
     expect(initial.mutes.length).toEqual(6)
     expect(initial.mutes.map((m) => m.handle)).toContain('elta48.test')
 
-    await client.app.bsky.graph.unmute(
+    await agent.api.app.bsky.graph.unmute(
       { user: sc.dids['elta48.test'] },
       { headers: sc.getHeaders(silas), encoding: 'application/json' },
     )
 
-    const { data: final } = await client.app.bsky.graph.getMutes(
+    const { data: final } = await agent.api.app.bsky.graph.getMutes(
       {},
       { headers: sc.getHeaders(silas) },
     )
     expect(final.mutes.length).toEqual(5)
     expect(final.mutes.map((m) => m.handle)).not.toContain('elta48.test')
 
-    await client.app.bsky.graph.mute(
+    await agent.api.app.bsky.graph.mute(
       { user: sc.dids['elta48.test'] },
       { headers: sc.getHeaders(silas), encoding: 'application/json' },
     )
   })
 
   it('does not allow muting self.', async () => {
-    const promise = client.app.bsky.graph.mute(
+    const promise = agent.api.app.bsky.graph.mute(
       { user: silas },
       { headers: sc.getHeaders(silas), encoding: 'application/json' },
     )

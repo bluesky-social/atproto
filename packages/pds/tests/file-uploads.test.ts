@@ -1,6 +1,6 @@
 import fs from 'fs/promises'
 import { gzipSync } from 'zlib'
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { CloseFn, runTestServer, TestServerInfo } from './_util'
 import { CID } from 'multiformats/cid'
 import { Database, ServerConfig } from '../src'
@@ -25,9 +25,9 @@ const bob = {
 
 describe('file uploads', () => {
   let server: TestServerInfo
-  let client: AtpServiceClient
-  let aliceClient: AtpServiceClient
-  let bobClient: AtpServiceClient
+  let agent: AtpAgent
+  let aliceAgent: AtpAgent
+  let bobAgent: AtpAgent
   let blobstore: DiskBlobStore
   let db: Database
   let cfg: ServerConfig
@@ -41,9 +41,9 @@ describe('file uploads', () => {
     blobstore = server.ctx.blobstore as DiskBlobStore
     db = server.ctx.db
     close = server.close
-    client = AtpApi.service(server.url)
-    aliceClient = AtpApi.service(server.url)
-    bobClient = AtpApi.service(server.url)
+    agent = new AtpAgent({ service: server.url })
+    aliceAgent = new AtpAgent({ service: server.url })
+    bobAgent = new AtpAgent({ service: server.url })
     cfg = server.ctx.cfg
     serverUrl = server.url
   })
@@ -53,19 +53,19 @@ describe('file uploads', () => {
   })
 
   it('registers users', async () => {
-    const res = await client.com.atproto.account.create({
+    const res = await agent.api.com.atproto.account.create({
       email: alice.email,
       handle: alice.handle,
       password: alice.password,
     })
-    aliceClient.setHeader('authorization', `Bearer ${res.data.accessJwt}`)
+    aliceAgent.api.setHeader('authorization', `Bearer ${res.data.accessJwt}`)
     alice.did = res.data.did
-    const res2 = await client.com.atproto.account.create({
+    const res2 = await agent.api.com.atproto.account.create({
       email: bob.email,
       handle: bob.handle,
       password: bob.password,
     })
-    bobClient.setHeader('authorization', `Bearer ${res2.data.accessJwt}`)
+    bobAgent.api.setHeader('authorization', `Bearer ${res2.data.accessJwt}`)
     bob.did = res2.data.did
   })
 
@@ -86,7 +86,7 @@ describe('file uploads', () => {
       signal: abortController.signal,
       headers: {
         'content-type': 'image/jpeg',
-        authorization: aliceClient.xrpc.headers.authorization,
+        authorization: aliceAgent.api.xrpc.headers.authorization,
       },
     })
     await expect(response).rejects.toThrow('operation was aborted')
@@ -98,7 +98,7 @@ describe('file uploads', () => {
 
   it('uploads files', async () => {
     smallFile = await fs.readFile('tests/image/fixtures/key-portrait-small.jpg')
-    const res = await aliceClient.com.atproto.blob.upload(smallFile, {
+    const res = await aliceAgent.api.com.atproto.blob.upload(smallFile, {
       encoding: 'image/jpeg',
     } as any)
     smallCid = CID.parse(res.data.cid)
@@ -118,7 +118,7 @@ describe('file uploads', () => {
   })
 
   it('can reference the file', async () => {
-    await aliceClient.app.bsky.actor.updateProfile({
+    await aliceAgent.api.app.bsky.actor.updateProfile({
       displayName: 'Alice',
       avatar: { cid: smallCid.toString(), mimeType: 'image/jpeg' },
     })
@@ -138,7 +138,7 @@ describe('file uploads', () => {
   })
 
   it('serves the referenced blob', async () => {
-    const profile = await aliceClient.app.bsky.actor.getProfile({
+    const profile = await aliceAgent.api.app.bsky.actor.getProfile({
       actor: 'alice.test',
     })
     const avatar = profile.data.avatar as string
@@ -160,12 +160,12 @@ describe('file uploads', () => {
 
   it('does not allow referencing a file that is outside blob constraints', async () => {
     largeFile = await fs.readFile('tests/image/fixtures/hd-key.jpg')
-    const res = await aliceClient.com.atproto.blob.upload(largeFile, {
+    const res = await aliceAgent.api.com.atproto.blob.upload(largeFile, {
       encoding: 'image/jpeg',
     } as any)
     largeCid = CID.parse(res.data.cid)
 
-    const profilePromise = aliceClient.app.bsky.actor.updateProfile({
+    const profilePromise = aliceAgent.api.app.bsky.actor.updateProfile({
       avatar: { cid: largeCid.toString(), mimeType: 'image/jpeg' },
     })
 
@@ -188,25 +188,29 @@ describe('file uploads', () => {
     const file = await fs.readFile(
       'tests/image/fixtures/key-landscape-small.jpg',
     )
-    const { data: uploadA } = await aliceClient.com.atproto.blob.upload(file, {
-      encoding: 'image/jpeg',
-    } as any)
-    const { data: uploadB } = await bobClient.com.atproto.blob.upload(file, {
+    const { data: uploadA } = await aliceAgent.api.com.atproto.blob.upload(
+      file,
+      {
+        encoding: 'image/jpeg',
+      } as any,
+    )
+    const { data: uploadB } = await bobAgent.api.com.atproto.blob.upload(file, {
       encoding: 'image/jpeg',
     } as any)
     expect(uploadA).toEqual(uploadB)
-    const { data: profileA } = await aliceClient.app.bsky.actor.updateProfile({
-      displayName: 'Alice',
-      avatar: { cid: uploadA.cid, mimeType: 'image/jpeg' },
-    })
+    const { data: profileA } =
+      await aliceAgent.api.app.bsky.actor.updateProfile({
+        displayName: 'Alice',
+        avatar: { cid: uploadA.cid, mimeType: 'image/jpeg' },
+      })
     expect((profileA.record as any).avatar.cid).toEqual(uploadA.cid)
-    const { data: profileB } = await bobClient.app.bsky.actor.updateProfile({
+    const { data: profileB } = await bobAgent.api.app.bsky.actor.updateProfile({
       displayName: 'Bob',
       avatar: { cid: uploadB.cid, mimeType: 'image/jpeg' },
     })
     expect((profileB.record as any).avatar.cid).toEqual(uploadA.cid)
     const { data: uploadAfterPermanent } =
-      await aliceClient.com.atproto.blob.upload(file, {
+      await aliceAgent.api.com.atproto.blob.upload(file, {
         encoding: 'image/jpeg',
       } as any)
     expect(uploadAfterPermanent).toEqual(uploadA)
@@ -219,7 +223,7 @@ describe('file uploads', () => {
   })
 
   it('supports compression during upload', async () => {
-    const { data: uploaded } = await aliceClient.com.atproto.blob.upload(
+    const { data: uploaded } = await aliceAgent.api.com.atproto.blob.upload(
       gzipSync(smallFile),
       {
         encoding: 'image/jpeg',
@@ -235,7 +239,7 @@ describe('file uploads', () => {
     const file = await fs.readFile(
       'tests/image/fixtures/key-landscape-large.jpg',
     )
-    const res = await aliceClient.com.atproto.blob.upload(file, {
+    const res = await aliceAgent.api.com.atproto.blob.upload(file, {
       encoding: 'video/mp4',
     } as any)
 
@@ -252,7 +256,7 @@ describe('file uploads', () => {
 
   it('handles unknown mimetypes', async () => {
     const file = await randomBytes(20000)
-    const res = await aliceClient.com.atproto.blob.upload(file, {
+    const res = await aliceAgent.api.com.atproto.blob.upload(file, {
       encoding: 'test/fake',
     } as any)
 

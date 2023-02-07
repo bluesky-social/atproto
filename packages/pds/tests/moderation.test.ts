@@ -1,4 +1,4 @@
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { AtUri } from '@atproto/uri'
 import {
   adminAuth,
@@ -21,7 +21,7 @@ import { BlobNotFoundError } from '@atproto/repo'
 describe('moderation', () => {
   let server: TestServerInfo
   let close: CloseFn
-  let client: AtpServiceClient
+  let agent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
@@ -29,8 +29,8 @@ describe('moderation', () => {
       dbPostgresSchema: 'moderation',
     })
     close = server.close
-    client = AtpApi.service(server.url)
-    sc = new SeedClient(client)
+    agent = new AtpAgent({ service: server.url })
+    sc = new SeedClient(agent)
     await basicSeed(sc)
   })
 
@@ -40,7 +40,7 @@ describe('moderation', () => {
 
   describe('reporting', () => {
     it('creates reports of a repo.', async () => {
-      const { data: reportA } = await client.com.atproto.report.create(
+      const { data: reportA } = await agent.api.com.atproto.report.create(
         {
           reasonType: SPAM,
           subject: {
@@ -50,7 +50,7 @@ describe('moderation', () => {
         },
         { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
       )
-      const { data: reportB } = await client.com.atproto.report.create(
+      const { data: reportB } = await agent.api.com.atproto.report.create(
         {
           reasonType: OTHER,
           reason: 'impersonation',
@@ -65,7 +65,7 @@ describe('moderation', () => {
     })
 
     it("fails reporting a repo that doesn't exist.", async () => {
-      const promise = client.com.atproto.report.create(
+      const promise = agent.api.com.atproto.report.create(
         {
           reasonType: SPAM,
           subject: {
@@ -81,7 +81,7 @@ describe('moderation', () => {
     it('creates reports of a record.', async () => {
       const postA = sc.posts[sc.dids.bob][0].ref
       const postB = sc.posts[sc.dids.bob][1].ref
-      const { data: reportA } = await client.com.atproto.report.create(
+      const { data: reportA } = await agent.api.com.atproto.report.create(
         {
           reasonType: SPAM,
           subject: {
@@ -91,7 +91,7 @@ describe('moderation', () => {
         },
         { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
       )
-      const { data: reportB } = await client.com.atproto.report.create(
+      const { data: reportB } = await agent.api.com.atproto.report.create(
         {
           reasonType: OTHER,
           reason: 'defamation',
@@ -112,7 +112,7 @@ describe('moderation', () => {
       const postUriBad = new AtUri(postA.uriStr)
       postUriBad.rkey = 'badrkey'
 
-      const promiseA = client.com.atproto.report.create(
+      const promiseA = agent.api.com.atproto.report.create(
         {
           reasonType: SPAM,
           subject: {
@@ -124,7 +124,7 @@ describe('moderation', () => {
       )
       await expect(promiseA).rejects.toThrow('Record not found')
 
-      const promiseB = client.com.atproto.report.create(
+      const promiseB = agent.api.com.atproto.report.create(
         {
           reasonType: OTHER,
           reason: 'defamation',
@@ -142,7 +142,7 @@ describe('moderation', () => {
 
   describe('actioning', () => {
     it('resolves reports on repos and records.', async () => {
-      const { data: reportA } = await client.com.atproto.report.create(
+      const { data: reportA } = await agent.api.com.atproto.report.create(
         {
           reasonType: SPAM,
           subject: {
@@ -153,7 +153,7 @@ describe('moderation', () => {
         { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
       )
       const post = sc.posts[sc.dids.bob][1].ref
-      const { data: reportB } = await client.com.atproto.report.create(
+      const { data: reportB } = await agent.api.com.atproto.report.create(
         {
           reasonType: OTHER,
           reason: 'defamation',
@@ -165,7 +165,7 @@ describe('moderation', () => {
         { headers: sc.getHeaders(sc.dids.carol), encoding: 'application/json' },
       )
       const { data: action } =
-        await client.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.takeModerationAction(
           {
             action: TAKEDOWN,
             subject: {
@@ -181,7 +181,7 @@ describe('moderation', () => {
           },
         )
       const { data: actionResolvedReports } =
-        await client.com.atproto.admin.resolveModerationReports(
+        await agent.api.com.atproto.admin.resolveModerationReports(
           {
             actionId: action.id,
             reportIds: [reportB.id, reportA.id],
@@ -196,7 +196,7 @@ describe('moderation', () => {
       expect(forSnapshot(actionResolvedReports)).toMatchSnapshot()
 
       // Cleanup
-      await client.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: action.id,
           createdBy: 'X',
@@ -210,7 +210,7 @@ describe('moderation', () => {
     })
 
     it('does not resolve report for mismatching repo.', async () => {
-      const { data: report } = await client.com.atproto.report.create(
+      const { data: report } = await agent.api.com.atproto.report.create(
         {
           reasonType: SPAM,
           subject: {
@@ -221,7 +221,7 @@ describe('moderation', () => {
         { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
       )
       const { data: action } =
-        await client.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.takeModerationAction(
           {
             action: TAKEDOWN,
             subject: {
@@ -237,7 +237,7 @@ describe('moderation', () => {
           },
         )
 
-      const promise = client.com.atproto.admin.resolveModerationReports(
+      const promise = agent.api.com.atproto.admin.resolveModerationReports(
         {
           actionId: action.id,
           reportIds: [report.id],
@@ -254,7 +254,7 @@ describe('moderation', () => {
       )
 
       // Cleanup
-      await client.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: action.id,
           createdBy: 'X',
@@ -270,7 +270,7 @@ describe('moderation', () => {
     it('does not resolve report for mismatching record.', async () => {
       const postUri1 = sc.posts[sc.dids.alice][0].ref.uri
       const postUri2 = sc.posts[sc.dids.bob][0].ref.uri
-      const { data: report } = await client.com.atproto.report.create(
+      const { data: report } = await agent.api.com.atproto.report.create(
         {
           reasonType: SPAM,
           subject: {
@@ -281,7 +281,7 @@ describe('moderation', () => {
         { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
       )
       const { data: action } =
-        await client.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.takeModerationAction(
           {
             action: TAKEDOWN,
             subject: {
@@ -297,7 +297,7 @@ describe('moderation', () => {
           },
         )
 
-      const promise = client.com.atproto.admin.resolveModerationReports(
+      const promise = agent.api.com.atproto.admin.resolveModerationReports(
         {
           actionId: action.id,
           reportIds: [report.id],
@@ -314,7 +314,7 @@ describe('moderation', () => {
       )
 
       // Cleanup
-      await client.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: action.id,
           createdBy: 'X',
@@ -331,7 +331,7 @@ describe('moderation', () => {
       const postRef1 = sc.posts[sc.dids.alice][0].ref
       const postRef2 = sc.posts[sc.dids.bob][0].ref
       const { data: action1 } =
-        await client.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.takeModerationAction(
           {
             action: FLAG,
             subject: {
@@ -357,7 +357,7 @@ describe('moderation', () => {
         }),
       )
       const { data: action2 } =
-        await client.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.takeModerationAction(
           {
             action: ACKNOWLEDGE,
             subject: {
@@ -383,7 +383,7 @@ describe('moderation', () => {
         }),
       )
       // Cleanup
-      await client.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: action1.id,
           createdBy: 'X',
@@ -394,7 +394,7 @@ describe('moderation', () => {
           headers: { authorization: adminAuth() },
         },
       )
-      await client.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: action2.id,
           createdBy: 'X',
@@ -410,7 +410,7 @@ describe('moderation', () => {
     it('only allows record to have one current action.', async () => {
       const postUri = sc.posts[sc.dids.alice][0].ref.uri
       const { data: acknowledge } =
-        await client.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.takeModerationAction(
           {
             action: ACKNOWLEDGE,
             subject: {
@@ -425,7 +425,7 @@ describe('moderation', () => {
             headers: { authorization: adminAuth() },
           },
         )
-      const flagPromise = client.com.atproto.admin.takeModerationAction(
+      const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
         {
           action: FLAG,
           subject: {
@@ -445,7 +445,7 @@ describe('moderation', () => {
       )
 
       // Reverse current then retry
-      await client.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: acknowledge.id,
           createdBy: 'X',
@@ -457,7 +457,7 @@ describe('moderation', () => {
         },
       )
       const { data: flag } =
-        await client.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.takeModerationAction(
           {
             action: FLAG,
             subject: {
@@ -474,7 +474,7 @@ describe('moderation', () => {
         )
 
       // Cleanup
-      await client.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: flag.id,
           createdBy: 'X',
@@ -489,7 +489,7 @@ describe('moderation', () => {
 
     it('only allows repo to have one current action.', async () => {
       const { data: acknowledge } =
-        await client.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.takeModerationAction(
           {
             action: ACKNOWLEDGE,
             subject: {
@@ -504,7 +504,7 @@ describe('moderation', () => {
             headers: { authorization: adminAuth() },
           },
         )
-      const flagPromise = client.com.atproto.admin.takeModerationAction(
+      const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
         {
           action: FLAG,
           subject: {
@@ -524,7 +524,7 @@ describe('moderation', () => {
       )
 
       // Reverse current then retry
-      await client.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: acknowledge.id,
           createdBy: 'X',
@@ -536,7 +536,7 @@ describe('moderation', () => {
         },
       )
       const { data: flag } =
-        await client.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.takeModerationAction(
           {
             action: FLAG,
             subject: {
@@ -553,7 +553,7 @@ describe('moderation', () => {
         )
 
       // Cleanup
-      await client.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: flag.id,
           createdBy: 'X',
@@ -571,7 +571,7 @@ describe('moderation', () => {
       const postA = await sc.post(sc.dids.alice, 'image A', undefined, [img])
       const postB = await sc.post(sc.dids.alice, 'image B', undefined, [img])
       const { data: acknowledge } =
-        await client.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.takeModerationAction(
           {
             action: ACKNOWLEDGE,
             subject: {
@@ -587,7 +587,7 @@ describe('moderation', () => {
             headers: { authorization: adminAuth() },
           },
         )
-      const flagPromise = client.com.atproto.admin.takeModerationAction(
+      const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
         {
           action: FLAG,
           subject: {
@@ -607,7 +607,7 @@ describe('moderation', () => {
         'Blob already has an active action:',
       )
       // Reverse current then retry
-      await client.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: acknowledge.id,
           createdBy: 'X',
@@ -619,7 +619,7 @@ describe('moderation', () => {
         },
       )
       const { data: flag } =
-        await client.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.takeModerationAction(
           {
             action: FLAG,
             subject: {
@@ -637,7 +637,7 @@ describe('moderation', () => {
         )
 
       // Cleanup
-      await client.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: flag.id,
           createdBy: 'X',
@@ -666,7 +666,7 @@ describe('moderation', () => {
       await fetch(imageUri)
       const cached = await fetch(imageUri)
       expect(cached.headers.get('x-cache')).toEqual('hit')
-      const takeAction = await client.com.atproto.admin.takeModerationAction(
+      const takeAction = await agent.api.com.atproto.admin.takeModerationAction(
         {
           action: TAKEDOWN,
           subject: {
@@ -710,7 +710,7 @@ describe('moderation', () => {
     })
 
     it('restores blob when action is reversed.', async () => {
-      await client.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: actionId,
           createdBy: 'X',
