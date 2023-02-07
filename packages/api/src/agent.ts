@@ -79,7 +79,6 @@ export class AtpAgent {
     opts: AtpAgentCreateAccountOpts,
   ): Promise<ComAtprotoAccountCreate.Response> {
     try {
-      this.session = undefined
       const res = await this.api.com.atproto.account.create({
         handle: opts.handle,
         password: opts.password,
@@ -93,6 +92,9 @@ export class AtpAgent {
         did: res.data.did,
       }
       return res
+    } catch (e) {
+      this.session = undefined
+      throw e
     } finally {
       if (this.session) {
         this._persistSession?.('create', this.session)
@@ -109,7 +111,6 @@ export class AtpAgent {
     opts: AtpAgentLoginOpts,
   ): Promise<ComAtprotoSessionCreate.Response> {
     try {
-      this.session = undefined
       const res = await this.api.com.atproto.session.create({
         identifier: opts.identifier,
         password: opts.password,
@@ -121,6 +122,9 @@ export class AtpAgent {
         did: res.data.did,
       }
       return res
+    } catch (e) {
+      this.session = undefined
+      throw e
     } finally {
       if (this.session) {
         this._persistSession?.('create', this.session)
@@ -136,14 +140,14 @@ export class AtpAgent {
   async resumeSession(
     session: AtpSessionData,
   ): Promise<ComAtprotoSessionGet.Response> {
-    this.session = session
     try {
+      this.session = session
       const res = await this.api.com.atproto.session.get()
       if (!res.success || res.data.did !== this.session.did) {
         throw new Error('Invalid session')
       }
       return res
-    } catch (e: any) {
+    } catch (e) {
       this.session = undefined
       throw e
     } finally {
