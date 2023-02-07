@@ -132,6 +132,8 @@ export class PDS {
   }
 
   async start(): Promise<http.Server> {
+    await this.ctx.db.startListeningToChannels()
+    await this.ctx.sequencer.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     this.terminator = createHttpTerminator({ server })

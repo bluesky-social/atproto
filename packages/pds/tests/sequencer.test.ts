@@ -1,5 +1,4 @@
 import AtpApi from '@atproto/api'
-import { Database } from '../src'
 import Sequencer, { RepoEvent } from '../src/sequencer'
 import { SeedClient } from './seeds/client'
 import userSeed from './seeds/users'
@@ -8,7 +7,6 @@ import Outbox from '../src/sequencer/outbox'
 import { randomStr } from '@atproto/crypto'
 
 describe('sequencer', () => {
-  let db: Database
   let sequencer: Sequencer
   let close: CloseFn
   let sc: SeedClient
@@ -20,7 +18,6 @@ describe('sequencer', () => {
       dbPostgresSchema: 'db',
     })
     close = server.close
-    db = server.ctx.db
     sequencer = server.ctx.sequencer
     const client = AtpApi.service(server.url)
     sc = new SeedClient(client)

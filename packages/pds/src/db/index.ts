@@ -15,6 +15,7 @@ import { CtxMigrationProvider } from './migrations/provider'
 import { dbLogger as log } from '../logger'
 
 export class Database {
+  txChannelMsgs: ChannelMsg[] = []
   channels: Channels
   migrator: Migrator
   private channelClient: PgPoolClient | null = null
@@ -77,6 +78,7 @@ export class Database {
 
   async startListeningToChannels() {
     if (this.cfg.dialect !== 'pg') return
+    if (this.channelClient) return
     this.channelClient = await this.cfg.pool.connect()
     await this.channelClient.query(`LISTEN repo_seq`)
     this.channelClient.on('notification', (msg) => {
@@ -96,6 +98,19 @@ export class Database {
     if (channel !== 'repo_seq') {
       throw new Error(`attempted sending on unavailable channel: ${channel}`)
     }
+    // hardcoded b/c of type system & we only have one msg type
+    const message: ChannelMsg = { channel: 'repo_seq' }
+
+    // if in a tx, we buffer the notification until the tx successfully commits
+    if (this.isTransaction) {
+      this.txChannelMsgs.push(message)
+    } else {
+      this.sendChannelMsg(message)
+    }
+  }
+
+  private sendChannelMsg(msg: ChannelMsg) {
+    const { channel } = msg
     if (this.cfg.dialect === 'pg') {
       this.cfg.pool.query(`NOTIFY ${channel}`)
     } else {
@@ -107,10 +122,17 @@ export class Database {
   }
 
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
-    return await this.db.transaction().execute((txn) => {
+    let txMsgs: ChannelMsg[] = []
+    const res = await this.db.transaction().execute(async (txn) => {
       const dbTxn = new Database(txn, this.cfg, this.channels)
-      return fn(dbTxn)
+      const txRes = await fn(dbTxn)
+      txMsgs = dbTxn.txChannelMsgs
+      return txRes
     })
+    txMsgs.forEach((msg) => {
+      this.sendChannelMsg(msg)
+    })
+    return res
   }
 
   get schema(): string | undefined {
@@ -196,6 +218,8 @@ type ChannelEvents = {
 }
 
 type ChannelEmitter = TypedEmitter<ChannelEvents>
+
+type ChannelMsg = { channel: 'repo_seq' }
 
 type Channels = {
   repo_seq: ChannelEmitter

@@ -10,7 +10,6 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
   constructor(public db: Database, public lastSeen?: number) {
     super()
-    this.start()
   }
 
   async start() {
@@ -33,11 +32,12 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     })
   }
 
-  async requestSeqRange(
-    firstExclusive?: number,
-    lastInclusive?: number,
-    limit?: number,
-  ): Promise<MaybeRepoEvent[]> {
+  async requestSeqRange(opts: {
+    firstExclusive?: number
+    lastInclusive?: number
+    limit?: number
+  }): Promise<MaybeRepoEvent[]> {
+    const { firstExclusive, lastInclusive, limit } = opts
     let seqQb = this.db.db.selectFrom('repo_seq').selectAll()
     if (firstExclusive !== undefined) {
       seqQb = seqQb.where('seq', '>', firstExclusive)
@@ -103,9 +103,10 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async pollDb() {
-    const evts = await this.requestSeqRange(this.lastSeen)
+    const evts = await this.requestSeqRange({ firstExclusive: this.lastSeen })
     for (const evt of evts) {
       if (evt !== null) {
+        this.lastSeen = evt.seq
         this.emit('event', evt)
       }
     }
