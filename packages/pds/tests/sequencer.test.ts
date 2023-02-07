@@ -13,6 +13,8 @@ describe('sequencer', () => {
   let alice: string
   let bob: string
 
+  let totalEvts
+
   beforeAll(async () => {
     const server = await runTestServer({
       dbPostgresSchema: 'db',
@@ -24,6 +26,8 @@ describe('sequencer', () => {
     await userSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
+    // 6 events in userSeed
+    totalEvts = 6
   })
 
   afterAll(async () => {
@@ -47,19 +51,22 @@ describe('sequencer', () => {
   }
 
   it('sends to outbox', async () => {
-    const count = 10
+    const count = 20
+    totalEvts += count * 2
     await createPosts(count)
     const outbox = new Outbox(sequencer)
-    const evts = await getAllEvents(outbox, 26)
-    expect(evts.length).toBe(26)
+    const evts = await getAllEvents(outbox, totalEvts)
+    expect(evts.length).toBe(totalEvts)
   })
 
   it('handles cut over', async () => {
+    const count = 20
+    totalEvts += count * 2
     const outbox = new Outbox(sequencer)
     const [evts] = await Promise.all([
-      getAllEvents(outbox, 46),
-      createPosts(10),
+      getAllEvents(outbox, totalEvts),
+      createPosts(count),
     ])
-    expect(evts.length).toBe(46)
+    expect(evts.length).toBe(totalEvts)
   })
 })

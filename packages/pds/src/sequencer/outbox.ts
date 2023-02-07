@@ -1,5 +1,6 @@
 import Sequencer, { RepoEvent, SequencerEmitter } from '.'
 import { EventEmitter } from 'stream'
+import { AsyncBuffer } from '@atproto/common'
 
 const MAX_BUFFER_SIZE = 1000
 
@@ -10,7 +11,7 @@ export class Outbox {
   caughtUp = false
   lastSeen?: number
 
-  outBuffer = new OutBuffer()
+  outBuffer = new AsyncBuffer<RepoEvent>()
 
   constructor(public sequencer: Sequencer) {}
 
@@ -85,45 +86,6 @@ export class Outbox {
       if (evts.length < 50) {
         break
       }
-    }
-  }
-}
-
-class OutBuffer {
-  private events: RepoEvent[] = []
-  private promise: Promise<void>
-  private resolve: () => void
-
-  constructor() {
-    this.resetPromise()
-  }
-
-  get curr(): RepoEvent[] {
-    return this.events
-  }
-
-  get size(): number {
-    return this.events.length
-  }
-
-  resetPromise() {
-    this.promise = new Promise<void>((r) => (this.resolve = r))
-  }
-
-  push(evt: RepoEvent) {
-    this.events.push(evt)
-    this.resolve()
-    this.resetPromise()
-  }
-
-  async nextEvent(): Promise<RepoEvent> {
-    const [first, ...rest] = this.events
-    if (first) {
-      this.events = rest
-      return first
-    } else {
-      await this.promise
-      return this.nextEvent()
     }
   }
 }
