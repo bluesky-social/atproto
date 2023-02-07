@@ -285,11 +285,12 @@ export const lexiconDoc = z
         defId !== 'main' &&
         (def.type === 'record' ||
           def.type === 'procedure' ||
-          def.type === 'query')
+          def.type === 'query' ||
+          def.type === 'subscription')
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `Records, procedures, and queries must be the main definition.`,
+          message: `Records, procedures, queries, and subscriptions must be the main definition.`,
         })
       }
     }

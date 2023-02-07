@@ -1,7 +1,12 @@
 import * as http from 'http'
 import { WebSocket, createWebSocketStream } from 'ws'
-import { byFrame, Frame } from '../src'
-import { createServer, closeServer } from './_util'
+import { byFrame, DataFrame, ErrorFrame, Frame } from '../src'
+import {
+  createServer,
+  closeServer,
+  createBasicAuth,
+  basicAuthHeaders,
+} from './_util'
 import * as xrpcServer from '../src'
 
 const LEXICONS = [
@@ -29,17 +34,83 @@ const LEXICONS = [
       },
     },
   },
+  {
+    lexicon: 1,
+    id: 'io.example.stream2',
+    defs: {
+      main: {
+        type: 'subscription',
+        parameters: {
+          type: 'params',
+          required: ['countdown'],
+          properties: {
+            countdown: { type: 'integer' },
+          },
+        },
+        output: {
+          codes: {
+            '#even': 0,
+            'io.example.stream2#odd': 1,
+          },
+          schema: {
+            type: 'union',
+            refs: ['#even', '#odd'],
+          },
+        },
+      },
+      even: {
+        type: 'object',
+        required: ['count'],
+        properties: { count: { type: 'integer' } },
+      },
+      odd: {
+        type: 'object',
+        required: ['count'],
+        properties: { count: { type: 'integer' } },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'io.example.streamAuth',
+    defs: {
+      main: {
+        type: 'subscription',
+      },
+    },
+  },
 ]
 
 describe('Subscriptions', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS)
+
   server.streamMethod('io.example.stream1', async function* ({ params }) {
     const countdown = Number(params.countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
       yield { count: i }
     }
   })
+
+  server.streamMethod('io.example.stream2', async function* ({ params }) {
+    const countdown = Number(params.countdown ?? 0)
+    for (let i = countdown; i >= 0; i--) {
+      yield {
+        $type:
+          i % 2 === 0 ? 'io.example.stream2#even' : 'io.example.stream2#odd',
+        count: i,
+      }
+    }
+    yield { $type: 'io.example.stream2#done' }
+  })
+
+  server.streamMethod('io.example.streamAuth', {
+    auth: createBasicAuth({ username: 'admin', password: 'password' }),
+    handler: async function* ({ auth }) {
+      yield auth
+    },
+  })
+
   beforeAll(async () => {
     s = await createServer(8895, server)
   })
@@ -57,14 +128,102 @@ describe('Subscriptions', () => {
       frames.push(frame)
     }
 
-    const items = frames.map((frame) => frame.body)
-    expect(items).toEqual([
-      { count: 5 },
-      { count: 4 },
-      { count: 3 },
-      { count: 2 },
-      { count: 1 },
-      { count: 0 },
+    expect(frames).toEqual([
+      new DataFrame({ body: { count: 5 } }),
+      new DataFrame({ body: { count: 4 } }),
+      new DataFrame({ body: { count: 3 } }),
+      new DataFrame({ body: { count: 2 } }),
+      new DataFrame({ body: { count: 1 } }),
+      new DataFrame({ body: { count: 0 } }),
+    ])
+  })
+
+  it('streams messages in a union', async () => {
+    const ws = new WebSocket(
+      'ws://localhost:8895/xrpc/io.example.stream2?countdown=5',
+    )
+
+    const frames: Frame[] = []
+    for await (const frame of byFrame(ws)) {
+      frames.push(frame)
+    }
+
+    expect(frames).toEqual([
+      new DataFrame({ type: 1, body: { count: 5 } }),
+      new DataFrame({ type: 0, body: { count: 4 } }),
+      new DataFrame({ type: 1, body: { count: 3 } }),
+      new DataFrame({ type: 0, body: { count: 2 } }),
+      new DataFrame({ type: 1, body: { count: 1 } }),
+      new DataFrame({ type: 0, body: { count: 0 } }),
+      new DataFrame({ body: { $type: 'io.example.stream2#done' } }),
+    ])
+  })
+
+  it('resolves auth into handler', async () => {
+    const ws = new WebSocket('ws://localhost:8895/xrpc/io.example.streamAuth', {
+      headers: basicAuthHeaders({
+        username: 'admin',
+        password: 'password',
+      }),
+    })
+
+    const frames: Frame[] = []
+    for await (const frame of byFrame(ws)) {
+      frames.push(frame)
+    }
+
+    expect(frames).toEqual([
+      new DataFrame({
+        body: {
+          credentials: {
+            username: 'admin',
+          },
+          artifacts: {
+            original: 'YWRtaW46cGFzc3dvcmQ=',
+          },
+        },
+      }),
+    ])
+  })
+
+  it('errors immediately on bad parameter', async () => {
+    const ws = new WebSocket('ws://localhost:8895/xrpc/io.example.stream1')
+
+    const frames: Frame[] = []
+    for await (const frame of byFrame(ws)) {
+      frames.push(frame)
+    }
+
+    expect(frames).toEqual([
+      new ErrorFrame({
+        body: {
+          error: 'InvalidRequest',
+          message: 'Error: Params must have the property "countdown"',
+        },
+      }),
+    ])
+  })
+
+  it('errors immediately on bad auth', async () => {
+    const ws = new WebSocket('ws://localhost:8895/xrpc/io.example.streamAuth', {
+      headers: basicAuthHeaders({
+        username: 'bad',
+        password: 'wrong',
+      }),
+    })
+
+    const frames: Frame[] = []
+    for await (const frame of byFrame(ws)) {
+      frames.push(frame)
+    }
+
+    expect(frames).toEqual([
+      new ErrorFrame({
+        body: {
+          error: 'AuthenticationRequired',
+          message: 'Authentication Required',
+        },
+      }),
     ])
   })
 

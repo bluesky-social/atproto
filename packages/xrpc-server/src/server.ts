@@ -257,6 +257,7 @@ export class Server {
   ) {
     const assertValidXrpcParams = (params: unknown) =>
       this.lex.assertValidXrpcParams(nsid, params)
+    const resolveLexUri = (ref: string) => this.lex.resolveLexUri(nsid, ref)
     this.subscriptions.set(
       nsid,
       new XrpcStreamServer({
@@ -284,8 +285,21 @@ export class Server {
             for await (const item of items) {
               if (item instanceof Frame) {
                 yield item
+              } else if (
+                typeof item?.['$type'] === 'string' &&
+                def.output?.codes
+              ) {
+                const typeUri = resolveLexUri(item['$type'])
+                if (def.output.codes[typeUri] !== undefined) {
+                  const code = def.output.codes[typeUri]
+                  const clone = { ...item }
+                  delete clone['$type']
+                  yield new DataFrame({ type: code, body: clone })
+                } else {
+                  yield new DataFrame({ body: item })
+                }
               } else {
-                yield new DataFrame({ body: item }) // @TODO set type code
+                yield new DataFrame({ body: item })
               }
             }
           } catch (err) {
