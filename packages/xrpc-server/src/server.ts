@@ -56,13 +56,7 @@ export class Server {
     this.router.use('/xrpc/:methodId', this.catchall.bind(this))
     this.router.use(errorMiddleware)
     this.router.once('mount', (app: express.Application) => {
-      const _listen = app.listen
-      app.listen = (...args) => {
-        // @ts-ignore the args spread
-        const httpServer = _listen.call(app, ...args)
-        this.enableStreaming(httpServer)
-        return httpServer
-      }
+      this.enableStreamingOnListen(app)
     })
     this.options = opts ?? {}
     this.middleware = {
@@ -313,17 +307,23 @@ export class Server {
     )
   }
 
-  private enableStreaming(server: http.Server) {
-    server.on('upgrade', async (req, socket, head) => {
-      const url = new URL(req.url || '', 'http://x')
-      const sub = url.pathname.startsWith('/xrpc/')
-        ? this.subscriptions.get(url.pathname.replace('/xrpc/', ''))
-        : undefined
-      if (!sub) return socket.destroy()
-      sub.wss.handleUpgrade(req, socket, head, (ws) =>
-        sub.wss.emit('connection', ws, req),
-      )
-    })
+  private enableStreamingOnListen(app: express.Application) {
+    const _listen = app.listen
+    app.listen = (...args) => {
+      // @ts-ignore the args spread
+      const httpServer = _listen.call(app, ...args)
+      httpServer.on('upgrade', (req, socket, head) => {
+        const url = new URL(req.url || '', 'http://x')
+        const sub = url.pathname.startsWith('/xrpc/')
+          ? this.subscriptions.get(url.pathname.replace('/xrpc/', ''))
+          : undefined
+        if (!sub) return socket.destroy()
+        sub.wss.handleUpgrade(req, socket, head, (ws) =>
+          sub.wss.emit('connection', ws, req),
+        )
+      })
+      return httpServer
+    }
   }
 }
 
