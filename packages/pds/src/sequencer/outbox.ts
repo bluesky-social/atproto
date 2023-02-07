@@ -1,6 +1,8 @@
 import Sequencer, { RepoEvent, SequencerEmitter } from '.'
 import { EventEmitter } from 'stream'
 
+const MAX_BUFFER_SIZE = 1000
+
 export class Outbox {
   internalEmitter = new EventEmitter() as SequencerEmitter
 
@@ -34,6 +36,9 @@ export class Outbox {
     // then dedupes them & streams out them in order
     this.sequencer.on('event', (evt) => {
       if (this.caughtUp) {
+        if (this.outBuffer.size >= MAX_BUFFER_SIZE) {
+          throw new Error('Stream too slow')
+        }
         this.outBuffer.push(evt)
       } else {
         this.cutoverBuffer.push(evt)
@@ -95,6 +100,10 @@ class OutBuffer {
 
   get curr(): RepoEvent[] {
     return this.events
+  }
+
+  get size(): number {
+    return this.events.length
   }
 
   resetPromise() {
