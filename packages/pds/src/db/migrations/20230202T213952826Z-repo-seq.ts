@@ -22,6 +22,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
       ['did', 'commit'],
       'repo_commit_history',
       ['creator', 'commit'],
+      (cb) => cb.onDelete('cascade'),
     )
 
   await builder.execute()
