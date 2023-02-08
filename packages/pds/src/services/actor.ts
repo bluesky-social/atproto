@@ -3,7 +3,7 @@ import * as common from '@atproto/common'
 import { dbLogger as log } from '../logger'
 import Database from '../db'
 import * as scrypt from '../db/scrypt'
-import { User } from '../db/tables/user'
+import { UserAccount } from '../db/tables/user-account'
 import { DidHandle } from '../db/tables/did-handle'
 import { RepoRoot } from '../db/tables/repo-root'
 import { Record as DeclarationRecord } from '../lexicon/types/app/bsky/system/declaration'
@@ -21,16 +21,16 @@ export class ActorService {
   async getUser(
     handleOrDid: string,
     includeSoftDeleted = false,
-  ): Promise<(User & DidHandle & RepoRoot) | null> {
+  ): Promise<(UserAccount & DidHandle & RepoRoot) | null> {
     const { ref } = this.db.db.dynamic
     let query = this.db.db
-      .selectFrom('user')
-      .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
+      .selectFrom('user_account')
+      .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
       .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('repo_root'))),
       )
-      .selectAll('user')
+      .selectAll('user_account')
       .selectAll('did_handle')
       .selectAll('repo_root')
     if (handleOrDid.startsWith('did:')) {
@@ -45,17 +45,17 @@ export class ActorService {
   async getUserByEmail(
     email: string,
     includeSoftDeleted = false,
-  ): Promise<(User & DidHandle & RepoRoot) | null> {
+  ): Promise<(UserAccount & DidHandle & RepoRoot) | null> {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
-      .selectFrom('user')
-      .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
+      .selectFrom('user_account')
+      .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
       .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('repo_root'))),
       )
       .where('email', '=', email.toLowerCase())
-      .selectAll('user')
+      .selectAll('user_account')
       .selectAll('did_handle')
       .selectAll('repo_root')
       .executeTakeFirst()
@@ -80,97 +80,64 @@ export class ActorService {
     return found ? found.did : null
   }
 
-  async registerUser(email: string, handle: string, password: string) {
+  async registerUser(
+    email: string,
+    handle: string,
+    did: string,
+    password: string,
+    declaration: DeclarationRecord,
+  ) {
     this.db.assertTransaction()
     log.debug({ handle, email }, 'registering user')
-    const inserted = await this.db.db
-      .insertInto('user')
+    const declarationCid = await common.cidForCbor(declaration)
+    const registerUserAccnt = this.db.db
+      .insertInto('user_account')
       .values({
         email: email.toLowerCase(),
-        handle: handle,
+        did,
         password: await scrypt.hash(password),
         createdAt: new Date().toISOString(),
         lastSeenNotifs: new Date().toISOString(),
       })
       .onConflict((oc) => oc.doNothing())
-      .returning('handle')
+      .returning('did')
       .executeTakeFirst()
-    if (!inserted) {
-      throw new UserAlreadyExistsError()
-    }
-    log.info({ handle, email }, 'registered user')
-  }
-
-  async preregisterDid(handle: string, tempDid: string) {
-    this.db.assertTransaction()
-    const inserted = await this.db.db
+    const registerDidHandle = this.db.db
       .insertInto('did_handle')
       .values({
         handle,
-        did: tempDid,
-        actorType: 'temp',
-        declarationCid: 'temp',
-      })
-      .onConflict((oc) => oc.doNothing())
-      .returning('handle')
-      .executeTakeFirst()
-    if (!inserted) {
-      throw new UserAlreadyExistsError()
-    }
-    log.info({ handle, tempDid }, 'pre-registered did')
-  }
-
-  async finalizeDid(
-    handle: string,
-    did: string,
-    tempDid: string,
-    declaration: DeclarationRecord,
-  ) {
-    this.db.assertTransaction()
-    log.debug({ handle, did }, 'registering did-handle')
-    const declarationCid = await common.cidForCbor(declaration)
-    const updated = await this.db.db
-      .updateTable('did_handle')
-      .set({
         did,
         actorType: declaration.actorType,
         declarationCid: declarationCid.toString(),
       })
-      .where('handle', '=', handle)
-      .where('did', '=', tempDid)
-      .returningAll()
+      .onConflict((oc) => oc.doNothing())
+      .returning('handle')
       .executeTakeFirst()
-    if (!updated) {
-      throw new Error('DID could not be finalized')
+
+    const [res1, res2] = await Promise.all([
+      registerUserAccnt,
+      registerDidHandle,
+    ])
+    if (!res1 || !res2) {
+      throw new UserAlreadyExistsError()
     }
-    log.info({ handle, did }, 'post-registered did-handle')
+    log.info({ handle, email, did }, 'registered user')
   }
 
-  async updateUserPassword(handle: string, password: string) {
+  async updateUserPassword(did: string, password: string) {
     const hashedPassword = await scrypt.hash(password)
     await this.db.db
-      .updateTable('user')
+      .updateTable('user_account')
       .set({ password: hashedPassword })
-      .where('handle', '=', handle)
+      .where('did', '=', did)
       .execute()
   }
 
-  async verifyUserPassword(handle: string, password: string): Promise<boolean> {
+  async verifyUserPassword(did: string, password: string): Promise<boolean> {
     const found = await this.db.db
-      .selectFrom('user')
+      .selectFrom('user_account')
       .selectAll()
-      .where('handle', '=', handle)
-      .executeTakeFirst()
-    if (!found) return false
-    return scrypt.verify(password, found.password)
-  }
-
-  async verifyUserDidPassword(did: string, password: string): Promise<boolean> {
-    const found = await this.db.db
-      .selectFrom('did_handle')
-      .where('did_handle.did', '=', did)
-      .innerJoin('user', 'user.handle', 'did_handle.handle')
-      .selectAll()
+      .where('did', '=', did)
       .executeTakeFirst()
     if (!found) return false
     return scrypt.verify(password, found.password)
@@ -248,17 +215,12 @@ export class ActorService {
 
   async deleteUser(did: string): Promise<void> {
     this.db.assertTransaction()
-    await this.db.db
-      .deleteFrom('user')
-      .where('user.handle', '=', (qb) =>
-        qb
-          .selectFrom('did_handle')
-          .where('did', '=', did)
-          .select('did_handle.handle as handle'),
-      )
-      .execute()
     await Promise.all([
       this.db.db.deleteFrom('refresh_token').where('did', '=', did).execute(),
+      this.db.db
+        .deleteFrom('user_account')
+        .where('user_account.did', '=', did)
+        .execute(),
       this.db.db
         .deleteFrom('did_handle')
         .where('did_handle.did', '=', did)

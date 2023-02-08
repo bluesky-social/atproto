@@ -1,5 +1,5 @@
-export interface User {
-  handle: string
+export interface UserAccount {
+  did: string
   email: string
   password: string
   lastSeenNotifs: string
@@ -8,6 +8,6 @@ export interface User {
   passwordResetGrantedAt: string | null
 }
 
-export const tableName = 'user'
+export const tableName = 'user_account'
 
-export type PartialDB = { [tableName]: User }
+export type PartialDB = { [tableName]: UserAccount }

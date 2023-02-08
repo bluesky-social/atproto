@@ -1,5 +1,5 @@
 import { Kysely } from 'kysely'
-import * as user from './tables/user'
+import * as userAccount from './tables/user-account'
 import * as didHandle from './tables/did-handle'
 import * as repoRoot from './tables/repo-root'
 import * as refreshToken from './tables/refresh-token'
@@ -27,7 +27,7 @@ import * as messageQueueCursor from './tables/message-queue-cursor'
 import * as moderation from './tables/moderation'
 import * as mute from './tables/mute'
 
-export type DatabaseSchemaType = user.PartialDB &
+export type DatabaseSchemaType = userAccount.PartialDB &
   didHandle.PartialDB &
   refreshToken.PartialDB &
   repoRoot.PartialDB &
