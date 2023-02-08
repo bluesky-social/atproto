@@ -59,7 +59,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
     const getEvents = this.db.db
       .selectFrom(seqQb.as('repo_seq'))
-      .leftJoin('repo_commit_history', (join) =>
+      .innerJoin('repo_commit_history', (join) =>
         join
           .onRef('repo_commit_history.creator', '=', 'repo_seq.did')
           .onRef('repo_commit_history.commit', '=', 'repo_seq.commit'),

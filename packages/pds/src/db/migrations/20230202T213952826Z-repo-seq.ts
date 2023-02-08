@@ -11,19 +11,11 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
       col.autoIncrement().primaryKey(),
     )
   }
-  // @TODO add foreign keys
   builder = builder
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('commit', 'varchar', (col) => col.notNull())
     .addColumn('eventType', 'varchar', (col) => col.notNull())
     .addColumn('sequencedAt', 'varchar', (col) => col.notNull())
-    .addForeignKeyConstraint(
-      'repo_seq_commit_history_fkey',
-      ['did', 'commit'],
-      'repo_commit_history',
-      ['creator', 'commit'],
-      (cb) => cb.onDelete('cascade'),
-    )
 
   await builder.execute()
 }

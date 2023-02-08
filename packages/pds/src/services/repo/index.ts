@@ -156,6 +156,7 @@ export class RepoService {
         .where('creator', '=', did)
         .execute(),
       this.db.db.deleteFrom('repo_root').where('did', '=', did).execute(),
+      this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute(),
       this.blobs.deleteForUser(did),
     ])
   }
