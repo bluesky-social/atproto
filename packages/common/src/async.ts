@@ -3,7 +3,7 @@ import { wait } from './util'
 export const readFromGenerator = async <T>(
   gen: AsyncGenerator<T>,
   maxLength = Number.MAX_SAFE_INTEGER,
-  timeout = 500,
+  timeout = 1000,
 ): Promise<T[]> => {
   const evts: T[] = []
   while (evts.length < maxLength) {
