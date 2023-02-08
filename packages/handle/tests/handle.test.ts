@@ -34,6 +34,7 @@ describe('handle validation', () => {
     expect(check('jo/hn.test')).toThrow('Invalid characters in handle')
     expect(check('about.test')).toThrow('Reserved handle')
     expect(check('atp.test')).toThrow('Reserved handle')
+    expect(check('barackobama.test')).toThrow('Reserved handle')
   })
 
   it('normalizes handles', () => {
