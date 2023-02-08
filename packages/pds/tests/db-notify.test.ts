@@ -1,7 +1,7 @@
 import { allComplete, createDeferrables } from '@atproto/common'
 import { Database } from '../src'
 
-describe('db', () => {
+describe('db notify', () => {
   let dbOne: Database
   let dbTwo: Database
 

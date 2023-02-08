@@ -22,7 +22,7 @@ describe('sequencer', () => {
 
   beforeAll(async () => {
     const server = await runTestServer({
-      dbPostgresSchema: 'db',
+      dbPostgresSchema: 'sequencer',
     })
     close = server.close
     db = server.ctx.db

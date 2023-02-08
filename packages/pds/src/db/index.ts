@@ -1,11 +1,7 @@
 import assert from 'assert'
 import { Kysely, SqliteDialect, PostgresDialect, Migrator } from 'kysely'
 import SqliteDB from 'better-sqlite3'
-import {
-  Pool as PgPool,
-  PoolClient as PgPoolClient,
-  types as pgTypes,
-} from 'pg'
+import { Pool as PgPool, Client as PgClient, types as pgTypes } from 'pg'
 import EventEmitter from 'events'
 import TypedEmitter from 'typed-emitter'
 import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
@@ -18,7 +14,9 @@ export class Database {
   txChannelMsgs: ChannelMsg[] = []
   channels: Channels
   migrator: Migrator
-  private channelClient: PgPoolClient | null = null
+  destroyed = false
+
+  private channelClient: PgClient | null = null
 
   constructor(
     public db: DatabaseSchema,
@@ -45,9 +43,8 @@ export class Database {
   }
 
   static postgres(opts: PgOptions): Database {
-    const { schema } = opts
-    const pool =
-      'pool' in opts ? opts.pool : new PgPool({ connectionString: opts.url })
+    const { schema, url } = opts
+    const pool = opts.pool ?? new PgPool({ connectionString: url })
 
     // Select count(*) and other pg bigints as js integer
     pgTypes.setTypeParser(pgTypes.builtins.INT8, (n) => parseInt(n, 10))
@@ -69,7 +66,7 @@ export class Database {
       dialect: new PostgresDialect({ pool }),
     })
 
-    return new Database(db, { dialect: 'pg', pool, schema })
+    return new Database(db, { dialect: 'pg', pool, schema, url })
   }
 
   static memory(): Database {
@@ -79,10 +76,13 @@ export class Database {
   async startListeningToChannels() {
     if (this.cfg.dialect !== 'pg') return
     if (this.channelClient) return
-    this.channelClient = await this.cfg.pool.connect()
-    await this.channelClient.query(`LISTEN repo_seq`)
+    this.channelClient = new PgClient(this.cfg.url)
+    await this.channelClient.connect()
+    await this.channelClient.query(
+      `LISTEN ${this.getSchemaChannel('repo_seq')}`,
+    )
     this.channelClient.on('notification', (msg) => {
-      const channel = this.channels[msg.channel]
+      const channel = this.channels[this.normalizeSchemaChannel(msg.channel)]
       if (channel) {
         channel.emit('message')
       }
@@ -109,10 +109,31 @@ export class Database {
     }
   }
 
+  private getSchemaChannel(channel: string) {
+    if (this.cfg.dialect === 'pg' && this.cfg.schema) {
+      return this.cfg.schema + '_' + channel
+    } else {
+      return channel
+    }
+  }
+
+  private normalizeSchemaChannel(schemaChannel: string): string {
+    if (this.cfg.dialect === 'pg' && this.cfg.schema) {
+      const prefix = this.cfg.schema + '_'
+      if (schemaChannel.startsWith(prefix)) {
+        return schemaChannel.slice(prefix.length)
+      } else {
+        return schemaChannel
+      }
+    } else {
+      return schemaChannel
+    }
+  }
+
   private sendChannelMsg(msg: ChannelMsg) {
     const { channel } = msg
     if (this.cfg.dialect === 'pg') {
-      this.cfg.pool.query(`NOTIFY ${channel}`)
+      this.cfg.pool.query(`NOTIFY ${this.getSchemaChannel(channel)}`)
     } else {
       const emitter = this.channels[channel]
       if (emitter) {
@@ -152,13 +173,12 @@ export class Database {
   }
 
   async close(): Promise<void> {
-    this.channelClient?.removeAllListeners()
-    this.channelClient?.release()
-    // @TODO investigate
-    // if (this.cfg.dialect === 'pg') {
-    //   await this.cfg.pool.end()
-    // }
+    if (this.destroyed) return
+    if (this.channelClient) {
+      await this.channelClient.end()
+    }
     await this.db.destroy()
+    this.destroyed = true
   }
 
   async migrateToOrThrow(migration: string) {
@@ -199,6 +219,7 @@ export type DialectConfig = PgConfig | SqliteConfig
 export type PgConfig = {
   dialect: 'pg'
   pool: PgPool
+  url: string
   schema?: string
 }
 
@@ -209,9 +230,11 @@ export type SqliteConfig = {
 // Can use with typeof to get types for partial queries
 export const dbType = new Kysely<DatabaseSchema>({ dialect: dummyDialect })
 
-type PgOptions =
-  | { url: string; schema?: string }
-  | { pool: PgPool; schema?: string }
+type PgOptions = {
+  url: string
+  pool?: PgPool
+  schema?: string
+}
 
 type ChannelEvents = {
   message: () => void
