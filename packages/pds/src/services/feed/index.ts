@@ -267,7 +267,7 @@ export class FeedService {
     }
   }
   
-  async mute(info: { uri: string; hiddenByDid: string; createdAt?: Date }) {
+  async hide(info: { uri: string; hiddenByDid: string; createdAt?: Date }) {
     const { uri, hiddenByDid, createdAt = new Date() } = info
     await this.db.db
       .insertInto('hide')
@@ -280,7 +280,7 @@ export class FeedService {
       .execute()
   }
 
-  async unmute(info: { uri: string; hiddenByDid: string }) {
+  async unhide(info: { uri: string; hiddenByDid: string }) {
     const { uri, hiddenByDid } = info
     await this.db.db
       .deleteFrom('hide')

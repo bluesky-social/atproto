@@ -70,6 +70,7 @@ import * as AppBskyFeedHide from './types/app/bsky/feed/hide'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 import * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
+import * as AppBskyFeedUnhide from './types/app/bsky/feed/unhide'
 import * as AppBskyFeedVote from './types/app/bsky/feed/vote'
 import * as AppBskyGraphAssertCreator from './types/app/bsky/graph/assertCreator'
 import * as AppBskyGraphAssertMember from './types/app/bsky/graph/assertMember'
@@ -152,6 +153,7 @@ export * as AppBskyFeedHide from './types/app/bsky/feed/hide'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 export * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
+export * as AppBskyFeedUnhide from './types/app/bsky/feed/unhide'
 export * as AppBskyFeedVote from './types/app/bsky/feed/vote'
 export * as AppBskyGraphAssertCreator from './types/app/bsky/graph/assertCreator'
 export * as AppBskyGraphAssertMember from './types/app/bsky/graph/assertMember'
@@ -975,6 +977,17 @@ export class FeedNS {
       .call('app.bsky.feed.setVote', opts?.qp, data, opts)
       .catch((e) => {
         throw AppBskyFeedSetVote.toKnownErr(e)
+      })
+  }
+
+  unhide(
+    data?: AppBskyFeedUnhide.InputSchema,
+    opts?: AppBskyFeedUnhide.CallOptions,
+  ): Promise<AppBskyFeedUnhide.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.unhide', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyFeedUnhide.toKnownErr(e)
       })
   }
 }

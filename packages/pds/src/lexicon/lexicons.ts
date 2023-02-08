@@ -2994,9 +2994,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['pid'],
+            required: ['uri'],
             properties: {
-              pid: {
+              uri: {
                 type: 'string',
               },
             },
@@ -3219,6 +3219,28 @@ export const schemaDict = {
                 type: 'string',
               },
               downvote: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedUnhide: {
+    lexicon: 1,
+    id: 'app.bsky.feed.unhide',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Unhide a post from future timelines.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri'],
+            properties: {
+              uri: {
                 type: 'string',
               },
             },
@@ -3881,6 +3903,7 @@ export const ids = {
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
   AppBskyFeedSetVote: 'app.bsky.feed.setVote',
+  AppBskyFeedUnhide: 'app.bsky.feed.unhide',
   AppBskyFeedVote: 'app.bsky.feed.vote',
   AppBskyGraphAssertCreator: 'app.bsky.graph.assertCreator',
   AppBskyGraphAssertMember: 'app.bsky.graph.assertMember',

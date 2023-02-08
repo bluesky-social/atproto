@@ -19,6 +19,8 @@ import getNotifications from './notification/list'
 import getNotificationCount from './notification/getCount'
 import getSuggestions from './actor/getSuggestions'
 import postNotificationsSeen from './notification/updateSeen'
+import hide from './feed/hide'
+import unhide from './feed/unhide'
 
 export default function (server: Server, ctx: AppContext) {
   getTimeline(server, ctx)
@@ -40,4 +42,6 @@ export default function (server: Server, ctx: AppContext) {
   getNotificationCount(server, ctx)
   getSuggestions(server, ctx)
   postNotificationsSeen(server, ctx)
+  hide(server, ctx)
+  unhide(server, ctx)
 }

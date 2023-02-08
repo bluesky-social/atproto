@@ -72,7 +72,7 @@ export const composeFeed = async (
 export enum FeedAlgorithm {
   ReverseChronological = 'reverse-chronological',
   // all posts above a threshold of points
-  AllPostsAboveThreshold = 'all-posts',
+  AllPosts = 'all-posts',
 }
 
 export class FeedKeyset extends TimeCidKeyset<FeedRow> {

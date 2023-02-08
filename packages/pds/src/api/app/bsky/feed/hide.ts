@@ -12,8 +12,9 @@ export default function (server: Server, ctx: AppContext) {
       
       await services.feed(db).hide({
         uri,
-        hiddenBy: requester,
+        hiddenByDid: requester,
       })
     },
   })
 }
+

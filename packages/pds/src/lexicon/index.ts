@@ -56,6 +56,7 @@ import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
 import * as AppBskyFeedHide from './types/app/bsky/feed/hide'
 import * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
+import * as AppBskyFeedUnhide from './types/app/bsky/feed/unhide'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
@@ -622,6 +623,13 @@ export class FeedNS {
     cfg: ConfigOf<AV, AppBskyFeedSetVote.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.feed.setVote' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unhide<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedUnhide.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.unhide' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

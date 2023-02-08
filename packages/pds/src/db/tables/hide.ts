@@ -1,7 +1,7 @@
 export interface Hide {
-  cid: string
+  uri: string
   hiddenByDid: string
-  createdAt: string // seen at
+  createdAt: string
 }
 
 export const tableName = 'hide'
