@@ -88,4 +88,37 @@ describe('Stream', () => {
 
     httpServer.close()
   })
+
+  it('kills handler and closes client disconnect.', async () => {
+    const httpServer = http.createServer()
+    let i = 1
+    const server = new XrpcStreamServer({
+      server: httpServer,
+      handler: async function* () {
+        while (true) {
+          await wait(0)
+          yield new MessageFrame(i++)
+        }
+      },
+    })
+
+    await once(httpServer.listen(), 'listening')
+    const { port } = server.wss.address() as AddressInfo
+
+    const ws = new WebSocket(`ws://localhost:${port}`)
+    const frames: Frame[] = []
+    for await (const frame of byFrame(ws)) {
+      frames.push(frame)
+      if (frame.body === 3) ws.terminate()
+    }
+
+    // Grace period to let close take place on the server
+    await wait(5)
+    // Ensure handler hasn't kept running
+    const currentCount = i
+    await wait(5)
+    expect(i).toBe(currentCount)
+
+    httpServer.close()
+  })
 })
