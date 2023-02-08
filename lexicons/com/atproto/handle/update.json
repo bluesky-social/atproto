@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.handle.update",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Updates the handle of the account",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["handle"],
+          "properties": {
+            "handle": {"type": "string"}
+          }
+        }
+      }
+    }
+  }
+}
