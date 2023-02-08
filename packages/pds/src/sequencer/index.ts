@@ -1,6 +1,6 @@
+import { BlockMap, writeCar } from '@atproto/repo'
 import EventEmitter from 'events'
 import TypedEmitter from 'typed-emitter'
-import { BlockMap, writeCar } from '@atproto/repo'
 import { CID } from 'multiformats/cid'
 import Database from '../db'
 

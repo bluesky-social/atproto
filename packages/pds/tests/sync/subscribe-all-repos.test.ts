@@ -7,10 +7,10 @@ import { MemoryBlockstore } from '@atproto/repo'
 import { byFrame, ErrorFrame } from '@atproto/xrpc-server'
 import { WebSocket } from 'ws'
 import { RepoAppend } from '../../src/lexicon/types/com/atproto/sync/subscribeAllRepos'
-import { SeedClient } from '../seeds/client'
-import { CloseFn, runTestServer } from '../_util'
-import basicSeed from '../seeds/basic'
 import { Database } from '../../src'
+import { SeedClient } from '../seeds/client'
+import basicSeed from '../seeds/basic'
+import { CloseFn, runTestServer } from '../_util'
 
 describe('repo subscribe all repos', () => {
   let serverHost: string

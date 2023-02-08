@@ -1,6 +1,6 @@
-import Sequencer, { RepoAppendEvent, SequencerEmitter } from '.'
-import { EventEmitter } from 'stream'
 import { AsyncBuffer, AsyncBufferFullError } from '@atproto/common'
+import { EventEmitter } from 'stream'
+import Sequencer, { RepoAppendEvent, SequencerEmitter } from '.'
 
 export type OutboxOpts = {
   maxBufferSize: number

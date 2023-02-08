@@ -1,12 +1,12 @@
 import AtpApi from '@atproto/api'
+import { randomStr } from '@atproto/crypto'
+import { readFromGenerator, wait } from '@atproto/common'
 import Sequencer, { RepoAppendEvent } from '../src/sequencer'
+import Outbox, { StreamConsumerTooSlowError } from '../src/sequencer/outbox'
+import { Database } from '../src'
 import { SeedClient } from './seeds/client'
 import userSeed from './seeds/users'
 import { CloseFn, runTestServer } from './_util'
-import Outbox, { StreamConsumerTooSlowError } from '../src/sequencer/outbox'
-import { randomStr } from '@atproto/crypto'
-import { readFromGenerator, wait } from '@atproto/common'
-import { Database } from '../src'
 
 describe('sequencer', () => {
   let db: Database
