@@ -155,5 +155,27 @@ describe('sequencer', () => {
       await readFromGenerator(evtGenerator)
     }
     await expect(overloadBuffer).rejects.toThrow(StreamConsumerTooSlowError)
+
+    const fromDb = await loadFromDb(lastSeen)
+    lastSeen = fromDb[fromDb.length - 1].sequencedAt
+  })
+
+  it('handles many open connections', async () => {
+    const count = 20
+    const outboxes: Outbox[] = []
+    for (let i = 0; i < 50; i++) {
+      outboxes.push(new Outbox(sequencer))
+    }
+    const readOutboxes = Promise.all(
+      outboxes.map((o) => readFromGenerator(o.events(lastSeen))),
+    )
+    const [results] = await Promise.all([readOutboxes, createPosts(count)])
+    const fromDb = await loadFromDb(lastSeen)
+    for (let i = 0; i < 50; i++) {
+      const evts = results[i]
+      expect(evts.length).toBe(count + 1)
+      expect(evts.map(evtToDbRow)).toEqual(fromDb)
+    }
+    lastSeen = results[0][results[0].length - 1].time
   })
 })

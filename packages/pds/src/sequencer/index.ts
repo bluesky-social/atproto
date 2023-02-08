@@ -148,9 +148,9 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
   async pollDb() {
     const evts = await this.requestSeqRange({ earliestSeq: this.lastSeen })
-    for (const evt of evts) {
-      this.lastSeen = evt.seq
-      this.emit('event', evt)
+    if (evts.length > 0) {
+      this.emit('events', evts)
+      this.lastSeen = evts[evts.length - 1].seq
     }
     // check if we should continue polling
     if (this.queued === false) {
@@ -173,7 +173,7 @@ export type RepoAppendEvent = {
 }
 
 type SequencerEvents = {
-  event: (evt: RepoAppendEvent) => void
+  events: (evts: RepoAppendEvent[]) => void
 }
 
 export type SequencerEmitter = TypedEmitter<SequencerEvents>

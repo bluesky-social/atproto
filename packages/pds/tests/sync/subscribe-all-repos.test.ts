@@ -1,5 +1,5 @@
 import AtpApi, { ServiceClient as AtpClient } from '@atproto/api'
-import { HOUR, MINUTE, readFromGenerator } from '@atproto/common'
+import { HOUR, MINUTE, readFromGenerator, wait } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import { DidResolver } from '@atproto/did-resolver'
 import * as repo from '@atproto/repo'
@@ -80,12 +80,27 @@ describe('repo subscribe all repos', () => {
     }
   }
 
+  const randomPost = async (by: string) => sc.post(by, randomStr(8, 'base32'))
+  const makePosts = async () => {
+    const promises: Promise<unknown>[] = []
+    for (let i = 0; i < 10; i++) {
+      promises.push(randomPost(alice))
+      promises.push(randomPost(bob))
+      promises.push(randomPost(carol))
+      promises.push(randomPost(dan))
+    }
+    await Promise.all(promises)
+  }
+
   it('sync backfilled events', async () => {
     const ws = new WebSocket(
       `ws://${serverHost}/xrpc/com.atproto.sync.subscribeAllRepos?backfillFrom=${timeAtStart}`,
     )
 
-    const evts = await readFromGenerator(byFrame(ws))
+    const gen = byFrame(ws)
+    const evts = await readFromGenerator(gen)
+    ws.terminate()
+
     const byUser = evts.reduce((acc, cur) => {
       const evt = cur.body as RepoAppend
       acc[evt.repo] ??= []
@@ -99,27 +114,18 @@ describe('repo subscribe all repos', () => {
     await verifyRepo(dan, byUser[dan])
   })
 
-  const randomPost = async (by: string) => sc.post(by, randomStr(8, 'base32'))
-  const makePosts = async () => {
-    const promises: Promise<unknown>[] = []
-    for (let i = 0; i < 10; i++) {
-      promises.push(randomPost(alice))
-      promises.push(randomPost(bob))
-      promises.push(randomPost(carol))
-      promises.push(randomPost(dan))
-    }
-    await Promise.all(promises)
-  }
-
   it('syncs new events', async () => {
-    const ws = new WebSocket(
-      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeAllRepos?backfillFrom=${timeAtStart}`,
-    )
+    const readAfterDelay = async () => {
+      await wait(200) // wait just a hair so that we catch it during cutover
+      const ws = new WebSocket(
+        `ws://${serverHost}/xrpc/com.atproto.sync.subscribeAllRepos?backfillFrom=${timeAtStart}`,
+      )
+      const evts = await readFromGenerator(byFrame(ws))
+      ws.terminate()
+      return evts
+    }
 
-    const [evts] = await Promise.all([
-      readFromGenerator(byFrame(ws)),
-      makePosts(),
-    ])
+    const [evts] = await Promise.all([readAfterDelay(), makePosts()])
 
     const byUser = evts.reduce((acc, cur) => {
       const evt = cur.body as RepoAppend

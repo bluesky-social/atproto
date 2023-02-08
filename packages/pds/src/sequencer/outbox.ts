@@ -1,22 +1,21 @@
 import { AsyncBuffer, AsyncBufferFullError } from '@atproto/common'
-import { EventEmitter } from 'stream'
-import Sequencer, { RepoAppendEvent, SequencerEmitter } from '.'
+import Sequencer, { RepoAppendEvent } from '.'
 
 export type OutboxOpts = {
   maxBufferSize: number
 }
 
 export class Outbox {
-  internalEmitter = new EventEmitter() as SequencerEmitter
-
-  cutoverBuffer: RepoAppendEvent[] = []
   caughtUp = false
   lastSeen = -1
 
+  cutoverBuffer: RepoAppendEvent[]
   outBuffer: AsyncBuffer<RepoAppendEvent>
+  id = Math.floor(Math.random() * 1000) //@TODO DELETE, debugging
 
   constructor(public sequencer: Sequencer, opts: Partial<OutboxOpts> = {}) {
     const { maxBufferSize = 500 } = opts
+    this.cutoverBuffer = []
     this.outBuffer = new AsyncBuffer<RepoAppendEvent>(maxBufferSize)
   }
 
@@ -41,38 +40,38 @@ export class Outbox {
     }
 
     // streams updates from sequencer, but buffers them as it makes a last request
-    this.sequencer.on('event', (evt) => {
+    this.sequencer.on('events', (evts) => {
       if (this.caughtUp) {
-        this.outBuffer.push(evt)
+        this.outBuffer.pushMany(evts)
       } else {
-        this.cutoverBuffer.push(evt)
+        this.cutoverBuffer = [...this.cutoverBuffer, ...evts]
       }
     })
 
-    // only need to perform cutover if we've been backfilling
-    if (backfillFrom) {
-      const cutoverEvts = await this.sequencer.requestSeqRange({
-        earliestSeq: this.lastSeen,
-      })
-      for (const evt of cutoverEvts) {
-        this.outBuffer.push(evt)
+    const cutover = async () => {
+      // only need to perform cutover if we've been backfilling
+      if (backfillFrom) {
+        const cutoverEvts = await this.sequencer.requestSeqRange({
+          earliestSeq: this.lastSeen,
+        })
+        this.outBuffer.pushMany(cutoverEvts)
+        // dont worry about dupes, we ensure order on yield
+        this.outBuffer.pushMany(this.cutoverBuffer)
+        this.caughtUp = true
+        this.cutoverBuffer = []
+      } else {
+        this.caughtUp = true
       }
-      // we can push duplicate events, they get deduped later as they come out of the buffer
-      for (const evt of this.cutoverBuffer) {
-        this.outBuffer.push(evt)
-      }
-      this.caughtUp = true
-      this.cutoverBuffer = []
-    } else {
-      this.caughtUp = true
     }
+    cutover()
 
     while (true) {
       try {
-        const evt = await this.outBuffer.nextEvent()
-        if (evt.seq > this.lastSeen) {
-          yield evt
-          this.lastSeen = evt.seq
+        for await (const evt of this.outBuffer.events()) {
+          if (evt.seq > this.lastSeen) {
+            yield evt
+            this.lastSeen = evt.seq
+          }
         }
       } catch (err) {
         if (err instanceof AsyncBufferFullError) {

@@ -65,20 +65,26 @@ export class AsyncBuffer<T> {
   push(item: T) {
     this.buffer.push(item)
     this.resolve()
-    this.resetPromise()
   }
 
-  async nextEvent(): Promise<T> {
+  pushMany(items: T[]) {
+    items.forEach((i) => this.buffer.push(i))
+    this.resolve()
+  }
+
+  async *events(): AsyncGenerator<T> {
     if (this.maxSize && this.size > this.maxSize) {
       throw new AsyncBufferFullError(this.maxSize)
     }
-    const [first, ...rest] = this.buffer
-    if (first) {
-      this.buffer = rest
-      return first
-    } else {
+    while (this.buffer !== null) {
       await this.promise
-      return this.nextEvent()
+      const [first, ...rest] = this.buffer
+      if (first) {
+        this.buffer = rest
+        yield first
+      } else {
+        this.resetPromise()
+      }
     }
   }
 }
