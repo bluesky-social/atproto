@@ -1,3 +1,5 @@
+'use strict' /* eslint-disable */
+
 require('dd-trace/init') // Only works with commonjs
 const { Database, PlcServer } = require('..')
 

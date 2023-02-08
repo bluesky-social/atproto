@@ -1,0 +1,7 @@
+{
+  "name": "plc-service",
+  "private": true,
+  "dependencies": {
+    "dd-trace": "^3.8.0"
+  }
+}
