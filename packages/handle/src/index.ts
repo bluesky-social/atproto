@@ -21,7 +21,15 @@ export const ensureValid = (
     throw new InvalidHandleError('Handle too short')
   } else if (front.length > 20) {
     throw new InvalidHandleError('Handle too long')
+  } else if (handle.length > 253) {
+    throw new InvalidHandleError('Handle too long')
   }
+
+  handle.split('.').map((domainLabel) => {
+    if (domainLabel.length > 63) {
+      throw new InvalidHandleError('Handle too long')
+    }
+  })
 
   if (reservedSubdomains[front]) {
     throw new ReservedHandleError('Reserved handle')
@@ -33,6 +41,11 @@ export const ensureValid = (
 
   const isValid = address.isDomainValid(handle)
   if (!isValid) {
+    throw new InvalidHandleError('Invalid characters in handle')
+  }
+
+  // check that all chars are boring ASCII
+  if (!/^[a-zA-Z0-9.-]+$/.test(handle)) {
     throw new InvalidHandleError('Invalid characters in handle')
   }
 }
