@@ -21,8 +21,13 @@ export type TestServerInfo = {
   close: CloseFn
 }
 
+export type TestServerOpts = {
+  migration?: string
+}
+
 export const runTestServer = async (
   params: Partial<ServerConfig> = {},
+  opts: TestServerOpts = {},
 ): Promise<TestServerInfo> => {
   const keypair = await crypto.EcdsaKeypair.create()
 
@@ -78,7 +83,11 @@ export const runTestServer = async (
         })
       : Database.memory()
 
-  await db.migrateToLatestOrThrow()
+  if (opts.migration) {
+    await db.migrateToOrThrow(opts.migration)
+  } else {
+    await db.migrateToLatestOrThrow()
+  }
 
   const blobstore =
     cfg.blobstoreLocation !== undefined

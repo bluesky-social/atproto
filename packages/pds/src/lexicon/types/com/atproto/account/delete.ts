@@ -6,12 +6,22 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {}
 
-export type InputSchema = undefined
-export type HandlerInput = undefined
+export interface InputSchema {
+  did: string
+  password: string
+  token: string
+  [k: string]: unknown
+}
+
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
 
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'ExpiredToken' | 'InvalidToken'
 }
 
 export type HandlerOutput = HandlerError | void

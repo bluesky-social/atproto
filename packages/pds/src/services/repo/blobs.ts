@@ -67,10 +67,19 @@ export class RepoBlobs {
   }
 
   async verifyBlobAndMakePermanent(blob: BlobRef): Promise<void> {
+    const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('blob')
       .selectAll()
       .where('cid', '=', blob.cid.toString())
+      .whereNotExists(
+        // Check if blob has been taken down
+        this.db.db
+          .selectFrom('repo_blob')
+          .selectAll()
+          .where('takedownId', 'is not', null)
+          .whereRef('cid', '=', ref('blob.cid')),
+      )
       .executeTakeFirst()
     if (!found) {
       throw new InvalidRequestError(
@@ -105,6 +114,32 @@ export class RepoBlobs {
       })
       .onConflict((oc) => oc.doNothing())
       .execute()
+  }
+
+  async deleteForUser(did: string): Promise<void> {
+    this.db.assertTransaction()
+    const deleted = await this.db.db
+      .deleteFrom('repo_blob')
+      .where('did', '=', did)
+      .returningAll()
+      .execute()
+    const deletedCids = deleted.map((d) => d.cid)
+    let duplicateCids: string[] = []
+    if (deletedCids.length > 0) {
+      const res = await this.db.db
+        .selectFrom('repo_blob')
+        .where('cid', 'in', deletedCids)
+        .selectAll()
+        .execute()
+      duplicateCids = res.map((d) => d.cid)
+    }
+    const toDelete = deletedCids.filter((cid) => !duplicateCids.includes(cid))
+    if (toDelete.length > 0) {
+      await this.db.db.deleteFrom('blob').where('cid', 'in', toDelete).execute()
+      await Promise.all(
+        toDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
+      )
+    }
   }
 }
 

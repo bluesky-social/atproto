@@ -30,13 +30,13 @@ export interface Account {
 }
 
 export interface Moderation {
-  takedownId?: number
+  currentAction?: ComAtprotoAdminModerationAction.ViewCurrent
   [k: string]: unknown
 }
 
 export interface ModerationDetail {
+  currentAction?: ComAtprotoAdminModerationAction.ViewCurrent
   actions: ComAtprotoAdminModerationAction.View[]
   reports: ComAtprotoAdminModerationReport.View[]
-  takedownId?: number
   [k: string]: unknown
 }

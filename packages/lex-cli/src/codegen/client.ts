@@ -68,7 +68,7 @@ const indexTs = (
   nsidTokens: Record<string, string[]>,
 ) =>
   gen(project, '/index.ts', async (file) => {
-    //= import {Client as XrpcClient, ServiceClient as XrpcServiceClient} from '@atproto/xrpc'
+    //= import {Client as XrpcClient, AtpServiceClient as XrpcServiceClient} from '@atproto/xrpc'
     const xrpcImport = file.addImportDeclaration({
       moduleSpecifier: '@atproto/xrpc',
     })
@@ -116,9 +116,9 @@ const indexTs = (
       })
     }
 
-    //= export class Client {...}
+    //= export class AtpBaseClient {...}
     const clientCls = file.addClass({
-      name: 'Client',
+      name: 'AtpBaseClient',
       isExported: true,
     })
     //= xrpc: XrpcClient = new XrpcClient()
@@ -131,39 +131,26 @@ const indexTs = (
     //=   this.xrpc.addLexicons(schemas)
     //= }
     clientCls.addConstructor().setBodyText(`this.xrpc.addLexicons(schemas)`)
-    //= service(serviceUri: string | URL): ServiceClient {
-    //=   return new ServiceClient(this, this.xrpc.service(serviceUri))
+    //= service(serviceUri: string | URL): AtpServiceClient {
+    //=   return new AtpServiceClient(this, this.xrpc.service(serviceUri))
     //= }
     clientCls
       .addMethod({
         name: 'service',
         parameters: [{ name: 'serviceUri', type: 'string | URL' }],
-        returnType: 'ServiceClient',
+        returnType: 'AtpServiceClient',
       })
       .setBodyText(
-        `return new ServiceClient(this, this.xrpc.service(serviceUri))`,
+        `return new AtpServiceClient(this, this.xrpc.service(serviceUri))`,
       )
 
-    //= const defaultInst = new Client()
-    //= export default defaultInst
-    file.addVariableStatement({
-      declarationKind: VariableDeclarationKind.Const,
-      declarations: [
-        {
-          name: 'defaultInst',
-          initializer: 'new Client()',
-        },
-      ],
-    })
-    file.insertText(file.getFullText().length, `export default defaultInst`)
-
-    //= export class ServiceClient {...}
+    //= export class AtpServiceClient {...}
     const serviceClientCls = file.addClass({
-      name: 'ServiceClient',
+      name: 'AtpServiceClient',
       isExported: true,
     })
-    //= _baseClient: Client
-    serviceClientCls.addProperty({ name: '_baseClient', type: 'Client' })
+    //= _baseClient: AtpBaseClient
+    serviceClientCls.addProperty({ name: '_baseClient', type: 'AtpBaseClient' })
     //= xrpc: XrpcServiceClient
     serviceClientCls.addProperty({
       name: 'xrpc',
@@ -176,7 +163,7 @@ const indexTs = (
         type: ns.className,
       })
     }
-    //= constructor (baseClient: Client, xrpcService: XrpcServiceClient) {
+    //= constructor (baseClient: AtpBaseClient, xrpcService: XrpcServiceClient) {
     //=   this.baseClient = baseClient
     //=   this.xrpcService = xrpcService
     //=   {namespace declarations}
@@ -184,7 +171,7 @@ const indexTs = (
     serviceClientCls
       .addConstructor({
         parameters: [
-          { name: 'baseClient', type: 'Client' },
+          { name: 'baseClient', type: 'AtpBaseClient' },
           { name: 'xrpcService', type: 'XrpcServiceClient' },
         ],
       })
@@ -227,10 +214,10 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
     name: ns.className,
     isExported: true,
   })
-  //= _service: ServiceClient
+  //= _service: AtpServiceClient
   cls.addProperty({
     name: '_service',
-    type: 'ServiceClient',
+    type: 'AtpServiceClient',
   })
 
   for (const userType of ns.userTypes) {
@@ -256,7 +243,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
     genNamespaceCls(file, child)
   }
 
-  //= constructor(service: ServiceClient) {
+  //= constructor(service: AtpServiceClient) {
   //=  this._service = service
   //=  {child namespace prop declarations}
   //=  {record prop declarations}
@@ -264,7 +251,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
   const cons = cls.addConstructor()
   cons.addParameter({
     name: 'service',
-    type: 'ServiceClient',
+    type: 'AtpServiceClient',
   })
   cons.setBodyText(
     [
@@ -338,19 +325,19 @@ function genRecordCls(file: SourceFile, userType: DefTreeNodeUserType) {
     name: `${toTitleCase(name)}Record`,
     isExported: true,
   })
-  //= _service: ServiceClient
+  //= _service: AtpServiceClient
   cls.addProperty({
     name: '_service',
-    type: 'ServiceClient',
+    type: 'AtpServiceClient',
   })
 
-  //= constructor(service: ServiceClient) {
+  //= constructor(service: AtpServiceClient) {
   //=  this._service = service
   //= }
   const cons = cls.addConstructor()
   cons.addParameter({
     name: 'service',
-    type: 'ServiceClient',
+    type: 'AtpServiceClient',
   })
   cons.setBodyText(`this._service = service`)
 

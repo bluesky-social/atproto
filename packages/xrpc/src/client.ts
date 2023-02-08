@@ -130,7 +130,7 @@ export class ServiceClient {
   }
 }
 
-async function defaultFetchHandler(
+export async function defaultFetchHandler(
   httpUri: string,
   httpMethod: string,
   httpHeaders: Headers,

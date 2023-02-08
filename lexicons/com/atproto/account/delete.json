@@ -4,7 +4,20 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Delete an account."
+      "description": "Delete a user account with a token and password.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did", "password",  "token"],
+          "properties": {
+            "did": { "type": "string" },
+            "password": { "type": "string" },
+            "token": { "type": "string" }
+          }
+        }
+      },
+      "errors": [{ "name": "ExpiredToken" }, { "name": "InvalidToken" }]
     }
   }
 }

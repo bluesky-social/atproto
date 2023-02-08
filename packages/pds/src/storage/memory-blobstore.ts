@@ -7,6 +7,7 @@ import { bytesToStream, streamToArray } from '@atproto/common'
 export class MemoryBlobStore implements BlobStore {
   temp: Map<string, Uint8Array> = new Map()
   blocks: Map<string, Uint8Array> = new Map()
+  quarantined: Map<string, Uint8Array> = new Map()
 
   constructor() {}
 
@@ -56,6 +57,24 @@ export class MemoryBlobStore implements BlobStore {
     this.blocks.set(cid.toString(), byteArray)
   }
 
+  async quarantine(cid: CID): Promise<void> {
+    const cidStr = cid.toString()
+    const bytes = this.blocks.get(cidStr)
+    if (bytes) {
+      this.blocks.delete(cidStr)
+      this.quarantined.set(cidStr, bytes)
+    }
+  }
+
+  async unquarantine(cid: CID): Promise<void> {
+    const cidStr = cid.toString()
+    const bytes = this.quarantined.get(cidStr)
+    if (bytes) {
+      this.quarantined.delete(cidStr)
+      this.blocks.set(cidStr, bytes)
+    }
+  }
+
   async getBytes(cid: CID): Promise<Uint8Array> {
     const value = this.blocks.get(cid.toString())
     if (!value) {
@@ -67,6 +86,10 @@ export class MemoryBlobStore implements BlobStore {
   async getStream(cid: CID): Promise<stream.Readable> {
     const bytes = await this.getBytes(cid)
     return bytesToStream(bytes)
+  }
+
+  async delete(cid: CID): Promise<void> {
+    this.blocks.delete(cid.toString())
   }
 }
 

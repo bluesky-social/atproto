@@ -110,7 +110,7 @@ export const fillRepo = async (
     }
     repoData[collName] = collData
   }
-  const updated = await repo.applyCommit(writes, keypair)
+  const updated = await repo.applyWrites(writes, keypair)
   return {
     repo: updated,
     data: repoData,
@@ -137,7 +137,7 @@ export const editRepo = async (
       const object = generateObject()
       const rkey = TID.nextStr()
       collData[rkey] = object
-      repo = await repo.applyCommit(
+      repo = await repo.applyWrites(
         {
           action: WriteOpAction.Create,
           collection: collName,
@@ -152,7 +152,7 @@ export const editRepo = async (
     for (let i = 0; i < toUpdate.length; i++) {
       const object = generateObject()
       const rkey = toUpdate[i][0]
-      repo = await repo.applyCommit(
+      repo = await repo.applyWrites(
         {
           action: WriteOpAction.Update,
           collection: collName,
@@ -167,7 +167,7 @@ export const editRepo = async (
     const toDelete = shuffled.slice(updates, deletes)
     for (let i = 0; i < toDelete.length; i++) {
       const rkey = toDelete[i][0]
-      repo = await repo.applyCommit(
+      repo = await repo.applyWrites(
         {
           action: WriteOpAction.Delete,
           collection: collName,

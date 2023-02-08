@@ -3,6 +3,7 @@ import * as uint8arrays from 'uint8arrays'
 import { CID } from 'multiformats/cid'
 import { Options } from './util'
 
+// @NOTE if there are any additions here, ensure to include them on ImageUriBuilder.commonSignedUris
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
 export class ImageUriBuilder {
@@ -37,14 +38,21 @@ export class ImageUriBuilder {
     return this.endpoint + path
   }
 
+  static commonSignedUris: CommonSignedUris[] = [
+    'avatar',
+    'banner',
+    'feed_thumbnail',
+    'feed_fullsize',
+  ]
+
   getCommonSignedUri(id: CommonSignedUris, cid: string | CID): string {
     if (id === 'avatar') {
       return this.getSignedUri({
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
         fit: 'cover',
-        height: 500,
-        width: 500,
+        height: 1000,
+        width: 1000,
         min: true,
       })
     } else if (id === 'banner') {
@@ -52,8 +60,8 @@ export class ImageUriBuilder {
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
         fit: 'cover',
-        height: 500,
-        width: 1500,
+        height: 1000,
+        width: 3000,
         min: true,
       })
     } else if (id === 'feed_fullsize') {
@@ -61,17 +69,17 @@ export class ImageUriBuilder {
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
         fit: 'inside',
-        height: 1000,
-        width: 1000,
+        height: 2000,
+        width: 2000,
         min: true,
       })
     } else if (id === 'feed_thumbnail') {
       return this.getSignedUri({
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
-        fit: 'cover',
-        height: 500,
-        width: 500,
+        fit: 'inside',
+        height: 1000,
+        width: 1000,
         min: true,
       })
     } else {

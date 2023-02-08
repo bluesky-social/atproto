@@ -20,16 +20,16 @@
           "avatar": {
             "type": "image",
             "accept": ["image/png", "image/jpeg"],
-            "maxWidth": 1000,
-            "maxHeight": 1000,
-            "maxSize": 300000
+            "maxWidth": 2000,
+            "maxHeight": 2000,
+            "maxSize": 1000000
           },
           "banner": {
             "type": "image",
             "accept": ["image/png", "image/jpeg"],
-            "maxWidth": 3000,
-            "maxHeight": 1000,
-            "maxSize": 500000
+            "maxWidth": 6000,
+            "maxHeight": 2000,
+            "maxSize": 1000000
           }
         }
       }
