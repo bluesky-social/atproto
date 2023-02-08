@@ -97,7 +97,7 @@ describe('repo sync', () => {
 
     const car = await agent.api.com.atproto.sync.getRepo({
       did,
-      from: currRoot?.toString(),
+      earliest: currRoot?.toString(),
     })
     const currRepo = await repo.Repo.load(storage, currRoot)
     const synced = await repo.loadDiff(
@@ -135,6 +135,47 @@ describe('repo sync', () => {
       latest: localStr[15],
     })
     expect(partialCommitPath.data.commits).toEqual(localStr.slice(3, 16))
+  })
+
+  it('syncs commit range', async () => {
+    const local = await storage.getCommits(currRoot as CID, null)
+    if (!local) {
+      throw new Error('Could not get local commit path')
+    }
+    const memoryStore = new MemoryBlockstore()
+    // first we load some baseline data (needed for parsing range)
+    const first = await agent.api.com.atproto.sync.getRepo({
+      did,
+      latest: local[2].commit.toString(),
+    })
+    const firstParsed = await repo.readCar(new Uint8Array(first.data))
+    memoryStore.putMany(firstParsed.blocks)
+
+    // then we load some commit range
+    const second = await agent.api.com.atproto.sync.getRepo({
+      did,
+      earliest: local[2].commit.toString(),
+      latest: local[15].commit.toString(),
+    })
+    const secondParsed = await repo.readCar(new Uint8Array(second.data))
+    memoryStore.putMany(secondParsed.blocks)
+
+    // then we verify we have all the commits in the range
+    const commits = await memoryStore.getCommits(
+      local[15].commit,
+      local[2].commit,
+    )
+    if (!commits) {
+      throw new Error('expected commits to be defined')
+    }
+    const localSlice = local.slice(2, 15)
+    expect(commits.length).toBe(localSlice.length)
+    for (let i = 0; i < commits.length; i++) {
+      const fromRemote = commits[i]
+      const fromLocal = localSlice[i]
+      expect(fromRemote.commit.equals(fromLocal.commit))
+      expect(fromRemote.blocks.equals(fromLocal.blocks))
+    }
   })
 
   it('sync a repo checkout', async () => {

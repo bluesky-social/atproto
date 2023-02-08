@@ -2155,9 +2155,15 @@ export const schemaDict = {
               type: 'string',
               description: 'The DID of the repo.',
             },
-            from: {
+            earliest: {
               type: 'string',
-              description: 'A past commit CID.',
+              description:
+                'The earliest commit in the commit range (not inclusive)',
+            },
+            latest: {
+              type: 'string',
+              description:
+                'The latest commit you in the commit range (inclusive',
             },
           },
         },
