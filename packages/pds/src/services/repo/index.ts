@@ -138,7 +138,7 @@ export class RepoService {
         sequencedAt: new Date().toISOString(),
       })
       .execute()
-    this.db.notify('repo_seq')
+    await this.db.notify('repo_seq')
   }
 
   async deleteRepo(did: string) {

@@ -1,4 +1,4 @@
-import { allComplete, createDeferrables } from '@atproto/common'
+import { allComplete, createDeferrables, wait } from '@atproto/common'
 import { Database } from '../src'
 
 describe('db notify', () => {
@@ -61,7 +61,7 @@ describe('db notify', () => {
     })
 
     for (let i = 0; i < sendCount; i++) {
-      dbTwo.notify('repo_seq')
+      await dbTwo.notify('repo_seq')
     }
 
     await allComplete(deferrables)
@@ -69,22 +69,41 @@ describe('db notify', () => {
     expect(receivedTwo).toBe(sendCount)
   })
 
-  it('works within txs', async () => {
+  it('bundles within txs', async () => {
     const sendCount = 5
-    const deferrables = createDeferrables(sendCount)
     let receivedCount = 0
     dbOne.channels.repo_seq.addListener('message', () => {
-      deferrables[receivedCount]?.resolve()
       receivedCount++
     })
 
     await dbTwo.transaction(async (dbTx) => {
       for (let i = 0; i < sendCount; i++) {
-        dbTx.notify('repo_seq')
+        await dbTx.notify('repo_seq')
       }
     })
 
-    await allComplete(deferrables)
-    expect(receivedCount).toBe(sendCount)
+    await wait(200)
+    expect(receivedCount).toBe(1)
+  })
+
+  it('does not send on failed tx', async () => {
+    let received = false
+    dbOne.channels.repo_seq.addListener('message', () => {
+      received = true
+    })
+
+    const fakeErr = new Error('test')
+    try {
+      await dbTwo.transaction(async (dbTx) => {
+        await dbTx.notify('repo_seq')
+        throw fakeErr
+      })
+    } catch (err) {
+      if (err !== fakeErr) {
+        throw err
+      }
+    }
+    await wait(200)
+    expect(received).toBeFalsy()
   })
 })

@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { Kysely, SqliteDialect, PostgresDialect, Migrator } from 'kysely'
+import { Kysely, SqliteDialect, PostgresDialect, Migrator, sql } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, Client as PgClient, types as pgTypes } from 'pg'
 import EventEmitter from 'events'
@@ -94,18 +94,21 @@ export class Database {
     })
   }
 
-  notify(channel: keyof Channels) {
+  async notify(channel: keyof Channels) {
     if (channel !== 'repo_seq') {
       throw new Error(`attempted sending on unavailable channel: ${channel}`)
     }
     // hardcoded b/c of type system & we only have one msg type
-    const message: ChannelMsg = { channel: 'repo_seq' }
+    const message = 'repo_seq' as ChannelMsg
 
-    // if in a tx, we buffer the notification until the tx successfully commits
-    if (this.isTransaction) {
-      this.txChannelMsgs.push(message)
+    // if in a sqlite tx, we buffer the notification until the tx successfully commits
+    if (this.isTransaction && this.dialect === 'sqlite') {
+      // no duplicate notifies in a tx per Postgres semantics
+      if (!this.txChannelMsgs.includes(message)) {
+        this.txChannelMsgs.push(message)
+      }
     } else {
-      this.sendChannelMsg(message)
+      await this.sendChannelMsg(message)
     }
   }
 
@@ -130,10 +133,10 @@ export class Database {
     }
   }
 
-  private sendChannelMsg(msg: ChannelMsg) {
-    const { channel } = msg
+  private async sendChannelMsg(channel: ChannelMsg) {
     if (this.cfg.dialect === 'pg') {
-      this.cfg.pool.query(`NOTIFY ${this.getSchemaChannel(channel)}`)
+      const { ref } = this.db.dynamic
+      await sql`NOTIFY ${ref(this.getSchemaChannel(channel))}`.execute(this.db)
     } else {
       const emitter = this.channels[channel]
       if (emitter) {
@@ -242,7 +245,7 @@ type ChannelEvents = {
 
 type ChannelEmitter = TypedEmitter<ChannelEvents>
 
-type ChannelMsg = { channel: 'repo_seq' }
+type ChannelMsg = 'repo_seq'
 
 type Channels = {
   repo_seq: ChannelEmitter
