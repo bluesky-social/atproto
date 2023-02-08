@@ -2,6 +2,9 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import { ValidationResult } from '@atproto/lexicon'
+import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
@@ -46,4 +49,16 @@ export interface MyState {
   follow?: string
   muted?: boolean
   [k: string]: unknown
+}
+
+export function isMyState(v: unknown): v is MyState {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.getProfile#myState'
+  )
+}
+
+export function validateMyState(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.getProfile#myState', v)
 }

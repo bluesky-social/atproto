@@ -1,6 +1,9 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
+import { ValidationResult } from '@atproto/lexicon'
+import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoReportReasonType from '../report/reasonType'
 import * as ComAtprotoRepoRepoRef from '../repo/repoRef'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
@@ -22,6 +25,18 @@ export interface View {
   [k: string]: unknown
 }
 
+export function isView(v: unknown): v is View {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.moderationReport#view'
+  )
+}
+
+export function validateView(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.moderationReport#view', v)
+}
+
 export interface ViewDetail {
   id: number
   reasonType: ComAtprotoReportReasonType.Main
@@ -34,4 +49,16 @@ export interface ViewDetail {
   createdAt: string
   resolvedByActions: ComAtprotoAdminModerationAction.View[]
   [k: string]: unknown
+}
+
+export function isViewDetail(v: unknown): v is ViewDetail {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.moderationReport#viewDetail'
+  )
+}
+
+export function validateViewDetail(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.moderationReport#viewDetail', v)
 }

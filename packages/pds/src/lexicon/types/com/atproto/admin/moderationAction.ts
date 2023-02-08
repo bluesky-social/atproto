@@ -1,6 +1,9 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
+import { ValidationResult } from '@atproto/lexicon'
+import { lexicons } from '../../../../lexicons'
+import { isObj, hasProp } from '../../../../util'
 import * as ComAtprotoRepoRepoRef from '../repo/repoRef'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
 import * as ComAtprotoAdminRepo from './repo'
@@ -24,6 +27,18 @@ export interface View {
   [k: string]: unknown
 }
 
+export function isView(v: unknown): v is View {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.moderationAction#view'
+  )
+}
+
+export function validateView(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.moderationAction#view', v)
+}
+
 export interface ViewDetail {
   id: number
   action: ActionType
@@ -40,8 +55,6 @@ export interface ViewDetail {
   [k: string]: unknown
 }
 
-<<<<<<< HEAD
-=======
 export function isViewDetail(v: unknown): v is ViewDetail {
   return (
     isObj(v) &&
@@ -72,7 +85,6 @@ export function validateViewCurrent(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.moderationAction#viewCurrent', v)
 }
 
->>>>>>> e8b8d081aefbd480e2a30d74fcba203635a37c93
 export interface Reversal {
   reason: string
   createdBy: string
@@ -80,8 +92,6 @@ export interface Reversal {
   [k: string]: unknown
 }
 
-<<<<<<< HEAD
-=======
 export function isReversal(v: unknown): v is Reversal {
   return (
     isObj(v) &&
@@ -100,7 +110,6 @@ export type ActionType =
   | 'com.atproto.admin.moderationAction#acknowledge'
   | (string & {})
 
->>>>>>> e8b8d081aefbd480e2a30d74fcba203635a37c93
 /** Moderation action type: Takedown. Indicates that content should not be served by the PDS. */
 export const TAKEDOWN = 'com.atproto.admin.moderationAction#takedown'
 /** Moderation action type: Flag. Indicates that the content was reviewed and considered to violate PDS rules, but may still be served. */

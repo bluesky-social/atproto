@@ -2,6 +2,9 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
+import { ValidationResult } from '@atproto/lexicon'
+import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
@@ -44,11 +47,6 @@ export interface Actor {
   [k: string]: unknown
 }
 
-<<<<<<< HEAD
-export interface MyState {
-  follow?: string
-  [k: string]: unknown
-=======
 export function isActor(v: unknown): v is Actor {
   return (
     isObj(v) &&
@@ -59,5 +57,4 @@ export function isActor(v: unknown): v is Actor {
 
 export function validateActor(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.getSuggestions#actor', v)
->>>>>>> e8b8d081aefbd480e2a30d74fcba203635a37c93
 }

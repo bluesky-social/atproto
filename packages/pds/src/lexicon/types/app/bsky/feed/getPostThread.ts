@@ -2,6 +2,9 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import { ValidationResult } from '@atproto/lexicon'
+import { lexicons } from '../../../../lexicons'
+import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyFeedPost from './post'
 
@@ -56,8 +59,32 @@ export interface ThreadViewPost {
   [k: string]: unknown
 }
 
+export function isThreadViewPost(v: unknown): v is ThreadViewPost {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.getPostThread#threadViewPost'
+  )
+}
+
+export function validateThreadViewPost(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.getPostThread#threadViewPost', v)
+}
+
 export interface NotFoundPost {
   uri: string
   notFound: true
   [k: string]: unknown
+}
+
+export function isNotFoundPost(v: unknown): v is NotFoundPost {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.getPostThread#notFoundPost'
+  )
+}
+
+export function validateNotFoundPost(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.getPostThread#notFoundPost', v)
 }
