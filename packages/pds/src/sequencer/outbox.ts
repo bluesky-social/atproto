@@ -11,7 +11,7 @@ export class Outbox {
 
   cutoverBuffer: RepoAppendEvent[] = []
   caughtUp = false
-  lastSeen?: number
+  lastSeen = -1
 
   outBuffer: AsyncBuffer<RepoAppendEvent>
 
@@ -41,7 +41,6 @@ export class Outbox {
     }
 
     // streams updates from sequencer, but buffers them as it makes a last request
-    // then dedupes them & streams out them in order
     this.sequencer.on('event', (evt) => {
       if (this.caughtUp) {
         this.outBuffer.push(evt)
@@ -55,20 +54,12 @@ export class Outbox {
       const cutoverEvts = await this.sequencer.requestSeqRange({
         earliestSeq: this.lastSeen,
       })
-      const toSend = cutoverEvts.filter(
-        (e) => this.sequencer.lastSeen && e.seq < this.sequencer.lastSeen,
-      )
-      const alreadySent: number[] = []
-      for (const evt of toSend) {
+      for (const evt of cutoverEvts) {
         this.outBuffer.push(evt)
-        this.lastSeen = evt.seq
-        alreadySent.push(evt.seq)
       }
+      // we can push duplicate events, they get deduped later as they come out of the buffer
       for (const evt of this.cutoverBuffer) {
-        if (!alreadySent.includes(evt.seq)) {
-          this.outBuffer.push(evt)
-          this.lastSeen = evt.seq
-        }
+        this.outBuffer.push(evt)
       }
       this.caughtUp = true
       this.cutoverBuffer = []
@@ -79,7 +70,10 @@ export class Outbox {
     while (true) {
       try {
         const evt = await this.outBuffer.nextEvent()
-        yield evt
+        if (evt.seq > this.lastSeen) {
+          yield evt
+          this.lastSeen = evt.seq
+        }
       } catch (err) {
         if (err instanceof AsyncBufferFullError) {
           throw new StreamConsumerTooSlowError(err)
