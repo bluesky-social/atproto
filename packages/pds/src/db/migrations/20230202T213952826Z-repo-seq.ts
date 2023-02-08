@@ -17,11 +17,16 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('commit', 'varchar', (col) => col.notNull())
     .addColumn('eventType', 'varchar', (col) => col.notNull())
     .addColumn('sequencedAt', 'varchar', (col) => col.notNull())
-  await builder.execute()
+    .addForeignKeyConstraint(
+      'repo_seq_commit_history_fkey',
+      ['did', 'commit'],
+      'repo_commit_history',
+      ['creator', 'commit'],
+    )
 
-  // @TODO migrate past repo commits
+  await builder.execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropTable(repoSeqTable)
+  await db.schema.dropTable(repoSeqTable).execute()
 }
