@@ -310,6 +310,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     db.db
       .selectFrom('repo_commit_block')
       .orderBy('creator')
+      .orderBy('commit')
       .orderBy('block')
       .selectAll()
       .execute(),

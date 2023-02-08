@@ -73,11 +73,11 @@ export class AsyncBuffer<T> {
   }
 
   async *events(): AsyncGenerator<T> {
-    if (this.maxSize && this.size > this.maxSize) {
-      throw new AsyncBufferFullError(this.maxSize)
-    }
     while (this.buffer !== null) {
       await this.promise
+      if (this.maxSize && this.size > this.maxSize) {
+        throw new AsyncBufferFullError(this.maxSize)
+      }
       const [first, ...rest] = this.buffer
       if (first) {
         this.buffer = rest

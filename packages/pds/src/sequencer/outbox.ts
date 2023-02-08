@@ -11,7 +11,6 @@ export class Outbox {
 
   cutoverBuffer: RepoAppendEvent[]
   outBuffer: AsyncBuffer<RepoAppendEvent>
-  id = Math.floor(Math.random() * 1000) //@TODO DELETE, debugging
 
   constructor(public sequencer: Sequencer, opts: Partial<OutboxOpts> = {}) {
     const { maxBufferSize = 500 } = opts
@@ -36,10 +35,11 @@ export class Outbox {
         this.lastSeen = evt.seq
       }
     } else {
+      // if not backfill, we don't need to cutover, just start streaming
       this.caughtUp = true
     }
 
-    // streams updates from sequencer, but buffers them as it makes a last request
+    // streams updates from sequencer, but buffers them for cutover as it makes a last request
     this.sequencer.on('events', (evts) => {
       if (this.caughtUp) {
         this.outBuffer.pushMany(evts)
