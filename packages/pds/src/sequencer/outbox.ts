@@ -55,15 +55,18 @@ export class Outbox {
       const cutoverEvts = await this.sequencer.requestSeqRange({
         earliestSeq: this.lastSeen,
       })
+      const toSend = cutoverEvts.filter(
+        (e) => this.sequencer.lastSeen && e.seq < this.sequencer.lastSeen,
+      )
       const alreadySent: number[] = []
-      for (const evt of cutoverEvts) {
-        yield evt
+      for (const evt of toSend) {
+        this.outBuffer.push(evt)
         this.lastSeen = evt.seq
         alreadySent.push(evt.seq)
       }
       for (const evt of this.cutoverBuffer) {
         if (!alreadySent.includes(evt.seq)) {
-          yield evt
+          this.outBuffer.push(evt)
           this.lastSeen = evt.seq
         }
       }
@@ -93,6 +96,7 @@ export class Outbox {
       const evts = await this.sequencer.requestSeqRange({
         earliestTime: startTime,
         earliestSeq: this.lastSeen,
+        latestSeq: this.sequencer.lastSeen,
         limit: 50,
       })
       for (const evt of evts) {

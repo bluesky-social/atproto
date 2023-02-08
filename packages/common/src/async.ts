@@ -1,3 +1,21 @@
+import { wait } from './util'
+
+export const readFromGenerator = async <T>(
+  gen: AsyncGenerator<T>,
+  maxLength = Number.MAX_SAFE_INTEGER,
+  timeout = 500,
+): Promise<T[]> => {
+  const evts: T[] = []
+  while (evts.length < maxLength) {
+    const maybeEvt = await Promise.race([gen.next(), wait(timeout)])
+    if (!maybeEvt) break
+    const evt = maybeEvt as IteratorResult<T>
+    if (evt.done) break
+    evts.push(evt.value)
+  }
+  return evts
+}
+
 export type Deferrable = {
   resolve: () => void
   complete: Promise<void>

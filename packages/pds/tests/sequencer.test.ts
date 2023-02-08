@@ -5,7 +5,7 @@ import userSeed from './seeds/users'
 import { CloseFn, runTestServer } from './_util'
 import Outbox, { StreamConsumerTooSlowError } from '../src/sequencer/outbox'
 import { randomStr } from '@atproto/crypto'
-import { wait } from '@atproto/common'
+import { readFromGenerator, wait } from '@atproto/common'
 import { Database } from '../src'
 
 describe('sequencer', () => {
@@ -53,19 +53,6 @@ describe('sequencer', () => {
     }
   }
 
-  const readEvents = async (
-    gen: AsyncGenerator<RepoAppendEvent>,
-    expected: number,
-  ) => {
-    const evts: RepoAppendEvent[] = []
-    while (evts.length < expected) {
-      const evt = await gen.next()
-      if (evt.done) break
-      evts.push(evt.value)
-    }
-    return evts
-  }
-
   const loadFromDb = (lastSeen: string) => {
     return db.db
       .selectFrom('repo_seq')
@@ -88,7 +75,7 @@ describe('sequencer', () => {
     totalEvts += count
     await createPosts(count)
     const outbox = new Outbox(sequencer)
-    const evts = await readEvents(outbox.events(timeBeforeWrites), totalEvts)
+    const evts = await readFromGenerator(outbox.events(timeBeforeWrites))
     expect(evts.length).toBe(totalEvts)
 
     const fromDb = await loadFromDb(timeBeforeWrites)
@@ -102,7 +89,7 @@ describe('sequencer', () => {
     totalEvts += count
     const outbox = new Outbox(sequencer)
     const [evts] = await Promise.all([
-      readEvents(outbox.events(timeBeforeWrites), totalEvts),
+      readFromGenerator(outbox.events(timeBeforeWrites)),
       createPosts(count),
     ])
     expect(evts.length).toBe(totalEvts)
@@ -119,9 +106,11 @@ describe('sequencer', () => {
     const outbox = new Outbox(sequencer)
     const gen = outbox.events(lastSeen)
     const [evts] = await Promise.all([
-      readEvents(gen, count + 1), // +1 because we send the lastSeen date as well
+      readFromGenerator(gen),
       createPosts(count),
     ])
+
+    // +1 because we send the lastSeen date as well
     expect(evts.length).toBe(count + 1)
 
     const fromDb = await loadFromDb(lastSeen)
@@ -138,10 +127,10 @@ describe('sequencer', () => {
     // read enough to start streaming then wait so that the rest go into the buffer,
     // then stream out from buffer
     const [firstPart] = await Promise.all([
-      readEvents(evtGenerator, 5),
+      readFromGenerator(evtGenerator, 5),
       createPosts(count),
     ])
-    const secondPart = await readEvents(evtGenerator, 16)
+    const secondPart = await readFromGenerator(evtGenerator)
     const evts = [...firstPart, ...secondPart]
     expect(evts.length).toBe(count + 1)
 
@@ -158,9 +147,12 @@ describe('sequencer', () => {
     const evtGenerator = outbox.events(lastSeen)
     // read enough to start streaming then wait to stream rest until buffer is overloaded
     const overloadBuffer = async () => {
-      await Promise.all([readEvents(evtGenerator, 5), createPosts(count)])
+      await Promise.all([
+        readFromGenerator(evtGenerator, 5),
+        createPosts(count),
+      ])
       await wait(500)
-      await readEvents(evtGenerator, 15)
+      await readFromGenerator(evtGenerator)
     }
     await expect(overloadBuffer).rejects.toThrow(StreamConsumerTooSlowError)
   })
