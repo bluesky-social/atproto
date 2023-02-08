@@ -8,14 +8,6 @@ export interface RepoSeq {
   sequencedAt: string
 }
 
-export interface RepoSeqReadRow {
-  seq: number
-  did: string
-  commit: string
-  eventType: string
-  sequencedAt: string
-}
-
 export const tableName = 'repo_seq'
 
 export type PartialDB = { [tableName]: RepoSeq }

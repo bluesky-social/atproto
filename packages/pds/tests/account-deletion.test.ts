@@ -23,7 +23,8 @@ import { PostEmbedExternal } from '../src/db/tables/post-embed-external'
 import { RepoCommitHistory } from '../src/db/tables/repo-commit-history'
 import { RepoCommitBlock } from '../src/db/tables/repo-commit-block'
 import { Record } from '../src/db/tables/record'
-import { RepoSeq, RepoSeqReadRow } from '../src/db/tables/repo-seq'
+import { RepoSeq } from '../src/db/tables/repo-seq'
+import { Selectable } from 'kysely'
 
 describe('account deletion', () => {
   let client: AtpServiceClient
@@ -257,7 +258,7 @@ type DbContents = {
   roots: RepoRoot[]
   users: User[]
   blocks: IpldBlock[]
-  seqs: RepoSeqReadRow[]
+  seqs: Selectable<RepoSeq>[]
   commitHistories: RepoCommitHistory[]
   commitBlocks: RepoCommitBlock[]
   records: Record[]
