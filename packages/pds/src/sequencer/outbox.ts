@@ -21,9 +21,9 @@ export class Outbox {
   }
 
   // event stream occurs in 3 phases
-  // 1. historical events: events that have been added to the DB since the last time a connection was open.
+  // 1. backfill events: events that have been added to the DB since the last time a connection was open.
   // The outbox is not yet listening for new events from the sequencer
-  // 2. the cutover: the outbox has caught up with where the sequencer purports to be,
+  // 2. cutover: the outbox has caught up with where the sequencer purports to be,
   // but the sequencer might already be halfway through sending out a round of updates.
   // Therefore, we start accepting the sequencer's events in a buffer, while making our own request to the
   // database to ensure we're caught up. We then dedupe the query & the buffer & stream the events in order
@@ -32,7 +32,7 @@ export class Outbox {
   async *events(backfillFrom?: string): AsyncGenerator<RepoAppendEvent> {
     // catch up as much as we can
     if (backfillFrom) {
-      for await (const evt of this.getHistorical(backfillFrom)) {
+      for await (const evt of this.getBackfill(backfillFrom)) {
         yield evt
         this.lastSeen = evt.seq
       }
@@ -91,7 +91,7 @@ export class Outbox {
   }
 
   // yields only historical events
-  async *getHistorical(startTime?: string) {
+  async *getBackfill(startTime?: string) {
     while (true) {
       const evts = await this.sequencer.requestSeqRange({
         earliestTime: startTime,
