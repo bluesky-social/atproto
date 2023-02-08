@@ -11,7 +11,10 @@ export class XrpcStreamServer {
     this.wss.on('connection', async (socket, req) => {
       socket.on('error', (err) => logger.error(err, 'websocket error'))
       try {
-        for await (const frame of handler(req, socket, this)) {
+        const iterator = unwrapIterator(handler(req, socket, this))
+        socket.once('close', () => iterator.return?.())
+        const safeFrames = wrapIterator(iterator)
+        for await (const frame of safeFrames) {
           if (frame instanceof ErrorFrame) {
             await new Promise((res, rej) => {
               socket.send(frame.toBytes(), { binary: true }, (err) => {
@@ -56,4 +59,16 @@ export class DisconnectError extends Error {
 export enum CloseCode {
   Normal = 1000,
   Policy = 1008,
+}
+
+function unwrapIterator<T>(iterable: AsyncIterable<T>): AsyncIterator<T> {
+  return iterable[Symbol.asyncIterator]()
+}
+
+function wrapIterator<T>(iterator: AsyncIterator<T>): AsyncIterable<T> {
+  return {
+    [Symbol.asyncIterator]() {
+      return iterator
+    },
+  }
 }
