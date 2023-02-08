@@ -153,6 +153,7 @@ describe('repo subscribe all repos', () => {
       `ws://${serverHost}/xrpc/com.atproto.sync.subscribeAllRepos?backfillFrom=${midPointTime}`,
     )
     const evts = await readFromGenerator(byFrame(ws))
+    ws.terminate()
     const seqSlice = seqs.slice(midPoint)
     expect(evts.length).toBe(seqSlice.length)
     for (let i = 0; i < evts.length; i++) {
@@ -170,6 +171,7 @@ describe('repo subscribe all repos', () => {
       `ws://${serverHost}/xrpc/com.atproto.sync.subscribeAllRepos?backfillFrom=${overAnHourAgo}`,
     )
     const frames = await readFromGenerator(byFrame(ws))
+    ws.terminate()
     expect(frames.length).toBe(1)
     expect(frames[0]).toBeInstanceOf(ErrorFrame)
   })
