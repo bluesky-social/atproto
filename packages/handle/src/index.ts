@@ -17,7 +17,7 @@ export const ensureValid = (
     throw new InvalidHandleError('Not a supported handle domain')
   }
   const front = handle.slice(0, handle.length - supportedDomain.length)
-  if (front.length < 2) {
+  if (front.length < 3) {
     throw new InvalidHandleError('Handle too short')
   } else if (front.length > 20) {
     throw new InvalidHandleError('Handle too long')
