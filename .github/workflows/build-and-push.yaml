@@ -39,7 +39,8 @@ jobs:
         with:
           context: .
           file: ./packages/plc/Dockerfile
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            type=sha,enable=true,priority=100,prefix=plc:sha-,suffix=,format=short
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
