@@ -31,7 +31,10 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,enable=true,priority=100,prefix=plc:sha-,suffix=,format=short
 
       - name: Build and push Docker image
         id: build-and-push
@@ -39,8 +42,7 @@ jobs:
         with:
           context: .
           file: ./packages/plc/Dockerfile
-          tags: |
-            type=sha,enable=true,priority=100,prefix=plc:sha-,suffix=,format=short
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
