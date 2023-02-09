@@ -6,6 +6,7 @@ import getVotes from './feed/getVotes'
 import setVote from './feed/setVote'
 import getPostThread from './feed/getPostThread'
 import getProfile from './actor/getProfile'
+import getProfiles from './actor/getProfiles'
 import updateProfile from './actor/updateProfile'
 import getRepostedBy from './feed/getRepostedBy'
 import getFollowers from './graph/getFollowers'
@@ -27,6 +28,7 @@ export default function (server: Server, ctx: AppContext) {
   setVote(server, ctx)
   getPostThread(server, ctx)
   getProfile(server, ctx)
+  getProfiles(server, ctx)
   updateProfile(server, ctx)
   getRepostedBy(server, ctx)
   getFollowers(server, ctx)

@@ -39,3 +39,5 @@ export const def = {
     schema: schema.unknown,
   } as Def<unknown>,
 }
+
+export type ArrayEl<A> = A extends readonly (infer T)[] ? T : never

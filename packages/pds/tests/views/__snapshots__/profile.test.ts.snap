@@ -19,6 +19,79 @@ Object {
 }
 `;
 
+exports[`pds profile views fetches multiple profiles 1`] = `
+Array [
+  Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "creator": "user(0)",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "description": "its me!",
+    "did": "user(0)",
+    "displayName": "ali",
+    "followersCount": 2,
+    "followsCount": 3,
+    "handle": "alice.test",
+    "myState": Object {
+      "follow": "record(0)",
+      "muted": false,
+    },
+    "postsCount": 4,
+  },
+  Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "creator": "user(1)",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "description": "hi im bob",
+    "did": "user(1)",
+    "displayName": "bobby",
+    "followersCount": 2,
+    "followsCount": 2,
+    "handle": "bob.test",
+    "myState": Object {
+      "muted": false,
+    },
+    "postsCount": 3,
+  },
+  Object {
+    "creator": "user(2)",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(2)",
+    "followersCount": 2,
+    "followsCount": 1,
+    "handle": "carol.test",
+    "myState": Object {
+      "follow": "record(1)",
+      "muted": false,
+    },
+    "postsCount": 2,
+  },
+  Object {
+    "creator": "user(3)",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(3)",
+    "followersCount": 1,
+    "followsCount": 1,
+    "handle": "dan.test",
+    "myState": Object {
+      "muted": false,
+    },
+    "postsCount": 2,
+  },
+]
+`;
+
 exports[`pds profile views fetches other's profile, with a follow 1`] = `
 Object {
   "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",

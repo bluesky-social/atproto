@@ -59,6 +59,33 @@ describe('pds profile views', () => {
     expect(forSnapshot(danForBob.data)).toMatchSnapshot()
   })
 
+  it('fetches multiple profiles', async () => {
+    const {
+      data: { profiles },
+    } = await agent.api.app.bsky.actor.getProfiles(
+      {
+        actors: [
+          alice,
+          'bob.test',
+          'did:missing',
+          'carol.test',
+          dan,
+          'missing.test',
+        ],
+      },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    expect(profiles.map((p) => p.handle)).toEqual([
+      'alice.test',
+      'bob.test',
+      'carol.test',
+      'dan.test',
+    ])
+
+    expect(forSnapshot(profiles)).toMatchSnapshot()
+  })
+
   it('updates profile', async () => {
     await agent.api.app.bsky.actor.updateProfile(
       { displayName: 'ali', description: 'new descript' },

@@ -21,7 +21,7 @@ export function createServices(resources: {
   const { keypair, messageQueue, blobstore, imgUriBuilder, imgInvalidator } =
     resources
   return {
-    actor: ActorService.creator(),
+    actor: ActorService.creator(imgUriBuilder),
     auth: AuthService.creator(),
     feed: FeedService.creator(imgUriBuilder),
     record: RecordService.creator(messageQueue),

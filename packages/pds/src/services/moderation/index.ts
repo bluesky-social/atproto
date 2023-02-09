@@ -37,7 +37,7 @@ export class ModerationService {
       )
   }
 
-  views = new ModerationViews(this.db, this.messageQueue)
+  views = new ModerationViews(this.db, this.messageQueue, this.imgUriBuilder)
 
   services = {
     record: RecordService.creator(this.messageQueue),

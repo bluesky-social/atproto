@@ -1,45 +1,78 @@
 import { sql } from 'kysely'
 import * as common from '@atproto/common'
-import { dbLogger as log } from '../logger'
-import Database from '../db'
-import * as scrypt from '../db/scrypt'
-import { User } from '../db/tables/user'
-import { DidHandle } from '../db/tables/did-handle'
-import { RepoRoot } from '../db/tables/repo-root'
-import { Record as DeclarationRecord } from '../lexicon/types/app/bsky/system/declaration'
-import { notSoftDeletedClause } from '../db/util'
-import { getUserSearchQueryPg, getUserSearchQuerySqlite } from './util/search'
-import { paginate, TimeCidKeyset } from '../db/pagination'
+import { dbLogger as log } from '../../logger'
+import Database from '../../db'
+import * as scrypt from '../../db/scrypt'
+import { User } from '../../db/tables/user'
+import { DidHandle } from '../../db/tables/did-handle'
+import { RepoRoot } from '../../db/tables/repo-root'
+import { Record as DeclarationRecord } from '../../lexicon/types/app/bsky/system/declaration'
+import { notSoftDeletedClause } from '../../db/util'
+import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
+import { paginate, TimeCidKeyset } from '../../db/pagination'
+import { ActorViews } from './views'
+import { ImageUriBuilder } from '../../image/uri'
 
 export class ActorService {
-  constructor(public db: Database) {}
+  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
 
-  static creator() {
-    return (db: Database) => new ActorService(db)
+  static creator(imgUriBuilder: ImageUriBuilder) {
+    return (db: Database) => new ActorService(db, imgUriBuilder)
   }
+
+  views = new ActorViews(this.db, this.imgUriBuilder)
 
   async getUser(
     handleOrDid: string,
     includeSoftDeleted = false,
   ): Promise<(User & DidHandle & RepoRoot) | null> {
+    const users = await this.getUsers([handleOrDid], includeSoftDeleted)
+    return users[0] || null
+  }
+
+  async getUsers(
+    handleOrDids: string[],
+    includeSoftDeleted = false,
+  ): Promise<(User & DidHandle & RepoRoot)[]> {
     const { ref } = this.db.db.dynamic
-    let query = this.db.db
+    const dids: string[] = []
+    const handles: string[] = []
+    const order: Record<string, number> = {}
+    handleOrDids.forEach((item, i) => {
+      if (item.startsWith('did:')) {
+        order[item] = i
+        dids.push(item)
+      } else {
+        order[item.toLowerCase()] = i
+        handles.push(item.toLowerCase())
+      }
+    })
+    const results = await this.db.db
       .selectFrom('user')
       .innerJoin('did_handle', 'did_handle.handle', 'user.handle')
       .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('repo_root'))),
       )
+      .where((qb) => {
+        if (dids.length) {
+          qb = qb.orWhere('did_handle.did', 'in', dids)
+        }
+        if (handles.length) {
+          qb = qb.orWhere('did_handle.handle', 'in', handles)
+        }
+        return qb
+      })
       .selectAll('user')
       .selectAll('did_handle')
       .selectAll('repo_root')
-    if (handleOrDid.startsWith('did:')) {
-      query = query.where('did_handle.did', '=', handleOrDid)
-    } else {
-      query = query.where('did_handle.handle', '=', handleOrDid.toLowerCase())
-    }
-    const found = await query.executeTakeFirst()
-    return found || null
+      .execute()
+
+    return results.sort((a, b) => {
+      const orderA = order[a.did] ?? order[a.handle.toLowerCase()]
+      const orderB = order[b.did] ?? order[b.handle.toLowerCase()]
+      return orderA - orderB
+    })
   }
 
   async getUserByEmail(
