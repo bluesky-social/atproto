@@ -45,10 +45,10 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropIndex('vote_subject_direction_idx')
-  await db.schema.dropIndex('repost_subject_idx')
-  await db.schema.dropIndex('post_replyparent_idx')
-  await db.schema.dropIndex('follow_subjectdid_idx')
-  await db.schema.dropIndex('post_creator_idx')
-  await db.schema.dropIndex('profile_creator_idx')
+  await db.schema.dropIndex('vote_subject_direction_idx').execute()
+  await db.schema.dropIndex('repost_subject_idx').execute()
+  await db.schema.dropIndex('post_replyparent_idx').execute()
+  await db.schema.dropIndex('follow_subjectdid_idx').execute()
+  await db.schema.dropIndex('post_creator_idx').execute()
+  await db.schema.dropIndex('profile_creator_idx').execute()
 }
