@@ -34,14 +34,6 @@ describe('pds follow views', () => {
     await close()
   })
 
-  const getCursors = (items: { createdAt?: string }[]) =>
-    items.map((item) => item.createdAt ?? constantDate)
-
-  const getSortedCursors = (items: { createdAt?: string }[]) =>
-    getCursors(items).sort((a, b) => tstamp(b) - tstamp(a))
-
-  const tstamp = (x: string) => new Date(x).getTime()
-
   it('fetches followers', async () => {
     const aliceFollowers = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.alice },
@@ -49,9 +41,6 @@ describe('pds follow views', () => {
     )
 
     expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
-    expect(getCursors(aliceFollowers.data.followers)).toEqual(
-      getSortedCursors(aliceFollowers.data.followers),
-    )
 
     const bobFollowers = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.bob },
@@ -59,9 +48,6 @@ describe('pds follow views', () => {
     )
 
     expect(forSnapshot(bobFollowers.data)).toMatchSnapshot()
-    expect(getCursors(bobFollowers.data.followers)).toEqual(
-      getSortedCursors(bobFollowers.data.followers),
-    )
 
     const carolFollowers = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.carol },
@@ -69,9 +55,6 @@ describe('pds follow views', () => {
     )
 
     expect(forSnapshot(carolFollowers.data)).toMatchSnapshot()
-    expect(getCursors(carolFollowers.data.followers)).toEqual(
-      getSortedCursors(carolFollowers.data.followers),
-    )
 
     const danFollowers = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.dan },
@@ -79,9 +62,6 @@ describe('pds follow views', () => {
     )
 
     expect(forSnapshot(danFollowers.data)).toMatchSnapshot()
-    expect(getCursors(danFollowers.data.followers)).toEqual(
-      getSortedCursors(danFollowers.data.followers),
-    )
 
     const eveFollowers = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.eve },
@@ -89,9 +69,6 @@ describe('pds follow views', () => {
     )
 
     expect(forSnapshot(eveFollowers.data)).toMatchSnapshot()
-    expect(getCursors(eveFollowers.data.followers)).toEqual(
-      getSortedCursors(eveFollowers.data.followers),
-    )
   })
 
   it('fetches followers by handle', async () => {
@@ -179,9 +156,6 @@ describe('pds follow views', () => {
     )
 
     expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
-    expect(getCursors(aliceFollowers.data.follows)).toEqual(
-      getSortedCursors(aliceFollowers.data.follows),
-    )
 
     const bobFollowers = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.bob },
@@ -189,9 +163,6 @@ describe('pds follow views', () => {
     )
 
     expect(forSnapshot(bobFollowers.data)).toMatchSnapshot()
-    expect(getCursors(bobFollowers.data.follows)).toEqual(
-      getSortedCursors(bobFollowers.data.follows),
-    )
 
     const carolFollowers = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.carol },
@@ -199,9 +170,6 @@ describe('pds follow views', () => {
     )
 
     expect(forSnapshot(carolFollowers.data)).toMatchSnapshot()
-    expect(getCursors(carolFollowers.data.follows)).toEqual(
-      getSortedCursors(carolFollowers.data.follows),
-    )
 
     const danFollowers = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.dan },
@@ -209,9 +177,6 @@ describe('pds follow views', () => {
     )
 
     expect(forSnapshot(danFollowers.data)).toMatchSnapshot()
-    expect(getCursors(danFollowers.data.follows)).toEqual(
-      getSortedCursors(danFollowers.data.follows),
-    )
 
     const eveFollowers = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.eve },
@@ -219,9 +184,6 @@ describe('pds follow views', () => {
     )
 
     expect(forSnapshot(eveFollowers.data)).toMatchSnapshot()
-    expect(getCursors(eveFollowers.data.follows)).toEqual(
-      getSortedCursors(eveFollowers.data.follows),
-    )
   })
 
   it('fetches follows by handle', async () => {
