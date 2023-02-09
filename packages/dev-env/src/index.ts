@@ -10,6 +10,7 @@ import * as plc from '@atproto/plc'
 import * as crypto from '@atproto/crypto'
 import AtpAgent from '@atproto/api'
 import { ServerType, ServerConfig, StartParams } from './types.js'
+import { HOUR } from '@atproto/common'
 
 interface Startable {
   start(): Promise<http.Server>
@@ -102,6 +103,8 @@ export class DevEnvServer {
               'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
             privacyPolicyUrl: 'https://example.com/privacy',
             termsOfServiceUrl: 'https://example.com/tos',
+            maxSubscriptionBuffer: 200,
+            repoBackfillLimitMs: HOUR,
           }),
         })
         await startServer(pds)

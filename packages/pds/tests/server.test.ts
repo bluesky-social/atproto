@@ -92,7 +92,7 @@ describe('server', () => {
   })
 
   it('healthcheck fails when database is unavailable.', async () => {
-    await db.db.destroy()
+    await db.close()
     let error: AxiosError
     try {
       await axios.get(`${server.url}/xrpc/_health`)

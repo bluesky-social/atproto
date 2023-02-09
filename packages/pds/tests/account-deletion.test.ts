@@ -23,6 +23,8 @@ import { PostEmbedExternal } from '../src/db/tables/post-embed-external'
 import { RepoCommitHistory } from '../src/db/tables/repo-commit-history'
 import { RepoCommitBlock } from '../src/db/tables/repo-commit-block'
 import { Record } from '../src/db/tables/record'
+import { RepoSeq } from '../src/db/tables/repo-seq'
+import { Selectable } from 'kysely'
 
 describe('account deletion', () => {
   let agent: AtpAgent
@@ -142,6 +144,9 @@ describe('account deletion', () => {
     expect(updatedDbContents.blocks).toEqual(
       initialDbContents.blocks.filter((row) => row.creator !== carol.did),
     )
+    expect(updatedDbContents.seqs).toEqual(
+      initialDbContents.seqs.filter((row) => row.did !== carol.did),
+    )
     expect(updatedDbContents.commitBlocks).toEqual(
       initialDbContents.commitBlocks.filter((row) => row.creator !== carol.did),
     )
@@ -253,6 +258,7 @@ type DbContents = {
   roots: RepoRoot[]
   users: User[]
   blocks: IpldBlock[]
+  seqs: Selectable<RepoSeq>[]
   commitHistories: RepoCommitHistory[]
   commitBlocks: RepoCommitBlock[]
   records: Record[]
@@ -272,6 +278,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     roots,
     users,
     blocks,
+    seqs,
     commitHistories,
     commitBlocks,
     records,
@@ -293,6 +300,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
       .orderBy('cid')
       .selectAll()
       .execute(),
+    db.db.selectFrom('repo_seq').orderBy('seq').selectAll().execute(),
     db.db
       .selectFrom('repo_commit_history')
       .orderBy('creator')
@@ -302,6 +310,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     db.db
       .selectFrom('repo_commit_block')
       .orderBy('creator')
+      .orderBy('commit')
       .orderBy('block')
       .selectAll()
       .execute(),
@@ -334,6 +343,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     roots,
     users,
     blocks,
+    seqs,
     commitHistories,
     commitBlocks,
     records,

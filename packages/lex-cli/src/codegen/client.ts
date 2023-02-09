@@ -10,7 +10,6 @@ import {
   LexXrpcProcedure,
   LexXrpcQuery,
   LexRecord,
-  LexXrpcSubscription,
 } from '@atproto/lexicon'
 import { NSID } from '@atproto/nsid'
 import { gen, utilTs, lexiconsTs } from './common'
@@ -273,20 +272,17 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
 
   // methods
   for (const userType of ns.userTypes) {
-    if (
-      userType.def.type !== 'query' &&
-      userType.def.type !== 'subscription' &&
-      userType.def.type !== 'procedure'
-    ) {
+    if (userType.def.type !== 'query' && userType.def.type !== 'procedure') {
       continue
     }
+    const isGetReq = userType.def.type === 'query'
     const moduleName = toTitleCase(userType.nsid)
     const name = toCamelCase(NSID.parse(userType.nsid).name || '')
     const method = cls.addMethod({
       name,
       returnType: `Promise<${moduleName}.Response>`,
     })
-    if (userType.def.type === 'query' || userType.def.type === 'subscription') {
+    if (isGetReq) {
       method.addParameter({
         name: 'params?',
         type: `${moduleName}.QueryParams`,
@@ -304,7 +300,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
     method.setBodyText(
       [
         `return this._service.xrpc`,
-        userType.def.type === 'query'
+        isGetReq
           ? `.call('${userType.nsid}', params, undefined, opts)`
           : `.call('${userType.nsid}', opts?.qp, data, opts)`,
         `  .catch((e) => {`,

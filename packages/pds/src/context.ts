@@ -8,6 +8,7 @@ import { BlobStore } from '@atproto/repo'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import { MessageQueue } from './event-stream/types'
+import Sequencer from './sequencer'
 
 export class AppContext {
   constructor(
@@ -21,6 +22,7 @@ export class AppContext {
       mailer: ServerMailer
       services: Services
       messageQueue: MessageQueue
+      sequencer: Sequencer
     },
   ) {}
 
@@ -74,6 +76,10 @@ export class AppContext {
 
   get messageQueue(): MessageQueue {
     return this.opts.messageQueue
+  }
+
+  get sequencer(): Sequencer {
+    return this.opts.sequencer
   }
 
   get plcClient(): plc.PlcClient {

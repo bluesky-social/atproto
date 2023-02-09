@@ -6,7 +6,7 @@ import * as repo from '@atproto/repo'
 import { collapseWriteLog, MemoryBlockstore } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import { CloseFn, runTestServer } from './_util'
+import { CloseFn, runTestServer } from '../_util'
 
 describe('repo sync', () => {
   let agent: AtpAgent
