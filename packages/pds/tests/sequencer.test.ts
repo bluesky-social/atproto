@@ -81,7 +81,7 @@ describe('sequencer', () => {
     const fromDb = await loadFromDb(timeBeforeWrites)
     expect(evts.map(evtToDbRow)).toEqual(fromDb)
 
-    lastSeen = evts[evts.length - 1].time
+    lastSeen = evts.at(-1)?.time ?? lastSeen
   })
 
   it('handles cut over', async () => {
@@ -97,7 +97,7 @@ describe('sequencer', () => {
     const fromDb = await loadFromDb(timeBeforeWrites)
     expect(evts.map(evtToDbRow)).toEqual(fromDb)
 
-    lastSeen = evts[evts.length - 1].time
+    lastSeen = evts.at(-1)?.time ?? lastSeen
   })
 
   it('only gets events after (inclusive) lastSeen', async () => {
@@ -116,7 +116,7 @@ describe('sequencer', () => {
     const fromDb = await loadFromDb(lastSeen)
     expect(evts.map(evtToDbRow)).toEqual(fromDb)
 
-    lastSeen = evts[evts.length - 1].time
+    lastSeen = evts.at(-1)?.time ?? lastSeen
   })
 
   it('buffers events that are not being read', async () => {
@@ -137,7 +137,7 @@ describe('sequencer', () => {
     const fromDb = await loadFromDb(lastSeen)
     expect(evts.map(evtToDbRow)).toEqual(fromDb)
 
-    lastSeen = evts[evts.length - 1].time
+    lastSeen = evts.at(-1)?.time ?? lastSeen
   })
 
   it('errors when buffer is overloaded', async () => {
@@ -157,7 +157,7 @@ describe('sequencer', () => {
     await expect(overloadBuffer).rejects.toThrow(StreamConsumerTooSlowError)
 
     const fromDb = await loadFromDb(lastSeen)
-    lastSeen = fromDb[fromDb.length - 1].sequencedAt
+    lastSeen = fromDb.at(-1)?.sequencedAt ?? lastSeen
   })
 
   it('handles many open connections', async () => {
@@ -176,6 +176,6 @@ describe('sequencer', () => {
       expect(evts.length).toBe(count + 1)
       expect(evts.map(evtToDbRow)).toEqual(fromDb)
     }
-    lastSeen = results[0][results[0].length - 1].time
+    lastSeen = results[0].at(-1)?.time ?? lastSeen
   })
 })

@@ -2176,11 +2176,11 @@ export const schemaDict = {
         description: 'Subscribe to repo updates',
         parameters: {
           type: 'params',
-          required: ['backfillFrom'],
           properties: {
             backfillFrom: {
-              type: 'string',
-              description: 'The last known event to backfill from. Does not',
+              type: 'datetime',
+              description:
+                'The last known event to backfill from. Does not dedupe as there may be an overlap in timestamps.',
             },
           },
         },

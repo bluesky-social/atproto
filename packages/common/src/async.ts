@@ -1,5 +1,7 @@
 import { wait } from './util'
 
+// reads values from a generator into a list
+// NOTE: does not signal generator to close. it *will* continue to produce values
 export const readFromGenerator = async <T>(
   gen: AsyncGenerator<T>,
   maxLength = Number.MAX_SAFE_INTEGER,
@@ -73,7 +75,7 @@ export class AsyncBuffer<T> {
   }
 
   async *events(): AsyncGenerator<T> {
-    while (this.buffer !== null) {
+    while (true) {
       await this.promise
       if (this.maxSize && this.size > this.maxSize) {
         throw new AsyncBufferFullError(this.maxSize)

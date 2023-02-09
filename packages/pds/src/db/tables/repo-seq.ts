@@ -4,7 +4,7 @@ export interface RepoSeq {
   seq: Generated<number>
   did: string
   commit: string
-  eventType: string
+  eventType: 'repo_append'
   sequencedAt: string
 }
 

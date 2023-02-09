@@ -165,7 +165,7 @@ describe('repo subscribe all repos', () => {
     }
   })
 
-  it('errors on to old of a backfill', async () => {
+  it('errors on too old of a backfill', async () => {
     const overAnHourAgo = new Date(Date.now() - HOUR - MINUTE).toISOString()
     const ws = new WebSocket(
       `ws://${serverHost}/xrpc/com.atproto.sync.subscribeAllRepos?backfillFrom=${overAnHourAgo}`,

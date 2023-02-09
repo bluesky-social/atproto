@@ -31,8 +31,8 @@ export class Outbox {
     // catch up as much as we can
     if (backfillFrom) {
       for await (const evt of this.getBackfill(backfillFrom)) {
-        yield evt
         this.lastSeen = evt.seq
+        yield evt
       }
     } else {
       // if not backfill, we don't need to cutover, just start streaming
@@ -69,8 +69,8 @@ export class Outbox {
       try {
         for await (const evt of this.outBuffer.events()) {
           if (evt.seq > this.lastSeen) {
-            yield evt
             this.lastSeen = evt.seq
+            yield evt
           }
         }
       } catch (err) {

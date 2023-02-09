@@ -13,11 +13,14 @@ export default function (server: Server, ctx: AppContext) {
     if (backfillFrom) {
       const now = Date.now()
       const backfillUnix = new Date(backfillFrom).getTime()
+      if (isNaN(backfillUnix)) {
+        throw new InvalidRequestError('Invalid "backfillFrom"')
+      }
       if (now - backfillUnix > ctx.cfg.repoBackfillLimitMs) {
         throw new InvalidRequestError('Backfill request too long')
       }
     }
-    for await (const evt of outbox.events(params.backfillFrom)) {
+    for await (const evt of outbox.events(backfillFrom)) {
       const { time, repo, commit, prev, blocks, blobs } = evt
       yield { time, repo, commit, prev, blocks, blobs } as RepoAppend
     }

@@ -8,8 +8,8 @@ import { HandlerAuth, InfoFrame, ErrorFrame } from '@atproto/xrpc-server'
 import { IncomingMessage } from 'http'
 
 export interface QueryParams {
-  /** The last known event to backfill from. Does not */
-  backfillFrom: string
+  /** The last known event to backfill from. Does not dedupe as there may be an overlap in timestamps. */
+  backfillFrom?: string
 }
 
 export type OutputSchema =

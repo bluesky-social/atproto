@@ -99,7 +99,7 @@ export class Database {
       throw new Error(`attempted sending on unavailable channel: ${channel}`)
     }
     // hardcoded b/c of type system & we only have one msg type
-    const message = 'repo_seq' as ChannelMsg
+    const message: ChannelMsg = 'repo_seq'
 
     // if in a sqlite tx, we buffer the notification until the tx successfully commits
     if (this.isTransaction && this.dialect === 'sqlite') {
