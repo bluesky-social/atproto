@@ -1,9 +1,12 @@
 import * as http from 'http'
-import express from 'express'
 import xrpc, { XRPCError } from '@atproto/xrpc'
-import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
-import { AuthRequiredError } from '../src'
+import {
+  createServer,
+  closeServer,
+  createBasicAuth,
+  basicAuthHeaders,
+} from './_util'
 
 const LEXICONS = [
   {
@@ -125,31 +128,3 @@ describe('Auth', () => {
     })
   })
 })
-
-function createBasicAuth(allowed: { username: string; password: string }) {
-  return function (ctx: { req: express.Request }) {
-    const header = ctx.req.headers.authorization ?? ''
-    if (!header.startsWith('Basic ')) {
-      throw new AuthRequiredError()
-    }
-    const original = header.replace('Basic ', '')
-    const [username, password] = Buffer.from(original, 'base64')
-      .toString()
-      .split(':')
-    if (username !== allowed.username || password !== allowed.password) {
-      throw new AuthRequiredError()
-    }
-    return {
-      credentials: { username },
-      artifacts: { original },
-    }
-  }
-}
-
-function basicAuthHeaders(creds: { username: string; password: string }) {
-  return {
-    authorization:
-      'Basic ' +
-      Buffer.from(`${creds.username}:${creds.password}`).toString('base64'),
-  }
-}

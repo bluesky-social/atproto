@@ -1,7 +1,12 @@
+import { IncomingMessage } from 'http'
 import express from 'express'
 import { isHttpError } from 'http-errors'
 import zod from 'zod'
-import { ResponseType, ResponseTypeStrings } from '@atproto/xrpc'
+import {
+  ResponseType,
+  ResponseTypeStrings,
+  ResponseTypeNames,
+} from '@atproto/xrpc'
 
 export type Options = {
   validateResponse?: boolean
@@ -52,6 +57,12 @@ export type XRPCHandler = (ctx: {
   res: express.Response
 }) => Promise<HandlerOutput> | HandlerOutput | undefined
 
+export type XRPCStreamHandler = (ctx: {
+  auth: HandlerAuth | undefined
+  params: Params
+  req: IncomingMessage
+}) => AsyncIterable<unknown>
+
 export type AuthOutput = HandlerAuth | HandlerError
 
 export type AuthVerifier = (ctx: {
@@ -59,9 +70,18 @@ export type AuthVerifier = (ctx: {
   res: express.Response
 }) => Promise<AuthOutput> | AuthOutput
 
+export type StreamAuthVerifier = (ctx: {
+  req: IncomingMessage
+}) => Promise<AuthOutput> | AuthOutput
+
 export type XRPCHandlerConfig = {
   auth?: AuthVerifier
   handler: XRPCHandler
+}
+
+export type XRPCStreamHandlerConfig = {
+  auth?: StreamAuthVerifier
+  handler: XRPCStreamHandler
 }
 
 export class XRPCError extends Error {
@@ -75,12 +95,16 @@ export class XRPCError extends Error {
 
   get payload() {
     return {
-      error: this.customErrorName,
+      error: this.customErrorName ?? this.typeName,
       message:
         this.type === ResponseType.InternalServerError
           ? this.typeStr // Do not respond with error details for 500s
           : this.errorMessage || this.typeStr,
     }
+  }
+
+  get typeName(): string | undefined {
+    return ResponseTypeNames[this.type]
   }
 
   get typeStr(): string | undefined {

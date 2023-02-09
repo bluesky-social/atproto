@@ -186,6 +186,15 @@ export const lexXrpcBody = z.object({
 })
 export type LexXrpcBody = z.infer<typeof lexXrpcBody>
 
+export const lexXrpcSubscriptionMessage = z.object({
+  description: z.string().optional(),
+  schema: z.union([lexRefVariant, lexObject]).optional(),
+  codes: z.record(z.number().int()).optional(),
+})
+export type LexXrpcSubscriptionMessage = z.infer<
+  typeof lexXrpcSubscriptionMessage
+>
+
 export const lexXrpcError = z.object({
   name: z.string(),
   description: z.string().optional(),
@@ -211,6 +220,16 @@ export const lexXrpcProcedure = z.object({
 })
 export type LexXrpcProcedure = z.infer<typeof lexXrpcProcedure>
 
+export const lexXrpcSubscription = z.object({
+  type: z.literal('subscription'),
+  description: z.string().optional(),
+  parameters: lexXrpcParameters.optional(),
+  message: lexXrpcSubscriptionMessage.optional(),
+  infos: lexXrpcError.array().optional(),
+  errors: lexXrpcError.array().optional(),
+})
+export type LexXrpcSubscription = z.infer<typeof lexXrpcSubscription>
+
 // database
 // =
 
@@ -230,6 +249,7 @@ export const lexUserType = z.union([
 
   lexXrpcQuery,
   lexXrpcProcedure,
+  lexXrpcSubscription,
 
   lexBlob,
   lexImage,
@@ -266,11 +286,12 @@ export const lexiconDoc = z
         defId !== 'main' &&
         (def.type === 'record' ||
           def.type === 'procedure' ||
-          def.type === 'query')
+          def.type === 'query' ||
+          def.type === 'subscription')
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `Records, procedures, and queries must be the main definition.`,
+          message: `Records, procedures, queries, and subscriptions must be the main definition.`,
         })
       }
     }

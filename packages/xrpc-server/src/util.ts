@@ -2,7 +2,12 @@ import { Readable, Transform } from 'stream'
 import { createDeflate, createGunzip } from 'zlib'
 import express from 'express'
 import mime from 'mime-types'
-import { Lexicons, LexXrpcProcedure, LexXrpcQuery } from '@atproto/lexicon'
+import {
+  Lexicons,
+  LexXrpcProcedure,
+  LexXrpcQuery,
+  LexXrpcSubscription,
+} from '@atproto/lexicon'
 import { forwardStreamErrors, MaxSizeChecker } from '@atproto/common'
 import {
   UndecodedParams,
@@ -17,7 +22,7 @@ import {
 } from './types'
 
 export function decodeQueryParams(
-  def: LexXrpcProcedure | LexXrpcQuery,
+  def: LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription,
   params: UndecodedParams,
 ): Params {
   const decoded: Params = {}
@@ -57,6 +62,18 @@ export function decodeQueryParam(
   } else if (type === 'boolean') {
     return value === 'true'
   }
+}
+
+export function getQueryParams(url = ''): Record<string, string | string[]> {
+  const { searchParams } = new URL(url ?? '', 'http://x')
+  const result: Record<string, string | string[]> = {}
+  for (const key of searchParams.keys()) {
+    result[key] = searchParams.getAll(key)
+    if (result[key].length === 1) {
+      result[key] = result[key][0]
+    }
+  }
+  return result
 }
 
 export function validateInput(

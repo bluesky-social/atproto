@@ -10,6 +10,7 @@ import {
   LexXrpcProcedure,
   LexXrpcQuery,
   LexRecord,
+  LexXrpcSubscription,
 } from '@atproto/lexicon'
 import { NSID } from '@atproto/nsid'
 import { gen, utilTs, lexiconsTs } from './common'
@@ -272,7 +273,11 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
 
   // methods
   for (const userType of ns.userTypes) {
-    if (userType.def.type !== 'query' && userType.def.type !== 'procedure') {
+    if (
+      userType.def.type !== 'query' &&
+      userType.def.type !== 'subscription' &&
+      userType.def.type !== 'procedure'
+    ) {
       continue
     }
     const moduleName = toTitleCase(userType.nsid)
@@ -281,7 +286,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
       name,
       returnType: `Promise<${moduleName}.Response>`,
     })
-    if (userType.def.type === 'query') {
+    if (userType.def.type === 'query' || userType.def.type === 'subscription') {
       method.addParameter({
         name: 'params?',
         type: `${moduleName}.QueryParams`,
@@ -469,7 +474,11 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
       const imports: Set<string> = new Set()
 
       const main = lexiconDoc.defs.main
-      if (main?.type === 'query' || main?.type === 'procedure') {
+      if (
+        main?.type === 'query' ||
+        main?.type === 'subscription' ||
+        main?.type === 'procedure'
+      ) {
         //= import {Headers, XRPCError} from '@atproto/xrpc'
         const xrpcImport = file.addImportDeclaration({
           moduleSpecifier: '@atproto/xrpc',
@@ -510,6 +519,8 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
             genXrpcInput(file, imports, lexicons, lexUri)
             genXrpcOutput(file, imports, lexicons, lexUri)
             genClientXrpcCommon(file, lexicons, lexUri)
+          } else if (def.type === 'subscription') {
+            continue
           } else if (def.type === 'record') {
             genClientRecord(file, imports, lexicons, lexUri)
           } else {
@@ -563,7 +574,7 @@ function genClientXrpcCommon(
   res.addProperty({ name: 'success', type: 'boolean' })
   res.addProperty({ name: 'headers', type: 'Headers' })
   if (def.output?.schema) {
-    if (def.output.encoding.includes(',')) {
+    if (def.output.encoding?.includes(',')) {
       res.addProperty({ name: 'data', type: 'OutputSchema | Uint8Array' })
     } else {
       res.addProperty({ name: 'data', type: 'OutputSchema' })
