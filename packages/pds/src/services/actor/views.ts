@@ -1,4 +1,4 @@
-// import { Selectable } from 'kysely'
+import { ArrayEl } from '@atproto/common'
 import { View as ProfileView } from '../../lexicon/types/app/bsky/actor/profile'
 import { User } from '../../db/tables/user'
 import { DidHandle } from '../../db/tables/did-handle'
@@ -103,4 +103,3 @@ export class ActorViews {
 }
 
 type UserResult = User & DidHandle & RepoRoot
-type ArrayEl<A> = A extends readonly (infer T)[] ? T : never

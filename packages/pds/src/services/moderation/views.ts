@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { cborBytesToRecord } from '@atproto/common'
+import { ArrayEl, cborBytesToRecord } from '@atproto/common'
 import { AtUri } from '@atproto/uri'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
@@ -574,8 +574,6 @@ type SubjectResult = Pick<
 >
 
 type SubjectView = ActionViewDetail['subject'] & ReportViewDetail['subject']
-
-type ArrayEl<A> = A extends readonly (infer T)[] ? T : never
 
 function didFromUri(uri: string) {
   return new AtUri(uri).host
