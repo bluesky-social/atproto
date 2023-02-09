@@ -63,6 +63,7 @@ export default function (server: Server, ctx: AppContext) {
           avatar: row.avatarCid
             ? ctx.imgUriBuilder.getCommonSignedUri('avatar', row.avatarCid)
             : undefined,
+          viewer: {}, // @TODO
         },
       }))
 

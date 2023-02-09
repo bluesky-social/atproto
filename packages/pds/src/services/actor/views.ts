@@ -37,6 +37,7 @@ export class ActorViews {
         'profile.description as description',
         'profile.avatarCid as avatarCid',
         'profile.bannerCid as bannerCid',
+        'profile.indexedAt as indexedAt',
         this.db.db
           .selectFrom('follow')
           .whereRef('creator', '=', ref('did_handle.did'))
@@ -57,7 +58,13 @@ export class ActorViews {
           .where('creator', '=', viewer)
           .whereRef('subjectDid', '=', ref('did_handle.did'))
           .select('uri')
-          .as('requesterFollow'),
+          .as('requesterFollowing'),
+        this.db.db
+          .selectFrom('follow')
+          .whereRef('creator', '=', ref('did_handle.did'))
+          .where('subjectDid', '=', viewer)
+          .select('uri')
+          .as('requesterFollowedBy'),
         this.db.db
           .selectFrom('mute')
           .whereRef('did', '=', ref('did_handle.did'))
@@ -83,7 +90,6 @@ export class ActorViews {
         did: result.did,
         declaration: getDeclarationSimple(result),
         handle: result.handle,
-        creator: result.did,
         displayName: profileInfo?.displayName || undefined,
         description: profileInfo?.description || undefined,
         avatar,
@@ -91,8 +97,15 @@ export class ActorViews {
         followsCount: profileInfo?.followsCount ?? 0,
         followersCount: profileInfo?.followersCount ?? 0,
         postsCount: profileInfo?.postsCount ?? 0,
+        creator: result.did,
+        indexedAt: profileInfo?.indexedAt || undefined,
+        viewer: {
+          muted: !!profileInfo?.requesterMuted,
+          following: profileInfo?.requesterFollowing || undefined,
+          followedBy: profileInfo?.requesterFollowedBy || undefined,
+        },
         myState: {
-          follow: profileInfo?.requesterFollow || undefined,
+          follow: profileInfo?.requesterFollowing || undefined,
           muted: !!profileInfo?.requesterMuted,
         },
       }

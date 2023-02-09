@@ -101,7 +101,7 @@ export class FeedService {
           avatar: cur.avatarCid
             ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
             : undefined,
-          viewer: { muted: !!cur.muted },
+          viewer: { muted: !!cur.muted }, // @TODO
         },
       }
     }, {} as ActorViewMap)

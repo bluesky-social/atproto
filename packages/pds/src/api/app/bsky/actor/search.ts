@@ -45,6 +45,7 @@ export default function (server: Server, ctx: AppContext) {
           ? ctx.imgUriBuilder.getCommonSignedUri('avatar', result.avatarCid)
           : undefined,
         indexedAt: result.indexedAt ?? undefined,
+        viewer: {}, // @TODO
       }))
 
       const keyset = new SearchKeyset(sql``, sql``)

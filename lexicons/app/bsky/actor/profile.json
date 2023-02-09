@@ -55,7 +55,6 @@
         "followsCount": {"type": "integer"},
         "postsCount": {"type": "integer"},
         "creator": {"type": "string"},
-        "createdAt": {"type": "datetime"},
         "indexedAt": {"type": "datetime"},
         "viewer": {"type": "ref", "ref": "#viewerState"},
         "myState": {"type": "ref", "ref": "#myState", "description": "Deprecated"}
@@ -77,7 +76,6 @@
           "maxLength": 256
         },
         "avatar": { "type": "string" },
-        "createdAt": {"type": "datetime"},
         "indexedAt": {"type": "datetime"},
         "viewer": {"type": "ref", "ref": "#viewerState"}
       }

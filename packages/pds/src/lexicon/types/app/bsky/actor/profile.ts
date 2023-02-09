@@ -39,7 +39,6 @@ export interface View {
   followsCount: number
   postsCount: number
   creator: string
-  createdAt?: string
   indexedAt?: string
   viewer?: ViewerState
   myState?: MyState
@@ -63,7 +62,6 @@ export interface ViewBasic {
   displayName?: string
   description?: string
   avatar?: string
-  createdAt?: string
   indexedAt?: string
   viewer?: ViewerState
   [k: string]: unknown

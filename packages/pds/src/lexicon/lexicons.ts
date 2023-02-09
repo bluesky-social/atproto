@@ -2358,9 +2358,6 @@ export const schemaDict = {
           creator: {
             type: 'string',
           },
-          createdAt: {
-            type: 'datetime',
-          },
           indexedAt: {
             type: 'datetime',
           },
@@ -2407,9 +2404,6 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
-          },
-          createdAt: {
-            type: 'datetime',
           },
           indexedAt: {
             type: 'datetime',

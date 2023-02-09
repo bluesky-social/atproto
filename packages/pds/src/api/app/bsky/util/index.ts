@@ -50,6 +50,7 @@ export const getActorInfo = async (
           min: true,
         })
       : undefined,
+    // @TODO viewer?
   }
 }
 

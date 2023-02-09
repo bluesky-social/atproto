@@ -92,6 +92,7 @@ export default function (server: Server, ctx: AppContext) {
                 notif.authorAvatarCid,
               )
             : undefined,
+          viewer: {}, // @TODO
         },
         reason: notif.reason,
         reasonSubject: notif.reasonSubject || undefined,

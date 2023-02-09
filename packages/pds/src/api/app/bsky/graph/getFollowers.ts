@@ -40,7 +40,6 @@ export default function (server: Server, ctx: AppContext) {
           'profile.avatarCid as avatarCid',
           'follow.cid as cid',
           'follow.createdAt as createdAt',
-          'follow.indexedAt as indexedAt',
         ])
 
       const keyset = new TimeCidKeyset(
@@ -62,8 +61,7 @@ export default function (server: Server, ctx: AppContext) {
         avatar: row.avatarCid
           ? ctx.imgUriBuilder.getCommonSignedUri('avatar', row.avatarCid)
           : undefined,
-        createdAt: row.createdAt,
-        indexedAt: row.indexedAt,
+        viewer: {}, // @TODO
       }))
 
       return {

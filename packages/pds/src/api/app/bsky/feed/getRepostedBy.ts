@@ -31,7 +31,6 @@ export default function (server: Server, ctx: AppContext) {
           'profile.avatarCid as avatarCid',
           'repost.cid as cid',
           'repost.createdAt as createdAt',
-          'repost.indexedAt as indexedAt',
         ])
 
       if (cid) {
@@ -57,8 +56,7 @@ export default function (server: Server, ctx: AppContext) {
         avatar: row.avatarCid
           ? ctx.imgUriBuilder.getCommonSignedUri('avatar', row.avatarCid)
           : undefined,
-        createdAt: row.createdAt,
-        indexedAt: row.indexedAt,
+        viewer: {}, // @TODO
       }))
 
       return {
