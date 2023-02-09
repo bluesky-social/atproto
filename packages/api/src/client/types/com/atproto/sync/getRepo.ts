@@ -9,8 +9,10 @@ import { lexicons } from '../../../../lexicons'
 export interface QueryParams {
   /** The DID of the repo. */
   did: string
-  /** A past commit CID. */
-  from?: string
+  /** The earliest commit in the commit range (not inclusive) */
+  earliest?: string
+  /** The latest commit you in the commit range (inclusive */
+  latest?: string
 }
 
 export type InputSchema = undefined
