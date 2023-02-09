@@ -2374,15 +2374,7 @@ export const schemaDict = {
       },
       viewBasic: {
         type: 'object',
-        required: [
-          'did',
-          'declaration',
-          'handle',
-          'creator',
-          'followersCount',
-          'followsCount',
-          'postsCount',
-        ],
+        required: ['did', 'declaration', 'handle'],
         properties: {
           did: {
             type: 'string',
