@@ -39,7 +39,10 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     limit?: number
   }): Promise<RepoAppendEvent[]> {
     const { earliestSeq, earliestTime, limit } = opts
-    let seqQb = this.db.db.selectFrom('repo_seq').selectAll().orderBy('seq')
+    let seqQb = this.db.db
+      .selectFrom('repo_seq')
+      .selectAll()
+      .orderBy('seq', 'asc')
     if (earliestSeq !== undefined) {
       seqQb = seqQb.where('seq', '>', earliestSeq)
     }
