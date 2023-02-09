@@ -1,7 +1,7 @@
 import fs from 'fs/promises'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
 import { adminAuth, CloseFn, paginateAll, runTestServer } from './_util'
 import { BlobNotFoundError } from '@atproto/repo'
@@ -23,8 +23,8 @@ const bob = {
 
 describe('crud operations', () => {
   let ctx: AppContext
-  let client: AtpServiceClient
-  let aliceClient: AtpServiceClient
+  let agent: AtpAgent
+  let aliceAgent: AtpAgent
   let close: CloseFn
 
   beforeAll(async () => {
@@ -33,8 +33,8 @@ describe('crud operations', () => {
     })
     ctx = server.ctx
     close = server.close
-    client = AtpApi.service(server.url)
-    aliceClient = AtpApi.service(server.url)
+    agent = new AtpAgent({ service: server.url })
+    aliceAgent = new AtpAgent({ service: server.url })
   })
 
   afterAll(async () => {
@@ -42,14 +42,14 @@ describe('crud operations', () => {
   })
 
   it('registers users', async () => {
-    const res = await client.com.atproto.account.create({
+    const res = await agent.api.com.atproto.account.create({
       email: alice.email,
       handle: alice.handle,
       password: alice.password,
     })
-    aliceClient.setHeader('authorization', `Bearer ${res.data.accessJwt}`)
+    aliceAgent.api.setHeader('authorization', `Bearer ${res.data.accessJwt}`)
     alice.did = res.data.did
-    const res2 = await client.com.atproto.account.create({
+    const res2 = await agent.api.com.atproto.account.create({
       email: bob.email,
       handle: bob.handle,
       password: bob.password,
@@ -58,12 +58,12 @@ describe('crud operations', () => {
   })
 
   it('describes repo', async () => {
-    const description = await client.com.atproto.repo.describe({
+    const description = await agent.api.com.atproto.repo.describe({
       user: alice.did,
     })
     expect(description.data.handle).toBe(alice.handle)
     expect(description.data.did).toBe(alice.did)
-    const description2 = await client.com.atproto.repo.describe({
+    const description2 = await agent.api.com.atproto.repo.describe({
       user: bob.did,
     })
     expect(description2.data.handle).toBe(bob.handle)
@@ -72,7 +72,7 @@ describe('crud operations', () => {
 
   let uri: AtUri
   it('creates records', async () => {
-    const res = await aliceClient.com.atproto.repo.createRecord({
+    const res = await aliceAgent.api.com.atproto.repo.createRecord({
       did: alice.did,
       collection: 'app.bsky.feed.post',
       record: {
@@ -88,7 +88,7 @@ describe('crud operations', () => {
   })
 
   it('lists records', async () => {
-    const res1 = await client.com.atproto.repo.listRecords({
+    const res1 = await agent.api.com.atproto.repo.listRecords({
       user: alice.did,
       collection: 'app.bsky.feed.post',
     })
@@ -98,7 +98,7 @@ describe('crud operations', () => {
       'Hello, world!',
     )
 
-    const res2 = await client.app.bsky.feed.post.list({
+    const res2 = await agent.api.app.bsky.feed.post.list({
       user: alice.did,
     })
     expect(res2.records.length).toBe(1)
@@ -107,7 +107,7 @@ describe('crud operations', () => {
   })
 
   it('gets records', async () => {
-    const res1 = await client.com.atproto.repo.getRecord({
+    const res1 = await agent.api.com.atproto.repo.getRecord({
       user: alice.did,
       collection: 'app.bsky.feed.post',
       rkey: uri.rkey,
@@ -115,7 +115,7 @@ describe('crud operations', () => {
     expect(res1.data.uri).toBe(uri.toString())
     expect((res1.data.value as Post.Record).text).toBe('Hello, world!')
 
-    const res2 = await client.app.bsky.feed.post.get({
+    const res2 = await agent.api.app.bsky.feed.post.get({
       user: alice.did,
       rkey: uri.rkey,
     })
@@ -124,12 +124,12 @@ describe('crud operations', () => {
   })
 
   it('deletes records', async () => {
-    await aliceClient.com.atproto.repo.deleteRecord({
+    await aliceAgent.api.com.atproto.repo.deleteRecord({
       did: alice.did,
       collection: 'app.bsky.feed.post',
       rkey: uri.rkey,
     })
-    const res1 = await client.com.atproto.repo.listRecords({
+    const res1 = await agent.api.com.atproto.repo.listRecords({
       user: alice.did,
       collection: 'app.bsky.feed.post',
     })
@@ -137,7 +137,7 @@ describe('crud operations', () => {
   })
 
   it('CRUDs records with the semantic sugars', async () => {
-    const res1 = await aliceClient.app.bsky.feed.post.create(
+    const res1 = await aliceAgent.api.app.bsky.feed.post.create(
       { did: alice.did },
       {
         $type: 'app.bsky.feed.post',
@@ -147,17 +147,17 @@ describe('crud operations', () => {
     )
     const uri = new AtUri(res1.uri)
 
-    const res2 = await client.app.bsky.feed.post.list({
+    const res2 = await agent.api.app.bsky.feed.post.list({
       user: alice.did,
     })
     expect(res2.records.length).toBe(1)
 
-    await aliceClient.app.bsky.feed.post.delete({
+    await aliceAgent.api.app.bsky.feed.post.delete({
       did: alice.did,
       rkey: uri.rkey,
     })
 
-    const res3 = await client.app.bsky.feed.post.list({
+    const res3 = await agent.api.app.bsky.feed.post.list({
       user: alice.did,
     })
     expect(res3.records.length).toBe(0)
@@ -167,7 +167,7 @@ describe('crud operations', () => {
     const file = await fs.readFile(
       'tests/image/fixtures/key-landscape-small.jpg',
     )
-    const { data: image } = await aliceClient.com.atproto.blob.upload(file, {
+    const { data: image } = await aliceAgent.api.com.atproto.blob.upload(file, {
       encoding: 'image/jpeg',
     })
     const imageCid = CID.parse(image.cid)
@@ -176,7 +176,7 @@ describe('crud operations', () => {
       BlobNotFoundError,
     )
     // Associate image with post, image should be placed in blobstore
-    const res = await aliceClient.app.bsky.feed.post.create(
+    const res = await aliceAgent.api.app.bsky.feed.post.create(
       { did: alice.did },
       {
         $type: 'app.bsky.feed.post',
@@ -192,7 +192,7 @@ describe('crud operations', () => {
     )
     // Ensure image is on post record
     const postUri = new AtUri(res.uri)
-    const post = await aliceClient.app.bsky.feed.post.get({
+    const post = await aliceAgent.api.app.bsky.feed.post.get({
       rkey: postUri.rkey,
       user: alice.did,
     })
@@ -202,14 +202,14 @@ describe('crud operations', () => {
     // Ensure that the uploaded image is now in the blobstore, i.e. doesn't throw BlobNotFoundError
     await ctx.blobstore.getBytes(imageCid)
     // Cleanup
-    await aliceClient.app.bsky.feed.post.delete({
+    await aliceAgent.api.app.bsky.feed.post.delete({
       rkey: postUri.rkey,
       did: alice.did,
     })
   })
 
   it('creates records with the correct key described by the schema', async () => {
-    const res1 = await aliceClient.app.bsky.actor.profile.create(
+    const res1 = await aliceAgent.api.app.bsky.actor.profile.create(
       { did: alice.did },
       {
         displayName: 'alice',
@@ -230,7 +230,7 @@ describe('crud operations', () => {
       }
       const responses = await Promise.all(
         postTexts.map((text) =>
-          aliceClient.app.bsky.feed.post.create(
+          aliceAgent.api.app.bsky.feed.post.create(
             { did: alice.did },
             {
               text,
@@ -244,7 +244,7 @@ describe('crud operations', () => {
 
       for (let i = 0; i < uris.length; i++) {
         const uri = uris[i]
-        const got = await aliceClient.com.atproto.repo.getRecord({
+        const got = await aliceAgent.api.com.atproto.repo.getRecord({
           user: alice.did,
           collection: uri.collection,
           rkey: uri.rkey,
@@ -257,7 +257,7 @@ describe('crud operations', () => {
     it('handles races on del', async () => {
       await Promise.all(
         uris.map((uri) =>
-          aliceClient.app.bsky.feed.post.delete({
+          aliceAgent.api.app.bsky.feed.post.delete({
             did: alice.did,
             rkey: uri.rkey,
           }),
@@ -265,7 +265,7 @@ describe('crud operations', () => {
       )
       for (const uri of uris) {
         await expect(
-          aliceClient.com.atproto.repo.getRecord({
+          aliceAgent.api.com.atproto.repo.getRecord({
             user: alice.did,
             collection: uri.collection,
             rkey: uri.rkey,
@@ -284,7 +284,7 @@ describe('crud operations', () => {
 
     beforeAll(async () => {
       const createPost = async (text: string) => {
-        const res = await aliceClient.app.bsky.feed.post.create(
+        const res = await aliceAgent.api.app.bsky.feed.post.create(
           { did: alice.did },
           {
             $type: 'app.bsky.feed.post',
@@ -304,7 +304,7 @@ describe('crud operations', () => {
     afterAll(async () => {
       await Promise.all(
         [uri1, uri2, uri3, uri4, uri5].map((uri) =>
-          aliceClient.app.bsky.feed.post.delete({
+          aliceAgent.api.app.bsky.feed.post.delete({
             did: alice.did,
             rkey: uri.rkey,
           }),
@@ -315,7 +315,7 @@ describe('crud operations', () => {
     it('in forwards order', async () => {
       const results = (results) => results.flatMap((res) => res.records)
       const paginator = async (cursor?: string) => {
-        const res = await client.app.bsky.feed.post.list({
+        const res = await agent.api.app.bsky.feed.post.list({
           user: alice.did,
           before: cursor,
           limit: 2,
@@ -328,7 +328,7 @@ describe('crud operations', () => {
         expect(res.records.length).toBeLessThanOrEqual(2),
       )
 
-      const full = await client.app.bsky.feed.post.list({
+      const full = await agent.api.app.bsky.feed.post.list({
         user: alice.did,
       })
 
@@ -339,7 +339,7 @@ describe('crud operations', () => {
     it('in reverse order', async () => {
       const results = (results) => results.flatMap((res) => res.records)
       const paginator = async (cursor?: string) => {
-        const res = await client.app.bsky.feed.post.list({
+        const res = await agent.api.app.bsky.feed.post.list({
           user: alice.did,
           reverse: true,
           after: cursor,
@@ -353,7 +353,7 @@ describe('crud operations', () => {
         expect(res.records.length).toBeLessThanOrEqual(2),
       )
 
-      const full = await client.app.bsky.feed.post.list({
+      const full = await agent.api.app.bsky.feed.post.list({
         user: alice.did,
         reverse: true,
       })
@@ -363,7 +363,7 @@ describe('crud operations', () => {
     })
 
     it('between two records', async () => {
-      const list = await client.app.bsky.feed.post.list({
+      const list = await agent.api.app.bsky.feed.post.list({
         user: alice.did,
         after: uri1.rkey,
         before: uri5.rkey,
@@ -375,10 +375,10 @@ describe('crud operations', () => {
     })
 
     it('reverses', async () => {
-      const forwards = await client.app.bsky.feed.post.list({
+      const forwards = await agent.api.app.bsky.feed.post.list({
         user: alice.did,
       })
-      const reverse = await client.app.bsky.feed.post.list({
+      const reverse = await agent.api.app.bsky.feed.post.list({
         user: alice.did,
         reverse: true,
       })
@@ -394,7 +394,7 @@ describe('crud operations', () => {
   // --------------
 
   it('defaults an undefined $type on records', async () => {
-    const res = await aliceClient.com.atproto.repo.createRecord({
+    const res = await aliceAgent.api.com.atproto.repo.createRecord({
       did: alice.did,
       collection: 'app.bsky.feed.post',
       record: {
@@ -403,7 +403,7 @@ describe('crud operations', () => {
       },
     })
     const uri = new AtUri(res.data.uri)
-    const got = await client.com.atproto.repo.getRecord({
+    const got = await agent.api.com.atproto.repo.getRecord({
       user: alice.did,
       collection: uri.collection,
       rkey: uri.rkey,
@@ -412,7 +412,7 @@ describe('crud operations', () => {
   })
 
   it('requires the schema to be known if validating', async () => {
-    const prom = aliceClient.com.atproto.repo.createRecord({
+    const prom = aliceAgent.api.com.atproto.repo.createRecord({
       did: alice.did,
       collection: 'com.example.foobar',
       record: { $type: 'com.example.foobar' },
@@ -424,7 +424,7 @@ describe('crud operations', () => {
 
   it('requires the $type to match the schema', async () => {
     await expect(
-      aliceClient.com.atproto.repo.createRecord({
+      aliceAgent.api.com.atproto.repo.createRecord({
         did: alice.did,
         collection: 'app.bsky.feed.post',
         record: { $type: 'app.bsky.feed.vote' },
@@ -436,7 +436,7 @@ describe('crud operations', () => {
 
   it('validates the record on write', async () => {
     await expect(
-      aliceClient.com.atproto.repo.createRecord({
+      aliceAgent.api.com.atproto.repo.createRecord({
         did: alice.did,
         collection: 'app.bsky.feed.post',
         record: { $type: 'app.bsky.feed.post' },
@@ -450,7 +450,7 @@ describe('crud operations', () => {
   // --------------
 
   it("doesn't serve taken-down record", async () => {
-    const created = await aliceClient.app.bsky.feed.post.create(
+    const created = await aliceAgent.api.app.bsky.feed.post.create(
       { did: alice.did },
       {
         $type: 'app.bsky.feed.post',
@@ -459,15 +459,15 @@ describe('crud operations', () => {
       },
     )
     const postUri = new AtUri(created.uri)
-    const post = await client.app.bsky.feed.post.get({
+    const post = await agent.api.app.bsky.feed.post.get({
       user: alice.did,
       rkey: postUri.rkey,
     })
-    const posts = await client.app.bsky.feed.post.list({ user: alice.did })
+    const posts = await agent.api.app.bsky.feed.post.list({ user: alice.did })
     expect(posts.records.map((r) => r.uri)).toContain(post.uri)
 
     const { data: action } =
-      await client.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.takeModerationAction(
         {
           action: TAKEDOWN,
           subject: {
@@ -483,18 +483,18 @@ describe('crud operations', () => {
         },
       )
 
-    const postTakedownPromise = client.app.bsky.feed.post.get({
+    const postTakedownPromise = agent.api.app.bsky.feed.post.get({
       user: alice.did,
       rkey: postUri.rkey,
     })
     await expect(postTakedownPromise).rejects.toThrow('Could not locate record')
-    const postsTakedown = await client.app.bsky.feed.post.list({
+    const postsTakedown = await agent.api.app.bsky.feed.post.list({
       user: alice.did,
     })
     expect(postsTakedown.records.map((r) => r.uri)).not.toContain(post.uri)
 
     // Cleanup
-    await client.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: action.id,
         createdBy: 'X',

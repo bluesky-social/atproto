@@ -5,17 +5,18 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
+import * as AppBskyActorProfile from './profile'
 
 export interface QueryParams {
-  /** The DID of the repo. */
-  did: string
-  /** The earliest commit in the commit range (not inclusive) */
-  earliest?: string
-  /** The latest commit you in the commit range (inclusive */
-  latest?: string
+  actors: string[]
 }
 
 export type InputSchema = undefined
+
+export interface OutputSchema {
+  profiles: AppBskyActorProfile.View[]
+  [k: string]: unknown
+}
 
 export interface CallOptions {
   headers?: Headers
@@ -24,7 +25,7 @@ export interface CallOptions {
 export interface Response {
   success: boolean
   headers: Headers
-  data: Uint8Array
+  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {

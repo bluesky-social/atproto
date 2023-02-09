@@ -1,6 +1,5 @@
 import { once, EventEmitter } from 'events'
-import AtpApi, {
-  ServiceClient as AtpServiceClient,
+import AtpAgent, {
   ComAtprotoAccountCreate,
   ComAtprotoAccountResetPassword as ResetAccountPassword,
 } from '@atproto/api'
@@ -18,10 +17,10 @@ const passwordAlt = 'test456'
 const minsToMs = 60 * 1000
 
 const createInviteCode = async (
-  client: AtpServiceClient,
+  agent: AtpAgent,
   uses: number,
 ): Promise<string> => {
-  const res = await client.com.atproto.account.createInviteCode(
+  const res = await agent.api.com.atproto.account.createInviteCode(
     { useCount: uses },
     {
       headers: { authorization: util.adminAuth() },
@@ -35,7 +34,7 @@ describe('account', () => {
   let serverUrl: string
   let cfg: ServerConfig
   let serverKey: string
-  let client: AtpServiceClient
+  let agent: AtpAgent
   let close: util.CloseFn
   let mailer: ServerMailer
   let db: Database
@@ -55,7 +54,7 @@ describe('account', () => {
     cfg = server.ctx.cfg
     serverUrl = server.url
     serverKey = server.ctx.keypair.did()
-    client = AtpApi.service(serverUrl)
+    agent = new AtpAgent({ service: serverUrl })
 
     // Catch emails for use in tests
     _origSendMail = mailer.transporter.sendMail
@@ -76,14 +75,14 @@ describe('account', () => {
   let inviteCode: string
 
   it('creates an invite code', async () => {
-    inviteCode = await createInviteCode(client, 1)
+    inviteCode = await createInviteCode(agent, 1)
     const [host, code] = inviteCode.split('-')
     expect(host).toBe('pds.public.url') // Hostname of public url
     expect(code.length).toBe(5)
   })
 
   it('serves the accounts system config', async () => {
-    const res = await client.com.atproto.server.getAccountsConfig({})
+    const res = await agent.api.com.atproto.server.getAccountsConfig({})
     expect(res.data.inviteCodeRequired).toBe(true)
     expect(res.data.availableUserDomains[0]).toBe('.test')
     expect(typeof res.data.inviteCodeRequired).toBe('boolean')
@@ -94,7 +93,7 @@ describe('account', () => {
   })
 
   it('fails on invalid handles', async () => {
-    const promise = client.com.atproto.account.create({
+    const promise = agent.api.com.atproto.account.create({
       email: 'bad-handle@test.com',
       handle: 'did:bad-handle.test',
       password: 'asdf',
@@ -106,7 +105,7 @@ describe('account', () => {
   })
 
   it('fails on bad invite code', async () => {
-    const promise = client.com.atproto.account.create({
+    const promise = agent.api.com.atproto.account.create({
       email,
       handle,
       password,
@@ -121,7 +120,7 @@ describe('account', () => {
   let jwt: string
 
   it('creates an account', async () => {
-    const res = await client.com.atproto.account.create({
+    const res = await agent.api.com.atproto.account.create({
       email,
       handle,
       password,
@@ -146,9 +145,9 @@ describe('account', () => {
   })
 
   it('allows a custom set recovery key', async () => {
-    const inviteCode = await createInviteCode(client, 1)
+    const inviteCode = await createInviteCode(agent, 1)
     const recoveryKey = (await crypto.EcdsaKeypair.create()).did()
-    const res = await client.com.atproto.account.create({
+    const res = await agent.api.com.atproto.account.create({
       email: 'custom-recovery@test.com',
       handle: 'custom-recovery.test',
       password: 'custom-recovery',
@@ -163,11 +162,11 @@ describe('account', () => {
   })
 
   it('disallows duplicate email addresses and handles', async () => {
-    const inviteCode = await createInviteCode(client, 2)
+    const inviteCode = await createInviteCode(agent, 2)
     const email = 'bob@test.com'
     const handle = 'bob.test'
     const password = 'test123'
-    await client.com.atproto.account.create({
+    await agent.api.com.atproto.account.create({
       email,
       handle,
       password,
@@ -175,7 +174,7 @@ describe('account', () => {
     })
 
     await expect(
-      client.com.atproto.account.create({
+      agent.api.com.atproto.account.create({
         email: email.toUpperCase(),
         handle: 'carol.test',
         password,
@@ -184,7 +183,7 @@ describe('account', () => {
     ).rejects.toThrow('Email already taken: BOB@TEST.COM')
 
     await expect(
-      client.com.atproto.account.create({
+      agent.api.com.atproto.account.create({
         email: 'carol@test.com',
         handle: handle.toUpperCase(),
         password,
@@ -194,9 +193,9 @@ describe('account', () => {
   })
 
   it('disallows improperly formatted handles', async () => {
-    const inviteCode = await createInviteCode(client, 1)
+    const inviteCode = await createInviteCode(agent, 1)
     const tryHandle = async (handle: string) => {
-      await client.com.atproto.account.create({
+      await agent.api.com.atproto.account.create({
         email: 'john@test.com',
         handle,
         password: 'test123',
@@ -242,7 +241,7 @@ describe('account', () => {
   })
 
   it('fails on used up invite code', async () => {
-    const promise = client.com.atproto.account.create({
+    const promise = agent.api.com.atproto.account.create({
       email: 'bob@test.com',
       handle: 'bob.test',
       password: 'asdf',
@@ -254,7 +253,7 @@ describe('account', () => {
   })
 
   it('handles racing invite code uses', async () => {
-    const inviteCode = await createInviteCode(client, 1)
+    const inviteCode = await createInviteCode(agent, 1)
     const COUNT = 10
 
     let successes = 0
@@ -263,7 +262,7 @@ describe('account', () => {
     for (let i = 0; i < COUNT; i++) {
       const attempt = async () => {
         try {
-          await client.com.atproto.account.create({
+          await agent.api.com.atproto.account.create({
             email: `user${i}@test.com`,
             handle: `user${i}.test`,
             password: `password`,
@@ -284,8 +283,8 @@ describe('account', () => {
   it('handles racing signups for same handle', async () => {
     const COUNT = 10
 
-    const invite1 = await createInviteCode(client, COUNT)
-    const invite2 = await createInviteCode(client, COUNT)
+    const invite1 = await createInviteCode(agent, COUNT)
+    const invite2 = await createInviteCode(agent, COUNT)
 
     let successes = 0
     let failures = 0
@@ -296,7 +295,7 @@ describe('account', () => {
           // Use two invites to ensure per-invite locking doesn't
           // give the appearance of fixing a race for handle.
           const invite = i % 2 ? invite1 : invite2
-          await client.com.atproto.account.create({
+          await agent.api.com.atproto.account.create({
             email: `matching@test.com`,
             handle: `matching.test`,
             password: `password`,
@@ -315,11 +314,11 @@ describe('account', () => {
   })
 
   it('fails on unauthenticated requests', async () => {
-    await expect(client.com.atproto.session.get({})).rejects.toThrow()
+    await expect(agent.api.com.atproto.session.get({})).rejects.toThrow()
   })
 
   it('logs in', async () => {
-    const res = await client.com.atproto.session.create({
+    const res = await agent.api.com.atproto.session.create({
       identifier: handle,
       password,
     })
@@ -330,8 +329,8 @@ describe('account', () => {
   })
 
   it('can perform authenticated requests', async () => {
-    client.setHeader('authorization', `Bearer ${jwt}`)
-    const res = await client.com.atproto.session.get({})
+    agent.api.setHeader('authorization', `Bearer ${jwt}`)
+    const res = await agent.api.com.atproto.session.get({})
     expect(res.data.did).toBe(did)
     expect(res.data.handle).toBe(handle)
   })
@@ -346,7 +345,7 @@ describe('account', () => {
 
   it('can reset account password', async () => {
     const mail = await getMailFrom(
-      client.com.atproto.account.requestPasswordReset({ email }),
+      agent.api.com.atproto.account.requestPasswordReset({ email }),
     )
 
     expect(mail.to).toEqual(email)
@@ -359,18 +358,18 @@ describe('account', () => {
       return expect(token).toBeDefined()
     }
 
-    await client.com.atproto.account.resetPassword({
+    await agent.api.com.atproto.account.resetPassword({
       token,
       password: passwordAlt,
     })
 
     // Logs in with new password and not previous password
     await expect(
-      client.com.atproto.session.create({ identifier: handle, password }),
+      agent.api.com.atproto.session.create({ identifier: handle, password }),
     ).rejects.toThrow('Invalid identifier or password')
 
     await expect(
-      client.com.atproto.session.create({
+      agent.api.com.atproto.session.create({
         identifier: handle,
         password: passwordAlt,
       }),
@@ -379,7 +378,7 @@ describe('account', () => {
 
   it('allows only single-use of password reset token', async () => {
     const mail = await getMailFrom(
-      client.com.atproto.account.requestPasswordReset({ email }),
+      agent.api.com.atproto.account.requestPasswordReset({ email }),
     )
 
     const token = getTokenFromMail(mail)
@@ -389,28 +388,28 @@ describe('account', () => {
     }
 
     // Reset back from passwordAlt to password
-    await client.com.atproto.account.resetPassword({ token, password })
+    await agent.api.com.atproto.account.resetPassword({ token, password })
 
     // Reuse of token fails
     await expect(
-      client.com.atproto.account.resetPassword({ token, password }),
+      agent.api.com.atproto.account.resetPassword({ token, password }),
     ).rejects.toThrow(ResetAccountPassword.InvalidTokenError)
 
     // Logs in with new password and not previous password
     await expect(
-      client.com.atproto.session.create({
+      agent.api.com.atproto.session.create({
         identifier: handle,
         password: passwordAlt,
       }),
     ).rejects.toThrow('Invalid identifier or password')
 
     await expect(
-      client.com.atproto.session.create({ identifier: handle, password }),
+      agent.api.com.atproto.session.create({ identifier: handle, password }),
     ).resolves.toBeDefined()
   })
 
   it('allows only unexpired password reset tokens', async () => {
-    await client.com.atproto.account.requestPasswordReset({ email })
+    await agent.api.com.atproto.account.requestPasswordReset({ email })
 
     const user = await db.db
       .updateTable('user')
@@ -428,7 +427,7 @@ describe('account', () => {
 
     // Use of expired token fails
     await expect(
-      client.com.atproto.account.resetPassword({
+      agent.api.com.atproto.account.resetPassword({
         token: user.passwordResetToken,
         password: passwordAlt,
       }),
@@ -436,25 +435,25 @@ describe('account', () => {
 
     // Still logs in with previous password
     await expect(
-      client.com.atproto.session.create({
+      agent.api.com.atproto.session.create({
         identifier: handle,
         password: passwordAlt,
       }),
     ).rejects.toThrow('Invalid identifier or password')
 
     await expect(
-      client.com.atproto.session.create({ identifier: handle, password }),
+      agent.api.com.atproto.session.create({ identifier: handle, password }),
     ).resolves.toBeDefined()
   })
 
   it('resolves did for account', async () => {
-    const resolved = await client.com.atproto.handle.resolve({ handle })
+    const resolved = await agent.api.com.atproto.handle.resolve({ handle })
     expect(resolved.data).toEqual({ did })
   })
 
   it('resolves did for server', async () => {
-    const resolvedImplicit = await client.com.atproto.handle.resolve({})
-    const resolvedExplicit = await client.com.atproto.handle.resolve({
+    const resolvedImplicit = await agent.api.com.atproto.handle.resolve({})
+    const resolvedExplicit = await agent.api.com.atproto.handle.resolve({
       handle: 'pds.public.url',
     })
     expect(resolvedImplicit.data).toEqual({ did: cfg.serverDid })

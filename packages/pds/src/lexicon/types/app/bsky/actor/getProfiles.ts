@@ -2,27 +2,28 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
-import stream from 'stream'
 import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
+import * as AppBskyActorProfile from './profile'
 
 export interface QueryParams {
-  /** The DID of the repo. */
-  did: string
-  /** The earliest commit in the commit range (not inclusive) */
-  earliest?: string
-  /** The latest commit you in the commit range (inclusive */
-  latest?: string
+  actors: string[]
 }
 
 export type InputSchema = undefined
+
+export interface OutputSchema {
+  profiles: AppBskyActorProfile.View[]
+  [k: string]: unknown
+}
+
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {
-  encoding: 'application/vnd.ipld.car'
-  body: Uint8Array | stream.Readable
+  encoding: 'application/json'
+  body: OutputSchema
 }
 
 export interface HandlerError {

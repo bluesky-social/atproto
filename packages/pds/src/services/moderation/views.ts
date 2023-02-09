@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { cborBytesToRecord } from '@atproto/common'
+import { ArrayEl, cborBytesToRecord } from '@atproto/common'
 import { AtUri } from '@atproto/uri'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
@@ -26,12 +26,17 @@ import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/re
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { ActorService } from '../actor'
 import { RecordService } from '../record'
+import { ImageUriBuilder } from '../../image/uri'
 
 export class ModerationViews {
-  constructor(private db: Database, private messageQueue: MessageQueue) {}
+  constructor(
+    private db: Database,
+    private messageQueue: MessageQueue,
+    private imgUriBuilder: ImageUriBuilder,
+  ) {}
 
   services = {
-    actor: ActorService.creator(),
+    actor: ActorService.creator(this.imgUriBuilder),
     record: RecordService.creator(this.messageQueue),
   }
 
@@ -569,8 +574,6 @@ type SubjectResult = Pick<
 >
 
 type SubjectView = ActionViewDetail['subject'] & ReportViewDetail['subject']
-
-type ArrayEl<A> = A extends readonly (infer T)[] ? T : never
 
 function didFromUri(uri: string) {
   return new AtUri(uri).host

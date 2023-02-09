@@ -1,6 +1,6 @@
 import { once, EventEmitter } from 'events'
 import Mail from 'nodemailer/lib/mailer'
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import { Database } from '../src'
@@ -27,7 +27,7 @@ import { RepoSeq } from '../src/db/tables/repo-seq'
 import { Selectable } from 'kysely'
 
 describe('account deletion', () => {
-  let client: AtpServiceClient
+  let agent: AtpAgent
   let close: util.CloseFn
   let sc: SeedClient
 
@@ -50,8 +50,8 @@ describe('account deletion', () => {
     mailer = server.ctx.mailer
     db = server.ctx.db
     blobstore = server.ctx.blobstore
-    client = AtpApi.service(server.url)
-    sc = new SeedClient(client)
+    agent = new AtpAgent({ service: server.url })
+    sc = new SeedClient(agent)
     await basicSeed(sc, server.ctx.messageQueue)
     carol = sc.accounts[sc.dids.carol]
 
@@ -85,7 +85,7 @@ describe('account deletion', () => {
 
   it('requests account deletion', async () => {
     const mail = await getMailFrom(
-      client.com.atproto.account.requestDelete(undefined, {
+      agent.api.com.atproto.account.requestDelete(undefined, {
         headers: sc.getHeaders(carol.did),
       }),
     )
@@ -100,7 +100,7 @@ describe('account deletion', () => {
   })
 
   it('fails account deletion with a bad token', async () => {
-    const attempt = client.com.atproto.account.delete({
+    const attempt = agent.api.com.atproto.account.delete({
       token: '123456',
       did: carol.did,
       password: carol.password,
@@ -109,7 +109,7 @@ describe('account deletion', () => {
   })
 
   it('fails account deletion with a bad password', async () => {
-    const attempt = client.com.atproto.account.delete({
+    const attempt = agent.api.com.atproto.account.delete({
       token,
       did: carol.did,
       password: 'bad-pass',
@@ -118,7 +118,7 @@ describe('account deletion', () => {
   })
 
   it('deletes account with a valid token & password', async () => {
-    await client.com.atproto.account.delete({
+    await agent.api.com.atproto.account.delete({
       token,
       did: carol.did,
       password: carol.password,
@@ -126,7 +126,7 @@ describe('account deletion', () => {
   })
 
   it('no longer lets the user log in', async () => {
-    const attempt = client.com.atproto.session.create({
+    const attempt = agent.api.com.atproto.session.create({
       handle: carol.handle,
       password: carol.password,
     })
@@ -210,7 +210,7 @@ describe('account deletion', () => {
   })
 
   it('no longer displays the users posts in feeds', async () => {
-    const feed = await client.app.bsky.feed.getTimeline(undefined, {
+    const feed = await agent.api.app.bsky.feed.getTimeline(undefined, {
       headers: sc.getHeaders(sc.dids.alice),
     })
     const found = feed.data.feed.filter(
@@ -220,7 +220,7 @@ describe('account deletion', () => {
   })
 
   it('removes notifications from the user', async () => {
-    const notifs = await client.app.bsky.notification.list(undefined, {
+    const notifs = await agent.api.app.bsky.notification.list(undefined, {
       headers: sc.getHeaders(sc.dids.alice),
     })
     const found = notifs.data.notifications.filter(
@@ -237,7 +237,7 @@ describe('account deletion', () => {
     })
 
     const mail = await getMailFrom(
-      client.com.atproto.account.requestDelete(undefined, {
+      agent.api.com.atproto.account.requestDelete(undefined, {
         headers: sc.getHeaders(eve.did),
       }),
     )
@@ -246,7 +246,7 @@ describe('account deletion', () => {
     if (!token) {
       return expect(token).toBeDefined()
     }
-    await client.com.atproto.account.delete({
+    await agent.api.com.atproto.account.delete({
       token,
       did: eve.did,
       password: eve.password,

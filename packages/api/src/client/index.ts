@@ -55,6 +55,7 @@ import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 import * as ComAtprotoSyncSubscribeAllRepos from './types/com/atproto/sync/subscribeAllRepos'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
+import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 import * as AppBskyActorRef from './types/app/bsky/actor/ref'
@@ -139,6 +140,7 @@ export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 export * as ComAtprotoSyncSubscribeAllRepos from './types/com/atproto/sync/subscribeAllRepos'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
+export * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 export * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 export * as AppBskyActorRef from './types/app/bsky/actor/ref'
@@ -191,28 +193,25 @@ export const APP_BSKY_SYSTEM = {
   ActorUser: 'app.bsky.system.actorUser',
 }
 
-export class Client {
+export class AtpBaseClient {
   xrpc: XrpcClient = new XrpcClient()
 
   constructor() {
     this.xrpc.addLexicons(schemas)
   }
 
-  service(serviceUri: string | URL): ServiceClient {
-    return new ServiceClient(this, this.xrpc.service(serviceUri))
+  service(serviceUri: string | URL): AtpServiceClient {
+    return new AtpServiceClient(this, this.xrpc.service(serviceUri))
   }
 }
 
-const defaultInst = new Client()
-export default defaultInst
-
-export class ServiceClient {
-  _baseClient: Client
+export class AtpServiceClient {
+  _baseClient: AtpBaseClient
   xrpc: XrpcServiceClient
   com: ComNS
   app: AppNS
 
-  constructor(baseClient: Client, xrpcService: XrpcServiceClient) {
+  constructor(baseClient: AtpBaseClient, xrpcService: XrpcServiceClient) {
     this._baseClient = baseClient
     this.xrpc = xrpcService
     this.com = new ComNS(this)
@@ -225,17 +224,17 @@ export class ServiceClient {
 }
 
 export class ComNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
   atproto: AtprotoNS
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
     this.atproto = new AtprotoNS(service)
   }
 }
 
 export class AtprotoNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
   account: AccountNS
   admin: AdminNS
   blob: BlobNS
@@ -246,7 +245,7 @@ export class AtprotoNS {
   session: SessionNS
   sync: SyncNS
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
     this.account = new AccountNS(service)
     this.admin = new AdminNS(service)
@@ -261,9 +260,9 @@ export class AtprotoNS {
 }
 
 export class AccountNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 
@@ -346,9 +345,9 @@ export class AccountNS {
 }
 
 export class AdminNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 
@@ -464,9 +463,9 @@ export class AdminNS {
 }
 
 export class BlobNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 
@@ -483,9 +482,9 @@ export class BlobNS {
 }
 
 export class HandleNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 
@@ -502,9 +501,9 @@ export class HandleNS {
 }
 
 export class RepoNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 
@@ -587,9 +586,9 @@ export class RepoNS {
 }
 
 export class ReportNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 
@@ -606,9 +605,9 @@ export class ReportNS {
 }
 
 export class ServerNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 
@@ -625,9 +624,9 @@ export class ServerNS {
 }
 
 export class SessionNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 
@@ -677,9 +676,9 @@ export class SessionNS {
 }
 
 export class SyncNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 
@@ -740,17 +739,17 @@ export class SyncNS {
 }
 
 export class AppNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
   bsky: BskyNS
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
     this.bsky = new BskyNS(service)
   }
 }
 
 export class BskyNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
   actor: ActorNS
   embed: EmbedNS
   feed: FeedNS
@@ -758,7 +757,7 @@ export class BskyNS {
   notification: NotificationNS
   system: SystemNS
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
     this.actor = new ActorNS(service)
     this.embed = new EmbedNS(service)
@@ -770,10 +769,10 @@ export class BskyNS {
 }
 
 export class ActorNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
   profile: ProfileRecord
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
     this.profile = new ProfileRecord(service)
   }
@@ -786,6 +785,17 @@ export class ActorNS {
       .call('app.bsky.actor.getProfile', params, undefined, opts)
       .catch((e) => {
         throw AppBskyActorGetProfile.toKnownErr(e)
+      })
+  }
+
+  getProfiles(
+    params?: AppBskyActorGetProfiles.QueryParams,
+    opts?: AppBskyActorGetProfiles.CallOptions,
+  ): Promise<AppBskyActorGetProfiles.Response> {
+    return this._service.xrpc
+      .call('app.bsky.actor.getProfiles', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyActorGetProfiles.toKnownErr(e)
       })
   }
 
@@ -835,9 +845,9 @@ export class ActorNS {
 }
 
 export class ProfileRecord {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 
@@ -896,20 +906,20 @@ export class ProfileRecord {
 }
 
 export class EmbedNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 }
 
 export class FeedNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
   post: PostRecord
   repost: RepostRecord
   vote: VoteRecord
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
     this.post = new PostRecord(service)
     this.repost = new RepostRecord(service)
@@ -984,9 +994,9 @@ export class FeedNS {
 }
 
 export class PostRecord {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 
@@ -1045,9 +1055,9 @@ export class PostRecord {
 }
 
 export class RepostRecord {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 
@@ -1106,9 +1116,9 @@ export class RepostRecord {
 }
 
 export class VoteRecord {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 
@@ -1167,12 +1177,12 @@ export class VoteRecord {
 }
 
 export class GraphNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
   assertion: AssertionRecord
   confirmation: ConfirmationRecord
   follow: FollowRecord
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
     this.assertion = new AssertionRecord(service)
     this.confirmation = new ConfirmationRecord(service)
@@ -1236,9 +1246,9 @@ export class GraphNS {
 }
 
 export class AssertionRecord {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 
@@ -1301,9 +1311,9 @@ export class AssertionRecord {
 }
 
 export class ConfirmationRecord {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 
@@ -1366,9 +1376,9 @@ export class ConfirmationRecord {
 }
 
 export class FollowRecord {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 
@@ -1427,9 +1437,9 @@ export class FollowRecord {
 }
 
 export class NotificationNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 
@@ -1468,19 +1478,19 @@ export class NotificationNS {
 }
 
 export class SystemNS {
-  _service: ServiceClient
+  _service: AtpServiceClient
   declaration: DeclarationRecord
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
     this.declaration = new DeclarationRecord(service)
   }
 }
 
 export class DeclarationRecord {
-  _service: ServiceClient
+  _service: AtpServiceClient
 
-  constructor(service: ServiceClient) {
+  constructor(service: AtpServiceClient) {
     this._service = service
   }
 

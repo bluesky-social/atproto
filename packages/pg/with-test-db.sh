@@ -1,5 +1,4 @@
 #!/usr/bin/env sh
-# @TODO handle sigint for cleanup
 
 # Example usage:
 # ./with-test-db.sh psql postgresql://pg:password@localhost:5433/postgres -c 'select 1;'
@@ -9,6 +8,13 @@ compose_file="$dir/docker-compose.yaml"
 
 docker compose -f $compose_file up --wait --force-recreate db_test
 echo # newline
+
+trap on_sigint INT
+on_sigint() { 
+  echo # newline
+  docker compose -f $compose_file rm -f --stop --volumes db_test
+  exit $?
+}
 
 # Based on creds in compose.yaml
 export PGPORT=5433

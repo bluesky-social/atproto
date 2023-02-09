@@ -1,4 +1,4 @@
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { TID } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import { DidResolver } from '@atproto/did-resolver'
@@ -9,7 +9,7 @@ import { CID } from 'multiformats/cid'
 import { CloseFn, runTestServer } from '../_util'
 
 describe('repo sync', () => {
-  let client: AtpServiceClient
+  let agent: AtpAgent
   let did: string
 
   const repoData: repo.RepoContents = {}
@@ -25,13 +25,13 @@ describe('repo sync', () => {
       dbPostgresSchema: 'repo_sync',
     })
     close = server.close
-    client = AtpApi.service(server.url)
-    const res = await client.com.atproto.account.create({
+    agent = new AtpAgent({ service: server.url })
+    const res = await agent.api.com.atproto.account.create({
       email: 'alice@test.com',
       handle: 'alice.test',
       password: 'alice-pass',
     })
-    client.setHeader('authorization', `Bearer ${res.data.accessJwt}`)
+    agent.api.setHeader('authorization', `Bearer ${res.data.accessJwt}`)
     did = res.data.did
     didResolver = new DidResolver({ plcUrl: server.ctx.cfg.didPlcUrl })
     repoData['app.bsky.system.declaration'] = {
@@ -49,7 +49,7 @@ describe('repo sync', () => {
   it('creates and syncs some records', async () => {
     const ADD_COUNT = 10
     for (let i = 0; i < ADD_COUNT; i++) {
-      const { obj, uri } = await makePost(client, did)
+      const { obj, uri } = await makePost(agent, did)
       if (!repoData[uri.collection]) {
         repoData[uri.collection] = {}
       }
@@ -57,7 +57,7 @@ describe('repo sync', () => {
       uris.push(uri)
     }
 
-    const car = await client.com.atproto.sync.getRepo({ did })
+    const car = await agent.api.com.atproto.sync.getRepo({ did })
     const synced = await repo.loadFullRepo(
       storage,
       new Uint8Array(car.data),
@@ -77,7 +77,7 @@ describe('repo sync', () => {
     const ADD_COUNT = 10
     const DEL_COUNT = 4
     for (let i = 0; i < ADD_COUNT; i++) {
-      const { obj, uri } = await makePost(client, did)
+      const { obj, uri } = await makePost(agent, did)
       if (!repoData[uri.collection]) {
         repoData[uri.collection] = {}
       }
@@ -87,7 +87,7 @@ describe('repo sync', () => {
     // delete two that are already sync & two that have not been
     for (let i = 0; i < DEL_COUNT; i++) {
       const uri = uris[i * 5]
-      await client.app.bsky.feed.post.delete({
+      await agent.api.app.bsky.feed.post.delete({
         did,
         colleciton: uri.collection,
         rkey: uri.rkey,
@@ -95,9 +95,9 @@ describe('repo sync', () => {
       delete repoData[uri.collection][uri.rkey]
     }
 
-    const car = await client.com.atproto.sync.getRepo({
+    const car = await agent.api.com.atproto.sync.getRepo({
       did,
-      from: currRoot?.toString(),
+      earliest: currRoot?.toString(),
     })
     const currRepo = await repo.Repo.load(storage, currRoot)
     const synced = await repo.loadDiff(
@@ -116,7 +116,7 @@ describe('repo sync', () => {
   })
 
   it('syncs current root', async () => {
-    const root = await client.com.atproto.sync.getHead({ did })
+    const root = await agent.api.com.atproto.sync.getHead({ did })
     expect(root.data.root).toEqual(currRoot?.toString())
   })
 
@@ -126,10 +126,10 @@ describe('repo sync', () => {
       throw new Error('Could not get local commit path')
     }
     const localStr = local.map((c) => c.toString())
-    const commitPath = await client.com.atproto.sync.getCommitPath({ did })
+    const commitPath = await agent.api.com.atproto.sync.getCommitPath({ did })
     expect(commitPath.data.commits).toEqual(localStr)
 
-    const partialCommitPath = await client.com.atproto.sync.getCommitPath({
+    const partialCommitPath = await agent.api.com.atproto.sync.getCommitPath({
       did,
       earliest: localStr[2],
       latest: localStr[15],
@@ -137,8 +137,49 @@ describe('repo sync', () => {
     expect(partialCommitPath.data.commits).toEqual(localStr.slice(3, 16))
   })
 
+  it('syncs commit range', async () => {
+    const local = await storage.getCommits(currRoot as CID, null)
+    if (!local) {
+      throw new Error('Could not get local commit path')
+    }
+    const memoryStore = new MemoryBlockstore()
+    // first we load some baseline data (needed for parsing range)
+    const first = await agent.api.com.atproto.sync.getRepo({
+      did,
+      latest: local[2].commit.toString(),
+    })
+    const firstParsed = await repo.readCar(new Uint8Array(first.data))
+    memoryStore.putMany(firstParsed.blocks)
+
+    // then we load some commit range
+    const second = await agent.api.com.atproto.sync.getRepo({
+      did,
+      earliest: local[2].commit.toString(),
+      latest: local[15].commit.toString(),
+    })
+    const secondParsed = await repo.readCar(new Uint8Array(second.data))
+    memoryStore.putMany(secondParsed.blocks)
+
+    // then we verify we have all the commits in the range
+    const commits = await memoryStore.getCommits(
+      local[15].commit,
+      local[2].commit,
+    )
+    if (!commits) {
+      throw new Error('expected commits to be defined')
+    }
+    const localSlice = local.slice(2, 15)
+    expect(commits.length).toBe(localSlice.length)
+    for (let i = 0; i < commits.length; i++) {
+      const fromRemote = commits[i]
+      const fromLocal = localSlice[i]
+      expect(fromRemote.commit.equals(fromLocal.commit))
+      expect(fromRemote.blocks.equals(fromLocal.blocks))
+    }
+  })
+
   it('sync a repo checkout', async () => {
-    const car = await client.com.atproto.sync.getCheckout({ did })
+    const car = await agent.api.com.atproto.sync.getCheckout({ did })
     const checkoutStorage = new MemoryBlockstore()
     const loaded = await repo.loadCheckout(
       checkoutStorage,
@@ -153,7 +194,7 @@ describe('repo sync', () => {
   it('sync a record proof', async () => {
     const collection = Object.keys(repoData)[0]
     const rkey = Object.keys(repoData[collection])[0]
-    const car = await client.com.atproto.sync.getRecord({
+    const car = await agent.api.com.atproto.sync.getRecord({
       did,
       collection,
       rkey,
@@ -183,7 +224,7 @@ describe('repo sync', () => {
   it('sync a proof of non-existence', async () => {
     const collection = Object.keys(repoData)[0]
     const rkey = TID.nextStr() // rkey that doesn't exist
-    const car = await client.com.atproto.sync.getRecord({
+    const car = await agent.api.com.atproto.sync.getRecord({
       did,
       collection,
       rkey,
@@ -204,13 +245,13 @@ describe('repo sync', () => {
   })
 })
 
-const makePost = async (client: AtpServiceClient, did: string) => {
+const makePost = async (agent: AtpAgent, did: string) => {
   const obj = {
     $type: 'app.bsky.feed.post',
     text: randomStr(32, 'base32'),
     createdAt: new Date().toISOString(),
   }
-  const res = await client.app.bsky.feed.post.create({ did }, obj)
+  const res = await agent.api.app.bsky.feed.post.create({ did }, obj)
   const uri = new AtUri(res.uri)
   return { obj, uri }
 }

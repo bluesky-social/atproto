@@ -2155,9 +2155,15 @@ export const schemaDict = {
               type: 'string',
               description: 'The DID of the repo.',
             },
-            from: {
+            earliest: {
               type: 'string',
-              description: 'A past commit CID.',
+              description:
+                'The earliest commit in the commit range (not inclusive)',
+            },
+            latest: {
+              type: 'string',
+              description:
+                'The latest commit you in the commit range (inclusive',
             },
           },
         },
@@ -2328,6 +2334,44 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyActorGetProfiles: {
+    lexicon: 1,
+    id: 'app.bsky.actor.getProfiles',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['actors'],
+          properties: {
+            actors: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['profiles'],
+            properties: {
+              profiles: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.profile#view',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyActorGetSuggestions: {
     lexicon: 1,
     id: 'app.bsky.actor.getSuggestions',
@@ -2434,6 +2478,71 @@ export const schemaDict = {
               maxHeight: 2000,
               maxSize: 1000000,
             },
+          },
+        },
+      },
+      view: {
+        type: 'object',
+        required: [
+          'did',
+          'declaration',
+          'handle',
+          'creator',
+          'followersCount',
+          'followsCount',
+          'postsCount',
+        ],
+        properties: {
+          did: {
+            type: 'string',
+          },
+          declaration: {
+            type: 'ref',
+            ref: 'lex:app.bsky.system.declRef',
+          },
+          handle: {
+            type: 'string',
+          },
+          creator: {
+            type: 'string',
+          },
+          displayName: {
+            type: 'string',
+            maxLength: 64,
+          },
+          description: {
+            type: 'string',
+            maxLength: 256,
+          },
+          avatar: {
+            type: 'string',
+          },
+          banner: {
+            type: 'string',
+          },
+          followersCount: {
+            type: 'integer',
+          },
+          followsCount: {
+            type: 'integer',
+          },
+          postsCount: {
+            type: 'integer',
+          },
+          myState: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.profile#myState',
+          },
+        },
+      },
+      myState: {
+        type: 'object',
+        properties: {
+          follow: {
+            type: 'string',
+          },
+          muted: {
+            type: 'boolean',
           },
         },
       },
@@ -4087,6 +4196,7 @@ export const ids = {
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
   ComAtprotoSyncSubscribeAllRepos: 'com.atproto.sync.subscribeAllRepos',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
+  AppBskyActorGetProfiles: 'app.bsky.actor.getProfiles',
   AppBskyActorGetSuggestions: 'app.bsky.actor.getSuggestions',
   AppBskyActorProfile: 'app.bsky.actor.profile',
   AppBskyActorRef: 'app.bsky.actor.ref',

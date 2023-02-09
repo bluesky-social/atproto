@@ -1,7 +1,7 @@
 import { AddressInfo } from 'net'
 import express from 'express'
 import axios, { AxiosError } from 'axios'
-import AtpApi, { ServiceClient as AtpServiceClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { CloseFn, runTestServer, TestServerInfo } from './_util'
 import { handler as errorHandler } from '../src/error'
 import { SeedClient } from './seeds/client'
@@ -12,7 +12,7 @@ describe('server', () => {
   let server: TestServerInfo
   let close: CloseFn
   let db: Database
-  let client: AtpServiceClient
+  let agent: AtpAgent
   let sc: SeedClient
   let alice: string
 
@@ -22,8 +22,8 @@ describe('server', () => {
     })
     close = server.close
     db = server.ctx.db
-    client = AtpApi.service(server.url)
-    sc = new SeedClient(client)
+    agent = new AtpAgent({ service: server.url })
+    sc = new SeedClient(agent)
     await usersSeed(sc)
     alice = sc.dids.alice
   })
