@@ -11,6 +11,7 @@ describe('event stream concurrency', () => {
     const dbPostgresUrl = process.env.DB_POSTGRES_URL
     db = dbPostgresUrl
       ? Database.postgres({
+          url: dbPostgresUrl,
           pool: new Pool({ connectionString: dbPostgresUrl, max: 10 }),
           schema: 'event_stream_concurrency',
         })

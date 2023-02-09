@@ -11,6 +11,7 @@ import { PDS, ServerConfig, Database, MemoryBlobStore } from '../src/index'
 import { Main as FeedViewPost } from '../src/lexicon/types/app/bsky/feed/feedViewPost'
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import AppContext from '../src/context'
+import { HOUR } from '@atproto/common'
 
 const ADMIN_PASSWORD = 'admin-pass'
 
@@ -72,6 +73,8 @@ export const runTestServer = async (
     dbPostgresUrl: process.env.DB_POSTGRES_URL,
     blobstoreLocation: `${blobstoreLoc}/blobs`,
     blobstoreTmp: `${blobstoreLoc}/tmp`,
+    maxSubscriptionBuffer: 200,
+    repoBackfillLimitMs: HOUR,
     ...params,
   })
 

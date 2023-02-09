@@ -1,3 +1,5 @@
+import { DAY } from '@atproto/common'
+
 export interface ServerConfigValues {
   debugMode?: boolean
   version: string
@@ -37,6 +39,9 @@ export interface ServerConfigValues {
   appUrlPasswordReset: string
   emailSmtpUrl?: string
   emailNoReplyAddress: string
+
+  maxSubscriptionBuffer: number
+  repoBackfillLimitMs: number
 }
 
 export class ServerConfig {
@@ -61,7 +66,7 @@ export class ServerConfig {
     } else {
       scheme = hostname === 'localhost' ? 'http' : 'https'
     }
-    const envPort = parseInt(process.env.PORT || '')
+    const envPort = parseInt(process.env.PORT || '', 10)
     const port = isNaN(envPort) ? 2583 : envPort
 
     const jwtSecret = process.env.JWT_SECRET || 'jwt_secret'
@@ -112,6 +117,12 @@ export class ServerConfig {
     const dbPostgresUrl = process.env.DB_POSTGRES_URL
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
 
+    const maxBuffer = parseInt(process.env.MAX_SUBSCRIPTION_BUFFER || '', 10)
+    const maxSubscriptionBuffer = isNaN(maxBuffer) ? 500 : maxBuffer
+
+    const backfillLimit = parseInt(process.env.REPO_BACKFILL_LIMIT_MS || '', 10)
+    const repoBackfillLimitMs = isNaN(backfillLimit) ? DAY : backfillLimit
+
     return new ServerConfig({
       debugMode,
       version,
@@ -140,6 +151,8 @@ export class ServerConfig {
       appUrlPasswordReset,
       emailSmtpUrl,
       emailNoReplyAddress,
+      maxSubscriptionBuffer,
+      repoBackfillLimitMs,
       ...overrides,
     })
   }
@@ -280,5 +293,13 @@ export class ServerConfig {
 
   get emailNoReplyAddress() {
     return this.cfg.emailNoReplyAddress
+  }
+
+  get maxSubscriptionBuffer() {
+    return this.cfg.maxSubscriptionBuffer
+  }
+
+  get repoBackfillLimitMs() {
+    return this.cfg.repoBackfillLimitMs
   }
 }

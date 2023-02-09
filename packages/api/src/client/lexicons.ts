@@ -2173,6 +2173,81 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncSubscribeAllRepos: {
+    lexicon: 1,
+    id: 'com.atproto.sync.subscribeAllRepos',
+    defs: {
+      main: {
+        type: 'subscription',
+        description: 'Subscribe to repo updates',
+        parameters: {
+          type: 'params',
+          properties: {
+            backfillFrom: {
+              type: 'datetime',
+              description:
+                'The last known event to backfill from. Does not dedupe as there may be an overlap in timestamps.',
+            },
+          },
+        },
+        message: {
+          schema: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.sync.subscribeAllRepos#repoAppend',
+              'lex:com.atproto.sync.subscribeAllRepos#repoRebase',
+            ],
+          },
+          codes: {
+            'lex:com.atproto.sync.subscribeAllRepos#repoAppend': 0,
+            'lex:com.atproto.sync.subscribeAllRepos#repoRebase': 1,
+          },
+        },
+      },
+      repoAppend: {
+        type: 'object',
+        required: ['time', 'repo', 'commit', 'blocks', 'blobs'],
+        properties: {
+          time: {
+            type: 'datetime',
+          },
+          repo: {
+            type: 'string',
+          },
+          commit: {
+            type: 'string',
+          },
+          prev: {
+            type: 'string',
+          },
+          blocks: {
+            type: 'unknown',
+          },
+          blobs: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+        },
+      },
+      repoRebase: {
+        type: 'object',
+        required: ['time', 'repo', 'commit'],
+        properties: {
+          time: {
+            type: 'datetime',
+          },
+          repo: {
+            type: 'string',
+          },
+          commit: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
   AppBskyActorGetProfile: {
     lexicon: 1,
     id: 'app.bsky.actor.getProfile',
@@ -4119,6 +4194,7 @@ export const ids = {
   ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
+  ComAtprotoSyncSubscribeAllRepos: 'com.atproto.sync.subscribeAllRepos',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
   AppBskyActorGetProfiles: 'app.bsky.actor.getProfiles',
   AppBskyActorGetSuggestions: 'app.bsky.actor.getSuggestions',
