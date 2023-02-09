@@ -11,6 +11,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
   constructor(public db: Database, public lastSeen?: number) {
     super()
+    // note: this does not err when surpassed, just prints a warning to stderr
+    this.setMaxListeners(100)
   }
 
   async start() {
