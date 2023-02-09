@@ -53,6 +53,7 @@ export class Outbox {
       if (backfillFrom) {
         const cutoverEvts = await this.sequencer.requestSeqRange({
           earliestSeq: this.lastSeen,
+          earliestTime: backfillFrom,
         })
         this.outBuffer.pushMany(cutoverEvts)
         // dont worry about dupes, we ensure order on yield
@@ -89,12 +90,12 @@ export class Outbox {
       const evts = await this.sequencer.requestSeqRange({
         earliestTime: startTime,
         earliestSeq: this.lastSeen,
-        latestSeq: this.sequencer.lastSeen,
         limit: 50,
       })
       for (const evt of evts) {
         yield evt
       }
+      // we requested 50, if we get less than that then we know we're caught up & can do cutover
       if (evts.length < 50) {
         break
       }

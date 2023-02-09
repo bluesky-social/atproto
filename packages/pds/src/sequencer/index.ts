@@ -3,6 +3,7 @@ import EventEmitter from 'events'
 import TypedEmitter from 'typed-emitter'
 import { CID } from 'multiformats/cid'
 import Database from '../db'
+import { seqLogger as log } from '../logger'
 
 export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   polling = false
@@ -35,23 +36,15 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   async requestSeqRange(opts: {
     earliestSeq?: number
     earliestTime?: string
-    latestSeq?: number
-    latestTime?: string
     limit?: number
   }): Promise<RepoAppendEvent[]> {
-    const { earliestSeq, earliestTime, latestSeq, latestTime, limit } = opts
-    let seqQb = this.db.db.selectFrom('repo_seq').selectAll()
+    const { earliestSeq, earliestTime, limit } = opts
+    let seqQb = this.db.db.selectFrom('repo_seq').selectAll().orderBy('seq')
     if (earliestSeq !== undefined) {
       seqQb = seqQb.where('seq', '>', earliestSeq)
     }
     if (earliestTime !== undefined) {
       seqQb = seqQb.where('sequencedAt', '>=', earliestTime)
-    }
-    if (latestSeq !== undefined) {
-      seqQb = seqQb.where('seq', '<=', latestSeq)
-    }
-    if (latestTime !== undefined) {
-      seqQb = seqQb.where('sequencedAt', '<=', latestTime)
     }
     if (limit !== undefined) {
       seqQb = seqQb.limit(limit)
@@ -147,17 +140,22 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async pollDb() {
-    const evts = await this.requestSeqRange({ earliestSeq: this.lastSeen })
-    if (evts.length > 0) {
-      this.lastSeen = evts[evts.length - 1].seq
-      this.emit('events', evts)
-    }
-    // check if we should continue polling
-    if (this.queued === false) {
-      this.polling = false
-    } else {
-      this.queued = false
-      this.pollDb()
+    try {
+      const evts = await this.requestSeqRange({ earliestSeq: this.lastSeen })
+      if (evts.length > 0) {
+        this.lastSeen = evts[evts.length - 1].seq
+        this.emit('events', evts)
+      }
+    } catch (err) {
+      log.error({ err, lastSeen: this.lastSeen }, 'sequencer failed to poll db')
+    } finally {
+      // check if we should continue polling
+      if (this.queued === false) {
+        this.polling = false
+      } else {
+        this.queued = false
+        this.pollDb()
+      }
     }
   }
 }

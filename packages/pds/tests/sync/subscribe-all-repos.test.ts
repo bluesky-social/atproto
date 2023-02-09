@@ -140,14 +140,48 @@ describe('repo subscribe all repos', () => {
     await verifyRepo(dan, byUser[dan])
   })
 
+  it('handles no backfill & backfill in future', async () => {
+    const wsNoBackfill = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeAllRepos`,
+    )
+    const FUTURE = new Date(Date.now() + 100000).toISOString()
+    const wsFuture = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeAllRepos?backfillFrom=${FUTURE}`,
+    )
+
+    const makePostsAfterWait = async () => {
+      // give them just a second to get subscriptions set up
+      await wait(200)
+      await makePosts()
+    }
+
+    const [noBackfill, future] = await Promise.all([
+      // give these generators a little bit more leeway time
+      readFromGenerator(byFrame(wsNoBackfill), undefined, 2000),
+      readFromGenerator(byFrame(wsFuture), undefined, 2000),
+      makePostsAfterWait(),
+    ])
+
+    wsNoBackfill.terminate()
+    wsFuture.terminate()
+
+    expect(future.length).toBe(40)
+    expect(noBackfill.length).toBe(40)
+    expect(noBackfill).toEqual(future)
+  })
   it('backfills only from provided time', async () => {
     const seqs = await db.db
       .selectFrom('repo_seq')
       .selectAll()
       .orderBy('seq', 'asc')
       .execute()
-    const midPoint = Math.floor(seqs.length / 2)
-    const midPointTime = seqs[midPoint].sequencedAt
+    let midPoint = Math.floor(seqs.length / 2)
+    let midPointTime = seqs[midPoint].sequencedAt
+    // ensure we get the earliest seq with the same timestamp as the midpoint
+    while (seqs[midPoint - 1].sequencedAt === midPointTime) {
+      midPoint = midPoint - 1
+      midPointTime = seqs[midPoint].sequencedAt
+    }
 
     const ws = new WebSocket(
       `ws://${serverHost}/xrpc/com.atproto.sync.subscribeAllRepos?backfillFrom=${midPointTime}`,
