@@ -21,26 +21,10 @@
             "cursor": {"type": "string"},
             "actors": {
               "type": "array",
-              "items": {"type": "ref", "ref": "#actor"}
+              "items": {"type": "ref", "ref": "app.bsky.actor.profile#viewBasic"}
             }
           }
         }
-      }
-    },
-    "actor": {
-      "type": "object",
-      "required": ["did", "declaration", "handle"],
-      "properties": {
-        "did": {"type": "string"},
-        "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
-        "handle": {"type": "string"},
-        "displayName": {
-          "type": "string",
-          "maxLength": 64
-        },
-        "description": {"type": "string"},
-        "avatar": {"type": "string"},
-        "indexedAt": {"type": "datetime"}
       }
     }
   }

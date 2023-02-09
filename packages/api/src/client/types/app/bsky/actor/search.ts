@@ -5,7 +5,7 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
-import * as AppBskySystemDeclRef from '../system/declRef'
+import * as AppBskyActorProfile from './profile'
 
 export interface QueryParams {
   term?: string
@@ -17,7 +17,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  users: User[]
+  users: AppBskyActorProfile.ViewBasic[]
   [k: string]: unknown
 }
 
@@ -35,25 +35,4 @@ export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
   }
   return e
-}
-
-export interface User {
-  did: string
-  declaration: AppBskySystemDeclRef.Main
-  handle: string
-  displayName?: string
-  avatar?: string
-  description?: string
-  indexedAt?: string
-  [k: string]: unknown
-}
-
-export function isUser(v: unknown): v is User {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.actor.search#user'
-  )
-}
-
-export function validateUser(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.actor.search#user', v)
 }

@@ -46,6 +46,8 @@ export function validateWithInfo(v: unknown): ValidationResult {
 
 export interface ViewerState {
   muted?: boolean
+  following?: string
+  followedBy?: string
   [k: string]: unknown
 }
 
