@@ -157,8 +157,8 @@ describe('repo subscribe all repos', () => {
 
     const [noBackfill, future] = await Promise.all([
       // give these generators a little bit more leeway time
-      readFromGenerator(byFrame(wsNoBackfill), undefined, 2000),
-      readFromGenerator(byFrame(wsFuture), undefined, 2000),
+      readFromGenerator(byFrame(wsNoBackfill)),
+      readFromGenerator(byFrame(wsFuture)),
       makePostsAfterWait(),
     ])
 

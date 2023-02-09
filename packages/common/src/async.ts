@@ -5,7 +5,7 @@ import { wait } from './util'
 export const readFromGenerator = async <T>(
   gen: AsyncGenerator<T>,
   maxLength = Number.MAX_SAFE_INTEGER,
-  timeout = 1000,
+  timeout = 2000,
 ): Promise<T[]> => {
   const evts: T[] = []
   while (evts.length < maxLength) {
