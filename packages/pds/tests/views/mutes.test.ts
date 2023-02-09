@@ -1,11 +1,5 @@
 import AtpAgent from '@atproto/api'
-import {
-  runTestServer,
-  forSnapshot,
-  constantDate,
-  CloseFn,
-  paginateAll,
-} from '../_util'
+import { runTestServer, forSnapshot, CloseFn, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
 
