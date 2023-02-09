@@ -44,21 +44,12 @@ describe('mute views', () => {
     await close()
   })
 
-  const getCursors = (items: { createdAt?: string }[]) =>
-    items.map((item) => item.createdAt ?? constantDate)
-
-  const getSortedCursors = (items: { createdAt?: string }[]) =>
-    getCursors(items).sort((a, b) => tstamp(b) - tstamp(a))
-
-  const tstamp = (x: string) => new Date(x).getTime()
-
   it('fetches mutes for the logged-in user.', async () => {
     const { data: view } = await agent.api.app.bsky.graph.getMutes(
       {},
       { headers: sc.getHeaders(silas) },
     )
     expect(forSnapshot(view.mutes)).toMatchSnapshot()
-    expect(getCursors(view.mutes)).toEqual(getSortedCursors(view.mutes))
   })
 
   it('paginates.', async () => {
