@@ -1,4 +1,4 @@
-import AtpApi, { ServiceClient as AtpClient } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { HOUR, MINUTE, readFromGenerator, wait } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import { DidResolver } from '@atproto/did-resolver'
@@ -18,7 +18,7 @@ describe('repo subscribe all repos', () => {
   let db: Database
 
   let didResolver: DidResolver
-  let client: AtpClient
+  let agent: AtpAgent
   let sc: SeedClient
   let alice: string
   let bob: string
@@ -36,8 +36,8 @@ describe('repo subscribe all repos', () => {
     serverHost = server.url.replace('http://', '')
     db = server.ctx.db
     close = server.close
-    client = AtpApi.service(server.url)
-    sc = new SeedClient(client)
+    agent = new AtpAgent({ service: server.url })
+    sc = new SeedClient(agent)
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -51,7 +51,7 @@ describe('repo subscribe all repos', () => {
   })
 
   const getRepo = async (did: string) => {
-    const car = await client.com.atproto.sync.getRepo({ did })
+    const car = await agent.api.com.atproto.sync.getRepo({ did })
     const storage = new MemoryBlockstore()
     const synced = await repo.loadFullRepo(
       storage,

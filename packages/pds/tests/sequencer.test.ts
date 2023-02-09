@@ -1,4 +1,4 @@
-import AtpApi from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
 import { readFromGenerator, wait } from '@atproto/common'
 import Sequencer, { RepoAppendEvent } from '../src/sequencer'
@@ -27,8 +27,8 @@ describe('sequencer', () => {
     close = server.close
     db = server.ctx.db
     sequencer = server.ctx.sequencer
-    const client = AtpApi.service(server.url)
-    sc = new SeedClient(client)
+    const agent = new AtpAgent({ service: server.url })
+    sc = new SeedClient(agent)
     await userSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
