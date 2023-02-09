@@ -1,8 +1,8 @@
 name: build-and-push
-on: [push]
-  branches:
-    - main
-
+on:
+  push:
+    branches:
+      - main
 env:
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
