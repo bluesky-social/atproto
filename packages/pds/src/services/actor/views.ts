@@ -194,6 +194,7 @@ export class ActorViews {
     return Array.isArray(result) ? views : views[0]
   }
 
+  // @NOTE keep in sync with feedService.getActorViews()
   actorWithInfo(result: UserResult, viewer: string): Promise<ActorWithInfo>
   actorWithInfo(result: UserResult[], viewer: string): Promise<ActorWithInfo[]>
   async actorWithInfo(
