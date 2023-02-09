@@ -235,6 +235,7 @@ const snapTypeaheadPg = [
     did: 'user(0)',
     declaration,
     handle: 'cara-wiegand69.test',
+    viewer: { muted: false },
   },
   {
     did: 'user(1)',
@@ -242,6 +243,7 @@ const snapTypeaheadPg = [
     displayName: 'Carol Littel',
     handle: 'eudora-dietrich4.test',
     avatar,
+    viewer: { muted: false },
   },
   {
     did: 'user(2)',
@@ -249,6 +251,7 @@ const snapTypeaheadPg = [
     displayName: 'Sadie Carter',
     handle: 'shane-torphy52.test',
     avatar,
+    viewer: { muted: false },
   },
   {
     did: 'user(3)',
@@ -256,11 +259,13 @@ const snapTypeaheadPg = [
     displayName: 'Carlton Abernathy IV',
     handle: 'aliya-hodkiewicz.test',
     avatar,
+    viewer: { muted: false },
   },
   {
     did: 'user(4)',
     declaration,
     handle: 'carlos6.test',
+    viewer: { muted: false },
   },
   {
     did: 'user(5)',
@@ -268,6 +273,7 @@ const snapTypeaheadPg = [
     displayName: 'Latoya Windler',
     handle: 'carolina-mcdermott77.test',
     avatar,
+    viewer: { muted: false },
   },
   {
     did: 'user(6)',
@@ -275,6 +281,7 @@ const snapTypeaheadPg = [
     displayName: 'Rachel Kshlerin',
     handle: 'cayla-marquardt39.test',
     avatar,
+    viewer: { muted: false },
   },
 ]
 
@@ -285,16 +292,19 @@ const snapTypeaheadSqlite = [
     displayName: 'Carlton Abernathy IV',
     handle: 'aliya-hodkiewicz.test',
     avatar,
+    viewer: { muted: false },
   },
   {
     did: 'user(1)',
     declaration,
     handle: 'cara-wiegand69.test',
+    viewer: { muted: false },
   },
   {
     did: 'user(2)',
     declaration,
     handle: 'carlos6.test',
+    viewer: { muted: false },
   },
   {
     did: 'user(3)',
@@ -302,6 +312,7 @@ const snapTypeaheadSqlite = [
     displayName: 'Latoya Windler',
     handle: 'carolina-mcdermott77.test',
     avatar,
+    viewer: { muted: false },
   },
   {
     did: 'user(4)',
@@ -309,6 +320,7 @@ const snapTypeaheadSqlite = [
     displayName: 'Carol Littel',
     handle: 'eudora-dietrich4.test',
     avatar,
+    viewer: { muted: false },
   },
   {
     did: 'user(5)',
@@ -316,6 +328,7 @@ const snapTypeaheadSqlite = [
     displayName: 'Sadie Carter',
     handle: 'shane-torphy52.test',
     avatar,
+    viewer: { muted: false },
   },
 ]
 
