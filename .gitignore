@@ -11,3 +11,6 @@ test.sqlite
 *.log
 tsconfig.build.tsbuildinfo
 .dev.env
+\#*\#
+*~
+*.swp
