@@ -77,7 +77,7 @@ export default function (server: Server, ctx: AppContext) {
         actorType: APP_BSKY_SYSTEM.ActorUser,
       }
 
-      // Pre-register user before going out to PLC to get a real did
+      // Register user before going out to PLC to get a real did
       try {
         await actorTxn.registerUser(
           email,
