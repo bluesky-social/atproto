@@ -43,14 +43,16 @@ export default function (server: Server, ctx: AppContext) {
   })
 
   server.com.atproto.sync.getRepo(async ({ params }) => {
-    const { did, from = null } = params
+    const { did } = params
     const storage = new SqlRepoStorage(ctx.db, did)
-    const head = await storage.getHead()
-    if (head === null) {
+    const earliest = params.earliest ? CID.parse(params.earliest) : null
+    const latest = params.latest
+      ? CID.parse(params.latest)
+      : await storage.getHead()
+    if (latest === null) {
       throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
     }
-    const fromCid = from ? CID.parse(from) : null
-    const diff = await repo.getDiff(storage, head, fromCid)
+    const diff = await repo.getDiff(storage, latest, earliest)
     return {
       encoding: 'application/vnd.ipld.car',
       body: Buffer.from(diff),
