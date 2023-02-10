@@ -10,6 +10,7 @@ import {
   LexXrpcProcedure,
   LexXrpcQuery,
   LexToken,
+  LexXrpcSubscription,
 } from '@atproto/lexicon'
 import { toCamelCase, toTitleCase, toScreamingSnakeCase } from './util'
 
@@ -244,6 +245,7 @@ export function genXrpcParams(
 ) {
   const def = lexicons.getDefOrThrow(lexUri, [
     'query',
+    'subscription',
     'procedure',
   ]) as LexXrpcQuery
 
@@ -328,23 +330,20 @@ export function genXrpcOutput(
 ) {
   const def = lexicons.getDefOrThrow(lexUri, [
     'query',
+    'subscription',
     'procedure',
-  ]) as LexXrpcQuery
+  ]) as LexXrpcQuery | LexXrpcSubscription | LexXrpcProcedure
 
-  if (def.output?.schema) {
-    if (
-      def.output.schema.type === 'ref' ||
-      def.output.schema.type === 'union'
-    ) {
+  const schema =
+    def.type === 'subscription' ? def.message?.schema : def.output?.schema
+  if (schema) {
+    if (schema.type === 'ref' || schema.type === 'union') {
       //= export type OutputSchema = ...
-      const refs =
-        def.output.schema.type === 'union'
-          ? def.output.schema.refs
-          : [def.output.schema.ref]
+      const refs = schema.type === 'union' ? schema.refs : [schema.ref]
       const types = refs.map((ref) =>
         refToType(ref, stripScheme(stripHash(lexUri)), imports),
       )
-      if (def.output.schema.type === 'union' && !def.output.schema.closed) {
+      if (schema.type === 'union' && !schema.closed) {
         types.push('{$type: string; [k: string]: unknown}')
       }
       file.addTypeAlias({
@@ -354,7 +353,7 @@ export function genXrpcOutput(
       })
     } else {
       //= export interface OutputSchema {...}
-      genObject(file, imports, lexUri, def.output.schema, `OutputSchema`)
+      genObject(file, imports, lexUri, schema, `OutputSchema`)
     }
   }
 }

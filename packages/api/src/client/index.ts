@@ -53,7 +53,9 @@ import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommit
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+import * as ComAtprotoSyncSubscribeAllRepos from './types/com/atproto/sync/subscribeAllRepos'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
+import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 import * as AppBskyActorRef from './types/app/bsky/actor/ref'
@@ -136,7 +138,9 @@ export * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommit
 export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+export * as ComAtprotoSyncSubscribeAllRepos from './types/com/atproto/sync/subscribeAllRepos'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
+export * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 export * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 export * as AppBskyActorRef from './types/app/bsky/actor/ref'
@@ -781,6 +785,17 @@ export class ActorNS {
       .call('app.bsky.actor.getProfile', params, undefined, opts)
       .catch((e) => {
         throw AppBskyActorGetProfile.toKnownErr(e)
+      })
+  }
+
+  getProfiles(
+    params?: AppBskyActorGetProfiles.QueryParams,
+    opts?: AppBskyActorGetProfiles.CallOptions,
+  ): Promise<AppBskyActorGetProfiles.Response> {
+    return this._service.xrpc
+      .call('app.bsky.actor.getProfiles', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyActorGetProfiles.toKnownErr(e)
       })
   }
 

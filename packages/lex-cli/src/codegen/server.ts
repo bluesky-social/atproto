@@ -10,6 +10,7 @@ import {
   LexXrpcProcedure,
   LexXrpcQuery,
   LexRecord,
+  LexXrpcSubscription,
 } from '@atproto/lexicon'
 import { NSID } from '@atproto/nsid'
 import { gen, lexiconsTs, utilTs } from './common'
@@ -60,23 +61,24 @@ const indexTs = (
 ) =>
   gen(project, '/index.ts', async (file) => {
     //= import {createServer as createXrpcServer, Server as XrpcServer} from '@atproto/xrpc-server'
-    const xrpcImport = file.addImportDeclaration({
+    file.addImportDeclaration({
       moduleSpecifier: '@atproto/xrpc-server',
-    })
-    xrpcImport.addNamedImport({
-      name: 'createServer',
-      alias: 'createXrpcServer',
-    })
-    xrpcImport.addNamedImport({
-      name: 'Server',
-      alias: 'XrpcServer',
-    })
-    xrpcImport.addNamedImport({
-      name: 'Options',
-      alias: 'XrpcOptions',
-    })
-    xrpcImport.addNamedImport({
-      name: 'AuthVerifier',
+      namedImports: [
+        {
+          name: 'createServer',
+          alias: 'createXrpcServer',
+        },
+        {
+          name: 'Server',
+          alias: 'XrpcServer',
+        },
+        {
+          name: 'Options',
+          alias: 'XrpcOptions',
+        },
+        { name: 'AuthVerifier' },
+        { name: 'StreamAuthVerifier' },
+      ],
     })
     //= import {schemas} from './lexicons'
     file
@@ -91,6 +93,7 @@ const indexTs = (
     for (const lexiconDoc of lexiconDocs) {
       if (
         lexiconDoc.defs.main?.type !== 'query' &&
+        lexiconDoc.defs.main?.type !== 'subscription' &&
         lexiconDoc.defs.main?.type !== 'procedure'
       ) {
         continue
@@ -192,7 +195,9 @@ const indexTs = (
 
     file.addTypeAlias({
       name: 'ExtractAuth',
-      typeParameters: [{ name: 'AV', constraint: 'AuthVerifier' }],
+      typeParameters: [
+        { name: 'AV', constraint: 'AuthVerifier | StreamAuthVerifier' },
+      ],
       type: `Extract<
         Awaited<ReturnType<AV>>,
         { credentials: unknown }
@@ -243,25 +248,36 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
 
   // methods
   for (const userType of ns.userTypes) {
-    if (userType.def.type !== 'query' && userType.def.type !== 'procedure') {
+    if (
+      userType.def.type !== 'query' &&
+      userType.def.type !== 'subscription' &&
+      userType.def.type !== 'procedure'
+    ) {
       continue
     }
     const moduleName = toTitleCase(userType.nsid)
     const name = toCamelCase(NSID.parse(userType.nsid).name || '')
+    const isSubscription = userType.def.type === 'subscription'
     const method = cls.addMethod({
       name,
-      typeParameters: [{ name: 'AV', constraint: 'AuthVerifier' }],
+      typeParameters: [
+        {
+          name: 'AV',
+          constraint: isSubscription ? 'StreamAuthVerifier' : 'AuthVerifier',
+        },
+      ],
     })
     method.addParameter({
       name: 'cfg',
       type: `ConfigOf<AV, ${moduleName}.Handler<ExtractAuth<AV>>>`,
     })
+    const methodType = isSubscription ? 'streamMethod' : 'method'
     method.setBodyText(
       [
         // Placing schema on separate line, since the following one was being formatted
         // into multiple lines and causing the ts-ignore to ignore the wrong line.
         `const nsid = '${userType.nsid}' // @ts-ignore`,
-        `return this._server.xrpc.method(nsid, cfg)`,
+        `return this._server.xrpc.${methodType}(nsid, cfg)`,
       ].join('\n'),
     )
   }
@@ -328,7 +344,11 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
             genXrpcParams(file, lexicons, lexUri)
             genXrpcInput(file, imports, lexicons, lexUri)
             genXrpcOutput(file, imports, lexicons, lexUri)
-            genServerXrpcCommon(file, lexicons, lexUri)
+            genServerXrpcMethod(file, lexicons, lexUri)
+          } else if (def.type === 'subscription') {
+            genXrpcParams(file, lexicons, lexUri)
+            genXrpcOutput(file, imports, lexicons, lexUri)
+            genServerXrpcStreaming(file, lexicons, lexUri)
           } else if (def.type === 'record') {
             genServerRecord(file, imports, lexicons, lexUri)
           } else {
@@ -342,7 +362,7 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
     },
   )
 
-function genServerXrpcCommon(
+function genServerXrpcMethod(
   file: SourceFile,
   lexicons: Lexicons,
   lexUri: string,
@@ -461,6 +481,66 @@ function genServerXrpcCommon(
   })
 }
 
+function genServerXrpcStreaming(
+  file: SourceFile,
+  lexicons: Lexicons,
+  lexUri: string,
+) {
+  const def = lexicons.getDefOrThrow(lexUri, [
+    'subscription',
+  ]) as LexXrpcSubscription
+
+  file.addImportDeclaration({
+    moduleSpecifier: '@atproto/xrpc-server',
+    namedImports: [
+      { name: 'HandlerAuth' },
+      { name: 'InfoFrame' },
+      { name: 'ErrorFrame' },
+    ],
+  })
+
+  file.addImportDeclaration({
+    moduleSpecifier: 'http',
+    namedImports: [{ name: 'IncomingMessage' }],
+  })
+
+  // export type HandlerError = ...
+  file.addTypeAlias({
+    name: 'HandlerError',
+    isExported: true,
+    type: `ErrorFrame<${arrayToUnion(def.errors?.map((e) => e.name))}>`,
+  })
+
+  // export type HandlerInfo = ...
+  file.addTypeAlias({
+    name: 'HandlerInfo',
+    isExported: true,
+    type: `InfoFrame<${arrayToUnion(def.infos?.map((e) => e.name))}>`,
+  })
+
+  // export type HandlerOutput = ...
+  file.addTypeAlias({
+    isExported: true,
+    name: 'HandlerOutput',
+    type: `HandlerInfo | HandlerError | ${
+      def.message?.schema ? 'OutputSchema' : 'void'
+    }`,
+  })
+
+  file.addTypeAlias({
+    name: 'Handler',
+    isExported: true,
+    typeParameters: [
+      { name: 'HA', constraint: 'HandlerAuth', default: 'never' },
+    ],
+    type: `(ctx: {
+        auth: HA
+        params: QueryParams
+        req: IncomingMessage
+      }) => AsyncIterable<HandlerOutput>`,
+  })
+}
+
 function genServerRecord(
   file: SourceFile,
   imports: Set<string>,
@@ -473,4 +553,11 @@ function genServerRecord(
   genObject(file, imports, lexUri, def.record, 'Record')
   //= export function isRecord(v: unknown): v is Record {...}
   genObjHelpers(file, lexUri, 'Record')
+}
+
+function arrayToUnion(arr?: string[]) {
+  if (!arr?.length) {
+    return 'never'
+  }
+  return arr.map((item) => `'${item}'`).join(' | ')
 }

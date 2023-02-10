@@ -6,6 +6,7 @@ import {
   Server as XrpcServer,
   Options as XrpcOptions,
   AuthVerifier,
+  StreamAuthVerifier,
 } from '@atproto/xrpc-server'
 import { schemas } from './lexicons'
 import * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
@@ -45,7 +46,9 @@ import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommit
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+import * as ComAtprotoSyncSubscribeAllRepos from './types/com/atproto/sync/subscribeAllRepos'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
+import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 import * as AppBskyActorSearch from './types/app/bsky/actor/search'
 import * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypeahead'
@@ -493,6 +496,13 @@ export class SyncNS {
     const nsid = 'com.atproto.sync.getRepo' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
+
+  subscribeAllRepos<AV extends StreamAuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncSubscribeAllRepos.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.subscribeAllRepos' // @ts-ignore
+    return this._server.xrpc.streamMethod(nsid, cfg)
+  }
 }
 
 export class AppNS {
@@ -536,6 +546,13 @@ export class ActorNS {
     cfg: ConfigOf<AV, AppBskyActorGetProfile.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.actor.getProfile' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getProfiles<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyActorGetProfiles.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.actor.getProfiles' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -712,7 +729,7 @@ type ConfigOf<Auth, Handler> =
       auth?: Auth
       handler: Handler
     }
-type ExtractAuth<AV extends AuthVerifier> = Extract<
+type ExtractAuth<AV extends AuthVerifier | StreamAuthVerifier> = Extract<
   Awaited<ReturnType<AV>>,
   { credentials: unknown }
 >
