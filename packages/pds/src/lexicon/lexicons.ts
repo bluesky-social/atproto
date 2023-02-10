@@ -1770,8 +1770,8 @@ export const schemaDict = {
       main: {
         type: 'string',
         knownValues: [
-          'com.atproto.report.reason#spam',
-          'com.atproto.report.reason#other',
+          'com.atproto.report.reasonType#spam',
+          'com.atproto.report.reasonType#other',
         ],
       },
       spam: {
