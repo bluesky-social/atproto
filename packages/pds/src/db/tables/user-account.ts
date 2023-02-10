@@ -1,8 +1,7 @@
 export interface UserAccount {
   did: string
   email: string
-  password: string
-  lastSeenNotifs: string
+  passwordScrypt: string
   createdAt: string
   passwordResetToken: string | null
   passwordResetGrantedAt: string | null

@@ -13,6 +13,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('user_notification as notif')
         .select(countAll.as('count'))
         .innerJoin('user_account', 'user_account.did', 'notif.userDid')
+        .innerJoin('user_state', 'user_state.did', 'user_account.did')
         .innerJoin(
           'repo_root as author_repo',
           'author_repo.did',
@@ -30,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
             .whereRef('did', '=', ref('notif.author'))
             .where('mutedByDid', '=', requester),
         )
-        .whereRef('notif.indexedAt', '>', 'user_account.lastSeenNotifs')
+        .whereRef('notif.indexedAt', '>', 'user_state.lastSeenNotifs')
         .executeTakeFirst()
 
       const count = result?.count ?? 0

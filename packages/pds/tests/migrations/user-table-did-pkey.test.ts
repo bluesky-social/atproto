@@ -12,7 +12,7 @@ describe('user table did pkey migration', () => {
     if (process.env.DB_POSTGRES_URL) {
       db = Database.postgres({
         url: process.env.DB_POSTGRES_URL,
-        schema: 'migration_user_table_did_pk',
+        schema: 'migration_user_table_did_pkey',
       })
     } else {
       db = Database.memory()
@@ -77,6 +77,10 @@ describe('user table did pkey migration', () => {
       .selectAll()
       .orderBy('email')
       .execute()
+
+    // console.log(
+    //   await rawDb.selectFrom('user').select('lastSeenNotifs').execute(),
+    // )
   })
 
   it('migrates up', async () => {
@@ -95,19 +99,24 @@ describe('user table did pkey migration', () => {
       .selectAll()
       .orderBy('email')
       .execute()
+    const updatedUserState = await rawDb
+      .selectFrom('user_state')
+      .selectAll()
+      .orderBy('did')
+      .execute()
 
-    expect(updatedDidHandle.length).toBe(didHandleSnap.length)
-    for (let i = 0; i < updatedDidHandle.length; i++) {
-      expect(updatedDidHandle[i]).toEqual(didHandleSnap[i])
-    }
+    expect(updatedDidHandle).toEqual(didHandleSnap)
 
     expect(updatedUser.length).toBe(userSnap.length)
-
     for (let i = 0; i < updatedUser.length; i++) {
-      const { handle, ...rest } = userSnap[i]
+      const { handle, password, lastSeenNotifs, ...rest } = userSnap[i]
       const expectedDid = didHandleSnap.find((row) => row.handle === handle).did
-      const expected = { did: expectedDid, ...rest }
+      const expected = { did: expectedDid, passwordScrypt: password, ...rest }
       expect(updatedUser[i]).toEqual(expected)
+      const lastSeen = updatedUserState.find(
+        (row) => row.did === expectedDid,
+      )?.lastSeenNotifs
+      expect(lastSeen).toEqual(lastSeenNotifs)
     }
   })
 

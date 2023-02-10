@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       await ctx.db.db
-        .updateTable('user_account')
+        .updateTable('user_state')
         .set({ lastSeenNotifs: parsed })
         .where('did', '=', user.did)
         .executeTakeFirst()

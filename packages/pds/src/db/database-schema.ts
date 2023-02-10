@@ -1,5 +1,6 @@
 import { Kysely } from 'kysely'
 import * as userAccount from './tables/user-account'
+import * as userState from './tables/user-state'
 import * as didHandle from './tables/did-handle'
 import * as repoRoot from './tables/repo-root'
 import * as refreshToken from './tables/refresh-token'
@@ -28,6 +29,7 @@ import * as moderation from './tables/moderation'
 import * as mute from './tables/mute'
 
 export type DatabaseSchemaType = userAccount.PartialDB &
+  userState.PartialDB &
   didHandle.PartialDB &
   refreshToken.PartialDB &
   repoRoot.PartialDB &

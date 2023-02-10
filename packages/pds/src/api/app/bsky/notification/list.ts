@@ -69,12 +69,18 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
 
-      const [user, notifs] = await Promise.all([
-        ctx.services.actor(ctx.db).getUser(requester),
+      const userStateQuery = ctx.db.db
+        .selectFrom('user_state')
+        .selectAll()
+        .where('did', '=', requester)
+        .executeTakeFirst()
+
+      const [userState, notifs] = await Promise.all([
+        userStateQuery,
         notifBuilder.execute(),
       ])
 
-      if (!user) {
+      if (!userState) {
         throw new InvalidRequestError(`Could not find user: ${requester}`)
       }
 
@@ -96,7 +102,7 @@ export default function (server: Server, ctx: AppContext) {
         reason: notif.reason,
         reasonSubject: notif.reasonSubject || undefined,
         record: common.cborBytesToRecord(notif.recordBytes),
-        isRead: notif.indexedAt <= user.lastSeenNotifs,
+        isRead: notif.indexedAt <= userState.lastSeenNotifs,
         indexedAt: notif.indexedAt,
       }))
 

@@ -95,9 +95,8 @@ export class ActorService {
       .values({
         email: email.toLowerCase(),
         did,
-        password: await scrypt.hash(password),
+        passwordScrypt: await scrypt.hash(password),
         createdAt: new Date().toISOString(),
-        lastSeenNotifs: new Date().toISOString(),
       })
       .onConflict((oc) => oc.doNothing())
       .returning('did')
@@ -113,22 +112,32 @@ export class ActorService {
       .onConflict((oc) => oc.doNothing())
       .returning('handle')
       .executeTakeFirst()
+    const registerUserState = this.db.db
+      .insertInto('user_state')
+      .values({
+        did,
+        lastSeenNotifs: new Date().toISOString(),
+      })
+      .onConflict((oc) => oc.doNothing())
+      .returning('did')
+      .executeTakeFirst()
 
-    const [res1, res2] = await Promise.all([
+    const [res1, res2, res3] = await Promise.all([
       registerUserAccnt,
       registerDidHandle,
+      registerUserState,
     ])
-    if (!res1 || !res2) {
+    if (!res1 || !res2 || !res3) {
       throw new UserAlreadyExistsError()
     }
     log.info({ handle, email, did }, 'registered user')
   }
 
   async updateUserPassword(did: string, password: string) {
-    const hashedPassword = await scrypt.hash(password)
+    const passwordScrypt = await scrypt.hash(password)
     await this.db.db
       .updateTable('user_account')
-      .set({ password: hashedPassword })
+      .set({ passwordScrypt })
       .where('did', '=', did)
       .execute()
   }
@@ -140,7 +149,7 @@ export class ActorService {
       .where('did', '=', did)
       .executeTakeFirst()
     if (!found) return false
-    return scrypt.verify(password, found.password)
+    return scrypt.verify(password, found.passwordScrypt)
   }
 
   async mute(info: { did: string; mutedByDid: string; createdAt?: Date }) {
