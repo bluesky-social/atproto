@@ -8,6 +8,8 @@ import * as messages from '../../../event-stream/messages'
 import { Message } from '../../../event-stream/messages'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
+import { sql } from 'kysely'
+import { PostHierarchy } from '../../../db/tables/post-hierarchy'
 
 type Post = DatabaseSchemaType['post']
 type PostEntity = DatabaseSchemaType['post_entity']
@@ -17,6 +19,7 @@ type IndexedPost = {
   post: Post
   entities: PostEntity[]
   embed?: PostEmbedImage[] | PostEmbedExternal
+  ancestors: PostHierarchy[]
 }
 
 const lexId = lex.ids.AppBskyFeedPost
@@ -53,6 +56,7 @@ const insertFn = async (
     .onConflict((oc) => oc.doNothing())
     .returningAll()
     .executeTakeFirst()
+  // Entity and embed indices
   let insertedEntities: PostEntity[] = []
   if (entities.length > 0) {
     insertedEntities = await db
@@ -83,8 +87,35 @@ const insertFn = async (
       await db.insertInto('post_embed_external').values(embed).execute()
     }
   }
+  // Thread index
+  await db
+    .insertInto('post_hierarchy')
+    .values({
+      uri: post.uri,
+      ancestorUri: post.uri,
+      depth: 0,
+    })
+    .execute()
+  let ancestors: PostHierarchy[] = []
+  if (post.replyParent) {
+    ancestors = await db
+      .insertInto('post_hierarchy')
+      .columns(['uri', 'ancestorUri', 'depth'])
+      .expression(
+        db
+          .selectFrom('post_hierarchy as parent_hierarchy')
+          .where('parent_hierarchy.uri', '=', post.replyParent)
+          .select([
+            sql`${post.uri}`.as('uri'),
+            'ancestorUri',
+            sql`depth + 1`.as('depth'),
+          ]),
+      )
+      .returningAll()
+      .execute()
+  }
   return insertedPost
-    ? { post: insertedPost, entities: insertedEntities, embed }
+    ? { post: insertedPost, entities: insertedEntities, embed, ancestors }
     : null
 }
 
@@ -158,7 +189,12 @@ const deleteFn = async (
     deletedEmbed = deletedExternals || undefined
   }
   return deleted
-    ? { post: deleted, entities: deletedEntities, embed: deletedEmbed }
+    ? {
+        post: deleted,
+        entities: deletedEntities,
+        embed: deletedEmbed,
+        ancestors: [], // Do not delete, maintain thread hierarchy even if post doesn't exist
+      }
     : null
 }
 

@@ -1,12 +1,15 @@
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
 import { AtUri } from '@atproto/uri'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import { Database } from '../../src'
 import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
-import { SeedClient } from '../seeds/client'
+import { RecordRef, SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
+import threadSeed, { walk, item, Item } from '../seeds/thread'
 
 describe('pds thread views', () => {
   let agent: AtpAgent
+  let db: Database
   let close: CloseFn
   let sc: SeedClient
 
@@ -19,6 +22,7 @@ describe('pds thread views', () => {
     const server = await runTestServer({
       dbPostgresSchema: 'views_thread',
     })
+    db = server.ctx.db
     close = server.close
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
@@ -410,5 +414,60 @@ describe('pds thread views', () => {
         ),
       ),
     )
+  })
+
+  it('builds post hierarchy index.', async () => {
+    const threads: Item[] = [
+      item(1, [item(2, [item(3), item(4)])]),
+      item(5, [item(6), item(7, [item(9, [item(11)]), item(10)]), item(8)]),
+      item(12),
+    ]
+    await threadSeed(sc, sc.dids.alice, threads)
+    let closureSize = 0
+    const itemByUri: Record<string, Item> = {}
+
+    const postsAndReplies = ([] as { text: string; ref: RecordRef }[])
+      .concat(Object.values(sc.posts[sc.dids.alice]))
+      .concat(Object.values(sc.replies[sc.dids.alice]))
+      .filter((p) => {
+        const id = parseInt(p.text, 10)
+        return 0 < id && id <= 12
+      })
+
+    await walk(threads, async (item, depth) => {
+      const post = postsAndReplies.find((p) => p.text === String(item.id))
+      if (!post) throw new Error('Post not found')
+      itemByUri[post.ref.uriStr] = item
+      closureSize += depth + 1
+    })
+
+    const hierarchy = await db.db
+      .selectFrom('post_hierarchy')
+      .where(
+        'uri',
+        'in',
+        postsAndReplies.map((p) => p.ref.uriStr),
+      )
+      .orWhere(
+        'ancestorUri',
+        'in',
+        postsAndReplies.map((p) => p.ref.uriStr),
+      )
+      .selectAll()
+      .execute()
+
+    expect(hierarchy.length).toEqual(closureSize)
+
+    for (const relation of hierarchy) {
+      const item = itemByUri[relation.uri]
+      const ancestor = itemByUri[relation.ancestorUri]
+      let depth = -1
+      await walk([ancestor], async (candidate, candidateDepth) => {
+        if (candidate === item) {
+          depth = candidateDepth
+        }
+      })
+      expect(depth).toEqual(relation.depth)
+    }
   })
 })

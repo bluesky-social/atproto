@@ -1,7 +1,8 @@
 import { AtpAgent } from '@atproto/api'
 import { Database } from '../../src'
-import usersSeed from '../seeds/users'
 import { RecordRef, SeedClient } from '../seeds/client'
+import usersSeed from '../seeds/users'
+import threadSeed, { walk, item, Item } from '../seeds/thread'
 import { CloseFn, runTestServer } from '../_util'
 
 describe('post hierarchy migration', () => {
@@ -27,7 +28,8 @@ describe('post hierarchy migration', () => {
     close = server.close
     const agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
-    await threadSeed(sc, threads)
+    await usersSeed(sc)
+    await threadSeed(sc, sc.dids.alice, threads)
     await db.migrateToOrThrow('_20230210T210132396Z')
   })
 
@@ -70,48 +72,3 @@ describe('post hierarchy migration', () => {
     }
   })
 })
-
-async function threadSeed(sc: SeedClient, threads: Item[]) {
-  await usersSeed(sc)
-  const refByItemId: Record<string, RecordRef> = {}
-  const rootByItemId: Record<string, RecordRef> = {}
-  await walk(threads, async (item, _depth, parent) => {
-    if (parent !== undefined) {
-      const parentRef = refByItemId[parent.id]
-      const rootRef = rootByItemId[parent.id]
-      const { ref } = await sc.reply(
-        sc.dids.alice,
-        rootRef,
-        parentRef,
-        String(item.id),
-      )
-      refByItemId[item.id] = ref
-      rootByItemId[item.id] = rootRef
-    } else {
-      const { ref } = await sc.post(sc.dids.alice, String(item.id))
-      refByItemId[item.id] = ref
-      rootByItemId[item.id] = ref
-    }
-  })
-}
-
-function item(id: number, children: Item[] = []) {
-  return { id, children }
-}
-
-async function walk(
-  items: Item[],
-  cb: (item: Item, depth: number, parent?: Item) => Promise<void>,
-  depth = 0,
-  parent?: Item,
-) {
-  for (const item of items) {
-    await cb(item, depth, parent)
-    await walk(item.children, cb, depth + 1, item)
-  }
-}
-
-interface Item {
-  id: number
-  children: Item[]
-}
