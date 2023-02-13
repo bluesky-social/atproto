@@ -1,19 +1,12 @@
-import dotenv from 'dotenv'
+import './env'
+import { ServerConfig } from './config'
 import * as crypto from '@atproto/crypto'
 import Database from './db'
 import PDS from './index'
-import { ServerConfig } from './config'
 import { DiskBlobStore, MemoryBlobStore } from './storage'
 import { BlobStore } from '@atproto/repo'
 
 const run = async () => {
-  const env = process.env.ENV
-  if (env) {
-    dotenv.config({ path: `./.${env}.env` })
-  } else {
-    dotenv.config()
-  }
-
   let db: Database
 
   const keypair = await crypto.EcdsaKeypair.create()
