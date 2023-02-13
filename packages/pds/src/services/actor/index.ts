@@ -12,6 +12,7 @@ import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import { ActorViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export class ActorService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
@@ -164,6 +165,17 @@ export class ActorService {
       throw new UserAlreadyExistsError()
     }
     log.info({ handle, email, did }, 'registered user')
+  }
+
+  async updateHandle(did: string, handle: string) {
+    const res = await this.db.db
+      .updateTable('did_handle')
+      .set({ handle })
+      .where('did', '=', did)
+      .executeTakeFirst()
+    if (res.numUpdatedRows < 1) {
+      throw new InvalidRequestError('User not found')
+    }
   }
 
   async updateUserPassword(did: string, password: string) {
