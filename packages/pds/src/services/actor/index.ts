@@ -12,7 +12,6 @@ import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import { ActorViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export class ActorService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
