@@ -11,6 +11,13 @@ export async function up(
     .addPrimaryKeyConstraint('post_hierarchy_pkey', ['uri', 'ancestorUri'])
     .execute()
 
+  // Supports fetching all children for a post
+  await db.schema
+    .createIndex('post_hierarchy_ancestoruri_idx')
+    .on('post_hierarchy')
+    .column('ancestorUri')
+    .execute()
+
   const postHierarchyQb = db
     .withRecursive('hierarchy(uri, ancestorUri, depth)', (cte) => {
       return cte
