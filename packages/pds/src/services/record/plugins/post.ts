@@ -140,17 +140,17 @@ const eventsForInsert = (obj: IndexedPost): Message[] => {
       }
     }
   }
-  if (obj.post.replyParent) {
-    const parentUri = new AtUri(obj.post.replyParent)
-    if (parentUri.host !== obj.post.creator) {
+  for (const relation of obj.ancestors) {
+    const ancestorUri = new AtUri(relation.ancestorUri)
+    if (ancestorUri.host !== obj.post.creator) {
       notifs.push(
         messages.createNotification({
-          userDid: parentUri.host,
+          userDid: ancestorUri.host,
           author: obj.post.creator,
           recordUri: obj.post.uri,
           recordCid: obj.post.cid,
           reason: 'reply',
-          reasonSubject: parentUri.toString(),
+          reasonSubject: ancestorUri.toString(),
         }),
       )
     }

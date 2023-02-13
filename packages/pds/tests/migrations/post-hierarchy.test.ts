@@ -16,21 +16,17 @@ describe('post hierarchy migration', () => {
   ]
 
   beforeAll(async () => {
-    const server = await runTestServer(
-      {
-        dbPostgresSchema: 'migration_post_hierarchy',
-      },
-      {
-        migration: '_20230208T081544325Z',
-      },
-    )
+    const server = await runTestServer({
+      dbPostgresSchema: 'migration_post_hierarchy',
+    })
     db = server.ctx.db
     close = server.close
     const agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
     await usersSeed(sc)
     await threadSeed(sc, sc.dids.alice, threads)
-    await db.migrateToOrThrow('_20230210T210132396Z')
+    await db.migrateToOrThrow('_20230208T081544325Z') // Down to before index exists
+    await db.migrateToLatestOrThrow() // Build index from migration
   })
 
   afterAll(async () => {

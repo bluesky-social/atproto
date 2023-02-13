@@ -49,7 +49,8 @@ export async function up(
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropTable('post_hierarchy')
+  await db.schema.dropIndex('post_hierarchy_ancestoruri_idx').execute()
+  await db.schema.dropTable('post_hierarchy').execute()
 }
 
 type Post = {
