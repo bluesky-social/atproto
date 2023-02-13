@@ -2,6 +2,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as handleLib from '@atproto/handle'
 import { Server } from '../../../lexicon'
 import AppContext from '../../../context'
+import { UserAlreadyExistsError } from '../../../services/actor'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.handle.resolve(async ({ params }) => {
@@ -50,7 +51,14 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
-      await ctx.services.actor(ctx.db).updateHandle(requester, handle)
+      try {
+        await ctx.services.actor(ctx.db).updateHandle(requester, handle)
+      } catch (err) {
+        if (err instanceof UserAlreadyExistsError) {
+          throw new InvalidRequestError(`Handle already taken: ${handle}`)
+        }
+        throw err
+      }
     },
   })
 }
