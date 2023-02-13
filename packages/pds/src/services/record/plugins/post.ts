@@ -140,9 +140,12 @@ const eventsForInsert = (obj: IndexedPost): Message[] => {
       }
     }
   }
-  for (const relation of obj.ancestors) {
+  const notified = new Set([obj.post.creator])
+  const ancestors = [...obj.ancestors].sort((a, b) => a.depth - b.depth)
+  for (const relation of ancestors) {
     const ancestorUri = new AtUri(relation.ancestorUri)
-    if (ancestorUri.host !== obj.post.creator) {
+    if (!notified.has(ancestorUri.host)) {
+      notified.add(ancestorUri.host)
       notifs.push(
         messages.createNotification({
           userDid: ancestorUri.host,
