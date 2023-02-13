@@ -1,8 +1,8 @@
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import Outbox from '../../../../sequencer/outbox'
 import { RepoAppend } from '../../../../lexicon/types/com/atproto/sync/subscribeAllRepos'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.subscribeAllRepos(async function* ({ params }) {
@@ -22,7 +22,11 @@ export default function (server: Server, ctx: AppContext) {
     }
     for await (const evt of outbox.events(backfillFrom)) {
       const { time, repo, commit, prev, blocks, blobs } = evt
-      yield { time, repo, commit, prev, blocks, blobs } as RepoAppend
+      const append: RepoAppend = Object.assign(
+        { time, repo, commit, blocks, blobs },
+        prev !== undefined ? { prev } : {}, // Undefineds not allowed by dag-cbor encoding
+      )
+      yield append
     }
   })
 }
