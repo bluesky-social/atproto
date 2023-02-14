@@ -51,14 +51,18 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
-      try {
-        await ctx.services.actor(ctx.db).updateHandle(requester, handle)
-      } catch (err) {
-        if (err instanceof UserAlreadyExistsError) {
-          throw new InvalidRequestError(`Handle already taken: ${handle}`)
+      await ctx.db.transaction(async (dbTxn) => {
+        try {
+          await ctx.services.actor(dbTxn).updateHandle(requester, handle)
+        } catch (err) {
+          if (err instanceof UserAlreadyExistsError) {
+            throw new InvalidRequestError(`Handle already taken: ${handle}`)
+          }
+          throw err
         }
-        throw err
-      }
+
+        await ctx.plcClient.updateHandle(requester, handle, ctx.keypair)
+      })
     },
   })
 }
