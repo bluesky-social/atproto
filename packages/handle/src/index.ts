@@ -1,6 +1,8 @@
 import * as address from '@sideway/address'
 import { reservedSubdomains } from './reserved'
 
+export * from './resolve'
+
 export const ensureValid = (
   handle: string,
   availableUserDomains: string[],
