@@ -14,8 +14,7 @@ import * as assertion from './tables/assertion'
 import * as profile from './tables/profile'
 import * as post from './tables/post'
 import * as postEntity from './tables/post-entity'
-import * as postEmbedImage from './tables/post-embed-image'
-import * as postEmbedExternal from './tables/post-embed-external'
+import * as postEmbed from './tables/post-embed'
 import * as vote from './tables/vote'
 import * as repost from './tables/repost'
 import * as follow from './tables/follow'
@@ -45,8 +44,7 @@ export type DatabaseSchemaType = user.PartialDB &
   profile.PartialDB &
   post.PartialDB &
   postEntity.PartialDB &
-  postEmbedImage.PartialDB &
-  postEmbedExternal.PartialDB &
+  postEmbed.PartialDB &
   vote.PartialDB &
   repost.PartialDB &
   follow.PartialDB &
