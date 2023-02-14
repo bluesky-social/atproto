@@ -98,7 +98,7 @@ describe('handles', () => {
 
   it('does not allow taking a handle that already exists', async () => {
     const attempt = agent.api.com.atproto.handle.update(
-      { handle: 'bob.test' },
+      { handle: 'Bob.test' },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
     await expect(attempt).rejects.toThrow('Handle already taken: bob.test')
