@@ -151,6 +151,14 @@ describe('Bodies', () => {
     await expect(
       client.call('io.example.validationTest', {}, { foo: 123 }),
     ).rejects.toThrow(`Input/foo must be a string`)
+    await expect(
+      client.call(
+        'io.example.validationTest',
+        {},
+        { foo: 'hello', bar: 123 },
+        { encoding: 'image/jpeg' },
+      ),
+    ).rejects.toThrow(`Wrong request encoding (Content-Type): image/jpeg`)
 
     // 500 responses don't include details, so we nab details from the logger.
     let error: string | undefined
@@ -236,5 +244,19 @@ describe('Bodies', () => {
     )
 
     await expect(promise).rejects.toThrow('request entity too large')
+  })
+
+  it('requires any parsable Content-Type for blob uploads', async () => {
+    // not a real mimetype, but correct syntax
+    await client.call('io.example.blobTest', {}, randomBytes(BLOB_LIMIT), {
+      encoding: 'some/thing',
+    })
+
+    // empty mimetype, but correct syntax
+    const p3 = client.call('io.example.blobTest', {}, randomBytes(BLOB_LIMIT), {
+      encoding: '',
+    })
+    // TODO: await expect(p3).rejects.toThrow('Request encoding (Content-Type) required but not provided')
+    await expect(p3).rejects.toThrow('TypeError: fetch failed')
   })
 })
