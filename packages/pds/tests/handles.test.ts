@@ -104,6 +104,11 @@ describe('handles', () => {
     await expect(attempt).rejects.toThrow('Handle already taken: bob.test')
   })
 
+  it('if handle update fails, it does not update their did document', async () => {
+    const data = await ctx.plcClient.getDocumentData(alice)
+    expect(data.handle).toBe(newHandle)
+  })
+
   it('disallows improperly formatted handles', async () => {
     const tryHandle = async (handle: string) => {
       await agent.api.com.atproto.handle.update(
