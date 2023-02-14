@@ -40,7 +40,13 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
   ])
   await sc.post(alice, posts.alice[1])
   await sc.post(bob, posts.bob[1])
-  await sc.post(alice, posts.alice[2])
+  await sc.post(
+    alice,
+    posts.alice[2],
+    undefined,
+    undefined,
+    sc.posts[dan][1].ref,
+  )
   await sc.vote('up', bob, sc.posts[alice][1].ref)
   await sc.vote('down', bob, sc.posts[alice][2].ref)
   await sc.vote('down', carol, sc.posts[alice][1].ref)

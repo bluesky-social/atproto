@@ -205,7 +205,7 @@ export class FeedService {
       .selectFrom('post_embed_post')
       .innerJoin('post as embed', 'embed.uri', 'embedPostUri')
       .where('postUri', 'in', uris)
-      .select(['embed.uri as uri', 'embed.creator as did'])
+      .select(['postUri', 'embed.uri as uri', 'embed.creator as did'])
       .execute()
     const [images, externals, posts] = await Promise.all([
       imgPromise,
@@ -261,14 +261,14 @@ export class FeedService {
       return acc
     }, embeds)
     embeds = posts.reduce((acc, cur) => {
-      if (!acc[cur.uri]) {
+      if (!acc[cur.postUri]) {
         const formatted = this.formatPostView(
           cur.uri,
           actorViews,
           postViews,
           {},
         )
-        acc[cur.uri] = {
+        acc[cur.postUri] = {
           $type: 'app.bsky.embed.post#presented',
           post: formatted
             ? {
