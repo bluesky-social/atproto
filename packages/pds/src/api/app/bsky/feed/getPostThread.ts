@@ -32,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
       const [actors, posts, embeds] = await Promise.all([
         feedService.getActorViews(Array.from(relevant.dids), requester),
         feedService.getPostViews(Array.from(relevant.uris), requester),
-        feedService.embedsForPosts(Array.from(relevant.uris)),
+        feedService.embedsForPosts(Array.from(relevant.uris), requester),
       ])
 
       const thread = composeThread(

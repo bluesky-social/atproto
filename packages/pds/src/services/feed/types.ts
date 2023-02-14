@@ -1,8 +1,9 @@
 import { Presented as PresentedImage } from '../../lexicon/types/app/bsky/embed/images'
 import { Presented as PresentedExternal } from '../../lexicon/types/app/bsky/embed/external'
+import { Presented as PresentedPost } from '../../lexicon/types/app/bsky/embed/post'
 
 export type FeedEmbeds = {
-  [uri: string]: PresentedImage | PresentedExternal
+  [uri: string]: PresentedImage | PresentedExternal | PresentedPost
 }
 
 export type PostInfo = {

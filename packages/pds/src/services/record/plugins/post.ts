@@ -1,8 +1,9 @@
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import { Record as PostRecord } from '../../../lexicon/types/app/bsky/feed/post'
-import { Main as ImagesEmbedFragment } from '../../../lexicon/types/app/bsky/embed/images'
-import { Main as ExternalEmbedFragment } from '../../../lexicon/types/app/bsky/embed/external'
+import { isMain as isEmbedImage } from '../../../lexicon/types/app/bsky/embed/images'
+import { isMain as isEmbedExternal } from '../../../lexicon/types/app/bsky/embed/external'
+import { isMain as isEmbedPost } from '../../../lexicon/types/app/bsky/embed/post'
 import * as lex from '../../../lexicon/lexicons'
 import * as messages from '../../../event-stream/messages'
 import { Message } from '../../../event-stream/messages'
@@ -13,10 +14,11 @@ type Post = DatabaseSchemaType['post']
 type PostEntity = DatabaseSchemaType['post_entity']
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
 type PostEmbedExternal = DatabaseSchemaType['post_embed_external']
+type PostEmbedPost = DatabaseSchemaType['post_embed_post']
 type IndexedPost = {
   post: Post
   entities: PostEntity[]
-  embed?: PostEmbedImage[] | PostEmbedExternal
+  embed?: PostEmbedImage[] | PostEmbedExternal | PostEmbedPost
 }
 
 const lexId = lex.ids.AppBskyFeedPost
@@ -61,27 +63,34 @@ const insertFn = async (
       .returningAll()
       .execute()
   }
-  let embed: PostEmbedImage[] | PostEmbedExternal | undefined
-  if (obj.embed) {
-    if (obj.embed.$type === 'app.bsky.embed.images') {
-      embed = (obj.embed as ImagesEmbedFragment).images.map((img, i) => ({
-        postUri: uri.toString(),
-        position: i,
-        imageCid: img.image.cid,
-        alt: img.alt,
-      }))
-      await db.insertInto('post_embed_image').values(embed).execute()
-    } else if (obj.embed.$type === 'app.bsky.embed.external') {
-      const external = (obj.embed as ExternalEmbedFragment).external
-      embed = {
-        postUri: uri.toString(),
-        uri: external.uri,
-        title: external.title,
-        description: external.description,
-        thumbCid: external.thumb?.cid || null,
-      }
-      await db.insertInto('post_embed_external').values(embed).execute()
+  let embed: PostEmbedImage[] | PostEmbedExternal | PostEmbedPost | undefined
+  if (isEmbedImage(obj.embed)) {
+    const { images } = obj.embed
+    embed = images.map((img, i) => ({
+      postUri: uri.toString(),
+      position: i,
+      imageCid: img.image.cid,
+      alt: img.alt,
+    }))
+    await db.insertInto('post_embed_image').values(embed).execute()
+  } else if (isEmbedExternal(obj.embed)) {
+    const { external } = obj.embed
+    embed = {
+      postUri: uri.toString(),
+      uri: external.uri,
+      title: external.title,
+      description: external.description,
+      thumbCid: external.thumb?.cid || null,
     }
+    await db.insertInto('post_embed_external').values(embed).execute()
+  } else if (isEmbedPost(obj.embed)) {
+    const { post } = obj.embed
+    embed = {
+      postUri: uri.toString(),
+      embedPostUri: post.uri,
+      embedPostCid: post.cid,
+    }
+    await db.insertInto('post_embed_post').values(embed).execute()
   }
   return insertedPost
     ? { post: insertedPost, entities: insertedEntities, embed }
@@ -141,21 +150,32 @@ const deleteFn = async (
     .where('postUri', '=', uri.toString())
     .returningAll()
     .execute()
-  let deletedEmbed: PostEmbedImage[] | PostEmbedExternal | undefined
+  let deletedEmbed:
+    | PostEmbedImage[]
+    | PostEmbedExternal
+    | PostEmbedPost
+    | undefined
   const deletedImgs = await db
     .deleteFrom('post_embed_image')
     .where('postUri', '=', uri.toString())
     .returningAll()
     .execute()
-  if (deletedImgs) {
-    deletedEmbed = deletedImgs
-  } else {
+  deletedEmbed = deletedImgs.length ? deletedImgs : undefined
+  if (!deletedEmbed) {
     const deletedExternals = await db
       .deleteFrom('post_embed_external')
       .where('postUri', '=', uri.toString())
       .returningAll()
       .executeTakeFirst()
-    deletedEmbed = deletedExternals || undefined
+    deletedEmbed = deletedExternals
+  }
+  if (!deletedEmbed) {
+    const deletedPosts = await db
+      .deleteFrom('post_embed_post')
+      .where('postUri', '=', uri.toString())
+      .returningAll()
+      .executeTakeFirst()
+    deletedEmbed = deletedPosts
   }
   return deleted
     ? { post: deleted, entities: deletedEntities, embed: deletedEmbed }
