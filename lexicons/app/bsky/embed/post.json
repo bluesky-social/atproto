@@ -1,0 +1,38 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.embed.post",
+  "description": "An representation of a post embedded in another form of content",
+  "defs": {
+    "main": {
+      "type": "object",
+      "required": ["post"],
+      "properties": {
+        "post": {"type": "ref", "ref": "com.atproto.repo.strongRef"}
+      }
+    },
+    "presented": {
+      "type": "object",
+      "required":  ["post"],
+      "properties": {
+        "post": {"type": "union", "refs": ["#presentedPost", "#presentedNotFound"]}
+      }
+    },
+    "presentedPost": {
+      "type": "object",
+      "required":  ["uri", "cid", "author", "record"],
+      "properties": {
+        "uri": {"type": "string"},
+        "cid": {"type": "string"},
+        "author": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
+        "record": {"type": "unknown"}
+      }
+    },
+    "presentedNotFound": {
+      "type": "object",
+      "required":  ["uri"],
+      "properties": {
+        "uri": {"type": "string"}
+      }
+    }
+  }
+}

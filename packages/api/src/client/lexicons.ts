@@ -2946,6 +2946,65 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyEmbedPost: {
+    lexicon: 1,
+    id: 'app.bsky.embed.post',
+    description:
+      'An representation of a post embedded in another form of content',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['post'],
+        properties: {
+          post: {
+            type: 'ref',
+            ref: 'lex:com.atproto.repo.strongRef',
+          },
+        },
+      },
+      presented: {
+        type: 'object',
+        required: ['post'],
+        properties: {
+          post: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.embed.post#presentedPost',
+              'lex:app.bsky.embed.post#presentedNotFound',
+            ],
+          },
+        },
+      },
+      presentedPost: {
+        type: 'object',
+        required: ['uri', 'cid', 'author', 'record'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+          record: {
+            type: 'unknown',
+          },
+        },
+      },
+      presentedNotFound: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedFeedViewPost: {
     lexicon: 1,
     id: 'app.bsky.feed.feedViewPost',
@@ -3366,6 +3425,7 @@ export const schemaDict = {
               refs: [
                 'lex:app.bsky.embed.images',
                 'lex:app.bsky.embed.external',
+                'lex:app.bsky.embed.post',
               ],
             },
             createdAt: {
@@ -3454,6 +3514,7 @@ export const schemaDict = {
             refs: [
               'lex:app.bsky.embed.images#presented',
               'lex:app.bsky.embed.external#presented',
+              'lex:app.bsky.embed.post#presented',
             ],
           },
           replyCount: {
@@ -4205,6 +4266,7 @@ export const ids = {
   AppBskyActorUpdateProfile: 'app.bsky.actor.updateProfile',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
+  AppBskyEmbedPost: 'app.bsky.embed.post',
   AppBskyFeedFeedViewPost: 'app.bsky.feed.feedViewPost',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
