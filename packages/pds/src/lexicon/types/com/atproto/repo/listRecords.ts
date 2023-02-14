@@ -13,7 +13,7 @@ export interface QueryParams {
   /** The NSID of the record type. */
   collection: string
   /** The number of records to return. */
-  limit?: number
+  limit: number
   /** A TID to filter the range of records returned. */
   before?: string
   /** A TID to filter the range of records returned. */

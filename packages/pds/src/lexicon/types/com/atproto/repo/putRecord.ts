@@ -17,7 +17,7 @@ export interface InputSchema {
   /** The TID of the record. */
   rkey: string
   /** Validate the record? */
-  validate?: boolean
+  validate: boolean
   /** The record to create. */
   record: {}
   [k: string]: unknown
