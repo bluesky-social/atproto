@@ -9,7 +9,7 @@ import { ServerMailer } from '../src/mailer'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { CID } from 'multiformats/cid'
 import { RepoRoot } from '../src/db/tables/repo-root'
-import { User } from '../src/db/tables/user'
+import { UserAccount } from '../src/db/tables/user-account'
 import { IpldBlock } from '../src/db/tables/ipld-block'
 import { Post } from '../src/db/tables/post'
 import { Vote } from '../src/db/tables/vote'
@@ -139,7 +139,7 @@ describe('account deletion', () => {
       initialDbContents.roots.filter((row) => row.did !== carol.did),
     )
     expect(updatedDbContents.users).toEqual(
-      initialDbContents.users.filter((row) => row.handle !== carol.handle),
+      initialDbContents.users.filter((row) => row.did !== carol.did),
     )
     expect(updatedDbContents.blocks).toEqual(
       initialDbContents.blocks.filter((row) => row.creator !== carol.did),
@@ -256,7 +256,7 @@ describe('account deletion', () => {
 
 type DbContents = {
   roots: RepoRoot[]
-  users: User[]
+  users: UserAccount[]
   blocks: IpldBlock[]
   seqs: Selectable<RepoSeq>[]
   commitHistories: RepoCommitHistory[]
@@ -293,7 +293,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     blobs,
   ] = await Promise.all([
     db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
-    db.db.selectFrom('user').orderBy('handle').selectAll().execute(),
+    db.db.selectFrom('user_account').orderBy('did').selectAll().execute(),
     db.db
       .selectFrom('ipld_block')
       .orderBy('creator')
