@@ -3,25 +3,26 @@ import { NoHandleRecordError, resolveDns } from '../src'
 jest.mock('dns/promises', () => {
   return {
     resolveTxt: (handle: string) => {
-      if (handle === '_did.simple.test') {
-        return [['atproto=did:example:simpleDid']]
+      if (handle === '_atproto.simple.test') {
+        return [['did:example:simpleDid']]
       }
-      if (handle === '_did.noisy.test') {
+      if (handle === '_atproto.noisy.test') {
         return [
           ['blah blah blah'],
-          ['atproto=did:example:noisyDid'],
-          ['atprotodid:example:noisyDid'],
-          ['did:example:noiseDid'],
+          ['did=did:example:fakeDid'],
+          ['atprotodid:example:fakeDid'],
+          ['did:example:noisyDid'],
           [
             'chunk long domain aspdfoiuwerpoaisdfupasodfiuaspdfoiuasdpfoiausdfpaosidfuaspodifuaspdfoiuasdpfoiasudfpasodifuaspdofiuaspdfoiuasd',
             'apsodfiuweproiasudfpoasidfu',
           ],
         ]
       }
-      if (handle === '_did.bad.test') {
+      if (handle === '_atproto.bad.test') {
         return [
           ['blah blah blah'],
-          ['did:example:badDid'],
+          ['did=did:example:fakeDid'],
+          ['atprotodid:example:fakeDid'],
           [
             'chunk long domain aspdfoiuwerpoaisdfupasodfiuaspdfoiuasdpfoiausdfpaosidfuaspodifuaspdfoiuasdpfoiasudfpasodifuaspdofiuaspdfoiuasd',
             'apsodfiuweproiasudfpoasidfu',

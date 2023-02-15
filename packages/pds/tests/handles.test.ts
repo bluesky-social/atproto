@@ -11,11 +11,11 @@ let bob: string
 jest.mock('dns/promises', () => {
   return {
     resolveTxt: (domain: string) => {
-      if (domain === '_did.alice.external') {
-        return [[`atproto=${alice}`]]
+      if (domain === '_atproto.alice.external') {
+        return [[alice]]
       }
-      if (domain === '_did.bob.external') {
-        return [[`atproto=${bob}`]]
+      if (domain === '_atproto.bob.external') {
+        return [[bob]]
       }
       return []
     },
