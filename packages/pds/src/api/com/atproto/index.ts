@@ -4,7 +4,7 @@ import account from './account'
 import admin from './admin'
 import blob from './blob'
 import getAccountsConfig from './getAccountsConfig'
-import handles from './handles'
+import handle from './handle'
 import repo from './repo'
 import report from './report'
 import session from './session'
@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
   admin(server, ctx)
   blob(server, ctx)
   getAccountsConfig(server, ctx)
-  handles(server, ctx)
+  handle(server, ctx)
   repo(server, ctx)
   report(server, ctx)
   session(server, ctx)

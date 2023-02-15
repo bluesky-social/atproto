@@ -125,55 +125,67 @@ const getThreadData = async (
   uri: string,
   depth: number,
 ): Promise<PostThread | null> => {
-  const post = await feedService
-    .selectPostQb()
-    .where('post.uri', '=', uri)
-    .executeTakeFirst()
+  const [parents, children] = await Promise.all([
+    feedService
+      .selectPostQb()
+      .innerJoin('post_hierarchy', 'post_hierarchy.ancestorUri', 'post.uri')
+      .where('post_hierarchy.uri', '=', uri)
+      .execute(),
+    feedService
+      .selectPostQb()
+      .innerJoin('post_hierarchy', 'post_hierarchy.uri', 'post.uri')
+      .where('post_hierarchy.uri', '!=', uri)
+      .where('post_hierarchy.ancestorUri', '=', uri)
+      .where('depth', '<=', depth)
+      .orderBy('post.createdAt', 'desc')
+      .execute(),
+  ])
+  const parentsByUri = parents.reduce((acc, parent) => {
+    return Object.assign(acc, { [parent.postUri]: parent })
+  }, {} as Record<string, FeedRow>)
+  const childrenByParentUri = children.reduce((acc, child) => {
+    if (!child.replyParent) return acc
+    acc[child.replyParent] ??= []
+    acc[child.replyParent].push(child)
+    return acc
+  }, {} as Record<string, FeedRow[]>)
+  const post = parentsByUri[uri]
   if (!post) return null
   return {
     post,
     parent: post.replyParent
-      ? await getParentData(feedService, post.replyParent)
+      ? getParentData(parentsByUri, post.replyParent)
       : undefined,
-    replies: await getChildrenData(feedService, uri, depth),
+    replies: getChildrenData(childrenByParentUri, uri, depth),
   }
 }
 
-const getParentData = async (
-  feedService: FeedService,
+const getParentData = (
+  postsByUri: Record<string, FeedRow>,
   uri: string,
-): Promise<PostThread | ParentNotFoundError> => {
-  const post = await feedService
-    .selectPostQb()
-    .where('post.uri', '=', uri)
-    .executeTakeFirst()
+): PostThread | ParentNotFoundError => {
+  const post = postsByUri[uri]
   if (!post) return new ParentNotFoundError(uri)
   return {
     post,
     parent: post.replyParent
-      ? await getParentData(feedService, post.replyParent)
+      ? getParentData(postsByUri, post.replyParent)
       : undefined,
     replies: [],
   }
 }
 
-const getChildrenData = async (
-  feedService: FeedService,
+const getChildrenData = (
+  childrenByParentUri: Record<string, FeedRow[]>,
   uri: string,
   depth: number,
-): Promise<PostThread[] | undefined> => {
+): PostThread[] | undefined => {
   if (depth === 0) return undefined
-  const children = await feedService
-    .selectPostQb()
-    .where('post.replyParent', '=', uri)
-    .orderBy('post.createdAt', 'desc')
-    .execute()
-  return Promise.all(
-    children.map(async (row) => ({
-      post: row,
-      replies: await getChildrenData(feedService, row.postUri, depth - 1),
-    })),
-  )
+  const children = childrenByParentUri[uri] ?? []
+  return children.map((row) => ({
+    post: row,
+    replies: getChildrenData(childrenByParentUri, row.postUri, depth - 1),
+  }))
 }
 
 class ParentNotFoundError extends Error {

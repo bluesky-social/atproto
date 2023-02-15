@@ -1,5 +1,4 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as crypto from '@atproto/crypto'
 import * as handleLib from '@atproto/handle'
 import { cidForCbor } from '@atproto/common'
 import { Server, APP_BSKY_SYSTEM } from '../../../../lexicon'
@@ -28,10 +27,6 @@ export default function (server: Server, ctx: AppContext) {
       throw err
     }
 
-    // In order to perform the significant db updates ahead of
-    // registering the did, we will use a temp invalid did. Once everything
-    // goes well and a fresh did is registered, we'll replace the temp values.
-    const tempDid = crypto.randomStr(16, 'base32')
     const now = new Date().toISOString()
 
     const result = await ctx.db.transaction(async (dbTxn) => {
@@ -68,33 +63,44 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      // Pre-register user before going out to PLC to get a real did
-      try {
-        await actorTxn.preregisterDid(handle, tempDid)
-      } catch (err) {
-        if (err instanceof UserAlreadyExistsError) {
-          throw new InvalidRequestError(`Handle already taken: ${handle}`)
-        }
-        throw err
+      // format create op, but don't send until we ensure the username & email are available
+      const plcCreate = await ctx.plcClient.formatCreateOp(
+        ctx.keypair,
+        recoveryKey || ctx.cfg.recoveryKey,
+        handle,
+        ctx.cfg.publicUrl,
+      )
+      const did = plcCreate.did
+
+      const declaration = {
+        $type: lex.ids.AppBskySystemDeclaration,
+        actorType: APP_BSKY_SYSTEM.ActorUser,
       }
+
+      // Register user before going out to PLC to get a real did
       try {
-        await actorTxn.registerUser(email, handle, password)
+        await actorTxn.registerUser(
+          email,
+          handle,
+          plcCreate.did,
+          password,
+          declaration,
+        )
       } catch (err) {
         if (err instanceof UserAlreadyExistsError) {
-          throw new InvalidRequestError(`Email already taken: ${email}`)
+          const got = await actorTxn.getUser(handle, true)
+          if (got) {
+            throw new InvalidRequestError(`Handle already taken: ${handle}`)
+          } else {
+            throw new InvalidRequestError(`Email already taken: ${email}`)
+          }
         }
         throw err
       }
 
       // Generate a real did with PLC
-      let did: string
       try {
-        did = await ctx.plcClient.createDid(
-          ctx.keypair,
-          recoveryKey || ctx.cfg.recoveryKey,
-          handle,
-          ctx.cfg.publicUrl,
-        )
+        await ctx.plcClient.sendOperation(did, plcCreate.op)
       } catch (err) {
         req.log.error(
           { didKey: ctx.keypair.did(), handle },
@@ -103,13 +109,6 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
-      // Now that we have a real did, we create the declaration & replace the tempDid
-      // and setup the repo root. This _should_ succeed under typical conditions.
-      const declaration = {
-        $type: lex.ids.AppBskySystemDeclaration,
-        actorType: APP_BSKY_SYSTEM.ActorUser,
-      }
-      await actorTxn.finalizeDid(handle, did, tempDid, declaration)
       if (ctx.cfg.inviteRequired && inviteCode) {
         await dbTxn.db
           .insertInto('invite_code_use')

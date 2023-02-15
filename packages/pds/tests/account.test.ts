@@ -412,7 +412,7 @@ describe('account', () => {
     await agent.api.com.atproto.account.requestPasswordReset({ email })
 
     const user = await db.db
-      .updateTable('user')
+      .updateTable('user_account')
       .where('email', '=', email)
       .set({
         passwordResetGrantedAt: new Date(

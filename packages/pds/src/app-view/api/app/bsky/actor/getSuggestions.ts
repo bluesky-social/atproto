@@ -18,8 +18,8 @@ export default function (server: Server, ctx: AppContext) {
       const { ref } = db.dynamic
 
       const suggestionsQb = db
-        .selectFrom('user')
-        .innerJoin('did_handle', 'user.handle', 'did_handle.handle')
+        .selectFrom('user_account')
+        .innerJoin('did_handle', 'user_account.did', 'did_handle.did')
         .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
         .leftJoin('profile', 'profile.creator', 'did_handle.did')
         .where(notSoftDeletedClause(ref('repo_root')))
@@ -41,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
           'profile.description as description',
           'profile.avatarCid as avatarCid',
           'profile.indexedAt as indexedAt',
-          'user.createdAt as createdAt',
+          'user_account.createdAt as createdAt',
           db
             .selectFrom('post')
             .whereRef('creator', '=', ref('did_handle.did'))

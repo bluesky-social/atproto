@@ -30,6 +30,7 @@ import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRep
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 import * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
+import * as ComAtprotoHandleUpdate from './types/com/atproto/handle/update'
 import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
@@ -115,6 +116,7 @@ export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRep
 export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 export * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 export * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
+export * as ComAtprotoHandleUpdate from './types/com/atproto/handle/update'
 export * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
 export * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 export * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
@@ -496,6 +498,17 @@ export class HandleNS {
       .call('com.atproto.handle.resolve', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoHandleResolve.toKnownErr(e)
+      })
+  }
+
+  update(
+    data?: ComAtprotoHandleUpdate.InputSchema,
+    opts?: ComAtprotoHandleUpdate.CallOptions,
+  ): Promise<ComAtprotoHandleUpdate.Response> {
+    return this._service.xrpc
+      .call('com.atproto.handle.update', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoHandleUpdate.toKnownErr(e)
       })
   }
 }
