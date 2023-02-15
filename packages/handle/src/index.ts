@@ -62,7 +62,7 @@ export const ensureServiceConstraints = (
     handle.endsWith(domain),
   )
   if (!supportedDomain) {
-    throw new InvalidHandleError('Not a supported handle domain')
+    throw new UnsupportedDomainError('Not a supported handle domain')
   }
   const front = handle.slice(0, handle.length - supportedDomain.length)
   if (front.indexOf('.') > -1) {
@@ -97,3 +97,4 @@ export const fulfillsServiceConstraints = (
 
 export class InvalidHandleError extends Error {}
 export class ReservedHandleError extends Error {}
+export class UnsupportedDomainError extends Error {}

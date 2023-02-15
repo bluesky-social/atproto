@@ -53,19 +53,28 @@ export default function (server: Server, ctx: AppContext) {
       } catch (err) {
         if (err instanceof handleLib.InvalidHandleError) {
           throw new InvalidRequestError(err.message, 'InvalidHandle')
-        } else if (err instanceof handleLib.ReservedHandleError) {
-          throw new InvalidRequestError(err.message, 'HandleNotAvailable')
         }
         throw err
       }
 
-      // if not one of our available domains, we must check that the domain correctly links to the DID
-      if (!handleLib.isValidUserDomain(handle, ctx.cfg.availableUserDomains)) {
-        const did = await resolveExternalHandle(ctx.cfg.scheme, handle)
-        if (did !== requester) {
-          throw new InvalidRequestError(
-            'External handle did not resolve to DID',
-          )
+      // test against our service constraints
+      // if not a supported domain, then we must check that the domain correctly links to the DID
+      try {
+        handleLib.ensureServiceConstraints(handle, ctx.cfg.availableUserDomains)
+      } catch (err) {
+        if (err instanceof handleLib.UnsupportedDomainError) {
+          const did = await resolveExternalHandle(ctx.cfg.scheme, handle)
+          if (did !== requester) {
+            throw new InvalidRequestError(
+              'External handle did not resolve to DID',
+            )
+          }
+        } else if (err instanceof handleLib.InvalidHandleError) {
+          throw new InvalidRequestError(err.message, 'InvalidHandle')
+        } else if (err instanceof handleLib.ReservedHandleError) {
+          throw new InvalidRequestError(err.message, 'HandleNotAvailable')
+        } else {
+          throw err
         }
       }
 
