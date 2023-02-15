@@ -11,7 +11,7 @@ import * as ComAtprotoAdminModerationReport from './moderationReport'
 export interface QueryParams {
   subject?: string
   resolved?: boolean
-  limit?: number
+  limit: number
   before?: string
 }
 

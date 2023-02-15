@@ -11,7 +11,7 @@ import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
   user: string
-  limit?: number
+  limit: number
   before?: string
 }
 

@@ -116,7 +116,7 @@ export function validateInput(
   // if input schema, validate
   if (def.input?.schema) {
     try {
-      lexicons.assertValidXrpcInput(nsid, req.body)
+      req.body = lexicons.assertValidXrpcInput(nsid, req.body)
     } catch (e) {
       throw new InvalidRequestError(e instanceof Error ? e.message : String(e))
     }
@@ -174,7 +174,10 @@ export function validateOutput(
   // output schema
   if (def.output?.schema) {
     try {
-      lexicons.assertValidXrpcOutput(nsid, output?.body)
+      const result = lexicons.assertValidXrpcOutput(nsid, output?.body)
+      if (output) {
+        output.body = result
+      }
     } catch (e) {
       throw new InternalServerError(e instanceof Error ? e.message : String(e))
     }

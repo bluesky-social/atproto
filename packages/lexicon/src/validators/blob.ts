@@ -26,7 +26,7 @@ export function blob(
       error: new ValidationError(`${path}/mimeType should be a string`),
     }
   }
-  return { success: true }
+  return { success: true, value }
 }
 
 export function image(

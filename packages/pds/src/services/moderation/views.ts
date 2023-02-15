@@ -51,7 +51,7 @@ export class ModerationViews {
     const [info, actionResults] = await Promise.all([
       await this.db.db
         .selectFrom('did_handle')
-        .leftJoin('user', 'user.handle', 'did_handle.handle')
+        .leftJoin('user_account', 'user_account.did', 'did_handle.did')
         .leftJoin('profile', 'profile.creator', 'did_handle.did')
         .leftJoin('ipld_block as profile_block', (join) =>
           join
@@ -70,7 +70,7 @@ export class ModerationViews {
         )
         .select([
           'did_handle.did as did',
-          'user.email as email',
+          'user_account.email as email',
           'profile_block.content as profileBytes',
           'declaration_block.content as declarationBytes',
         ])

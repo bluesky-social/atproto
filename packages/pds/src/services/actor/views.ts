@@ -1,6 +1,6 @@
 import { ArrayEl } from '@atproto/common'
 import { View as ProfileView } from '../../lexicon/types/app/bsky/actor/profile'
-import { User } from '../../db/tables/user'
+import { UserAccount } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
 import { countAll } from '../../db/util'
@@ -102,4 +102,4 @@ export class ActorViews {
   }
 }
 
-type UserResult = User & DidHandle & RepoRoot
+type UserResult = UserAccount & DidHandle & RepoRoot

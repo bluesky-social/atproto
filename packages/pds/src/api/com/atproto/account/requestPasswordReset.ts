@@ -12,8 +12,8 @@ export default function (server: Server, ctx: AppContext) {
       const token = getSixDigitToken()
       const grantedAt = new Date().toISOString()
       await ctx.db.db
-        .updateTable('user')
-        .where('handle', '=', user.handle)
+        .updateTable('user_account')
+        .where('did', '=', user.did)
         .set({
           passwordResetToken: token,
           passwordResetGrantedAt: grantedAt,

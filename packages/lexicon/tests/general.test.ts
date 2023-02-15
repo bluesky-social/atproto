@@ -56,6 +56,7 @@ describe('General validation', () => {
     {
       const res = lex.validate('com.example.kitchenSink', {})
       expect(res.success).toBe(false)
+      if (res.success) throw new Error('Asserted')
       expect(res.error?.message).toBe('Record must have the property "object"')
     }
   })
@@ -74,6 +75,7 @@ describe('General validation', () => {
     {
       const res = lex.validate('com.example.kitchenSink#object', {})
       expect(res.success).toBe(false)
+      if (res.success) throw new Error('Asserted')
       expect(res.error?.message).toBe('Object must have the property "object"')
     }
   })
@@ -282,6 +284,27 @@ describe('Record validation', () => {
     lex.assertValidRecord('com.example.optional', {
       $type: 'com.example.optional',
     })
+  })
+
+  it('Handles default properties correctly', () => {
+    const result = lex.assertValidRecord('com.example.default', {
+      $type: 'com.example.default',
+      object: {},
+    })
+    expect(result).toEqual({
+      $type: 'com.example.default',
+      boolean: false,
+      integer: 0,
+      number: 0,
+      string: '',
+      object: {
+        boolean: true,
+        integer: 1,
+        number: 1.5,
+        string: 'x',
+      },
+    })
+    expect(result).not.toHaveProperty('datetime')
   })
 
   it('Handles unions correctly', () => {
@@ -570,19 +593,36 @@ describe('XRPC parameter validation', () => {
   const lex = new Lexicons(LexiconDocs)
 
   it('Passes valid parameters', () => {
-    lex.assertValidXrpcParams('com.example.query', {
+    const queryResult = lex.assertValidXrpcParams('com.example.query', {
       boolean: true,
       number: 123.45,
       integer: 123,
       string: 'string',
       array: ['x', 'y'],
     })
-    lex.assertValidXrpcParams('com.example.procedure', {
+    expect(queryResult).toEqual({
       boolean: true,
       number: 123.45,
       integer: 123,
       string: 'string',
       array: ['x', 'y'],
+      def: 0,
+    })
+    const paramResult = lex.assertValidXrpcParams('com.example.procedure', {
+      boolean: true,
+      number: 123.45,
+      integer: 123,
+      string: 'string',
+      array: ['x', 'y'],
+      def: 1,
+    })
+    expect(paramResult).toEqual({
+      boolean: true,
+      number: 123.45,
+      integer: 123,
+      string: 'string',
+      array: ['x', 'y'],
+      def: 1,
     })
   })
 
