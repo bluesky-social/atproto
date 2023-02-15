@@ -12,7 +12,7 @@ export interface QueryParams {
   uri: string
   cid?: string
   direction?: 'up' | 'down'
-  limit?: number
+  limit: number
   before?: string
 }
 

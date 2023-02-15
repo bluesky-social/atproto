@@ -19,6 +19,7 @@ const LEXICONS = [
             num: { type: 'number', minimum: 2, maximum: 10 },
             bool: { type: 'boolean' },
             arr: { type: 'array', items: { type: 'integer' }, maxLength: 2 },
+            def: { type: 'integer', default: 0 },
           },
         },
         output: {
@@ -55,6 +56,7 @@ describe('Parameters', () => {
       num: 5.5,
       bool: true,
       arr: [1, 2],
+      def: 5,
     })
     expect(res1.success).toBeTruthy()
     expect(res1.data.str).toBe('valid')
@@ -62,6 +64,7 @@ describe('Parameters', () => {
     expect(res1.data.num).toBe(5.5)
     expect(res1.data.bool).toBe(true)
     expect(res1.data.arr).toEqual([1, 2])
+    expect(res1.data.def).toEqual(5)
 
     const res2 = await client.call('io.example.paramTest', {
       str: 10,
@@ -76,7 +79,9 @@ describe('Parameters', () => {
     expect(res2.data.num).toBe(5.5)
     expect(res2.data.bool).toBe(true)
     expect(res2.data.arr).toEqual([3])
+    expect(res2.data.def).toEqual(0)
 
+    // @TODO test sending blatantly bad types
     await expect(
       client.call('io.example.paramTest', {
         str: 'n',
