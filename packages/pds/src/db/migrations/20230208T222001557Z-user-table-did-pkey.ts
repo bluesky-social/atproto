@@ -126,6 +126,7 @@ export async function down(db: Kysely<any>): Promise<void> {
     .column('passwordResetToken')
     .execute()
 
+  await db.schema.dropTable('user_state').execute()
   await db.schema.dropIndex('user_account_email_lower_idx').execute()
   await db.schema.dropIndex('user_account_password_reset_token_idx').execute()
   await db.schema.dropTable('user_account').execute()

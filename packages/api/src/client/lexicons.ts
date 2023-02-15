@@ -1225,6 +1225,28 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoHandleUpdate: {
+    lexicon: 1,
+    id: 'com.atproto.handle.update',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Updates the handle of the account',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle'],
+            properties: {
+              handle: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoRepoBatchWrite: {
     lexicon: 1,
     id: 'com.atproto.repo.batchWrite',
@@ -4171,6 +4193,7 @@ export const ids = {
   ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
   ComAtprotoBlobUpload: 'com.atproto.blob.upload',
   ComAtprotoHandleResolve: 'com.atproto.handle.resolve',
+  ComAtprotoHandleUpdate: 'com.atproto.handle.update',
   ComAtprotoRepoBatchWrite: 'com.atproto.repo.batchWrite',
   ComAtprotoRepoCreateRecord: 'com.atproto.repo.createRecord',
   ComAtprotoRepoDeleteRecord: 'com.atproto.repo.deleteRecord',

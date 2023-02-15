@@ -166,6 +166,23 @@ export class ActorService {
     log.info({ handle, email, did }, 'registered user')
   }
 
+  async updateHandle(did: string, handle: string) {
+    const res = await this.db.db
+      .updateTable('did_handle')
+      .set({ handle })
+      .where('did', '=', did)
+      .whereNotExists(
+        this.db.db
+          .selectFrom('did_handle')
+          .where('handle', '=', handle)
+          .selectAll(),
+      )
+      .executeTakeFirst()
+    if (res.numUpdatedRows < 1) {
+      throw new UserAlreadyExistsError()
+    }
+  }
+
   async updateUserPassword(did: string, password: string) {
     const passwordScrypt = await scrypt.hash(password)
     await this.db.db
