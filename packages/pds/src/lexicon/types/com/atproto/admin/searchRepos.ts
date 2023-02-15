@@ -10,7 +10,7 @@ import * as ComAtprotoAdminRepo from './repo'
 
 export interface QueryParams {
   term?: string
-  limit?: number
+  limit: number
   before?: string
 }
 

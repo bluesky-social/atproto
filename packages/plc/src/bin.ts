@@ -1,15 +1,8 @@
-import dotenv from 'dotenv'
+import './env'
 import { Database } from './server/db'
 import PlcServer from './server'
 
 const run = async () => {
-  const env = process.env.ENV
-  if (env) {
-    dotenv.config({ path: `./.${env}.env` })
-  } else {
-    dotenv.config()
-  }
-
   const dbLoc = process.env.DATABASE_LOC
   const dbPostgresUrl = process.env.DB_POSTGRES_URL
 

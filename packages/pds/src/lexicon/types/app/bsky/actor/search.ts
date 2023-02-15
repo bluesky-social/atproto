@@ -10,7 +10,7 @@ import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface QueryParams {
   term?: string
-  limit?: number
+  limit: number
   before?: string
 }
 

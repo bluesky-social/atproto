@@ -302,7 +302,7 @@ export const schemaDict = {
           required: ['id'],
           properties: {
             id: {
-              type: 'number',
+              type: 'integer',
             },
           },
         },
@@ -374,7 +374,7 @@ export const schemaDict = {
           required: ['id'],
           properties: {
             id: {
-              type: 'number',
+              type: 'integer',
             },
           },
         },

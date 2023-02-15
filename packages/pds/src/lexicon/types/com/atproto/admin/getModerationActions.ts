@@ -10,7 +10,7 @@ import * as ComAtprotoAdminModerationAction from './moderationAction'
 
 export interface QueryParams {
   subject?: string
-  limit?: number
+  limit: number
   before?: string
 }
 

@@ -343,11 +343,11 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
           if (def.type === 'query' || def.type === 'procedure') {
             genXrpcParams(file, lexicons, lexUri)
             genXrpcInput(file, imports, lexicons, lexUri)
-            genXrpcOutput(file, imports, lexicons, lexUri)
+            genXrpcOutput(file, imports, lexicons, lexUri, false)
             genServerXrpcMethod(file, lexicons, lexUri)
           } else if (def.type === 'subscription') {
             genXrpcParams(file, lexicons, lexUri)
-            genXrpcOutput(file, imports, lexicons, lexUri)
+            genXrpcOutput(file, imports, lexicons, lexUri, false)
             genServerXrpcStreaming(file, lexicons, lexUri)
           } else if (def.type === 'record') {
             genServerRecord(file, imports, lexicons, lexUri)

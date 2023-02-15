@@ -14,6 +14,7 @@ import * as notification from './tables/user-notification'
 import * as assertion from './tables/assertion'
 import * as profile from './tables/profile'
 import * as post from './tables/post'
+import * as postHierarchy from './tables/post-hierarchy'
 import * as postEntity from './tables/post-entity'
 import * as postEmbedImage from './tables/post-embed-image'
 import * as postEmbedExternal from './tables/post-embed-external'
@@ -46,6 +47,7 @@ export type DatabaseSchemaType = userAccount.PartialDB &
   assertion.PartialDB &
   profile.PartialDB &
   post.PartialDB &
+  postHierarchy.PartialDB &
   postEntity.PartialDB &
   postEmbedImage.PartialDB &
   postEmbedExternal.PartialDB &
