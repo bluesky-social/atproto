@@ -3,44 +3,22 @@ import { reservedSubdomains } from './reserved'
 
 export * from './resolve'
 
-export const isValidUserDomain = (
-  handle: string,
-  availableUserDomains: string[],
-): boolean => {
-  const supportedDomain = availableUserDomains.find((domain) =>
-    handle.endsWith(domain),
-  )
-  return !!supportedDomain
-}
-
 export const ensureValid = (handle: string): void => {
   if (handle.startsWith('did:')) {
     throw new InvalidHandleError(
       'Cannot register a handle that starts with `did:`',
     )
   }
-  const front = handle.split('.')[0]
-  if (front.length < 3) {
-    throw new InvalidHandleError('Handle too short')
-  } else if (front.length > 20) {
-    throw new InvalidHandleError('Handle too long')
-  } else if (handle.length > 253) {
+
+  if (handle.length > 40) {
     throw new InvalidHandleError('Handle too long')
   }
 
   handle.split('.').map((domainLabel) => {
-    if (domainLabel.length > 63) {
+    if (domainLabel.length > 20) {
       throw new InvalidHandleError('Handle too long')
     }
   })
-
-  if (reservedSubdomains[front]) {
-    throw new ReservedHandleError('Reserved handle')
-  }
-
-  if (front.indexOf('.') > -1) {
-    throw new InvalidHandleError('Invalid characters in handle')
-  }
 
   const isValid = address.isDomainValid(handle)
   if (!isValid) {
@@ -66,6 +44,45 @@ export const normalizeAndEnsureValid = (handle: string): string => {
 export const isValid = (handle: string): boolean => {
   try {
     ensureValid(handle)
+  } catch (err) {
+    if (err instanceof InvalidHandleError) {
+      return false
+    }
+    throw err
+  }
+  return true
+}
+
+export const ensureServiceConstraints = (
+  handle: string,
+  availableUserDomains: string[],
+  reserved = reservedSubdomains,
+): void => {
+  const supportedDomain = availableUserDomains.find((domain) =>
+    handle.endsWith(domain),
+  )
+  if (!supportedDomain) {
+    throw new InvalidHandleError('Not a supported handle domain')
+  }
+  const front = handle.slice(0, handle.length - supportedDomain.length)
+  if (front.indexOf('.') > -1) {
+    throw new InvalidHandleError('Invalid characters in handle')
+  }
+  if (front.length < 3) {
+    throw new InvalidHandleError('Handle too short')
+  }
+  if (reserved[front]) {
+    throw new ReservedHandleError('Reserved handle')
+  }
+}
+
+export const fulfillsServiceConstraints = (
+  handle: string,
+  availableUserDomains: string[],
+  reserved = reservedSubdomains,
+): boolean => {
+  try {
+    ensureServiceConstraints(handle, availableUserDomains, reserved)
   } catch (err) {
     if (
       err instanceof InvalidHandleError ||

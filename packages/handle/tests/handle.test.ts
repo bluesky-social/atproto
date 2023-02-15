@@ -1,78 +1,98 @@
-import { ensureValid, normalizeAndEnsureValid } from '../src'
+import {
+  ensureValid,
+  ensureServiceConstraints,
+  normalizeAndEnsureValid,
+} from '../src'
 
 describe('handle validation', () => {
   const domains = ['.bsky.app', '.test']
-  const check = (toCheck: string) => () => {
-    return ensureValid(toCheck, domains)
-  }
 
   it('allows valid handles', () => {
-    check('john.test')
-    check('jan.test')
-    check('a234567890123456789.test')
-    check('john2.test')
-    check('john-john.test')
-    check('john-.test')
-    check('john.bsky.app')
-    check('0john.test')
-    check('12345.test')
-    check(
-      'short.loooooooooooooooooooooooong.loooooooooooooooooooooooong.loooooooooooooooooooooooong.loooooooooooooooooooooooong.test',
-    )
+    ensureValid('john.test')
+    ensureValid('jan.test')
+    ensureValid('a234567890123456789.test')
+    ensureValid('john2.test')
+    ensureValid('john-john.test')
+    ensureValid('john.bsky.app')
+    ensureValid('0john.test')
+    ensureValid('12345.test')
+    ensureValid('this.has.many.sub.domains.test')
+  })
+
+  it('allows handles that pass service constraints', () => {
+    ensureServiceConstraints('john.test', domains)
+    ensureServiceConstraints('jan.test', domains)
+    ensureServiceConstraints('a234567890123456789.test', domains)
+    ensureServiceConstraints('john2.test', domains)
+    ensureServiceConstraints('john-john.test', domains)
+    ensureServiceConstraints('john.bsky.app', domains)
+    ensureServiceConstraints('0john.test', domains)
+    ensureServiceConstraints('12345.test', domains)
   })
 
   it('allows punycode handles', () => {
-    check('xn--ls8h.test') // 💩.test
-    check('xn--bcher-kva.tld') // bücher.tld
+    ensureValid('xn--ls8h.test') // 💩.test
+    ensureValid('xn--bcher-kva.tld') // bücher.tld
   })
 
   it('throws on invalid handles', () => {
-    expect(check('did:john.test')).toThrow(
+    const expectThrow = (handle: string, err: string) => {
+      expect(() => ensureValid(handle)).toThrow(err)
+    }
+
+    expectThrow(
+      'did:john.test',
       'Cannot register a handle that starts with `did:`',
     )
-    expect(check('john.bsky.io')).toThrow('Not a supported handle domain')
-    expect(check('john.com')).toThrow('Not a supported handle domain')
-    expect(check('j.test')).toThrow('Handle too short')
-    expect(check('uk.test')).toThrow('Handle too short')
-    expect(check('jaymome-johnber123456.test')).toThrow('Handle too long')
-    expect(check('jay.mome-johnber123456.test')).toThrow('Handle too long')
-    expect(
-      check(
-        'short.loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong.test',
-      ),
-    ).toThrow('Handle too long')
-    expect(
-      check(
-        'short.loooooooooooooooooooooooong.loooooooooooooooooooooooong.loooooooooooooooooooooooong.loooooooooooooooooooooooong.loooooooooooooooooooooooong.loooooooooooooooooooooooong.loooooooooooooooooooooooong.loooooooooooooooooooooooong.loooooooooooooooooooooooong.test',
-      ),
-    ).toThrow('Handle too long')
-    expect(check('john.test.bsky.app')).toThrow('Invalid characters in handle')
-    expect(check('john..test')).toThrow('Invalid characters in handle')
-    expect(check('jo_hn.test')).toThrow('Invalid characters in handle')
-    expect(check('-john.test')).toThrow('Invalid characters in handle')
-    expect(check('.john.test')).toThrow('Invalid characters in handle')
-    expect(check('jo!hn.test')).toThrow('Invalid characters in handle')
-    expect(check('jo%hn.test')).toThrow('Invalid characters in handle')
-    expect(check('jo&hn.test')).toThrow('Invalid characters in handle')
-    expect(check('jo@hn.test')).toThrow('Invalid characters in handle')
-    expect(check('jo*hn.test')).toThrow('Invalid characters in handle')
-    expect(check('jo|hn.test')).toThrow('Invalid characters in handle')
-    expect(check('jo:hn.test')).toThrow('Invalid characters in handle')
-    expect(check('jo/hn.test')).toThrow('Invalid characters in handle')
-    expect(check('john💩.test')).toThrow('Invalid characters in handle')
-    expect(check('bücher.test')).toThrow('Invalid characters in handle')
-    expect(check('about.test')).toThrow('Reserved handle')
-    expect(check('atp.test')).toThrow('Reserved handle')
-    expect(check('barackobama.test')).toThrow('Reserved handle')
+    expectThrow('jaymome-johnber123456.test', 'Handle too long')
+    expectThrow('jay.mome-johnber1234567890.subdomain.test', 'Handle too long')
+    expectThrow(
+      'short.loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong.test',
+      'Handle too long',
+    )
+    expectThrow(
+      'short.short.short.short.short.short.short.test',
+      'Handle too long',
+    )
+    expectThrow('john..test', 'Invalid characters in handle')
+    expectThrow('jo_hn.test', 'Invalid characters in handle')
+    expectThrow('-john.test', 'Invalid characters in handle')
+    expectThrow('john-.test', 'Invalid characters in handle')
+    expectThrow('.john.test', 'Invalid characters in handle')
+    expectThrow('jo!hn.test', 'Invalid characters in handle')
+    expectThrow('jo%hn.test', 'Invalid characters in handle')
+    expectThrow('jo&hn.test', 'Invalid characters in handle')
+    expectThrow('jo@hn.test', 'Invalid characters in handle')
+    expectThrow('jo*hn.test', 'Invalid characters in handle')
+    expectThrow('jo|hn.test', 'Invalid characters in handle')
+    expectThrow('jo:hn.test', 'Invalid characters in handle')
+    expectThrow('jo/hn.test', 'Invalid characters in handle')
+    expectThrow('john💩.test', 'Invalid characters in handle')
+    expectThrow('bücher.test', 'Invalid characters in handle')
+  })
+
+  it('throw on handles that violate service constraints', () => {
+    const expectThrow = (handle: string, err: string) => {
+      expect(() => ensureServiceConstraints(handle, domains)).toThrow(err)
+    }
+
+    expectThrow('john.bsky.io', 'Not a supported handle domain')
+    expectThrow('john.com', 'Not a supported handle domain')
+    expectThrow('j.test', 'Handle too short')
+    expectThrow('uk.test', 'Handle too short')
+    expectThrow('john.test.bsky.app', 'Invalid characters in handle')
+    expectThrow('about.test', 'Reserved handle')
+    expectThrow('atp.test', 'Reserved handle')
+    expectThrow('barackobama.test', 'Reserved handle')
   })
 
   it('normalizes handles', () => {
-    const normalized = normalizeAndEnsureValid('JoHn.TeST', domains)
+    const normalized = normalizeAndEnsureValid('JoHn.TeST')
     expect(normalized).toBe('john.test')
   })
 
   it('throws on invalid normalized handles', () => {
-    expect(() => normalizeAndEnsureValid('JoH!n.TeST', domains)).toThrow(
+    expect(() => normalizeAndEnsureValid('JoH!n.TeST')).toThrow(
       'Invalid characters in handle',
     )
   })
