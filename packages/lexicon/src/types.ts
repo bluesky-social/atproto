@@ -336,10 +336,15 @@ export class LexiconDocMalformedError extends Error {
   }
 }
 
-export interface ValidationResult {
-  success: boolean
-  error?: ValidationError
-}
+export type ValidationResult =
+  | {
+      success: true
+      value: unknown
+    }
+  | {
+      success: false
+      error: ValidationError
+    }
 
 export class ValidationError extends Error {}
 export class InvalidLexiconError extends Error {}

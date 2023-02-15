@@ -28,8 +28,6 @@ describe('handles', () => {
   let sc: SeedClient
   let ctx: AppContext
 
-  // let alice: string
-  // let bob: string
   const newHandle = 'alice2.test'
 
   beforeAll(async () => {

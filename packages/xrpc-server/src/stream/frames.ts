@@ -1,5 +1,6 @@
 import * as cborx from 'cbor-x'
 import * as uint8arrays from 'uint8arrays'
+import { cborEncode } from '@atproto/common'
 import {
   frameHeader,
   FrameHeader,
@@ -20,10 +21,7 @@ export abstract class Frame {
     return this.header.op
   }
   toBytes(): Uint8Array {
-    return uint8arrays.concat([
-      cborx.encode(this.header),
-      cborx.encode(this.body),
-    ])
+    return uint8arrays.concat([cborEncode(this.header), cborEncode(this.body)])
   }
   static fromBytes(bytes: Uint8Array) {
     let i = 0
@@ -75,7 +73,10 @@ export class MessageFrame<T = Record<string, unknown>> extends Frame {
   body: T
   constructor(body: T, opts?: { type?: number }) {
     super()
-    this.header = { op: FrameType.Message, t: opts?.type }
+    this.header =
+      opts?.type !== undefined
+        ? { op: FrameType.Message, t: opts?.type }
+        : { op: FrameType.Message }
     this.body = body
   }
   get type() {
