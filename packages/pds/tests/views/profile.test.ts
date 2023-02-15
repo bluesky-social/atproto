@@ -146,6 +146,23 @@ describe('pds profile views', () => {
     expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
   })
 
+  it('handles unsetting profile fields', async () => {
+    await agent.api.app.bsky.actor.updateProfile(
+      { description: null, avatar: null, banner: null },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+
+    const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(aliceForAlice.data.description).toBeUndefined()
+    expect(aliceForAlice.data.avatar).toBeUndefined()
+    expect(aliceForAlice.data.banner).toBeUndefined()
+    expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
+  })
+
   it('creates new profile', async () => {
     await agent.api.app.bsky.actor.updateProfile(
       { displayName: 'danny boy' },
