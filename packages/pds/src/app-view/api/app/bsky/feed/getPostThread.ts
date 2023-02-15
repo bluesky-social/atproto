@@ -1,13 +1,13 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
+import { Server } from '../../../../../lexicon'
+import AppContext from '../../../../../context'
 import {
   ActorViewMap,
   FeedEmbeds,
   FeedRow,
   FeedService,
   PostInfoMap,
-} from '../../../../services/feed'
+} from '../../../../../services/feed'
 
 export type PostThread = {
   post: FeedRow

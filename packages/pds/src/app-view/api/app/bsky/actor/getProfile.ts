@@ -1,7 +1,7 @@
-import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { softDeleted } from '../../../../db/util'
-import AppContext from '../../../../context'
+import { Server } from '../../../../../lexicon'
+import { softDeleted } from '../../../../../db/util'
+import AppContext from '../../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({

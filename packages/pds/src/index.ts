@@ -12,6 +12,7 @@ import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import { DidResolver } from '@atproto/did-resolver'
 import API, { health } from './api'
+import AppViewAPI from './app-view/api'
 import Database from './db'
 import { ServerAuth } from './auth'
 import * as streamConsumers from './event-stream/consumers'
@@ -131,15 +132,19 @@ export class PDS {
 
     streamConsumers.listen(ctx)
 
-    const apiServer = API(ctx, {
+    const apiCfg = {
       payload: {
         jsonLimit: 100 * 1024, // 100kb
         textLimit: 100 * 1024, // 100kb
         blobLimit: 5 * 1024 * 1024, // 5mb
       },
-    })
+    }
+    const apiServer = API(ctx, apiCfg)
+    const appViewApiServer = AppViewAPI(ctx, apiCfg)
+
     app.use(health.createRouter(ctx))
     app.use(apiServer.xrpc.router)
+    app.use(appViewApiServer.xrpc.router)
     app.use(error.handler)
 
     return new PDS({

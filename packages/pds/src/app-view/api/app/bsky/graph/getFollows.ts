@@ -1,9 +1,12 @@
-import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { getActorInfo, getDeclarationSimple } from '../util'
-import { paginate, TimeCidKeyset } from '../../../../db/pagination'
-import AppContext from '../../../../context'
-import { notSoftDeletedClause } from '../../../../db/util'
+import { Server } from '../../../../../lexicon'
+import {
+  getActorInfo,
+  getDeclarationSimple,
+} from '../../../../../api/app/bsky/util'
+import { paginate, TimeCidKeyset } from '../../../../../db/pagination'
+import AppContext from '../../../../../context'
+import { notSoftDeletedClause } from '../../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollows({

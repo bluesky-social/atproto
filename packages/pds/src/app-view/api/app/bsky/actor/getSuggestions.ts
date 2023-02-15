@@ -1,9 +1,9 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import AppContext from '../../../../context'
-import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
-import { countAll, notSoftDeletedClause } from '../../../../db/util'
-import { Server } from '../../../../lexicon'
-import { getDeclarationSimple } from '../util'
+import AppContext from '../../../../../context'
+import { Cursor, GenericKeyset, paginate } from '../../../../../db/pagination'
+import { countAll, notSoftDeletedClause } from '../../../../../db/util'
+import { Server } from '../../../../../lexicon'
+import { getDeclarationSimple } from '../../../../../api/app/bsky/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getSuggestions({

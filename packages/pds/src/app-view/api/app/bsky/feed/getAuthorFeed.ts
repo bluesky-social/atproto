@@ -1,8 +1,8 @@
-import { Server } from '../../../../lexicon'
-import { FeedKeyset, composeFeed } from '../util/feed'
-import { paginate } from '../../../../db/pagination'
-import AppContext from '../../../../context'
-import { FeedRow } from '../../../../services/feed'
+import { Server } from '../../../../../lexicon'
+import { FeedKeyset, composeFeed } from '../../../../../api/app/bsky/util/feed'
+import { paginate } from '../../../../../db/pagination'
+import AppContext from '../../../../../context'
+import { FeedRow } from '../../../../../services/feed'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
