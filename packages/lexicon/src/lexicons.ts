@@ -159,7 +159,7 @@ export class Lexicons {
         `Invalid $type: must be ${lexUri}, got ${$type}`,
       )
     }
-    assertValidRecord(this, def as LexRecord, value)
+    return assertValidRecord(this, def as LexRecord, value)
   }
 
   /**
@@ -172,7 +172,7 @@ export class Lexicons {
       'procedure',
       'subscription',
     ])
-    assertValidXrpcParams(
+    return assertValidXrpcParams(
       this,
       def as LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription,
       value,
@@ -185,7 +185,7 @@ export class Lexicons {
   assertValidXrpcInput(lexUri: string, value: unknown) {
     lexUri = toLexUri(lexUri)
     const def = this.getDefOrThrow(lexUri, ['procedure'])
-    assertValidXrpcInput(this, def as LexXrpcProcedure, value)
+    return assertValidXrpcInput(this, def as LexXrpcProcedure, value)
   }
 
   /**
@@ -194,7 +194,11 @@ export class Lexicons {
   assertValidXrpcOutput(lexUri: string, value: unknown) {
     lexUri = toLexUri(lexUri)
     const def = this.getDefOrThrow(lexUri, ['query', 'procedure'])
-    assertValidXrpcOutput(this, def as LexXrpcProcedure | LexXrpcQuery, value)
+    return assertValidXrpcOutput(
+      this,
+      def as LexXrpcProcedure | LexXrpcQuery,
+      value,
+    )
   }
 
   /**
