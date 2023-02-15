@@ -3,22 +3,23 @@ import { reservedSubdomains } from './reserved'
 
 export * from './resolve'
 
-export const ensureValid = (
+export const isValidUserDomain = (
   handle: string,
   availableUserDomains: string[],
-): void => {
+): boolean => {
+  const supportedDomain = availableUserDomains.find((domain) =>
+    handle.endsWith(domain),
+  )
+  return !!supportedDomain
+}
+
+export const ensureValid = (handle: string): void => {
   if (handle.startsWith('did:')) {
     throw new InvalidHandleError(
       'Cannot register a handle that starts with `did:`',
     )
   }
-  const supportedDomain = availableUserDomains.find((domain) =>
-    handle.endsWith(domain),
-  )
-  if (!supportedDomain) {
-    throw new InvalidHandleError('Not a supported handle domain')
-  }
-  const front = handle.slice(0, handle.length - supportedDomain.length)
+  const front = handle.split('.')[0]
   if (front.length < 3) {
     throw new InvalidHandleError('Handle too short')
   } else if (front.length > 20) {
@@ -56,21 +57,15 @@ export const normalize = (handle: string): string => {
   return handle.toLowerCase()
 }
 
-export const normalizeAndEnsureValid = (
-  handle: string,
-  availableUserDomains: string[],
-): string => {
+export const normalizeAndEnsureValid = (handle: string): string => {
   const normalized = normalize(handle)
-  ensureValid(normalized, availableUserDomains)
+  ensureValid(normalized)
   return normalized
 }
 
-export const isValid = (
-  handle: string,
-  availableUserDomains: string[],
-): boolean => {
+export const isValid = (handle: string): boolean => {
   try {
-    ensureValid(handle, availableUserDomains)
+    ensureValid(handle)
   } catch (err) {
     if (
       err instanceof InvalidHandleError ||

@@ -1,4 +1,4 @@
-import { resolveDns } from '../src'
+import { NoHandleRecordError, resolveDns } from '../src'
 
 jest.mock('dns/promises', () => {
   return {
@@ -37,14 +37,11 @@ describe('handle resolution', () => {
     const did = await resolveDns('simple.test')
     expect(did).toBe('did:example:simpleDid')
   })
-
   it('handles a noisy DNS resolution', async () => {
     const did = await resolveDns('noisy.test')
     expect(did).toBe('did:example:noisyDid')
   })
-
   it('handles a bad DNS resolution', async () => {
-    const did = await resolveDns('bad.test')
-    expect(did).toBeNull()
+    await expect(resolveDns('bad.test')).rejects.toThrow(NoHandleRecordError)
   })
 })
