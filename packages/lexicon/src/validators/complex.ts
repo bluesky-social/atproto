@@ -130,12 +130,17 @@ export function object(
     }
   }
 
+  const nullable = new Set(def.nullable)
+
   // properties
   if (typeof def.properties === 'object') {
     for (const key in def.properties) {
       const propValue = value[key]
       if (typeof propValue === 'undefined') {
         continue // skip- if required, will have already failed
+      }
+      if (propValue === null && nullable.has(key)) {
+        continue
       }
       const propDef = def.properties[key]
       const propPath = `${path}/${key}`

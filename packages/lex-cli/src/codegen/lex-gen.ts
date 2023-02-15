@@ -97,10 +97,12 @@ export function genObject(
     isExported: true,
   })
   genComment(iface, def)
+  const nullable = new Set(def.nullable)
   if (def.properties) {
     for (const propKey in def.properties) {
       const req = def.required?.includes(propKey)
       const propDef = def.properties[propKey]
+      const propNullable = nullable.has(propKey)
       if (propDef.type === 'ref' || propDef.type === 'union') {
         //= propName: External|External
         const refs = propDef.type === 'union' ? propDef.refs : [propDef.ref]
@@ -112,7 +114,7 @@ export function genObject(
         }
         iface.addProperty({
           name: `${propKey}${req ? '' : '?'}`,
-          type: types.join('|'),
+          type: makeType(types, { nullable: propNullable }),
         })
         continue
       } else {
@@ -122,11 +124,17 @@ export function genObject(
           if (propDef.items.type === 'ref') {
             propAst = iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
-              type: `${refToType(
-                propDef.items.ref,
-                stripScheme(stripHash(lexUri)),
-                imports,
-              )}[]`,
+              type: makeType(
+                refToType(
+                  propDef.items.ref,
+                  stripScheme(stripHash(lexUri)),
+                  imports,
+                ),
+                {
+                  nullable: propNullable,
+                  array: true,
+                },
+              ),
             })
           } else if (propDef.items.type === 'union') {
             const types = propDef.items.refs.map((ref) =>
@@ -137,12 +145,18 @@ export function genObject(
             }
             propAst = iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
-              type: `(${types.join('|')})[]`,
+              type: makeType(types, {
+                nullable: propNullable,
+                array: true,
+              }),
             })
           } else {
             propAst = iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
-              type: `${primitiveOrBlobToType(propDef.items)}[]`,
+              type: makeType(primitiveOrBlobToType(propDef.items), {
+                nullable: propNullable,
+                array: true,
+              }),
             })
           }
           genComment(propAst, propDef)
@@ -151,7 +165,9 @@ export function genObject(
           genComment(
             iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
-              type: primitiveOrBlobToType(propDef),
+              type: makeType(primitiveOrBlobToType(propDef), {
+                nullable: propNullable,
+              }),
             }),
             propDef,
           )
@@ -472,4 +488,16 @@ export function primitiveToType(def: LexPrimitive): string {
     default:
       throw new Error(`Unexpected primitive type: ${JSON.stringify(def)}`)
   }
+}
+
+function makeType(
+  _types: string | string[],
+  opts?: { array?: boolean; nullable?: boolean },
+) {
+  const types = ([] as string[]).concat(_types)
+  if (opts?.nullable) types.push('null')
+  const arr = opts?.array ? '[]' : ''
+  if (types.length === 1) return `${types[0]}${arr}`
+  if (arr) return `(${types.join(' | ')})${arr}`
+  return types.join(' | ')
 }
