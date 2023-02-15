@@ -14,10 +14,7 @@ export default function (server: Server, ctx: AppContext) {
 
     let handle: string
     try {
-      handle = handleLib.normalizeAndEnsureValid(
-        input.body.handle,
-        ctx.cfg.availableUserDomains,
-      )
+      handle = handleLib.normalizeAndEnsureValid(input.body.handle)
     } catch (err) {
       if (err instanceof handleLib.InvalidHandleError) {
         throw new InvalidRequestError(err.message, 'InvalidHandle')
@@ -25,6 +22,10 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(err.message, 'HandleNotAvailable')
       }
       throw err
+    }
+
+    if (!handleLib.isValidUserDomain(handle, ctx.cfg.availableUserDomains)) {
+      throw new InvalidRequestError('Not a supported handle domain')
     }
 
     const now = new Date().toISOString()
