@@ -31,7 +31,6 @@ export interface View {
   did: string
   declaration: AppBskySystemDeclRef.Main
   handle: string
-  creator: string
   displayName?: string
   description?: string
   avatar?: string
@@ -39,6 +38,9 @@ export interface View {
   followersCount: number
   followsCount: number
   postsCount: number
+  creator: string
+  indexedAt?: string
+  viewer?: ViewerState
   myState?: MyState
   [k: string]: unknown
 }
@@ -53,6 +55,50 @@ export function validateView(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.profile#view', v)
 }
 
+export interface ViewBasic {
+  did: string
+  declaration: AppBskySystemDeclRef.Main
+  handle: string
+  displayName?: string
+  description?: string
+  avatar?: string
+  indexedAt?: string
+  viewer?: ViewerState
+  [k: string]: unknown
+}
+
+export function isViewBasic(v: unknown): v is ViewBasic {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.profile#viewBasic'
+  )
+}
+
+export function validateViewBasic(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.profile#viewBasic', v)
+}
+
+export interface ViewerState {
+  muted?: boolean
+  following?: string
+  followedBy?: string
+  [k: string]: unknown
+}
+
+export function isViewerState(v: unknown): v is ViewerState {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.profile#viewerState'
+  )
+}
+
+export function validateViewerState(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.profile#viewerState', v)
+}
+
+/** Deprecated in favor of #viewerState */
 export interface MyState {
   follow?: string
   muted?: boolean

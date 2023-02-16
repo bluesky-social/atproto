@@ -29,7 +29,9 @@
     "viewerState": {
       "type": "object",
       "properties": {
-        "muted": {"type": "boolean"}
+        "muted": {"type": "boolean"},
+        "following": {"type": "string"},
+        "followedBy": {"type": "string"}
       }
     }
   }

@@ -6,6 +6,7 @@ import { ImageUriBuilder } from '../../image/uri'
 import { Presented as PresentedImage } from '../../lexicon/types/app/bsky/embed/images'
 import { View as PostView } from '../../lexicon/types/app/bsky/feed/post'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
+import { getDeclarationSimple } from '../../api/app/bsky/util'
 
 export * from './types'
 
@@ -63,28 +64,42 @@ export class FeedService {
       ])
   }
 
+  // @NOTE keep in sync with actorService.views.actorWithInfo()
   async getActorViews(
     dids: string[],
     requester: string,
   ): Promise<ActorViewMap> {
     if (dids.length < 1) return {}
+    const { ref } = this.db.db.dynamic
     const actors = await this.db.db
-      .selectFrom('did_handle as actor')
-      .where('actor.did', 'in', dids)
-      .leftJoin('profile', 'profile.creator', 'actor.did')
-      .leftJoin('mute', (join) =>
-        join
-          .onRef('mute.did', '=', 'actor.did')
-          .on('mute.mutedByDid', '=', requester),
-      )
+      .selectFrom('did_handle')
+      .where('did_handle.did', 'in', dids)
+      .leftJoin('profile', 'profile.creator', 'did_handle.did')
+      .selectAll('did_handle')
       .select([
-        'actor.did as did',
-        'actor.declarationCid as declarationCid',
-        'actor.actorType as actorType',
-        'actor.handle as handle',
+        'profile.uri as profileUri',
         'profile.displayName as displayName',
+        'profile.description as description',
         'profile.avatarCid as avatarCid',
-        'mute.did as muted',
+        'profile.indexedAt as indexedAt',
+        this.db.db
+          .selectFrom('follow')
+          .where('creator', '=', requester)
+          .whereRef('subjectDid', '=', ref('did_handle.did'))
+          .select('uri')
+          .as('requesterFollowing'),
+        this.db.db
+          .selectFrom('follow')
+          .whereRef('creator', '=', ref('did_handle.did'))
+          .where('subjectDid', '=', requester)
+          .select('uri')
+          .as('requesterFollowedBy'),
+        this.db.db
+          .selectFrom('mute')
+          .whereRef('did', '=', ref('did_handle.did'))
+          .where('mutedByDid', '=', requester)
+          .select('did')
+          .as('requesterMuted'),
       ])
       .execute()
     return actors.reduce((acc, cur) => {
@@ -92,16 +107,17 @@ export class FeedService {
         ...acc,
         [cur.did]: {
           did: cur.did,
-          declaration: {
-            cid: cur.declarationCid,
-            actorType: cur.actorType,
-          },
+          declaration: getDeclarationSimple(cur),
           handle: cur.handle,
-          displayName: cur.displayName ?? undefined,
+          displayName: cur.displayName || undefined,
           avatar: cur.avatarCid
             ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
             : undefined,
-          viewer: { muted: !!cur.muted },
+          viewer: {
+            muted: !!cur?.requesterMuted,
+            following: cur?.requesterFollowing || undefined,
+            followedBy: cur?.requesterFollowedBy || undefined,
+          },
         },
       }
     }, {} as ActorViewMap)

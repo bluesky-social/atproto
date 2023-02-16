@@ -5,7 +5,7 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
-import * as AppBskySystemDeclRef from '../system/declRef'
+import * as AppBskyActorRef from '../actor/ref'
 
 export interface QueryParams {
   limit?: number
@@ -16,7 +16,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  mutes: Mute[]
+  mutes: AppBskyActorRef.WithInfo[]
   [k: string]: unknown
 }
 
@@ -34,25 +34,4 @@ export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
   }
   return e
-}
-
-export interface Mute {
-  did: string
-  declaration: AppBskySystemDeclRef.Main
-  handle: string
-  displayName?: string
-  createdAt: string
-  [k: string]: unknown
-}
-
-export function isMute(v: unknown): v is Mute {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.graph.getMutes#mute'
-  )
-}
-
-export function validateMute(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.graph.getMutes#mute', v)
 }

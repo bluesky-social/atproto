@@ -3,38 +3,43 @@
 exports[`pds repost views fetches reposted-by for a post 1`] = `
 Array [
   Object {
-    "createdAt": "1970-01-01T00:00:00.000Z",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
     },
     "did": "user(0)",
     "handle": "eve.test",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "viewer": Object {
+      "muted": false,
+    },
   },
   Object {
-    "createdAt": "1970-01-01T00:00:00.000Z",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
     },
     "did": "user(1)",
     "handle": "dan.test",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "viewer": Object {
+      "following": "record(0)",
+      "muted": false,
+    },
   },
   Object {
-    "createdAt": "1970-01-01T00:00:00.000Z",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
     },
     "did": "user(2)",
     "handle": "carol.test",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "viewer": Object {
+      "followedBy": "record(2)",
+      "following": "record(1)",
+      "muted": false,
+    },
   },
   Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-    "createdAt": "1970-01-01T00:00:00.000Z",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
@@ -42,7 +47,11 @@ Array [
     "did": "user(3)",
     "displayName": "bobby",
     "handle": "bob.test",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "viewer": Object {
+      "followedBy": "record(4)",
+      "following": "record(3)",
+      "muted": false,
+    },
   },
 ]
 `;
@@ -50,24 +59,27 @@ Array [
 exports[`pds repost views fetches reposted-by for a reply 1`] = `
 Array [
   Object {
-    "createdAt": "1970-01-01T00:00:00.000Z",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
     },
     "did": "user(0)",
     "handle": "eve.test",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "viewer": Object {
+      "muted": false,
+    },
   },
   Object {
-    "createdAt": "1970-01-01T00:00:00.000Z",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
     },
     "did": "user(1)",
     "handle": "dan.test",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "viewer": Object {
+      "following": "record(0)",
+      "muted": false,
+    },
   },
 ]
 `;

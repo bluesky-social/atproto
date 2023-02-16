@@ -12,10 +12,14 @@ Object {
   "followersCount": 1,
   "followsCount": 1,
   "handle": "dan.test",
+  "indexedAt": "1970-01-01T00:00:00.000Z",
   "myState": Object {
     "muted": false,
   },
   "postsCount": 2,
+  "viewer": Object {
+    "muted": false,
+  },
 }
 `;
 
@@ -34,11 +38,17 @@ Array [
     "followersCount": 2,
     "followsCount": 3,
     "handle": "alice.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {
       "follow": "record(0)",
       "muted": false,
     },
     "postsCount": 4,
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
   },
   Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -53,10 +63,14 @@ Array [
     "followersCount": 2,
     "followsCount": 2,
     "handle": "bob.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
     "myState": Object {
       "muted": false,
     },
     "postsCount": 3,
+    "viewer": Object {
+      "muted": false,
+    },
   },
   Object {
     "creator": "user(2)",
@@ -69,10 +83,14 @@ Array [
     "followsCount": 1,
     "handle": "carol.test",
     "myState": Object {
-      "follow": "record(1)",
+      "follow": "record(2)",
       "muted": false,
     },
     "postsCount": 2,
+    "viewer": Object {
+      "following": "record(2)",
+      "muted": false,
+    },
   },
   Object {
     "creator": "user(3)",
@@ -88,6 +106,10 @@ Array [
       "muted": false,
     },
     "postsCount": 2,
+    "viewer": Object {
+      "followedBy": "record(3)",
+      "muted": false,
+    },
   },
 ]
 `;
@@ -106,11 +128,17 @@ Object {
   "followersCount": 2,
   "followsCount": 3,
   "handle": "alice.test",
+  "indexedAt": "1970-01-01T00:00:00.000Z",
   "myState": Object {
     "follow": "record(0)",
     "muted": false,
   },
   "postsCount": 4,
+  "viewer": Object {
+    "followedBy": "record(1)",
+    "following": "record(0)",
+    "muted": false,
+  },
 }
 `;
 
@@ -129,6 +157,10 @@ Object {
     "muted": false,
   },
   "postsCount": 2,
+  "viewer": Object {
+    "followedBy": "record(0)",
+    "muted": false,
+  },
 }
 `;
 
@@ -146,10 +178,14 @@ Object {
   "followersCount": 2,
   "followsCount": 3,
   "handle": "alice.test",
+  "indexedAt": "1970-01-01T00:00:00.000Z",
   "myState": Object {
     "muted": false,
   },
   "postsCount": 4,
+  "viewer": Object {
+    "muted": false,
+  },
 }
 `;
 
@@ -168,10 +204,14 @@ Object {
   "followersCount": 2,
   "followsCount": 3,
   "handle": "alice.test",
+  "indexedAt": "1970-01-01T00:00:00.000Z",
   "myState": Object {
     "muted": false,
   },
   "postsCount": 4,
+  "viewer": Object {
+    "muted": false,
+  },
 }
 `;
 
@@ -189,10 +229,14 @@ Object {
   "followersCount": 2,
   "followsCount": 3,
   "handle": "alice.test",
+  "indexedAt": "1970-01-01T00:00:00.000Z",
   "myState": Object {
     "muted": false,
   },
   "postsCount": 4,
+  "viewer": Object {
+    "muted": false,
+  },
 }
 `;
 
@@ -210,9 +254,13 @@ Object {
   "followersCount": 2,
   "followsCount": 3,
   "handle": "alice.test",
+  "indexedAt": "1970-01-01T00:00:00.000Z",
   "myState": Object {
     "muted": false,
   },
   "postsCount": 4,
+  "viewer": Object {
+    "muted": false,
+  },
 }
 `;

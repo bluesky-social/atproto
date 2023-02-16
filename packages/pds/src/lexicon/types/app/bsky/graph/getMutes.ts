@@ -6,7 +6,7 @@ import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskySystemDeclRef from '../system/declRef'
+import * as AppBskyActorRef from '../actor/ref'
 
 export interface QueryParams {
   limit: number
@@ -17,7 +17,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  mutes: Mute[]
+  mutes: AppBskyActorRef.WithInfo[]
   [k: string]: unknown
 }
 
@@ -41,24 +41,3 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
   req: express.Request
   res: express.Response
 }) => Promise<HandlerOutput> | HandlerOutput
-
-export interface Mute {
-  did: string
-  declaration: AppBskySystemDeclRef.Main
-  handle: string
-  displayName?: string
-  createdAt: string
-  [k: string]: unknown
-}
-
-export function isMute(v: unknown): v is Mute {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.graph.getMutes#mute'
-  )
-}
-
-export function validateMute(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.graph.getMutes#mute', v)
-}
