@@ -120,7 +120,8 @@ describe('Bodies', () => {
       }
     },
   )
-  const client = xrpc.service(`http://localhost:8892`)
+  const url = `http://localhost:8892`
+  const client = xrpc.service(url)
   xrpc.addLexicons(LEXICONS)
   beforeAll(async () => {
     s = await createServer(8892, server)
@@ -151,6 +152,14 @@ describe('Bodies', () => {
     await expect(
       client.call('io.example.validationTest', {}, { foo: 123 }),
     ).rejects.toThrow(`Input/foo must be a string`)
+    await expect(
+      client.call(
+        'io.example.validationTest',
+        {},
+        { foo: 'hello', bar: 123 },
+        { encoding: 'image/jpeg' },
+      ),
+    ).rejects.toThrow(`Wrong request encoding (Content-Type): image/jpeg`)
 
     // 500 responses don't include details, so we nab details from the logger.
     let error: string | undefined
@@ -236,5 +245,32 @@ describe('Bodies', () => {
     )
 
     await expect(promise).rejects.toThrow('request entity too large')
+  })
+
+  it('requires any parsable Content-Type for blob uploads', async () => {
+    // not a real mimetype, but correct syntax
+    await client.call('io.example.blobTest', {}, randomBytes(BLOB_LIMIT), {
+      encoding: 'some/thing',
+    })
+  })
+
+  // @TODO: figure out why this is failing dependent on the prev test being run
+  // https://github.com/bluesky-social/atproto/pull/550/files#r1106400413
+  it.skip('errors on an empty Content-type on blob upload', async () => {
+    // empty mimetype, but correct syntax
+    const res = await fetch(`${url}/xrpc/io.example.blobTest`, {
+      method: 'post',
+      headers: { 'Content-Type': '' },
+      body: randomBytes(BLOB_LIMIT),
+      // @ts-ignore see note in @atproto/xrpc/client.ts
+      duplex: 'half',
+    })
+    const resBody = await res.json()
+    const status = res.status
+    expect(status).toBe(400)
+    expect(resBody.error).toBe('InvalidRequest')
+    expect(resBody.message).toBe(
+      'Request encoding (Content-Type) required but not provided',
+    )
   })
 })

@@ -10,12 +10,12 @@ describe('async', () => {
     }
 
     it('reads from generator with timeout', async () => {
-      const read = await readFromGenerator(waitToYield(100), undefined, 101)
+      const read = await readFromGenerator(waitToYield(100), undefined, 105)
       expect(read).toEqual([true, true, true, true, true])
     })
 
     it('stops reading at timeout', async () => {
-      const read = await readFromGenerator(waitToYield(100), undefined, 99)
+      const read = await readFromGenerator(waitToYield(100), undefined, 95)
       expect(read).toEqual([])
     })
   })

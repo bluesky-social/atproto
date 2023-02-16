@@ -14,15 +14,15 @@ export default function (server: Server, ctx: AppContext) {
 
     let handle: string
     try {
-      handle = handleLib.normalizeAndEnsureValid(
-        input.body.handle,
-        ctx.cfg.availableUserDomains,
-      )
+      handle = handleLib.normalizeAndEnsureValid(input.body.handle)
+      handleLib.ensureServiceConstraints(handle, ctx.cfg.availableUserDomains)
     } catch (err) {
       if (err instanceof handleLib.InvalidHandleError) {
         throw new InvalidRequestError(err.message, 'InvalidHandle')
       } else if (err instanceof handleLib.ReservedHandleError) {
         throw new InvalidRequestError(err.message, 'HandleNotAvailable')
+      } else if (err instanceof handleLib.UnsupportedDomainError) {
+        throw new InvalidRequestError(err.message, 'UnsupportedDomain')
       }
       throw err
     }

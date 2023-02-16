@@ -105,7 +105,15 @@ export function validateInput(
     def.input?.encoding &&
     (!inputEncoding || !isValidEncoding(def.input?.encoding, inputEncoding))
   ) {
-    throw new InvalidRequestError(`Invalid request encoding: ${inputEncoding}`)
+    if (!inputEncoding) {
+      throw new InvalidRequestError(
+        `Request encoding (Content-Type) required but not provided`,
+      )
+    } else {
+      throw new InvalidRequestError(
+        `Wrong request encoding (Content-Type): ${inputEncoding}`,
+      )
+    }
   }
 
   if (!inputEncoding) {
@@ -187,8 +195,9 @@ export function validateOutput(
 }
 
 export function normalizeMime(v: string) {
-  const fullType = mime.contentType(v)
   if (!v) return false
+  const fullType = mime.contentType(v)
+  if (!fullType) return false
   const shortType = fullType.split(';')[0]
   if (!shortType) return false
   return shortType
