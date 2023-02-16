@@ -240,6 +240,25 @@ Object {
 }
 `;
 
+exports[`pds profile views handles unsetting profile fields 1`] = `
+Object {
+  "creator": "user(0)",
+  "declaration": Object {
+    "actorType": "app.bsky.system.actorUser",
+    "cid": "cids(0)",
+  },
+  "did": "user(0)",
+  "displayName": "ali",
+  "followersCount": 2,
+  "followsCount": 3,
+  "handle": "alice.test",
+  "myState": Object {
+    "muted": false,
+  },
+  "postsCount": 4,
+}
+`;
+
 exports[`pds profile views updates profile 1`] = `
 Object {
   "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",

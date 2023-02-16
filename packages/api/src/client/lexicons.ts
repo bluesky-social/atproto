@@ -2694,6 +2694,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
+            nullable: ['description', 'avatar', 'banner'],
             properties: {
               displayName: {
                 type: 'string',
