@@ -86,7 +86,8 @@ export const fulfillsServiceConstraints = (
   } catch (err) {
     if (
       err instanceof InvalidHandleError ||
-      err instanceof ReservedHandleError
+      err instanceof ReservedHandleError ||
+      err instanceof UnsupportedDomainError
     ) {
       return false
     }
