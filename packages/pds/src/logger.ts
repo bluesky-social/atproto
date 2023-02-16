@@ -17,7 +17,7 @@ export const loggerMiddleware = pinoHttp({
       const authHeader = serialized.headers.authorization || ''
       let auth: string | undefined = undefined
       if (authHeader.startsWith('Bearer ')) {
-        const token = authHeader.slice(0, 'Bearer '.length)
+        const token = authHeader.slice('Bearer '.length)
         const sub = jwt.decode(token)?.sub
         if (sub) {
           auth = 'Bearer ' + sub

@@ -4,14 +4,30 @@ import basicSeed from './seeds/basic'
 import * as util from './_util'
 import { AppContext } from '../src'
 
+// outside of suite so they can be used in mock
+let alice: string
+let bob: string
+
+jest.mock('dns/promises', () => {
+  return {
+    resolveTxt: (domain: string) => {
+      if (domain === '_atproto.alice.external') {
+        return [[`did=${alice}`]]
+      }
+      if (domain === '_atproto.bob.external') {
+        return [[`did=${bob}`]]
+      }
+      return []
+    },
+  }
+})
+
 describe('handles', () => {
   let agent: AtpAgent
   let close: util.CloseFn
   let sc: SeedClient
   let ctx: AppContext
 
-  let alice: string
-  let bob: string
   const newHandle = 'alice2.test'
 
   beforeAll(async () => {
@@ -120,7 +136,7 @@ describe('handles', () => {
       'Cannot register a handle that starts with `did:`',
     )
     await expect(tryHandle('john.bsky.io')).rejects.toThrow(
-      'Not a supported handle domain',
+      'External handle did not resolve to DID',
     )
     await expect(tryHandle('j.test')).rejects.toThrow('Handle too short')
     await expect(tryHandle('jayromy-johnber123456.test')).rejects.toThrow(
@@ -152,5 +168,50 @@ describe('handles', () => {
     )
     await expect(tryHandle('about.test')).rejects.toThrow('Reserved handle')
     await expect(tryHandle('atp.test')).rejects.toThrow('Reserved handle')
+  })
+
+  it('allows updating to a dns handles', async () => {
+    await agent.api.com.atproto.handle.update(
+      {
+        handle: 'alice.external',
+      },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+    const profile = await agent.api.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(bob) },
+    )
+    expect(profile.data.handle).toBe('alice.external')
+
+    const data = await ctx.plcClient.getDocumentData(alice)
+    expect(data.handle).toBe('alice.external')
+  })
+
+  it('does not allow updating to an invalid dns handle', async () => {
+    const attempt = agent.api.com.atproto.handle.update(
+      {
+        handle: 'bob.external',
+      },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+    await expect(attempt).rejects.toThrow(
+      'External handle did not resolve to DID',
+    )
+
+    const attempt2 = agent.api.com.atproto.handle.update(
+      {
+        handle: 'noexist.external',
+      },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+    await expect(attempt2).rejects.toThrow(
+      'External handle did not resolve to DID',
+    )
+
+    const profile = await agent.api.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(bob) },
+    )
+    expect(profile.data.handle).toBe('alice.external')
   })
 })

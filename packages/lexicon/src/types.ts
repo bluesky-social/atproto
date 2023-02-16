@@ -162,6 +162,7 @@ export const lexObject = z.object({
   type: z.literal('object'),
   description: z.string().optional(),
   required: z.string().array().optional(),
+  nullable: z.string().array().optional(),
   properties: z
     .record(z.union([lexRefVariant, lexArray, lexBlobVariant, lexPrimitive]))
     .optional(),

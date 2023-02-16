@@ -2,7 +2,6 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as common from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
-import { getDeclaration } from '../util'
 import AppContext from '../../../../context'
 import { notSoftDeletedClause } from '../../../../db/util'
 
@@ -22,11 +21,6 @@ export default function (server: Server, ctx: AppContext) {
             .onRef('ipld_block.creator', '=', 'notif.author'),
         )
         .innerJoin('did_handle as author', 'author.did', 'notif.author')
-        .leftJoin(
-          'profile as author_profile',
-          'author_profile.creator',
-          'author.did',
-        )
         .innerJoin(
           'repo_root as author_repo',
           'author_repo.did',
@@ -51,8 +45,6 @@ export default function (server: Server, ctx: AppContext) {
           'author.declarationCid as authorDeclarationCid',
           'author.actorType as authorActorType',
           'author.handle as authorHandle',
-          'author_profile.displayName as authorDisplayName',
-          'author_profile.avatarCid as authorAvatarCid',
           'notif.reason as reason',
           'notif.reasonSubject as reasonSubject',
           'notif.indexedAt as indexedAt',
@@ -84,21 +76,21 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Could not find user: ${requester}`)
       }
 
-      const notifications = notifs.map((notif) => ({
+      const actorService = ctx.services.actor(ctx.db)
+      const authors = await actorService.views.actorWithInfo(
+        notifs.map((notif) => ({
+          did: notif.authorDid,
+          handle: notif.authorHandle,
+          actorType: notif.authorActorType,
+          declarationCid: notif.authorDeclarationCid,
+        })),
+        requester,
+      )
+
+      const notifications = notifs.map((notif, i) => ({
         uri: notif.uri,
         cid: notif.cid,
-        author: {
-          did: notif.authorDid,
-          declaration: getDeclaration('author', notif),
-          handle: notif.authorHandle,
-          displayName: notif.authorDisplayName || undefined,
-          avatar: notif.authorAvatarCid
-            ? ctx.imgUriBuilder.getCommonSignedUri(
-                'avatar',
-                notif.authorAvatarCid,
-              )
-            : undefined,
-        },
+        author: authors[i],
         reason: notif.reason,
         reasonSubject: notif.reasonSubject || undefined,
         record: common.cborBytesToRecord(notif.recordBytes),

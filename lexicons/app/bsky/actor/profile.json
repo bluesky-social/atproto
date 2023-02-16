@@ -41,7 +41,6 @@
         "did": {"type": "string"},
         "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
         "handle": {"type": "string"},
-        "creator": {"type": "string"},
         "displayName": {
           "type": "string",
           "maxLength": 64
@@ -55,11 +54,43 @@
         "followersCount": {"type": "integer"},
         "followsCount": {"type": "integer"},
         "postsCount": {"type": "integer"},
-        "myState": {"type": "ref", "ref": "#myState"}
+        "creator": {"type": "string"},
+        "indexedAt": {"type": "datetime"},
+        "viewer": {"type": "ref", "ref": "#viewerState"},
+        "myState": {"type": "ref", "ref": "#myState", "description": "Deprecated"}
+      }
+    },
+    "viewBasic": {
+      "type": "object",
+      "required": ["did", "declaration", "handle"],
+      "properties": {
+        "did": {"type": "string"},
+        "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
+        "handle": {"type": "string"},
+        "displayName": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "avatar": { "type": "string" },
+        "indexedAt": {"type": "datetime"},
+        "viewer": {"type": "ref", "ref": "#viewerState"}
+      }
+    },
+    "viewerState": {
+      "type": "object",
+      "properties": {
+        "muted": {"type": "boolean"},
+        "following": {"type": "string"},
+        "followedBy": {"type": "string"}
       }
     },
     "myState": {
       "type": "object",
+      "description": "Deprecated in favor of #viewerState",
       "properties": {
         "follow": {"type": "string"},
         "muted": {"type": "boolean"}

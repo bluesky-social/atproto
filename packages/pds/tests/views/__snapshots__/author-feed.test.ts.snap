@@ -53,6 +53,8 @@ Array [
           "displayName": "bobby",
           "handle": "bob.test",
           "viewer": Object {
+            "followedBy": "record(4)",
+            "following": "record(3)",
             "muted": false,
           },
         },
@@ -158,7 +160,7 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 1,
-      "uri": "record(3)",
+      "uri": "record(5)",
       "viewer": Object {},
     },
   },
@@ -218,7 +220,7 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 0,
-      "uri": "record(4)",
+      "uri": "record(6)",
       "viewer": Object {},
     },
   },
@@ -300,6 +302,8 @@ Array [
           "displayName": "ali",
           "handle": "alice.test",
           "viewer": Object {
+            "followedBy": "record(3)",
+            "following": "record(2)",
             "muted": false,
           },
         },
@@ -316,7 +320,7 @@ Array [
         "upvoteCount": 2,
         "uri": "record(1)",
         "viewer": Object {
-          "upvote": "record(2)",
+          "upvote": "record(4)",
         },
       },
       "root": Object {
@@ -330,6 +334,8 @@ Array [
           "displayName": "ali",
           "handle": "alice.test",
           "viewer": Object {
+            "followedBy": "record(3)",
+            "following": "record(2)",
             "muted": false,
           },
         },
@@ -346,7 +352,7 @@ Array [
         "upvoteCount": 2,
         "uri": "record(1)",
         "viewer": Object {
-          "upvote": "record(2)",
+          "upvote": "record(4)",
         },
       },
     },
@@ -377,7 +383,7 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 0,
-      "uri": "record(3)",
+      "uri": "record(5)",
       "viewer": Object {},
     },
   },
@@ -407,7 +413,7 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 0,
-      "uri": "record(4)",
+      "uri": "record(6)",
       "viewer": Object {},
     },
   },
@@ -520,6 +526,8 @@ Array [
           "displayName": "ali",
           "handle": "alice.test",
           "viewer": Object {
+            "followedBy": "record(5)",
+            "following": "record(4)",
             "muted": false,
           },
         },
@@ -536,7 +544,7 @@ Array [
         "upvoteCount": 2,
         "uri": "record(3)",
         "viewer": Object {
-          "downvote": "record(4)",
+          "downvote": "record(6)",
         },
       },
       "root": Object {
@@ -550,6 +558,8 @@ Array [
           "displayName": "ali",
           "handle": "alice.test",
           "viewer": Object {
+            "followedBy": "record(5)",
+            "following": "record(4)",
             "muted": false,
           },
         },
@@ -566,7 +576,7 @@ Array [
         "upvoteCount": 2,
         "uri": "record(3)",
         "viewer": Object {
-          "downvote": "record(4)",
+          "downvote": "record(6)",
         },
       },
     },
@@ -629,7 +639,7 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 2,
-      "uri": "record(5)",
+      "uri": "record(7)",
       "viewer": Object {},
     },
   },
@@ -650,6 +660,7 @@ Array [
         "displayName": "ali",
         "handle": "alice.test",
         "viewer": Object {
+          "followedBy": "record(1)",
           "muted": false,
         },
       },
@@ -666,8 +677,8 @@ Array [
       "upvoteCount": 2,
       "uri": "record(0)",
       "viewer": Object {
-        "repost": "record(1)",
-        "upvote": "record(2)",
+        "repost": "record(2)",
+        "upvote": "record(3)",
       },
     },
     "reason": Object {
@@ -720,7 +731,7 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "upvoteCount": 0,
-      "uri": "record(3)",
+      "uri": "record(4)",
       "viewer": Object {},
     },
   },
@@ -748,7 +759,7 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 0,
-      "uri": "record(4)",
+      "uri": "record(5)",
       "viewer": Object {},
     },
   },
@@ -767,6 +778,7 @@ Array [
         "did": "user(0)",
         "handle": "dan.test",
         "viewer": Object {
+          "followedBy": "record(1)",
           "muted": true,
         },
       },
@@ -805,6 +817,7 @@ Array [
         "did": "user(0)",
         "handle": "dan.test",
         "viewer": Object {
+          "followedBy": "record(1)",
           "muted": true,
         },
       },
@@ -819,7 +832,7 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 0,
-      "uri": "record(1)",
+      "uri": "record(2)",
       "viewer": Object {},
     },
   },
@@ -840,6 +853,8 @@ Array [
         "displayName": "ali",
         "handle": "alice.test",
         "viewer": Object {
+          "followedBy": "record(2)",
+          "following": "record(1)",
           "muted": false,
         },
       },
@@ -852,11 +867,11 @@ Array [
         "reply": Object {
           "parent": Object {
             "cid": "cids(3)",
-            "uri": "record(2)",
+            "uri": "record(4)",
           },
           "root": Object {
             "cid": "cids(2)",
-            "uri": "record(1)",
+            "uri": "record(3)",
           },
         },
         "text": "thanks bob",
@@ -879,6 +894,7 @@ Array [
           "displayName": "bobby",
           "handle": "bob.test",
           "viewer": Object {
+            "followedBy": "record(6)",
             "muted": false,
           },
         },
@@ -913,11 +929,11 @@ Array [
           "reply": Object {
             "parent": Object {
               "cid": "cids(2)",
-              "uri": "record(1)",
+              "uri": "record(3)",
             },
             "root": Object {
               "cid": "cids(2)",
-              "uri": "record(1)",
+              "uri": "record(3)",
             },
           },
           "text": "hear that",
@@ -925,7 +941,7 @@ Array [
         "replyCount": 1,
         "repostCount": 0,
         "upvoteCount": 0,
-        "uri": "record(2)",
+        "uri": "record(4)",
         "viewer": Object {},
       },
       "root": Object {
@@ -939,6 +955,8 @@ Array [
           "displayName": "ali",
           "handle": "alice.test",
           "viewer": Object {
+            "followedBy": "record(2)",
+            "following": "record(1)",
             "muted": false,
           },
         },
@@ -953,9 +971,9 @@ Array [
         "replyCount": 2,
         "repostCount": 1,
         "upvoteCount": 2,
-        "uri": "record(1)",
+        "uri": "record(3)",
         "viewer": Object {
-          "downvote": "record(3)",
+          "downvote": "record(5)",
         },
       },
     },
@@ -972,6 +990,8 @@ Array [
         "displayName": "ali",
         "handle": "alice.test",
         "viewer": Object {
+          "followedBy": "record(2)",
+          "following": "record(1)",
           "muted": false,
         },
       },
@@ -986,9 +1006,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 1,
-      "uri": "record(4)",
+      "uri": "record(7)",
       "viewer": Object {
-        "upvote": "record(5)",
+        "upvote": "record(8)",
       },
     },
   },
@@ -1004,6 +1024,8 @@ Array [
         "displayName": "ali",
         "handle": "alice.test",
         "viewer": Object {
+          "followedBy": "record(2)",
+          "following": "record(1)",
           "muted": false,
         },
       },
@@ -1018,9 +1040,9 @@ Array [
       "replyCount": 2,
       "repostCount": 1,
       "upvoteCount": 2,
-      "uri": "record(1)",
+      "uri": "record(3)",
       "viewer": Object {
-        "downvote": "record(3)",
+        "downvote": "record(5)",
       },
     },
   },
@@ -1036,6 +1058,8 @@ Array [
         "displayName": "ali",
         "handle": "alice.test",
         "viewer": Object {
+          "followedBy": "record(2)",
+          "following": "record(1)",
           "muted": false,
         },
       },
@@ -1050,7 +1074,7 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 0,
-      "uri": "record(6)",
+      "uri": "record(9)",
       "viewer": Object {},
     },
   },

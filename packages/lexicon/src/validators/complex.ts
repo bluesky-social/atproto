@@ -118,12 +118,16 @@ export function object(
     }
   }
 
-  const requiredProps = new Set(def.required ?? [])
+  const requiredProps = new Set(def.required)
+  const nullableProps = new Set(def.nullable)
 
   // properties
   let resultValue = value
   if (typeof def.properties === 'object') {
     for (const key in def.properties) {
+      if (value[key] === null && nullableProps.has(key)) {
+        continue
+      }
       const propDef = def.properties[key]
       const propPath = `${path}/${key}`
       const validated = validateOneOf(lexicons, propPath, propDef, value[key])
