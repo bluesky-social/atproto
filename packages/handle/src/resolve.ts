@@ -2,6 +2,7 @@ import { isErrnoException } from '@atproto/common'
 import dns from 'dns/promises'
 
 const SUBDOMAIN = '_atproto'
+const PREFIX = 'did='
 
 export const resolveDns = async (handle: string): Promise<string> => {
   let chunkedResults: string[][]
@@ -14,9 +15,9 @@ export const resolveDns = async (handle: string): Promise<string> => {
     throw err
   }
   const results = chunkedResults.map((chunks) => chunks.join(''))
-  const found = results.find((i) => i.startsWith('did:'))
+  const found = results.find((i) => i.startsWith(PREFIX))
   if (!found) throw new NoHandleRecordError()
-  return found
+  return found.slice(PREFIX)
 }
 
 export class NoHandleRecordError extends Error {}

@@ -4,14 +4,14 @@ jest.mock('dns/promises', () => {
   return {
     resolveTxt: (handle: string) => {
       if (handle === '_atproto.simple.test') {
-        return [['did:example:simpleDid']]
+        return [['did=did:example:simpleDid']]
       }
       if (handle === '_atproto.noisy.test') {
         return [
           ['blah blah blah'],
-          ['did=did:example:fakeDid'],
-          ['atprotodid:example:fakeDid'],
-          ['did:example:noisyDid'],
+          ['did:example:fakeDid'],
+          ['atproto=did:example:fakeDid'],
+          ['did=did:example:noisyDid'],
           [
             'chunk long domain aspdfoiuwerpoaisdfupasodfiuaspdfoiuasdpfoiausdfpaosidfuaspodifuaspdfoiuasdpfoiasudfpasodifuaspdofiuaspdfoiuasd',
             'apsodfiuweproiasudfpoasidfu',
@@ -21,8 +21,8 @@ jest.mock('dns/promises', () => {
       if (handle === '_atproto.bad.test') {
         return [
           ['blah blah blah'],
-          ['did=did:example:fakeDid'],
-          ['atprotodid:example:fakeDid'],
+          ['did:example:fakeDid'],
+          ['atproto=did:example:fakeDid'],
           [
             'chunk long domain aspdfoiuwerpoaisdfupasodfiuaspdfoiuasdpfoiausdfpaosidfuaspodifuaspdfoiuasdpfoiasudfpasodifuaspdofiuaspdfoiuasd',
             'apsodfiuweproiasudfpoasidfu',
