@@ -26,6 +26,7 @@
     "postpublish": "npm run update-main-to-src"
   },
   "dependencies": {
+    "@atproto/api": "*",
     "@atproto/common": "*",
     "@atproto/crypto": "*",
     "@atproto/did-resolver": "*",
