@@ -182,6 +182,9 @@ describe('handles', () => {
       { headers: sc.getHeaders(bob) },
     )
     expect(profile.data.handle).toBe('alice.external')
+
+    const data = await ctx.plcClient.getDocumentData(alice)
+    expect(data.handle).toBe('alice.external')
   })
 
   it('does not allow updating to an invalid dns handle', async () => {
