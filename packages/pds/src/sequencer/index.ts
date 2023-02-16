@@ -4,6 +4,7 @@ import TypedEmitter from 'typed-emitter'
 import { CID } from 'multiformats/cid'
 import Database from '../db'
 import { seqLogger as log } from '../logger'
+import { RepoSeqEntry } from '../db/tables/repo-seq'
 
 export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   polling = false
@@ -16,14 +17,9 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async start() {
-    const found = await this.db.db
-      .selectFrom('repo_seq')
-      .selectAll()
-      .orderBy('seq', 'desc')
-      .limit(1)
-      .executeTakeFirst()
-    if (found) {
-      this.lastSeen = found.seq
+    const curr = await this.curr()
+    if (curr) {
+      this.lastSeen = curr.seq
     }
     this.db.channels.repo_seq.addListener('message', () => {
       if (this.polling) {
@@ -33,6 +29,27 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         this.pollDb()
       }
     })
+  }
+
+  async curr(): Promise<RepoSeqEntry | null> {
+    const got = await this.db.db
+      .selectFrom('repo_seq')
+      .selectAll()
+      .orderBy('seq', 'desc')
+      .limit(1)
+      .executeTakeFirst()
+    return got || null
+  }
+
+  async next(cursor: number): Promise<RepoSeqEntry | null> {
+    const got = await this.db.db
+      .selectFrom('repo_seq')
+      .selectAll()
+      .where('seq', '>', cursor)
+      .limit(1)
+      .orderBy('seq', 'asc')
+      .executeTakeFirst()
+    return got || null
   }
 
   async requestSeqRange(opts: {
