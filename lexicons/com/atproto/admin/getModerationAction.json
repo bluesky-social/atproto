@@ -9,7 +9,7 @@
         "type": "params",
         "required": ["id"],
         "properties": {
-          "id": {"type": "number"}
+          "id": {"type": "integer"}
         }
       },
       "output": {

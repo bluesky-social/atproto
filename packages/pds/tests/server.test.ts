@@ -54,6 +54,7 @@ describe('server', () => {
       const axiosError = err as AxiosError
       expect(axiosError.response?.status).toEqual(500)
       expect(axiosError.response?.data).toEqual({
+        error: 'InternalServerError',
         message: 'Internal Server Error',
       })
     }
@@ -91,7 +92,7 @@ describe('server', () => {
   })
 
   it('healthcheck fails when database is unavailable.', async () => {
-    await db.db.destroy()
+    await db.close()
     let error: AxiosError
     try {
       await axios.get(`${server.url}/xrpc/_health`)

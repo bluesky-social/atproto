@@ -10,7 +10,7 @@ import * as AppBskyActorRef from '../actor/ref'
 
 export interface QueryParams {
   user: string
-  limit?: number
+  limit: number
   before?: string
 }
 

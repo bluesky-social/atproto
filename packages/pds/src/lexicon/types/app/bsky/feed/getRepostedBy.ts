@@ -11,7 +11,7 @@ import * as AppBskyActorRef from '../actor/ref'
 export interface QueryParams {
   uri: string
   cid?: string
-  limit?: number
+  limit: number
   before?: string
 }
 

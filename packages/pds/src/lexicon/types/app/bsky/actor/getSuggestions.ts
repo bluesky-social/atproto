@@ -9,7 +9,7 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyActorProfile from './profile'
 
 export interface QueryParams {
-  limit?: number
+  limit: number
   cursor?: string
 }
 

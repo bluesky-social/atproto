@@ -1,5 +1,6 @@
 import { Kysely } from 'kysely'
-import * as user from './tables/user'
+import * as userAccount from './tables/user-account'
+import * as userState from './tables/user-state'
 import * as didHandle from './tables/did-handle'
 import * as repoRoot from './tables/repo-root'
 import * as refreshToken from './tables/refresh-token'
@@ -13,6 +14,7 @@ import * as notification from './tables/user-notification'
 import * as assertion from './tables/assertion'
 import * as profile from './tables/profile'
 import * as post from './tables/post'
+import * as postHierarchy from './tables/post-hierarchy'
 import * as postEntity from './tables/post-entity'
 import * as postEmbedImage from './tables/post-embed-image'
 import * as postEmbedExternal from './tables/post-embed-external'
@@ -26,8 +28,10 @@ import * as messageQueue from './tables/message-queue'
 import * as messageQueueCursor from './tables/message-queue-cursor'
 import * as moderation from './tables/moderation'
 import * as mute from './tables/mute'
+import * as repoSeq from './tables/repo-seq'
 
-export type DatabaseSchemaType = user.PartialDB &
+export type DatabaseSchemaType = userAccount.PartialDB &
+  userState.PartialDB &
   didHandle.PartialDB &
   refreshToken.PartialDB &
   repoRoot.PartialDB &
@@ -43,6 +47,7 @@ export type DatabaseSchemaType = user.PartialDB &
   assertion.PartialDB &
   profile.PartialDB &
   post.PartialDB &
+  postHierarchy.PartialDB &
   postEntity.PartialDB &
   postEmbedImage.PartialDB &
   postEmbedExternal.PartialDB &
@@ -55,7 +60,8 @@ export type DatabaseSchemaType = user.PartialDB &
   messageQueue.PartialDB &
   messageQueueCursor.PartialDB &
   moderation.PartialDB &
-  mute.PartialDB
+  mute.PartialDB &
+  repoSeq.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

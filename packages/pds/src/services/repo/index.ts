@@ -122,7 +122,23 @@ export class RepoService {
     commit: CID,
     writes: PreparedWrite[],
   ) {
-    await this.blobs.processWriteBlobs(did, commit, writes)
+    await Promise.all([
+      this.blobs.processWriteBlobs(did, commit, writes),
+      this.sequenceWrite(did, commit),
+    ])
+  }
+
+  async sequenceWrite(did: string, commit: CID) {
+    await this.db.db
+      .insertInto('repo_seq')
+      .values({
+        did,
+        commit: commit.toString(),
+        eventType: 'repo_append',
+        sequencedAt: new Date().toISOString(),
+      })
+      .execute()
+    await this.db.notify('repo_seq')
   }
 
   async deleteRepo(did: string) {
@@ -139,6 +155,7 @@ export class RepoService {
         .where('creator', '=', did)
         .execute(),
       this.db.db.deleteFrom('repo_root').where('did', '=', did).execute(),
+      this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute(),
       this.blobs.deleteForUser(did),
     ])
   }

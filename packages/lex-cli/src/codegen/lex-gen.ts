@@ -10,6 +10,7 @@ import {
   LexXrpcProcedure,
   LexXrpcQuery,
   LexToken,
+  LexXrpcSubscription,
 } from '@atproto/lexicon'
 import { toCamelCase, toTitleCase, toScreamingSnakeCase } from './util'
 
@@ -90,6 +91,7 @@ export function genObject(
   lexUri: string,
   def: LexObject,
   ifaceName?: string,
+  defaultsArePresent = true,
 ) {
   const iface = file.addInterface({
     name: ifaceName || toTitleCase(getHash(lexUri)),
@@ -98,8 +100,12 @@ export function genObject(
   genComment(iface, def)
   if (def.properties) {
     for (const propKey in def.properties) {
-      const req = def.required?.includes(propKey)
       const propDef = def.properties[propKey]
+      const req =
+        def.required?.includes(propKey) ||
+        (defaultsArePresent &&
+          'default' in propDef &&
+          propDef.default !== undefined)
       if (propDef.type === 'ref' || propDef.type === 'union') {
         //= propName: External|External
         const refs = propDef.type === 'union' ? propDef.refs : [propDef.ref]
@@ -241,9 +247,11 @@ export function genXrpcParams(
   file: SourceFile,
   lexicons: Lexicons,
   lexUri: string,
+  defaultsArePresent = true,
 ) {
   const def = lexicons.getDefOrThrow(lexUri, [
     'query',
+    'subscription',
     'procedure',
   ]) as LexXrpcQuery
 
@@ -254,8 +262,12 @@ export function genXrpcParams(
   })
   if (def.parameters) {
     for (const paramKey in def.parameters.properties) {
-      const req = def.parameters.required?.includes(paramKey)
       const paramDef = def.parameters.properties[paramKey]
+      const req =
+        def.parameters.required?.includes(paramKey) ||
+        (defaultsArePresent &&
+          'default' in paramDef &&
+          paramDef.default !== undefined)
       genComment(
         iface.addProperty({
           name: `${paramKey}${req ? '' : '?'}`,
@@ -275,6 +287,7 @@ export function genXrpcInput(
   imports: Set<string>,
   lexicons: Lexicons,
   lexUri: string,
+  defaultsArePresent = true,
 ) {
   const def = lexicons.getDefOrThrow(lexUri, [
     'query',
@@ -301,7 +314,14 @@ export function genXrpcInput(
       })
     } else {
       //= export interface InputSchema {...}
-      genObject(file, imports, lexUri, def.input.schema, `InputSchema`)
+      genObject(
+        file,
+        imports,
+        lexUri,
+        def.input.schema,
+        `InputSchema`,
+        defaultsArePresent,
+      )
     }
   } else if (def.input?.encoding) {
     //= export type InputSchema = string | Uint8Array
@@ -325,26 +345,24 @@ export function genXrpcOutput(
   imports: Set<string>,
   lexicons: Lexicons,
   lexUri: string,
+  defaultsArePresent = true,
 ) {
   const def = lexicons.getDefOrThrow(lexUri, [
     'query',
+    'subscription',
     'procedure',
-  ]) as LexXrpcQuery
+  ]) as LexXrpcQuery | LexXrpcSubscription | LexXrpcProcedure
 
-  if (def.output?.schema) {
-    if (
-      def.output.schema.type === 'ref' ||
-      def.output.schema.type === 'union'
-    ) {
+  const schema =
+    def.type === 'subscription' ? def.message?.schema : def.output?.schema
+  if (schema) {
+    if (schema.type === 'ref' || schema.type === 'union') {
       //= export type OutputSchema = ...
-      const refs =
-        def.output.schema.type === 'union'
-          ? def.output.schema.refs
-          : [def.output.schema.ref]
+      const refs = schema.type === 'union' ? schema.refs : [schema.ref]
       const types = refs.map((ref) =>
         refToType(ref, stripScheme(stripHash(lexUri)), imports),
       )
-      if (def.output.schema.type === 'union' && !def.output.schema.closed) {
+      if (schema.type === 'union' && !schema.closed) {
         types.push('{$type: string; [k: string]: unknown}')
       }
       file.addTypeAlias({
@@ -354,7 +372,14 @@ export function genXrpcOutput(
       })
     } else {
       //= export interface OutputSchema {...}
-      genObject(file, imports, lexUri, def.output.schema, `OutputSchema`)
+      genObject(
+        file,
+        imports,
+        lexUri,
+        schema,
+        `OutputSchema`,
+        defaultsArePresent,
+      )
     }
   }
 }

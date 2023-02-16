@@ -27,18 +27,37 @@ export class PlcClient {
     return `${this.url}/${encodeURIComponent(did)}`
   }
 
+  async sendOperation(did: string, op: t.Operation) {
+    await axios.post(this.postOpUrl(did), op)
+  }
+
+  async formatCreateOp(
+    signingKey: Keypair,
+    recoveryKey: string,
+    handle: string,
+    service: string,
+  ): Promise<{ op: t.CreateOp; did: string }> {
+    const op = await operations.create(signingKey, recoveryKey, handle, service)
+    if (!check.is(op, t.def.createOp)) {
+      throw new Error('Not a valid create operation')
+    }
+    const did = await operations.didForCreateOp(op)
+    return { did, op }
+  }
+
   async createDid(
     signingKey: Keypair,
     recoveryKey: string,
     handle: string,
     service: string,
   ): Promise<string> {
-    const op = await operations.create(signingKey, recoveryKey, handle, service)
-    if (!check.is(op, t.def.createOp)) {
-      throw new Error('Not a valid create operation')
-    }
-    const did = await operations.didForCreateOp(op)
-    await axios.post(this.postOpUrl(did), op)
+    const { op, did } = await this.formatCreateOp(
+      signingKey,
+      recoveryKey,
+      handle,
+      service,
+    )
+    await this.sendOperation(did, op)
     return did
   }
 
@@ -62,7 +81,7 @@ export class PlcClient {
       prev.toString(),
       signingKey,
     )
-    await axios.post(this.postOpUrl(did), op)
+    await this.sendOperation(did, op)
   }
 
   async rotateRecoveryKey(
@@ -77,7 +96,7 @@ export class PlcClient {
       prev.toString(),
       signingKey,
     )
-    await axios.post(this.postOpUrl(did), op)
+    await this.sendOperation(did, op)
   }
 
   async updateHandle(did: string, handle: string, signingKey: Keypair) {
@@ -87,7 +106,7 @@ export class PlcClient {
       prev.toString(),
       signingKey,
     )
-    await axios.post(this.postOpUrl(did), op)
+    await this.sendOperation(did, op)
   }
 
   async updateAtpPds(did: string, service: string, signingKey: Keypair) {
@@ -97,7 +116,7 @@ export class PlcClient {
       prev.toString(),
       signingKey,
     )
-    await axios.post(this.postOpUrl(did), op)
+    await this.sendOperation(did, op)
   }
 
   async health() {

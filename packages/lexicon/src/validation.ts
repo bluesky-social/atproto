@@ -1,5 +1,10 @@
 import { Lexicons } from './lexicons'
-import { LexRecord, LexXrpcProcedure, LexXrpcQuery } from './types'
+import {
+  LexRecord,
+  LexXrpcProcedure,
+  LexXrpcQuery,
+  LexXrpcSubscription,
+} from './types'
 import { assertValidOneOf } from './util'
 
 import * as ComplexValidators from './validators/complex'
@@ -12,16 +17,18 @@ export function assertValidRecord(
 ) {
   const res = ComplexValidators.object(lexicons, 'Record', def.record, value)
   if (!res.success) throw res.error
+  return res.value
 }
 
 export function assertValidXrpcParams(
   lexicons: Lexicons,
-  def: LexXrpcProcedure | LexXrpcQuery,
+  def: LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription,
   value: unknown,
 ) {
   if (def.parameters) {
     const res = XrpcValidators.params(lexicons, 'Params', def.parameters, value)
     if (!res.success) throw res.error
+    return res.value
   }
 }
 
@@ -32,7 +39,7 @@ export function assertValidXrpcInput(
 ) {
   if (def.input?.schema) {
     // loop: all input schema definitions
-    assertValidOneOf(lexicons, 'Input', def.input.schema, value, true)
+    return assertValidOneOf(lexicons, 'Input', def.input.schema, value, true)
   }
 }
 
@@ -43,6 +50,6 @@ export function assertValidXrpcOutput(
 ) {
   if (def.output?.schema) {
     // loop: all output schema definitions
-    assertValidOneOf(lexicons, 'Output', def.output.schema, value, true)
+    return assertValidOneOf(lexicons, 'Output', def.output.schema, value, true)
   }
 }

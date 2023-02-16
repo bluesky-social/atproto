@@ -6,8 +6,8 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 
 export type Main =
-  | 'com.atproto.report.reason#spam'
-  | 'com.atproto.report.reason#other'
+  | 'com.atproto.report.reasonType#spam'
+  | 'com.atproto.report.reasonType#other'
   | (string & {})
 
 /** Moderation report reason: Spam. */

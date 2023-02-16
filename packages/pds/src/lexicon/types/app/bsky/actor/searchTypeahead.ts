@@ -10,7 +10,7 @@ import * as AppBskyActorRef from './ref'
 
 export interface QueryParams {
   term?: string
-  limit?: number
+  limit: number
 }
 
 export type InputSchema = undefined

@@ -2,7 +2,12 @@ import { Readable, Transform } from 'stream'
 import { createDeflate, createGunzip } from 'zlib'
 import express from 'express'
 import mime from 'mime-types'
-import { Lexicons, LexXrpcProcedure, LexXrpcQuery } from '@atproto/lexicon'
+import {
+  Lexicons,
+  LexXrpcProcedure,
+  LexXrpcQuery,
+  LexXrpcSubscription,
+} from '@atproto/lexicon'
 import { forwardStreamErrors, MaxSizeChecker } from '@atproto/common'
 import {
   UndecodedParams,
@@ -17,7 +22,7 @@ import {
 } from './types'
 
 export function decodeQueryParams(
-  def: LexXrpcProcedure | LexXrpcQuery,
+  def: LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription,
   params: UndecodedParams,
 ): Params {
   const decoded: Params = {}
@@ -57,6 +62,18 @@ export function decodeQueryParam(
   } else if (type === 'boolean') {
     return value === 'true'
   }
+}
+
+export function getQueryParams(url = ''): Record<string, string | string[]> {
+  const { searchParams } = new URL(url ?? '', 'http://x')
+  const result: Record<string, string | string[]> = {}
+  for (const key of searchParams.keys()) {
+    result[key] = searchParams.getAll(key)
+    if (result[key].length === 1) {
+      result[key] = result[key][0]
+    }
+  }
+  return result
 }
 
 export function validateInput(
@@ -99,7 +116,7 @@ export function validateInput(
   // if input schema, validate
   if (def.input?.schema) {
     try {
-      lexicons.assertValidXrpcInput(nsid, req.body)
+      req.body = lexicons.assertValidXrpcInput(nsid, req.body)
     } catch (e) {
       throw new InvalidRequestError(e instanceof Error ? e.message : String(e))
     }
@@ -157,7 +174,10 @@ export function validateOutput(
   // output schema
   if (def.output?.schema) {
     try {
-      lexicons.assertValidXrpcOutput(nsid, output?.body)
+      const result = lexicons.assertValidXrpcOutput(nsid, output?.body)
+      if (output) {
+        output.body = result
+      }
     } catch (e) {
       throw new InternalServerError(e instanceof Error ? e.message : String(e))
     }

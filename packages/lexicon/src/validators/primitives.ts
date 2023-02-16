@@ -48,9 +48,9 @@ export function boolean(
 
   // type
   const type = typeof value
-  if (type == 'undefined') {
+  if (type === 'undefined') {
     if (typeof def.default === 'boolean') {
-      return { success: true }
+      return { success: true, value: def.default }
     }
     return {
       success: false,
@@ -73,7 +73,7 @@ export function boolean(
     }
   }
 
-  return { success: true }
+  return { success: true, value }
 }
 
 export function number(
@@ -86,9 +86,9 @@ export function number(
 
   // type
   const type = typeof value
-  if (type == 'undefined') {
+  if (type === 'undefined') {
     if (typeof def.default === 'number') {
-      return { success: true }
+      return { success: true, value: def.default }
     }
     return {
       success: false,
@@ -147,7 +147,7 @@ export function number(
     }
   }
 
-  return { success: true }
+  return { success: true, value }
 }
 
 export function integer(
@@ -162,6 +162,8 @@ export function integer(
   const numRes = number(lexicons, path, def, value)
   if (!numRes.success) {
     return numRes
+  } else {
+    value = numRes.value
   }
 
   // whole numbers only
@@ -172,7 +174,7 @@ export function integer(
     }
   }
 
-  return { success: true }
+  return { success: true, value }
 }
 
 export function string(
@@ -185,9 +187,9 @@ export function string(
 
   // type
   const type = typeof value
-  if (type == 'undefined') {
+  if (type === 'undefined') {
     if (typeof def.default === 'string') {
-      return { success: true }
+      return { success: true, value: def.default }
     }
     return {
       success: false,
@@ -246,7 +248,7 @@ export function string(
     }
   }
 
-  return { success: true }
+  return { success: true, value }
 }
 
 export function datetime(
@@ -279,7 +281,7 @@ export function datetime(
     }
   }
 
-  return { success: true }
+  return { success: true, value }
 }
 
 export function unknown(
@@ -296,5 +298,5 @@ export function unknown(
     }
   }
 
-  return { success: true }
+  return { success: true, value }
 }

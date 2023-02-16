@@ -49,7 +49,7 @@ export function validateOneOf(
           ),
         }
       }
-      return { success: true }
+      return { success: true, value }
     } else {
       concreteDefs = toConcreteTypes(lexicons, {
         type: 'ref',
@@ -88,9 +88,8 @@ export function assertValidOneOf(
   mustBeObj = false,
 ) {
   const res = validateOneOf(lexicons, path, def, value, mustBeObj)
-  if (!res.success) {
-    throw res.error
-  }
+  if (!res.success) throw res.error
+  return res.value
 }
 
 export function toConcreteTypes(

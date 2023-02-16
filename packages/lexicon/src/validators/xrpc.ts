@@ -8,41 +8,43 @@ export function params(
   lexicons: Lexicons,
   path: string,
   def: LexXrpcParameters,
-  value: unknown,
+  val: unknown,
 ): ValidationResult {
   // type
-  if (!value || typeof value !== 'object') {
-    // in this case, we just fall back to an object
-    value = {}
-  }
+  const value = val && typeof val === 'object' ? val : {}
 
-  // required
-  if (Array.isArray(def.required)) {
-    for (const key of def.required) {
-      if (typeof (value as Record<string, unknown>)[key] === 'undefined') {
+  const requiredProps = new Set(def.required ?? [])
+
+  // properties
+  let resultValue = value
+  if (typeof def.properties === 'object') {
+    for (const key in def.properties) {
+      const propDef = def.properties[key]
+      const validated =
+        propDef.type === 'array'
+          ? array(lexicons, key, propDef, value[key])
+          : PrimitiveValidators.validate(lexicons, key, propDef, value[key])
+      const propValue = validated.success ? validated.value : value[key]
+      const propIsUndefined = typeof propValue === 'undefined'
+      // Return error for bad validation, giving required rule precedence
+      if (propIsUndefined && requiredProps.has(key)) {
         return {
           success: false,
           error: new ValidationError(`${path} must have the property "${key}"`),
         }
+      } else if (!propIsUndefined && !validated.success) {
+        return validated
+      }
+      // Adjust value based on e.g. applied defaults, cloning shallowly if there was a changed value
+      if (propValue !== value[key]) {
+        if (resultValue === value) {
+          // Lazy shallow clone
+          resultValue = { ...value }
+        }
+        resultValue[key] = propValue
       }
     }
   }
 
-  // properties
-  for (const key in def.properties) {
-    if (typeof (value as Record<string, unknown>)[key] === 'undefined') {
-      continue // skip- if required, will have already failed
-    }
-    const paramDef = def.properties[key]
-    const val = (value as Record<string, unknown>)[key]
-    const res =
-      paramDef.type === 'array'
-        ? array(lexicons, key, paramDef, val)
-        : PrimitiveValidators.validate(lexicons, key, paramDef, val)
-    if (!res.success) {
-      return res
-    }
-  }
-
-  return { success: true }
+  return { success: true, value: resultValue }
 }

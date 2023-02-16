@@ -61,17 +61,22 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
 
-      const actorService = ctx.services.actor(ctx.db)
+      const userStateQuery = ctx.db.db
+        .selectFrom('user_state')
+        .selectAll()
+        .where('did', '=', requester)
+        .executeTakeFirst()
 
-      const [user, notifs] = await Promise.all([
-        actorService.getUser(requester),
+      const [userState, notifs] = await Promise.all([
+        userStateQuery,
         notifBuilder.execute(),
       ])
 
-      if (!user) {
+      if (!userState) {
         throw new InvalidRequestError(`Could not find user: ${requester}`)
       }
 
+      const actorService = ctx.services.actor(ctx.db)
       const authors = await actorService.views.actorWithInfo(
         notifs.map((notif) => ({
           did: notif.authorDid,
@@ -89,7 +94,7 @@ export default function (server: Server, ctx: AppContext) {
         reason: notif.reason,
         reasonSubject: notif.reasonSubject || undefined,
         record: common.cborBytesToRecord(notif.recordBytes),
-        isRead: notif.indexedAt <= user.lastSeenNotifs,
+        isRead: notif.indexedAt <= userState.lastSeenNotifs,
         indexedAt: notif.indexedAt,
       }))
 

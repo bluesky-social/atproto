@@ -7,8 +7,8 @@ export default function (server: Server, ctx: AppContext) {
     const { token, password } = input.body
 
     const tokenInfo = await ctx.db.db
-      .selectFrom('user')
-      .select(['handle', 'passwordResetGrantedAt'])
+      .selectFrom('user_account')
+      .select(['did', 'passwordResetGrantedAt'])
       .where('passwordResetToken', '=', token)
       .executeTakeFirst()
 
@@ -21,15 +21,15 @@ export default function (server: Server, ctx: AppContext) {
     const expiresAt = new Date(grantedAt.getTime() + 15 * minsToMs)
 
     if (now > expiresAt) {
-      await unsetResetToken(ctx.db, tokenInfo.handle)
+      await unsetResetToken(ctx.db, tokenInfo.did)
       return createExpiredTokenError()
     }
 
     await ctx.db.transaction(async (dbTxn) => {
-      await unsetResetToken(dbTxn, tokenInfo.handle)
+      await unsetResetToken(dbTxn, tokenInfo.did)
       await ctx.services
         .actor(dbTxn)
-        .updateUserPassword(tokenInfo.handle, password)
+        .updateUserPassword(tokenInfo.did, password)
     })
   })
 }
@@ -58,10 +58,10 @@ const createExpiredTokenError = (): ErrorResponse & {
   message: 'The password reset token has expired',
 })
 
-const unsetResetToken = async (db: Database, handle: string) => {
+const unsetResetToken = async (db: Database, did: string) => {
   await db.db
-    .updateTable('user')
-    .where('handle', '=', handle)
+    .updateTable('user_account')
+    .where('did', '=', did)
     .set({
       passwordResetToken: null,
       passwordResetGrantedAt: null,

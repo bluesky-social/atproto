@@ -1,9 +1,9 @@
+import { ArrayEl } from '@atproto/common'
+import { WithInfo as ActorWithInfo } from '../../lexicon/types/app/bsky/actor/ref'
 import {
   View as ProfileView,
   ViewBasic as ProfileViewBasic,
 } from '../../lexicon/types/app/bsky/actor/profile'
-import { WithInfo as ActorWithInfo } from '../../lexicon/types/app/bsky/actor/ref'
-import { User } from '../../db/tables/user'
 import { DidHandle } from '../../db/tables/did-handle'
 import { countAll } from '../../db/util'
 import Database from '../../db'
@@ -219,4 +219,3 @@ export class ActorViews {
 }
 
 type UserResult = DidHandle
-type ArrayEl<A> = A extends readonly (infer T)[] ? T : never

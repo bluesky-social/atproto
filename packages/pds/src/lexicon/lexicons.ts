@@ -302,7 +302,7 @@ export const schemaDict = {
           required: ['id'],
           properties: {
             id: {
-              type: 'number',
+              type: 'integer',
             },
           },
         },
@@ -374,7 +374,7 @@ export const schemaDict = {
           required: ['id'],
           properties: {
             id: {
-              type: 'number',
+              type: 'integer',
             },
           },
         },
@@ -1225,6 +1225,28 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoHandleUpdate: {
+    lexicon: 1,
+    id: 'com.atproto.handle.update',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Updates the handle of the account',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle'],
+            properties: {
+              handle: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoRepoBatchWrite: {
     lexicon: 1,
     id: 'com.atproto.repo.batchWrite',
@@ -1770,8 +1792,8 @@ export const schemaDict = {
       main: {
         type: 'string',
         knownValues: [
-          'com.atproto.report.reason#spam',
-          'com.atproto.report.reason#other',
+          'com.atproto.report.reasonType#spam',
+          'com.atproto.report.reasonType#other',
         ],
       },
       spam: {
@@ -2169,6 +2191,81 @@ export const schemaDict = {
         },
         output: {
           encoding: 'application/vnd.ipld.car',
+        },
+      },
+    },
+  },
+  ComAtprotoSyncSubscribeAllRepos: {
+    lexicon: 1,
+    id: 'com.atproto.sync.subscribeAllRepos',
+    defs: {
+      main: {
+        type: 'subscription',
+        description: 'Subscribe to repo updates',
+        parameters: {
+          type: 'params',
+          properties: {
+            backfillFrom: {
+              type: 'datetime',
+              description:
+                'The last known event to backfill from. Does not dedupe as there may be an overlap in timestamps.',
+            },
+          },
+        },
+        message: {
+          schema: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.sync.subscribeAllRepos#repoAppend',
+              'lex:com.atproto.sync.subscribeAllRepos#repoRebase',
+            ],
+          },
+          codes: {
+            'lex:com.atproto.sync.subscribeAllRepos#repoAppend': 0,
+            'lex:com.atproto.sync.subscribeAllRepos#repoRebase': 1,
+          },
+        },
+      },
+      repoAppend: {
+        type: 'object',
+        required: ['time', 'repo', 'commit', 'blocks', 'blobs'],
+        properties: {
+          time: {
+            type: 'datetime',
+          },
+          repo: {
+            type: 'string',
+          },
+          commit: {
+            type: 'string',
+          },
+          prev: {
+            type: 'string',
+          },
+          blocks: {
+            type: 'unknown',
+          },
+          blobs: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+        },
+      },
+      repoRebase: {
+        type: 'object',
+        required: ['time', 'repo', 'commit'],
+        properties: {
+          time: {
+            type: 'datetime',
+          },
+          repo: {
+            type: 'string',
+          },
+          commit: {
+            type: 'string',
+          },
         },
       },
     },
@@ -3907,6 +4004,7 @@ export const ids = {
   ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
   ComAtprotoBlobUpload: 'com.atproto.blob.upload',
   ComAtprotoHandleResolve: 'com.atproto.handle.resolve',
+  ComAtprotoHandleUpdate: 'com.atproto.handle.update',
   ComAtprotoRepoBatchWrite: 'com.atproto.repo.batchWrite',
   ComAtprotoRepoCreateRecord: 'com.atproto.repo.createRecord',
   ComAtprotoRepoDeleteRecord: 'com.atproto.repo.deleteRecord',
@@ -3930,6 +4028,7 @@ export const ids = {
   ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
+  ComAtprotoSyncSubscribeAllRepos: 'com.atproto.sync.subscribeAllRepos',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
   AppBskyActorGetProfiles: 'app.bsky.actor.getProfiles',
   AppBskyActorGetSuggestions: 'app.bsky.actor.getSuggestions',

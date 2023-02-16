@@ -26,6 +26,7 @@ import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import AppContext from './context'
+import Sequencer from './sequencer'
 import {
   ImageInvalidator,
   ImageProcessingServerInvalidator,
@@ -65,6 +66,7 @@ export class PDS {
     })
 
     const messageQueue = new SqlMessageQueue('pds', db)
+    const sequencer = new Sequencer(db)
 
     const mailTransport =
       config.emailSmtpUrl !== undefined
@@ -121,6 +123,7 @@ export class PDS {
       cfg: config,
       auth,
       messageQueue,
+      sequencer,
       services,
       mailer,
       imgUriBuilder,
@@ -146,6 +149,8 @@ export class PDS {
   }
 
   async start(): Promise<http.Server> {
+    await this.ctx.sequencer.start()
+    await this.ctx.db.startListeningToChannels()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     this.terminator = createHttpTerminator({ server })

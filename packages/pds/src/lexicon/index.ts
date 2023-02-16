@@ -6,6 +6,7 @@ import {
   Server as XrpcServer,
   Options as XrpcOptions,
   AuthVerifier,
+  StreamAuthVerifier,
 } from '@atproto/xrpc-server'
 import { schemas } from './lexicons'
 import * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
@@ -27,6 +28,7 @@ import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRep
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 import * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
+import * as ComAtprotoHandleUpdate from './types/com/atproto/handle/update'
 import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
@@ -45,6 +47,7 @@ import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommit
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+import * as ComAtprotoSyncSubscribeAllRepos from './types/com/atproto/sync/subscribeAllRepos'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
@@ -325,6 +328,13 @@ export class HandleNS {
     const nsid = 'com.atproto.handle.resolve' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
+
+  update<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoHandleUpdate.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.handle.update' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
 }
 
 export class RepoNS {
@@ -493,6 +503,13 @@ export class SyncNS {
   ) {
     const nsid = 'com.atproto.sync.getRepo' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
+  }
+
+  subscribeAllRepos<AV extends StreamAuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncSubscribeAllRepos.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.subscribeAllRepos' // @ts-ignore
+    return this._server.xrpc.streamMethod(nsid, cfg)
   }
 }
 
@@ -720,7 +737,7 @@ type ConfigOf<Auth, Handler> =
       auth?: Auth
       handler: Handler
     }
-type ExtractAuth<AV extends AuthVerifier> = Extract<
+type ExtractAuth<AV extends AuthVerifier | StreamAuthVerifier> = Extract<
   Awaited<ReturnType<AV>>,
   { credentials: unknown }
 >
