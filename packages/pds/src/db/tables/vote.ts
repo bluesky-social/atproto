@@ -1,3 +1,4 @@
+// @NOTE also used by app-view
 export interface Vote {
   uri: string
   cid: string
