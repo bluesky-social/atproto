@@ -1,4 +1,4 @@
-import { Generated } from 'kysely'
+import { Generated, Selectable } from 'kysely'
 
 export interface RepoSeq {
   seq: Generated<number>
@@ -7,6 +7,8 @@ export interface RepoSeq {
   eventType: 'repo_append'
   sequencedAt: string
 }
+
+export type RepoSeqEntry = Selectable<RepoSeq>
 
 export const tableName = 'repo_seq'
 

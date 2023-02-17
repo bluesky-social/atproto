@@ -2234,68 +2234,66 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            backfillFrom: {
-              type: 'datetime',
-              description:
-                'The last known event to backfill from. Does not dedupe as there may be an overlap in timestamps.',
+            cursor: {
+              type: 'integer',
+              description: 'The last known event to backfill from.',
             },
           },
         },
         message: {
           schema: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.sync.subscribeAllRepos#repoAppend',
-              'lex:com.atproto.sync.subscribeAllRepos#repoRebase',
+            type: 'object',
+            required: [
+              'seq',
+              'event',
+              'repo',
+              'commit',
+              'blocks',
+              'blobs',
+              'time',
             ],
-          },
-          codes: {
-            'lex:com.atproto.sync.subscribeAllRepos#repoAppend': 0,
-            'lex:com.atproto.sync.subscribeAllRepos#repoRebase': 1,
-          },
-        },
-      },
-      repoAppend: {
-        type: 'object',
-        required: ['time', 'repo', 'commit', 'blocks', 'blobs'],
-        properties: {
-          time: {
-            type: 'datetime',
-          },
-          repo: {
-            type: 'string',
-          },
-          commit: {
-            type: 'string',
-          },
-          prev: {
-            type: 'string',
-          },
-          blocks: {
-            type: 'unknown',
-          },
-          blobs: {
-            type: 'array',
-            items: {
-              type: 'string',
+            properties: {
+              seq: {
+                type: 'integer',
+              },
+              event: {
+                type: 'string',
+                knownValues: ['repo_append', 'rebase'],
+              },
+              repo: {
+                type: 'string',
+              },
+              commit: {
+                type: 'string',
+              },
+              prev: {
+                type: 'string',
+              },
+              blocks: {
+                type: 'unknown',
+              },
+              blobs: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              time: {
+                type: 'datetime',
+              },
             },
           },
         },
-      },
-      repoRebase: {
-        type: 'object',
-        required: ['time', 'repo', 'commit'],
-        properties: {
-          time: {
-            type: 'datetime',
+        infos: [
+          {
+            name: 'OutdatedCursor',
           },
-          repo: {
-            type: 'string',
+        ],
+        errors: [
+          {
+            name: 'FutureCursor',
           },
-          commit: {
-            type: 'string',
-          },
-        },
+        ],
       },
     },
   },

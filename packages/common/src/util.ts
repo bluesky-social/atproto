@@ -13,6 +13,20 @@ export const wait = (ms: number) => {
   return new Promise((res) => setTimeout(res, ms))
 }
 
+export const bailableWait = (
+  ms: number,
+): { bail: () => void; wait: () => Promise<void> } => {
+  let bail
+  const waitPromise = new Promise<void>((res) => {
+    const timeout = setTimeout(res, ms)
+    bail = () => {
+      clearTimeout(timeout)
+      res()
+    }
+  })
+  return { bail, wait: () => waitPromise }
+}
+
 export const flattenUint8Arrays = (arrs: Uint8Array[]): Uint8Array => {
   const length = arrs.reduce((acc, cur) => {
     return acc + cur.length
