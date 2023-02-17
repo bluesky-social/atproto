@@ -27,4 +27,4 @@ https://www.youtube.com/watch?v=dlaSdG5gMBY
 <br />
 If you're here, most of your problems are already solved; now what? pv!  #peace #what ?
 ~
-https://cdn.discordapp.com/attachments/989274745495240734/1075870671395110962/IMG_7852.jpg
+[img](https://cdn.discordapp.com/attachments/989274745495240734/1075870671395110962/IMG_7852.jpg)
