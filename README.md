@@ -16,11 +16,7 @@ To learn more about ATP, see:
   - [Overview Guide](https://atproto.com/guides/overview) 👈 Good place to start
 - The [Blogpost on self-authenticating data structures](https://blueskyweb.xyz/blog/3-6-2022-a-self-authenticating-social-protocol)
 
-## License
-
-MIT License
-
-Copyright (c) 2023 Bluesky PBLLC :neutral: :face: :|
+nah jk.
 
 ~
 
