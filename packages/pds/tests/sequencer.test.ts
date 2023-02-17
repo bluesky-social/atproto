@@ -99,7 +99,7 @@ describe('sequencer', () => {
     lastSeen = evts.at(-1)?.seq ?? lastSeen
   })
 
-  it('only gets events after (inclusive) lastSeen', async () => {
+  it('only gets events after cursor', async () => {
     const count = 20
     totalEvts += count
     const outbox = new Outbox(sequencer)

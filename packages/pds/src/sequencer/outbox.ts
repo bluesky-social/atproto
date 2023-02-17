@@ -55,7 +55,7 @@ export class Outbox {
       // only need to perform cutover if we've been backfilling
       if (backfillCursor) {
         const cutoverEvts = await this.sequencer.requestSeqRange({
-          earliestSeq: this.lastSeen,
+          earliestSeq: this.lastSeen > -1 ? this.lastSeen : backfillCursor,
           earliestTime: backFillTime,
         })
         this.outBuffer.pushMany(cutoverEvts)
