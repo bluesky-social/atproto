@@ -74,7 +74,7 @@ describe('repo subscribe all repos', () => {
       expect(evt.repo).toEqual(did)
       expect(evt.commit).toEqual(commit.commit.toString())
       expect(evt.prev).toEqual(commits[i - 1]?.commit?.toString())
-      const car = await repo.readCar(evt.blocks as Uint8Array)
+      const car = await repo.readCarWithRoot(evt.blocks as Uint8Array)
       expect(car.root.equals(commit.commit))
       expect(car.blocks.equals(commit.blocks))
     }

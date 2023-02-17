@@ -2,46 +2,29 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import stream from 'stream'
 import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
-export interface QueryParams {}
-
-export interface InputSchema {
-  displayName?: string
-  description?: string
-  avatar?: { cid: string; mimeType: string; [k: string]: unknown }
-  banner?: { cid: string; mimeType: string; [k: string]: unknown }
-  [k: string]: unknown
+export interface QueryParams {
+  /** The DID of the repo. */
+  did: string
+  cids: string[]
 }
 
-export interface OutputSchema {
-  uri: string
-  cid: string
-  record: {}
-  [k: string]: unknown
-}
-
-export interface HandlerInput {
-  encoding: 'application/json'
-  body: InputSchema
-}
+export type InputSchema = undefined
+export type HandlerInput = undefined
 
 export interface HandlerSuccess {
-  encoding: 'application/json'
-  body: OutputSchema
+  encoding: 'application/vnd.ipld.car'
+  body: Uint8Array | stream.Readable
 }
 
 export interface HandlerError {
   status: number
   message?: string
-  error?:
-    | 'InvalidBlob'
-    | 'BlobTooLarge'
-    | 'InvalidMimeType'
-    | 'InvalidImageDimensions'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
