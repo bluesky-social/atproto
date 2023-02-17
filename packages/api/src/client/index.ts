@@ -49,6 +49,7 @@ import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 import * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 import * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
+import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
 import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
@@ -135,6 +136,7 @@ export * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 export * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 export * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 export * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
+export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
 export * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
 export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
@@ -693,6 +695,17 @@ export class SyncNS {
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  getBlocks(
+    params?: ComAtprotoSyncGetBlocks.QueryParams,
+    opts?: ComAtprotoSyncGetBlocks.CallOptions,
+  ): Promise<ComAtprotoSyncGetBlocks.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getBlocks', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetBlocks.toKnownErr(e)
+      })
   }
 
   getCheckout(
