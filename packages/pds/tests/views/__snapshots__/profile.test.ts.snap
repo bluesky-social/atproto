@@ -252,10 +252,14 @@ Object {
   "followersCount": 2,
   "followsCount": 3,
   "handle": "alice.test",
+  "indexedAt": "1970-01-01T00:00:00.000Z",
   "myState": Object {
     "muted": false,
   },
   "postsCount": 4,
+  "viewer": Object {
+    "muted": false,
+  },
 }
 `;
 

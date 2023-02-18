@@ -8,46 +8,43 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "backfillFrom": {
-            "type": "datetime",
-            "description": "The last known event to backfill from. Does not dedupe as there may be an overlap in timestamps."
+          "cursor": {
+            "type": "integer",
+            "description": "The last known event to backfill from."
           }
         }
       },
       "message": {
         "schema": {
-          "type": "union",
-          "refs": ["#repoAppend", "#repoRebase"]
-        },
-        "codes": {
-          "#repoAppend": 0,
-          "#repoRebase": 1
+          "type": "object",
+          "required": ["seq", "event", "repo", "commit", "blocks", "blobs", "time"],
+          "properties": {
+            "seq": {"type": "integer"},
+            "event": { 
+              "type": "string",
+              "knownValues": [
+                "repo_append",
+                "rebase"
+              ]
+            },
+            "repo": {"type": "string"},
+            "commit": {"type": "string"},
+            "prev": {"type": "string"},
+            "blocks": {"type": "unknown"},
+            "blobs": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "time": {"type": "datetime"}
+          }
         }
-      }
-    },
-    "repoAppend": {
-      "type": "object",
-      "required": ["time", "repo", "commit", "blocks", "blobs"],
-      "properties": {
-        "time": {"type": "datetime"},
-        "repo": {"type": "string"},
-        "commit": {"type": "string"},
-        "prev": {"type": "string"},
-        "blocks": {"type": "unknown"},
-        "blobs": {
-          "type": "array",
-          "items": {"type": "string"}
-        }
-      }
-    },
-    "repoRebase": {
-      "type": "object",
-      "required": ["time", "repo", "commit"],
-      "properties": {
-        "time": {"type": "datetime"},
-        "repo": {"type": "string"},
-        "commit": {"type": "string"}
-      }
+      },
+      "infos": [
+        {"name": "OutdatedCursor"}
+      ],
+      "errors": [
+        {"name": "FutureCursor"}
+      ]
     }
   }
 }

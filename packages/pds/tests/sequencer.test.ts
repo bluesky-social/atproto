@@ -17,8 +17,7 @@ describe('sequencer', () => {
   let bob: string
 
   let totalEvts
-  const timeBeforeWrites = new Date().toISOString()
-  let lastSeen: string
+  let lastSeen: number
 
   beforeAll(async () => {
     const server = await runTestServer({
@@ -53,11 +52,11 @@ describe('sequencer', () => {
     }
   }
 
-  const loadFromDb = (lastSeen: string) => {
+  const loadFromDb = (lastSeen: number) => {
     return db.db
       .selectFrom('repo_seq')
       .selectAll()
-      .where('repo_seq.sequencedAt', '>=', lastSeen)
+      .where('repo_seq.seq', '>', lastSeen)
       .orderBy('repo_seq.seq', 'asc')
       .execute()
   }
@@ -75,13 +74,13 @@ describe('sequencer', () => {
     totalEvts += count
     await createPosts(count)
     const outbox = new Outbox(sequencer)
-    const evts = await readFromGenerator(outbox.events(timeBeforeWrites))
+    const evts = await readFromGenerator(outbox.events(-1))
     expect(evts.length).toBe(totalEvts)
 
-    const fromDb = await loadFromDb(timeBeforeWrites)
+    const fromDb = await loadFromDb(-1)
     expect(evts.map(evtToDbRow)).toEqual(fromDb)
 
-    lastSeen = evts.at(-1)?.time ?? lastSeen
+    lastSeen = evts.at(-1)?.seq ?? lastSeen
   })
 
   it('handles cut over', async () => {
@@ -89,18 +88,18 @@ describe('sequencer', () => {
     totalEvts += count
     const outbox = new Outbox(sequencer)
     const [evts] = await Promise.all([
-      readFromGenerator(outbox.events(timeBeforeWrites)),
+      readFromGenerator(outbox.events(-1)),
       createPosts(count),
     ])
     expect(evts.length).toBe(totalEvts)
 
-    const fromDb = await loadFromDb(timeBeforeWrites)
+    const fromDb = await loadFromDb(-1)
     expect(evts.map(evtToDbRow)).toEqual(fromDb)
 
-    lastSeen = evts.at(-1)?.time ?? lastSeen
+    lastSeen = evts.at(-1)?.seq ?? lastSeen
   })
 
-  it('only gets events after (inclusive) lastSeen', async () => {
+  it('only gets events after cursor', async () => {
     const count = 20
     totalEvts += count
     const outbox = new Outbox(sequencer)
@@ -111,12 +110,12 @@ describe('sequencer', () => {
     ])
 
     // +1 because we send the lastSeen date as well
-    expect(evts.length).toBe(count + 1)
+    expect(evts.length).toBe(count)
 
     const fromDb = await loadFromDb(lastSeen)
     expect(evts.map(evtToDbRow)).toEqual(fromDb)
 
-    lastSeen = evts.at(-1)?.time ?? lastSeen
+    lastSeen = evts.at(-1)?.seq ?? lastSeen
   })
 
   it('buffers events that are not being read', async () => {
@@ -132,12 +131,12 @@ describe('sequencer', () => {
     ])
     const secondPart = await readFromGenerator(evtGenerator)
     const evts = [...firstPart, ...secondPart]
-    expect(evts.length).toBe(count + 1)
+    expect(evts.length).toBe(count)
 
     const fromDb = await loadFromDb(lastSeen)
     expect(evts.map(evtToDbRow)).toEqual(fromDb)
 
-    lastSeen = evts.at(-1)?.time ?? lastSeen
+    lastSeen = evts.at(-1)?.seq ?? lastSeen
   })
 
   it('errors when buffer is overloaded', async () => {
@@ -157,7 +156,7 @@ describe('sequencer', () => {
     await expect(overloadBuffer).rejects.toThrow(StreamConsumerTooSlowError)
 
     const fromDb = await loadFromDb(lastSeen)
-    lastSeen = fromDb.at(-1)?.sequencedAt ?? lastSeen
+    lastSeen = fromDb.at(-1)?.seq ?? lastSeen
   })
 
   it('handles many open connections', async () => {
@@ -173,9 +172,9 @@ describe('sequencer', () => {
     const fromDb = await loadFromDb(lastSeen)
     for (let i = 0; i < 50; i++) {
       const evts = results[i]
-      expect(evts.length).toBe(count + 1)
+      expect(evts.length).toBe(count)
       expect(evts.map(evtToDbRow)).toEqual(fromDb)
     }
-    lastSeen = results[0].at(-1)?.time ?? lastSeen
+    lastSeen = results[0].at(-1)?.seq ?? lastSeen
   })
 })

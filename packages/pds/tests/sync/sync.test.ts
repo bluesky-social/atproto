@@ -3,7 +3,7 @@ import { TID } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import { DidResolver } from '@atproto/did-resolver'
 import * as repo from '@atproto/repo'
-import { collapseWriteLog, MemoryBlockstore } from '@atproto/repo'
+import { collapseWriteLog, MemoryBlockstore, readCar } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import { CloseFn, runTestServer } from '../_util'
@@ -242,6 +242,26 @@ describe('repo sync', () => {
     )
     expect(result.verified.length).toBe(1)
     expect(result.unverified.length).toBe(0)
+  })
+
+  it('sync blocks', async () => {
+    // let's just get some cids to reference
+    const collection = Object.keys(repoData)[0]
+    const rkey = Object.keys(repoData[collection])[0]
+    const proofCar = await agent.api.com.atproto.sync.getRecord({
+      did,
+      collection,
+      rkey,
+    })
+    const proofBlocks = await readCar(new Uint8Array(proofCar.data))
+    const cids = proofBlocks.blocks.entries().map((e) => e.cid.toString())
+    const res = await agent.api.com.atproto.sync.getBlocks({
+      did,
+      cids,
+    })
+    const car = await readCar(new Uint8Array(res.data))
+    expect(car.roots.length).toBe(0)
+    expect(car.blocks.equals(proofBlocks.blocks))
   })
 })
 

@@ -161,7 +161,7 @@ export const verifyProofs = async (
   claims: RecordClaim[],
   didResolver: DidResolver,
 ): Promise<{ verified: RecordClaim[]; unverified: RecordClaim[] }> => {
-  const car = await util.readCar(proofs)
+  const car = await util.readCarWithRoot(proofs)
   const blockstore = new MemoryBlockstore(car.blocks)
   const commit = await blockstore.readObj(car.root, def.commit)
   const validSig = await didResolver.verifySignature(
@@ -206,7 +206,7 @@ export const verifyRecords = async (
   proofs: Uint8Array,
   didResolver: DidResolver,
 ): Promise<RecordClaim[]> => {
-  const car = await util.readCar(proofs)
+  const car = await util.readCarWithRoot(proofs)
   const blockstore = new MemoryBlockstore(car.blocks)
   const commit = await blockstore.readObj(car.root, def.commit)
   const validSig = await didResolver.verifySignature(

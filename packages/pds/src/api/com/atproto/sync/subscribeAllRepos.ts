@@ -1,32 +1,51 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import Outbox from '../../../../sequencer/outbox'
-import { RepoAppend } from '../../../../lexicon/types/com/atproto/sync/subscribeAllRepos'
+import { OutputSchema as RepoEvent } from '../../../../lexicon/types/com/atproto/sync/subscribeAllRepos'
+import { InfoFrame, InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.subscribeAllRepos(async function* ({ params }) {
+    const { cursor } = params
     const outbox = new Outbox(ctx.sequencer, {
       maxBufferSize: ctx.cfg.maxSubscriptionBuffer,
     })
-    const backfillFrom = params.backfillFrom
-    if (backfillFrom) {
-      const now = Date.now()
-      const backfillUnix = new Date(backfillFrom).getTime()
-      if (isNaN(backfillUnix)) {
-        throw new InvalidRequestError('Invalid "backfillFrom"')
+
+    const backfillTime = new Date(
+      Date.now() - ctx.cfg.repoBackfillLimitMs,
+    ).toISOString()
+    if (cursor) {
+      const [next, curr] = await Promise.all([
+        ctx.sequencer.next(cursor),
+        ctx.sequencer.curr(),
+      ])
+      if (next && next.sequencedAt < backfillTime) {
+        yield new InfoFrame({
+          info: 'OutdatedCursor',
+          message: 'Requested cursor exceeded limit. Possibly missing events',
+        })
       }
-      if (now - backfillUnix > ctx.cfg.repoBackfillLimitMs) {
-        throw new InvalidRequestError('Backfill request too long')
+      if (curr && cursor > curr.seq) {
+        throw new InvalidRequestError('Cursor in the future.', 'FutureCursor')
       }
     }
-    for await (const evt of outbox.events(backfillFrom)) {
-      const { time, repo, commit, prev, blocks, blobs } = evt
-      const append: RepoAppend = Object.assign(
-        { time, repo, commit, blocks, blobs },
-        prev !== undefined ? { prev } : {}, // Undefineds not allowed by dag-cbor encoding
-      )
-      yield append
+
+    for await (const evt of outbox.events(cursor, backfillTime)) {
+      const { seq, time, repo, commit, prev, blocks, blobs } = evt
+      const toYield: RepoEvent = {
+        seq,
+        event: 'repo_append',
+        repo,
+        commit,
+        blocks,
+        blobs,
+        time,
+      }
+      // Undefineds not allowed by dag-cbor encoding
+      if (prev !== undefined) {
+        toYield.prev = prev
+      }
+      yield toYield
     }
   })
 }
