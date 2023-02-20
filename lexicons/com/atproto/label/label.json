@@ -8,15 +8,39 @@
       "key": "tid",
       "record": {
         "type": "object",
-        "required": ["src", "uri", "val", "ts"],
+        "required": ["src", "uri", "val", "cts"],
         "properties": {
-          "src": {"type": "string", "maxLength": 1024},
-          "uri": {"type": "string", "maxLength": 1024},
-          "cid": {"type": "string", "maxLength": 256},
-          "val": {"type": "string", "maxLength": 128},
-          "ts": {"type": "datetime"},
-          "labelUri": {"type": "string", "maxLength": 1024}
+          "src": {
+            "type": "string",
+            "description": "DID of the actor who created this label"
+          },
+          "uri": {
+            "type": "string",
+            "description": "AT URI of the record, repository (account), or other resource which this label applies to"
+          },
+          "cid": {
+            "type": "string",
+            "description": "optionally, CID specifying the specific version of 'uri' resource this label applies to"
+          },
+          "val": {
+            "type": "string",
+            "maxLength": 128,
+            "description": "the short string name of the value or type of this label"
+          },
+          "cts": {
+            "type": "datetime",
+            "description": "timestamp when this label was created"
+          }
         }
+      }
+    },
+    "labelEvent": {
+      "type": "object",
+      "required": ["uri", "cid", "label"],
+      "properties": {
+          "uri": {"type": "string"},
+          "cid": {"type": "string"},
+          "label": {"type": "ref", "ref": "app.bsky.label.label#main"}
       }
     }
   }
