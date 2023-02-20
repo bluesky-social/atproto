@@ -1,12 +1,12 @@
 import { sql } from 'kysely'
 import * as common from '@atproto/common'
-import Database from '../../db'
-import { countAll, notSoftDeletedClause } from '../../db/util'
-import { ImageUriBuilder } from '../../image/uri'
-import { Presented as PresentedImage } from '../../lexicon/types/app/bsky/embed/images'
-import { View as PostView } from '../../lexicon/types/app/bsky/feed/post'
+import Database from '../../../db'
+import { countAll, notSoftDeletedClause } from '../../../db/util'
+import { ImageUriBuilder } from '../../../image/uri'
+import { Presented as PresentedImage } from '../../../lexicon/types/app/bsky/embed/images'
+import { View as PostView } from '../../../lexicon/types/app/bsky/feed/post'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
-import { getDeclarationSimple } from '../../api/app/bsky/util'
+import { getDeclarationSimple } from '../../../api/app/bsky/util'
 
 export * from './types'
 

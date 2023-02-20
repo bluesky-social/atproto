@@ -9,7 +9,7 @@ import { Message } from '../../../event-stream/messages'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { sql } from 'kysely'
-import { PostHierarchy } from '../../../db/tables/post-hierarchy'
+import { PostHierarchy } from '../../../app-view/db/tables/post-hierarchy'
 
 type Post = DatabaseSchemaType['post']
 type PostEntity = DatabaseSchemaType['post_entity']

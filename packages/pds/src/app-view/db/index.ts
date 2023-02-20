@@ -8,6 +8,7 @@ import * as postEmbedImage from './tables/post-embed-image'
 import * as postEmbedExternal from './tables/post-embed-external'
 import * as repost from './tables/repost'
 import * as follow from './tables/follow'
+import * as vote from './tables/vote'
 
 // @NOTE app-view also shares did-handle, record, repo-root, and vote tables w/ main pds
 export type DatabaseSchemaType = duplicateRecords.PartialDB &
@@ -19,4 +20,5 @@ export type DatabaseSchemaType = duplicateRecords.PartialDB &
   postEmbedImage.PartialDB &
   postEmbedExternal.PartialDB &
   repost.PartialDB &
-  follow.PartialDB
+  follow.PartialDB &
+  vote.PartialDB

@@ -10,7 +10,6 @@ import * as repoCommitHistory from './tables/repo-commit-history'
 import * as ipldBlock from './tables/ipld-block'
 import * as inviteCode from './tables/invite-code'
 import * as notification from './tables/user-notification'
-import * as vote from './tables/vote'
 import * as blob from './tables/blob'
 import * as repoBlob from './tables/repo-blob'
 import * as deleteAccountToken from './tables/delete-account-token'
@@ -35,7 +34,6 @@ export type DatabaseSchemaType = appView.DatabaseSchemaType &
   repoCommitHistory.PartialDB &
   inviteCode.PartialDB &
   notification.PartialDB &
-  vote.PartialDB &
   blob.PartialDB &
   repoBlob.PartialDB &
   deleteAccountToken.PartialDB &

@@ -1,5 +1,6 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import getTimeline from './feed/getTimeline'
 import getAuthorFeed from './feed/getAuthorFeed'
 import getVotes from './feed/getVotes'
 import getPostThread from './feed/getPostThread'
@@ -13,6 +14,7 @@ import getUsersTypeahead from './actor/searchTypeahead'
 import getSuggestions from './actor/getSuggestions'
 
 export default function (server: Server, ctx: AppContext) {
+  getTimeline(server, ctx)
   getAuthorFeed(server, ctx)
   getVotes(server, ctx)
   getPostThread(server, ctx)

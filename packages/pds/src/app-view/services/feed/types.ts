@@ -1,5 +1,5 @@
-import { Presented as PresentedImage } from '../../lexicon/types/app/bsky/embed/images'
-import { Presented as PresentedExternal } from '../../lexicon/types/app/bsky/embed/external'
+import { Presented as PresentedImage } from '../../../lexicon/types/app/bsky/embed/images'
+import { Presented as PresentedExternal } from '../../../lexicon/types/app/bsky/embed/external'
 
 export type FeedEmbeds = {
   [uri: string]: PresentedImage | PresentedExternal

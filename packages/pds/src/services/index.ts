@@ -6,10 +6,10 @@ import { ImageUriBuilder } from '../image/uri'
 import { ImageInvalidator } from '../image/invalidator'
 import { ActorService } from './actor'
 import { AuthService } from './auth'
-import { FeedService } from './feed'
 import { RecordService } from './record'
 import { RepoService } from './repo'
 import { ModerationService } from './moderation'
+import { FeedService } from '../app-view/services/feed'
 
 export function createServices(resources: {
   keypair: crypto.Keypair
@@ -23,7 +23,6 @@ export function createServices(resources: {
   return {
     actor: ActorService.creator(imgUriBuilder),
     auth: AuthService.creator(),
-    feed: FeedService.creator(imgUriBuilder),
     record: RecordService.creator(messageQueue),
     repo: RepoService.creator(keypair, messageQueue, blobstore),
     moderation: ModerationService.creator(
@@ -32,16 +31,21 @@ export function createServices(resources: {
       imgUriBuilder,
       imgInvalidator,
     ),
+    appView: {
+      feed: FeedService.creator(imgUriBuilder),
+    },
   }
 }
 
 export type Services = {
   actor: FromDb<ActorService>
   auth: FromDb<AuthService>
-  feed: FromDb<FeedService>
   record: FromDb<RecordService>
   repo: FromDb<RepoService>
   moderation: FromDb<ModerationService>
+  appView: {
+    feed: FromDb<FeedService>
+  }
 }
 
 type FromDb<T> = (db: Database) => T

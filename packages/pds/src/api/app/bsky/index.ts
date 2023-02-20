@@ -1,6 +1,5 @@
 import { Server } from '../../../lexicon'
 import AppContext from '../../../context'
-import getTimeline from './feed/getTimeline'
 import setVote from './feed/setVote'
 import updateProfile from './actor/updateProfile'
 import mute from './graph/mute'
@@ -11,7 +10,6 @@ import getNotificationCount from './notification/getCount'
 import postNotificationsSeen from './notification/updateSeen'
 
 export default function (server: Server, ctx: AppContext) {
-  getTimeline(server, ctx)
   setVote(server, ctx)
   updateProfile(server, ctx)
   mute(server, ctx)

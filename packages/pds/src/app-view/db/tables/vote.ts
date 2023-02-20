@@ -1,4 +1,4 @@
-// @NOTE also used by app-view
+// @TODO still used in pds by setVote
 export interface Vote {
   uri: string
   cid: string

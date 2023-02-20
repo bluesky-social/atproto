@@ -1,8 +1,8 @@
 import { Server } from '../../../../../lexicon'
-import { FeedKeyset, composeFeed } from '../../../../../api/app/bsky/util/feed'
+import { FeedKeyset, composeFeed } from '../util/feed'
 import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
-import { FeedRow } from '../../../../../services/feed'
+import { FeedRow } from '../../../../services/feed'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.db
       const { ref } = db.dynamic
 
-      const feedService = ctx.services.feed(ctx.db)
+      const feedService = ctx.services.appView.feed(ctx.db)
 
       const userLookupCol = author.startsWith('did:')
         ? 'did_handle.did'
