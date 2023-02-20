@@ -254,6 +254,23 @@ describe('file uploads', () => {
     expect(found?.height).toBe(742)
   })
 
+  it('handles pngs', async () => {
+    const file = await fs.readFile('tests/image/fixtures/at.png')
+    const res = await aliceAgent.api.com.atproto.blob.upload(file, {
+      encoding: 'image/png',
+    })
+
+    const found = await db.db
+      .selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', res.data.cid.toString())
+      .executeTakeFirst()
+
+    expect(found?.mimeType).toBe('image/png')
+    expect(found?.width).toBe(554)
+    expect(found?.height).toBe(532)
+  })
+
   it('handles unknown mimetypes', async () => {
     const file = await randomBytes(20000)
     const res = await aliceAgent.api.com.atproto.blob.upload(file, {
