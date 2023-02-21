@@ -27,10 +27,13 @@ export class Outbox {
   // database to ensure we're caught up. We then dedupe the query & the buffer & stream the events in order
   // 3. streaming: we're all caught up on historic state, so the sequencer outputs events and we
   // immediately yield them
-  async *events(backfillFrom?: string): AsyncGenerator<RepoAppendEvent> {
+  async *events(
+    backfillCursor?: number,
+    backFillTime?: string,
+  ): AsyncGenerator<RepoAppendEvent> {
     // catch up as much as we can
-    if (backfillFrom) {
-      for await (const evt of this.getBackfill(backfillFrom)) {
+    if (backfillCursor) {
+      for await (const evt of this.getBackfill(backfillCursor, backFillTime)) {
         this.lastSeen = evt.seq
         yield evt
       }
@@ -50,10 +53,10 @@ export class Outbox {
 
     const cutover = async () => {
       // only need to perform cutover if we've been backfilling
-      if (backfillFrom) {
+      if (backfillCursor) {
         const cutoverEvts = await this.sequencer.requestSeqRange({
-          earliestSeq: this.lastSeen,
-          earliestTime: backfillFrom,
+          earliestSeq: this.lastSeen > -1 ? this.lastSeen : backfillCursor,
+          earliestTime: backFillTime,
         })
         this.outBuffer.pushMany(cutoverEvts)
         // dont worry about dupes, we ensure order on yield
@@ -85,11 +88,11 @@ export class Outbox {
   }
 
   // yields only historical events
-  async *getBackfill(startTime?: string) {
+  async *getBackfill(backfillCursor: number, backfillTime?: string) {
     while (true) {
       const evts = await this.sequencer.requestSeqRange({
-        earliestTime: startTime,
-        earliestSeq: this.lastSeen,
+        earliestTime: backfillTime,
+        earliestSeq: this.lastSeen > -1 ? this.lastSeen : backfillCursor,
         limit: 50,
       })
       for (const evt of evts) {

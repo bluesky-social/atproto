@@ -16,7 +16,7 @@ export const loadCheckout = async (
   repoCar: Uint8Array,
   didResolver: DidResolver,
 ): Promise<{ root: CID; contents: RepoContents }> => {
-  const { root, blocks } = await util.readCar(repoCar)
+  const { root, blocks } = await util.readCarWithRoot(repoCar)
   const updateStorage = new MemoryBlockstore(blocks)
   const checkout = await verify.verifyCheckout(updateStorage, root, didResolver)
 
@@ -45,7 +45,7 @@ export const loadFullRepo = async (
   repoCar: Uint8Array,
   didResolver: DidResolver,
 ): Promise<{ root: CID; writeLog: WriteLog }> => {
-  const { root, blocks } = await util.readCar(repoCar)
+  const { root, blocks } = await util.readCarWithRoot(repoCar)
   const updateStorage = new MemoryBlockstore(blocks)
   const updates = await verify.verifyFullHistory(
     updateStorage,
@@ -69,7 +69,7 @@ export const loadDiff = async (
   diffCar: Uint8Array,
   didResolver: DidResolver,
 ): Promise<{ root: CID; writeLog: WriteLog }> => {
-  const { root, blocks } = await util.readCar(diffCar)
+  const { root, blocks } = await util.readCarWithRoot(diffCar)
   const updateStorage = new MemoryBlockstore(blocks)
   const updates = await verify.verifyUpdates(
     repo,
