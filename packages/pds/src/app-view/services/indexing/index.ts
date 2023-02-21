@@ -10,7 +10,6 @@ import * as Assertion from './plugins/assertion'
 import * as Confirmation from './plugins/confirmation'
 import * as Profile from './plugins/profile'
 import { MessageQueue } from '../../../event-stream/types'
-import { MessageDispatcher } from '../../../event-stream/message-queue'
 
 export class IndexingService {
   records: {
@@ -27,7 +26,7 @@ export class IndexingService {
   constructor(
     public db: Database,
     public messageQueue: MessageQueue,
-    public messageDispatcher: MessageDispatcher,
+    public messageDispatcher: MessageQueue,
   ) {
     this.records = {
       declaration: Declaration.makePlugin(this.db.db),
@@ -41,10 +40,7 @@ export class IndexingService {
     }
   }
 
-  static creator(
-    messageQueue: MessageQueue,
-    messageDispatcher: MessageDispatcher,
-  ) {
+  static creator(messageQueue: MessageQueue, messageDispatcher: MessageQueue) {
     return (db: Database) =>
       new IndexingService(db, messageQueue, messageDispatcher)
   }

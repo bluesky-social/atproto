@@ -2,7 +2,7 @@ import { Selectable } from 'kysely'
 import { ArrayEl, cborBytesToRecord } from '@atproto/common'
 import { AtUri } from '@atproto/uri'
 import Database from '../../db'
-import { MessageDispatcher } from '../../event-stream/message-queue'
+import { MessageQueue } from '../../event-stream/types'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
 import {
@@ -26,14 +26,9 @@ import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/re
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { AccountService } from '../account'
 import { RecordService } from '../record'
-import { ImageUriBuilder } from '../../image/uri'
 
 export class ModerationViews {
-  constructor(
-    private db: Database,
-    private messageDispatcher: MessageDispatcher,
-    private imgUriBuilder: ImageUriBuilder,
-  ) {}
+  constructor(private db: Database, private messageDispatcher: MessageQueue) {}
 
   services = {
     account: AccountService.creator(),

@@ -10,9 +10,9 @@ import { AuthService } from './auth'
 import { RecordService } from './record'
 import { RepoService } from './repo'
 import { ModerationService } from './moderation'
+import { ActorService } from '../app-view/services/actor'
 import { FeedService } from '../app-view/services/feed'
 import { IndexingService } from '../app-view/services/indexing'
-import { ActorService as AppViewActorService } from '../app-view/services/actor'
 
 export function createServices(resources: {
   keypair: crypto.Keypair
@@ -42,9 +42,9 @@ export function createServices(resources: {
       imgInvalidator,
     ),
     appView: {
+      actor: ActorService.creator(imgUriBuilder),
       feed: FeedService.creator(imgUriBuilder),
       indexing: IndexingService.creator(messageQueue, messageDispatcher),
-      actor: AppViewActorService.creator(imgUriBuilder),
     },
   }
 }
@@ -58,7 +58,7 @@ export type Services = {
   appView: {
     feed: FromDb<FeedService>
     indexing: FromDb<IndexingService>
-    actor: FromDb<AppViewActorService>
+    actor: FromDb<ActorService>
   }
 }
 

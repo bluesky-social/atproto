@@ -4,7 +4,7 @@ import * as common from '@atproto/common'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import { notSoftDeletedClause } from '../../db/util'
-import { MessageDispatcher } from '../../event-stream/message-queue'
+import { MessageQueue } from '../../event-stream/types'
 import {
   indexRecord,
   deleteRecord,
@@ -12,12 +12,9 @@ import {
 } from '../../event-stream/messages'
 
 export class RecordService {
-  constructor(
-    public db: Database,
-    public messageDispatcher: MessageDispatcher,
-  ) {}
+  constructor(public db: Database, public messageDispatcher: MessageQueue) {}
 
-  static creator(messageDispatcher: MessageDispatcher) {
+  static creator(messageDispatcher: MessageQueue) {
     return (db: Database) => new RecordService(db, messageDispatcher)
   }
 

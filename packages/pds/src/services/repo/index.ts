@@ -3,7 +3,7 @@ import * as crypto from '@atproto/crypto'
 import { BlobStore, CommitData, Repo, WriteOpAction } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
-import { MessageDispatcher } from '../../event-stream/message-queue'
+import { MessageQueue } from '../../event-stream/types'
 import SqlRepoStorage from '../../sql-repo-storage'
 import { PreparedCreate, PreparedWrite } from '../../repo/types'
 import { RepoBlobs } from './blobs'
@@ -16,7 +16,7 @@ export class RepoService {
   constructor(
     public db: Database,
     public keypair: crypto.Keypair,
-    public messageDispatcher: MessageDispatcher,
+    public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
   ) {
     this.blobs = new RepoBlobs(db, blobstore)
@@ -24,7 +24,7 @@ export class RepoService {
 
   static creator(
     keypair: crypto.Keypair,
-    messageDispatcher: MessageDispatcher,
+    messageDispatcher: MessageQueue,
     blobstore: BlobStore,
   ) {
     return (db: Database) =>
