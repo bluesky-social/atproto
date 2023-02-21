@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       const { services, db } = ctx
       const { ref } = db.db.dynamic
 
-      const actorService = services.actor(db)
+      const actorService = services.appView.actor(db)
 
       const subjectRes = await actorService.getUser(user)
       if (!subjectRes) {

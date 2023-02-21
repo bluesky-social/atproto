@@ -46,7 +46,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const votesRes = await builder.execute()
-      const actors = await services
+      const actors = await services.appView
         .actor(db)
         .views.actorWithInfo(votesRes, requester)
 

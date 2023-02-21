@@ -40,7 +40,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const repostedByRes = await builder.execute()
-      const repostedBy = await services
+      const repostedBy = await services.appView
         .actor(db)
         .views.actorWithInfo(repostedByRes, requester)
 

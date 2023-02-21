@@ -37,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: {
-          users: await services
+          users: await services.appView
             .actor(db)
             .views.actorWithInfo(results, requester),
         },

@@ -12,6 +12,7 @@ import { RepoService } from './repo'
 import { ModerationService } from './moderation'
 import { FeedService } from '../app-view/services/feed'
 import { IndexingService } from '../app-view/services/indexing'
+import { ActorService as AppViewActorService } from '../app-view/services/actor'
 
 export function createServices(resources: {
   keypair: crypto.Keypair
@@ -43,6 +44,7 @@ export function createServices(resources: {
     appView: {
       feed: FeedService.creator(imgUriBuilder),
       indexing: IndexingService.creator(messageQueue, messageDispatcher),
+      actor: AppViewActorService.creator(imgUriBuilder),
     },
   }
 }
@@ -56,6 +58,7 @@ export type Services = {
   appView: {
     feed: FromDb<FeedService>
     indexing: FromDb<IndexingService>
+    actor: FromDb<AppViewActorService>
   }
 }
 

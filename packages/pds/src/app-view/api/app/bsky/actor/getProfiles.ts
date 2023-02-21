@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
       const { actors } = params
       const requester = auth.credentials.did
       const { db, services } = ctx
-      const actorService = services.actor(db)
+      const actorService = services.appView.actor(db)
 
       const users = await actorService.getUsers(actors)
 

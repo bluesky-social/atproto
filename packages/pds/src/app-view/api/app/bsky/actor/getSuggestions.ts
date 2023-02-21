@@ -58,7 +58,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           cursor: keyset.packFromResult(suggestionsRes),
-          actors: await services
+          actors: await services.appView
             .actor(ctx.db)
             .views.profileBasic(suggestionsRes, requester),
         },
