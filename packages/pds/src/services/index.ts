@@ -5,7 +5,7 @@ import { MessageQueue } from '../event-stream/types'
 import { MessageDispatcher } from '../event-stream/message-queue'
 import { ImageUriBuilder } from '../image/uri'
 import { ImageInvalidator } from '../image/invalidator'
-import { ActorService } from './actor'
+import { AccountService } from './account'
 import { AuthService } from './auth'
 import { RecordService } from './record'
 import { RepoService } from './repo'
@@ -31,7 +31,7 @@ export function createServices(resources: {
     imgInvalidator,
   } = resources
   return {
-    actor: ActorService.creator(imgUriBuilder),
+    account: AccountService.creator(),
     auth: AuthService.creator(),
     record: RecordService.creator(messageDispatcher),
     repo: RepoService.creator(keypair, messageDispatcher, blobstore),
@@ -50,7 +50,7 @@ export function createServices(resources: {
 }
 
 export type Services = {
-  actor: FromDb<ActorService>
+  account: FromDb<AccountService>
   auth: FromDb<AuthService>
   record: FromDb<RecordService>
   repo: FromDb<RepoService>

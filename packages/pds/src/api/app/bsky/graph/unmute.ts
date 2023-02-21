@@ -10,12 +10,12 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const { db, services } = ctx
 
-      const subject = await services.actor(db).getUser(user)
+      const subject = await services.account(db).getUser(user)
       if (!subject) {
         throw new InvalidRequestError(`Actor not found: ${user}`)
       }
 
-      await services.actor(db).unmute({
+      await services.account(db).unmute({
         did: subject.did,
         mutedByDid: requester,
       })

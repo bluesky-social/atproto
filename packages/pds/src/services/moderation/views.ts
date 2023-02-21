@@ -24,7 +24,7 @@ import {
 import { View as BlobView } from '../../lexicon/types/com/atproto/admin/blob'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/report/create'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
-import { ActorService } from '../actor'
+import { AccountService } from '../account'
 import { RecordService } from '../record'
 import { ImageUriBuilder } from '../../image/uri'
 
@@ -36,7 +36,7 @@ export class ModerationViews {
   ) {}
 
   services = {
-    actor: ActorService.creator(this.imgUriBuilder),
+    account: AccountService.creator(),
     record: RecordService.creator(this.messageDispatcher),
   }
 
@@ -472,7 +472,7 @@ export class ModerationViews {
     let subject: SubjectView
     if (result.subjectType === 'com.atproto.repo.repoRef') {
       const repoResult = await this.services
-        .actor(this.db)
+        .account(this.db)
         .getUser(result.subjectDid, true)
       if (!repoResult) {
         throw new Error(

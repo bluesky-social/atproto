@@ -10,44 +10,20 @@ import { Record as DeclarationRecord } from '../../lexicon/types/app/bsky/system
 import { notSoftDeletedClause } from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
-import { ActorViews } from './views'
-import { ImageUriBuilder } from '../../image/uri'
 
-export class ActorService {
-  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
+export class AccountService {
+  constructor(public db: Database) {}
 
-  static creator(imgUriBuilder: ImageUriBuilder) {
-    return (db: Database) => new ActorService(db, imgUriBuilder)
+  static creator() {
+    return (db: Database) => new AccountService(db)
   }
-
-  views = new ActorViews(this.db, this.imgUriBuilder)
 
   async getUser(
     handleOrDid: string,
     includeSoftDeleted = false,
   ): Promise<(UserAccount & DidHandle & RepoRoot) | null> {
-    const users = await this.getUsers([handleOrDid], includeSoftDeleted)
-    return users[0] || null
-  }
-
-  async getUsers(
-    handleOrDids: string[],
-    includeSoftDeleted = false,
-  ): Promise<(UserAccount & DidHandle & RepoRoot)[]> {
     const { ref } = this.db.db.dynamic
-    const dids: string[] = []
-    const handles: string[] = []
-    const order: Record<string, number> = {}
-    handleOrDids.forEach((item, i) => {
-      if (item.startsWith('did:')) {
-        order[item] = i
-        dids.push(item)
-      } else {
-        order[item.toLowerCase()] = i
-        handles.push(item.toLowerCase())
-      }
-    })
-    const results = await this.db.db
+    const result = await this.db.db
       .selectFrom('user_account')
       .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
       .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
@@ -55,24 +31,17 @@ export class ActorService {
         qb.where(notSoftDeletedClause(ref('repo_root'))),
       )
       .where((qb) => {
-        if (dids.length) {
-          qb = qb.orWhere('did_handle.did', 'in', dids)
+        if (handleOrDid.startsWith('did:')) {
+          return qb.where('did_handle.did', '=', handleOrDid)
+        } else {
+          return qb.where('did_handle.handle', '=', handleOrDid)
         }
-        if (handles.length) {
-          qb = qb.orWhere('did_handle.handle', 'in', handles)
-        }
-        return qb
       })
       .selectAll('user_account')
       .selectAll('did_handle')
       .selectAll('repo_root')
-      .execute()
-
-    return results.sort((a, b) => {
-      const orderA = order[a.did] ?? order[a.handle.toLowerCase()]
-      const orderB = order[b.did] ?? order[b.handle.toLowerCase()]
-      return orderA - orderB
-    })
+      .executeTakeFirst()
+    return result || null
   }
 
   async getUserByEmail(
