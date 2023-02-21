@@ -2,7 +2,7 @@ import { Selectable } from 'kysely'
 import { ArrayEl, cborBytesToRecord } from '@atproto/common'
 import { AtUri } from '@atproto/uri'
 import Database from '../../db'
-import { MessageQueue } from '../../event-stream/types'
+import { MessageDispatcher } from '../../event-stream/message-queue'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
 import {
@@ -31,13 +31,13 @@ import { ImageUriBuilder } from '../../image/uri'
 export class ModerationViews {
   constructor(
     private db: Database,
-    private messageQueue: MessageQueue,
+    private messageDispatcher: MessageDispatcher,
     private imgUriBuilder: ImageUriBuilder,
   ) {}
 
   services = {
     actor: ActorService.creator(this.imgUriBuilder),
-    record: RecordService.creator(this.messageQueue),
+    record: RecordService.creator(this.messageDispatcher),
   }
 
   repo(result: RepoResult): Promise<RepoView>

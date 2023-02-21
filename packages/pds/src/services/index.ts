@@ -2,6 +2,7 @@ import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import Database from '../db'
 import { MessageQueue } from '../event-stream/types'
+import { MessageDispatcher } from '../event-stream/message-queue'
 import { ImageUriBuilder } from '../image/uri'
 import { ImageInvalidator } from '../image/invalidator'
 import { ActorService } from './actor'
@@ -10,29 +11,38 @@ import { RecordService } from './record'
 import { RepoService } from './repo'
 import { ModerationService } from './moderation'
 import { FeedService } from '../app-view/services/feed'
+import { IndexingService } from '../app-view/services/indexing'
 
 export function createServices(resources: {
   keypair: crypto.Keypair
   messageQueue: MessageQueue
+  messageDispatcher: MessageDispatcher
   blobstore: BlobStore
   imgUriBuilder: ImageUriBuilder
   imgInvalidator: ImageInvalidator
 }): Services {
-  const { keypair, messageQueue, blobstore, imgUriBuilder, imgInvalidator } =
-    resources
+  const {
+    keypair,
+    messageQueue,
+    messageDispatcher,
+    blobstore,
+    imgUriBuilder,
+    imgInvalidator,
+  } = resources
   return {
     actor: ActorService.creator(imgUriBuilder),
     auth: AuthService.creator(),
-    record: RecordService.creator(messageQueue),
-    repo: RepoService.creator(keypair, messageQueue, blobstore),
+    record: RecordService.creator(messageDispatcher),
+    repo: RepoService.creator(keypair, messageDispatcher, blobstore),
     moderation: ModerationService.creator(
-      messageQueue,
+      messageDispatcher,
       blobstore,
       imgUriBuilder,
       imgInvalidator,
     ),
     appView: {
       feed: FeedService.creator(imgUriBuilder),
+      indexing: IndexingService.creator(messageQueue, messageDispatcher),
     },
   }
 }
@@ -45,6 +55,7 @@ export type Services = {
   moderation: FromDb<ModerationService>
   appView: {
     feed: FromDb<FeedService>
+    indexing: FromDb<IndexingService>
   }
 }
 

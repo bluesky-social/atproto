@@ -1,9 +1,9 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import * as common from '@atproto/common'
-import DatabaseSchema from '../../db/database-schema'
-import { Message } from '../../event-stream/messages'
-import { lexicons } from '../../lexicon/lexicons'
+import DatabaseSchema from '../../../db/database-schema'
+import { Message } from '../../../event-stream/messages'
+import { lexicons } from '../../../lexicon/lexicons'
 
 type RecordProcessorParams<T, S> = {
   lexId: string
@@ -50,7 +50,7 @@ export class RecordProcessor<T, S> {
     uri: AtUri,
     cid: CID,
     obj: unknown,
-    timestamp?: string,
+    timestamp: string,
   ): Promise<Message[]> {
     if (!this.matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${this.params.lexId}`)
@@ -94,6 +94,7 @@ export class RecordProcessor<T, S> {
     } else {
       const found = await this.db
         .selectFrom('duplicate_record')
+        // @TODO remove ipld_block dependency from app-view
         .innerJoin('ipld_block', (join) =>
           join
             .onRef('ipld_block.cid', '=', 'duplicate_record.cid')

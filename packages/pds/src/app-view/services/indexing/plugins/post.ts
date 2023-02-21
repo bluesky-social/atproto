@@ -1,15 +1,18 @@
-import { AtUri } from '@atproto/uri'
-import { CID } from 'multiformats/cid'
-import { Record as PostRecord } from '../../../lexicon/types/app/bsky/feed/post'
-import { Main as ImagesEmbedFragment } from '../../../lexicon/types/app/bsky/embed/images'
-import { Main as ExternalEmbedFragment } from '../../../lexicon/types/app/bsky/embed/external'
-import * as lex from '../../../lexicon/lexicons'
-import * as messages from '../../../event-stream/messages'
-import { Message } from '../../../event-stream/messages'
-import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
-import RecordProcessor from '../processor'
 import { sql } from 'kysely'
-import { PostHierarchy } from '../../../app-view/db/tables/post-hierarchy'
+import { CID } from 'multiformats/cid'
+import { AtUri } from '@atproto/uri'
+import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
+import { Main as ImagesEmbedFragment } from '../../../../lexicon/types/app/bsky/embed/images'
+import { Main as ExternalEmbedFragment } from '../../../../lexicon/types/app/bsky/embed/external'
+import * as lex from '../../../../lexicon/lexicons'
+import * as messages from '../../../../event-stream/messages'
+import { Message } from '../../../../event-stream/messages'
+import {
+  DatabaseSchema,
+  DatabaseSchemaType,
+} from '../../../../db/database-schema'
+import RecordProcessor from '../processor'
+import { PostHierarchy } from '../../../db/tables/post-hierarchy'
 
 type Post = DatabaseSchemaType['post']
 type PostEntity = DatabaseSchemaType['post_entity']
@@ -123,7 +126,7 @@ const findDuplicate = async (): Promise<AtUri | null> => {
   return null
 }
 
-const eventsForInsert = (obj: IndexedPost): Message[] => {
+const eventsForInsert = (obj: IndexedPost) => {
   const notifs: Message[] = []
   for (const entity of obj.entities || []) {
     if (entity.type === 'mention') {

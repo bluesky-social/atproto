@@ -1,9 +1,11 @@
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Declaration from '../../../lexicon/types/app/bsky/system/declaration'
-import * as lex from '../../../lexicon/lexicons'
-import { Message } from '../../../event-stream/messages'
-import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
+import * as Declaration from '../../../../lexicon/types/app/bsky/system/declaration'
+import * as lex from '../../../../lexicon/lexicons'
+import {
+  DatabaseSchema,
+  DatabaseSchemaType,
+} from '../../../../db/database-schema'
 import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskySystemDeclaration
@@ -30,7 +32,7 @@ const findDuplicate = async (): Promise<AtUri | null> => {
   return null
 }
 
-const eventsForInsert = (): Message[] => {
+const eventsForInsert = () => {
   return []
 }
 
@@ -38,7 +40,7 @@ const deleteFn = async (): Promise<DidHandle | null> => {
   throw new Error('Declaration alone can not be deleted')
 }
 
-const eventsForDelete = (): Message[] => {
+const eventsForDelete = () => {
   return []
 }
 

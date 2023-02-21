@@ -1,10 +1,12 @@
-import { AtUri } from '@atproto/uri'
-import * as Repost from '../../../lexicon/types/app/bsky/feed/repost'
-import * as lex from '../../../lexicon/lexicons'
 import { CID } from 'multiformats/cid'
-import * as messages from '../../../event-stream/messages'
-import { Message } from '../../../event-stream/messages'
-import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
+import { AtUri } from '@atproto/uri'
+import * as Repost from '../../../../lexicon/types/app/bsky/feed/repost'
+import * as lex from '../../../../lexicon/lexicons'
+import * as messages from '../../../../event-stream/messages'
+import {
+  DatabaseSchema,
+  DatabaseSchemaType,
+} from '../../../../db/database-schema'
 import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyFeedRepost
@@ -48,7 +50,7 @@ const findDuplicate = async (
   return found ? new AtUri(found.uri) : null
 }
 
-const eventsForInsert = (obj: IndexedRepost): Message[] => {
+const eventsForInsert = (obj: IndexedRepost) => {
   const subjectUri = new AtUri(obj.subject)
   const notif = messages.createNotification({
     userDid: subjectUri.host,
@@ -76,7 +78,7 @@ const deleteFn = async (
 const eventsForDelete = (
   deleted: IndexedRepost,
   replacedBy: IndexedRepost | null,
-): Message[] => {
+) => {
   if (replacedBy) return []
   return [messages.deleteNotifications(deleted.uri)]
 }

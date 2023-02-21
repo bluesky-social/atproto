@@ -1,9 +1,11 @@
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Confirmation from '../../../lexicon/types/app/bsky/graph/confirmation'
-import * as lex from '../../../lexicon/lexicons'
-import { Message } from '../../../event-stream/messages'
-import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
+import * as Confirmation from '../../../../lexicon/types/app/bsky/graph/confirmation'
+import * as lex from '../../../../lexicon/lexicons'
+import {
+  DatabaseSchema,
+  DatabaseSchemaType,
+} from '../../../../db/database-schema'
 import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyGraphConfirmation
@@ -47,7 +49,7 @@ const findDuplicate = async (
   return found?.confirmUri ? new AtUri(found.confirmUri) : null
 }
 
-const eventsForInsert = (_obj: IndexedAssertion): Message[] => {
+const eventsForInsert = (_obj: IndexedAssertion) => {
   return []
 }
 
@@ -72,7 +74,7 @@ const deleteFn = async (
 const eventsForDelete = (
   _deleted: IndexedAssertion,
   _replacedBy: IndexedAssertion | null,
-): Message[] => {
+) => {
   return []
 }
 

@@ -1,37 +1,34 @@
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Assertion from '../../../lexicon/types/app/bsky/graph/assertion'
-import * as lex from '../../../lexicon/lexicons'
-import * as messages from '../../../event-stream/messages'
-import { Message } from '../../../event-stream/messages'
-import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
+import * as Follow from '../../../../lexicon/types/app/bsky/graph/follow'
+import * as lex from '../../../../lexicon/lexicons'
+import * as messages from '../../../../event-stream/messages'
+import {
+  DatabaseSchema,
+  DatabaseSchemaType,
+} from '../../../../db/database-schema'
 import RecordProcessor from '../processor'
 
-const lexId = lex.ids.AppBskyGraphAssertion
-type IndexedAssertion = DatabaseSchemaType['assertion']
+const lexId = lex.ids.AppBskyGraphFollow
+type IndexedFollow = DatabaseSchemaType['follow']
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
-  obj: Assertion.Record,
+  obj: Follow.Record,
   timestamp?: string,
-): Promise<IndexedAssertion | null> => {
+): Promise<IndexedFollow | null> => {
   const inserted = await db
-    .insertInto('assertion')
+    .insertInto('follow')
     .values({
       uri: uri.toString(),
       cid: cid.toString(),
       creator: uri.host,
-      assertion: obj.assertion,
       subjectDid: obj.subject.did,
       subjectDeclarationCid: obj.subject.declarationCid,
       createdAt: obj.createdAt,
       indexedAt: timestamp || new Date().toISOString(),
-      confirmUri: null,
-      confirmCid: null,
-      confirmCreated: null,
-      confirmIndexed: null,
     })
     .onConflict((oc) => oc.doNothing())
     .returningAll()
@@ -42,29 +39,35 @@ const insertFn = async (
 const findDuplicate = async (
   db: DatabaseSchema,
   uri: AtUri,
-  obj: Assertion.Record,
+  obj: Follow.Record,
 ): Promise<AtUri | null> => {
   const found = await db
-    .selectFrom('assertion')
+    .selectFrom('follow')
     .where('creator', '=', uri.host)
     .where('subjectDid', '=', obj.subject.did)
-    .where('assertion.assertion', '=', obj.assertion)
     .selectAll()
     .executeTakeFirst()
   return found ? new AtUri(found.uri) : null
 }
 
-const eventsForInsert = (_obj: IndexedAssertion): Message[] => {
-  // disabled for now
-  return []
+const eventsForInsert = (obj: IndexedFollow) => {
+  return [
+    messages.createNotification({
+      userDid: obj.subjectDid,
+      author: obj.creator,
+      recordUri: obj.uri,
+      recordCid: obj.cid,
+      reason: 'follow',
+    }),
+  ]
 }
 
 const deleteFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-): Promise<IndexedAssertion | null> => {
+): Promise<IndexedFollow | null> => {
   const deleted = await db
-    .deleteFrom('assertion')
+    .deleteFrom('follow')
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
@@ -72,13 +75,14 @@ const deleteFn = async (
 }
 
 const eventsForDelete = (
-  deleted: IndexedAssertion,
-  _replacedBy: IndexedAssertion | null,
-): Message[] => {
+  deleted: IndexedFollow,
+  replacedBy: IndexedFollow | null,
+) => {
+  if (replacedBy) return []
   return [messages.deleteNotifications(deleted.uri)]
 }
 
-export type PluginType = RecordProcessor<Assertion.Record, IndexedAssertion>
+export type PluginType = RecordProcessor<Follow.Record, IndexedFollow>
 
 export const makePlugin = (db: DatabaseSchema): PluginType => {
   return new RecordProcessor(db, {

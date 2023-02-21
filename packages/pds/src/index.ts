@@ -17,12 +17,15 @@ import AppViewAPI from './app-view/api'
 import Database from './db'
 import { ServerAuth } from './auth'
 import * as streamConsumers from './event-stream/consumers'
+import * as dispatcherConsumers from './app-view/event-stream/consumers'
 import * as error from './error'
 import { loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
 import { createServer } from './lexicon'
-import SqlMessageQueue from './event-stream/message-queue'
+import SqlMessageQueue, {
+  MessageDispatcher,
+} from './event-stream/message-queue'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
@@ -68,6 +71,7 @@ export class PDS {
     })
 
     const messageQueue = new SqlMessageQueue('pds', db)
+    const messageDispatcher = new MessageDispatcher()
     const sequencer = new Sequencer(db)
 
     const mailTransport =
@@ -113,6 +117,7 @@ export class PDS {
     const services = createServices({
       keypair,
       messageQueue,
+      messageDispatcher,
       blobstore,
       imgUriBuilder,
       imgInvalidator,
@@ -125,6 +130,7 @@ export class PDS {
       cfg: config,
       auth,
       messageQueue,
+      messageDispatcher,
       sequencer,
       services,
       mailer,
@@ -132,6 +138,7 @@ export class PDS {
     })
 
     streamConsumers.listen(ctx)
+    dispatcherConsumers.listen(ctx)
 
     let server = createServer({
       payload: {
