@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { EcdsaKeypair } from '@atproto/crypto'
 import PlcClient from '../src/client'
 import * as document from '../src/lib/document'
@@ -12,6 +13,7 @@ describe('PLC server', () => {
 
   let close: CloseFn
   let db: Database
+  let url: string
   let client: PlcClient
 
   let signingKey: EcdsaKeypair
@@ -26,7 +28,8 @@ describe('PLC server', () => {
 
     db = server.ctx.db
     close = server.close
-    client = new PlcClient(server.url)
+    url = server.url
+    client = new PlcClient(url)
     signingKey = await EcdsaKeypair.create()
     recoveryKey = await EcdsaKeypair.create()
   })
@@ -160,6 +163,12 @@ describe('PLC server', () => {
 
     const ops = await client.getOperationLog(did)
     await document.validateOperationLog(did, ops)
+  })
+
+  it('gets a full export', async () => {
+    console.log(url)
+    const got = await axios.get(`${url}/export`)
+    console.log(got.data)
   })
 
   it('healthcheck succeeds when database is available.', async () => {

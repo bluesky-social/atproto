@@ -20,6 +20,18 @@ export const createRouter = (ctx: AppContext): express.Router => {
     res.send({ version })
   })
 
+  router.get('/export', async function (req, res) {
+    const fullExport = await ctx.db.fullExport()
+    res.setHeader('content-type', 'application/jsonlines')
+    res.status(200)
+    for (const [did, ops] of Object.entries(fullExport)) {
+      const line = JSON.stringify({ did, ops })
+      res.write(line)
+      res.write('\n')
+    }
+    res.end()
+  })
+
   // Get data for a DID document
   router.get('/:did', async function (req, res) {
     const { did } = req.params

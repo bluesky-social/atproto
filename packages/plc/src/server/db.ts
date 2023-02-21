@@ -177,6 +177,24 @@ export class Database {
       createdAt: new Date(row.createdAt),
     }))
   }
+
+  async fullExport(): Promise<Record<string, OpLogExport>> {
+    const res = await this.db
+      .selectFrom('operations')
+      .selectAll()
+      .orderBy('did')
+      .orderBy('createdAt')
+      .execute()
+    return res.reduce((acc, cur) => {
+      acc[cur.did] ??= []
+      acc[cur.did].push({
+        op: JSON.parse(cur.operation),
+        nullified: cur.nullified === 1,
+        createdAt: cur.createdAt,
+      })
+      return acc
+    }, {} as Record<string, OpLogExport>)
+  }
 }
 
 export default Database
@@ -193,4 +211,12 @@ interface OperationsTable {
 
 interface DatabaseSchema {
   operations: OperationsTable
+}
+
+type OpLogExport = OpExport[]
+
+type OpExport = {
+  op: Record<string, unknown>
+  nullified: boolean
+  createdAt: string
 }
