@@ -6,7 +6,7 @@ import { cidForCbor } from '@atproto/common'
 import { AxiosError } from 'axios'
 import { Database } from '../src'
 
-describe.skip('PLC server', () => {
+describe('PLC server', () => {
   let handle = 'alice.example.com'
   let atpPds = 'example.com'
 
@@ -49,6 +49,8 @@ describe.skip('PLC server', () => {
     expect(doc.handle).toEqual(handle)
     expect(doc.atpPds).toEqual(atpPds)
   })
+
+  return
 
   it('can perform some updates', async () => {
     const newSigningKey = await EcdsaKeypair.create()
