@@ -2917,17 +2917,17 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyEmbedPost: {
+  AppBskyEmbedRecord: {
     lexicon: 1,
-    id: 'app.bsky.embed.post',
+    id: 'app.bsky.embed.record',
     description:
-      'An representation of a post embedded in another form of content',
+      'An representation of a record embedded in another form of content',
     defs: {
       main: {
         type: 'object',
-        required: ['post'],
+        required: ['record'],
         properties: {
-          post: {
+          record: {
             type: 'ref',
             ref: 'lex:com.atproto.repo.strongRef',
           },
@@ -2935,18 +2935,18 @@ export const schemaDict = {
       },
       presented: {
         type: 'object',
-        required: ['post'],
+        required: ['record'],
         properties: {
-          post: {
+          record: {
             type: 'union',
             refs: [
-              'lex:app.bsky.embed.post#presentedPost',
-              'lex:app.bsky.embed.post#presentedNotFound',
+              'lex:app.bsky.embed.record#presentedRecord',
+              'lex:app.bsky.embed.record#presentedNotFound',
             ],
           },
         },
       },
-      presentedPost: {
+      presentedRecord: {
         type: 'object',
         required: ['uri', 'cid', 'author', 'record'],
         properties: {
@@ -3367,7 +3367,7 @@ export const schemaDict = {
               refs: [
                 'lex:app.bsky.embed.images',
                 'lex:app.bsky.embed.external',
-                'lex:app.bsky.embed.post',
+                'lex:app.bsky.embed.record',
               ],
             },
             createdAt: {
@@ -3456,7 +3456,7 @@ export const schemaDict = {
             refs: [
               'lex:app.bsky.embed.images#presented',
               'lex:app.bsky.embed.external#presented',
-              'lex:app.bsky.embed.post#presented',
+              'lex:app.bsky.embed.record#presented',
             ],
           },
           replyCount: {
@@ -4129,7 +4129,7 @@ export const ids = {
   AppBskyActorUpdateProfile: 'app.bsky.actor.updateProfile',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
-  AppBskyEmbedPost: 'app.bsky.embed.post',
+  AppBskyEmbedRecord: 'app.bsky.embed.record',
   AppBskyFeedFeedViewPost: 'app.bsky.feed.feedViewPost',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',

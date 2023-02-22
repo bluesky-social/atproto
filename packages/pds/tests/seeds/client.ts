@@ -203,8 +203,8 @@ export class SeedClient {
         }
       : quote
       ? {
-          $type: 'app.bsky.embed.post',
-          post: { uri: quote.uriStr, cid: quote.cidStr },
+          $type: 'app.bsky.embed.record',
+          record: { uri: quote.uriStr, cid: quote.cidStr },
         }
       : undefined
     const res = await this.agent.api.app.bsky.feed.post.create(

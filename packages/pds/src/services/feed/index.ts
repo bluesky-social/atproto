@@ -217,24 +217,24 @@ export class FeedService {
       .selectAll()
       .where('postUri', 'in', uris)
       .execute()
-    const postPromise = this.db.db
-      .selectFrom('post_embed_post')
-      .innerJoin('post as embed', 'embed.uri', 'embedPostUri')
+    const recordPromise = this.db.db
+      .selectFrom('post_embed_record')
+      .innerJoin('record as embed', 'embed.uri', 'embedUri')
       .where('postUri', 'in', uris)
-      .select(['postUri', 'embed.uri as uri', 'embed.creator as did'])
+      .select(['postUri', 'embed.uri as uri', 'embed.did as did'])
       .execute()
-    const [images, externals, posts] = await Promise.all([
+    const [images, externals, records] = await Promise.all([
       imgPromise,
       extPromise,
-      postPromise,
+      recordPromise,
     ])
     const [postViews, actorViews] = await Promise.all([
       this.getPostViews(
-        posts.map((p) => p.uri),
+        records.map((p) => p.uri),
         requester,
       ),
       this.getActorViews(
-        posts.map((p) => p.did),
+        records.map((p) => p.did),
         requester,
       ),
     ])
@@ -276,7 +276,7 @@ export class FeedService {
       }
       return acc
     }, embeds)
-    embeds = posts.reduce((acc, cur) => {
+    embeds = records.reduce((acc, cur) => {
       if (!acc[cur.postUri]) {
         const formatted = this.formatPostView(
           cur.uri,
@@ -285,17 +285,17 @@ export class FeedService {
           {},
         )
         acc[cur.postUri] = {
-          $type: 'app.bsky.embed.post#presented',
-          post: formatted
+          $type: 'app.bsky.embed.record#presented',
+          record: formatted
             ? {
-                $type: 'app.bsky.embed.post#presentedPost',
+                $type: 'app.bsky.embed.record#presentedPost',
                 uri: formatted.uri,
                 cid: formatted.cid,
                 author: formatted.author,
                 record: formatted.record,
               }
             : {
-                $type: 'app.bsky.embed.post#presentedNotFound',
+                $type: 'app.bsky.embed.record#presentedNotFound',
                 uri: cur.uri,
               },
         }

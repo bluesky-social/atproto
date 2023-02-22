@@ -3,7 +3,7 @@ import { CID } from 'multiformats/cid'
 import { Record as PostRecord } from '../../../lexicon/types/app/bsky/feed/post'
 import { isMain as isEmbedImage } from '../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../../lexicon/types/app/bsky/embed/external'
-import { isMain as isEmbedPost } from '../../../lexicon/types/app/bsky/embed/post'
+import { isMain as isEmbedRecord } from '../../../lexicon/types/app/bsky/embed/record'
 import * as lex from '../../../lexicon/lexicons'
 import * as messages from '../../../event-stream/messages'
 import { Message } from '../../../event-stream/messages'
@@ -16,11 +16,11 @@ type Post = DatabaseSchemaType['post']
 type PostEntity = DatabaseSchemaType['post_entity']
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
 type PostEmbedExternal = DatabaseSchemaType['post_embed_external']
-type PostEmbedPost = DatabaseSchemaType['post_embed_post']
+type PostEmbedRecord = DatabaseSchemaType['post_embed_record']
 type IndexedPost = {
   post: Post
   entities: PostEntity[]
-  embed?: PostEmbedImage[] | PostEmbedExternal | PostEmbedPost
+  embed?: PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord
   ancestors: PostHierarchy[]
 }
 
@@ -67,7 +67,7 @@ const insertFn = async (
       .returningAll()
       .execute()
   }
-  let embed: PostEmbedImage[] | PostEmbedExternal | PostEmbedPost | undefined
+  let embed: PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord | undefined
   if (isEmbedImage(obj.embed)) {
     const { images } = obj.embed
     embed = images.map((img, i) => ({
@@ -87,14 +87,14 @@ const insertFn = async (
       thumbCid: external.thumb?.cid || null,
     }
     await db.insertInto('post_embed_external').values(embed).execute()
-  } else if (isEmbedPost(obj.embed)) {
-    const { post } = obj.embed
+  } else if (isEmbedRecord(obj.embed)) {
+    const { record } = obj.embed
     embed = {
       postUri: uri.toString(),
-      embedPostUri: post.uri,
-      embedPostCid: post.cid,
+      embedUri: record.uri,
+      embedCid: record.cid,
     }
-    await db.insertInto('post_embed_post').values(embed).execute()
+    await db.insertInto('post_embed_record').values(embed).execute()
   }
   // Thread index
   await db
@@ -187,7 +187,7 @@ const deleteFn = async (
   let deletedEmbed:
     | PostEmbedImage[]
     | PostEmbedExternal
-    | PostEmbedPost
+    | PostEmbedRecord
     | undefined
   const deletedImgs = await db
     .deleteFrom('post_embed_image')
@@ -205,7 +205,7 @@ const deleteFn = async (
   }
   if (!deletedEmbed) {
     const deletedPosts = await db
-      .deleteFrom('post_embed_post')
+      .deleteFrom('post_embed_record')
       .where('postUri', '=', uri.toString())
       .returningAll()
       .executeTakeFirst()

@@ -672,9 +672,9 @@ Array [
       "cid": "cids(12)",
       "downvoteCount": 1,
       "embed": Object {
-        "$type": "app.bsky.embed.post#presented",
-        "post": Object {
-          "$type": "app.bsky.embed.post#presentedPost",
+        "$type": "app.bsky.embed.record#presented",
+        "record": Object {
+          "$type": "app.bsky.embed.record#presentedPost",
           "author": Object {
             "declaration": Object {
               "actorType": "app.bsky.system.actorUser",
@@ -711,8 +711,8 @@ Array [
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "embed": Object {
-          "$type": "app.bsky.embed.post",
-          "post": Object {
+          "$type": "app.bsky.embed.record",
+          "record": Object {
             "cid": "cids(2)",
             "uri": "record(2)",
           },

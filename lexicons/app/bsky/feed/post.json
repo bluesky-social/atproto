@@ -20,7 +20,7 @@
             "refs": [
               "app.bsky.embed.images",
               "app.bsky.embed.external",
-              "app.bsky.embed.post"
+              "app.bsky.embed.record"
             ]
           },
           "createdAt": {"type": "datetime"}
@@ -69,7 +69,7 @@
           "refs": [
             "app.bsky.embed.images#presented",
             "app.bsky.embed.external#presented",
-            "app.bsky.embed.post#presented"
+            "app.bsky.embed.record#presented"
           ]
         },
         "replyCount": {"type": "integer"},

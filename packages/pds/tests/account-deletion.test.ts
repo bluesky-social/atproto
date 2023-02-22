@@ -21,7 +21,7 @@ import { PostEntity } from '../src/db/tables/post-entity'
 import {
   PostEmbedImage,
   PostEmbedExternal,
-  PostEmbedPost,
+  PostEmbedRecord,
 } from '../src/db/tables/post-embed'
 import { RepoCommitHistory } from '../src/db/tables/repo-commit-history'
 import { RepoCommitBlock } from '../src/db/tables/repo-commit-block'
@@ -269,7 +269,7 @@ type DbContents = {
   postEntities: PostEntity[]
   postImages: PostEmbedImage[]
   postExternals: PostEmbedExternal[]
-  postPosts: PostEmbedPost[]
+  postRecords: PostEmbedRecord[]
   votes: Vote[]
   reposts: Repost[]
   follows: Follow[]
@@ -290,7 +290,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     postEntities,
     postImages,
     postExternals,
-    postPosts,
+    postRecords,
     votes,
     reposts,
     follows,
@@ -333,7 +333,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
       .selectAll()
       .execute(),
     db.db
-      .selectFrom('post_embed_post')
+      .selectFrom('post_embed_record')
       .orderBy('postUri')
       .selectAll()
       .execute(),
@@ -361,7 +361,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     postEntities,
     postImages,
     postExternals,
-    postPosts,
+    postRecords,
     votes,
     reposts,
     follows,
