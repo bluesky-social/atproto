@@ -9,9 +9,13 @@
 // libraries.
 
 // Handle constraints, in English:
-//  - must be a possible domain name per RFC-1035
+//  - must be a possible domain name
+//    - RFC-1035 is commonly referenced, but has been updated. eg, RFC-3696,
+//      section 2. and RFC-3986, section 3. can now have leading numbers (eg,
+//      4chan.org)
 //    - "labels" (sub-names) are made of ASCII letters, digits, hyphens
-//    - must start with a letter
+//    - can not start or end with a hyphen
+//    - TLD (last component) should not start with a digit
 //    - can't end with a hyphen (can end with digit)
 //    - must be between 2 and 63 characters (not including any periods)
 //    - overall length can't be more than 253 characters
@@ -40,27 +44,30 @@ export const lexVerifyHandle = (handle: string): void => {
   if (labels.length < 2) {
     throw new Error('Handle domain needs at least two parts')
   }
-  labels.forEach((l) => {
+  for (let i = 0; i < labels.length; i++) {
+    const l = labels[i]
     if (l.length < 1) {
       throw new Error('Handle parts can not be empty')
     }
     if (l.length > 63) {
       throw new Error('Handle part too long (max 63 chars)')
     }
-    if (l.endsWith('-')) {
-      throw new Error('Handle parts can not end with hyphen')
+    if (l.endsWith('-') || l.startsWith('-')) {
+      throw new Error('Handle parts can not start or end with hyphens')
     }
-    if (!/^[a-zA-Z]/.test(l)) {
-      throw new Error('Handle parts must start with ASCII letter')
+    if (i + 1 == labels.length && !/^[a-zA-Z]/.test(l)) {
+      throw new Error(
+        'Handle final component (TLD) must start with ASCII letter',
+      )
     }
-  })
+  }
 }
 
 export const lexVerifyHandleRegex = (handle: string): void => {
   // simple regex to enforce most constraints via just regex and length
   // hand wrote this regex based on above constraints
   if (
-    !/^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/.test(
+    !/^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/.test(
       handle,
     )
   ) {
@@ -85,6 +92,8 @@ export const lexVerifyHandleRegex = (handle: string): void => {
 //   up to 128 chars?
 // - TODO: consider explicitly mapping hyphen to underscore when translating
 //   NSID to identifiers in programming languages
+// - TODO: confirm whether we want to restrict to no leading numbers. consider
+//   programming language variable name restrictions. But what about 'org.4chan.*'...
 export const lexVerifyNsid = (nsid: string): void => {
   // check that all chars are boring ASCII
   if (!/^[a-zA-Z0-9.-]*$/.test(nsid)) {

@@ -40,6 +40,8 @@ describe('handle permissive validation', () => {
     expectValid('jaymome-johnber123456.test')
     expectValid('jay.mome-johnber123456.test')
     expectValid('john.test.bsky.app')
+    expectValid('laptop.local')
+    expectValid('laptop.arpa')
 
     // NOTE: this probably isn't ever going to be a real domain, but my read of
     // the RFC is that it would be possible
@@ -51,12 +53,30 @@ describe('handle permissive validation', () => {
     expectValid('xn--bcher-kva.tld') // bücher.tld
   })
 
+  it('allows onion (Tor) handles', () => {
+    expectValid('expyuzz4wqqyqhjn.onion')
+    expectValid('friend.expyuzz4wqqyqhjn.onion')
+    expectValid(
+      'g2zyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.onion',
+    )
+    expectValid(
+      'friend.g2zyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.onion',
+    )
+    expectValid(
+      'friend.g2zyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.onion',
+    )
+    expectValid(
+      '2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.onion',
+    )
+    expectValid(
+      'friend.2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.onion',
+    )
+  })
+
   it('throws on invalid handles', () => {
-    expectInvalid('12345.test')
     expectInvalid('did:thing.test')
     expectInvalid('did:thing')
     expectInvalid('john-.test')
-    expectInvalid('0john.test')
     expectInvalid('john.0')
     expectInvalid('john.-')
     expectInvalid('short.' + 'o'.repeat(64) + '.test')
@@ -89,8 +109,36 @@ describe('handle permissive validation', () => {
     expectInvalid('.john.test')
     expectInvalid(' john.test')
     expectInvalid('john.test ')
-    expectInvalid('0ohn.test')
     expectInvalid('joh-.test')
+    expectInvalid('john.-est')
+    expectInvalid('john.tes-')
+  })
+
+  it('correctly validates corner cases (modern vs. old RFCs)', () => {
+    expectValid('12345.test')
+    expectValid('8.cn')
+    expectValid('4chan.org')
+    expectValid('4chan.o-g')
+    expectValid('blah.4chan.org')
+    expectValid('thing.a01')
+    expectValid('120.0.0.1.com')
+    expectValid('0john.test')
+    expectValid('9sta--ck.com')
+    expectValid('99stack.com')
+    expectValid('0ohn.test')
+    expectValid('john.t--t')
+    expectValid('thing.0aa.thing')
+
+    expectInvalid('cn.8')
+    expectInvalid('thing.0aa')
+    expectInvalid('thing.0aa')
+  })
+
+  it('does not allow IP addresses as handles', () => {
+    expectInvalid('127.0.0.1')
+    expectInvalid('192.168.0.142')
+    expectInvalid('fe80::7325:8a97:c100:94b')
+    expectInvalid('2600:3c03::f03c:9100:feb0:af1f')
   })
 
   it('is consistent with examples from stackoverflow', () => {
@@ -119,8 +167,6 @@ describe('handle permissive validation', () => {
     const badStackoverflow = [
       '-notvalid.at-all',
       '-thing.com',
-      '9sta--ck.com',
-      '99stack.com',
       'www.masełkowski.pl.com',
     ]
     badStackoverflow.forEach(expectInvalid)
@@ -196,6 +242,21 @@ describe('NSID permissive validation', () => {
   it('handles corner-cases which nsid package does not', () => {
     expectInvalid('com.example-.foo')
   })
+
+  it('allows onion (Tor) NSIDs', () => {
+    expectValid('onion.expyuzz4wqqyqhjn.spec.getThing')
+    expectValid(
+      'onion.g2zyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.lex.deleteThing',
+    )
+  })
+
+  it('blocks starting-with-numeric segments (differently from domains)', () => {
+    expectInvalid('org.4chan.lex.getThing')
+    expectInvalid('cn.8.lex.stuff')
+    expectInvalid(
+      'onion.2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.lex.deleteThing',
+    )
+  })
 })
 
 describe('DID permissive validation', () => {
@@ -248,6 +309,10 @@ describe('DID permissive validation', () => {
     expectInvalid('did:method:val?two')
     expectInvalid('did:method:val#two')
     expectInvalid('did:method:val%')
+
+    expectValid(
+      'did:onion:2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid',
+    )
   })
 
   it('allows some real DID values', () => {
