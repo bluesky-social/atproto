@@ -162,6 +162,7 @@ export const lexObject = z.object({
   type: z.literal('object'),
   description: z.string().optional(),
   required: z.string().array().optional(),
+  nullable: z.string().array().optional(),
   properties: z
     .record(z.union([lexRefVariant, lexArray, lexBlobVariant, lexPrimitive]))
     .optional(),
@@ -336,10 +337,15 @@ export class LexiconDocMalformedError extends Error {
   }
 }
 
-export interface ValidationResult {
-  success: boolean
-  error?: ValidationError
-}
+export type ValidationResult =
+  | {
+      success: true
+      value: unknown
+    }
+  | {
+      success: false
+      error: ValidationError
+    }
 
 export class ValidationError extends Error {}
 export class InvalidLexiconError extends Error {}

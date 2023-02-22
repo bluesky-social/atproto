@@ -1,5 +1,6 @@
 import { Kysely } from 'kysely'
-import * as user from './tables/user'
+import * as userAccount from './tables/user-account'
+import * as userState from './tables/user-state'
 import * as didHandle from './tables/did-handle'
 import * as repoRoot from './tables/repo-root'
 import * as refreshToken from './tables/refresh-token'
@@ -13,6 +14,7 @@ import * as notification from './tables/user-notification'
 import * as assertion from './tables/assertion'
 import * as profile from './tables/profile'
 import * as post from './tables/post'
+import * as postHierarchy from './tables/post-hierarchy'
 import * as postEntity from './tables/post-entity'
 import * as postEmbed from './tables/post-embed'
 import * as vote from './tables/vote'
@@ -27,7 +29,8 @@ import * as moderation from './tables/moderation'
 import * as mute from './tables/mute'
 import * as repoSeq from './tables/repo-seq'
 
-export type DatabaseSchemaType = user.PartialDB &
+export type DatabaseSchemaType = userAccount.PartialDB &
+  userState.PartialDB &
   didHandle.PartialDB &
   refreshToken.PartialDB &
   repoRoot.PartialDB &
@@ -43,6 +46,7 @@ export type DatabaseSchemaType = user.PartialDB &
   assertion.PartialDB &
   profile.PartialDB &
   post.PartialDB &
+  postHierarchy.PartialDB &
   postEntity.PartialDB &
   postEmbed.PartialDB &
   vote.PartialDB &

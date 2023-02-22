@@ -40,10 +40,7 @@ export default function (server: Server, ctx: AppContext) {
       throw new AuthRequiredError('Invalid identifier or password')
     }
 
-    const validPass = await actorService.verifyUserPassword(
-      user.handle,
-      password,
-    )
+    const validPass = await actorService.verifyUserPassword(user.did, password)
 
     if (!validPass) {
       throw new AuthRequiredError('Invalid identifier or password')

@@ -13,37 +13,7 @@
       },
       "output": {
         "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "required": ["did", "declaration", "handle", "creator", "followersCount", "followsCount", "postsCount"],
-          "properties": {
-            "did": {"type": "string"},
-            "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
-            "handle": {"type": "string"},
-            "creator": {"type": "string"},
-            "displayName": {
-              "type": "string",
-              "maxLength": 64
-            },
-            "description": {
-              "type": "string",
-              "maxLength": 256
-            },
-            "avatar": { "type": "string" },
-            "banner": { "type": "string" },
-            "followersCount": {"type": "integer"},
-            "followsCount": {"type": "integer"},
-            "postsCount": {"type": "integer"},
-            "myState": {"type": "ref", "ref": "#myState"}
-          }
-        }
-      }
-    },
-    "myState": {
-      "type": "object",
-      "properties": {
-        "follow": {"type": "string"},
-        "muted": {"type": "boolean"}
+        "schema": {"type": "ref", "ref": "app.bsky.actor.profile#view"}
       }
     }
   }

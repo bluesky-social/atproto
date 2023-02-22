@@ -6,7 +6,7 @@ Object {
   "parent": Object {
     "$type": "app.bsky.feed.getPostThread#notFoundPost",
     "notFound": true,
-    "uri": "record(2)",
+    "uri": "record(4)",
   },
   "post": Object {
     "author": Object {
@@ -19,6 +19,8 @@ Object {
       "displayName": "ali",
       "handle": "alice.test",
       "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
         "muted": false,
       },
     },
@@ -31,11 +33,11 @@ Object {
       "reply": Object {
         "parent": Object {
           "cid": "cids(3)",
-          "uri": "record(2)",
+          "uri": "record(4)",
         },
         "root": Object {
           "cid": "cids(2)",
-          "uri": "record(1)",
+          "uri": "record(3)",
         },
       },
       "text": "thanks bob",
@@ -45,7 +47,7 @@ Object {
     "upvoteCount": 0,
     "uri": "record(0)",
     "viewer": Object {
-      "repost": "record(3)",
+      "repost": "record(5)",
     },
   },
   "replies": Array [],
@@ -58,7 +60,7 @@ Object {
   "parent": Object {
     "$type": "app.bsky.feed.getPostThread#notFoundPost",
     "notFound": true,
-    "uri": "record(2)",
+    "uri": "record(4)",
   },
   "post": Object {
     "author": Object {
@@ -71,6 +73,8 @@ Object {
       "displayName": "ali",
       "handle": "alice.test",
       "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
         "muted": false,
       },
     },
@@ -83,11 +87,11 @@ Object {
       "reply": Object {
         "parent": Object {
           "cid": "cids(3)",
-          "uri": "record(2)",
+          "uri": "record(4)",
         },
         "root": Object {
           "cid": "cids(2)",
-          "uri": "record(1)",
+          "uri": "record(3)",
         },
       },
       "text": "thanks bob",
@@ -97,7 +101,7 @@ Object {
     "upvoteCount": 0,
     "uri": "record(0)",
     "viewer": Object {
-      "repost": "record(3)",
+      "repost": "record(5)",
     },
   },
   "replies": Array [],
@@ -118,6 +122,8 @@ Object {
       "displayName": "ali",
       "handle": "alice.test",
       "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
         "muted": false,
       },
     },
@@ -134,7 +140,7 @@ Object {
     "upvoteCount": 2,
     "uri": "record(0)",
     "viewer": Object {
-      "upvote": "record(1)",
+      "upvote": "record(3)",
     },
   },
   "replies": Array [
@@ -197,7 +203,7 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "upvoteCount": 0,
-        "uri": "record(2)",
+        "uri": "record(4)",
         "viewer": Object {},
       },
       "replies": Array [
@@ -214,6 +220,8 @@ Object {
               "displayName": "ali",
               "handle": "alice.test",
               "viewer": Object {
+                "followedBy": "record(2)",
+                "following": "record(1)",
                 "muted": false,
               },
             },
@@ -226,7 +234,7 @@ Object {
               "reply": Object {
                 "parent": Object {
                   "cid": "cids(2)",
-                  "uri": "record(2)",
+                  "uri": "record(4)",
                 },
                 "root": Object {
                   "cid": "cids(0)",
@@ -238,9 +246,9 @@ Object {
             "replyCount": 0,
             "repostCount": 1,
             "upvoteCount": 0,
-            "uri": "record(3)",
+            "uri": "record(5)",
             "viewer": Object {
-              "repost": "record(4)",
+              "repost": "record(6)",
             },
           },
           "replies": Array [],
@@ -265,6 +273,8 @@ Object {
       "displayName": "ali",
       "handle": "alice.test",
       "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
         "muted": false,
       },
     },
@@ -281,7 +291,7 @@ Object {
     "upvoteCount": 2,
     "uri": "record(0)",
     "viewer": Object {
-      "upvote": "record(1)",
+      "upvote": "record(3)",
     },
   },
   "replies": Array [
@@ -344,7 +354,7 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "upvoteCount": 0,
-        "uri": "record(2)",
+        "uri": "record(4)",
         "viewer": Object {},
       },
       "replies": Array [],
@@ -371,6 +381,8 @@ Object {
           "displayName": "ali",
           "handle": "alice.test",
           "viewer": Object {
+            "followedBy": "record(2)",
+            "following": "record(1)",
             "muted": false,
           },
         },
@@ -385,9 +397,9 @@ Object {
         "replyCount": 2,
         "repostCount": 1,
         "upvoteCount": 2,
-        "uri": "record(1)",
+        "uri": "record(3)",
         "viewer": Object {
-          "upvote": "record(4)",
+          "upvote": "record(6)",
         },
       },
       "replies": Array [],
@@ -437,11 +449,11 @@ Object {
         "reply": Object {
           "parent": Object {
             "cid": "cids(2)",
-            "uri": "record(1)",
+            "uri": "record(3)",
           },
           "root": Object {
             "cid": "cids(2)",
-            "uri": "record(1)",
+            "uri": "record(3)",
           },
         },
         "text": "hear that",
@@ -449,7 +461,7 @@ Object {
       "replyCount": 1,
       "repostCount": 0,
       "upvoteCount": 0,
-      "uri": "record(2)",
+      "uri": "record(4)",
       "viewer": Object {},
     },
     "replies": Array [],
@@ -465,6 +477,8 @@ Object {
       "displayName": "ali",
       "handle": "alice.test",
       "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
         "muted": false,
       },
     },
@@ -477,11 +491,11 @@ Object {
       "reply": Object {
         "parent": Object {
           "cid": "cids(3)",
-          "uri": "record(2)",
+          "uri": "record(4)",
         },
         "root": Object {
           "cid": "cids(2)",
-          "uri": "record(1)",
+          "uri": "record(3)",
         },
       },
       "text": "thanks bob",
@@ -491,7 +505,7 @@ Object {
     "upvoteCount": 0,
     "uri": "record(0)",
     "viewer": Object {
-      "repost": "record(3)",
+      "repost": "record(5)",
     },
   },
   "replies": Array [],
@@ -512,6 +526,8 @@ Object {
       "displayName": "ali",
       "handle": "alice.test",
       "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
         "muted": false,
       },
     },
@@ -528,7 +544,7 @@ Object {
     "upvoteCount": 2,
     "uri": "record(0)",
     "viewer": Object {
-      "upvote": "record(1)",
+      "upvote": "record(3)",
     },
   },
   "replies": Array [
@@ -543,6 +559,7 @@ Object {
           "did": "user(1)",
           "handle": "carol.test",
           "viewer": Object {
+            "following": "record(5)",
             "muted": false,
           },
         },
@@ -567,7 +584,7 @@ Object {
         "replyCount": 0,
         "repostCount": 0,
         "upvoteCount": 0,
-        "uri": "record(2)",
+        "uri": "record(4)",
         "viewer": Object {},
       },
       "replies": Array [],
@@ -631,7 +648,7 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "upvoteCount": 0,
-        "uri": "record(3)",
+        "uri": "record(6)",
         "viewer": Object {},
       },
       "replies": Array [
@@ -648,6 +665,8 @@ Object {
               "displayName": "ali",
               "handle": "alice.test",
               "viewer": Object {
+                "followedBy": "record(2)",
+                "following": "record(1)",
                 "muted": false,
               },
             },
@@ -660,7 +679,7 @@ Object {
               "reply": Object {
                 "parent": Object {
                   "cid": "cids(3)",
-                  "uri": "record(3)",
+                  "uri": "record(6)",
                 },
                 "root": Object {
                   "cid": "cids(0)",
@@ -672,9 +691,9 @@ Object {
             "replyCount": 0,
             "repostCount": 1,
             "upvoteCount": 0,
-            "uri": "record(4)",
+            "uri": "record(7)",
             "viewer": Object {
-              "repost": "record(5)",
+              "repost": "record(8)",
             },
           },
           "replies": Array [],
@@ -699,6 +718,8 @@ Object {
       "displayName": "ali",
       "handle": "alice.test",
       "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
         "muted": false,
       },
     },
@@ -715,7 +736,7 @@ Object {
     "upvoteCount": 2,
     "uri": "record(0)",
     "viewer": Object {
-      "upvote": "record(1)",
+      "upvote": "record(3)",
     },
   },
   "replies": Array [
@@ -730,6 +751,7 @@ Object {
           "did": "user(1)",
           "handle": "carol.test",
           "viewer": Object {
+            "following": "record(5)",
             "muted": false,
           },
         },
@@ -754,7 +776,7 @@ Object {
         "replyCount": 0,
         "repostCount": 0,
         "upvoteCount": 0,
-        "uri": "record(2)",
+        "uri": "record(4)",
         "viewer": Object {},
       },
     },
@@ -817,7 +839,7 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "upvoteCount": 0,
-        "uri": "record(3)",
+        "uri": "record(6)",
         "viewer": Object {},
       },
     },
@@ -839,6 +861,8 @@ Object {
       "displayName": "ali",
       "handle": "alice.test",
       "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
         "muted": false,
       },
     },
@@ -894,7 +918,7 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "upvoteCount": 0,
-        "uri": "record(1)",
+        "uri": "record(3)",
         "viewer": Object {},
       },
       "replies": Array [
@@ -911,6 +935,8 @@ Object {
               "displayName": "ali",
               "handle": "alice.test",
               "viewer": Object {
+                "followedBy": "record(2)",
+                "following": "record(1)",
                 "muted": false,
               },
             },
@@ -923,7 +949,7 @@ Object {
               "reply": Object {
                 "parent": Object {
                   "cid": "cids(2)",
-                  "uri": "record(1)",
+                  "uri": "record(3)",
                 },
                 "root": Object {
                   "cid": "cids(0)",
@@ -935,7 +961,7 @@ Object {
             "replyCount": 0,
             "repostCount": 0,
             "upvoteCount": 0,
-            "uri": "record(2)",
+            "uri": "record(4)",
             "viewer": Object {},
           },
           "replies": Array [],
@@ -960,6 +986,8 @@ Object {
       "displayName": "ali",
       "handle": "alice.test",
       "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
         "muted": false,
       },
     },
@@ -987,7 +1015,7 @@ Object {
   "parent": Object {
     "$type": "app.bsky.feed.getPostThread#notFoundPost",
     "notFound": true,
-    "uri": "record(2)",
+    "uri": "record(4)",
   },
   "post": Object {
     "author": Object {
@@ -1000,6 +1028,8 @@ Object {
       "displayName": "ali",
       "handle": "alice.test",
       "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
         "muted": false,
       },
     },
@@ -1012,11 +1042,11 @@ Object {
       "reply": Object {
         "parent": Object {
           "cid": "cids(3)",
-          "uri": "record(2)",
+          "uri": "record(4)",
         },
         "root": Object {
           "cid": "cids(2)",
-          "uri": "record(1)",
+          "uri": "record(3)",
         },
       },
       "text": "Reply reply",
@@ -1045,6 +1075,8 @@ Object {
       "displayName": "ali",
       "handle": "alice.test",
       "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
         "muted": true,
       },
     },
@@ -1061,7 +1093,7 @@ Object {
     "upvoteCount": 2,
     "uri": "record(0)",
     "viewer": Object {
-      "upvote": "record(1)",
+      "upvote": "record(3)",
     },
   },
   "replies": Array [
@@ -1076,6 +1108,7 @@ Object {
           "did": "user(1)",
           "handle": "carol.test",
           "viewer": Object {
+            "following": "record(5)",
             "muted": false,
           },
         },
@@ -1100,7 +1133,7 @@ Object {
         "replyCount": 0,
         "repostCount": 0,
         "upvoteCount": 0,
-        "uri": "record(2)",
+        "uri": "record(4)",
         "viewer": Object {},
       },
       "replies": Array [],
@@ -1164,7 +1197,7 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "upvoteCount": 0,
-        "uri": "record(3)",
+        "uri": "record(6)",
         "viewer": Object {},
       },
       "replies": Array [
@@ -1181,6 +1214,8 @@ Object {
               "displayName": "ali",
               "handle": "alice.test",
               "viewer": Object {
+                "followedBy": "record(2)",
+                "following": "record(1)",
                 "muted": true,
               },
             },
@@ -1193,7 +1228,7 @@ Object {
               "reply": Object {
                 "parent": Object {
                   "cid": "cids(3)",
-                  "uri": "record(3)",
+                  "uri": "record(6)",
                 },
                 "root": Object {
                   "cid": "cids(0)",
@@ -1205,9 +1240,9 @@ Object {
             "replyCount": 0,
             "repostCount": 1,
             "upvoteCount": 0,
-            "uri": "record(4)",
+            "uri": "record(7)",
             "viewer": Object {
-              "repost": "record(5)",
+              "repost": "record(8)",
             },
           },
           "replies": Array [],

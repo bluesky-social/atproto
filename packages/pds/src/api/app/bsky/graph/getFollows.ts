@@ -1,6 +1,5 @@
 import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { getActorInfo, getDeclarationSimple } from '../util'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { notSoftDeletedClause } from '../../../../db/util'
@@ -8,21 +7,22 @@ import { notSoftDeletedClause } from '../../../../db/util'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollows({
     auth: ctx.accessVerifier,
-    handler: async ({ params }) => {
+    handler: async ({ params, auth }) => {
       const { user, limit, before } = params
-      const { ref } = ctx.db.db.dynamic
+      const requester = auth.credentials.did
+      const { services, db } = ctx
+      const { ref } = db.db.dynamic
 
-      const creator = await getActorInfo(
-        ctx.db.db,
-        ctx.imgUriBuilder,
-        user,
-      ).catch((_e) => {
+      const actorService = services.actor(db)
+
+      const creatorRes = await actorService.getUser(user)
+      if (!creatorRes) {
         throw new InvalidRequestError(`User not found: ${user}`)
-      })
+      }
 
       let followsReq = ctx.db.db
         .selectFrom('follow')
-        .where('follow.creator', '=', creator.did)
+        .where('follow.creator', '=', creatorRes.did)
         .innerJoin('did_handle as subject', 'subject.did', 'follow.subjectDid')
         .innerJoin(
           'repo_root as subject_repo',
@@ -30,18 +30,8 @@ export default function (server: Server, ctx: AppContext) {
           'follow.subjectDid',
         )
         .where(notSoftDeletedClause(ref('subject_repo')))
-        .leftJoin('profile', 'profile.creator', 'follow.subjectDid')
-        .select([
-          'subject.did as did',
-          'subject.declarationCid as declarationCid',
-          'subject.actorType as actorType',
-          'subject.handle as handle',
-          'profile.displayName as displayName',
-          'profile.avatarCid as avatarCid',
-          'follow.cid as cid',
-          'follow.createdAt as createdAt',
-          'follow.indexedAt as indexedAt',
-        ])
+        .selectAll('subject')
+        .select(['follow.cid as cid', 'follow.createdAt as createdAt'])
 
       const keyset = new TimeCidKeyset(
         ref('follow.createdAt'),
@@ -54,22 +44,15 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const followsRes = await followsReq.execute()
-      const follows = followsRes.map((row) => ({
-        did: row.did,
-        declaration: getDeclarationSimple(row),
-        handle: row.handle,
-        displayName: row.displayName ?? undefined,
-        avatar: row.avatarCid
-          ? ctx.imgUriBuilder.getCommonSignedUri('avatar', row.avatarCid)
-          : undefined,
-        createdAt: row.createdAt,
-        indexedAt: row.indexedAt,
-      }))
+      const [follows, subject] = await Promise.all([
+        actorService.views.actorWithInfo(followsRes, requester),
+        actorService.views.actorWithInfo(creatorRes, requester),
+      ])
 
       return {
         encoding: 'application/json',
         body: {
-          subject: creator,
+          subject,
           follows,
           cursor: keyset.packFromResult(followsRes),
         },

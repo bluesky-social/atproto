@@ -1,7 +1,7 @@
 import { Server } from '../../../../lexicon'
-import { getDeclarationSimple } from '../util'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
+import { notSoftDeletedClause } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getMutes({
@@ -9,22 +9,17 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params }) => {
       const { limit, before } = params
       const requester = auth.credentials.did
+      const { services, db } = ctx
       const { ref } = ctx.db.db.dynamic
 
       let mutesReq = ctx.db.db
         .selectFrom('mute')
-        .innerJoin('did_handle as actor', 'actor.did', 'mute.did') // TODO omit soft deleted
-        .leftJoin('profile', 'profile.creator', 'mute.did')
+        .innerJoin('did_handle as actor', 'actor.did', 'mute.did')
+        .innerJoin('repo_root', 'repo_root.did', 'mute.did')
+        .where(notSoftDeletedClause(ref('repo_root')))
         .where('mute.mutedByDid', '=', requester)
-        .select([
-          'mute.did as did',
-          'mute.createdAt as createdAt',
-          'actor.handle as handle',
-          'actor.declarationCid as declarationCid',
-          'actor.actorType as actorType',
-          'profile.displayName as displayName',
-          'profile.avatarCid as avatarCid',
-        ])
+        .selectAll('actor')
+        .select('mute.createdAt as createdAt')
 
       const keyset = new CreatedAtDidKeyset(
         ref('mute.createdAt'),
@@ -37,23 +32,14 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const mutesRes = await mutesReq.execute()
-      const mutes = mutesRes.map((row) => ({
-        did: row.did,
-        handle: row.handle,
-        declaration: getDeclarationSimple(row),
-        displayName: row.displayName || undefined,
-        avatar: row.avatarCid
-          ? ctx.imgUriBuilder.getCommonSignedUri('avatar', row.avatarCid)
-          : undefined,
-        createdAt: row.createdAt,
-        indexedAt: row.createdAt,
-      }))
 
       return {
         encoding: 'application/json',
         body: {
-          mutes,
           cursor: keyset.packFromResult(mutesRes),
+          mutes: await services
+            .actor(db)
+            .views.actorWithInfo(mutesRes, requester),
         },
       }
     },

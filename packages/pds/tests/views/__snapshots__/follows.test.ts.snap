@@ -6,46 +6,58 @@ Object {
   "followers": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(1)",
       "handle": "eve.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(1)",
+        "following": "record(0)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(2)",
       "handle": "bob.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(3)",
       "handle": "carol.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
     },
   ],
   "subject": Object {
-    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
     },
     "did": "user(0)",
     "handle": "alice.test",
+    "viewer": Object {
+      "muted": false,
+    },
   },
 }
 `;
@@ -56,49 +68,58 @@ Object {
   "follows": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(1)",
-      "displayName": "",
       "handle": "eve.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(1)",
+        "following": "record(0)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(2)",
-      "displayName": "",
       "handle": "carol.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(3)",
-      "displayName": "",
       "handle": "bob.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
     },
   ],
   "subject": Object {
-    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
     },
     "did": "user(0)",
     "handle": "alice.test",
+    "viewer": Object {
+      "muted": false,
+    },
   },
 }
 `;
@@ -109,57 +130,72 @@ Object {
   "followers": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(1)",
       "handle": "eve.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(1)",
+        "following": "record(0)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(2)",
       "handle": "dan.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(3)",
       "handle": "bob.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(4)",
       "handle": "carol.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(7)",
+        "following": "record(6)",
+        "muted": false,
+      },
     },
   ],
   "subject": Object {
-    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
     },
     "did": "user(0)",
     "handle": "alice.test",
+    "viewer": Object {
+      "muted": false,
+    },
   },
 }
 `;
@@ -170,35 +206,44 @@ Object {
   "followers": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(1)",
       "handle": "dan.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(2)",
       "handle": "alice.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "muted": false,
+      },
     },
   ],
   "subject": Object {
-    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
     },
     "did": "user(0)",
     "handle": "bob.test",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
   },
 }
 `;
@@ -209,46 +254,58 @@ Object {
   "followers": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(1)",
       "handle": "eve.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(2)",
       "handle": "bob.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(3)",
       "handle": "alice.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "muted": false,
+      },
     },
   ],
   "subject": Object {
-    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
     },
     "did": "user(0)",
     "handle": "carol.test",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
   },
 }
 `;
@@ -259,24 +316,30 @@ Object {
   "followers": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(1)",
       "handle": "alice.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "muted": false,
+      },
     },
   ],
   "subject": Object {
-    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
     },
     "did": "user(0)",
     "handle": "dan.test",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
   },
 }
 `;
@@ -287,35 +350,44 @@ Object {
   "followers": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(1)",
       "handle": "dan.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(2)",
       "handle": "alice.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "muted": false,
+      },
     },
   ],
   "subject": Object {
-    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
     },
     "did": "user(0)",
     "handle": "eve.test",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
   },
 }
 `;
@@ -326,61 +398,72 @@ Object {
   "follows": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(1)",
-      "displayName": "",
       "handle": "eve.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(1)",
+        "following": "record(0)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(2)",
-      "displayName": "",
       "handle": "dan.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(3)",
-      "displayName": "",
       "handle": "carol.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(4)",
-      "displayName": "",
       "handle": "bob.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(7)",
+        "following": "record(6)",
+        "muted": false,
+      },
     },
   ],
   "subject": Object {
-    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
     },
     "did": "user(0)",
     "handle": "alice.test",
+    "viewer": Object {
+      "muted": false,
+    },
   },
 }
 `;
@@ -391,37 +474,44 @@ Object {
   "follows": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(1)",
-      "displayName": "",
       "handle": "carol.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(2)",
-      "displayName": "",
       "handle": "alice.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "muted": false,
+      },
     },
   ],
   "subject": Object {
-    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
     },
     "did": "user(0)",
     "handle": "bob.test",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
   },
 }
 `;
@@ -432,25 +522,30 @@ Object {
   "follows": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(1)",
-      "displayName": "",
       "handle": "alice.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "muted": false,
+      },
     },
   ],
   "subject": Object {
-    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
     },
     "did": "user(0)",
     "handle": "carol.test",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
   },
 }
 `;
@@ -461,49 +556,58 @@ Object {
   "follows": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(1)",
-      "displayName": "",
       "handle": "eve.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(2)",
-      "displayName": "",
       "handle": "bob.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(3)",
-      "displayName": "",
       "handle": "alice.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "muted": false,
+      },
     },
   ],
   "subject": Object {
-    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
     },
     "did": "user(0)",
     "handle": "dan.test",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
   },
 }
 `;
@@ -514,37 +618,44 @@ Object {
   "follows": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(1)",
-      "displayName": "",
       "handle": "carol.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "createdAt": "1970-01-01T00:00:00.000Z",
       "declaration": Object {
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(0)",
       },
       "did": "user(2)",
-      "displayName": "",
       "handle": "alice.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "muted": false,
+      },
     },
   ],
   "subject": Object {
-    "avatar": "https://pds.public.url/image/w4t9ji0l53vlWd7Res2ZSFAL6QS2iaI9RGCt6Gs5reE/rs:fill:250:250:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
     "declaration": Object {
       "actorType": "app.bsky.system.actorUser",
       "cid": "cids(0)",
     },
     "did": "user(0)",
     "handle": "eve.test",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
   },
 }
 `;

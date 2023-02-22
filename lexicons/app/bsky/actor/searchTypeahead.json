@@ -18,23 +18,12 @@
           "type": "object",
           "required": ["users"],
           "properties": {
-            "users": {"type": "array", "items": {"type": "ref", "ref": "#user"}}
+            "users": {
+              "type": "array",
+              "items": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"}
+            }
           }
         }
-      }
-    },
-    "user": {
-      "type": "object",
-      "required": ["did", "declaration", "handle"],
-      "properties": {
-        "did": {"type": "string"},
-        "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
-        "handle": {"type": "string"},
-        "displayName": {
-          "type": "string",
-          "maxLength": 64
-        },
-        "avatar": {"type": "string"}
       }
     }
   }

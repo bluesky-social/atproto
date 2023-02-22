@@ -511,8 +511,8 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
         const lexUri = `${lexiconDoc.id}#${defId}`
         if (defId === 'main') {
           if (def.type === 'query' || def.type === 'procedure') {
-            genXrpcParams(file, lexicons, lexUri)
-            genXrpcInput(file, imports, lexicons, lexUri)
+            genXrpcParams(file, lexicons, lexUri, false)
+            genXrpcInput(file, imports, lexicons, lexUri, false)
             genXrpcOutput(file, imports, lexicons, lexUri)
             genClientXrpcCommon(file, lexicons, lexUri)
           } else if (def.type === 'subscription') {

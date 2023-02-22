@@ -91,16 +91,23 @@ export function genObject(
   lexUri: string,
   def: LexObject,
   ifaceName?: string,
+  defaultsArePresent = true,
 ) {
   const iface = file.addInterface({
     name: ifaceName || toTitleCase(getHash(lexUri)),
     isExported: true,
   })
   genComment(iface, def)
+  const nullableProps = new Set(def.nullable)
   if (def.properties) {
     for (const propKey in def.properties) {
-      const req = def.required?.includes(propKey)
       const propDef = def.properties[propKey]
+      const propNullable = nullableProps.has(propKey)
+      const req =
+        def.required?.includes(propKey) ||
+        (defaultsArePresent &&
+          'default' in propDef &&
+          propDef.default !== undefined)
       if (propDef.type === 'ref' || propDef.type === 'union') {
         //= propName: External|External
         const refs = propDef.type === 'union' ? propDef.refs : [propDef.ref]
@@ -112,7 +119,7 @@ export function genObject(
         }
         iface.addProperty({
           name: `${propKey}${req ? '' : '?'}`,
-          type: types.join('|'),
+          type: makeType(types, { nullable: propNullable }),
         })
         continue
       } else {
@@ -122,11 +129,17 @@ export function genObject(
           if (propDef.items.type === 'ref') {
             propAst = iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
-              type: `${refToType(
-                propDef.items.ref,
-                stripScheme(stripHash(lexUri)),
-                imports,
-              )}[]`,
+              type: makeType(
+                refToType(
+                  propDef.items.ref,
+                  stripScheme(stripHash(lexUri)),
+                  imports,
+                ),
+                {
+                  nullable: propNullable,
+                  array: true,
+                },
+              ),
             })
           } else if (propDef.items.type === 'union') {
             const types = propDef.items.refs.map((ref) =>
@@ -137,12 +150,18 @@ export function genObject(
             }
             propAst = iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
-              type: `(${types.join('|')})[]`,
+              type: makeType(types, {
+                nullable: propNullable,
+                array: true,
+              }),
             })
           } else {
             propAst = iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
-              type: `${primitiveOrBlobToType(propDef.items)}[]`,
+              type: makeType(primitiveOrBlobToType(propDef.items), {
+                nullable: propNullable,
+                array: true,
+              }),
             })
           }
           genComment(propAst, propDef)
@@ -151,7 +170,9 @@ export function genObject(
           genComment(
             iface.addProperty({
               name: `${propKey}${req ? '' : '?'}`,
-              type: primitiveOrBlobToType(propDef),
+              type: makeType(primitiveOrBlobToType(propDef), {
+                nullable: propNullable,
+              }),
             }),
             propDef,
           )
@@ -242,6 +263,7 @@ export function genXrpcParams(
   file: SourceFile,
   lexicons: Lexicons,
   lexUri: string,
+  defaultsArePresent = true,
 ) {
   const def = lexicons.getDefOrThrow(lexUri, [
     'query',
@@ -256,8 +278,12 @@ export function genXrpcParams(
   })
   if (def.parameters) {
     for (const paramKey in def.parameters.properties) {
-      const req = def.parameters.required?.includes(paramKey)
       const paramDef = def.parameters.properties[paramKey]
+      const req =
+        def.parameters.required?.includes(paramKey) ||
+        (defaultsArePresent &&
+          'default' in paramDef &&
+          paramDef.default !== undefined)
       genComment(
         iface.addProperty({
           name: `${paramKey}${req ? '' : '?'}`,
@@ -277,6 +303,7 @@ export function genXrpcInput(
   imports: Set<string>,
   lexicons: Lexicons,
   lexUri: string,
+  defaultsArePresent = true,
 ) {
   const def = lexicons.getDefOrThrow(lexUri, [
     'query',
@@ -303,7 +330,14 @@ export function genXrpcInput(
       })
     } else {
       //= export interface InputSchema {...}
-      genObject(file, imports, lexUri, def.input.schema, `InputSchema`)
+      genObject(
+        file,
+        imports,
+        lexUri,
+        def.input.schema,
+        `InputSchema`,
+        defaultsArePresent,
+      )
     }
   } else if (def.input?.encoding) {
     //= export type InputSchema = string | Uint8Array
@@ -327,6 +361,7 @@ export function genXrpcOutput(
   imports: Set<string>,
   lexicons: Lexicons,
   lexUri: string,
+  defaultsArePresent = true,
 ) {
   const def = lexicons.getDefOrThrow(lexUri, [
     'query',
@@ -353,7 +388,14 @@ export function genXrpcOutput(
       })
     } else {
       //= export interface OutputSchema {...}
-      genObject(file, imports, lexUri, schema, `OutputSchema`)
+      genObject(
+        file,
+        imports,
+        lexUri,
+        schema,
+        `OutputSchema`,
+        defaultsArePresent,
+      )
     }
   }
 }
@@ -472,4 +514,16 @@ export function primitiveToType(def: LexPrimitive): string {
     default:
       throw new Error(`Unexpected primitive type: ${JSON.stringify(def)}`)
   }
+}
+
+function makeType(
+  _types: string | string[],
+  opts?: { array?: boolean; nullable?: boolean },
+) {
+  const types = ([] as string[]).concat(_types)
+  if (opts?.nullable) types.push('null')
+  const arr = opts?.array ? '[]' : ''
+  if (types.length === 1) return `${types[0]}${arr}`
+  if (arr) return `(${types.join(' | ')})${arr}`
+  return types.join(' | ')
 }

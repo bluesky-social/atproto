@@ -15,7 +15,7 @@ export interface InputSchema {
   /** The NSID of the record collection. */
   collection: string
   /** Validate the record? */
-  validate?: boolean
+  validate: boolean
   /** The record to create. */
   record: {}
   [k: string]: unknown

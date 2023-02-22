@@ -26,6 +26,7 @@ import {
   Options,
   XRPCStreamHandlerConfig,
   XRPCStreamHandler,
+  Params,
 } from './types'
 import {
   decodeQueryParams,
@@ -184,9 +185,9 @@ export class Server {
     return async function (req, res, next) {
       try {
         // validate request
-        const params = decodeQueryParams(def, req.query)
+        let params = decodeQueryParams(def, req.query)
         try {
-          assertValidXrpcParams(params)
+          params = assertValidXrpcParams(params) as Params
         } catch (e) {
           throw new InvalidRequestError(String(e))
         }
@@ -260,9 +261,9 @@ export class Server {
               throw XRPCError.fromError(auth)
             }
             // validate request
-            const params = decodeQueryParams(def, getQueryParams(req.url))
+            let params = decodeQueryParams(def, getQueryParams(req.url))
             try {
-              assertValidXrpcParams(params)
+              params = assertValidXrpcParams(params) as Params
             } catch (e) {
               throw new InvalidRequestError(String(e))
             }

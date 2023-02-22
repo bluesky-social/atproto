@@ -58,7 +58,7 @@ export const getUserSearchQueryPg = (
 
   // Combine user account and profile results, taking best matches from each
   const emptyQb = db.db
-    .selectFrom('user')
+    .selectFrom('user_account')
     .where(sql`1 = 0`)
     .select([sql.literal('').as('did'), sql<number>`0`.as('distance')])
   const resultsQb = db.db

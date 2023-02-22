@@ -6,6 +6,7 @@ import {
   CloseFn,
   paginateAll,
   adminAuth,
+  TestServerInfo,
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -13,6 +14,7 @@ import { Database } from '../../src'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/list'
 
 describe('pds notification views', () => {
+  let server: TestServerInfo
   let agent: AtpAgent
   let close: CloseFn
   let db: Database
@@ -22,7 +24,7 @@ describe('pds notification views', () => {
   let alice: string
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    server = await runTestServer({
       dbPostgresSchema: 'views_notifications',
     })
     close = server.close
@@ -47,12 +49,45 @@ describe('pds notification views', () => {
   }
 
   it('fetches notification count without a last-seen', async () => {
-    const notifCount = await agent.api.app.bsky.notification.getCount(
+    const notifCountAlice = await agent.api.app.bsky.notification.getCount(
       {},
       { headers: sc.getHeaders(alice) },
     )
 
-    expect(notifCount.data.count).toBe(9)
+    expect(notifCountAlice.data.count).toBe(9)
+
+    const notifCountBob = await agent.api.app.bsky.notification.getCount(
+      {},
+      { headers: sc.getHeaders(sc.dids.bob) },
+    )
+
+    expect(notifCountBob.data.count).toBe(3)
+  })
+
+  it('generates notifications for all reply ancestors', async () => {
+    // Add to reply chain, post ancestors: alice -> bob -> alice -> carol.
+    // Should have added one notification for each of alice and bob.
+    await sc.reply(
+      sc.dids.carol,
+      sc.posts[alice][1].ref,
+      sc.replies[alice][0].ref,
+      'indeed',
+    )
+    await server.ctx.messageQueue.processAll()
+
+    const notifCountAlice = await agent.api.app.bsky.notification.getCount(
+      {},
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(notifCountAlice.data.count).toBe(10)
+
+    const notifCountBob = await agent.api.app.bsky.notification.getCount(
+      {},
+      { headers: sc.getHeaders(sc.dids.bob) },
+    )
+
+    expect(notifCountBob.data.count).toBe(4)
   })
 
   it('fetches notifications without a last-seen', async () => {
@@ -62,7 +97,7 @@ describe('pds notification views', () => {
     )
 
     const notifs = sort(notifRes.data.notifications)
-    expect(notifs.length).toBe(9)
+    expect(notifs.length).toBe(10)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map(() => false))
@@ -141,9 +176,9 @@ describe('pds notification views', () => {
     )
 
     const notifs = sort(notifRes.data.notifications)
-    expect(notifs.length).toBe(7)
+    expect(notifs.length).toBe(8)
     expect(forSnapshot(notifs)).toMatchSnapshot()
-    expect(notifCount.data.count).toBe(7)
+    expect(notifCount.data.count).toBe(8)
 
     // Cleanup
     await Promise.all(
@@ -189,7 +224,7 @@ describe('pds notification views', () => {
       },
     )
 
-    expect(full.data.notifications.length).toEqual(9)
+    expect(full.data.notifications.length).toEqual(10)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
@@ -232,7 +267,7 @@ describe('pds notification views', () => {
     )
 
     const notifs = sort(notifRes.data.notifications)
-    expect(notifs.length).toBe(9)
+    expect(notifs.length).toBe(10)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map((_, i) => i >= 3))

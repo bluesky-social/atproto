@@ -31,10 +31,11 @@ export async function* verifyIncomingCarBlocks(
 }
 
 export const writeCar = async (
-  root: CID,
+  root: CID | null,
   fn: (car: BlockWriter) => Promise<void>,
 ): Promise<Uint8Array> => {
-  const { writer, out } = CarWriter.create(root)
+  const { writer, out } =
+    root !== null ? CarWriter.create(root) : CarWriter.create()
   const bytes = streamToArray(out)
   try {
     await fn(writer)
@@ -44,19 +45,40 @@ export const writeCar = async (
   return bytes
 }
 
+export const blocksToCar = async (
+  root: CID | null,
+  blocks: BlockMap,
+): Promise<Uint8Array> => {
+  return writeCar(root, async (writer) => {
+    for (const entry of blocks.entries()) {
+      await writer.put(entry)
+    }
+  })
+}
+
 export const readCar = async (
   bytes: Uint8Array,
-): Promise<{ root: CID; blocks: BlockMap }> => {
+): Promise<{ roots: CID[]; blocks: BlockMap }> => {
   const car = await CarReader.fromBytes(bytes)
   const roots = await car.getRoots()
-  if (roots.length !== 1) {
-    throw new Error(`Expected one root, got ${roots.length}`)
-  }
-  const root = roots[0]
   const blocks = new BlockMap()
   for await (const block of verifyIncomingCarBlocks(car.blocks())) {
     await blocks.set(block.cid, block.bytes)
   }
+  return {
+    roots,
+    blocks,
+  }
+}
+
+export const readCarWithRoot = async (
+  bytes: Uint8Array,
+): Promise<{ root: CID; blocks: BlockMap }> => {
+  const { roots, blocks } = await readCar(bytes)
+  if (roots.length !== 1) {
+    throw new Error(`Expected one root, got ${roots.length}`)
+  }
+  const root = roots[0]
   return {
     root,
     blocks,

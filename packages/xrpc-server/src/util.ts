@@ -105,7 +105,15 @@ export function validateInput(
     def.input?.encoding &&
     (!inputEncoding || !isValidEncoding(def.input?.encoding, inputEncoding))
   ) {
-    throw new InvalidRequestError(`Invalid request encoding: ${inputEncoding}`)
+    if (!inputEncoding) {
+      throw new InvalidRequestError(
+        `Request encoding (Content-Type) required but not provided`,
+      )
+    } else {
+      throw new InvalidRequestError(
+        `Wrong request encoding (Content-Type): ${inputEncoding}`,
+      )
+    }
   }
 
   if (!inputEncoding) {
@@ -116,7 +124,7 @@ export function validateInput(
   // if input schema, validate
   if (def.input?.schema) {
     try {
-      lexicons.assertValidXrpcInput(nsid, req.body)
+      req.body = lexicons.assertValidXrpcInput(nsid, req.body)
     } catch (e) {
       throw new InvalidRequestError(e instanceof Error ? e.message : String(e))
     }
@@ -174,7 +182,10 @@ export function validateOutput(
   // output schema
   if (def.output?.schema) {
     try {
-      lexicons.assertValidXrpcOutput(nsid, output?.body)
+      const result = lexicons.assertValidXrpcOutput(nsid, output?.body)
+      if (output) {
+        output.body = result
+      }
     } catch (e) {
       throw new InternalServerError(e instanceof Error ? e.message : String(e))
     }
@@ -184,8 +195,9 @@ export function validateOutput(
 }
 
 export function normalizeMime(v: string) {
-  const fullType = mime.contentType(v)
   if (!v) return false
+  const fullType = mime.contentType(v)
+  if (!fullType) return false
   const shortType = fullType.split(';')[0]
   if (!shortType) return false
   return shortType

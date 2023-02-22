@@ -10,18 +10,22 @@ Array [
       },
       "did": "user(0)",
       "handle": "dan.test",
+      "viewer": Object {
+        "following": "record(1)",
+        "muted": true,
+      },
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
     "reason": "repost",
-    "reasonSubject": "record(1)",
+    "reasonSubject": "record(2)",
     "record": Object {
       "$type": "app.bsky.feed.repost",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": Object {
         "cid": "cids(2)",
-        "uri": "record(1)",
+        "uri": "record(2)",
       },
     },
     "uri": "record(0)",
@@ -36,12 +40,17 @@ Array [
       "did": "user(1)",
       "displayName": "bobby",
       "handle": "bob.test",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
     },
     "cid": "cids(3)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
     "reason": "reply",
-    "reasonSubject": "record(1)",
+    "reasonSubject": "record(2)",
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -60,39 +69,14 @@ Array [
       "reply": Object {
         "parent": Object {
           "cid": "cids(2)",
-          "uri": "record(1)",
+          "uri": "record(2)",
         },
         "root": Object {
           "cid": "cids(2)",
-          "uri": "record(1)",
+          "uri": "record(2)",
         },
       },
       "text": "hear that",
-    },
-    "uri": "record(2)",
-  },
-  Object {
-    "author": Object {
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(1)",
-      },
-      "did": "user(0)",
-      "handle": "dan.test",
-    },
-    "cid": "cids(5)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "vote",
-    "reasonSubject": "record(1)",
-    "record": Object {
-      "$type": "app.bsky.feed.vote",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "direction": "up",
-      "subject": Object {
-        "cid": "cids(2)",
-        "uri": "record(1)",
-      },
     },
     "uri": "record(3)",
   },
@@ -102,51 +86,58 @@ Array [
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
       },
-      "did": "user(2)",
-      "handle": "carol.test",
+      "did": "user(0)",
+      "handle": "dan.test",
+      "viewer": Object {
+        "following": "record(1)",
+        "muted": true,
+      },
     },
-    "cid": "cids(6)",
+    "cid": "cids(5)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
     "reason": "vote",
-    "reasonSubject": "record(5)",
-    "record": Object {
-      "$type": "app.bsky.feed.vote",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "direction": "up",
-      "subject": Object {
-        "cid": "cids(7)",
-        "uri": "record(5)",
-      },
-    },
-    "uri": "record(4)",
-  },
-  Object {
-    "author": Object {
-      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(1)",
-      },
-      "did": "user(1)",
-      "displayName": "bobby",
-      "handle": "bob.test",
-    },
-    "cid": "cids(8)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "vote",
-    "reasonSubject": "record(1)",
+    "reasonSubject": "record(2)",
     "record": Object {
       "$type": "app.bsky.feed.vote",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "direction": "up",
       "subject": Object {
         "cid": "cids(2)",
-        "uri": "record(1)",
+        "uri": "record(2)",
       },
     },
     "uri": "record(6)",
+  },
+  Object {
+    "author": Object {
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(2)",
+      "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(9)",
+        "following": "record(8)",
+        "muted": true,
+      },
+    },
+    "cid": "cids(6)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "vote",
+    "reasonSubject": "record(10)",
+    "record": Object {
+      "$type": "app.bsky.feed.vote",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "up",
+      "subject": Object {
+        "cid": "cids(7)",
+        "uri": "record(10)",
+      },
+    },
+    "uri": "record(7)",
   },
   Object {
     "author": Object {
@@ -158,6 +149,43 @@ Array [
       "did": "user(1)",
       "displayName": "bobby",
       "handle": "bob.test",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(8)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "vote",
+    "reasonSubject": "record(2)",
+    "record": Object {
+      "$type": "app.bsky.feed.vote",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "up",
+      "subject": Object {
+        "cid": "cids(2)",
+        "uri": "record(2)",
+      },
+    },
+    "uri": "record(11)",
+  },
+  Object {
+    "author": Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(1)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
     },
     "cid": "cids(9)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -171,7 +199,7 @@ Array [
         "did": "user(3)",
       },
     },
-    "uri": "record(7)",
+    "uri": "record(5)",
   },
   Object {
     "author": Object {
@@ -181,6 +209,11 @@ Array [
       },
       "did": "user(2)",
       "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(9)",
+        "following": "record(8)",
+        "muted": true,
+      },
     },
     "cid": "cids(10)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -194,7 +227,7 @@ Array [
         "did": "user(3)",
       },
     },
-    "uri": "record(8)",
+    "uri": "record(9)",
   },
 ]
 `;
@@ -208,22 +241,62 @@ Array [
         "cid": "cids(1)",
       },
       "did": "user(0)",
-      "handle": "dan.test",
+      "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "reason": "reply",
+    "reasonSubject": "record(3)",
+    "record": Object {
+      "$type": "app.bsky.feed.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "reply": Object {
+        "parent": Object {
+          "cid": "cids(3)",
+          "uri": "record(3)",
+        },
+        "root": Object {
+          "cid": "cids(2)",
+          "uri": "record(4)",
+        },
+      },
+      "text": "indeed",
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "author": Object {
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(1)",
+      "handle": "dan.test",
+      "viewer": Object {
+        "following": "record(6)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(4)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
     "reason": "repost",
-    "reasonSubject": "record(1)",
+    "reasonSubject": "record(4)",
     "record": Object {
       "$type": "app.bsky.feed.repost",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": Object {
         "cid": "cids(2)",
-        "uri": "record(1)",
+        "uri": "record(4)",
       },
     },
-    "uri": "record(0)",
+    "uri": "record(5)",
   },
   Object {
     "author": Object {
@@ -232,15 +305,20 @@ Array [
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
       },
-      "did": "user(1)",
+      "did": "user(2)",
       "displayName": "bobby",
       "handle": "bob.test",
+      "viewer": Object {
+        "followedBy": "record(9)",
+        "following": "record(8)",
+        "muted": false,
+      },
     },
-    "cid": "cids(3)",
+    "cid": "cids(5)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
     "reason": "reply",
-    "reasonSubject": "record(1)",
+    "reasonSubject": "record(4)",
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -250,7 +328,7 @@ Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
             "image": Object {
-              "cid": "cids(4)",
+              "cid": "cids(6)",
               "mimeType": "image/jpeg",
             },
           },
@@ -259,116 +337,14 @@ Array [
       "reply": Object {
         "parent": Object {
           "cid": "cids(2)",
-          "uri": "record(1)",
+          "uri": "record(4)",
         },
         "root": Object {
           "cid": "cids(2)",
-          "uri": "record(1)",
+          "uri": "record(4)",
         },
       },
       "text": "hear that",
-    },
-    "uri": "record(2)",
-  },
-  Object {
-    "author": Object {
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(1)",
-      },
-      "did": "user(0)",
-      "handle": "dan.test",
-    },
-    "cid": "cids(5)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "vote",
-    "reasonSubject": "record(1)",
-    "record": Object {
-      "$type": "app.bsky.feed.vote",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "direction": "up",
-      "subject": Object {
-        "cid": "cids(2)",
-        "uri": "record(1)",
-      },
-    },
-    "uri": "record(3)",
-  },
-  Object {
-    "author": Object {
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(1)",
-      },
-      "did": "user(2)",
-      "handle": "carol.test",
-    },
-    "cid": "cids(6)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "vote",
-    "reasonSubject": "record(5)",
-    "record": Object {
-      "$type": "app.bsky.feed.vote",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "direction": "up",
-      "subject": Object {
-        "cid": "cids(7)",
-        "uri": "record(5)",
-      },
-    },
-    "uri": "record(4)",
-  },
-  Object {
-    "author": Object {
-      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(1)",
-      },
-      "did": "user(1)",
-      "displayName": "bobby",
-      "handle": "bob.test",
-    },
-    "cid": "cids(8)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "vote",
-    "reasonSubject": "record(1)",
-    "record": Object {
-      "$type": "app.bsky.feed.vote",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "direction": "up",
-      "subject": Object {
-        "cid": "cids(2)",
-        "uri": "record(1)",
-      },
-    },
-    "uri": "record(6)",
-  },
-  Object {
-    "author": Object {
-      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(1)",
-      },
-      "did": "user(1)",
-      "displayName": "bobby",
-      "handle": "bob.test",
-    },
-    "cid": "cids(9)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "follow",
-    "record": Object {
-      "$type": "app.bsky.graph.follow",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": Object {
-        "declarationCid": "cids(1)",
-        "did": "user(3)",
-      },
     },
     "uri": "record(7)",
   },
@@ -378,10 +354,108 @@ Array [
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
       },
-      "did": "user(2)",
+      "did": "user(1)",
+      "handle": "dan.test",
+      "viewer": Object {
+        "following": "record(6)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(7)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "vote",
+    "reasonSubject": "record(4)",
+    "record": Object {
+      "$type": "app.bsky.feed.vote",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "up",
+      "subject": Object {
+        "cid": "cids(2)",
+        "uri": "record(4)",
+      },
+    },
+    "uri": "record(10)",
+  },
+  Object {
+    "author": Object {
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(0)",
       "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(8)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "vote",
+    "reasonSubject": "record(12)",
+    "record": Object {
+      "$type": "app.bsky.feed.vote",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "up",
+      "subject": Object {
+        "cid": "cids(9)",
+        "uri": "record(12)",
+      },
+    },
+    "uri": "record(11)",
+  },
+  Object {
+    "author": Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(2)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "viewer": Object {
+        "followedBy": "record(9)",
+        "following": "record(8)",
+        "muted": false,
+      },
     },
     "cid": "cids(10)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "vote",
+    "reasonSubject": "record(4)",
+    "record": Object {
+      "$type": "app.bsky.feed.vote",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "up",
+      "subject": Object {
+        "cid": "cids(2)",
+        "uri": "record(4)",
+      },
+    },
+    "uri": "record(13)",
+  },
+  Object {
+    "author": Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(2)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "viewer": Object {
+        "followedBy": "record(9)",
+        "following": "record(8)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(11)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
     "reason": "follow",
@@ -393,7 +467,35 @@ Array [
         "did": "user(3)",
       },
     },
-    "uri": "record(8)",
+    "uri": "record(9)",
+  },
+  Object {
+    "author": Object {
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(0)",
+      "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(12)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "follow",
+    "record": Object {
+      "$type": "app.bsky.graph.follow",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": Object {
+        "declarationCid": "cids(1)",
+        "did": "user(3)",
+      },
+    },
+    "uri": "record(2)",
   },
 ]
 `;
@@ -407,20 +509,32 @@ Array [
         "cid": "cids(1)",
       },
       "did": "user(0)",
-      "handle": "dan.test",
+      "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
-    "reason": "repost",
-    "reasonSubject": "record(1)",
+    "reason": "reply",
+    "reasonSubject": "record(3)",
     "record": Object {
-      "$type": "app.bsky.feed.repost",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": Object {
-        "cid": "cids(2)",
-        "uri": "record(1)",
+      "reply": Object {
+        "parent": Object {
+          "cid": "cids(3)",
+          "uri": "record(3)",
+        },
+        "root": Object {
+          "cid": "cids(2)",
+          "uri": "record(4)",
+        },
       },
+      "text": "indeed",
     },
     "uri": "record(0)",
   },
@@ -431,29 +545,62 @@ Array [
         "cid": "cids(1)",
       },
       "did": "user(1)",
-      "handle": "carol.test",
+      "handle": "dan.test",
+      "viewer": Object {
+        "following": "record(6)",
+        "muted": false,
+      },
     },
-    "cid": "cids(3)",
+    "cid": "cids(4)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "repost",
+    "reasonSubject": "record(4)",
+    "record": Object {
+      "$type": "app.bsky.feed.repost",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": Object {
+        "cid": "cids(2)",
+        "uri": "record(4)",
+      },
+    },
+    "uri": "record(5)",
+  },
+  Object {
+    "author": Object {
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(0)",
+      "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(5)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
     "reason": "reply",
-    "reasonSubject": "record(1)",
+    "reasonSubject": "record(4)",
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": Object {
           "cid": "cids(2)",
-          "uri": "record(1)",
+          "uri": "record(4)",
         },
         "root": Object {
           "cid": "cids(2)",
-          "uri": "record(1)",
+          "uri": "record(4)",
         },
       },
       "text": "of course",
     },
-    "uri": "record(2)",
+    "uri": "record(7)",
   },
   Object {
     "author": Object {
@@ -465,12 +612,17 @@ Array [
       "did": "user(2)",
       "displayName": "bobby",
       "handle": "bob.test",
+      "viewer": Object {
+        "followedBy": "record(10)",
+        "following": "record(9)",
+        "muted": false,
+      },
     },
-    "cid": "cids(4)",
+    "cid": "cids(6)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
+    "isRead": true,
     "reason": "reply",
-    "reasonSubject": "record(1)",
+    "reasonSubject": "record(4)",
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -480,7 +632,7 @@ Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
             "image": Object {
-              "cid": "cids(5)",
+              "cid": "cids(7)",
               "mimeType": "image/jpeg",
             },
           },
@@ -489,41 +641,16 @@ Array [
       "reply": Object {
         "parent": Object {
           "cid": "cids(2)",
-          "uri": "record(1)",
+          "uri": "record(4)",
         },
         "root": Object {
           "cid": "cids(2)",
-          "uri": "record(1)",
+          "uri": "record(4)",
         },
       },
       "text": "hear that",
     },
-    "uri": "record(3)",
-  },
-  Object {
-    "author": Object {
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(1)",
-      },
-      "did": "user(0)",
-      "handle": "dan.test",
-    },
-    "cid": "cids(6)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": true,
-    "reason": "vote",
-    "reasonSubject": "record(1)",
-    "record": Object {
-      "$type": "app.bsky.feed.vote",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "direction": "up",
-      "subject": Object {
-        "cid": "cids(2)",
-        "uri": "record(1)",
-      },
-    },
-    "uri": "record(4)",
+    "uri": "record(8)",
   },
   Object {
     "author": Object {
@@ -532,23 +659,57 @@ Array [
         "cid": "cids(1)",
       },
       "did": "user(1)",
-      "handle": "carol.test",
+      "handle": "dan.test",
+      "viewer": Object {
+        "following": "record(6)",
+        "muted": false,
+      },
     },
-    "cid": "cids(7)",
+    "cid": "cids(8)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
     "reason": "vote",
-    "reasonSubject": "record(6)",
+    "reasonSubject": "record(4)",
     "record": Object {
       "$type": "app.bsky.feed.vote",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "direction": "up",
       "subject": Object {
-        "cid": "cids(8)",
-        "uri": "record(6)",
+        "cid": "cids(2)",
+        "uri": "record(4)",
       },
     },
-    "uri": "record(5)",
+    "uri": "record(11)",
+  },
+  Object {
+    "author": Object {
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(0)",
+      "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(9)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": true,
+    "reason": "vote",
+    "reasonSubject": "record(13)",
+    "record": Object {
+      "$type": "app.bsky.feed.vote",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "up",
+      "subject": Object {
+        "cid": "cids(10)",
+        "uri": "record(13)",
+      },
+    },
+    "uri": "record(12)",
   },
   Object {
     "author": Object {
@@ -560,22 +721,27 @@ Array [
       "did": "user(2)",
       "displayName": "bobby",
       "handle": "bob.test",
+      "viewer": Object {
+        "followedBy": "record(10)",
+        "following": "record(9)",
+        "muted": false,
+      },
     },
-    "cid": "cids(9)",
+    "cid": "cids(11)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
     "reason": "vote",
-    "reasonSubject": "record(1)",
+    "reasonSubject": "record(4)",
     "record": Object {
       "$type": "app.bsky.feed.vote",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "direction": "up",
       "subject": Object {
         "cid": "cids(2)",
-        "uri": "record(1)",
+        "uri": "record(4)",
       },
     },
-    "uri": "record(7)",
+    "uri": "record(14)",
   },
   Object {
     "author": Object {
@@ -583,10 +749,14 @@ Array [
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
       },
-      "did": "user(0)",
+      "did": "user(1)",
       "handle": "dan.test",
+      "viewer": Object {
+        "following": "record(6)",
+        "muted": false,
+      },
     },
-    "cid": "cids(10)",
+    "cid": "cids(12)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
     "reason": "mention",
@@ -605,7 +775,7 @@ Array [
       ],
       "text": "@alice.bluesky.xyz is the best",
     },
-    "uri": "record(8)",
+    "uri": "record(15)",
   },
   Object {
     "author": Object {
@@ -617,31 +787,13 @@ Array [
       "did": "user(2)",
       "displayName": "bobby",
       "handle": "bob.test",
-    },
-    "cid": "cids(11)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": true,
-    "reason": "follow",
-    "record": Object {
-      "$type": "app.bsky.graph.follow",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": Object {
-        "declarationCid": "cids(1)",
-        "did": "user(3)",
+      "viewer": Object {
+        "followedBy": "record(10)",
+        "following": "record(9)",
+        "muted": false,
       },
     },
-    "uri": "record(9)",
-  },
-  Object {
-    "author": Object {
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(1)",
-      },
-      "did": "user(1)",
-      "handle": "carol.test",
-    },
-    "cid": "cids(12)",
+    "cid": "cids(13)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
     "reason": "follow",
@@ -654,6 +806,34 @@ Array [
       },
     },
     "uri": "record(10)",
+  },
+  Object {
+    "author": Object {
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(0)",
+      "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(14)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": true,
+    "reason": "follow",
+    "record": Object {
+      "$type": "app.bsky.graph.follow",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": Object {
+        "declarationCid": "cids(1)",
+        "did": "user(3)",
+      },
+    },
+    "uri": "record(2)",
   },
 ]
 `;
@@ -667,20 +847,32 @@ Array [
         "cid": "cids(1)",
       },
       "did": "user(0)",
-      "handle": "dan.test",
+      "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
-    "reason": "repost",
-    "reasonSubject": "record(1)",
+    "reason": "reply",
+    "reasonSubject": "record(3)",
     "record": Object {
-      "$type": "app.bsky.feed.repost",
+      "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": Object {
-        "cid": "cids(2)",
-        "uri": "record(1)",
+      "reply": Object {
+        "parent": Object {
+          "cid": "cids(3)",
+          "uri": "record(3)",
+        },
+        "root": Object {
+          "cid": "cids(2)",
+          "uri": "record(4)",
+        },
       },
+      "text": "indeed",
     },
     "uri": "record(0)",
   },
@@ -691,29 +883,62 @@ Array [
         "cid": "cids(1)",
       },
       "did": "user(1)",
-      "handle": "carol.test",
+      "handle": "dan.test",
+      "viewer": Object {
+        "following": "record(6)",
+        "muted": false,
+      },
     },
-    "cid": "cids(3)",
+    "cid": "cids(4)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "repost",
+    "reasonSubject": "record(4)",
+    "record": Object {
+      "$type": "app.bsky.feed.repost",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": Object {
+        "cid": "cids(2)",
+        "uri": "record(4)",
+      },
+    },
+    "uri": "record(5)",
+  },
+  Object {
+    "author": Object {
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(0)",
+      "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(5)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
     "reason": "reply",
-    "reasonSubject": "record(1)",
+    "reasonSubject": "record(4)",
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "reply": Object {
         "parent": Object {
           "cid": "cids(2)",
-          "uri": "record(1)",
+          "uri": "record(4)",
         },
         "root": Object {
           "cid": "cids(2)",
-          "uri": "record(1)",
+          "uri": "record(4)",
         },
       },
       "text": "of course",
     },
-    "uri": "record(2)",
+    "uri": "record(7)",
   },
   Object {
     "author": Object {
@@ -725,12 +950,17 @@ Array [
       "did": "user(2)",
       "displayName": "bobby",
       "handle": "bob.test",
+      "viewer": Object {
+        "followedBy": "record(10)",
+        "following": "record(9)",
+        "muted": false,
+      },
     },
-    "cid": "cids(4)",
+    "cid": "cids(6)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
     "reason": "reply",
-    "reasonSubject": "record(1)",
+    "reasonSubject": "record(4)",
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -740,7 +970,7 @@ Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
             "image": Object {
-              "cid": "cids(5)",
+              "cid": "cids(7)",
               "mimeType": "image/jpeg",
             },
           },
@@ -749,41 +979,16 @@ Array [
       "reply": Object {
         "parent": Object {
           "cid": "cids(2)",
-          "uri": "record(1)",
+          "uri": "record(4)",
         },
         "root": Object {
           "cid": "cids(2)",
-          "uri": "record(1)",
+          "uri": "record(4)",
         },
       },
       "text": "hear that",
     },
-    "uri": "record(3)",
-  },
-  Object {
-    "author": Object {
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(1)",
-      },
-      "did": "user(0)",
-      "handle": "dan.test",
-    },
-    "cid": "cids(6)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "vote",
-    "reasonSubject": "record(1)",
-    "record": Object {
-      "$type": "app.bsky.feed.vote",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "direction": "up",
-      "subject": Object {
-        "cid": "cids(2)",
-        "uri": "record(1)",
-      },
-    },
-    "uri": "record(4)",
+    "uri": "record(8)",
   },
   Object {
     "author": Object {
@@ -792,23 +997,57 @@ Array [
         "cid": "cids(1)",
       },
       "did": "user(1)",
-      "handle": "carol.test",
+      "handle": "dan.test",
+      "viewer": Object {
+        "following": "record(6)",
+        "muted": false,
+      },
     },
-    "cid": "cids(7)",
+    "cid": "cids(8)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
     "reason": "vote",
-    "reasonSubject": "record(6)",
+    "reasonSubject": "record(4)",
     "record": Object {
       "$type": "app.bsky.feed.vote",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "direction": "up",
       "subject": Object {
-        "cid": "cids(8)",
-        "uri": "record(6)",
+        "cid": "cids(2)",
+        "uri": "record(4)",
       },
     },
-    "uri": "record(5)",
+    "uri": "record(11)",
+  },
+  Object {
+    "author": Object {
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(0)",
+      "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(9)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "vote",
+    "reasonSubject": "record(13)",
+    "record": Object {
+      "$type": "app.bsky.feed.vote",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "direction": "up",
+      "subject": Object {
+        "cid": "cids(10)",
+        "uri": "record(13)",
+      },
+    },
+    "uri": "record(12)",
   },
   Object {
     "author": Object {
@@ -820,22 +1059,27 @@ Array [
       "did": "user(2)",
       "displayName": "bobby",
       "handle": "bob.test",
+      "viewer": Object {
+        "followedBy": "record(10)",
+        "following": "record(9)",
+        "muted": false,
+      },
     },
-    "cid": "cids(9)",
+    "cid": "cids(11)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
     "reason": "vote",
-    "reasonSubject": "record(1)",
+    "reasonSubject": "record(4)",
     "record": Object {
       "$type": "app.bsky.feed.vote",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "direction": "up",
       "subject": Object {
         "cid": "cids(2)",
-        "uri": "record(1)",
+        "uri": "record(4)",
       },
     },
-    "uri": "record(7)",
+    "uri": "record(14)",
   },
   Object {
     "author": Object {
@@ -843,10 +1087,14 @@ Array [
         "actorType": "app.bsky.system.actorUser",
         "cid": "cids(1)",
       },
-      "did": "user(0)",
+      "did": "user(1)",
       "handle": "dan.test",
+      "viewer": Object {
+        "following": "record(6)",
+        "muted": false,
+      },
     },
-    "cid": "cids(10)",
+    "cid": "cids(12)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
     "reason": "mention",
@@ -865,7 +1113,7 @@ Array [
       ],
       "text": "@alice.bluesky.xyz is the best",
     },
-    "uri": "record(8)",
+    "uri": "record(15)",
   },
   Object {
     "author": Object {
@@ -877,31 +1125,13 @@ Array [
       "did": "user(2)",
       "displayName": "bobby",
       "handle": "bob.test",
-    },
-    "cid": "cids(11)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "follow",
-    "record": Object {
-      "$type": "app.bsky.graph.follow",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": Object {
-        "declarationCid": "cids(1)",
-        "did": "user(3)",
+      "viewer": Object {
+        "followedBy": "record(10)",
+        "following": "record(9)",
+        "muted": false,
       },
     },
-    "uri": "record(9)",
-  },
-  Object {
-    "author": Object {
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(1)",
-      },
-      "did": "user(1)",
-      "handle": "carol.test",
-    },
-    "cid": "cids(12)",
+    "cid": "cids(13)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
     "reason": "follow",
@@ -914,6 +1144,34 @@ Array [
       },
     },
     "uri": "record(10)",
+  },
+  Object {
+    "author": Object {
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(1)",
+      },
+      "did": "user(0)",
+      "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(14)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "reason": "follow",
+    "record": Object {
+      "$type": "app.bsky.graph.follow",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": Object {
+        "declarationCid": "cids(1)",
+        "did": "user(3)",
+      },
+    },
+    "uri": "record(2)",
   },
 ]
 `;

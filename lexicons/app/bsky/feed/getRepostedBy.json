@@ -25,26 +25,10 @@
             "cursor": {"type": "string"},
             "repostedBy": {
               "type": "array",
-              "items": {"type": "ref", "ref": "#repostedBy"}
+              "items": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"}
             }
           }
         }
-      }
-    },
-    "repostedBy": {
-      "type": "object",
-      "required": ["did", "declaration", "handle", "indexedAt"],
-      "properties": {
-        "did": {"type": "string"},
-        "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
-        "handle": {"type": "string"},
-        "displayName": {
-          "type": "string",
-          "maxLength": 64
-        },
-        "avatar": {"type": "string"},
-        "createdAt": {"type": "datetime"},
-        "indexedAt": {"type": "datetime"}
       }
     }
   }

@@ -13,7 +13,7 @@ export interface InputSchema {
   /** The DID of the repo. */
   did: string
   /** Validate the records? */
-  validate?: boolean
+  validate: boolean
   writes: (Create | Update | Delete)[]
   [k: string]: unknown
 }

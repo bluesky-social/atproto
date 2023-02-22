@@ -28,6 +28,7 @@ import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRep
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 import * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
+import * as ComAtprotoHandleUpdate from './types/com/atproto/handle/update'
 import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
@@ -41,6 +42,7 @@ import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 import * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 import * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
+import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
 import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
@@ -327,6 +329,13 @@ export class HandleNS {
     const nsid = 'com.atproto.handle.resolve' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
+
+  update<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoHandleUpdate.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.handle.update' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
 }
 
 export class RepoNS {
@@ -460,6 +469,13 @@ export class SyncNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  getBlocks<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncGetBlocks.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.getBlocks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   getCheckout<AV extends AuthVerifier>(

@@ -1,9 +1,9 @@
 import { sql } from 'kysely'
 import AppContext from '../../../../context'
 import Database from '../../../../db'
+import { DidHandle } from '../../../../db/tables/did-handle'
 import { Server } from '../../../../lexicon'
 import * as Method from '../../../../lexicon/types/app/bsky/actor/search'
-import { getDeclarationSimple } from '../util'
 import {
   cleanTerm,
   getUserSearchQueryPg,
@@ -14,9 +14,11 @@ import {
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.search({
     auth: ctx.accessVerifier,
-    handler: async ({ params }) => {
+    handler: async ({ auth, params }) => {
+      const { services, db } = ctx
       let { term, limit } = params
       const { before } = params
+      const requester = auth.credentials.did
 
       term = cleanTerm(term || '')
       limit = Math.min(limit ?? 25, 100)
@@ -31,29 +33,19 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const results =
-        ctx.db.dialect === 'pg'
-          ? await getResultsPg(ctx.db, { term, limit, before })
-          : await getResultsSqlite(ctx.db, { term, limit, before })
-
-      const users = results.map((result) => ({
-        did: result.did,
-        declaration: getDeclarationSimple(result),
-        handle: result.handle,
-        displayName: result.displayName ?? undefined,
-        description: result.description ?? undefined,
-        avatar: result.avatarCid
-          ? ctx.imgUriBuilder.getCommonSignedUri('avatar', result.avatarCid)
-          : undefined,
-        indexedAt: result.indexedAt ?? undefined,
-      }))
+        db.dialect === 'pg'
+          ? await getResultsPg(db, { term, limit, before })
+          : await getResultsSqlite(db, { term, limit, before })
 
       const keyset = new SearchKeyset(sql``, sql``)
 
       return {
         encoding: 'application/json',
         body: {
-          users,
           cursor: keyset.packFromResult(results),
+          users: await services
+            .actor(db)
+            .views.profileBasic(results, requester),
         },
       }
     },
@@ -63,50 +55,20 @@ export default function (server: Server, ctx: AppContext) {
 const getResultsPg: GetResultsFn = async (db, { term, limit, before }) => {
   return await getUserSearchQueryPg(db, { term: term || '', limit, before })
     .leftJoin('profile', 'profile.creator', 'did_handle.did')
-    .select([
-      'distance',
-      'did_handle.did as did',
-      'did_handle.handle as handle',
-      'did_handle.actorType as actorType',
-      'did_handle.declarationCid as declarationCid',
-      'profile.displayName as displayName',
-      'profile.description as description',
-      'profile.avatarCid as avatarCid',
-      'profile.indexedAt as indexedAt',
-    ])
+    .select('distance')
+    .selectAll('did_handle')
     .execute()
 }
 
 const getResultsSqlite: GetResultsFn = async (db, { term, limit, before }) => {
   return await getUserSearchQuerySqlite(db, { term: term || '', limit, before })
     .leftJoin('profile', 'profile.creator', 'did_handle.did')
-    .select([
-      sql<number>`0`.as('distance'),
-      'did_handle.did as did',
-      'did_handle.handle as handle',
-      'did_handle.actorType as actorType',
-      'did_handle.declarationCid as declarationCid',
-      'profile.displayName as displayName',
-      'profile.description as description',
-      'profile.avatarCid as avatarCid',
-      'profile.indexedAt as indexedAt',
-    ])
+    .select(sql<number>`0`.as('distance'))
+    .selectAll('did_handle')
     .execute()
 }
 
 type GetResultsFn = (
   db: Database,
   opts: Method.QueryParams & { limit: number },
-) => Promise<
-  {
-    did: string
-    actorType: string
-    declarationCid: string
-    handle: string
-    displayName: string | null
-    description: string | null
-    avatarCid: string | null
-    distance: number
-    indexedAt: string | null
-  }[]
->
+) => Promise<(DidHandle & { distance: number })[]>

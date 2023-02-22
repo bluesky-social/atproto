@@ -16,15 +16,15 @@ export class RepoBlobs {
   constructor(public db: Database, public blobstore: BlobStore) {}
 
   async addUntetheredBlob(
-    mimeType: string,
+    userSuggestedMime: string,
     blobStream: stream.Readable,
   ): Promise<CID> {
-    const [tempKey, size, sha256, imgInfo, fileType] = await Promise.all([
+    const [tempKey, size, sha256, imgInfo, sniffedMime] = await Promise.all([
       this.blobstore.putTemp(cloneStream(blobStream)),
       streamSize(cloneStream(blobStream)),
       sha256Stream(cloneStream(blobStream)),
       img.maybeGetInfo(cloneStream(blobStream)),
-      fileTypeFromStream(blobStream),
+      mimeTypeFromStream(cloneStream(blobStream)),
     ])
 
     const cid = sha256RawToCid(sha256)
@@ -33,7 +33,7 @@ export class RepoBlobs {
       .insertInto('blob')
       .values({
         cid: cid.toString(),
-        mimeType: fileType?.mime || mimeType,
+        mimeType: sniffedMime || userSuggestedMime,
         size,
         tempKey,
         width: imgInfo?.width || null,
@@ -149,6 +149,14 @@ export class CidNotFound extends Error {
     super(`cid not found: ${cid.toString()}`)
     this.cid = cid
   }
+}
+
+async function mimeTypeFromStream(
+  blobStream: stream.Readable,
+): Promise<string | undefined> {
+  const fileType = await fileTypeFromStream(blobStream)
+  blobStream.destroy()
+  return fileType?.mime
 }
 
 function acceptedMime(mime: string, accepted: string[]): boolean {

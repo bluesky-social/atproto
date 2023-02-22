@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "license": "MIT",
   "main": "src/index.ts",
   "bin": "dist/bin.ts",
@@ -26,6 +26,7 @@
     "postpublish": "npm run update-main-to-src"
   },
   "dependencies": {
+    "@atproto/api": "*",
     "@atproto/common": "*",
     "@atproto/crypto": "*",
     "@atproto/did-resolver": "*",

@@ -30,6 +30,7 @@ import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRep
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 import * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
+import * as ComAtprotoHandleUpdate from './types/com/atproto/handle/update'
 import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
@@ -48,6 +49,7 @@ import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 import * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 import * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
+import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
 import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
@@ -116,6 +118,7 @@ export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRep
 export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 export * as ComAtprotoBlobUpload from './types/com/atproto/blob/upload'
 export * as ComAtprotoHandleResolve from './types/com/atproto/handle/resolve'
+export * as ComAtprotoHandleUpdate from './types/com/atproto/handle/update'
 export * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
 export * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 export * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
@@ -134,6 +137,7 @@ export * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 export * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 export * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 export * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
+export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
 export * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
 export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
@@ -500,6 +504,17 @@ export class HandleNS {
         throw ComAtprotoHandleResolve.toKnownErr(e)
       })
   }
+
+  update(
+    data?: ComAtprotoHandleUpdate.InputSchema,
+    opts?: ComAtprotoHandleUpdate.CallOptions,
+  ): Promise<ComAtprotoHandleUpdate.Response> {
+    return this._service.xrpc
+      .call('com.atproto.handle.update', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoHandleUpdate.toKnownErr(e)
+      })
+  }
 }
 
 export class RepoNS {
@@ -682,6 +697,17 @@ export class SyncNS {
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  getBlocks(
+    params?: ComAtprotoSyncGetBlocks.QueryParams,
+    opts?: ComAtprotoSyncGetBlocks.CallOptions,
+  ): Promise<ComAtprotoSyncGetBlocks.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getBlocks', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetBlocks.toKnownErr(e)
+      })
   }
 
   getCheckout(

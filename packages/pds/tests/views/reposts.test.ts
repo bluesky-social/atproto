@@ -1,11 +1,5 @@
 import AtpAgent from '@atproto/api'
-import {
-  runTestServer,
-  forSnapshot,
-  constantDate,
-  CloseFn,
-  paginateAll,
-} from '../_util'
+import { runTestServer, forSnapshot, CloseFn, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import repostsSeed from '../seeds/reposts'
 
@@ -34,14 +28,6 @@ describe('pds repost views', () => {
     await close()
   })
 
-  const getCursors = (items: { createdAt?: string }[]) =>
-    items.map((item) => item.createdAt ?? constantDate)
-
-  const getSortedCursors = (items: { createdAt?: string }[]) =>
-    getCursors(items).sort((a, b) => tstamp(b) - tstamp(a))
-
-  const tstamp = (x: string) => new Date(x).getTime()
-
   it('fetches reposted-by for a post', async () => {
     const view = await agent.api.app.bsky.feed.getRepostedBy(
       { uri: sc.posts[alice][2].ref.uriStr },
@@ -49,9 +35,6 @@ describe('pds repost views', () => {
     )
     expect(view.data.uri).toEqual(sc.posts[sc.dids.alice][2].ref.uriStr)
     expect(forSnapshot(view.data.repostedBy)).toMatchSnapshot()
-    expect(getCursors(view.data.repostedBy)).toEqual(
-      getSortedCursors(view.data.repostedBy),
-    )
   })
 
   it('fetches reposted-by for a reply', async () => {
@@ -61,9 +44,6 @@ describe('pds repost views', () => {
     )
     expect(view.data.uri).toEqual(sc.replies[sc.dids.bob][0].ref.uriStr)
     expect(forSnapshot(view.data.repostedBy)).toMatchSnapshot()
-    expect(getCursors(view.data.repostedBy)).toEqual(
-      getSortedCursors(view.data.repostedBy),
-    )
   })
 
   it('paginates', async () => {

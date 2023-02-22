@@ -34,21 +34,23 @@ export default function (server: Server, ctx: AppContext) {
               // @TODO need a way to get a profile out of a broken state
               throw new InvalidRequestError('could not parse current profile')
             }
-
             updated = {
               ...current,
               displayName: input.body.displayName || current.displayName,
-              description: input.body.description || current.description,
-              avatar: input.body.avatar || current.avatar,
-              banner: input.body.banner || current.banner,
+              description: unsetIfNull(
+                input.body.description,
+                current.description,
+              ),
+              avatar: unsetIfNull(input.body.avatar, current.avatar),
+              banner: unsetIfNull(input.body.banner, current.banner),
             }
           } else {
             updated = {
               $type: profileNsid,
               displayName: input.body.displayName,
-              description: input.body.description,
-              avatar: input.body.avatar,
-              banner: input.body.banner,
+              description: unsetIfNull(input.body.description),
+              avatar: unsetIfNull(input.body.avatar),
+              banner: unsetIfNull(input.body.banner),
             }
           }
           updated = common.noUndefinedVals(updated)
@@ -87,9 +89,9 @@ export default function (server: Server, ctx: AppContext) {
                 .set({
                   cid: profileCid.toString(),
                   displayName: updated.displayName,
-                  description: updated.description,
-                  avatarCid: updated.avatar?.cid,
-                  bannerCid: updated.banner?.cid,
+                  description: updated.description ?? null,
+                  avatarCid: updated.avatar?.cid ?? null,
+                  bannerCid: updated.banner?.cid ?? null,
                   indexedAt: now,
                 })
                 .where('uri', '=', uri.toString())
@@ -117,4 +119,9 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+function unsetIfNull<T>(x: T | null | undefined, y?: T): T | undefined {
+  if (x === null) return undefined
+  return x ?? y
 }

@@ -66,6 +66,7 @@ export default [
             integer: { type: 'integer' },
             string: { type: 'string' },
             array: { type: 'array', items: { type: 'string' } },
+            def: { type: 'integer', default: 0 },
           },
         },
         output: {
@@ -120,6 +121,36 @@ export default [
             integer: { type: 'integer' },
             string: { type: 'string' },
           },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.default',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          required: ['boolean'],
+          properties: {
+            boolean: { type: 'boolean', default: false },
+            number: { type: 'number', default: 0 },
+            integer: { type: 'integer', default: 0 },
+            string: { type: 'string', default: '' },
+            datetime: { type: 'datetime' },
+            object: { type: 'ref', ref: '#object' },
+          },
+        },
+      },
+      object: {
+        type: 'object',
+        properties: {
+          boolean: { type: 'boolean', default: true },
+          number: { type: 'number', default: 1.5 },
+          integer: { type: 'integer', default: 1 },
+          string: { type: 'string', default: 'x' },
         },
       },
     },
