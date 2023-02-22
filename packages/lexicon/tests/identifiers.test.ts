@@ -1,4 +1,9 @@
-import { lexVerifyHandle, lexVerifyHandleRegex } from '../src/identifiers'
+import {
+  lexVerifyHandle,
+  lexVerifyHandleRegex,
+  lexVerifyNsid,
+  lexVerifyNsidRegex,
+} from '../src/identifiers'
 
 describe('handle permissive validation', () => {
   const expectValid = (h: string) => {
@@ -117,5 +122,76 @@ describe('handle permissive validation', () => {
       'www.masełkowski.pl.com',
     ]
     badStackoverflow.forEach(expectInvalid)
+  })
+})
+
+describe('NSID permissive validation', () => {
+  const expectValid = (h: string) => {
+    lexVerifyNsid(h)
+    lexVerifyNsidRegex(h)
+  }
+  const expectInvalid = (h: string) => {
+    expect(() => lexVerifyNsid(h)).toThrow()
+    expect(() => lexVerifyNsidRegex(h)).toThrow()
+  }
+
+  it('enforces spec details', () => {
+    expectValid('com.example.foo')
+    const longNsid = 'com.' + 'o'.repeat(63) + '.foo'
+    expectValid(longNsid)
+
+    const tooLongNsid = 'com.' + 'o'.repeat(64) + '.foo'
+    expectInvalid(tooLongNsid)
+
+    const longEnd = 'com.example.' + 'o'.repeat(128)
+    expectValid(longEnd)
+
+    const tooLongEnd = 'com.example.' + 'o'.repeat(129)
+    expectInvalid(tooLongEnd)
+
+    const longOverall = 'com.' + 'middle.'.repeat(50) + 'foo'
+    expect(longOverall.length).toBe(357)
+    expectValid(longOverall)
+
+    const tooLongOverall = 'com.' + 'middle.'.repeat(100) + 'foo'
+    expect(tooLongOverall.length).toBe(707)
+    expectInvalid(tooLongOverall)
+
+    expectValid('a.b.c')
+    expectValid('a0.b1.c3')
+    expectValid('a-0.b-1.c-3')
+    expectValid('m.xn--masekowski-d0b.pl')
+    expectValid('one.two.three')
+
+    expectInvalid('com.example')
+    expectInvalid('a.0.c')
+    expectInvalid('a.')
+    expectInvalid('.one.two.three')
+    expectInvalid('one.two.three ')
+    expectInvalid('one.two..three')
+    expectInvalid('one .two.three')
+    expectInvalid(' one.two.three')
+    expectInvalid('com.exa💩ple.thing')
+    expectInvalid('com.atproto.feed.p@st')
+    expectInvalid('com.atproto.feed.p_st')
+    expectInvalid('com.atproto.feed.p*st')
+    expectInvalid('com.atproto.feed.po#t')
+    expectInvalid('com.atproto.feed.p!ot')
+  })
+
+  it('is mostly consistent with nsid package', () => {
+    expectValid('com.example.foo')
+    expectValid('com.long-thing1.cool.fooBarBaz')
+    expectValid('cool.long-thing1.com')
+    expectInvalid('example.com')
+    expectInvalid('com.1example.foo')
+    expectInvalid('com.example!.foo')
+    expectInvalid('com.example.*.foo')
+    expectInvalid('foo')
+    expectInvalid('foo/bar')
+  })
+
+  it('handles corner-cases which nsid package does not', () => {
+    expectInvalid('com.example-.foo')
   })
 })

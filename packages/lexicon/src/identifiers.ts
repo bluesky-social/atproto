@@ -70,3 +70,66 @@ export const lexVerifyHandleRegex = (handle: string): void => {
     throw new Error('Handle is too long (253 chars max)')
   }
 }
+
+// Human readable constraints on NSID:
+// - a valid domain in reversed notation. which means the same as a loose domain!
+// - "nsid-ns" is a special situation, not allowed here
+// - not clear if final "name" should be allowed in authority or not
+// - TODO: current com.atproto.server.* means server.atproto.com is the
+//   authority? hrm. hope we consider lookups by DNS not HTTP well-known,
+//   otherwise could have some conflicts, and/or require a bunch of letsencrypt
+//   certs for little reason
+// - TODO: NSID docs allow a trailing hyphen in segment, domain RFC does not
+// - TODO: what total length and segment lengths should be enforced? let's say
+//   authority must be valid domain (so 253 max, 63 for paths), but name can be
+//   up to 128 chars?
+// - TODO: consider explicitly mapping hyphen to underscore when translating
+//   NSID to identifiers in programming languages
+export const lexVerifyNsid = (nsid: string): void => {
+  // check that all chars are boring ASCII
+  if (!/^[a-zA-Z0-9.-]*$/.test(nsid)) {
+    throw new Error(
+      'Disallowed characters in NSID (ASCII letters, digits, dashes, periods only)',
+    )
+  }
+
+  if (nsid.length > 253 + 1 + 128) {
+    throw new Error('NSID is too long (382 chars max)')
+  }
+  const labels = nsid.split('.')
+  if (labels.length < 3) {
+    throw new Error('NSID needs at least three parts')
+  }
+  for (let i = 0; i < labels.length; i++) {
+    const l = labels[i]
+    if (l.length < 1) {
+      throw new Error('NSID parts can not be empty')
+    }
+    if (l.length > 63 && i + 1 < labels.length) {
+      throw new Error('NSID domain part too long (max 63 chars)')
+    }
+    if (l.length > 128 && i + 1 == labels.length) {
+      throw new Error('NSID name part too long (max 127 chars)')
+    }
+    if (l.endsWith('-')) {
+      throw new Error('NSID parts can not end with hyphen')
+    }
+    if (!/^[a-zA-Z]/.test(l)) {
+      throw new Error('NSID parts must start with ASCII letter')
+    }
+  }
+}
+export const lexVerifyNsidRegex = (nsid: string): void => {
+  // simple regex to enforce most constraints via just regex and length.
+  // hand wrote this regex based on above constraints
+  if (
+    !/^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9-]{0,126}[a-zA-Z0-9])?)$/.test(
+      nsid,
+    )
+  ) {
+    throw new Error("NSID didn't validate via regex")
+  }
+  if (nsid.length > 253 + 1 + 128) {
+    throw new Error('NSID is too long (382 chars max)')
+  }
+}
