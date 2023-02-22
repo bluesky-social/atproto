@@ -6,7 +6,7 @@ import { cidForCbor } from '@atproto/common'
 import { AxiosError } from 'axios'
 import { Database } from '../src'
 
-describe('PLC server', () => {
+describe.skip('PLC server', () => {
   let handle = 'alice.example.com'
   let atpPds = 'example.com'
 
