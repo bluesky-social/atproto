@@ -1241,7 +1241,7 @@ Array [
       "embed": Object {
         "$type": "app.bsky.embed.record#presented",
         "record": Object {
-          "$type": "app.bsky.embed.record#presentedPost",
+          "$type": "app.bsky.embed.record#presentedRecord",
           "author": Object {
             "declaration": Object {
               "actorType": "app.bsky.system.actorUser",
@@ -2002,7 +2002,7 @@ Array [
       "embed": Object {
         "$type": "app.bsky.embed.record#presented",
         "record": Object {
-          "$type": "app.bsky.embed.record#presentedPost",
+          "$type": "app.bsky.embed.record#presentedRecord",
           "author": Object {
             "declaration": Object {
               "actorType": "app.bsky.system.actorUser",
@@ -2570,7 +2570,7 @@ Array [
       "embed": Object {
         "$type": "app.bsky.embed.record#presented",
         "record": Object {
-          "$type": "app.bsky.embed.record#presentedPost",
+          "$type": "app.bsky.embed.record#presentedRecord",
           "author": Object {
             "declaration": Object {
               "actorType": "app.bsky.system.actorUser",
@@ -3265,7 +3265,7 @@ Array [
       "embed": Object {
         "$type": "app.bsky.embed.record#presented",
         "record": Object {
-          "$type": "app.bsky.embed.record#presentedPost",
+          "$type": "app.bsky.embed.record#presentedRecord",
           "author": Object {
             "declaration": Object {
               "actorType": "app.bsky.system.actorUser",

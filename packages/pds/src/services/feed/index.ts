@@ -288,7 +288,7 @@ export class FeedService {
           $type: 'app.bsky.embed.record#presented',
           record: formatted
             ? {
-                $type: 'app.bsky.embed.record#presentedPost',
+                $type: 'app.bsky.embed.record#presentedRecord',
                 uri: formatted.uri,
                 cid: formatted.cid,
                 author: formatted.author,
