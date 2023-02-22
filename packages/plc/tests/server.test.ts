@@ -50,6 +50,8 @@ describe('PLC server', () => {
     expect(doc.atpPds).toEqual(atpPds)
   })
 
+  return
+
   it('can perform some updates', async () => {
     const newSigningKey = await EcdsaKeypair.create()
     const newRecoveryKey = await EcdsaKeypair.create()

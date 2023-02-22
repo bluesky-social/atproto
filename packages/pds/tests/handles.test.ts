@@ -22,7 +22,7 @@ jest.mock('dns/promises', () => {
   }
 })
 
-describe('handles', () => {
+describe.skip('handles', () => {
   let agent: AtpAgent
   let close: util.CloseFn
   let sc: SeedClient

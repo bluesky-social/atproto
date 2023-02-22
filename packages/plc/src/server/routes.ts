@@ -61,6 +61,9 @@ export const createRouter = (ctx: AppContext): express.Router => {
     if (!check.is(op, t.def.operation)) {
       throw new ServerError(400, `Not a valid operation: ${JSON.stringify(op)}`)
     }
+    if (op.type !== 'create') {
+      throw new Error('All ops apart from `create` are temporarily disabled')
+    }
     await ctx.db.validateAndAddOp(did, op)
     res.sendStatus(200)
   })
