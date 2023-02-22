@@ -46,76 +46,6 @@ export type Operation = z.infer<typeof operation>
 
 const compatibleOp = z.union([createOpV1, operation])
 export type CompatibleOp = z.infer<typeof compatibleOp>
-
-// const unsignedRotateSigningKeyOp = z.object({
-//   type: z.literal('rotate_signing_key'),
-//   key: z.string(),
-//   prev: z.string(),
-// })
-// export type UnsignedRotateSigningKeyOp = z.infer<
-//   typeof unsignedRotateSigningKeyOp
-// >
-// const rotateSigningKeyOp = unsignedRotateSigningKeyOp.extend({
-//   sig: z.string(),
-// })
-// export type RotateSigningKeyOp = z.infer<typeof rotateSigningKeyOp>
-
-// const unsignedRotateRecoveryKeyOp = z.object({
-//   type: z.literal('rotate_recovery_key'),
-//   key: z.string(),
-//   prev: z.string(),
-// })
-// export type UnsignedRotateRecoveryKeyOp = z.infer<
-//   typeof unsignedRotateRecoveryKeyOp
-// >
-// const rotateRecoveryKeyOp = unsignedRotateRecoveryKeyOp.extend({
-//   sig: z.string(),
-// })
-// export type RotateRecoveryKeyOp = z.infer<typeof rotateRecoveryKeyOp>
-
-// const unsignedUpdateHandleOp = z.object({
-//   type: z.literal('update_handle'),
-//   handle: z.string(),
-//   prev: z.string(),
-// })
-// export type UnsignedUpdateHandleOp = z.infer<typeof unsignedUpdateHandleOp>
-// const updateHandleOp = unsignedUpdateHandleOp.extend({
-//   sig: z.string(),
-// })
-// export type UpdateHandleOp = z.infer<typeof updateHandleOp>
-
-// const unsignedUpdateAtpPdsOp = z.object({
-//   type: z.literal('update_atp_pds'),
-//   service: z.string(),
-//   prev: z.string(),
-// })
-// export type UnsignedUpdateAtpPdsOp = z.infer<typeof unsignedUpdateAtpPdsOp>
-// const updateAtpPdsOp = unsignedUpdateAtpPdsOp.extend({
-//   sig: z.string(),
-// })
-// export type UpdateAtpPdsOp = z.infer<typeof updateAtpPdsOp>
-
-// const updateOperation = z.union([
-//   rotateSigningKeyOp,
-//   rotateRecoveryKeyOp,
-//   updateHandleOp,
-//   updateAtpPdsOp,
-// ])
-// export type UpdateOperation = z.infer<typeof updateOperation>
-
-// const operation = z.union([createOp, updateOperation])
-// export type Operation = z.infer<typeof operation>
-
-// const unsignedUpdateOperation = z.union([
-//   unsignedRotateSigningKeyOp,
-//   unsignedRotateRecoveryKeyOp,
-//   unsignedUpdateHandleOp,
-//   unsignedUpdateAtpPdsOp,
-// ])
-// export type UnsignedUpdateOperation = z.infer<typeof unsignedUpdateOperation>
-// const unsignedOperation = z.union([unsignedCreateOp, unsignedUpdateOperation])
-// export type UnsignedOperation = z.infer<typeof unsignedOperation>
-
 export const indexedOperation = z.object({
   did: z.string(),
   operation: compatibleOp,
@@ -152,23 +82,9 @@ export type DidDocument = z.infer<typeof didDocument>
 
 export const def = {
   documentData,
-  // unsignedCreateOp,
-  // createOp,
-  // unsignedRotateSigningKeyOp,
-  // rotateSigningKeyOp,
-  // unsignedRotateRecoveryKeyOp,
-  // rotateRecoveryKeyOp,
-  // unsignedUpdateHandleOp,
-  // updateHandleOp,
-  // unsignedUpdateAtpPdsOp,
-  // updateAtpPdsOp,
-  // updateOperation,
-  // operation,
-  // unsignedUpdateOperation,
   createOpV1,
   unsignedOperation,
   operation,
   compatibleOp,
-  // indexedOperation,
   didDocument,
 }
