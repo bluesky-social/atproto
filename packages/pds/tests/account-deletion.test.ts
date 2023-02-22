@@ -18,8 +18,11 @@ import { Follow } from '../src/db/tables/follow'
 import { RepoBlob } from '../src/db/tables/repo-blob'
 import { Blob } from '../src/db/tables/blob'
 import { PostEntity } from '../src/db/tables/post-entity'
-import { PostEmbedImage } from '../src/db/tables/post-embed-image'
-import { PostEmbedExternal } from '../src/db/tables/post-embed-external'
+import {
+  PostEmbedImage,
+  PostEmbedExternal,
+  PostEmbedRecord,
+} from '../src/db/tables/post-embed'
 import { RepoCommitHistory } from '../src/db/tables/repo-commit-history'
 import { RepoCommitBlock } from '../src/db/tables/repo-commit-block'
 import { Record } from '../src/db/tables/record'
@@ -266,6 +269,7 @@ type DbContents = {
   postEntities: PostEntity[]
   postImages: PostEmbedImage[]
   postExternals: PostEmbedExternal[]
+  postRecords: PostEmbedRecord[]
   votes: Vote[]
   reposts: Repost[]
   follows: Follow[]
@@ -286,6 +290,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     postEntities,
     postImages,
     postExternals,
+    postRecords,
     votes,
     reposts,
     follows,
@@ -327,6 +332,11 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
       .orderBy('postUri')
       .selectAll()
       .execute(),
+    db.db
+      .selectFrom('post_embed_record')
+      .orderBy('postUri')
+      .selectAll()
+      .execute(),
     db.db.selectFrom('vote').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('repost').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('follow').orderBy('uri').selectAll().execute(),
@@ -351,6 +361,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     postEntities,
     postImages,
     postExternals,
+    postRecords,
     votes,
     reposts,
     follows,

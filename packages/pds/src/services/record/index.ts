@@ -248,6 +248,10 @@ export class RecordService {
         .where('post_embed_external.postUri', 'in', postByUser)
         .execute(),
       this.db.db
+        .deleteFrom('post_embed_record')
+        .where('post_embed_record.postUri', 'in', postByUser)
+        .execute(),
+      this.db.db
         .deleteFrom('duplicate_record')
         .where('duplicate_record.duplicateOf', 'in', (qb) =>
           qb
