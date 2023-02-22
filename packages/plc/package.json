@@ -1,7 +1,7 @@
 {
   "name": "@atproto/plc",
   "version": "0.0.1",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "license": "MIT",
   "scripts": {
     "start": "node dist/bin.js",

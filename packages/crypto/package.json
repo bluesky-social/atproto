@@ -1,6 +1,6 @@
 {
   "name": "@atproto/crypto",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "main": "src/index.ts",
   "license": "MIT",
   "scripts": {
@@ -19,7 +19,6 @@
     "postpublish": "npm run update-main-to-src"
   },
   "dependencies": {
-    "@atproto/crypto": "*",
     "@noble/secp256k1": "^1.7.0",
     "big-integer": "^1.6.51",
     "multiformats": "^9.6.4",
