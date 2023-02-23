@@ -288,7 +288,7 @@ describe('utils', () => {
   })
 
   it('counts string (not byte) prefix length', () => {
-    // TODO: these are not cross-language consistent
+    // @TODO: these are not cross-language consistent
     expect('jalapeño'.length).toBe(8)
     expect('💩'.length).toBe(2)
     expect('👩‍👧‍👧'.length).toBe(8)

@@ -414,7 +414,6 @@ export class MST implements DataStore {
   // returns entry at index
   async atIndex(index: number): Promise<NodeEntry | null> {
     const entries = await this.getEntries()
-    // TODO: shouldn't this error instead of returning null?
     return entries[index] ?? null
   }
 
