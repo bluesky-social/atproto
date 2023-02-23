@@ -105,8 +105,7 @@ export class MST implements DataStore {
     opts?: Partial<MstOpts>,
   ): Promise<MST> {
     const pointer = await util.cidForEntries(entries)
-    // TODO: why isn't this layer=null
-    const { layer = 0, fanout = DEFAULT_MST_FANOUT } = opts || {}
+    const { layer = null, fanout = DEFAULT_MST_FANOUT } = opts || {}
     return new MST(storage, fanout, pointer, entries, layer)
   }
 
