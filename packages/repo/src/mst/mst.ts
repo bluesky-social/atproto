@@ -21,6 +21,15 @@ import * as parse from '../parse'
  * This is a merkle tree, so each subtree is referred to by it's hash (CID).
  * When a leaf is changed, ever tree on the path to that leaf is changed as well,
  * thereby updating the root hash.
+ *
+ * For atproto, we use SHA-256 as the key hashing algorithm, and ~16 fanout
+ * (4-bits of zero per layer).
+ *
+ * NOTE: currently keys are strings, not bytes. Because UTF-8 strings can't be
+ * safely split at arbitrary byte boundaries (the results are not necessarily
+ * valid UTF-8 strings), this means that "wide" characters not really supported
+ * in keys, particularly across programming language implementations. We
+ * recommend sticking with simple alphanumeric (ASCII) strings.
  */
 
 /**
@@ -96,7 +105,7 @@ export class MST implements DataStore {
     opts?: Partial<MstOpts>,
   ): Promise<MST> {
     const pointer = await util.cidForEntries(entries)
-    const { layer = 0, fanout = DEFAULT_MST_FANOUT } = opts || {}
+    const { layer = null, fanout = DEFAULT_MST_FANOUT } = opts || {}
     return new MST(storage, fanout, pointer, entries, layer)
   }
 
@@ -111,6 +120,7 @@ export class MST implements DataStore {
     return new MST(storage, fanout, pointer, entries, layer)
   }
 
+  // this is really a *lazy* load, doesn't actually touch storage
   static load(
     storage: ReadableBlockstore,
     cid: CID,
