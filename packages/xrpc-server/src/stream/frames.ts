@@ -23,6 +23,15 @@ export abstract class Frame {
   toBytes(): Uint8Array {
     return uint8arrays.concat([cborEncode(this.header), cborEncode(this.body)])
   }
+  isMessage(): this is MessageFrame<unknown> {
+    return this.op === FrameType.Message
+  }
+  isInfo(): this is InfoFrame {
+    return this.op === FrameType.Info
+  }
+  isError(): this is ErrorFrame {
+    return this.op === FrameType.Error
+  }
   static fromBytes(bytes: Uint8Array) {
     let i = 0
     let header: unknown
