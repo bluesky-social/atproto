@@ -1,0 +1,10 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.sync.notifyOfUpdate",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Notify a crawling service of a recent update. Often when a long break between updates causes the connection with the crawling service to break."
+    }
+  }
+}
