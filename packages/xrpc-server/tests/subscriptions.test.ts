@@ -1,6 +1,7 @@
 import * as http from 'http'
 import { WebSocket, createWebSocketStream } from 'ws'
-import { byFrame, MessageFrame, ErrorFrame, Frame } from '../src'
+import { wait } from '@atproto/common'
+import { byFrame, MessageFrame, ErrorFrame, Frame, Subscription } from '../src'
 import {
   createServer,
   closeServer,
@@ -82,11 +83,14 @@ const LEXICONS = [
 
 describe('Subscriptions', () => {
   let s: http.Server
+
   const server = xrpcServer.createServer(LEXICONS)
+  const lex = server.lex
 
   server.streamMethod('io.example.stream1', async function* ({ params }) {
     const countdown = Number(params.countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
+      await wait(0)
       yield { count: i }
     }
   })
@@ -227,6 +231,100 @@ describe('Subscriptions', () => {
         bytes // drain
       }
     }
-    expect(drainStream).rejects.toThrow('ECONNREFUSED')
+    await expect(drainStream).rejects.toHaveProperty('code', 'ECONNRESET')
+  })
+
+  describe('Subscription consumer', () => {
+    it('receives messages w/ skips', async () => {
+      const sub = new Subscription({
+        service: 'ws://localhost:8895',
+        method: 'io.example.stream1',
+        validate: (obj) => {
+          const result = lex.assertValidXrpcMessage<{ count: number }>(
+            'io.example.stream1',
+            obj,
+          )
+          if (!result.count || result.count % 2) {
+            return result
+          }
+        },
+        getParams: () => new URLSearchParams({ countdown: '5' }),
+      })
+
+      const messages: { count: number }[] = []
+      for await (const msg of sub) {
+        messages.push(msg)
+      }
+
+      expect(messages).toEqual([
+        { count: 5 },
+        { count: 3 },
+        { count: 1 },
+        { count: 0 },
+      ])
+    })
+
+    it('receives messages w/ skips', async () => {
+      const sub = new Subscription({
+        service: 'ws://localhost:8895',
+        method: 'io.example.stream1',
+        getParams: () => new URLSearchParams({ countdown: '5' }),
+        validate: (obj) => {
+          const result = lex.assertValidXrpcMessage<{ count: number }>(
+            'io.example.stream1',
+            obj,
+          )
+          if (!result.count || result.count % 2) {
+            return result
+          }
+        },
+      })
+
+      const messages: { count: number }[] = []
+      for await (const msg of sub) {
+        messages.push(msg)
+      }
+
+      expect(messages).toEqual([
+        { count: 5 },
+        { count: 3 },
+        { count: 1 },
+        { count: 0 },
+      ])
+    })
+
+    it('reconnects w/ param update', async () => {
+      let countdown = 100
+      let calledGetParams = 0
+      const sub = new Subscription({
+        service: 'ws://localhost:8895',
+        method: 'io.example.stream1',
+        getParams: () => {
+          calledGetParams++
+          return new URLSearchParams({ countdown: String(countdown) })
+        },
+        validate: (obj) => {
+          return lex.assertValidXrpcMessage<{ count: number }>(
+            'io.example.stream1',
+            obj,
+          )
+        },
+      })
+
+      let disconnected = false
+      for await (const msg of sub) {
+        expect(msg.count).toBeGreaterThanOrEqual(countdown - 1) // No skips
+        countdown = Math.min(countdown, msg.count) // Only allow forward movement
+        if (msg.count <= 60 && !disconnected) {
+          disconnected = true
+          server.subscriptions.forEach(({ wss }) => {
+            wss.clients.forEach((c) => c.terminate())
+          })
+        }
+      }
+
+      expect(countdown).toEqual(0)
+      expect(calledGetParams).toBeGreaterThan(1)
+    })
   })
 })

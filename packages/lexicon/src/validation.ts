@@ -53,3 +53,20 @@ export function assertValidXrpcOutput(
     return assertValidOneOf(lexicons, 'Output', def.output.schema, value, true)
   }
 }
+
+export function assertValidXrpcMessage(
+  lexicons: Lexicons,
+  def: LexXrpcSubscription,
+  value: unknown,
+) {
+  if (def.message?.schema) {
+    // loop: all output schema definitions
+    return assertValidOneOf(
+      lexicons,
+      'Message',
+      def.message.schema,
+      value,
+      true,
+    )
+  }
+}
