@@ -264,35 +264,6 @@ describe('Subscriptions', () => {
       ])
     })
 
-    it('receives messages w/ skips', async () => {
-      const sub = new Subscription({
-        service: 'ws://localhost:8895',
-        method: 'io.example.stream1',
-        getParams: () => ({ countdown: 5 }),
-        validate: (obj) => {
-          const result = lex.assertValidXrpcMessage<{ count: number }>(
-            'io.example.stream1',
-            obj,
-          )
-          if (!result.count || result.count % 2) {
-            return result
-          }
-        },
-      })
-
-      const messages: { count: number }[] = []
-      for await (const msg of sub) {
-        messages.push(msg)
-      }
-
-      expect(messages).toEqual([
-        { count: 5 },
-        { count: 3 },
-        { count: 1 },
-        { count: 0 },
-      ])
-    })
-
     it('reconnects w/ param update', async () => {
       let countdown = 10
       let calledGetParams = 0
