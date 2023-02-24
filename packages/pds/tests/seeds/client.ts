@@ -85,7 +85,10 @@ export class SeedClient {
     }
   >
   follows: Record<string, Record<string, RecordRef>>
-  posts: Record<string, { text: string; ref: RecordRef; images: ImageRef[] }[]>
+  posts: Record<
+    string,
+    { text: string; ref: RecordRef; images: ImageRef[]; quote?: RecordRef }[]
+  >
   votes: {
     up: Record<string, Record<string, AtUri>>
     down: Record<string, Record<string, AtUri>>
@@ -185,11 +188,23 @@ export class SeedClient {
     return this.follows[from][to.did]
   }
 
-  async post(by: string, text: string, entities?: any, images?: ImageRef[]) {
+  async post(
+    by: string,
+    text: string,
+    entities?: any,
+    images?: ImageRef[],
+    quote?: RecordRef,
+  ) {
+    if (images && quote) throw new Error("Can't embed images and a quote")
     const embed = images
       ? {
           $type: 'app.bsky.embed.images',
           images,
+        }
+      : quote
+      ? {
+          $type: 'app.bsky.embed.record',
+          record: { uri: quote.uriStr, cid: quote.cidStr },
         }
       : undefined
     const res = await this.agent.api.app.bsky.feed.post.create(
@@ -206,7 +221,8 @@ export class SeedClient {
     const post = {
       text,
       ref: new RecordRef(res.uri, res.cid),
-      images: images || [],
+      images: images ?? [],
+      quote,
     }
     this.posts[by].push(post)
     return post

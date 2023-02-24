@@ -1,4 +1,4 @@
-import { wait } from './util'
+import { bailableWait } from './util'
 
 // reads values from a generator into a list
 // NOTE: does not signal generator to close. it *will* continue to produce values
@@ -9,7 +9,9 @@ export const readFromGenerator = async <T>(
 ): Promise<T[]> => {
   const evts: T[] = []
   while (evts.length < maxLength) {
-    const maybeEvt = await Promise.race([gen.next(), wait(timeout)])
+    const { bail, wait } = bailableWait(timeout)
+    const maybeEvt = await Promise.race([gen.next(), wait()])
+    bail()
     if (!maybeEvt) break
     const evt = maybeEvt as IteratorResult<T>
     if (evt.done) break

@@ -49,6 +49,7 @@ import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 import * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 import * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
+import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
 import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
@@ -65,6 +66,7 @@ import * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypea
 import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images'
+import * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 import * as AppBskyFeedFeedViewPost from './types/app/bsky/feed/feedViewPost'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
@@ -135,6 +137,7 @@ export * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 export * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 export * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 export * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
+export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
 export * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
 export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
@@ -151,6 +154,7 @@ export * as AppBskyActorSearchTypeahead from './types/app/bsky/actor/searchTypea
 export * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images'
+export * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 export * as AppBskyFeedFeedViewPost from './types/app/bsky/feed/feedViewPost'
 export * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
@@ -693,6 +697,17 @@ export class SyncNS {
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  getBlocks(
+    params?: ComAtprotoSyncGetBlocks.QueryParams,
+    opts?: ComAtprotoSyncGetBlocks.CallOptions,
+  ): Promise<ComAtprotoSyncGetBlocks.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getBlocks', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetBlocks.toKnownErr(e)
+      })
   }
 
   getCheckout(

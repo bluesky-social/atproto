@@ -3,7 +3,7 @@ import * as common from '@atproto/common'
 import Database from '../../db'
 import { countAll, notSoftDeletedClause } from '../../db/util'
 import { ImageUriBuilder } from '../../image/uri'
-import { Presented as PresentedImage } from '../../lexicon/types/app/bsky/embed/images'
+import { isPresented as isPresentedImage } from '../../lexicon/types/app/bsky/embed/images'
 import { View as PostView } from '../../lexicon/types/app/bsky/feed/post'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
 import { getDeclarationSimple } from '../../api/app/bsky/util'
@@ -201,7 +201,7 @@ export class FeedService {
     )
   }
 
-  async embedsForPosts(uris: string[]): Promise<FeedEmbeds> {
+  async embedsForPosts(uris: string[], requester: string): Promise<FeedEmbeds> {
     if (uris.length < 1) {
       return {}
     }
@@ -217,15 +217,34 @@ export class FeedService {
       .selectAll()
       .where('postUri', 'in', uris)
       .execute()
-    const [images, externals] = await Promise.all([imgPromise, extPromise])
-    const imgEmbeds = images.reduce((acc, cur) => {
-      if (!acc[cur.postUri]) {
-        acc[cur.postUri] = {
-          $type: 'app.bsky.embed.images#presented',
-          images: [],
-        }
-      }
-      acc[cur.postUri].images.push({
+    const recordPromise = this.db.db
+      .selectFrom('post_embed_record')
+      .innerJoin('record as embed', 'embed.uri', 'embedUri')
+      .where('postUri', 'in', uris)
+      .select(['postUri', 'embed.uri as uri', 'embed.did as did'])
+      .execute()
+    const [images, externals, records] = await Promise.all([
+      imgPromise,
+      extPromise,
+      recordPromise,
+    ])
+    const [postViews, actorViews] = await Promise.all([
+      this.getPostViews(
+        records.map((p) => p.uri),
+        requester,
+      ),
+      this.getActorViews(
+        records.map((p) => p.did),
+        requester,
+      ),
+    ])
+    let embeds = images.reduce((acc, cur) => {
+      const embed = (acc[cur.postUri] ??= {
+        $type: 'app.bsky.embed.images#presented',
+        images: [],
+      })
+      if (!isPresentedImage(embed)) return acc
+      embed.images.push({
         thumb: this.imgUriBuilder.getCommonSignedUri(
           'feed_thumbnail',
           cur.imageCid,
@@ -237,8 +256,8 @@ export class FeedService {
         alt: cur.alt,
       })
       return acc
-    }, {} as { [uri: string]: PresentedImage })
-    return externals.reduce((acc, cur) => {
+    }, {} as FeedEmbeds)
+    embeds = externals.reduce((acc, cur) => {
       if (!acc[cur.postUri]) {
         acc[cur.postUri] = {
           $type: 'app.bsky.embed.external#presented',
@@ -256,7 +275,34 @@ export class FeedService {
         }
       }
       return acc
-    }, imgEmbeds as FeedEmbeds)
+    }, embeds)
+    embeds = records.reduce((acc, cur) => {
+      if (!acc[cur.postUri]) {
+        const formatted = this.formatPostView(
+          cur.uri,
+          actorViews,
+          postViews,
+          {},
+        )
+        acc[cur.postUri] = {
+          $type: 'app.bsky.embed.record#presented',
+          record: formatted
+            ? {
+                $type: 'app.bsky.embed.record#presentedRecord',
+                uri: formatted.uri,
+                cid: formatted.cid,
+                author: formatted.author,
+                record: formatted.record,
+              }
+            : {
+                $type: 'app.bsky.embed.record#presentedNotFound',
+                uri: cur.uri,
+              },
+        }
+      }
+      return acc
+    }, embeds)
+    return embeds
   }
 
   formatPostView(

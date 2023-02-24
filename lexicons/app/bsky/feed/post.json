@@ -15,7 +15,14 @@
             "items": {"type": "ref", "ref": "#entity"}
           },
           "reply": {"type": "ref", "ref": "#replyRef"},
-          "embed": { "type": "union", "refs": ["app.bsky.embed.images", "app.bsky.embed.external"]},
+          "embed": {
+            "type": "union",
+            "refs": [
+              "app.bsky.embed.images",
+              "app.bsky.embed.external",
+              "app.bsky.embed.record"
+            ]
+          },
           "createdAt": {"type": "datetime"}
         }
       }
@@ -61,7 +68,8 @@
           "type": "union",
           "refs": [
             "app.bsky.embed.images#presented",
-            "app.bsky.embed.external#presented"
+            "app.bsky.embed.external#presented",
+            "app.bsky.embed.record#presented"
           ]
         },
         "replyCount": {"type": "integer"},

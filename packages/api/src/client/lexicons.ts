@@ -2025,6 +2025,35 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncGetBlocks: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getBlocks',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Gets blocks from a given repo.',
+        parameters: {
+          type: 'params',
+          required: ['did', 'cids'],
+          properties: {
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
+            cids: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/vnd.ipld.car',
+        },
+      },
+    },
+  },
   ComAtprotoSyncGetCheckout: {
     lexicon: 1,
     id: 'com.atproto.sync.getCheckout',
@@ -2205,68 +2234,66 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            backfillFrom: {
-              type: 'datetime',
-              description:
-                'The last known event to backfill from. Does not dedupe as there may be an overlap in timestamps.',
+            cursor: {
+              type: 'integer',
+              description: 'The last known event to backfill from.',
             },
           },
         },
         message: {
           schema: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.sync.subscribeAllRepos#repoAppend',
-              'lex:com.atproto.sync.subscribeAllRepos#repoRebase',
+            type: 'object',
+            required: [
+              'seq',
+              'event',
+              'repo',
+              'commit',
+              'blocks',
+              'blobs',
+              'time',
             ],
-          },
-          codes: {
-            'lex:com.atproto.sync.subscribeAllRepos#repoAppend': 0,
-            'lex:com.atproto.sync.subscribeAllRepos#repoRebase': 1,
-          },
-        },
-      },
-      repoAppend: {
-        type: 'object',
-        required: ['time', 'repo', 'commit', 'blocks', 'blobs'],
-        properties: {
-          time: {
-            type: 'datetime',
-          },
-          repo: {
-            type: 'string',
-          },
-          commit: {
-            type: 'string',
-          },
-          prev: {
-            type: 'string',
-          },
-          blocks: {
-            type: 'unknown',
-          },
-          blobs: {
-            type: 'array',
-            items: {
-              type: 'string',
+            properties: {
+              seq: {
+                type: 'integer',
+              },
+              event: {
+                type: 'string',
+                knownValues: ['repo_append', 'rebase'],
+              },
+              repo: {
+                type: 'string',
+              },
+              commit: {
+                type: 'string',
+              },
+              prev: {
+                type: 'string',
+              },
+              blocks: {
+                type: 'unknown',
+              },
+              blobs: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              time: {
+                type: 'datetime',
+              },
             },
           },
         },
-      },
-      repoRebase: {
-        type: 'object',
-        required: ['time', 'repo', 'commit'],
-        properties: {
-          time: {
-            type: 'datetime',
+        infos: [
+          {
+            name: 'OutdatedCursor',
           },
-          repo: {
-            type: 'string',
+        ],
+        errors: [
+          {
+            name: 'FutureCursor',
           },
-          commit: {
-            type: 'string',
-          },
-        },
+        ],
       },
     },
   },
@@ -2890,6 +2917,65 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyEmbedRecord: {
+    lexicon: 1,
+    id: 'app.bsky.embed.record',
+    description:
+      'An representation of a record embedded in another form of content',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['record'],
+        properties: {
+          record: {
+            type: 'ref',
+            ref: 'lex:com.atproto.repo.strongRef',
+          },
+        },
+      },
+      presented: {
+        type: 'object',
+        required: ['record'],
+        properties: {
+          record: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.embed.record#presentedRecord',
+              'lex:app.bsky.embed.record#presentedNotFound',
+            ],
+          },
+        },
+      },
+      presentedRecord: {
+        type: 'object',
+        required: ['uri', 'cid', 'author', 'record'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+          record: {
+            type: 'unknown',
+          },
+        },
+      },
+      presentedNotFound: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedFeedViewPost: {
     lexicon: 1,
     id: 'app.bsky.feed.feedViewPost',
@@ -3281,6 +3367,7 @@ export const schemaDict = {
               refs: [
                 'lex:app.bsky.embed.images',
                 'lex:app.bsky.embed.external',
+                'lex:app.bsky.embed.record',
               ],
             },
             createdAt: {
@@ -3369,6 +3456,7 @@ export const schemaDict = {
             refs: [
               'lex:app.bsky.embed.images#presented',
               'lex:app.bsky.embed.external#presented',
+              'lex:app.bsky.embed.record#presented',
             ],
           },
           replyCount: {
@@ -4024,6 +4112,7 @@ export const ids = {
   ComAtprotoSessionDelete: 'com.atproto.session.delete',
   ComAtprotoSessionGet: 'com.atproto.session.get',
   ComAtprotoSessionRefresh: 'com.atproto.session.refresh',
+  ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
   ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
   ComAtprotoSyncGetCommitPath: 'com.atproto.sync.getCommitPath',
   ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
@@ -4040,6 +4129,7 @@ export const ids = {
   AppBskyActorUpdateProfile: 'app.bsky.actor.updateProfile',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
+  AppBskyEmbedRecord: 'app.bsky.embed.record',
   AppBskyFeedFeedViewPost: 'app.bsky.feed.feedViewPost',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
