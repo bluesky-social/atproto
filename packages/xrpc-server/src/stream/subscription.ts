@@ -11,8 +11,8 @@ export class Subscription<T = unknown> {
       maxReconnectSeconds?: number
       validate: (obj: unknown) => T | undefined
       getParams?: () =>
-        | URLSearchParams
-        | Promise<URLSearchParams | undefined>
+        | Record<string, unknown>
+        | Promise<Record<string, unknown> | undefined>
         | undefined
     },
   ) {}
@@ -29,12 +29,15 @@ export class Subscription<T = unknown> {
       ws.once('close', (code, reason) => {
         if (code === CloseCode.Abnormal) {
           // Forward into an error to distinguish from a clean close
-          ws.emit('error', new AbnormalCloseError(reason.toString()))
+          ws.emit(
+            'error',
+            new AbnormalCloseError(`Abnormal ws close: ${reason.toString()}`),
+          )
         }
       })
       try {
         for await (const message of byMessage(ws)) {
-          const result = this.opts.validate(message.body) // @TODO map $type, handle bad validation
+          const result = this.opts.validate(message.body) // @TODO map $type
           if (result !== undefined) {
             yield result
           }
@@ -53,8 +56,8 @@ export class Subscription<T = unknown> {
   }
 
   private async getSocket() {
-    const params = await this.opts.getParams?.()
-    const query = params?.toString() ?? ''
+    const params = (await this.opts.getParams?.()) ?? {}
+    const query = encodeQueryParams(params)
     const url = `${this.opts.service}/xrpc/${this.opts.method}?${query}`
     return new WebSocket(url, this.opts)
   }
@@ -62,7 +65,7 @@ export class Subscription<T = unknown> {
 
 export default Subscription
 
-export class AbnormalCloseError extends Error {
+class AbnormalCloseError extends Error {
   code = 'EWSABNORMALCLOSE'
 }
 
@@ -71,7 +74,8 @@ function isReconnectable(err: unknown, reconnects: number | null): boolean {
   if (reconnects === null) return false
   // Network errors are reconnectable.
   // AuthenticationRequired and InvalidRequest XRPCErrors are not reconnectable.
-  // @TODO method-specific XRPCErrors may be reconnectable, need to consider.
+  // @TODO method-specific XRPCErrors may be reconnectable, need to consider. Receiving
+  // an invalid message is not current reconnectable, but the user can decide to skip them.
   if (!err || typeof err['code'] !== 'string') return false
   return networkErrorCodes.includes(err['code'])
 }
@@ -91,4 +95,43 @@ function backoffMs(n: number, maxMs: number) {
   const randSec = Math.random() - 0.5 // Random jitter between -.5 and .5 seconds
   const ms = 1000 * (baseSec + randSec)
   return Math.min(ms, maxMs)
+}
+
+function encodeQueryParams(obj: Record<string, unknown>): string {
+  const params = new URLSearchParams()
+  Object.entries(obj).forEach(([key, value]) => {
+    const encoded = encodeQueryParam(value)
+    if (Array.isArray(encoded)) {
+      encoded.forEach((enc) => params.append(key, enc))
+    } else {
+      params.set(key, encoded)
+    }
+  })
+  return params.toString()
+}
+
+// Adapted from xrpc, but without any lex-specific knowledge
+function encodeQueryParam(value: unknown): string | string[] {
+  if (typeof value === 'string') {
+    return value
+  }
+  if (typeof value === 'number') {
+    return value.toString()
+  }
+  if (typeof value === 'boolean') {
+    return value ? 'true' : 'false'
+  }
+  if (typeof value === 'undefined') {
+    return ''
+  }
+  if (typeof value === 'object') {
+    if (value instanceof Date) {
+      return value.toISOString()
+    } else if (Array.isArray(value)) {
+      return value.flatMap(encodeQueryParam)
+    } else if (!value) {
+      return ''
+    }
+  }
+  throw new Error(`Cannot encode ${typeof value}s into query params`)
 }

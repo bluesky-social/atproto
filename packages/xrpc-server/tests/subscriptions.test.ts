@@ -239,6 +239,7 @@ describe('Subscriptions', () => {
       const sub = new Subscription({
         service: 'ws://localhost:8895',
         method: 'io.example.stream1',
+        getParams: () => ({ countdown: 5 }),
         validate: (obj) => {
           const result = lex.assertValidXrpcMessage<{ count: number }>(
             'io.example.stream1',
@@ -248,7 +249,6 @@ describe('Subscriptions', () => {
             return result
           }
         },
-        getParams: () => new URLSearchParams({ countdown: '5' }),
       })
 
       const messages: { count: number }[] = []
@@ -268,7 +268,7 @@ describe('Subscriptions', () => {
       const sub = new Subscription({
         service: 'ws://localhost:8895',
         method: 'io.example.stream1',
-        getParams: () => new URLSearchParams({ countdown: '5' }),
+        getParams: () => ({ countdown: 5 }),
         validate: (obj) => {
           const result = lex.assertValidXrpcMessage<{ count: number }>(
             'io.example.stream1',
@@ -294,14 +294,14 @@ describe('Subscriptions', () => {
     })
 
     it('reconnects w/ param update', async () => {
-      let countdown = 100
+      let countdown = 10
       let calledGetParams = 0
       const sub = new Subscription({
         service: 'ws://localhost:8895',
         method: 'io.example.stream1',
         getParams: () => {
           calledGetParams++
-          return new URLSearchParams({ countdown: String(countdown) })
+          return { countdown }
         },
         validate: (obj) => {
           return lex.assertValidXrpcMessage<{ count: number }>(
@@ -315,7 +315,7 @@ describe('Subscriptions', () => {
       for await (const msg of sub) {
         expect(msg.count).toBeGreaterThanOrEqual(countdown - 1) // No skips
         countdown = Math.min(countdown, msg.count) // Only allow forward movement
-        if (msg.count <= 60 && !disconnected) {
+        if (msg.count <= 6 && !disconnected) {
           disconnected = true
           server.subscriptions.forEach(({ wss }) => {
             wss.clients.forEach((c) => c.terminate())
