@@ -82,18 +82,6 @@ export const lexVerifyHandleRegex = (handle: string): void => {
 // - a valid domain in reversed notation. which means the same as a loose domain!
 // - "nsid-ns" is a special situation, not allowed here
 // - not clear if final "name" should be allowed in authority or not
-// - TODO: current com.atproto.server.* means server.atproto.com is the
-//   authority? hrm. hope we consider lookups by DNS not HTTP well-known,
-//   otherwise could have some conflicts, and/or require a bunch of letsencrypt
-//   certs for little reason
-// - TODO: NSID docs allow a trailing hyphen in segment, domain RFC does not
-// - TODO: what total length and segment lengths should be enforced? let's say
-//   authority must be valid domain (so 253 max, 63 for paths), but name can be
-//   up to 128 chars?
-// - TODO: consider explicitly mapping hyphen to underscore when translating
-//   NSID to identifiers in programming languages
-// - TODO: confirm whether we want to restrict to no leading numbers. consider
-//   programming language variable name restrictions. But what about 'org.4chan.*'...
 export const lexVerifyNsid = (nsid: string): void => {
   // check that all chars are boring ASCII
   if (!/^[a-zA-Z0-9.-]*$/.test(nsid)) {
@@ -157,7 +145,6 @@ export const lexVerifyNsidRegex = (nsid: string): void => {
 //   - in current atproto, only allowing did:plc and did:web. But not *forcing* this at lexico layer
 //   - hard length limit of 8KBytes
 //   - not going to validate "percent encoding" here
-//   - TODO: shorter hard limit?
 export const lexVerifyDid = (did: string): void => {
   // check that all chars are boring ASCII
   if (!/^[a-zA-Z0-9._:%-]*$/.test(did)) {
@@ -213,12 +200,6 @@ export const lexVerifyDidRegex = (did: string): void => {
 //          [a-zA-Z0-9._~:@!$&'\(\)*+,;=-]
 //      - rkey must have at least one char
 //      - regardless of path component, a fragment can follow  as "#" and then a JSON pointer (RFC-6901)
-//  - TODO: should we really disallow trailing slash after authority if no
-//    path? and after collection if no rkey
-//  - TODO: rkey seems very flexible! do we really want that?
-//  - TODO: propose that fragment JSON pointer must be one or more chars
-//  - TODO: JSON pointer (in URI fragment) is super flexible, allows Unicode (not UTF-8!), and basically any character is allowed, including whitespace and control characters. Think we should narrow that down. Do probably need things like square brackets and quotes? hrm
-//  - TODO: feels like we might want to be more flexible about path section to leave ourselves room in the future
 
 export const lexVerifyAtUri = (uri: string): void => {
   // JSON pointer is pretty different from rest of URI, so split that out first
