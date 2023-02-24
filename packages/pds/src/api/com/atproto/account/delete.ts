@@ -7,7 +7,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.account.delete(async ({ input }) => {
     const { did, password, token } = input.body
     const validPass = await ctx.services
-      .actor(ctx.db)
+      .account(ctx.db)
       .verifyUserPassword(did, password)
     if (!validPass) {
       throw new AuthRequiredError('Invalid did or password')
@@ -41,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
       await removeDeleteToken(dbTxn, did)
       await ctx.services.record(dbTxn).deleteForUser(did)
       await ctx.services.repo(dbTxn).deleteRepo(did)
-      await ctx.services.actor(dbTxn).deleteUser(did)
+      await ctx.services.account(dbTxn).deleteUser(did)
     })
   })
 }

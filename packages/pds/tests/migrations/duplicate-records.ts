@@ -4,10 +4,14 @@ import { cidForCbor, TID } from '@atproto/common'
 import { Database, MemoryBlobStore } from '../../src'
 import * as lex from '../../src/lexicon/lexicons'
 import { APP_BSKY_GRAPH } from '../../src/lexicon'
-import SqlMessageQueue from '../../src/event-stream/message-queue'
+import SqlMessageQueue, {
+  MessageDispatcher,
+} from '../../src/event-stream/message-queue'
 import { MessageQueue } from '../../src/event-stream/types'
 import { createServices, Services } from '../../src/services'
 import { ImageUriBuilder } from '../../src/image/uri'
+import { ImageProcessingServerInvalidator } from '../../src/image/invalidator'
+import { BlobDiskCache } from '../../src/image/server'
 
 describe('duplicate record', () => {
   let db: Database
@@ -27,8 +31,10 @@ describe('duplicate record', () => {
     services = createServices({
       keypair: await crypto.EcdsaKeypair.create(),
       messageQueue,
+      messageDispatcher: new MessageDispatcher(),
       blobstore: new MemoryBlobStore(),
       imgUriBuilder: new ImageUriBuilder('http://x', '00', '00'),
+      imgInvalidator: new ImageProcessingServerInvalidator(new BlobDiskCache()),
     })
     await db.migrator.migrateTo('_20221021T162202001Z')
   })

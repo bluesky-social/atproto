@@ -1,3 +1,4 @@
+// @NOTE also used by app-view (moderation)
 export interface RepoRoot {
   did: string
   root: string

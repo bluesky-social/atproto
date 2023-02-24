@@ -1,62 +1,21 @@
 import { CID } from 'multiformats/cid'
-import { ValidationError } from '@atproto/lexicon'
 import { AtUri } from '@atproto/uri'
 import * as common from '@atproto/common'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
-import * as Declaration from './plugins/declaration'
-import * as Post from './plugins/post'
-import * as Vote from './plugins/vote'
-import * as Repost from './plugins/repost'
-import * as Follow from './plugins/follow'
-import * as Assertion from './plugins/assertion'
-import * as Confirmation from './plugins/confirmation'
-import * as Profile from './plugins/profile'
-import { MessageQueue } from '../../event-stream/types'
 import { notSoftDeletedClause } from '../../db/util'
+import { MessageQueue } from '../../event-stream/types'
+import {
+  indexRecord,
+  deleteRecord,
+  deleteRepo,
+} from '../../event-stream/messages'
 
 export class RecordService {
-  records: {
-    declaration: Declaration.PluginType
-    post: Post.PluginType
-    vote: Vote.PluginType
-    repost: Repost.PluginType
-    follow: Follow.PluginType
-    profile: Profile.PluginType
-    assertion: Assertion.PluginType
-    confirmation: Confirmation.PluginType
-  }
+  constructor(public db: Database, public messageDispatcher: MessageQueue) {}
 
-  constructor(public db: Database, public messageQueue: MessageQueue) {
-    this.records = {
-      declaration: Declaration.makePlugin(this.db.db),
-      post: Post.makePlugin(this.db.db),
-      vote: Vote.makePlugin(this.db.db),
-      repost: Repost.makePlugin(this.db.db),
-      follow: Follow.makePlugin(this.db.db),
-      assertion: Assertion.makePlugin(this.db.db),
-      confirmation: Confirmation.makePlugin(this.db.db),
-      profile: Profile.makePlugin(this.db.db),
-    }
-  }
-
-  static creator(messageQueue: MessageQueue) {
-    return (db: Database) => new RecordService(db, messageQueue)
-  }
-
-  assertValidRecord(collection: string, obj: unknown): void {
-    let table
-    try {
-      table = this.findTableForCollection(collection)
-    } catch (e) {
-      throw new ValidationError(`Schema not found`)
-    }
-    table.assertValidRecord(obj)
-  }
-
-  canIndexRecord(collection: string, obj: unknown): boolean {
-    const table = this.findTableForCollection(collection)
-    return table.matchesSchema(obj)
+  static creator(messageDispatcher: MessageQueue) {
+    return (db: Database) => new RecordService(db, messageDispatcher)
   }
 
   async indexRecord(uri: AtUri, cid: CID, obj: unknown, timestamp?: string) {
@@ -79,9 +38,10 @@ export class RecordService {
     }
     await this.db.db.insertInto('record').values(record).execute()
 
-    const table = this.findTableForCollection(uri.collection)
-    const events = await table.insertRecord(uri, cid, obj, timestamp)
-    await this.messageQueue.send(this.db, events)
+    await this.messageDispatcher.send(
+      this.db,
+      indexRecord(uri, cid, obj, record.indexedAt),
+    )
 
     log.info({ uri }, 'indexed record')
   }
@@ -89,17 +49,15 @@ export class RecordService {
   async deleteRecord(uri: AtUri, cascading = false) {
     this.db.assertTransaction()
     log.debug({ uri }, 'deleting indexed record')
-    const table = this.findTableForCollection(uri.collection)
     const deleteQuery = this.db.db
       .deleteFrom('record')
       .where('uri', '=', uri.toString())
       .execute()
 
-    const [events] = await Promise.all([
-      table.deleteRecord(uri, cascading),
+    await Promise.all([
+      this.messageDispatcher.send(this.db, deleteRecord(uri, cascading)),
       deleteQuery,
     ])
-    await this.messageQueue.send(this.db, events)
 
     log.info({ uri }, 'deleted indexed record')
   }
@@ -215,70 +173,10 @@ export class RecordService {
     return !!record
   }
 
-  findTableForCollection(collection: string) {
-    const found = Object.values(this.records).find(
-      (plugin) => plugin.collection === collection,
-    )
-    if (!found) {
-      throw new Error('Could not find table for collection')
-    }
-    return found
-  }
-
   async deleteForUser(did: string) {
     this.db.assertTransaction()
-
-    const postByUser = (qb) =>
-      qb
-        .selectFrom('post')
-        .where('post.creator', '=', did)
-        .select('post.uri as uri')
-
     await Promise.all([
-      this.db.db
-        .deleteFrom('post_entity')
-        .where('post_entity.postUri', 'in', postByUser)
-        .execute(),
-      this.db.db
-        .deleteFrom('post_embed_image')
-        .where('post_embed_image.postUri', 'in', postByUser)
-        .execute(),
-      this.db.db
-        .deleteFrom('post_embed_external')
-        .where('post_embed_external.postUri', 'in', postByUser)
-        .execute(),
-      this.db.db
-        .deleteFrom('post_embed_record')
-        .where('post_embed_record.postUri', 'in', postByUser)
-        .execute(),
-      this.db.db
-        .deleteFrom('duplicate_record')
-        .where('duplicate_record.duplicateOf', 'in', (qb) =>
-          qb
-            .selectFrom('record')
-            .where('record.did', '=', did)
-            .select('record.uri as uri'),
-        )
-        .execute(),
-    ])
-    await Promise.all([
-      this.db.db.deleteFrom('record').where('did', '=', did).execute(),
-      this.db.db.deleteFrom('assertion').where('creator', '=', did).execute(),
-      this.db.db.deleteFrom('follow').where('creator', '=', did).execute(),
-      this.db.db.deleteFrom('post').where('creator', '=', did).execute(),
-      this.db.db.deleteFrom('profile').where('creator', '=', did).execute(),
-      this.db.db.deleteFrom('repost').where('creator', '=', did).execute(),
-      this.db.db.deleteFrom('vote').where('creator', '=', did).execute(),
-      this.db.db
-        .updateTable('assertion')
-        .set({
-          confirmUri: null,
-          confirmCid: null,
-          confirmCreated: null,
-          confirmIndexed: null,
-        })
-        .where('subjectDid', '=', did)
-        .execute(),
+      this.messageDispatcher.send(this.db, deleteRepo(did)),
       this.db.db
         .deleteFrom('user_notification')
         .where('author', '=', did)

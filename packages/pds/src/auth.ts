@@ -169,7 +169,7 @@ export const accessVerifierCheckTakedown =
   (auth: ServerAuth, { db, services }: AppContext) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
     const did = auth.getUserDidOrThrow(ctx.req, AuthScopes.Access)
-    const actor = await services.actor(db).getUser(did, true)
+    const actor = await services.account(db).getUser(did, true)
     if (!actor || softDeleted(actor)) {
       throw new AuthRequiredError(
         'Account has been taken down',
