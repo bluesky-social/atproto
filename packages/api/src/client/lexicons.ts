@@ -2224,6 +2224,27 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncNotifyOfUpdate: {
+    lexicon: 1,
+    id: 'com.atproto.sync.notifyOfUpdate',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Notify a crawling service of a recent update. Often when a long break between updates causes the connection with the crawling service to break.',
+      },
+    },
+  },
+  ComAtprotoSyncRequestCrawl: {
+    lexicon: 1,
+    id: 'com.atproto.sync.requestCrawl',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Request a service to persistently crawl hosted repos.',
+      },
+    },
+  },
   ComAtprotoSyncSubscribeAllRepos: {
     lexicon: 1,
     id: 'com.atproto.sync.subscribeAllRepos',
@@ -4118,6 +4139,8 @@ export const ids = {
   ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
+  ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
+  ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeAllRepos: 'com.atproto.sync.subscribeAllRepos',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
   AppBskyActorGetProfiles: 'app.bsky.actor.getProfiles',
