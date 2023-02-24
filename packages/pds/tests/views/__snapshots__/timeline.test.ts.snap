@@ -157,10 +157,24 @@ Array [
       },
       "cid": "cids(5)",
       "downvoteCount": 1,
+      "embed": Object {
+        "$type": "app.bsky.embed.record#presented",
+        "record": Object {
+          "$type": "app.bsky.embed.record#presentedNotFound",
+          "uri": "record(7)",
+        },
+      },
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
+        "embed": Object {
+          "$type": "app.bsky.embed.record",
+          "record": Object {
+            "cid": "cids(6)",
+            "uri": "record(7)",
+          },
+        },
         "text": "yoohoo",
       },
       "replyCount": 0,
@@ -215,7 +229,7 @@ Array [
           "muted": false,
         },
       },
-      "cid": "cids(6)",
+      "cid": "cids(7)",
       "downvoteCount": 0,
       "embed": Object {
         "$type": "app.bsky.embed.images#presented",
@@ -242,14 +256,14 @@ Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
               "image": Object {
-                "cid": "cids(7)",
+                "cid": "cids(8)",
                 "mimeType": "image/jpeg",
               },
             },
             Object {
               "alt": "tests/image/fixtures/key-alt.jpg",
               "image": Object {
-                "cid": "cids(8)",
+                "cid": "cids(9)",
                 "mimeType": "image/jpeg",
               },
             },
@@ -260,9 +274,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 2,
-      "uri": "record(7)",
+      "uri": "record(8)",
       "viewer": Object {
-        "upvote": "record(8)",
+        "upvote": "record(9)",
       },
     },
   },
@@ -281,7 +295,7 @@ Array [
           "muted": false,
         },
       },
-      "cid": "cids(9)",
+      "cid": "cids(10)",
       "downvoteCount": 0,
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "record": Object {
@@ -292,7 +306,7 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 0,
-      "uri": "record(9)",
+      "uri": "record(10)",
       "viewer": Object {},
     },
   },
@@ -502,10 +516,24 @@ Array [
       },
       "cid": "cids(5)",
       "downvoteCount": 1,
+      "embed": Object {
+        "$type": "app.bsky.embed.record#presented",
+        "record": Object {
+          "$type": "app.bsky.embed.record#presentedNotFound",
+          "uri": "record(8)",
+        },
+      },
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
+        "embed": Object {
+          "$type": "app.bsky.embed.record",
+          "record": Object {
+            "cid": "cids(6)",
+            "uri": "record(8)",
+          },
+        },
         "text": "yoohoo",
       },
       "replyCount": 0,
@@ -527,12 +555,12 @@ Array [
         "displayName": "bobby",
         "handle": "bob.test",
         "viewer": Object {
-          "followedBy": "record(10)",
-          "following": "record(9)",
+          "followedBy": "record(11)",
+          "following": "record(10)",
           "muted": false,
         },
       },
-      "cid": "cids(6)",
+      "cid": "cids(7)",
       "downvoteCount": 0,
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "record": Object {
@@ -543,7 +571,7 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 0,
-      "uri": "record(8)",
+      "uri": "record(9)",
       "viewer": Object {},
     },
   },
@@ -591,7 +619,7 @@ Array [
           "muted": false,
         },
       },
-      "cid": "cids(7)",
+      "cid": "cids(8)",
       "downvoteCount": 0,
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "record": Object {
@@ -602,7 +630,7 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 0,
-      "uri": "record(11)",
+      "uri": "record(12)",
       "viewer": Object {},
     },
   },
@@ -621,7 +649,7 @@ Array [
           "muted": false,
         },
       },
-      "cid": "cids(8)",
+      "cid": "cids(9)",
       "downvoteCount": 0,
       "embed": Object {
         "$type": "app.bsky.embed.images#presented",
@@ -648,14 +676,14 @@ Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
               "image": Object {
-                "cid": "cids(9)",
+                "cid": "cids(10)",
                 "mimeType": "image/jpeg",
               },
             },
             Object {
               "alt": "tests/image/fixtures/key-alt.jpg",
               "image": Object {
-                "cid": "cids(10)",
+                "cid": "cids(11)",
                 "mimeType": "image/jpeg",
               },
             },
@@ -666,9 +694,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 2,
-      "uri": "record(12)",
+      "uri": "record(13)",
       "viewer": Object {
-        "upvote": "record(13)",
+        "upvote": "record(14)",
       },
     },
   },
@@ -684,12 +712,12 @@ Array [
         "displayName": "bobby",
         "handle": "bob.test",
         "viewer": Object {
-          "followedBy": "record(10)",
-          "following": "record(9)",
+          "followedBy": "record(11)",
+          "following": "record(10)",
           "muted": false,
         },
       },
-      "cid": "cids(11)",
+      "cid": "cids(12)",
       "downvoteCount": 0,
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "record": Object {
@@ -700,7 +728,7 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 0,
-      "uri": "record(14)",
+      "uri": "record(15)",
       "viewer": Object {},
     },
   },
@@ -719,7 +747,7 @@ Array [
           "muted": false,
         },
       },
-      "cid": "cids(12)",
+      "cid": "cids(13)",
       "downvoteCount": 0,
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "record": Object {
@@ -730,7 +758,7 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "upvoteCount": 0,
-      "uri": "record(15)",
+      "uri": "record(16)",
       "viewer": Object {},
     },
   },
@@ -1210,10 +1238,52 @@ Array [
       },
       "cid": "cids(7)",
       "downvoteCount": 1,
+      "embed": Object {
+        "$type": "app.bsky.embed.record#presented",
+        "record": Object {
+          "$type": "app.bsky.embed.record#presentedRecord",
+          "author": Object {
+            "declaration": Object {
+              "actorType": "app.bsky.system.actorUser",
+              "cid": "cids(1)",
+            },
+            "did": "user(1)",
+            "handle": "dan.test",
+            "viewer": Object {
+              "following": "record(1)",
+              "muted": false,
+            },
+          },
+          "cid": "cids(2)",
+          "record": Object {
+            "$type": "app.bsky.feed.post",
+            "createdAt": "1970-01-01T00:00:00.000Z",
+            "entities": Array [
+              Object {
+                "index": Object {
+                  "end": 18,
+                  "start": 0,
+                },
+                "type": "mention",
+                "value": "user(0)",
+              },
+            ],
+            "text": "@alice.bluesky.xyz is the best",
+          },
+          "uri": "record(2)",
+        },
+      },
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
+        "embed": Object {
+          "$type": "app.bsky.embed.record",
+          "record": Object {
+            "cid": "cids(2)",
+            "uri": "record(2)",
+          },
+        },
         "text": "yoohoo",
       },
       "replyCount": 0,
@@ -1929,10 +1999,52 @@ Array [
       },
       "cid": "cids(7)",
       "downvoteCount": 1,
+      "embed": Object {
+        "$type": "app.bsky.embed.record#presented",
+        "record": Object {
+          "$type": "app.bsky.embed.record#presentedRecord",
+          "author": Object {
+            "declaration": Object {
+              "actorType": "app.bsky.system.actorUser",
+              "cid": "cids(1)",
+            },
+            "did": "user(0)",
+            "handle": "dan.test",
+            "viewer": Object {
+              "followedBy": "record(1)",
+              "muted": false,
+            },
+          },
+          "cid": "cids(0)",
+          "record": Object {
+            "$type": "app.bsky.feed.post",
+            "createdAt": "1970-01-01T00:00:00.000Z",
+            "entities": Array [
+              Object {
+                "index": Object {
+                  "end": 18,
+                  "start": 0,
+                },
+                "type": "mention",
+                "value": "user(1)",
+              },
+            ],
+            "text": "@alice.bluesky.xyz is the best",
+          },
+          "uri": "record(0)",
+        },
+      },
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
+        "embed": Object {
+          "$type": "app.bsky.embed.record",
+          "record": Object {
+            "cid": "cids(0)",
+            "uri": "record(0)",
+          },
+        },
         "text": "yoohoo",
       },
       "replyCount": 0,
@@ -2455,10 +2567,51 @@ Array [
       },
       "cid": "cids(7)",
       "downvoteCount": 1,
+      "embed": Object {
+        "$type": "app.bsky.embed.record#presented",
+        "record": Object {
+          "$type": "app.bsky.embed.record#presentedRecord",
+          "author": Object {
+            "declaration": Object {
+              "actorType": "app.bsky.system.actorUser",
+              "cid": "cids(1)",
+            },
+            "did": "user(0)",
+            "handle": "dan.test",
+            "viewer": Object {
+              "muted": false,
+            },
+          },
+          "cid": "cids(0)",
+          "record": Object {
+            "$type": "app.bsky.feed.post",
+            "createdAt": "1970-01-01T00:00:00.000Z",
+            "entities": Array [
+              Object {
+                "index": Object {
+                  "end": 18,
+                  "start": 0,
+                },
+                "type": "mention",
+                "value": "user(1)",
+              },
+            ],
+            "text": "@alice.bluesky.xyz is the best",
+          },
+          "uri": "record(0)",
+        },
+      },
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
+        "embed": Object {
+          "$type": "app.bsky.embed.record",
+          "record": Object {
+            "cid": "cids(0)",
+            "uri": "record(0)",
+          },
+        },
         "text": "yoohoo",
       },
       "replyCount": 0,
@@ -3109,10 +3262,52 @@ Array [
       },
       "cid": "cids(5)",
       "downvoteCount": 1,
+      "embed": Object {
+        "$type": "app.bsky.embed.record#presented",
+        "record": Object {
+          "$type": "app.bsky.embed.record#presentedRecord",
+          "author": Object {
+            "declaration": Object {
+              "actorType": "app.bsky.system.actorUser",
+              "cid": "cids(1)",
+            },
+            "did": "user(1)",
+            "handle": "dan.test",
+            "viewer": Object {
+              "following": "record(1)",
+              "muted": false,
+            },
+          },
+          "cid": "cids(6)",
+          "record": Object {
+            "$type": "app.bsky.feed.post",
+            "createdAt": "1970-01-01T00:00:00.000Z",
+            "entities": Array [
+              Object {
+                "index": Object {
+                  "end": 18,
+                  "start": 0,
+                },
+                "type": "mention",
+                "value": "user(0)",
+              },
+            ],
+            "text": "@alice.bluesky.xyz is the best",
+          },
+          "uri": "record(7)",
+        },
+      },
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
+        "embed": Object {
+          "$type": "app.bsky.embed.record",
+          "record": Object {
+            "cid": "cids(6)",
+            "uri": "record(7)",
+          },
+        },
         "text": "yoohoo",
       },
       "replyCount": 0,

@@ -2917,6 +2917,65 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyEmbedRecord: {
+    lexicon: 1,
+    id: 'app.bsky.embed.record',
+    description:
+      'An representation of a record embedded in another form of content',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['record'],
+        properties: {
+          record: {
+            type: 'ref',
+            ref: 'lex:com.atproto.repo.strongRef',
+          },
+        },
+      },
+      presented: {
+        type: 'object',
+        required: ['record'],
+        properties: {
+          record: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.embed.record#presentedRecord',
+              'lex:app.bsky.embed.record#presentedNotFound',
+            ],
+          },
+        },
+      },
+      presentedRecord: {
+        type: 'object',
+        required: ['uri', 'cid', 'author', 'record'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+          record: {
+            type: 'unknown',
+          },
+        },
+      },
+      presentedNotFound: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedFeedViewPost: {
     lexicon: 1,
     id: 'app.bsky.feed.feedViewPost',
@@ -3308,6 +3367,7 @@ export const schemaDict = {
               refs: [
                 'lex:app.bsky.embed.images',
                 'lex:app.bsky.embed.external',
+                'lex:app.bsky.embed.record',
               ],
             },
             createdAt: {
@@ -3396,6 +3456,7 @@ export const schemaDict = {
             refs: [
               'lex:app.bsky.embed.images#presented',
               'lex:app.bsky.embed.external#presented',
+              'lex:app.bsky.embed.record#presented',
             ],
           },
           replyCount: {
@@ -4068,6 +4129,7 @@ export const ids = {
   AppBskyActorUpdateProfile: 'app.bsky.actor.updateProfile',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
+  AppBskyEmbedRecord: 'app.bsky.embed.record',
   AppBskyFeedFeedViewPost: 'app.bsky.feed.feedViewPost',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',

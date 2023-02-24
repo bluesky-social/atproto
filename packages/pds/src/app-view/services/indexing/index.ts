@@ -92,6 +92,10 @@ export class IndexingService {
         .where('post_embed_external.postUri', 'in', postByUser)
         .execute(),
       this.db.db
+        .deleteFrom('post_embed_record')
+        .where('post_embed_record.postUri', 'in', postByUser)
+        .execute(),
+      this.db.db
         .deleteFrom('duplicate_record')
         .where('duplicate_record.duplicateOf', 'in', (qb) =>
           // @TODO remove dependency on record table from app view

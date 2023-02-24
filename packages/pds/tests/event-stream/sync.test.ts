@@ -132,6 +132,7 @@ describe('sync', () => {
     'post_entity',
     'post_embed_image',
     'post_embed_external',
+    'post_embed_record',
     'repost',
     'vote',
     /* Not these:

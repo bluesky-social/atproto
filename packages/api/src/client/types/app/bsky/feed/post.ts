@@ -6,6 +6,7 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as AppBskyEmbedImages from '../embed/images'
 import * as AppBskyEmbedExternal from '../embed/external'
+import * as AppBskyEmbedRecord from '../embed/record'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 import * as AppBskyActorRef from '../actor/ref'
 
@@ -16,6 +17,7 @@ export interface Record {
   embed?:
     | AppBskyEmbedImages.Main
     | AppBskyEmbedExternal.Main
+    | AppBskyEmbedRecord.Main
     | { $type: string; [k: string]: unknown }
   createdAt: string
   [k: string]: unknown
@@ -94,6 +96,7 @@ export interface View {
   embed?:
     | AppBskyEmbedImages.Presented
     | AppBskyEmbedExternal.Presented
+    | AppBskyEmbedRecord.Presented
     | { $type: string; [k: string]: unknown }
   replyCount: number
   repostCount: number
