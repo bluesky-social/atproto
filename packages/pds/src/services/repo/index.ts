@@ -16,7 +16,7 @@ export class RepoService {
   constructor(
     public db: Database,
     public keypair: crypto.Keypair,
-    public messageQueue: MessageQueue,
+    public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
   ) {
     this.blobs = new RepoBlobs(db, blobstore)
@@ -24,15 +24,15 @@ export class RepoService {
 
   static creator(
     keypair: crypto.Keypair,
-    messageQueue: MessageQueue,
+    messageDispatcher: MessageQueue,
     blobstore: BlobStore,
   ) {
     return (db: Database) =>
-      new RepoService(db, keypair, messageQueue, blobstore)
+      new RepoService(db, keypair, messageDispatcher, blobstore)
   }
 
   services = {
-    record: RecordService.creator(this.messageQueue),
+    record: RecordService.creator(this.messageDispatcher),
   }
 
   async createRepo(did: string, writes: PreparedCreate[], now: string) {

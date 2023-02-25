@@ -15,14 +15,14 @@ import { ImageUriBuilder } from '../../image/uri'
 export class ModerationService {
   constructor(
     public db: Database,
-    public messageQueue: MessageQueue,
+    public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
     public imgUriBuilder: ImageUriBuilder,
     public imgInvalidator: ImageInvalidator,
   ) {}
 
   static creator(
-    messageQueue: MessageQueue,
+    messageDispatcher: MessageQueue,
     blobstore: BlobStore,
     imgUriBuilder: ImageUriBuilder,
     imgInvalidator: ImageInvalidator,
@@ -30,17 +30,17 @@ export class ModerationService {
     return (db: Database) =>
       new ModerationService(
         db,
-        messageQueue,
+        messageDispatcher,
         blobstore,
         imgUriBuilder,
         imgInvalidator,
       )
   }
 
-  views = new ModerationViews(this.db, this.messageQueue, this.imgUriBuilder)
+  views = new ModerationViews(this.db, this.messageDispatcher)
 
   services = {
-    record: RecordService.creator(this.messageQueue),
+    record: RecordService.creator(this.messageDispatcher),
   }
 
   async getAction(id: number): Promise<ModerationActionRow | undefined> {

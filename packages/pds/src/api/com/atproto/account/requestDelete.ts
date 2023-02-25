@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
       const did = auth.credentials.did
       const token = getSixDigitToken()
       const requestedAt = new Date().toISOString()
-      const user = await ctx.services.actor(ctx.db).getUser(did)
+      const user = await ctx.services.account(ctx.db).getUser(did)
       if (!user) {
         throw new InvalidRequestError('user not found')
       }

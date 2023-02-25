@@ -1,3 +1,4 @@
+// @NOTE also used by app-view (moderation)
 export interface Record {
   uri: string
   cid: string
