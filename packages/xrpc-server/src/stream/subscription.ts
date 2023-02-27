@@ -10,6 +10,7 @@ export class Subscription<T = unknown> {
       method: string
       maxReconnectSeconds?: number
       validate: (obj: unknown) => T | undefined
+      onReconnect?: (n: number, initialSetup: boolean) => void
       getParams?: () =>
         | Record<string, unknown>
         | Promise<Record<string, unknown> | undefined>
@@ -23,6 +24,7 @@ export class Subscription<T = unknown> {
     const maxReconnectMs = 1000 * (this.opts.maxReconnectSeconds ?? 64)
     while (true) {
       if (reconnects !== null) {
+        this.opts.onReconnect?.(reconnects, initialSetup)
         const duration = initialSetup
           ? Math.min(1000, maxReconnectMs)
           : backoffMs(reconnects++, maxReconnectMs)

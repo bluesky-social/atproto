@@ -266,14 +266,12 @@ describe('Subscriptions', () => {
 
     it('reconnects w/ param update', async () => {
       let countdown = 10
-      let calledGetParams = 0
+      let reconnects = 0
       const sub = new Subscription({
         service: 'ws://localhost:8895',
         method: 'io.example.stream1',
-        getParams: () => {
-          calledGetParams++
-          return { countdown }
-        },
+        onReconnect: () => reconnects++,
+        getParams: () => ({ countdown }),
         validate: (obj) => {
           return lex.assertValidXrpcMessage<{ count: number }>(
             'io.example.stream1',
@@ -295,7 +293,7 @@ describe('Subscriptions', () => {
       }
 
       expect(countdown).toEqual(0)
-      expect(calledGetParams).toBeGreaterThan(1)
+      expect(reconnects).toBeGreaterThan(0)
     })
   })
 })
