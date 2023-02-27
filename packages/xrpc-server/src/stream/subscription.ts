@@ -9,6 +9,7 @@ export class Subscription<T = unknown> {
       service: string
       method: string
       maxReconnectSeconds?: number
+      signal?: AbortSignal
       validate: (obj: unknown) => T | undefined
       onReconnect?: (n: number, initialSetup: boolean) => void
       getParams?: () =>
@@ -31,6 +32,10 @@ export class Subscription<T = unknown> {
         await wait(duration)
       }
       const ws = await this.getSocket()
+      const ac = new AbortController()
+      if (this.opts.signal) {
+        forwardSignal(this.opts.signal, ac)
+      }
       ws.once('open', () => {
         initialSetup = false
         reconnects = 0
@@ -38,14 +43,14 @@ export class Subscription<T = unknown> {
       ws.once('close', (code, reason) => {
         if (code === CloseCode.Abnormal) {
           // Forward into an error to distinguish from a clean close
-          ws.emit(
-            'error',
+          ac.abort(
             new AbnormalCloseError(`Abnormal ws close: ${reason.toString()}`),
           )
         }
       })
       try {
-        for await (const message of byMessage(ws)) {
+        const cancelable = { signal: ac.signal }
+        for await (const message of byMessage(ws, cancelable)) {
           const result = this.opts.validate(message.body) // @TODO map $type
           if (result !== undefined) {
             yield result
@@ -83,6 +88,7 @@ function isReconnectable(err: unknown): boolean {
   // AuthenticationRequired and InvalidRequest XRPCErrors are not reconnectable.
   // @TODO method-specific XRPCErrors may be reconnectable, need to consider. Receiving
   // an invalid message is not current reconnectable, but the user can decide to skip them.
+  err = err?.['code'] === 'ABORT_ERR' ? err['cause'] : err
   if (!err || typeof err['code'] !== 'string') return false
   return networkErrorCodes.includes(err['code'])
 }
@@ -141,4 +147,14 @@ function encodeQueryParam(value: unknown): string | string[] {
     }
   }
   throw new Error(`Cannot encode ${typeof value}s into query params`)
+}
+
+function forwardSignal(signal: AbortSignal, ac: AbortController) {
+  if (signal.aborted) {
+    return ac.abort(signal.reason)
+  } else {
+    signal.addEventListener('abort', () => ac.abort(signal.reason), {
+      signal: ac.signal,
+    })
+  }
 }

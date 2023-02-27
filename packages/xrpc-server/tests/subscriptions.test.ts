@@ -295,5 +295,47 @@ describe('Subscriptions', () => {
       expect(countdown).toEqual(0)
       expect(reconnects).toBeGreaterThan(0)
     })
+
+    it('aborts with signal', async () => {
+      const abortController = new AbortController()
+      const sub = new Subscription({
+        service: 'ws://localhost:8895',
+        method: 'io.example.stream1',
+        signal: abortController.signal,
+        getParams: () => ({ countdown: 10 }),
+        validate: (obj) => {
+          const result = lex.assertValidXrpcMessage<{ count: number }>(
+            'io.example.stream1',
+            obj,
+          )
+          return result
+        },
+      })
+
+      let error
+      let disconnected = false
+      const messages: { count: number }[] = []
+      try {
+        for await (const msg of sub) {
+          messages.push(msg)
+          if (msg.count <= 6 && !disconnected) {
+            disconnected = true
+            abortController.abort(new Error('Oops!'))
+          }
+        }
+      } catch (err) {
+        error = err
+      }
+
+      expect(error?.['code']).toEqual('ABORT_ERR')
+      expect(error?.['cause']).toEqual(new Error('Oops!'))
+      expect(messages).toEqual([
+        { count: 10 },
+        { count: 9 },
+        { count: 8 },
+        { count: 7 },
+        { count: 6 },
+      ])
+    })
   })
 })
