@@ -11,7 +11,11 @@ export class Subscription<T = unknown> {
       maxReconnectSeconds?: number
       signal?: AbortSignal
       validate: (obj: unknown) => T | undefined
-      onReconnect?: (n: number, initialSetup: boolean) => void
+      onReconnectError?: (
+        error: unknown,
+        n: number,
+        initialSetup: boolean,
+      ) => void
       getParams?: () =>
         | Record<string, unknown>
         | Promise<Record<string, unknown> | undefined>
@@ -25,7 +29,6 @@ export class Subscription<T = unknown> {
     const maxReconnectMs = 1000 * (this.opts.maxReconnectSeconds ?? 64)
     while (true) {
       if (reconnects !== null) {
-        this.opts.onReconnect?.(reconnects, initialSetup)
         const duration = initialSetup
           ? Math.min(1000, maxReconnectMs)
           : backoffMs(reconnects++, maxReconnectMs)
@@ -60,6 +63,7 @@ export class Subscription<T = unknown> {
         ws.close() // No-ops if already closed or closing
         if (isReconnectable(err)) {
           reconnects ??= 0 // Never reconnect with a null
+          this.opts.onReconnectError?.(err, reconnects, initialSetup)
           continue
         } else {
           throw err

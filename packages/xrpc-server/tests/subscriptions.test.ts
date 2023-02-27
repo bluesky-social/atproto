@@ -270,7 +270,7 @@ describe('Subscriptions', () => {
       const sub = new Subscription({
         service: 'ws://localhost:8895',
         method: 'io.example.stream1',
-        onReconnect: () => reconnects++,
+        onReconnectError: () => reconnects++,
         getParams: () => ({ countdown }),
         validate: (obj) => {
           return lex.assertValidXrpcMessage<{ count: number }>(
