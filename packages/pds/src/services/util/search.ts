@@ -4,6 +4,7 @@ import Database from '../../db'
 import { notSoftDeletedClause, DbRef } from '../../db/util'
 import { GenericKeyset, paginate } from '../../db/pagination'
 
+// @TODO utilized in both pds and app-view
 export const getUserSearchQueryPg = (
   db: Database,
   opts: {

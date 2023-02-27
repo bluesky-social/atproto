@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
           const uri = AtUri.make(did, profileNsid, 'self')
           const current = (await recordTxn.getRecord(uri, null, true))?.value
           if (current) {
-            if (!recordTxn.records.profile.matchesSchema(current)) {
+            if (!isProfile(current)) {
               // @TODO need a way to get a profile out of a broken state
               throw new InvalidRequestError('could not parse current profile')
             }
@@ -54,7 +54,7 @@ export default function (server: Server, ctx: AppContext) {
             }
           }
           updated = common.noUndefinedVals(updated)
-          if (!recordTxn.records.profile.matchesSchema(updated)) {
+          if (!isProfile(updated)) {
             throw new InvalidRequestError(
               'requested updates do not produce a valid profile doc',
             )
@@ -124,4 +124,8 @@ export default function (server: Server, ctx: AppContext) {
 function unsetIfNull<T>(x: T | null | undefined, y?: T): T | undefined {
   if (x === null) return undefined
   return x ?? y
+}
+
+function isProfile(obj: unknown): obj is Profile.Record {
+  return Profile.validateRecord(obj).success
 }

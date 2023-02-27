@@ -5,7 +5,7 @@ import { Server, APP_BSKY_SYSTEM } from '../../../../lexicon'
 import { countAll } from '../../../../db/util'
 import * as lex from '../../../../lexicon/lexicons'
 import * as repo from '../../../../repo'
-import { UserAlreadyExistsError } from '../../../../services/actor'
+import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
     const now = new Date().toISOString()
 
     const result = await ctx.db.transaction(async (dbTxn) => {
-      const actorTxn = ctx.services.actor(dbTxn)
+      const actorTxn = ctx.services.account(dbTxn)
       const repoTxn = ctx.services.repo(dbTxn)
       if (ctx.cfg.inviteRequired) {
         if (!inviteCode) {

@@ -76,7 +76,8 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Could not find user: ${requester}`)
       }
 
-      const actorService = ctx.services.actor(ctx.db)
+      // @NOTE calling into app-view, will eventually be replaced
+      const actorService = ctx.services.appView.actor(ctx.db)
       const authors = await actorService.views.actorWithInfo(
         notifs.map((notif) => ({
           did: notif.authorDid,

@@ -47,3 +47,7 @@ ENV NODE_ENV=production
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
 CMD ["node", "--enable-source-maps", "index.js"]
+
+LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
+LABEL org.opencontainers.image.description="ATP Personal Data Server (PDS)"
+LABEL org.opencontainers.image.licenses=MIT

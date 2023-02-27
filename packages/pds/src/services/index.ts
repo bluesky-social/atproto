@@ -2,46 +2,64 @@ import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import Database from '../db'
 import { MessageQueue } from '../event-stream/types'
+import { MessageDispatcher } from '../event-stream/message-queue'
 import { ImageUriBuilder } from '../image/uri'
 import { ImageInvalidator } from '../image/invalidator'
-import { ActorService } from './actor'
+import { AccountService } from './account'
 import { AuthService } from './auth'
-import { FeedService } from './feed'
 import { RecordService } from './record'
 import { RepoService } from './repo'
 import { ModerationService } from './moderation'
+import { ActorService } from '../app-view/services/actor'
+import { FeedService } from '../app-view/services/feed'
+import { IndexingService } from '../app-view/services/indexing'
 
 export function createServices(resources: {
   keypair: crypto.Keypair
   messageQueue: MessageQueue
+  messageDispatcher: MessageDispatcher
   blobstore: BlobStore
   imgUriBuilder: ImageUriBuilder
   imgInvalidator: ImageInvalidator
 }): Services {
-  const { keypair, messageQueue, blobstore, imgUriBuilder, imgInvalidator } =
-    resources
+  const {
+    keypair,
+    messageQueue,
+    messageDispatcher,
+    blobstore,
+    imgUriBuilder,
+    imgInvalidator,
+  } = resources
   return {
-    actor: ActorService.creator(imgUriBuilder),
+    account: AccountService.creator(),
     auth: AuthService.creator(),
-    feed: FeedService.creator(imgUriBuilder),
-    record: RecordService.creator(messageQueue),
-    repo: RepoService.creator(keypair, messageQueue, blobstore),
+    record: RecordService.creator(messageDispatcher),
+    repo: RepoService.creator(keypair, messageDispatcher, blobstore),
     moderation: ModerationService.creator(
-      messageQueue,
+      messageDispatcher,
       blobstore,
       imgUriBuilder,
       imgInvalidator,
     ),
+    appView: {
+      actor: ActorService.creator(imgUriBuilder),
+      feed: FeedService.creator(imgUriBuilder),
+      indexing: IndexingService.creator(messageQueue, messageDispatcher),
+    },
   }
 }
 
 export type Services = {
-  actor: FromDb<ActorService>
+  account: FromDb<AccountService>
   auth: FromDb<AuthService>
-  feed: FromDb<FeedService>
   record: FromDb<RecordService>
   repo: FromDb<RepoService>
   moderation: FromDb<ModerationService>
+  appView: {
+    feed: FromDb<FeedService>
+    indexing: FromDb<IndexingService>
+    actor: FromDb<ActorService>
+  }
 }
 
 type FromDb<T> = (db: Database) => T

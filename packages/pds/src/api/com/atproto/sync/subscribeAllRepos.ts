@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
     const backfillTime = new Date(
       Date.now() - ctx.cfg.repoBackfillLimitMs,
     ).toISOString()
-    if (cursor) {
+    if (cursor !== undefined) {
       const [next, curr] = await Promise.all([
         ctx.sequencer.next(cursor),
         ctx.sequencer.curr(),
@@ -40,10 +40,7 @@ export default function (server: Server, ctx: AppContext) {
         blocks,
         blobs,
         time,
-      }
-      // Undefineds not allowed by dag-cbor encoding
-      if (prev !== undefined) {
-        toYield.prev = prev
+        prev: prev ?? null,
       }
       yield toYield
     }

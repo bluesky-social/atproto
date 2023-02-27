@@ -17,7 +17,8 @@
       "message": {
         "schema": {
           "type": "object",
-          "required": ["seq", "event", "repo", "commit", "blocks", "blobs", "time"],
+          "required": ["seq", "event", "repo", "commit", "prev", "blocks", "blobs", "time"],
+          "nullable": ["prev"],
           "properties": {
             "seq": {"type": "integer"},
             "event": { 
