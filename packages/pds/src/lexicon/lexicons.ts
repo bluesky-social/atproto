@@ -2242,6 +2242,17 @@ export const schemaDict = {
       main: {
         type: 'query',
         description: 'Request a service to persistently crawl hosted repos.',
+        parameters: {
+          type: 'params',
+          required: ['hostname'],
+          properties: {
+            host: {
+              type: 'string',
+              description:
+                'Hostname of hte service that is reqeusting to be crawled.',
+            },
+          },
+        },
       },
     },
   },

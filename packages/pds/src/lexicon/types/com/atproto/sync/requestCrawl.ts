@@ -7,7 +7,10 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
-export interface QueryParams {}
+export interface QueryParams {
+  /** Hostname of hte service that is reqeusting to be crawled. */
+  host?: string
+}
 
 export type InputSchema = undefined
 export type HandlerInput = undefined
