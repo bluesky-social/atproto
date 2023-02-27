@@ -2248,10 +2248,12 @@ export const schemaDict = {
               'event',
               'repo',
               'commit',
+              'prev',
               'blocks',
               'blobs',
               'time',
             ],
+            nullable: ['prev'],
             properties: {
               seq: {
                 type: 'integer',
