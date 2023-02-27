@@ -18,14 +18,21 @@ export class Subscription<T = unknown> {
   ) {}
 
   async *[Symbol.asyncIterator](): AsyncGenerator<T> {
+    let initialSetup = true
     let reconnects: number | null = null
     const maxReconnectMs = 1000 * (this.opts.maxReconnectSeconds ?? 64)
     while (true) {
       if (reconnects !== null) {
-        await wait(backoffMs(reconnects++, maxReconnectMs))
+        const duration = initialSetup
+          ? Math.min(1000, maxReconnectMs)
+          : backoffMs(reconnects++, maxReconnectMs)
+        await wait(duration)
       }
       const ws = await this.getSocket()
-      ws.once('open', () => (reconnects = 0))
+      ws.once('open', () => {
+        initialSetup = false
+        reconnects = 0
+      })
       ws.once('close', (code, reason) => {
         if (code === CloseCode.Abnormal) {
           // Forward into an error to distinguish from a clean close
@@ -44,7 +51,7 @@ export class Subscription<T = unknown> {
         }
       } catch (err) {
         ws.close() // No-ops if already closed or closing
-        if (isReconnectable(err, reconnects)) {
+        if (isReconnectable(err)) {
           reconnects ??= 0 // Never reconnect with a null
           continue
         } else {
@@ -69,9 +76,7 @@ class AbnormalCloseError extends Error {
   code = 'EWSABNORMALCLOSE'
 }
 
-function isReconnectable(err: unknown, reconnects: number | null): boolean {
-  // The socket never opened on initial connection.
-  if (reconnects === null) return false
+function isReconnectable(err: unknown): boolean {
   // Network errors are reconnectable.
   // AuthenticationRequired and InvalidRequest XRPCErrors are not reconnectable.
   // @TODO method-specific XRPCErrors may be reconnectable, need to consider. Receiving
