@@ -17,7 +17,7 @@ export interface OutputSchema {
   event: 'repo_append' | 'rebase' | (string & {})
   repo: string
   commit: string
-  prev?: string
+  prev: string | null
   blocks: {}
   blobs: string[]
   time: string
