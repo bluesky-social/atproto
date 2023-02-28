@@ -42,7 +42,10 @@ export const getKey = (doc: DIDDocument): string | undefined => {
 export const getHandle = (doc: DIDDocument): string | undefined => {
   const aka = doc.alsoKnownAs
   if (!aka) return undefined
-  return aka.find((name) => name.startsWith('at://'))
+  const found = aka.find((name) => name.startsWith('at://'))
+  if (!found) return undefined
+  // strip off at:// prefix
+  return found.slice(5)
 }
 
 export const getPds = (doc: DIDDocument): string | undefined => {

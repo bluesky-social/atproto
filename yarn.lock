@@ -10,29 +10,6 @@
     "@jridgewell/gen-mapping" "^0.1.0"
     "@jridgewell/trace-mapping" "^0.3.9"
 
-"@atproto/plc@*":
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/@atproto/plc/-/plc-0.0.1.tgz#713de881fd2b803a0f1afbee57735de8382a8ed3"
-  integrity sha512-9JM027ioAb6rG+2F/p89DJlIXBOH85rGWXFcG3dImZJ8SalFqRZ0/7gtdFN387IZ/HNAWRmmFaAxMEmJ9NgKpQ==
-  dependencies:
-    "@atproto/common" "*"
-    "@atproto/crypto" "*"
-    "@ipld/dag-cbor" "^7.0.3"
-    async-mutex "^0.4.0"
-    axios "^0.27.2"
-    better-sqlite3 "^7.6.2"
-    cors "^2.8.5"
-    dotenv "^16.0.2"
-    express "^4.17.2"
-    express-async-errors "^3.1.1"
-    http-terminator "^3.2.0"
-    kysely "^0.22.0"
-    pg "^8.8.0"
-    pino "^8.6.1"
-    pino-http "^8.2.1"
-    uint8arrays "3.0.0"
-    zod "^3.14.2"
-
 "@aws-crypto/crc32@2.0.0":
   version "2.0.0"
   resolved "https://registry.npmjs.org/@aws-crypto/crc32/-/crc32-2.0.0.tgz"
@@ -5120,13 +5097,6 @@ assert-plus@1.0.0, assert-plus@^1.0.0:
   resolved "https://registry.npmjs.org/assert-plus/-/assert-plus-1.0.0.tgz"
   integrity sha512-NfJ4UzBCcQGLDlQq7nHxH+tv3kyZ0hHQqF5BO6J7tNJeP5do1llPr8dZ8zHonfhAu0PHAdMkSo+8o0wxg9lZWw==
 
-async-mutex@^0.4.0:
-  version "0.4.0"
-  resolved "https://registry.npmjs.org/async-mutex/-/async-mutex-0.4.0.tgz"
-  integrity sha512-eJFZ1YhRR8UN8eBLoNzcDPcy/jqjsg6I1AP+KvWQX80BqOSW1oJPJXDylPUEeMr2ZQvHgnQ//Lp6f3RQ1zI7HA==
-  dependencies:
-    tslib "^2.4.0"
-
 asynckit@^0.4.0:
   version "0.4.0"
   resolved "https://registry.npmjs.org/asynckit/-/asynckit-0.4.0.tgz"
@@ -6222,7 +6192,7 @@ dot-prop@^6.0.1:
   dependencies:
     is-obj "^2.0.0"
 
-dotenv@^16.0.0, dotenv@^16.0.1, dotenv@^16.0.2, dotenv@^16.0.3:
+dotenv@^16.0.0, dotenv@^16.0.1, dotenv@^16.0.3:
   version "16.0.3"
   resolved "https://registry.npmjs.org/dotenv/-/dotenv-16.0.3.tgz"
   integrity sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==
@@ -11245,7 +11215,7 @@ tslib@^2.1.0:
   resolved "https://registry.npmjs.org/tslib/-/tslib-2.4.1.tgz"
   integrity sha512-tGyy4dAjRIEwI7BzsB0lynWgOpfqjUdq91XXAlIWD2OwKBH7oCl/GZG/HT4BOHrTlPMOASlMQ7veyTqpmRcrNA==
 
-tslib@^2.3.1, tslib@^2.4.0:
+tslib@^2.3.1:
   version "2.4.0"
   resolved "https://registry.npmjs.org/tslib/-/tslib-2.4.0.tgz"
   integrity sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==

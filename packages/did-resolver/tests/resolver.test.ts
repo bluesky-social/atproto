@@ -39,7 +39,7 @@ describe('resolver', () => {
     await close()
   })
 
-  const handle = 'at://alice.test'
+  const handle = 'alice.test'
   const pds = 'https://service.test'
   let signingKey: Secp256k1Keypair
   let rotationKey: Secp256k1Keypair
