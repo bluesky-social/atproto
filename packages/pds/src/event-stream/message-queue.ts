@@ -6,12 +6,14 @@ import { MessageQueue, Listenable, Listener, MessageOfType } from './types'
 // @NOTE A message dispatcher for loose coupling within db transactions.
 // Messages are handled immediately. This should not be around for long.
 export class MessageDispatcher implements MessageQueue {
+  private destroyed = false
   private listeners: Map<string, Listener[]> = new Map()
 
   async send(
     tx: Database,
     message: MessageOfType | MessageOfType[],
   ): Promise<void> {
+    if (this.destroyed) return
     const messages = Array.isArray(message) ? message : [message]
     for (const msg of messages) {
       await this.handleMessage(tx, msg)
@@ -27,9 +29,9 @@ export class MessageDispatcher implements MessageQueue {
     this.listeners.set(topic, listeners)
   }
 
-  async processNext(): Promise<void> {}
-  async processAll(): Promise<void> {}
-  destroy(): void {}
+  destroy(): void {
+    this.destroyed = true
+  }
 
   private async handleMessage(db: Database, message: MessageOfType) {
     const listeners = this.listeners.get(message.type)
@@ -40,6 +42,10 @@ export class MessageDispatcher implements MessageQueue {
       await listener({ message, db })
     }
   }
+
+  // Unused by MessageDispatcher
+  async processNext(): Promise<void> {}
+  async processAll(): Promise<void> {}
 }
 
 export class SqlMessageQueue implements MessageQueue {

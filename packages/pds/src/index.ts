@@ -12,12 +12,11 @@ import { createTransport } from 'nodemailer'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import { DidResolver } from '@atproto/did-resolver'
+import { AppView } from './app-view'
 import API, { health } from './api'
-import AppViewAPI from './app-view/api'
 import Database from './db'
 import { ServerAuth } from './auth'
 import * as streamConsumers from './event-stream/consumers'
-import * as dispatcherConsumers from './app-view/event-stream/consumers'
 import * as error from './error'
 import { loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
@@ -45,13 +44,19 @@ export { AppContext } from './context'
 
 export class PDS {
   public ctx: AppContext
+  public appView: AppView
   public app: express.Application
   public server?: http.Server
   private terminator?: HttpTerminator
 
-  constructor(opts: { ctx: AppContext; app: express.Application }) {
+  constructor(opts: {
+    ctx: AppContext
+    app: express.Application
+    appView: AppView
+  }) {
     this.ctx = opts.ctx
     this.app = opts.app
+    this.appView = opts.appView
   }
 
   static create(opts: {
@@ -137,8 +142,7 @@ export class PDS {
       imgUriBuilder,
     })
 
-    streamConsumers.listen(ctx)
-    dispatcherConsumers.listen(ctx)
+    const appView = new AppView(ctx)
 
     let server = createServer({
       payload: {
@@ -149,7 +153,7 @@ export class PDS {
     })
 
     server = API(server, ctx)
-    server = AppViewAPI(server, ctx)
+    server = appView.api(server)
 
     app.use(health.createRouter(ctx))
     app.use(server.xrpc.router)
@@ -158,10 +162,13 @@ export class PDS {
     return new PDS({
       ctx,
       app,
+      appView,
     })
   }
 
   async start(): Promise<http.Server> {
+    this.appView.start()
+    streamConsumers.listen(this.ctx)
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()
     const server = this.app.listen(this.ctx.cfg.port)
@@ -172,6 +179,7 @@ export class PDS {
   }
 
   async destroy(): Promise<void> {
+    this.appView.destroy()
     await this.ctx.messageQueue.destroy()
     await this.terminator?.terminate()
     await this.ctx.db.close()
