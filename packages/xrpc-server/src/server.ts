@@ -1,4 +1,4 @@
-import { pipeline, Readable } from 'stream'
+import { Readable } from 'stream'
 import express, {
   ErrorRequestHandler,
   NextFunction,
@@ -228,7 +228,6 @@ export class Server {
             res.status(200)
             forwardStreamErrors(output.body, res)
             output.body.pipe(res)
-            // pipeline(output.body, res)
           } else if (output) {
             res
               .status(200)
