@@ -1,7 +1,6 @@
 import * as crypto from '@atproto/crypto'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import * as uint8arrays from 'uint8arrays'
-import { DidResolver } from '@atproto/did-resolver'
 import express from 'express'
 import * as jwt from 'jsonwebtoken'
 import AppContext from './context'
@@ -12,7 +11,6 @@ const BASIC = 'Basic '
 
 export type ServerAuthOpts = {
   jwtSecret: string
-  didResolver: DidResolver
   adminPass: string
 }
 
@@ -33,12 +31,10 @@ export type RefreshToken = AuthToken & { jti: string }
 export class ServerAuth {
   private _secret: string
   private _adminPass: string
-  didResolver: DidResolver
 
   constructor(opts: ServerAuthOpts) {
     this._secret = opts.jwtSecret
     this._adminPass = opts.adminPass
-    this.didResolver = opts.didResolver
   }
 
   createAccessToken(did: string, expiresIn?: string | number) {

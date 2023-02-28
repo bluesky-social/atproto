@@ -34,8 +34,29 @@ export const runTestServer = async (
   const repoSigningKey = await crypto.Secp256k1Keypair.create()
   const plcRotationKey = await crypto.Secp256k1Keypair.create()
 
+  const dbPostgresUrl = params.dbPostgresUrl || process.env.DB_POSTGRES_URL
+  const dbPostgresSchema =
+    params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
   // run plc server
-  const plcDb = PlcDatabase.mock()
+
+  let plcDb
+  if (dbPostgresUrl !== undefined) {
+    plcDb = PlcDatabase.postgres({
+      url: dbPostgresUrl,
+      schema: `plc_test_${dbPostgresSchema}`,
+    })
+    await plcDb.migrateToLatestOrThrow()
+  } else {
+    plcDb = PlcDatabase.mock()
+  }
+
+  // const plcDb =
+  //   dbPostgresUrl !== undefined
+  //     ? PlcDatabase.postgres({
+  //         url: dbPostgresUrl,
+  //         schema: `plc_test_${dbPostgresSchema}`,
+  //       })
+  //     : PlcDatabase.mock()
   // await plcDb.migrateToLatestOrThrow()
   const plcServer = PlcServer.create({ db: plcDb })
   const plcListener = await plcServer.start()

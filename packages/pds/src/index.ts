@@ -10,7 +10,6 @@ import http from 'http'
 import events from 'events'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
-import { DidResolver } from '@atproto/did-resolver'
 import API, { health } from './api'
 import Database from './db'
 import { ServerAuth } from './auth'
@@ -59,11 +58,9 @@ export class PDS {
   }): PDS {
     const { db, blobstore, repoSigningKey, plcRotationKey, config } = opts
     let maybeImgInvalidator = opts.imgInvalidator
-    const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
     const auth = new ServerAuth({
       jwtSecret: config.jwtSecret,
       adminPass: config.adminPassword,
-      didResolver,
     })
 
     const messageQueue = new SqlMessageQueue('pds', db)
