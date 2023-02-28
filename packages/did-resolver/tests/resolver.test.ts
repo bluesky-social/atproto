@@ -1,11 +1,11 @@
 import getPort from 'get-port'
-import { AtprotoData, DidResolver } from '../src'
+import { DidResolver } from '../src'
 import { DidWebServer } from './web/server'
 import DidWebDb from './web/db'
 import * as plc from '@did-plc/lib'
 import { Database as DidPlcDb, PlcServer } from '@did-plc/server'
 import { DIDDocument } from 'did-resolver'
-import { EcdsaKeypair } from '@atproto/crypto'
+import { Secp256k1Keypair } from '@atproto/crypto'
 
 describe('resolver', () => {
   let close: () => Promise<void>
@@ -22,7 +22,6 @@ describe('resolver', () => {
     })
 
     const plcDB = DidPlcDb.mock()
-    await plcDB.migrateToLatestOrThrow()
     const plcPort = await getPort()
     const plcServer = PlcServer.create({ db: plcDB, port: plcPort })
     await plcServer.start()
@@ -40,25 +39,25 @@ describe('resolver', () => {
     await close()
   })
 
+  const handle = 'at://alice.test'
+  const pds = 'https://service.test'
+  let signingKey: Secp256k1Keypair
+  let rotationKey: Secp256k1Keypair
   let webDid: string
   let plcDid: string
   let didWebDoc: DIDDocument
   let didPlcDoc: DIDDocument
-  let didWebData: AtprotoData
-  let didPlcData: AtprotoData
 
   it('creates the did on did:web & did:plc', async () => {
-    const signingKey = await EcdsaKeypair.create()
-    const rotationKey = await EcdsaKeypair.create()
-    const handle = 'alice.test'
-    const pds = 'https://service.test'
+    signingKey = await Secp256k1Keypair.create()
+    rotationKey = await Secp256k1Keypair.create()
     const client = new plc.Client(plcUrl)
     plcDid = await client.createDid({
       signingKey: signingKey.did(),
       handle,
       pds,
       rotationKeys: [rotationKey.did()],
-      signer: signingKey,
+      signer: rotationKey,
     })
     didPlcDoc = await client.getDocument(plcDid)
     const domain = encodeURIComponent(`localhost:${webServer.port}`)
@@ -67,12 +66,6 @@ describe('resolver', () => {
       ...didPlcDoc,
       id: webDid,
     }
-
-    // didPlcData = await client.getDocumentData(plcDid)
-    // didWebData = {
-    //   ...didPlcData,
-    //   did: webDid,
-    // }
 
     await webServer.put(didWebDoc)
   })
@@ -84,7 +77,11 @@ describe('resolver', () => {
 
   it('resolve valid atpData from did:web', async () => {
     const atpData = await resolver.resolveAtpData(webDid)
-    expect(atpData).toEqual(didWebData)
+    expect(atpData.did).toEqual(webDid)
+    expect(atpData.handle).toEqual(handle)
+    expect(atpData.pds).toEqual(pds)
+    expect(atpData.signingKey).toEqual(signingKey.did())
+    expect(atpData.handle).toEqual(handle)
   })
 
   it('throws on malformed did:webs', async () => {
@@ -100,7 +97,11 @@ describe('resolver', () => {
 
   it('resolve valid atpData from did:plc', async () => {
     const atpData = await resolver.resolveAtpData(plcDid)
-    expect(atpData).toEqual(didPlcData)
+    expect(atpData.did).toEqual(plcDid)
+    expect(atpData.handle).toEqual(handle)
+    expect(atpData.pds).toEqual(pds)
+    expect(atpData.signingKey).toEqual(signingKey.did())
+    expect(atpData.handle).toEqual(handle)
   })
 
   it('throws on malformed did:plc', async () => {

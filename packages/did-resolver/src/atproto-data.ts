@@ -4,7 +4,6 @@ import * as crypto from '@atproto/crypto'
 export type AtprotoData = {
   did: string
   signingKey: string
-  recoveryKey: string
   handle: string
   pds: string
 }
@@ -17,14 +16,14 @@ export const getDid = (doc: DIDDocument): string => {
   return id
 }
 
-export const getKey = (doc: DIDDocument, id: string): string | undefined => {
+export const getKey = (doc: DIDDocument): string | undefined => {
   let keys = doc.verificationMethod
   if (!keys) return undefined
   if (typeof keys !== 'object') return undefined
   if (!Array.isArray(keys)) {
     keys = [keys]
   }
-  const found = keys.find((key) => key.id === id)
+  const found = keys.find((key) => key.id === '#atproto')
   if (!found) return undefined
 
   // @TODO support jwk
@@ -53,7 +52,7 @@ export const getPds = (doc: DIDDocument): string | undefined => {
   if (!Array.isArray(services)) {
     services = [services]
   }
-  const found = services.find((service) => service.id === '#atproto-pds')
+  const found = services.find((service) => service.id === '#atproto_pds')
   if (!found) return undefined
   if (found.type !== 'AtprotoPersonalDataServer') {
     return undefined
@@ -70,29 +69,25 @@ export const parseToAtprotoDocument = (
   const did = getDid(doc)
   return {
     did,
-    signingKey: getKey(doc, '#signingKey'),
+    signingKey: getKey(doc),
     handle: getHandle(doc),
     pds: getPds(doc),
   }
 }
 
 export const ensureAtpDocument = (doc: DIDDocument): AtprotoData => {
-  const { did, signingKey, recoveryKey, handle, pds } =
-    parseToAtprotoDocument(doc)
+  const { did, signingKey, handle, pds } = parseToAtprotoDocument(doc)
   if (!did) {
     throw new Error(`Could not parse id from doc: ${doc}`)
   }
   if (!signingKey) {
     throw new Error(`Could not parse signingKey from doc: ${doc}`)
   }
-  if (!recoveryKey) {
-    throw new Error(`Could not parse recoveryKey from doc: ${doc}`)
-  }
   if (!handle) {
     throw new Error(`Could not parse handle from doc: ${doc}`)
   }
   if (!pds) {
-    throw new Error(`Could not parse atpPds from doc: ${doc}`)
+    throw new Error(`Could not parse pds from doc: ${doc}`)
   }
-  return { did, signingKey, recoveryKey, handle, pds }
+  return { did, signingKey, handle, pds }
 }
