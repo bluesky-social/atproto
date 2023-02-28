@@ -1,8 +1,9 @@
 import getPort from 'get-port'
-import { AtpData, DidResolver } from '../src'
+import { AtprotoData, DidResolver } from '../src'
 import { DidWebServer } from './web/server'
 import DidWebDb from './web/db'
-import { Database as DidPlcDb, PlcServer, PlcClient } from '@atproto/plc'
+import * as plc from '@did-plc/lib'
+import { Database as DidPlcDb, PlcServer } from '@did-plc/server'
 import { DIDDocument } from 'did-resolver'
 import { EcdsaKeypair } from '@atproto/crypto'
 
@@ -20,7 +21,7 @@ describe('resolver', () => {
       webServer._httpServer?.on('error', reject)
     })
 
-    const plcDB = DidPlcDb.memory()
+    const plcDB = DidPlcDb.mock()
     await plcDB.migrateToLatestOrThrow()
     const plcPort = await getPort()
     const plcServer = PlcServer.create({ db: plcDB, port: plcPort })
@@ -43,16 +44,22 @@ describe('resolver', () => {
   let plcDid: string
   let didWebDoc: DIDDocument
   let didPlcDoc: DIDDocument
-  let didWebData: AtpData
-  let didPlcData: AtpData
+  let didWebData: AtprotoData
+  let didPlcData: AtprotoData
 
   it('creates the did on did:web & did:plc', async () => {
     const signingKey = await EcdsaKeypair.create()
-    const recoveryKey = await EcdsaKeypair.create()
+    const rotationKey = await EcdsaKeypair.create()
     const handle = 'alice.test'
     const pds = 'https://service.test'
-    const client = new PlcClient(plcUrl)
-    plcDid = await client.createDid(signingKey, recoveryKey.did(), handle, pds)
+    const client = new plc.Client(plcUrl)
+    plcDid = await client.createDid({
+      signingKey: signingKey.did(),
+      handle,
+      pds,
+      rotationKeys: [rotationKey.did()],
+      signer: signingKey,
+    })
     didPlcDoc = await client.getDocument(plcDid)
     const domain = encodeURIComponent(`localhost:${webServer.port}`)
     webDid = `did:web:${domain}`
@@ -61,11 +68,11 @@ describe('resolver', () => {
       id: webDid,
     }
 
-    didPlcData = await client.getDocumentData(plcDid)
-    didWebData = {
-      ...didPlcData,
-      did: webDid,
-    }
+    // didPlcData = await client.getDocumentData(plcDid)
+    // didWebData = {
+    //   ...didPlcData,
+    //   did: webDid,
+    // }
 
     await webServer.put(didWebDoc)
   })

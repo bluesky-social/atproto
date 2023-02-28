@@ -1,6 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as handleLib from '@atproto/handle'
 import { cidForCbor } from '@atproto/common'
+import * as plc from '@did-plc/lib'
 import { Server, APP_BSKY_SYSTEM } from '../../../../lexicon'
 import { countAll } from '../../../../db/util'
 import * as lex from '../../../../lexicon/lexicons'
@@ -63,13 +64,18 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
+      const rotationKeys = [ctx.cfg.recoveryKey, ctx.plcRotationKey.did()]
+      if (recoveryKey) {
+        rotationKeys.unshift(recoveryKey)
+      }
       // format create op, but don't send until we ensure the username & email are available
-      const plcCreate = await ctx.plcClient.formatCreateOp(
-        ctx.keypair,
-        recoveryKey || ctx.cfg.recoveryKey,
+      const plcCreate = await plc.createOp({
+        signingKey: ctx.repoSigningKey.did(),
+        rotationKeys,
         handle,
-        ctx.cfg.publicUrl,
-      )
+        pds: ctx.cfg.publicUrl,
+        signer: ctx.plcRotationKey,
+      })
       const did = plcCreate.did
 
       const declaration = {
@@ -79,13 +85,7 @@ export default function (server: Server, ctx: AppContext) {
 
       // Register user before going out to PLC to get a real did
       try {
-        await actorTxn.registerUser(
-          email,
-          handle,
-          plcCreate.did,
-          password,
-          declaration,
-        )
+        await actorTxn.registerUser(email, handle, did, password, declaration)
       } catch (err) {
         if (err instanceof UserAlreadyExistsError) {
           const got = await actorTxn.getUser(handle, true)
@@ -103,7 +103,7 @@ export default function (server: Server, ctx: AppContext) {
         await ctx.plcClient.sendOperation(did, plcCreate.op)
       } catch (err) {
         req.log.error(
-          { didKey: ctx.keypair.did(), handle },
+          { didKey: ctx.plcRotationKey.did(), handle },
           'failed to create did:plc',
         )
         throw err

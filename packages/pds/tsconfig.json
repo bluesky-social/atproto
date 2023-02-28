@@ -15,7 +15,6 @@
     { "path": "../handle/tsconfig.build.json" },
     { "path": "../lexicon/tsconfig.build.json" },
     { "path": "../lex-cli/tsconfig.build.json" },
-    { "path": "../plc/tsconfig.build.json" },
     { "path": "../repo/tsconfig.build.json" },
     { "path": "../uri/tsconfig.build.json" },
     { "path": "../xrpc-server/tsconfig.build.json" }

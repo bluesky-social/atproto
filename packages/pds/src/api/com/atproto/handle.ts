@@ -87,7 +87,7 @@ export default function (server: Server, ctx: AppContext) {
           }
           throw err
         }
-        await ctx.plcClient.updateHandle(requester, handle, ctx.keypair)
+        await ctx.plcClient.updateHandle(requester, ctx.plcRotationKey, handle)
       })
     },
   })

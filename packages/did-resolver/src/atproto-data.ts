@@ -1,12 +1,12 @@
 import { DIDDocument } from 'did-resolver'
 import * as crypto from '@atproto/crypto'
 
-export type AtpData = {
+export type AtprotoData = {
   did: string
   signingKey: string
   recoveryKey: string
   handle: string
-  atpPds: string
+  pds: string
 }
 
 export const getDid = (doc: DIDDocument): string => {
@@ -43,52 +43,42 @@ export const getKey = (doc: DIDDocument, id: string): string | undefined => {
 export const getHandle = (doc: DIDDocument): string | undefined => {
   const aka = doc.alsoKnownAs
   if (!aka) return undefined
-  let found: string | undefined
-  if (typeof aka === 'string') found = aka
-  if (Array.isArray(aka) && typeof aka[0] === 'string') {
-    found = aka[0]
-  }
-  if (!found) return undefined
-  return new URL(found).host
+  return aka.find((name) => name.startsWith('at://'))
 }
 
-export const getAtpPds = (doc: DIDDocument): string | undefined => {
+export const getPds = (doc: DIDDocument): string | undefined => {
   let services = doc.service
   if (!services) return undefined
   if (typeof services !== 'object') return undefined
   if (!Array.isArray(services)) {
     services = [services]
   }
-  const found = services.find(
-    (service) => service.type === 'AtpPersonalDataServer',
-  )
+  const found = services.find((service) => service.id === '#atproto-pds')
   if (!found) return undefined
-  if (typeof found.serviceEndpoint === 'string') {
-    return found.serviceEndpoint
-  } else if (
-    Array.isArray(found.serviceEndpoint) &&
-    typeof found.serviceEndpoint[0] === 'string'
-  ) {
-    return found.serviceEndpoint[0]
-  } else {
+  if (found.type !== 'AtprotoPersonalDataServer') {
     return undefined
   }
+  if (typeof found.serviceEndpoint === 'string') {
+    return found.serviceEndpoint
+  }
+  return undefined
 }
 
-export const parseToAtpDocument = (doc: DIDDocument): Partial<AtpData> => {
+export const parseToAtprotoDocument = (
+  doc: DIDDocument,
+): Partial<AtprotoData> => {
   const did = getDid(doc)
   return {
     did,
     signingKey: getKey(doc, '#signingKey'),
-    recoveryKey: getKey(doc, '#recoveryKey'),
     handle: getHandle(doc),
-    atpPds: getAtpPds(doc),
+    pds: getPds(doc),
   }
 }
 
-export const ensureAtpDocument = (doc: DIDDocument): AtpData => {
-  const { did, signingKey, recoveryKey, handle, atpPds } =
-    parseToAtpDocument(doc)
+export const ensureAtpDocument = (doc: DIDDocument): AtprotoData => {
+  const { did, signingKey, recoveryKey, handle, pds } =
+    parseToAtprotoDocument(doc)
   if (!did) {
     throw new Error(`Could not parse id from doc: ${doc}`)
   }
@@ -101,8 +91,8 @@ export const ensureAtpDocument = (doc: DIDDocument): AtpData => {
   if (!handle) {
     throw new Error(`Could not parse handle from doc: ${doc}`)
   }
-  if (!atpPds) {
+  if (!pds) {
     throw new Error(`Could not parse atpPds from doc: ${doc}`)
   }
-  return { did, signingKey, recoveryKey, handle, atpPds }
+  return { did, signingKey, recoveryKey, handle, pds }
 }

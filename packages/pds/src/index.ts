@@ -53,10 +53,11 @@ export class PDS {
     db: Database
     blobstore: BlobStore
     imgInvalidator?: ImageInvalidator
-    keypair: crypto.Keypair
+    repoSigningKey: crypto.Keypair
+    plcRotationKey: crypto.Keypair
     config: ServerConfig
   }): PDS {
-    const { db, blobstore, keypair, config } = opts
+    const { db, blobstore, repoSigningKey, plcRotationKey, config } = opts
     let maybeImgInvalidator = opts.imgInvalidator
     const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
     const auth = new ServerAuth({
@@ -109,7 +110,7 @@ export class PDS {
     )
 
     const services = createServices({
-      keypair,
+      repoSigningKey,
       messageQueue,
       blobstore,
       imgUriBuilder,
@@ -119,7 +120,8 @@ export class PDS {
     const ctx = new AppContext({
       db,
       blobstore,
-      keypair,
+      repoSigningKey,
+      plcRotationKey,
       cfg: config,
       auth,
       messageQueue,

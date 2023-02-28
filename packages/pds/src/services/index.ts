@@ -12,20 +12,25 @@ import { RepoService } from './repo'
 import { ModerationService } from './moderation'
 
 export function createServices(resources: {
-  keypair: crypto.Keypair
+  repoSigningKey: crypto.Keypair
   messageQueue: MessageQueue
   blobstore: BlobStore
   imgUriBuilder: ImageUriBuilder
   imgInvalidator: ImageInvalidator
 }): Services {
-  const { keypair, messageQueue, blobstore, imgUriBuilder, imgInvalidator } =
-    resources
+  const {
+    repoSigningKey,
+    messageQueue,
+    blobstore,
+    imgUriBuilder,
+    imgInvalidator,
+  } = resources
   return {
     actor: ActorService.creator(imgUriBuilder),
     auth: AuthService.creator(),
     feed: FeedService.creator(imgUriBuilder),
     record: RecordService.creator(messageQueue),
-    repo: RepoService.creator(keypair, messageQueue, blobstore),
+    repo: RepoService.creator(repoSigningKey, messageQueue, blobstore),
     moderation: ModerationService.creator(
       messageQueue,
       blobstore,
