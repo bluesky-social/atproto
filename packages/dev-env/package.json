@@ -20,6 +20,8 @@
     "@atproto/did-resolver": "*",
     "@atproto/pds": "*",
     "@atproto/uri": "*",
+    "@did-plc/lib": "^0.0.1",
+    "@did-plc/server": "^0.0.1",
     "chalk": "^5.0.1",
     "dotenv": "^16.0.1",
     "get-port": "^6.1.2",
