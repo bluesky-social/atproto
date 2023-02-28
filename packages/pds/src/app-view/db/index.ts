@@ -8,6 +8,7 @@ import * as postHierarchy from './tables/post-hierarchy'
 import * as repost from './tables/repost'
 import * as follow from './tables/follow'
 import * as vote from './tables/vote'
+import * as subscription from './tables/subscription'
 
 // @NOTE app-view also shares did-handle, record, repo-root, and vote tables w/ main pds
 export type DatabaseSchemaType = duplicateRecords.PartialDB &
@@ -19,4 +20,5 @@ export type DatabaseSchemaType = duplicateRecords.PartialDB &
   postHierarchy.PartialDB &
   repost.PartialDB &
   follow.PartialDB &
-  vote.PartialDB
+  vote.PartialDB &
+  subscription.PartialDB
