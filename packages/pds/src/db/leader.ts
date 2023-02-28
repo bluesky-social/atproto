@@ -20,6 +20,10 @@ export class Leader {
     }
   }
 
+  destroy(err?: Error) {
+    this.session?.abortController.abort(err)
+  }
+
   private async lock(): Promise<Session | null> {
     if (this.session) {
       return null
