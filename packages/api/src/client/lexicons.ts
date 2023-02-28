@@ -1477,6 +1477,29 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoRepoGetBlob: {
+    lexicon: 1,
+    id: 'com.atproto.repo.getBlob',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Fetch a blob.',
+        parameters: {
+          type: 'params',
+          required: ['cid'],
+          properties: {
+            cid: {
+              type: 'string',
+              description: 'The CID of the blob to fetch',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/octet-stream',
+        },
+      },
+    },
+  },
   ComAtprotoRepoGetRecord: {
     lexicon: 1,
     id: 'com.atproto.repo.getRecord',
@@ -4098,6 +4121,7 @@ export const ids = {
   ComAtprotoRepoCreateRecord: 'com.atproto.repo.createRecord',
   ComAtprotoRepoDeleteRecord: 'com.atproto.repo.deleteRecord',
   ComAtprotoRepoDescribe: 'com.atproto.repo.describe',
+  ComAtprotoRepoGetBlob: 'com.atproto.repo.getBlob',
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',

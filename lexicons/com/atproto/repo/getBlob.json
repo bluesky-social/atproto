@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.repo.getBlob",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Fetch a blob.",
+      "parameters": {
+        "type": "params",
+        "required": ["cid"],
+        "properties": {
+          "cid": {"type": "string", "description": "The CID of the blob to fetch"}
+        }
+      },
+      "output": {
+        "encoding": "application/octet-stream"
+      }
+    }
+  }
+}
