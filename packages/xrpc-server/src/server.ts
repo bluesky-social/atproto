@@ -1,4 +1,4 @@
-import { Readable } from 'stream'
+import { pipeline, Readable } from 'stream'
 import express, {
   ErrorRequestHandler,
   NextFunction,
@@ -35,6 +35,7 @@ import {
   validateOutput,
 } from './util'
 import log from './logger'
+import { forwardStreamErrors } from '@atproto/common'
 
 export function createServer(lexicons?: unknown[], options?: Options) {
   return new Server(lexicons, options)
@@ -222,8 +223,13 @@ export class Server {
             output?.encoding === 'json'
           ) {
             res.status(200).json(output.body)
-          } else if (output) {
+          } else if (output?.body instanceof Readable) {
             res.header('Content-Type', output.encoding)
+            res.status(200)
+            forwardStreamErrors(output.body, res)
+            output.body.pipe(res)
+            // pipeline(output.body, res)
+          } else if (output) {
             res
               .status(200)
               .send(
