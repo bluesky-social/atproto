@@ -7,6 +7,8 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
 export interface QueryParams {
+  /** The DID of the repo. */
+  did: string
   /** The CID of the blob to fetch */
   cid: string
 }

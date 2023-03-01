@@ -1477,29 +1477,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoRepoGetBlob: {
-    lexicon: 1,
-    id: 'com.atproto.repo.getBlob',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Fetch a blob.',
-        parameters: {
-          type: 'params',
-          required: ['cid'],
-          properties: {
-            cid: {
-              type: 'string',
-              description: 'The CID of the blob to fetch',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/octet-stream',
-        },
-      },
-    },
-  },
   ComAtprotoRepoGetRecord: {
     lexicon: 1,
     id: 'com.atproto.repo.getRecord',
@@ -2045,6 +2022,33 @@ export const schemaDict = {
             name: 'AccountTakedown',
           },
         ],
+      },
+    },
+  },
+  ComAtprotoSyncGetBlob: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getBlob',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a blob associated with a given repo.',
+        parameters: {
+          type: 'params',
+          required: ['did', 'cid'],
+          properties: {
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
+            cid: {
+              type: 'string',
+              description: 'The CID of the blob to fetch',
+            },
+          },
+        },
+        output: {
+          encoding: '*/*',
+        },
       },
     },
   },
@@ -4121,7 +4125,6 @@ export const ids = {
   ComAtprotoRepoCreateRecord: 'com.atproto.repo.createRecord',
   ComAtprotoRepoDeleteRecord: 'com.atproto.repo.deleteRecord',
   ComAtprotoRepoDescribe: 'com.atproto.repo.describe',
-  ComAtprotoRepoGetBlob: 'com.atproto.repo.getBlob',
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
@@ -4136,6 +4139,7 @@ export const ids = {
   ComAtprotoSessionDelete: 'com.atproto.session.delete',
   ComAtprotoSessionGet: 'com.atproto.session.get',
   ComAtprotoSessionRefresh: 'com.atproto.session.refresh',
+  ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
   ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
   ComAtprotoSyncGetCommitPath: 'com.atproto.sync.getCommitPath',

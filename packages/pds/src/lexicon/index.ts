@@ -33,7 +33,6 @@ import * as ComAtprotoRepoBatchWrite from './types/com/atproto/repo/batchWrite'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
 import * as ComAtprotoRepoDescribe from './types/com/atproto/repo/describe'
-import * as ComAtprotoRepoGetBlob from './types/com/atproto/repo/getBlob'
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
@@ -43,6 +42,7 @@ import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 import * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 import * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
+import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
 import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
@@ -374,13 +374,6 @@ export class RepoNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getBlob<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, ComAtprotoRepoGetBlob.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'com.atproto.repo.getBlob' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getRecord<AV extends AuthVerifier>(
     cfg: ConfigOf<AV, ComAtprotoRepoGetRecord.Handler<ExtractAuth<AV>>>,
   ) {
@@ -477,6 +470,13 @@ export class SyncNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  getBlob<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncGetBlob.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.getBlob' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   getBlocks<AV extends AuthVerifier>(

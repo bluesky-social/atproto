@@ -4,7 +4,6 @@ import batchWrite from './batchWrite'
 import createRecord from './createRecord'
 import deleteRecord from './deleteRecord'
 import describe from './describe'
-import getBlob from './getBlob'
 import getRecord from './getRecord'
 import listRecords from './listRecords'
 import putRecord from './putRecord'
@@ -14,7 +13,6 @@ export default function (server: Server, ctx: AppContext) {
   createRecord(server, ctx)
   deleteRecord(server, ctx)
   describe(server, ctx)
-  getBlob(server, ctx)
   getRecord(server, ctx)
   listRecords(server, ctx)
   putRecord(server, ctx)

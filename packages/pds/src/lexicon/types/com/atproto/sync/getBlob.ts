@@ -9,6 +9,8 @@ import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {
+  /** The DID of the repo. */
+  did: string
   /** The CID of the blob to fetch */
   cid: string
 }
@@ -17,7 +19,7 @@ export type InputSchema = undefined
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {
-  encoding: 'application/octet-stream'
+  encoding: '*/*'
   body: Uint8Array | stream.Readable
 }
 
