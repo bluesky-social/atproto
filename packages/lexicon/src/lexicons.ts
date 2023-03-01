@@ -20,6 +20,7 @@ import {
   assertValidXrpcParams,
   assertValidXrpcInput,
   assertValidXrpcOutput,
+  assertValidXrpcMessage,
 } from './validation'
 import { toLexUri } from './util'
 import * as ComplexValidators from './validators/complex'
@@ -199,6 +200,15 @@ export class Lexicons {
       def as LexXrpcProcedure | LexXrpcQuery,
       value,
     )
+  }
+
+  /**
+   * Validate xrpc subscription message and throw on any error.
+   */
+  assertValidXrpcMessage<T = unknown>(lexUri: string, value: unknown): T {
+    lexUri = toLexUri(lexUri)
+    const def = this.getDefOrThrow(lexUri, ['subscription'])
+    return assertValidXrpcMessage(this, def as LexXrpcSubscription, value) as T
   }
 
   /**
