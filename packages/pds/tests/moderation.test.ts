@@ -64,8 +64,6 @@ describe('moderation', () => {
       expect(forSnapshot([reportA, reportB])).toMatchSnapshot()
     })
 
-    return
-
     it("fails reporting a repo that doesn't exist.", async () => {
       const promise = agent.api.com.atproto.report.create(
         {
@@ -570,8 +568,8 @@ describe('moderation', () => {
 
     it('only allows blob to have one current action.', async () => {
       const img = sc.posts[sc.dids.carol][0].images[0]
-      const postA = await sc.post(sc.dids.alice, 'image A', undefined, [img])
-      const postB = await sc.post(sc.dids.alice, 'image B', undefined, [img])
+      const postA = await sc.post(sc.dids.carol, 'image A', undefined, [img])
+      const postB = await sc.post(sc.dids.carol, 'image B', undefined, [img])
       const { data: acknowledge } =
         await agent.api.com.atproto.admin.takeModerationAction(
           {

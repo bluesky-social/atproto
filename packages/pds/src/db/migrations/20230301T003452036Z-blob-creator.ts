@@ -1,4 +1,5 @@
 import { Kysely } from 'kysely'
+import { Dialect } from '..'
 
 export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
@@ -28,8 +29,8 @@ export async function up(db: Kysely<any>): Promise<void> {
         'height',
         'createdAt',
       ])
-      .values(
-        db
+      .expression((exp) =>
+        exp
           .selectFrom('blob')
           .innerJoin('repo_blob', 'repo_blob.cid', 'blob.cid')
           .select([
@@ -62,33 +63,15 @@ export async function down(db: Kysely<any>): Promise<void> {
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .execute()
 
-  const res = await db.selectFrom('blob').limit(1).selectAll().execute()
+  const res = await db.selectFrom('blob').selectAll().execute()
+  const unique = res.reduce((acc, cur) => {
+    const { creator, ...rest } = cur
+    acc[cur.cid] ??= rest
+    return acc
+  }, {})
+
   if (res.length > 0) {
-    await db
-      .insertInto('blob_new')
-      .columns([
-        'cid',
-        'mimeType',
-        'size',
-        'tempKey',
-        'width',
-        'height',
-        'createdAt',
-      ])
-      .values(
-        db
-          .selectFrom('blob')
-          .select([
-            'blob.cid',
-            'blob.mimeType',
-            'blob.size',
-            'blob.tempKey',
-            'blob.width',
-            'blob.height',
-            'blob.createdAt',
-          ]),
-      )
-      .execute()
+    await db.insertInto('blob_new').values(Object.values(unique)).execute()
   }
 
   await db.schema.dropTable('blob').execute()
