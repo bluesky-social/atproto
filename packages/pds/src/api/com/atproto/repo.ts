@@ -1,5 +1,6 @@
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/uri'
+import { WriteOpAction } from '@atproto/repo'
 import * as didResolver from '@atproto/did-resolver'
 import * as repo from '../../../repo'
 import { Server } from '../../../lexicon'
@@ -9,13 +10,12 @@ import {
   PreparedWrite,
 } from '../../../repo'
 import AppContext from '../../../context'
-import { WriteOpAction } from '@atproto/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.describe(async ({ params }) => {
     const { user } = params
 
-    const userObj = await ctx.services.actor(ctx.db).getUser(user)
+    const userObj = await ctx.services.account(ctx.db).getUser(user)
     if (userObj === null) {
       throw new InvalidRequestError(`Could not find user: ${user}`)
     }
@@ -49,7 +49,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.listRecords(async ({ params }) => {
     const { user, collection, limit, before, after, reverse } = params
 
-    const did = await ctx.services.actor(ctx.db).getDidForActor(user)
+    const did = await ctx.services.account(ctx.db).getDidForActor(user)
     if (!did) {
       throw new InvalidRequestError(`Could not find user: ${user}`)
     }
@@ -81,7 +81,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.getRecord(async ({ params }) => {
     const { user, collection, rkey, cid } = params
 
-    const did = await ctx.services.actor(ctx.db).getDidForActor(user)
+    const did = await ctx.services.account(ctx.db).getDidForActor(user)
     if (!did) {
       throw new InvalidRequestError(`Could not find user: ${user}`)
     }

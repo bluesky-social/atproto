@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ auth }) => {
       const did = auth.credentials.did
-      const user = await ctx.services.actor(ctx.db).getUser(did)
+      const user = await ctx.services.account(ctx.db).getUser(did)
       if (!user) {
         throw new InvalidRequestError(
           `Could not find user info for account: ${did}`,
@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
       ''
     ).toLowerCase()
     const authService = ctx.services.auth(ctx.db)
-    const actorService = ctx.services.actor(ctx.db)
+    const actorService = ctx.services.account(ctx.db)
 
     const user = identifier.includes('@')
       ? await actorService.getUserByEmail(identifier, true)
@@ -72,7 +72,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.refreshVerifier,
     handler: async ({ req, auth }) => {
       const did = auth.credentials.did
-      const user = await ctx.services.actor(ctx.db).getUser(did, true)
+      const user = await ctx.services.account(ctx.db).getUser(did, true)
       if (!user) {
         throw new InvalidRequestError(
           `Could not find user info for account: ${did}`,

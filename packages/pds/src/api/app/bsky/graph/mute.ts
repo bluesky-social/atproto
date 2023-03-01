@@ -1,5 +1,5 @@
-import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const { db, services } = ctx
 
-      const subject = await services.actor(db).getUser(user)
+      const subject = await services.account(db).getUser(user)
       if (!subject) {
         throw new InvalidRequestError(`Actor not found: ${user}`)
       }
@@ -18,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Cannot mute oneself')
       }
 
-      await services.actor(db).mute({
+      await services.account(db).mute({
         did: subject.did,
         mutedByDid: requester,
       })

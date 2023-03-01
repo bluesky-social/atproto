@@ -9,6 +9,7 @@ import { BlobStore } from '@atproto/repo'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import { MessageQueue } from './event-stream/types'
+import { MessageDispatcher } from './event-stream/message-queue'
 import Sequencer from './sequencer'
 
 export class AppContext {
@@ -24,6 +25,7 @@ export class AppContext {
       mailer: ServerMailer
       services: Services
       messageQueue: MessageQueue
+      messageDispatcher: MessageDispatcher
       sequencer: Sequencer
     },
   ) {}
@@ -82,6 +84,10 @@ export class AppContext {
 
   get messageQueue(): MessageQueue {
     return this.opts.messageQueue
+  }
+
+  get messageDispatcher(): MessageDispatcher {
+    return this.opts.messageDispatcher
   }
 
   get sequencer(): Sequencer {

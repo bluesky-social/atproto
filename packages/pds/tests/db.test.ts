@@ -1,4 +1,7 @@
+import { once } from 'events'
+import { wait } from '@atproto/common'
 import { Database } from '../src'
+import { Leader } from '../src/db/leader'
 import { runTestServer, CloseFn } from './_util'
 
 describe('db', () => {
@@ -96,6 +99,79 @@ describe('db', () => {
       await db.transaction(async (dbTxn) => {
         expect(() => dbTxn.assertTransaction()).not.toThrow()
       })
+    })
+  })
+
+  describe('Leader', () => {
+    it('allows leaders to run sequentially.', async () => {
+      const task = async () => {
+        await wait(25)
+        return 'complete'
+      }
+      const leader1 = new Leader(777, db)
+      const leader2 = new Leader(777, db)
+      const leader3 = new Leader(777, db)
+      const result1 = await leader1.run(task)
+      const result2 = await leader2.run(task)
+      const result3 = await leader3.run(task)
+      const result4 = await leader3.run(task)
+      expect([result1, result2, result3, result4]).toEqual([
+        { ran: true, result: 'complete' },
+        { ran: true, result: 'complete' },
+        { ran: true, result: 'complete' },
+        { ran: true, result: 'complete' },
+      ])
+    })
+
+    it('only allows one leader at a time.', async () => {
+      const task = async () => {
+        await wait(25)
+        return 'complete'
+      }
+      const results = await Promise.all([
+        new Leader(777, db).run(task),
+        new Leader(777, db).run(task),
+        new Leader(777, db).run(task),
+      ])
+      const byRan = (a, b) => Number(a.ran) - Number(b.ran)
+      expect(results.sort(byRan)).toEqual([
+        { ran: false },
+        { ran: false },
+        { ran: true, result: 'complete' },
+      ])
+    })
+
+    it('leaders with different ids do not conflict.', async () => {
+      const task = async () => {
+        await wait(25)
+        return 'complete'
+      }
+      const results = await Promise.all([
+        new Leader(777, db).run(task),
+        new Leader(778, db).run(task),
+        new Leader(779, db).run(task),
+      ])
+      expect(results).toEqual([
+        { ran: true, result: 'complete' },
+        { ran: true, result: 'complete' },
+        { ran: true, result: 'complete' },
+      ])
+    })
+
+    it('supports abort.', async () => {
+      const task = async (ctx: { signal: AbortSignal }) => {
+        return await Promise.race([
+          wait(100),
+          once(ctx.signal, 'abort').then(() => ctx.signal.reason),
+        ])
+      }
+      const leader = new Leader(777, db)
+      setTimeout(
+        () => leader.session?.abortController.abort(new Error('Oops!')),
+        25,
+      )
+      const result = await leader.run(task)
+      expect(result).toEqual({ ran: true, result: new Error('Oops!') })
     })
   })
 })

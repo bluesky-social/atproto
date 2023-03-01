@@ -8,18 +8,23 @@ import express from 'express'
 import cors from 'cors'
 import http from 'http'
 import events from 'events'
+import { createTransport } from 'nodemailer'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import API, { health } from './api'
+import AppViewAPI from './app-view/api'
 import Database from './db'
 import { ServerAuth } from './auth'
 import * as streamConsumers from './event-stream/consumers'
+import * as dispatcherConsumers from './app-view/event-stream/consumers'
 import * as error from './error'
 import { loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
-import { createTransport } from 'nodemailer'
-import SqlMessageQueue from './event-stream/message-queue'
+import { createServer } from './lexicon'
+import SqlMessageQueue, {
+  MessageDispatcher,
+} from './event-stream/message-queue'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
@@ -64,6 +69,7 @@ export class PDS {
     })
 
     const messageQueue = new SqlMessageQueue('pds', db)
+    const messageDispatcher = new MessageDispatcher()
     const sequencer = new Sequencer(db)
 
     const mailTransport =
@@ -109,6 +115,7 @@ export class PDS {
     const services = createServices({
       repoSigningKey,
       messageQueue,
+      messageDispatcher,
       blobstore,
       imgUriBuilder,
       imgInvalidator,
@@ -122,6 +129,7 @@ export class PDS {
       cfg: config,
       auth,
       messageQueue,
+      messageDispatcher,
       sequencer,
       services,
       mailer,
@@ -129,16 +137,21 @@ export class PDS {
     })
 
     streamConsumers.listen(ctx)
+    dispatcherConsumers.listen(ctx)
 
-    const apiServer = API(ctx, {
+    let server = createServer({
       payload: {
         jsonLimit: 100 * 1024, // 100kb
         textLimit: 100 * 1024, // 100kb
         blobLimit: 5 * 1024 * 1024, // 5mb
       },
     })
+
+    server = API(server, ctx)
+    server = AppViewAPI(server, ctx)
+
     app.use(health.createRouter(ctx))
-    app.use(apiServer.xrpc.router)
+    app.use(server.xrpc.router)
     app.use(error.handler)
 
     return new PDS({

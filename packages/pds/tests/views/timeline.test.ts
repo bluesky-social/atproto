@@ -11,7 +11,7 @@ import {
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import { FeedAlgorithm } from '../../src/api/app/bsky/util/feed'
+import { FeedAlgorithm } from '../../src/app-view/api/app/bsky/util/feed'
 
 describe('timeline views', () => {
   let agent: AtpAgent
