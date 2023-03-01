@@ -41,11 +41,15 @@ export async function up(
     })
     .selectFrom('hierarchy')
 
-  await db
-    .insertInto('post_hierarchy')
-    .columns(['uri', 'ancestorUri', 'depth'])
-    .expression(postHierarchyQb.select(['uri', 'ancestorUri', 'depth']))
-    .execute()
+  const res = await postHierarchyQb.selectAll().limit(1).execute()
+
+  if (res.length > 0) {
+    await db
+      .insertInto('post_hierarchy')
+      .columns(['uri', 'ancestorUri', 'depth'])
+      .expression(postHierarchyQb.select(['uri', 'ancestorUri', 'depth']))
+      .execute()
+  }
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {

@@ -16,6 +16,7 @@ export class RepoBlobs {
   constructor(public db: Database, public blobstore: BlobStore) {}
 
   async addUntetheredBlob(
+    creator: string,
     userSuggestedMime: string,
     blobStream: stream.Readable,
   ): Promise<CID> {
@@ -32,6 +33,7 @@ export class RepoBlobs {
     await this.db.db
       .insertInto('blob')
       .values({
+        creator,
         cid: cid.toString(),
         mimeType: sniffedMime || userSuggestedMime,
         size,
@@ -40,12 +42,7 @@ export class RepoBlobs {
         height: imgInfo?.height || null,
         createdAt: new Date().toISOString(),
       })
-      .onConflict((oc) =>
-        oc
-          .column('cid')
-          .doUpdateSet({ tempKey })
-          .where('blob.tempKey', 'is not', null),
-      )
+      .onConflict((oc) => oc.doNothing())
       .execute()
     return cid
   }
@@ -58,7 +55,7 @@ export class RepoBlobs {
         write.action === WriteOpAction.Update
       ) {
         for (const blob of write.blobs) {
-          blobPromises.push(this.verifyBlobAndMakePermanent(blob))
+          blobPromises.push(this.verifyBlobAndMakePermanent(did, blob))
           blobPromises.push(this.associateBlob(blob, write.uri, commit, did))
         }
       }
@@ -66,11 +63,15 @@ export class RepoBlobs {
     await Promise.all(blobPromises)
   }
 
-  async verifyBlobAndMakePermanent(blob: BlobRef): Promise<void> {
+  async verifyBlobAndMakePermanent(
+    creator: string,
+    blob: BlobRef,
+  ): Promise<void> {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('blob')
       .selectAll()
+      .where('creator', '=', creator)
       .where('cid', '=', blob.cid.toString())
       .whereNotExists(
         // Check if blob has been taken down

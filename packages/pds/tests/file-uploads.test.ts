@@ -138,7 +138,8 @@ describe('file uploads', () => {
   })
 
   it('can fetch the file after being referenced', async () => {
-    const fetchedFile = await aliceAgent.api.com.atproto.repo.getBlob({
+    const fetchedFile = await aliceAgent.api.com.atproto.sync.getBlob({
+      did: alice.did,
       cid: smallCid.toString(),
     })
     expect(
