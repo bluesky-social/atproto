@@ -119,11 +119,14 @@ export class RepoBlobs {
 
   async deleteForUser(did: string): Promise<void> {
     this.db.assertTransaction()
-    const deleted = await this.db.db
-      .deleteFrom('repo_blob')
-      .where('did', '=', did)
-      .returningAll()
-      .execute()
+    const [deleted] = await Promise.all([
+      this.db.db
+        .deleteFrom('blob')
+        .where('creator', '=', did)
+        .returningAll()
+        .execute(),
+      this.db.db.deleteFrom('repo_blob').where('did', '=', did).execute(),
+    ])
     const deletedCids = deleted.map((d) => d.cid)
     let duplicateCids: string[] = []
     if (deletedCids.length > 0) {
@@ -136,7 +139,6 @@ export class RepoBlobs {
     }
     const toDelete = deletedCids.filter((cid) => !duplicateCids.includes(cid))
     if (toDelete.length > 0) {
-      await this.db.db.deleteFrom('blob').where('cid', 'in', toDelete).execute()
       await Promise.all(
         toDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
       )

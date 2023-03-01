@@ -12,7 +12,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn('width', 'integer')
     .addColumn('height', 'integer')
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint('blob_pkey', ['creator', 'cid'])
+    .addPrimaryKeyConstraint('blob_creator_pkey', ['creator', 'cid'])
     .execute()
 
   const res = await db.selectFrom('blob').limit(1).selectAll().execute()
