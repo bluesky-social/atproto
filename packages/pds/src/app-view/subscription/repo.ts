@@ -33,10 +33,9 @@ export class RepoSubscription {
         const { ran } = await this.leader.run(async ({ signal }) => {
           const sub = this.getSubscription({ signal })
           for await (const msg of sub) {
-            const timestamp = msg.time || new Date().toISOString() // @TODO remove when msg.time is always set
             const ops = await getOps(msg)
             await db.transaction(async (tx) => {
-              await this.handleOps(tx, ops, timestamp)
+              await this.handleOps(tx, ops, msg.time)
               await this.setState(tx, { cursor: msg.seq })
             })
           }
@@ -126,8 +125,14 @@ export class RepoSubscription {
         )
       },
       validate: (value) => {
-        // @TODO handle poison message
-        return lexicons.assertValidXrpcMessage<Message>(METHOD, value)
+        try {
+          return lexicons.assertValidXrpcMessage<Message>(METHOD, value)
+        } catch (err) {
+          appViewLogger.warn(
+            { err, service: this.service },
+            'repo subscription skipped invalid message',
+          )
+        }
       },
     })
   }
