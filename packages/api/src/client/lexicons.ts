@@ -2274,6 +2274,10 @@ export const schemaDict = {
               blocks: {
                 type: 'unknown',
               },
+              ops: {
+                type: 'ref',
+                ref: 'lex:com.atproto.sync.subscribeAllRepos#repoOp',
+              },
               blobs: {
                 type: 'array',
                 items: {
@@ -2296,6 +2300,21 @@ export const schemaDict = {
             name: 'FutureCursor',
           },
         ],
+      },
+      repoOp: {
+        type: 'object',
+        required: ['action', 'path'],
+        properties: {
+          action: {
+            type: 'string',
+          },
+          path: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+        },
       },
     },
   },

@@ -32,6 +32,7 @@
             "commit": {"type": "string"},
             "prev": {"type": "string"},
             "blocks": {"type": "unknown"},
+            "ops": {"type": "ref", "ref": "#repoOp"},
             "blobs": {
               "type": "array",
               "items": {"type": "string"}
@@ -46,6 +47,15 @@
       "errors": [
         {"name": "FutureCursor"}
       ]
+    },
+    "repoOp": {
+      "type": "object",
+      "required": ["action", "path"],
+      "properties": {
+        "action": {"type": "string"},
+        "path": {"type": "string"},
+        "cid": {"type": "string"}
+      }
     }
   }
 }
