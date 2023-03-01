@@ -230,6 +230,7 @@ export class Server {
             output.body.pipe(res)
           } else if (output) {
             res
+              .header('Content-Type', output.encoding)
               .status(200)
               .send(
                 output.body instanceof Uint8Array
