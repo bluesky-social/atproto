@@ -1,0 +1,17 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.sync.requestCrawl",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Request a service to persistently crawl hosted repos.",
+      "parameters": {
+        "type": "params",
+        "required": ["hostname"],
+        "properties": {
+          "host": {"type": "string", "description": "Hostname of the service that is requesting to be crawled."}
+        }
+      }
+    }
+  }
+}

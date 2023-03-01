@@ -1,11 +1,11 @@
 import ApiAgent from '@atproto/api'
+import { XRPCError } from '@atproto/xrpc'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as handleLib from '@atproto/handle'
 import { Server } from '../../../lexicon'
 import AppContext from '../../../context'
 import { UserAlreadyExistsError } from '../../../services/account'
 import { httpLogger as log } from '../../../logger'
-import { XRPCError } from '@atproto/xrpc'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.handle.resolve(async ({ params }) => {

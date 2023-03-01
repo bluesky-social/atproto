@@ -42,3 +42,10 @@ export const frameHeader = z.union([
   errorFrameHeader,
 ])
 export type FrameHeader = z.infer<typeof frameHeader>
+
+// https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
+export enum CloseCode {
+  Normal = 1000,
+  Abnormal = 1006,
+  Policy = 1008,
+}
