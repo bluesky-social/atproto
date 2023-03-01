@@ -3,18 +3,32 @@ import AppContext from '../context'
 import { Server } from '../lexicon'
 import { RepoSubscription } from './subscription/repo'
 import * as dispatcherConsumers from './event-stream/consumers'
+import { appViewLogger } from './logger'
 
 export class AppView {
   api = (server: Server) => api(server, this.ctx)
   services = this.ctx.services.appView
-  repoSubscription = new RepoSubscription(this.ctx)
-  constructor(public ctx: AppContext) {}
+  repoSubscription?: RepoSubscription
+
+  constructor(public ctx: AppContext) {
+    if (ctx.cfg.appViewRepoHost) {
+      this.repoSubscription = new RepoSubscription(ctx, ctx.cfg.appViewRepoHost)
+    }
+  }
+
   start() {
-    dispatcherConsumers.listen(this.ctx)
-    this.repoSubscription.run()
+    if (this.repoSubscription) {
+      this.repoSubscription.run()
+    } else {
+      dispatcherConsumers.listen(this.ctx)
+      appViewLogger.info('repo subscription disabled')
+    }
     return this
   }
+
   destroy() {
-    this.repoSubscription.destroy()
+    if (this.repoSubscription) {
+      this.repoSubscription.destroy()
+    }
   }
 }

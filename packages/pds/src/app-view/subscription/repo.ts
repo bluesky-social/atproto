@@ -24,7 +24,7 @@ export const REPO_SUB_ID = 1000
 export class RepoSubscription {
   leader = new Leader(REPO_SUB_ID, this.ctx.db)
   destroyed = false
-  constructor(public ctx: AppContext) {}
+  constructor(public ctx: AppContext, public service: string) {}
 
   async run() {
     const { db } = this.ctx
@@ -130,10 +130,6 @@ export class RepoSubscription {
         return lexicons.assertValidXrpcMessage<Message>(METHOD, value)
       },
     })
-  }
-
-  private get service() {
-    return this.ctx.cfg.internalUrl.replace('http://', 'ws://') // @TODO point at bgs
   }
 }
 
