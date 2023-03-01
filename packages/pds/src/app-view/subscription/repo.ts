@@ -41,7 +41,7 @@ export class RepoSubscription {
             })
           }
         })
-        if (ran) {
+        if (ran && !this.destroyed) {
           throw new Error('Repo sub completed, but should be persistent')
         }
       } catch (err) {
@@ -83,7 +83,7 @@ export class RepoSubscription {
     }
   }
 
-  private async getState(): Promise<State> {
+  async getState(): Promise<State> {
     const sub = await this.ctx.db.db
       .selectFrom('subscription')
       .selectAll()
