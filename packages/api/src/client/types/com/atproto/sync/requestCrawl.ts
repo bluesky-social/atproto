@@ -7,7 +7,7 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
 export interface QueryParams {
-  /** Hostname of hte service that is reqeusting to be crawled. */
+  /** Hostname of the service that is requesting to be crawled. */
   host?: string
 }
 

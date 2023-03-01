@@ -8,7 +8,7 @@ import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {
-  /** Hostname of hte service that is reqeusting to be crawled. */
+  /** Hostname of the service that is requesting to be crawled. */
   host?: string
 }
 

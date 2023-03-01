@@ -2249,7 +2249,7 @@ export const schemaDict = {
             host: {
               type: 'string',
               description:
-                'Hostname of hte service that is reqeusting to be crawled.',
+                'Hostname of the service that is requesting to be crawled.',
             },
           },
         },
