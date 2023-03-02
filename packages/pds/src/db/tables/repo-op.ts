@@ -1,7 +1,9 @@
+import { WriteOpAction } from '@atproto/repo'
+
 export interface RepoOp {
   did: string
   commit: string
-  action: string
+  action: WriteOpAction
   path: string
   cid: string | null
 }

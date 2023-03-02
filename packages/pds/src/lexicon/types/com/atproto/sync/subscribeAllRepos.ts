@@ -35,7 +35,7 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
 }) => AsyncIterable<HandlerOutput>
 
 export interface RepoOp {
-  action: string
+  action: 'create' | 'update' | 'delete' | (string & {})
   path: string
   cid: string | null
   [k: string]: unknown

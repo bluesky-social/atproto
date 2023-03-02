@@ -56,7 +56,14 @@
       "required": ["action", "path", "cid"],
       "nullable": ["cid"],
       "properties": {
-        "action": {"type": "string"},
+        "action": {
+          "type": "string",
+          "knownValues": [
+            "create",
+            "update",
+            "delete"
+          ]
+        },
         "path": {"type": "string"},
         "cid": {"type": "string"}
       }

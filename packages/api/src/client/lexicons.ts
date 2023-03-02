@@ -2312,6 +2312,7 @@ export const schemaDict = {
         properties: {
           action: {
             type: 'string',
+            knownValues: ['create', 'update', 'delete'],
           },
           path: {
             type: 'string',

@@ -7,7 +7,7 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
 export interface RepoOp {
-  action: string
+  action: 'create' | 'update' | 'delete' | (string & {})
   path: string
   cid: string | null
   [k: string]: unknown
