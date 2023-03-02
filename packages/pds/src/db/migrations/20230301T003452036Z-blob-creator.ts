@@ -15,37 +15,34 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addPrimaryKeyConstraint('blob_creator_pkey', ['creator', 'cid'])
     .execute()
 
-  const res = await db.selectFrom('blob').limit(1).selectAll().execute()
-  if (res.length > 0) {
-    await db
-      .insertInto('blob_new')
-      .columns([
-        'creator',
-        'cid',
-        'mimeType',
-        'size',
-        'tempKey',
-        'width',
-        'height',
-        'createdAt',
-      ])
-      .expression((exp) =>
-        exp
-          .selectFrom('blob')
-          .innerJoin('repo_blob', 'repo_blob.cid', 'blob.cid')
-          .select([
-            'repo_blob.did',
-            'blob.cid',
-            'blob.mimeType',
-            'blob.size',
-            'blob.tempKey',
-            'blob.width',
-            'blob.height',
-            'blob.createdAt',
-          ]),
-      )
-      .execute()
-  }
+  await db
+    .insertInto('blob_new')
+    .columns([
+      'creator',
+      'cid',
+      'mimeType',
+      'size',
+      'tempKey',
+      'width',
+      'height',
+      'createdAt',
+    ])
+    .expression((exp) =>
+      exp
+        .selectFrom('blob')
+        .innerJoin('repo_blob', 'repo_blob.cid', 'blob.cid')
+        .select([
+          'repo_blob.did',
+          'blob.cid',
+          'blob.mimeType',
+          'blob.size',
+          'blob.tempKey',
+          'blob.width',
+          'blob.height',
+          'blob.createdAt',
+        ]),
+    )
+    .execute()
 
   await db.schema.dropTable('blob').execute()
   await db.schema.alterTable('blob_new').renameTo('blob').execute()
