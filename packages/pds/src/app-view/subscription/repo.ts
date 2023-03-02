@@ -102,7 +102,7 @@ export class RepoSubscription {
       .where('service', '=', this.service)
       .where('method', '=', METHOD)
       .executeTakeFirst()
-    return sub ? (JSON.parse(sub.state) as State) : { cursor: -1 } // @TODO change to 0 once fix on pds lands
+    return sub ? (JSON.parse(sub.state) as State) : { cursor: 0 }
   }
 
   private async setState(tx: Database, state: State): Promise<void> {
