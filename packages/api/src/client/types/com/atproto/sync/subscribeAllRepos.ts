@@ -9,7 +9,7 @@ import { lexicons } from '../../../../lexicons'
 export interface RepoOp {
   action: string
   path: string
-  cid?: string
+  cid: string | null
   [k: string]: unknown
 }
 

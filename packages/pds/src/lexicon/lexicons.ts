@@ -2250,6 +2250,7 @@ export const schemaDict = {
               'commit',
               'prev',
               'blocks',
+              'ops',
               'blobs',
               'time',
             ],
@@ -2275,8 +2276,11 @@ export const schemaDict = {
                 type: 'unknown',
               },
               ops: {
-                type: 'ref',
-                ref: 'lex:com.atproto.sync.subscribeAllRepos#repoOp',
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.sync.subscribeAllRepos#repoOp',
+                },
               },
               blobs: {
                 type: 'array',
@@ -2303,7 +2307,8 @@ export const schemaDict = {
       },
       repoOp: {
         type: 'object',
-        required: ['action', 'path'],
+        required: ['action', 'path', 'cid'],
+        nullable: ['cid'],
         properties: {
           action: {
             type: 'string',
