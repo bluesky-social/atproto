@@ -32,7 +32,7 @@ export class Outbox {
     backFillTime?: string,
   ): AsyncGenerator<RepoAppendEvent> {
     // catch up as much as we can
-    if (backfillCursor) {
+    if (backfillCursor !== undefined) {
       for await (const evt of this.getBackfill(backfillCursor, backFillTime)) {
         this.lastSeen = evt.seq
         yield evt
@@ -53,7 +53,7 @@ export class Outbox {
 
     const cutover = async () => {
       // only need to perform cutover if we've been backfilling
-      if (backfillCursor) {
+      if (backfillCursor !== undefined) {
         const cutoverEvts = await this.sequencer.requestSeqRange({
           earliestSeq: this.lastSeen > -1 ? this.lastSeen : backfillCursor,
           earliestTime: backFillTime,
