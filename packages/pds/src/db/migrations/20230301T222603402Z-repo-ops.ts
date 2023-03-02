@@ -7,7 +7,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn('commit', 'text', (col) => col.notNull())
     .addColumn('action', 'text', (col) => col.notNull())
     .addColumn('path', 'text', (col) => col.notNull())
-    .addColumn('cid', 'text', (col) => col.notNull())
+    .addColumn('cid', 'text')
     .addPrimaryKeyConstraint('repo_op_pkey', ['did', 'commit', 'path'])
     .execute()
 
