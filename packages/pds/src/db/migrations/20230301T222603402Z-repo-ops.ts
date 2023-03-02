@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely'
 
-export async function up(db: Kysely<unknown>): Promise<void> {
+export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
     .createTable('repo_op')
     .addColumn('did', 'text', (col) => col.notNull())
@@ -10,6 +10,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('cid', 'text', (col) => col.notNull())
     .addPrimaryKeyConstraint('repo_op_pkey', ['did', 'commit', 'path'])
     .execute()
+
+  await db.deleteFrom('repo_seq').execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
