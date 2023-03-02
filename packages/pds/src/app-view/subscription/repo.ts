@@ -12,13 +12,13 @@ import {
 } from '@atproto/repo'
 import { PreparedWrite } from '../../repo'
 import { OutputSchema as Message } from '../../lexicon/types/com/atproto/sync/subscribeAllRepos'
-import { lexicons } from '../../lexicon/lexicons'
+import { ids, lexicons } from '../../lexicon/lexicons'
 import Database from '../../db'
 import AppContext from '../../context'
 import { Leader } from '../../db/leader'
 import { appViewLogger } from '../logger'
 
-const METHOD = 'com.atproto.sync.subscribeAllRepos'
+const METHOD = ids.ComAtprotoSyncSubscribeAllRepos
 export const REPO_SUB_ID = 1000
 
 export class RepoSubscription {
@@ -33,19 +33,32 @@ export class RepoSubscription {
         const { ran } = await this.leader.run(async ({ signal }) => {
           const sub = this.getSubscription({ signal })
           for await (const msg of sub) {
-            const ops = await getOps(msg)
-            await db.transaction(async (tx) => {
-              await this.handleOps(tx, ops, msg.time)
-              await this.setState(tx, { cursor: msg.seq })
-            })
+            try {
+              const ops = await getOps(msg)
+              await db.transaction(async (tx) => {
+                await this.handleOps(tx, ops, msg.time)
+                await this.setState(tx, { cursor: msg.seq })
+              })
+            } catch (err) {
+              throw new ProcessingError(msg, { cause: err })
+            }
           }
         })
         if (ran && !this.destroyed) {
           throw new Error('Repo sub completed, but should be persistent')
         }
-      } catch (err) {
+      } catch (_err) {
+        const msg = _err instanceof ProcessingError ? _err.msg : undefined
+        const err = _err instanceof ProcessingError ? _err.cause : _err
         appViewLogger.error(
-          { err, service: this.service },
+          {
+            err,
+            seq: msg?.seq,
+            repo: msg?.repo,
+            commit: msg?.commit,
+            time: msg?.time,
+            service: this.service,
+          },
           'repo subscription errored',
         )
       }
@@ -129,7 +142,14 @@ export class RepoSubscription {
           return lexicons.assertValidXrpcMessage<Message>(METHOD, value)
         } catch (err) {
           appViewLogger.warn(
-            { err, service: this.service },
+            {
+              err,
+              seq: ifNumber(value?.['seq']),
+              repo: ifString(value?.['repo']),
+              commit: ifString(value?.['commit']),
+              time: ifString(value?.['time']),
+              service: this.service,
+            },
             'repo subscription skipped invalid message',
           )
         }
@@ -174,7 +194,21 @@ async function blocksToRecords(blocks: Uint8Array): Promise<CarRecord[]> {
 }
 
 function jitter(maxMs) {
-  return Math.round(Math.random() * maxMs)
+  return Math.round((Math.random() - 0.5) * maxMs * 2)
+}
+
+function ifString(val: unknown): string | undefined {
+  return typeof val === 'string' ? val : undefined
+}
+
+function ifNumber(val: unknown): number | undefined {
+  return typeof val === 'number' ? val : undefined
+}
+
+class ProcessingError extends Error {
+  constructor(public msg: Message, opts: { cause: unknown }) {
+    super('processing error', opts)
+  }
 }
 
 type CarRecord = {
