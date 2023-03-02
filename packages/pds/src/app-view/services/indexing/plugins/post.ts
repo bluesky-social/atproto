@@ -34,15 +34,8 @@ const insertFn = async (
   uri: AtUri,
   cid: CID,
   obj: PostRecord,
-  timestamp?: string,
+  timestamp: string,
 ): Promise<IndexedPost | null> => {
-  const entities = (obj.entities || []).map((entity) => ({
-    postUri: uri.toString(),
-    startIndex: entity.index.start,
-    endIndex: entity.index.end,
-    type: entity.type,
-    value: entity.value,
-  }))
   const post = {
     uri: uri.toString(),
     cid: cid.toString(),
@@ -53,7 +46,7 @@ const insertFn = async (
     replyRootCid: obj.reply?.root?.cid || null,
     replyParent: obj.reply?.parent?.uri || null,
     replyParentCid: obj.reply?.parent?.cid || null,
-    indexedAt: timestamp || new Date().toISOString(),
+    indexedAt: timestamp,
   }
   const insertedPost = await db
     .insertInto('post')
@@ -61,6 +54,16 @@ const insertFn = async (
     .onConflict((oc) => oc.doNothing())
     .returningAll()
     .executeTakeFirst()
+  if (!insertedPost) {
+    return null // Post already indexed
+  }
+  const entities = (obj.entities || []).map((entity) => ({
+    postUri: uri.toString(),
+    startIndex: entity.index.start,
+    endIndex: entity.index.end,
+    type: entity.type,
+    value: entity.value,
+  }))
   // Entity and embed indices
   let insertedEntities: PostEntity[] = []
   if (entities.length > 0) {
@@ -126,9 +129,7 @@ const insertFn = async (
       .returningAll()
       .execute()
   }
-  return insertedPost
-    ? { post: insertedPost, entities: insertedEntities, embed, ancestors }
-    : null
+  return { post: insertedPost, entities: insertedEntities, embed, ancestors }
 }
 
 const findDuplicate = async (): Promise<AtUri | null> => {

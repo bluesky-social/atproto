@@ -17,7 +17,7 @@ const insertFn = async (
   uri: AtUri,
   cid: CID,
   obj: Assertion.Record,
-  timestamp?: string,
+  timestamp: string,
 ): Promise<IndexedAssertion | null> => {
   const inserted = await db
     .insertInto('assertion')
@@ -29,7 +29,7 @@ const insertFn = async (
       subjectDid: obj.subject.did,
       subjectDeclarationCid: obj.subject.declarationCid,
       createdAt: obj.createdAt,
-      indexedAt: timestamp || new Date().toISOString(),
+      indexedAt: timestamp,
       confirmUri: null,
       confirmCid: null,
       confirmCreated: null,

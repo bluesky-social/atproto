@@ -70,7 +70,7 @@ export class RepoSubscription {
     for (const op of ops) {
       if (
         op.action === WriteOpAction.Create ||
-        op.action === WriteOpAction.Update
+        op.action === WriteOpAction.Update // @TODO ensure updates are indexed properly, unify updateProfile
       ) {
         await indexingTx.indexRecord(op.uri, op.cid, op.record, timestamp)
       } else if (op.action === WriteOpAction.Delete) {
