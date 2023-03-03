@@ -2,40 +2,32 @@ import { CID } from 'multiformats'
 import * as uint8arrays from 'uint8arrays'
 import { ReadableBlockstore } from '../storage'
 import { sha256 } from '@atproto/crypto'
-import { MST, Leaf, NodeEntry, NodeData, MstOpts, Fanout } from './mst'
+import { MST, Leaf, NodeEntry, NodeData, MstOpts } from './mst'
 import { cidForCbor } from '@atproto/common'
 
 type SupportedBases = 'base2' | 'base8' | 'base16' | 'base32' | 'base64'
 
-export const leadingZerosOnHash = async (
-  key: string,
-  fanout: Fanout,
-): Promise<number> => {
-  if ([2, 8, 16, 32, 64].indexOf(fanout) < 0) {
-    throw new Error(`Not a valid fanout: ${fanout}`)
-  }
-  const base: SupportedBases = `base${fanout}`
-  const zeroChar = uint8arrays.toString(new Uint8Array(1), base)[0]
+// @TODO improve this
+export const leadingZerosOnHash = async (key: string): Promise<number> => {
   const hash = await sha256(key)
-  const encoded = uint8arrays.toString(hash, base)
-  let count = 0
-  for (const char of encoded) {
-    if (char === zeroChar) {
-      count++
+  const binary = uint8arrays.toString(hash, 'base2')
+  let leadingZeros = 0
+  for (const char of binary) {
+    if (char === '0') {
+      leadingZeros++
     } else {
       break
     }
   }
-  return count
+  return Math.floor(leadingZeros / 2)
 }
 
 export const layerForEntries = async (
   entries: NodeEntry[],
-  fanout: Fanout,
 ): Promise<number | null> => {
   const firstLeaf = entries.find((entry) => entry.isLeaf())
   if (!firstLeaf || firstLeaf.isTree()) return null
-  return await leadingZerosOnHash(firstLeaf.key, fanout)
+  return await leadingZerosOnHash(firstLeaf.key)
 }
 
 export const deserializeNodeData = async (
@@ -43,13 +35,12 @@ export const deserializeNodeData = async (
   data: NodeData,
   opts?: Partial<MstOpts>,
 ): Promise<NodeEntry[]> => {
-  const { layer, fanout } = opts || {}
+  const { layer } = opts || {}
   const entries: NodeEntry[] = []
   if (data.l !== null) {
     entries.push(
       await MST.load(storage, data.l, {
         layer: layer ? layer - 1 : undefined,
-        fanout,
       }),
     )
   }
@@ -62,7 +53,6 @@ export const deserializeNodeData = async (
       entries.push(
         await MST.load(storage, entry.t, {
           layer: layer ? layer - 1 : undefined,
-          fanout,
         }),
       )
     }
