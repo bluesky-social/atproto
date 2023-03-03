@@ -12,7 +12,7 @@ import RecordProcessor from '../processor'
 const lexId = lex.ids.AppBskyGraphFollow
 type IndexedFollow = DatabaseSchemaType['follow']
 
-const insertFn = async (
+const indexFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
@@ -50,7 +50,7 @@ const findDuplicate = async (
   return found ? new AtUri(found.uri) : null
 }
 
-const eventsForInsert = (obj: IndexedFollow) => {
+const eventsForIndex = (obj: IndexedFollow) => {
   return [
     messages.createNotification({
       userDid: obj.subjectDid,
@@ -87,10 +87,10 @@ export type PluginType = RecordProcessor<Follow.Record, IndexedFollow>
 export const makePlugin = (db: DatabaseSchema): PluginType => {
   return new RecordProcessor(db, {
     lexId,
-    insertFn,
+    indexFn,
     findDuplicate,
     deleteFn,
-    eventsForInsert,
+    eventsForIndex,
     eventsForDelete,
   })
 }

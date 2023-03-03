@@ -4,10 +4,11 @@ import * as common from '@atproto/common'
 import DatabaseSchema from '../../../db/database-schema'
 import { Message } from '../../../event-stream/messages'
 import { lexicons } from '../../../lexicon/lexicons'
+import { WriteOpAction } from '@atproto/repo'
 
 type RecordProcessorParams<T, S> = {
   lexId: string
-  insertFn: (
+  indexFn: (
     db: DatabaseSchema,
     uri: AtUri,
     cid: CID,
@@ -20,7 +21,7 @@ type RecordProcessorParams<T, S> = {
     obj: T,
   ) => Promise<AtUri | null>
   deleteFn: (db: DatabaseSchema, uri: AtUri) => Promise<S | null>
-  eventsForInsert: (obj: S) => Message[]
+  eventsForIndex: (obj: S) => Message[]
   eventsForDelete: (prev: S, replacedBy: S | null) => Message[]
 }
 
@@ -46,38 +47,44 @@ export class RecordProcessor<T, S> {
     lexicons.assertValidRecord(this.params.lexId, obj)
   }
 
-  async insertRecord(
+  async indexRecord(
     uri: AtUri,
     cid: CID,
     obj: unknown,
+    action: WriteOpAction.Create | WriteOpAction.Update,
     timestamp: string,
   ): Promise<Message[]> {
     if (!this.matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${this.params.lexId}`)
     }
-    const inserted = await this.params.insertFn(
-      this.db,
-      uri,
-      cid,
-      obj,
-      timestamp,
-    )
+    // @TODO distinguish indexing w/ conflict on uri vs unique key
+    const indexed = await this.params.indexFn(this.db, uri, cid, obj, timestamp)
     // if this was a new record, return events
-    if (inserted) {
-      return this.params.eventsForInsert(inserted)
+    if (indexed) {
+      // @TODO
+      return this.params.eventsForIndex(indexed)
     }
     // if duplicate, insert into duplicates table with no events
     const found = await this.params.findDuplicate(this.db, uri, obj)
-    if (found && found.toString() !== uri.toString()) {
+    if (found?.toString() === uri.toString()) {
+      return []
+    }
+    if (found) {
+      const dupe = {
+        uri: uri.toString(),
+        cid: cid.toString(),
+        duplicateOf: found.toString(),
+        indexedAt: timestamp,
+      }
       await this.db
         .insertInto('duplicate_record')
-        .values({
-          uri: uri.toString(),
-          cid: cid.toString(),
-          duplicateOf: found.toString(),
-          indexedAt: timestamp,
-        })
-        .onConflict((oc) => oc.doNothing())
+        .values(dupe)
+        .onConflict((oc) => oc.doUpdateSet(dupe))
+        .execute()
+    } else {
+      await this.db
+        .deleteFrom('duplicate_record')
+        .where('uri', '=', uri.toString())
         .execute()
     }
     return []
@@ -114,14 +121,14 @@ export class RecordProcessor<T, S> {
       if (!this.matchesSchema(record)) {
         return this.params.eventsForDelete(deleted, null)
       }
-      const inserted = await this.params.insertFn(
+      const indexed = await this.params.indexFn(
         this.db,
         new AtUri(found.uri),
         CID.parse(found.cid),
         record,
         found.indexedAt,
       )
-      return this.params.eventsForDelete(deleted, inserted)
+      return this.params.eventsForDelete(deleted, indexed)
     }
   }
 }

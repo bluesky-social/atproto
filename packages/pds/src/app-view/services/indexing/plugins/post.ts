@@ -29,7 +29,7 @@ type IndexedPost = {
 
 const lexId = lex.ids.AppBskyFeedPost
 
-const insertFn = async (
+const indexFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
@@ -136,7 +136,7 @@ const findDuplicate = async (): Promise<AtUri | null> => {
   return null
 }
 
-const eventsForInsert = (obj: IndexedPost) => {
+const eventsForIndex = (obj: IndexedPost) => {
   const notifs: Message[] = []
   for (const entity of obj.entities || []) {
     if (entity.type === 'mention') {
@@ -238,10 +238,10 @@ export type PluginType = RecordProcessor<PostRecord, IndexedPost>
 export const makePlugin = (db: DatabaseSchema): PluginType => {
   return new RecordProcessor(db, {
     lexId,
-    insertFn,
+    indexFn,
     findDuplicate,
     deleteFn,
-    eventsForInsert,
+    eventsForIndex,
     eventsForDelete,
   })
 }

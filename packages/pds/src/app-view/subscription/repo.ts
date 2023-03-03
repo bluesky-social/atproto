@@ -79,7 +79,13 @@ export class RepoSubscription {
         op.action === WriteOpAction.Create ||
         op.action === WriteOpAction.Update // @TODO ensure updates are indexed properly, unify updateProfile
       ) {
-        await indexingTx.indexRecord(op.uri, op.cid, op.record, timestamp)
+        await indexingTx.indexRecord(
+          op.uri,
+          op.cid,
+          op.record,
+          op.action,
+          timestamp,
+        )
       } else if (op.action === WriteOpAction.Delete) {
         await indexingTx.deleteRecord(op.uri)
       } else {

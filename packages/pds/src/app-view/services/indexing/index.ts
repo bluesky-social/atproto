@@ -10,6 +10,7 @@ import * as Assertion from './plugins/assertion'
 import * as Confirmation from './plugins/confirmation'
 import * as Profile from './plugins/profile'
 import { MessageQueue } from '../../../event-stream/types'
+import { WriteOpAction } from '@atproto/repo'
 
 export class IndexingService {
   records: {
@@ -45,10 +46,16 @@ export class IndexingService {
       new IndexingService(db, messageQueue, messageDispatcher)
   }
 
-  async indexRecord(uri: AtUri, cid: CID, obj: unknown, timestamp: string) {
+  async indexRecord(
+    uri: AtUri,
+    cid: CID,
+    obj: unknown,
+    action: WriteOpAction.Create | WriteOpAction.Update,
+    timestamp: string,
+  ) {
     this.db.assertTransaction()
     const table = this.findTableForCollection(uri.collection)
-    const events = await table.insertRecord(uri, cid, obj, timestamp)
+    const events = await table.indexRecord(uri, cid, obj, action, timestamp)
     await this.messageQueue.send(this.db, events)
   }
 

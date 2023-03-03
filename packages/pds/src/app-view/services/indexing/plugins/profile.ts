@@ -11,7 +11,7 @@ import RecordProcessor from '../processor'
 const lexId = lex.ids.AppBskyActorProfile
 type IndexedProfile = DatabaseSchemaType['profile']
 
-const insertFn = async (
+const indexFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
@@ -19,19 +19,20 @@ const insertFn = async (
   timestamp: string,
 ): Promise<IndexedProfile | null> => {
   if (uri.rkey !== 'self') return null
+  const profile = {
+    uri: uri.toString(),
+    cid: cid.toString(),
+    creator: uri.host,
+    displayName: obj.displayName,
+    description: obj.description,
+    avatarCid: obj.avatar?.cid,
+    bannerCid: obj.banner?.cid,
+    indexedAt: timestamp,
+  }
   const inserted = await db
     .insertInto('profile')
-    .values({
-      uri: uri.toString(),
-      cid: cid.toString(),
-      creator: uri.host,
-      displayName: obj.displayName,
-      description: obj.description,
-      avatarCid: obj.avatar?.cid,
-      bannerCid: obj.banner?.cid,
-      indexedAt: timestamp,
-    })
-    .onConflict((oc) => oc.doNothing())
+    .values(profile)
+    .onConflict((oc) => oc.doUpdateSet(profile))
     .returningAll()
     .executeTakeFirst()
   return inserted || null
@@ -41,7 +42,7 @@ const findDuplicate = async (): Promise<AtUri | null> => {
   return null
 }
 
-const eventsForInsert = () => {
+const eventsForIndex = () => {
   return []
 }
 
@@ -66,10 +67,10 @@ export type PluginType = RecordProcessor<Profile.Record, IndexedProfile>
 export const makePlugin = (db: DatabaseSchema): PluginType => {
   return new RecordProcessor(db, {
     lexId,
-    insertFn,
+    indexFn,
     findDuplicate,
     deleteFn,
-    eventsForInsert,
+    eventsForIndex,
     eventsForDelete,
   })
 }
