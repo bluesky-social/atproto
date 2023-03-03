@@ -50,14 +50,6 @@ export const runTestServer = async (
     plcDb = PlcDatabase.mock()
   }
 
-  // const plcDb =
-  //   dbPostgresUrl !== undefined
-  //     ? PlcDatabase.postgres({
-  //         url: dbPostgresUrl,
-  //         schema: `plc_test_${dbPostgresSchema}`,
-  //       })
-  //     : PlcDatabase.mock()
-  // await plcDb.migrateToLatestOrThrow()
   const plcServer = PlcServer.create({ db: plcDb })
   const plcListener = await plcServer.start()
   const plcPort = (plcListener.address() as AddressInfo).port
