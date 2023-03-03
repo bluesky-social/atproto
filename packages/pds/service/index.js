@@ -17,7 +17,6 @@ const {
   CloudfrontInvalidator,
 } = require('@atproto/aws')
 const { Database, ServerConfig, PDS } = require('@atproto/pds')
-const { Secp256k1Keypair } = require('@atproto/crypto')
 
 const main = async () => {
   const env = getEnv()
@@ -37,9 +36,11 @@ const main = async () => {
   const cfInvalidator = new CloudfrontInvalidator({
     distributionId: env.cfDistributionId,
   })
-  const repoSigningKey = await Secp256k1Keypair.import(env.repoSigningKey)
+  const repoSigningKey = await KmsKeypair.load({
+    keyId: env.signingKeyId,
+  })
   const plcRotationKey = await KmsKeypair.load({
-    keyId: env.plcRotationKeyId,
+    keyId: env.signingKeyId,
   })
   let recoveryKey
   if (env.recoveryKeyId.startsWith('did:')) {
@@ -86,8 +87,7 @@ const smtpUrl = ({ username, password, host }) => {
 
 const getEnv = () => ({
   port: parseInt(process.env.PORT),
-  repoSigningKey: process.env.REPO_SIGNING_KEY,
-  plcRotationKeyId: process.env.PLC_ROTATION_KEY_ID,
+  signingKeyId: process.env.SIGNING_KEY_ID,
   recoveryKeyId: process.env.RECOVERY_KEY_ID,
   dbCreds: JSON.parse(process.env.DB_CREDS_JSON),
   dbMigrateCreds: JSON.parse(process.env.DB_MIGRATE_CREDS_JSON),
