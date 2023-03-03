@@ -11,8 +11,11 @@ export class AppView {
   repoSubscription?: RepoSubscription
 
   constructor(public ctx: AppContext) {
-    if (ctx.cfg.appViewRepoHost) {
-      this.repoSubscription = new RepoSubscription(ctx, ctx.cfg.appViewRepoHost)
+    if (ctx.cfg.appViewRepoProvider) {
+      this.repoSubscription = new RepoSubscription(
+        ctx,
+        ctx.cfg.appViewRepoProvider,
+      )
     }
   }
 

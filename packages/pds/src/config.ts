@@ -43,7 +43,7 @@ export interface ServerConfigValues {
   maxSubscriptionBuffer: number
   repoBackfillLimitMs: number
 
-  appViewRepoHost?: string
+  appViewRepoProvider?: string
 }
 
 export class ServerConfig {
@@ -126,7 +126,7 @@ export class ServerConfig {
     const repoBackfillLimitMs = isNaN(backfillLimit) ? DAY : backfillLimit
 
     // E.g. ws://abc.com:4000
-    const appViewRepoHost = process.env.APP_VIEW_REPO_HOST || undefined
+    const appViewRepoProvider = process.env.APP_VIEW_REPO_PROVIDER || undefined
 
     return new ServerConfig({
       debugMode,
@@ -158,7 +158,7 @@ export class ServerConfig {
       emailNoReplyAddress,
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
-      appViewRepoHost,
+      appViewRepoProvider,
       ...overrides,
     })
   }
@@ -309,7 +309,7 @@ export class ServerConfig {
     return this.cfg.repoBackfillLimitMs
   }
 
-  get appViewRepoHost() {
-    return this.cfg.appViewRepoHost
+  get appViewRepoProvider() {
+    return this.cfg.appViewRepoProvider
   }
 }
