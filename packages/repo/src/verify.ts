@@ -35,11 +35,7 @@ export const verifyCheckout = async (
     )
   }
   const diff = await DataDiff.of(repo.data, null)
-  const newCids = new CidSet([
-    repo.cid,
-    repo.commit.root,
-    repo.root.meta,
-  ]).addSet(diff.newCids)
+  const newCids = new CidSet([repo.cid, repo.commit.root]).addSet(diff.newCids)
 
   const contents: RepoContents = {}
   for (const add of diff.addList()) {
@@ -76,11 +72,9 @@ export const verifyFullHistory = async (
   }
   const baseRepo = await Repo.load(storage, commitPath[0])
   const baseDiff = await DataDiff.of(baseRepo.data, null)
-  const baseRepoCids = new CidSet([
-    baseRepo.cid,
-    baseRepo.commit.root,
-    baseRepo.root.meta,
-  ]).addSet(baseDiff.newCids)
+  const baseRepoCids = new CidSet([baseRepo.cid, baseRepo.commit.root]).addSet(
+    baseDiff.newCids,
+  )
   const init: VerifiedUpdate = {
     commit: baseRepo.cid,
     prev: null,
@@ -124,7 +118,7 @@ export const verifyCommitPath = async (
     const nextRepo = await ReadableRepo.load(storage, commit)
     const diff = await DataDiff.of(nextRepo.data, prevRepo.data)
 
-    if (!nextRepo.root.meta.equals(prevRepo.root.meta)) {
+    if (!util.metaEqual(nextRepo.root, prevRepo.root)) {
       throw new RepoVerificationError('Not supported: repo metadata updated')
     }
 

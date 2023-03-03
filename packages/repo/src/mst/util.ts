@@ -5,10 +5,10 @@ import { sha256 } from '@atproto/crypto'
 import { MST, Leaf, NodeEntry, NodeData, MstOpts } from './mst'
 import { cidForCbor } from '@atproto/common'
 
-type SupportedBases = 'base2' | 'base8' | 'base16' | 'base32' | 'base64'
-
 // @TODO improve this
-export const leadingZerosOnHash = async (key: string): Promise<number> => {
+export const leadingZerosOnHash = async (
+  key: string | Uint8Array,
+): Promise<number> => {
   const hash = await sha256(key)
   const binary = uint8arrays.toString(hash, 'base2')
   let leadingZeros = 0
@@ -46,7 +46,8 @@ export const deserializeNodeData = async (
   }
   let lastKey = ''
   for (const entry of data.e) {
-    const key = lastKey.slice(0, entry.p) + entry.k
+    const keyStr = uint8arrays.toString(entry.k, 'ascii')
+    const key = lastKey.slice(0, entry.p) + keyStr
     entries.push(new Leaf(key, entry.v))
     lastKey = key
     if (entry.t !== null) {
@@ -86,7 +87,7 @@ export const serializeNodeData = (entries: NodeEntry[]): NodeData => {
     const prefixLen = countPrefixLen(lastKey, leaf.key)
     data.e.push({
       p: prefixLen,
-      k: leaf.key.slice(prefixLen),
+      k: toByteString(leaf.key.slice(prefixLen)),
       v: leaf.value,
       t: subtree,
     })
@@ -109,4 +110,12 @@ export const countPrefixLen = (a: string, b: string): number => {
 export const cidForEntries = async (entries: NodeEntry[]): Promise<CID> => {
   const data = serializeNodeData(entries)
   return cidForCbor(data)
+}
+
+export const toByteString = (str: string): Uint8Array => {
+  const isAscii = /^[\x00-\x7F]*$/.test(str)
+  if (!isAscii) {
+    throw new Error(`not ascii: ${str}`)
+  }
+  return uint8arrays.fromString(str, 'ascii')
 }

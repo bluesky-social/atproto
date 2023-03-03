@@ -17,8 +17,6 @@ export const getCheckout = async (
 ): Promise<Uint8Array> => {
   return util.writeCar(cid, async (car: BlockWriter) => {
     const root = await writeCommitAndRootToCar(storage, car, cid)
-    const meta = await storage.readObjAndBytes(root.meta, def.repoMeta)
-    await car.put({ cid: root.meta, bytes: meta.bytes })
     const mst = MST.load(storage, root.data)
     await mst.writeToCarStream(car)
   })

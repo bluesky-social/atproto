@@ -21,9 +21,8 @@ describe('Repo', () => {
   })
 
   it('has proper metadata', async () => {
-    expect(repo.meta.did).toEqual(keypair.did())
-    expect(repo.meta.version).toBe(1)
-    expect(repo.meta.datastore).toBe('mst')
+    expect(repo.did).toEqual(keypair.did())
+    expect(repo.version).toBe(2)
   })
 
   it('does basic operations', async () => {
@@ -105,8 +104,7 @@ describe('Repo', () => {
 
     const contents = await reloadedRepo.getContents()
     expect(contents).toEqual(repoData)
-    expect(repo.meta.did).toEqual(keypair.did())
-    expect(repo.meta.version).toBe(1)
-    expect(repo.meta.datastore).toBe('mst')
+    expect(repo.did).toEqual(keypair.did())
+    expect(repo.version).toBe(2)
   })
 })

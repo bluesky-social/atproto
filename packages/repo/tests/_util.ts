@@ -247,7 +247,7 @@ export const addBadCommit = async (
   const unstoredData = await updatedData.getUnstoredBlocks()
   blocks.addMap(unstoredData.blocks)
   const root: RepoRoot = {
-    meta: repo.root.meta,
+    ...repo.root,
     prev: repo.cid,
     data: unstoredData.root,
   }

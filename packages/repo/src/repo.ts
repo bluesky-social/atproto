@@ -5,7 +5,6 @@ import {
   Commit,
   def,
   DataStore,
-  RepoMeta,
   RecordCreateOp,
   RecordWriteOp,
   CommitData,
@@ -23,7 +22,6 @@ type Params = {
   data: DataStore
   commit: Commit
   root: RepoRoot
-  meta: RepoMeta
   cid: CID
 }
 
@@ -51,15 +49,9 @@ export class Repo extends ReadableRepo {
     const unstoredData = await data.getUnstoredBlocks()
     newBlocks.addMap(unstoredData.blocks)
 
-    const meta: RepoMeta = {
+    const root: RepoRoot = {
       did,
       version: 1,
-      datastore: 'mst',
-    }
-    const metaCid = await newBlocks.add(meta)
-
-    const root: RepoRoot = {
-      meta: metaCid,
       prev: null,
       data: unstoredData.root,
     }
@@ -102,15 +94,13 @@ export class Repo extends ReadableRepo {
     }
     const commit = await storage.readObj(commitCid, def.commit)
     const root = await storage.readObj(commit.root, def.repoRoot)
-    const meta = await storage.readObj(root.meta, def.repoMeta)
     const data = await MST.load(storage, root.data)
-    log.info({ did: meta.did }, 'loaded repo for')
+    log.info({ did: root.did }, 'loaded repo for')
     return new Repo({
       storage,
       data,
       commit,
       root,
-      meta,
       cid: commitCid,
     })
   }
@@ -156,7 +146,7 @@ export class Repo extends ReadableRepo {
     }
 
     const root: RepoRoot = {
-      meta: this.root.meta,
+      ...this.root,
       prev: this.cid,
       data: unstoredData.root,
     }

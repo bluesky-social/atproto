@@ -14,6 +14,7 @@ import {
   RecordPath,
   RecordUpdateDescript,
   RecordWriteDescript,
+  RepoRoot,
   WriteLog,
   WriteOpAction,
 } from './types'
@@ -211,4 +212,8 @@ export const parseDataKey = (key: string): RecordPath => {
 
 export const formatDataKey = (collection: string, rkey: string): string => {
   return collection + '/' + rkey
+}
+
+export const metaEqual = (a: RepoRoot, b: RepoRoot): boolean => {
+  return a.did === b.did && a.version === b.version
 }
