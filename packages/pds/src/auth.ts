@@ -49,7 +49,7 @@ export class ServerAuth {
     return {
       payload: payload as AuthToken, // exp set by sign()
       jwt: jwt.sign(payload, this._secret, {
-        expiresIn: expiresIn ?? '15mins',
+        expiresIn: expiresIn ?? '120mins',
         mutatePayload: true,
       }),
     }
