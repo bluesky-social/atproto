@@ -1,15 +1,9 @@
+import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import { wait } from '@atproto/common'
+import { cborDecode, wait } from '@atproto/common'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
-import {
-  MemoryBlockstore,
-  MST,
-  WriteOpAction,
-  parseDataKey,
-  readCarWithRoot,
-  def as repoDef,
-} from '@atproto/repo'
+import { WriteOpAction, readCarWithRoot } from '@atproto/repo'
 import { PreparedWrite } from '../../repo'
 import { OutputSchema as Message } from '../../lexicon/types/com/atproto/sync/subscribeAllRepos'
 import { ids, lexicons } from '../../lexicon/lexicons'
@@ -159,38 +153,38 @@ export class RepoSubscription {
 }
 
 async function getOps(msg: Message): Promise<PreparedWrite[]> {
-  const claims = await blocksToRecords(msg.blocks as Uint8Array)
-  return claims.map(({ collection, rkey, cid, record }) => ({
-    action: WriteOpAction.Create,
-    cid,
-    record,
-    blobs: [], // @TODO need to determine how the app-view provides URLs for processed blobs
-    uri: AtUri.make(msg.repo, collection, rkey),
-  }))
-}
-
-// @TODO temporary until ops are in the sub messages, based on repo.verifyRecords().
-async function blocksToRecords(blocks: Uint8Array): Promise<CarRecord[]> {
-  const car = await readCarWithRoot(blocks)
-  const blockstore = new MemoryBlockstore(car.blocks)
-  const commit = await blockstore.readObj(car.root, repoDef.commit)
-  const root = await blockstore.readObj(commit.root, repoDef.repoRoot)
-  const mst = MST.load(blockstore, root.data)
-  const records: CarRecord[] = []
-  const leaves = await mst.reachableLeaves()
-  for (const leaf of leaves) {
-    const { collection, rkey } = parseDataKey(leaf.key)
-    const record = await blockstore.attemptRead(leaf.value, repoDef.record)
-    if (record) {
-      records.push({
-        collection,
-        rkey,
-        cid: leaf.value,
-        record: record.obj,
-      })
+  const { ops } = msg
+  const car = await readCarWithRoot(msg.blocks as Uint8Array)
+  return ops.map((op) => {
+    const [collection, rkey] = op.path.split('/')
+    assert(collection && rkey)
+    if (
+      op.action === WriteOpAction.Create ||
+      op.action === WriteOpAction.Update
+    ) {
+      assert(op.cid)
+      const cid = CID.parse(op.cid)
+      const record = car.blocks.get(cid)
+      assert(record)
+      return {
+        action:
+          op.action === WriteOpAction.Create
+            ? WriteOpAction.Create
+            : WriteOpAction.Update,
+        cid,
+        record: cborDecode(record),
+        blobs: [], // @TODO need to determine how the app-view provides URLs for processed blobs
+        uri: AtUri.make(msg.repo, collection, rkey),
+      }
+    } else if (op.action === WriteOpAction.Delete) {
+      return {
+        action: WriteOpAction.Delete,
+        uri: AtUri.make(msg.repo, collection, rkey),
+      }
+    } else {
+      throw new Error(`Unknown repo op action: ${op.action}`)
     }
-  }
-  return records
+  })
 }
 
 function jitter(maxMs) {
@@ -209,13 +203,6 @@ class ProcessingError extends Error {
   constructor(public msg: Message, opts: { cause: unknown }) {
     super('processing error', opts)
   }
-}
-
-type CarRecord = {
-  collection: string
-  rkey: string
-  cid: CID
-  record: Record<string, unknown>
 }
 
 type State = { cursor: number }
