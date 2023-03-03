@@ -57,7 +57,7 @@ const res1 = await agent.api.com.atproto.repo.createRecord(
     }
   }
 )
-const res2 = await agent.api.com.atproto.repo.listRecords({did: alice.did, type: 'app.bsky.feed.post'})
+const res2 = await agent.api.com.atproto.repo.listRecords({user: alice.did, collection: 'app.bsky.feed.post'})
 
 // repo record methods
 const res3 = await agent.api.app.bsky.feed.post.create({did: alice.did}, {
