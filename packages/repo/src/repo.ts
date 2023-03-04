@@ -1,7 +1,7 @@
 import { CID } from 'multiformats/cid'
+import * as cbor from '@ipld/dag-cbor'
 import * as crypto from '@atproto/crypto'
 import {
-  RepoRoot,
   Commit,
   def,
   DataStore,
@@ -9,6 +9,7 @@ import {
   RecordWriteOp,
   CommitData,
   WriteOpAction,
+  UnsignedCommit,
 } from './types'
 import { RepoStorage } from './storage'
 import { MST } from './mst'
@@ -16,12 +17,12 @@ import DataDiff from './data-diff'
 import log from './logger'
 import BlockMap from './block-map'
 import { ReadableRepo } from './readable-repo'
+import * as util from './util'
 
 type Params = {
   storage: RepoStorage
   data: DataStore
   commit: Commit
-  root: RepoRoot
   cid: CID
 }
 
@@ -49,18 +50,15 @@ export class Repo extends ReadableRepo {
     const unstoredData = await data.getUnstoredBlocks()
     newBlocks.addMap(unstoredData.blocks)
 
-    const root: RepoRoot = {
-      did,
-      version: 1,
-      prev: null,
-      data: unstoredData.root,
-    }
-    const rootCid = await newBlocks.add(root)
-
-    const commit: Commit = {
-      root: rootCid,
-      sig: await keypair.sign(rootCid.bytes),
-    }
+    const commit = util.signCommit(
+      {
+        did,
+        version: 1,
+        prev: null,
+        data: unstoredData.root,
+      },
+      keypair,
+    )
     const commitCid = await newBlocks.add(commit)
 
     return {
@@ -93,14 +91,12 @@ export class Repo extends ReadableRepo {
       throw new Error('No cid provided and none in storage')
     }
     const commit = await storage.readObj(commitCid, def.commit)
-    const root = await storage.readObj(commit.root, def.repoRoot)
-    const data = await MST.load(storage, root.data)
-    log.info({ did: root.did }, 'loaded repo for')
+    const data = await MST.load(storage, commit.data)
+    log.info({ did: commit.did }, 'loaded repo for')
     return new Repo({
       storage,
       data,
       commit,
-      root,
       cid: commitCid,
     })
   }
@@ -145,17 +141,14 @@ export class Repo extends ReadableRepo {
       newBlocks.addMap(fromStorage.blocks)
     }
 
-    const root: RepoRoot = {
-      ...this.root,
-      prev: this.cid,
-      data: unstoredData.root,
-    }
-    const rootCid = await newBlocks.add(root)
-
-    const commit: Commit = {
-      root: rootCid,
-      sig: await keypair.sign(rootCid.bytes),
-    }
+    const commit = await util.signCommit(
+      {
+        ...this.commit,
+        prev: this.cid,
+        data: unstoredData.root,
+      },
+      keypair,
+    )
     const commitCid = await newBlocks.add(commit)
 
     return {

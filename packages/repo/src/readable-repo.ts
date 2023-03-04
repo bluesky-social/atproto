@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { RepoRoot, Commit, def, DataStore, RepoContents } from './types'
+import { Commit, def, DataStore, RepoContents } from './types'
 import { ReadableBlockstore } from './storage'
 import { MST } from './mst'
 import log from './logger'
@@ -11,7 +11,6 @@ type Params = {
   storage: ReadableBlockstore
   data: DataStore
   commit: Commit
-  root: RepoRoot
   cid: CID
 }
 
@@ -19,37 +18,33 @@ export class ReadableRepo {
   storage: ReadableBlockstore
   data: DataStore
   commit: Commit
-  root: RepoRoot
   cid: CID
 
   constructor(params: Params) {
     this.storage = params.storage
     this.data = params.data
     this.commit = params.commit
-    this.root = params.root
     this.cid = params.cid
   }
 
   static async load(storage: ReadableBlockstore, commitCid: CID) {
     const commit = await storage.readObj(commitCid, def.commit)
-    const root = await storage.readObj(commit.root, def.repoRoot)
-    const data = await MST.load(storage, root.data)
-    log.info({ did: root.did }, 'loaded repo for')
+    const data = await MST.load(storage, commit.data)
+    log.info({ did: commit.did }, 'loaded repo for')
     return new ReadableRepo({
       storage,
       data,
       commit,
-      root,
       cid: commitCid,
     })
   }
 
   get did(): string {
-    return this.root.did
+    return this.commit.did
   }
 
   get version(): number {
-    return this.root.version
+    return this.commit.version
   }
 
   async getRecord(collection: string, rkey: string): Promise<unknown | null> {

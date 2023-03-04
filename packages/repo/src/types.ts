@@ -7,32 +7,30 @@ import BlockMap from './block-map'
 // Repo nodes
 // ---------------
 
-const repoRoot = z.object({
+const unsignedCommit = z.object({
   did: z.string(),
   version: z.number(),
   prev: common.cid.nullable(),
   data: common.cid,
 })
-export type RepoRoot = z.infer<typeof repoRoot>
+export type UnsignedCommit = z.infer<typeof unsignedCommit>
 
 const commit = z.object({
-  root: common.cid,
+  did: z.string(),
+  version: z.number(),
+  prev: common.cid.nullable(),
+  data: common.cid,
   sig: common.bytes,
 })
 export type Commit = z.infer<typeof commit>
 
 export const schema = {
   ...common,
-  repoRoot,
   commit,
 }
 
 export const def = {
   ...commonDef,
-  repoRoot: {
-    name: 'repo root',
-    schema: schema.repoRoot,
-  },
   commit: {
     name: 'commit',
     schema: schema.commit,
