@@ -12,7 +12,7 @@ import {
   AtpSessionData,
   AtpAgentCreateAccountOpts,
   AtpAgentLoginOpts,
-  AptAgentFetchHandler,
+  AtpAgentFetchHandler,
   AtpAgentFetchHandlerResponse,
   AtpAgentGlobalOpts,
   AtpPersistSessionHandler,
@@ -37,7 +37,7 @@ export class AtpAgent {
   /**
    * The `fetch` implementation; must be implemented for your platform.
    */
-  static fetch: AptAgentFetchHandler | undefined = defaultFetchHandler
+  static fetch: AtpAgentFetchHandler | undefined = defaultFetchHandler
 
   /**
    * Configures the API globally.
