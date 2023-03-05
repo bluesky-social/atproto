@@ -6,7 +6,8 @@ import PDSServer, {
   MemoryBlobStore,
   ServerConfig as PDSServerConfig,
 } from '@atproto/pds'
-import * as plc from '@atproto/plc'
+import * as plc from '@did-plc/lib'
+import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
 import * as crypto from '@atproto/crypto'
 import AtpAgent from '@atproto/api'
 import { ServerType, ServerConfig, StartParams } from './types.js'
@@ -70,18 +71,20 @@ export class DevEnvServer {
 
         const blobstore = new MemoryBlobStore()
 
-        const plcClient = new plc.PlcClient(this.env.plcUrl)
-        const serverDid = await plcClient.createDid(
-          keypair,
-          keypair.did(),
-          'localhost',
-          `http://localhost:${this.port}`,
-        )
+        const plcClient = new plc.Client(this.env.plcUrl)
+        const serverDid = await plcClient.createDid({
+          signingKey: keypair.did(),
+          rotationKeys: [keypair.did()],
+          handle: 'localhost',
+          pds: `http://localhost:${this.port}`,
+          signer: keypair,
+        })
 
         const pds = PDSServer.create({
           db,
           blobstore,
-          keypair,
+          repoSigningKey: keypair,
+          plcRotationKey: keypair,
           config: new PDSServerConfig({
             debugMode: true,
             version: '0.0.0',
@@ -112,9 +115,8 @@ export class DevEnvServer {
         break
       }
       case ServerType.DidPlaceholder: {
-        const db = plc.Database.memory()
-        await db.migrateToLatestOrThrow()
-        const plcServer = plc.PlcServer.create({ db, port: this.port })
+        const db = PlcDatabase.mock()
+        const plcServer = PlcServer.create({ db, port: this.port })
         await startServer(plcServer)
         this.inst = plcServer
         break

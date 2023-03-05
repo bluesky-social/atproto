@@ -14,7 +14,6 @@
 - [DID Resolver](./did-resolver): A library for resolving ATP's Decentralized ID methods.
 - [Lexicon](./lexicon): A library for validating data using ATP's schema system.
 - [NSID](./nsid): A parser and generator of NSIDs.
-- [PLC](./plc): The did:placeholder implementation.
 - [Repo](./repo): The "ATP repository" core implementation (a Merkle Search Tree).
 - [URI](./uri): A parser and generator of `at://` uris.
 - [XRPC](./xrpc): An XRPC client implementation.

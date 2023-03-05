@@ -15,7 +15,6 @@ COPY ./packages/lex-cli ./packages/lex-cli
 COPY ./packages/lexicon ./packages/lexicon
 COPY ./packages/nsid ./packages/nsid
 COPY ./packages/pds ./packages/pds
-COPY ./packages/plc ./packages/plc
 COPY ./packages/repo ./packages/repo
 COPY ./packages/uri ./packages/uri
 COPY ./packages/xrpc ./packages/xrpc
