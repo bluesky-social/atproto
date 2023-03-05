@@ -48,6 +48,8 @@ import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommit
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
+import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeAllRepos from './types/com/atproto/sync/subscribeAllRepos'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
@@ -510,6 +512,20 @@ export class SyncNS {
     cfg: ConfigOf<AV, ComAtprotoSyncGetRepo.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.sync.getRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  notifyOfUpdate<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncNotifyOfUpdate.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.notifyOfUpdate' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  requestCrawl<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncRequestCrawl.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.requestCrawl' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

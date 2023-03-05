@@ -9,7 +9,7 @@ import {
 import { randomStr } from '@atproto/crypto'
 import { DidResolver } from '@atproto/did-resolver'
 import * as repo from '@atproto/repo'
-import { MemoryBlockstore } from '@atproto/repo'
+import { getWriteLog, MemoryBlockstore, WriteOpAction } from '@atproto/repo'
 import { byFrame, ErrorFrame, Frame, InfoFrame } from '@atproto/xrpc-server'
 import { WebSocket } from 'ws'
 import { OutputSchema as RepoEvent } from '../../src/lexicon/types/com/atproto/sync/subscribeAllRepos'
@@ -82,11 +82,13 @@ describe('repo subscribe all repos', () => {
 
   const verifyRepo = async (did: string, evts: RepoEvent[]) => {
     const didRepo = await getRepo(did)
+    const writeLog = await getWriteLog(didRepo.storage, didRepo.cid, null)
     const commits = await didRepo.storage.getCommits(didRepo.cid, null)
     if (!commits) {
       return expect(commits !== null)
     }
     expect(evts.length).toBe(commits.length)
+    expect(evts.length).toBe(writeLog.length)
     for (let i = 0; i < commits.length; i++) {
       const commit = commits[i]
       const evt = evts[i]
@@ -96,6 +98,14 @@ describe('repo subscribe all repos', () => {
       const car = await repo.readCarWithRoot(evt.blocks as Uint8Array)
       expect(car.root.equals(commit.commit))
       expect(car.blocks.equals(commit.blocks))
+      const writes = writeLog[i].map((w) => ({
+        action: w.action,
+        path: w.collection + '/' + w.rkey,
+        cid: w.action === WriteOpAction.Delete ? null : w.cid.toString(),
+      }))
+      const sortedOps = evt.ops.sort((a, b) => a.path.localeCompare(b.path))
+      const sortedWrites = evt.ops.sort((a, b) => a.path.localeCompare(b.path))
+      expect(sortedOps).toEqual(sortedWrites)
     }
   }
 

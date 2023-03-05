@@ -2224,6 +2224,38 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncNotifyOfUpdate: {
+    lexicon: 1,
+    id: 'com.atproto.sync.notifyOfUpdate',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Notify a crawling service of a recent update. Often when a long break between updates causes the connection with the crawling service to break.',
+      },
+    },
+  },
+  ComAtprotoSyncRequestCrawl: {
+    lexicon: 1,
+    id: 'com.atproto.sync.requestCrawl',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Request a service to persistently crawl hosted repos.',
+        parameters: {
+          type: 'params',
+          required: ['hostname'],
+          properties: {
+            host: {
+              type: 'string',
+              description:
+                'Hostname of the service that is requesting to be crawled.',
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoSyncSubscribeAllRepos: {
     lexicon: 1,
     id: 'com.atproto.sync.subscribeAllRepos',
@@ -2250,6 +2282,7 @@ export const schemaDict = {
               'commit',
               'prev',
               'blocks',
+              'ops',
               'blobs',
               'time',
             ],
@@ -2274,6 +2307,13 @@ export const schemaDict = {
               blocks: {
                 type: 'unknown',
               },
+              ops: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.sync.subscribeAllRepos#repoOp',
+                },
+              },
               blobs: {
                 type: 'array',
                 items: {
@@ -2296,6 +2336,23 @@ export const schemaDict = {
             name: 'FutureCursor',
           },
         ],
+      },
+      repoOp: {
+        type: 'object',
+        required: ['action', 'path', 'cid'],
+        nullable: ['cid'],
+        properties: {
+          action: {
+            type: 'string',
+            knownValues: ['create', 'update', 'delete'],
+          },
+          path: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+          },
+        },
       },
     },
   },
@@ -4120,6 +4177,8 @@ export const ids = {
   ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
+  ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
+  ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeAllRepos: 'com.atproto.sync.subscribeAllRepos',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
   AppBskyActorGetProfiles: 'app.bsky.actor.getProfiles',

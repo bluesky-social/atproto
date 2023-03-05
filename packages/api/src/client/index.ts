@@ -55,6 +55,8 @@ import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommit
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
+import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeAllRepos from './types/com/atproto/sync/subscribeAllRepos'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
@@ -143,6 +145,8 @@ export * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommit
 export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
+export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeAllRepos from './types/com/atproto/sync/subscribeAllRepos'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 export * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
@@ -762,6 +766,28 @@ export class SyncNS {
       .call('com.atproto.sync.getRepo', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoSyncGetRepo.toKnownErr(e)
+      })
+  }
+
+  notifyOfUpdate(
+    params?: ComAtprotoSyncNotifyOfUpdate.QueryParams,
+    opts?: ComAtprotoSyncNotifyOfUpdate.CallOptions,
+  ): Promise<ComAtprotoSyncNotifyOfUpdate.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.notifyOfUpdate', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncNotifyOfUpdate.toKnownErr(e)
+      })
+  }
+
+  requestCrawl(
+    params?: ComAtprotoSyncRequestCrawl.QueryParams,
+    opts?: ComAtprotoSyncRequestCrawl.CallOptions,
+  ): Promise<ComAtprotoSyncRequestCrawl.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.requestCrawl', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncRequestCrawl.toKnownErr(e)
       })
   }
 }

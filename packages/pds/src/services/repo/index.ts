@@ -124,8 +124,24 @@ export class RepoService {
   ) {
     await Promise.all([
       this.blobs.processWriteBlobs(did, commit, writes),
+      this.indexRepoOps(did, commit, writes),
       this.sequenceWrite(did, commit),
     ])
+  }
+
+  async indexRepoOps(did: string, commit: CID, writes: PreparedWrite[]) {
+    const ops = writes.map((w) => {
+      const path = w.uri.collection + '/' + w.uri.rkey
+      const cid = w.action === WriteOpAction.Delete ? null : w.cid.toString()
+      return {
+        did,
+        commit: commit.toString(),
+        action: w.action,
+        path,
+        cid,
+      }
+    })
+    await this.db.db.insertInto('repo_op').values(ops).execute()
   }
 
   async sequenceWrite(did: string, commit: CID) {

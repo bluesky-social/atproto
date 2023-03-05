@@ -19,6 +19,7 @@ export interface OutputSchema {
   commit: string
   prev: string | null
   blocks: {}
+  ops: RepoOp[]
   blobs: string[]
   time: string
   [k: string]: unknown
@@ -32,3 +33,22 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
   params: QueryParams
   req: IncomingMessage
 }) => AsyncIterable<HandlerOutput>
+
+export interface RepoOp {
+  action: 'create' | 'update' | 'delete' | (string & {})
+  path: string
+  cid: string | null
+  [k: string]: unknown
+}
+
+export function isRepoOp(v: unknown): v is RepoOp {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.sync.subscribeAllRepos#repoOp'
+  )
+}
+
+export function validateRepoOp(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.sync.subscribeAllRepos#repoOp', v)
+}

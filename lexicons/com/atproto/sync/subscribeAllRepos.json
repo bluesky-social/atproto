@@ -17,7 +17,7 @@
       "message": {
         "schema": {
           "type": "object",
-          "required": ["seq", "event", "repo", "commit", "prev", "blocks", "blobs", "time"],
+          "required": ["seq", "event", "repo", "commit", "prev", "blocks", "ops", "blobs", "time"],
           "nullable": ["prev"],
           "properties": {
             "seq": {"type": "integer"},
@@ -32,6 +32,10 @@
             "commit": {"type": "string"},
             "prev": {"type": "string"},
             "blocks": {"type": "unknown"},
+            "ops": {
+              "type": "array", 
+              "items": { "type": "ref", "ref": "#repoOp"}
+            },
             "blobs": {
               "type": "array",
               "items": {"type": "string"}
@@ -46,6 +50,23 @@
       "errors": [
         {"name": "FutureCursor"}
       ]
+    },
+    "repoOp": {
+      "type": "object",
+      "required": ["action", "path", "cid"],
+      "nullable": ["cid"],
+      "properties": {
+        "action": {
+          "type": "string",
+          "knownValues": [
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        "path": {"type": "string"},
+        "cid": {"type": "string"}
+      }
     }
   }
 }

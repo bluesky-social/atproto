@@ -31,13 +31,14 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     for await (const evt of outbox.events(cursor, backfillTime)) {
-      const { seq, time, repo, commit, prev, blocks, blobs } = evt
+      const { seq, time, repo, commit, prev, blocks, ops, blobs } = evt
       const toYield: RepoEvent = {
         seq,
         event: 'repo_append',
         repo,
         commit,
         blocks,
+        ops,
         blobs,
         time,
         prev: prev ?? null,

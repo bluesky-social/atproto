@@ -112,16 +112,32 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       .selectFrom(seqQb.as('repo_seq'))
       .innerJoin('repo_blob', (join) =>
         join
-          .onRef('repo_blob.did', '=', 'repo_blob.did')
+          .onRef('repo_blob.did', '=', 'repo_seq.did')
           .onRef('repo_blob.commit', '=', 'repo_seq.commit'),
       )
       .select(['repo_seq.seq as seq', 'repo_blob.cid as cid'])
       .execute()
 
-    const [events, blocks, blobs] = await Promise.all([
+    const getOps = this.db.db
+      .selectFrom(seqQb.as('repo_seq'))
+      .innerJoin('repo_op', (join) =>
+        join
+          .onRef('repo_op.did', '=', 'repo_seq.did')
+          .onRef('repo_op.commit', '=', 'repo_seq.commit'),
+      )
+      .select([
+        'repo_seq.seq as seq',
+        'repo_op.action as action',
+        'repo_op.path as path',
+        'repo_op.cid as cid',
+      ])
+      .execute()
+
+    const [events, blocks, blobs, ops] = await Promise.all([
       getEvents,
       getBlocks,
       getBlobs,
+      getOps,
     ])
 
     const blocksBySeq = blocks.reduce((acc, cur) => {
@@ -136,6 +152,13 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       return acc
     }, {} as Record<number, string[]>)
 
+    const opsBySeq = ops.reduce((acc, cur) => {
+      acc[cur.seq] ??= []
+      const { action, path, cid } = cur
+      acc[cur.seq].push({ action, path, cid })
+      return acc
+    }, {} as Record<number, RepoAppendOp[]>)
+
     return Promise.all(
       events.map(async (evt) => {
         const commit = CID.parse(evt.commit)
@@ -148,6 +171,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
           }
         })
         const blobs = blobsBySeq[evt.seq] || []
+        const ops = opsBySeq[evt.seq] || []
         return {
           seq: evt.seq,
           time: evt.sequencedAt,
@@ -155,8 +179,9 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
           commit: evt.commit,
           prev: evt.prev || undefined,
           blocks: carSlice,
+          ops,
           blobs,
-        } as RepoAppendEvent
+        }
       }),
     )
   }
@@ -189,7 +214,14 @@ export type RepoAppendEvent = {
   commit: string
   prev?: string
   blocks: Uint8Array
+  ops: RepoAppendOp[]
   blobs: string[]
+}
+
+export type RepoAppendOp = {
+  action: string
+  path: string
+  cid: string | null
 }
 
 type SequencerEvents = {
