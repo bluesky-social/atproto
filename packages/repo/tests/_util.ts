@@ -12,12 +12,12 @@ import {
   RecordWriteOp,
   RepoContents,
   RecordPath,
-  RepoRoot,
   WriteLog,
   WriteOpAction,
   RecordClaim,
+  Commit,
 } from '../src'
-import { Keypair } from '@atproto/crypto'
+import { Keypair, randomBytes } from '@atproto/crypto'
 
 type IdMapping = Record<string, CID>
 
@@ -246,16 +246,12 @@ export const addBadCommit = async (
   const updatedData = await repo.data.add(`com.example.test/${TID.next()}`, cid)
   const unstoredData = await updatedData.getUnstoredBlocks()
   blocks.addMap(unstoredData.blocks)
-  const root: RepoRoot = {
-    ...repo.root,
+  // we generate a bad sig by signing some other data
+  const commit: Commit = {
+    ...repo.commit,
     prev: repo.cid,
     data: unstoredData.root,
-  }
-  const rootCid = await blocks.add(root)
-  // we generate a bad sig by signing the data cid instead of root cid
-  const commit = {
-    root: rootCid,
-    sig: await keypair.sign(unstoredData.root.bytes),
+    sig: await keypair.sign(randomBytes(256)),
   }
   const commitCid = await blocks.add(commit)
   await repo.storage.applyCommit({

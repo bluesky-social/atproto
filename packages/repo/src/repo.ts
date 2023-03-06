@@ -50,10 +50,10 @@ export class Repo extends ReadableRepo {
     const unstoredData = await data.getUnstoredBlocks()
     newBlocks.addMap(unstoredData.blocks)
 
-    const commit = util.signCommit(
+    const commit = await util.signCommit(
       {
         did,
-        version: 1,
+        version: 2,
         prev: null,
         data: unstoredData.root,
       },
@@ -143,7 +143,8 @@ export class Repo extends ReadableRepo {
 
     const commit = await util.signCommit(
       {
-        ...this.commit,
+        did: this.did,
+        version: 2,
         prev: this.cid,
         data: unstoredData.root,
       },
