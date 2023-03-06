@@ -77,12 +77,11 @@ describe('indexing', () => {
         .processWrites(sc.dids.alice, [createRecord], new Date().toISOString())
     })
 
-    const getAfterCreate = await sc.agent.api.com.atproto.repo.getRecord({
-      user: uri.host,
-      collection: uri.collection,
-      rkey: uri.rkey,
-    })
-    expect(getAfterCreate.data.cid).toEqual(createRecord.cid.toString())
+    const getAfterCreate = await agent.api.app.bsky.feed.getPostThread(
+      { uri: uri.toString() },
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+    expect(forSnapshot(getAfterCreate.data)).toMatchSnapshot()
     await messageQueue.processAll()
     const createNotifications = await getNotifications(db, uri)
 
@@ -93,12 +92,11 @@ describe('indexing', () => {
         .processWrites(sc.dids.alice, [updateRecord], new Date().toISOString())
     })
 
-    const getAfterUpdate = await sc.agent.api.com.atproto.repo.getRecord({
-      user: uri.host,
-      collection: uri.collection,
-      rkey: uri.rkey,
-    })
-    expect(getAfterUpdate.data.cid).toEqual(updateRecord.cid.toString())
+    const getAfterUpdate = await agent.api.app.bsky.feed.getPostThread(
+      { uri: uri.toString() },
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+    expect(forSnapshot(getAfterUpdate.data)).toMatchSnapshot()
     await messageQueue.processAll()
     const updateNotifications = await getNotifications(db, uri)
 
@@ -109,12 +107,11 @@ describe('indexing', () => {
         .processWrites(sc.dids.alice, [deleteRecord], new Date().toISOString())
     })
 
-    const getAfterDelete = sc.agent.api.com.atproto.repo.getRecord({
-      user: updateRecord.uri.host,
-      collection: updateRecord.uri.collection,
-      rkey: updateRecord.uri.rkey,
-    })
-    await expect(getAfterDelete).rejects.toThrow(/Could not locate record/)
+    const getAfterDelete = agent.api.app.bsky.feed.getPostThread(
+      { uri: uri.toString() },
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+    await expect(getAfterDelete).rejects.toThrow(/Post not found:/)
     await messageQueue.processAll()
     const deleteNotifications = await getNotifications(db, uri)
 
@@ -161,12 +158,11 @@ describe('indexing', () => {
         .processWrites(sc.dids.dan, [createRecord], new Date().toISOString())
     })
 
-    const getAfterCreate = await sc.agent.api.com.atproto.repo.getRecord({
-      user: uri.host,
-      collection: uri.collection,
-      rkey: uri.rkey,
-    })
-    expect(getAfterCreate.data.cid).toEqual(createRecord.cid.toString())
+    const getAfterCreate = await agent.api.app.bsky.actor.getProfile(
+      { actor: sc.dids.dan },
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+    expect(forSnapshot(getAfterCreate.data)).toMatchSnapshot()
     await messageQueue.processAll()
     const createNotifications = await getNotifications(db, uri)
 
@@ -177,12 +173,11 @@ describe('indexing', () => {
         .processWrites(sc.dids.dan, [updateRecord], new Date().toISOString())
     })
 
-    const getAfterUpdate = await sc.agent.api.com.atproto.repo.getRecord({
-      user: uri.host,
-      collection: uri.collection,
-      rkey: uri.rkey,
-    })
-    expect(getAfterUpdate.data.cid).toEqual(updateRecord.cid.toString())
+    const getAfterUpdate = await agent.api.app.bsky.actor.getProfile(
+      { actor: sc.dids.dan },
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+    expect(forSnapshot(getAfterUpdate.data)).toMatchSnapshot()
     await messageQueue.processAll()
     const updateNotifications = await getNotifications(db, uri)
 
@@ -193,12 +188,11 @@ describe('indexing', () => {
         .processWrites(sc.dids.dan, [deleteRecord], new Date().toISOString())
     })
 
-    const getAfterDelete = sc.agent.api.com.atproto.repo.getRecord({
-      user: updateRecord.uri.host,
-      collection: updateRecord.uri.collection,
-      rkey: updateRecord.uri.rkey,
-    })
-    await expect(getAfterDelete).rejects.toThrow(/Could not locate record/)
+    const getAfterDelete = await agent.api.app.bsky.actor.getProfile(
+      { actor: sc.dids.dan },
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+    expect(forSnapshot(getAfterDelete.data)).toMatchSnapshot()
     await messageQueue.processAll()
     const deleteNotifications = await getNotifications(db, uri)
 
