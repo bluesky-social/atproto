@@ -11,7 +11,7 @@ isValid('alice.test', ['.test']) // returns true
 ensureValid('alice.test', ['.test']) // returns void
 
 isValid('al!ce.test', ['.test']) // returns false
-isValid('al!ce.test', ['.test']) // throws
+ensureValid('al!ce.test', ['.test']) // throws
 ```
 
 ## License
