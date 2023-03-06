@@ -11,7 +11,7 @@ import RecordProcessor from '../processor'
 const lexId = lex.ids.AppBskySystemDeclaration
 type DidHandle = DatabaseSchemaType['did_handle']
 
-const indexFn = async (
+const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
@@ -32,7 +32,7 @@ const findDuplicate = async (): Promise<AtUri | null> => {
   return null
 }
 
-const eventsForIndex = () => {
+const eventsForInsert = () => {
   return []
 }
 
@@ -49,10 +49,10 @@ export type PluginType = RecordProcessor<Declaration.Record, DidHandle>
 export const makePlugin = (db: DatabaseSchema): PluginType => {
   return new RecordProcessor(db, {
     lexId,
-    indexFn,
+    insertFn,
     findDuplicate,
     deleteFn,
-    eventsForIndex,
+    eventsForInsert,
     eventsForDelete,
   })
 }

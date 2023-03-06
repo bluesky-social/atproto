@@ -16,7 +16,6 @@ export const listen = (ctx: AppContext) => {
         message.uri,
         message.cid,
         message.obj,
-        message.action,
         message.timestamp,
       )
     },

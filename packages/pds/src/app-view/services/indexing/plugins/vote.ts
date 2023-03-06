@@ -13,7 +13,7 @@ import RecordProcessor from '../processor'
 const lexId = lex.ids.AppBskyFeedVote
 type IndexedVote = DatabaseSchemaType['vote']
 
-const indexFn = async (
+const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
@@ -67,7 +67,7 @@ const createNotif = (obj: IndexedVote) => {
   })
 }
 
-const eventsForIndex = (obj: IndexedVote) => {
+const eventsForInsert = (obj: IndexedVote) => {
   // No events for downvotes
   if (obj.direction === 'down') return []
   return [createNotif(obj)]
@@ -104,10 +104,10 @@ export type PluginType = RecordProcessor<Vote.Record, IndexedVote>
 export const makePlugin = (db: DatabaseSchema): PluginType => {
   return new RecordProcessor(db, {
     lexId,
-    indexFn,
+    insertFn,
     findDuplicate,
     deleteFn,
-    eventsForIndex,
+    eventsForInsert,
     eventsForDelete,
   })
 }

@@ -36,11 +36,7 @@ export class RecordService {
     } else if (record.rkey.length < 1) {
       throw new Error('Expected indexed URI to contain a record key')
     }
-    await this.db.db
-      .insertInto('record')
-      .values(record)
-      .onConflict((oc) => oc.doUpdateSet({ cid: record.cid }))
-      .execute()
+    await this.db.db.insertInto('record').values(record).execute()
 
     await this.messageDispatcher.send(
       this.db,

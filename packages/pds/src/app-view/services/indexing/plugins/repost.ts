@@ -12,7 +12,7 @@ import RecordProcessor from '../processor'
 const lexId = lex.ids.AppBskyFeedRepost
 type IndexedRepost = DatabaseSchemaType['repost']
 
-const indexFn = async (
+const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
@@ -50,7 +50,7 @@ const findDuplicate = async (
   return found ? new AtUri(found.uri) : null
 }
 
-const eventsForIndex = (obj: IndexedRepost) => {
+const eventsForInsert = (obj: IndexedRepost) => {
   const subjectUri = new AtUri(obj.subject)
   const notif = messages.createNotification({
     userDid: subjectUri.host,
@@ -88,10 +88,10 @@ export type PluginType = RecordProcessor<Repost.Record, IndexedRepost>
 export const makePlugin = (db: DatabaseSchema): PluginType => {
   return new RecordProcessor(db, {
     lexId,
-    indexFn,
+    insertFn,
     findDuplicate,
     deleteFn,
-    eventsForIndex,
+    eventsForInsert,
     eventsForDelete,
   })
 }

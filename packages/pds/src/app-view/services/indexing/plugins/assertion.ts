@@ -12,7 +12,7 @@ import RecordProcessor from '../processor'
 const lexId = lex.ids.AppBskyGraphAssertion
 type IndexedAssertion = DatabaseSchemaType['assertion']
 
-const indexFn = async (
+const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
@@ -56,7 +56,7 @@ const findDuplicate = async (
   return found ? new AtUri(found.uri) : null
 }
 
-const eventsForIndex = (_obj: IndexedAssertion) => {
+const eventsForInsert = (_obj: IndexedAssertion) => {
   // disabled for now
   return []
 }
@@ -85,10 +85,10 @@ export type PluginType = RecordProcessor<Assertion.Record, IndexedAssertion>
 export const makePlugin = (db: DatabaseSchema): PluginType => {
   return new RecordProcessor(db, {
     lexId,
-    indexFn,
+    insertFn,
     findDuplicate,
     deleteFn,
-    eventsForIndex,
+    eventsForInsert,
     eventsForDelete,
   })
 }

@@ -76,7 +76,26 @@ export default function (server: Server, ctx: AppContext) {
           const profileCid = write.cid
           await repoTxn.processWrites(did, [write], now, async () => {
             if (write.action === WriteOpAction.Update) {
-              await recordTxn.indexRecord(uri, profileCid, updated, now)
+              // Update profile record
+              await dbTxn.db
+                .updateTable('record')
+                .set({ cid: profileCid.toString() })
+                .where('uri', '=', uri.toString())
+                .execute()
+
+              // Update profile app index
+              await dbTxn.db
+                .updateTable('profile')
+                .set({
+                  cid: profileCid.toString(),
+                  displayName: updated.displayName,
+                  description: updated.description ?? null,
+                  avatarCid: updated.avatar?.cid ?? null,
+                  bannerCid: updated.banner?.cid ?? null,
+                  indexedAt: now,
+                })
+                .where('uri', '=', uri.toString())
+                .execute()
             } else if (write.action === WriteOpAction.Create) {
               await recordTxn.indexRecord(uri, profileCid, updated, now)
             } else {
