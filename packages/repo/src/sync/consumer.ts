@@ -14,11 +14,17 @@ import { MissingBlocksError } from '../error'
 export const loadCheckout = async (
   storage: RepoStorage,
   repoCar: Uint8Array,
-  didKey: string,
+  did: string,
+  signingKey: string,
 ): Promise<{ root: CID; contents: RepoContents }> => {
   const { root, blocks } = await util.readCarWithRoot(repoCar)
   const updateStorage = new MemoryBlockstore(blocks)
-  const checkout = await verify.verifyCheckout(updateStorage, root, didKey)
+  const checkout = await verify.verifyCheckout(
+    updateStorage,
+    root,
+    did,
+    signingKey,
+  )
 
   const checkoutBlocks = await updateStorage.getBlocks(
     checkout.newCids.toList(),
@@ -43,11 +49,17 @@ export const loadCheckout = async (
 export const loadFullRepo = async (
   storage: RepoStorage,
   repoCar: Uint8Array,
-  didKey: string,
+  did: string,
+  signingKey: string,
 ): Promise<{ root: CID; writeLog: WriteLog }> => {
   const { root, blocks } = await util.readCarWithRoot(repoCar)
   const updateStorage = new MemoryBlockstore(blocks)
-  const updates = await verify.verifyFullHistory(updateStorage, root, didKey)
+  const updates = await verify.verifyFullHistory(
+    updateStorage,
+    root,
+    did,
+    signingKey,
+  )
 
   const [writeLog] = await Promise.all([
     persistUpdates(storage, updateStorage, updates),
@@ -63,11 +75,18 @@ export const loadFullRepo = async (
 export const loadDiff = async (
   repo: Repo,
   diffCar: Uint8Array,
-  didKey: string,
+  did: string,
+  signingKey: string,
 ): Promise<{ root: CID; writeLog: WriteLog }> => {
   const { root, blocks } = await util.readCarWithRoot(diffCar)
   const updateStorage = new MemoryBlockstore(blocks)
-  const updates = await verify.verifyUpdates(repo, updateStorage, root, didKey)
+  const updates = await verify.verifyUpdates(
+    repo,
+    updateStorage,
+    root,
+    did,
+    signingKey,
+  )
 
   const [writeLog] = await Promise.all([
     persistUpdates(repo.storage, updateStorage, updates),

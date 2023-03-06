@@ -12,10 +12,12 @@ describe('Checkout Sync', () => {
   let keypair: crypto.Keypair
   let repoData: RepoContents
 
+  const repoDid = 'did:example:test'
+
   beforeAll(async () => {
     storage = new MemoryBlockstore()
     keypair = await crypto.Secp256k1Keypair.create()
-    repo = await Repo.create(storage, keypair.did(), keypair)
+    repo = await Repo.create(storage, repoDid, keypair)
     syncStorage = new MemoryBlockstore()
     const filled = await util.fillRepo(repo, keypair, 20)
     repo = filled.repo
@@ -27,6 +29,7 @@ describe('Checkout Sync', () => {
     const checkout = await sync.loadCheckout(
       syncStorage,
       checkoutCar,
+      repoDid,
       keypair.did(),
     )
     const checkoutRepo = await Repo.load(syncStorage, checkout.root)
@@ -48,7 +51,7 @@ describe('Checkout Sync', () => {
     const badRepo = await util.addBadCommit(repo, keypair)
     const checkoutCar = await sync.getCheckout(storage, badRepo.cid)
     await expect(
-      sync.loadCheckout(syncStorage, checkoutCar, keypair.did()),
+      sync.loadCheckout(syncStorage, checkoutCar, repoDid, keypair.did()),
     ).rejects.toThrow(RepoVerificationError)
   })
 })

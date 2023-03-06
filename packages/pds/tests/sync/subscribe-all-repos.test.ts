@@ -13,7 +13,7 @@ import { getWriteLog, MemoryBlockstore, WriteOpAction } from '@atproto/repo'
 import { byFrame, ErrorFrame, Frame, InfoFrame } from '@atproto/xrpc-server'
 import { WebSocket } from 'ws'
 import { OutputSchema as RepoEvent } from '../../src/lexicon/types/com/atproto/sync/subscribeAllRepos'
-import { Database } from '../../src'
+import { AppContext, Database } from '../../src'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { CloseFn, runTestServer } from '../_util'
@@ -23,8 +23,8 @@ describe('repo subscribe all repos', () => {
   let serverHost: string
 
   let db: Database
+  let ctx: AppContext
 
-  let didResolver: DidResolver
   let agent: AtpAgent
   let sc: SeedClient
   let alice: string
@@ -39,6 +39,7 @@ describe('repo subscribe all repos', () => {
       dbPostgresSchema: 'repo_subscribe_all_repos',
     })
     serverHost = server.url.replace('http://', '')
+    ctx = server.ctx
     db = server.ctx.db
     close = server.close
     agent = new AtpAgent({ service: server.url })
@@ -48,7 +49,6 @@ describe('repo subscribe all repos', () => {
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
-    didResolver = new DidResolver({ plcUrl: server.ctx.cfg.didPlcUrl })
   })
 
   afterAll(async () => {
@@ -61,7 +61,7 @@ describe('repo subscribe all repos', () => {
     const synced = await repo.loadFullRepo(
       storage,
       new Uint8Array(car.data),
-      didResolver,
+      ctx.keypair.did(),
     )
     return repo.Repo.load(storage, synced.root)
   }

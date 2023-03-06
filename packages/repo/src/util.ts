@@ -1,3 +1,4 @@
+import * as ui8 from 'uint8arrays'
 import { CID } from 'multiformats/cid'
 import * as cbor from '@ipld/dag-cbor'
 import { CarReader } from '@ipld/car/reader'
@@ -228,6 +229,11 @@ export const signCommit = async (
 ): Promise<Commit> => {
   const encoded = cbor.encode(unsigned)
   const sig = await keypair.sign(encoded)
+  // console.log('signing: ', unsigned)
+  // console.log('signing encoded: ', ui8.toString(encoded, 'base32'))
+  // console.log('signing length: ', encoded.length)
+  // console.log('signing key: ', keypair.did())
+  // console.log('created sig: ', sig)
   return {
     ...unsigned,
     sig,
@@ -240,5 +246,11 @@ export const verifyCommitSig = async (
 ): Promise<boolean> => {
   const { sig, ...rest } = commit
   const encoded = cbor.encode(rest)
+  // console.log('COMMIT: ', commit)
+  // console.log('verifying: ', rest)
+  // console.log('verifying encoded: ', ui8.toString(encoded, 'base32'))
+  // console.log('verifying length: ', encoded.length)
+  // console.log('verifying key: ', didKey)
+  // console.log('verifying sig: ', sig)
   return crypto.verifySignature(didKey, encoded, sig)
 }

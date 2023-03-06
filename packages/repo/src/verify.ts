@@ -1,6 +1,4 @@
 import { CID } from 'multiformats/cid'
-import { DidResolver } from '@atproto/did-resolver'
-import * as crypto from '@atproto/crypto'
 import { MemoryBlockstore, ReadableBlockstore, RepoStorage } from './storage'
 import DataDiff from './data-diff'
 import SyncStorage from './storage/sync-storage'
@@ -21,10 +19,14 @@ export type VerifiedCheckout = {
 export const verifyCheckout = async (
   storage: ReadableBlockstore,
   head: CID,
-  didKey: string,
+  did: string,
+  signingKey: string,
 ): Promise<VerifiedCheckout> => {
   const repo = await ReadableRepo.load(storage, head)
-  const validSig = await util.verifyCommitSig(repo.commit, didKey)
+  if (repo.did !== did) {
+    throw new RepoVerificationError(`Invalid repo did: ${repo.did}`)
+  }
+  const validSig = await util.verifyCommitSig(repo.commit, signingKey)
   if (!validSig) {
     throw new RepoVerificationError(
       `Invalid signature on commit: ${repo.cid.toString()}`,
@@ -58,7 +60,8 @@ export type VerifiedUpdate = {
 export const verifyFullHistory = async (
   storage: RepoStorage,
   head: CID,
-  didKey: string,
+  did: string,
+  signingKey: string,
 ): Promise<VerifiedUpdate[]> => {
   const commitPath = await storage.getCommitPath(head, null)
   if (commitPath === null) {
@@ -79,7 +82,8 @@ export const verifyFullHistory = async (
     baseRepo,
     storage,
     commitPath.slice(1),
-    didKey,
+    did,
+    signingKey,
   )
   return [init, ...updates]
 }
@@ -88,22 +92,25 @@ export const verifyUpdates = async (
   repo: ReadableRepo,
   updateStorage: RepoStorage,
   updateRoot: CID,
-  didKey: string,
+  did: string,
+  signingKey: string,
 ): Promise<VerifiedUpdate[]> => {
   const commitPath = await updateStorage.getCommitPath(updateRoot, repo.cid)
   if (commitPath === null) {
     throw new RepoVerificationError('Could not find shared history')
   }
   const syncStorage = new SyncStorage(updateStorage, repo.storage)
-  return verifyCommitPath(repo, syncStorage, commitPath, didKey)
+  return verifyCommitPath(repo, syncStorage, commitPath, did, signingKey)
 }
 
 export const verifyCommitPath = async (
   baseRepo: ReadableRepo,
   storage: ReadableBlockstore,
   commitPath: CID[],
-  didKey: string,
+  did: string,
+  signingKey: string,
 ): Promise<VerifiedUpdate[]> => {
+  console.log('path: ', commitPath)
   const updates: VerifiedUpdate[] = []
   if (commitPath.length === 0) return updates
   let prevRepo = baseRepo
@@ -111,11 +118,15 @@ export const verifyCommitPath = async (
     const nextRepo = await ReadableRepo.load(storage, commit)
     const diff = await DataDiff.of(nextRepo.data, prevRepo.data)
 
+    if (nextRepo.did !== did) {
+      throw new RepoVerificationError(`Invalid repo did: ${nextRepo.did}`)
+    }
     if (!util.metaEqual(nextRepo.commit, prevRepo.commit)) {
       throw new RepoVerificationError('Not supported: repo metadata updated')
     }
 
-    const validSig = await util.verifyCommitSig(nextRepo.commit, didKey)
+    const validSig = await util.verifyCommitSig(nextRepo.commit, signingKey)
+    console.log('HRE: ', validSig)
     if (!validSig) {
       throw new RepoVerificationError(
         `Invalid signature on commit: ${nextRepo.cid.toString()}`,
@@ -136,14 +147,17 @@ export const verifyCommitPath = async (
 }
 
 export const verifyProofs = async (
-  did: string,
   proofs: Uint8Array,
   claims: RecordClaim[],
+  did: string,
   didKey: string,
 ): Promise<{ verified: RecordClaim[]; unverified: RecordClaim[] }> => {
   const car = await util.readCarWithRoot(proofs)
   const blockstore = new MemoryBlockstore(car.blocks)
   const commit = await blockstore.readObj(car.root, def.commit)
+  if (commit.did !== did) {
+    throw new RepoVerificationError(`Invalid repo did: ${commit.did}`)
+  }
   const validSig = await util.verifyCommitSig(commit, didKey)
   if (!validSig) {
     throw new RepoVerificationError(
@@ -177,14 +191,17 @@ export const verifyProofs = async (
 }
 
 export const verifyRecords = async (
-  did: string,
   proofs: Uint8Array,
-  didKey: string,
+  did: string,
+  signingKey: string,
 ): Promise<RecordClaim[]> => {
   const car = await util.readCarWithRoot(proofs)
   const blockstore = new MemoryBlockstore(car.blocks)
   const commit = await blockstore.readObj(car.root, def.commit)
-  const validSig = await util.verifyCommitSig(commit, didKey)
+  if (commit.did !== did) {
+    throw new RepoVerificationError(`Invalid repo did: ${commit.did}`)
+  }
+  const validSig = await util.verifyCommitSig(commit, signingKey)
   if (!validSig) {
     throw new RepoVerificationError(
       `Invalid signature on commit: ${car.root.toString()}`,

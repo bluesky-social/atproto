@@ -12,10 +12,12 @@ describe('Diff Sync', () => {
   let keypair: crypto.Keypair
   let repoData: RepoContents
 
+  const repoDid = 'did:example:test'
+
   beforeAll(async () => {
     storage = new MemoryBlockstore()
     keypair = await crypto.Secp256k1Keypair.create()
-    repo = await Repo.create(storage, keypair.did(), keypair)
+    repo = await Repo.create(storage, repoDid, keypair)
     syncStorage = new MemoryBlockstore()
   })
 
@@ -23,7 +25,12 @@ describe('Diff Sync', () => {
 
   it('syncs an empty repo', async () => {
     const car = await sync.getFullRepo(storage, repo.cid)
-    const loaded = await sync.loadFullRepo(syncStorage, car, keypair.did())
+    const loaded = await sync.loadFullRepo(
+      syncStorage,
+      car,
+      repoDid,
+      keypair.did(),
+    )
     syncRepo = await Repo.load(syncStorage, loaded.root)
     const data = await syncRepo.data.list(10)
     expect(data.length).toBe(0)
@@ -35,7 +42,12 @@ describe('Diff Sync', () => {
     repoData = filled.data
 
     const car = await sync.getFullRepo(storage, repo.cid)
-    const loaded = await sync.loadFullRepo(syncStorage, car, keypair.did())
+    const loaded = await sync.loadFullRepo(
+      syncStorage,
+      car,
+      repoDid,
+      keypair.did(),
+    )
     syncRepo = await Repo.load(syncStorage, loaded.root)
     const contents = await syncRepo.getContents()
     expect(contents).toEqual(repoData)
@@ -53,7 +65,12 @@ describe('Diff Sync', () => {
     repo = edited.repo
     repoData = edited.data
     const diffCar = await sync.getDiff(storage, repo.cid, syncRepo.cid)
-    const loaded = await sync.loadDiff(syncRepo, diffCar, keypair.did())
+    const loaded = await sync.loadDiff(
+      syncRepo,
+      diffCar,
+      repoDid,
+      keypair.did(),
+    )
     syncRepo = await Repo.load(syncStorage, loaded.root)
     const contents = await syncRepo.getContents()
     expect(contents).toEqual(repoData)
@@ -64,7 +81,7 @@ describe('Diff Sync', () => {
     const badRepo = await util.addBadCommit(repo, keypair)
     const diffCar = await sync.getDiff(storage, badRepo.cid, syncRepo.cid)
     await expect(
-      sync.loadDiff(syncRepo, diffCar, keypair.did()),
+      sync.loadDiff(syncRepo, diffCar, repoDid, keypair.did()),
     ).rejects.toThrow('Invalid signature on commit')
   })
 })

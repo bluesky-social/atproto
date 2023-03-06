@@ -13,10 +13,12 @@ describe('Narrow Sync', () => {
   let keypair: crypto.Keypair
   let repoData: RepoContents
 
+  const repoDid = 'did:example:test'
+
   beforeAll(async () => {
     storage = new MemoryBlockstore()
     keypair = await crypto.Secp256k1Keypair.create()
-    repo = await Repo.create(storage, keypair.did(), keypair)
+    repo = await Repo.create(storage, repoDid, keypair)
     const filled = await util.fillRepo(repo, keypair, 5)
     repo = filled.repo
     repoData = filled.data
@@ -27,7 +29,7 @@ describe('Narrow Sync', () => {
   }
 
   const doVerify = (proofs: Uint8Array, claims: RecordClaim[]) => {
-    return verify.verifyProofs(repo.did, proofs, claims, keypair.did())
+    return verify.verifyProofs(proofs, claims, repoDid, keypair.did())
   }
 
   it('verifies valid records', async () => {
@@ -110,7 +112,7 @@ describe('Narrow Sync', () => {
       possible[8],
     ]
     const proofs = await getProofs(claims)
-    const records = await verify.verifyRecords(repo.did, proofs, keypair.did())
+    const records = await verify.verifyRecords(proofs, repoDid, keypair.did())
     for (const record of records) {
       const foundClaim = claims.find(
         (claim) =>
@@ -129,7 +131,7 @@ describe('Narrow Sync', () => {
     const badRepo = await util.addBadCommit(repo, keypair)
     const claims = util.contentsToClaims(repoData)
     const proofs = await sync.getRecords(storage, badRepo.cid, claims)
-    const fn = verify.verifyRecords(repo.did, proofs, keypair.did())
+    const fn = verify.verifyRecords(proofs, repoDid, keypair.did())
     await expect(fn).rejects.toThrow(verify.RepoVerificationError)
   })
 
@@ -137,7 +139,7 @@ describe('Narrow Sync', () => {
     const badRepo = await util.addBadCommit(repo, keypair)
     const claims = util.contentsToClaims(repoData)
     const proofs = await sync.getRecords(storage, badRepo.cid, claims)
-    const fn = verify.verifyProofs(repo.did, proofs, claims, keypair.did())
+    const fn = verify.verifyProofs(proofs, claims, repoDid, keypair.did())
     await expect(fn).rejects.toThrow(verify.RepoVerificationError)
   })
 })
