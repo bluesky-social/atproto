@@ -110,6 +110,7 @@ const insertFn = async (
       ancestorUri: post.uri,
       depth: 0,
     })
+    .onConflict((oc) => oc.doNothing()) // Supports post updates
     .execute()
   let ancestors: PostHierarchy[] = []
   if (post.replyParent) {
@@ -126,6 +127,7 @@ const insertFn = async (
             sql`depth + 1`.as('depth'),
           ]),
       )
+      .onConflict((oc) => oc.doNothing()) // Supports post updates
       .returningAll()
       .execute()
   }

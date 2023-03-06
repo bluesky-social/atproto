@@ -67,7 +67,7 @@ export default function (server: Server, ctx: AppContext) {
           writes.push(create)
         }
 
-        await repoTxn.processCreatesAndDeletes(requester, writes, now)
+        await repoTxn.processWrites(requester, writes, now)
 
         return create?.uri.toString()
       })

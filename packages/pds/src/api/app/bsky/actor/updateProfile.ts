@@ -7,7 +7,6 @@ import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
 import * as common from '@atproto/common'
 import * as repo from '../../../../repo'
 import AppContext from '../../../../context'
-import { WriteOpAction } from '@atproto/repo'
 
 const profileNsid = lexicons.ids.AppBskyActorProfile
 
@@ -72,40 +71,8 @@ export default function (server: Server, ctx: AppContext) {
                 collection: profileNsid,
                 record: updated,
               })
-
-          const profileCid = write.cid
-          await repoTxn.processWrites(did, [write], now, async () => {
-            if (write.action === WriteOpAction.Update) {
-              // Update profile record
-              await dbTxn.db
-                .updateTable('record')
-                .set({ cid: profileCid.toString() })
-                .where('uri', '=', uri.toString())
-                .execute()
-
-              // Update profile app index
-              await dbTxn.db
-                .updateTable('profile')
-                .set({
-                  cid: profileCid.toString(),
-                  displayName: updated.displayName,
-                  description: updated.description ?? null,
-                  avatarCid: updated.avatar?.cid ?? null,
-                  bannerCid: updated.banner?.cid ?? null,
-                  indexedAt: now,
-                })
-                .where('uri', '=', uri.toString())
-                .execute()
-            } else if (write.action === WriteOpAction.Create) {
-              await recordTxn.indexRecord(uri, profileCid, updated, now)
-            } else {
-              const exhaustiveCheck: never = write
-              throw new Error(
-                `Unsupported action on update profile: ${exhaustiveCheck}`,
-              )
-            }
-          })
-          return { profileCid, updated }
+          await repoTxn.processWrites(did, [write], now)
+          return { profileCid: write.cid, updated }
         },
       )
 

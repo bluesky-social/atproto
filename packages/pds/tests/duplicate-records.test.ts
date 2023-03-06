@@ -1,9 +1,9 @@
+import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
+import { cidForCbor, TID, cborEncode } from '@atproto/common'
 import { CloseFn, runTestServer } from './_util'
 import { Database } from '../src'
 import * as lex from '../src/lexicon/lexicons'
-import { cidForCbor, TID, cborEncode } from '@atproto/common'
-import { CID } from 'multiformats/cid'
 import { APP_BSKY_GRAPH } from '../src/lexicon'
 import { Services } from '../src/services'
 

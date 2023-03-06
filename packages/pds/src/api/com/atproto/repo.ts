@@ -155,7 +155,7 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.db.transaction(async (dbTxn) => {
         const now = new Date().toISOString()
         const repoTxn = ctx.services.repo(dbTxn)
-        await repoTxn.processCreatesAndDeletes(did, writes, now)
+        await repoTxn.processWrites(did, writes, now)
       })
     },
   })
@@ -198,7 +198,7 @@ export default function (server: Server, ctx: AppContext) {
 
       await ctx.db.transaction(async (dbTxn) => {
         const repoTxn = ctx.services.repo(dbTxn)
-        await repoTxn.processCreatesAndDeletes(did, [write], now)
+        await repoTxn.processWrites(did, [write], now)
       })
 
       return {
@@ -224,9 +224,7 @@ export default function (server: Server, ctx: AppContext) {
       const now = new Date().toISOString()
       const write = await repo.prepareDelete({ did, collection, rkey })
       await ctx.db.transaction(async (dbTxn) => {
-        await ctx.services
-          .repo(dbTxn)
-          .processCreatesAndDeletes(did, [write], now)
+        await ctx.services.repo(dbTxn).processWrites(did, [write], now)
       })
     },
   })
