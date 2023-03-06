@@ -75,22 +75,16 @@ export class RepoSubscription {
     const { services } = this.ctx
     const indexingTx = services.appView.indexing(tx)
     for (const op of ops) {
-      if (
-        op.action === WriteOpAction.Create ||
-        op.action === WriteOpAction.Update // @TODO ensure updates are indexed properly, unify updateProfile
-      ) {
+      if (op.action === WriteOpAction.Delete) {
+        await indexingTx.deleteRecord(op.uri)
+      } else {
         await indexingTx.indexRecord(
           op.uri,
           op.cid,
           op.record,
-          op.action,
+          op.action, // create or update
           timestamp,
         )
-      } else if (op.action === WriteOpAction.Delete) {
-        await indexingTx.deleteRecord(op.uri)
-      } else {
-        const exhaustiveCheck: never = op
-        throw new Error(`Unsupported op: ${exhaustiveCheck?.['action']}`)
       }
     }
   }

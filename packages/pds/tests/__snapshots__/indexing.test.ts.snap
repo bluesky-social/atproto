@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`indexing indexes posts. 1`] = `
+Object {
+  "createNotifications": Array [
+    Object {
+      "author": "user(1)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "reason": "mention",
+      "reasonSubject": null,
+      "recordCid": "cids(0)",
+      "recordUri": "record(0)",
+      "userDid": "user(0)",
+    },
+  ],
+  "deleteNotifications": Array [],
+  "updateNotifications": Array [
+    Object {
+      "author": "user(1)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "reason": "mention",
+      "reasonSubject": null,
+      "recordCid": "cids(1)",
+      "recordUri": "record(0)",
+      "userDid": "user(2)",
+    },
+  ],
+}
+`;
+
+exports[`indexing indexes profiles. 1`] = `
+Object {
+  "createNotifications": Array [],
+  "deleteNotifications": Array [],
+  "updateNotifications": Array [],
+}
+`;

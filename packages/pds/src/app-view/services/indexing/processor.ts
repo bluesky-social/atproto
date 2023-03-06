@@ -138,8 +138,11 @@ export class RecordProcessor<T, S> {
     return this.params.eventsForDelete(deleted, inserted)
   }
 
-  // @TODO delete record out of dupes table by uri
   async deleteRecord(uri: AtUri, cascading = false): Promise<Message[]> {
+    await this.db
+      .deleteFrom('duplicate_record')
+      .where('uri', '=', uri.toString())
+      .execute()
     const deleted = await this.params.deleteFn(this.db, uri)
     if (!deleted) return []
     if (cascading) {
