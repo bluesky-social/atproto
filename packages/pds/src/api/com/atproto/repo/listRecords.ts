@@ -7,7 +7,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.listRecords(async ({ params }) => {
     const { user, collection, limit, before, after, reverse } = params
 
-    const did = await ctx.services.actor(ctx.db).getDidForActor(user)
+    const did = await ctx.services.account(ctx.db).getDidForActor(user)
     if (!did) {
       throw new InvalidRequestError(`Could not find user: ${user}`)
     }

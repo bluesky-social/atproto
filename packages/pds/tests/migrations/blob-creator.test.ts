@@ -55,7 +55,7 @@ describe('blob creator migration', () => {
         cid,
         mimeType: 'image/jpeg',
         size: Math.floor(Math.random() * 1000000),
-        tempkey: null,
+        tempKey: null,
         width: Math.floor(Math.random() * 1000),
         height: Math.floor(Math.random() * 1000),
         createdAt: new Date().toISOString(),

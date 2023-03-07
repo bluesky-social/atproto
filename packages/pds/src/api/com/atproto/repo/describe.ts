@@ -7,14 +7,14 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.describe(async ({ params }) => {
     const { user } = params
 
-    const userObj = await ctx.services.actor(ctx.db).getUser(user)
+    const userObj = await ctx.services.account(ctx.db).getUser(user)
     if (userObj === null) {
       throw new InvalidRequestError(`Could not find user: ${user}`)
     }
 
     let didDoc
     try {
-      didDoc = await ctx.auth.didResolver.ensureResolveDid(userObj.did)
+      didDoc = await ctx.didResolver.ensureResolveDid(userObj.did)
     } catch (err) {
       throw new InvalidRequestError(`Could not resolve DID: ${err}`)
     }

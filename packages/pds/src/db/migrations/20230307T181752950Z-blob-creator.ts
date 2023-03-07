@@ -39,7 +39,9 @@ export async function up(db: Kysely<any>): Promise<void> {
           'blob.width',
           'blob.height',
           'blob.createdAt',
-        ]),
+        ])
+        // kinda silly, but we need a WHERE clause so that the ON CONFLICT parses correctly
+        .where('repo_blob.did', 'is not', null),
     )
     .onConflict((oc) => oc.doNothing())
     .execute()
@@ -82,7 +84,9 @@ export async function down(db: Kysely<any>): Promise<void> {
           'blob.width',
           'blob.height',
           'blob.createdAt',
-        ]),
+        ])
+        // kinda silly, but we need a WHERE clause so that the ON CONFLICT parses correctly
+        .where('cid', 'is not', null),
     )
     .onConflict((oc) => oc.doNothing())
     .execute()
