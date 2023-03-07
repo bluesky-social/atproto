@@ -57,6 +57,11 @@ describe('handles', () => {
     expect(res.data.did).toBe(alice)
   })
 
+  it('does not resolve a root "available domain" for the service', async () => {
+    const promise = agent.api.com.atproto.handle.resolve({ handle: 'test' })
+    await expect(promise).rejects.toThrow('Unable to resolve handle')
+  })
+
   it('does not resolve a "handle" for the service', async () => {
     const promise = agent.api.com.atproto.handle.resolve()
     await expect(promise).rejects.toThrow('Unable to resolve handle')
