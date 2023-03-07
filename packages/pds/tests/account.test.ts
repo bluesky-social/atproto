@@ -78,9 +78,11 @@ describe('account', () => {
 
   it('creates an invite code', async () => {
     inviteCode = await createInviteCode(agent, 1)
-    const [host, code] = inviteCode.split('-')
+    const split = inviteCode.split('-')
+    const host = split.slice(0, -1).join('.')
+    const code = split.at(-1)
     expect(host).toBe('pds.public.url') // Hostname of public url
-    expect(code.length).toBe(5)
+    expect(code?.length).toBe(5)
   })
 
   it('serves the accounts system config', async () => {
