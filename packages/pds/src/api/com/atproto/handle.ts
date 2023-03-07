@@ -1,5 +1,4 @@
 import ApiAgent from '@atproto/api'
-import { XRPCError } from '@atproto/xrpc'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as handleLib from '@atproto/handle'
 import { Server } from '../../../lexicon'
@@ -8,33 +7,27 @@ import { UserAlreadyExistsError } from '../../../services/account'
 import { httpLogger as log } from '../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.handle.resolve(async ({ params }) => {
-    const handle = params.handle
+  server.com.atproto.handle.resolve(async ({ req, params }) => {
+    const handle = params.handle || req.hostname
 
-    let did = ''
-    if (!handle || handle === ctx.cfg.publicHostname) {
-      // self
-      did = ctx.cfg.serverDid
+    let did: string | undefined
+    const user = await ctx.services.account(ctx.db).getUser(handle, true)
+    if (user) {
+      did = user.did
     } else {
-      const user = await ctx.services.account(ctx.db).getUser(handle, true)
-      if (user) {
-        did = user.did
-      } else {
-        const supportedHandle = ctx.cfg.availableUserDomains.some((host) =>
-          handle.endsWith(host),
-        )
-        // this should be in our DB & we couldn't find it, so fail
-        if (supportedHandle) {
-          throw new InvalidRequestError('Unable to resolve handle')
-        }
-
-        // this is not someone on our server, but we help with resolving anyway
-        const resolved = await resolveExternalHandle(ctx.cfg.scheme, handle)
-        if (!resolved) {
-          throw new InvalidRequestError('Unable to resolve handle')
-        }
-        did = resolved
+      const supportedHandle = ctx.cfg.availableUserDomains.some((host) =>
+        handle.endsWith(host),
+      )
+      // this should be in our DB & we couldn't find it, so fail
+      if (supportedHandle) {
+        throw new InvalidRequestError('Unable to resolve handle')
       }
+
+      // this is not someone on our server, but we help with resolving anyway
+      did = await resolveExternalHandle(ctx.cfg.scheme, handle)
+    }
+    if (!did) {
+      throw new InvalidRequestError('Unable to resolve handle')
     }
 
     return {
@@ -96,7 +89,7 @@ export default function (server: Server, ctx: AppContext) {
 const resolveExternalHandle = async (
   scheme: string,
   handle: string,
-): Promise<string | null> => {
+): Promise<string | undefined> => {
   try {
     const did = await handleLib.resolveDns(handle)
     return did
@@ -112,9 +105,6 @@ const resolveExternalHandle = async (
     const res = await agent.api.com.atproto.handle.resolve({ handle })
     return res.data.did
   } catch (err) {
-    if (err instanceof XRPCError) {
-      return null
-    }
-    throw err
+    return undefined
   }
 }

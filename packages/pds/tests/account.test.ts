@@ -449,18 +449,4 @@ describe('account', () => {
       agent.api.com.atproto.session.create({ identifier: handle, password }),
     ).resolves.toBeDefined()
   })
-
-  it('resolves did for account', async () => {
-    const resolved = await agent.api.com.atproto.handle.resolve({ handle })
-    expect(resolved.data).toEqual({ did })
-  })
-
-  it('resolves did for server', async () => {
-    const resolvedImplicit = await agent.api.com.atproto.handle.resolve({})
-    const resolvedExplicit = await agent.api.com.atproto.handle.resolve({
-      handle: 'pds.public.url',
-    })
-    expect(resolvedImplicit.data).toEqual({ did: ctx.cfg.serverDid })
-    expect(resolvedExplicit.data).toEqual({ did: ctx.cfg.serverDid })
-  })
 })
