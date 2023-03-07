@@ -3,10 +3,10 @@ import AtpAgent, {
   ComAtprotoAccountCreate,
   ComAtprotoAccountResetPassword as ResetAccountPassword,
 } from '@atproto/api'
-import * as plc from '@atproto/plc'
+import { DidResolver } from '@atproto/did-resolver'
 import * as crypto from '@atproto/crypto'
 import Mail from 'nodemailer/lib/mailer'
-import { Database, ServerConfig } from '../src'
+import { AppContext, Database } from '../src'
 import * as util from './_util'
 import { ServerMailer } from '../src/mailer'
 
@@ -32,12 +32,13 @@ const createInviteCode = async (
 
 describe('account', () => {
   let serverUrl: string
-  let cfg: ServerConfig
-  let serverKey: string
+  let ctx: AppContext
+  let repoSigningKey: string
   let agent: AtpAgent
   let close: util.CloseFn
   let mailer: ServerMailer
   let db: Database
+  let didResolver: DidResolver
   const mailCatcher = new EventEmitter()
   let _origSendMail
 
@@ -51,9 +52,10 @@ describe('account', () => {
     close = server.close
     mailer = server.ctx.mailer
     db = server.ctx.db
-    cfg = server.ctx.cfg
+    ctx = server.ctx
     serverUrl = server.url
-    serverKey = server.ctx.keypair.did()
+    repoSigningKey = server.ctx.repoSigningKey.did()
+    didResolver = new DidResolver({ plcUrl: ctx.cfg.didPlcUrl })
     agent = new AtpAgent({ service: serverUrl })
 
     // Catch emails for use in tests
@@ -135,13 +137,12 @@ describe('account', () => {
   })
 
   it('generates a properly formatted PLC DID', async () => {
-    const plcClient = new plc.PlcClient(cfg.didPlcUrl)
-    const didData = await plcClient.getDocumentData(did)
+    const didData = await didResolver.resolveAtpData(did)
 
+    expect(didData.did).toBe(did)
     expect(didData.handle).toBe(handle)
-    expect(didData.signingKey).toBe(serverKey)
-    expect(didData.recoveryKey).toBe(cfg.recoveryKey)
-    expect(didData.atpPds).toBe('https://pds.public.url') // Mapped from publicUrl
+    expect(didData.signingKey).toBe(repoSigningKey)
+    expect(didData.pds).toBe('https://pds.public.url') // Mapped from publicUrl
   })
 
   it('allows a custom set recovery key', async () => {
@@ -154,11 +155,14 @@ describe('account', () => {
       inviteCode,
       recoveryKey,
     })
-    const plcClient = new plc.PlcClient(cfg.didPlcUrl)
-    const didData = await plcClient.getDocumentData(res.data.did)
 
-    expect(didData.signingKey).toBe(serverKey)
-    expect(didData.recoveryKey).toBe(recoveryKey)
+    const didData = await ctx.plcClient.getDocumentData(res.data.did)
+
+    expect(didData.rotationKeys).toEqual([
+      recoveryKey,
+      ctx.cfg.recoveryKey,
+      ctx.plcRotationKey.did(),
+    ])
   })
 
   it('disallows duplicate email addresses and handles', async () => {
@@ -456,7 +460,7 @@ describe('account', () => {
     const resolvedExplicit = await agent.api.com.atproto.handle.resolve({
       handle: 'pds.public.url',
     })
-    expect(resolvedImplicit.data).toEqual({ did: cfg.serverDid })
-    expect(resolvedExplicit.data).toEqual({ did: cfg.serverDid })
+    expect(resolvedImplicit.data).toEqual({ did: ctx.cfg.serverDid })
+    expect(resolvedExplicit.data).toEqual({ did: ctx.cfg.serverDid })
   })
 })
