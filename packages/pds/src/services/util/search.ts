@@ -65,8 +65,8 @@ export const getUserSearchQueryPg = (
   const resultsQb = db.db
     .selectFrom(
       emptyQb
-        .union(sql`${accountsQb}`) // The sql`` is adding parens
-        .union(sql`${profilesQb}`)
+        .unionAll(sql`${accountsQb}`) // The sql`` is adding parens
+        .unionAll(sql`${profilesQb}`)
         .as('accounts_and_profiles'),
     )
     .selectAll()

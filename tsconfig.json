@@ -24,7 +24,6 @@
   },
   "exclude": ["node_modules", "**/*/dist"],
   "references": [
-    { "path": "./packages/plc/tsconfig.build.json" },
     { "path": "./packages/pds/tsconfig.build.json" },
     { "path": "./packages/api/tsconfig.build.json" },
     { "path": "./packages/aws/tsconfig.build.json" },

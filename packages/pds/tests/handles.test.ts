@@ -1,4 +1,5 @@
 import AtpAgent from '@atproto/api'
+import { DidResolver } from '@atproto/did-resolver'
 import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import * as util from './_util'
@@ -22,11 +23,12 @@ jest.mock('dns/promises', () => {
   }
 })
 
-describe.skip('handles', () => {
+describe('handles', () => {
   let agent: AtpAgent
   let close: util.CloseFn
   let sc: SeedClient
   let ctx: AppContext
+  let didResolver: DidResolver
 
   const newHandle = 'alice2.test'
 
@@ -35,6 +37,7 @@ describe.skip('handles', () => {
       dbPostgresSchema: 'handles',
     })
     ctx = server.ctx
+    didResolver = new DidResolver({ plcUrl: ctx.cfg.didPlcUrl })
     close = server.close
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
@@ -70,7 +73,7 @@ describe.skip('handles', () => {
   })
 
   it('updates their did document', async () => {
-    const data = await ctx.plcClient.getDocumentData(alice)
+    const data = await didResolver.resolveAtpData(alice)
     expect(data.handle).toBe(newHandle)
   })
 
@@ -121,7 +124,7 @@ describe.skip('handles', () => {
   })
 
   it('if handle update fails, it does not update their did document', async () => {
-    const data = await ctx.plcClient.getDocumentData(alice)
+    const data = await didResolver.resolveAtpData(alice)
     expect(data.handle).toBe(newHandle)
   })
 
@@ -183,7 +186,7 @@ describe.skip('handles', () => {
     )
     expect(profile.data.handle).toBe('alice.external')
 
-    const data = await ctx.plcClient.getDocumentData(alice)
+    const data = await didResolver.resolveAtpData(alice)
     expect(data.handle).toBe('alice.external')
   })
 
