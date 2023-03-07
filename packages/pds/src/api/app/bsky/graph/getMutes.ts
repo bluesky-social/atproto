@@ -33,13 +33,14 @@ export default function (server: Server, ctx: AppContext) {
 
       const mutesRes = await mutesReq.execute()
 
+      // @NOTE calling into app-view, will eventually be replaced
+      const actorService = services.appView.actor(db)
+
       return {
         encoding: 'application/json',
         body: {
           cursor: keyset.packFromResult(mutesRes),
-          mutes: await services
-            .actor(db)
-            .views.actorWithInfo(mutesRes, requester),
+          mutes: await actorService.views.actorWithInfo(mutesRes, requester),
         },
       }
     },

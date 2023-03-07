@@ -4,6 +4,7 @@ import Database from '../../db'
 import { notSoftDeletedClause, DbRef } from '../../db/util'
 import { GenericKeyset, paginate } from '../../db/pagination'
 
+// @TODO utilized in both pds and app-view
 export const getUserSearchQueryPg = (
   db: Database,
   opts: {
@@ -64,8 +65,8 @@ export const getUserSearchQueryPg = (
   const resultsQb = db.db
     .selectFrom(
       emptyQb
-        .union(sql`${accountsQb}`) // The sql`` is adding parens
-        .union(sql`${profilesQb}`)
+        .unionAll(sql`${accountsQb}`) // The sql`` is adding parens
+        .unionAll(sql`${profilesQb}`)
         .as('accounts_and_profiles'),
     )
     .selectAll()

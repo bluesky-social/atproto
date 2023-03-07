@@ -15,8 +15,8 @@ export class RepoService {
 
   constructor(
     public db: Database,
-    public keypair: crypto.Keypair,
-    public messageQueue: MessageQueue,
+    public repoSigningKey: crypto.Keypair,
+    public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
   ) {
     this.blobs = new RepoBlobs(db, blobstore)
@@ -24,22 +24,22 @@ export class RepoService {
 
   static creator(
     keypair: crypto.Keypair,
-    messageQueue: MessageQueue,
+    messageDispatcher: MessageQueue,
     blobstore: BlobStore,
   ) {
     return (db: Database) =>
-      new RepoService(db, keypair, messageQueue, blobstore)
+      new RepoService(db, keypair, messageDispatcher, blobstore)
   }
 
   services = {
-    record: RecordService.creator(this.messageQueue),
+    record: RecordService.creator(this.messageDispatcher),
   }
 
   async createRepo(did: string, writes: PreparedCreate[], now: string) {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
     const writeOps = writes.map(createWriteToOp)
-    const repo = await Repo.create(storage, did, this.keypair, writeOps)
+    const repo = await Repo.create(storage, did, this.repoSigningKey, writeOps)
     await Promise.all([
       this.indexCreatesAndDeletes(writes, now),
       this.afterWriteProcessing(did, repo.cid, writes),
@@ -88,7 +88,7 @@ export class RepoService {
     }
     const writeOps = writes.map(writeToOp)
     const repo = await Repo.load(storage, currRoot)
-    return repo.formatCommit(writeOps, this.keypair)
+    return repo.formatCommit(writeOps, this.repoSigningKey)
   }
 
   async applyCommit(
@@ -124,8 +124,24 @@ export class RepoService {
   ) {
     await Promise.all([
       this.blobs.processWriteBlobs(did, commit, writes),
+      this.indexRepoOps(did, commit, writes),
       this.sequenceWrite(did, commit),
     ])
+  }
+
+  async indexRepoOps(did: string, commit: CID, writes: PreparedWrite[]) {
+    const ops = writes.map((w) => {
+      const path = w.uri.collection + '/' + w.uri.rkey
+      const cid = w.action === WriteOpAction.Delete ? null : w.cid.toString()
+      return {
+        did,
+        commit: commit.toString(),
+        action: w.action,
+        path,
+        cid,
+      }
+    })
+    await this.db.db.insertInto('repo_op').values(ops).execute()
   }
 
   async sequenceWrite(did: string, commit: CID) {

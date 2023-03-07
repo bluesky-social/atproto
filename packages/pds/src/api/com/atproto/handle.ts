@@ -1,11 +1,11 @@
 import ApiAgent from '@atproto/api'
+import { XRPCError } from '@atproto/xrpc'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as handleLib from '@atproto/handle'
 import { Server } from '../../../lexicon'
 import AppContext from '../../../context'
-import { UserAlreadyExistsError } from '../../../services/actor'
+import { UserAlreadyExistsError } from '../../../services/account'
 import { httpLogger as log } from '../../../logger'
-import { XRPCError } from '@atproto/xrpc'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.handle.resolve(async ({ params }) => {
@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
       // self
       did = ctx.cfg.serverDid
     } else {
-      const user = await ctx.services.actor(ctx.db).getUser(handle, true)
+      const user = await ctx.services.account(ctx.db).getUser(handle, true)
       if (user) {
         did = user.did
       } else {
@@ -80,14 +80,14 @@ export default function (server: Server, ctx: AppContext) {
 
       await ctx.db.transaction(async (dbTxn) => {
         try {
-          await ctx.services.actor(dbTxn).updateHandle(requester, handle)
+          await ctx.services.account(dbTxn).updateHandle(requester, handle)
         } catch (err) {
           if (err instanceof UserAlreadyExistsError) {
             throw new InvalidRequestError(`Handle already taken: ${handle}`)
           }
           throw err
         }
-        await ctx.plcClient.updateHandle(requester, handle, ctx.keypair)
+        await ctx.plcClient.updateHandle(requester, ctx.plcRotationKey, handle)
       })
     },
   })

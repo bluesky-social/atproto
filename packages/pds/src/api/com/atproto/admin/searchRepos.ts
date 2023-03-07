@@ -2,7 +2,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { SearchKeyset } from '../../../../services/util/search'
 import { sql } from 'kysely'
-import { ListKeyset } from '../../../../services/actor'
+import { ListKeyset } from '../../../../services/account'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
 
       if (!term) {
         const results = await services
-          .actor(db)
+          .account(db)
           .list({ limit, before, includeSoftDeleted: true })
         const keyset = new ListKeyset(sql``, sql``)
 
@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const results = await services
-        .actor(db)
+        .account(db)
         .search({ term, limit, before, includeSoftDeleted: true })
       const keyset = new SearchKeyset(sql``, sql``)
 

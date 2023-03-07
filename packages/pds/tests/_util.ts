@@ -2,7 +2,8 @@ import { AddressInfo } from 'net'
 import os from 'os'
 import path from 'path'
 import * as crypto from '@atproto/crypto'
-import * as plc from '@atproto/plc'
+import * as plc from '@did-plc/lib'
+import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
 import { AtUri } from '@atproto/uri'
 import { randomStr } from '@atproto/crypto'
 import { CID } from 'multiformats/cid'
@@ -30,25 +31,40 @@ export const runTestServer = async (
   params: Partial<ServerConfig> = {},
   opts: TestServerOpts = {},
 ): Promise<TestServerInfo> => {
-  const keypair = await crypto.EcdsaKeypair.create()
+  const repoSigningKey = await crypto.Secp256k1Keypair.create()
+  const plcRotationKey = await crypto.Secp256k1Keypair.create()
 
+  const dbPostgresUrl = params.dbPostgresUrl || process.env.DB_POSTGRES_URL
+  const dbPostgresSchema =
+    params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
   // run plc server
-  const plcDb = plc.Database.memory()
-  await plcDb.migrateToLatestOrThrow()
-  const plcServer = plc.PlcServer.create({ db: plcDb })
+
+  let plcDb
+  if (dbPostgresUrl !== undefined) {
+    plcDb = PlcDatabase.postgres({
+      url: dbPostgresUrl,
+      schema: `plc_test_${dbPostgresSchema}`,
+    })
+    await plcDb.migrateToLatestOrThrow()
+  } else {
+    plcDb = PlcDatabase.mock()
+  }
+
+  const plcServer = PlcServer.create({ db: plcDb })
   const plcListener = await plcServer.start()
   const plcPort = (plcListener.address() as AddressInfo).port
   const plcUrl = `http://localhost:${plcPort}`
 
-  const recoveryKey = (await crypto.EcdsaKeypair.create()).did()
+  const recoveryKey = (await crypto.Secp256k1Keypair.create()).did()
 
-  const plcClient = new plc.PlcClient(plcUrl)
-  const serverDid = await plcClient.createDid(
-    keypair,
-    recoveryKey,
-    'localhost',
-    'https://pds.public.url',
-  )
+  const plcClient = new plc.Client(plcUrl)
+  const serverDid = await plcClient.createDid({
+    signingKey: repoSigningKey.did(),
+    rotationKeys: [recoveryKey, plcRotationKey.did()],
+    handle: 'localhost',
+    pds: 'https://pds.public.url',
+    signer: plcRotationKey,
+  })
 
   const blobstoreLoc = path.join(os.tmpdir(), randomStr(5, 'base32'))
 
@@ -97,7 +113,13 @@ export const runTestServer = async (
       ? await DiskBlobStore.create(cfg.blobstoreLocation, cfg.blobstoreTmp)
       : new MemoryBlobStore()
 
-  const pds = PDS.create({ db, blobstore, keypair, config: cfg })
+  const pds = PDS.create({
+    db,
+    blobstore,
+    repoSigningKey,
+    plcRotationKey,
+    config: cfg,
+  })
   const pdsServer = await pds.start()
   const pdsPort = (pdsServer.address() as AddressInfo).port
 

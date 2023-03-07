@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
     await ctx.db.transaction(async (dbTxn) => {
       await unsetResetToken(dbTxn, tokenInfo.did)
       await ctx.services
-        .actor(dbTxn)
+        .account(dbTxn)
         .updateUserPassword(tokenInfo.did, password)
     })
   })

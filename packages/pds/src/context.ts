@@ -1,5 +1,6 @@
-import * as plc from '@atproto/plc'
+import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
+import { DidResolver } from '@atproto/did-resolver'
 import { Database } from './db'
 import { ServerConfig } from './config'
 import * as auth from './auth'
@@ -8,6 +9,7 @@ import { BlobStore } from '@atproto/repo'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import { MessageQueue } from './event-stream/types'
+import { MessageDispatcher } from './event-stream/message-queue'
 import Sequencer from './sequencer'
 
 export class AppContext {
@@ -15,13 +17,15 @@ export class AppContext {
     private opts: {
       db: Database
       blobstore: BlobStore
-      keypair: crypto.Keypair
+      repoSigningKey: crypto.Keypair
+      plcRotationKey: crypto.Keypair
       auth: auth.ServerAuth
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       mailer: ServerMailer
       services: Services
       messageQueue: MessageQueue
+      messageDispatcher: MessageDispatcher
       sequencer: Sequencer
     },
   ) {}
@@ -34,8 +38,12 @@ export class AppContext {
     return this.opts.blobstore
   }
 
-  get keypair(): crypto.Keypair {
-    return this.opts.keypair
+  get repoSigningKey(): crypto.Keypair {
+    return this.opts.repoSigningKey
+  }
+
+  get plcRotationKey(): crypto.Keypair {
+    return this.opts.plcRotationKey
   }
 
   get auth(): auth.ServerAuth {
@@ -78,12 +86,20 @@ export class AppContext {
     return this.opts.messageQueue
   }
 
+  get messageDispatcher(): MessageDispatcher {
+    return this.opts.messageDispatcher
+  }
+
   get sequencer(): Sequencer {
     return this.opts.sequencer
   }
 
-  get plcClient(): plc.PlcClient {
-    return new plc.PlcClient(this.cfg.didPlcUrl)
+  get plcClient(): plc.Client {
+    return new plc.Client(this.cfg.didPlcUrl)
+  }
+
+  get didResolver(): DidResolver {
+    return new DidResolver({ plcUrl: this.cfg.didPlcUrl })
   }
 }
 

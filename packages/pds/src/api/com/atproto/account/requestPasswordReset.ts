@@ -6,7 +6,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.account.requestPasswordReset(async ({ input }) => {
     const email = input.body.email.toLowerCase()
 
-    const user = await ctx.services.actor(ctx.db).getUserByEmail(email)
+    const user = await ctx.services.account(ctx.db).getUserByEmail(email)
 
     if (user) {
       const token = getSixDigitToken()

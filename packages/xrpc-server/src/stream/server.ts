@@ -2,6 +2,7 @@ import { IncomingMessage } from 'http'
 import { WebSocketServer, ServerOptions, WebSocket } from 'ws'
 import { ErrorFrame, Frame } from './frames'
 import logger from './logger'
+import { CloseCode } from './types'
 
 export class XrpcStreamServer {
   wss: WebSocketServer
@@ -53,12 +54,6 @@ export class DisconnectError extends Error {
   ) {
     super()
   }
-}
-
-// https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
-export enum CloseCode {
-  Normal = 1000,
-  Policy = 1008,
 }
 
 function unwrapIterator<T>(iterable: AsyncIterable<T>): AsyncIterator<T> {
