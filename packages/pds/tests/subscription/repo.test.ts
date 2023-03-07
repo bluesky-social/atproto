@@ -1,7 +1,6 @@
-import { createHash } from 'crypto'
 import { sql } from 'kysely'
 import AtpAgent from '@atproto/api'
-import { cborEncode, wait } from '@atproto/common'
+import { wait } from '@atproto/common'
 import basicSeed from '../seeds/basic'
 import { SeedClient } from '../seeds/client'
 import { forSnapshot, runTestServer, TestServerInfo } from '../_util'
@@ -73,10 +72,8 @@ describe('sync', () => {
 
   it('indexes permit history being replayed.', async () => {
     const { db } = ctx
-    const { ref } = db.db.dynamic
 
     // Generate some modifications and dupes
-    // @TODO include profile updates once indexing updates has solidified
     const { alice, bob, carol, dan } = sc.dids
     await sc.follow(alice, sc.actorRef(bob))
     await sc.follow(carol, sc.actorRef(alice))
@@ -88,6 +85,14 @@ describe('sync', () => {
     await sc.vote('down', carol, sc.posts[alice][2].ref) // Reversed
     await sc.vote('up', dan, sc.posts[alice][1].ref) // Identical
     await sc.vote('up', alice, sc.posts[carol][0].ref) // Identical
+    await agent.api.app.bsky.actor.updateProfile(
+      { displayName: 'ali!' },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+    await agent.api.app.bsky.actor.updateProfile(
+      { displayName: 'robert!' },
+      { headers: sc.getHeaders(bob), encoding: 'application/json' },
+    )
 
     // Table comparator
     const getTableDump = async () => {
@@ -138,7 +143,10 @@ describe('sync', () => {
       forSnapshot(originalTl.data.feed),
     )
 
-    await expect(getTableDump()).resolves.toEqual(originalTableDump)
+    // Permissive of indexedAt times changing
+    expect(forSnapshot(await getTableDump())).toEqual(
+      forSnapshot(originalTableDump),
+    )
   })
 
   const indexedTables = [

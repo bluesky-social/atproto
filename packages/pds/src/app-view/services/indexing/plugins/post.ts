@@ -110,6 +110,7 @@ const insertFn = async (
       ancestorUri: post.uri,
       depth: 0,
     })
+    .onConflict((oc) => oc.doNothing()) // Supports post updates
     .execute()
   let ancestors: PostHierarchy[] = []
   if (post.replyParent) {
@@ -126,6 +127,7 @@ const insertFn = async (
             sql`depth + 1`.as('depth'),
           ]),
       )
+      .onConflict((oc) => oc.doNothing()) // Supports post updates
       .returningAll()
       .execute()
   }
@@ -215,12 +217,19 @@ const deleteFn = async (
       .executeTakeFirst()
     deletedEmbed = deletedPosts
   }
+  // Do not delete, maintain thread hierarchy even if post no longer exists
+  const ancestors = await db
+    .selectFrom('post_hierarchy')
+    .where('uri', '=', uri.toString())
+    .where('depth', '>', 0)
+    .selectAll()
+    .execute()
   return deleted
     ? {
         post: deleted,
         entities: deletedEntities,
         embed: deletedEmbed,
-        ancestors: [], // Do not delete, maintain thread hierarchy even if post doesn't exist
+        ancestors,
       }
     : null
 }
@@ -229,8 +238,11 @@ const eventsForDelete = (
   deleted: IndexedPost,
   replacedBy: IndexedPost | null,
 ): Message[] => {
-  if (replacedBy) return []
-  return [messages.deleteNotifications(deleted.post.uri)]
+  const replacedNotifications = replacedBy ? eventsForInsert(replacedBy) : []
+  return [
+    messages.deleteNotifications(deleted.post.uri),
+    ...replacedNotifications,
+  ]
 }
 
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>
