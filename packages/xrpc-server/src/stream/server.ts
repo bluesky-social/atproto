@@ -2,7 +2,7 @@ import { IncomingMessage } from 'http'
 import { WebSocketServer, ServerOptions, WebSocket } from 'ws'
 import { ErrorFrame, Frame } from './frames'
 import logger from './logger'
-import { CloseCode } from './types'
+import { CloseCode, DisconnectError } from './types'
 
 export class XrpcStreamServer {
   wss: WebSocketServer
@@ -46,15 +46,6 @@ export type Handler = (
   socket: WebSocket,
   server: XrpcStreamServer,
 ) => AsyncIterable<Frame>
-
-export class DisconnectError extends Error {
-  constructor(
-    public wsCode: CloseCode = CloseCode.Policy,
-    public xrpcCode?: string,
-  ) {
-    super()
-  }
-}
 
 function unwrapIterator<T>(iterable: AsyncIterable<T>): AsyncIterator<T> {
   return iterable[Symbol.asyncIterator]()

@@ -6,6 +6,7 @@ import {
   DeleteRepo,
 } from '../../event-stream/messages'
 
+// Used w/ in-process PDS as alternative to the repo subscription
 export const listen = (ctx: AppContext) => {
   ctx.messageDispatcher.listen('index_record', {
     async listener(input: { db: Database; message: IndexRecord }) {
