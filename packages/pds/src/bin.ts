@@ -38,7 +38,13 @@ const run = async () => {
     blobstore = new MemoryBlobStore()
   }
 
-  const pds = PDS.create({ db, blobstore, keypair, config: cfg })
+  const pds = PDS.create({
+    db,
+    blobstore,
+    repoSigningKey: keypair,
+    plcRotationKey: keypair,
+    config: cfg,
+  })
   await pds.start()
   console.log(`🌞 ATP Data server is running at ${cfg.origin}`)
 }

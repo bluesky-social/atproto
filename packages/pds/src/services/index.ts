@@ -15,7 +15,7 @@ import { FeedService } from '../app-view/services/feed'
 import { IndexingService } from '../app-view/services/indexing'
 
 export function createServices(resources: {
-  keypair: crypto.Keypair
+  repoSigningKey: crypto.Keypair
   messageQueue: MessageQueue
   messageDispatcher: MessageDispatcher
   blobstore: BlobStore
@@ -23,7 +23,7 @@ export function createServices(resources: {
   imgInvalidator: ImageInvalidator
 }): Services {
   const {
-    keypair,
+    repoSigningKey,
     messageQueue,
     messageDispatcher,
     blobstore,
@@ -34,7 +34,7 @@ export function createServices(resources: {
     account: AccountService.creator(),
     auth: AuthService.creator(),
     record: RecordService.creator(messageDispatcher),
-    repo: RepoService.creator(keypair, messageDispatcher, blobstore),
+    repo: RepoService.creator(repoSigningKey, messageDispatcher, blobstore),
     moderation: ModerationService.creator(
       messageDispatcher,
       blobstore,

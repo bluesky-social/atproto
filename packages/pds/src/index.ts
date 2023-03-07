@@ -11,7 +11,6 @@ import events from 'events'
 import { createTransport } from 'nodemailer'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
-import { DidResolver } from '@atproto/did-resolver'
 import API, { health } from './api'
 import AppViewAPI from './app-view/api'
 import Database from './db'
@@ -58,16 +57,15 @@ export class PDS {
     db: Database
     blobstore: BlobStore
     imgInvalidator?: ImageInvalidator
-    keypair: crypto.Keypair
+    repoSigningKey: crypto.Keypair
+    plcRotationKey: crypto.Keypair
     config: ServerConfig
   }): PDS {
-    const { db, blobstore, keypair, config } = opts
+    const { db, blobstore, repoSigningKey, plcRotationKey, config } = opts
     let maybeImgInvalidator = opts.imgInvalidator
-    const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
     const auth = new ServerAuth({
       jwtSecret: config.jwtSecret,
       adminPass: config.adminPassword,
-      didResolver,
     })
 
     const messageQueue = new SqlMessageQueue('pds', db)
@@ -115,7 +113,7 @@ export class PDS {
     )
 
     const services = createServices({
-      keypair,
+      repoSigningKey,
       messageQueue,
       messageDispatcher,
       blobstore,
@@ -126,7 +124,8 @@ export class PDS {
     const ctx = new AppContext({
       db,
       blobstore,
-      keypair,
+      repoSigningKey,
+      plcRotationKey,
       cfg: config,
       auth,
       messageQueue,
