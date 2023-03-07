@@ -27,11 +27,6 @@ run-pds: ## Run PDS locally
 	if [ ! -f "packages/pds/.dev.env" ]; then cp packages/pds/example.dev.env packages/pds/.dev.env; fi
 	cd packages/pds; ENV=dev yarn run start | yarn exec pino-pretty
 
-.PHONY: run-plc
-run-plc: ## Run DID:PLC server locally
-	if [ ! -f "packages/plc/.dev.env" ]; then cp packages/plc/example.dev.env packages/plc/.dev.env; fi
-	cd packages/plc; ENV=dev yarn run start | yarn exec pino-pretty
-
 .PHONY: lint
 lint: ## Run style checks and verify syntax
 	yarn verify

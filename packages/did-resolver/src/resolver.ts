@@ -7,7 +7,7 @@ import {
 import * as crypto from '@atproto/crypto'
 import * as web from './web-resolver'
 import * as plc from './plc-resolver'
-import * as atpDid from './atp-did'
+import * as atpDid from './atproto-data'
 import log from './logger'
 
 export type DidResolverOptions = {
@@ -52,7 +52,7 @@ export class DidResolver {
     return result.didDocument
   }
 
-  async resolveAtpData(did: string): Promise<atpDid.AtpData> {
+  async resolveAtpData(did: string): Promise<atpDid.AtprotoData> {
     const didDocument = await this.ensureResolveDid(did)
     return atpDid.ensureAtpDocument(didDocument)
   }

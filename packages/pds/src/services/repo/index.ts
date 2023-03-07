@@ -15,7 +15,7 @@ export class RepoService {
 
   constructor(
     public db: Database,
-    public keypair: crypto.Keypair,
+    public repoSigningKey: crypto.Keypair,
     public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
   ) {
@@ -39,7 +39,7 @@ export class RepoService {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
     const writeOps = writes.map(createWriteToOp)
-    const repo = await Repo.create(storage, did, this.keypair, writeOps)
+    const repo = await Repo.create(storage, did, this.repoSigningKey, writeOps)
     await Promise.all([
       this.indexCreatesAndDeletes(writes, now),
       this.afterWriteProcessing(did, repo.cid, writes),
@@ -88,7 +88,7 @@ export class RepoService {
     }
     const writeOps = writes.map(writeToOp)
     const repo = await Repo.load(storage, currRoot)
-    return repo.formatCommit(writeOps, this.keypair)
+    return repo.formatCommit(writeOps, this.repoSigningKey)
   }
 
   async applyCommit(

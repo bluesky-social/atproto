@@ -42,7 +42,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
       let feedItemsQb = db
-        .selectFrom(postsQb.union(repostsQb).as('feed_items'))
+        .selectFrom(postsQb.unionAll(repostsQb).as('feed_items'))
         .selectAll()
       feedItemsQb = paginate(feedItemsQb, {
         limit,

@@ -36,7 +36,10 @@ const main = async () => {
   const cfInvalidator = new CloudfrontInvalidator({
     distributionId: env.cfDistributionId,
   })
-  const signingKeypair = await KmsKeypair.load({
+  const repoSigningKey = await KmsKeypair.load({
+    keyId: env.signingKeyId,
+  })
+  const plcRotationKey = await KmsKeypair.load({
     keyId: env.signingKeyId,
   })
   let recoveryKey
@@ -60,7 +63,8 @@ const main = async () => {
   const pds = PDS.create({
     db,
     blobstore: s3Blobstore,
-    keypair: signingKeypair,
+    repoSigningKey,
+    plcRotationKey,
     config: cfg,
     imgInvalidator: cfInvalidator,
   })

@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
 
     let didDoc
     try {
-      didDoc = await ctx.auth.didResolver.ensureResolveDid(userObj.did)
+      didDoc = await ctx.didResolver.ensureResolveDid(userObj.did)
     } catch (err) {
       throw new InvalidRequestError(`Could not resolve DID: ${err}`)
     }
