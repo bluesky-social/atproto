@@ -1,11 +1,13 @@
+import { createHash } from 'crypto'
 import { sql } from 'kysely'
 import AtpAgent from '@atproto/api'
-import { wait } from '@atproto/common'
+import { cborEncode, wait } from '@atproto/common'
 import basicSeed from '../seeds/basic'
 import { SeedClient } from '../seeds/client'
 import { forSnapshot, runTestServer, TestServerInfo } from '../_util'
-import { AppContext } from '../../src'
+import { AppContext, Database } from '../../src'
 import { RepoSubscription } from '../../src/app-view/subscription/repo'
+import { DatabaseSchemaType } from '../../src/app-view/db'
 
 describe('sync', () => {
   let server: TestServerInfo
@@ -30,11 +32,11 @@ describe('sync', () => {
   it('rebuilds timeline indexes from repo state.', async () => {
     const { db } = ctx
     const { ref } = db.db.dynamic
-    // Destroy indexes
     const originalTl = await agent.api.app.bsky.feed.getTimeline(
       {},
       { headers: sc.getHeaders(sc.dids.alice) },
     )
+    // Destroy indexes
     await Promise.all(
       indexedTables.map((t) => sql`delete from ${ref(t)}`.execute(db.db)),
     )
@@ -53,7 +55,7 @@ describe('sync', () => {
 
     try {
       sub.run()
-      await entireSeqProcessed(ctx, sub)
+      await processFullSequence(ctx, sub)
     } finally {
       sub.destroy()
     }
@@ -67,6 +69,76 @@ describe('sync', () => {
     expect(forSnapshot(aliceTL.data.feed)).toEqual(
       forSnapshot(originalTl.data.feed),
     )
+  })
+
+  it('indexes permit history being replayed.', async () => {
+    const { db } = ctx
+    const { ref } = db.db.dynamic
+
+    // Generate some modifications and dupes
+    // @TODO include profile updates once indexing updates has solidified
+    const { alice, bob, carol, dan } = sc.dids
+    await sc.follow(alice, sc.actorRef(bob))
+    await sc.follow(carol, sc.actorRef(alice))
+    await sc.follow(bob, sc.actorRef(alice))
+    await sc.follow(dan, sc.actorRef(bob))
+    await sc.vote('down', bob, sc.posts[alice][1].ref) // Reversed
+    await sc.vote('up', bob, sc.posts[alice][2].ref) // Reversed
+    await sc.vote('up', carol, sc.posts[alice][1].ref) // Reversed
+    await sc.vote('down', carol, sc.posts[alice][2].ref) // Reversed
+    await sc.vote('up', dan, sc.posts[alice][1].ref) // Identical
+    await sc.vote('up', alice, sc.posts[carol][0].ref) // Identical
+
+    // Table comparator
+    const getTableDump = async () => {
+      const [post, profile, vote, follow, dupes] = await Promise.all([
+        dumpTable(db, 'post', ['uri']),
+        dumpTable(db, 'profile', ['uri']),
+        dumpTable(db, 'vote', ['creator', 'subject']),
+        dumpTable(db, 'follow', ['creator', 'subjectDid']),
+        dumpTable(db, 'duplicate_record', ['uri']),
+      ])
+      return { post, profile, vote, follow, dupes }
+    }
+
+    // Mark originals
+    const originalTableDump = await getTableDump()
+    const originalTl = await agent.api.app.bsky.feed.getTimeline(
+      {},
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+
+    // Destroy subscription state
+    const { numDeletedRows } = await db.db
+      .deleteFrom('subscription')
+      .where('method', '=', 'com.atproto.sync.subscribeAllRepos')
+      .executeTakeFirst()
+    expect(Number(numDeletedRows)).toEqual(1)
+
+    // Reprocess repos via sync subscription, on top of existing indices
+    const sub = new RepoSubscription(
+      ctx,
+      server.url.replace('http://', 'ws://'),
+    )
+
+    try {
+      sub.run()
+      await processFullSequence(ctx, sub)
+    } finally {
+      sub.destroy()
+    }
+
+    // Check indexed timeline
+    const aliceTL = await agent.api.app.bsky.feed.getTimeline(
+      {},
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+
+    expect(forSnapshot(aliceTL.data.feed)).toEqual(
+      forSnapshot(originalTl.data.feed),
+    )
+
+    await expect(getTableDump()).resolves.toEqual(originalTableDump)
   })
 
   const indexedTables = [
@@ -100,18 +172,31 @@ describe('sync', () => {
   ]
 })
 
-async function entireSeqProcessed(ctx: AppContext, sub: RepoSubscription) {
+async function processFullSequence(ctx: AppContext, sub: RepoSubscription) {
   const { db } = ctx.db
   const timeout = 5000
   const start = Date.now()
   while (Date.now() - start < timeout) {
     await wait(50)
-    const subState = await sub.getState()
+    const state = await sub.getState()
     const { lastSeq } = await db
       .selectFrom('repo_seq')
       .select(db.fn.max('repo_seq.seq').as('lastSeq'))
       .executeTakeFirstOrThrow()
-    if (subState.cursor === lastSeq) return
+    if (state.cursor === lastSeq) return
   }
   throw new Error(`Sequence was not processed within ${timeout}ms`)
+}
+
+async function dumpTable<T extends keyof DatabaseSchemaType>(
+  db: Database,
+  tableName: T,
+  pkeys: (keyof DatabaseSchemaType[T] & string)[],
+) {
+  const { ref } = db.db.dynamic
+  let builder = db.db.selectFrom(tableName).selectAll()
+  pkeys.forEach((key) => {
+    builder = builder.orderBy(ref(key))
+  })
+  return await builder.execute()
 }

@@ -18,7 +18,7 @@ const insertFn = async (
   uri: AtUri,
   cid: CID,
   obj: Vote.Record,
-  timestamp?: string,
+  timestamp: string,
 ): Promise<IndexedVote | null> => {
   if (obj.direction === 'up' || obj.direction === 'down') {
     const inserted = await db
@@ -31,7 +31,7 @@ const insertFn = async (
         subject: obj.subject.uri,
         subjectCid: obj.subject.cid,
         createdAt: obj.createdAt,
-        indexedAt: timestamp || new Date().toISOString(),
+        indexedAt: timestamp,
       })
       .onConflict((oc) => oc.doNothing())
       .returningAll()

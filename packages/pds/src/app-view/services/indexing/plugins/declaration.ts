@@ -16,7 +16,7 @@ const insertFn = async (
   uri: AtUri,
   cid: CID,
   obj: Declaration.Record,
-  _timestamp?: string,
+  _timestamp: string,
 ): Promise<DidHandle | null> => {
   if (uri.rkey !== 'self') return null
   const updated = await db

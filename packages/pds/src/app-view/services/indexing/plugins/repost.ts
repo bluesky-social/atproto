@@ -17,7 +17,7 @@ const insertFn = async (
   uri: AtUri,
   cid: CID,
   obj: Repost.Record,
-  timestamp?: string,
+  timestamp: string,
 ): Promise<IndexedRepost | null> => {
   const inserted = await db
     .insertInto('repost')
@@ -28,7 +28,7 @@ const insertFn = async (
       subject: obj.subject.uri,
       subjectCid: obj.subject.cid,
       createdAt: obj.createdAt,
-      indexedAt: timestamp || new Date().toISOString(),
+      indexedAt: timestamp,
     })
     .onConflict((oc) => oc.doNothing())
     .returningAll()
