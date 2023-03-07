@@ -42,7 +42,12 @@ export class RepoBlobs {
         height: imgInfo?.height || null,
         createdAt: new Date().toISOString(),
       })
-      .onConflict((oc) => oc.doNothing())
+      .onConflict((oc) =>
+        oc
+          .columns(['creator', 'cid'])
+          .doUpdateSet({ tempKey })
+          .where('blob.tempKey', 'is not', null),
+      )
       .execute()
     return cid
   }

@@ -1,6 +1,6 @@
 import * as aws from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
-import { BlobStore } from '@atproto/repo'
+import { BlobStore, BlobNotFoundError } from '@atproto/repo'
 import { randomStr } from '@atproto/crypto'
 import { CID } from 'multiformats/cid'
 import stream from 'stream'
@@ -56,10 +56,16 @@ export class S3BlobStore implements BlobStore {
   }
 
   async makePermanent(key: string, cid: CID): Promise<void> {
-    await this.move({
-      from: this.getTmpPath(key),
-      to: this.getStoredPath(cid),
-    })
+    const alreadyHas = await this.hasStored(cid)
+    if (!alreadyHas) {
+      await this.move({
+        from: this.getTmpPath(key),
+        to: this.getStoredPath(cid),
+      })
+    } else {
+      // already saved, so we no-op & just delete the temp
+      await this.deleteKey(this.getTmpPath(key))
+    }
   }
 
   async putPermanent(
@@ -98,7 +104,7 @@ export class S3BlobStore implements BlobStore {
     if (res.Body) {
       return res.Body
     } else {
-      throw new Error(`Could not get blob: ${cid.toString()}`)
+      throw new BlobNotFoundError()
     }
   }
 
@@ -113,9 +119,25 @@ export class S3BlobStore implements BlobStore {
   }
 
   async delete(cid: CID): Promise<void> {
+    await this.deleteKey(this.getStoredPath(cid))
+  }
+
+  async hasStored(cid: CID): Promise<boolean> {
+    try {
+      const res = await this.client.headObject({
+        Bucket: this.bucket,
+        Key: this.getStoredPath(cid),
+      })
+      return res.$metadata.httpStatusCode === 200
+    } catch (err) {
+      return false
+    }
+  }
+
+  private async deleteKey(key: string) {
     await this.client.deleteObject({
       Bucket: this.bucket,
-      Key: this.getStoredPath(cid),
+      Key: key,
     })
   }
 

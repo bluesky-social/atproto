@@ -1,5 +1,4 @@
 import { Kysely } from 'kysely'
-import { Dialect } from '..'
 
 export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
@@ -42,6 +41,7 @@ export async function up(db: Kysely<any>): Promise<void> {
           'blob.createdAt',
         ]),
     )
+    .onConflict((oc) => oc.doNothing())
     .execute()
 
   await db.schema.dropTable('blob').execute()
@@ -60,16 +60,32 @@ export async function down(db: Kysely<any>): Promise<void> {
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .execute()
 
-  const res = await db.selectFrom('blob').selectAll().execute()
-  const unique = res.reduce((acc, cur) => {
-    const { creator, ...rest } = cur
-    acc[cur.cid] ??= rest
-    return acc
-  }, {})
-
-  if (res.length > 0) {
-    await db.insertInto('blob_new').values(Object.values(unique)).execute()
-  }
+  await db
+    .insertInto('blob_new')
+    .columns([
+      'cid',
+      'mimeType',
+      'size',
+      'tempKey',
+      'width',
+      'height',
+      'createdAt',
+    ])
+    .expression((exp) =>
+      exp
+        .selectFrom('blob')
+        .select([
+          'blob.cid',
+          'blob.mimeType',
+          'blob.size',
+          'blob.tempKey',
+          'blob.width',
+          'blob.height',
+          'blob.createdAt',
+        ]),
+    )
+    .onConflict((oc) => oc.doNothing())
+    .execute()
 
   await db.schema.dropTable('blob').execute()
   await db.schema.alterTable('blob_new').renameTo('blob').execute()
