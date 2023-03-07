@@ -47,7 +47,7 @@ describe('repo sync', () => {
   })
 
   it('creates and syncs some records', async () => {
-    const ADD_COUNT = 1
+    const ADD_COUNT = 10
     for (let i = 0; i < ADD_COUNT; i++) {
       const { obj, uri } = await makePost(agent, did)
       if (!repoData[uri.collection]) {
@@ -62,7 +62,7 @@ describe('repo sync', () => {
       storage,
       new Uint8Array(car.data),
       did,
-      ctx.keypair.did(),
+      ctx.repoSigningKey.did(),
     )
     expect(synced.writeLog.length).toBe(ADD_COUNT + 1) // +1 because of declaration
     const ops = await collapseWriteLog(synced.writeLog)
@@ -73,8 +73,6 @@ describe('repo sync', () => {
 
     currRoot = synced.root
   })
-
-  return
 
   it('syncs creates and deletes', async () => {
     const ADD_COUNT = 10
@@ -107,7 +105,7 @@ describe('repo sync', () => {
       currRepo,
       new Uint8Array(car.data),
       did,
-      ctx.keypair.did(),
+      ctx.repoSigningKey.did(),
     )
     expect(synced.writeLog.length).toBe(ADD_COUNT + DEL_COUNT)
     const ops = await collapseWriteLog(synced.writeLog)
@@ -189,7 +187,7 @@ describe('repo sync', () => {
       checkoutStorage,
       new Uint8Array(car.data),
       did,
-      ctx.keypair.did(),
+      ctx.repoSigningKey.did(),
     )
     expect(loaded.contents).toEqual(repoData)
     const loadedRepo = await repo.Repo.load(checkoutStorage, loaded.root)
@@ -207,7 +205,7 @@ describe('repo sync', () => {
     const records = await repo.verifyRecords(
       new Uint8Array(car.data),
       did,
-      ctx.keypair.did(),
+      ctx.repoSigningKey.did(),
     )
     const claim = {
       collection,
@@ -220,7 +218,7 @@ describe('repo sync', () => {
       new Uint8Array(car.data),
       [claim],
       did,
-      ctx.keypair.did(),
+      ctx.repoSigningKey.did(),
     )
     expect(result.verified.length).toBe(1)
     expect(result.unverified.length).toBe(0)
@@ -243,7 +241,7 @@ describe('repo sync', () => {
       new Uint8Array(car.data),
       [claim],
       did,
-      ctx.keypair.did(),
+      ctx.repoSigningKey.did(),
     )
     expect(result.verified.length).toBe(1)
     expect(result.unverified.length).toBe(0)

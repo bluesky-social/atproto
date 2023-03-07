@@ -110,7 +110,6 @@ export const verifyCommitPath = async (
   did: string,
   signingKey: string,
 ): Promise<VerifiedUpdate[]> => {
-  console.log('path: ', commitPath)
   const updates: VerifiedUpdate[] = []
   if (commitPath.length === 0) return updates
   let prevRepo = baseRepo
@@ -126,7 +125,6 @@ export const verifyCommitPath = async (
     }
 
     const validSig = await util.verifyCommitSig(nextRepo.commit, signingKey)
-    console.log('HRE: ', validSig)
     if (!validSig) {
       throw new RepoVerificationError(
         `Invalid signature on commit: ${nextRepo.cid.toString()}`,
