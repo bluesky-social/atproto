@@ -112,9 +112,6 @@ const resolveExternalHandle = async (
     const res = await agent.api.com.atproto.handle.resolve({ handle })
     return res.data.did
   } catch (err) {
-    if (err instanceof XRPCError) {
-      return null
-    }
-    throw err
+    return null
   }
 }
