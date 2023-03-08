@@ -689,7 +689,7 @@ export class MST implements DataStore {
     for (const entry of entries) {
       if (entry.isTree()) {
         try {
-          for await (const e of entry.walk()) {
+          for await (const e of entry.walkReachable()) {
             yield e
           }
         } catch (err) {
