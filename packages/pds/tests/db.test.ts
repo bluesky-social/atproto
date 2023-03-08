@@ -178,6 +178,8 @@ describe('db', () => {
 
   describe('appMigration()', () => {
     it('fails once together', async () => {
+      if (db.cfg.dialect !== 'pg') return // postgres-only
+
       await db.db.deleteFrom('did_handle').execute()
       await db.db
         .insertInto('did_handle')
@@ -241,6 +243,8 @@ describe('db', () => {
     })
 
     it('succeeds once together', async () => {
+      if (db.cfg.dialect !== 'pg') return // postgres-only
+
       await db.db.deleteFrom('did_handle').execute()
 
       let runCount = 0
