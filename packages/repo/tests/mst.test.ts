@@ -1,6 +1,10 @@
 import { MST } from '../src/mst'
 import DataDiff, { DataAdd, DataUpdate, DataDelete } from '../src/data-diff'
-import { countPrefixLen, leadingZerosOnHash } from '../src/mst/util'
+import {
+  countPrefixLen,
+  InvalidMstKeyError,
+  leadingZerosOnHash,
+} from '../src/mst/util'
 
 import { MemoryBlockstore } from '../src/storage'
 import * as util from './_util'
@@ -16,7 +20,7 @@ describe('Merkle Search Tree', () => {
   beforeAll(async () => {
     blockstore = new MemoryBlockstore()
     mst = await MST.create(blockstore)
-    mapping = await util.generateBulkTidMapping(1000, blockstore)
+    mapping = await util.generateBulkDataKeys(1000, blockstore)
     shuffled = util.shuffle(Object.entries(mapping))
   })
 
@@ -105,7 +109,7 @@ describe('Merkle Search Tree', () => {
     let toDiff = mst
 
     const toAdd = Object.entries(
-      await util.generateBulkTidMapping(100, blockstore),
+      await util.generateBulkDataKeys(100, blockstore),
     )
     const toEdit = shuffled.slice(500, 600)
     const toDel = shuffled.slice(400, 500)
@@ -173,6 +177,52 @@ describe('Merkle Search Tree', () => {
     })
   })
 
+  describe('MST Interop Allowable Keys', () => {
+    let blockstore: MemoryBlockstore
+    let mst: MST
+    let cid1: CID
+
+    beforeAll(async () => {
+      blockstore = new MemoryBlockstore()
+      mst = await MST.create(blockstore)
+      cid1 = CID.parse(
+        'bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454',
+      )
+    })
+
+    const expectReject = async (key: string) => {
+      const promise = mst.add(key, cid1)
+      await expect(promise).rejects.toThrow(InvalidMstKeyError)
+    }
+
+    it('rejects the empty key', async () => {
+      await expectReject('')
+    })
+
+    it('rejects a key with no collection', async () => {
+      await expectReject('asdf')
+    })
+
+    it('rejects a key with a nested collection', async () => {
+      await expectReject('nested/collection/asdf')
+    })
+
+    it('rejects non-ascii chars', async () => {
+      await expectReject('coll/jalapeñoA')
+      await expectReject('coll/coöperative')
+      await expectReject('coll/abc💩')
+    })
+
+    it('rejects ascii that we dont support', async () => {
+      await expectReject('coll/key$')
+      await expectReject('coll/key%')
+      await expectReject('coll/key(')
+      await expectReject('coll/key)')
+      await expectReject('coll/key+')
+      await expectReject('coll/key=')
+    })
+  })
+
   describe('MST Interop Known Maps', () => {
     let blockstore: MemoryBlockstore
     let mst: MST
@@ -197,31 +247,31 @@ describe('Merkle Search Tree', () => {
     })
 
     it('computes "trivial" tree root CID', async () => {
-      mst = await mst.add('asdf', cid1)
+      mst = await mst.add('com.example.record/3jqfcqzm3fo2j', cid1)
       expect(await mst.leafCount()).toBe(1)
       expect((await mst.getPointer()).toString()).toBe(
-        'bafyreiehq2cp7f4dnrjanw2x36a3ybt4g4d4k5cx3supts4ommmgxjezfa',
+        'bafyreibj4lsc3aqnrvphp5xmrnfoorvru4wynt6lwidqbm2623a6tatzdu',
       )
     })
 
     it('computes "singlelayer2" tree root CID', async () => {
-      mst = await mst.add('3jqfbupe2ee2w', cid1)
+      mst = await mst.add('com.example.record/3jqfcqzm3fx2j', cid1)
       expect(await mst.leafCount()).toBe(1)
       expect(await mst.layer).toBe(2)
       expect((await mst.getPointer()).toString()).toBe(
-        'bafyreifu5zmjhskrsakkadbwbkjip6ciayvht2blkpjaq2qlpgpvyqvwxy',
+        'bafyreih7wfei65pxzhauoibu3ls7jgmkju4bspy4t2ha2qdjnzqvoy33ai',
       )
     })
 
     it('computes "simple" tree root CID', async () => {
-      mst = await mst.add('asdf', cid1)
-      mst = await mst.add('88bfafc7', cid1)
-      mst = await mst.add('2a92d355', cid1)
-      mst = await mst.add('app.bsky.feed.post/454397e440ec', cid1)
-      mst = await mst.add('app.bsky.feed.post/9adeb165882c', cid1)
+      mst = await mst.add('com.example.record/3jqfcqzm3fp2j', cid1) // level 0
+      mst = await mst.add('com.example.record/3jqfcqzm3fr2j', cid1) // level 0
+      mst = await mst.add('com.example.record/3jqfcqzm3fs2j', cid1) // level 1
+      mst = await mst.add('com.example.record/3jqfcqzm3ft2j', cid1) // level 0
+      mst = await mst.add('com.example.record/3jqfcqzm4fc2j', cid1) // level 0
       expect(await mst.leafCount()).toBe(5)
       expect((await mst.getPointer()).toString()).toBe(
-        'bafyreidrfr4uo35fmlxpvpmwiyu72zphffmjjsddwhfm3zta2o6qpuszey',
+        'bafyreicmahysq4n6wfuxo522m6dpiy7z7qzym3dzs756t5n7nfdgccwq7m',
       )
     })
   })

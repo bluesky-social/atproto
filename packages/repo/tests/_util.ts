@@ -29,22 +29,14 @@ export const randomCid = async (storage?: RepoStorage): Promise<CID> => {
   return block.cid
 }
 
-export const generateBulkTids = (count: number): TID[] => {
-  const ids: TID[] = []
-  for (let i = 0; i < count; i++) {
-    ids.push(TID.next())
-  }
-  return ids
-}
-
-export const generateBulkTidMapping = async (
+export const generateBulkDataKeys = async (
   count: number,
   blockstore?: RepoStorage,
 ): Promise<IdMapping> => {
-  const ids = generateBulkTids(count)
   const obj: IdMapping = {}
-  for (const id of ids) {
-    obj[id.toString()] = await randomCid(blockstore)
+  for (let i = 0; i < count; i++) {
+    const key = `com.example.record/${TID.nextStr()}`
+    obj[key] = await randomCid(blockstore)
   }
   return obj
 }

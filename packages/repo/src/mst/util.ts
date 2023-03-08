@@ -84,10 +84,11 @@ export const serializeNodeData = (entries: NodeEntry[]): NodeData => {
       subtree = next.pointer
       i++
     }
+    ensureValidMstKey(leaf.key)
     const prefixLen = countPrefixLen(lastKey, leaf.key)
     data.e.push({
       p: prefixLen,
-      k: toByteString(leaf.key.slice(prefixLen)),
+      k: uint8arrays.fromString(leaf.key.slice(prefixLen), 'ascii'),
       v: leaf.value,
       t: subtree,
     })
@@ -112,17 +113,23 @@ export const cidForEntries = async (entries: NodeEntry[]): Promise<CID> => {
   return cidForCbor(data)
 }
 
-export const toByteString = (str: string): Uint8Array => {
-  ensureAscii(str)
-  return uint8arrays.fromString(str, 'ascii')
+export const validCharsRegex = /^[a-zA-Z0-9_\-:\.]*$/
+
+export const isValidMstKey = (str: string): boolean => {
+  const split = str.split('/')
+  if (split.length !== 2) return false
+  if (!validCharsRegex.test(split[0])) return false
+  return validCharsRegex.test(split[1])
 }
 
-export const ensureAscii = (str: string) => {
-  if (!isAscii(str)) {
-    throw new Error(`not ascii: ${str}`)
+export const ensureValidMstKey = (str: string) => {
+  if (!isValidMstKey(str)) {
+    throw new InvalidMstKeyError(str)
   }
 }
 
-export const isAscii = (str: string): boolean => {
-  return /^[\x00-\x7F]*$/.test(str)
+export class InvalidMstKeyError extends Error {
+  constructor(public key: string) {
+    super(`Not a valid MST key: ${key}`)
+  }
 }

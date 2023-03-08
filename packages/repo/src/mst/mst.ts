@@ -220,6 +220,7 @@ export class MST implements DataStore {
   // Adds a new leaf for the given key/value pair
   // Throws if a leaf with that key already exists
   async add(key: string, value: CID, knownZeros?: number): Promise<MST> {
+    util.ensureValidMstKey(key)
     const keyZeros = knownZeros ?? (await util.leadingZerosOnHash(key))
     const layer = await this.getLayer()
     const newLeaf = new Leaf(key, value)
@@ -304,6 +305,7 @@ export class MST implements DataStore {
   // Edits the value at the given key
   // Throws if the given key does not exist
   async update(key: string, value: CID): Promise<MST> {
+    util.ensureValidMstKey(key)
     const index = await this.findGtOrEqualLeafIndex(key)
     const found = await this.atIndex(index)
     if (found && found.isLeaf() && found.key === key) {
