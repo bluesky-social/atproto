@@ -4,13 +4,12 @@ import { AtUri } from '@atproto/uri'
 import { cborDecode, wait } from '@atproto/common'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
 import { WriteOpAction, readCarWithRoot } from '@atproto/repo'
-import { PreparedWrite } from '../../repo'
 import { OutputSchema as Message } from '../lexicon/types/com/atproto/sync/subscribeAllRepos'
 import { ids, lexicons } from '../lexicon/lexicons'
 import Database from '../db'
 import AppContext from '../context'
 import { Leader } from '../db/leader'
-import { appViewLogger } from '../app-view/logger'
+import { subLogger } from '../logger'
 
 const METHOD = ids.ComAtprotoSyncSubscribeAllRepos
 export const REPO_SUB_ID = 1000
@@ -44,7 +43,7 @@ export class RepoSubscription {
       } catch (_err) {
         const msg = _err instanceof ProcessingError ? _err.msg : undefined
         const err = _err instanceof ProcessingError ? _err.cause : _err
-        appViewLogger.error(
+        subLogger.error(
           {
             err,
             seq: msg?.seq,
@@ -73,7 +72,7 @@ export class RepoSubscription {
     timestamp: string,
   ) {
     const { services } = this.ctx
-    const indexingTx = services.appView.indexing(tx)
+    const indexingTx = services.indexing(tx)
     for (const op of ops) {
       if (op.action === WriteOpAction.Delete) {
         await indexingTx.deleteRecord(op.uri)
@@ -126,7 +125,7 @@ export class RepoSubscription {
       signal: opts.signal,
       getParams: () => this.getState(),
       onReconnectError: (err, reconnects, initial) => {
-        appViewLogger.warn(
+        subLogger.warn(
           { err, reconnects, initial },
           'repo subscription reconnect',
         )
@@ -135,7 +134,7 @@ export class RepoSubscription {
         try {
           return lexicons.assertValidXrpcMessage<Message>(METHOD, value)
         } catch (err) {
-          appViewLogger.warn(
+          subLogger.warn(
             {
               err,
               seq: ifNumber(value?.['seq']),
@@ -206,3 +205,26 @@ class ProcessingError extends Error {
 }
 
 type State = { cursor: number }
+
+type PreparedCreate = {
+  action: WriteOpAction.Create
+  uri: AtUri
+  cid: CID
+  record: Record<string, unknown>
+  blobs: CID[] // differs from similar type in pds
+}
+
+type PreparedUpdate = {
+  action: WriteOpAction.Update
+  uri: AtUri
+  cid: CID
+  record: Record<string, unknown>
+  blobs: CID[] // differs from similar type in pds
+}
+
+type PreparedDelete = {
+  action: WriteOpAction.Delete
+  uri: AtUri
+}
+
+type PreparedWrite = PreparedCreate | PreparedUpdate | PreparedDelete

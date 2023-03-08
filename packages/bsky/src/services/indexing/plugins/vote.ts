@@ -2,9 +2,9 @@ import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Vote from '../../../lexicon/types/app/bsky/feed/vote'
 import * as lex from '../../../lexicon/lexicons'
-import * as messages from '../../../../event-stream/messages'
-import { Message } from '../../../../event-stream/messages'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
+import * as messages from '../messages'
+import { Message } from '../messages'
 import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyFeedVote

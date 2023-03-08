@@ -2,8 +2,8 @@ import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import * as common from '@atproto/common'
 import DatabaseSchema from '../../db/database-schema'
-import { Message } from '../../../event-stream/messages'
 import { lexicons } from '../../lexicon/lexicons'
+import { Message } from './messages'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
 // (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).

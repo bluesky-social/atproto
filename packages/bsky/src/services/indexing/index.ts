@@ -10,7 +10,6 @@ import * as Follow from './plugins/follow'
 import * as Assertion from './plugins/assertion'
 import * as Confirmation from './plugins/confirmation'
 import * as Profile from './plugins/profile'
-import { MessageQueue } from '../../../event-stream/types'
 
 export class IndexingService {
   records: {
@@ -24,11 +23,7 @@ export class IndexingService {
     confirmation: Confirmation.PluginType
   }
 
-  constructor(
-    public db: Database,
-    public messageQueue: MessageQueue,
-    public messageDispatcher: MessageQueue,
-  ) {
+  constructor(public db: Database) {
     this.records = {
       declaration: Declaration.makePlugin(this.db.db),
       post: Post.makePlugin(this.db.db),
@@ -41,9 +36,8 @@ export class IndexingService {
     }
   }
 
-  static creator(messageQueue: MessageQueue, messageDispatcher: MessageQueue) {
-    return (db: Database) =>
-      new IndexingService(db, messageQueue, messageDispatcher)
+  static creator() {
+    return (db: Database) => new IndexingService(db)
   }
 
   async indexRecord(
@@ -55,18 +49,18 @@ export class IndexingService {
   ) {
     this.db.assertTransaction()
     const indexer = this.findIndexerForCollection(uri.collection)
-    const events =
+    // @TODO(bsky) direct notifs
+    const notifs =
       action === WriteOpAction.Create
         ? await indexer.insertRecord(uri, cid, obj, timestamp)
         : await indexer.updateRecord(uri, cid, obj, timestamp)
-    await this.messageQueue.send(this.db, events)
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {
     this.db.assertTransaction()
     const indexer = this.findIndexerForCollection(uri.collection)
-    const events = await indexer.deleteRecord(uri, cascading)
-    await this.messageQueue.send(this.db, events)
+    // @TODO(bsky) direct notifs
+    const notifs = await indexer.deleteRecord(uri, cascading)
   }
 
   findIndexerForCollection(collection: string) {

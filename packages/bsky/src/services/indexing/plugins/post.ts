@@ -6,11 +6,11 @@ import { isMain as isEmbedImage } from '../../../lexicon/types/app/bsky/embed/im
 import { isMain as isEmbedExternal } from '../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecord } from '../../../lexicon/types/app/bsky/embed/record'
 import * as lex from '../../../lexicon/lexicons'
-import * as messages from '../../../../event-stream/messages'
-import { Message } from '../../../../event-stream/messages'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
+import { PostHierarchy } from '../../../db/tables/post-hierarchy'
+import * as messages from '../messages'
+import { Message } from '../messages'
 import RecordProcessor from '../processor'
-import { PostHierarchy } from '../../../app-view/db/tables/post-hierarchy'
 
 type Post = DatabaseSchemaType['post']
 type PostEntity = DatabaseSchemaType['post_entity']

@@ -2,6 +2,8 @@
 // It's important that every migration is exported from here with the proper name. We'd simplify
 // this with kysely's FileMigrationProvider, but it doesn't play nicely with the build process.
 
+// @TODO(bsky) collapse migrations down, remove unused tables
+
 export * as _20221021T162202001Z from './20221021T162202001Z-init'
 export * as _20221116T234458063Z from './20221116T234458063Z-duplicate-records'
 export * as _20221202T212459280Z from './20221202T212459280Z-blobs'

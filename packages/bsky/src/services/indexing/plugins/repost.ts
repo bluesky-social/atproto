@@ -2,8 +2,8 @@ import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import * as Repost from '../../../lexicon/types/app/bsky/feed/repost'
 import * as lex from '../../../lexicon/lexicons'
-import * as messages from '../../../../event-stream/messages'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
+import * as messages from '../messages'
 import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyFeedRepost
