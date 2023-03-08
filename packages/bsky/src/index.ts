@@ -19,6 +19,7 @@ import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import AppContext from './context'
+import { RepoSubscription } from './subscription/repo'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -28,12 +29,18 @@ export { AppContext } from './context'
 export class BskyAppView {
   public ctx: AppContext
   public app: express.Application
+  public sub: RepoSubscription
   public server?: http.Server
   private terminator?: HttpTerminator
 
-  constructor(opts: { ctx: AppContext; app: express.Application }) {
+  constructor(opts: {
+    ctx: AppContext
+    app: express.Application
+    sub: RepoSubscription
+  }) {
     this.ctx = opts.ctx
     this.app = opts.app
+    this.sub = opts.sub
   }
 
   static create(opts: {
@@ -90,7 +97,9 @@ export class BskyAppView {
     app.use(server.xrpc.router)
     app.use(error.handler)
 
-    return new BskyAppView({ ctx, app })
+    const sub = new RepoSubscription(ctx, config.repoProvider)
+
+    return new BskyAppView({ ctx, app, sub })
   }
 
   async start(): Promise<http.Server> {
@@ -98,10 +107,12 @@ export class BskyAppView {
     this.server = server
     this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
+    await this.sub.run()
     return server
   }
 
   async destroy(): Promise<void> {
+    this.sub.destroy()
     await this.terminator?.terminate()
     await this.ctx.db.close()
   }
