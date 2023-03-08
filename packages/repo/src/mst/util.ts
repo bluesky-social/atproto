@@ -5,21 +5,21 @@ import { sha256 } from '@atproto/crypto'
 import { MST, Leaf, NodeEntry, NodeData, MstOpts } from './mst'
 import { cidForCbor } from '@atproto/common'
 
-// @TODO improve this
-export const leadingZerosOnHash = async (
-  key: string | Uint8Array,
-): Promise<number> => {
+export const leadingZerosOnHash = async (key: string | Uint8Array) => {
   const hash = await sha256(key)
-  const binary = uint8arrays.toString(hash, 'base2')
   let leadingZeros = 0
-  for (const char of binary) {
-    if (char === '0') {
+  for (let i = 0; i < hash.length; i++) {
+    const byte = hash[i]
+    if (byte < 64) leadingZeros++
+    if (byte < 16) leadingZeros++
+    if (byte < 4) leadingZeros++
+    if (byte === 0) {
       leadingZeros++
     } else {
       break
     }
   }
-  return Math.floor(leadingZeros / 2)
+  return leadingZeros
 }
 
 export const layerForEntries = async (
