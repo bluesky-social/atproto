@@ -114,16 +114,22 @@ export const cidForEntries = async (entries: NodeEntry[]): Promise<CID> => {
   return cidForCbor(data)
 }
 
+export const isValidMstKey = (str: string): boolean => {
+  const split = str.split('/')
+  return (
+    str.length <= 256 &&
+    split.length === 2 &&
+    split[0].length > 0 &&
+    split[1].length > 0 &&
+    isValidChars(split[0]) &&
+    isValidChars(split[1])
+  )
+}
+
 export const validCharsRegex = /^[a-zA-Z0-9_\-:.]*$/
 
-export const isValidMstKey = (str: string): boolean => {
-  if (str.length >= 256) return false
-  const split = str.split('/')
-  if (split.length !== 2) return false
-  if (split[0].length < 1) return false
-  if (split[1].length < 1) return false
-  if (!validCharsRegex.test(split[0])) return false
-  return validCharsRegex.test(split[1])
+export const isValidChars = (str: string): boolean => {
+  return str.match(validCharsRegex) !== null
 }
 
 export const ensureValidMstKey = (str: string) => {

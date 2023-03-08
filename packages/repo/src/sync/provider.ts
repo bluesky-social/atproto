@@ -89,16 +89,3 @@ export const getRecords = async (
     }
   })
 }
-
-// Helpers
-// -------------
-
-export const writeCommitToCar = async (
-  storage: RepoStorage,
-  car: BlockWriter,
-  cid: CID,
-): Promise<Commit> => {
-  const commit = await storage.readObjAndBytes(cid, def.commit)
-  await car.put({ cid: cid, bytes: commit.bytes })
-  return commit.obj
-}

@@ -13,7 +13,7 @@ const unsignedCommit = z.object({
   prev: common.cid.nullable(),
   data: common.cid,
 })
-export type UnsignedCommit = z.infer<typeof unsignedCommit>
+export type UnsignedCommit = z.infer<typeof unsignedCommit> & { sig?: never }
 
 const commit = z.object({
   did: z.string(),
