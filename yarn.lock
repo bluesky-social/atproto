@@ -10,6 +10,16 @@
     "@jridgewell/gen-mapping" "^0.1.0"
     "@jridgewell/trace-mapping" "^0.3.9"
 
+"@atproto/common@0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@atproto/common/-/common-0.1.0.tgz#4216a8fef5b985ab62ac21252a0f8ca0f4a0f210"
+  integrity sha512-OB5tWE2R19jwiMIs2IjQieH5KTUuMb98XGCn9h3xuu6NanwjlmbCYMv08fMYwIp3UQ6jcq//84cDT3Bu6fJD+A==
+  dependencies:
+    "@ipld/dag-cbor" "^7.0.3"
+    multiformats "^9.6.4"
+    pino "^8.6.1"
+    zod "^3.14.2"
+
 "@aws-crypto/crc32@2.0.0":
   version "2.0.0"
   resolved "https://registry.npmjs.org/@aws-crypto/crc32/-/crc32-2.0.0.tgz"

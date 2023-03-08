@@ -2,15 +2,16 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { softDeleted } from '../../../../db/util'
 import AppContext from '../../../../context'
+import { authVerifier } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
-    auth: ctx.accessVerifier,
+    auth: authVerifier,
     handler: async ({ auth, params }) => {
       const { actor } = params
       const requester = auth.credentials.did
       const { db, services } = ctx
-      const actorService = services.appView.actor(db)
+      const actorService = services.actor(db)
 
       const user = await actorService.getUser(actor, true)
 

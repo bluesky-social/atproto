@@ -3,10 +3,11 @@ import AppContext from '../../../../context'
 import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
 import { countAll, notSoftDeletedClause } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
+import { authVerifier } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getSuggestions({
-    auth: ctx.accessVerifier,
+    auth: authVerifier,
     handler: async ({ params, auth }) => {
       let { limit } = params
       const { cursor } = params
@@ -18,8 +19,7 @@ export default function (server: Server, ctx: AppContext) {
       const { ref } = db.dynamic
 
       const suggestionsQb = db
-        .selectFrom('user_account')
-        .innerJoin('did_handle', 'user_account.did', 'did_handle.did')
+        .selectFrom('did_handle')
         .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
         .where(notSoftDeletedClause(ref('repo_root')))
         .where('did_handle.did', '!=', requester)
@@ -58,7 +58,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           cursor: keyset.packFromResult(suggestionsRes),
-          actors: await services.appView
+          actors: await services
             .actor(ctx.db)
             .views.profileBasic(suggestionsRes, requester),
         },

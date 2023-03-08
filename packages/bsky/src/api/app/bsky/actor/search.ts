@@ -6,10 +6,11 @@ import {
   getUserSearchQueryPg,
   SearchKeyset,
 } from '../../../../services/util/search'
+import { authVerifier } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.search({
-    auth: ctx.accessVerifier,
+    auth: authVerifier,
     handler: async ({ auth, params }) => {
       const { services, db } = ctx
       let { term, limit } = params
@@ -35,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           cursor: keyset.packFromResult(results),
-          users: await services.appView
+          users: await services
             .actor(db)
             .views.profileBasic(results, requester),
         },

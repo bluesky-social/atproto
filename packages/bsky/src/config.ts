@@ -1,13 +1,10 @@
 import assert from 'assert'
 
 export interface ServerConfigValues {
-  debugMode?: boolean
   version: string
-  publicUrl?: string
-  scheme: string
   port?: number
-  hostname: string
-  dbPostgresUrl?: string
+  publicUrl?: string
+  dbPostgresUrl: string
   dbPostgresSchema?: string
   blobstoreLocation?: string
   blobstoreTmp?: string
@@ -23,16 +20,8 @@ export class ServerConfig {
   constructor(private cfg: ServerConfigValues) {}
 
   static readEnv(overrides?: Partial<ServerConfigValues>) {
-    const debugMode = process.env.DEBUG_MODE === '1'
     const version = process.env.BSKY_VERSION || '0.0.0'
     const publicUrl = process.env.PUBLIC_URL || undefined
-    const hostname = process.env.HOSTNAME || 'localhost'
-    let scheme
-    if ('TLS' in process.env) {
-      scheme = process.env.TLS === '1' ? 'https' : 'http'
-    } else {
-      scheme = hostname === 'localhost' ? 'http' : 'https'
-    }
     const envPort = parseInt(process.env.PORT || '', 10)
     const port = isNaN(envPort) ? 2583 : envPort
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
@@ -46,16 +35,14 @@ export class ServerConfig {
     const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
     const blobCacheLocation = process.env.BLOB_CACHE_LOC
     const dbPostgresUrl = process.env.DB_POSTGRES_URL
+    assert(dbPostgresUrl)
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
     const repoProvider = process.env.REPO_PROVIDER // E.g. ws://abc.com:4000
     assert(repoProvider)
     return new ServerConfig({
-      debugMode,
       version,
-      publicUrl,
-      scheme,
-      hostname,
       port,
+      publicUrl,
       dbPostgresUrl,
       dbPostgresSchema,
       blobstoreLocation,
@@ -70,42 +57,16 @@ export class ServerConfig {
     })
   }
 
-  get debugMode() {
-    return this.cfg.debugMode
-  }
-
   get version() {
     return this.cfg.version
-  }
-
-  get scheme() {
-    return this.cfg.scheme
   }
 
   get port() {
     return this.cfg.port
   }
 
-  get hostname() {
-    return this.cfg.hostname
-  }
-
-  get internalUrl() {
-    return `${this.scheme}://${this.hostname}:${this.port}`
-  }
-
-  get origin() {
-    const u = new URL(this.internalUrl)
-    return u.origin
-  }
-
   get publicUrl() {
-    return this.cfg.publicUrl || this.internalUrl
-  }
-
-  get publicHostname() {
-    const u = new URL(this.publicUrl)
-    return u.hostname
+    return this.cfg.publicUrl
   }
 
   get dbPostgresUrl() {

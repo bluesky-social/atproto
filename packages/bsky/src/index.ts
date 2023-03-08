@@ -5,10 +5,8 @@
 import 'express-async-errors' // @TODO(bsky) remove
 
 import express from 'express'
-import cors from 'cors'
 import http from 'http'
 import events from 'events'
-import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import API, { health } from './api'
 import Database from './db'
@@ -41,13 +39,10 @@ export class BskyAppView {
   static create(opts: {
     db: Database
     blobstore: BlobStore
-    repoSigningKey: crypto.Keypair
-    plcRotationKey: crypto.Keypair
     config: ServerConfig
   }): BskyAppView {
     const { db, blobstore, config } = opts
     const app = express()
-    app.use(cors())
     app.use(loggerMiddleware)
 
     let imgUriEndpoint = config.imgUriEndpoint

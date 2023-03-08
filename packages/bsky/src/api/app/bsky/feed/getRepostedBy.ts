@@ -2,10 +2,11 @@ import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { notSoftDeletedClause } from '../../../../db/util'
+import { authVerifier } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getRepostedBy({
-    auth: ctx.accessVerifier,
+    auth: authVerifier,
     handler: async ({ params, auth }) => {
       const { uri, limit, before, cid } = params
       const requester = auth.credentials.did
@@ -40,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const repostedByRes = await builder.execute()
-      const repostedBy = await services.appView
+      const repostedBy = await services
         .actor(db)
         .views.actorWithInfo(repostedByRes, requester)
 

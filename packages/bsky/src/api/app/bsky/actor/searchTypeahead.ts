@@ -4,10 +4,11 @@ import {
   cleanTerm,
   getUserSearchQueryPg,
 } from '../../../../services/util/search'
+import { authVerifier } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchTypeahead({
-    auth: ctx.accessVerifier,
+    auth: authVerifier,
     handler: async ({ params, auth }) => {
       const { services, db } = ctx
       let { term, limit } = params
@@ -30,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: {
-          users: await services.appView
+          users: await services
             .actor(db)
             .views.actorWithInfo(results, requester),
         },

@@ -1,5 +1,4 @@
 import * as plc from '@did-plc/lib'
-import { DidResolver } from '@atproto/did-resolver'
 import { Database } from './db'
 import { ServerConfig } from './config'
 import { BlobStore } from '@atproto/repo'
@@ -39,10 +38,6 @@ export class AppContext {
 
   get plcClient(): plc.Client {
     return new plc.Client(this.cfg.didPlcUrl)
-  }
-
-  get didResolver(): DidResolver {
-    return new DidResolver({ plcUrl: this.cfg.didPlcUrl })
   }
 }
 

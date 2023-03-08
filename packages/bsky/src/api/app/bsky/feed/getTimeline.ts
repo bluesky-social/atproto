@@ -4,11 +4,12 @@ import { FeedAlgorithm, FeedKeyset, composeFeed } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow } from '../../../../services/feed'
+import { authVerifier } from '../util'
 
 // @TODO getTimeline() will be replaced by composeTimeline() in the app-view
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
-    auth: ctx.accessVerifier,
+    auth: authVerifier,
     handler: async ({ params, auth }) => {
       const { algorithm, limit, before } = params
       const db = ctx.db.db
@@ -19,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
       }
 
-      const feedService = ctx.services.appView.feed(ctx.db)
+      const feedService = ctx.services.feed(ctx.db)
 
       const followingIdsSubquery = db
         .selectFrom('follow')

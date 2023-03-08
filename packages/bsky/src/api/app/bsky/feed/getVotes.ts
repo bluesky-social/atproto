@@ -2,10 +2,11 @@ import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { notSoftDeletedClause } from '../../../../db/util'
+import { authVerifier } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getVotes({
-    auth: ctx.accessVerifier,
+    auth: authVerifier,
     handler: async ({ params, auth }) => {
       const { uri, limit, before, cid, direction } = params
       const requester = auth.credentials.did
@@ -46,7 +47,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const votesRes = await builder.execute()
-      const actors = await services.appView
+      const actors = await services
         .actor(db)
         .views.actorWithInfo(votesRes, requester)
 

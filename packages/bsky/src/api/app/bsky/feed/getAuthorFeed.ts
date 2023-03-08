@@ -3,17 +3,18 @@ import { FeedKeyset, composeFeed } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow } from '../../../../services/feed'
+import { authVerifier } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
-    auth: ctx.accessVerifier,
+    auth: authVerifier,
     handler: async ({ params, auth }) => {
       const { author, limit, before } = params
       const requester = auth.credentials.did
       const db = ctx.db.db
       const { ref } = db.dynamic
 
-      const feedService = ctx.services.appView.feed(ctx.db)
+      const feedService = ctx.services.feed(ctx.db)
 
       const userLookupCol = author.startsWith('did:')
         ? 'did_handle.did'

@@ -2,8 +2,6 @@ import { chunkArray } from '@atproto/common'
 import { BlockMap, MemoryBlockstore } from '@atproto/repo'
 import { Kysely } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { RepoCommitBlock } from '../tables/repo-commit-block'
-import { RepoCommitHistory } from '../tables/repo-commit-history'
 
 export async function up(db: Kysely<any>): Promise<void> {
   const migrateUser = async (did: string, head: CID, start: CID | null) => {
@@ -138,4 +136,16 @@ class MigrationStorage extends MemoryBlockstore {
     })
     return this.blocks.getMany(cids)
   }
+}
+
+interface RepoCommitBlock {
+  commit: string
+  block: string
+  creator: string
+}
+
+interface RepoCommitHistory {
+  commit: string
+  prev: string | null
+  creator: string
 }

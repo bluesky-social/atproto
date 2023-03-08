@@ -3,17 +3,18 @@ import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { notSoftDeletedClause } from '../../../../db/util'
+import { authVerifier } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollows({
-    auth: ctx.accessVerifier,
+    auth: authVerifier,
     handler: async ({ params, auth }) => {
       const { user, limit, before } = params
       const requester = auth.credentials.did
       const { services, db } = ctx
       const { ref } = db.db.dynamic
 
-      const actorService = services.appView.actor(db)
+      const actorService = services.actor(db)
 
       const creatorRes = await actorService.getUser(user)
       if (!creatorRes) {
