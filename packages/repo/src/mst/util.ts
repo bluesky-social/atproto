@@ -113,9 +113,16 @@ export const cidForEntries = async (entries: NodeEntry[]): Promise<CID> => {
 }
 
 export const toByteString = (str: string): Uint8Array => {
-  const isAscii = /^[\x00-\x7F]*$/.test(str)
-  if (!isAscii) {
+  ensureAscii(str)
+  return uint8arrays.fromString(str, 'ascii')
+}
+
+export const ensureAscii = (str: string) => {
+  if (!isAscii(str)) {
     throw new Error(`not ascii: ${str}`)
   }
-  return uint8arrays.fromString(str, 'ascii')
+}
+
+export const isAscii = (str: string): boolean => {
+  return /^[\x00-\x7F]*$/.test(str)
 }

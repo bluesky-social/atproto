@@ -155,378 +155,216 @@ describe('Merkle Search Tree', () => {
     }
   })
 
-  //   // Special Cases (these are made for fanout 32)
-  //   // ------------
+  describe('utils', () => {
+    it('counts prefix length', () => {
+      expect(countPrefixLen('abc', 'abc')).toBe(3)
+      expect(countPrefixLen('', 'abc')).toBe(0)
+      expect(countPrefixLen('abc', '')).toBe(0)
+      expect(countPrefixLen('ab', 'abc')).toBe(2)
+      expect(countPrefixLen('abc', 'ab')).toBe(2)
+      expect(countPrefixLen('abcde', 'abc')).toBe(3)
+      expect(countPrefixLen('abc', 'abcde')).toBe(3)
+      expect(countPrefixLen('abcde', 'abc1')).toBe(3)
+      expect(countPrefixLen('abcde', 'abb')).toBe(2)
+      expect(countPrefixLen('abcde', 'qbb')).toBe(0)
+      expect(countPrefixLen('', 'asdf')).toBe(0)
+      expect(countPrefixLen('abc', 'abc\x00')).toBe(3)
+      expect(countPrefixLen('abc\x00', 'abc')).toBe(3)
+    })
+  })
 
-  //   it('trims the top of an MST on stage', async () => {
-  //     const layer0 = [
-  //       '3j6hnk65jis2t',
-  //       '3j6hnk65jit2t',
-  //       '3j6hnk65jiu2t',
-  //       '3j6hnk65jne2t',
-  //       '3j6hnk65jnm2t',
-  //     ]
-  //     const layer1 = '3j6hnk65jju2t'
-  //     mst = await MST.create(blockstore, [], { fanout: 32 })
-  //     const cid = await util.randomCid()
-  //     const tids = [...layer0, layer1]
-  //     for (const tid of tids) {
-  //       mst = await mst.add(tid, cid)
-  //     }
-  //     const layer = await mst.getLayer()
-  //     expect(layer).toBe(1)
-  //     mst = await mst.delete(layer1)
-  //     const root = await util.saveMst(blockstore, mst)
-  //     const loaded = MST.load(blockstore, root)
-  //     const loadedLayer = await loaded.getLayer()
-  //     expect(loadedLayer).toBe(0)
-  //   })
+  describe('MST Interop Known Maps', () => {
+    let blockstore: MemoryBlockstore
+    let mst: MST
+    let cid1: CID
 
-  //   // These are some tricky things that can come up that may not be included in a randomized tree
+    beforeAll(async () => {
+      blockstore = new MemoryBlockstore()
+      cid1 = CID.parse(
+        'bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454',
+      )
+    })
 
-  //   /**
-  //    *   `f` gets added & it does two node splits (e is no longer grouped with g/h)
-  //    *
-  //    *                *                                  *
-  //    *       _________|________                      ____|_____
-  //    *       |   |    |    |   |                    |    |     |
-  //    *       *   d    *    i   *       ->           *    f     *
-  //    *     __|__    __|__    __|__                __|__      __|___
-  //    *    |  |  |  |  |  |  |  |  |              |  |  |    |  |   |
-  //    *    a  b  c  e  g  h  j  k  l              *  d  *    *  i   *
-  //    *                                         __|__   |   _|_   __|__
-  //    *                                        |  |  |  |  |   | |  |  |
-  //    *                                        a  b  c  e  g   h j  k  l
-  //    *
-  //    */
-  //   it('handles splits that must go 2 deep', async () => {
-  //     const layer0 = [
-  //       '3j6hnk65jis2t',
-  //       '3j6hnk65jit2t',
-  //       '3j6hnk65jiu2t',
-  //       '3j6hnk65jne2t',
-  //       '3j6hnk65jnm2t',
-  //       '3j6hnk65jnn2t',
-  //       '3j6hnk65kvx2t',
-  //       '3j6hnk65kvy2t',
-  //       '3j6hnk65kvz2t',
-  //     ]
-  //     const layer1 = ['3j6hnk65jju2t', '3j6hnk65kve2t']
-  //     const layer2 = '3j6hnk65jng2t'
-  //     mst = await MST.create(blockstore, [], { fanout: 32 })
-  //     const cid = await util.randomCid()
-  //     for (const tid of layer0) {
-  //       mst = await mst.add(tid, cid)
-  //     }
-  //     for (const tid of layer1) {
-  //       mst = await mst.add(tid, cid)
-  //     }
-  //     mst = await mst.add(layer2, cid)
-  //     const layer = await mst.getLayer()
-  //     expect(layer).toBe(2)
+    beforeEach(async () => {
+      mst = await MST.create(blockstore)
+    })
 
-  //     const root = await util.saveMst(blockstore, mst)
-  //     mst = MST.load(blockstore, root, { fanout: 32 })
+    it('computes "empty" tree root CID', async () => {
+      expect(await mst.leafCount()).toBe(0)
+      expect((await mst.getPointer()).toString()).toBe(
+        'bafyreie5737gdxlw5i64vzichcalba3z2v5n6icifvx5xytvske7mr3hpm',
+      )
+    })
 
-  //     const allTids = [...layer0, ...layer1, layer2]
-  //     for (const tid of allTids) {
-  //       const got = await mst.get(tid)
-  //       expect(cid.equals(got)).toBeTruthy()
-  //     }
-  //   })
-  //   /**
-  //    *   `b` gets added & it hashes to 2 levels above any existing leaves
-  //    *
-  //    *          *        ->            *
-  //    *        __|__                  __|__
-  //    *       |     |                |  |  |
-  //    *       a     c                *  b  *
-  //    *                              |     |
-  //    *                              *     *
-  //    *                              |     |
-  //    *                              a     c
-  //    *
-  //    */
-  //   it('handles new layers that are two higher than existing', async () => {
-  //     const layer0 = ['3j6hnk65jis2t', '3j6hnk65kvz2t']
-  //     const layer2 = '3j6hnk65jng2t'
-  //     mst = await MST.create(blockstore, [], { fanout: 32 })
-  //     const cid = await util.randomCid()
-  //     for (const tid of layer0) {
-  //       mst = await mst.add(tid, cid)
-  //     }
-  //     mst = await mst.add(layer2, cid)
+    it('computes "trivial" tree root CID', async () => {
+      mst = await mst.add('asdf', cid1)
+      expect(await mst.leafCount()).toBe(1)
+      expect((await mst.getPointer()).toString()).toBe(
+        'bafyreiehq2cp7f4dnrjanw2x36a3ybt4g4d4k5cx3supts4ommmgxjezfa',
+      )
+    })
 
-  //     const root = await util.saveMst(blockstore, mst)
-  //     mst = MST.load(blockstore, root, { fanout: 32 })
+    it('computes "singlelayer2" tree root CID', async () => {
+      mst = await mst.add('3jqfbupe2ee2w', cid1)
+      expect(await mst.leafCount()).toBe(1)
+      expect(await mst.layer).toBe(2)
+      expect((await mst.getPointer()).toString()).toBe(
+        'bafyreifu5zmjhskrsakkadbwbkjip6ciayvht2blkpjaq2qlpgpvyqvwxy',
+      )
+    })
 
-  //     const layer = await mst.getLayer()
-  //     expect(layer).toBe(2)
-  //     const allTids = [...layer0, layer2]
-  //     for (const tid of allTids) {
-  //       const got = await mst.get(tid)
-  //       expect(cid.equals(got)).toBeTruthy()
-  //     }
-  //   })
-  // })
+    it('computes "simple" tree root CID', async () => {
+      mst = await mst.add('asdf', cid1)
+      mst = await mst.add('88bfafc7', cid1)
+      mst = await mst.add('2a92d355', cid1)
+      mst = await mst.add('app.bsky.feed.post/454397e440ec', cid1)
+      mst = await mst.add('app.bsky.feed.post/9adeb165882c', cid1)
+      expect(await mst.leafCount()).toBe(5)
+      expect((await mst.getPointer()).toString()).toBe(
+        'bafyreidrfr4uo35fmlxpvpmwiyu72zphffmjjsddwhfm3zta2o6qpuszey',
+      )
+    })
+  })
 
-  // describe('utils', () => {
-  //   it('counts prefix length', () => {
-  //     expect(countPrefixLen('abc', 'abc')).toBe(3)
-  //     expect(countPrefixLen('', 'abc')).toBe(0)
-  //     expect(countPrefixLen('abc', '')).toBe(0)
-  //     expect(countPrefixLen('ab', 'abc')).toBe(2)
-  //     expect(countPrefixLen('abc', 'ab')).toBe(2)
-  //     expect(countPrefixLen('abcde', 'abc')).toBe(3)
-  //     expect(countPrefixLen('abc', 'abcde')).toBe(3)
-  //     expect(countPrefixLen('abcde', 'abc1')).toBe(3)
-  //     expect(countPrefixLen('abcde', 'abb')).toBe(2)
-  //     expect(countPrefixLen('abcde', 'qbb')).toBe(0)
-  //     expect(countPrefixLen('', 'asdf')).toBe(0)
-  //     expect(countPrefixLen('abc', 'abc\x00')).toBe(3)
-  //     expect(countPrefixLen('abc\x00', 'abc')).toBe(3)
-  //   })
+  describe('MST Interop Edge Cases', () => {
+    let blockstore: MemoryBlockstore
+    let mst: MST
+    let cid1: CID
 
-  //   it('counts string (not byte) prefix length', () => {
-  //     // @TODO: these are not cross-language consistent
-  //     expect('jalapeño'.length).toBe(8)
-  //     expect('💩'.length).toBe(2)
-  //     expect('👩‍👧‍👧'.length).toBe(8)
-  //     expect(countPrefixLen('jalapeño', 'jalapeno')).toBe(6)
-  //     expect(countPrefixLen('jalapeñoA', 'jalapeñoB')).toBe(8)
-  //     expect(countPrefixLen('coöperative', 'coüperative')).toBe(2)
-  //     expect(countPrefixLen('abc💩abc', 'abcabc')).toBe(3)
-  //     // these are a bit unintuitive
-  //     expect(countPrefixLen('💩abc', '💩ab')).toBe(4)
-  //     expect(countPrefixLen('abc👩‍👧‍👧de', 'abc👩‍👦‍👦')).toBe(7)
-  //   })
+    beforeAll(async () => {
+      blockstore = new MemoryBlockstore()
+      cid1 = CID.parse(
+        'bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454',
+      )
+    })
 
-  //   it.skip('counts byte (not string) prefix length', () => {
-  //     expect(countPrefixLen('jalapeño', 'jalapeno')).toBe(6)
-  //     expect(countPrefixLen('jalapeñoA', 'jalapeñoB')).toBe(8)
-  //     expect(countPrefixLen('coöperative', 'coüperative')).toBe(3)
+    beforeEach(async () => {
+      mst = await MST.create(blockstore)
+    })
 
-  //     expect(countPrefixLen('jalapeño', 'jalapeno')).toBe(6)
-  //     expect(countPrefixLen('jalapeñoA', 'jalapeñoB')).toBe(8)
-  //     expect(countPrefixLen('coöperative', 'coüperative')).toBe(3)
-  //     expect(countPrefixLen('abc💩abc', 'abcabc')).toBe(3)
-  //     expect(countPrefixLen('💩abc', '💩ab')).toBe(6)
-  //     expect(countPrefixLen('abc👩‍👧‍👧de', 'abc👩‍👦‍👦')).toBe(11)
-  //   })
+    it('trims top of tree on delete', async () => {
+      const l1root =
+        'bafyreifnqrwbk6ffmyaz5qtujqrzf5qmxf7cbxvgzktl4e3gabuxbtatv4'
+      const l0root =
+        'bafyreie4kjuxbwkhzg2i5dljaswcroeih4dgiqq6pazcmunwt2byd725vi'
 
-  //   it('computes leading zeros', async () => {
-  //     const fo = 16
-  //     expect(await leadingZerosOnHash('', fo)).toBe(0)
-  //     expect(await leadingZerosOnHash('asdf', fo)).toBe(0)
-  //     expect(await leadingZerosOnHash('2653ae71', fo)).toBe(0)
-  //     expect(await leadingZerosOnHash('88bfafc7', fo)).toBe(1)
-  //     expect(await leadingZerosOnHash('2a92d355', fo)).toBe(2)
-  //     expect(await leadingZerosOnHash('884976f5', fo)).toBe(3)
-  //     expect(
-  //       await leadingZerosOnHash('app.bsky.feed.post/454397e440ec', fo),
-  //     ).toBe(2)
-  //     expect(
-  //       await leadingZerosOnHash('app.bsky.feed.post/9adeb165882c', fo),
-  //     ).toBe(4)
-  //   })
-  // })
+      mst = await mst.add('com.example.record/3jqfcqzm3fn2j', cid1) // level 0
+      mst = await mst.add('com.example.record/3jqfcqzm3fo2j', cid1) // level 0
+      mst = await mst.add('com.example.record/3jqfcqzm3fp2j', cid1) // level 0
+      mst = await mst.add('com.example.record/3jqfcqzm3fs2j', cid1) // level 1
+      mst = await mst.add('com.example.record/3jqfcqzm3ft2j', cid1) // level 0
+      mst = await mst.add('com.example.record/3jqfcqzm3fu2j', cid1) // level 0
 
-  // describe('MST Interop Known Maps', () => {
-  //   let blockstore: MemoryBlockstore
-  //   let mst: MST
-  //   let cid1: CID
+      expect(await mst.leafCount()).toBe(6)
+      expect(await mst.layer).toBe(1)
+      expect((await mst.getPointer()).toString()).toBe(l1root)
 
-  //   beforeAll(async () => {
-  //     blockstore = new MemoryBlockstore()
-  //     cid1 = CID.parse(
-  //       'bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454',
-  //     )
-  //   })
+      mst = await mst.delete('com.example.record/3jqfcqzm3fs2j') // level 1
+      expect(await mst.leafCount()).toBe(5)
+      expect(await mst.layer).toBe(0)
+      expect((await mst.getPointer()).toString()).toBe(l0root)
+    })
 
-  //   beforeEach(async () => {
-  //     mst = await MST.create(blockstore)
-  //   })
+    /**
+     *
+     *                *                                  *
+     *       _________|________                      ____|_____
+     *       |   |    |    |   |                    |    |     |
+     *       *   d    *    i   *       ->           *    f     *
+     *     __|__    __|__    __|__                __|__      __|___
+     *    |  |  |  |  |  |  |  |  |              |  |  |    |  |   |
+     *    a  b  c  e  g  h  j  k  l              *  d  *    *  i   *
+     *                                         __|__   |   _|_   __|__
+     *                                        |  |  |  |  |   | |  |  |
+     *                                        a  b  c  e  g   h j  k  l
+     *
+     */
+    it('handles insertion that splits two layers down', async () => {
+      const l1root =
+        'bafyreiettyludka6fpgp33stwxfuwhkzlur6chs4d2v4nkmq2j3ogpdjem'
+      const l2root =
+        'bafyreid2x5eqs4w4qxvc5jiwda4cien3gw2q6cshofxwnvv7iucrmfohpm'
 
-  //   it('computes "empty" tree root CID', async () => {
-  //     expect(await mst.leafCount()).toBe(0)
-  //     expect((await mst.getPointer()).toString()).toBe(
-  //       'bafyreie5737gdxlw5i64vzichcalba3z2v5n6icifvx5xytvske7mr3hpm',
-  //     )
-  //   })
+      mst = await mst.add('com.example.record/3jqfcqzm3fo2j', cid1) // A; level 0
+      mst = await mst.add('com.example.record/3jqfcqzm3fp2j', cid1) // B; level 0
+      mst = await mst.add('com.example.record/3jqfcqzm3fr2j', cid1) // C; level 0
+      mst = await mst.add('com.example.record/3jqfcqzm3fs2j', cid1) // D; level 1
+      mst = await mst.add('com.example.record/3jqfcqzm3ft2j', cid1) // E; level 0
+      // GAP for F
+      mst = await mst.add('com.example.record/3jqfcqzm3fz2j', cid1) // G; level 0
+      mst = await mst.add('com.example.record/3jqfcqzm4fc2j', cid1) // H; level 0
+      mst = await mst.add('com.example.record/3jqfcqzm4fd2j', cid1) // I; level 1
+      mst = await mst.add('com.example.record/3jqfcqzm4ff2j', cid1) // J; level 0
+      mst = await mst.add('com.example.record/3jqfcqzm4fg2j', cid1) // K; level 0
+      mst = await mst.add('com.example.record/3jqfcqzm4fh2j', cid1) // L; level 0
 
-  //   it('computes "trivial" tree root CID', async () => {
-  //     mst = await mst.add('asdf', cid1)
-  //     expect(await mst.leafCount()).toBe(1)
-  //     expect((await mst.getPointer()).toString()).toBe(
-  //       'bafyreidaftbr35xhh4lzmv5jcoeufqjh75ohzmz6u56v7n2ippbtxdgqqe',
-  //     )
-  //   })
+      expect(await mst.leafCount()).toBe(11)
+      expect(await mst.layer).toBe(1)
+      expect((await mst.getPointer()).toString()).toBe(l1root)
 
-  //   it('computes "singlelayer2" tree root CID', async () => {
-  //     mst = await mst.add('com.example.record/9ba1c7247ede', cid1)
-  //     expect(await mst.leafCount()).toBe(1)
-  //     expect(await mst.layer).toBe(2)
-  //     expect((await mst.getPointer()).toString()).toBe(
-  //       'bafyreid4g5smj6ukhrjasebt6myj7wmtm2eijouteoyueoqgoh6vm5jkae',
-  //     )
-  //   })
+      // insert F, which will push E out of the node with G+H to a new node under D
+      mst = await mst.add('com.example.record/3jqfcqzm3fx2j', cid1) // F; level 2
+      expect(await mst.leafCount()).toBe(12)
+      expect(await mst.layer).toBe(2)
+      expect((await mst.getPointer()).toString()).toBe(l2root)
 
-  //   it('computes "simple" tree root CID', async () => {
-  //     mst = await mst.add('asdf', cid1)
-  //     mst = await mst.add('88bfafc7', cid1)
-  //     mst = await mst.add('2a92d355', cid1)
-  //     mst = await mst.add('app.bsky.feed.post/454397e440ec', cid1)
-  //     mst = await mst.add('app.bsky.feed.post/9adeb165882c', cid1)
-  //     expect(await mst.leafCount()).toBe(5)
-  //     expect((await mst.getPointer()).toString()).toBe(
-  //       'bafyreiecb33zh7r2sc3k2wthm6exwzfktof63kmajeildktqc25xj6qzx4',
-  //     )
-  //   })
+      // remove F, which should push E back over with G+H
+      mst = await mst.delete('com.example.record/3jqfcqzm3fx2j') // F; level 2
+      expect(await mst.leafCount()).toBe(11)
+      expect(await mst.layer).toBe(1)
+      expect((await mst.getPointer()).toString()).toBe(l1root)
+    })
 
-  //   it('computes "tricky" tree root CID', async () => {
-  //     mst = await mst.add('asdf', cid1)
-  //     mst = await mst.add('88bfafc7', cid1)
-  //     mst = await mst.add('2a92d355', cid1)
-  //     mst = await mst.add('app.bsky.feed.post/454397e440ec', cid1)
-  //     mst = await mst.add('app.bsky.feed.post/9adeb165882c', cid1)
-  //     expect(await mst.leafCount()).toBe(5)
-  //     expect((await mst.getPointer()).toString()).toBe(
-  //       'bafyreiecb33zh7r2sc3k2wthm6exwzfktof63kmajeildktqc25xj6qzx4',
-  //     )
-  //   })
-  // })
+    /**
+     *
+     *          *        ->            *
+     *        __|__                  __|__
+     *       |     |                |  |  |
+     *       a     c                *  b  *
+     *                              |     |
+     *                              *     *
+     *                              |     |
+     *                              a     c
+     *
+     */
+    it('handles new layers that are two higher than existing', async () => {
+      const l0root =
+        'bafyreidfcktqnfmykz2ps3dbul35pepleq7kvv526g47xahuz3rqtptmky'
+      const l2root =
+        'bafyreiavxaxdz7o7rbvr3zg2liox2yww46t7g6hkehx4i4h3lwudly7dhy'
+      const l2root2 =
+        'bafyreig4jv3vuajbsybhyvb7gggvpwh2zszwfyttjrj6qwvcsp24h6popu'
 
-  // // ported from fanout=32 versions above
-  // describe('MST Interop Edge Cases', () => {
-  //   let blockstore: MemoryBlockstore
-  //   let mst: MST
-  //   let cid1: CID
+      mst = await mst.add('com.example.record/3jqfcqzm3ft2j', cid1) // A; level 0
+      mst = await mst.add('com.example.record/3jqfcqzm3fz2j', cid1) // C; level 0
+      expect(await mst.leafCount()).toBe(2)
+      expect(await mst.layer).toBe(0)
+      expect((await mst.getPointer()).toString()).toBe(l0root)
 
-  //   beforeAll(async () => {
-  //     blockstore = new MemoryBlockstore()
-  //     cid1 = CID.parse(
-  //       'bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454',
-  //     )
-  //   })
+      // insert B, which is two levels above
+      mst = await mst.add('com.example.record/3jqfcqzm3fx2j', cid1) // B; level 2
+      expect(await mst.leafCount()).toBe(3)
+      expect(await mst.layer).toBe(2)
+      expect((await mst.getPointer()).toString()).toBe(l2root)
 
-  //   beforeEach(async () => {
-  //     mst = await MST.create(blockstore)
-  //   })
+      // remove B
+      mst = await mst.delete('com.example.record/3jqfcqzm3fx2j') // B; level 2
+      expect(await mst.leafCount()).toBe(2)
+      expect(await mst.layer).toBe(0)
+      expect((await mst.getPointer()).toString()).toBe(l0root)
 
-  //   it('trims top of tree on delete', async () => {
-  //     const l1root = 'bafyreihuyj2vzb2vjw3yhxg6dy25achg5fmre6gg5m6fjtxn64bqju4dee'
-  //     const l0root = 'bafyreibmijjc63mekkjzl3v2pegngwke5u6cu66g75z6uw27v64bc6ahqi'
+      // insert B (level=2) and D (level=1)
+      mst = await mst.add('com.example.record/3jqfcqzm3fx2j', cid1) // B; level 2
+      mst = await mst.add('com.example.record/3jqfcqzm4fd2j', cid1) // D; level 1
+      expect(await mst.leafCount()).toBe(4)
+      expect(await mst.layer).toBe(2)
+      expect((await mst.getPointer()).toString()).toBe(l2root2)
 
-  //     mst = await mst.add('com.example.record/40c73105b48f', cid1) // level 0
-  //     mst = await mst.add('com.example.record/e99bf3ced34b', cid1) // level 0
-  //     mst = await mst.add('com.example.record/893e6c08b450', cid1) // level 0
-  //     mst = await mst.add('com.example.record/9cd8b6c0cc02', cid1) // level 0
-  //     mst = await mst.add('com.example.record/cbe72d33d12a', cid1) // level 0
-  //     mst = await mst.add('com.example.record/a15e33ba0f6c', cid1) // level 1
-  //     expect(await mst.leafCount()).toBe(6)
-  //     expect(await mst.layer).toBe(1)
-  //     expect((await mst.getPointer()).toString()).toBe(l1root)
-
-  //     mst = await mst.delete('com.example.record/a15e33ba0f6c') // level 1
-  //     expect(await mst.leafCount()).toBe(5)
-  //     expect(await mst.layer).toBe(0)
-  //     expect((await mst.getPointer()).toString()).toBe(l0root)
-  //   })
-
-  //   /**
-  //    *
-  //    *                *                                  *
-  //    *       _________|________                      ____|_____
-  //    *       |   |    |    |   |                    |    |     |
-  //    *       *   d    *    i   *       ->           *    f     *
-  //    *     __|__    __|__    __|__                __|__      __|___
-  //    *    |  |  |  |  |  |  |  |  |              |  |  |    |  |   |
-  //    *    a  b  c  e  g  h  j  k  l              *  d  *    *  i   *
-  //    *                                         __|__   |   _|_   __|__
-  //    *                                        |  |  |  |  |   | |  |  |
-  //    *                                        a  b  c  e  g   h j  k  l
-  //    *
-  //    */
-  //   it('handles insertion that splits two layers down', async () => {
-  //     const l1root = 'bafyreiagt55jzvkenoa4yik77dhomagq2uj26ix4cijj7kd2py2u3s43ve'
-  //     const l2root = 'bafyreiddrz7qbvfattp5dzzh4ldohsaobatsg7f5l6awxnmuydewq66qoa'
-
-  //     mst = await mst.add('com.example.record/403e2aeebfdb', cid1) // A; level 0
-  //     mst = await mst.add('com.example.record/40c73105b48f', cid1) // B; level 0
-  //     mst = await mst.add('com.example.record/645787eb4316', cid1) // C; level 0
-  //     mst = await mst.add('com.example.record/7ca4e61d6fbc', cid1) // D; level 1
-  //     mst = await mst.add('com.example.record/893e6c08b450', cid1) // E; level 0
-  //     // GAP for F
-  //     mst = await mst.add('com.example.record/9cd8b6c0cc02', cid1) // G; level 0
-  //     mst = await mst.add('com.example.record/cbe72d33d12a', cid1) // H; level 0
-  //     mst = await mst.add('com.example.record/dbea731be795', cid1) // I; level 1
-  //     mst = await mst.add('com.example.record/e2ef555433f2', cid1) // J; level 0
-  //     mst = await mst.add('com.example.record/e99bf3ced34b', cid1) // K; level 0
-  //     mst = await mst.add('com.example.record/f728ba61e4b6', cid1) // L; level 0
-  //     expect(await mst.leafCount()).toBe(11)
-  //     expect(await mst.layer).toBe(1)
-  //     expect((await mst.getPointer()).toString()).toBe(l1root)
-
-  //     // insert F, which will push E out of the node with G+H to a new node under D
-  //     mst = await mst.add('com.example.record/9ba1c7247ede', cid1) // F; level 2
-  //     expect(await mst.leafCount()).toBe(12)
-  //     expect(await mst.layer).toBe(2)
-  //     expect((await mst.getPointer()).toString()).toBe(l2root)
-
-  //     // remove F, which should push E back over with G+H
-  //     mst = await mst.delete('com.example.record/9ba1c7247ede') // F; level 2
-  //     expect(await mst.leafCount()).toBe(11)
-  //     expect(await mst.layer).toBe(1)
-  //     expect((await mst.getPointer()).toString()).toBe(l1root)
-  //   })
-
-  //   /**
-  //    *
-  //    *          *        ->            *
-  //    *        __|__                  __|__
-  //    *       |     |                |  |  |
-  //    *       a     c                *  b  *
-  //    *                              |     |
-  //    *                              *     *
-  //    *                              |     |
-  //    *                              a     c
-  //    *
-  //    */
-  //   it('handles new layers that are two higher than existing', async () => {
-  //     const l0root = 'bafyreicivoa3p3ttcebdn2zfkdzenkd2uk3gxxlaz43qvueeip6yysvq2m'
-  //     const l2root = 'bafyreidwoqm6xlewxzhrx6ytbyhsazctlv72txtmnd4au6t53z2vpzn7wa'
-  //     const l2root2 =
-  //       'bafyreiapru27ce4wdlylk5revtr3hewmxhmt3ek5f2ypioiivmdbv5igrm'
-
-  //     mst = await mst.add('com.example.record/403e2aeebfdb', cid1) // A; level 0
-  //     mst = await mst.add('com.example.record/cbe72d33d12a', cid1) // C; level 0
-  //     expect(await mst.leafCount()).toBe(2)
-  //     expect(await mst.layer).toBe(0)
-  //     expect((await mst.getPointer()).toString()).toBe(l0root)
-
-  //     // insert B, which is two levels above
-  //     mst = await mst.add('com.example.record/9ba1c7247ede', cid1) // B; level 2
-  //     expect(await mst.leafCount()).toBe(3)
-  //     expect(await mst.layer).toBe(2)
-  //     expect((await mst.getPointer()).toString()).toBe(l2root)
-
-  //     // remove B
-  //     mst = await mst.delete('com.example.record/9ba1c7247ede') // B; level 2
-  //     expect(await mst.leafCount()).toBe(2)
-  //     expect(await mst.layer).toBe(0)
-  //     expect((await mst.getPointer()).toString()).toBe(l0root)
-
-  //     // insert B (level=2) and D (level=1)
-  //     mst = await mst.add('com.example.record/9ba1c7247ede', cid1) // B; level 2
-  //     mst = await mst.add('com.example.record/fae7a851fbeb', cid1) // D; level 1
-  //     expect(await mst.leafCount()).toBe(4)
-  //     expect(await mst.layer).toBe(2)
-  //     expect((await mst.getPointer()).toString()).toBe(l2root2)
-
-  //     // remove D
-  //     mst = await mst.delete('com.example.record/fae7a851fbeb') // D; level 1
-  //     expect(await mst.leafCount()).toBe(3)
-  //     expect(await mst.layer).toBe(2)
-  //     expect((await mst.getPointer()).toString()).toBe(l2root)
-  //   })
+      // remove D
+      mst = await mst.delete('com.example.record/3jqfcqzm4fd2j') // D; level 1
+      expect(await mst.leafCount()).toBe(3)
+      expect(await mst.layer).toBe(2)
+      expect((await mst.getPointer()).toString()).toBe(l2root)
+    })
+  })
 })

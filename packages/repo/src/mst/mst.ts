@@ -24,12 +24,6 @@ import * as parse from '../parse'
  *
  * For atproto, we use SHA-256 as the key hashing algorithm, and ~4 fanout
  * (2-bits of zero per layer).
- *
- * NOTE: currently keys are strings, not bytes. Because UTF-8 strings can't be
- * safely split at arbitrary byte boundaries (the results are not necessarily
- * valid UTF-8 strings), this means that "wide" characters not really supported
- * in keys, particularly across programming language implementations. We
- * recommend sticking with simple alphanumeric (ASCII) strings.
  */
 
 /**
