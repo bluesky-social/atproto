@@ -1,0 +1,198 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`indexing indexes posts. 1`] = `
+Object {
+  "thread": Object {
+    "$type": "app.bsky.feed.getPostThread#threadViewPost",
+    "post": Object {
+      "author": Object {
+        "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(1)",
+        },
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
+      },
+      "cid": "cids(0)",
+      "downvoteCount": 0,
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "entities": Array [
+          Object {
+            "index": Object {
+              "end": 9,
+              "start": 0,
+            },
+            "type": "mention",
+            "value": "user(1)",
+          },
+        ],
+        "text": "@bob.test how are you?",
+      },
+      "replyCount": 0,
+      "repostCount": 0,
+      "upvoteCount": 0,
+      "uri": "record(0)",
+      "viewer": Object {},
+    },
+    "replies": Array [],
+  },
+}
+`;
+
+exports[`indexing indexes posts. 2`] = `
+Object {
+  "thread": Object {
+    "$type": "app.bsky.feed.getPostThread#threadViewPost",
+    "post": Object {
+      "author": Object {
+        "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+        "declaration": Object {
+          "actorType": "app.bsky.system.actorUser",
+          "cid": "cids(1)",
+        },
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "viewer": Object {
+          "muted": false,
+        },
+      },
+      "cid": "cids(0)",
+      "downvoteCount": 0,
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "entities": Array [
+          Object {
+            "index": Object {
+              "end": 11,
+              "start": 0,
+            },
+            "type": "mention",
+            "value": "user(1)",
+          },
+        ],
+        "text": "@carol.test how are you?",
+      },
+      "replyCount": 0,
+      "repostCount": 0,
+      "upvoteCount": 0,
+      "uri": "record(0)",
+      "viewer": Object {},
+    },
+    "replies": Array [],
+  },
+}
+`;
+
+exports[`indexing indexes posts. 3`] = `
+Object {
+  "createNotifications": Array [
+    Object {
+      "author": "user(1)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "reason": "mention",
+      "reasonSubject": null,
+      "recordCid": "cids(0)",
+      "recordUri": "record(0)",
+      "userDid": "user(0)",
+    },
+  ],
+  "deleteNotifications": Array [],
+  "updateNotifications": Array [
+    Object {
+      "author": "user(1)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "reason": "mention",
+      "reasonSubject": null,
+      "recordCid": "cids(1)",
+      "recordUri": "record(0)",
+      "userDid": "user(2)",
+    },
+  ],
+}
+`;
+
+exports[`indexing indexes profiles. 1`] = `
+Object {
+  "creator": "user(0)",
+  "declaration": Object {
+    "actorType": "app.bsky.system.actorUser",
+    "cid": "cids(0)",
+  },
+  "did": "user(0)",
+  "displayName": "dan",
+  "followersCount": 0,
+  "followsCount": 0,
+  "handle": "dan.test",
+  "indexedAt": "1970-01-01T00:00:00.000Z",
+  "myState": Object {
+    "muted": false,
+  },
+  "postsCount": 0,
+  "viewer": Object {
+    "muted": false,
+  },
+}
+`;
+
+exports[`indexing indexes profiles. 2`] = `
+Object {
+  "creator": "user(0)",
+  "declaration": Object {
+    "actorType": "app.bsky.system.actorUser",
+    "cid": "cids(0)",
+  },
+  "did": "user(0)",
+  "displayName": "danny",
+  "followersCount": 0,
+  "followsCount": 0,
+  "handle": "dan.test",
+  "indexedAt": "1970-01-01T00:00:00.000Z",
+  "myState": Object {
+    "muted": false,
+  },
+  "postsCount": 0,
+  "viewer": Object {
+    "muted": false,
+  },
+}
+`;
+
+exports[`indexing indexes profiles. 3`] = `
+Object {
+  "creator": "user(0)",
+  "declaration": Object {
+    "actorType": "app.bsky.system.actorUser",
+    "cid": "cids(0)",
+  },
+  "did": "user(0)",
+  "followersCount": 0,
+  "followsCount": 0,
+  "handle": "dan.test",
+  "myState": Object {
+    "muted": false,
+  },
+  "postsCount": 0,
+  "viewer": Object {
+    "muted": false,
+  },
+}
+`;
+
+exports[`indexing indexes profiles. 4`] = `
+Object {
+  "createNotifications": Array [],
+  "deleteNotifications": Array [],
+  "updateNotifications": Array [],
+}
+`;

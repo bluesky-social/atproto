@@ -1,0 +1,661 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`pds follow views blocks followers by actor takedown 1`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "followers": Array [
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "eve.test",
+      "viewer": Object {
+        "followedBy": "record(1)",
+        "following": "record(0)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "handle": "bob.test",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(3)",
+      "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(0)",
+    "handle": "alice.test",
+    "viewer": Object {
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views blocks follows by actor takedown 1`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "follows": Array [
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "eve.test",
+      "viewer": Object {
+        "followedBy": "record(1)",
+        "following": "record(0)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(3)",
+      "handle": "bob.test",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(0)",
+    "handle": "alice.test",
+    "viewer": Object {
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches followers 1`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "followers": Array [
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "eve.test",
+      "viewer": Object {
+        "followedBy": "record(1)",
+        "following": "record(0)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "handle": "dan.test",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(3)",
+      "handle": "bob.test",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(4)",
+      "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(7)",
+        "following": "record(6)",
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(0)",
+    "handle": "alice.test",
+    "viewer": Object {
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches followers 2`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "followers": Array [
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "dan.test",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "handle": "alice.test",
+      "viewer": Object {
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(0)",
+    "handle": "bob.test",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches followers 3`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "followers": Array [
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "eve.test",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "handle": "bob.test",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(3)",
+      "handle": "alice.test",
+      "viewer": Object {
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(0)",
+    "handle": "carol.test",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches followers 4`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "followers": Array [
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "alice.test",
+      "viewer": Object {
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(0)",
+    "handle": "dan.test",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches followers 5`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "followers": Array [
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "dan.test",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "handle": "alice.test",
+      "viewer": Object {
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(0)",
+    "handle": "eve.test",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches follows 1`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "follows": Array [
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "eve.test",
+      "viewer": Object {
+        "followedBy": "record(1)",
+        "following": "record(0)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "handle": "dan.test",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(3)",
+      "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(4)",
+      "handle": "bob.test",
+      "viewer": Object {
+        "followedBy": "record(7)",
+        "following": "record(6)",
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(0)",
+    "handle": "alice.test",
+    "viewer": Object {
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches follows 2`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "follows": Array [
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "handle": "alice.test",
+      "viewer": Object {
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(0)",
+    "handle": "bob.test",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches follows 3`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "follows": Array [
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "alice.test",
+      "viewer": Object {
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(0)",
+    "handle": "carol.test",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches follows 4`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "follows": Array [
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "eve.test",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "handle": "bob.test",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(3)",
+      "handle": "alice.test",
+      "viewer": Object {
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(0)",
+    "handle": "dan.test",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches follows 5`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "follows": Array [
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(1)",
+      "handle": "carol.test",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "declaration": Object {
+        "actorType": "app.bsky.system.actorUser",
+        "cid": "cids(0)",
+      },
+      "did": "user(2)",
+      "handle": "alice.test",
+      "viewer": Object {
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "declaration": Object {
+      "actorType": "app.bsky.system.actorUser",
+      "cid": "cids(0)",
+    },
+    "did": "user(0)",
+    "handle": "eve.test",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
+}
+`;
