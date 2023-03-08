@@ -1,5 +1,4 @@
 import { CID } from 'multiformats/cid'
-import { DidResolver } from '@atproto/did-resolver'
 import { MemoryBlockstore, RepoStorage } from '../storage'
 import Repo from '../repo'
 import * as verify from '../verify'

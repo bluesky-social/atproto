@@ -1,5 +1,4 @@
 import { CID } from 'multiformats/cid'
-import * as cbor from '@ipld/dag-cbor'
 import * as crypto from '@atproto/crypto'
 import {
   Commit,
@@ -9,7 +8,6 @@ import {
   RecordWriteOp,
   CommitData,
   WriteOpAction,
-  UnsignedCommit,
 } from './types'
 import { RepoStorage } from './storage'
 import { MST } from './mst'

@@ -1,10 +1,6 @@
 import { MST } from '../src/mst'
 import DataDiff, { DataAdd, DataUpdate, DataDelete } from '../src/data-diff'
-import {
-  countPrefixLen,
-  InvalidMstKeyError,
-  leadingZerosOnHash,
-} from '../src/mst/util'
+import { countPrefixLen, InvalidMstKeyError } from '../src/mst/util'
 
 import { MemoryBlockstore } from '../src/storage'
 import * as util from './_util'
@@ -205,6 +201,11 @@ describe('Merkle Search Tree', () => {
 
     it('rejects a key with a nested collection', async () => {
       await expectReject('nested/collection/asdf')
+    })
+
+    it('rejects on empty coll or rkey', async () => {
+      await expectReject('coll/')
+      await expectReject('/rkey')
     })
 
     it('rejects non-ascii chars', async () => {

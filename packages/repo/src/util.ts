@@ -1,4 +1,3 @@
-import * as ui8 from 'uint8arrays'
 import { CID } from 'multiformats/cid'
 import * as cbor from '@ipld/dag-cbor'
 import { CarReader } from '@ipld/car/reader'

@@ -7,7 +7,6 @@ import {
   wait,
 } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
-import { DidResolver } from '@atproto/did-resolver'
 import * as repo from '@atproto/repo'
 import { getWriteLog, MemoryBlockstore, WriteOpAction } from '@atproto/repo'
 import { byFrame, ErrorFrame, Frame, InfoFrame } from '@atproto/xrpc-server'
@@ -61,7 +60,8 @@ describe('repo subscribe all repos', () => {
     const synced = await repo.loadFullRepo(
       storage,
       new Uint8Array(car.data),
-      ctx.keypair.did(),
+      did,
+      ctx.repoSigningKey.did(),
     )
     return repo.Repo.load(storage, synced.root)
   }
@@ -104,7 +104,7 @@ describe('repo subscribe all repos', () => {
         cid: w.action === WriteOpAction.Delete ? null : w.cid.toString(),
       }))
       const sortedOps = evt.ops.sort((a, b) => a.path.localeCompare(b.path))
-      const sortedWrites = evt.ops.sort((a, b) => a.path.localeCompare(b.path))
+      const sortedWrites = writes.sort((a, b) => a.path.localeCompare(b.path))
       expect(sortedOps).toEqual(sortedWrites)
     }
   }
