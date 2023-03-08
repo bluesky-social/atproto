@@ -48,6 +48,7 @@ export const deserializeNodeData = async (
   for (const entry of data.e) {
     const keyStr = uint8arrays.toString(entry.k, 'ascii')
     const key = lastKey.slice(0, entry.p) + keyStr
+    ensureValidMstKey(key)
     entries.push(new Leaf(key, entry.v))
     lastKey = key
     if (entry.t !== null) {
@@ -116,6 +117,7 @@ export const cidForEntries = async (entries: NodeEntry[]): Promise<CID> => {
 export const validCharsRegex = /^[a-zA-Z0-9_\-:\.]*$/
 
 export const isValidMstKey = (str: string): boolean => {
+  if (str.length >= 256) return false
   const split = str.split('/')
   if (split.length !== 2) return false
   if (!validCharsRegex.test(split[0])) return false

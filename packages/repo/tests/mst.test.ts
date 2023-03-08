@@ -221,6 +221,12 @@ describe('Merkle Search Tree', () => {
       await expectReject('coll/key+')
       await expectReject('coll/key=')
     })
+
+    it('rejects keys over 256 chars', async () => {
+      await expectReject(
+        'coll/asdofiupoiwqeurfpaosidfuapsodirupasoirupasoeiruaspeoriuaspeoriu2p3o4iu1pqw3oiuaspdfoiuaspdfoiuasdfpoiasdufpwoieruapsdofiuaspdfoiuasdpfoiausdfpoasidfupasodifuaspdofiuasdpfoiasudfpoasidfuapsodfiuasdpfoiausdfpoasidufpasodifuapsdofiuasdpofiuasdfpoaisdufpao',
+      )
+    })
   })
 
   describe('MST Interop Known Maps', () => {
