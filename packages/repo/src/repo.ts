@@ -16,6 +16,8 @@ import log from './logger'
 import BlockMap from './block-map'
 import { ReadableRepo } from './readable-repo'
 import * as util from './util'
+import CidSet from './cid-set'
+import { Block } from 'multiformats/block'
 
 type Params = {
   storage: RepoStorage
@@ -35,14 +37,14 @@ export class Repo extends ReadableRepo {
     storage: RepoStorage,
     did: string,
     keypair: crypto.Keypair,
-    initialRecords: RecordCreateOp[] = [],
+    initialRecords: Record<string, CID>,
   ): Promise<CommitData> {
     const newBlocks = new BlockMap()
+    const relatedCids = new CidSet()
 
     let data = await MST.create(storage)
-    for (const write of initialRecords) {
-      const cid = await newBlocks.add(write.record)
-      const dataKey = write.collection + '/' + write.rkey
+    for (const [dataKey, cid] of Object.entries(initialRecords)) {
+      relatedCids.add(cid)
       data = await data.add(dataKey, cid)
     }
     const unstoredData = await data.getUnstoredBlocks()
@@ -63,6 +65,7 @@ export class Repo extends ReadableRepo {
       commit: commitCid,
       prev: null,
       blocks: newBlocks,
+      relatedCids: relatedCids.toList(),
     }
   }
 
@@ -70,15 +73,27 @@ export class Repo extends ReadableRepo {
     storage: RepoStorage,
     did: string,
     keypair: crypto.Keypair,
-    initialRecords: RecordCreateOp[] = [],
+    initialWrites: RecordCreateOp[] = [],
   ): Promise<Repo> {
+    const newBlocks = new BlockMap()
+    const initialRecords: Record<string, CID> = {}
+    for (const record of initialWrites) {
+      const cid = await newBlocks.add(record.record)
+      const dataKey = util.formatDataKey(record.collection, record.rkey)
+      initialRecords[dataKey] = cid
+    }
     const commit = await Repo.formatInitCommit(
       storage,
       did,
       keypair,
       initialRecords,
     )
-    await storage.applyCommit(commit)
+    newBlocks.addMap(commit.blocks)
+    await storage.applyCommit({
+      commit: commit.commit,
+      prev: commit.prev,
+      blocks: newBlocks,
+    })
     log.info({ did }, `created repo`)
     return Repo.load(storage, commit.commit)
   }
