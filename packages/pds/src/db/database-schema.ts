@@ -20,8 +20,10 @@ import * as moderation from './tables/moderation'
 import * as mute from './tables/mute'
 import * as repoSeq from './tables/repo-seq'
 import * as appView from '../app-view/db'
+import { AppMigrationPartialDB } from './leader'
 
 export type DatabaseSchemaType = appView.DatabaseSchemaType &
+  AppMigrationPartialDB &
   userAccount.PartialDB &
   userState.PartialDB &
   didHandle.PartialDB &
