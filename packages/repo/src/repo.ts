@@ -106,16 +106,16 @@ export class Repo extends ReadableRepo {
     keypair: crypto.Keypair,
   ): Promise<CommitData> {
     const writes = Array.isArray(toWrite) ? toWrite : [toWrite]
-    const newBlocks = new BlockMap()
+    const commitBlocks = new BlockMap()
 
     let data = this.data
     for (const write of writes) {
       if (write.action === WriteOpAction.Create) {
-        const cid = await newBlocks.add(write.record)
+        const cid = await commitBlocks.add(write.record)
         const dataKey = write.collection + '/' + write.rkey
         data = await data.add(dataKey, cid)
       } else if (write.action === WriteOpAction.Update) {
-        const cid = await newBlocks.add(write.record)
+        const cid = await commitBlocks.add(write.record)
         const dataKey = write.collection + '/' + write.rkey
         data = await data.update(dataKey, cid)
       } else if (write.action === WriteOpAction.Delete) {
@@ -125,11 +125,11 @@ export class Repo extends ReadableRepo {
     }
 
     const unstoredData = await data.getUnstoredBlocks()
-    newBlocks.addMap(unstoredData.blocks)
+    commitBlocks.addMap(unstoredData.blocks)
 
     // ensure we're not missing any blocks that were removed and then readded in this commit
     const diff = await DataDiff.of(data, this.data)
-    const found = newBlocks.getMany(diff.newCidList())
+    const found = commitBlocks.getMany(diff.newCidList())
     if (found.missing.length > 0) {
       const fromStorage = await this.storage.getBlocks(found.missing)
       if (fromStorage.missing.length > 0) {
@@ -138,7 +138,7 @@ export class Repo extends ReadableRepo {
           'Could not find block for commit in Datastore or storage',
         )
       }
-      newBlocks.addMap(fromStorage.blocks)
+      commitBlocks.addMap(fromStorage.blocks)
     }
 
     const commit = await util.signCommit(
@@ -150,12 +150,12 @@ export class Repo extends ReadableRepo {
       },
       keypair,
     )
-    const commitCid = await newBlocks.add(commit)
+    const commitCid = await commitBlocks.add(commit)
 
     return {
       commit: commitCid,
       prev: this.cid,
-      blocks: newBlocks,
+      blocks: commitBlocks,
     }
   }
 

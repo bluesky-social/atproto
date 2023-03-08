@@ -257,7 +257,7 @@ export class SqlRepoStorage extends RepoStorage {
       .innerJoin('ipld_block', (join) =>
         join
           .onRef('ipld_block.cid', '=', 'repo_commit_block.block')
-          .on('ipld_block.creator', '=', this.did),
+          .onRef('ipld_block.creator', '=', 'repo_commit_block.creator'),
       )
       .select([
         'repo_commit_block.commit',
