@@ -197,6 +197,9 @@ export class SqlRepoStorage extends RepoStorage {
           root: cid.toString(),
           indexedAt: this.getTimestamp(),
         })
+        .onConflict((oc) =>
+          oc.column('did').doUpdateSet({ root: cid.toString() }),
+        )
         .execute()
     } else {
       const res = await this.db.db

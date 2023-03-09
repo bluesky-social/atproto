@@ -1,20 +1,26 @@
-import { Keypair } from '@atproto/crypto'
+import { chunkArray } from '@atproto/common'
+import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { formatDataKey, Repo } from '@atproto/repo'
 import { CID } from 'multiformats/cid'
-import AppContext from '../context'
 import Database from '../db'
 import SqlRepoStorage from '../sql-repo-storage'
 
-export const runV2Migration = async (ctx: AppContext) => {
-  ctx.db.transaction(async (dbTxn) => {
+export const runV2Migration = async (db: Database, keypair: Keypair) => {
+  await db.transaction(async (dbTxn) => {
     const dids = await getUserDids(dbTxn)
+    const total = dids.length
+    console.log(`running for ${total} repos`)
     await deleteAllOldData(dbTxn)
+    console.log('deleted old data')
+    // chunk it into 20 chunks
+    const chunked = chunkArray(dids, Math.ceil(total / 20))
+    let count = 0
     await Promise.all(
-      dids.map(async (row) => {
-        if (row.actorType === 'app.bsky.system.actorScene') {
-          await deleteScene(ctx, dbTxn, row.did)
-        } else {
-          await migrateUser(dbTxn, ctx.repoSigningKey, row.did)
+      chunked.map(async (chunk) => {
+        for (const row of chunk) {
+          await migrateUser(dbTxn, keypair, row.did)
+          count++
+          console.log(`(${count}/${total})`)
         }
       }),
     )
@@ -24,33 +30,17 @@ export const runV2Migration = async (ctx: AppContext) => {
 }
 
 export const getUserDids = async (db: Database) => {
-  return await db.db
-    .selectFrom('did_handle')
-    .select(['did', 'actorType'])
-    .execute()
-}
-
-export const deleteScene = async (
-  ctx: AppContext,
-  db: Database,
-  did: string,
-) => {
-  await ctx.services.record(db).deleteForUser(did)
-  await ctx.services.repo(db).deleteRepo(did)
-  await ctx.services.account(db).deleteUser(did)
+  return await db.db.selectFrom('did_handle').select('did').execute()
 }
 
 export const deleteAllOldData = async (db: Database): Promise<void> => {
-  // delete all ipld_blocks that do not reference records
-  await db.db
-    .deleteFrom('ipld_block')
-    .where('cid', 'not in', (qb) => qb.selectFrom('record').select('cid'))
-    .execute()
-
-  // delete all repo_ops, commit blocks, commit history
+  console.log('deleting')
   await db.db.deleteFrom('repo_op').execute()
+  console.log('delete ops')
   await db.db.deleteFrom('repo_commit_block').execute()
+  console.log('delete blocks')
   await db.db.deleteFrom('repo_commit_history').execute()
+  console.log('delete history')
 }
 
 export const migrateUser = async (
@@ -63,6 +53,14 @@ export const migrateUser = async (
     .selectFrom('record')
     .selectAll()
     .where('did', '=', did)
+    .execute()
+
+  await db.db
+    .deleteFrom('ipld_block')
+    .where('creator', '=', did)
+    .where('cid', 'not in', (qb) =>
+      qb.selectFrom('record').select('cid').where('did', '=', did),
+    )
     .execute()
 
   // make record map
@@ -87,3 +85,14 @@ export const migrateUser = async (
     .set({ commit: commit.commit.toString() })
     .execute()
 }
+
+const run = async () => {
+  const db = Database.postgres({
+    url: 'postgresql://pg:password@localhost:5432/postgres',
+  })
+  await db.migrateToLatestOrThrow()
+  const keypair = await Secp256k1Keypair.create()
+  await runV2Migration(db, keypair)
+}
+
+run()
