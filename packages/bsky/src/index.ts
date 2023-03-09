@@ -107,7 +107,7 @@ export class BskyAppView {
     this.server = server
     this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
-    await this.sub.run()
+    this.sub.run() // Don't await, backgrounded
     return server
   }
 
