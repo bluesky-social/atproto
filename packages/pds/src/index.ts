@@ -41,6 +41,8 @@ export { ServerConfig } from './config'
 export { Database } from './db'
 export { DiskBlobStore, MemoryBlobStore } from './storage'
 export { AppContext } from './context'
+export { repoV2Migration } from './app-migrations/repo-v2'
+export { plcKeysMigration } from './app-migrations/plc-keys'
 
 export class PDS {
   public ctx: AppContext

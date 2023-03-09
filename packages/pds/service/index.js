@@ -16,7 +16,8 @@ const {
   S3BlobStore,
   CloudfrontInvalidator,
 } = require('@atproto/aws')
-const { Database, ServerConfig, PDS } = require('@atproto/pds')
+const { Database, ServerConfig, PDS, repoV2Migration, plcKeysMigration } = require('@atproto/pds')
+const { Secp256k1Keypair } = require('@atproto/crypto')
 
 const main = async () => {
   const env = getEnv()
@@ -36,11 +37,12 @@ const main = async () => {
   const cfInvalidator = new CloudfrontInvalidator({
     distributionId: env.cfDistributionId,
   })
-  const repoSigningKey = await KmsKeypair.load({
-    keyId: env.signingKeyId,
+  const oldSigningKey = await KmsKeypair.load({
+    keyId: env.oldSigningKeyId,
   })
+  const repoSigningKey = await Secp256k1Keypair.import(env.repoSigningKey)
   const plcRotationKey = await KmsKeypair.load({
-    keyId: env.signingKeyId,
+    keyId: env.plcRotationKeyId,
   })
   let recoveryKey
   if (env.recoveryKeyId.startsWith('did:')) {
@@ -59,6 +61,14 @@ const main = async () => {
       username: env.smtpUsername,
       password: env.smtpPassword,
     }),
+  })
+  await repoV2Migration(db, repoSigningKey)
+  await plcKeysMigration(db, { 
+    plcUrl: cfg.didPlcUrl,
+    oldSigningKey,
+    repoSigningKey,
+    plcRotationKey,
+    recoveryKey,
   })
   const pds = PDS.create({
     db,
@@ -87,7 +97,9 @@ const smtpUrl = ({ username, password, host }) => {
 
 const getEnv = () => ({
   port: parseInt(process.env.PORT),
-  signingKeyId: process.env.SIGNING_KEY_ID,
+  oldSigningKeyId: process.env.SIGNING_KEY_ID,
+  plcRotationKeyId: process.env.PLC_ROTATION_KEY_ID,
+  repoSigningKey: process.env.REPO_SIGNING_KEY,
   recoveryKeyId: process.env.RECOVERY_KEY_ID,
   dbCreds: JSON.parse(process.env.DB_CREDS_JSON),
   dbMigrateCreds: JSON.parse(process.env.DB_MIGRATE_CREDS_JSON),

@@ -98,6 +98,7 @@ export type CommitBlockData = {
 
 export type CommitData = CommitBlockData & {
   prev: CID | null
+  relatedCids?: CID[]
 }
 
 export type RepoUpdate = CommitData & {

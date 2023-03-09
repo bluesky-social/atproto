@@ -145,13 +145,17 @@ export class SqlRepoStorage extends RepoStorage {
     const commitBlocks: RepoCommitBlock[] = []
     const commitHistory: RepoCommitHistory[] = []
     for (const commit of commits) {
+      const commitCids = commit.relatedCids || []
       for (const block of commit.blocks.entries()) {
+        commitCids.push(block.cid)
+        allBlocks.set(block.cid, block.bytes)
+      }
+      for (const cid of commitCids) {
         commitBlocks.push({
           commit: commit.commit.toString(),
-          block: block.cid.toString(),
+          block: cid.toString(),
           creator: this.did,
         })
-        allBlocks.set(block.cid, block.bytes)
       }
       commitHistory.push({
         commit: commit.commit.toString(),
@@ -193,6 +197,9 @@ export class SqlRepoStorage extends RepoStorage {
           root: cid.toString(),
           indexedAt: this.getTimestamp(),
         })
+        .onConflict((oc) =>
+          oc.column('did').doUpdateSet({ root: cid.toString() }),
+        )
         .execute()
     } else {
       const res = await this.db.db
