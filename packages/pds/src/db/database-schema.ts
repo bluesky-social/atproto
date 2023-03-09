@@ -19,11 +19,11 @@ import * as messageQueueCursor from './tables/message-queue-cursor'
 import * as moderation from './tables/moderation'
 import * as mute from './tables/mute'
 import * as repoSeq from './tables/repo-seq'
+import * as appMigration from './tables/app-migration'
 import * as appView from '../app-view/db'
-import { AppMigrationPartialDB } from './leader'
 
 export type DatabaseSchemaType = appView.DatabaseSchemaType &
-  AppMigrationPartialDB &
+  appMigration.PartialDB &
   userAccount.PartialDB &
   userState.PartialDB &
   didHandle.PartialDB &

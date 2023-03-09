@@ -85,7 +85,6 @@ export async function appMigration(
   runMigration: (tx: Database) => Promise<void>,
 ) {
   // Ensure migration is tracked in a table
-  await ensureAppMigrationTable(db)
   await ensureMigrationTracked(db, id)
 
   // If the migration has already completed, succeed/fail with it (fast path, no locks)
@@ -157,16 +156,6 @@ async function completeMigration(db: Database, id: string, success: 0 | 1) {
     .executeTakeFirst()
 }
 
-async function ensureAppMigrationTable(db: Database) {
-  await db.db.schema
-    .createTable('app_migration')
-    .ifNotExists()
-    .addColumn('id', 'varchar', (col) => col.notNull().primaryKey())
-    .addColumn('success', 'int2', (col) => col.notNull().defaultTo(0))
-    .addColumn('completedAt', 'varchar')
-    .execute()
-}
-
 async function ensureMigrationTracked(db: Database, id: string) {
   await db.db
     .insertInto('app_migration')
@@ -180,14 +169,4 @@ enum MigrationStatus {
   Succeeded,
   Failed,
   Running,
-}
-
-export interface AppMigrationPartialDB {
-  app_migration: AppMigration
-}
-
-export interface AppMigration {
-  id: string
-  success: 0 | 1
-  completedAt: string | null
 }
