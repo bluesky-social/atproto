@@ -289,7 +289,7 @@ describe('db', () => {
       ])
 
       const after = await db.db.selectFrom('did_handle').select('did').execute()
-      expect(after).toEqual([{ did: 'did:plc:1' }])
+      expect(after).toEqual([{ did: 'did:plc:0' }])
     })
   })
 })
