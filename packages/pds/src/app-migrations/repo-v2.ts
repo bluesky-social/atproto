@@ -187,7 +187,8 @@ const verifyRepo = async (
   assert(ipldBlockCount?.count === cidCount)
 }
 
-const run = async () => {
+// for dev testing
+const testRun = async () => {
   const db = Database.postgres({
     url: 'postgresql://pg:password@localhost:5432/postgres',
   })
@@ -197,5 +198,3 @@ const run = async () => {
   )
   await repoV2Migration(db, keypair)
 }
-
-run()
