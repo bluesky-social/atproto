@@ -156,16 +156,11 @@ const verifyRepo = async (
     .addList()
     .map((add) => ({ key: add.key, cid: add.cid.toString() }))
     .sort((a, b) => a.key.localeCompare(b.key))
+
   const recordsRes = await db.db
     .selectFrom('record')
-    .innerJoin('ipld_block', (join) =>
-      // added the inner join in here to ensure that none of the record cids were deleted from ipld_block
-      join
-        .onRef('ipld_block.creator', '=', 'record.did')
-        .onRef('ipld_block.cid', '=', 'record.cid'),
-    )
     .where('did', '=', did)
-    .select(['collection', 'rkey', 'ipld_block.cid as cid'])
+    .select(['collection', 'rkey', 'cid'])
     .execute()
   const sorted = recordsRes
     .map((row) => ({
@@ -174,6 +169,22 @@ const verifyRepo = async (
     }))
     .sort((a, b) => a.key.localeCompare(b.key))
   assert.deepStrictEqual(adds, sorted)
+
+  const cidMap = adds.reduce((acc, cur) => {
+    acc[cur.cid] ??= true
+    return acc
+  }, {} as Record<string, boolean>)
+  const cidCount = Object.entries(cidMap).length
+
+  const ipldBlockCount = await db.db
+    .selectFrom('ipld_block')
+    .where('creator', '=', did)
+    .where('cid', 'in', (qb) =>
+      qb.selectFrom('record').where('record.did', '=', did).select('cid'),
+    )
+    .select(db.db.fn.count('ipld_block.cid').as('count'))
+    .executeTakeFirst()
+  assert(ipldBlockCount?.count === cidCount)
 }
 
 const run = async () => {
@@ -181,7 +192,9 @@ const run = async () => {
     url: 'postgresql://pg:password@localhost:5432/postgres',
   })
   await db.migrateToLatestOrThrow()
-  const keypair = await Secp256k1Keypair.create()
+  const keypair = await Secp256k1Keypair.import(
+    '35b92fe58c800bb1f880066355226a9d937c2294fb900030d69be21972ca5168',
+  )
   await repoV2Migration(db, keypair)
 }
 
