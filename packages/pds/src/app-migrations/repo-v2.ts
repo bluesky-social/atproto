@@ -46,6 +46,8 @@ export const getUserDids = async (db: Database) => {
 
 export const deleteAllOldData = async (db: Database): Promise<void> => {
   console.log('deleting')
+  await db.db.deleteFrom('repo_seq').execute()
+  console.log('deleted seqs')
   await db.db.deleteFrom('repo_op').execute()
   console.log('deleted ops')
   await db.db.deleteFrom('repo_commit_block').execute()
