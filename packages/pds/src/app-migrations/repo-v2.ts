@@ -8,13 +8,9 @@ import { appMigration } from '../db/leader'
 import SqlRepoStorage from '../sql-repo-storage'
 
 export const repoV2Migration = async (db: Database, keypair: Keypair) => {
-  await appMigration(
-    db,
-    `${new Date().toISOString()}-repo-v2`,
-    async (dbTxn) => {
-      await doMigration(dbTxn, keypair)
-    },
-  )
+  await appMigration(db, `2023-03-09-repo-v2`, async (dbTxn) => {
+    await doMigration(dbTxn, keypair)
+  })
 }
 
 export const doMigration = async (db: Database, keypair: Keypair) => {

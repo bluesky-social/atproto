@@ -13,13 +13,9 @@ export const plcKeysMigration = async (
     recoveryKey: string
   },
 ) => {
-  await appMigration(
-    db,
-    `${new Date().toISOString()}-plc-keys`,
-    async (dbTxn) => {
-      await doMigration(dbTxn, opts)
-    },
-  )
+  await appMigration(db, `2023-03-09-plc-keys`, async (dbTxn) => {
+    await doMigration(dbTxn, opts)
+  })
 }
 
 export const doMigration = async (
@@ -36,6 +32,8 @@ export const doMigration = async (
   const { oldSigningKey, plcRotationKey, repoSigningKey, recoveryKey } = opts
   const res = await db.db.selectFrom('did_handle').select('did').execute()
   const dids = res.map((row) => row.did)
+  const total = dids.length
+  let count = 0
   for (const did of dids) {
     await plcClient.updateData(did, oldSigningKey, (lastOp) => ({
       ...lastOp,
@@ -44,5 +42,10 @@ export const doMigration = async (
         atproto: repoSigningKey.did(),
       },
     }))
+    count++
+    if (count % 10 === 0) {
+      console.log(`plc key: ${count}/${total}`)
+    }
   }
+  console.log('plc key migration done')
 }
