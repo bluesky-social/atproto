@@ -74,3 +74,99 @@ export class Leader {
 type Session = { abortController: AbortController; client?: PoolClient }
 
 type RunResult<T> = { ran: false } | { ran: true; result: T }
+
+// Mini system for coordinated app-level migrations.
+
+const APP_MIGRATION_LOCK_ID = 1100
+
+export async function appMigration(
+  db: Database,
+  id: string,
+  runMigration: (tx: Database) => Promise<void>,
+) {
+  // Ensure migration is tracked in a table
+  await ensureMigrationTracked(db, id)
+
+  // If the migration has already completed, succeed/fail with it (fast path, no locks)
+  const status = await checkMigrationStatus(db, id)
+  if (status === MigrationStatus.Succeeded) {
+    return
+  } else if (status === MigrationStatus.Failed) {
+    throw new Error('Migration previously failed')
+  }
+
+  // Take a lock for potentially running an app migration
+  const disposeLock = await acquireMigrationLock(db)
+  try {
+    // If the migration has already completed, succeed/fail with it
+    const status = await checkMigrationStatus(db, id)
+    if (status === MigrationStatus.Succeeded) {
+      return
+    } else if (status === MigrationStatus.Failed) {
+      throw new Error('Migration previously failed')
+    }
+    // Run the migration and update migration state
+    try {
+      await db.transaction(runMigration)
+      await completeMigration(db, id, 1)
+    } catch (err) {
+      await completeMigration(db, id, 0)
+      throw err
+    }
+  } finally {
+    // Ensure lock is released
+    disposeLock()
+  }
+}
+
+async function checkMigrationStatus(db: Database, id: string) {
+  const migration = await db.db
+    .selectFrom('app_migration')
+    .selectAll()
+    .where('id', '=', id)
+    .executeTakeFirstOrThrow()
+  if (!migration.completedAt) {
+    return MigrationStatus.Running
+  }
+  return migration.success ? MigrationStatus.Succeeded : MigrationStatus.Failed
+}
+
+async function acquireMigrationLock(db: Database) {
+  if (db.cfg.dialect !== 'pg') {
+    throw new Error('App migrations are pg-only')
+  }
+  const client = await db.cfg.pool.connect()
+  const dispose = () => client.release(true)
+  try {
+    // Blocks until lock is acquired
+    await client.query('SELECT pg_advisory_lock($1)', [APP_MIGRATION_LOCK_ID])
+  } catch (err) {
+    dispose()
+    throw err
+  }
+  return dispose
+}
+
+async function completeMigration(db: Database, id: string, success: 0 | 1) {
+  await db.db
+    .updateTable('app_migration')
+    .where('id', '=', id)
+    .where('completedAt', 'is', null)
+    .set({ success, completedAt: new Date().toISOString() })
+    .executeTakeFirst()
+}
+
+async function ensureMigrationTracked(db: Database, id: string) {
+  await db.db
+    .insertInto('app_migration')
+    .values({ id, success: 0 })
+    .onConflict((oc) => oc.doNothing())
+    .returningAll()
+    .execute()
+}
+
+enum MigrationStatus {
+  Succeeded,
+  Failed,
+  Running,
+}
