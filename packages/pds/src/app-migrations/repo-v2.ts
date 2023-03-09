@@ -4,30 +4,39 @@ import { verifyFullHistory, formatDataKey, Repo } from '@atproto/repo'
 import assert from 'assert'
 import { CID } from 'multiformats/cid'
 import Database from '../db'
+import { appMigration } from '../db/leader'
 import SqlRepoStorage from '../sql-repo-storage'
 
-export const runV2Migration = async (db: Database, keypair: Keypair) => {
-  await db.transaction(async (dbTxn) => {
-    const dids = await getUserDids(dbTxn)
-    const total = dids.length
-    console.log(`running for ${total} repos`)
-    await deleteAllOldData(dbTxn)
-    // chunk it into 50 chunks
-    const chunked = chunkArray(dids, Math.ceil(total / 50))
-    const roots: Record<string, CID> = {}
-    let count = 0
-    await Promise.all(
-      chunked.map(async (chunk) => {
-        for (const did of chunk) {
-          roots[did] = await migrateUser(dbTxn, keypair, did)
-          count++
-          console.log(`(${count}/${total})`)
-        }
-      }),
-    )
-    assert(count === total)
-    await sanityCheck(dbTxn, keypair, roots)
-  })
+export const repoV2Migration = async (db: Database, keypair: Keypair) => {
+  await appMigration(
+    db,
+    `${new Date().toISOString()}-repo-v2`,
+    async (dbTxn) => {
+      await doMigration(dbTxn, keypair)
+    },
+  )
+}
+
+export const doMigration = async (db: Database, keypair: Keypair) => {
+  const dids = await getUserDids(db)
+  const total = dids.length
+  console.log(`running for ${total} repos`)
+  await deleteAllOldData(db)
+  // chunk it into 50 chunks
+  const chunked = chunkArray(dids, Math.ceil(total / 50))
+  const roots: Record<string, CID> = {}
+  let count = 0
+  await Promise.all(
+    chunked.map(async (chunk) => {
+      for (const did of chunk) {
+        roots[did] = await migrateUser(db, keypair, did)
+        count++
+        console.log(`(${count}/${total})`)
+      }
+    }),
+  )
+  assert(count === total)
+  await sanityCheck(db, keypair, roots)
 }
 
 export const getUserDids = async (db: Database) => {
@@ -111,7 +120,7 @@ const sanityCheck = async (
   }
   console.log('verified history')
 
-  // sample 50 random repos & make sure they look good
+  // sample 100 random repos & make sure they look good
   let promises: Promise<void>[] = []
   for (let i = 0; i < 100; i++) {
     const random = repoRoots[Math.floor(Math.random() * repoRoots.length)]
@@ -173,7 +182,7 @@ const run = async () => {
   })
   await db.migrateToLatestOrThrow()
   const keypair = await Secp256k1Keypair.create()
-  await runV2Migration(db, keypair)
+  await repoV2Migration(db, keypair)
 }
 
 run()
