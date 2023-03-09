@@ -22,14 +22,8 @@ import * as parse from '../parse'
  * When a leaf is changed, ever tree on the path to that leaf is changed as well,
  * thereby updating the root hash.
  *
- * For atproto, we use SHA-256 as the key hashing algorithm, and ~16 fanout
- * (4-bits of zero per layer).
- *
- * NOTE: currently keys are strings, not bytes. Because UTF-8 strings can't be
- * safely split at arbitrary byte boundaries (the results are not necessarily
- * valid UTF-8 strings), this means that "wide" characters not really supported
- * in keys, particularly across programming language implementations. We
- * recommend sticking with simple alphanumeric (ASCII) strings.
+ * For atproto, we use SHA-256 as the key hashing algorithm, and ~4 fanout
+ * (2-bits of zero per layer).
  */
 
 /**
@@ -52,8 +46,8 @@ import * as parse from '../parse'
  */
 const subTreePointer = z.nullable(common.cid)
 const treeEntry = z.object({
-  p: z.number(), // prefix count of utf-8 chars that this key shares with the prev key
-  k: z.string(), // the rest of the key outside the shared prefix
+  p: z.number(), // prefix count of ascii chars that this key shares with the prev key
+  k: common.bytes, // the rest of the key outside the shared prefix
   v: common.cid, // value
   t: subTreePointer, // next subtree (to the right of leaf)
 })
@@ -70,16 +64,12 @@ export const nodeDataDef = {
 
 export type NodeEntry = MST | Leaf
 
-const DEFAULT_MST_FANOUT = 16
-export type Fanout = 2 | 8 | 16 | 32 | 64
 export type MstOpts = {
   layer: number
-  fanout: Fanout
 }
 
 export class MST implements DataStore {
   storage: ReadableBlockstore
-  fanout: Fanout
   entries: NodeEntry[] | null
   layer: number | null
   pointer: CID
@@ -87,13 +77,11 @@ export class MST implements DataStore {
 
   constructor(
     storage: ReadableBlockstore,
-    fanout: Fanout,
     pointer: CID,
     entries: NodeEntry[] | null,
     layer: number | null,
   ) {
     this.storage = storage
-    this.fanout = fanout
     this.entries = entries
     this.layer = layer
     this.pointer = pointer
@@ -105,8 +93,8 @@ export class MST implements DataStore {
     opts?: Partial<MstOpts>,
   ): Promise<MST> {
     const pointer = await util.cidForEntries(entries)
-    const { layer = null, fanout = DEFAULT_MST_FANOUT } = opts || {}
-    return new MST(storage, fanout, pointer, entries, layer)
+    const { layer = null } = opts || {}
+    return new MST(storage, pointer, entries, layer)
   }
 
   static async fromData(
@@ -114,10 +102,10 @@ export class MST implements DataStore {
     data: NodeData,
     opts?: Partial<MstOpts>,
   ): Promise<MST> {
-    const { layer = null, fanout = DEFAULT_MST_FANOUT } = opts || {}
+    const { layer = null } = opts || {}
     const entries = await util.deserializeNodeData(storage, data, opts)
     const pointer = await cidForCbor(data)
-    return new MST(storage, fanout, pointer, entries, layer)
+    return new MST(storage, pointer, entries, layer)
   }
 
   // this is really a *lazy* load, doesn't actually touch storage
@@ -126,8 +114,8 @@ export class MST implements DataStore {
     cid: CID,
     opts?: Partial<MstOpts>,
   ): MST {
-    const { layer = null, fanout = DEFAULT_MST_FANOUT } = opts || {}
-    return new MST(storage, fanout, cid, null, layer)
+    const { layer = null } = opts || {}
+    return new MST(storage, cid, null, layer)
   }
 
   // Immutability
@@ -135,13 +123,7 @@ export class MST implements DataStore {
 
   // We never mutate an MST, we just return a new MST with updated values
   async newTree(entries: NodeEntry[]): Promise<MST> {
-    const mst = new MST(
-      this.storage,
-      this.fanout,
-      this.pointer,
-      entries,
-      this.layer,
-    )
+    const mst = new MST(this.storage, this.pointer, entries, this.layer)
     mst.outdatedPointer = true
     return mst
   }
@@ -157,11 +139,10 @@ export class MST implements DataStore {
       const firstLeaf = data.e[0]
       const layer =
         firstLeaf !== undefined
-          ? await util.leadingZerosOnHash(firstLeaf.k, this.fanout)
+          ? await util.leadingZerosOnHash(firstLeaf.k)
           : undefined
       this.entries = await util.deserializeNodeData(this.storage, data, {
         layer,
-        fanout: this.fanout,
       })
 
       return this.entries
@@ -199,7 +180,7 @@ export class MST implements DataStore {
   async attemptGetLayer(): Promise<number | null> {
     if (this.layer !== null) return this.layer
     const entries = await this.getEntries()
-    let layer = await util.layerForEntries(entries, this.fanout)
+    let layer = await util.layerForEntries(entries)
     if (layer === null) {
       for (const entry of entries) {
         if (entry.isTree()) {
@@ -239,8 +220,8 @@ export class MST implements DataStore {
   // Adds a new leaf for the given key/value pair
   // Throws if a leaf with that key already exists
   async add(key: string, value: CID, knownZeros?: number): Promise<MST> {
-    const keyZeros =
-      knownZeros ?? (await util.leadingZerosOnHash(key, this.fanout))
+    util.ensureValidMstKey(key)
+    const keyZeros = knownZeros ?? (await util.leadingZerosOnHash(key))
     const layer = await this.getLayer()
     const newLeaf = new Leaf(key, value)
     if (keyZeros === layer) {
@@ -301,7 +282,6 @@ export class MST implements DataStore {
       if (right) updated.push(right)
       const newRoot = await MST.create(this.storage, updated, {
         layer: keyZeros,
-        fanout: this.fanout,
       })
       newRoot.outdatedPointer = true
       return newRoot
@@ -325,6 +305,7 @@ export class MST implements DataStore {
   // Edits the value at the given key
   // Throws if the given key does not exist
   async update(key: string, value: CID): Promise<MST> {
+    util.ensureValidMstKey(key)
     const index = await this.findGtOrEqualLeafIndex(key)
     const found = await this.atIndex(index)
     if (found && found.isLeaf() && found.key === key) {
@@ -524,7 +505,6 @@ export class MST implements DataStore {
     const layer = await this.getLayer()
     return MST.create(this.storage, [], {
       layer: layer - 1,
-      fanout: this.fanout,
     })
   }
 
@@ -532,7 +512,6 @@ export class MST implements DataStore {
     const layer = await this.getLayer()
     const parent = await MST.create(this.storage, [this], {
       layer: layer + 1,
-      fanout: this.fanout,
     })
     parent.outdatedPointer = true
     return parent

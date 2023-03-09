@@ -3,7 +3,7 @@ import { Repo } from '../src/repo'
 import { MemoryBlockstore } from '../src/storage'
 import * as util from './_util'
 import { TID } from '@atproto/common'
-import { RepoContents, WriteOpAction } from '../src'
+import { RepoContents, verifyCommitSig, WriteOpAction } from '../src'
 import { Secp256k1Keypair } from '@atproto/crypto'
 
 describe('Repo', () => {
@@ -21,9 +21,8 @@ describe('Repo', () => {
   })
 
   it('has proper metadata', async () => {
-    expect(repo.meta.did).toEqual(keypair.did())
-    expect(repo.meta.version).toBe(1)
-    expect(repo.meta.datastore).toBe('mst')
+    expect(repo.did).toEqual(keypair.did())
+    expect(repo.version).toBe(2)
   })
 
   it('does basic operations', async () => {
@@ -86,18 +85,13 @@ describe('Repo', () => {
     expect(contents).toEqual(repoData)
   })
 
-  it('adds a valid signature to commit', async () => {
-    const commit = await repo.commit
-    const verified = await crypto.verifySignature(
-      repo.did,
-      commit.root.bytes,
-      commit.sig,
-    )
+  it('has a valid signature to commit', async () => {
+    const verified = await verifyCommitSig(repo.commit, keypair.did())
     expect(verified).toBeTruthy()
   })
 
   it('sets correct DID', async () => {
-    expect(repo.did).toEqual(await keypair.did())
+    expect(repo.did).toEqual(keypair.did())
   })
 
   it('loads from blockstore', async () => {
@@ -105,8 +99,7 @@ describe('Repo', () => {
 
     const contents = await reloadedRepo.getContents()
     expect(contents).toEqual(repoData)
-    expect(repo.meta.did).toEqual(keypair.did())
-    expect(repo.meta.version).toBe(1)
-    expect(repo.meta.datastore).toBe('mst')
+    expect(repo.did).toEqual(keypair.did())
+    expect(repo.version).toBe(2)
   })
 })

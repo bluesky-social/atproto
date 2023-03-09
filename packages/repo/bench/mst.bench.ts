@@ -24,7 +24,7 @@ describe('MST Benchmarks', () => {
   const size = 500000
 
   beforeAll(async () => {
-    mapping = await util.generateBulkTidMapping(size)
+    mapping = await util.generateBulkDataKeys(size)
     shuffled = util.shuffle(Object.entries(mapping))
   })
 

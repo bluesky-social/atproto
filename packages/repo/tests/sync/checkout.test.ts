@@ -1,5 +1,4 @@
 import * as crypto from '@atproto/crypto'
-import { DidResolver } from '@atproto/did-resolver'
 import { Repo, RepoContents, RepoVerificationError } from '../../src'
 import { MemoryBlockstore } from '../../src/storage'
 import * as sync from '../../src/sync'
@@ -12,12 +11,13 @@ describe('Checkout Sync', () => {
   let repo: Repo
   let keypair: crypto.Keypair
   let repoData: RepoContents
-  const didResolver = new DidResolver()
+
+  const repoDid = 'did:example:test'
 
   beforeAll(async () => {
     storage = new MemoryBlockstore()
     keypair = await crypto.Secp256k1Keypair.create()
-    repo = await Repo.create(storage, keypair.did(), keypair)
+    repo = await Repo.create(storage, repoDid, keypair)
     syncStorage = new MemoryBlockstore()
     const filled = await util.fillRepo(repo, keypair, 20)
     repo = filled.repo
@@ -29,7 +29,8 @@ describe('Checkout Sync', () => {
     const checkout = await sync.loadCheckout(
       syncStorage,
       checkoutCar,
-      didResolver,
+      repoDid,
+      keypair.did(),
     )
     const checkoutRepo = await Repo.load(syncStorage, checkout.root)
     const contents = await checkoutRepo.getContents()
@@ -50,7 +51,7 @@ describe('Checkout Sync', () => {
     const badRepo = await util.addBadCommit(repo, keypair)
     const checkoutCar = await sync.getCheckout(storage, badRepo.cid)
     await expect(
-      sync.loadCheckout(syncStorage, checkoutCar, didResolver),
+      sync.loadCheckout(syncStorage, checkoutCar, repoDid, keypair.did()),
     ).rejects.toThrow(RepoVerificationError)
   })
 })

@@ -1,5 +1,4 @@
 import { CID } from 'multiformats/cid'
-import { DidResolver } from '@atproto/did-resolver'
 import { MemoryBlockstore, RepoStorage } from '../storage'
 import Repo from '../repo'
 import * as verify from '../verify'
@@ -14,11 +13,17 @@ import { MissingBlocksError } from '../error'
 export const loadCheckout = async (
   storage: RepoStorage,
   repoCar: Uint8Array,
-  didResolver: DidResolver,
+  did: string,
+  signingKey: string,
 ): Promise<{ root: CID; contents: RepoContents }> => {
   const { root, blocks } = await util.readCarWithRoot(repoCar)
   const updateStorage = new MemoryBlockstore(blocks)
-  const checkout = await verify.verifyCheckout(updateStorage, root, didResolver)
+  const checkout = await verify.verifyCheckout(
+    updateStorage,
+    root,
+    did,
+    signingKey,
+  )
 
   const checkoutBlocks = await updateStorage.getBlocks(
     checkout.newCids.toList(),
@@ -43,14 +48,16 @@ export const loadCheckout = async (
 export const loadFullRepo = async (
   storage: RepoStorage,
   repoCar: Uint8Array,
-  didResolver: DidResolver,
+  did: string,
+  signingKey: string,
 ): Promise<{ root: CID; writeLog: WriteLog }> => {
   const { root, blocks } = await util.readCarWithRoot(repoCar)
   const updateStorage = new MemoryBlockstore(blocks)
   const updates = await verify.verifyFullHistory(
     updateStorage,
     root,
-    didResolver,
+    did,
+    signingKey,
   )
 
   const [writeLog] = await Promise.all([
@@ -67,7 +74,8 @@ export const loadFullRepo = async (
 export const loadDiff = async (
   repo: Repo,
   diffCar: Uint8Array,
-  didResolver: DidResolver,
+  did: string,
+  signingKey: string,
 ): Promise<{ root: CID; writeLog: WriteLog }> => {
   const { root, blocks } = await util.readCarWithRoot(diffCar)
   const updateStorage = new MemoryBlockstore(blocks)
@@ -75,7 +83,8 @@ export const loadDiff = async (
     repo,
     updateStorage,
     root,
-    didResolver,
+    did,
+    signingKey,
   )
 
   const [writeLog] = await Promise.all([
