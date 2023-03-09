@@ -1,7 +1,8 @@
+import { sql } from 'kysely'
 import { once } from 'events'
 import { wait } from '@atproto/common'
 import { Database } from '../src'
-import { Leader } from '../src/db/leader'
+import { Leader, appMigration } from '../src/db/leader'
 import { runTestServer, CloseFn } from './_util'
 
 describe('db', () => {
@@ -172,6 +173,123 @@ describe('db', () => {
       )
       const result = await leader.run(task)
       expect(result).toEqual({ ran: true, result: new Error('Oops!') })
+    })
+  })
+
+  describe('appMigration()', () => {
+    it('fails once together', async () => {
+      if (db.cfg.dialect !== 'pg') return // postgres-only
+
+      await db.db.deleteFrom('did_handle').execute()
+      await db.db
+        .insertInto('did_handle')
+        .values([
+          {
+            did: 'did:plc:1',
+            handle: 'user1',
+            declarationCid: 'x',
+            actorType: 'x',
+          },
+          {
+            did: 'did:plc:2',
+            handle: 'user2',
+            declarationCid: 'x',
+            actorType: 'x',
+          },
+        ])
+        .execute()
+
+      let runCount = 0
+      const migration = async (tx: Database) => {
+        const nthRun = runCount++
+        await wait(100)
+        await tx.db.deleteFrom('did_handle').execute()
+        await wait(100)
+        if (nthRun === 0) throw new Error('Intentional failure')
+      }
+
+      const results = await Promise.allSettled([
+        appMigration(db, 'migration-fail', migration),
+        appMigration(db, 'migration-fail', migration),
+        appMigration(db, 'migration-fail', migration),
+        appMigration(db, 'migration-fail', migration),
+        appMigration(db, 'migration-fail', migration),
+        appMigration(db, 'migration-fail', migration),
+        appMigration(db, 'migration-fail', migration),
+        appMigration(db, 'migration-fail', migration),
+      ])
+
+      const errMessages = results
+        .map((res) => res['reason']?.['message'] ?? null)
+        .sort()
+
+      expect(runCount).toEqual(1)
+      expect(errMessages).toEqual([
+        'Intentional failure',
+        'Migration previously failed',
+        'Migration previously failed',
+        'Migration previously failed',
+        'Migration previously failed',
+        'Migration previously failed',
+        'Migration previously failed',
+        'Migration previously failed',
+      ])
+
+      const after = await db.db
+        .selectFrom('did_handle')
+        .select(sql<number>`count(*)`.as('count'))
+        .executeTakeFirstOrThrow()
+      expect(after.count).toEqual(2)
+    })
+
+    it('succeeds once together', async () => {
+      if (db.cfg.dialect !== 'pg') return // postgres-only
+
+      await db.db.deleteFrom('did_handle').execute()
+
+      let runCount = 0
+      const migration = async (tx: Database) => {
+        const nthRun = runCount++
+        await wait(100)
+        await tx.db
+          .insertInto('did_handle')
+          .values({
+            did: `did:plc:${nthRun}`,
+            handle: `user${nthRun}`,
+            declarationCid: 'x',
+            actorType: 'x',
+          })
+          .execute()
+        await wait(100)
+      }
+
+      const results = await Promise.allSettled([
+        appMigration(db, 'migration-succeed', migration),
+        appMigration(db, 'migration-succeed', migration),
+        appMigration(db, 'migration-succeed', migration),
+        appMigration(db, 'migration-succeed', migration),
+        appMigration(db, 'migration-succeed', migration),
+        appMigration(db, 'migration-succeed', migration),
+        appMigration(db, 'migration-succeed', migration),
+        appMigration(db, 'migration-succeed', migration),
+      ])
+
+      const statuses = results.map((res) => res.status)
+
+      expect(runCount).toEqual(1)
+      expect(statuses).toEqual([
+        'fulfilled',
+        'fulfilled',
+        'fulfilled',
+        'fulfilled',
+        'fulfilled',
+        'fulfilled',
+        'fulfilled',
+        'fulfilled',
+      ])
+
+      const after = await db.db.selectFrom('did_handle').select('did').execute()
+      expect(after).toEqual([{ did: 'did:plc:0' }])
     })
   })
 })
