@@ -1,6 +1,10 @@
 import { MST } from '../src/mst'
 import DataDiff, { DataAdd, DataUpdate, DataDelete } from '../src/data-diff'
-import { countPrefixLen, InvalidMstKeyError } from '../src/mst/util'
+import {
+  countPrefixLen,
+  leadingZerosOnHash,
+  InvalidMstKeyError,
+} from '../src/mst/util'
 
 import { MemoryBlockstore } from '../src/storage'
 import * as util from './_util'
@@ -156,6 +160,23 @@ describe('Merkle Search Tree', () => {
   })
 
   describe('utils', () => {
+    it('computes leading zeros', async () => {
+      // TODO: updated examples, full paths, with values 0,1,2,3,4,5,6,7,8
+      expect(await leadingZerosOnHash('')).toBe(0)
+      expect(await leadingZerosOnHash('asdf')).toBe(0)
+      expect(await leadingZerosOnHash('blue')).toBe(1)
+      expect(await leadingZerosOnHash('2653ae71')).toBe(0)
+      expect(await leadingZerosOnHash('88bfafc7')).toBe(2)
+      expect(await leadingZerosOnHash('2a92d355')).toBe(4)
+      expect(await leadingZerosOnHash('884976f5')).toBe(6)
+      expect(await leadingZerosOnHash('app.bsky.feed.post/454397e440ec')).toBe(
+        4,
+      )
+      expect(await leadingZerosOnHash('app.bsky.feed.post/9adeb165882c')).toBe(
+        8,
+      )
+    })
+
     it('counts prefix length', () => {
       expect(countPrefixLen('abc', 'abc')).toBe(3)
       expect(countPrefixLen('', 'abc')).toBe(0)
@@ -189,6 +210,10 @@ describe('Merkle Search Tree', () => {
     const expectReject = async (key: string) => {
       const promise = mst.add(key, cid1)
       await expect(promise).rejects.toThrow(InvalidMstKeyError)
+    }
+
+    const expectAllow = async (key: string) => {
+      await mst.add(key, cid1)
     }
 
     it('rejects the empty key', async () => {
@@ -227,6 +252,20 @@ describe('Merkle Search Tree', () => {
       await expectReject(
         'coll/asdofiupoiwqeurfpaosidfuapsodirupasoirupasoeiruaspeoriuaspeoriu2p3o4iu1pqw3oiuaspdfoiuaspdfoiuasdfpoiasdufpwoieruapsdofiuaspdfoiuasdpfoiausdfpoasidfupasodifuaspdofiuasdpfoiasudfpoasidfuapsodfiuasdpfoiausdfpoasidufpasodifuapsdofiuasdpofiuasdfpoaisdufpao',
       )
+    })
+
+    it('allows long key under 256 chars', async () => {
+      await expectAllow(
+        'coll/asdofiupoiwqeurfpaosidfuapsodirupasoirupasoeiruaspeoriuaspeoriu2p3o4iu1pqw3oiuaspdfoiuaspdfoiuasdfpoiasdufpwoieruapsdofiuaspdfoiuasdpfoiausdfpoasidfupasodifuaspdofiuasdpfoiasudfpoasidfuapsodfiuasdpfoiausdfpoasidufpasodifuapsdofiuasdpofiuasdfpoaisduf',
+      )
+    })
+
+    it('allows URL-safe characters', async () => {
+      await expectAllow('coll/key0')
+      await expectAllow('coll/key_')
+      await expectAllow('coll/key:')
+      await expectAllow('coll/key.')
+      await expectAllow('coll/key-')
     })
   })
 
