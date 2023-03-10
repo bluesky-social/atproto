@@ -67,12 +67,6 @@ export class ActorViews {
           .where('subjectDid', '=', viewer)
           .select('uri')
           .as('requesterFollowedBy'),
-        this.db.db
-          .selectFrom('mute')
-          .whereRef('did', '=', ref('did_handle.did'))
-          .where('mutedByDid', '=', viewer)
-          .select('did')
-          .as('requesterMuted'),
       ])
       .execute()
 
@@ -102,13 +96,13 @@ export class ActorViews {
         creator: result.did,
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: {
-          muted: !!profileInfo?.requesterMuted,
           following: profileInfo?.requesterFollowing || undefined,
           followedBy: profileInfo?.requesterFollowedBy || undefined,
+          // muted field hydrated on pds
         },
         myState: {
           follow: profileInfo?.requesterFollowing || undefined,
-          muted: !!profileInfo?.requesterMuted,
+          // muted field hydrated on pds
         },
       }
     })
@@ -157,12 +151,6 @@ export class ActorViews {
           .where('subjectDid', '=', viewer)
           .select('uri')
           .as('requesterFollowedBy'),
-        this.db.db
-          .selectFrom('mute')
-          .whereRef('did', '=', ref('did_handle.did'))
-          .where('mutedByDid', '=', viewer)
-          .select('did')
-          .as('requesterMuted'),
       ])
       .execute()
 
@@ -184,9 +172,9 @@ export class ActorViews {
         avatar,
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: {
-          muted: !!profileInfo?.requesterMuted,
           following: profileInfo?.requesterFollowing || undefined,
           followedBy: profileInfo?.requesterFollowedBy || undefined,
+          // muted field hydrated on pds
         },
       }
     })

@@ -32,7 +32,7 @@ export type ActorView = {
   handle: string
   displayName?: string
   avatar?: string
-  viewer?: { muted: boolean }
+  viewer?: { muted?: boolean; following?: string; followedBy?: string }
 }
 export type ActorViewMap = { [did: string]: ActorView }
 

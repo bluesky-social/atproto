@@ -23,11 +23,8 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('did_handle')
         .selectAll()
         .where(userLookupCol, '=', author)
-      const mutedQb = db
-        .selectFrom('mute')
-        .select('did')
-        .where('mutedByDid', '=', requester)
 
+      // @NOTE mutes applied on pds
       const postsQb = feedService
         .selectPostQb()
         .whereExists(
@@ -39,7 +36,6 @@ export default function (server: Server, ctx: AppContext) {
         .whereExists(
           userQb.whereRef('did_handle.did', '=', ref('repost.creator')),
         )
-        .whereNotExists(mutedQb.whereRef('did', '=', ref('post.creator'))) // Hide reposts of muted content
 
       const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
       let feedItemsQb = db

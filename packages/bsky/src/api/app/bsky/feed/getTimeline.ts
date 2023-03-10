@@ -27,11 +27,7 @@ export default function (server: Server, ctx: AppContext) {
         .select('follow.subjectDid')
         .where('follow.creator', '=', requester)
 
-      const mutedQb = db
-        .selectFrom('mute')
-        .select('did')
-        .where('mutedByDid', '=', requester)
-
+      // @NOTE mutes applied on pds
       const postsQb = feedService
         .selectPostQb()
         .where((qb) =>
@@ -39,7 +35,6 @@ export default function (server: Server, ctx: AppContext) {
             .where('creator', '=', requester)
             .orWhere('creator', 'in', followingIdsSubquery),
         )
-        .whereNotExists(mutedQb.whereRef('did', '=', ref('post.creator'))) // Hide posts of muted actors
 
       const repostsQb = feedService
         .selectRepostQb()
@@ -47,11 +42,6 @@ export default function (server: Server, ctx: AppContext) {
           qb
             .where('repost.creator', '=', requester)
             .orWhere('repost.creator', 'in', followingIdsSubquery),
-        )
-        .whereNotExists(
-          mutedQb
-            .whereRef('did', '=', ref('post.creator')) // Hide reposts of or by muted actors
-            .orWhereRef('did', '=', ref('repost.creator')),
         )
 
       const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))

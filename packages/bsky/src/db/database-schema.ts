@@ -14,7 +14,6 @@ import * as didHandle from './tables/did-handle'
 import * as repoRoot from './tables/repo-root'
 import * as record from './tables/record'
 import * as ipldBlock from './tables/ipld-block'
-import * as mute from './tables/mute'
 
 export type DatabaseSchemaType = duplicateRecords.PartialDB &
   assertion.PartialDB &
@@ -27,11 +26,11 @@ export type DatabaseSchemaType = duplicateRecords.PartialDB &
   follow.PartialDB &
   vote.PartialDB &
   subscription.PartialDB &
-  didHandle.PartialDB & // Here and below are pds holdovers
-  repoRoot.PartialDB &
-  record.PartialDB &
-  ipldBlock.PartialDB &
-  mute.PartialDB
+  // Below are pds holdovers
+  didHandle.PartialDB & // Used to present handles
+  repoRoot.PartialDB & // Used to check takedown
+  record.PartialDB & // Used to check takedown
+  ipldBlock.PartialDB // Used to get record contents
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

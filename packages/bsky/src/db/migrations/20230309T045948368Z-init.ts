@@ -283,20 +283,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('content', sql`bytea`, (col) => col.notNull())
     .addPrimaryKeyConstraint('ipld_block_with_creator_pkey', ['creator', 'cid'])
     .execute()
-
-  // @TODO(bsky) mute
-  await db.schema
-    .createTable('mute')
-    .addColumn('did', 'varchar', (col) => col.notNull())
-    .addColumn('mutedByDid', 'varchar', (col) => col.notNull())
-    .addColumn('createdAt', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint('mute_pkey', ['mutedByDid', 'did'])
-    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  // @TODO(bsky) mute
-  await db.schema.dropTable('mute').execute()
   // @TODO(bsky) ipldBlock
   await db.schema.dropTable('ipld_block').execute()
   // @TODO(bsky) record

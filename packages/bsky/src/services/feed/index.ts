@@ -94,12 +94,6 @@ export class FeedService {
           .where('subjectDid', '=', requester)
           .select('uri')
           .as('requesterFollowedBy'),
-        this.db.db
-          .selectFrom('mute')
-          .whereRef('did', '=', ref('did_handle.did'))
-          .where('mutedByDid', '=', requester)
-          .select('did')
-          .as('requesterMuted'),
       ])
       .execute()
     return actors.reduce((acc, cur) => {
@@ -114,9 +108,9 @@ export class FeedService {
             ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
             : undefined,
           viewer: {
-            muted: !!cur?.requesterMuted,
             following: cur?.requesterFollowing || undefined,
             followedBy: cur?.requesterFollowedBy || undefined,
+            // muted field hydrated on pds
           },
         },
       }
