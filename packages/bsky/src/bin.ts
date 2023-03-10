@@ -33,8 +33,10 @@ const run = async () => {
 
   await bsky.start()
 
-  const { address } = bsky.server?.address() as AddressInfo
-  console.log(`🌞 Bsky App View is running at ${address}`)
+  const { address, port, family } = bsky.server?.address() as AddressInfo
+  const location =
+    family === 'IPv6' ? `[${address}]:${port}` : `${address}:${port}`
+  console.log(`🌞 Bsky App View is running at ${location}`)
 }
 
 run()

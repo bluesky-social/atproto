@@ -8,7 +8,7 @@
     "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
-    "start": "node dist/bin.js",
+    "start": "node --enable-source-maps dist/bin.js",
     "test": "./pg/with-test-db.sh jest",
     "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "jest --updateSnapshot",
