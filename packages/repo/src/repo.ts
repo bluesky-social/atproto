@@ -17,7 +17,6 @@ import BlockMap from './block-map'
 import { ReadableRepo } from './readable-repo'
 import * as util from './util'
 import CidSet from './cid-set'
-import { Block } from 'multiformats/block'
 
 type Params = {
   storage: RepoStorage
