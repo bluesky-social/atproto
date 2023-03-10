@@ -17,7 +17,7 @@ const insertFn = async (
   uri: AtUri,
   cid: CID,
   obj: Follow.Record,
-  timestamp?: string,
+  timestamp: string,
 ): Promise<IndexedFollow | null> => {
   const inserted = await db
     .insertInto('follow')
@@ -28,7 +28,7 @@ const insertFn = async (
       subjectDid: obj.subject.did,
       subjectDeclarationCid: obj.subject.declarationCid,
       createdAt: obj.createdAt,
-      indexedAt: timestamp || new Date().toISOString(),
+      indexedAt: timestamp,
     })
     .onConflict((oc) => oc.doNothing())
     .returningAll()

@@ -1,6 +1,7 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import * as common from '@atproto/common'
+import { WriteOpAction } from '@atproto/repo'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import { notSoftDeletedClause } from '../../db/util'
@@ -18,7 +19,13 @@ export class RecordService {
     return (db: Database) => new RecordService(db, messageDispatcher)
   }
 
-  async indexRecord(uri: AtUri, cid: CID, obj: unknown, timestamp?: string) {
+  async indexRecord(
+    uri: AtUri,
+    cid: CID,
+    obj: unknown,
+    action: WriteOpAction.Create | WriteOpAction.Update = WriteOpAction.Create,
+    timestamp?: string,
+  ) {
     this.db.assertTransaction()
     log.debug({ uri }, 'indexing record')
     const record = {
@@ -36,11 +43,19 @@ export class RecordService {
     } else if (record.rkey.length < 1) {
       throw new Error('Expected indexed URI to contain a record key')
     }
-    await this.db.db.insertInto('record').values(record).execute()
+    await this.db.db
+      .insertInto('record')
+      .values(record)
+      .onConflict((oc) =>
+        oc
+          .column('uri')
+          .doUpdateSet({ cid: record.cid, indexedAt: record.indexedAt }),
+      )
+      .execute()
 
     await this.messageDispatcher.send(
       this.db,
-      indexRecord(uri, cid, obj, record.indexedAt),
+      indexRecord(uri, cid, obj, action, record.indexedAt),
     )
 
     log.info({ uri }, 'indexed record')
@@ -175,8 +190,9 @@ export class RecordService {
 
   async deleteForUser(did: string) {
     this.db.assertTransaction()
+    await this.messageDispatcher.send(this.db, deleteRepo(did))
     await Promise.all([
-      this.messageDispatcher.send(this.db, deleteRepo(did)),
+      this.db.db.deleteFrom('record').where('did', '=', did).execute(),
       this.db.db
         .deleteFrom('user_notification')
         .where('author', '=', did)

@@ -65,7 +65,7 @@ describe('sync', () => {
       const now = new Date(ts++).toISOString()
       const writes = await prepareWrites(op.did, op.ops)
       await db.transaction((dbTxn) =>
-        services.repo(dbTxn).indexCreatesAndDeletes(writes, now),
+        services.repo(dbTxn).indexWrites(writes, now),
       )
     }
     await messageQueue.processAll()

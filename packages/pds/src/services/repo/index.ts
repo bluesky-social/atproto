@@ -41,27 +41,12 @@ export class RepoService {
     const writeOps = writes.map(createWriteToOp)
     const repo = await Repo.create(storage, did, this.repoSigningKey, writeOps)
     await Promise.all([
-      this.indexCreatesAndDeletes(writes, now),
+      this.indexWrites(writes, now),
       this.afterWriteProcessing(did, repo.cid, writes),
     ])
   }
 
-  async processCreatesAndDeletes(
-    did: string,
-    writes: PreparedWrite[],
-    now: string,
-  ) {
-    await this.processWrites(did, writes, now, () =>
-      this.indexCreatesAndDeletes(writes, now),
-    )
-  }
-
-  async processWrites(
-    did: string,
-    writes: PreparedWrite[],
-    now: string,
-    indexWrites: (commit: CID) => Promise<void>,
-  ) {
+  async processWrites(did: string, writes: PreparedWrite[], now: string) {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
     const commitData = await this.formatCommit(storage, did, writes)
@@ -69,7 +54,7 @@ export class RepoService {
       // persist the commit to repo storage
       await storage.applyCommit(commitData),
       // & send to indexing
-      indexWrites(commitData.commit),
+      this.indexWrites(writes, now),
       // do any other processing needed after write
       this.afterWriteProcessing(did, commitData.commit, writes),
     ])
@@ -103,13 +88,22 @@ export class RepoService {
     return commit.commit
   }
 
-  async indexCreatesAndDeletes(writes: PreparedWrite[], now: string) {
+  async indexWrites(writes: PreparedWrite[], now: string) {
     this.db.assertTransaction()
     const recordTxn = this.services.record(this.db)
     await Promise.all(
       writes.map(async (write) => {
-        if (write.action === WriteOpAction.Create) {
-          await recordTxn.indexRecord(write.uri, write.cid, write.record, now)
+        if (
+          write.action === WriteOpAction.Create ||
+          write.action === WriteOpAction.Update
+        ) {
+          await recordTxn.indexRecord(
+            write.uri,
+            write.cid,
+            write.record,
+            write.action,
+            now,
+          )
         } else if (write.action === WriteOpAction.Delete) {
           await recordTxn.deleteRecord(write.uri)
         }

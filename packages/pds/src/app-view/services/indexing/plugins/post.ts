@@ -34,15 +34,8 @@ const insertFn = async (
   uri: AtUri,
   cid: CID,
   obj: PostRecord,
-  timestamp?: string,
+  timestamp: string,
 ): Promise<IndexedPost | null> => {
-  const entities = (obj.entities || []).map((entity) => ({
-    postUri: uri.toString(),
-    startIndex: entity.index.start,
-    endIndex: entity.index.end,
-    type: entity.type,
-    value: entity.value,
-  }))
   const post = {
     uri: uri.toString(),
     cid: cid.toString(),
@@ -53,7 +46,7 @@ const insertFn = async (
     replyRootCid: obj.reply?.root?.cid || null,
     replyParent: obj.reply?.parent?.uri || null,
     replyParentCid: obj.reply?.parent?.cid || null,
-    indexedAt: timestamp || new Date().toISOString(),
+    indexedAt: timestamp,
   }
   const insertedPost = await db
     .insertInto('post')
@@ -61,6 +54,16 @@ const insertFn = async (
     .onConflict((oc) => oc.doNothing())
     .returningAll()
     .executeTakeFirst()
+  if (!insertedPost) {
+    return null // Post already indexed
+  }
+  const entities = (obj.entities || []).map((entity) => ({
+    postUri: uri.toString(),
+    startIndex: entity.index.start,
+    endIndex: entity.index.end,
+    type: entity.type,
+    value: entity.value,
+  }))
   // Entity and embed indices
   let insertedEntities: PostEntity[] = []
   if (entities.length > 0) {
@@ -107,6 +110,7 @@ const insertFn = async (
       ancestorUri: post.uri,
       depth: 0,
     })
+    .onConflict((oc) => oc.doNothing()) // Supports post updates
     .execute()
   let ancestors: PostHierarchy[] = []
   if (post.replyParent) {
@@ -123,12 +127,11 @@ const insertFn = async (
             sql`depth + 1`.as('depth'),
           ]),
       )
+      .onConflict((oc) => oc.doNothing()) // Supports post updates
       .returningAll()
       .execute()
   }
-  return insertedPost
-    ? { post: insertedPost, entities: insertedEntities, embed, ancestors }
-    : null
+  return { post: insertedPost, entities: insertedEntities, embed, ancestors }
 }
 
 const findDuplicate = async (): Promise<AtUri | null> => {
@@ -214,12 +217,19 @@ const deleteFn = async (
       .executeTakeFirst()
     deletedEmbed = deletedPosts
   }
+  // Do not delete, maintain thread hierarchy even if post no longer exists
+  const ancestors = await db
+    .selectFrom('post_hierarchy')
+    .where('uri', '=', uri.toString())
+    .where('depth', '>', 0)
+    .selectAll()
+    .execute()
   return deleted
     ? {
         post: deleted,
         entities: deletedEntities,
         embed: deletedEmbed,
-        ancestors: [], // Do not delete, maintain thread hierarchy even if post doesn't exist
+        ancestors,
       }
     : null
 }
@@ -228,8 +238,11 @@ const eventsForDelete = (
   deleted: IndexedPost,
   replacedBy: IndexedPost | null,
 ): Message[] => {
-  if (replacedBy) return []
-  return [messages.deleteNotifications(deleted.post.uri)]
+  const replacedNotifications = replacedBy ? eventsForInsert(replacedBy) : []
+  return [
+    messages.deleteNotifications(deleted.post.uri),
+    ...replacedNotifications,
+  ]
 }
 
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>

@@ -327,8 +327,7 @@ describe('Subscriptions', () => {
         error = err
       }
 
-      expect(error?.['code']).toEqual('ABORT_ERR')
-      expect(error?.['cause']).toEqual(new Error('Oops!'))
+      expect(error).toEqual(new Error('Oops!'))
       expect(messages).toEqual([
         { count: 10 },
         { count: 9 },

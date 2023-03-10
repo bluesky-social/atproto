@@ -108,6 +108,7 @@ export class DevEnvServer {
             termsOfServiceUrl: 'https://example.com/tos',
             maxSubscriptionBuffer: 200,
             repoBackfillLimitMs: HOUR,
+            appViewRepoProvider: process.env.APP_VIEW_REPO_PROVIDER,
           }),
         })
         await startServer(pds)

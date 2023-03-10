@@ -1,4 +1,5 @@
 import { CID } from 'multiformats/cid'
+import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import Database from '../../../db'
 import * as Declaration from './plugins/declaration'
@@ -45,26 +46,35 @@ export class IndexingService {
       new IndexingService(db, messageQueue, messageDispatcher)
   }
 
-  async indexRecord(uri: AtUri, cid: CID, obj: unknown, timestamp: string) {
+  async indexRecord(
+    uri: AtUri,
+    cid: CID,
+    obj: unknown,
+    action: WriteOpAction.Create | WriteOpAction.Update,
+    timestamp: string,
+  ) {
     this.db.assertTransaction()
-    const table = this.findTableForCollection(uri.collection)
-    const events = await table.insertRecord(uri, cid, obj, timestamp)
+    const indexer = this.findIndexerForCollection(uri.collection)
+    const events =
+      action === WriteOpAction.Create
+        ? await indexer.insertRecord(uri, cid, obj, timestamp)
+        : await indexer.updateRecord(uri, cid, obj, timestamp)
     await this.messageQueue.send(this.db, events)
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {
     this.db.assertTransaction()
-    const table = this.findTableForCollection(uri.collection)
-    const events = await table.deleteRecord(uri, cascading)
+    const indexer = this.findIndexerForCollection(uri.collection)
+    const events = await indexer.deleteRecord(uri, cascading)
     await this.messageQueue.send(this.db, events)
   }
 
-  findTableForCollection(collection: string) {
+  findIndexerForCollection(collection: string) {
     const found = Object.values(this.records).find(
       (plugin) => plugin.collection === collection,
     )
     if (!found) {
-      throw new Error('Could not find table for collection')
+      throw new Error('Could not find indexer for collection')
     }
     return found
   }
@@ -107,7 +117,6 @@ export class IndexingService {
         .execute(),
     ])
     await Promise.all([
-      this.db.db.deleteFrom('record').where('did', '=', did).execute(),
       this.db.db.deleteFrom('assertion').where('creator', '=', did).execute(),
       this.db.db.deleteFrom('follow').where('creator', '=', did).execute(),
       this.db.db.deleteFrom('post').where('creator', '=', did).execute(),

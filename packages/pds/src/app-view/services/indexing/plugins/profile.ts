@@ -16,6 +16,7 @@ const insertFn = async (
   uri: AtUri,
   cid: CID,
   obj: Profile.Record,
+  timestamp: string,
 ): Promise<IndexedProfile | null> => {
   if (uri.rkey !== 'self') return null
   const inserted = await db
@@ -28,7 +29,7 @@ const insertFn = async (
       description: obj.description,
       avatarCid: obj.avatar?.cid,
       bannerCid: obj.banner?.cid,
-      indexedAt: new Date().toISOString(),
+      indexedAt: timestamp,
     })
     .onConflict((oc) => oc.doNothing())
     .returningAll()
