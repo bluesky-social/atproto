@@ -12,12 +12,12 @@ import {
   RecordWriteOp,
   RepoContents,
   RecordPath,
-  RepoRoot,
   WriteLog,
   WriteOpAction,
   RecordClaim,
+  Commit,
 } from '../src'
-import { Keypair } from '@atproto/crypto'
+import { Keypair, randomBytes } from '@atproto/crypto'
 
 type IdMapping = Record<string, CID>
 
@@ -29,22 +29,14 @@ export const randomCid = async (storage?: RepoStorage): Promise<CID> => {
   return block.cid
 }
 
-export const generateBulkTids = (count: number): TID[] => {
-  const ids: TID[] = []
-  for (let i = 0; i < count; i++) {
-    ids.push(TID.next())
-  }
-  return ids
-}
-
-export const generateBulkTidMapping = async (
+export const generateBulkDataKeys = async (
   count: number,
   blockstore?: RepoStorage,
 ): Promise<IdMapping> => {
-  const ids = generateBulkTids(count)
   const obj: IdMapping = {}
-  for (const id of ids) {
-    obj[id.toString()] = await randomCid(blockstore)
+  for (let i = 0; i < count; i++) {
+    const key = `com.example.record/${TID.nextStr()}`
+    obj[key] = await randomCid(blockstore)
   }
   return obj
 }
@@ -246,16 +238,12 @@ export const addBadCommit = async (
   const updatedData = await repo.data.add(`com.example.test/${TID.next()}`, cid)
   const unstoredData = await updatedData.getUnstoredBlocks()
   blocks.addMap(unstoredData.blocks)
-  const root: RepoRoot = {
-    meta: repo.root.meta,
+  // we generate a bad sig by signing some other data
+  const commit: Commit = {
+    ...repo.commit,
     prev: repo.cid,
     data: unstoredData.root,
-  }
-  const rootCid = await blocks.add(root)
-  // we generate a bad sig by signing the data cid instead of root cid
-  const commit = {
-    root: rootCid,
-    sig: await keypair.sign(unstoredData.root.bytes),
+    sig: await keypair.sign(randomBytes(256)),
   }
   const commitCid = await blocks.add(commit)
   await repo.storage.applyCommit({

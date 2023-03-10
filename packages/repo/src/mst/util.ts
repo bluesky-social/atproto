@@ -2,40 +2,32 @@ import { CID } from 'multiformats'
 import * as uint8arrays from 'uint8arrays'
 import { ReadableBlockstore } from '../storage'
 import { sha256 } from '@atproto/crypto'
-import { MST, Leaf, NodeEntry, NodeData, MstOpts, Fanout } from './mst'
+import { MST, Leaf, NodeEntry, NodeData, MstOpts } from './mst'
 import { cidForCbor } from '@atproto/common'
 
-type SupportedBases = 'base2' | 'base8' | 'base16' | 'base32' | 'base64'
-
-export const leadingZerosOnHash = async (
-  key: string,
-  fanout: Fanout,
-): Promise<number> => {
-  if ([2, 8, 16, 32, 64].indexOf(fanout) < 0) {
-    throw new Error(`Not a valid fanout: ${fanout}`)
-  }
-  const base: SupportedBases = `base${fanout}`
-  const zeroChar = uint8arrays.toString(new Uint8Array(1), base)[0]
+export const leadingZerosOnHash = async (key: string | Uint8Array) => {
   const hash = await sha256(key)
-  const encoded = uint8arrays.toString(hash, base)
-  let count = 0
-  for (const char of encoded) {
-    if (char === zeroChar) {
-      count++
+  let leadingZeros = 0
+  for (let i = 0; i < hash.length; i++) {
+    const byte = hash[i]
+    if (byte < 64) leadingZeros++
+    if (byte < 16) leadingZeros++
+    if (byte < 4) leadingZeros++
+    if (byte === 0) {
+      leadingZeros++
     } else {
       break
     }
   }
-  return count
+  return leadingZeros
 }
 
 export const layerForEntries = async (
   entries: NodeEntry[],
-  fanout: Fanout,
 ): Promise<number | null> => {
   const firstLeaf = entries.find((entry) => entry.isLeaf())
   if (!firstLeaf || firstLeaf.isTree()) return null
-  return await leadingZerosOnHash(firstLeaf.key, fanout)
+  return await leadingZerosOnHash(firstLeaf.key)
 }
 
 export const deserializeNodeData = async (
@@ -43,26 +35,26 @@ export const deserializeNodeData = async (
   data: NodeData,
   opts?: Partial<MstOpts>,
 ): Promise<NodeEntry[]> => {
-  const { layer, fanout } = opts || {}
+  const { layer } = opts || {}
   const entries: NodeEntry[] = []
   if (data.l !== null) {
     entries.push(
       await MST.load(storage, data.l, {
         layer: layer ? layer - 1 : undefined,
-        fanout,
       }),
     )
   }
   let lastKey = ''
   for (const entry of data.e) {
-    const key = lastKey.slice(0, entry.p) + entry.k
+    const keyStr = uint8arrays.toString(entry.k, 'ascii')
+    const key = lastKey.slice(0, entry.p) + keyStr
+    ensureValidMstKey(key)
     entries.push(new Leaf(key, entry.v))
     lastKey = key
     if (entry.t !== null) {
       entries.push(
         await MST.load(storage, entry.t, {
           layer: layer ? layer - 1 : undefined,
-          fanout,
         }),
       )
     }
@@ -93,10 +85,11 @@ export const serializeNodeData = (entries: NodeEntry[]): NodeData => {
       subtree = next.pointer
       i++
     }
+    ensureValidMstKey(leaf.key)
     const prefixLen = countPrefixLen(lastKey, leaf.key)
     data.e.push({
       p: prefixLen,
-      k: leaf.key.slice(prefixLen),
+      k: uint8arrays.fromString(leaf.key.slice(prefixLen), 'ascii'),
       v: leaf.value,
       t: subtree,
     })
@@ -119,4 +112,34 @@ export const countPrefixLen = (a: string, b: string): number => {
 export const cidForEntries = async (entries: NodeEntry[]): Promise<CID> => {
   const data = serializeNodeData(entries)
   return cidForCbor(data)
+}
+
+export const isValidMstKey = (str: string): boolean => {
+  const split = str.split('/')
+  return (
+    str.length <= 256 &&
+    split.length === 2 &&
+    split[0].length > 0 &&
+    split[1].length > 0 &&
+    isValidChars(split[0]) &&
+    isValidChars(split[1])
+  )
+}
+
+export const validCharsRegex = /^[a-zA-Z0-9_\-:.]*$/
+
+export const isValidChars = (str: string): boolean => {
+  return str.match(validCharsRegex) !== null
+}
+
+export const ensureValidMstKey = (str: string) => {
+  if (!isValidMstKey(str)) {
+    throw new InvalidMstKeyError(str)
+  }
+}
+
+export class InvalidMstKeyError extends Error {
+  constructor(public key: string) {
+    super(`Not a valid MST key: ${key}`)
+  }
 }

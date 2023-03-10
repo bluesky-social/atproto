@@ -10,9 +10,10 @@ export default function (server: Server, ctx: AppContext) {
       const { useCount } = input.body
 
       // generate a 5 char b32 invite code - preceded by the hostname
-      // ex: bsky.app-abc12
+      // with '.'s replaced by '-'s so it is not mistakable for a link
+      // ex: bsky-app-abc12
       const code =
-        ctx.cfg.publicHostname +
+        ctx.cfg.publicHostname.replaceAll('.', '-') +
         '-' +
         uint8arrays.toString(await crypto.randomBytes(5), 'base32').slice(0, 5)
 
