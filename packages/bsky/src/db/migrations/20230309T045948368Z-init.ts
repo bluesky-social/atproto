@@ -276,7 +276,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
   // @TODO(bsky) ipldBlock
   await db.schema
-    .createTable('ipld_block_temp')
+    .createTable('ipld_block')
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('size', 'integer', (col) => col.notNull())

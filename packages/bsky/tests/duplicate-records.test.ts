@@ -1,6 +1,7 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { cidForCbor, TID, cborEncode } from '@atproto/common'
+import { WriteOpAction } from '@atproto/repo'
 import { CloseFn, runTestServer } from './_util'
 import { Database } from '../src'
 import * as lex from '../src/lexicon/lexicons'
@@ -73,7 +74,9 @@ describe('duplicate record', () => {
         }
         const uri = AtUri.make(did, coll, TID.nextStr())
         const cid = await putBlock(tx, did, repost)
-        await services.record(tx).indexRecord(uri, cid, repost)
+        await services
+          .indexing(tx)
+          .indexRecord(uri, cid, repost, WriteOpAction.Create, repost.createdAt)
         uris.push(uri)
       }
     })
@@ -82,14 +85,14 @@ describe('duplicate record', () => {
     expect(count).toBe(1)
 
     await db.transaction(async (tx) => {
-      await services.record(tx).deleteRecord(uris[0], false)
+      await services.indexing(tx).deleteRecord(uris[0], false)
     })
 
     count = await countRecords(db, 'repost')
     expect(count).toBe(1)
 
     await db.transaction(async (tx) => {
-      await services.record(tx).deleteRecord(uris[1], true)
+      await services.indexing(tx).deleteRecord(uris[1], true)
     })
 
     count = await countRecords(db, 'repost')
@@ -115,7 +118,9 @@ describe('duplicate record', () => {
         }
         const uri = AtUri.make(did, coll, TID.nextStr())
         const cid = await putBlock(tx, did, vote)
-        await services.record(tx).indexRecord(uri, cid, vote)
+        await services
+          .indexing(tx)
+          .indexRecord(uri, cid, vote, WriteOpAction.Create, vote.createdAt)
         uris.push(uri)
       }
     })
@@ -124,7 +129,7 @@ describe('duplicate record', () => {
     expect(count).toBe(1)
 
     await db.transaction(async (tx) => {
-      await services.record(tx).deleteRecord(uris[0], false)
+      await services.indexing(tx).deleteRecord(uris[0], false)
     })
 
     count = await countRecords(db, 'vote')
@@ -138,7 +143,7 @@ describe('duplicate record', () => {
     expect(got?.direction === 'down')
 
     await db.transaction(async (tx) => {
-      await services.record(tx).deleteRecord(uris[1], true)
+      await services.indexing(tx).deleteRecord(uris[1], true)
     })
 
     count = await countRecords(db, 'vote')
@@ -161,7 +166,9 @@ describe('duplicate record', () => {
         }
         const uri = AtUri.make(did, coll, TID.nextStr())
         const cid = await putBlock(tx, did, follow)
-        await services.record(tx).indexRecord(uri, cid, follow)
+        await services
+          .indexing(tx)
+          .indexRecord(uri, cid, follow, WriteOpAction.Create, follow.createdAt)
         uris.push(uri)
       }
     })
@@ -170,14 +177,14 @@ describe('duplicate record', () => {
     expect(count).toBe(1)
 
     await db.transaction(async (tx) => {
-      await services.record(tx).deleteRecord(uris[0], false)
+      await services.indexing(tx).deleteRecord(uris[0], false)
     })
 
     count = await countRecords(db, 'follow')
     expect(count).toBe(1)
 
     await db.transaction(async (tx) => {
-      await services.record(tx).deleteRecord(uris[1], true)
+      await services.indexing(tx).deleteRecord(uris[1], true)
     })
 
     count = await countRecords(db, 'follow')
@@ -203,7 +210,15 @@ describe('duplicate record', () => {
         }
         const uri = AtUri.make(did, coll, TID.nextStr())
         const cid = await putBlock(tx, did, assertion)
-        await services.record(tx).indexRecord(uri, cid, assertion)
+        await services
+          .indexing(tx)
+          .indexRecord(
+            uri,
+            cid,
+            assertion,
+            WriteOpAction.Create,
+            assertion.createdAt,
+          )
         assertUris.push(uri)
         assertCids.push(cid)
       }
@@ -228,7 +243,9 @@ describe('duplicate record', () => {
         }
         const uri = AtUri.make(did, coll, TID.nextStr())
         const cid = await putBlock(tx, did, follow)
-        await services.record(tx).indexRecord(uri, cid, follow)
+        await services
+          .indexing(tx)
+          .indexRecord(uri, cid, follow, WriteOpAction.Create, follow.createdAt)
         confirmUris.push(uri)
         confirmCids.push(cid)
       }
@@ -246,7 +263,7 @@ describe('duplicate record', () => {
     expect(count).toBe(1)
 
     await db.transaction(async (tx) => {
-      await services.record(tx).deleteRecord(confirmUris[0], false)
+      await services.indexing(tx).deleteRecord(confirmUris[0], false)
     })
 
     count = await countRecords(db, 'assertion')
@@ -255,7 +272,7 @@ describe('duplicate record', () => {
     expect(assertion?.confirmUri).toEqual(confirmUris[1].toString())
 
     await db.transaction(async (tx) => {
-      await services.record(tx).deleteRecord(confirmUris[1], true)
+      await services.indexing(tx).deleteRecord(confirmUris[1], true)
     })
 
     count = await countRecords(db, 'assertion')
@@ -264,14 +281,14 @@ describe('duplicate record', () => {
     expect(assertion?.confirmUri).toBeNull()
 
     await db.transaction(async (tx) => {
-      await services.record(tx).deleteRecord(assertUris[0], false)
+      await services.indexing(tx).deleteRecord(assertUris[0], false)
     })
 
     count = await countRecords(db, 'assertion')
     expect(count).toBe(1)
 
     await db.transaction(async (tx) => {
-      await services.record(tx).deleteRecord(assertUris[1], false)
+      await services.indexing(tx).deleteRecord(assertUris[1], false)
     })
 
     count = await countRecords(db, 'assertion')
