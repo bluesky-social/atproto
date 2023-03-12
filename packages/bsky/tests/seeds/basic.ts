@@ -1,4 +1,4 @@
-import { MessageQueue } from '../../src/event-stream/types'
+import { MessageQueue } from '@atproto/pds/src/event-stream/types'
 import { SeedClient } from './client'
 import usersSeed from './users'
 

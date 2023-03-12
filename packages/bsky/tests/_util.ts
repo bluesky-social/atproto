@@ -11,7 +11,6 @@ import { Main as FeedViewPost } from '../src/lexicon/types/app/bsky/feed/feedVie
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import MemoryBlobStore from '../src/storage/memory-blobstore'
 import AppContext from '../src/context'
-import { RepoSubscription } from '../src/subscription/repo'
 
 const ADMIN_PASSWORD = 'admin-pass'
 
@@ -22,6 +21,8 @@ export type TestServerInfo = {
   ctx: AppContext
   pds: pds.PDS
   pdsUrl: string
+  plc: PlcServer
+  plcUrl: string
   close: CloseFn
 }
 
@@ -134,6 +135,8 @@ export const runTestServer = async (
     ctx: bsky.ctx,
     pds: pdsServer,
     pdsUrl: `http://localhost:${pdsPort}`,
+    plc: plcServer,
+    plcUrl: `http://localhost:${plcPort}`,
     close: async () => {
       await bsky.destroy()
       await pdsServer.destroy()

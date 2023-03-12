@@ -66,6 +66,11 @@ export class RepoSubscription {
     this.leader.destroy(new DisconnectError())
   }
 
+  async resume() {
+    this.destroyed = false
+    await this.run()
+  }
+
   private async handleOps(
     tx: Database,
     ops: PreparedWrite[],
@@ -96,6 +101,14 @@ export class RepoSubscription {
       .where('method', '=', METHOD)
       .executeTakeFirst()
     return sub ? (JSON.parse(sub.state) as State) : { cursor: 0 }
+  }
+
+  async resetState(): Promise<void> {
+    await this.ctx.db.db
+      .deleteFrom('subscription')
+      .where('service', '=', this.service)
+      .where('method', '=', METHOD)
+      .executeTakeFirst()
   }
 
   private async setState(tx: Database, state: State): Promise<void> {

@@ -1,20 +1,14 @@
 import { AddressInfo } from 'net'
 import express from 'express'
 import axios, { AxiosError } from 'axios'
-import AtpAgent from '@atproto/api'
 import { CloseFn, runTestServer, TestServerInfo } from './_util'
 import { handler as errorHandler } from '../src/error'
-import { SeedClient } from './seeds/client'
-import usersSeed from './seeds/users'
 import { Database } from '../src'
 
 describe('server', () => {
   let server: TestServerInfo
   let close: CloseFn
   let db: Database
-  let agent: AtpAgent
-  let sc: SeedClient
-  let alice: string
 
   beforeAll(async () => {
     server = await runTestServer({
@@ -22,10 +16,6 @@ describe('server', () => {
     })
     close = server.close
     db = server.ctx.db
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
-    await usersSeed(sc)
-    alice = sc.dids.alice
   })
 
   afterAll(async () => {
@@ -66,7 +56,8 @@ describe('server', () => {
     expect(data).toEqual({ version: '0.0.0' })
   })
 
-  it('limits size of json input.', async () => {
+  // TODO(bsky) check on a different endpoint that accepts json, currently none.
+  it.skip('limits size of json input.', async () => {
     let error: AxiosError
     try {
       await axios.post(
@@ -74,7 +65,7 @@ describe('server', () => {
         {
           data: 'x'.repeat(100 * 1024), // 100kb
         },
-        { headers: sc.getHeaders(alice) },
+        // { headers: sc.getHeaders(alice) },
       )
       throw new Error('Request should have failed')
     } catch (err) {
@@ -92,6 +83,7 @@ describe('server', () => {
   })
 
   it('healthcheck fails when database is unavailable.', async () => {
+    server.bsky.sub.destroy()
     await db.close()
     let error: AxiosError
     try {
