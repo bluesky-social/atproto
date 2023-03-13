@@ -1,9 +1,6 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import {
-  cleanTerm,
-  getUserSearchQueryPg,
-} from '../../../../services/util/search'
+import { cleanTerm, getUserSearchQuery } from '../../../../services/util/search'
 import { authVerifier } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -26,7 +23,9 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const results = await getResultsPg(ctx.db, { term, limit })
+      const results = await getUserSearchQuery(db, { term, limit })
+        .selectAll('actor')
+        .execute()
 
       return {
         encoding: 'application/json',
@@ -38,11 +37,4 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
-}
-
-const getResultsPg = async (db, { term, limit }) => {
-  return await getUserSearchQueryPg(db, { term: term || '', limit })
-    .leftJoin('profile', 'profile.creator', 'did_handle.did')
-    .selectAll('did_handle')
-    .execute()
 }

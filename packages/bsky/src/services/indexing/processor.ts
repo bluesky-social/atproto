@@ -1,6 +1,5 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import * as common from '@atproto/common'
 import DatabaseSchema from '../../db/database-schema'
 import { lexicons } from '../../lexicon/lexicons'
 import { Message } from './messages'
@@ -57,6 +56,17 @@ export class RecordProcessor<T, S> {
     if (!this.matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${this.params.lexId}`)
     }
+    await this.db
+      .insertInto('record')
+      .values({
+        uri: uri.toString(),
+        cid: cid.toString(),
+        did: uri.host,
+        json: JSON.stringify(obj),
+        indexedAt: timestamp,
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
     const inserted = await this.params.insertFn(
       this.db,
       uri,
@@ -98,7 +108,15 @@ export class RecordProcessor<T, S> {
     if (!this.matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${this.params.lexId}`)
     }
-
+    await this.db
+      .updateTable('record')
+      .where('uri', '=', uri.toString())
+      .set({
+        cid: cid.toString(),
+        json: JSON.stringify(obj),
+        indexedAt: timestamp,
+      })
+      .execute()
     // If the updated record was a dupe, update dupe info for it
     const dupe = await this.params.findDuplicate(this.db, uri, obj)
     if (dupe) {
@@ -140,6 +158,10 @@ export class RecordProcessor<T, S> {
 
   async deleteRecord(uri: AtUri, cascading = false): Promise<Message[]> {
     await this.db
+      .deleteFrom('record')
+      .where('uri', '=', uri.toString())
+      .execute()
+    await this.db
       .deleteFrom('duplicate_record')
       .where('uri', '=', uri.toString())
       .execute()
@@ -154,12 +176,7 @@ export class RecordProcessor<T, S> {
     } else {
       const found = await this.db
         .selectFrom('duplicate_record')
-        // @TODO remove ipld_block dependency from app-view
-        .innerJoin('ipld_block', (join) =>
-          join
-            .onRef('ipld_block.cid', '=', 'duplicate_record.cid')
-            .on('ipld_block.creator', '=', uri.host),
-        )
+        .innerJoin('record', 'record.uri', 'duplicate_record.uri')
         .where('duplicateOf', '=', uri.toString())
         .orderBy('duplicate_record.indexedAt', 'asc')
         .limit(1)
@@ -169,7 +186,7 @@ export class RecordProcessor<T, S> {
       if (!found) {
         return this.params.eventsForDelete(deleted, null)
       }
-      const record = common.cborDecode(found.content)
+      const record = JSON.parse(found.json)
       if (!this.matchesSchema(record)) {
         return this.params.eventsForDelete(deleted, null)
       }

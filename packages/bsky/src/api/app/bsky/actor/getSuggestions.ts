@@ -19,22 +19,21 @@ export default function (server: Server, ctx: AppContext) {
       const { ref } = db.dynamic
 
       const suggestionsQb = db
-        .selectFrom('did_handle')
-        .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
-        .where(notSoftDeletedClause(ref('repo_root')))
-        .where('did_handle.did', '!=', requester)
+        .selectFrom('actor')
+        .where(notSoftDeletedClause(ref('actor')))
+        .where('actor.did', '!=', requester)
         .whereNotExists((qb) =>
           qb
             .selectFrom('follow')
             .selectAll()
             .where('creator', '=', requester)
-            .whereRef('subjectDid', '=', ref('did_handle.did')),
+            .whereRef('subjectDid', '=', ref('actor.did')),
         )
-        .selectAll('did_handle')
+        .selectAll()
         .select(
           db
             .selectFrom('post')
-            .whereRef('creator', '=', ref('did_handle.did'))
+            .whereRef('creator', '=', ref('actor.did'))
             .select(countAll.as('count'))
             .as('postCount'),
         )

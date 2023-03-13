@@ -16,13 +16,8 @@ export default function (server: Server, ctx: AppContext) {
       let builder = db.db
         .selectFrom('vote')
         .where('vote.subject', '=', uri)
-        .innerJoin('did_handle as creator', 'creator.did', 'vote.creator')
-        .innerJoin(
-          'repo_root as creator_repo',
-          'creator_repo.did',
-          'vote.creator',
-        )
-        .where(notSoftDeletedClause(ref('creator_repo')))
+        .innerJoin('actor as creator', 'creator.did', 'vote.creator')
+        .where(notSoftDeletedClause(ref('creator')))
         .selectAll('creator')
         .select([
           'vote.cid as cid',

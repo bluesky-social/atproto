@@ -10,19 +10,19 @@ import {
 
 export const actorWhereClause = (actor: string) => {
   if (actor.startsWith('did:')) {
-    return sql<0 | 1>`"did_handle"."did" = ${actor}`
+    return sql<0 | 1>`"actor"."did" = ${actor}`
   } else {
-    return sql<0 | 1>`"did_handle"."handle" = ${actor}`
+    return sql<0 | 1>`"actor"."handle" = ${actor}`
   }
 }
 
-// Applies to repo_root or record table
+// Applies to actor or record table
 export const notSoftDeletedClause = (alias: DbRef) => {
   return sql`${alias}."takedownId" is null`
 }
 
-export const softDeleted = (repoOrRecord: { takedownId: number | null }) => {
-  return repoOrRecord.takedownId !== null
+export const softDeleted = (actorOrRecord: { takedownId: number | null }) => {
+  return actorOrRecord.takedownId !== null
 }
 
 export const countAll = sql<number>`count(*)`

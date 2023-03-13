@@ -3,7 +3,7 @@ import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import {
   cleanTerm,
-  getUserSearchQueryPg,
+  getUserSearchQuery,
   SearchKeyset,
 } from '../../../../services/util/search'
 import { authVerifier } from '../util'
@@ -29,7 +29,10 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const results = await getResultsPg(db, { term, limit, before })
+      const results = await getUserSearchQuery(db, { term, limit, before })
+        .select('distance')
+        .selectAll('actor')
+        .execute()
       const keyset = new SearchKeyset(sql``, sql``)
 
       return {
@@ -43,12 +46,4 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
-}
-
-const getResultsPg = async (db, { term, limit, before }) => {
-  return await getUserSearchQueryPg(db, { term: term || '', limit, before })
-    .leftJoin('profile', 'profile.creator', 'did_handle.did')
-    .select('distance')
-    .selectAll('did_handle')
-    .execute()
 }

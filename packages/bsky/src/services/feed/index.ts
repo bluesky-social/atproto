@@ -1,12 +1,11 @@
 import { sql } from 'kysely'
-import * as common from '@atproto/common'
+import { getDeclarationSimple } from '../../api/app/bsky/util'
 import Database from '../../db'
 import { countAll, notSoftDeletedClause } from '../../db/util'
 import { ImageUriBuilder } from '../../image/uri'
 import { isPresented as isPresentedImage } from '../../lexicon/types/app/bsky/embed/images'
 import { View as PostView } from '../../lexicon/types/app/bsky/feed/post'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from '../types'
-import { getDeclarationSimple } from '../../api/app/bsky/util'
 
 export * from '../types'
 
@@ -21,9 +20,9 @@ export class FeedService {
     const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('post')
-      .innerJoin('repo_root as author_repo', 'author_repo.did', 'post.creator')
+      .innerJoin('actor as author', 'author.did', 'post.creator')
       .innerJoin('record', 'record.uri', 'post.uri')
-      .where(notSoftDeletedClause(ref('author_repo')))
+      .where(notSoftDeletedClause(ref('author')))
       .where(notSoftDeletedClause(ref('record')))
       .select([
         sql<FeedItemType>`${'post'}`.as('type'),
@@ -42,15 +41,11 @@ export class FeedService {
     return this.db.db
       .selectFrom('repost')
       .innerJoin('post', 'post.uri', 'repost.subject')
-      .innerJoin('repo_root as author_repo', 'author_repo.did', 'post.creator')
-      .innerJoin(
-        'repo_root as originator_repo',
-        'originator_repo.did',
-        'repost.creator',
-      )
+      .innerJoin('actor as author', 'author.did', 'post.creator')
+      .innerJoin('actor as originator', 'originator.did', 'repost.creator')
       .innerJoin('record as post_record', 'post_record.uri', 'post.uri')
-      .where(notSoftDeletedClause(ref('author_repo')))
-      .where(notSoftDeletedClause(ref('originator_repo')))
+      .where(notSoftDeletedClause(ref('author')))
+      .where(notSoftDeletedClause(ref('originator')))
       .where(notSoftDeletedClause(ref('post_record')))
       .select([
         sql<FeedItemType>`${'repost'}`.as('type'),
@@ -72,10 +67,10 @@ export class FeedService {
     if (dids.length < 1) return {}
     const { ref } = this.db.db.dynamic
     const actors = await this.db.db
-      .selectFrom('did_handle')
-      .where('did_handle.did', 'in', dids)
-      .leftJoin('profile', 'profile.creator', 'did_handle.did')
-      .selectAll('did_handle')
+      .selectFrom('actor')
+      .where('actor.did', 'in', dids)
+      .leftJoin('profile', 'profile.creator', 'actor.did')
+      .selectAll('actor')
       .select([
         'profile.uri as profileUri',
         'profile.displayName as displayName',
@@ -85,12 +80,12 @@ export class FeedService {
         this.db.db
           .selectFrom('follow')
           .where('creator', '=', requester)
-          .whereRef('subjectDid', '=', ref('did_handle.did'))
+          .whereRef('subjectDid', '=', ref('actor.did'))
           .select('uri')
           .as('requesterFollowing'),
         this.db.db
           .selectFrom('follow')
-          .whereRef('creator', '=', ref('did_handle.did'))
+          .whereRef('creator', '=', ref('actor.did'))
           .where('subjectDid', '=', requester)
           .select('uri')
           .as('requesterFollowedBy'),
@@ -101,7 +96,7 @@ export class FeedService {
         ...acc,
         [cur.did]: {
           did: cur.did,
-          declaration: getDeclarationSimple(cur),
+          declaration: getDeclarationSimple(),
           handle: cur.handle,
           displayName: cur.displayName || undefined,
           avatar: cur.avatarCid
@@ -127,21 +122,16 @@ export class FeedService {
     const posts = await db
       .selectFrom('post')
       .where('post.uri', 'in', postUris)
-      .innerJoin('ipld_block', (join) =>
-        join
-          .onRef('ipld_block.cid', '=', 'post.cid')
-          .onRef('ipld_block.creator', '=', 'post.creator'),
-      )
-      .innerJoin('repo_root', 'repo_root.did', 'post.creator')
+      .innerJoin('actor', 'actor.did', 'post.creator')
       .innerJoin('record', 'record.uri', 'post.uri')
-      .where(notSoftDeletedClause(ref('repo_root'))) // Ensures post reply parent/roots get omitted from views when taken down
+      .where(notSoftDeletedClause(ref('actor'))) // Ensures post reply parent/roots get omitted from views when taken down
       .where(notSoftDeletedClause(ref('record')))
       .select([
         'post.uri as uri',
         'post.cid as cid',
         'post.creator as creator',
         'post.indexedAt as indexedAt',
-        'ipld_block.content as recordBytes',
+        'record.json as recordJson',
         db
           .selectFrom('vote')
           .whereRef('subject', '=', ref('post.uri'))
@@ -312,7 +302,7 @@ export class FeedService {
       uri: post.uri,
       cid: post.cid,
       author: author,
-      record: common.cborDecode(post.recordBytes),
+      record: JSON.parse(post.recordJson),
       embed: embeds[uri],
       replyCount: post.replyCount,
       repostCount: post.repostCount,

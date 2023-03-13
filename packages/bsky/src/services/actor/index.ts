@@ -1,8 +1,8 @@
 import Database from '../../db'
-import { DidHandle } from '../../db/tables/did-handle'
 import { notSoftDeletedClause } from '../../db/util'
 import { ActorViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
+import { Actor } from '../../db/tables/actor'
 
 export class ActorService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
@@ -39,22 +39,20 @@ export class ActorService {
       }
     })
     const results = await this.db.db
-      .selectFrom('did_handle')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .selectFrom('actor')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('actor'))),
       )
       .where((qb) => {
         if (dids.length) {
-          qb = qb.orWhere('did_handle.did', 'in', dids)
+          qb = qb.orWhere('actor.did', 'in', dids)
         }
         if (handles.length) {
-          qb = qb.orWhere('did_handle.handle', 'in', handles)
+          qb = qb.orWhere('actor.handle', 'in', handles)
         }
         return qb
       })
-      .selectAll('did_handle')
-      .select('takedownId')
+      .selectAll()
       .execute()
 
     return results.sort((a, b) => {
@@ -65,4 +63,4 @@ export class ActorService {
   }
 }
 
-type ActorResult = DidHandle & { takedownId: number | null }
+type ActorResult = Actor

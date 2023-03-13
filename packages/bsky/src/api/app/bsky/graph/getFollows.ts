@@ -24,13 +24,8 @@ export default function (server: Server, ctx: AppContext) {
       let followsReq = ctx.db.db
         .selectFrom('follow')
         .where('follow.creator', '=', creatorRes.did)
-        .innerJoin('did_handle as subject', 'subject.did', 'follow.subjectDid')
-        .innerJoin(
-          'repo_root as subject_repo',
-          'subject_repo.did',
-          'follow.subjectDid',
-        )
-        .where(notSoftDeletedClause(ref('subject_repo')))
+        .innerJoin('actor as subject', 'subject.did', 'follow.subjectDid')
+        .where(notSoftDeletedClause(ref('subject')))
         .selectAll('subject')
         .select(['follow.cid as cid', 'follow.createdAt as createdAt'])
 
