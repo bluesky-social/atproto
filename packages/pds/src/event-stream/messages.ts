@@ -2,9 +2,11 @@
 
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
+import { WriteOpAction } from '@atproto/repo'
 
 export type IndexRecord = {
   type: 'index_record'
+  action: WriteOpAction.Create | WriteOpAction.Update
   uri: AtUri
   cid: CID
   obj: unknown
@@ -26,12 +28,14 @@ export const indexRecord = (
   uri: AtUri,
   cid: CID,
   obj: unknown,
+  action: WriteOpAction.Create | WriteOpAction.Update,
   timestamp: string,
 ): IndexRecord => ({
   type: 'index_record',
   uri,
   cid,
   obj,
+  action,
   timestamp,
 })
 

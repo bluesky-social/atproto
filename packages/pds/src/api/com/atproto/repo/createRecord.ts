@@ -43,7 +43,7 @@ export default function (server: Server, ctx: AppContext) {
 
       await ctx.db.transaction(async (dbTxn) => {
         const repoTxn = ctx.services.repo(dbTxn)
-        await repoTxn.processCreatesAndDeletes(did, [write], now)
+        await repoTxn.processWrites(did, [write], now)
       })
 
       return {

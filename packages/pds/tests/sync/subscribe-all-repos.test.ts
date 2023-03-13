@@ -7,13 +7,12 @@ import {
   wait,
 } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
-import { DidResolver } from '@atproto/did-resolver'
 import * as repo from '@atproto/repo'
 import { getWriteLog, MemoryBlockstore, WriteOpAction } from '@atproto/repo'
 import { byFrame, ErrorFrame, Frame, InfoFrame } from '@atproto/xrpc-server'
 import { WebSocket } from 'ws'
 import { OutputSchema as RepoEvent } from '../../src/lexicon/types/com/atproto/sync/subscribeAllRepos'
-import { Database } from '../../src'
+import { AppContext, Database } from '../../src'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { CloseFn, runTestServer } from '../_util'
@@ -23,8 +22,8 @@ describe('repo subscribe all repos', () => {
   let serverHost: string
 
   let db: Database
+  let ctx: AppContext
 
-  let didResolver: DidResolver
   let agent: AtpAgent
   let sc: SeedClient
   let alice: string
@@ -39,6 +38,7 @@ describe('repo subscribe all repos', () => {
       dbPostgresSchema: 'repo_subscribe_all_repos',
     })
     serverHost = server.url.replace('http://', '')
+    ctx = server.ctx
     db = server.ctx.db
     close = server.close
     agent = new AtpAgent({ service: server.url })
@@ -48,7 +48,6 @@ describe('repo subscribe all repos', () => {
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
-    didResolver = new DidResolver({ plcUrl: server.ctx.cfg.didPlcUrl })
   })
 
   afterAll(async () => {
@@ -61,7 +60,8 @@ describe('repo subscribe all repos', () => {
     const synced = await repo.loadFullRepo(
       storage,
       new Uint8Array(car.data),
-      didResolver,
+      did,
+      ctx.repoSigningKey.did(),
     )
     return repo.Repo.load(storage, synced.root)
   }
@@ -104,7 +104,7 @@ describe('repo subscribe all repos', () => {
         cid: w.action === WriteOpAction.Delete ? null : w.cid.toString(),
       }))
       const sortedOps = evt.ops.sort((a, b) => a.path.localeCompare(b.path))
-      const sortedWrites = evt.ops.sort((a, b) => a.path.localeCompare(b.path))
+      const sortedWrites = writes.sort((a, b) => a.path.localeCompare(b.path))
       expect(sortedOps).toEqual(sortedWrites)
     }
   }

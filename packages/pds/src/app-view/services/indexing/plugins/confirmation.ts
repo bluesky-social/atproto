@@ -16,7 +16,7 @@ const insertFn = async (
   uri: AtUri,
   cid: CID,
   obj: Confirmation.Record,
-  timestamp?: string,
+  timestamp: string,
 ): Promise<IndexedAssertion | null> => {
   const updated = await db
     .updateTable('assertion')
@@ -27,7 +27,7 @@ const insertFn = async (
       confirmUri: uri.toString(),
       confirmCid: cid.toString(),
       confirmCreated: obj.createdAt,
-      confirmIndexed: timestamp || new Date().toISOString(),
+      confirmIndexed: timestamp,
     })
     .returningAll()
     .executeTakeFirst()

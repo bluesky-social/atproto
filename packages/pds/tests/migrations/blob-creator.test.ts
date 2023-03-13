@@ -17,7 +17,7 @@ describe('blob creator migration', () => {
     } else {
       db = Database.memory()
     }
-    await db.migrateToOrThrow('_20230304T193548198Z')
+    await db.migrateToOrThrow('_20230310T205728933Z')
 
     rawDb = db.db
   })
@@ -87,7 +87,7 @@ describe('blob creator migration', () => {
   })
 
   it('migrates up', async () => {
-    const migration = await db.migrator.migrateTo('_20230307T181752950Z')
+    const migration = await db.migrator.migrateTo('_20230310T205728933Z')
     expect(migration.error).toBeUndefined()
   })
 
@@ -120,7 +120,7 @@ describe('blob creator migration', () => {
   })
 
   it('migrates down', async () => {
-    const migration = await db.migrator.migrateTo('_20230304T193548198Z')
+    const migration = await db.migrator.migrateTo('_20230310T205728933Z')
     expect(migration.error).toBeUndefined()
 
     const updatedBlobs = await rawDb

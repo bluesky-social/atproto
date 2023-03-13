@@ -16,9 +16,7 @@ export default function (server: Server, ctx: AppContext) {
       const now = new Date().toISOString()
       const write = await repo.prepareDelete({ did, collection, rkey })
       await ctx.db.transaction(async (dbTxn) => {
-        await ctx.services
-          .repo(dbTxn)
-          .processCreatesAndDeletes(did, [write], now)
+        await ctx.services.repo(dbTxn).processWrites(did, [write], now)
       })
     },
   })

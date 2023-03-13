@@ -9,6 +9,7 @@ export class DataDiff {
   deletes: Record<string, DataDelete> = {}
 
   newCids: CidSet = new CidSet()
+  removedCids: CidSet = new CidSet()
 
   static async of(curr: DataStore, prev: DataStore | null): Promise<DataDiff> {
     if (curr instanceof MST && (prev === null || prev instanceof MST)) {
@@ -32,7 +33,19 @@ export class DataDiff {
   }
 
   recordNewCid(cid: CID): void {
-    this.newCids.add(cid)
+    if (this.removedCids.has(cid)) {
+      this.removedCids.delete(cid)
+    } else {
+      this.newCids.add(cid)
+    }
+  }
+
+  recordRemovedCid(cid: CID): void {
+    if (this.newCids.has(cid)) {
+      this.newCids.delete(cid)
+    } else {
+      this.removedCids.add(cid)
+    }
   }
 
   addDiff(diff: DataDiff) {

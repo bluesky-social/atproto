@@ -66,13 +66,12 @@ export class MemoryBlockstore extends RepoStorage {
     while (curr !== null) {
       path.push(curr)
       const commit = await this.readObj(curr, def.commit)
-      const root = await this.readObj(commit.root, def.repoRoot)
-      if (!earliest && root.prev === null) {
+      if (!earliest && commit.prev === null) {
         return path.reverse()
-      } else if (earliest && root.prev.equals(earliest)) {
+      } else if (earliest && commit.prev.equals(earliest)) {
         return path.reverse()
       }
-      curr = root.prev
+      curr = commit.prev
     }
     return null
   }
@@ -84,20 +83,14 @@ export class MemoryBlockstore extends RepoStorage {
     let prevData: MST | null = null
     for (const commitCid of commits) {
       const commit = await this.readObj(commitCid, def.commit)
-      const root = await this.readObj(commit.root, def.repoRoot)
-      const data = await MST.load(this, root.data)
+      const data = await MST.load(this, commit.data)
       const diff = await DataDiff.of(data, prevData)
       const { blocks, missing } = await this.getBlocks([
         commitCid,
-        commit.root,
         ...diff.newCidList(),
       ])
       if (missing.length > 0) {
         throw new MissingCommitBlocksError(commitCid, missing)
-      }
-      if (!root.prev) {
-        const meta = await this.readObjAndBytes(root.meta, def.repoMeta)
-        blocks.set(root.meta, meta.bytes)
       }
       commitData[commitCid.toString()] = blocks
       prevData = data

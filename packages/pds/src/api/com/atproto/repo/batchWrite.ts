@@ -63,7 +63,7 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.db.transaction(async (dbTxn) => {
         const now = new Date().toISOString()
         const repoTxn = ctx.services.repo(dbTxn)
-        await repoTxn.processCreatesAndDeletes(did, writes, now)
+        await repoTxn.processWrites(did, writes, now)
       })
     },
   })

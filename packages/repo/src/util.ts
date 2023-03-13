@@ -1,25 +1,30 @@
 import { CID } from 'multiformats/cid'
+import * as cbor from '@ipld/dag-cbor'
 import { CarReader } from '@ipld/car/reader'
 import { BlockWriter, CarWriter } from '@ipld/car/writer'
 import { Block as CarBlock } from '@ipld/car/api'
 import { def, streamToArray, verifyCidForBytes } from '@atproto/common'
+import * as crypto from '@atproto/crypto'
 import Repo from './repo'
 import { MST } from './mst'
 import DataDiff from './data-diff'
 import { RepoStorage } from './storage'
 import {
+  Commit,
   DataStore,
   RecordCreateDescript,
   RecordDeleteDescript,
   RecordPath,
   RecordUpdateDescript,
   RecordWriteDescript,
+  UnsignedCommit,
   WriteLog,
   WriteOpAction,
 } from './types'
 import BlockMap from './block-map'
 import { MissingBlocksError } from './error'
 import * as parse from './parse'
+import { Keypair } from '@atproto/crypto'
 
 export async function* verifyIncomingCarBlocks(
   car: AsyncIterable<CarBlock>,
@@ -211,4 +216,29 @@ export const parseDataKey = (key: string): RecordPath => {
 
 export const formatDataKey = (collection: string, rkey: string): string => {
   return collection + '/' + rkey
+}
+
+export const metaEqual = (a: Commit, b: Commit): boolean => {
+  return a.did === b.did && a.version === b.version
+}
+
+export const signCommit = async (
+  unsigned: UnsignedCommit,
+  keypair: Keypair,
+): Promise<Commit> => {
+  const encoded = cbor.encode(unsigned)
+  const sig = await keypair.sign(encoded)
+  return {
+    ...unsigned,
+    sig,
+  }
+}
+
+export const verifyCommitSig = async (
+  commit: Commit,
+  didKey: string,
+): Promise<boolean> => {
+  const { sig, ...rest } = commit
+  const encoded = cbor.encode(rest)
+  return crypto.verifySignature(didKey, encoded, sig)
 }

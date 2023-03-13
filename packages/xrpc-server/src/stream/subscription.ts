@@ -1,7 +1,7 @@
 import { wait } from '@atproto/common'
 import { WebSocket, ClientOptions } from 'ws'
 import { byMessage } from './stream'
-import { CloseCode } from './types'
+import { CloseCode, DisconnectError } from './types'
 
 export class Subscription<T = unknown> {
   constructor(
@@ -59,7 +59,13 @@ export class Subscription<T = unknown> {
             yield result
           }
         }
-      } catch (err) {
+      } catch (_err) {
+        const err = _err?.['code'] === 'ABORT_ERR' ? _err['cause'] : _err
+        if (err instanceof DisconnectError) {
+          // We cleanly end the connection
+          ws.close(err.wsCode)
+          break
+        }
         ws.close() // No-ops if already closed or closing
         if (isReconnectable(err)) {
           reconnects ??= 0 // Never reconnect with a null
@@ -92,7 +98,6 @@ function isReconnectable(err: unknown): boolean {
   // AuthenticationRequired and InvalidRequest XRPCErrors are not reconnectable.
   // @TODO method-specific XRPCErrors may be reconnectable, need to consider. Receiving
   // an invalid message is not current reconnectable, but the user can decide to skip them.
-  err = err?.['code'] === 'ABORT_ERR' ? err['cause'] : err
   if (!err || typeof err['code'] !== 'string') return false
   return networkErrorCodes.includes(err['code'])
 }

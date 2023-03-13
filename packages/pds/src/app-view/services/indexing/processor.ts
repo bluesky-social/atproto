@@ -5,6 +5,8 @@ import DatabaseSchema from '../../../db/database-schema'
 import { Message } from '../../../event-stream/messages'
 import { lexicons } from '../../../lexicon/lexicons'
 
+// @NOTE re: insertions and deletions. Due to how record updates are handled,
+// (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).
 type RecordProcessorParams<T, S> = {
   lexId: string
   insertFn: (
@@ -12,7 +14,7 @@ type RecordProcessorParams<T, S> = {
     uri: AtUri,
     cid: CID,
     obj: T,
-    timestamp?: string,
+    timestamp: string,
   ) => Promise<S | null>
   findDuplicate: (
     db: DatabaseSchema,
@@ -68,21 +70,79 @@ export class RecordProcessor<T, S> {
     }
     // if duplicate, insert into duplicates table with no events
     const found = await this.params.findDuplicate(this.db, uri, obj)
-    if (found) {
+    if (found && found.toString() !== uri.toString()) {
       await this.db
         .insertInto('duplicate_record')
         .values({
           uri: uri.toString(),
           cid: cid.toString(),
           duplicateOf: found.toString(),
-          indexedAt: timestamp || new Date().toISOString(),
+          indexedAt: timestamp,
         })
+        .onConflict((oc) => oc.doNothing())
         .execute()
     }
     return []
   }
 
+  // Currently using a very simple strategy for updates: purge the existing index
+  // for the uri then replace it. The main upside is that this allows the indexer
+  // for each collection to avoid bespoke logic for in-place updates, which isn't
+  // straightforward in the general case. We still get nice control over notifications.
+  async updateRecord(
+    uri: AtUri,
+    cid: CID,
+    obj: unknown,
+    timestamp: string,
+  ): Promise<Message[]> {
+    if (!this.matchesSchema(obj)) {
+      throw new Error(`Record does not match schema: ${this.params.lexId}`)
+    }
+
+    // If the updated record was a dupe, update dupe info for it
+    const dupe = await this.params.findDuplicate(this.db, uri, obj)
+    if (dupe) {
+      await this.db
+        .updateTable('duplicate_record')
+        .where('uri', '=', uri.toString())
+        .set({
+          cid: cid.toString(),
+          duplicateOf: dupe.toString(),
+          indexedAt: timestamp,
+        })
+        .execute()
+    } else {
+      await this.db
+        .deleteFrom('duplicate_record')
+        .where('uri', '=', uri.toString())
+        .execute()
+    }
+
+    const deleted = await this.params.deleteFn(this.db, uri)
+    if (!deleted) {
+      // If a record was updated but hadn't been indexed yet, treat it like a plain insert.
+      return this.insertRecord(uri, cid, obj, timestamp)
+    }
+    const inserted = await this.params.insertFn(
+      this.db,
+      uri,
+      cid,
+      obj,
+      timestamp,
+    )
+    if (!inserted) {
+      throw new Error(
+        'Record update failed: removed from index but could not be replaced',
+      )
+    }
+    return this.params.eventsForDelete(deleted, inserted)
+  }
+
   async deleteRecord(uri: AtUri, cascading = false): Promise<Message[]> {
+    await this.db
+      .deleteFrom('duplicate_record')
+      .where('uri', '=', uri.toString())
+      .execute()
     const deleted = await this.params.deleteFn(this.db, uri)
     if (!deleted) return []
     if (cascading) {

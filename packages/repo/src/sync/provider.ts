@@ -1,10 +1,9 @@
-import { def, RecordPath } from '../types'
+import { Commit, def, RecordPath } from '../types'
 import { BlockWriter } from '@ipld/car/writer'
 import { CID } from 'multiformats/cid'
 import CidSet from '../cid-set'
 import { MissingBlocksError } from '../error'
 import { RepoStorage } from '../storage'
-import { RepoRoot } from '../types'
 import * as util from '../util'
 import { MST } from '../mst'
 
@@ -13,13 +12,12 @@ import { MST } from '../mst'
 
 export const getCheckout = async (
   storage: RepoStorage,
-  cid: CID,
+  commitCid: CID,
 ): Promise<Uint8Array> => {
-  return util.writeCar(cid, async (car: BlockWriter) => {
-    const root = await writeCommitAndRootToCar(storage, car, cid)
-    const meta = await storage.readObjAndBytes(root.meta, def.repoMeta)
-    await car.put({ cid: root.meta, bytes: meta.bytes })
-    const mst = MST.load(storage, root.data)
+  return util.writeCar(commitCid, async (car: BlockWriter) => {
+    const commit = await storage.readObjAndBytes(commitCid, def.commit)
+    await car.put({ cid: commitCid, bytes: commit.bytes })
+    const mst = MST.load(storage, commit.obj.data)
     await mst.writeToCarStream(car)
   })
 }
@@ -67,12 +65,13 @@ export const writeCommitsToCarStream = async (
 
 export const getRecords = async (
   storage: RepoStorage,
-  commit: CID,
+  commitCid: CID,
   paths: RecordPath[],
 ): Promise<Uint8Array> => {
-  return util.writeCar(commit, async (car: BlockWriter) => {
-    const root = await writeCommitAndRootToCar(storage, car, commit)
-    const mst = MST.load(storage, root.data)
+  return util.writeCar(commitCid, async (car: BlockWriter) => {
+    const commit = await storage.readObjAndBytes(commitCid, def.commit)
+    await car.put({ cid: commitCid, bytes: commit.bytes })
+    const mst = MST.load(storage, commit.obj.data)
     const cidsForPaths = await Promise.all(
       paths.map((p) =>
         mst.cidsForPath(util.formatDataKey(p.collection, p.rkey)),
@@ -89,19 +88,4 @@ export const getRecords = async (
       await car.put(block)
     }
   })
-}
-
-// Helpers
-// -------------
-
-export const writeCommitAndRootToCar = async (
-  storage: RepoStorage,
-  car: BlockWriter,
-  cid: CID,
-): Promise<RepoRoot> => {
-  const commit = await storage.readObjAndBytes(cid, def.commit)
-  await car.put({ cid: cid, bytes: commit.bytes })
-  const root = await storage.readObjAndBytes(commit.obj.root, def.repoRoot)
-  await car.put({ cid: commit.obj.root, bytes: root.bytes })
-  return root.obj
 }
