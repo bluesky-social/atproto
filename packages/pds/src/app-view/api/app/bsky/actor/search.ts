@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
         return {
           encoding: 'application/json',
           body: {
-            users: [],
+            actors: [],
           },
         }
       }

@@ -110,11 +110,11 @@ describe('pds notification views', () => {
 
   it('fetches notifications omitting mentions and replies by a muted user', async () => {
     await agent.api.app.bsky.graph.mute(
-      { user: sc.dids.carol }, // Replier
+      { actor: sc.dids.carol }, // Replier
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
     await agent.api.app.bsky.graph.mute(
-      { user: sc.dids.dan }, // Mentioner
+      { actor: sc.dids.dan }, // Mentioner
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
 
@@ -134,11 +134,11 @@ describe('pds notification views', () => {
 
     // Cleanup
     await agent.api.app.bsky.graph.unmute(
-      { user: sc.dids.carol },
+      { actor: sc.dids.carol },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
     await agent.api.app.bsky.graph.unmute(
-      { user: sc.dids.dan },
+      { actor: sc.dids.dan },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
   })
