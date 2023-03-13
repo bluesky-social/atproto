@@ -2,7 +2,7 @@
 // is to have simple implementations here, and test coverage, that would be
 // enforced while doing Lexicon-level validation. These are redundant with
 // existing packages like 'handle', 'nsid', and 'uri'... but those packages
-// might be enforcing additional validation or constratins beyond those here.
+// might be enforcing additional validation or constraints beyond those here.
 //
 // For use in consistent cross-language / cross-implementation validation, I
 // think it is beneficial to have these be simple and not rely on external
@@ -17,7 +17,7 @@
 //    - can not start or end with a hyphen
 //    - TLD (last component) should not start with a digit
 //    - can't end with a hyphen (can end with digit)
-//    - must be between 2 and 63 characters (not including any periods)
+//    - each segment must be between 1 and 63 characters (not including any periods)
 //    - overall length can't be more than 253 characters
 //    - separated by (ASCII) periods; does not start or end with period
 //    - case insensitive
@@ -81,7 +81,10 @@ export const lexVerifyHandleRegex = (handle: string): void => {
 // Human readable constraints on NSID:
 // - a valid domain in reversed notation. which means the same as a loose domain!
 // - "nsid-ns" is a special situation, not allowed here
-// - not clear if final "name" should be allowed in authority or not
+// - not clear if penultimate segment must be included in authority, or if
+//    authority is the "registerable" part of the domain. eg, in
+//   'com.example.extra.someEndpoint', is the authority 'example.com' or
+//   'extra.example.com'
 export const lexVerifyNsid = (nsid: string): void => {
   // check that all chars are boring ASCII
   if (!/^[a-zA-Z0-9.-]*$/.test(nsid)) {
