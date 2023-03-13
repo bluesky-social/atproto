@@ -26,10 +26,10 @@ describe('db', () => {
     it('commits changes', async () => {
       const result = await db.transaction(async (dbTxn) => {
         return await dbTxn.db
-          .insertInto('repo_root')
+          .insertInto('actor')
           .values({
             did: 'x',
-            root: 'x',
+            handle: 'x',
             indexedAt: 'bad-date',
           })
           .returning('did')
@@ -43,14 +43,14 @@ describe('db', () => {
       expect(result.did).toEqual('x')
 
       const row = await db.db
-        .selectFrom('repo_root')
+        .selectFrom('actor')
         .selectAll()
         .where('did', '=', 'x')
         .executeTakeFirst()
 
       expect(row).toEqual({
         did: 'x',
-        root: 'x',
+        handle: 'x',
         indexedAt: 'bad-date',
         takedownId: null,
       })
@@ -59,10 +59,10 @@ describe('db', () => {
     it('rolls-back changes on failure', async () => {
       const promise = db.transaction(async (dbTxn) => {
         await dbTxn.db
-          .insertInto('repo_root')
+          .insertInto('actor')
           .values({
             did: 'y',
-            root: 'y',
+            handle: 'y',
             indexedAt: 'bad-date',
           })
           .returning('did')
@@ -74,7 +74,7 @@ describe('db', () => {
       await expect(promise).rejects.toThrow('Oops!')
 
       const row = await db.db
-        .selectFrom('repo_root')
+        .selectFrom('actor')
         .selectAll()
         .where('did', '=', 'y')
         .executeTakeFirst()

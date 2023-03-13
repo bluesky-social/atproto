@@ -25,28 +25,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .execute()
 
-  // assertion
-  await db.schema
-    .createTable('assertion')
-    .addColumn('uri', 'varchar', (col) => col.primaryKey())
-    .addColumn('cid', 'varchar', (col) => col.notNull())
-    .addColumn('creator', 'varchar', (col) => col.notNull())
-    .addColumn('assertion', 'varchar', (col) => col.notNull())
-    .addColumn('subjectDid', 'varchar', (col) => col.notNull())
-    .addColumn('subjectDeclarationCid', 'varchar', (col) => col.notNull())
-    .addColumn('createdAt', 'varchar', (col) => col.notNull())
-    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .addColumn('confirmUri', 'varchar')
-    .addColumn('confirmCid', 'varchar')
-    .addColumn('confirmCreated', 'varchar')
-    .addColumn('confirmIndexed', 'varchar')
-    .addUniqueConstraint('assertion_unique_subject', [
-      'creator',
-      'subjectDid',
-      'assertion',
-    ])
-    .execute()
-
   // profile
   await db.schema
     .createTable('profile')
@@ -232,68 +210,37 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addPrimaryKeyConstraint('subscription_pkey', ['service', 'method'])
     .execute()
 
-  // @TODO(bsky) didHandle
+  // actor
   await db.schema
-    .createTable('did_handle')
+    .createTable('actor')
     .addColumn('did', 'varchar', (col) => col.primaryKey())
     .addColumn('handle', 'varchar', (col) => col.unique())
-    .addColumn('actorType', 'varchar')
-    .addColumn('declarationCid', 'varchar')
-    .execute()
-  await db.schema
-    .createIndex('did_handle_handle_lower_idx')
-    .unique()
-    .on('did_handle')
-    .expression(sql`lower("handle")`) // @TODO needed?
+    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .addColumn('takedownId', 'integer') // @TODO intentionally missing index
     .execute()
   await db.schema // Supports user search
-    .createIndex(`${'did_handle'}_handle_tgrm_idx`)
-    .on('did_handle')
+    .createIndex(`actor_handle_tgrm_idx`)
+    .on('actor')
     .using('gist')
     .expression(sql`"handle" gist_trgm_ops`)
     .execute()
 
-  // @TODO(bsky) repoRoot
-  await db.schema
-    .createTable('repo_root')
-    .addColumn('did', 'varchar', (col) => col.primaryKey())
-    .addColumn('root', 'varchar', (col) => col.notNull())
-    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .addColumn('takedownId', 'integer') // @TODO intentionally missing index
-    .execute()
-
-  // @TODO(bsky) record
+  //record
   await db.schema
     .createTable('record')
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('did', 'varchar', (col) => col.notNull())
-    .addColumn('collection', 'varchar', (col) => col.notNull())
-    .addColumn('rkey', 'varchar', (col) => col.notNull())
-    .addColumn('takedownId', 'integer') // @TODO intentionally missing index
+    .addColumn('json', 'text', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .execute()
-
-  // @TODO(bsky) ipldBlock
-  await db.schema
-    .createTable('ipld_block')
-    .addColumn('cid', 'varchar', (col) => col.notNull())
-    .addColumn('creator', 'varchar', (col) => col.notNull())
-    .addColumn('size', 'integer', (col) => col.notNull())
-    .addColumn('content', sql`bytea`, (col) => col.notNull())
-    .addPrimaryKeyConstraint('ipld_block_with_creator_pkey', ['creator', 'cid'])
     .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  // @TODO(bsky) ipldBlock
-  await db.schema.dropTable('ipld_block').execute()
-  // @TODO(bsky) record
+  // record
   await db.schema.dropTable('record').execute()
-  // @TODO(bsky) repoRoot
-  await db.schema.dropTable('repo_root').execute()
-  // @TODO(bsky) didHandle
-  await db.schema.dropTable('did_handle').execute()
+  // actor
+  await db.schema.dropTable('actor').execute()
   // subscription
   await db.schema.dropTable('subscription').execute()
   // vote
@@ -316,8 +263,6 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('post').execute()
   // profile
   await db.schema.dropTable('profile').execute()
-  // assertion
-  await db.schema.dropTable('assertion').execute()
   // duplicateRecords
   await db.schema.dropTable('duplicate_record').execute()
 }

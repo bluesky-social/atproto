@@ -1,11 +1,9 @@
-import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import { cidForCbor, TID, cborEncode } from '@atproto/common'
+import { cidForCbor, TID } from '@atproto/common'
 import { WriteOpAction } from '@atproto/repo'
 import { CloseFn, runTestServer } from './_util'
 import { Database } from '../src'
 import * as lex from '../src/lexicon/lexicons'
-import { APP_BSKY_GRAPH } from '../src/lexicon'
 import { Services } from '../src/services'
 
 describe('duplicate record', () => {
@@ -37,29 +35,9 @@ describe('duplicate record', () => {
     return got.length
   }
 
-  const putBlock = async (
-    db: Database,
-    creator: string,
-    data: object,
-  ): Promise<CID> => {
-    const cid = await cidForCbor(data)
-    const bytes = await cborEncode(data)
-    await db.db
-      .insertInto('ipld_block')
-      .values({
-        cid: cid.toString(),
-        creator,
-        size: bytes.length,
-        content: bytes,
-      })
-      .onConflict((oc) => oc.doNothing())
-      .execute()
-    return cid
-  }
-
   it('dedupes reposts', async () => {
     const subject = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
-    const subjectCid = await putBlock(db, did, { test: 'blah' })
+    const subjectCid = await cidForCbor({ test: 'blah' })
     const coll = lex.ids.AppBskyFeedRepost
     const uris: AtUri[] = []
     await db.transaction(async (tx) => {
@@ -73,7 +51,7 @@ describe('duplicate record', () => {
           createdAt: new Date().toISOString(),
         }
         const uri = AtUri.make(did, coll, TID.nextStr())
-        const cid = await putBlock(tx, did, repost)
+        const cid = await cidForCbor(repost)
         await services
           .indexing(tx)
           .indexRecord(uri, cid, repost, WriteOpAction.Create, repost.createdAt)
@@ -101,7 +79,7 @@ describe('duplicate record', () => {
 
   it('dedupes votes', async () => {
     const subject = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
-    const subjectCid = await putBlock(db, did, { test: 'blah' })
+    const subjectCid = await cidForCbor({ test: 'blah' })
     const coll = lex.ids.AppBskyFeedVote
     const uris: AtUri[] = []
     await db.transaction(async (tx) => {
@@ -117,7 +95,7 @@ describe('duplicate record', () => {
           createdAt: new Date().toISOString(),
         }
         const uri = AtUri.make(did, coll, TID.nextStr())
-        const cid = await putBlock(tx, did, vote)
+        const cid = await cidForCbor(vote)
         await services
           .indexing(tx)
           .indexRecord(uri, cid, vote, WriteOpAction.Create, vote.createdAt)
@@ -151,7 +129,7 @@ describe('duplicate record', () => {
   })
 
   it('dedupes follows', async () => {
-    const subjectCid = await putBlock(db, did, { test: 'blah' })
+    const subjectCid = await cidForCbor({ test: 'blah' })
     const coll = lex.ids.AppBskyGraphFollow
     const uris: AtUri[] = []
     await db.transaction(async (tx) => {
@@ -165,7 +143,7 @@ describe('duplicate record', () => {
           createdAt: new Date().toISOString(),
         }
         const uri = AtUri.make(did, coll, TID.nextStr())
-        const cid = await putBlock(tx, did, follow)
+        const cid = await cidForCbor(follow)
         await services
           .indexing(tx)
           .indexRecord(uri, cid, follow, WriteOpAction.Create, follow.createdAt)
@@ -188,110 +166,6 @@ describe('duplicate record', () => {
     })
 
     count = await countRecords(db, 'follow')
-    expect(count).toBe(0)
-  })
-
-  it('dedupes assertions & confirmations', async () => {
-    const subjectCid = await putBlock(db, did, { test: 'blah' })
-    const assertUris: AtUri[] = []
-    const assertCids: CID[] = []
-    // make assertions
-    await db.transaction(async (tx) => {
-      const coll = lex.ids.AppBskyGraphAssertion
-      for (let i = 0; i < 5; i++) {
-        const assertion = {
-          $type: coll,
-          assertion: APP_BSKY_GRAPH.AssertMember,
-          subject: {
-            did: 'did:example:bob',
-            declarationCid: subjectCid.toString(),
-          },
-          createdAt: new Date().toISOString(),
-        }
-        const uri = AtUri.make(did, coll, TID.nextStr())
-        const cid = await putBlock(tx, did, assertion)
-        await services
-          .indexing(tx)
-          .indexRecord(
-            uri,
-            cid,
-            assertion,
-            WriteOpAction.Create,
-            assertion.createdAt,
-          )
-        assertUris.push(uri)
-        assertCids.push(cid)
-      }
-    })
-    const confirmUris: AtUri[] = []
-    const confirmCids: CID[] = []
-    // make confirms on first assert
-    await db.transaction(async (tx) => {
-      const coll = lex.ids.AppBskyGraphConfirmation
-      for (let i = 0; i < 5; i++) {
-        const follow = {
-          $type: coll,
-          originator: {
-            did: 'did:example:bob',
-            declarationCid: subjectCid.toString(),
-          },
-          assertion: {
-            uri: assertUris[0].toString(),
-            cid: assertCids[0].toString(),
-          },
-          createdAt: new Date().toISOString(),
-        }
-        const uri = AtUri.make(did, coll, TID.nextStr())
-        const cid = await putBlock(tx, did, follow)
-        await services
-          .indexing(tx)
-          .indexRecord(uri, cid, follow, WriteOpAction.Create, follow.createdAt)
-        confirmUris.push(uri)
-        confirmCids.push(cid)
-      }
-    })
-
-    const getAssertion = async () => {
-      return await db.db
-        .selectFrom('assertion')
-        .selectAll()
-        .where('creator', '=', did)
-        .executeTakeFirst()
-    }
-
-    let count = await countRecords(db, 'assertion')
-    expect(count).toBe(1)
-
-    await db.transaction(async (tx) => {
-      await services.indexing(tx).deleteRecord(confirmUris[0], false)
-    })
-
-    count = await countRecords(db, 'assertion')
-    expect(count).toBe(1)
-    let assertion = await getAssertion()
-    expect(assertion?.confirmUri).toEqual(confirmUris[1].toString())
-
-    await db.transaction(async (tx) => {
-      await services.indexing(tx).deleteRecord(confirmUris[1], true)
-    })
-
-    count = await countRecords(db, 'assertion')
-    expect(count).toBe(1)
-    assertion = await getAssertion()
-    expect(assertion?.confirmUri).toBeNull()
-
-    await db.transaction(async (tx) => {
-      await services.indexing(tx).deleteRecord(assertUris[0], false)
-    })
-
-    count = await countRecords(db, 'assertion')
-    expect(count).toBe(1)
-
-    await db.transaction(async (tx) => {
-      await services.indexing(tx).deleteRecord(assertUris[1], false)
-    })
-
-    count = await countRecords(db, 'assertion')
     expect(count).toBe(0)
   })
 })
