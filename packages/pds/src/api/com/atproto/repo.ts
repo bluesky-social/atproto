@@ -13,11 +13,11 @@ import AppContext from '../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.describe(async ({ params }) => {
-    const { user } = params
+    const { repo } = params
 
-    const userObj = await ctx.services.account(ctx.db).getUser(user)
+    const userObj = await ctx.services.account(ctx.db).getUser(repo)
     if (userObj === null) {
-      throw new InvalidRequestError(`Could not find user: ${user}`)
+      throw new InvalidRequestError(`Could not find repo: ${repo}`)
     }
 
     let didDoc
@@ -47,11 +47,11 @@ export default function (server: Server, ctx: AppContext) {
   })
 
   server.com.atproto.repo.listRecords(async ({ params }) => {
-    const { user, collection, limit, before, after, reverse } = params
+    const { repo, collection, limit, before, after, reverse } = params
 
-    const did = await ctx.services.account(ctx.db).getDidForActor(user)
+    const did = await ctx.services.account(ctx.db).getDidForActor(repo)
     if (!did) {
-      throw new InvalidRequestError(`Could not find user: ${user}`)
+      throw new InvalidRequestError(`Could not find repo: ${repo}`)
     }
 
     const records = await ctx.services
@@ -79,11 +79,11 @@ export default function (server: Server, ctx: AppContext) {
   })
 
   server.com.atproto.repo.getRecord(async ({ params }) => {
-    const { user, collection, rkey, cid } = params
+    const { repo, collection, rkey, cid } = params
 
-    const did = await ctx.services.account(ctx.db).getDidForActor(user)
+    const did = await ctx.services.account(ctx.db).getDidForActor(repo)
     if (!did) {
-      throw new InvalidRequestError(`Could not find user: ${user}`)
+      throw new InvalidRequestError(`Could not find repo: ${repo}`)
     }
 
     const uri = new AtUri(`${did}/${collection}/${rkey}`)

@@ -8,7 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import * as AppBskyActorRef from '../actor/ref'
 
 export interface QueryParams {
-  user: string
+  actor: string
   limit?: number
   before?: string
 }

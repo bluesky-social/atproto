@@ -1,7 +1,7 @@
 import AppContext from '../../../../../context'
 import Database from '../../../../../db'
 import { Server } from '../../../../../lexicon'
-import * as Method from '../../../../../lexicon/types/app/bsky/actor/search'
+import * as Method from '../../../../../lexicon/types/app/bsky/actor/searchTypeahead'
 import {
   cleanTerm,
   getUserSearchQueryPg,
@@ -37,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: {
-          users: await services.appView
+          actors: await services.appView
             .actor(db)
             .views.actorWithInfo(results, requester),
         },

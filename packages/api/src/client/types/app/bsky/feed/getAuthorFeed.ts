@@ -8,7 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import * as AppBskyFeedFeedViewPost from './feedViewPost'
 
 export interface QueryParams {
-  author: string
+  actor: string
   limit?: number
   before?: string
 }

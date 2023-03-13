@@ -6,13 +6,13 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.mute({
     auth: ctx.accessVerifier,
     handler: async ({ auth, input }) => {
-      const { user } = input.body
+      const { actor } = input.body
       const requester = auth.credentials.did
       const { db, services } = ctx
 
-      const subject = await services.account(db).getUser(user)
+      const subject = await services.account(db).getUser(actor)
       if (!subject) {
-        throw new InvalidRequestError(`Actor not found: ${user}`)
+        throw new InvalidRequestError(`Actor not found: ${actor}`)
       }
       if (subject.did === requester) {
         throw new InvalidRequestError('Cannot mute oneself')

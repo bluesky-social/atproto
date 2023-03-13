@@ -15,7 +15,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  users: AppBskyActorRef.WithInfo[]
+  actors: AppBskyActorRef.WithInfo[]
   [k: string]: unknown
 }
 

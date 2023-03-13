@@ -8,20 +8,20 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
-      const { author, limit, before } = params
+      const { actor, limit, before } = params
       const requester = auth.credentials.did
       const db = ctx.db.db
       const { ref } = db.dynamic
 
       const feedService = ctx.services.appView.feed(ctx.db)
 
-      const userLookupCol = author.startsWith('did:')
+      const userLookupCol = actor.startsWith('did:')
         ? 'did_handle.did'
         : 'did_handle.handle'
       const userQb = db
         .selectFrom('did_handle')
         .selectAll()
-        .where(userLookupCol, '=', author)
+        .where(userLookupCol, '=', actor)
       const mutedQb = db
         .selectFrom('mute')
         .select('did')
