@@ -101,7 +101,11 @@ export class BskyAppView {
     app.use(server.xrpc.router)
     app.use(error.handler)
 
-    const sub = new RepoSubscription(ctx, config.repoProvider)
+    const sub = new RepoSubscription(
+      ctx,
+      config.repoProvider,
+      config.repoSubLockId,
+    )
 
     return new BskyAppView({ ctx, app, sub })
   }

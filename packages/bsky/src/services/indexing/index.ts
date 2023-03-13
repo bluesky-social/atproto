@@ -78,11 +78,19 @@ export class IndexingService {
       return // No bidirectional link between did and handle
     }
     const actorInfo = { handle, indexedAt: timestamp }
-    await this.db.db
+    const inserted = await this.db.db
       .insertInto('actor')
       .values({ did, ...actorInfo })
-      .onConflict((oc) => oc.column('did').doUpdateSet(actorInfo))
+      .onConflict((oc) => oc.doNothing())
+      .returning('did')
       .executeTakeFirst()
+    if (!inserted) {
+      await this.db.db
+        .updateTable('actor')
+        .set(actorInfo)
+        .where('did', '=', did)
+        .execute()
+    }
   }
 
   findIndexerForCollection(collection: string) {

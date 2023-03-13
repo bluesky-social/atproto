@@ -15,9 +15,13 @@ const METHOD = ids.ComAtprotoSyncSubscribeAllRepos
 export const REPO_SUB_ID = 1000
 
 export class RepoSubscription {
-  leader = new Leader(REPO_SUB_ID, this.ctx.db)
+  leader = new Leader(this.subLockId, this.ctx.db)
   destroyed = false
-  constructor(public ctx: AppContext, public service: string) {}
+  constructor(
+    public ctx: AppContext,
+    public service: string,
+    public subLockId = REPO_SUB_ID,
+  ) {}
 
   async run() {
     const { db } = this.ctx
@@ -194,7 +198,7 @@ async function getOps(msg: Message): Promise<PreparedWrite[]> {
             : WriteOpAction.Update,
         cid,
         record: cborDecode(record),
-        blobs: [], // @TODO need to determine how the app-view provides URLs for processed blobs
+        blobs: [], // @TODO(bsky) need to determine how the app-view provides URLs for processed blobs
         uri: AtUri.make(msg.repo, collection, rkey),
       }
     } else if (op.action === WriteOpAction.Delete) {
