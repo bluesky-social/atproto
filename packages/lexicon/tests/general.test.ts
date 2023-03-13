@@ -1,3 +1,4 @@
+import { AtUri } from '@atproto/uri'
 import { Lexicons } from '../src/index'
 import LexiconDocs from './_scaffolds/lexicons'
 
@@ -50,6 +51,9 @@ describe('General validation', () => {
         integer: 123,
         string: 'string',
         datetime: new Date().toISOString(),
+        atUri: 'at://did:web:example.com/com.example.test/self',
+        did: 'did:web:example.com',
+        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       })
       expect(res.success).toBe(true)
     }
@@ -101,6 +105,9 @@ describe('Record validation', () => {
       integer: 123,
       string: 'string',
       datetime: new Date().toISOString(),
+      atUri: 'at://did:web:example.com/com.example.test/self',
+      did: 'did:web:example.com',
+      cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
     })
   })
 
@@ -135,6 +142,9 @@ describe('Record validation', () => {
         integer: 123,
         string: 'string',
         datetime: new Date().toISOString(),
+        atUri: 'at://did:web:example.com/com.example.test/self',
+        did: 'did:web:example.com',
+        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
     ).toThrow('Record must have the property "object"')
     expect(() =>
@@ -147,6 +157,9 @@ describe('Record validation', () => {
         integer: 123,
         string: 'string',
         datetime: new Date().toISOString(),
+        atUri: 'at://did:web:example.com/com.example.test/self',
+        did: 'did:web:example.com',
+        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
     ).toThrow('Record must have the property "object"')
   })
@@ -169,6 +182,9 @@ describe('Record validation', () => {
         integer: 123,
         string: 'string',
         datetime: new Date().toISOString(),
+        atUri: 'at://did:web:example.com/com.example.test/self',
+        did: 'did:web:example.com',
+        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
     ).toThrow('Record/object/object/boolean must be a boolean')
     expect(() =>
@@ -181,6 +197,9 @@ describe('Record validation', () => {
         integer: 123,
         string: 'string',
         datetime: new Date().toISOString(),
+        atUri: 'at://did:web:example.com/com.example.test/self',
+        did: 'did:web:example.com',
+        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
     ).toThrow('Record/object must be an object')
     expect(() =>
@@ -200,6 +219,9 @@ describe('Record validation', () => {
         integer: 123,
         string: 'string',
         datetime: new Date().toISOString(),
+        atUri: 'at://did:web:example.com/com.example.test/self',
+        did: 'did:web:example.com',
+        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
     ).toThrow('Record/array must be an array')
     expect(() =>
@@ -219,6 +241,9 @@ describe('Record validation', () => {
         integer: 123,
         string: 'string',
         datetime: new Date().toISOString(),
+        atUri: 'at://did:web:example.com/com.example.test/self',
+        did: 'did:web:example.com',
+        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
     ).toThrow('Record/number must be a number')
     expect(() =>
@@ -238,6 +263,9 @@ describe('Record validation', () => {
         integer: true,
         string: 'string',
         datetime: new Date().toISOString(),
+        atUri: 'at://did:web:example.com/com.example.test/self',
+        did: 'did:web:example.com',
+        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
     ).toThrow('Record/integer must be a number')
     expect(() =>
@@ -257,6 +285,9 @@ describe('Record validation', () => {
         integer: 123,
         string: {},
         datetime: new Date().toISOString(),
+        atUri: 'at://did:web:example.com/com.example.test/self',
+        did: 'did:web:example.com',
+        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
     ).toThrow('Record/string must be a string')
     expect(() =>
@@ -276,6 +307,9 @@ describe('Record validation', () => {
         integer: 123,
         string: 'string',
         datetime: 1234,
+        atUri: 'at://did:web:example.com/com.example.test/self',
+        did: 'did:web:example.com',
+        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
     ).toThrow('Record/datetime must be a string')
   })
@@ -586,6 +620,56 @@ describe('Record validation', () => {
         datetime: 'bad date',
       }),
     ).toThrow('Record/datetime must be an iso8601 formatted datetime')
+  })
+
+  it('Applies at-uri formatting constraint', () => {
+    lex.assertValidRecord('com.example.atUri', {
+      $type: 'com.example.atUri',
+      atUri: 'at://did:web:example.com/com.example.test/self',
+    })
+    expect(() =>
+      lex.assertValidRecord('com.example.atUri', {
+        $type: 'com.example.atUri',
+        atUri: 'http://not-atproto.com',
+      }),
+    ).toThrow('Record/atUri must be an at-uri')
+  })
+
+  it('Applies did formatting constraint', () => {
+    lex.assertValidRecord('com.example.did', {
+      $type: 'com.example.did',
+      did: 'did:web:example.com',
+    })
+    lex.assertValidRecord('com.example.did', {
+      $type: 'com.example.did',
+      did: 'did:plc:12345678abcdefghijklmnop',
+    })
+
+    expect(() =>
+      lex.assertValidRecord('com.example.did', {
+        $type: 'com.example.did',
+        did: 'bad did',
+      }),
+    ).toThrow('Record/did must be a did')
+    expect(() =>
+      lex.assertValidRecord('com.example.did', {
+        $type: 'com.example.did',
+        did: 'did:short',
+      }),
+    ).toThrow('Record/did must be a did')
+  })
+
+  it('Applies cid formatting constraint', () => {
+    lex.assertValidRecord('com.example.cid', {
+      $type: 'com.example.cid',
+      cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+    })
+    expect(() =>
+      lex.assertValidRecord('com.example.cid', {
+        $type: 'com.example.cid',
+        cid: 'abapsdofiuwrpoiasdfuaspdfoiu',
+      }),
+    ).toThrow('Record/cid must be a cid')
   })
 })
 

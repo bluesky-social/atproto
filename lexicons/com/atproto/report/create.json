@@ -40,7 +40,7 @@
               ]
             },
             "reportedByDid": {"type": "string"},
-            "createdAt": {"type": "datetime"}
+            "createdAt": {"type": "string", "format": "datetime"}
           }
         }
       }

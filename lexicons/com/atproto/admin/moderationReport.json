@@ -17,7 +17,7 @@
           ]
         },
         "reportedByDid": {"type": "string"},
-        "createdAt": {"type": "datetime"},
+        "createdAt": {"type": "string", "format": "datetime"},
         "resolvedByActionIds": {"type": "array", "items": {"type": "integer"}}
       }
     },
@@ -36,7 +36,7 @@
           ]
         },
         "reportedByDid": {"type": "string"},
-        "createdAt": {"type": "datetime"},
+        "createdAt": {"type": "string", "format": "datetime"},
         "resolvedByActions": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.moderationAction#view"}}
       }
     }

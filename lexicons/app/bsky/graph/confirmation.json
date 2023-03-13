@@ -11,7 +11,7 @@
         "properties": {
           "originator": {"type": "ref", "ref": "app.bsky.actor.ref"},
           "assertion": {"type": "ref", "ref": "com.atproto.repo.strongRef"},
-          "createdAt": {"type": "datetime"}
+          "createdAt": {"type": "string", "format": "datetime"}
         }
       }
     }

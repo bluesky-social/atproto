@@ -24,7 +24,7 @@
       "required": ["by", "indexedAt"],
       "properties": {
         "by": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
-        "indexedAt": {"type": "datetime"}
+        "indexedAt": {"type": "string", "format": "datetime"}
       }
     }
   }

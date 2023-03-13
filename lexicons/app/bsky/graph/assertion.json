@@ -11,7 +11,7 @@
         "properties": {
           "assertion": {"type": "string"},
           "subject": {"type": "ref", "ref": "app.bsky.actor.ref"},
-          "createdAt": {"type": "datetime"}
+          "createdAt": {"type": "string", "format": "datetime"}
         }
       }
     }

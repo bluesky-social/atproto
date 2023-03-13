@@ -507,8 +507,6 @@ export function primitiveToType(def: LexPrimitive): string {
         return JSON.stringify(def.const)
       }
       return 'boolean'
-    case 'datetime':
-      return 'string'
     case 'unknown':
       return '{}'
     default:

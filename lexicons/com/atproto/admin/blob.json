@@ -9,7 +9,7 @@
         "cid": {"type": "string"},
         "mimeType": {"type": "string"},
         "size": {"type": "integer"},
-        "createdAt": {"type": "datetime"},
+        "createdAt": {"type": "string", "format": "datetime"},
         "details": {
           "type": "union",
           "refs": ["#imageDetails", "#videoDetails"]

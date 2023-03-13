@@ -37,8 +37,8 @@
       "required": ["direction", "indexedAt", "createdAt", "actor"],
       "properties": {
         "direction": {"type": "string", "enum": ["up", "down"]},
-        "indexedAt": {"type": "datetime"},
-        "createdAt": {"type": "datetime"},
+        "indexedAt": {"type": "string", "format": "datetime"},
+        "createdAt": {"type": "string", "format": "datetime"},
         "actor": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"}
       }
     }

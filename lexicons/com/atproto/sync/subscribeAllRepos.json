@@ -40,7 +40,7 @@
               "type": "array",
               "items": {"type": "string"}
             },
-            "time": {"type": "datetime"}
+            "time": {"type": "string", "format": "datetime"}
           }
         }
       },

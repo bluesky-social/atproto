@@ -236,7 +236,8 @@ export const schemaDict = {
             type: 'integer',
           },
           createdAt: {
-            type: 'datetime',
+            type: 'string',
+            format: 'datetime',
           },
           details: {
             type: 'union',
@@ -695,7 +696,8 @@ export const schemaDict = {
             type: 'string',
           },
           createdAt: {
-            type: 'datetime',
+            type: 'string',
+            format: 'datetime',
           },
           resolvedByActionIds: {
             type: 'array',
@@ -737,7 +739,8 @@ export const schemaDict = {
             type: 'string',
           },
           createdAt: {
-            type: 'datetime',
+            type: 'string',
+            format: 'datetime',
           },
           resolvedByActions: {
             type: 'array',
@@ -1777,7 +1780,8 @@ export const schemaDict = {
                 type: 'string',
               },
               createdAt: {
-                type: 'datetime',
+                type: 'string',
+                format: 'datetime',
               },
             },
           },
@@ -2321,7 +2325,8 @@ export const schemaDict = {
                 },
               },
               time: {
-                type: 'datetime',
+                type: 'string',
+                format: 'datetime',
               },
             },
           },
@@ -2368,6 +2373,7 @@ export const schemaDict = {
           properties: {
             actor: {
               type: 'string',
+              format: 'did',
             },
           },
         },
@@ -2395,6 +2401,7 @@ export const schemaDict = {
               type: 'array',
               items: {
                 type: 'string',
+                format: 'did',
               },
               maxLength: 25,
             },
@@ -2513,6 +2520,7 @@ export const schemaDict = {
         properties: {
           did: {
             type: 'string',
+            format: 'did',
           },
           declaration: {
             type: 'ref',
@@ -2548,7 +2556,8 @@ export const schemaDict = {
             type: 'string',
           },
           indexedAt: {
-            type: 'datetime',
+            type: 'string',
+            format: 'datetime',
           },
           viewer: {
             type: 'ref',
@@ -2567,6 +2576,7 @@ export const schemaDict = {
         properties: {
           did: {
             type: 'string',
+            format: 'did',
           },
           declaration: {
             type: 'ref',
@@ -2587,7 +2597,8 @@ export const schemaDict = {
             type: 'string',
           },
           indexedAt: {
-            type: 'datetime',
+            type: 'string',
+            format: 'datetime',
           },
           viewer: {
             type: 'ref',
@@ -3080,7 +3091,8 @@ export const schemaDict = {
             ref: 'lex:app.bsky.actor.ref#withInfo',
           },
           indexedAt: {
-            type: 'datetime',
+            type: 'string',
+            format: 'datetime',
           },
         },
       },
@@ -3382,10 +3394,12 @@ export const schemaDict = {
             enum: ['up', 'down'],
           },
           indexedAt: {
-            type: 'datetime',
+            type: 'string',
+            format: 'datetime',
           },
           createdAt: {
-            type: 'datetime',
+            type: 'string',
+            format: 'datetime',
           },
           actor: {
             type: 'ref',
@@ -3430,7 +3444,8 @@ export const schemaDict = {
               ],
             },
             createdAt: {
-              type: 'datetime',
+              type: 'string',
+              format: 'datetime',
             },
           },
         },
@@ -3531,7 +3546,8 @@ export const schemaDict = {
             type: 'integer',
           },
           indexedAt: {
-            type: 'datetime',
+            type: 'string',
+            format: 'datetime',
           },
           viewer: {
             type: 'ref',
@@ -3571,7 +3587,8 @@ export const schemaDict = {
               ref: 'lex:com.atproto.repo.strongRef',
             },
             createdAt: {
-              type: 'datetime',
+              type: 'string',
+              format: 'datetime',
             },
           },
         },
@@ -3639,7 +3656,8 @@ export const schemaDict = {
               enum: ['up', 'down'],
             },
             createdAt: {
-              type: 'datetime',
+              type: 'string',
+              format: 'datetime',
             },
           },
         },
@@ -3687,7 +3705,8 @@ export const schemaDict = {
               ref: 'lex:app.bsky.actor.ref',
             },
             createdAt: {
-              type: 'datetime',
+              type: 'string',
+              format: 'datetime',
             },
           },
         },
@@ -3714,7 +3733,8 @@ export const schemaDict = {
               ref: 'lex:com.atproto.repo.strongRef',
             },
             createdAt: {
-              type: 'datetime',
+              type: 'string',
+              format: 'datetime',
             },
           },
         },
@@ -3738,7 +3758,8 @@ export const schemaDict = {
               ref: 'lex:app.bsky.actor.ref',
             },
             createdAt: {
-              type: 'datetime',
+              type: 'string',
+              format: 'datetime',
             },
           },
         },
@@ -4040,7 +4061,8 @@ export const schemaDict = {
             type: 'boolean',
           },
           indexedAt: {
-            type: 'datetime',
+            type: 'string',
+            format: 'datetime',
           },
         },
       },
@@ -4060,7 +4082,8 @@ export const schemaDict = {
             required: ['seenAt'],
             properties: {
               seenAt: {
-                type: 'datetime',
+                type: 'string',
+                format: 'datetime',
               },
             },
           },

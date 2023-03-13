@@ -41,7 +41,7 @@
         "reasonSubject": {"type": "string"},
         "record": {"type": "unknown"},
         "isRead": {"type": "boolean"},
-        "indexedAt": {"type": "datetime"}
+        "indexedAt": {"type": "string", "format": "datetime"}
       }
     }
   }
