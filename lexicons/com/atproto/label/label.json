@@ -34,7 +34,7 @@
         }
       }
     },
-    "labelEvent": {
+    "view": {
       "type": "object",
       "required": ["uri", "cid", "label"],
       "properties": {
