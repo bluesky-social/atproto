@@ -52,6 +52,7 @@ export const schemaDict = {
               },
               did: {
                 type: 'string',
+                format: 'did',
               },
             },
           },
@@ -122,6 +123,7 @@ export const schemaDict = {
             properties: {
               did: {
                 type: 'string',
+                format: 'did',
               },
               password: {
                 type: 'string',
@@ -228,6 +230,7 @@ export const schemaDict = {
         properties: {
           cid: {
             type: 'string',
+            format: 'cid',
           },
           mimeType: {
             type: 'string',
@@ -451,9 +454,11 @@ export const schemaDict = {
           properties: {
             uri: {
               type: 'string',
+              format: 'at-uri',
             },
             cid: {
               type: 'string',
+              format: 'cid',
             },
           },
         },
@@ -480,6 +485,7 @@ export const schemaDict = {
           properties: {
             did: {
               type: 'string',
+              format: 'did',
             },
           },
         },
@@ -535,9 +541,11 @@ export const schemaDict = {
           },
           createdBy: {
             type: 'string',
+            format: 'did',
           },
           createdAt: {
             type: 'string',
+            format: 'datetime',
           },
           reversal: {
             type: 'ref',
@@ -590,9 +598,11 @@ export const schemaDict = {
           },
           createdBy: {
             type: 'string',
+            format: 'did',
           },
           createdAt: {
             type: 'string',
+            format: 'datetime',
           },
           reversal: {
             type: 'ref',
@@ -629,9 +639,11 @@ export const schemaDict = {
           },
           createdBy: {
             type: 'string',
+            format: 'did',
           },
           createdAt: {
             type: 'string',
+            format: 'datetime',
           },
         },
       },
@@ -694,6 +706,7 @@ export const schemaDict = {
           },
           reportedByDid: {
             type: 'string',
+            format: 'did',
           },
           createdAt: {
             type: 'string',
@@ -737,6 +750,7 @@ export const schemaDict = {
           },
           reportedByDid: {
             type: 'string',
+            format: 'did',
           },
           createdAt: {
             type: 'string',
@@ -771,9 +785,11 @@ export const schemaDict = {
         properties: {
           uri: {
             type: 'string',
+            format: 'at-uri',
           },
           cid: {
             type: 'string',
+            format: 'cid',
           },
           value: {
             type: 'unknown',
@@ -782,10 +798,12 @@ export const schemaDict = {
             type: 'array',
             items: {
               type: 'string',
+              format: 'cid',
             },
           },
           indexedAt: {
             type: 'string',
+            format: 'datetime',
           },
           moderation: {
             type: 'ref',
@@ -811,9 +829,11 @@ export const schemaDict = {
         properties: {
           uri: {
             type: 'string',
+            format: 'at-uri',
           },
           cid: {
             type: 'string',
+            format: 'cid',
           },
           value: {
             type: 'unknown',
@@ -827,6 +847,7 @@ export const schemaDict = {
           },
           indexedAt: {
             type: 'string',
+            format: 'datetime',
           },
           moderation: {
             type: 'ref',
@@ -890,6 +911,7 @@ export const schemaDict = {
         properties: {
           did: {
             type: 'string',
+            format: 'did',
           },
           handle: {
             type: 'string',
@@ -906,6 +928,7 @@ export const schemaDict = {
           },
           indexedAt: {
             type: 'string',
+            format: 'datetime',
           },
           moderation: {
             type: 'ref',
@@ -925,6 +948,7 @@ export const schemaDict = {
         properties: {
           did: {
             type: 'string',
+            format: 'did',
           },
           handle: {
             type: 'string',
@@ -941,6 +965,7 @@ export const schemaDict = {
           },
           indexedAt: {
             type: 'string',
+            format: 'datetime',
           },
           moderation: {
             type: 'ref',
@@ -1017,6 +1042,7 @@ export const schemaDict = {
               },
               createdBy: {
                 type: 'string',
+                format: 'did',
               },
             },
           },
@@ -1052,6 +1078,7 @@ export const schemaDict = {
               },
               createdBy: {
                 type: 'string',
+                format: 'did',
               },
             },
           },
@@ -1144,6 +1171,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'string',
+                  format: 'cid',
                 },
               },
               reason: {
@@ -1151,6 +1179,7 @@ export const schemaDict = {
               },
               createdBy: {
                 type: 'string',
+                format: 'did',
               },
             },
           },
@@ -1189,6 +1218,7 @@ export const schemaDict = {
             properties: {
               cid: {
                 type: 'string',
+                format: 'cid',
               },
             },
           },
@@ -1221,6 +1251,7 @@ export const schemaDict = {
             properties: {
               did: {
                 type: 'string',
+                format: 'did',
               },
             },
           },
@@ -1265,6 +1296,7 @@ export const schemaDict = {
             properties: {
               did: {
                 type: 'string',
+                format: 'did',
                 description: 'The DID of the repo.',
               },
               validate: {
@@ -1359,6 +1391,7 @@ export const schemaDict = {
             properties: {
               did: {
                 type: 'string',
+                format: 'did',
                 description: 'The DID of the repo.',
               },
               collection: {
@@ -1385,9 +1418,11 @@ export const schemaDict = {
             properties: {
               uri: {
                 type: 'string',
+                format: 'at-uri',
               },
               cid: {
                 type: 'string',
+                format: 'cid',
               },
             },
           },
@@ -1410,6 +1445,7 @@ export const schemaDict = {
             properties: {
               did: {
                 type: 'string',
+                format: 'did',
                 description: 'The DID of the repo.',
               },
               collection: {
@@ -1461,6 +1497,7 @@ export const schemaDict = {
               },
               did: {
                 type: 'string',
+                format: 'did',
               },
               didDoc: {
                 type: 'unknown',
@@ -1505,6 +1542,7 @@ export const schemaDict = {
             },
             cid: {
               type: 'string',
+              format: 'cid',
               description:
                 'The CID of the version of the record. If not specified, then return the most recent version.',
             },
@@ -1518,9 +1556,11 @@ export const schemaDict = {
             properties: {
               uri: {
                 type: 'string',
+                format: 'at-uri',
               },
               cid: {
                 type: 'string',
+                format: 'cid',
               },
               value: {
                 type: 'unknown',
@@ -1597,9 +1637,11 @@ export const schemaDict = {
         properties: {
           uri: {
             type: 'string',
+            format: 'at-uri',
           },
           cid: {
             type: 'string',
+            format: 'cid',
           },
           value: {
             type: 'unknown',
@@ -1623,6 +1665,7 @@ export const schemaDict = {
             properties: {
               did: {
                 type: 'string',
+                format: 'did',
                 description: 'The DID of the repo.',
               },
               collection: {
@@ -1653,9 +1696,11 @@ export const schemaDict = {
             properties: {
               uri: {
                 type: 'string',
+                format: 'at-uri',
               },
               cid: {
                 type: 'string',
+                format: 'cid',
               },
             },
           },
@@ -1674,9 +1719,11 @@ export const schemaDict = {
         properties: {
           uri: {
             type: 'string',
+            format: 'at-uri',
           },
           cid: {
             type: 'string',
+            format: 'cid',
           },
         },
       },
@@ -1693,6 +1740,7 @@ export const schemaDict = {
         properties: {
           did: {
             type: 'string',
+            format: 'did',
           },
         },
       },
@@ -1709,9 +1757,11 @@ export const schemaDict = {
         properties: {
           uri: {
             type: 'string',
+            format: 'at-uri',
           },
           cid: {
             type: 'string',
+            format: 'cid',
           },
         },
       },
@@ -1778,6 +1828,7 @@ export const schemaDict = {
               },
               reportedByDid: {
                 type: 'string',
+                format: 'did',
               },
               createdAt: {
                 type: 'string',
@@ -1820,6 +1871,7 @@ export const schemaDict = {
         properties: {
           did: {
             type: 'string',
+            format: 'did',
             description: 'The DID of the repo.',
           },
         },
@@ -1830,6 +1882,7 @@ export const schemaDict = {
         properties: {
           did: {
             type: 'string',
+            format: 'cid',
             description: 'The DID of the repo.',
           },
           collection: {
@@ -1842,6 +1895,7 @@ export const schemaDict = {
           },
           cid: {
             type: 'string',
+            format: 'cid',
             description:
               'The CID of the version of the record. If not specified, defaults to the most recent version.',
           },
@@ -1853,9 +1907,11 @@ export const schemaDict = {
         properties: {
           uri: {
             type: 'string',
+            format: 'at-uri',
           },
           cid: {
             type: 'string',
+            format: 'cid',
           },
         },
       },
@@ -1946,6 +2002,7 @@ export const schemaDict = {
               },
               did: {
                 type: 'string',
+                format: 'did',
               },
             },
           },
@@ -1986,6 +2043,7 @@ export const schemaDict = {
               },
               did: {
                 type: 'string',
+                format: 'did',
               },
             },
           },
@@ -2017,6 +2075,7 @@ export const schemaDict = {
               },
               did: {
                 type: 'string',
+                format: 'did',
               },
             },
           },
@@ -2042,12 +2101,14 @@ export const schemaDict = {
           properties: {
             did: {
               type: 'string',
+              format: 'did',
               description: 'The DID of the repo.',
             },
             cids: {
               type: 'array',
               items: {
                 type: 'string',
+                format: 'cid',
               },
             },
           },
@@ -2071,10 +2132,12 @@ export const schemaDict = {
           properties: {
             did: {
               type: 'string',
+              format: 'did',
               description: 'The DID of the repo.',
             },
             commit: {
               type: 'string',
+              format: 'cid',
               description:
                 'The commit to get the checkout from. Defaults to current HEAD.',
             },
@@ -2099,14 +2162,17 @@ export const schemaDict = {
           properties: {
             did: {
               type: 'string',
+              format: 'did',
               description: 'The DID of the repo.',
             },
             latest: {
               type: 'string',
+              format: 'cid',
               description: 'The most recent commit',
             },
             earliest: {
               type: 'string',
+              format: 'cid',
               description: 'The earliest commit to start from',
             },
           },
@@ -2121,6 +2187,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'string',
+                  format: 'cid',
                 },
               },
             },
@@ -2142,6 +2209,7 @@ export const schemaDict = {
           properties: {
             did: {
               type: 'string',
+              format: 'did',
               description: 'The DID of the repo.',
             },
           },
@@ -2154,6 +2222,7 @@ export const schemaDict = {
             properties: {
               root: {
                 type: 'string',
+                format: 'cid',
               },
             },
           },
@@ -2175,6 +2244,7 @@ export const schemaDict = {
           properties: {
             did: {
               type: 'string',
+              format: 'did',
               description: 'The DID of the repo.',
             },
             collection: {
@@ -2185,6 +2255,7 @@ export const schemaDict = {
             },
             commit: {
               type: 'string',
+              format: 'cid',
               description: 'An optional past commit CID.',
             },
           },
@@ -2208,15 +2279,18 @@ export const schemaDict = {
           properties: {
             did: {
               type: 'string',
+              format: 'did',
               description: 'The DID of the repo.',
             },
             earliest: {
               type: 'string',
+              format: 'cid',
               description:
                 'The earliest commit in the commit range (not inclusive)',
             },
             latest: {
               type: 'string',
+              format: 'cid',
               description:
                 'The latest commit you in the commit range (inclusive',
             },
@@ -2301,12 +2375,15 @@ export const schemaDict = {
               },
               repo: {
                 type: 'string',
+                format: 'did',
               },
               commit: {
                 type: 'string',
+                format: 'cid',
               },
               prev: {
                 type: 'string',
+                format: 'cid',
               },
               blocks: {
                 type: 'unknown',
@@ -2322,6 +2399,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'string',
+                  format: 'cid',
                 },
               },
               time: {
@@ -2356,6 +2434,7 @@ export const schemaDict = {
           },
           cid: {
             type: 'string',
+            format: 'cid',
           },
         },
       },
@@ -2373,7 +2452,6 @@ export const schemaDict = {
           properties: {
             actor: {
               type: 'string',
-              format: 'did',
             },
           },
         },
@@ -2401,7 +2479,6 @@ export const schemaDict = {
               type: 'array',
               items: {
                 type: 'string',
-                format: 'did',
               },
               maxLength: 25,
             },
@@ -2614,9 +2691,11 @@ export const schemaDict = {
           },
           following: {
             type: 'string',
+            format: 'at-uri',
           },
           followedBy: {
             type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -2626,6 +2705,7 @@ export const schemaDict = {
         properties: {
           follow: {
             type: 'string',
+            format: 'at-uri',
           },
           muted: {
             type: 'boolean',
@@ -2645,6 +2725,7 @@ export const schemaDict = {
         properties: {
           did: {
             type: 'string',
+            format: 'did',
           },
           declarationCid: {
             type: 'string',
@@ -2657,6 +2738,7 @@ export const schemaDict = {
         properties: {
           did: {
             type: 'string',
+            format: 'did',
           },
           declaration: {
             type: 'ref',
@@ -2686,9 +2768,11 @@ export const schemaDict = {
           },
           following: {
             type: 'string',
+            format: 'at-uri',
           },
           followedBy: {
             type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -2826,9 +2910,11 @@ export const schemaDict = {
             properties: {
               uri: {
                 type: 'string',
+                format: 'at-uri',
               },
               cid: {
                 type: 'string',
+                format: 'cid',
               },
               record: {
                 type: 'unknown',
@@ -2875,6 +2961,7 @@ export const schemaDict = {
         properties: {
           uri: {
             type: 'string',
+            format: 'at-uri',
           },
           title: {
             type: 'string',
@@ -2907,6 +2994,7 @@ export const schemaDict = {
         properties: {
           uri: {
             type: 'string',
+            format: 'at-uri',
           },
           title: {
             type: 'string',
@@ -3022,9 +3110,11 @@ export const schemaDict = {
         properties: {
           uri: {
             type: 'string',
+            format: 'at-uri',
           },
           cid: {
             type: 'string',
+            format: 'cid',
           },
           author: {
             type: 'ref',
@@ -3041,6 +3131,7 @@ export const schemaDict = {
         properties: {
           uri: {
             type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -3157,6 +3248,7 @@ export const schemaDict = {
           properties: {
             uri: {
               type: 'string',
+              format: 'at-uri',
             },
             depth: {
               type: 'integer',
@@ -3218,6 +3310,7 @@ export const schemaDict = {
         properties: {
           uri: {
             type: 'string',
+            format: 'at-uri',
           },
           notFound: {
             type: 'boolean',
@@ -3239,9 +3332,11 @@ export const schemaDict = {
           properties: {
             uri: {
               type: 'string',
+              format: 'at-uri',
             },
             cid: {
               type: 'string',
+              format: 'cid',
             },
             limit: {
               type: 'integer',
@@ -3262,9 +3357,11 @@ export const schemaDict = {
             properties: {
               uri: {
                 type: 'string',
+                format: 'at-uri',
               },
               cid: {
                 type: 'string',
+                format: 'cid',
               },
               cursor: {
                 type: 'string',
@@ -3340,9 +3437,11 @@ export const schemaDict = {
           properties: {
             uri: {
               type: 'string',
+              format: 'at-uri',
             },
             cid: {
               type: 'string',
+              format: 'cid',
             },
             direction: {
               type: 'string',
@@ -3367,9 +3466,11 @@ export const schemaDict = {
             properties: {
               uri: {
                 type: 'string',
+                format: 'at-uri',
               },
               cid: {
                 type: 'string',
+                format: 'cid',
               },
               cursor: {
                 type: 'string',
@@ -3626,9 +3727,11 @@ export const schemaDict = {
             properties: {
               upvote: {
                 type: 'string',
+                format: 'at-uri',
               },
               downvote: {
                 type: 'string',
+                format: 'at-uri',
               },
             },
           },
@@ -4030,9 +4133,11 @@ export const schemaDict = {
         properties: {
           uri: {
             type: 'string',
+            format: 'at-uri',
           },
           cid: {
             type: 'string',
+            format: 'cid',
           },
           author: {
             type: 'ref',
@@ -4053,6 +4158,7 @@ export const schemaDict = {
           },
           reasonSubject: {
             type: 'string',
+            format: 'at-uri',
           },
           record: {
             type: 'unknown',

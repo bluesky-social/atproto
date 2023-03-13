@@ -11,7 +11,7 @@
           "type": "object",
           "required": ["did", "password",  "token"],
           "properties": {
-            "did": { "type": "string" },
+            "did": { "type": "string", "format": "did" },
             "password": { "type": "string" },
             "token": { "type": "string" }
           }

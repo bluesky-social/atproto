@@ -84,15 +84,15 @@
       "type": "object",
       "properties": {
         "muted": {"type": "boolean"},
-        "following": {"type": "string"},
-        "followedBy": {"type": "string"}
+        "following": {"type": "string", "format": "at-uri"},
+        "followedBy": {"type": "string", "format": "at-uri"}
       }
     },
     "myState": {
       "type": "object",
       "description": "Deprecated in favor of #viewerState",
       "properties": {
-        "follow": {"type": "string"},
+        "follow": {"type": "string", "format": "at-uri"},
         "muted": {"type": "boolean"}
       }
     }

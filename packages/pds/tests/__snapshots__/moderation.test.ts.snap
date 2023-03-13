@@ -4,7 +4,7 @@ exports[`moderation actioning resolves reports on repos and records. 1`] = `
 Object {
   "action": "com.atproto.admin.moderationAction#takedown",
   "createdAt": "1970-01-01T00:00:00.000Z",
-  "createdBy": "X",
+  "createdBy": "did:example:admin",
   "id": 1,
   "reason": "Y",
   "resolvedReportIds": Array [

@@ -39,7 +39,7 @@
                 "com.atproto.repo.strongRef"
               ]
             },
-            "reportedByDid": {"type": "string"},
+            "reportedByDid": {"type": "string", "format": "did"},
             "createdAt": {"type": "string", "format": "datetime"}
           }
         }

@@ -119,7 +119,7 @@ describe('pds follow views', () => {
             $type: 'com.atproto.repo.repoRef',
             did: sc.dids.dan,
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -138,7 +138,7 @@ describe('pds follow views', () => {
     await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: modAction.id,
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {
@@ -234,7 +234,7 @@ describe('pds follow views', () => {
             $type: 'com.atproto.repo.repoRef',
             did: sc.dids.dan,
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -253,7 +253,7 @@ describe('pds follow views', () => {
     await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: modAction.id,
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {

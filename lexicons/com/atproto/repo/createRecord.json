@@ -13,6 +13,7 @@
           "properties": {
             "did": {
               "type": "string",
+              "format": "did",
               "description": "The DID of the repo."
             },
             "collection": {
@@ -37,8 +38,8 @@
           "type": "object",
           "required": ["uri", "cid"],
           "properties": {
-            "uri": {"type": "string"},
-            "cid": {"type": "string"}
+            "uri": {"type": "string", "format": "at-uri"},
+            "cid": {"type": "string", "format": "cid"}
           }
         }
       }

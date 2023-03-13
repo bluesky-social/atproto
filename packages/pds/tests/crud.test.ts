@@ -474,7 +474,7 @@ describe('crud operations', () => {
             $type: 'com.atproto.repo.recordRef',
             uri: postUri.toString(),
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -497,7 +497,7 @@ describe('crud operations', () => {
     await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: action.id,
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {

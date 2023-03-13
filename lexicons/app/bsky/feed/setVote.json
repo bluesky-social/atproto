@@ -24,8 +24,8 @@
         "schema": {
           "type": "object",
           "properties": {
-            "upvote": {"type": "string"},
-            "downvote": {"type": "string"}
+            "upvote": {"type": "string", "format":"at-uri"},
+            "downvote": {"type": "string", "format":"at-uri"}
           }
         }
       }

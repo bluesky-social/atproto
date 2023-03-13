@@ -9,8 +9,16 @@
         "type": "params",
         "required": ["did"],
         "properties": {
-          "did": {"type": "string", "description": "The DID of the repo."},
-          "commit": {"type": "string", "description": "The commit to get the checkout from. Defaults to current HEAD."}
+          "did": {
+            "type": "string",
+            "format": "did",
+            "description": "The DID of the repo."
+          },
+          "commit": {
+            "type": "string",
+            "format": "cid",
+            "description": "The commit to get the checkout from. Defaults to current HEAD."
+          }
         }
       },
       "output": {

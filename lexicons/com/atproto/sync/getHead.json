@@ -9,7 +9,11 @@
         "type": "params",
         "required": ["did"],
         "properties": {
-          "did": {"type": "string", "description": "The DID of the repo."}
+          "did": {
+            "type": "string",
+            "format": "did",
+            "description": "The DID of the repo."
+          }
         }
       },
       "output": {
@@ -18,7 +22,7 @@
           "type": "object",
           "required": ["root"],
           "properties": {
-            "root": {"type": "string"}
+            "root": {"type": "string", "format": "cid"}
           }
         }
       }

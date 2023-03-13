@@ -36,8 +36,8 @@
       "type": "object",
       "required": ["uri", "cid", "value"],
       "properties": {
-        "uri": {"type": "string"},
-        "cid": {"type": "string"},
+        "uri": {"type": "string", "format": "at-uri"},
+        "cid": {"type": "string", "format": "cid"},
         "value": {"type": "unknown"}
       }
     }

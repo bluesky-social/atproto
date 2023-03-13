@@ -8,8 +8,8 @@
         "type": "params",
         "required": ["uri"],
         "properties": {
-          "uri": {"type": "string"},
-          "cid": {"type": "string"},
+          "uri": {"type": "string", "format": "at-uri"},
+          "cid": {"type": "string", "format": "cid"},
           "direction": {"type": "string", "enum": ["up", "down"]},
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
           "before": {"type": "string"}
@@ -21,8 +21,8 @@
           "type": "object",
           "required": ["uri", "votes"],
           "properties": {
-            "uri": {"type": "string"},
-            "cid": {"type": "string"},
+            "uri": {"type": "string", "format": "at-uri"},
+            "cid": {"type": "string", "format": "cid"},
             "cursor": {"type": "string"},
             "votes": {
               "type": "array",

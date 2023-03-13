@@ -13,6 +13,7 @@
           "properties": {
             "did": {
               "type": "string",
+              "format": "did",
               "description": "The DID of the repo."
             },
             "validate": {

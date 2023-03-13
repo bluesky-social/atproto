@@ -9,7 +9,7 @@
         "type": "params",
         "required": ["did"],
         "properties": {
-          "did": {"type": "string"}
+          "did": {"type": "string", "format":"did"}
         }
       },
       "output": {

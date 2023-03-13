@@ -17,8 +17,8 @@
         },
         "subjectBlobCids": {"type": "array", "items": {"type": "string"}},
         "reason": {"type": "string"},
-        "createdBy": {"type": "string"},
-        "createdAt": {"type": "string"},
+        "createdBy": {"type": "string", "format": "did"},
+        "createdAt": {"type": "string", "format": "datetime"},
         "reversal": {"type": "ref", "ref": "#reversal"},
         "resolvedReportIds": {"type": "array", "items": {"type": "integer"}}
       }
@@ -38,8 +38,8 @@
         },
         "subjectBlobs": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.blob#view"}},
         "reason": {"type": "string"},
-        "createdBy": {"type": "string"},
-        "createdAt": {"type": "string"},
+        "createdBy": {"type": "string", "format": "did"},
+        "createdAt": {"type": "string", "format": "datetime"},
         "reversal": {"type": "ref", "ref": "#reversal"},
         "resolvedReports": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.moderationReport#view"}}
       }
@@ -57,8 +57,8 @@
       "required": ["reason", "createdBy", "createdAt"],
       "properties": {
         "reason": {"type": "string"},
-        "createdBy": {"type": "string"},
-        "createdAt": {"type": "string"}
+        "createdBy": {"type": "string", "format": "did"},
+        "createdAt": {"type": "string", "format": "datetime"}
       }
     },
     "actionType": {

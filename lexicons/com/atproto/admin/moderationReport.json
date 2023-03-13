@@ -16,7 +16,7 @@
             "com.atproto.repo.strongRef"
           ]
         },
-        "reportedByDid": {"type": "string"},
+        "reportedByDid": {"type": "string", "format": "did"},
         "createdAt": {"type": "string", "format": "datetime"},
         "resolvedByActionIds": {"type": "array", "items": {"type": "integer"}}
       }
@@ -35,7 +35,7 @@
             "com.atproto.admin.record#view"
           ]
         },
-        "reportedByDid": {"type": "string"},
+        "reportedByDid": {"type": "string", "format": "did"},
         "createdAt": {"type": "string", "format": "datetime"},
         "resolvedByActions": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.moderationAction#view"}}
       }

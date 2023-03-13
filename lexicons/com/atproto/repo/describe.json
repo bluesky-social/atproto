@@ -19,7 +19,7 @@
           "required": ["handle", "did", "didDoc", "collections", "handleIsCorrect"],
           "properties": {
             "handle": {"type": "string"},
-            "did": {"type": "string"},
+            "did": {"type": "string", "format": "did"},
             "didDoc": {"type": "unknown"},
             "collections": {"type": "array", "items": {"type": "string"}},
             "handleIsCorrect": {"type": "boolean"}

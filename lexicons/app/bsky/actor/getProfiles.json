@@ -10,7 +10,7 @@
         "properties": {
           "actors": {
             "type": "array",
-            "items": {"type": "string", "format": "did"},
+            "items": {"type": "string"},
             "maxLength": 25
           }
         }

@@ -155,7 +155,7 @@ describe('pds notification views', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postUri.toString(),
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -186,7 +186,7 @@ describe('pds notification views', () => {
         agent.api.com.atproto.admin.reverseModerationAction(
           {
             id: result.data.id,
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {

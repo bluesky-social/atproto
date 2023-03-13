@@ -70,7 +70,7 @@ describe('pds thread views', () => {
 
   it('fails for an unknown post', async () => {
     const promise = agent.api.app.bsky.feed.getPostThread(
-      { uri: 'does.not.exist' },
+      { uri: 'at://did:example:fake/does.not.exist/self' },
       { headers: sc.getHeaders(bob) },
     )
 
@@ -155,7 +155,7 @@ describe('pds thread views', () => {
             $type: 'com.atproto.repo.repoRef',
             did: alice,
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -178,7 +178,7 @@ describe('pds thread views', () => {
     await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: modAction.id,
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {
@@ -197,7 +197,7 @@ describe('pds thread views', () => {
             $type: 'com.atproto.repo.repoRef',
             did: carol,
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -218,7 +218,7 @@ describe('pds thread views', () => {
     await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: modAction.id,
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {
@@ -237,7 +237,7 @@ describe('pds thread views', () => {
             $type: 'com.atproto.repo.repoRef',
             did: bob,
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -258,7 +258,7 @@ describe('pds thread views', () => {
     await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: modAction.id,
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {
@@ -278,7 +278,7 @@ describe('pds thread views', () => {
             $type: 'com.atproto.repo.recordRef',
             uri: postUri.toString(),
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -300,7 +300,7 @@ describe('pds thread views', () => {
     await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: modAction.id,
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {
@@ -327,7 +327,7 @@ describe('pds thread views', () => {
             $type: 'com.atproto.repo.recordRef',
             uri: postUri.toString(),
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -348,7 +348,7 @@ describe('pds thread views', () => {
     await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: modAction.id,
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {
@@ -379,7 +379,7 @@ describe('pds thread views', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postUri.toString(),
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -404,7 +404,7 @@ describe('pds thread views', () => {
         agent.api.com.atproto.admin.reverseModerationAction(
           {
             id: result.data.id,
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {

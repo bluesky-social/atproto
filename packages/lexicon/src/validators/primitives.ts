@@ -246,7 +246,6 @@ export function string(
     }
   }
 
-  // formats
   if (typeof def.format === 'string') {
     switch (def.format) {
       case 'datetime':
@@ -266,10 +265,15 @@ export function string(
 export function datetimeFormat(path: string, value: string): ValidationResult {
   try {
     if (!isValidISODateString(value)) {
-      throw new ValidationError(`${path} must be an iso8601 formatted datetime`)
+      throw new Error()
     }
   } catch {
-    throw new ValidationError(`${path} must be an iso8601 formatted datetime`)
+    return {
+      success: false,
+      error: new ValidationError(
+        `${path} must be an iso8601 formatted datetime`,
+      ),
+    }
   }
   return { success: true, value }
 }
@@ -278,10 +282,13 @@ export function atUriFormat(path: string, value: string): ValidationResult {
   try {
     const uri = new AtUri(value)
     if (!value.startsWith('at://') || uri.toString() !== value) {
-      throw new ValidationError(`${path} must be an at-uri`)
+      throw new Error()
     }
   } catch {
-    throw new ValidationError(`${path} must be an at-uri`)
+    return {
+      success: false,
+      error: new ValidationError(`${path} must be an at-uri`),
+    }
   }
   return { success: true, value }
 }
@@ -289,7 +296,10 @@ export function atUriFormat(path: string, value: string): ValidationResult {
 export function didFormat(path: string, value: string): ValidationResult {
   const parts = value.split(':')
   if (parts.length < 3 || parts[0] !== 'did') {
-    throw new ValidationError(`${path} must be a did`)
+    return {
+      success: false,
+      error: new ValidationError(`${path} must be a did`),
+    }
   }
   return { success: true, value }
 }
@@ -298,10 +308,13 @@ export function cidFormat(path: string, value: string): ValidationResult {
   try {
     const cid = CID.parse(value)
     if (cid.toString() !== value) {
-      throw new ValidationError(`${path} must be a cid`)
+      throw new Error()
     }
   } catch {
-    throw new ValidationError(`${path} must be a cid`)
+    return {
+      success: false,
+      error: new ValidationError(`${path} must be a cid`),
+    }
   }
   return { success: true, value }
 }

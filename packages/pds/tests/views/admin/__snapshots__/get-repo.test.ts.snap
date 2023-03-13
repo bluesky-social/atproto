@@ -13,7 +13,7 @@ Object {
       Object {
         "action": "com.atproto.admin.moderationAction#takedown",
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "createdBy": "Y",
+        "createdBy": "did:example:admin",
         "id": 2,
         "reason": "X",
         "resolvedReportIds": Array [],
@@ -26,13 +26,13 @@ Object {
       Object {
         "action": "com.atproto.admin.moderationAction#acknowledge",
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "createdBy": "Y",
+        "createdBy": "did:example:admin",
         "id": 1,
         "reason": "X",
         "resolvedReportIds": Array [],
         "reversal": Object {
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "createdBy": "Y",
+          "createdBy": "did:example:admin",
           "reason": "X",
         },
         "subject": Object {

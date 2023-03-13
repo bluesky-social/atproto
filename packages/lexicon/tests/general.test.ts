@@ -1,4 +1,3 @@
-import { AtUri } from '@atproto/uri'
 import { Lexicons } from '../src/index'
 import LexiconDocs from './_scaffolds/lexicons'
 
