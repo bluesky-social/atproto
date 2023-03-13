@@ -4,6 +4,7 @@ import ApiAgent from '@atproto/api'
 import { defaultFetchHandler } from '@atproto/xrpc'
 import * as crypto from '@atproto/crypto'
 import * as pds from '@atproto/pds'
+import { wait } from '@atproto/common'
 import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
@@ -18,9 +19,9 @@ const ADMIN_PASSWORD = 'admin-pass'
 
 export type CloseFn = () => Promise<void>
 export type TestServerInfo = {
+  ctx: AppContext
   bsky: BskyAppView
   url: string
-  ctx: AppContext
   pds: pds.PDS
   pdsUrl: string
   plc: PlcServer
@@ -105,6 +106,8 @@ export const runTestServer = async (
     ...params,
     dbPostgresUrl,
     dbPostgresSchema,
+    // Each test suite gets its own lock id for the repo subscription
+    repoSubLockId: uniqueLockId(),
   })
 
   const db = Database.postgres({
@@ -148,9 +151,9 @@ export const runTestServer = async (
   })
 
   return {
+    ctx: bsky.ctx,
     bsky,
     url: `http://localhost:${bskyPort}`,
-    ctx: bsky.ctx,
     pds: pdsServer,
     pdsUrl: `http://localhost:${pdsPort}`,
     plc: plcServer,
@@ -283,4 +286,31 @@ export const paginateAll = async <T extends { cursor?: string }>(
     cursor = res.cursor
   } while (cursor && results.length < limit)
   return results
+}
+
+export const processAll = async (server: TestServerInfo, timeout = 5000) => {
+  const { bsky, pds } = server
+  const sub = bsky.sub
+  const { db } = pds.ctx.db
+  const start = Date.now()
+  while (Date.now() - start < timeout) {
+    await wait(50)
+    const state = await sub.getState()
+    const { lastSeq } = await db
+      .selectFrom('repo_seq')
+      .select(db.fn.max('repo_seq.seq').as('lastSeq'))
+      .executeTakeFirstOrThrow()
+    if (state.cursor === lastSeq) return
+  }
+  throw new Error(`Sequence was not processed within ${timeout}ms`)
+}
+
+const usedLockIds = new Set()
+const uniqueLockId = () => {
+  let lockId: number
+  do {
+    lockId = 1000 + Math.ceil(1000 * Math.random())
+  } while (usedLockIds.has(lockId))
+  usedLockIds.add(lockId)
+  return lockId
 }

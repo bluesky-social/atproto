@@ -1,11 +1,10 @@
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
 import {
   runTestServer,
   forSnapshot,
   CloseFn,
   paginateAll,
-  adminAuth,
+  processAll,
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import followsSeed from '../seeds/follows'
@@ -24,8 +23,10 @@ describe('pds follow views', () => {
     })
     close = server.close
     agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    sc = new SeedClient(pdsAgent)
     await followsSeed(sc)
+    await processAll(server)
     alice = sc.dids.alice
   })
 
@@ -33,38 +34,41 @@ describe('pds follow views', () => {
     await close()
   })
 
+  // TODO(bsky) blocks followers by actor takedown via labels
+  // TODO(bsky) blocks follows by actor takedown via labels
+
   it('fetches followers', async () => {
     const aliceFollowers = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.alice },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
 
     expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
 
     const bobFollowers = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.bob },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
 
     expect(forSnapshot(bobFollowers.data)).toMatchSnapshot()
 
     const carolFollowers = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.carol },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
 
     expect(forSnapshot(carolFollowers.data)).toMatchSnapshot()
 
     const danFollowers = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.dan },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
 
     expect(forSnapshot(danFollowers.data)).toMatchSnapshot()
 
     const eveFollowers = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.eve },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
 
     expect(forSnapshot(eveFollowers.data)).toMatchSnapshot()
@@ -73,11 +77,11 @@ describe('pds follow views', () => {
   it('fetches followers by handle', async () => {
     const byDid = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.alice },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
     const byHandle = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.accounts[alice].handle },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
     expect(byHandle.data).toEqual(byDid.data)
   })
@@ -91,7 +95,7 @@ describe('pds follow views', () => {
           before: cursor,
           limit: 2,
         },
-        { headers: sc.getHeaders(alice) },
+        { headers: sc.getHeaders(alice, true) },
       )
       return res.data
     }
@@ -103,83 +107,45 @@ describe('pds follow views', () => {
 
     const full = await agent.api.app.bsky.graph.getFollowers(
       { user: sc.dids.alice },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
 
     expect(full.data.followers.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
-  it('blocks followers by actor takedown', async () => {
-    const { data: modAction } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.repo.repoRef',
-            did: sc.dids.dan,
-          },
-          createdBy: 'X',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
-
-    const aliceFollowers = await agent.api.app.bsky.graph.getFollowers(
-      { user: sc.dids.alice },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
-
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      {
-        id: modAction.id,
-        createdBy: 'X',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
-  })
-
   it('fetches follows', async () => {
     const aliceFollowers = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.alice },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
 
     expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
 
     const bobFollowers = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.bob },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
 
     expect(forSnapshot(bobFollowers.data)).toMatchSnapshot()
 
     const carolFollowers = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.carol },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
 
     expect(forSnapshot(carolFollowers.data)).toMatchSnapshot()
 
     const danFollowers = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.dan },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
 
     expect(forSnapshot(danFollowers.data)).toMatchSnapshot()
 
     const eveFollowers = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.eve },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
 
     expect(forSnapshot(eveFollowers.data)).toMatchSnapshot()
@@ -188,11 +154,11 @@ describe('pds follow views', () => {
   it('fetches follows by handle', async () => {
     const byDid = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.alice },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
     const byHandle = await agent.api.app.bsky.graph.getFollows(
       { user: sc.accounts[alice].handle },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
     expect(byHandle.data).toEqual(byDid.data)
   })
@@ -206,7 +172,7 @@ describe('pds follow views', () => {
           before: cursor,
           limit: 2,
         },
-        { headers: sc.getHeaders(alice) },
+        { headers: sc.getHeaders(alice, true) },
       )
       return res.data
     }
@@ -218,48 +184,10 @@ describe('pds follow views', () => {
 
     const full = await agent.api.app.bsky.graph.getFollows(
       { user: sc.dids.alice },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
 
     expect(full.data.follows.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
-  })
-
-  it('blocks follows by actor takedown', async () => {
-    const { data: modAction } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.repo.repoRef',
-            did: sc.dids.dan,
-          },
-          createdBy: 'X',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
-
-    const aliceFollows = await agent.api.app.bsky.graph.getFollows(
-      { user: sc.dids.alice },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(forSnapshot(aliceFollows.data)).toMatchSnapshot()
-
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      {
-        id: modAction.id,
-        createdBy: 'X',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
   })
 })

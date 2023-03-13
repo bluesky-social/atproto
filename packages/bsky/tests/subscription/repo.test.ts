@@ -1,11 +1,13 @@
 import AtpAgent from '@atproto/api'
-import { wait } from '@atproto/common'
-import { PDS } from '@atproto/pds'
 import basicSeed from '../seeds/basic'
 import { SeedClient } from '../seeds/client'
-import { forSnapshot, runTestServer, TestServerInfo } from '../_util'
+import {
+  forSnapshot,
+  processAll,
+  runTestServer,
+  TestServerInfo,
+} from '../_util'
 import { AppContext, Database } from '../../src'
-import { RepoSubscription } from '../../src/subscription/repo'
 import { DatabaseSchemaType } from '../../src/db/database-schema'
 
 describe('sync', () => {
@@ -52,7 +54,7 @@ describe('sync', () => {
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
 
-    await processFullSequence(server.pds, server.bsky.sub)
+    await processAll(server)
 
     // Table comparator
     const getTableDump = async () => {
@@ -74,7 +76,7 @@ describe('sync', () => {
     server.bsky.sub.destroy()
     await server.bsky.sub.resetState()
     server.bsky.sub.resume()
-    await processFullSequence(server.pds, server.bsky.sub)
+    await processAll(server)
 
     // Permissive of indexedAt times changing
     expect(forSnapshot(await getTableDump())).toEqual(
@@ -82,22 +84,6 @@ describe('sync', () => {
     )
   })
 })
-
-async function processFullSequence(pds: PDS, sub: RepoSubscription) {
-  const { db } = pds.ctx.db
-  const timeout = 5000
-  const start = Date.now()
-  while (Date.now() - start < timeout) {
-    await wait(50)
-    const state = await sub.getState()
-    const { lastSeq } = await db
-      .selectFrom('repo_seq')
-      .select(db.fn.max('repo_seq.seq').as('lastSeq'))
-      .executeTakeFirstOrThrow()
-    if (state.cursor === lastSeq) return
-  }
-  throw new Error(`Sequence was not processed within ${timeout}ms`)
-}
 
 async function dumpTable<T extends keyof DatabaseSchemaType>(
   db: Database,
