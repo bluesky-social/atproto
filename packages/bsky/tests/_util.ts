@@ -1,5 +1,7 @@
 import assert from 'assert'
 import { AddressInfo } from 'net'
+import ApiAgent from '@atproto/api'
+import { defaultFetchHandler } from '@atproto/xrpc'
 import * as crypto from '@atproto/crypto'
 import * as pds from '@atproto/pds'
 import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
@@ -128,6 +130,22 @@ export const runTestServer = async (
   })
   const bskyServer = await bsky.start()
   const bskyPort = (bskyServer.address() as AddressInfo).port
+
+  // Map pds public url to its local url
+  ApiAgent.configure({
+    fetch: (httpUri, ...args) => {
+      if (httpUri.startsWith(pdsServer.ctx.cfg.publicUrl)) {
+        return defaultFetchHandler(
+          httpUri.replace(
+            pdsServer.ctx.cfg.publicUrl,
+            `http://localhost:${pdsPort}`,
+          ),
+          ...args,
+        )
+      }
+      return defaultFetchHandler(httpUri, ...args)
+    },
+  })
 
   return {
     bsky,

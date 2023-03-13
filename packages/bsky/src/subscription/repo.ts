@@ -29,7 +29,10 @@ export class RepoSubscription {
             try {
               const ops = await getOps(msg)
               await db.transaction(async (tx) => {
-                await this.handleOps(tx, ops, msg.time)
+                await Promise.all([
+                  this.handleOps(tx, ops, msg.time),
+                  this.handleActor(tx, msg.repo, msg.time),
+                ])
                 await this.setState(tx, { cursor: msg.seq })
               })
             } catch (err) {
@@ -91,6 +94,12 @@ export class RepoSubscription {
         )
       }
     }
+  }
+
+  private async handleActor(tx: Database, did: string, timestamp: string) {
+    const { services } = this.ctx
+    const indexingTx = services.indexing(tx)
+    await indexingTx.indexActor(did, timestamp)
   }
 
   async getState(): Promise<State> {

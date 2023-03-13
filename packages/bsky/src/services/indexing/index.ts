@@ -1,6 +1,9 @@
 import { CID } from 'multiformats/cid'
+import ApiAgent from '@atproto/api'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
+import { DidResolver } from '@atproto/did-resolver'
+import * as handleLib from '@atproto/handle'
 import Database from '../../db'
 import * as Post from './plugins/post'
 import * as Vote from './plugins/vote'
@@ -8,6 +11,7 @@ import * as Repost from './plugins/repost'
 import * as Follow from './plugins/follow'
 import * as Profile from './plugins/profile'
 import RecordProcessor from './processor'
+import { subLogger } from '../../logger'
 
 export class IndexingService {
   records: {
@@ -18,7 +22,7 @@ export class IndexingService {
     profile: Profile.PluginType
   }
 
-  constructor(public db: Database) {
+  constructor(public db: Database, public didResolver: DidResolver) {
     this.records = {
       post: Post.makePlugin(this.db.db),
       vote: Vote.makePlugin(this.db.db),
@@ -28,8 +32,8 @@ export class IndexingService {
     }
   }
 
-  static creator() {
-    return (db: Database) => new IndexingService(db)
+  static creator(didResolver: DidResolver) {
+    return (db: Database) => new IndexingService(db, didResolver)
   }
 
   async indexRecord(
@@ -57,6 +61,28 @@ export class IndexingService {
     // @TODO(bsky) direct notifs
     const notifs = await indexer.deleteRecord(uri, cascading)
     return notifs
+  }
+
+  async indexActor(did: string, timestamp: string) {
+    const actor = await this.db.db
+      .selectFrom('actor')
+      .where('did', '=', did)
+      .selectAll()
+      .executeTakeFirst()
+    if (actor) {
+      return // @TODO deal with handle updates
+    }
+    const { pds, handle } = await this.didResolver.resolveAtpData(did)
+    const handleToDid = await resolveExternalHandle(pds, handle)
+    if (did !== handleToDid) {
+      return // No bidirectional link between did and handle
+    }
+    const actorInfo = { handle, indexedAt: timestamp }
+    await this.db.db
+      .insertInto('actor')
+      .values({ did, ...actorInfo })
+      .onConflict((oc) => oc.column('did').doUpdateSet(actorInfo))
+      .executeTakeFirst()
   }
 
   findIndexerForCollection(collection: string) {
@@ -109,5 +135,28 @@ export class IndexingService {
       this.db.db.deleteFrom('repost').where('creator', '=', did).execute(),
       this.db.db.deleteFrom('vote').where('creator', '=', did).execute(),
     ])
+  }
+}
+
+const resolveExternalHandle = async (
+  pds: string,
+  handle: string,
+): Promise<string | undefined> => {
+  try {
+    const did = await handleLib.resolveDns(handle)
+    return did
+  } catch (err) {
+    if (err instanceof handleLib.NoHandleRecordError) {
+      // no worries it's just not found
+    } else {
+      subLogger.error({ err, handle }, 'could not resolve dns handle')
+    }
+  }
+  try {
+    const agent = new ApiAgent({ service: pds }) // @TODO all good to use pds rather than the handle itself?
+    const res = await agent.api.com.atproto.handle.resolve({ handle })
+    return res.data.did
+  } catch (err) {
+    return undefined
   }
 }

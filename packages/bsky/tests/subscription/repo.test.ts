@@ -56,14 +56,15 @@ describe('sync', () => {
 
     // Table comparator
     const getTableDump = async () => {
-      const [post, profile, vote, follow, dupes] = await Promise.all([
+      const [actor, post, profile, vote, follow, dupes] = await Promise.all([
+        dumpTable(db, 'actor', ['did']),
         dumpTable(db, 'post', ['uri']),
         dumpTable(db, 'profile', ['uri']),
         dumpTable(db, 'vote', ['creator', 'subject']),
         dumpTable(db, 'follow', ['creator', 'subjectDid']),
         dumpTable(db, 'duplicate_record', ['uri']),
       ])
-      return { post, profile, vote, follow, dupes }
+      return { actor, post, profile, vote, follow, dupes }
     }
 
     // Mark originals
