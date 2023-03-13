@@ -6,7 +6,7 @@ import { AddressInfo } from 'net'
 import axios, { AxiosInstance } from 'axios'
 import { getInfo } from '../../src/image/sharp'
 import { BlobDiskCache, ImageProcessingServer } from '../../src/image/server'
-import { DiskBlobStore } from '../../src'
+import { DiskBlobStore } from '../../src/storage'
 import { cidForCbor } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 
