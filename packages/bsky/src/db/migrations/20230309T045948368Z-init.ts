@@ -233,6 +233,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('json', 'text', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .addColumn('takedownId', 'integer') // @TODO intentionally missing index
     .execute()
 }
 

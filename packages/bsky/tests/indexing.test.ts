@@ -1,16 +1,18 @@
-import AtpAgent, { AppBskyActorProfile, AppBskyFeedPost } from '@atproto/api'
+import { CID } from 'multiformats/cid'
+import { cidForCbor, TID } from '@atproto/common'
+import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
+import AtpAgent, { AppBskyActorProfile, AppBskyFeedPost } from '@atproto/api'
 import { CloseFn, forSnapshot, runTestServer, TestServerInfo } from './_util'
 import { SeedClient } from './seeds/client'
 import usersSeed from './seeds/users'
-import { Database } from '../src'
-import { prepareCreate, prepareDelete, prepareUpdate } from '../src/repo'
 import { ids } from '../src/lexicon/lexicons'
 
 describe('indexing', () => {
   let server: TestServerInfo
   let close: CloseFn
   let agent: AtpAgent
+  let pdsAgent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
@@ -19,8 +21,15 @@ describe('indexing', () => {
     })
     close = server.close
     agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    sc = new SeedClient(pdsAgent)
     await usersSeed(sc)
+    // Ensure actors are indexed so that views can be served
+    const now = new Date().toISOString()
+    const { db, services } = server.ctx
+    for (const did of Object.values(sc.dids)) {
+      await services.indexing(db).indexActor(did, now)
+    }
   })
 
   afterAll(async () => {
@@ -28,7 +37,7 @@ describe('indexing', () => {
   })
 
   it('indexes posts.', async () => {
-    const { db, services, messageQueue } = server.ctx
+    const { db, services } = server.ctx
     const createdAt = new Date().toISOString()
     const createRecord = await prepareCreate({
       did: sc.dids.alice,
@@ -46,7 +55,7 @@ describe('indexing', () => {
         createdAt,
       } as AppBskyFeedPost.Record,
     })
-    const { uri } = createRecord
+    const [uri] = createRecord
     const updateRecord = await prepareUpdate({
       did: sc.dids.alice,
       collection: ids.AppBskyFeedPost,
@@ -71,61 +80,49 @@ describe('indexing', () => {
     })
 
     // Create
-    await db.transaction(async (tx) => {
-      await services
-        .repo(tx)
-        .processWrites(sc.dids.alice, [createRecord], new Date().toISOString())
+    const createMessages = await db.transaction(async (tx) => {
+      return await services.indexing(tx).indexRecord(...createRecord)
     })
 
     const getAfterCreate = await agent.api.app.bsky.feed.getPostThread(
       { uri: uri.toString() },
-      { headers: sc.getHeaders(sc.dids.alice) },
+      { headers: sc.getHeaders(sc.dids.alice, true) },
     )
     expect(forSnapshot(getAfterCreate.data)).toMatchSnapshot()
-    await messageQueue.processAll()
-    const createNotifications = await getNotifications(db, uri)
 
     // Update
-    await db.transaction(async (tx) => {
-      await services
-        .repo(tx)
-        .processWrites(sc.dids.alice, [updateRecord], new Date().toISOString())
+    const updateMessages = await db.transaction(async (tx) => {
+      return await services.indexing(tx).indexRecord(...updateRecord)
     })
 
     const getAfterUpdate = await agent.api.app.bsky.feed.getPostThread(
       { uri: uri.toString() },
-      { headers: sc.getHeaders(sc.dids.alice) },
+      { headers: sc.getHeaders(sc.dids.alice, true) },
     )
     expect(forSnapshot(getAfterUpdate.data)).toMatchSnapshot()
-    await messageQueue.processAll()
-    const updateNotifications = await getNotifications(db, uri)
 
     // Delete
-    await db.transaction(async (tx) => {
-      await services
-        .repo(tx)
-        .processWrites(sc.dids.alice, [deleteRecord], new Date().toISOString())
+    const deletedMessages = await db.transaction(async (tx) => {
+      return await services.indexing(tx).deleteRecord(...deleteRecord)
     })
 
     const getAfterDelete = agent.api.app.bsky.feed.getPostThread(
       { uri: uri.toString() },
-      { headers: sc.getHeaders(sc.dids.alice) },
+      { headers: sc.getHeaders(sc.dids.alice, true) },
     )
     await expect(getAfterDelete).rejects.toThrow(/Post not found:/)
-    await messageQueue.processAll()
-    const deleteNotifications = await getNotifications(db, uri)
 
     expect(
       forSnapshot({
-        createNotifications,
-        updateNotifications,
-        deleteNotifications,
+        createMessages,
+        updateMessages,
+        deletedMessages,
       }),
     ).toMatchSnapshot()
   })
 
   it('indexes profiles.', async () => {
-    const { db, services, messageQueue } = server.ctx
+    const { db, services } = server.ctx
     const createRecord = await prepareCreate({
       did: sc.dids.dan,
       collection: ids.AppBskyActorProfile,
@@ -135,7 +132,7 @@ describe('indexing', () => {
         displayName: 'dan',
       } as AppBskyActorProfile.Record,
     })
-    const { uri } = createRecord
+    const [uri] = createRecord
     const updateRecord = await prepareUpdate({
       did: sc.dids.dan,
       collection: ids.AppBskyActorProfile,
@@ -152,65 +149,85 @@ describe('indexing', () => {
     })
 
     // Create
-    await db.transaction(async (tx) => {
-      await services
-        .repo(tx)
-        .processWrites(sc.dids.dan, [createRecord], new Date().toISOString())
+    const createMessages = await db.transaction(async (tx) => {
+      return await services.indexing(tx).indexRecord(...createRecord)
     })
 
     const getAfterCreate = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.dan },
-      { headers: sc.getHeaders(sc.dids.alice) },
+      { headers: sc.getHeaders(sc.dids.alice, true) },
     )
     expect(forSnapshot(getAfterCreate.data)).toMatchSnapshot()
-    await messageQueue.processAll()
-    const createNotifications = await getNotifications(db, uri)
 
     // Update
-    await db.transaction(async (tx) => {
-      await services
-        .repo(tx)
-        .processWrites(sc.dids.dan, [updateRecord], new Date().toISOString())
+    const updateMessages = await db.transaction(async (tx) => {
+      return await services.indexing(tx).indexRecord(...updateRecord)
     })
 
     const getAfterUpdate = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.dan },
-      { headers: sc.getHeaders(sc.dids.alice) },
+      { headers: sc.getHeaders(sc.dids.alice, true) },
     )
     expect(forSnapshot(getAfterUpdate.data)).toMatchSnapshot()
-    await messageQueue.processAll()
-    const updateNotifications = await getNotifications(db, uri)
 
     // Delete
-    await db.transaction(async (tx) => {
-      await services
-        .repo(tx)
-        .processWrites(sc.dids.dan, [deleteRecord], new Date().toISOString())
+    const deletedMessages = await db.transaction(async (tx) => {
+      return await services.indexing(tx).deleteRecord(...deleteRecord)
     })
 
     const getAfterDelete = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.dan },
-      { headers: sc.getHeaders(sc.dids.alice) },
+      { headers: sc.getHeaders(sc.dids.alice, true) },
     )
     expect(forSnapshot(getAfterDelete.data)).toMatchSnapshot()
-    await messageQueue.processAll()
-    const deleteNotifications = await getNotifications(db, uri)
 
     expect(
       forSnapshot({
-        createNotifications,
-        updateNotifications,
-        deleteNotifications,
+        createMessages,
+        updateMessages,
+        deletedMessages,
       }),
     ).toMatchSnapshot()
   })
 
-  async function getNotifications(db: Database, uri: AtUri) {
-    return await db.db
-      .selectFrom('user_notification')
-      .selectAll()
-      .where('recordUri', '=', uri.toString())
-      .orderBy('indexedAt')
-      .execute()
+  async function prepareCreate(opts: {
+    did: string
+    collection: string
+    rkey?: string
+    record: unknown
+    timestamp?: string
+  }): Promise<[AtUri, CID, unknown, WriteOpAction.Create, string]> {
+    const rkey = opts.rkey ?? TID.nextStr()
+    return [
+      AtUri.make(opts.did, opts.collection, rkey),
+      await cidForCbor(opts.record),
+      opts.record,
+      WriteOpAction.Create,
+      opts.timestamp ?? new Date().toISOString(),
+    ]
+  }
+
+  async function prepareUpdate(opts: {
+    did: string
+    collection: string
+    rkey: string
+    record: unknown
+    timestamp?: string
+  }): Promise<[AtUri, CID, unknown, WriteOpAction.Update, string]> {
+    return [
+      AtUri.make(opts.did, opts.collection, opts.rkey),
+      await cidForCbor(opts.record),
+      opts.record,
+      WriteOpAction.Update,
+      opts.timestamp ?? new Date().toISOString(),
+    ]
+  }
+
+  function prepareDelete(opts: {
+    did: string
+    collection: string
+    rkey: string
+  }): [AtUri] {
+    return [AtUri.make(opts.did, opts.collection, opts.rkey)]
   }
 })
