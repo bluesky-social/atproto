@@ -87,7 +87,7 @@ describe('blob creator migration', () => {
   })
 
   it('migrates up', async () => {
-    const migration = await db.migrator.migrateTo('_20230310T205728933Z')
+    const migration = await db.migrator.migrateTo('_20230313T232322844Z')
     expect(migration.error).toBeUndefined()
   })
 
