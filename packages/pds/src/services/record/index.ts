@@ -118,7 +118,7 @@ export class RecordService {
       builder = builder.where('record.rkey', '>', rkeyStart)
     }
     if (rkeyEnd !== undefined) {
-      builder = builder.where('record.rkey', '<=', rkeyEnd)
+      builder = builder.where('record.rkey', '<', rkeyEnd)
     }
     const res = await builder.execute()
     return res.map((row) => {

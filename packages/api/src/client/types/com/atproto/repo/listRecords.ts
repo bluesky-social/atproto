@@ -15,7 +15,7 @@ export interface QueryParams {
   limit?: number
   /** The lowest sort-ordered rkey to start from (exclusive) */
   rkeyStart?: string
-  /** The highest sort-ordered rkey to stop at (inclusive) */
+  /** The highest sort-ordered rkey to stop at (exclusive) */
   rkeyEnd?: string
   /** Reverse the order of the returned records? */
   reverse?: boolean
