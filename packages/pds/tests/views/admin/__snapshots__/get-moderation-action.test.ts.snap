@@ -46,10 +46,6 @@ Object {
       "moderation": Object {},
       "relatedRecords": Array [
         Object {
-          "$type": "app.bsky.system.declaration",
-          "actorType": "app.bsky.system.actorUser",
-        },
-        Object {
           "$type": "app.bsky.actor.profile",
           "avatar": Object {
             "cid": "cids(1)",
@@ -124,10 +120,6 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {},
     "relatedRecords": Array [
-      Object {
-        "$type": "app.bsky.system.declaration",
-        "actorType": "app.bsky.system.actorUser",
-      },
       Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {

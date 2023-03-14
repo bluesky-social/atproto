@@ -34,12 +34,6 @@ describe('repo sync', () => {
     })
     agent.api.setHeader('authorization', `Bearer ${res.data.accessJwt}`)
     did = res.data.did
-    repoData['app.bsky.system.declaration'] = {
-      self: {
-        $type: 'app.bsky.system.declaration',
-        actorType: 'app.bsky.system.actorUser',
-      },
-    }
   })
 
   afterAll(async () => {
@@ -64,9 +58,9 @@ describe('repo sync', () => {
       did,
       ctx.repoSigningKey.did(),
     )
-    expect(synced.writeLog.length).toBe(ADD_COUNT + 1) // +1 because of declaration
+    expect(synced.writeLog.length).toBe(ADD_COUNT + 1) // +1 because of repo
     const ops = await collapseWriteLog(synced.writeLog)
-    expect(ops.length).toBe(ADD_COUNT + 1)
+    expect(ops.length).toBe(ADD_COUNT) // Does not include empty initial commit
     const loaded = await repo.Repo.load(storage, synced.root)
     const contents = await loaded.getContents()
     expect(contents).toEqual(repoData)

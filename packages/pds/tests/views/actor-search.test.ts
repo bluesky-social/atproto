@@ -222,24 +222,17 @@ describe('pds user search views', () => {
 // you can achieve it using named snapshots, but when you run the tests for pg the test suite fails
 // since the sqlite snapshots appear obsolete to jest (and vice-versa when you run the sqlite suite).
 
-const declaration = {
-  actorType: 'app.bsky.system.actorUser',
-  cid: 'cids(0)',
-}
-
 const avatar =
   'https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg'
 
 const snapTypeaheadPg = [
   {
     did: 'user(0)',
-    declaration,
     handle: 'cara-wiegand69.test',
     viewer: { muted: false },
   },
   {
     did: 'user(1)',
-    declaration,
     displayName: 'Carol Littel',
     handle: 'eudora-dietrich4.test',
     avatar,
@@ -247,7 +240,6 @@ const snapTypeaheadPg = [
   },
   {
     did: 'user(2)',
-    declaration,
     displayName: 'Sadie Carter',
     handle: 'shane-torphy52.test',
     avatar,
@@ -255,7 +247,6 @@ const snapTypeaheadPg = [
   },
   {
     did: 'user(3)',
-    declaration,
     displayName: 'Carlton Abernathy IV',
     handle: 'aliya-hodkiewicz.test',
     avatar,
@@ -263,13 +254,11 @@ const snapTypeaheadPg = [
   },
   {
     did: 'user(4)',
-    declaration,
     handle: 'carlos6.test',
     viewer: { muted: false },
   },
   {
     did: 'user(5)',
-    declaration,
     displayName: 'Latoya Windler',
     handle: 'carolina-mcdermott77.test',
     avatar,
@@ -277,7 +266,6 @@ const snapTypeaheadPg = [
   },
   {
     did: 'user(6)',
-    declaration,
     displayName: 'Rachel Kshlerin',
     handle: 'cayla-marquardt39.test',
     avatar,
@@ -288,7 +276,6 @@ const snapTypeaheadPg = [
 const snapTypeaheadSqlite = [
   {
     did: 'user(0)',
-    declaration,
     displayName: 'Carlton Abernathy IV',
     handle: 'aliya-hodkiewicz.test',
     avatar,
@@ -296,19 +283,16 @@ const snapTypeaheadSqlite = [
   },
   {
     did: 'user(1)',
-    declaration,
     handle: 'cara-wiegand69.test',
     viewer: { muted: false },
   },
   {
     did: 'user(2)',
-    declaration,
     handle: 'carlos6.test',
     viewer: { muted: false },
   },
   {
     did: 'user(3)',
-    declaration,
     displayName: 'Latoya Windler',
     handle: 'carolina-mcdermott77.test',
     avatar,
@@ -316,7 +300,6 @@ const snapTypeaheadSqlite = [
   },
   {
     did: 'user(4)',
-    declaration,
     displayName: 'Carol Littel',
     handle: 'eudora-dietrich4.test',
     avatar,
@@ -324,7 +307,6 @@ const snapTypeaheadSqlite = [
   },
   {
     did: 'user(5)',
-    declaration,
     displayName: 'Sadie Carter',
     handle: 'shane-torphy52.test',
     avatar,
@@ -334,14 +316,12 @@ const snapTypeaheadSqlite = [
 
 const snapSearchPg = [
   {
-    declaration,
     did: 'user(0)',
     handle: 'cara-wiegand69.test',
     viewer: { muted: false },
   },
   {
     did: 'user(1)',
-    declaration,
     displayName: 'Carol Littel',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'eudora-dietrich4.test',
@@ -350,7 +330,6 @@ const snapSearchPg = [
   },
   {
     did: 'user(2)',
-    declaration,
     displayName: 'Sadie Carter',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'shane-torphy52.test',
@@ -359,7 +338,6 @@ const snapSearchPg = [
   },
   {
     did: 'user(3)',
-    declaration,
     displayName: 'Carlton Abernathy IV',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'aliya-hodkiewicz.test',
@@ -368,13 +346,11 @@ const snapSearchPg = [
   },
   {
     did: 'user(4)',
-    declaration,
     handle: 'carlos6.test',
     viewer: { muted: false },
   },
   {
     did: 'user(5)',
-    declaration,
     displayName: 'Latoya Windler',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'carolina-mcdermott77.test',
@@ -383,7 +359,6 @@ const snapSearchPg = [
   },
   {
     did: 'user(6)',
-    declaration,
     displayName: 'Rachel Kshlerin',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'cayla-marquardt39.test',
@@ -395,7 +370,6 @@ const snapSearchPg = [
 const snapSearchSqlite = [
   {
     did: 'user(0)',
-    declaration,
     displayName: 'Carlton Abernathy IV',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'aliya-hodkiewicz.test',
@@ -404,19 +378,16 @@ const snapSearchSqlite = [
   },
   {
     did: 'user(1)',
-    declaration,
     handle: 'cara-wiegand69.test',
     viewer: { muted: false },
   },
   {
     did: 'user(2)',
-    declaration,
     handle: 'carlos6.test',
     viewer: { muted: false },
   },
   {
     did: 'user(3)',
-    declaration,
     displayName: 'Latoya Windler',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'carolina-mcdermott77.test',
@@ -425,7 +396,6 @@ const snapSearchSqlite = [
   },
   {
     did: 'user(4)',
-    declaration,
     displayName: 'Carol Littel',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'eudora-dietrich4.test',
@@ -434,7 +404,6 @@ const snapSearchSqlite = [
   },
   {
     did: 'user(5)',
-    declaration,
     displayName: 'Sadie Carter',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'shane-torphy52.test',

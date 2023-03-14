@@ -42,17 +42,11 @@ describe('user table did pkey migration', () => {
       const password = randomStr(32, 'base32')
       const lastSeenNotifs = randDateBefore(Date.now())
       const createdAt = randDateBefore(lastSeenNotifs.getTime())
-      const declarationCid = await cidForCbor({ test: 123 })
       const passwordResetToken =
         Math.random() > 0.9 ? randomStr(4, 'base32') : null
       const passwordResetGrantedAt =
         Math.random() > 0.5 ? randDateBefore(lastSeenNotifs.getTime()) : null
-      didHandles.push({
-        did,
-        handle,
-        actorType: 'app.bsky.system.actorUser',
-        declarationCid: declarationCid.toString(),
-      })
+      didHandles.push({ did, handle })
       users.push({
         handle,
         email,

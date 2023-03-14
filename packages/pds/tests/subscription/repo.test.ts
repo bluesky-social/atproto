@@ -75,10 +75,10 @@ describe('sync', () => {
 
     // Generate some modifications and dupes
     const { alice, bob, carol, dan } = sc.dids
-    await sc.follow(alice, sc.actorRef(bob))
-    await sc.follow(carol, sc.actorRef(alice))
-    await sc.follow(bob, sc.actorRef(alice))
-    await sc.follow(dan, sc.actorRef(bob))
+    await sc.follow(alice, bob)
+    await sc.follow(carol, alice)
+    await sc.follow(bob, alice)
+    await sc.follow(dan, bob)
     await sc.vote('down', bob, sc.posts[alice][1].ref) // Reversed
     await sc.vote('up', bob, sc.posts[alice][2].ref) // Reversed
     await sc.vote('up', carol, sc.posts[alice][1].ref) // Reversed
@@ -152,7 +152,6 @@ describe('sync', () => {
   const indexedTables = [
     'duplicate_record',
     'user_notification',
-    'assertion',
     'profile',
     'follow',
     'post',

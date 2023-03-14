@@ -7,10 +7,6 @@ Object {
     "post": Object {
       "author": Object {
         "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-        "declaration": Object {
-          "actorType": "app.bsky.system.actorUser",
-          "cid": "cids(1)",
-        },
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
@@ -54,10 +50,6 @@ Object {
     "post": Object {
       "author": Object {
         "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-        "declaration": Object {
-          "actorType": "app.bsky.system.actorUser",
-          "cid": "cids(1)",
-        },
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
@@ -125,10 +117,6 @@ Object {
 exports[`indexing indexes profiles. 1`] = `
 Object {
   "creator": "user(0)",
-  "declaration": Object {
-    "actorType": "app.bsky.system.actorUser",
-    "cid": "cids(0)",
-  },
   "did": "user(0)",
   "displayName": "dan",
   "followersCount": 0,
@@ -148,10 +136,6 @@ Object {
 exports[`indexing indexes profiles. 2`] = `
 Object {
   "creator": "user(0)",
-  "declaration": Object {
-    "actorType": "app.bsky.system.actorUser",
-    "cid": "cids(0)",
-  },
   "did": "user(0)",
   "displayName": "danny",
   "followersCount": 0,
@@ -171,10 +155,6 @@ Object {
 exports[`indexing indexes profiles. 3`] = `
 Object {
   "creator": "user(0)",
-  "declaration": Object {
-    "actorType": "app.bsky.system.actorUser",
-    "cid": "cids(0)",
-  },
   "did": "user(0)",
   "followersCount": 0,
   "followsCount": 0,

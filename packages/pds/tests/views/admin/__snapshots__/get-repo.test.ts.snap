@@ -74,10 +74,6 @@ Object {
   },
   "relatedRecords": Array [
     Object {
-      "$type": "app.bsky.system.declaration",
-      "actorType": "app.bsky.system.actorUser",
-    },
-    Object {
       "$type": "app.bsky.actor.profile",
       "avatar": Object {
         "cid": "cids(0)",

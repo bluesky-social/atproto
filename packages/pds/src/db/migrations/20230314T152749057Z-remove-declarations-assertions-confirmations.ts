@@ -37,7 +37,9 @@ export async function down(db: Kysely<unknown>): Promise<void> {
     .execute()
   await db.schema
     .alterTable('follow')
-    .addColumn('subjectDeclarationCid', 'varchar', (col) => col.notNull())
+    .addColumn('subjectDeclarationCid', 'varchar', (col) =>
+      col.notNull().defaultTo(''),
+    )
     .execute()
   await db.schema
     .createTable('assertion')

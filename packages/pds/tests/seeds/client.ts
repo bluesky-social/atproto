@@ -41,27 +41,6 @@ export class RecordRef {
   }
 }
 
-export class ActorRef {
-  did: string
-  declarationCid: CID
-
-  constructor(did: string, declarationCid: CID | string) {
-    this.did = did
-    this.declarationCid = CID.parse(declarationCid.toString())
-  }
-
-  get raw(): { did: string; declarationCid: string } {
-    return {
-      did: this.did.toString(),
-      declarationCid: this.declarationCid.toString(),
-    }
-  }
-
-  get declarationStr(): string {
-    return this.declarationCid.toString()
-  }
-}
-
 export class SeedClient {
   accounts: Record<
     string,
@@ -72,7 +51,6 @@ export class SeedClient {
       handle: string
       email: string
       password: string
-      ref: ActorRef
     }
   >
   profiles: Record<
@@ -119,18 +97,11 @@ export class SeedClient {
     const { data: account } = await this.agent.api.com.atproto.account.create(
       params,
     )
-    const { data: profile } = await this.agent.api.app.bsky.actor.getProfile(
-      {
-        actor: params.handle,
-      },
-      { headers: SeedClient.getHeaders(account.accessJwt) },
-    )
     this.dids[shortName] = account.did
     this.accounts[account.did] = {
       ...account,
       email: params.email,
       password: params.password,
-      ref: new ActorRef(account.did, profile.declaration.cid),
     }
     return this.accounts[account.did]
   }
@@ -174,18 +145,18 @@ export class SeedClient {
     return this.profiles[by]
   }
 
-  async follow(from: string, to: ActorRef) {
+  async follow(from: string, to: string) {
     const res = await this.agent.api.app.bsky.graph.follow.create(
       { did: from },
       {
-        subject: to.raw,
+        subject: to,
         createdAt: new Date().toISOString(),
       },
       this.getHeaders(from),
     )
     this.follows[from] ??= {}
-    this.follows[from][to.did] = new RecordRef(res.uri, res.cid)
-    return this.follows[from][to.did]
+    this.follows[from][to] = new RecordRef(res.uri, res.cid)
+    return this.follows[from][to]
   }
 
   async post(
@@ -309,10 +280,6 @@ export class SeedClient {
     const repost = new RecordRef(res.uri, res.cid)
     this.reposts[by].push(repost)
     return repost
-  }
-
-  actorRef(did: string): ActorRef {
-    return this.accounts[did].ref
   }
 
   async takeModerationAction(opts: {
