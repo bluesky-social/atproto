@@ -16,7 +16,7 @@ export class AccountService {
     return (db: Database) => new AccountService(db)
   }
 
-  async getUser(
+  async getAccount(
     handleOrDid: string,
     includeSoftDeleted = false,
   ): Promise<(UserAccount & DidHandle & RepoRoot) | null> {
@@ -42,7 +42,7 @@ export class AccountService {
     return result || null
   }
 
-  async getUserByEmail(
+  async getAccountByEmail(
     email: string,
     includeSoftDeleted = false,
   ): Promise<(UserAccount & DidHandle & RepoRoot) | null> {
@@ -232,7 +232,7 @@ export class AccountService {
     }).execute()
   }
 
-  async deleteUser(did: string): Promise<void> {
+  async deleteAccount(did: string): Promise<void> {
     this.db.assertTransaction()
     await Promise.all([
       this.db.db.deleteFrom('refresh_token').where('did', '=', did).execute(),

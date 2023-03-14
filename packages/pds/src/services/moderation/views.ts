@@ -388,7 +388,7 @@ export class ModerationViews {
       createdAt: res.createdAt,
       reasonType: res.reasonType,
       reason: res.reason ?? undefined,
-      reportedBy: res.reportedBy,
+      reportedBy: res.reportedByDid,
       subject:
         res.subjectType === 'com.atproto.repo.repoRef'
           ? {
@@ -412,7 +412,7 @@ export class ModerationViews {
       createdAt: report.createdAt,
       reasonType: report.reasonType,
       reason: report.reason ?? undefined,
-      reportedBy: report.reportedBy,
+      reportedBy: report.reportedByDid,
       subject:
         report.subjectType === 'com.atproto.repo.repoRef'
           ? {
@@ -459,7 +459,7 @@ export class ModerationViews {
     if (result.subjectType === 'com.atproto.repo.repoRef') {
       const repoResult = await this.services
         .account(this.db)
-        .getUser(result.subjectDid, true)
+        .getAccount(result.subjectDid, true)
       if (!repoResult) {
         throw new Error(
           `Subject is missing: (${result.id}) ${result.subjectDid}`,

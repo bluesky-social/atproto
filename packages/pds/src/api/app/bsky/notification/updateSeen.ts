@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Invalid date')
       }
 
-      const user = await ctx.services.account(ctx.db).getUser(requester)
+      const user = await ctx.services.account(ctx.db).getAccount(requester)
       if (!user) {
         throw new InvalidRequestError(`Could not find user: ${requester}`)
       }

@@ -40,7 +40,7 @@ export interface ModerationReport {
   subjectCid: string | null
   reasonType: typeof SPAM | typeof OTHER
   reason: string | null
-  reportedBy: string
+  reportedByDid: string
   createdAt: string
 }
 

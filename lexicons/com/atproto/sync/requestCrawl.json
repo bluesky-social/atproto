@@ -9,7 +9,7 @@
         "type": "params",
         "required": ["hostname"],
         "properties": {
-          "host": {"type": "string", "description": "Hostname of the service that is requesting to be crawled."}
+          "hostname": {"type": "string", "description": "Hostname of the service that is requesting to be crawled."}
         }
       }
     }

@@ -188,7 +188,7 @@ export class RecordService {
     return !!record
   }
 
-  async deleteForUser(did: string) {
+  async deleteForActor(did: string) {
     this.db.assertTransaction()
     await this.messageDispatcher.send(this.db, deleteRepo(did))
     await Promise.all([

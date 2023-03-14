@@ -477,7 +477,7 @@ export class ModerationService {
         reasonType,
         reason: reason || null,
         createdAt: createdAt.toISOString(),
-        reportedBy,
+        reportedByDid: reportedBy,
         ...subjectInfo,
       })
       .returningAll()

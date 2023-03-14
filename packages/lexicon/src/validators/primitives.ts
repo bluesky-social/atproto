@@ -280,8 +280,11 @@ export function datetimeFormat(path: string, value: string): ValidationResult {
 
 export function atUriFormat(path: string, value: string): ValidationResult {
   try {
+    if (!value.startsWith('at://')) {
+      throw new Error()
+    }
     const uri = new AtUri(value)
-    if (!value.startsWith('at://') || uri.toString() !== value) {
+    if (!uri.host) {
       throw new Error()
     }
   } catch {
@@ -295,7 +298,7 @@ export function atUriFormat(path: string, value: string): ValidationResult {
 
 export function didFormat(path: string, value: string): ValidationResult {
   const parts = value.split(':')
-  if (parts.length < 3 || parts[0] !== 'did') {
+  if (parts[0] !== 'did' || !parts[1] || !parts[2]) {
     return {
       success: false,
       error: new ValidationError(`${path} must be a did`),
@@ -306,10 +309,7 @@ export function didFormat(path: string, value: string): ValidationResult {
 
 export function cidFormat(path: string, value: string): ValidationResult {
   try {
-    const cid = CID.parse(value)
-    if (cid.toString() !== value) {
-      throw new Error()
-    }
+    CID.parse(value)
   } catch {
     return {
       success: false,
