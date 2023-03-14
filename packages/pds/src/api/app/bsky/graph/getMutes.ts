@@ -7,7 +7,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getMutes({
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {
-      const { limit, before } = params
+      const { limit, cursor } = params
       const requester = auth.credentials.did
       const { services, db } = ctx
       const { ref } = ctx.db.db.dynamic
@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
       )
       mutesReq = paginate(mutesReq, {
         limit,
-        before,
+        cursor,
         keyset,
       })
 

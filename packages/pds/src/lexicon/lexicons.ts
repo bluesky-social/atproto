@@ -339,7 +339,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -414,7 +414,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -1112,7 +1112,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -1597,13 +1597,15 @@ export const schemaDict = {
               default: 50,
               description: 'The number of records to return.',
             },
-            before: {
+            rkeyStart: {
               type: 'string',
-              description: 'A TID to filter the range of records returned.',
+              description:
+                'The lowest sort-ordered rkey to start from (exclusive)',
             },
-            after: {
+            rkeyEnd: {
               type: 'string',
-              description: 'A TID to filter the range of records returned.',
+              description:
+                'The highest sort-ordered rkey to stop at (inclusive)',
             },
             reverse: {
               type: 'boolean',
@@ -2797,7 +2799,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -3209,7 +3211,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -3344,7 +3346,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -3398,7 +3400,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -3453,7 +3455,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -3889,7 +3891,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -3940,7 +3942,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -3987,7 +3989,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -4094,7 +4096,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },

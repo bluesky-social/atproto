@@ -12,7 +12,7 @@ export interface QueryParams {
   cid?: string
   direction?: 'up' | 'down'
   limit?: number
-  before?: string
+  cursor?: string
 }
 
 export type InputSchema = undefined

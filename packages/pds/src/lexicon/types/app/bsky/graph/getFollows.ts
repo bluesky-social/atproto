@@ -11,7 +11,7 @@ import * as AppBskyActorRef from '../actor/ref'
 export interface QueryParams {
   actor: string
   limit: number
-  before?: string
+  cursor?: string
 }
 
 export type InputSchema = undefined
