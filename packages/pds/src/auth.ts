@@ -51,11 +51,7 @@ export class ServerAuth {
     }
   }
 
-  createRefreshToken(
-    did: string,
-    jti?: string | null,
-    expiresIn?: string | number,
-  ) {
+  createRefreshToken(did: string, jti?: string, expiresIn?: string | number) {
     const payload = {
       scope: AuthScopes.Refresh,
       sub: did,

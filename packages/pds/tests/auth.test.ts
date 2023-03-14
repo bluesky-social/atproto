@@ -166,6 +166,7 @@ describe('auth', () => {
   })
 
   it('refresh token is revoked after grace period completes.', async () => {
+    const { db } = server.ctx
     const account = await createAccount({
       handle: 'evan.test',
       email: 'evan@test.com',
@@ -175,7 +176,7 @@ describe('auth', () => {
     const token = jwt.decode(account.refreshJwt, { json: true })
 
     // Update expiration (i.e. grace period) to end immediately
-    const refreshUpdated = await server.ctx.db.db
+    const refreshUpdated = await db.db
       .updateTable('refresh_token')
       .set({ expiresAt: new Date().toISOString() })
       .where('id', '=', token?.jti ?? '')
@@ -187,12 +188,12 @@ describe('auth', () => {
     await expect(refreshAgain).rejects.toThrow('Token has been revoked')
 
     // Ensure that token was cleaned-up
-    const refreshInfo2 = await server.ctx.db.db
+    const refreshInfo = await db.db
       .selectFrom('refresh_token')
       .selectAll()
       .where('id', '=', token?.jti ?? '')
       .executeTakeFirst()
-    expect(refreshInfo2).toBeUndefined()
+    expect(refreshInfo).toBeUndefined()
   })
 
   it('refresh token is revoked when session is deleted.', async () => {
@@ -220,12 +221,13 @@ describe('auth', () => {
   })
 
   it('expired refresh token cannot be used to refresh a session.', async () => {
+    const { auth } = server.ctx
     const account = await createAccount({
       handle: 'holga.test',
       email: 'holga@test.com',
       password: 'password',
     })
-    const refresh = server.ctx.auth.createRefreshToken(account.did, null, -1)
+    const refresh = auth.createRefreshToken(account.did, undefined, -1)
     const refreshExpired = refreshSession(refresh.jwt)
     await expect(refreshExpired).rejects.toThrow('Token has expired')
     await deleteSession(refresh.jwt) // No problem revoking an expired token
