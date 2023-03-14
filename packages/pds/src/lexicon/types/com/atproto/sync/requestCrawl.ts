@@ -9,7 +9,7 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {
   /** Hostname of the service that is requesting to be crawled. */
-  host?: string
+  hostname: string
 }
 
 export type InputSchema = undefined
