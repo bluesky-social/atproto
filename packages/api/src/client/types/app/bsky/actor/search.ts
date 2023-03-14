@@ -10,7 +10,7 @@ import * as AppBskyActorProfile from './profile'
 export interface QueryParams {
   term?: string
   limit?: number
-  before?: string
+  cursor?: string
 }
 
 export type InputSchema = undefined

@@ -10,7 +10,7 @@ import * as AppBskyFeedFeedViewPost from './feedViewPost'
 export interface QueryParams {
   algorithm?: string
   limit?: number
-  before?: string
+  cursor?: string
 }
 
 export type InputSchema = undefined

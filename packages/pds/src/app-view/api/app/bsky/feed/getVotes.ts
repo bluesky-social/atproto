@@ -7,7 +7,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getVotes({
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
-      const { uri, limit, before, cid, direction } = params
+      const { uri, limit, cursor, cid, direction } = params
       const requester = auth.credentials.did
       const { services, db } = ctx
       const { ref } = db.db.dynamic
@@ -41,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
       const keyset = new TimeCidKeyset(ref('vote.createdAt'), ref('vote.cid'))
       builder = paginate(builder, {
         limit,
-        before,
+        cursor,
         keyset,
       })
 

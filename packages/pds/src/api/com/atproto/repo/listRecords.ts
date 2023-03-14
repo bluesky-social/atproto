@@ -5,7 +5,7 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.listRecords(async ({ params }) => {
-    const { repo, collection, limit, before, after, reverse } = params
+    const { repo, collection, limit, rkeyStart, rkeyEnd, reverse } = params
 
     const did = await ctx.services.account(ctx.db).getDidForActor(repo)
     if (!did) {
@@ -19,8 +19,8 @@ export default function (server: Server, ctx: AppContext) {
         collection,
         limit || 50,
         reverse || false,
-        before,
-        after,
+        rkeyStart,
+        rkeyEnd,
       )
 
     const lastRecord = records.at(-1)

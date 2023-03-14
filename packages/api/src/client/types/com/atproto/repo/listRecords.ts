@@ -13,10 +13,10 @@ export interface QueryParams {
   collection: string
   /** The number of records to return. */
   limit?: number
-  /** A TID to filter the range of records returned. */
-  before?: string
-  /** A TID to filter the range of records returned. */
-  after?: string
+  /** The lowest sort-ordered rkey to start from (exclusive) */
+  rkeyStart?: string
+  /** The highest sort-ordered rkey to stop at (exclusive) */
+  rkeyEnd?: string
   /** Reverse the order of the returned records? */
   reverse?: boolean
 }

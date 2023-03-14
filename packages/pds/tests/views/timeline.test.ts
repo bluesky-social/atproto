@@ -142,7 +142,7 @@ describe('timeline views', () => {
       const res = await agent.api.app.bsky.feed.getTimeline(
         {
           algorithm: FeedAlgorithm.ReverseChronological,
-          before: cursor,
+          cursor,
           limit: 4,
         },
         { headers: sc.getHeaders(carol) },

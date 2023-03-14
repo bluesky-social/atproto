@@ -60,9 +60,9 @@ export class ModerationService {
   async getActions(opts: {
     subject?: string
     limit: number
-    before?: string
+    cursor?: string
   }): Promise<ModerationActionRow[]> {
-    const { subject, limit, before } = opts
+    const { subject, limit, cursor } = opts
     let builder = this.db.db.selectFrom('moderation_action')
     if (subject) {
       builder = builder.where((qb) => {
@@ -71,12 +71,12 @@ export class ModerationService {
           .orWhere('subjectUri', '=', subject)
       })
     }
-    if (before) {
-      const beforeNumeric = parseInt(before, 10)
-      if (isNaN(beforeNumeric)) {
+    if (cursor) {
+      const cursorNumeric = parseInt(cursor, 10)
+      if (isNaN(cursorNumeric)) {
         throw new InvalidRequestError('Malformed cursor')
       }
-      builder = builder.where('id', '<', beforeNumeric)
+      builder = builder.where('id', '<', cursorNumeric)
     }
     return await builder
       .selectAll()
@@ -97,9 +97,9 @@ export class ModerationService {
     subject?: string
     resolved?: boolean
     limit: number
-    before?: string
+    cursor?: string
   }): Promise<ModerationReportRow[]> {
-    const { subject, resolved, limit, before } = opts
+    const { subject, resolved, limit, cursor } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_report')
     if (subject) {
@@ -122,12 +122,12 @@ export class ModerationService {
         ? builder.whereExists(resolutionsQuery)
         : builder.whereNotExists(resolutionsQuery)
     }
-    if (before) {
-      const beforeNumeric = parseInt(before, 10)
-      if (isNaN(beforeNumeric)) {
+    if (cursor) {
+      const cursorNumeric = parseInt(cursor, 10)
+      if (isNaN(cursorNumeric)) {
         throw new InvalidRequestError('Malformed cursor')
       }
-      builder = builder.where('id', '<', beforeNumeric)
+      builder = builder.where('id', '<', cursorNumeric)
     }
     return await builder
       .selectAll()

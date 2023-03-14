@@ -160,7 +160,7 @@ describe('pds user search views', () => {
     const results = (results) => results.flatMap((res) => res.actors)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.actor.search(
-        { term: 'p', before: cursor, limit: 3 },
+        { term: 'p', cursor, limit: 3 },
         { headers },
       )
       return res.data

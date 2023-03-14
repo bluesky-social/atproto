@@ -204,7 +204,7 @@ describe('pds notification views', () => {
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.notification.list(
         {
-          before: cursor,
+          cursor,
           limit: 6,
         },
         { headers: sc.getHeaders(alice) },
