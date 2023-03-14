@@ -239,7 +239,7 @@ describe('pds author feed views', () => {
     await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: action.id,
-        createdBy: 'did:exampl:admin',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {

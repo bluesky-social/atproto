@@ -1861,62 +1861,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoReportSubject: {
-    lexicon: 1,
-    id: 'com.atproto.report.subject',
-    defs: {
-      repo: {
-        type: 'object',
-        required: ['did'],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-            description: 'The DID of the repo.',
-          },
-        },
-      },
-      record: {
-        type: 'object',
-        required: ['did', 'collection', 'rkey'],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'cid',
-            description: 'The DID of the repo.',
-          },
-          collection: {
-            type: 'string',
-            description: 'The NSID of the collection.',
-          },
-          rkey: {
-            type: 'string',
-            description: 'The key of the record.',
-          },
-          cid: {
-            type: 'string',
-            format: 'cid',
-            description:
-              'The CID of the version of the record. If not specified, defaults to the most recent version.',
-          },
-        },
-      },
-      recordRef: {
-        type: 'object',
-        required: ['uri', 'cid'],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          cid: {
-            type: 'string',
-            format: 'cid',
-          },
-        },
-      },
-    },
-  },
   ComAtprotoServerGetAccountsConfig: {
     lexicon: 1,
     id: 'com.atproto.server.getAccountsConfig',
@@ -4294,7 +4238,6 @@ export const ids = {
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoReportCreate: 'com.atproto.report.create',
   ComAtprotoReportReasonType: 'com.atproto.report.reasonType',
-  ComAtprotoReportSubject: 'com.atproto.report.subject',
   ComAtprotoServerGetAccountsConfig: 'com.atproto.server.getAccountsConfig',
   ComAtprotoSessionCreate: 'com.atproto.session.create',
   ComAtprotoSessionDelete: 'com.atproto.session.delete',
