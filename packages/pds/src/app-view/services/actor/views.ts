@@ -7,7 +7,6 @@ import {
 import { DidHandle } from '../../../db/tables/did-handle'
 import { countAll } from '../../../db/util'
 import Database from '../../../db'
-import { getDeclarationSimple } from '../../../api/app/bsky/util'
 import { ImageUriBuilder } from '../../../image/uri'
 
 export class ActorViews {
@@ -90,7 +89,6 @@ export class ActorViews {
         : undefined
       return {
         did: result.did,
-        declaration: getDeclarationSimple(result),
         handle: result.handle,
         displayName: profileInfo?.displayName || undefined,
         description: profileInfo?.description || undefined,
@@ -177,7 +175,6 @@ export class ActorViews {
         : undefined
       return {
         did: result.did,
-        declaration: getDeclarationSimple(result),
         handle: result.handle,
         displayName: profileInfo?.displayName || undefined,
         description: profileInfo?.description || undefined,
@@ -207,7 +204,6 @@ export class ActorViews {
     const profiles = await this.profileBasic(results, viewer)
     const views = profiles.map((view) => ({
       did: view.did,
-      declaration: view.declaration,
       handle: view.handle,
       displayName: view.displayName,
       avatar: view.avatar,

@@ -2,7 +2,6 @@ import { Database } from '../../src'
 import { randomStr } from '@atproto/crypto'
 import { cidForCbor } from '@atproto/common'
 import { Kysely } from 'kysely'
-import { APP_BSKY_SYSTEM } from '../../src/lexicon'
 
 describe('user table did pkey migration', () => {
   let db: Database
@@ -51,7 +50,7 @@ describe('user table did pkey migration', () => {
       didHandles.push({
         did,
         handle,
-        actorType: APP_BSKY_SYSTEM.ActorUser,
+        actorType: 'app.bsky.system.actorUser',
         declarationCid: declarationCid.toString(),
       })
       users.push({

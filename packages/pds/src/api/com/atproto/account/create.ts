@@ -1,11 +1,8 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as handleLib from '@atproto/handle'
-import { cidForCbor } from '@atproto/common'
 import * as plc from '@did-plc/lib'
-import { Server, APP_BSKY_SYSTEM } from '../../../../lexicon'
+import { Server } from '../../../../lexicon'
 import { countAll } from '../../../../db/util'
-import * as lex from '../../../../lexicon/lexicons'
-import * as repo from '../../../../repo'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
 
@@ -78,14 +75,9 @@ export default function (server: Server, ctx: AppContext) {
       })
       const did = plcCreate.did
 
-      const declaration = {
-        $type: lex.ids.AppBskySystemDeclaration,
-        actorType: APP_BSKY_SYSTEM.ActorUser,
-      }
-
       // Register user before going out to PLC to get a real did
       try {
-        await actorTxn.registerUser(email, handle, did, password, declaration)
+        await actorTxn.registerUser(email, handle, did, password)
       } catch (err) {
         if (err instanceof UserAlreadyExistsError) {
           const got = await actorTxn.getUser(handle, true)
@@ -120,23 +112,15 @@ export default function (server: Server, ctx: AppContext) {
           .execute()
       }
 
-      const write = await repo.prepareCreate({
-        did,
-        collection: lex.ids.AppBskySystemDeclaration,
-        record: declaration,
-      })
-
       // Setup repo root
-      await repoTxn.createRepo(did, [write], now)
+      await repoTxn.createRepo(did, [], now)
 
-      const declarationCid = await cidForCbor(declaration)
       const access = ctx.auth.createAccessToken(did)
       const refresh = ctx.auth.createRefreshToken(did)
       await ctx.services.auth(dbTxn).grantRefreshToken(refresh.payload)
 
       return {
         did,
-        declarationCid,
         accessJwt: access.jwt,
         refreshJwt: refresh.jwt,
       }
@@ -149,7 +133,6 @@ export default function (server: Server, ctx: AppContext) {
         did: result.did,
         accessJwt: result.accessJwt,
         refreshJwt: result.refreshJwt,
-        declarationCid: result.declarationCid.toString(),
       },
     }
   })

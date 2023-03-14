@@ -25,10 +25,6 @@ export type PostInfoMap = { [uri: string]: PostInfo }
 
 export type ActorView = {
   did: string
-  declaration: {
-    cid: string
-    actorType: string
-  }
   handle: string
   displayName?: string
   avatar?: string
