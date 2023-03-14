@@ -85,9 +85,6 @@ export const APP_BSKY_GRAPH = {
   AssertCreator: 'app.bsky.graph.assertCreator',
   AssertMember: 'app.bsky.graph.assertMember',
 }
-export const APP_BSKY_SYSTEM = {
-  ActorUser: 'app.bsky.system.actorUser',
-}
 
 export function createServer(options?: XrpcOptions): Server {
   return new Server(options)
@@ -554,7 +551,6 @@ export class BskyNS {
   feed: FeedNS
   graph: GraphNS
   notification: NotificationNS
-  system: SystemNS
 
   constructor(server: Server) {
     this._server = server
@@ -563,7 +559,6 @@ export class BskyNS {
     this.feed = new FeedNS(server)
     this.graph = new GraphNS(server)
     this.notification = new NotificationNS(server)
-    this.system = new SystemNS(server)
   }
 }
 
@@ -744,14 +739,6 @@ export class NotificationNS {
   ) {
     const nsid = 'app.bsky.notification.updateSeen' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
-  }
-}
-
-export class SystemNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
   }
 }
 

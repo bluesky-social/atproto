@@ -3,20 +3,11 @@
   "id": "app.bsky.actor.ref",
   "description": "A reference to an actor in the network.",
   "defs": {
-    "main": {
-      "type": "object",
-      "required": ["did", "declarationCid"],
-      "properties": {
-        "did": {"type": "string", "format": "did"},
-        "declarationCid": {"type": "string"}
-      }
-    },
     "withInfo": {
       "type": "object",
-      "required": ["did", "declaration", "handle"],
+      "required": ["did", "handle"],
       "properties": {
         "did": {"type": "string", "format": "did"},
-        "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
         "handle": {"type": "string"},
         "displayName": {
           "type": "string",

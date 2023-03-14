@@ -81,8 +81,6 @@ import * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
 import * as AppBskyFeedVote from './types/app/bsky/feed/vote'
 import * as AppBskyGraphAssertCreator from './types/app/bsky/graph/assertCreator'
 import * as AppBskyGraphAssertMember from './types/app/bsky/graph/assertMember'
-import * as AppBskyGraphAssertion from './types/app/bsky/graph/assertion'
-import * as AppBskyGraphConfirmation from './types/app/bsky/graph/confirmation'
 import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
@@ -92,9 +90,6 @@ import * as AppBskyGraphUnmute from './types/app/bsky/graph/unmute'
 import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
 import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
-import * as AppBskySystemActorUser from './types/app/bsky/system/actorUser'
-import * as AppBskySystemDeclRef from './types/app/bsky/system/declRef'
-import * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
 
 export * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
 export * as ComAtprotoAccountCreateInviteCode from './types/com/atproto/account/createInviteCode'
@@ -171,8 +166,6 @@ export * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
 export * as AppBskyFeedVote from './types/app/bsky/feed/vote'
 export * as AppBskyGraphAssertCreator from './types/app/bsky/graph/assertCreator'
 export * as AppBskyGraphAssertMember from './types/app/bsky/graph/assertMember'
-export * as AppBskyGraphAssertion from './types/app/bsky/graph/assertion'
-export * as AppBskyGraphConfirmation from './types/app/bsky/graph/confirmation'
 export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
@@ -182,9 +175,6 @@ export * as AppBskyGraphUnmute from './types/app/bsky/graph/unmute'
 export * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
 export * as AppBskyNotificationList from './types/app/bsky/notification/list'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
-export * as AppBskySystemActorUser from './types/app/bsky/system/actorUser'
-export * as AppBskySystemDeclRef from './types/app/bsky/system/declRef'
-export * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
 
 export const COM_ATPROTO_ADMIN = {
   ModerationActionTakedown: 'com.atproto.admin.moderationAction#takedown',
@@ -198,9 +188,6 @@ export const COM_ATPROTO_REPORT = {
 export const APP_BSKY_GRAPH = {
   AssertCreator: 'app.bsky.graph.assertCreator',
   AssertMember: 'app.bsky.graph.assertMember',
-}
-export const APP_BSKY_SYSTEM = {
-  ActorUser: 'app.bsky.system.actorUser',
 }
 
 export class AtpBaseClient {
@@ -809,7 +796,6 @@ export class BskyNS {
   feed: FeedNS
   graph: GraphNS
   notification: NotificationNS
-  system: SystemNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
@@ -818,7 +804,6 @@ export class BskyNS {
     this.feed = new FeedNS(service)
     this.graph = new GraphNS(service)
     this.notification = new NotificationNS(service)
-    this.system = new SystemNS(service)
   }
 }
 
@@ -1232,14 +1217,10 @@ export class VoteRecord {
 
 export class GraphNS {
   _service: AtpServiceClient
-  assertion: AssertionRecord
-  confirmation: ConfirmationRecord
   follow: FollowRecord
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.assertion = new AssertionRecord(service)
-    this.confirmation = new ConfirmationRecord(service)
     this.follow = new FollowRecord(service)
   }
 
@@ -1296,136 +1277,6 @@ export class GraphNS {
       .catch((e) => {
         throw AppBskyGraphUnmute.toKnownErr(e)
       })
-  }
-}
-
-export class AssertionRecord {
-  _service: AtpServiceClient
-
-  constructor(service: AtpServiceClient) {
-    this._service = service
-  }
-
-  async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyGraphAssertion.Record }[]
-  }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.graph.assertion',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{
-    uri: string
-    cid: string
-    value: AppBskyGraphAssertion.Record
-  }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.graph.assertion',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: Omit<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: AppBskyGraphAssertion.Record,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    record.$type = 'app.bsky.graph.assertion'
-    const res = await this._service.xrpc.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection: 'app.bsky.graph.assertion', ...params, record },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._service.xrpc.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.graph.assertion', ...params },
-      { headers },
-    )
-  }
-}
-
-export class ConfirmationRecord {
-  _service: AtpServiceClient
-
-  constructor(service: AtpServiceClient) {
-    this._service = service
-  }
-
-  async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyGraphConfirmation.Record }[]
-  }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.graph.confirmation',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{
-    uri: string
-    cid: string
-    value: AppBskyGraphConfirmation.Record
-  }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.graph.confirmation',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: Omit<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: AppBskyGraphConfirmation.Record,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    record.$type = 'app.bsky.graph.confirmation'
-    const res = await this._service.xrpc.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection: 'app.bsky.graph.confirmation', ...params, record },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._service.xrpc.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.graph.confirmation', ...params },
-      { headers },
-    )
   }
 }
 
@@ -1528,80 +1379,5 @@ export class NotificationNS {
       .catch((e) => {
         throw AppBskyNotificationUpdateSeen.toKnownErr(e)
       })
-  }
-}
-
-export class SystemNS {
-  _service: AtpServiceClient
-  declaration: DeclarationRecord
-
-  constructor(service: AtpServiceClient) {
-    this._service = service
-    this.declaration = new DeclarationRecord(service)
-  }
-}
-
-export class DeclarationRecord {
-  _service: AtpServiceClient
-
-  constructor(service: AtpServiceClient) {
-    this._service = service
-  }
-
-  async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskySystemDeclaration.Record }[]
-  }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.system.declaration',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{
-    uri: string
-    cid: string
-    value: AppBskySystemDeclaration.Record
-  }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.system.declaration',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: Omit<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: AppBskySystemDeclaration.Record,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    record.$type = 'app.bsky.system.declaration'
-    const res = await this._service.xrpc.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection: 'app.bsky.system.declaration', ...params, record },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._service.xrpc.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.system.declaration', ...params },
-      { headers },
-    )
   }
 }

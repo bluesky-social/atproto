@@ -2587,7 +2587,6 @@ export const schemaDict = {
         type: 'object',
         required: [
           'did',
-          'declaration',
           'handle',
           'creator',
           'followersCount',
@@ -2598,10 +2597,6 @@ export const schemaDict = {
           did: {
             type: 'string',
             format: 'did',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -2649,15 +2644,11 @@ export const schemaDict = {
       },
       viewBasic: {
         type: 'object',
-        required: ['did', 'declaration', 'handle'],
+        required: ['did', 'handle'],
         properties: {
           did: {
             type: 'string',
             format: 'did',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -2719,30 +2710,13 @@ export const schemaDict = {
     id: 'app.bsky.actor.ref',
     description: 'A reference to an actor in the network.',
     defs: {
-      main: {
-        type: 'object',
-        required: ['did', 'declarationCid'],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-          declarationCid: {
-            type: 'string',
-          },
-        },
-      },
       withInfo: {
         type: 'object',
-        required: ['did', 'declaration', 'handle'],
+        required: ['did', 'handle'],
         properties: {
           did: {
             type: 'string',
             format: 'did',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -3789,61 +3763,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyGraphAssertion: {
-    lexicon: 1,
-    id: 'app.bsky.graph.assertion',
-    defs: {
-      main: {
-        type: 'record',
-        key: 'tid',
-        record: {
-          type: 'object',
-          required: ['assertion', 'subject', 'createdAt'],
-          properties: {
-            assertion: {
-              type: 'string',
-            },
-            subject: {
-              type: 'ref',
-              ref: 'lex:app.bsky.actor.ref',
-            },
-            createdAt: {
-              type: 'string',
-              format: 'datetime',
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyGraphConfirmation: {
-    lexicon: 1,
-    id: 'app.bsky.graph.confirmation',
-    defs: {
-      main: {
-        type: 'record',
-        key: 'tid',
-        record: {
-          type: 'object',
-          required: ['originator', 'assertion', 'createdAt'],
-          properties: {
-            originator: {
-              type: 'ref',
-              ref: 'lex:app.bsky.actor.ref',
-            },
-            assertion: {
-              type: 'ref',
-              ref: 'lex:com.atproto.repo.strongRef',
-            },
-            createdAt: {
-              type: 'string',
-              format: 'datetime',
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyGraphFollow: {
     lexicon: 1,
     id: 'app.bsky.graph.follow',
@@ -3857,8 +3776,8 @@ export const schemaDict = {
           required: ['subject', 'createdAt'],
           properties: {
             subject: {
-              type: 'ref',
-              ref: 'lex:app.bsky.actor.ref',
+              type: 'string',
+              format: 'did',
             },
             createdAt: {
               type: 'string',
@@ -4197,59 +4116,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskySystemActorUser: {
-    lexicon: 1,
-    id: 'app.bsky.system.actorUser',
-    defs: {
-      main: {
-        type: 'token',
-        description:
-          "Actor type: User. Defined for app.bsky.system.declaration's actorType.",
-      },
-    },
-  },
-  AppBskySystemDeclRef: {
-    lexicon: 1,
-    id: 'app.bsky.system.declRef',
-    defs: {
-      main: {
-        description: 'A reference to a app.bsky.system.declaration record.',
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: ['app.bsky.system.actorUser'],
-          },
-        },
-      },
-    },
-  },
-  AppBskySystemDeclaration: {
-    lexicon: 1,
-    id: 'app.bsky.system.declaration',
-    defs: {
-      main: {
-        description:
-          'Context for an account that is considered intrinsic to it and alters the fundamental understanding of an account of changed. A declaration should be treated as immutable.',
-        type: 'record',
-        key: 'literal:self',
-        record: {
-          type: 'object',
-          required: ['actorType'],
-          properties: {
-            actorType: {
-              type: 'string',
-              knownValues: ['app.bsky.system.actorUser'],
-            },
-          },
-        },
-      },
-    },
-  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -4332,8 +4198,6 @@ export const ids = {
   AppBskyFeedVote: 'app.bsky.feed.vote',
   AppBskyGraphAssertCreator: 'app.bsky.graph.assertCreator',
   AppBskyGraphAssertMember: 'app.bsky.graph.assertMember',
-  AppBskyGraphAssertion: 'app.bsky.graph.assertion',
-  AppBskyGraphConfirmation: 'app.bsky.graph.confirmation',
   AppBskyGraphFollow: 'app.bsky.graph.follow',
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
@@ -4343,7 +4207,4 @@ export const ids = {
   AppBskyNotificationGetCount: 'app.bsky.notification.getCount',
   AppBskyNotificationList: 'app.bsky.notification.list',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
-  AppBskySystemActorUser: 'app.bsky.system.actorUser',
-  AppBskySystemDeclRef: 'app.bsky.system.declRef',
-  AppBskySystemDeclaration: 'app.bsky.system.declaration',
 }

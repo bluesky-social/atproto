@@ -10,7 +10,7 @@
         "type": "object",
         "required": ["subject", "createdAt"],
         "properties": {
-          "subject": {"type": "ref", "ref": "app.bsky.actor.ref"},
+          "subject": {"type": "string", "format": "did"},
           "createdAt": {"type": "string", "format": "datetime"}
         }
       }
