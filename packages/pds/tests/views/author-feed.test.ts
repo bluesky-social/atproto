@@ -168,7 +168,7 @@ describe('pds author feed views', () => {
             $type: 'com.atproto.repo.repoRef',
             did: alice,
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -188,7 +188,7 @@ describe('pds author feed views', () => {
     await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: action.id,
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {
@@ -216,7 +216,7 @@ describe('pds author feed views', () => {
             $type: 'com.atproto.repo.recordRef',
             uri: postUri.toString(),
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -239,7 +239,7 @@ describe('pds author feed views', () => {
     await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: action.id,
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {

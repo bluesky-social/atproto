@@ -13,7 +13,7 @@
           "properties": {
             "actionId": {"type": "integer"},
             "reportIds": {"type": "array", "items": {"type": "integer"}},
-            "createdBy": {"type": "string"}
+            "createdBy": {"type": "string", "format": "did"}
           }
         }
       },

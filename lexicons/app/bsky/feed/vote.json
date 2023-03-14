@@ -11,7 +11,7 @@
         "properties": {
           "subject": {"type": "ref", "ref": "com.atproto.repo.strongRef"},
           "direction": {"type": "string", "enum": ["up", "down"]},
-          "createdAt": {"type": "datetime"}
+          "createdAt": {"type": "string", "format": "datetime"}
         }
       }
     }

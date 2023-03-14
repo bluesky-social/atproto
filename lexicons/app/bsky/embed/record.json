@@ -21,8 +21,8 @@
       "type": "object",
       "required":  ["uri", "cid", "author", "record"],
       "properties": {
-        "uri": {"type": "string"},
-        "cid": {"type": "string"},
+        "uri": {"type": "string", "format": "at-uri"},
+        "cid": {"type": "string", "format": "cid"},
         "author": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
         "record": {"type": "unknown"}
       }
@@ -31,7 +31,7 @@
       "type": "object",
       "required":  ["uri"],
       "properties": {
-        "uri": {"type": "string"}
+        "uri": {"type": "string", "format": "at-uri"}
       }
     }
   }

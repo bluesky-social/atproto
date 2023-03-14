@@ -8,7 +8,7 @@
         "type": "params",
         "required": ["uri"],
         "properties": {
-          "uri": {"type": "string"},
+          "uri": {"type": "string", "format": "at-uri"},
           "depth": {"type": "integer"}
         }
       },
@@ -45,7 +45,7 @@
       "type": "object",
       "required": ["uri", "notFound"],
       "properties": {
-        "uri": {"type": "string"},
+        "uri": {"type": "string", "format": "at-uri"},
         "notFound": {"type": "boolean", "const": true}
       }
     }

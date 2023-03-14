@@ -30,18 +30,18 @@
       "type": "object",
       "required": ["uri", "cid", "author", "reason", "record", "isRead", "indexedAt"],
       "properties": {
-        "uri": {"type": "string"},
-        "cid": {"type": "string" },
+        "uri": {"type": "string", "format": "at-uri"},
+        "cid": {"type": "string", "format": "cid" },
         "author": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
         "reason": {
           "type": "string",
           "description": "Expected values are 'vote', 'repost', 'follow', 'invite', 'mention' and 'reply'.",
           "knownValues": ["vote", "repost", "follow", "invite", "mention", "reply"]
         },
-        "reasonSubject": {"type": "string"},
+        "reasonSubject": {"type": "string", "format": "at-uri"},
         "record": {"type": "unknown"},
         "isRead": {"type": "boolean"},
-        "indexedAt": {"type": "datetime"}
+        "indexedAt": {"type": "string", "format": "datetime"}
       }
     }
   }

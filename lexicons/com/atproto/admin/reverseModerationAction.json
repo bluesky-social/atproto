@@ -13,7 +13,7 @@
           "properties": {
             "id": {"type": "integer"},
             "reason": {"type": "string"},
-            "createdBy": {"type": "string"}
+            "createdBy": {"type": "string", "format": "did"}
           }
         }
       },

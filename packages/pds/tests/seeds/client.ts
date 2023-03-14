@@ -321,7 +321,12 @@ export class SeedClient {
     reason?: string
     createdBy?: string
   }) {
-    const { action, subject, reason = 'X', createdBy = 'Y' } = opts
+    const {
+      action,
+      subject,
+      reason = 'X',
+      createdBy = 'did:example:admin',
+    } = opts
     const result = await this.agent.api.com.atproto.admin.takeModerationAction(
       { action, subject, createdBy, reason },
       {
@@ -337,7 +342,7 @@ export class SeedClient {
     reason?: string
     createdBy?: string
   }) {
-    const { id, reason = 'X', createdBy = 'Y' } = opts
+    const { id, reason = 'X', createdBy = 'did:example:admin' } = opts
     const result =
       await this.agent.api.com.atproto.admin.reverseModerationAction(
         { id, reason, createdBy },
@@ -354,7 +359,7 @@ export class SeedClient {
     reportIds: number[]
     createdBy?: string
   }) {
-    const { actionId, reportIds, createdBy = 'Y' } = opts
+    const { actionId, reportIds, createdBy = 'did:example:admin' } = opts
     const result =
       await this.agent.api.com.atproto.admin.resolveModerationReports(
         { actionId, createdBy, reportIds },

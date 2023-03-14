@@ -17,6 +17,9 @@ export default [
             'integer',
             'string',
             'datetime',
+            'atUri',
+            'did',
+            'cid',
           ],
           properties: {
             object: { type: 'ref', ref: '#object' },
@@ -25,7 +28,10 @@ export default [
             number: { type: 'number' },
             integer: { type: 'integer' },
             string: { type: 'string' },
-            datetime: { type: 'datetime' },
+            datetime: { type: 'string', format: 'datetime' },
+            atUri: { type: 'string', format: 'at-uri' },
+            did: { type: 'string', format: 'did' },
+            cid: { type: 'string', format: 'cid' },
           },
         },
       },
@@ -139,7 +145,7 @@ export default [
             number: { type: 'number', default: 0 },
             integer: { type: 'integer', default: 0 },
             string: { type: 'string', default: '' },
-            datetime: { type: 'datetime' },
+            datetime: { type: 'string', format: 'datetime' },
             object: { type: 'ref', ref: '#object' },
           },
         },
@@ -419,7 +425,62 @@ export default [
           type: 'object',
           properties: {
             datetime: {
-              type: 'datetime',
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.atUri',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            atUri: {
+              type: 'string',
+              format: 'at-uri',
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.did',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.cid',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            cid: {
+              type: 'string',
+              format: 'cid',
             },
           },
         },

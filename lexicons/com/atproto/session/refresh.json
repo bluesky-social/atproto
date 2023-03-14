@@ -14,7 +14,7 @@
             "accessJwt": {"type": "string"},
             "refreshJwt": {"type": "string"},
             "handle": {"type": "string"},
-            "did": {"type": "string"}
+            "did": {"type": "string", "format": "did"}
           }
         }
       },

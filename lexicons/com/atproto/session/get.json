@@ -12,7 +12,7 @@
           "required": ["handle", "did"],
           "properties": {
             "handle": {"type": "string"},
-            "did": {"type": "string"}
+            "did": {"type": "string", "format": "did"}
           }
         }
       }

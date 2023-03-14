@@ -34,8 +34,12 @@ export const lexInteger = z.object({
 })
 export type LexInteger = z.infer<typeof lexInteger>
 
+export const lexStringFormat = z.enum(['datetime', 'at-uri', 'did', 'cid'])
+export type LexStringFormat = z.infer<typeof lexStringFormat>
+
 export const lexString = z.object({
   type: z.literal('string'),
+  format: lexStringFormat.optional(),
   description: z.string().optional(),
   default: z.string().optional(),
   minLength: z.number().int().optional(),
@@ -45,12 +49,6 @@ export const lexString = z.object({
   knownValues: z.string().array().optional(),
 })
 export type LexString = z.infer<typeof lexString>
-
-export const lexDatetime = z.object({
-  type: z.literal('datetime'),
-  description: z.string().optional(),
-})
-export type LexDatetime = z.infer<typeof lexDatetime>
 
 export const lexUnknown = z.object({
   type: z.literal('unknown'),
@@ -63,7 +61,6 @@ export const lexPrimitive = z.union([
   lexNumber,
   lexInteger,
   lexString,
-  lexDatetime,
   lexUnknown,
 ])
 export type LexPrimitive = z.infer<typeof lexPrimitive>
@@ -265,7 +262,6 @@ export const lexUserType = z.union([
   lexNumber,
   lexInteger,
   lexString,
-  lexDatetime,
   lexUnknown,
 ])
 export type LexUserType = z.infer<typeof lexUserType>

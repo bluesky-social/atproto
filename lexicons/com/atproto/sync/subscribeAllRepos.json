@@ -28,9 +28,9 @@
                 "rebase"
               ]
             },
-            "repo": {"type": "string"},
-            "commit": {"type": "string"},
-            "prev": {"type": "string"},
+            "repo": {"type": "string", "format": "did"},
+            "commit": {"type": "string", "format": "cid"},
+            "prev": {"type": "string", "format": "cid"},
             "blocks": {"type": "unknown"},
             "ops": {
               "type": "array", 
@@ -38,9 +38,9 @@
             },
             "blobs": {
               "type": "array",
-              "items": {"type": "string"}
+              "items": {"type": "string", "format": "cid"}
             },
-            "time": {"type": "datetime"}
+            "time": {"type": "string", "format": "datetime"}
           }
         }
       },
@@ -65,7 +65,7 @@
           ]
         },
         "path": {"type": "string"},
-        "cid": {"type": "string"}
+        "cid": {"type": "string", "format": "cid"}
       }
     }
   }

@@ -17,7 +17,7 @@
       "type": "object",
       "required":  ["uri", "title", "description"],
       "properties": {
-        "uri": {"type": "string"},
+        "uri": {"type": "string", "format": "at-uri"},
         "title": {"type": "string"},
         "description": {"type": "string"},
         "thumb": {
@@ -43,7 +43,7 @@
       "type": "object",
       "required":  ["uri", "title", "description"],
       "properties": {
-        "uri": {"type": "string"},
+        "uri": {"type": "string", "format": "at-uri"},
         "title": {"type": "string"},
         "description": {"type": "string"},
         "thumb": {"type": "string"}

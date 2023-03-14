@@ -172,7 +172,7 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.repoRef',
               did: sc.dids.bob,
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -185,7 +185,7 @@ describe('moderation', () => {
           {
             actionId: action.id,
             reportIds: [reportB.id, reportA.id],
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
           },
           {
             encoding: 'application/json',
@@ -199,7 +199,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: action.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -228,7 +228,7 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.repoRef',
               did: sc.dids.carol,
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -241,7 +241,7 @@ describe('moderation', () => {
         {
           actionId: action.id,
           reportIds: [report.id],
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
         },
         {
           encoding: 'application/json',
@@ -257,7 +257,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: action.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -288,7 +288,7 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postUri2.toString(),
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -301,7 +301,7 @@ describe('moderation', () => {
         {
           actionId: action.id,
           reportIds: [report.id],
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
         },
         {
           encoding: 'application/json',
@@ -317,7 +317,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: action.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -338,7 +338,7 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postRef1.uri.toString(),
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -364,7 +364,7 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postRef2.uri.toString(),
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -386,7 +386,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: action1.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -397,7 +397,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: action2.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -417,7 +417,7 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postUri.toString(),
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -432,7 +432,7 @@ describe('moderation', () => {
             $type: 'com.atproto.repo.recordRef',
             uri: postUri.toString(),
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -448,7 +448,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: acknowledge.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -464,7 +464,7 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postUri.toString(),
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -477,7 +477,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: flag.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -496,7 +496,7 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.repoRef',
               did: sc.dids.alice,
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -511,7 +511,7 @@ describe('moderation', () => {
             $type: 'com.atproto.repo.repoRef',
             did: sc.dids.alice,
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -527,7 +527,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: acknowledge.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -543,7 +543,7 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.repoRef',
               did: sc.dids.alice,
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -556,7 +556,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: flag.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -579,7 +579,7 @@ describe('moderation', () => {
               uri: postA.ref.uriStr,
             },
             subjectBlobCids: [img.image.cid],
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -595,7 +595,7 @@ describe('moderation', () => {
             uri: postB.ref.uriStr,
           },
           subjectBlobCids: [img.image.cid],
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -610,7 +610,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: acknowledge.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -627,7 +627,7 @@ describe('moderation', () => {
               uri: postB.ref.uriStr,
             },
             subjectBlobCids: [img.image.cid],
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -640,7 +640,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: flag.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -674,7 +674,7 @@ describe('moderation', () => {
             uri: post.ref.uriStr,
           },
           subjectBlobCids: [blob.image.cid],
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -713,7 +713,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: actionId,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {

@@ -176,7 +176,7 @@ describe('timeline views', () => {
               $type: 'com.atproto.repo.repoRef',
               did,
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -200,7 +200,7 @@ describe('timeline views', () => {
         agent.api.com.atproto.admin.reverseModerationAction(
           {
             id: result.data.id,
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -224,7 +224,7 @@ describe('timeline views', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postUri.toString(),
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -248,7 +248,7 @@ describe('timeline views', () => {
         agent.api.com.atproto.admin.reverseModerationAction(
           {
             id: result.data.id,
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {

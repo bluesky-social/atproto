@@ -4,7 +4,7 @@ exports[`pds admin get moderation action view gets moderation action for a recor
 Object {
   "action": "com.atproto.admin.moderationAction#takedown",
   "createdAt": "1970-01-01T00:00:00.000Z",
-  "createdBy": "Y",
+  "createdBy": "did:example:admin",
   "id": 2,
   "reason": "X",
   "resolvedReports": Array [
@@ -75,7 +75,7 @@ exports[`pds admin get moderation action view gets moderation action for a repo.
 Object {
   "action": "com.atproto.admin.moderationAction#flag",
   "createdAt": "1970-01-01T00:00:00.000Z",
-  "createdBy": "Y",
+  "createdBy": "did:example:admin",
   "id": 1,
   "reason": "X",
   "resolvedReports": Array [
@@ -111,7 +111,7 @@ Object {
   ],
   "reversal": Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "reason": "X",
   },
   "subject": Object {

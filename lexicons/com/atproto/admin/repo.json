@@ -6,11 +6,11 @@
       "type": "object",
       "required": ["did", "handle", "relatedRecords", "indexedAt", "moderation"],
       "properties": {
-        "did": {"type": "string"},
+        "did": {"type": "string", "format": "did"},
         "handle": {"type": "string"},
         "account": {"type": "ref", "ref": "#account"},
         "relatedRecords": {"type": "array", "items": {"type": "unknown"}},
-        "indexedAt": {"type": "string"},
+        "indexedAt": {"type": "string", "format": "datetime"},
         "moderation": {"type": "ref", "ref": "#moderation"}
       }
     },
@@ -18,11 +18,11 @@
       "type": "object",
       "required": ["did", "handle", "relatedRecords", "indexedAt", "moderation"],
       "properties": {
-        "did": {"type": "string"},
+        "did": {"type": "string", "format": "did"},
         "handle": {"type": "string"},
         "account": {"type": "ref", "ref": "#account"},
         "relatedRecords": {"type": "array", "items": {"type": "unknown"}},
-        "indexedAt": {"type": "string"},
+        "indexedAt": {"type": "string", "format": "datetime"},
         "moderation": {"type": "ref", "ref": "#moderationDetail"}
       }
     },

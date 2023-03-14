@@ -229,7 +229,7 @@ describe('pds profile views', () => {
             $type: 'com.atproto.repo.repoRef',
             did: alice,
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -248,7 +248,7 @@ describe('pds profile views', () => {
     await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: action.id,
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {

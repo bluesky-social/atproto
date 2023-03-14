@@ -205,7 +205,7 @@ describe('auth', () => {
           $type: 'com.atproto.repo.repoRef',
           did: account.did,
         },
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {
@@ -231,7 +231,7 @@ describe('auth', () => {
           $type: 'com.atproto.repo.repoRef',
           did: account.did,
         },
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {

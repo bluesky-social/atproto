@@ -1,4 +1,6 @@
+import { AtUri } from '@atproto/uri'
 import { isValidISODateString } from 'iso-datestring-validator'
+import { CID } from 'multiformats/cid'
 import { Lexicons } from '../lexicons'
 import {
   LexUserType,
@@ -6,7 +8,6 @@ import {
   LexNumber,
   LexInteger,
   LexString,
-  LexDatetime,
   ValidationResult,
   ValidationError,
 } from '../types'
@@ -26,8 +27,6 @@ export function validate(
       return integer(lexicons, path, def, value)
     case 'string':
       return string(lexicons, path, def, value)
-    case 'datetime':
-      return datetime(lexicons, path, def, value)
     case 'unknown':
       return unknown(lexicons, path, def, value)
     default:
@@ -186,8 +185,7 @@ export function string(
   def = def as LexString
 
   // type
-  const type = typeof value
-  if (type === 'undefined') {
+  if (typeof value === 'undefined') {
     if (typeof def.default === 'string') {
       return { success: true, value: def.default }
     }
@@ -195,7 +193,7 @@ export function string(
       success: false,
       error: new ValidationError(`${path} must be a string`),
     }
-  } else if (type !== 'string') {
+  } else if (typeof value !== 'string') {
     return {
       success: false,
       error: new ValidationError(`${path} must be a string`),
@@ -248,39 +246,76 @@ export function string(
     }
   }
 
+  if (typeof def.format === 'string') {
+    switch (def.format) {
+      case 'datetime':
+        return datetimeFormat(path, value)
+      case 'at-uri':
+        return atUriFormat(path, value)
+      case 'did':
+        return didFormat(path, value)
+      case 'cid':
+        return cidFormat(path, value)
+    }
+  }
+
   return { success: true, value }
 }
 
-export function datetime(
-  lexicons: Lexicons,
-  path: string,
-  def: LexUserType,
-  value: unknown,
-): ValidationResult {
-  def = def as LexDatetime
-
-  // type
-  const type = typeof value
-  if (type !== 'string') {
+export function datetimeFormat(path: string, value: string): ValidationResult {
+  try {
+    if (!isValidISODateString(value)) {
+      throw new Error()
+    }
+  } catch {
     return {
       success: false,
-      error: new ValidationError(`${path} must be a string`),
+      error: new ValidationError(
+        `${path} must be an iso8601 formatted datetime`,
+      ),
     }
   }
+  return { success: true, value }
+}
 
-  // valid iso-8601
-  {
-    try {
-      if (typeof value !== 'string' || !isValidISODateString(value)) {
-        throw new ValidationError(
-          `${path} must be an iso8601 formatted datetime`,
-        )
-      }
-    } catch {
-      throw new ValidationError(`${path} must be an iso8601 formatted datetime`)
+export function atUriFormat(path: string, value: string): ValidationResult {
+  try {
+    if (!value.startsWith('at://')) {
+      throw new Error()
+    }
+    const uri = new AtUri(value)
+    if (!uri.host) {
+      throw new Error()
+    }
+  } catch {
+    return {
+      success: false,
+      error: new ValidationError(`${path} must be an at-uri`),
     }
   }
+  return { success: true, value }
+}
 
+export function didFormat(path: string, value: string): ValidationResult {
+  const parts = value.split(':')
+  if (parts[0] !== 'did' || !parts[1] || !parts[2]) {
+    return {
+      success: false,
+      error: new ValidationError(`${path} must be a did`),
+    }
+  }
+  return { success: true, value }
+}
+
+export function cidFormat(path: string, value: string): ValidationResult {
+  try {
+    CID.parse(value)
+  } catch {
+    return {
+      success: false,
+      error: new ValidationError(`${path} must be a cid`),
+    }
+  }
   return { success: true, value }
 }
 

@@ -38,7 +38,7 @@
       "type": "object",
       "required": ["did", "declaration", "handle", "creator", "followersCount", "followsCount", "postsCount"],
       "properties": {
-        "did": {"type": "string"},
+        "did": {"type": "string", "format": "did"},
         "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
         "handle": {"type": "string"},
         "displayName": {
@@ -55,7 +55,7 @@
         "followsCount": {"type": "integer"},
         "postsCount": {"type": "integer"},
         "creator": {"type": "string"},
-        "indexedAt": {"type": "datetime"},
+        "indexedAt": {"type": "string", "format": "datetime"},
         "viewer": {"type": "ref", "ref": "#viewerState"},
         "myState": {"type": "ref", "ref": "#myState", "description": "Deprecated"}
       }
@@ -64,7 +64,7 @@
       "type": "object",
       "required": ["did", "declaration", "handle"],
       "properties": {
-        "did": {"type": "string"},
+        "did": {"type": "string", "format":"did"},
         "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
         "handle": {"type": "string"},
         "displayName": {
@@ -76,7 +76,7 @@
           "maxLength": 256
         },
         "avatar": { "type": "string" },
-        "indexedAt": {"type": "datetime"},
+        "indexedAt": {"type": "string", "format": "datetime"},
         "viewer": {"type": "ref", "ref": "#viewerState"}
       }
     },
@@ -84,15 +84,15 @@
       "type": "object",
       "properties": {
         "muted": {"type": "boolean"},
-        "following": {"type": "string"},
-        "followedBy": {"type": "string"}
+        "following": {"type": "string", "format": "at-uri"},
+        "followedBy": {"type": "string", "format": "at-uri"}
       }
     },
     "myState": {
       "type": "object",
       "description": "Deprecated in favor of #viewerState",
       "properties": {
-        "follow": {"type": "string"},
+        "follow": {"type": "string", "format": "at-uri"},
         "muted": {"type": "boolean"}
       }
     }

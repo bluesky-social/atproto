@@ -5,7 +5,7 @@ Array [
   Object {
     "action": "com.atproto.admin.moderationAction#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 1,
     "reason": "X",
     "resolvedReportIds": Array [
@@ -13,7 +13,7 @@ Array [
     ],
     "reversal": Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "createdBy": "Y",
+      "createdBy": "did:example:admin",
       "reason": "X",
     },
     "subject": Object {
@@ -31,7 +31,7 @@ Array [
   Object {
     "action": "com.atproto.admin.moderationAction#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 5,
     "reason": "X",
     "resolvedReportIds": Array [
@@ -46,7 +46,7 @@ Array [
   Object {
     "action": "com.atproto.admin.moderationAction#acknowledge",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 2,
     "reason": "X",
     "resolvedReportIds": Array [],
@@ -60,7 +60,7 @@ Array [
   Object {
     "action": "com.atproto.admin.moderationAction#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 1,
     "reason": "X",
     "resolvedReportIds": Array [
@@ -68,7 +68,7 @@ Array [
     ],
     "reversal": Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "createdBy": "Y",
+      "createdBy": "did:example:admin",
       "reason": "X",
     },
     "subject": Object {
@@ -86,7 +86,7 @@ Array [
   Object {
     "action": "com.atproto.admin.moderationAction#acknowledge",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 6,
     "reason": "X",
     "resolvedReportIds": Array [],
@@ -99,7 +99,7 @@ Array [
   Object {
     "action": "com.atproto.admin.moderationAction#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 5,
     "reason": "X",
     "resolvedReportIds": Array [
@@ -114,7 +114,7 @@ Array [
   Object {
     "action": "com.atproto.admin.moderationAction#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 4,
     "reason": "X",
     "resolvedReportIds": Array [],
@@ -128,7 +128,7 @@ Array [
   Object {
     "action": "com.atproto.admin.moderationAction#takedown",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 3,
     "reason": "X",
     "resolvedReportIds": Array [],
@@ -142,7 +142,7 @@ Array [
   Object {
     "action": "com.atproto.admin.moderationAction#acknowledge",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 2,
     "reason": "X",
     "resolvedReportIds": Array [],
@@ -156,7 +156,7 @@ Array [
   Object {
     "action": "com.atproto.admin.moderationAction#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 1,
     "reason": "X",
     "resolvedReportIds": Array [
@@ -164,7 +164,7 @@ Array [
     ],
     "reversal": Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "createdBy": "Y",
+      "createdBy": "did:example:admin",
       "reason": "X",
     },
     "subject": Object {

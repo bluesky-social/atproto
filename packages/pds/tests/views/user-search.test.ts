@@ -199,7 +199,7 @@ describe('pds user search views', () => {
           $type: 'com.atproto.repo.repoRef',
           did: sc.dids['cara-wiegand69.test'],
         },
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {
