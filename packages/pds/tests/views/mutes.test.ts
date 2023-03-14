@@ -50,7 +50,7 @@ describe('mute views', () => {
     const results = (results) => results.flatMap((res) => res.mutes)
     const paginator = async (cursor?: string) => {
       const { data: view } = await agent.api.app.bsky.graph.getMutes(
-        { before: cursor, limit: 2 },
+        { cursor, limit: 2 },
         { headers: sc.getHeaders(silas) },
       )
       return view

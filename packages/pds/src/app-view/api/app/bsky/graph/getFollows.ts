@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollows({
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
-      const { actor, limit, before } = params
+      const { actor, limit, cursor } = params
       const requester = auth.credentials.did
       const { services, db } = ctx
       const { ref } = db.db.dynamic
@@ -39,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
       )
       followsReq = paginate(followsReq, {
         limit,
-        before,
+        cursor,
         keyset,
       })
 

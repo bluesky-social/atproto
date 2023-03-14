@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
-      const { actor, limit, before } = params
+      const { actor, limit, cursor } = params
       const requester = auth.credentials.did
       const db = ctx.db.db
       const { ref } = db.dynamic
@@ -46,7 +46,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectAll()
       feedItemsQb = paginate(feedItemsQb, {
         limit,
-        before,
+        cursor,
         keyset,
       })
 

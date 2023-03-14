@@ -47,7 +47,7 @@ export default function (server: Server, ctx: AppContext) {
       const keyset = new PostCountDidKeyset(ref('postCount'), ref('did'))
       suggestionsReq = paginate(suggestionsReq, {
         limit,
-        before: cursor,
+        cursor,
         keyset,
         direction: 'desc',
       })

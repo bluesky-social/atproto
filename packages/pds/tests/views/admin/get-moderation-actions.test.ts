@@ -147,7 +147,7 @@ describe('pds admin get moderation actions view', () => {
     const results = (results) => results.flatMap((res) => res.actions)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.com.atproto.admin.getModerationActions(
-        { before: cursor, limit: 3 },
+        { cursor, limit: 3 },
         { headers: { authorization: adminAuth() } },
       )
       return res.data
