@@ -124,7 +124,6 @@ describe('sync', () => {
     'record',
     'duplicate_record',
     'user_notification',
-    'assertion',
     'profile',
     'follow',
     'post',

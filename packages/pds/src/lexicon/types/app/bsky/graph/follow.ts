@@ -4,10 +4,9 @@
 import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
-import * as AppBskyActorRef from '../actor/ref'
 
 export interface Record {
-  subject: AppBskyActorRef.Main
+  subject: string
   createdAt: string
   [k: string]: unknown
 }

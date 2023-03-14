@@ -42,8 +42,6 @@ export default function (server: Server, ctx: AppContext) {
           'notif.recordUri as uri',
           'notif.recordCid as cid',
           'author.did as authorDid',
-          'author.declarationCid as authorDeclarationCid',
-          'author.actorType as authorActorType',
           'author.handle as authorHandle',
           'notif.reason as reason',
           'notif.reasonSubject as reasonSubject',
@@ -82,8 +80,6 @@ export default function (server: Server, ctx: AppContext) {
         notifs.map((notif) => ({
           did: notif.authorDid,
           handle: notif.authorHandle,
-          actorType: notif.authorActorType,
-          declarationCid: notif.authorDeclarationCid,
         })),
         requester,
       )

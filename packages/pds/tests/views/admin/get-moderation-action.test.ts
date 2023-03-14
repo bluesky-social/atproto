@@ -32,7 +32,7 @@ describe('pds admin get moderation action view', () => {
 
   beforeAll(async () => {
     const reportRepo = await sc.createReport({
-      reportedByDid: sc.dids.bob,
+      reportedBy: sc.dids.bob,
       reasonType: SPAM,
       subject: {
         $type: 'com.atproto.repo.repoRef',
@@ -40,7 +40,7 @@ describe('pds admin get moderation action view', () => {
       },
     })
     const reportRecord = await sc.createReport({
-      reportedByDid: sc.dids.carol,
+      reportedBy: sc.dids.carol,
       reasonType: OTHER,
       reason: 'defamation',
       subject: {

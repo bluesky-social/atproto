@@ -3,10 +3,6 @@
 exports[`pds repost views fetches reposted-by for a post 1`] = `
 Array [
   Object {
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
     "did": "user(0)",
     "handle": "eve.test",
     "viewer": Object {
@@ -14,10 +10,6 @@ Array [
     },
   },
   Object {
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
     "did": "user(1)",
     "handle": "dan.test",
     "viewer": Object {
@@ -26,10 +18,6 @@ Array [
     },
   },
   Object {
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
     "did": "user(2)",
     "handle": "carol.test",
     "viewer": Object {
@@ -40,10 +28,6 @@ Array [
   },
   Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
     "did": "user(3)",
     "displayName": "bobby",
     "handle": "bob.test",
@@ -59,10 +43,6 @@ Array [
 exports[`pds repost views fetches reposted-by for a reply 1`] = `
 Array [
   Object {
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
     "did": "user(0)",
     "handle": "eve.test",
     "viewer": Object {
@@ -70,10 +50,6 @@ Array [
     },
   },
   Object {
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
     "did": "user(1)",
     "handle": "dan.test",
     "viewer": Object {

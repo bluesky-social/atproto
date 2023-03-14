@@ -51,7 +51,6 @@ export async function generateMockSetup(env: DevEnv) {
   interface User {
     email: string
     did: string
-    declarationCid: string
     handle: string
     password: string
     agent: AtpAgent
@@ -60,7 +59,6 @@ export async function generateMockSetup(env: DevEnv) {
     {
       email: 'alice@test.com',
       did: '',
-      declarationCid: '',
       handle: `alice.test`,
       password: 'hunter2',
       agent: clients.alice,
@@ -68,7 +66,6 @@ export async function generateMockSetup(env: DevEnv) {
     {
       email: 'bob@test.com',
       did: '',
-      declarationCid: '',
       handle: `bob.test`,
       password: 'hunter2',
       agent: clients.bob,
@@ -76,7 +73,6 @@ export async function generateMockSetup(env: DevEnv) {
     {
       email: 'carla@test.com',
       did: '',
-      declarationCid: '',
       handle: `carla.test`,
       password: 'hunter2',
       agent: clients.carla,
@@ -94,11 +90,7 @@ export async function generateMockSetup(env: DevEnv) {
       password: user.password,
     })
     user.agent.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)
-    const { data: profile } = await user.agent.api.app.bsky.actor.getProfile({
-      actor: user.handle,
-    })
     user.did = res.data.did
-    user.declarationCid = profile.declaration.cid
     await user.agent.api.app.bsky.actor.profile.create(
       { did: user.did },
       {
@@ -124,10 +116,7 @@ export async function generateMockSetup(env: DevEnv) {
     await author.agent.api.app.bsky.graph.follow.create(
       { did: author.did },
       {
-        subject: {
-          did: subject.did,
-          declarationCid: subject.declarationCid,
-        },
+        subject: subject.did,
         createdAt: date.next().value,
       },
     )

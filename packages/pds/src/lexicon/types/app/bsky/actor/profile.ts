@@ -4,7 +4,6 @@
 import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
-import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface Record {
   displayName: string
@@ -29,7 +28,6 @@ export function validateRecord(v: unknown): ValidationResult {
 
 export interface View {
   did: string
-  declaration: AppBskySystemDeclRef.Main
   handle: string
   displayName?: string
   description?: string
@@ -57,7 +55,6 @@ export function validateView(v: unknown): ValidationResult {
 
 export interface ViewBasic {
   did: string
-  declaration: AppBskySystemDeclRef.Main
   handle: string
   displayName?: string
   description?: string
