@@ -16,6 +16,7 @@ export class RepoBlobs {
   constructor(public db: Database, public blobstore: BlobStore) {}
 
   async addUntetheredBlob(
+    creator: string,
     userSuggestedMime: string,
     blobStream: stream.Readable,
   ): Promise<CID> {
@@ -32,6 +33,7 @@ export class RepoBlobs {
     await this.db.db
       .insertInto('blob')
       .values({
+        creator,
         cid: cid.toString(),
         mimeType: sniffedMime || userSuggestedMime,
         size,
@@ -42,7 +44,7 @@ export class RepoBlobs {
       })
       .onConflict((oc) =>
         oc
-          .column('cid')
+          .columns(['creator', 'cid'])
           .doUpdateSet({ tempKey })
           .where('blob.tempKey', 'is not', null),
       )
@@ -58,7 +60,7 @@ export class RepoBlobs {
         write.action === WriteOpAction.Update
       ) {
         for (const blob of write.blobs) {
-          blobPromises.push(this.verifyBlobAndMakePermanent(blob))
+          blobPromises.push(this.verifyBlobAndMakePermanent(did, blob))
           blobPromises.push(this.associateBlob(blob, write.uri, commit, did))
         }
       }
@@ -66,11 +68,15 @@ export class RepoBlobs {
     await Promise.all(blobPromises)
   }
 
-  async verifyBlobAndMakePermanent(blob: BlobRef): Promise<void> {
+  async verifyBlobAndMakePermanent(
+    creator: string,
+    blob: BlobRef,
+  ): Promise<void> {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('blob')
       .selectAll()
+      .where('creator', '=', creator)
       .where('cid', '=', blob.cid.toString())
       .whereNotExists(
         // Check if blob has been taken down
@@ -118,11 +124,14 @@ export class RepoBlobs {
 
   async deleteForUser(did: string): Promise<void> {
     this.db.assertTransaction()
-    const deleted = await this.db.db
-      .deleteFrom('repo_blob')
-      .where('did', '=', did)
-      .returningAll()
-      .execute()
+    const [deleted] = await Promise.all([
+      this.db.db
+        .deleteFrom('blob')
+        .where('creator', '=', did)
+        .returningAll()
+        .execute(),
+      this.db.db.deleteFrom('repo_blob').where('did', '=', did).execute(),
+    ])
     const deletedCids = deleted.map((d) => d.cid)
     let duplicateCids: string[] = []
     if (deletedCids.length > 0) {
@@ -135,7 +144,6 @@ export class RepoBlobs {
     }
     const toDelete = deletedCids.filter((cid) => !duplicateCids.includes(cid))
     if (toDelete.length > 0) {
-      await this.db.db.deleteFrom('blob').where('cid', 'in', toDelete).execute()
       await Promise.all(
         toDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
       )
