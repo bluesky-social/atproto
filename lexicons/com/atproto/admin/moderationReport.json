@@ -4,7 +4,7 @@
   "defs": {
     "view": {
       "type": "object",
-      "required": ["id", "reasonType", "subject", "reportedByDid", "createdAt", "resolvedByActionIds"],
+      "required": ["id", "reasonType", "subject", "reportedBy", "createdAt", "resolvedByActionIds"],
       "properties": {
         "id": {"type": "integer"},
         "reasonType": {"type": "ref", "ref": "com.atproto.report.reasonType"},
@@ -16,14 +16,14 @@
             "com.atproto.repo.strongRef"
           ]
         },
-        "reportedByDid": {"type": "string", "format": "did"},
+        "reportedBy": {"type": "string", "format": "did"},
         "createdAt": {"type": "string", "format": "datetime"},
         "resolvedByActionIds": {"type": "array", "items": {"type": "integer"}}
       }
     },
     "viewDetail": {
       "type": "object",
-      "required": ["id", "reasonType", "subject", "reportedByDid", "createdAt", "resolvedByActions"],
+      "required": ["id", "reasonType", "subject", "reportedBy", "createdAt", "resolvedByActions"],
       "properties": {
         "id": {"type": "integer"},
         "reasonType": {"type": "ref", "ref": "com.atproto.report.reasonType"},
@@ -35,7 +35,7 @@
             "com.atproto.admin.record#view"
           ]
         },
-        "reportedByDid": {"type": "string", "format": "did"},
+        "reportedBy": {"type": "string", "format": "did"},
         "createdAt": {"type": "string", "format": "datetime"},
         "resolvedByActions": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.moderationAction#view"}}
       }

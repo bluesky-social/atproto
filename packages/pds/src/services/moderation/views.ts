@@ -397,7 +397,7 @@ export class ModerationViews {
       createdAt: res.createdAt,
       reasonType: res.reasonType,
       reason: res.reason ?? undefined,
-      reportedByDid: res.reportedByDid,
+      reportedBy: res.reportedByDid,
       subject:
         res.subjectType === 'com.atproto.repo.repoRef'
           ? {
@@ -421,7 +421,7 @@ export class ModerationViews {
       createdAt: report.createdAt,
       reasonType: report.reasonType,
       reason: report.reason ?? undefined,
-      reportedByDid: report.reportedByDid,
+      reportedBy: report.reportedByDid,
       subject:
         report.subjectType === 'com.atproto.repo.repoRef'
           ? {
@@ -455,7 +455,7 @@ export class ModerationViews {
       createdAt: report.createdAt,
       reasonType: report.reasonType,
       reason: report.reason ?? undefined,
-      reportedByDid: report.reportedByDid,
+      reportedBy: report.reportedBy,
       subject,
       resolvedByActions,
     }
