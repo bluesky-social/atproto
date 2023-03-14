@@ -42,7 +42,7 @@ describe('pds author feed views', () => {
 
   it('fetches full author feeds for self (sorted, minimal myState).', async () => {
     const aliceForAlice = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: sc.accounts[alice].handle },
+      { actor: sc.accounts[alice].handle },
       {
         headers: sc.getHeaders(alice),
       },
@@ -51,7 +51,7 @@ describe('pds author feed views', () => {
     expect(forSnapshot(aliceForAlice.data.feed)).toMatchSnapshot()
 
     const bobForBob = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: sc.accounts[bob].handle },
+      { actor: sc.accounts[bob].handle },
       {
         headers: sc.getHeaders(bob),
       },
@@ -60,7 +60,7 @@ describe('pds author feed views', () => {
     expect(forSnapshot(bobForBob.data.feed)).toMatchSnapshot()
 
     const carolForCarol = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: sc.accounts[carol].handle },
+      { actor: sc.accounts[carol].handle },
       {
         headers: sc.getHeaders(carol),
       },
@@ -69,7 +69,7 @@ describe('pds author feed views', () => {
     expect(forSnapshot(carolForCarol.data.feed)).toMatchSnapshot()
 
     const danForDan = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: sc.accounts[dan].handle },
+      { actor: sc.accounts[dan].handle },
       {
         headers: sc.getHeaders(dan),
       },
@@ -80,7 +80,7 @@ describe('pds author feed views', () => {
 
   it("reflects fetching user's state in the feed.", async () => {
     const aliceForCarol = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: sc.accounts[alice].handle },
+      { actor: sc.accounts[alice].handle },
       {
         headers: sc.getHeaders(carol),
       },
@@ -98,26 +98,26 @@ describe('pds author feed views', () => {
 
   it('omits reposts from muted users.', async () => {
     await agent.api.app.bsky.graph.mute(
-      { user: alice }, // Has a repost by dan: will be omitted from dan's feed
+      { actor: alice }, // Has a repost by dan: will be omitted from dan's feed
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
     await agent.api.app.bsky.graph.mute(
-      { user: dan }, // Feed author: their posts will still appear
+      { actor: dan }, // Feed author: their posts will still appear
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
     const bobForDan = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: sc.accounts[dan].handle },
+      { actor: sc.accounts[dan].handle },
       { headers: sc.getHeaders(bob) },
     )
 
     expect(forSnapshot(bobForDan.data.feed)).toMatchSnapshot()
 
     await agent.api.app.bsky.graph.unmute(
-      { user: alice },
+      { actor: alice },
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
     await agent.api.app.bsky.graph.unmute(
-      { user: dan },
+      { actor: dan },
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
   })
@@ -127,7 +127,7 @@ describe('pds author feed views', () => {
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getAuthorFeed(
         {
-          author: sc.accounts[alice].handle,
+          actor: sc.accounts[alice].handle,
           before: cursor,
           limit: 2,
         },
@@ -143,7 +143,7 @@ describe('pds author feed views', () => {
 
     const full = await agent.api.app.bsky.feed.getAuthorFeed(
       {
-        author: sc.accounts[alice].handle,
+        actor: sc.accounts[alice].handle,
       },
       { headers: sc.getHeaders(dan) },
     )
@@ -154,7 +154,7 @@ describe('pds author feed views', () => {
 
   it('blocked by actor takedown.', async () => {
     const { data: preBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: alice },
+      { actor: alice },
       { headers: sc.getHeaders(carol) },
     )
 
@@ -178,7 +178,7 @@ describe('pds author feed views', () => {
       )
 
     const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: alice },
+      { actor: alice },
       { headers: sc.getHeaders(carol) },
     )
 
@@ -200,7 +200,7 @@ describe('pds author feed views', () => {
 
   it('blocked by record takedown.', async () => {
     const { data: preBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: alice },
+      { actor: alice },
       { headers: sc.getHeaders(carol) },
     )
 
@@ -226,7 +226,7 @@ describe('pds author feed views', () => {
       )
 
     const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: alice },
+      { actor: alice },
       { headers: sc.getHeaders(carol) },
     )
 

@@ -9,7 +9,7 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {
   /** The handle or DID of the repo. */
-  user: string
+  repo: string
 }
 
 export type InputSchema = undefined

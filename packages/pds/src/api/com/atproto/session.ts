@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ auth }) => {
       const did = auth.credentials.did
-      const user = await ctx.services.account(ctx.db).getUser(did)
+      const user = await ctx.services.account(ctx.db).getAccount(did)
       if (!user) {
         throw new InvalidRequestError(
           `Could not find user info for account: ${did}`,
@@ -33,8 +33,8 @@ export default function (server: Server, ctx: AppContext) {
     const actorService = ctx.services.account(ctx.db)
 
     const user = identifier.includes('@')
-      ? await actorService.getUserByEmail(identifier, true)
-      : await actorService.getUser(identifier, true)
+      ? await actorService.getAccountByEmail(identifier, true)
+      : await actorService.getAccount(identifier, true)
 
     if (!user) {
       throw new AuthRequiredError('Invalid identifier or password')
@@ -72,7 +72,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.refreshVerifier,
     handler: async ({ req, auth }) => {
       const did = auth.credentials.did
-      const user = await ctx.services.account(ctx.db).getUser(did, true)
+      const user = await ctx.services.account(ctx.db).getAccount(did, true)
       if (!user) {
         throw new InvalidRequestError(
           `Could not find user info for account: ${did}`,

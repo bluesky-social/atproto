@@ -30,7 +30,7 @@ export interface OutputSchema {
     | ComAtprotoRepoRepoRef.Main
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
-  reportedByDid: string
+  reportedBy: string
   createdAt: string
   [k: string]: unknown
 }

@@ -7,9 +7,9 @@
       "description": "Get information about the repo, including the list of collections.",
       "parameters": {
         "type": "params",
-        "required": ["user"],
+        "required": ["repo"],
         "properties": {
-          "user": {"type": "string", "description": "The handle or DID of the repo."}
+          "repo": {"type": "string", "description": "The handle or DID of the repo."}
         }
       },
       "output": {

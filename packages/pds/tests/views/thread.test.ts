@@ -81,7 +81,7 @@ describe('pds thread views', () => {
 
   it('includes the muted status of post authors.', async () => {
     await agent.api.app.bsky.graph.mute(
-      { user: alice },
+      { actor: alice },
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
     const thread = await agent.api.app.bsky.feed.getPostThread(
@@ -92,7 +92,7 @@ describe('pds thread views', () => {
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
     await agent.api.app.bsky.graph.unmute(
-      { user: alice },
+      { actor: alice },
       { encoding: 'application/json', headers: sc.getHeaders(bob) },
     )
   })

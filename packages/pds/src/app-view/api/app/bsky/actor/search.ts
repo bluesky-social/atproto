@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
         return {
           encoding: 'application/json',
           body: {
-            users: [],
+            actors: [],
           },
         }
       }
@@ -43,7 +43,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           cursor: keyset.packFromResult(results),
-          users: await services.appView
+          actors: await services.appView
             .actor(db)
             .views.profileBasic(results, requester),
         },

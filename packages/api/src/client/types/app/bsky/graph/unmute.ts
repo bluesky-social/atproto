@@ -9,7 +9,7 @@ import { lexicons } from '../../../../lexicons'
 export interface QueryParams {}
 
 export interface InputSchema {
-  user: string
+  actor: string
   [k: string]: unknown
 }
 

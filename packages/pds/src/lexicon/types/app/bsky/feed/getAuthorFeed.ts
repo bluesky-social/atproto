@@ -9,7 +9,7 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyFeedFeedViewPost from './feedViewPost'
 
 export interface QueryParams {
-  author: string
+  actor: string
   limit: number
   before?: string
 }

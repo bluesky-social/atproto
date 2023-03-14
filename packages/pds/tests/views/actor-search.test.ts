@@ -40,7 +40,7 @@ describe('pds user search views', () => {
       { headers },
     )
 
-    const handles = result.data.users.map((u) => u.handle)
+    const handles = result.data.actors.map((u) => u.handle)
 
     const shouldContain = [
       'cara-wiegand69.test',
@@ -72,9 +72,9 @@ describe('pds user search views', () => {
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
     if (db.dialect === 'pg') {
-      expect(forSnapshot(result.data.users)).toEqual(snapTypeaheadPg)
+      expect(forSnapshot(result.data.actors)).toEqual(snapTypeaheadPg)
     } else {
-      expect(forSnapshot(result.data.users)).toEqual(snapTypeaheadSqlite)
+      expect(forSnapshot(result.data.actors)).toEqual(snapTypeaheadSqlite)
     }
   })
 
@@ -84,7 +84,7 @@ describe('pds user search views', () => {
       { headers },
     )
 
-    expect(result.data.users).toEqual([])
+    expect(result.data.actors).toEqual([])
   })
 
   it('typeahead applies limit', async () => {
@@ -93,14 +93,14 @@ describe('pds user search views', () => {
       { headers },
     )
 
-    expect(full.data.users.length).toBeGreaterThan(5)
+    expect(full.data.actors.length).toBeGreaterThan(5)
 
     const limited = await agent.api.app.bsky.actor.searchTypeahead(
       { term: 'p', limit: 5 },
       { headers },
     )
 
-    expect(limited.data.users).toEqual(full.data.users.slice(0, 5))
+    expect(limited.data.actors).toEqual(full.data.actors.slice(0, 5))
   })
 
   it('search gives relevant results', async () => {
@@ -109,7 +109,7 @@ describe('pds user search views', () => {
       { headers },
     )
 
-    const handles = result.data.users.map((u) => u.handle)
+    const handles = result.data.actors.map((u) => u.handle)
 
     const shouldContain = [
       'cara-wiegand69.test',
@@ -141,9 +141,9 @@ describe('pds user search views', () => {
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
     if (db.dialect === 'pg') {
-      expect(forSnapshot(result.data.users)).toEqual(snapSearchPg)
+      expect(forSnapshot(result.data.actors)).toEqual(snapSearchPg)
     } else {
-      expect(forSnapshot(result.data.users)).toEqual(snapSearchSqlite)
+      expect(forSnapshot(result.data.actors)).toEqual(snapSearchSqlite)
     }
   })
 
@@ -153,11 +153,11 @@ describe('pds user search views', () => {
       { headers },
     )
 
-    expect(result.data.users).toEqual([])
+    expect(result.data.actors).toEqual([])
   })
 
   it('paginates', async () => {
-    const results = (results) => results.flatMap((res) => res.users)
+    const results = (results) => results.flatMap((res) => res.actors)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.actor.search(
         { term: 'p', before: cursor, limit: 3 },
@@ -168,7 +168,7 @@ describe('pds user search views', () => {
 
     const paginatedAll = await paginateAll(paginator)
     paginatedAll.forEach((res) =>
-      expect(res.users.length).toBeLessThanOrEqual(3),
+      expect(res.actors.length).toBeLessThanOrEqual(3),
     )
 
     const full = await agent.api.app.bsky.actor.search(
@@ -176,7 +176,7 @@ describe('pds user search views', () => {
       { headers },
     )
 
-    expect(full.data.users.length).toBeGreaterThan(5)
+    expect(full.data.actors.length).toBeGreaterThan(5)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
@@ -188,7 +188,7 @@ describe('pds user search views', () => {
       { headers },
     )
 
-    expect(result.data.users).toEqual([])
+    expect(result.data.actors).toEqual([])
   })
 
   it('search blocks by actor takedown', async () => {
@@ -211,7 +211,7 @@ describe('pds user search views', () => {
       { term: 'car' },
       { headers },
     )
-    const handles = result.data.users.map((u) => u.handle)
+    const handles = result.data.actors.map((u) => u.handle)
     expect(handles).toContain('carlos6.test')
     expect(handles).toContain('carolina-mcdermott77.test')
     expect(handles).not.toContain('cara-wiegand69.test')

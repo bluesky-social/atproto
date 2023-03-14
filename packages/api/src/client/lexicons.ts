@@ -682,7 +682,7 @@ export const schemaDict = {
           'id',
           'reasonType',
           'subject',
-          'reportedByDid',
+          'reportedBy',
           'createdAt',
           'resolvedByActionIds',
         ],
@@ -704,7 +704,7 @@ export const schemaDict = {
               'lex:com.atproto.repo.strongRef',
             ],
           },
-          reportedByDid: {
+          reportedBy: {
             type: 'string',
             format: 'did',
           },
@@ -726,7 +726,7 @@ export const schemaDict = {
           'id',
           'reasonType',
           'subject',
-          'reportedByDid',
+          'reportedBy',
           'createdAt',
           'resolvedByActions',
         ],
@@ -748,7 +748,7 @@ export const schemaDict = {
               'lex:com.atproto.admin.record#view',
             ],
           },
-          reportedByDid: {
+          reportedBy: {
             type: 'string',
             format: 'did',
           },
@@ -1472,9 +1472,9 @@ export const schemaDict = {
           'Get information about the repo, including the list of collections.',
         parameters: {
           type: 'params',
-          required: ['user'],
+          required: ['repo'],
           properties: {
-            user: {
+            repo: {
               type: 'string',
               description: 'The handle or DID of the repo.',
             },
@@ -1526,9 +1526,9 @@ export const schemaDict = {
         description: 'Fetch a record.',
         parameters: {
           type: 'params',
-          required: ['user', 'collection', 'rkey'],
+          required: ['repo', 'collection', 'rkey'],
           properties: {
-            user: {
+            repo: {
               type: 'string',
               description: 'The handle or DID of the repo.',
             },
@@ -1580,9 +1580,9 @@ export const schemaDict = {
         description: 'List a range of records in a collection.',
         parameters: {
           type: 'params',
-          required: ['user', 'collection'],
+          required: ['repo', 'collection'],
           properties: {
-            user: {
+            repo: {
               type: 'string',
               description: 'The handle or DID of the repo.',
             },
@@ -1805,7 +1805,7 @@ export const schemaDict = {
               'id',
               'reasonType',
               'subject',
-              'reportedByDid',
+              'reportedBy',
               'createdAt',
             ],
             properties: {
@@ -1826,7 +1826,7 @@ export const schemaDict = {
                   'lex:com.atproto.repo.strongRef',
                 ],
               },
-              reportedByDid: {
+              reportedBy: {
                 type: 'string',
                 format: 'did',
               },
@@ -2766,7 +2766,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Find users matching search criteria.',
+        description: 'Find actors matching search criteria.',
         parameters: {
           type: 'params',
           properties: {
@@ -2788,12 +2788,12 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['users'],
+            required: ['actors'],
             properties: {
               cursor: {
                 type: 'string',
               },
-              users: {
+              actors: {
                 type: 'array',
                 items: {
                   type: 'ref',
@@ -2812,7 +2812,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Find user suggestions for a search term.',
+        description: 'Find actor suggestions for a search term.',
         parameters: {
           type: 'params',
           properties: {
@@ -2831,9 +2831,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['users'],
+            required: ['actors'],
             properties: {
-              users: {
+              actors: {
                 type: 'array',
                 items: {
                   type: 'ref',
@@ -2852,7 +2852,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Notify server that the user has seen notifications.',
+        description: "Update an actor's profile.",
         input: {
           encoding: 'application/json',
           schema: {
@@ -3177,12 +3177,12 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: "A view of a user's feed.",
+        description: "A view of an actor's feed.",
         parameters: {
           type: 'params',
-          required: ['author'],
+          required: ['actor'],
           properties: {
-            author: {
+            actor: {
               type: 'string',
             },
             limit: {
@@ -3857,12 +3857,12 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Who is following a user?',
+        description: 'Who is following an actor?',
         parameters: {
           type: 'params',
-          required: ['user'],
+          required: ['actor'],
           properties: {
-            user: {
+            actor: {
               type: 'string',
             },
             limit: {
@@ -3908,12 +3908,12 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Who is a user following?',
+        description: 'Who is an actor following?',
         parameters: {
           type: 'params',
-          required: ['user'],
+          required: ['actor'],
           properties: {
-            user: {
+            actor: {
               type: 'string',
             },
             limit: {
@@ -4007,9 +4007,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['user'],
+            required: ['actor'],
             properties: {
-              user: {
+              actor: {
                 type: 'string',
               },
             },
@@ -4029,9 +4029,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['user'],
+            required: ['actor'],
             properties: {
-              user: {
+              actor: {
                 type: 'string',
               },
             },
