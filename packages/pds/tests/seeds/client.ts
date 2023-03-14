@@ -375,14 +375,14 @@ export class SeedClient {
     reasonType: CreateReportInput['reasonType']
     subject: CreateReportInput['subject']
     reason?: string
-    reportedByDid: string
+    reportedBy: string
   }) {
-    const { reasonType, subject, reason, reportedByDid } = opts
+    const { reasonType, subject, reason, reportedBy } = opts
     const result = await this.agent.api.com.atproto.report.create(
       { reasonType, subject, reason },
       {
         encoding: 'application/json',
-        headers: this.getHeaders(reportedByDid),
+        headers: this.getHeaders(reportedBy),
       },
     )
     return result.data

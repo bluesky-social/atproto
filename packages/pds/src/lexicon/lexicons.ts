@@ -682,7 +682,7 @@ export const schemaDict = {
           'id',
           'reasonType',
           'subject',
-          'reportedByDid',
+          'reportedBy',
           'createdAt',
           'resolvedByActionIds',
         ],
@@ -704,7 +704,7 @@ export const schemaDict = {
               'lex:com.atproto.repo.strongRef',
             ],
           },
-          reportedByDid: {
+          reportedBy: {
             type: 'string',
             format: 'did',
           },
@@ -726,7 +726,7 @@ export const schemaDict = {
           'id',
           'reasonType',
           'subject',
-          'reportedByDid',
+          'reportedBy',
           'createdAt',
           'resolvedByActions',
         ],
@@ -748,7 +748,7 @@ export const schemaDict = {
               'lex:com.atproto.admin.record#view',
             ],
           },
-          reportedByDid: {
+          reportedBy: {
             type: 'string',
             format: 'did',
           },
@@ -1805,7 +1805,7 @@ export const schemaDict = {
               'id',
               'reasonType',
               'subject',
-              'reportedByDid',
+              'reportedBy',
               'createdAt',
             ],
             properties: {
@@ -1826,7 +1826,7 @@ export const schemaDict = {
                   'lex:com.atproto.repo.strongRef',
                 ],
               },
-              reportedByDid: {
+              reportedBy: {
                 type: 'string',
                 format: 'did',
               },

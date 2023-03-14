@@ -436,13 +436,13 @@ export class ModerationService {
     reasonType: ModerationReportRow['reasonType']
     reason?: string
     subject: { did: string } | { uri: AtUri; cid?: CID }
-    reportedByDid: string
+    reportedBy: string
     createdAt?: Date
   }): Promise<ModerationReportRow> {
     const {
       reasonType,
       reason,
-      reportedByDid,
+      reportedBy,
       createdAt = new Date(),
       subject,
     } = info
@@ -477,7 +477,7 @@ export class ModerationService {
         reasonType,
         reason: reason || null,
         createdAt: createdAt.toISOString(),
-        reportedByDid,
+        reportedBy,
         ...subjectInfo,
       })
       .returningAll()

@@ -69,7 +69,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('subjectCid', 'varchar')
     .addColumn('reasonType', 'varchar', (col) => col.notNull())
     .addColumn('reason', 'text')
-    .addColumn('reportedByDid', 'varchar', (col) => col.notNull())
+    .addColumn('reportedBy', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .execute()
   // Moderation report resolutions

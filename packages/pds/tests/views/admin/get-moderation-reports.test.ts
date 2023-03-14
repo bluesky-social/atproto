@@ -52,7 +52,7 @@ describe('pds admin get moderation reports view', () => {
       recordReports.push(
         await sc.createReport({
           reasonType: getReasonType(i),
-          reportedByDid: getReportedByDid(i),
+          reportedBy: getReportedByDid(i),
           subject: {
             $type: 'com.atproto.repo.recordRef',
             uri: post.ref.uriStr,
@@ -66,7 +66,7 @@ describe('pds admin get moderation reports view', () => {
       repoReports.push(
         await sc.createReport({
           reasonType: getReasonType(i),
-          reportedByDid: getReportedByDid(i),
+          reportedBy: getReportedByDid(i),
           subject: {
             $type: 'com.atproto.repo.repoRef',
             did,
