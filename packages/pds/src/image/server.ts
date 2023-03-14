@@ -133,8 +133,9 @@ export class BlobDiskCache implements BlobCache {
   }
 
   async get(fileId: string) {
+    let handle: fs.FileHandle | undefined = undefined
     try {
-      const handle = await fs.open(path.join(this.tempDir, fileId), 'r')
+      handle = await fs.open(path.join(this.tempDir, fileId), 'r')
       const { size } = await handle.stat()
       if (size === 0) {
         throw new BlobNotFoundError()
@@ -145,6 +146,8 @@ export class BlobDiskCache implements BlobCache {
         throw new BlobNotFoundError()
       }
       throw err
+    } finally {
+      await handle?.close()
     }
   }
 

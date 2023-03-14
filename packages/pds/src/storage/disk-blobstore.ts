@@ -112,9 +112,13 @@ export class DiskBlobStore implements BlobStore {
   }
 
   async getStream(cid: CID): Promise<stream.Readable> {
+    const path = this.getStoredPath(cid)
+    const exists = await fileExists(path)
+    if (!exists) {
+      throw new BlobNotFoundError()
+    }
     try {
-      const handle = await fs.open(this.getStoredPath(cid), 'r')
-      return handle.createReadStream()
+      return fsSync.createReadStream(path)
     } catch (err) {
       if (isErrnoException(err) && err.code === 'ENOENT') {
         throw new BlobNotFoundError()
