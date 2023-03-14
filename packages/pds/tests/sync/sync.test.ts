@@ -305,6 +305,9 @@ describe('repo sync', () => {
       did,
       earliest: commits.at(-4),
     })
+    const blobsForRepo = await agent.api.com.atproto.sync.listBlobs({
+      did,
+    })
 
     expect(blobsForFirst.data.cids).toEqual([img1.image.cid])
     expect(blobsForSecond.data.cids.sort()).toEqual(
@@ -312,6 +315,9 @@ describe('repo sync', () => {
     )
     expect(blobsForThird.data.cids).toEqual([img2.image.cid])
     expect(blobsForRange.data.cids.sort()).toEqual(
+      [img1.image.cid, img2.image.cid].sort(),
+    )
+    expect(blobsForRepo.data.cids.sort()).toEqual(
       [img1.image.cid, img2.image.cid].sort(),
     )
   })
