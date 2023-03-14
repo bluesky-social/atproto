@@ -2025,6 +2025,33 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncGetBlob: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getBlob',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a blob associated with a given repo.',
+        parameters: {
+          type: 'params',
+          required: ['did', 'cid'],
+          properties: {
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
+            cid: {
+              type: 'string',
+              description: 'The CID of the blob to fetch',
+            },
+          },
+        },
+        output: {
+          encoding: '*/*',
+        },
+      },
+    },
+  },
   ComAtprotoSyncGetBlocks: {
     lexicon: 1,
     id: 'com.atproto.sync.getBlocks',
@@ -4171,6 +4198,7 @@ export const ids = {
   ComAtprotoSessionDelete: 'com.atproto.session.delete',
   ComAtprotoSessionGet: 'com.atproto.session.get',
   ComAtprotoSessionRefresh: 'com.atproto.session.refresh',
+  ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
   ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
   ComAtprotoSyncGetCommitPath: 'com.atproto.sync.getCommitPath',

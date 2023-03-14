@@ -42,6 +42,7 @@ import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 import * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 import * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
+import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
 import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
@@ -471,6 +472,13 @@ export class SyncNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  getBlob<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncGetBlob.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.getBlob' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   getBlocks<AV extends AuthVerifier>(
