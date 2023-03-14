@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Notify server that the user has seen notifications.",
+      "description": "Update an actor's profile.",
       "input": {
         "encoding": "application/json",
         "schema": {
