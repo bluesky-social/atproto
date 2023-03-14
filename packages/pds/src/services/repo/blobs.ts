@@ -122,6 +122,18 @@ export class RepoBlobs {
       .execute()
   }
 
+  async listForCommits(did: string, commits: CID[]): Promise<CID[]> {
+    if (commits.length < 1) return []
+    const commitStrs = commits.map((c) => c.toString())
+    const res = await this.db.db
+      .selectFrom('repo_blob')
+      .where('did', '=', did)
+      .where('commit', 'in', commitStrs)
+      .select('cid')
+      .execute()
+    return res.map((row) => CID.parse(row.cid))
+  }
+
   async deleteForUser(did: string): Promise<void> {
     this.db.assertTransaction()
     const [deleted] = await Promise.all([

@@ -2251,6 +2251,49 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncListBlobs: {
+    lexicon: 1,
+    id: 'com.atproto.sync.listBlobs',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List blob cids for some range of commits',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
+            latest: {
+              type: 'string',
+              description: 'The most recent commit',
+            },
+            earliest: {
+              type: 'string',
+              description: 'The earliest commit to start from',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['cids'],
+            properties: {
+              cids: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoSyncNotifyOfUpdate: {
     lexicon: 1,
     id: 'com.atproto.sync.notifyOfUpdate',
@@ -4216,6 +4259,7 @@ export const ids = {
   ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
+  ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeAllRepos: 'com.atproto.sync.subscribeAllRepos',
