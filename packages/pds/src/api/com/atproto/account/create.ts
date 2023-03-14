@@ -88,7 +88,7 @@ export default function (server: Server, ctx: AppContext) {
         await actorTxn.registerUser(email, handle, did, password, declaration)
       } catch (err) {
         if (err instanceof UserAlreadyExistsError) {
-          const got = await actorTxn.getUser(handle, true)
+          const got = await actorTxn.getAccount(handle, true)
           if (got) {
             throw new InvalidRequestError(`Handle already taken: ${handle}`)
           } else {

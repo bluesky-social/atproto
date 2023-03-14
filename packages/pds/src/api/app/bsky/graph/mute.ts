@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const { db, services } = ctx
 
-      const subject = await services.account(db).getUser(actor)
+      const subject = await services.account(db).getAccount(actor)
       if (!subject) {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
       }

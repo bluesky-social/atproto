@@ -6,7 +6,7 @@ Object {
   "id": 2,
   "reason": "defamation",
   "reasonType": "com.atproto.report.reasonType#other",
-  "reportedByDid": "user(0)",
+  "reportedBy": "user(0)",
   "resolvedByActions": Array [
     Object {
       "action": "com.atproto.admin.moderationAction#takedown",
@@ -96,7 +96,7 @@ Object {
   "createdAt": "1970-01-01T00:00:00.000Z",
   "id": 1,
   "reasonType": "com.atproto.report.reasonType#spam",
-  "reportedByDid": "user(0)",
+  "reportedBy": "user(0)",
   "resolvedByActions": Array [
     Object {
       "action": "com.atproto.admin.moderationAction#flag",

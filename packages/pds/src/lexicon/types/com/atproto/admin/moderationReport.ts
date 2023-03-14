@@ -19,7 +19,7 @@ export interface View {
     | ComAtprotoRepoRepoRef.Main
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
-  reportedByDid: string
+  reportedBy: string
   createdAt: string
   resolvedByActionIds: number[]
   [k: string]: unknown
@@ -45,7 +45,7 @@ export interface ViewDetail {
     | ComAtprotoAdminRepo.View
     | ComAtprotoAdminRecord.View
     | { $type: string; [k: string]: unknown }
-  reportedByDid: string
+  reportedBy: string
   createdAt: string
   resolvedByActions: ComAtprotoAdminModerationAction.View[]
   [k: string]: unknown
