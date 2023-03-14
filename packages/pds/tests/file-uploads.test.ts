@@ -137,6 +137,16 @@ describe('file uploads', () => {
     expect(uint8arrays.equals(smallFile, storedBytes)).toBeTruthy()
   })
 
+  it('can fetch the file after being referenced', async () => {
+    const fetchedFile = await aliceAgent.api.com.atproto.sync.getBlob({
+      did: alice.did,
+      cid: smallCid.toString(),
+    })
+    expect(
+      uint8arrays.equals(smallFile, new Uint8Array(fetchedFile.data)),
+    ).toBeTruthy()
+  })
+
   it('serves the referenced blob', async () => {
     const profile = await aliceAgent.api.app.bsky.actor.getProfile({
       actor: 'alice.test',

@@ -7,8 +7,10 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
 export interface QueryParams {
-  /** Hostname of the service that is notifying of update. */
-  hostname: string
+  /** The DID of the repo. */
+  did: string
+  /** The CID of the blob to fetch */
+  cid: string
 }
 
 export type InputSchema = undefined
@@ -20,6 +22,7 @@ export interface CallOptions {
 export interface Response {
   success: boolean
   headers: Headers
+  data: Uint8Array
 }
 
 export function toKnownErr(e: any) {

@@ -468,7 +468,7 @@ export class ModerationViews {
     if (result.subjectType === 'com.atproto.repo.repoRef') {
       const repoResult = await this.services
         .account(this.db)
-        .getUser(result.subjectDid, true)
+        .getAccount(result.subjectDid, true)
       if (!repoResult) {
         throw new Error(
           `Subject is missing: (${result.id}) ${result.subjectDid}`,
