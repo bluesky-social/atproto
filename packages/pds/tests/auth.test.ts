@@ -1,4 +1,5 @@
 import AtpAgent from '@atproto/api'
+import * as jwt from 'jsonwebtoken'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
 import * as CreateSession from '@atproto/api/src/client/types/com/atproto/session/create'
 import * as RefreshSession from '@atproto/api/src/client/types/com/atproto/session/refresh'
@@ -145,15 +146,53 @@ describe('auth', () => {
     )
   })
 
-  it('refresh token is revoked after use.', async () => {
+  it('refresh token provides new token with same id on multiple uses during grace period.', async () => {
     const account = await createAccount({
       handle: 'eve.test',
       email: 'eve@test.com',
       password: 'password',
     })
+    const refresh1 = await refreshSession(account.refreshJwt)
+    const refresh2 = await refreshSession(account.refreshJwt)
+
+    const token0 = jwt.decode(account.refreshJwt, { json: true })
+    const token1 = jwt.decode(refresh1.refreshJwt, { json: true })
+    const token2 = jwt.decode(refresh2.refreshJwt, { json: true })
+
+    expect(typeof token1?.jti).toEqual('string')
+    expect(token1?.jti).toEqual(token2?.jti)
+    expect(token1?.jti).not.toEqual(token0?.jti)
+    expect(token2?.jti).not.toEqual(token0?.jti)
+  })
+
+  it('refresh token is revoked after grace period completes.', async () => {
+    const account = await createAccount({
+      handle: 'evan.test',
+      email: 'evan@test.com',
+      password: 'password',
+    })
     await refreshSession(account.refreshJwt)
+    const token = jwt.decode(account.refreshJwt, { json: true })
+
+    // Update expiration (i.e. grace period) to end immediately
+    const refreshUpdated = await server.ctx.db.db
+      .updateTable('refresh_token')
+      .set({ expiresAt: new Date().toISOString() })
+      .where('id', '=', token?.jti ?? '')
+      .executeTakeFirst()
+    expect(Number(refreshUpdated.numUpdatedRows)).toEqual(1)
+
+    // Token can no longer be used
     const refreshAgain = refreshSession(account.refreshJwt)
     await expect(refreshAgain).rejects.toThrow('Token has been revoked')
+
+    // Ensure that token was cleaned-up
+    const refreshInfo2 = await server.ctx.db.db
+      .selectFrom('refresh_token')
+      .selectAll()
+      .where('id', '=', token?.jti ?? '')
+      .executeTakeFirst()
+    expect(refreshInfo2).toBeUndefined()
   })
 
   it('refresh token is revoked when session is deleted.', async () => {
@@ -186,7 +225,7 @@ describe('auth', () => {
       email: 'holga@test.com',
       password: 'password',
     })
-    const refresh = server.ctx.auth.createRefreshToken(account.did, -1)
+    const refresh = server.ctx.auth.createRefreshToken(account.did, null, -1)
     const refreshExpired = refreshSession(refresh.jwt)
     await expect(refreshExpired).rejects.toThrow('Token has expired')
     await deleteSession(refresh.jwt) // No problem revoking an expired token
