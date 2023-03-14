@@ -13,9 +13,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema
-    .dropIndex('refresh_token_did_idx')
-    .on('refresh_token')
-    .execute()
+  await db.schema.dropIndex('refresh_token_did_idx').execute()
   await db.schema.alterTable('refresh_token').dropColumn('nextId').execute()
 }
