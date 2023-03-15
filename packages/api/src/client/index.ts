@@ -71,14 +71,13 @@ import * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 import * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 import * as AppBskyFeedFeedViewPost from './types/app/bsky/feed/feedViewPost'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
+import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
-import * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
+import * as AppBskyFeedLike from './types/app/bsky/feed/like'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
-import * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
-import * as AppBskyFeedVote from './types/app/bsky/feed/vote'
 import * as AppBskyGraphAssertCreator from './types/app/bsky/graph/assertCreator'
 import * as AppBskyGraphAssertMember from './types/app/bsky/graph/assertMember'
 import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
@@ -156,14 +155,13 @@ export * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 export * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 export * as AppBskyFeedFeedViewPost from './types/app/bsky/feed/feedViewPost'
 export * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
+export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
-export * as AppBskyFeedGetVotes from './types/app/bsky/feed/getVotes'
+export * as AppBskyFeedLike from './types/app/bsky/feed/like'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
-export * as AppBskyFeedSetVote from './types/app/bsky/feed/setVote'
-export * as AppBskyFeedVote from './types/app/bsky/feed/vote'
 export * as AppBskyGraphAssertCreator from './types/app/bsky/graph/assertCreator'
 export * as AppBskyGraphAssertMember from './types/app/bsky/graph/assertMember'
 export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
@@ -965,15 +963,15 @@ export class EmbedNS {
 
 export class FeedNS {
   _service: AtpServiceClient
+  like: LikeRecord
   post: PostRecord
   repost: RepostRecord
-  vote: VoteRecord
 
   constructor(service: AtpServiceClient) {
     this._service = service
+    this.like = new LikeRecord(service)
     this.post = new PostRecord(service)
     this.repost = new RepostRecord(service)
-    this.vote = new VoteRecord(service)
   }
 
   getAuthorFeed(
@@ -984,6 +982,17 @@ export class FeedNS {
       .call('app.bsky.feed.getAuthorFeed', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetAuthorFeed.toKnownErr(e)
+      })
+  }
+
+  getLikes(
+    params?: AppBskyFeedGetLikes.QueryParams,
+    opts?: AppBskyFeedGetLikes.CallOptions,
+  ): Promise<AppBskyFeedGetLikes.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getLikes', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetLikes.toKnownErr(e)
       })
   }
 
@@ -1019,27 +1028,66 @@ export class FeedNS {
         throw AppBskyFeedGetTimeline.toKnownErr(e)
       })
   }
+}
 
-  getVotes(
-    params?: AppBskyFeedGetVotes.QueryParams,
-    opts?: AppBskyFeedGetVotes.CallOptions,
-  ): Promise<AppBskyFeedGetVotes.Response> {
-    return this._service.xrpc
-      .call('app.bsky.feed.getVotes', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetVotes.toKnownErr(e)
-      })
+export class LikeRecord {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
   }
 
-  setVote(
-    data?: AppBskyFeedSetVote.InputSchema,
-    opts?: AppBskyFeedSetVote.CallOptions,
-  ): Promise<AppBskyFeedSetVote.Response> {
-    return this._service.xrpc
-      .call('app.bsky.feed.setVote', opts?.qp, data, opts)
-      .catch((e) => {
-        throw AppBskyFeedSetVote.toKnownErr(e)
-      })
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedLike.Record }[]
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.like',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyFeedLike.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.like',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyFeedLike.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.feed.like'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.feed.like', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.like', ...params },
+      { headers },
+    )
   }
 }
 
@@ -1160,67 +1208,6 @@ export class RepostRecord {
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.feed.repost', ...params },
-      { headers },
-    )
-  }
-}
-
-export class VoteRecord {
-  _service: AtpServiceClient
-
-  constructor(service: AtpServiceClient) {
-    this._service = service
-  }
-
-  async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyFeedVote.Record }[]
-  }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.feed.vote',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyFeedVote.Record }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.feed.vote',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: Omit<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: AppBskyFeedVote.Record,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    record.$type = 'app.bsky.feed.vote'
-    const res = await this._service.xrpc.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection: 'app.bsky.feed.vote', ...params, record },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._service.xrpc.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.feed.vote', ...params },
       { headers },
     )
   }
