@@ -7,7 +7,7 @@ env:
   IMAGE_NAME: pds
 
 jobs:
-  build:
+  pds-container-mirror:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -27,6 +27,7 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ env.USERNAME}}
           password: ${{ env.PASSWORD }}
+          ecr: false
 
       - name: Extract Docker metadata
         id: meta
