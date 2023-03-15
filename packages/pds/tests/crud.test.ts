@@ -58,12 +58,12 @@ describe('crud operations', () => {
   })
 
   it('describes repo', async () => {
-    const description = await agent.api.com.atproto.repo.describe({
+    const description = await agent.api.com.atproto.repo.describeRepo({
       repo: alice.did,
     })
     expect(description.data.handle).toBe(alice.handle)
     expect(description.data.did).toBe(alice.did)
-    const description2 = await agent.api.com.atproto.repo.describe({
+    const description2 = await agent.api.com.atproto.repo.describeRepo({
       repo: bob.did,
     })
     expect(description2.data.handle).toBe(bob.handle)

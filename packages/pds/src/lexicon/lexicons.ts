@@ -1244,9 +1244,9 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoRepoDescribe: {
+  ComAtprotoRepoDescribeRepo: {
     lexicon: 1,
-    id: 'com.atproto.repo.describe',
+    id: 'com.atproto.repo.describeRepo',
     defs: {
       main: {
         type: 'query',
@@ -2336,168 +2336,7 @@ export const schemaDict = {
           },
         },
       },
-      viewerState: {
-        type: 'object',
-        properties: {
-          muted: {
-            type: 'boolean',
-          },
-          following: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          followedBy: {
-            type: 'string',
-            format: 'at-uri',
-          },
-        },
-      },
-    },
-  },
-  AppBskyActorGetProfile: {
-    lexicon: 1,
-    id: 'app.bsky.actor.getProfile',
-    defs: {
-      main: {
-        type: 'query',
-        parameters: {
-          type: 'params',
-          required: ['actor'],
-          properties: {
-            actor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.profile#view',
-          },
-        },
-      },
-    },
-  },
-  AppBskyActorGetProfiles: {
-    lexicon: 1,
-    id: 'app.bsky.actor.getProfiles',
-    defs: {
-      main: {
-        type: 'query',
-        parameters: {
-          type: 'params',
-          required: ['actors'],
-          properties: {
-            actors: {
-              type: 'array',
-              items: {
-                type: 'string',
-              },
-              maxLength: 25,
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['profiles'],
-            properties: {
-              profiles: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.actor.profile#view',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyActorGetSuggestions: {
-    lexicon: 1,
-    id: 'app.bsky.actor.getSuggestions',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Get a list of actors suggested for following. Used in discovery UIs.',
-        parameters: {
-          type: 'params',
-          properties: {
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['actors'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              actors: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.actor.profile#viewBasic',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyActorProfile: {
-    lexicon: 1,
-    id: 'app.bsky.actor.profile',
-    defs: {
-      main: {
-        type: 'record',
-        key: 'literal:self',
-        record: {
-          type: 'object',
-          required: ['displayName'],
-          properties: {
-            displayName: {
-              type: 'string',
-              maxLength: 64,
-            },
-            description: {
-              type: 'string',
-              maxLength: 256,
-            },
-            avatar: {
-              type: 'image',
-              accept: ['image/png', 'image/jpeg'],
-              maxWidth: 2000,
-              maxHeight: 2000,
-              maxSize: 1000000,
-            },
-            banner: {
-              type: 'image',
-              accept: ['image/png', 'image/jpeg'],
-              maxWidth: 6000,
-              maxHeight: 2000,
-              maxSize: 1000000,
-            },
-          },
-        },
-      },
-      view: {
+      profileView: {
         type: 'object',
         required: [
           'did',
@@ -2547,16 +2386,16 @@ export const schemaDict = {
           },
           viewer: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.profile#viewerState',
+            ref: 'lex:app.bsky.actor.defs#viewerState',
           },
           myState: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.profile#myState',
+            ref: 'lex:app.bsky.actor.defs#myState',
             description: 'Deprecated',
           },
         },
       },
-      viewBasic: {
+      profileViewBasic: {
         type: 'object',
         required: ['did', 'handle'],
         properties: {
@@ -2584,7 +2423,7 @@ export const schemaDict = {
           },
           viewer: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.profile#viewerState',
+            ref: 'lex:app.bsky.actor.defs#viewerState',
           },
         },
       },
@@ -2614,6 +2453,151 @@ export const schemaDict = {
           },
           muted: {
             type: 'boolean',
+          },
+        },
+      },
+    },
+  },
+  AppBskyActorGetProfile: {
+    lexicon: 1,
+    id: 'app.bsky.actor.getProfile',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+        },
+      },
+    },
+  },
+  AppBskyActorGetProfiles: {
+    lexicon: 1,
+    id: 'app.bsky.actor.getProfiles',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['actors'],
+          properties: {
+            actors: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['profiles'],
+            properties: {
+              profiles: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyActorGetSuggestions: {
+    lexicon: 1,
+    id: 'app.bsky.actor.getSuggestions',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a list of actors suggested for following. Used in discovery UIs.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actors'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              actors: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyActorProfile: {
+    lexicon: 1,
+    id: 'app.bsky.actor.profile',
+    defs: {
+      main: {
+        type: 'record',
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          required: ['displayName'],
+          properties: {
+            displayName: {
+              type: 'string',
+              maxLength: 64,
+            },
+            description: {
+              type: 'string',
+              maxLength: 256,
+            },
+            avatar: {
+              type: 'image',
+              accept: ['image/png', 'image/jpeg'],
+              maxWidth: 2000,
+              maxHeight: 2000,
+              maxSize: 1000000,
+            },
+            banner: {
+              type: 'image',
+              accept: ['image/png', 'image/jpeg'],
+              maxWidth: 6000,
+              maxHeight: 2000,
+              maxSize: 1000000,
+            },
           },
         },
       },
@@ -2656,7 +2640,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.profile#viewBasic',
+                  ref: 'lex:app.bsky.actor.defs#profileViewBasic',
                 },
               },
             },
@@ -4007,7 +3991,7 @@ export const ids = {
   ComAtprotoRepoApplyWrites: 'com.atproto.repo.applyWrites',
   ComAtprotoRepoCreateRecord: 'com.atproto.repo.createRecord',
   ComAtprotoRepoDeleteRecord: 'com.atproto.repo.deleteRecord',
-  ComAtprotoRepoDescribe: 'com.atproto.repo.describe',
+  ComAtprotoRepoDescribeRepo: 'com.atproto.repo.describeRepo',
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',

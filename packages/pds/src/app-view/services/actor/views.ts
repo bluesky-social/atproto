@@ -1,9 +1,9 @@
 import { ArrayEl } from '@atproto/common'
 import { WithInfo as ActorWithInfo } from '../../../lexicon/types/app/bsky/actor/defs'
 import {
-  View as ProfileView,
-  ViewBasic as ProfileViewBasic,
-} from '../../../lexicon/types/app/bsky/actor/profile'
+  ProfileView,
+  ProfileViewBasic,
+} from '../../../lexicon/types/app/bsky/actor/defs'
 import { DidHandle } from '../../../db/tables/did-handle'
 import { countAll } from '../../../db/util'
 import Database from '../../../db'

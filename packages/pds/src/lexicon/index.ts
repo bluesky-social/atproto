@@ -25,7 +25,7 @@ import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderatio
 import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
-import * as ComAtprotoRepoDescribe from './types/com/atproto/repo/describe'
+import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
@@ -299,10 +299,10 @@ export class RepoNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  describe<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, ComAtprotoRepoDescribe.Handler<ExtractAuth<AV>>>,
+  describeRepo<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoRepoDescribeRepo.Handler<ExtractAuth<AV>>>,
   ) {
-    const nsid = 'com.atproto.repo.describe' // @ts-ignore
+    const nsid = 'com.atproto.repo.describeRepo' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

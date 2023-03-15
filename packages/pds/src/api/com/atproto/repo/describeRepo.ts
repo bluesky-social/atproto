@@ -4,7 +4,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.describe(async ({ params }) => {
+  server.com.atproto.repo.describeRepo(async ({ params }) => {
     const { repo } = params
 
     const account = await ctx.services.account(ctx.db).getAccount(repo)

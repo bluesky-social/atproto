@@ -3,7 +3,7 @@ import { Server } from '../../../../lexicon'
 import applyWrites from './applyWrites'
 import createRecord from './createRecord'
 import deleteRecord from './deleteRecord'
-import describe from './describe'
+import describeRepo from './describeRepo'
 import getRecord from './getRecord'
 import listRecords from './listRecords'
 import putRecord from './putRecord'
@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
   applyWrites(server, ctx)
   createRecord(server, ctx)
   deleteRecord(server, ctx)
-  describe(server, ctx)
+  describeRepo(server, ctx)
   getRecord(server, ctx)
   listRecords(server, ctx)
   putRecord(server, ctx)

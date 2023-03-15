@@ -24,7 +24,7 @@ import * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs'
 import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
-import * as ComAtprotoRepoDescribe from './types/com/atproto/repo/describe'
+import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
@@ -102,7 +102,7 @@ export * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs'
 export * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
 export * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 export * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
-export * as ComAtprotoRepoDescribe from './types/com/atproto/repo/describe'
+export * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
 export * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
@@ -443,14 +443,14 @@ export class RepoNS {
       })
   }
 
-  describe(
-    params?: ComAtprotoRepoDescribe.QueryParams,
-    opts?: ComAtprotoRepoDescribe.CallOptions,
-  ): Promise<ComAtprotoRepoDescribe.Response> {
+  describeRepo(
+    params?: ComAtprotoRepoDescribeRepo.QueryParams,
+    opts?: ComAtprotoRepoDescribeRepo.CallOptions,
+  ): Promise<ComAtprotoRepoDescribeRepo.Response> {
     return this._service.xrpc
-      .call('com.atproto.repo.describe', params, undefined, opts)
+      .call('com.atproto.repo.describeRepo', params, undefined, opts)
       .catch((e) => {
-        throw ComAtprotoRepoDescribe.toKnownErr(e)
+        throw ComAtprotoRepoDescribeRepo.toKnownErr(e)
       })
   }
 
