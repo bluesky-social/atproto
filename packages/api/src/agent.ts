@@ -19,7 +19,7 @@ import {
   AtpAgentOpts,
 } from './types'
 
-const REFRESH_SESSION = 'com.atproto.session.refresh'
+const REFRESH_SESSION = 'com.atproto.server.refreshSession'
 
 /**
  * An ATP "Agent"
