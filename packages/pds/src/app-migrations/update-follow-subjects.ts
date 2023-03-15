@@ -5,7 +5,7 @@ import Database from '../db'
 import { appMigration } from '../db/leader'
 import { MessageDispatcher } from '../event-stream/message-queue'
 import { ids } from '../lexicon/lexicons'
-import { prepareUpdate } from '../repo'
+import { prepareUpdate, prepareDelete, assertValidRecord } from '../repo'
 import { RepoService } from '../services/repo'
 
 const MIGRATION_NAME = '2023-03-14-update-follow-subjects'
@@ -35,15 +35,20 @@ async function main(tx: Database, ctx: AppContext) {
 
   // For each user update follow records.
 
-  const [dids, followCount] = await Promise.all([
-    getActorDids(tx),
+  const [allDids, followCount] = await Promise.all([
+    getAllDids(tx),
     getFollowCount(tx),
   ])
-  const chunks = chunkArray(dids, Math.ceil(dids.length / 2))
 
-  console.log(SHORT_NAME, `${followCount} updates across ${dids.length} dids`)
+  console.log(
+    SHORT_NAME,
+    `${followCount} updates across ${allDids.length} dids`,
+  )
+
   let didsComplete = 0
   let updatesComplete = 0
+  const updatesTurnedDeletes: string[] = []
+  const chunks = chunkArray(allDids, Math.ceil(allDids.length / 2))
 
   await Promise.all(
     chunks.map(async (dids) => {
@@ -58,12 +63,24 @@ async function main(tx: Database, ctx: AppContext) {
               // Map old app.bsky.actor.ref to did
               record['subject'] = record['subject']['did']
             }
-            return prepareUpdate({
-              did,
-              collection: ids.AppBskyGraphFollow,
-              rkey: follow.rkey,
-              record,
-            })
+            try {
+              assertValidRecord(record)
+              return prepareUpdate({
+                did,
+                collection: ids.AppBskyGraphFollow,
+                rkey: follow.rkey,
+                record,
+                validate: false,
+              })
+            } catch {
+              const del = prepareDelete({
+                did,
+                collection: ids.AppBskyGraphFollow,
+                rkey: follow.rkey,
+              })
+              updatesTurnedDeletes.push(del.uri.toString())
+              return del
+            }
           }),
         )
 
@@ -78,6 +95,29 @@ async function main(tx: Database, ctx: AppContext) {
       }
     }),
   )
+
+  console.log(
+    SHORT_NAME,
+    `${updatesTurnedDeletes.length} updates turned deletes`,
+    updatesTurnedDeletes,
+  )
+
+  if (updatesTurnedDeletes.length > followCount / 1000) {
+    throw new Error('Too many updates turned deletes.')
+  }
+
+  // Update indexes for deleted, invalid follows
+
+  await tx.db
+    .deleteFrom('follow')
+    .where('uri', 'in', updatesTurnedDeletes)
+    .executeTakeFirst()
+  await tx.db
+    .deleteFrom('duplicate_record')
+    .where('duplicateOf', 'in', updatesTurnedDeletes)
+    .executeTakeFirst()
+
+  console.log(SHORT_NAME, 'updated indexes for updates-turned-deletes')
 
   // Update cids on indexed follows.
 
@@ -100,7 +140,7 @@ async function main(tx: Database, ctx: AppContext) {
   console.log(SHORT_NAME, 'complete')
 }
 
-async function getActorDids(db: Database) {
+async function getAllDids(db: Database) {
   const res = await db.db.selectFrom('did_handle').select('did').execute()
   return res.map((row) => row.did)
 }

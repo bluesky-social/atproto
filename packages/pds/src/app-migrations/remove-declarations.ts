@@ -41,7 +41,7 @@ async function main(tx: Database, ctx: AppContext) {
       'app.bsky.graph.assertion',
       'app.bsky.graph.confirmation',
     ])
-    .select(['did', 'collection', 'rkey'])
+    .select(['record.did as did', 'collection', 'rkey'])
     .execute()
 
   const deletionsByDid = recordsToDelete.reduce((collect, record) => {
@@ -49,16 +49,16 @@ async function main(tx: Database, ctx: AppContext) {
     collect[record.did].push(prepareDelete(record))
     return collect
   }, {} as Record<string, PreparedDelete[]>)
-
   const entries = Object.entries(deletionsByDid)
-  const chunks = chunkArray(entries, Math.ceil(entries.length / 50))
 
   console.log(
     SHORT_NAME,
     `${recordsToDelete.length} deletions across ${entries.length} dids`,
   )
+
   let didsComplete = 0
   let deletionsComplete = 0
+  const chunks = chunkArray(entries, Math.ceil(entries.length / 50))
 
   await Promise.all(
     chunks.map(async (chunk) => {
