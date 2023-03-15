@@ -100,7 +100,10 @@ async function main(tx: Database, ctx: AppContext) {
 
         // Chunk to avoid hitting e.g. postgres param limits
         for (const writeChunk of chunkArray(writeResults, 1000)) {
-          await repoTx.processWrites(did, writeChunk.flat(), now)
+          const writes = writeChunk.flat()
+          if (writes.length) {
+            await repoTx.processWrites(did, writes, now)
+          }
         }
 
         didsComplete += 1
