@@ -111,6 +111,9 @@ export const ensureHandleServiceConstraints = (
   if (front.length < 3) {
     throw new InvalidHandleError('Handle too short')
   }
+  if (handle.length > 30) {
+    throw new InvalidHandleError('Handle too long')
+  }
   if (reserved[front]) {
     throw new ReservedHandleError('Reserved handle')
   }
