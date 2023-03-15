@@ -51,11 +51,11 @@ export class ServerAuth {
     }
   }
 
-  createRefreshToken(did: string, expiresIn?: string | number) {
+  createRefreshToken(did: string, jti?: string, expiresIn?: string | number) {
     const payload = {
       scope: AuthScopes.Refresh,
       sub: did,
-      jti: uint8arrays.toString(crypto.randomBytes(32), 'base64'),
+      jti: jti ?? getRefreshTokenId(),
     }
     return {
       payload: payload as RefreshToken, // exp set by sign()
@@ -202,3 +202,7 @@ export const adminVerifier =
     }
     return { credentials: { admin } }
   }
+
+export const getRefreshTokenId = () => {
+  return uint8arrays.toString(crypto.randomBytes(32), 'base64')
+}
