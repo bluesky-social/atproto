@@ -21,7 +21,7 @@ export interface OutputSchema {
   uri: string
   cid?: string
   cursor?: string
-  likes?: Like[]
+  likes: Like[]
   [k: string]: unknown
 }
 

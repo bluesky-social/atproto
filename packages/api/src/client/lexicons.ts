@@ -3225,7 +3225,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['uri', 'votes'],
+            required: ['uri', 'likes'],
             properties: {
               uri: {
                 type: 'string',
@@ -3579,8 +3579,7 @@ export const schemaDict = {
           'record',
           'replyCount',
           'repostCount',
-          'upvoteCount',
-          'downvoteCount',
+          'likeCount',
           'indexedAt',
           'viewer',
         ],
@@ -3612,10 +3611,7 @@ export const schemaDict = {
           repostCount: {
             type: 'integer',
           },
-          upvoteCount: {
-            type: 'integer',
-          },
-          downvoteCount: {
+          likeCount: {
             type: 'integer',
           },
           indexedAt: {
@@ -3633,12 +3629,11 @@ export const schemaDict = {
         properties: {
           repost: {
             type: 'string',
+            format: 'at-uri',
           },
-          upvote: {
+          like: {
             type: 'string',
-          },
-          downvote: {
-            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -3992,15 +3987,8 @@ export const schemaDict = {
           reason: {
             type: 'string',
             description:
-              "Expected values are 'vote', 'repost', 'follow', 'invite', 'mention' and 'reply'.",
-            knownValues: [
-              'vote',
-              'repost',
-              'follow',
-              'invite',
-              'mention',
-              'reply',
-            ],
+              "Expected values are 'like', 'repost', 'follow', 'mention' and 'reply'.",
+            knownValues: ['like', 'repost', 'follow', 'mention', 'reply'],
           },
           reasonSubject: {
             type: 'string',
