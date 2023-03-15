@@ -1,6 +1,5 @@
-name: build-and-push
-on:
-  push:
+name: build-and-push-pds-mirror
+on: [push]
 env:
   REGISTRY: {{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_REGISTRY }}
   USERNAME: {{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_USERNAME }}

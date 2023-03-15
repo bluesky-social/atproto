@@ -1,10 +1,10 @@
-name: build-and-push
-on:
-  push:
-    branches:
-      - main
+name: build-and-push-pds
+on: [push]
 env:
   REGISTRY: ghcr.io
+  USERNAME: {{ github.actor }}
+  PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
 
@@ -27,8 +27,8 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ env.USERNAME  }}
+          password: ${{ env.PASSWORD }}
 
       - name: Extract Docker metadata
         id: meta
