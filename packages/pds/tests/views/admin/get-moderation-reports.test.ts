@@ -3,11 +3,11 @@ import {
   ACKNOWLEDGE,
   FLAG,
   TAKEDOWN,
-} from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+} from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
-  OTHER,
-  SPAM,
-} from '../../../src/lexicon/types/com/atproto/report/reasonType'
+  REASONOTHER,
+  REASONSPAM,
+} from '../../../src/lexicon/types/com/atproto/moderation/defs'
 import {
   runTestServer,
   forSnapshot,
@@ -40,7 +40,7 @@ describe('pds admin get moderation reports view', () => {
   beforeAll(async () => {
     const oneIn = (n) => (_, i) => i % n === 0
     const getAction = (i) => [FLAG, ACKNOWLEDGE, TAKEDOWN][i % 3]
-    const getReasonType = (i) => [OTHER, SPAM][i % 2]
+    const getReasonType = (i) => [REASONOTHER, REASONSPAM][i % 2]
     const getReportedByDid = (i) => [sc.dids.alice, sc.dids.carol][i % 2]
     const posts = Object.values(sc.posts)
       .flatMap((x) => x)

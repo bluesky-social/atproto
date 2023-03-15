@@ -2,11 +2,11 @@ import AtpAgent from '@atproto/api'
 import {
   ACKNOWLEDGE,
   TAKEDOWN,
-} from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+} from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
-  OTHER,
-  SPAM,
-} from '../../../src/lexicon/types/com/atproto/report/reasonType'
+  REASONOTHER,
+  REASONSPAM,
+} from '../../../src/lexicon/types/com/atproto/moderation/defs'
 import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../../_util'
 import { SeedClient } from '../../seeds/client'
 import basicSeed from '../../seeds/basic'
@@ -40,7 +40,7 @@ describe('pds admin get repo view', () => {
     })
     await sc.createReport({
       reportedBy: sc.dids.bob,
-      reasonType: SPAM,
+      reasonType: REASONSPAM,
       subject: {
         $type: 'com.atproto.repo.repoRef',
         did: sc.dids.alice,
@@ -48,7 +48,7 @@ describe('pds admin get repo view', () => {
     })
     await sc.createReport({
       reportedBy: sc.dids.carol,
-      reasonType: OTHER,
+      reasonType: REASONOTHER,
       reason: 'defamation',
       subject: {
         $type: 'com.atproto.repo.repoRef',

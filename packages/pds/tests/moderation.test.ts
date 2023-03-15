@@ -13,8 +13,11 @@ import {
   ACKNOWLEDGE,
   FLAG,
   TAKEDOWN,
-} from '../src/lexicon/types/com/atproto/admin/moderationAction'
-import { OTHER, SPAM } from '../src/lexicon/types/com/atproto/report/reasonType'
+} from '../src/lexicon/types/com/atproto/admin/defs'
+import {
+  REASONOTHER,
+  REASONSPAM,
+} from '../src/lexicon/types/com/atproto/moderation/defs'
 import { CID } from 'multiformats/cid'
 import { BlobNotFoundError } from '@atproto/repo'
 
@@ -40,34 +43,42 @@ describe('moderation', () => {
 
   describe('reporting', () => {
     it('creates reports of a repo.', async () => {
-      const { data: reportA } = await agent.api.com.atproto.report.create(
-        {
-          reasonType: SPAM,
-          subject: {
-            $type: 'com.atproto.repo.repoRef',
-            did: sc.dids.bob,
+      const { data: reportA } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONSPAM,
+            subject: {
+              $type: 'com.atproto.repo.repoRef',
+              did: sc.dids.bob,
+            },
           },
-        },
-        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
-      )
-      const { data: reportB } = await agent.api.com.atproto.report.create(
-        {
-          reasonType: OTHER,
-          reason: 'impersonation',
-          subject: {
-            $type: 'com.atproto.repo.repoRef',
-            did: sc.dids.bob,
+          {
+            headers: sc.getHeaders(sc.dids.alice),
+            encoding: 'application/json',
           },
-        },
-        { headers: sc.getHeaders(sc.dids.carol), encoding: 'application/json' },
-      )
+        )
+      const { data: reportB } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONOTHER,
+            reason: 'impersonation',
+            subject: {
+              $type: 'com.atproto.repo.repoRef',
+              did: sc.dids.bob,
+            },
+          },
+          {
+            headers: sc.getHeaders(sc.dids.carol),
+            encoding: 'application/json',
+          },
+        )
       expect(forSnapshot([reportA, reportB])).toMatchSnapshot()
     })
 
     it("fails reporting a repo that doesn't exist.", async () => {
-      const promise = agent.api.com.atproto.report.create(
+      const promise = agent.api.com.atproto.moderation.createReport(
         {
-          reasonType: SPAM,
+          reasonType: REASONSPAM,
           subject: {
             $type: 'com.atproto.repo.repoRef',
             did: 'did:plc:unknown',
@@ -81,28 +92,36 @@ describe('moderation', () => {
     it('creates reports of a record.', async () => {
       const postA = sc.posts[sc.dids.bob][0].ref
       const postB = sc.posts[sc.dids.bob][1].ref
-      const { data: reportA } = await agent.api.com.atproto.report.create(
-        {
-          reasonType: SPAM,
-          subject: {
-            $type: 'com.atproto.repo.recordRef',
-            uri: postA.uri.toString(),
+      const { data: reportA } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONSPAM,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postA.uri.toString(),
+            },
           },
-        },
-        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
-      )
-      const { data: reportB } = await agent.api.com.atproto.report.create(
-        {
-          reasonType: OTHER,
-          reason: 'defamation',
-          subject: {
-            $type: 'com.atproto.repo.recordRef',
-            uri: postB.uri.toString(),
-            cid: postB.cidStr,
+          {
+            headers: sc.getHeaders(sc.dids.alice),
+            encoding: 'application/json',
           },
-        },
-        { headers: sc.getHeaders(sc.dids.carol), encoding: 'application/json' },
-      )
+        )
+      const { data: reportB } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONOTHER,
+            reason: 'defamation',
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postB.uri.toString(),
+              cid: postB.cidStr,
+            },
+          },
+          {
+            headers: sc.getHeaders(sc.dids.carol),
+            encoding: 'application/json',
+          },
+        )
       expect(forSnapshot([reportA, reportB])).toMatchSnapshot()
     })
 
@@ -112,9 +131,9 @@ describe('moderation', () => {
       const postUriBad = new AtUri(postA.uriStr)
       postUriBad.rkey = 'badrkey'
 
-      const promiseA = agent.api.com.atproto.report.create(
+      const promiseA = agent.api.com.atproto.moderation.createReport(
         {
-          reasonType: SPAM,
+          reasonType: REASONSPAM,
           subject: {
             $type: 'com.atproto.repo.recordRef',
             uri: postUriBad.toString(),
@@ -124,9 +143,9 @@ describe('moderation', () => {
       )
       await expect(promiseA).rejects.toThrow('Record not found')
 
-      const promiseB = agent.api.com.atproto.report.create(
+      const promiseB = agent.api.com.atproto.moderation.createReport(
         {
-          reasonType: OTHER,
+          reasonType: REASONOTHER,
           reason: 'defamation',
           subject: {
             $type: 'com.atproto.repo.recordRef',
@@ -142,28 +161,36 @@ describe('moderation', () => {
 
   describe('actioning', () => {
     it('resolves reports on repos and records.', async () => {
-      const { data: reportA } = await agent.api.com.atproto.report.create(
-        {
-          reasonType: SPAM,
-          subject: {
-            $type: 'com.atproto.repo.repoRef',
-            did: sc.dids.bob,
+      const { data: reportA } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONSPAM,
+            subject: {
+              $type: 'com.atproto.repo.repoRef',
+              did: sc.dids.bob,
+            },
           },
-        },
-        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
-      )
+          {
+            headers: sc.getHeaders(sc.dids.alice),
+            encoding: 'application/json',
+          },
+        )
       const post = sc.posts[sc.dids.bob][1].ref
-      const { data: reportB } = await agent.api.com.atproto.report.create(
-        {
-          reasonType: OTHER,
-          reason: 'defamation',
-          subject: {
-            $type: 'com.atproto.repo.recordRef',
-            uri: post.uri.toString(),
+      const { data: reportB } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONOTHER,
+            reason: 'defamation',
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: post.uri.toString(),
+            },
           },
-        },
-        { headers: sc.getHeaders(sc.dids.carol), encoding: 'application/json' },
-      )
+          {
+            headers: sc.getHeaders(sc.dids.carol),
+            encoding: 'application/json',
+          },
+        )
       const { data: action } =
         await agent.api.com.atproto.admin.takeModerationAction(
           {
@@ -210,16 +237,20 @@ describe('moderation', () => {
     })
 
     it('does not resolve report for mismatching repo.', async () => {
-      const { data: report } = await agent.api.com.atproto.report.create(
-        {
-          reasonType: SPAM,
-          subject: {
-            $type: 'com.atproto.repo.repoRef',
-            did: sc.dids.bob,
+      const { data: report } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONSPAM,
+            subject: {
+              $type: 'com.atproto.repo.repoRef',
+              did: sc.dids.bob,
+            },
           },
-        },
-        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
-      )
+          {
+            headers: sc.getHeaders(sc.dids.alice),
+            encoding: 'application/json',
+          },
+        )
       const { data: action } =
         await agent.api.com.atproto.admin.takeModerationAction(
           {
@@ -270,16 +301,20 @@ describe('moderation', () => {
     it('does not resolve report for mismatching record.', async () => {
       const postUri1 = sc.posts[sc.dids.alice][0].ref.uri
       const postUri2 = sc.posts[sc.dids.bob][0].ref.uri
-      const { data: report } = await agent.api.com.atproto.report.create(
-        {
-          reasonType: SPAM,
-          subject: {
-            $type: 'com.atproto.repo.recordRef',
-            uri: postUri1.toString(),
+      const { data: report } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONSPAM,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postUri1.toString(),
+            },
           },
-        },
-        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
-      )
+          {
+            headers: sc.getHeaders(sc.dids.alice),
+            encoding: 'application/json',
+          },
+        )
       const { data: action } =
         await agent.api.com.atproto.admin.takeModerationAction(
           {

@@ -1,6 +1,6 @@
 import fs from 'fs/promises'
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -121,11 +121,11 @@ describe('pds profile views', () => {
     const bannerImg = await fs.readFile(
       'tests/image/fixtures/key-landscape-small.jpg',
     )
-    const avatarRes = await agent.api.com.atproto.blob.upload(avatarImg, {
+    const avatarRes = await agent.api.com.atproto.repo.uploadBlob(avatarImg, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
     })
-    const bannerRes = await agent.api.com.atproto.blob.upload(bannerImg, {
+    const bannerRes = await agent.api.com.atproto.repo.uploadBlob(bannerImg, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
     })
@@ -266,7 +266,7 @@ describe('pds profile views', () => {
 
     expect(initial.myState?.muted).toEqual(false)
 
-    await agent.api.app.bsky.graph.mute(
+    await agent.api.app.bsky.graph.muteActor(
       { actor: alice },
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
@@ -291,7 +291,7 @@ describe('pds profile views', () => {
     expect(fromBobUnrelated.myState?.muted).toEqual(false)
     expect(toAliceUnrelated.myState?.muted).toEqual(false)
 
-    await agent.api.app.bsky.graph.unmute(
+    await agent.api.app.bsky.graph.unmuteActor(
       { actor: alice },
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )

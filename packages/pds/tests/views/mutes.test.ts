@@ -27,7 +27,7 @@ describe('mute views', () => {
       'elta48.test',
     ]
     for (const did of mutes) {
-      await agent.api.app.bsky.graph.mute(
+      await agent.api.app.bsky.graph.muteActor(
         { actor: did },
         { headers: sc.getHeaders(silas), encoding: 'application/json' },
       )
@@ -78,7 +78,7 @@ describe('mute views', () => {
     expect(initial.mutes.length).toEqual(6)
     expect(initial.mutes.map((m) => m.handle)).toContain('elta48.test')
 
-    await agent.api.app.bsky.graph.unmute(
+    await agent.api.app.bsky.graph.unmuteActor(
       { actor: sc.dids['elta48.test'] },
       { headers: sc.getHeaders(silas), encoding: 'application/json' },
     )
@@ -90,14 +90,14 @@ describe('mute views', () => {
     expect(final.mutes.length).toEqual(5)
     expect(final.mutes.map((m) => m.handle)).not.toContain('elta48.test')
 
-    await agent.api.app.bsky.graph.mute(
+    await agent.api.app.bsky.graph.muteActor(
       { actor: sc.dids['elta48.test'] },
       { headers: sc.getHeaders(silas), encoding: 'application/json' },
     )
   })
 
   it('does not allow muting self.', async () => {
-    const promise = agent.api.app.bsky.graph.mute(
+    const promise = agent.api.app.bsky.graph.muteActor(
       { actor: silas },
       { headers: sc.getHeaders(silas), encoding: 'application/json' },
     )

@@ -3,11 +3,11 @@ import {
   ACKNOWLEDGE,
   FLAG,
   TAKEDOWN,
-} from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+} from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
-  OTHER,
-  SPAM,
-} from '../../../src/lexicon/types/com/atproto/report/reasonType'
+  REASONOTHER,
+  REASONSPAM,
+} from '../../../src/lexicon/types/com/atproto/moderation/defs'
 import {
   runTestServer,
   forSnapshot,
@@ -85,7 +85,7 @@ describe('pds admin get moderation actions view', () => {
       const ab = oneIn(2)(action, i)
       const report = await sc.createReport({
         reportedBy: ab ? sc.dids.carol : sc.dids.alice,
-        reasonType: ab ? SPAM : OTHER,
+        reasonType: ab ? REASONSPAM : REASONOTHER,
         subject: {
           $type: 'com.atproto.repo.recordRef',
           uri: action.subject.uri,
@@ -104,7 +104,7 @@ describe('pds admin get moderation actions view', () => {
       const ab = oneIn(2)(action, i)
       const report = await sc.createReport({
         reportedBy: ab ? sc.dids.carol : sc.dids.alice,
-        reasonType: ab ? SPAM : OTHER,
+        reasonType: ab ? REASONSPAM : REASONOTHER,
         subject: {
           $type: 'com.atproto.repo.repoRef',
           did: action.subject.did,

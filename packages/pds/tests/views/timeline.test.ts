@@ -1,6 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
-import { Main as FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/feedViewPost'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 import {
   runTestServer,
   forSnapshot,
@@ -109,11 +109,11 @@ describe('timeline views', () => {
   })
 
   it('omits posts and reposts of muted authors.', async () => {
-    await agent.api.app.bsky.graph.mute(
+    await agent.api.app.bsky.graph.muteActor(
       { actor: bob },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
-    await agent.api.app.bsky.graph.mute(
+    await agent.api.app.bsky.graph.muteActor(
       { actor: carol },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
@@ -126,11 +126,11 @@ describe('timeline views', () => {
     expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
 
     // Cleanup
-    await agent.api.app.bsky.graph.unmute(
+    await agent.api.app.bsky.graph.unmuteActor(
       { actor: bob },
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
-    await agent.api.app.bsky.graph.unmute(
+    await agent.api.app.bsky.graph.unmuteActor(
       { actor: carol },
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )

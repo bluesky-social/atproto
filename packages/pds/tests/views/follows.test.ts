@@ -1,5 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
   runTestServer,
   forSnapshot,

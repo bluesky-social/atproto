@@ -1,4 +1,5 @@
-import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
+import AtpAgent from '@atproto/api'
+import { ThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 import { SeedClient } from '../seeds/client'
 import votesSeed from '../seeds/votes'
 import {
@@ -145,7 +146,7 @@ describe('pds vote views', () => {
         headers: sc.getHeaders(alice),
       } as const
 
-      let post: AppBskyFeedGetPostThread.OutputSchema
+      let post
       const getPost = async () => {
         const result = await agent.api.app.bsky.feed.getPostThread(
           {
@@ -158,13 +159,8 @@ describe('pds vote views', () => {
       }
 
       post = await getPost()
-      expect(
-        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost)
-          .downvoteCount,
-      ).toEqual(0)
-      expect(
-        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost).viewer,
-      ).toEqual({})
+      expect((post.thread.post as ThreadViewPost).downvoteCount).toEqual(0)
+      expect((post.thread.post as ThreadViewPost).viewer).toEqual({})
 
       // Upvote
       const { data: upvoted } = await agent.api.app.bsky.feed.setVote(
@@ -180,17 +176,9 @@ describe('pds vote views', () => {
       post = await getPost()
       expect(upvoted.upvote).not.toBeUndefined()
       expect(upvoted.downvote).toBeUndefined()
-      expect(
-        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost)
-          .upvoteCount,
-      ).toEqual(1)
-      expect(
-        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost)
-          .downvoteCount,
-      ).toEqual(0)
-      expect(
-        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost).viewer,
-      ).toEqual(upvoted)
+      expect((post.thread.post as ThreadViewPost).upvoteCount).toEqual(1)
+      expect((post.thread.post as ThreadViewPost).downvoteCount).toEqual(0)
+      expect((post.thread.post as ThreadViewPost).viewer).toEqual(upvoted)
 
       // Downvote
       const { data: downvoted } = await agent.api.app.bsky.feed.setVote(
@@ -206,17 +194,9 @@ describe('pds vote views', () => {
       post = await getPost()
       expect(downvoted.upvote).toBeUndefined()
       expect(downvoted.downvote).not.toBeUndefined()
-      expect(
-        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost)
-          .upvoteCount,
-      ).toEqual(0)
-      expect(
-        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost)
-          .downvoteCount,
-      ).toEqual(1)
-      expect(
-        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost).viewer,
-      ).toEqual(downvoted)
+      expect((post.thread.post as ThreadViewPost).upvoteCount).toEqual(0)
+      expect((post.thread.post as ThreadViewPost).downvoteCount).toEqual(1)
+      expect((post.thread.post as ThreadViewPost).viewer).toEqual(downvoted)
 
       // No vote
       const { data: novoted } = await agent.api.app.bsky.feed.setVote(
@@ -232,17 +212,9 @@ describe('pds vote views', () => {
       post = await getPost()
       expect(novoted.upvote).toBeUndefined()
       expect(novoted.downvote).toBeUndefined()
-      expect(
-        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost)
-          .upvoteCount,
-      ).toEqual(0)
-      expect(
-        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost)
-          .downvoteCount,
-      ).toEqual(0)
-      expect(
-        (post.thread.post as AppBskyFeedGetPostThread.ThreadViewPost).viewer,
-      ).toEqual(novoted)
+      expect((post.thread.post as ThreadViewPost).upvoteCount).toEqual(0)
+      expect((post.thread.post as ThreadViewPost).downvoteCount).toEqual(0)
+      expect((post.thread.post as ThreadViewPost).viewer).toEqual(novoted)
     })
 
     it('no-ops when already in correct state', async () => {
