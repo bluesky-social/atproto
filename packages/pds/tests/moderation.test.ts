@@ -48,7 +48,7 @@ describe('moderation', () => {
           {
             reasonType: REASONSPAM,
             subject: {
-              $type: 'com.atproto.repo.repoRef',
+              $type: 'com.atproto.admin.defs#repoRef',
               did: sc.dids.bob,
             },
           },
@@ -63,7 +63,7 @@ describe('moderation', () => {
             reasonType: REASONOTHER,
             reason: 'impersonation',
             subject: {
-              $type: 'com.atproto.repo.repoRef',
+              $type: 'com.atproto.admin.defs#repoRef',
               did: sc.dids.bob,
             },
           },
@@ -80,7 +80,7 @@ describe('moderation', () => {
         {
           reasonType: REASONSPAM,
           subject: {
-            $type: 'com.atproto.repo.repoRef',
+            $type: 'com.atproto.admin.defs#repoRef',
             did: 'did:plc:unknown',
           },
         },
@@ -166,7 +166,7 @@ describe('moderation', () => {
           {
             reasonType: REASONSPAM,
             subject: {
-              $type: 'com.atproto.repo.repoRef',
+              $type: 'com.atproto.admin.defs#repoRef',
               did: sc.dids.bob,
             },
           },
@@ -196,7 +196,7 @@ describe('moderation', () => {
           {
             action: TAKEDOWN,
             subject: {
-              $type: 'com.atproto.repo.repoRef',
+              $type: 'com.atproto.admin.defs#repoRef',
               did: sc.dids.bob,
             },
             createdBy: 'did:example:admin',
@@ -242,7 +242,7 @@ describe('moderation', () => {
           {
             reasonType: REASONSPAM,
             subject: {
-              $type: 'com.atproto.repo.repoRef',
+              $type: 'com.atproto.admin.defs#repoRef',
               did: sc.dids.bob,
             },
           },
@@ -256,7 +256,7 @@ describe('moderation', () => {
           {
             action: TAKEDOWN,
             subject: {
-              $type: 'com.atproto.repo.repoRef',
+              $type: 'com.atproto.admin.defs#repoRef',
               did: sc.dids.carol,
             },
             createdBy: 'did:example:admin',
@@ -528,7 +528,7 @@ describe('moderation', () => {
           {
             action: ACKNOWLEDGE,
             subject: {
-              $type: 'com.atproto.repo.repoRef',
+              $type: 'com.atproto.admin.defs#repoRef',
               did: sc.dids.alice,
             },
             createdBy: 'did:example:admin',
@@ -543,7 +543,7 @@ describe('moderation', () => {
         {
           action: FLAG,
           subject: {
-            $type: 'com.atproto.repo.repoRef',
+            $type: 'com.atproto.admin.defs#repoRef',
             did: sc.dids.alice,
           },
           createdBy: 'did:example:admin',
@@ -575,7 +575,7 @@ describe('moderation', () => {
           {
             action: FLAG,
             subject: {
-              $type: 'com.atproto.repo.repoRef',
+              $type: 'com.atproto.admin.defs#repoRef',
               did: sc.dids.alice,
             },
             createdBy: 'did:example:admin',

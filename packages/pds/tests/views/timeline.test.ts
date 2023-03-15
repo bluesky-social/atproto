@@ -173,7 +173,7 @@ describe('timeline views', () => {
           {
             action: TAKEDOWN,
             subject: {
-              $type: 'com.atproto.repo.repoRef',
+              $type: 'com.atproto.admin.defs#repoRef',
               did,
             },
             createdBy: 'did:example:admin',

@@ -205,7 +205,7 @@ describe('auth', () => {
       {
         action: TAKEDOWN,
         subject: {
-          $type: 'com.atproto.repo.repoRef',
+          $type: 'com.atproto.admin.defs#repoRef',
           did: account.did,
         },
         createdBy: 'did:example:admin',
@@ -231,7 +231,7 @@ describe('auth', () => {
       {
         action: TAKEDOWN,
         subject: {
-          $type: 'com.atproto.repo.repoRef',
+          $type: 'com.atproto.admin.defs#repoRef',
           did: account.did,
         },
         createdBy: 'did:example:admin',

@@ -196,7 +196,7 @@ describe('pds user search views', () => {
       {
         action: TAKEDOWN,
         subject: {
-          $type: 'com.atproto.repo.repoRef',
+          $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids['cara-wiegand69.test'],
         },
         createdBy: 'did:example:admin',

@@ -34,6 +34,7 @@ export const getSubject = (subject: SubjectInput) => {
       cid: subject.cid ? parseCidParam(subject.cid) : undefined,
     }
   }
+  console.log(subject)
   throw new InvalidRequestError('Invalid subject')
 }
 

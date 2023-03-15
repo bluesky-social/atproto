@@ -152,7 +152,7 @@ describe('pds thread views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.repo.repoRef',
+            $type: 'com.atproto.admin.defs#repoRef',
             did: alice,
           },
           createdBy: 'did:example:admin',
@@ -194,7 +194,7 @@ describe('pds thread views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.repo.repoRef',
+            $type: 'com.atproto.admin.defs#repoRef',
             did: carol,
           },
           createdBy: 'did:example:admin',
@@ -234,7 +234,7 @@ describe('pds thread views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.repo.repoRef',
+            $type: 'com.atproto.admin.defs#repoRef',
             did: bob,
           },
           createdBy: 'did:example:admin',

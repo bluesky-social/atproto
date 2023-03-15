@@ -106,7 +106,7 @@ export async function generateMockSetup(env: DevEnv) {
     reasonType: picka([SPAM, OTHER]),
     reason: picka(["Didn't look right to me", undefined, undefined]),
     subject: {
-      $type: 'com.atproto.repo.repoRef',
+      $type: 'com.atproto.admin.defs#repoRef',
       did: picka(users).did,
     },
   })

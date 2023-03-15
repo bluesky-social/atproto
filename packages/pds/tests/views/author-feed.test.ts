@@ -165,7 +165,7 @@ describe('pds author feed views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.repo.repoRef',
+            $type: 'com.atproto.admin.defs#repoRef',
             did: alice,
           },
           createdBy: 'did:example:admin',

@@ -1,7 +1,7 @@
 import fs from 'fs/promises'
 import AtpAgent from '@atproto/api'
 import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/takeModerationAction'
-import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/report/create'
+import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/moderation/createReport'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import { adminAuth } from '../_util'
@@ -94,9 +94,8 @@ export class SeedClient {
       password: string
     },
   ) {
-    const { data: account } = await this.agent.api.com.atproto.account.create(
-      params,
-    )
+    const { data: account } =
+      await this.agent.api.com.atproto.server.createAccount(params)
     this.dids[shortName] = account.did
     this.accounts[account.did] = {
       ...account,
@@ -118,7 +117,7 @@ export class SeedClient {
 
     let avatarCid
     {
-      const res = await this.agent.api.com.atproto.blob.upload(AVATAR_IMG, {
+      const res = await this.agent.api.com.atproto.repo.uploadBlob(AVATAR_IMG, {
         encoding: 'image/jpeg',
         headers: this.getHeaders(fromUser || by),
       } as any)
@@ -215,7 +214,7 @@ export class SeedClient {
     encoding: string,
   ): Promise<ImageRef> {
     const file = await fs.readFile(filePath)
-    const res = await this.agent.api.com.atproto.blob.upload(file, {
+    const res = await this.agent.api.com.atproto.repo.uploadBlob(file, {
       headers: this.getHeaders(by),
       encoding,
     } as any)
@@ -345,7 +344,7 @@ export class SeedClient {
     reportedBy: string
   }) {
     const { reasonType, subject, reason, reportedBy } = opts
-    const result = await this.agent.api.com.atproto.report.create(
+    const result = await this.agent.api.com.atproto.moderation.createReport(
       { reasonType, subject, reason },
       {
         encoding: 'application/json',

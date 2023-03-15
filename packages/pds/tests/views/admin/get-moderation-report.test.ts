@@ -35,7 +35,7 @@ describe('pds admin get moderation action view', () => {
       reportedBy: sc.dids.bob,
       reasonType: REASONSPAM,
       subject: {
-        $type: 'com.atproto.repo.repoRef',
+        $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
       },
     })
@@ -51,7 +51,7 @@ describe('pds admin get moderation action view', () => {
     const flagRepo = await sc.takeModerationAction({
       action: FLAG,
       subject: {
-        $type: 'com.atproto.repo.repoRef',
+        $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
       },
     })

@@ -34,7 +34,7 @@ describe('pds admin get repo view', () => {
     const acknowledge = await sc.takeModerationAction({
       action: ACKNOWLEDGE,
       subject: {
-        $type: 'com.atproto.repo.repoRef',
+        $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
       },
     })
@@ -42,7 +42,7 @@ describe('pds admin get repo view', () => {
       reportedBy: sc.dids.bob,
       reasonType: REASONSPAM,
       subject: {
-        $type: 'com.atproto.repo.repoRef',
+        $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
       },
     })
@@ -51,7 +51,7 @@ describe('pds admin get repo view', () => {
       reasonType: REASONOTHER,
       reason: 'defamation',
       subject: {
-        $type: 'com.atproto.repo.repoRef',
+        $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
       },
     })
@@ -59,7 +59,7 @@ describe('pds admin get repo view', () => {
     await sc.takeModerationAction({
       action: TAKEDOWN,
       subject: {
-        $type: 'com.atproto.repo.repoRef',
+        $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
       },
     })

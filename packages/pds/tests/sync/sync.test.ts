@@ -27,7 +27,7 @@ describe('repo sync', () => {
     ctx = server.ctx
     close = server.close
     agent = new AtpAgent({ service: server.url })
-    const res = await agent.api.com.atproto.account.create({
+    const res = await agent.api.com.atproto.server.createAccount({
       email: 'alice@test.com',
       handle: 'alice.test',
       password: 'alice-pass',
