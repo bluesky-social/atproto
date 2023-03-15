@@ -91,8 +91,6 @@ describe('pds admin repo search view', () => {
     }
   })
 
-  return
-
   it('paginates with term', async () => {
     const results = (results) => results.flatMap((res) => res.users)
     const paginator = async (cursor?: string) => {
