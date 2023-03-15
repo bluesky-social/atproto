@@ -1,5 +1,5 @@
-import { chunkArray } from '@atproto/common'
 import assert from 'assert'
+import { chunkArray } from '@atproto/common'
 import AppContext from '../context'
 import Database from '../db'
 import { appMigration } from '../db/leader'

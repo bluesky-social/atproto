@@ -1,6 +1,6 @@
-import { cborBytesToRecord, chunkArray } from '@atproto/common'
 import assert from 'assert'
 import { sql } from 'kysely'
+import { cborBytesToRecord, chunkArray } from '@atproto/common'
 import AppContext from '../context'
 import Database from '../db'
 import { appMigration } from '../db/leader'
@@ -176,7 +176,19 @@ async function dummyCheck(
     )}`,
   )
 
-  // Check 3: cids and content
+  // Check 3. follow index
+  const { indexMismatchedCount } = await db.db
+    .selectFrom('follow')
+    .innerJoin('record', 'record.uri', 'follow.uri')
+    .whereRef('follow.cid', '!=', 'record.cid')
+    .select(countAll.as('indexMismatchedCount'))
+    .executeTakeFirstOrThrow()
+  assert(
+    indexMismatchedCount === 0,
+    `${SHORT_NAME} dummy check failed: ${indexMismatchedCount} mismatched records from follow index`,
+  )
+
+  // Check 4: cids and content
   const pct = Math.min(50 / followCount, 1) // Aim for around 50 random tests cases
   const testCases = await db.db
     .selectFrom('record')
