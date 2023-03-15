@@ -48,6 +48,7 @@ import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommit
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
@@ -126,6 +127,7 @@ export * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommit
 export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+export * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
@@ -709,6 +711,17 @@ export class SyncNS {
       .call('com.atproto.sync.getRepo', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoSyncGetRepo.toKnownErr(e)
+      })
+  }
+
+  listBlobs(
+    params?: ComAtprotoSyncListBlobs.QueryParams,
+    opts?: ComAtprotoSyncListBlobs.CallOptions,
+  ): Promise<ComAtprotoSyncListBlobs.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.listBlobs', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncListBlobs.toKnownErr(e)
       })
   }
 
