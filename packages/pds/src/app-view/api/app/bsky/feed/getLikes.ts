@@ -4,60 +4,54 @@ import AppContext from '../../../../../context'
 import { notSoftDeletedClause } from '../../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.feed.getVotes({
+  server.app.bsky.feed.getLikes({
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
-      const { uri, limit, before, cid, direction } = params
+      const { uri, limit, before, cid } = params
       const requester = auth.credentials.did
       const { services, db } = ctx
       const { ref } = db.db.dynamic
 
       let builder = db.db
-        .selectFrom('vote')
-        .where('vote.subject', '=', uri)
-        .innerJoin('did_handle as creator', 'creator.did', 'vote.creator')
+        .selectFrom('like')
+        .where('like.subject', '=', uri)
+        .innerJoin('did_handle as creator', 'creator.did', 'like.creator')
         .innerJoin(
           'repo_root as creator_repo',
           'creator_repo.did',
-          'vote.creator',
+          'like.creator',
         )
         .where(notSoftDeletedClause(ref('creator_repo')))
         .selectAll('creator')
         .select([
-          'vote.cid as cid',
-          'vote.direction as direction',
-          'vote.createdAt as createdAt',
-          'vote.indexedAt as indexedAt',
+          'like.cid as cid',
+          'like.createdAt as createdAt',
+          'like.indexedAt as indexedAt',
         ])
 
-      if (direction === 'up' || direction === 'down') {
-        builder = builder.where('vote.direction', '=', direction)
-      }
-
       if (cid) {
-        builder = builder.where('vote.subjectCid', '=', cid)
+        builder = builder.where('like.subjectCid', '=', cid)
       }
 
-      const keyset = new TimeCidKeyset(ref('vote.createdAt'), ref('vote.cid'))
+      const keyset = new TimeCidKeyset(ref('like.createdAt'), ref('like.cid'))
       builder = paginate(builder, {
         limit,
         before,
         keyset,
       })
 
-      const votesRes = await builder.execute()
+      const likesRes = await builder.execute()
       const actors = await services.appView
         .actor(db)
-        .views.actorWithInfo(votesRes, requester)
+        .views.actorWithInfo(likesRes, requester)
 
       return {
         encoding: 'application/json',
         body: {
           uri,
           cid,
-          cursor: keyset.packFromResult(votesRes),
-          votes: votesRes.map((row, i) => ({
-            direction: row.direction,
+          cursor: keyset.packFromResult(likesRes),
+          likes: likesRes.map((row, i) => ({
             createdAt: row.createdAt,
             indexedAt: row.indexedAt,
             actor: actors[i],

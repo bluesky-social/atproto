@@ -2,7 +2,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import getTimeline from './feed/getTimeline'
 import getAuthorFeed from './feed/getAuthorFeed'
-import getVotes from './feed/getVotes'
+import getLikes from './feed/getLikes'
 import getPostThread from './feed/getPostThread'
 import getProfile from './actor/getProfile'
 import getProfiles from './actor/getProfiles'
@@ -16,7 +16,7 @@ import getSuggestions from './actor/getSuggestions'
 export default function (server: Server, ctx: AppContext) {
   getTimeline(server, ctx)
   getAuthorFeed(server, ctx)
-  getVotes(server, ctx)
+  getLikes(server, ctx)
   getPostThread(server, ctx)
   getProfile(server, ctx)
   getProfiles(server, ctx)
