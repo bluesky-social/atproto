@@ -11,7 +11,6 @@ import * as AppBskyActorDefs from '../actor/defs'
 export interface QueryParams {
   uri: string
   cid?: string
-  direction?: 'up' | 'down'
   limit: number
   cursor?: string
 }
@@ -22,7 +21,7 @@ export interface OutputSchema {
   uri: string
   cid?: string
   cursor?: string
-  votes: Vote[]
+  likes: Like[]
   [k: string]: unknown
 }
 
@@ -47,20 +46,19 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
   res: express.Response
 }) => Promise<HandlerOutput> | HandlerOutput
 
-export interface Vote {
-  direction: 'up' | 'down'
+export interface Like {
   indexedAt: string
   createdAt: string
   actor: AppBskyActorDefs.WithInfo
   [k: string]: unknown
 }
 
-export function isVote(v: unknown): v is Vote {
+export function isLike(v: unknown): v is Like {
   return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.feed.getVotes#vote'
+    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.feed.getLikes#like'
   )
 }
 
-export function validateVote(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.getVotes#vote', v)
+export function validateLike(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.getLikes#like', v)
 }

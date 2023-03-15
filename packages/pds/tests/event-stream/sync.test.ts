@@ -133,7 +133,7 @@ describe('sync', () => {
     'post_embed_external',
     'post_embed_record',
     'repost',
-    'vote',
+    'like',
     /* Not these:
      * 'ipld_block',
      * 'blob',

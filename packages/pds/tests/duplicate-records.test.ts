@@ -95,52 +95,50 @@ describe('duplicate record', () => {
     expect(count).toBe(0)
   })
 
-  it('dedupes votes', async () => {
+  it('dedupes likes', async () => {
     const subject = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
     const subjectCid = await putBlock(db, did, { test: 'blah' })
-    const coll = lex.ids.AppBskyFeedVote
+    const coll = lex.ids.AppBskyFeedLike
     const uris: AtUri[] = []
     await db.transaction(async (tx) => {
       for (let i = 0; i < 5; i++) {
-        const direction = i % 2 === 0 ? 'up' : 'down'
-        const vote = {
+        const like = {
           $type: coll,
           subject: {
             uri: subject.toString(),
             cid: subjectCid.toString(),
           },
-          direction,
           createdAt: new Date().toISOString(),
         }
         const uri = AtUri.make(did, coll, TID.nextStr())
-        const cid = await putBlock(tx, did, vote)
-        await services.record(tx).indexRecord(uri, cid, vote)
+        const cid = await putBlock(tx, did, like)
+        await services.record(tx).indexRecord(uri, cid, like)
         uris.push(uri)
       }
     })
 
-    let count = await countRecords(db, 'vote')
+    let count = await countRecords(db, 'like')
     expect(count).toBe(1)
 
     await db.transaction(async (tx) => {
       await services.record(tx).deleteRecord(uris[0], false)
     })
 
-    count = await countRecords(db, 'vote')
+    count = await countRecords(db, 'like')
     expect(count).toBe(1)
-    // since the first was deleted, the vote should be flipped to down now
+
     const got = await db.db
-      .selectFrom('vote')
+      .selectFrom('like')
       .where('creator', '=', did)
       .selectAll()
       .executeTakeFirst()
-    expect(got?.direction === 'down')
+    expect(got?.uri).toEqual(uris[1].toString())
 
     await db.transaction(async (tx) => {
       await services.record(tx).deleteRecord(uris[1], true)
     })
 
-    count = await countRecords(db, 'vote')
+    count = await countRecords(db, 'like')
     expect(count).toBe(0)
   })
 

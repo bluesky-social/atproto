@@ -1,10 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds vote views fetches post votes 1`] = `
+exports[`pds like views fetches post likes 1`] = `
 Object {
   "cursor": "0000000000000::bafycid",
-  "uri": "record(0)",
-  "votes": Array [
+  "likes": Array [
     Object {
       "actor": Object {
         "did": "user(0)",
@@ -14,7 +13,6 @@ Object {
         },
       },
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "direction": "down",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
     Object {
@@ -27,7 +25,6 @@ Object {
         },
       },
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "direction": "up",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
     Object {
@@ -41,7 +38,6 @@ Object {
         },
       },
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "direction": "down",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
     Object {
@@ -57,18 +53,17 @@ Object {
         },
       },
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "direction": "up",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
   ],
+  "uri": "record(0)",
 }
 `;
 
-exports[`pds vote views fetches reply votes 1`] = `
+exports[`pds like views fetches reply likes 1`] = `
 Object {
   "cursor": "0000000000000::bafycid",
-  "uri": "record(0)",
-  "votes": Array [
+  "likes": Array [
     Object {
       "actor": Object {
         "did": "user(0)",
@@ -80,9 +75,9 @@ Object {
         },
       },
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "direction": "up",
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
   ],
+  "uri": "record(0)",
 }
 `;

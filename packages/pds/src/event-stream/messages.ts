@@ -66,11 +66,9 @@ export type NotificationInfo = {
 }
 
 export type NotificationReason =
-  | 'vote'
-  | 'assertion'
+  | 'like'
   | 'repost'
   | 'follow'
-  | 'invite'
   | 'mention'
   | 'reply'
 

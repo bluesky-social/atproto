@@ -55,7 +55,7 @@ describe('pds notification views', () => {
         { headers: sc.getHeaders(alice) },
       )
 
-    expect(notifCountAlice.data.count).toBe(9)
+    expect(notifCountAlice.data.count).toBe(11)
 
     const notifCountBob = await agent.api.app.bsky.notification.getUnreadCount(
       {},
@@ -82,7 +82,7 @@ describe('pds notification views', () => {
         { headers: sc.getHeaders(alice) },
       )
 
-    expect(notifCountAlice.data.count).toBe(10)
+    expect(notifCountAlice.data.count).toBe(12)
 
     const notifCountBob = await agent.api.app.bsky.notification.getUnreadCount(
       {},
@@ -99,7 +99,7 @@ describe('pds notification views', () => {
     )
 
     const notifs = sort(notifRes.data.notifications)
-    expect(notifs.length).toBe(10)
+    expect(notifs.length).toBe(12)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map(() => false))
@@ -130,9 +130,9 @@ describe('pds notification views', () => {
     )
 
     const notifs = sort(notifRes.data.notifications)
-    expect(notifs.length).toBe(7)
+    expect(notifs.length).toBe(9)
     expect(forSnapshot(notifs)).toMatchSnapshot()
-    expect(notifCount.data.count).toBe(7)
+    expect(notifCount.data.count).toBe(9)
 
     // Cleanup
     await agent.api.app.bsky.graph.unmuteActor(
@@ -178,9 +178,9 @@ describe('pds notification views', () => {
     )
 
     const notifs = sort(notifRes.data.notifications)
-    expect(notifs.length).toBe(8)
+    expect(notifs.length).toBe(10)
     expect(forSnapshot(notifs)).toMatchSnapshot()
-    expect(notifCount.data.count).toBe(8)
+    expect(notifCount.data.count).toBe(10)
 
     // Cleanup
     await Promise.all(
@@ -226,7 +226,7 @@ describe('pds notification views', () => {
       },
     )
 
-    expect(full.data.notifications.length).toEqual(10)
+    expect(full.data.notifications.length).toEqual(12)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
@@ -269,7 +269,7 @@ describe('pds notification views', () => {
     )
 
     const notifs = sort(notifRes.data.notifications)
-    expect(notifs.length).toBe(10)
+    expect(notifs.length).toBe(12)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map((_, i) => i >= 3))
