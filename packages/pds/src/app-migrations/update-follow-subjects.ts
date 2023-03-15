@@ -86,7 +86,9 @@ async function main(tx: Database, ctx: AppContext) {
           }),
         )
 
-        await repoTx.processWrites(did, updates, now)
+        if (updates.length) {
+          await repoTx.processWrites(did, updates, now)
+        }
 
         didsComplete += 1
         updatesComplete += follows.length
