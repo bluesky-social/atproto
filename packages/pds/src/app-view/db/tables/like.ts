@@ -1,15 +1,13 @@
-// @TODO still used in pds by setVote
-export interface Vote {
+export interface Like {
   uri: string
   cid: string
   creator: string
-  direction: 'up' | 'down'
   subject: string
   subjectCid: string
   createdAt: string
   indexedAt: string
 }
 
-const tableName = 'vote'
+const tableName = 'like'
 
-export type PartialDB = { [tableName]: Vote }
+export type PartialDB = { [tableName]: Like }
