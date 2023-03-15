@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
-      const { algorithm, limit, before } = params
+      const { algorithm, limit, cursor } = params
       const db = ctx.db.db
       const { ref } = db.dynamic
       const requester = auth.credentials.did
@@ -59,7 +59,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectAll()
       feedItemsQb = paginate(feedItemsQb, {
         limit,
-        before,
+        cursor,
         keyset,
       })
       const feedItems: FeedRow[] = await feedItemsQb.execute()

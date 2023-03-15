@@ -5,11 +5,11 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.getRecord(async ({ params }) => {
-    const { user, collection, rkey, cid } = params
+    const { repo, collection, rkey, cid } = params
 
-    const did = await ctx.services.account(ctx.db).getDidForActor(user)
+    const did = await ctx.services.account(ctx.db).getDidForActor(repo)
     if (!did) {
-      throw new InvalidRequestError(`Could not find user: ${user}`)
+      throw new InvalidRequestError(`Could not find repo: ${repo}`)
     }
 
     const uri = new AtUri(`${did}/${collection}/${rkey}`)

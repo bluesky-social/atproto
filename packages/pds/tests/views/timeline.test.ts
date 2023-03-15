@@ -110,11 +110,11 @@ describe('timeline views', () => {
 
   it('omits posts and reposts of muted authors.', async () => {
     await agent.api.app.bsky.graph.mute(
-      { user: bob },
+      { actor: bob },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
     await agent.api.app.bsky.graph.mute(
-      { user: carol },
+      { actor: carol },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
 
@@ -127,11 +127,11 @@ describe('timeline views', () => {
 
     // Cleanup
     await agent.api.app.bsky.graph.unmute(
-      { user: bob },
+      { actor: bob },
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
     await agent.api.app.bsky.graph.unmute(
-      { user: carol },
+      { actor: carol },
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
   })
@@ -142,7 +142,7 @@ describe('timeline views', () => {
       const res = await agent.api.app.bsky.feed.getTimeline(
         {
           algorithm: FeedAlgorithm.ReverseChronological,
-          before: cursor,
+          cursor,
           limit: 4,
         },
         { headers: sc.getHeaders(carol) },

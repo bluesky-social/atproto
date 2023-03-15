@@ -59,12 +59,12 @@ describe('crud operations', () => {
 
   it('describes repo', async () => {
     const description = await agent.api.com.atproto.repo.describe({
-      user: alice.did,
+      repo: alice.did,
     })
     expect(description.data.handle).toBe(alice.handle)
     expect(description.data.did).toBe(alice.did)
     const description2 = await agent.api.com.atproto.repo.describe({
-      user: bob.did,
+      repo: bob.did,
     })
     expect(description2.data.handle).toBe(bob.handle)
     expect(description2.data.did).toBe(bob.did)
@@ -89,7 +89,7 @@ describe('crud operations', () => {
 
   it('lists records', async () => {
     const res1 = await agent.api.com.atproto.repo.listRecords({
-      user: alice.did,
+      repo: alice.did,
       collection: 'app.bsky.feed.post',
     })
     expect(res1.data.records.length).toBe(1)
@@ -99,7 +99,7 @@ describe('crud operations', () => {
     )
 
     const res2 = await agent.api.app.bsky.feed.post.list({
-      user: alice.did,
+      repo: alice.did,
     })
     expect(res2.records.length).toBe(1)
     expect(res2.records[0].uri).toBe(uri.toString())
@@ -108,7 +108,7 @@ describe('crud operations', () => {
 
   it('gets records', async () => {
     const res1 = await agent.api.com.atproto.repo.getRecord({
-      user: alice.did,
+      repo: alice.did,
       collection: 'app.bsky.feed.post',
       rkey: uri.rkey,
     })
@@ -116,7 +116,7 @@ describe('crud operations', () => {
     expect((res1.data.value as Post.Record).text).toBe('Hello, world!')
 
     const res2 = await agent.api.app.bsky.feed.post.get({
-      user: alice.did,
+      repo: alice.did,
       rkey: uri.rkey,
     })
     expect(res2.uri).toBe(uri.toString())
@@ -130,7 +130,7 @@ describe('crud operations', () => {
       rkey: uri.rkey,
     })
     const res1 = await agent.api.com.atproto.repo.listRecords({
-      user: alice.did,
+      repo: alice.did,
       collection: 'app.bsky.feed.post',
     })
     expect(res1.data.records.length).toBe(0)
@@ -148,7 +148,7 @@ describe('crud operations', () => {
     const uri = new AtUri(res1.uri)
 
     const res2 = await agent.api.app.bsky.feed.post.list({
-      user: alice.did,
+      repo: alice.did,
     })
     expect(res2.records.length).toBe(1)
 
@@ -158,7 +158,7 @@ describe('crud operations', () => {
     })
 
     const res3 = await agent.api.app.bsky.feed.post.list({
-      user: alice.did,
+      repo: alice.did,
     })
     expect(res3.records.length).toBe(0)
   })
@@ -194,7 +194,7 @@ describe('crud operations', () => {
     const postUri = new AtUri(res.uri)
     const post = await aliceAgent.api.app.bsky.feed.post.get({
       rkey: postUri.rkey,
-      user: alice.did,
+      repo: alice.did,
     })
     const images = post.value.embed?.images as { image: { cid: string } }[]
     expect(images.length).toEqual(1)
@@ -245,7 +245,7 @@ describe('crud operations', () => {
       for (let i = 0; i < uris.length; i++) {
         const uri = uris[i]
         const got = await aliceAgent.api.com.atproto.repo.getRecord({
-          user: alice.did,
+          repo: alice.did,
           collection: uri.collection,
           rkey: uri.rkey,
         })
@@ -266,7 +266,7 @@ describe('crud operations', () => {
       for (const uri of uris) {
         await expect(
           aliceAgent.api.com.atproto.repo.getRecord({
-            user: alice.did,
+            repo: alice.did,
             collection: uri.collection,
             rkey: uri.rkey,
           }),
@@ -316,8 +316,8 @@ describe('crud operations', () => {
       const results = (results) => results.flatMap((res) => res.records)
       const paginator = async (cursor?: string) => {
         const res = await agent.api.app.bsky.feed.post.list({
-          user: alice.did,
-          before: cursor,
+          repo: alice.did,
+          rkeyEnd: cursor,
           limit: 2,
         })
         return res
@@ -329,7 +329,7 @@ describe('crud operations', () => {
       )
 
       const full = await agent.api.app.bsky.feed.post.list({
-        user: alice.did,
+        repo: alice.did,
       })
 
       expect(full.records.length).toEqual(5)
@@ -340,9 +340,9 @@ describe('crud operations', () => {
       const results = (results) => results.flatMap((res) => res.records)
       const paginator = async (cursor?: string) => {
         const res = await agent.api.app.bsky.feed.post.list({
-          user: alice.did,
+          repo: alice.did,
           reverse: true,
-          after: cursor,
+          rkeyStart: cursor,
           limit: 2,
         })
         return res
@@ -354,7 +354,7 @@ describe('crud operations', () => {
       )
 
       const full = await agent.api.app.bsky.feed.post.list({
-        user: alice.did,
+        repo: alice.did,
         reverse: true,
       })
 
@@ -364,9 +364,9 @@ describe('crud operations', () => {
 
     it('between two records', async () => {
       const list = await agent.api.app.bsky.feed.post.list({
-        user: alice.did,
-        after: uri1.rkey,
-        before: uri5.rkey,
+        repo: alice.did,
+        rkeyStart: uri1.rkey,
+        rkeyEnd: uri5.rkey,
       })
       expect(list.records.length).toBe(3)
       expect(list.records[0].uri).toBe(uri4.toString())
@@ -376,10 +376,10 @@ describe('crud operations', () => {
 
     it('reverses', async () => {
       const forwards = await agent.api.app.bsky.feed.post.list({
-        user: alice.did,
+        repo: alice.did,
       })
       const reverse = await agent.api.app.bsky.feed.post.list({
-        user: alice.did,
+        repo: alice.did,
         reverse: true,
       })
       expect(forwards.cursor).toEqual(uri1.rkey)
@@ -404,7 +404,7 @@ describe('crud operations', () => {
     })
     const uri = new AtUri(res.data.uri)
     const got = await agent.api.com.atproto.repo.getRecord({
-      user: alice.did,
+      repo: alice.did,
       collection: uri.collection,
       rkey: uri.rkey,
     })
@@ -460,10 +460,10 @@ describe('crud operations', () => {
     )
     const postUri = new AtUri(created.uri)
     const post = await agent.api.app.bsky.feed.post.get({
-      user: alice.did,
+      repo: alice.did,
       rkey: postUri.rkey,
     })
-    const posts = await agent.api.app.bsky.feed.post.list({ user: alice.did })
+    const posts = await agent.api.app.bsky.feed.post.list({ repo: alice.did })
     expect(posts.records.map((r) => r.uri)).toContain(post.uri)
 
     const { data: action } =
@@ -484,12 +484,12 @@ describe('crud operations', () => {
       )
 
     const postTakedownPromise = agent.api.app.bsky.feed.post.get({
-      user: alice.did,
+      repo: alice.did,
       rkey: postUri.rkey,
     })
     await expect(postTakedownPromise).rejects.toThrow('Could not locate record')
     const postsTakedown = await agent.api.app.bsky.feed.post.list({
-      user: alice.did,
+      repo: alice.did,
     })
     expect(postsTakedown.records.map((r) => r.uri)).not.toContain(post.uri)
 

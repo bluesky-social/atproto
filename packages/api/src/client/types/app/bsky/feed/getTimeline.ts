@@ -10,7 +10,7 @@ import * as AppBskyFeedDefs from './defs'
 export interface QueryParams {
   algorithm?: string
   limit?: number
-  before?: string
+  cursor?: string
 }
 
 export type InputSchema = undefined

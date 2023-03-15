@@ -4,23 +4,23 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Find users matching search criteria.",
+      "description": "Find actors matching search criteria.",
       "parameters": {
         "type": "params",
         "properties": {
           "term": {"type": "string"},
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "before": {"type": "string"}
+          "cursor": {"type": "string"}
         }
       },
       "output": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["users"],
+          "required": ["actors"],
           "properties": {
             "cursor": {"type": "string"},
-            "users": {
+            "actors": {
               "type": "array",
               "items": {"type": "ref", "ref": "app.bsky.actor.profile#viewBasic"}
             }

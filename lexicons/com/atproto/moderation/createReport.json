@@ -27,7 +27,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["id", "reasonType", "subject", "reportedByDid", "createdAt"],
+          "required": ["id", "reasonType", "subject", "reportedBy", "createdAt"],
           "properties": {
             "id": {"type": "integer"},
             "reasonType": {"type": "ref", "ref": "com.atproto.report.reasonType"},
@@ -39,7 +39,7 @@
                 "com.atproto.repo.strongRef"
               ]
             },
-            "reportedByDid": {"type": "string", "format": "did"},
+            "reportedBy": {"type": "string", "format": "did"},
             "createdAt": {"type": "string", "format": "datetime"}
           }
         }

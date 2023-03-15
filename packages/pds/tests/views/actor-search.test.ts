@@ -40,7 +40,7 @@ describe('pds user search views', () => {
       { headers },
     )
 
-    const handles = result.data.users.map((u) => u.handle)
+    const handles = result.data.actors.map((u) => u.handle)
 
     const shouldContain = [
       'cara-wiegand69.test',
@@ -72,9 +72,9 @@ describe('pds user search views', () => {
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
     if (db.dialect === 'pg') {
-      expect(forSnapshot(result.data.users)).toEqual(snapTypeaheadPg)
+      expect(forSnapshot(result.data.actors)).toEqual(snapTypeaheadPg)
     } else {
-      expect(forSnapshot(result.data.users)).toEqual(snapTypeaheadSqlite)
+      expect(forSnapshot(result.data.actors)).toEqual(snapTypeaheadSqlite)
     }
   })
 
@@ -84,7 +84,7 @@ describe('pds user search views', () => {
       { headers },
     )
 
-    expect(result.data.users).toEqual([])
+    expect(result.data.actors).toEqual([])
   })
 
   it('typeahead applies limit', async () => {
@@ -93,14 +93,14 @@ describe('pds user search views', () => {
       { headers },
     )
 
-    expect(full.data.users.length).toBeGreaterThan(5)
+    expect(full.data.actors.length).toBeGreaterThan(5)
 
     const limited = await agent.api.app.bsky.actor.searchTypeahead(
       { term: 'p', limit: 5 },
       { headers },
     )
 
-    expect(limited.data.users).toEqual(full.data.users.slice(0, 5))
+    expect(limited.data.actors).toEqual(full.data.actors.slice(0, 5))
   })
 
   it('search gives relevant results', async () => {
@@ -109,7 +109,7 @@ describe('pds user search views', () => {
       { headers },
     )
 
-    const handles = result.data.users.map((u) => u.handle)
+    const handles = result.data.actors.map((u) => u.handle)
 
     const shouldContain = [
       'cara-wiegand69.test',
@@ -141,9 +141,9 @@ describe('pds user search views', () => {
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
     if (db.dialect === 'pg') {
-      expect(forSnapshot(result.data.users)).toEqual(snapSearchPg)
+      expect(forSnapshot(result.data.actors)).toEqual(snapSearchPg)
     } else {
-      expect(forSnapshot(result.data.users)).toEqual(snapSearchSqlite)
+      expect(forSnapshot(result.data.actors)).toEqual(snapSearchSqlite)
     }
   })
 
@@ -153,14 +153,14 @@ describe('pds user search views', () => {
       { headers },
     )
 
-    expect(result.data.users).toEqual([])
+    expect(result.data.actors).toEqual([])
   })
 
   it('paginates', async () => {
-    const results = (results) => results.flatMap((res) => res.users)
+    const results = (results) => results.flatMap((res) => res.actors)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.actor.search(
-        { term: 'p', before: cursor, limit: 3 },
+        { term: 'p', cursor, limit: 3 },
         { headers },
       )
       return res.data
@@ -168,7 +168,7 @@ describe('pds user search views', () => {
 
     const paginatedAll = await paginateAll(paginator)
     paginatedAll.forEach((res) =>
-      expect(res.users.length).toBeLessThanOrEqual(3),
+      expect(res.actors.length).toBeLessThanOrEqual(3),
     )
 
     const full = await agent.api.app.bsky.actor.search(
@@ -176,7 +176,7 @@ describe('pds user search views', () => {
       { headers },
     )
 
-    expect(full.data.users.length).toBeGreaterThan(5)
+    expect(full.data.actors.length).toBeGreaterThan(5)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
@@ -188,7 +188,7 @@ describe('pds user search views', () => {
       { headers },
     )
 
-    expect(result.data.users).toEqual([])
+    expect(result.data.actors).toEqual([])
   })
 
   it('search blocks by actor takedown', async () => {
@@ -211,7 +211,7 @@ describe('pds user search views', () => {
       { term: 'car' },
       { headers },
     )
-    const handles = result.data.users.map((u) => u.handle)
+    const handles = result.data.actors.map((u) => u.handle)
     expect(handles).toContain('carlos6.test')
     expect(handles).toContain('carolina-mcdermott77.test')
     expect(handles).not.toContain('cara-wiegand69.test')
@@ -222,24 +222,17 @@ describe('pds user search views', () => {
 // you can achieve it using named snapshots, but when you run the tests for pg the test suite fails
 // since the sqlite snapshots appear obsolete to jest (and vice-versa when you run the sqlite suite).
 
-const declaration = {
-  actorType: 'app.bsky.system.actorUser',
-  cid: 'cids(0)',
-}
-
 const avatar =
   'https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg'
 
 const snapTypeaheadPg = [
   {
     did: 'user(0)',
-    declaration,
     handle: 'cara-wiegand69.test',
     viewer: { muted: false },
   },
   {
     did: 'user(1)',
-    declaration,
     displayName: 'Carol Littel',
     handle: 'eudora-dietrich4.test',
     avatar,
@@ -247,7 +240,6 @@ const snapTypeaheadPg = [
   },
   {
     did: 'user(2)',
-    declaration,
     displayName: 'Sadie Carter',
     handle: 'shane-torphy52.test',
     avatar,
@@ -255,7 +247,6 @@ const snapTypeaheadPg = [
   },
   {
     did: 'user(3)',
-    declaration,
     displayName: 'Carlton Abernathy IV',
     handle: 'aliya-hodkiewicz.test',
     avatar,
@@ -263,13 +254,11 @@ const snapTypeaheadPg = [
   },
   {
     did: 'user(4)',
-    declaration,
     handle: 'carlos6.test',
     viewer: { muted: false },
   },
   {
     did: 'user(5)',
-    declaration,
     displayName: 'Latoya Windler',
     handle: 'carolina-mcdermott77.test',
     avatar,
@@ -277,7 +266,6 @@ const snapTypeaheadPg = [
   },
   {
     did: 'user(6)',
-    declaration,
     displayName: 'Rachel Kshlerin',
     handle: 'cayla-marquardt39.test',
     avatar,
@@ -288,7 +276,6 @@ const snapTypeaheadPg = [
 const snapTypeaheadSqlite = [
   {
     did: 'user(0)',
-    declaration,
     displayName: 'Carlton Abernathy IV',
     handle: 'aliya-hodkiewicz.test',
     avatar,
@@ -296,19 +283,16 @@ const snapTypeaheadSqlite = [
   },
   {
     did: 'user(1)',
-    declaration,
     handle: 'cara-wiegand69.test',
     viewer: { muted: false },
   },
   {
     did: 'user(2)',
-    declaration,
     handle: 'carlos6.test',
     viewer: { muted: false },
   },
   {
     did: 'user(3)',
-    declaration,
     displayName: 'Latoya Windler',
     handle: 'carolina-mcdermott77.test',
     avatar,
@@ -316,7 +300,6 @@ const snapTypeaheadSqlite = [
   },
   {
     did: 'user(4)',
-    declaration,
     displayName: 'Carol Littel',
     handle: 'eudora-dietrich4.test',
     avatar,
@@ -324,7 +307,6 @@ const snapTypeaheadSqlite = [
   },
   {
     did: 'user(5)',
-    declaration,
     displayName: 'Sadie Carter',
     handle: 'shane-torphy52.test',
     avatar,
@@ -334,14 +316,12 @@ const snapTypeaheadSqlite = [
 
 const snapSearchPg = [
   {
-    declaration,
     did: 'user(0)',
     handle: 'cara-wiegand69.test',
     viewer: { muted: false },
   },
   {
     did: 'user(1)',
-    declaration,
     displayName: 'Carol Littel',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'eudora-dietrich4.test',
@@ -350,7 +330,6 @@ const snapSearchPg = [
   },
   {
     did: 'user(2)',
-    declaration,
     displayName: 'Sadie Carter',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'shane-torphy52.test',
@@ -359,7 +338,6 @@ const snapSearchPg = [
   },
   {
     did: 'user(3)',
-    declaration,
     displayName: 'Carlton Abernathy IV',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'aliya-hodkiewicz.test',
@@ -368,13 +346,11 @@ const snapSearchPg = [
   },
   {
     did: 'user(4)',
-    declaration,
     handle: 'carlos6.test',
     viewer: { muted: false },
   },
   {
     did: 'user(5)',
-    declaration,
     displayName: 'Latoya Windler',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'carolina-mcdermott77.test',
@@ -383,7 +359,6 @@ const snapSearchPg = [
   },
   {
     did: 'user(6)',
-    declaration,
     displayName: 'Rachel Kshlerin',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'cayla-marquardt39.test',
@@ -395,7 +370,6 @@ const snapSearchPg = [
 const snapSearchSqlite = [
   {
     did: 'user(0)',
-    declaration,
     displayName: 'Carlton Abernathy IV',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'aliya-hodkiewicz.test',
@@ -404,19 +378,16 @@ const snapSearchSqlite = [
   },
   {
     did: 'user(1)',
-    declaration,
     handle: 'cara-wiegand69.test',
     viewer: { muted: false },
   },
   {
     did: 'user(2)',
-    declaration,
     handle: 'carlos6.test',
     viewer: { muted: false },
   },
   {
     did: 'user(3)',
-    declaration,
     displayName: 'Latoya Windler',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'carolina-mcdermott77.test',
@@ -425,7 +396,6 @@ const snapSearchSqlite = [
   },
   {
     did: 'user(4)',
-    declaration,
     displayName: 'Carol Littel',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'eudora-dietrich4.test',
@@ -434,7 +404,6 @@ const snapSearchSqlite = [
   },
   {
     did: 'user(5)',
-    declaration,
     displayName: 'Sadie Carter',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'shane-torphy52.test',

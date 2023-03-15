@@ -7,9 +7,9 @@
       "description": "Fetch a record.",
       "parameters": {
         "type": "params",
-        "required": ["user", "collection", "rkey"],
+        "required": ["repo", "collection", "rkey"],
         "properties": {
-          "user": {"type": "string", "description": "The handle or DID of the repo."},
+          "repo": {"type": "string", "description": "The handle or DID of the repo."},
           "collection": {"type": "string", "description": "The NSID of the collection."},
           "rkey": {"type": "string", "description": "The key of the record."},
           "cid": {

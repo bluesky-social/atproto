@@ -40,7 +40,7 @@ describe('pds admin get record view', () => {
       },
     })
     await sc.createReport({
-      reportedByDid: sc.dids.bob,
+      reportedBy: sc.dids.bob,
       reasonType: SPAM,
       subject: {
         $type: 'com.atproto.repo.recordRef',
@@ -48,7 +48,7 @@ describe('pds admin get record view', () => {
       },
     })
     await sc.createReport({
-      reportedByDid: sc.dids.carol,
+      reportedBy: sc.dids.carol,
       reasonType: OTHER,
       reason: 'defamation',
       subject: {

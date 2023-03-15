@@ -5,10 +5,9 @@
   "defs": {
     "withInfo": {
       "type": "object",
-      "required": ["did", "declaration", "handle"],
+      "required": ["did", "handle"],
       "properties": {
         "did": {"type": "string", "format": "did"},
-        "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
         "handle": {"type": "string"},
         "displayName": {
           "type": "string",

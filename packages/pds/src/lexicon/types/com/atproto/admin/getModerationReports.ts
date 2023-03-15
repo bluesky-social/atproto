@@ -12,7 +12,7 @@ export interface QueryParams {
   subject?: string
   resolved?: boolean
   limit: number
-  before?: string
+  cursor?: string
 }
 
 export type InputSchema = undefined

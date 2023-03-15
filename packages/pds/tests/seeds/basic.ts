@@ -10,13 +10,13 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
   const carol = sc.dids.carol
   const dan = sc.dids.dan
 
-  await sc.follow(alice, sc.actorRef(bob))
-  await sc.follow(alice, sc.actorRef(carol))
-  await sc.follow(alice, sc.actorRef(dan))
-  await sc.follow(carol, sc.actorRef(alice))
-  await sc.follow(bob, sc.actorRef(alice))
-  await sc.follow(bob, sc.actorRef(carol))
-  await sc.follow(dan, sc.actorRef(bob))
+  await sc.follow(alice, bob)
+  await sc.follow(alice, carol)
+  await sc.follow(alice, dan)
+  await sc.follow(carol, alice)
+  await sc.follow(bob, alice)
+  await sc.follow(bob, carol)
+  await sc.follow(dan, bob)
   await sc.post(alice, posts.alice[0])
   await sc.post(bob, posts.bob[0])
   const img1 = await sc.uploadFile(

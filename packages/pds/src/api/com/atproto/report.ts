@@ -24,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
         reasonType: getReasonType(reasonType),
         reason,
         subject: getSubject(subject),
-        reportedByDid: requester,
+        reportedBy: requester,
       })
 
       return {

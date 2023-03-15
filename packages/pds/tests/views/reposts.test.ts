@@ -52,7 +52,7 @@ describe('pds repost views', () => {
       const res = await agent.api.app.bsky.feed.getRepostedBy(
         {
           uri: sc.posts[alice][2].ref.uriStr,
-          before: cursor,
+          cursor,
           limit: 2,
         },
         { headers: sc.getHeaders(alice) },

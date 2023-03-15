@@ -9,7 +9,7 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {
   /** The handle or DID of the repo. */
-  user: string
+  repo: string
   /** The NSID of the collection. */
   collection: string
   /** The key of the record. */

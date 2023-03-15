@@ -187,14 +187,10 @@ describe('db', () => {
           {
             did: 'did:plc:1',
             handle: 'user1',
-            declarationCid: 'x',
-            actorType: 'x',
           },
           {
             did: 'did:plc:2',
             handle: 'user2',
-            declarationCid: 'x',
-            actorType: 'x',
           },
         ])
         .execute()
@@ -256,8 +252,6 @@ describe('db', () => {
           .values({
             did: `did:plc:${nthRun}`,
             handle: `user${nthRun}`,
-            declarationCid: 'x',
-            actorType: 'x',
           })
           .execute()
         await wait(100)

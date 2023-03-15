@@ -83,9 +83,6 @@ import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
-import * as AppBskySystemActorUser from './types/app/bsky/system/actorUser'
-import * as AppBskySystemDeclRef from './types/app/bsky/system/declRef'
-import * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
@@ -164,9 +161,6 @@ export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
-export * as AppBskySystemActorUser from './types/app/bsky/system/actorUser'
-export * as AppBskySystemDeclRef from './types/app/bsky/system/declRef'
-export * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
 
 export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
@@ -180,9 +174,6 @@ export const COM_ATPROTO_MODERATION = {
 export const APP_BSKY_GRAPH = {
   AssertCreator: 'app.bsky.graph.assertCreator',
   AssertMember: 'app.bsky.graph.assertMember',
-}
-export const APP_BSKY_SYSTEM = {
-  ActorUser: 'app.bsky.system.actorUser',
 }
 
 export class AtpBaseClient {
@@ -751,7 +742,6 @@ export class BskyNS {
   feed: FeedNS
   graph: GraphNS
   notification: NotificationNS
-  system: SystemNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
@@ -760,7 +750,6 @@ export class BskyNS {
     this.feed = new FeedNS(service)
     this.graph = new GraphNS(service)
     this.notification = new NotificationNS(service)
-    this.system = new SystemNS(service)
   }
 }
 
@@ -1336,80 +1325,5 @@ export class NotificationNS {
       .catch((e) => {
         throw AppBskyNotificationUpdateSeen.toKnownErr(e)
       })
-  }
-}
-
-export class SystemNS {
-  _service: AtpServiceClient
-  declaration: DeclarationRecord
-
-  constructor(service: AtpServiceClient) {
-    this._service = service
-    this.declaration = new DeclarationRecord(service)
-  }
-}
-
-export class DeclarationRecord {
-  _service: AtpServiceClient
-
-  constructor(service: AtpServiceClient) {
-    this._service = service
-  }
-
-  async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskySystemDeclaration.Record }[]
-  }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.system.declaration',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{
-    uri: string
-    cid: string
-    value: AppBskySystemDeclaration.Record
-  }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.system.declaration',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: Omit<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: AppBskySystemDeclaration.Record,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    record.$type = 'app.bsky.system.declaration'
-    const res = await this._service.xrpc.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection: 'app.bsky.system.declaration', ...params, record },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._service.xrpc.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.system.declaration', ...params },
-      { headers },
-    )
   }
 }

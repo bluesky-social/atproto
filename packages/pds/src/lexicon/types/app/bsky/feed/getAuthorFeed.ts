@@ -9,9 +9,9 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyFeedDefs from './defs'
 
 export interface QueryParams {
-  author: string
+  actor: string
   limit: number
-  before?: string
+  cursor?: string
 }
 
 export type InputSchema = undefined

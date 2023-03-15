@@ -9,9 +9,9 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["user"],
+          "required": ["actor"],
           "properties": {
-            "user": { "type": "string" }
+            "actor": { "type": "string" }
           }
         }
       }

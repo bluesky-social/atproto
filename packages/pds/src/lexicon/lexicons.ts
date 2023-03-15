@@ -573,7 +573,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -648,7 +648,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -827,7 +827,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -1007,7 +1007,7 @@ export const schemaDict = {
               'id',
               'reasonType',
               'subject',
-              'reportedByDid',
+              'reportedBy',
               'createdAt',
             ],
             properties: {
@@ -1028,7 +1028,7 @@ export const schemaDict = {
                   'lex:com.atproto.repo.strongRef',
                 ],
               },
-              reportedByDid: {
+              reportedBy: {
                 type: 'string',
                 format: 'did',
               },
@@ -1254,9 +1254,9 @@ export const schemaDict = {
           'Get information about the repo, including the list of collections.',
         parameters: {
           type: 'params',
-          required: ['user'],
+          required: ['repo'],
           properties: {
-            user: {
+            repo: {
               type: 'string',
               description: 'The handle or DID of the repo.',
             },
@@ -1308,9 +1308,9 @@ export const schemaDict = {
         description: 'Fetch a record.',
         parameters: {
           type: 'params',
-          required: ['user', 'collection', 'rkey'],
+          required: ['repo', 'collection', 'rkey'],
           properties: {
-            user: {
+            repo: {
               type: 'string',
               description: 'The handle or DID of the repo.',
             },
@@ -1362,9 +1362,9 @@ export const schemaDict = {
         description: 'List a range of records in a collection.',
         parameters: {
           type: 'params',
-          required: ['user', 'collection'],
+          required: ['repo', 'collection'],
           properties: {
-            user: {
+            repo: {
               type: 'string',
               description: 'The handle or DID of the repo.',
             },
@@ -1379,13 +1379,15 @@ export const schemaDict = {
               default: 50,
               description: 'The number of records to return.',
             },
-            before: {
+            rkeyStart: {
               type: 'string',
-              description: 'A TID to filter the range of records returned.',
+              description:
+                'The lowest sort-ordered rkey to start from (exclusive)',
             },
-            after: {
+            rkeyEnd: {
               type: 'string',
-              description: 'A TID to filter the range of records returned.',
+              description:
+                'The highest sort-ordered rkey to stop at (exclusive)',
             },
             reverse: {
               type: 'boolean',
@@ -2312,15 +2314,11 @@ export const schemaDict = {
     defs: {
       withInfo: {
         type: 'object',
-        required: ['did', 'declaration', 'handle'],
+        required: ['did', 'handle'],
         properties: {
           did: {
             type: 'string',
             format: 'did',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -2503,7 +2501,6 @@ export const schemaDict = {
         type: 'object',
         required: [
           'did',
-          'declaration',
           'handle',
           'creator',
           'followersCount',
@@ -2514,10 +2511,6 @@ export const schemaDict = {
           did: {
             type: 'string',
             format: 'did',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -2565,15 +2558,11 @@ export const schemaDict = {
       },
       viewBasic: {
         type: 'object',
-        required: ['did', 'declaration', 'handle'],
+        required: ['did', 'handle'],
         properties: {
           did: {
             type: 'string',
             format: 'did',
-          },
-          declaration: {
-            type: 'ref',
-            ref: 'lex:app.bsky.system.declRef',
           },
           handle: {
             type: 'string',
@@ -2636,7 +2625,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Find users matching search criteria.',
+        description: 'Find actors matching search criteria.',
         parameters: {
           type: 'params',
           properties: {
@@ -2649,7 +2638,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -2658,12 +2647,12 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['users'],
+            required: ['actors'],
             properties: {
               cursor: {
                 type: 'string',
               },
-              users: {
+              actors: {
                 type: 'array',
                 items: {
                   type: 'ref',
@@ -2682,7 +2671,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Find user suggestions for a search term.',
+        description: 'Find actor suggestions for a search term.',
         parameters: {
           type: 'params',
           properties: {
@@ -2701,9 +2690,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['users'],
+            required: ['actors'],
             properties: {
-              users: {
+              actors: {
                 type: 'array',
                 items: {
                   type: 'ref',
@@ -3119,12 +3108,12 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: "A view of a user's feed.",
+        description: "A view of an actor's feed.",
         parameters: {
           type: 'params',
-          required: ['author'],
+          required: ['actor'],
           properties: {
-            author: {
+            actor: {
               type: 'string',
             },
             limit: {
@@ -3133,7 +3122,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -3268,7 +3257,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -3322,7 +3311,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -3377,7 +3366,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -3672,12 +3661,12 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Who is following a user?',
+        description: 'Who is following an actor?',
         parameters: {
           type: 'params',
-          required: ['user'],
+          required: ['actor'],
           properties: {
-            user: {
+            actor: {
               type: 'string',
             },
             limit: {
@@ -3686,7 +3675,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -3723,12 +3712,12 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Who is a user following?',
+        description: 'Who is an actor following?',
         parameters: {
           type: 'params',
-          required: ['user'],
+          required: ['actor'],
           properties: {
-            user: {
+            actor: {
               type: 'string',
             },
             limit: {
@@ -3737,7 +3726,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -3784,7 +3773,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -3822,9 +3811,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['user'],
+            required: ['actor'],
             properties: {
-              user: {
+              actor: {
                 type: 'string',
               },
             },
@@ -3844,9 +3833,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['user'],
+            required: ['actor'],
             properties: {
-              user: {
+              actor: {
                 type: 'string',
               },
             },
@@ -3891,7 +3880,7 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
-            before: {
+            cursor: {
               type: 'string',
             },
           },
@@ -3994,59 +3983,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskySystemActorUser: {
-    lexicon: 1,
-    id: 'app.bsky.system.actorUser',
-    defs: {
-      main: {
-        type: 'token',
-        description:
-          "Actor type: User. Defined for app.bsky.system.declaration's actorType.",
-      },
-    },
-  },
-  AppBskySystemDeclRef: {
-    lexicon: 1,
-    id: 'app.bsky.system.declRef',
-    defs: {
-      main: {
-        description: 'A reference to a app.bsky.system.declaration record.',
-        type: 'object',
-        required: ['cid', 'actorType'],
-        properties: {
-          cid: {
-            type: 'string',
-          },
-          actorType: {
-            type: 'string',
-            knownValues: ['app.bsky.system.actorUser'],
-          },
-        },
-      },
-    },
-  },
-  AppBskySystemDeclaration: {
-    lexicon: 1,
-    id: 'app.bsky.system.declaration',
-    defs: {
-      main: {
-        description:
-          'Context for an account that is considered intrinsic to it and alters the fundamental understanding of an account of changed. A declaration should be treated as immutable.',
-        type: 'record',
-        key: 'literal:self',
-        record: {
-          type: 'object',
-          required: ['actorType'],
-          properties: {
-            actorType: {
-              type: 'string',
-              knownValues: ['app.bsky.system.actorUser'],
-            },
-          },
-        },
-      },
-    },
-  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -4133,7 +4069,4 @@ export const ids = {
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
-  AppBskySystemActorUser: 'app.bsky.system.actorUser',
-  AppBskySystemDeclRef: 'app.bsky.system.declRef',
-  AppBskySystemDeclaration: 'app.bsky.system.declaration',
 }

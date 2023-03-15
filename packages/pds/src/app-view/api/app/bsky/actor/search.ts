@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params }) => {
       const { services, db } = ctx
       let { term, limit } = params
-      const { before } = params
+      const { cursor } = params
       const requester = auth.credentials.did
 
       term = cleanTerm(term || '')
@@ -27,15 +27,15 @@ export default function (server: Server, ctx: AppContext) {
         return {
           encoding: 'application/json',
           body: {
-            users: [],
+            actors: [],
           },
         }
       }
 
       const results =
         db.dialect === 'pg'
-          ? await getResultsPg(db, { term, limit, before })
-          : await getResultsSqlite(db, { term, limit, before })
+          ? await getResultsPg(db, { term, limit, cursor })
+          : await getResultsSqlite(db, { term, limit, cursor })
 
       const keyset = new SearchKeyset(sql``, sql``)
 
@@ -43,7 +43,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           cursor: keyset.packFromResult(results),
-          users: await services.appView
+          actors: await services.appView
             .actor(db)
             .views.profileBasic(results, requester),
         },
@@ -52,16 +52,16 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const getResultsPg: GetResultsFn = async (db, { term, limit, before }) => {
-  return await getUserSearchQueryPg(db, { term: term || '', limit, before })
+const getResultsPg: GetResultsFn = async (db, { term, limit, cursor }) => {
+  return await getUserSearchQueryPg(db, { term: term || '', limit, cursor })
     .leftJoin('profile', 'profile.creator', 'did_handle.did')
     .select('distance')
     .selectAll('did_handle')
     .execute()
 }
 
-const getResultsSqlite: GetResultsFn = async (db, { term, limit, before }) => {
-  return await getUserSearchQuerySqlite(db, { term: term || '', limit, before })
+const getResultsSqlite: GetResultsFn = async (db, { term, limit, cursor }) => {
+  return await getUserSearchQuerySqlite(db, { term: term || '', limit, cursor })
     .leftJoin('profile', 'profile.creator', 'did_handle.did')
     .select(sql<number>`0`.as('distance'))
     .selectAll('did_handle')

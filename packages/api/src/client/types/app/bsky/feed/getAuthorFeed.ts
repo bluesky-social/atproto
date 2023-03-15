@@ -8,9 +8,9 @@ import { lexicons } from '../../../../lexicons'
 import * as AppBskyFeedDefs from './defs'
 
 export interface QueryParams {
-  author: string
+  actor: string
   limit?: number
-  before?: string
+  cursor?: string
 }
 
 export type InputSchema = undefined

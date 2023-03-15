@@ -116,7 +116,7 @@ describe('handles', () => {
     }
 
     const followers = await agent.api.app.bsky.graph.getFollowers(
-      { user: bob },
+      { actor: bob },
       { headers: sc.getHeaders(bob) },
     )
 

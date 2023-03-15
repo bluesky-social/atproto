@@ -84,7 +84,7 @@ describe('pds admin get moderation actions view', () => {
       const action = someRecordActions[i]
       const ab = oneIn(2)(action, i)
       const report = await sc.createReport({
-        reportedByDid: ab ? sc.dids.carol : sc.dids.alice,
+        reportedBy: ab ? sc.dids.carol : sc.dids.alice,
         reasonType: ab ? SPAM : OTHER,
         subject: {
           $type: 'com.atproto.repo.recordRef',
@@ -103,7 +103,7 @@ describe('pds admin get moderation actions view', () => {
       const action = someRepoActions[i]
       const ab = oneIn(2)(action, i)
       const report = await sc.createReport({
-        reportedByDid: ab ? sc.dids.carol : sc.dids.alice,
+        reportedBy: ab ? sc.dids.carol : sc.dids.alice,
         reasonType: ab ? SPAM : OTHER,
         subject: {
           $type: 'com.atproto.repo.repoRef',
@@ -147,7 +147,7 @@ describe('pds admin get moderation actions view', () => {
     const results = (results) => results.flatMap((res) => res.actions)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.com.atproto.admin.getModerationActions(
-        { before: cursor, limit: 3 },
+        { cursor, limit: 3 },
         { headers: { authorization: adminAuth() } },
       )
       return res.data

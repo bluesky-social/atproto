@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
     const handle = params.handle || req.hostname
 
     let did: string | undefined
-    const user = await ctx.services.account(ctx.db).getUser(handle, true)
+    const user = await ctx.services.account(ctx.db).getAccount(handle, true)
     if (user) {
       did = user.did
     } else {

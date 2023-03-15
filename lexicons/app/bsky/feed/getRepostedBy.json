@@ -11,7 +11,7 @@
           "uri": {"type": "string", "format": "at-uri"},
           "cid": {"type": "string", "format": "cid"},
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "before": {"type": "string"}
+          "cursor": {"type": "string"}
         }
       },
       "output": {

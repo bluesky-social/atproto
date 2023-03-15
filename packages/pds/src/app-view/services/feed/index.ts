@@ -6,7 +6,6 @@ import { ImageUriBuilder } from '../../../image/uri'
 import { isPresented as isPresentedImage } from '../../../lexicon/types/app/bsky/embed/images'
 import { View as PostView } from '../../../lexicon/types/app/bsky/feed/post'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
-import { getDeclarationSimple } from '../../../api/app/bsky/util'
 
 export * from './types'
 
@@ -107,7 +106,6 @@ export class FeedService {
         ...acc,
         [cur.did]: {
           did: cur.did,
-          declaration: getDeclarationSimple(cur),
           handle: cur.handle,
           displayName: cur.displayName || undefined,
           avatar: cur.avatarCid

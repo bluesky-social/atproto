@@ -4,11 +4,9 @@
 import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
-import * as AppBskySystemDeclRef from '../system/declRef'
 
 export interface WithInfo {
   did: string
-  declaration: AppBskySystemDeclRef.Main
   handle: string
   displayName?: string
   avatar?: string

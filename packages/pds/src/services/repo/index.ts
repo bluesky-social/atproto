@@ -124,6 +124,9 @@ export class RepoService {
   }
 
   async indexRepoOps(did: string, commit: CID, writes: PreparedWrite[]) {
+    if (!writes.length) {
+      return
+    }
     const ops = writes.map((w) => {
       const path = w.uri.collection + '/' + w.uri.rkey
       const cid = w.action === WriteOpAction.Delete ? null : w.cid.toString()
