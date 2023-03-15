@@ -65,13 +65,6 @@ async function main(tx: Database, ctx: AppContext) {
             }
             try {
               assertValidRecord(record)
-              return prepareUpdate({
-                did,
-                collection: ids.AppBskyGraphFollow,
-                rkey: follow.rkey,
-                record,
-                validate: false,
-              })
             } catch {
               const del = prepareDelete({
                 did,
@@ -81,6 +74,13 @@ async function main(tx: Database, ctx: AppContext) {
               updatesTurnedDeletes.push(del.uri.toString())
               return del
             }
+            return prepareUpdate({
+              did,
+              collection: ids.AppBskyGraphFollow,
+              rkey: follow.rkey,
+              record,
+              validate: false, // Validated above
+            })
           }),
         )
 

@@ -23,7 +23,7 @@ async function main(tx: Database, ctx: AppContext) {
   const now = new Date().toISOString()
 
   // The message dispatcher usually ensures that the app view indexes these updates,
-  // but that has been taken care of via a db migration to remove the indexes entirely.
+  // but that has been taken care of with a db migration, plus the end of this migration.
   const noopDispatcher = new MessageDispatcher()
   noopDispatcher.destroy()
 
