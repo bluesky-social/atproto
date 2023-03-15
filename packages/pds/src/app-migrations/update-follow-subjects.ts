@@ -98,24 +98,26 @@ async function main(tx: Database, ctx: AppContext) {
 
   console.log(
     SHORT_NAME,
-    `${updatesTurnedDeletes.length} updates turned deletes`,
+    `${updatesTurnedDeletes.length} updates-turned-deletes`,
     updatesTurnedDeletes,
   )
 
   if (updatesTurnedDeletes.length > followCount / 1000) {
-    throw new Error('Too many updates turned deletes.')
+    throw new Error('Too many updates-turned-deletes.')
   }
 
   // Update indexes for deleted, invalid follows
 
-  await tx.db
-    .deleteFrom('follow')
-    .where('uri', 'in', updatesTurnedDeletes)
-    .executeTakeFirst()
-  await tx.db
-    .deleteFrom('duplicate_record')
-    .where('duplicateOf', 'in', updatesTurnedDeletes)
-    .executeTakeFirst()
+  if (updatesTurnedDeletes.length) {
+    await tx.db
+      .deleteFrom('follow')
+      .where('uri', 'in', updatesTurnedDeletes)
+      .executeTakeFirst()
+    await tx.db
+      .deleteFrom('duplicate_record')
+      .where('duplicateOf', 'in', updatesTurnedDeletes)
+      .executeTakeFirst()
+  }
 
   console.log(SHORT_NAME, 'updated indexes for updates-turned-deletes')
 
