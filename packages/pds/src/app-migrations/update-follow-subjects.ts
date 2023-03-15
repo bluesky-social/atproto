@@ -48,7 +48,7 @@ async function main(tx: Database, ctx: AppContext) {
   let didsComplete = 0
   let updatesComplete = 0
   const updatesTurnedDeletes: string[] = []
-  const chunks = chunkArray(allDids, Math.ceil(allDids.length / 2))
+  const chunks = chunkArray(allDids, Math.ceil(allDids.length / 10))
 
   await Promise.all(
     chunks.map(async (dids) => {
@@ -90,7 +90,7 @@ async function main(tx: Database, ctx: AppContext) {
         updatesComplete += follows.length
         console.log(
           SHORT_NAME,
-          `(${didsComplete}/${dids.length}) dids, (${updatesComplete}/${followCount}) records`,
+          `(${didsComplete}/${allDids.length}) dids, (${updatesComplete}/${followCount}) records`,
         )
       }
     }),
