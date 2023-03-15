@@ -2,7 +2,7 @@ name: build-and-push-pds
 on: [push]
 env:
   REGISTRY: ghcr.io
-  USERNAME: {{ github.actor }}
+  USERNAME: ${{ github.actor }}
   PASSWORD: ${{ secrets.GITHUB_TOKEN }}
 
   # github.repository as <account>/<repo>
