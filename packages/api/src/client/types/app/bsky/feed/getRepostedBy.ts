@@ -5,7 +5,7 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
-import * as AppBskyActorRef from '../actor/ref'
+import * as AppBskyActorDefs from '../actor/defs'
 
 export interface QueryParams {
   uri: string
@@ -20,7 +20,7 @@ export interface OutputSchema {
   uri: string
   cid?: string
   cursor?: string
-  repostedBy: AppBskyActorRef.WithInfo[]
+  repostedBy: AppBskyActorDefs.WithInfo[]
   [k: string]: unknown
 }
 

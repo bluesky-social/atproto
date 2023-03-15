@@ -6,7 +6,7 @@ import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyFeedFeedViewPost from './feedViewPost'
+import * as AppBskyFeedDefs from './defs'
 
 export interface QueryParams {
   algorithm?: string
@@ -18,7 +18,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  feed: AppBskyFeedFeedViewPost.Main[]
+  feed: AppBskyFeedDefs.PostViewInFeed[]
   [k: string]: unknown
 }
 

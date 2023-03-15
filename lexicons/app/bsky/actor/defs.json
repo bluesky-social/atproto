@@ -1,0 +1,30 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.actor.defs",
+  "description": "A reference to an actor in the network.",
+  "defs": {
+    "withInfo": {
+      "type": "object",
+      "required": ["did", "declaration", "handle"],
+      "properties": {
+        "did": {"type": "string", "format": "did"},
+        "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
+        "handle": {"type": "string"},
+        "displayName": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "avatar": { "type": "string" },
+        "viewer": {"type": "ref", "ref": "#viewerState"}
+      }
+    },
+    "viewerState": {
+      "type": "object",
+      "properties": {
+        "muted": {"type": "boolean"},
+        "following": {"type": "string", "format": "at-uri"},
+        "followedBy": {"type": "string", "format": "at-uri"}
+      }
+    }
+  }
+}

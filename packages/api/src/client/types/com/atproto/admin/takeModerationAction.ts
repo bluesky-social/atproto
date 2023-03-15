@@ -5,21 +5,20 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
-import * as ComAtprotoRepoRepoRef from '../repo/repoRef'
-import * as ComAtprotoRepoRecordRef from '../repo/recordRef'
-import * as ComAtprotoAdminModerationAction from './moderationAction'
+import * as ComAtprotoAdminDef from './def'
+import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
 
 export interface QueryParams {}
 
 export interface InputSchema {
   action:
-    | 'com.atproto.admin.moderationAction#takedown'
-    | 'com.atproto.admin.moderationAction#flag'
-    | 'com.atproto.admin.moderationAction#acknowledge'
+    | 'com.atproto.admin.def#takedown'
+    | 'com.atproto.admin.def#flag'
+    | 'com.atproto.admin.def#acknowledge'
     | (string & {})
   subject:
-    | ComAtprotoRepoRepoRef.Main
-    | ComAtprotoRepoRecordRef.Main
+    | ComAtprotoAdminDef.RepoRef
+    | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
   subjectBlobCids?: string[]
   reason: string
@@ -27,7 +26,7 @@ export interface InputSchema {
   [k: string]: unknown
 }
 
-export type OutputSchema = ComAtprotoAdminModerationAction.View
+export type OutputSchema = ComAtprotoAdminDef.ActionView
 
 export interface CallOptions {
   headers?: Headers

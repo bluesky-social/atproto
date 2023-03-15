@@ -6,7 +6,7 @@ import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as ComAtprotoAdminRecord from './record'
+import * as ComAtprotoAdminDef from './def'
 
 export interface QueryParams {
   uri: string
@@ -14,7 +14,7 @@ export interface QueryParams {
 }
 
 export type InputSchema = undefined
-export type OutputSchema = ComAtprotoAdminRecord.ViewDetail
+export type OutputSchema = ComAtprotoAdminDef.RecordViewDetail
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {

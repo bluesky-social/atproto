@@ -6,7 +6,7 @@ import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyActorRef from '../actor/ref'
+import * as AppBskyActorDefs from '../actor/defs'
 
 export interface QueryParams {
   uri: string
@@ -51,7 +51,7 @@ export interface Vote {
   direction: 'up' | 'down'
   indexedAt: string
   createdAt: string
-  actor: AppBskyActorRef.WithInfo
+  actor: AppBskyActorDefs.WithInfo
   [k: string]: unknown
 }
 
