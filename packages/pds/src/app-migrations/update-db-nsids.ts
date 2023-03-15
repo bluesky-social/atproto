@@ -6,7 +6,7 @@ import { appMigration } from '../db/leader'
 const MIGRATION_NAME = '2023-03-15-update-db-nsids'
 const SHORT_NAME = 'update-db-nsids'
 
-export async function removeDeclarationsMigration(ctx: AppContext) {
+export async function updateDbNsidsMigration(ctx: AppContext) {
   await appMigration(ctx.db, MIGRATION_NAME, (tx) => main(tx))
 }
 
