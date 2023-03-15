@@ -23,7 +23,7 @@
             "cursor": {"type": "string"},
             "feed": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.feed.defs#postViewInFeed"}
+              "items": {"type": "ref", "ref": "app.bsky.feed.defs#feedViewPost"}
             }
           }
         }

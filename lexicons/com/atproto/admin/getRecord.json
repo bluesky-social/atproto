@@ -15,7 +15,7 @@
       },
       "output": {
         "encoding": "application/json",
-        "schema": {"type": "ref", "ref": "com.atproto.admin.def#recordViewDetail"}
+        "schema": {"type": "ref", "ref": "com.atproto.admin.defs#recordViewDetail"}
       }
     }
   }

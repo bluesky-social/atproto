@@ -20,7 +20,7 @@
           "required": ["repos"],
           "properties": {
             "cursor": {"type": "string"},
-            "repos": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.def#repoView"}}
+            "repos": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.defs#repoView"}}
           }
         }
       }

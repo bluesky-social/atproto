@@ -20,7 +20,7 @@
           "required": ["actions"],
           "properties": {
             "cursor": {"type": "string"},
-            "actions": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.def#actionView"}}
+            "actions": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.defs#actionView"}}
           }
         }
       }

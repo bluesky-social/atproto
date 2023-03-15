@@ -6,7 +6,7 @@ import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as ComAtprotoAdminDef from './def'
+import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {}
 
@@ -17,7 +17,7 @@ export interface InputSchema {
   [k: string]: unknown
 }
 
-export type OutputSchema = ComAtprotoAdminDef.ActionView
+export type OutputSchema = ComAtprotoAdminDefs.ActionView
 
 export interface HandlerInput {
   encoding: 'application/json'

@@ -3,7 +3,7 @@ import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.account.requestPasswordReset(async ({ input }) => {
+  server.com.atproto.server.requestPasswordReset(async ({ input }) => {
     const email = input.body.email.toLowerCase()
 
     const user = await ctx.services.account(ctx.db).getAccountByEmail(email)

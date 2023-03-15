@@ -2,7 +2,7 @@
     "lexicon": 1,
     "id": "com.atproto.moderation.defs",
     "defs": {
-      "reason": {
+      "reasonType": {
         "type": "string",
         "knownValues": [
           "com.atproto.moderation.defs#reasonSpam",

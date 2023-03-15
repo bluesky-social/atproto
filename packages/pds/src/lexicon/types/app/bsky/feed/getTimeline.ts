@@ -18,7 +18,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  feed: AppBskyFeedDefs.PostViewInFeed[]
+  feed: AppBskyFeedDefs.FeedViewPost[]
   [k: string]: unknown
 }
 

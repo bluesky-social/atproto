@@ -3,19 +3,19 @@
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
 import { ValidationResult } from '@atproto/lexicon'
-import { isObj, hasProp } from '../../../util'
-import { lexicons } from '../../../lexicons'
-import * as ComAtprotoReportReasonType from './report/reasonType'
-import * as ComAtprotoAdminDef from './admin/def'
-import * as ComAtprotoRepoStrongRef from './repo/strongRef'
+import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
+import * as ComAtprotoModerationDefs from './defs'
+import * as ComAtprotoAdminDefs from '../admin/defs'
+import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
 
 export interface QueryParams {}
 
 export interface InputSchema {
-  reasonType: ComAtprotoReportReasonType.Main
+  reasonType: ComAtprotoModerationDefs.ReasonType
   reason?: string
   subject:
-    | ComAtprotoAdminDef.RepoRef
+    | ComAtprotoAdminDefs.RepoRef
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
   [k: string]: unknown
@@ -23,10 +23,10 @@ export interface InputSchema {
 
 export interface OutputSchema {
   id: number
-  reasonType: ComAtprotoReportReasonType.Main
+  reasonType: ComAtprotoModerationDefs.ReasonType
   reason?: string
   subject:
-    | ComAtprotoAdminDef.RepoRef
+    | ComAtprotoAdminDefs.RepoRef
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
   reportedBy: string

@@ -3,7 +3,7 @@ import { countAll, notSoftDeletedClause } from '../../../../db/util'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.notification.getCount({
+  server.app.bsky.notification.getUnreadCount({
     auth: ctx.accessVerifier,
     handler: async ({ auth }) => {
       const requester = auth.credentials.did

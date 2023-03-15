@@ -5,7 +5,7 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
-import * as ComAtprotoAdminDef from './def'
+import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
   subject?: string
@@ -18,7 +18,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  reports: ComAtprotoAdminDef.ReportView[]
+  reports: ComAtprotoAdminDefs.ReportView[]
   [k: string]: unknown
 }
 

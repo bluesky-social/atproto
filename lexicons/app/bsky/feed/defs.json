@@ -34,7 +34,7 @@
         "downvote": {"type": "string"}
       }
     },
-    "postViewInFeed": {
+    "feedViewPost": {
       "type": "object",
       "required": ["post"],
       "properties": {
@@ -57,6 +57,26 @@
       "properties": {
         "by": {"type": "ref", "ref": "app.bsky.actor.defs#withInfo"},
         "indexedAt": {"type": "string", "format": "datetime"}
+      }
+    },
+    "threadViewPost": {
+      "type": "object",
+      "required": ["post"],
+      "properties": {
+        "post": {"type": "ref", "ref": "#postView"},
+        "parent": {"type": "union", "refs": ["#threadViewPost", "#notFoundPost"]},
+        "replies": {
+          "type": "array",
+          "items": {"type": "union", "refs": ["#threadViewPost", "#notFoundPost"]}
+        }
+      }
+    },
+    "notFoundPost": {
+      "type": "object",
+      "required": ["uri", "notFound"],
+      "properties": {
+        "uri": {"type": "string", "format": "at-uri"},
+        "notFound": {"type": "boolean", "const": true}
       }
     }
   }

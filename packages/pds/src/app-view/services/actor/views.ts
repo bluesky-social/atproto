@@ -1,5 +1,5 @@
 import { ArrayEl } from '@atproto/common'
-import { WithInfo as ActorWithInfo } from '../../../lexicon/types/app/bsky/actor/ref'
+import { WithInfo as ActorWithInfo } from '../../../lexicon/types/app/bsky/actor/defs'
 import {
   View as ProfileView,
   ViewBasic as ProfileViewBasic,

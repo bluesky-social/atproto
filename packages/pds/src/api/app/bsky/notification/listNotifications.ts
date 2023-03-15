@@ -6,7 +6,7 @@ import AppContext from '../../../../context'
 import { notSoftDeletedClause } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.notification.list({
+  server.app.bsky.notification.listNotifications({
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const { limit, cursor } = params

@@ -1,11 +1,11 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import Outbox from '../../../../sequencer/outbox'
-import { OutputSchema as RepoEvent } from '../../../../lexicon/types/com/atproto/sync/subscribeAllRepos'
+import { OutputSchema as RepoEvent } from '../../../../lexicon/types/com/atproto/sync/subscribeRepos'
 import { InfoFrame, InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.sync.subscribeAllRepos(async function* ({ params }) {
+  server.com.atproto.sync.subscribeRepos(async function* ({ params }) {
     const { cursor } = params
     const outbox = new Outbox(ctx.sequencer, {
       maxBufferSize: ctx.cfg.maxSubscriptionBuffer,

@@ -5,7 +5,7 @@ import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 
-export type Reason =
+export type ReasonType =
   | 'com.atproto.moderation.defs#reasonSpam'
   | 'com.atproto.moderation.defs#reasonOther'
   | (string & {})

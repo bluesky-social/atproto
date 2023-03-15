@@ -1,8 +1,8 @@
-import { Server } from '../../../lexicon'
-import AppContext from '../../../context'
+import { Server } from '../../../../lexicon'
+import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.blob.upload({
+  server.com.atproto.repo.uploadBlob({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did

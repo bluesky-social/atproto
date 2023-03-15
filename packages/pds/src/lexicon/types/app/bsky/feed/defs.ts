@@ -57,23 +57,23 @@ export function validateViewerState(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#viewerState', v)
 }
 
-export interface PostViewInFeed {
+export interface FeedViewPost {
   post: PostView
   reply?: ReplyRef
   reason?: ReasonRepost | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
 
-export function isPostViewInFeed(v: unknown): v is PostViewInFeed {
+export function isFeedViewPost(v: unknown): v is FeedViewPost {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#postViewInFeed'
+    v.$type === 'app.bsky.feed.defs#feedViewPost'
   )
 }
 
-export function validatePostViewInFeed(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#postViewInFeed', v)
+export function validateFeedViewPost(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#feedViewPost', v)
 }
 
 export interface ReplyRef {
@@ -108,4 +108,48 @@ export function isReasonRepost(v: unknown): v is ReasonRepost {
 
 export function validateReasonRepost(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#reasonRepost', v)
+}
+
+export interface ThreadViewPost {
+  post: PostView
+  parent?:
+    | ThreadViewPost
+    | NotFoundPost
+    | { $type: string; [k: string]: unknown }
+  replies?: (
+    | ThreadViewPost
+    | NotFoundPost
+    | { $type: string; [k: string]: unknown }
+  )[]
+  [k: string]: unknown
+}
+
+export function isThreadViewPost(v: unknown): v is ThreadViewPost {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#threadViewPost'
+  )
+}
+
+export function validateThreadViewPost(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#threadViewPost', v)
+}
+
+export interface NotFoundPost {
+  uri: string
+  notFound: true
+  [k: string]: unknown
+}
+
+export function isNotFoundPost(v: unknown): v is NotFoundPost {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#notFoundPost'
+  )
+}
+
+export function validateNotFoundPost(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#notFoundPost', v)
 }

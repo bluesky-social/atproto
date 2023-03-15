@@ -19,7 +19,7 @@ import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRep
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
-import * as ComAtprotoCreateReport from './types/com/atproto/createReport'
+import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
 import * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs'
 import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
@@ -97,7 +97,7 @@ export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRep
 export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
-export * as ComAtprotoCreateReport from './types/com/atproto/createReport'
+export * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
 export * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs'
 export * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
 export * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
@@ -220,6 +220,7 @@ export class AtprotoNS {
   _service: AtpServiceClient
   admin: AdminNS
   identity: IdentityNS
+  moderation: ModerationNS
   repo: RepoNS
   server: ServerNS
   sync: SyncNS
@@ -228,20 +229,10 @@ export class AtprotoNS {
     this._service = service
     this.admin = new AdminNS(service)
     this.identity = new IdentityNS(service)
+    this.moderation = new ModerationNS(service)
     this.repo = new RepoNS(service)
     this.server = new ServerNS(service)
     this.sync = new SyncNS(service)
-  }
-
-  createReport(
-    data?: ComAtprotoCreateReport.InputSchema,
-    opts?: ComAtprotoCreateReport.CallOptions,
-  ): Promise<ComAtprotoCreateReport.Response> {
-    return this._service.xrpc
-      .call('com.atproto.createReport', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoCreateReport.toKnownErr(e)
-      })
   }
 }
 
@@ -389,6 +380,25 @@ export class IdentityNS {
       .call('com.atproto.identity.updateHandle', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoIdentityUpdateHandle.toKnownErr(e)
+      })
+  }
+}
+
+export class ModerationNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  createReport(
+    data?: ComAtprotoModerationCreateReport.InputSchema,
+    opts?: ComAtprotoModerationCreateReport.CallOptions,
+  ): Promise<ComAtprotoModerationCreateReport.Response> {
+    return this._service.xrpc
+      .call('com.atproto.moderation.createReport', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoModerationCreateReport.toKnownErr(e)
       })
   }
 }

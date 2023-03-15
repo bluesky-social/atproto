@@ -1,17 +1,17 @@
 import { CID } from 'multiformats/cid'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/uri'
-import { Server } from '../../../lexicon'
-import AppContext from '../../../context'
-import { ModerationReport } from '../../../db/tables/moderation'
-import { InputSchema as ReportInput } from '../../../lexicon/types/com/atproto/report/create'
+import { Server } from '../../../../lexicon'
+import AppContext from '../../../../context'
+import { ModerationReport } from '../../../../db/tables/moderation'
+import { InputSchema as ReportInput } from '../../../../lexicon/types/com/atproto/moderation/createReport'
 import {
-  OTHER,
-  SPAM,
-} from '../../../lexicon/types/com/atproto/report/reasonType'
+  REASONOTHER,
+  REASONSPAM,
+} from '../../../../lexicon/types/com/atproto/moderation/defs'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.report.create({
+  server.com.atproto.moderation.createReport({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ input, auth }) => {
       const { db, services } = ctx
@@ -36,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 function getReasonType(reasonType: ReportInput['reasonType']) {
-  if (reasonType === SPAM || reasonType === OTHER) {
+  if (reasonType === REASONSPAM || reasonType === REASONOTHER) {
     return reasonType as ModerationReport['reasonType']
   }
   throw new InvalidRequestError('Invalid reason type')

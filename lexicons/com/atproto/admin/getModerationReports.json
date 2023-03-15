@@ -21,7 +21,7 @@
           "required": ["reports"],
           "properties": {
             "cursor": {"type": "string"},
-            "reports": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.def#reportView"}}
+            "reports": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.defs#reportView"}}
           }
         }
       }

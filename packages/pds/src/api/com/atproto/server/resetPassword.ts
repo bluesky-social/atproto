@@ -3,7 +3,7 @@ import { Server } from '../../../../lexicon'
 import Database from '../../../../db'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.account.resetPassword(async ({ input }) => {
+  server.com.atproto.server.resetPassword(async ({ input }) => {
     const { token, password } = input.body
 
     const tokenInfo = await ctx.db.db

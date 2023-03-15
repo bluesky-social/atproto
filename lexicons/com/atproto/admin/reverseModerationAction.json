@@ -21,7 +21,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "ref",
-          "ref": "com.atproto.admin.def#actionView"
+          "ref": "com.atproto.admin.defs#actionView"
         }
       }
     }

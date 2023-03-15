@@ -7,7 +7,7 @@ import {
   ACKNOWLEDGE,
   FLAG,
   TAKEDOWN,
-} from '../../../../lexicon/types/com/atproto/admin/moderationAction'
+} from '../../../../lexicon/types/com/atproto/admin/defs'
 import { ModerationAction } from '../../../../db/tables/moderation'
 import { InputSchema as ActionInput } from '../../../../lexicon/types/com/atproto/admin/takeModerationAction'
 
@@ -33,7 +33,7 @@ export default function (server: Server, ctx: AppContext) {
 
         if (
           result.action === TAKEDOWN &&
-          result.subjectType === 'com.atproto.repo.repoRef' &&
+          result.subjectType === 'com.atproto.admin.defs#repoRef' &&
           result.subjectDid
         ) {
           await authTxn.revokeRefreshTokensByDid(result.subjectDid)

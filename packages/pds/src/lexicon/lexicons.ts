@@ -54,7 +54,7 @@ export const schemaDict = {
           },
           reversal: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionType',
+            ref: 'lex:com.atproto.admin.defs#actionReversal',
           },
           resolvedReportIds: {
             type: 'array',
@@ -87,8 +87,8 @@ export const schemaDict = {
           subject: {
             type: 'union',
             refs: [
-              'lex:com.atproto.admin.repo#view',
-              'lex:com.atproto.admin.record#view',
+              'lex:com.atproto.admin.defs#repoView',
+              'lex:com.atproto.admin.defs#recordView',
             ],
           },
           subjectBlobs: {
@@ -181,7 +181,7 @@ export const schemaDict = {
           'id',
           'reasonType',
           'subject',
-          'reportedByDid',
+          'reportedBy',
           'createdAt',
           'resolvedByActionIds',
         ],
@@ -191,7 +191,7 @@ export const schemaDict = {
           },
           reasonType: {
             type: 'ref',
-            ref: 'lex:com.atproto.report.reasonType',
+            ref: 'lex:com.atproto.moderation.defs#reasonType',
           },
           reason: {
             type: 'string',
@@ -203,7 +203,7 @@ export const schemaDict = {
               'lex:com.atproto.repo.strongRef',
             ],
           },
-          reportedByDid: {
+          reportedBy: {
             type: 'string',
             format: 'did',
           },
@@ -225,7 +225,7 @@ export const schemaDict = {
           'id',
           'reasonType',
           'subject',
-          'reportedByDid',
+          'reportedBy',
           'createdAt',
           'resolvedByActions',
         ],
@@ -235,7 +235,7 @@ export const schemaDict = {
           },
           reasonType: {
             type: 'ref',
-            ref: 'lex:com.atproto.report.reasonType',
+            ref: 'lex:com.atproto.moderation.defs#reasonType',
           },
           reason: {
             type: 'string',
@@ -243,11 +243,11 @@ export const schemaDict = {
           subject: {
             type: 'union',
             refs: [
-              'lex:com.atproto.admin.repo#view',
-              'lex:com.atproto.admin.record#view',
+              'lex:com.atproto.admin.defs#repoView',
+              'lex:com.atproto.admin.defs#recordView',
             ],
           },
-          reportedByDid: {
+          reportedBy: {
             type: 'string',
             format: 'did',
           },
@@ -259,7 +259,7 @@ export const schemaDict = {
             type: 'array',
             items: {
               type: 'ref',
-              ref: 'lex:com.atproto.admin.moderationAction#view',
+              ref: 'lex:com.atproto.admin.defs#actionView',
             },
           },
         },
@@ -386,7 +386,7 @@ export const schemaDict = {
           },
           repo: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.repo#view',
+            ref: 'lex:com.atproto.admin.defs#repoView',
           },
         },
       },
@@ -548,7 +548,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.def#actionViewDetail',
+            ref: 'lex:com.atproto.admin.defs#actionViewDetail',
           },
         },
       },
@@ -591,7 +591,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:com.atproto.admin.def#actionView',
+                  ref: 'lex:com.atproto.admin.defs#actionView',
                 },
               },
             },
@@ -620,7 +620,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.def#reportViewDetail',
+            ref: 'lex:com.atproto.admin.defs#reportViewDetail',
           },
         },
       },
@@ -666,7 +666,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:com.atproto.admin.def#reportView',
+                  ref: 'lex:com.atproto.admin.defs#reportView',
                 },
               },
             },
@@ -700,7 +700,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.def#recordViewDetail',
+            ref: 'lex:com.atproto.admin.defs#recordViewDetail',
           },
         },
       },
@@ -727,7 +727,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.def#repoViewDetail',
+            ref: 'lex:com.atproto.admin.defs#repoViewDetail',
           },
         },
       },
@@ -766,7 +766,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.def#actionView',
+            ref: 'lex:com.atproto.admin.defs#actionView',
           },
         },
       },
@@ -802,7 +802,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.def#actionView',
+            ref: 'lex:com.atproto.admin.defs#actionView',
           },
         },
       },
@@ -845,7 +845,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:com.atproto.admin.def#repoView',
+                  ref: 'lex:com.atproto.admin.defs#repoView',
                 },
               },
             },
@@ -870,15 +870,15 @@ export const schemaDict = {
               action: {
                 type: 'string',
                 knownValues: [
-                  'com.atproto.admin.def#takedown',
-                  'com.atproto.admin.def#flag',
-                  'com.atproto.admin.def#acknowledge',
+                  'com.atproto.admin.defs#takedown',
+                  'com.atproto.admin.defs#flag',
+                  'com.atproto.admin.defs#acknowledge',
                 ],
               },
               subject: {
                 type: 'union',
                 refs: [
-                  'lex:com.atproto.admin.def#repoRef',
+                  'lex:com.atproto.admin.defs#repoRef',
                   'lex:com.atproto.repo.strongRef',
                 ],
               },
@@ -903,7 +903,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.def#actionView',
+            ref: 'lex:com.atproto.admin.defs#actionView',
           },
         },
         errors: [
@@ -969,9 +969,9 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoCreateReport: {
+  ComAtprotoModerationCreateReport: {
     lexicon: 1,
-    id: 'com.atproto.createReport',
+    id: 'com.atproto.moderation.createReport',
     defs: {
       main: {
         type: 'procedure',
@@ -984,7 +984,7 @@ export const schemaDict = {
             properties: {
               reasonType: {
                 type: 'ref',
-                ref: 'lex:com.atproto.report.reasonType',
+                ref: 'lex:com.atproto.moderation.defs#reasonType',
               },
               reason: {
                 type: 'string',
@@ -992,7 +992,7 @@ export const schemaDict = {
               subject: {
                 type: 'union',
                 refs: [
-                  'lex:com.atproto.admin.def#repoRef',
+                  'lex:com.atproto.admin.defs#repoRef',
                   'lex:com.atproto.repo.strongRef',
                 ],
               },
@@ -1016,7 +1016,7 @@ export const schemaDict = {
               },
               reasonType: {
                 type: 'ref',
-                ref: 'lex:com.atproto.report.reasonType',
+                ref: 'lex:com.atproto.moderation.defs#reasonType',
               },
               reason: {
                 type: 'string',
@@ -1024,7 +1024,7 @@ export const schemaDict = {
               subject: {
                 type: 'union',
                 refs: [
-                  'lex:com.atproto.admin.def#repoRef',
+                  'lex:com.atproto.admin.defs#repoRef',
                   'lex:com.atproto.repo.strongRef',
                 ],
               },
@@ -1046,7 +1046,7 @@ export const schemaDict = {
     lexicon: 1,
     id: 'com.atproto.moderation.defs',
     defs: {
-      reason: {
+      reasonType: {
         type: 'string',
         knownValues: [
           'com.atproto.moderation.defs#reasonSpam',
@@ -3054,7 +3054,7 @@ export const schemaDict = {
           },
         },
       },
-      postViewInFeed: {
+      feedViewPost: {
         type: 'object',
         required: ['post'],
         properties: {
@@ -3100,6 +3100,47 @@ export const schemaDict = {
           },
         },
       },
+      threadViewPost: {
+        type: 'object',
+        required: ['post'],
+        properties: {
+          post: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#postView',
+          },
+          parent: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.defs#threadViewPost',
+              'lex:app.bsky.feed.defs#notFoundPost',
+            ],
+          },
+          replies: {
+            type: 'array',
+            items: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.feed.defs#threadViewPost',
+                'lex:app.bsky.feed.defs#notFoundPost',
+              ],
+            },
+          },
+        },
+      },
+      notFoundPost: {
+        type: 'object',
+        required: ['uri', 'notFound'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          notFound: {
+            type: 'boolean',
+            const: true,
+          },
+        },
+      },
     },
   },
   AppBskyFeedGetAuthorFeed: {
@@ -3140,7 +3181,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#postViewInFeed',
+                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
                 },
               },
             },
@@ -3177,8 +3218,8 @@ export const schemaDict = {
               thread: {
                 type: 'union',
                 refs: [
-                  'lex:app.bsky.feed.getPostThread#threadViewPost',
-                  'lex:app.bsky.feed.getPostThread#notFoundPost',
+                  'lex:app.bsky.feed.defs#threadViewPost',
+                  'lex:app.bsky.feed.defs#notFoundPost',
                 ],
               },
             },
@@ -3189,47 +3230,6 @@ export const schemaDict = {
             name: 'NotFound',
           },
         ],
-      },
-      threadViewPost: {
-        type: 'object',
-        required: ['post'],
-        properties: {
-          post: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.post#view',
-          },
-          parent: {
-            type: 'union',
-            refs: [
-              'lex:app.bsky.feed.getPostThread#threadViewPost',
-              'lex:app.bsky.feed.getPostThread#notFoundPost',
-            ],
-          },
-          replies: {
-            type: 'array',
-            items: {
-              type: 'union',
-              refs: [
-                'lex:app.bsky.feed.getPostThread#threadViewPost',
-                'lex:app.bsky.feed.getPostThread#notFoundPost',
-              ],
-            },
-          },
-        },
-      },
-      notFoundPost: {
-        type: 'object',
-        required: ['uri', 'notFound'],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          notFound: {
-            type: 'boolean',
-            const: true,
-          },
-        },
       },
     },
   },
@@ -3329,7 +3329,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#postViewInFeed',
+                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
                 },
               },
             },
@@ -4002,7 +4002,7 @@ export const ids = {
   ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
   ComAtprotoIdentityResolveHandle: 'com.atproto.identity.resolveHandle',
   ComAtprotoIdentityUpdateHandle: 'com.atproto.identity.updateHandle',
-  ComAtprotoCreateReport: 'com.atproto.createReport',
+  ComAtprotoModerationCreateReport: 'com.atproto.moderation.createReport',
   ComAtprotoModerationDefs: 'com.atproto.moderation.defs',
   ComAtprotoRepoApplyWrites: 'com.atproto.repo.applyWrites',
   ComAtprotoRepoCreateRecord: 'com.atproto.repo.createRecord',

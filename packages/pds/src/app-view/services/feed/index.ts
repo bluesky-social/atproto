@@ -4,7 +4,7 @@ import Database from '../../../db'
 import { countAll, notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
 import { isPresented as isPresentedImage } from '../../../lexicon/types/app/bsky/embed/images'
-import { View as PostView } from '../../../lexicon/types/app/bsky/feed/post'
+import { PostView } from '../../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
 
 export * from './types'

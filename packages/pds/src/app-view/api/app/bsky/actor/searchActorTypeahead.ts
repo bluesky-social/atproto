@@ -1,7 +1,7 @@
 import AppContext from '../../../../../context'
 import Database from '../../../../../db'
 import { Server } from '../../../../../lexicon'
-import * as Method from '../../../../../lexicon/types/app/bsky/actor/searchTypeahead'
+import * as Method from '../../../../../lexicon/types/app/bsky/actor/searchActorTypeahead'
 import {
   cleanTerm,
   getUserSearchQueryPg,
@@ -10,7 +10,7 @@ import {
 import { DidHandle } from '../../../../../db/tables/did-handle'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.actor.searchTypeahead({
+  server.app.bsky.actor.searchActorTypeahead({
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const { services, db } = ctx

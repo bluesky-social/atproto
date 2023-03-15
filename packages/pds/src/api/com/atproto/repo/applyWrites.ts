@@ -6,7 +6,7 @@ import AppContext from '../../../../context'
 import { WriteOpAction } from '@atproto/repo'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.batchWrite({
+  server.com.atproto.repo.applyWrites({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ input, auth }) => {
       const tx = input.body

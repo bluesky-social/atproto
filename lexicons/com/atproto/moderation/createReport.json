@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.createReport",
+  "id": "com.atproto.moderation.createReport",
   "defs": {
     "main": {
       "type": "procedure",
@@ -11,12 +11,12 @@
           "type": "object",
           "required": ["reasonType", "subject"],
           "properties": {
-            "reasonType": {"type": "ref", "ref": "com.atproto.report.reasonType"},
+            "reasonType": {"type": "ref", "ref": "com.atproto.moderation.defs#reasonType"},
             "reason": {"type": "string"},
             "subject": {
               "type": "union",
               "refs": [
-                "com.atproto.admin.def#repoRef",
+                "com.atproto.admin.defs#repoRef",
                 "com.atproto.repo.strongRef"
               ]
             }
@@ -30,12 +30,12 @@
           "required": ["id", "reasonType", "subject", "reportedBy", "createdAt"],
           "properties": {
             "id": {"type": "integer"},
-            "reasonType": {"type": "ref", "ref": "com.atproto.report.reasonType"},
+            "reasonType": {"type": "ref", "ref": "com.atproto.moderation.defs#reasonType"},
             "reason": {"type": "string"},
             "subject": {
               "type": "union",
               "refs": [
-                "com.atproto.admin.def#repoRef",
+                "com.atproto.admin.defs#repoRef",
                 "com.atproto.repo.strongRef"
               ]
             },

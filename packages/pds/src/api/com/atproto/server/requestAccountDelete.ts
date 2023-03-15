@@ -4,7 +4,7 @@ import AppContext from '../../../../context'
 import { randomStr } from '@atproto/crypto'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.account.requestDelete({
+  server.com.atproto.server.requestAccountDelete({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth }) => {
       const did = auth.credentials.did

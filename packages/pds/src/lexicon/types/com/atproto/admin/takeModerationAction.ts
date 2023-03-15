@@ -6,19 +6,19 @@ import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as ComAtprotoAdminDef from './def'
+import * as ComAtprotoAdminDefs from './defs'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
 
 export interface QueryParams {}
 
 export interface InputSchema {
   action:
-    | 'com.atproto.admin.def#takedown'
-    | 'com.atproto.admin.def#flag'
-    | 'com.atproto.admin.def#acknowledge'
+    | 'com.atproto.admin.defs#takedown'
+    | 'com.atproto.admin.defs#flag'
+    | 'com.atproto.admin.defs#acknowledge'
     | (string & {})
   subject:
-    | ComAtprotoAdminDef.RepoRef
+    | ComAtprotoAdminDefs.RepoRef
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
   subjectBlobCids?: string[]
@@ -27,7 +27,7 @@ export interface InputSchema {
   [k: string]: unknown
 }
 
-export type OutputSchema = ComAtprotoAdminDef.ActionView
+export type OutputSchema = ComAtprotoAdminDefs.ActionView
 
 export interface HandlerInput {
   encoding: 'application/json'

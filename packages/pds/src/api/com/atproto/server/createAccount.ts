@@ -7,7 +7,7 @@ import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.account.create(async ({ input, req }) => {
+  server.com.atproto.server.createAccount(async ({ input, req }) => {
     const { email, password, inviteCode, recoveryKey } = input.body
 
     let handle: string

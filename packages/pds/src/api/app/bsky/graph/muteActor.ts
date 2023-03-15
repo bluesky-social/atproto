@@ -1,9 +1,9 @@
-import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.graph.unmute({
+  server.app.bsky.graph.muteActor({
     auth: ctx.accessVerifier,
     handler: async ({ auth, input }) => {
       const { actor } = input.body
@@ -14,8 +14,11 @@ export default function (server: Server, ctx: AppContext) {
       if (!subject) {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
       }
+      if (subject.did === requester) {
+        throw new InvalidRequestError('Cannot mute oneself')
+      }
 
-      await services.account(db).unmute({
+      await services.account(db).mute({
         did: subject.did,
         mutedByDid: requester,
       })

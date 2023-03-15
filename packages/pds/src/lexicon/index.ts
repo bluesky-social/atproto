@@ -21,7 +21,7 @@ import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRep
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
-import * as ComAtprotoCreateReport from './types/com/atproto/createReport'
+import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
 import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
@@ -116,6 +116,7 @@ export class AtprotoNS {
   _server: Server
   admin: AdminNS
   identity: IdentityNS
+  moderation: ModerationNS
   repo: RepoNS
   server: ServerNS
   sync: SyncNS
@@ -124,16 +125,10 @@ export class AtprotoNS {
     this._server = server
     this.admin = new AdminNS(server)
     this.identity = new IdentityNS(server)
+    this.moderation = new ModerationNS(server)
     this.repo = new RepoNS(server)
     this.server = new ServerNS(server)
     this.sync = new SyncNS(server)
-  }
-
-  createReport<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, ComAtprotoCreateReport.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'com.atproto.createReport' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
   }
 }
 
@@ -254,6 +249,24 @@ export class IdentityNS {
     cfg: ConfigOf<AV, ComAtprotoIdentityUpdateHandle.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.identity.updateHandle' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ModerationNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  createReport<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoModerationCreateReport.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.moderation.createReport' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

@@ -19,7 +19,7 @@
         "reason": {"type": "string"},
         "createdBy": {"type": "string", "format": "did"},
         "createdAt": {"type": "string", "format": "datetime"},
-        "reversal": {"type": "ref", "ref": "#actionType"},
+        "reversal": {"type": "ref", "ref": "#actionReversal"},
         "resolvedReportIds": {"type": "array", "items": {"type": "integer"}}
       }
     },
@@ -32,8 +32,8 @@
         "subject": {
           "type": "union",
           "refs": [
-            "com.atproto.admin.repo#view",
-            "com.atproto.admin.record#view"
+            "#repoView",
+            "#recordView"
           ]
         },
         "subjectBlobs": {"type": "array", "items": {"type": "ref", "ref": "#blobView"}},
@@ -83,10 +83,10 @@
     },
     "reportView": {
       "type": "object",
-      "required": ["id", "reasonType", "subject", "reportedByDid", "createdAt", "resolvedByActionIds"],
+      "required": ["id", "reasonType", "subject", "reportedBy", "createdAt", "resolvedByActionIds"],
       "properties": {
         "id": {"type": "integer"},
-        "reasonType": {"type": "ref", "ref": "com.atproto.report.reasonType"},
+        "reasonType": {"type": "ref", "ref": "com.atproto.moderation.defs#reasonType"},
         "reason": {"type": "string"},
         "subject": {
           "type": "union",
@@ -95,28 +95,28 @@
             "com.atproto.repo.strongRef"
           ]
         },
-        "reportedByDid": {"type": "string", "format": "did"},
+        "reportedBy": {"type": "string", "format": "did"},
         "createdAt": {"type": "string", "format": "datetime"},
         "resolvedByActionIds": {"type": "array", "items": {"type": "integer"}}
       }
     },
     "reportViewDetail": {
       "type": "object",
-      "required": ["id", "reasonType", "subject", "reportedByDid", "createdAt", "resolvedByActions"],
+      "required": ["id", "reasonType", "subject", "reportedBy", "createdAt", "resolvedByActions"],
       "properties": {
         "id": {"type": "integer"},
-        "reasonType": {"type": "ref", "ref": "com.atproto.report.reasonType"},
+        "reasonType": {"type": "ref", "ref": "com.atproto.moderation.defs#reasonType"},
         "reason": {"type": "string"},
         "subject": {
           "type": "union",
           "refs": [
-            "com.atproto.admin.repo#view",
-            "com.atproto.admin.record#view"
+            "#repoView",
+            "#recordView"
           ]
         },
-        "reportedByDid": {"type": "string", "format": "did"},
+        "reportedBy": {"type": "string", "format": "did"},
         "createdAt": {"type": "string", "format": "datetime"},
-        "resolvedByActions": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.moderationAction#view"}}
+        "resolvedByActions": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.defs#actionView"}}
       }
     },
     "repoView": {
@@ -160,7 +160,7 @@
         "blobCids": {"type": "array", "items": {"type": "string", "format": "cid"}},
         "indexedAt": {"type": "string", "format": "datetime"},
         "moderation": {"type": "ref", "ref": "#moderation"},
-        "repo": {"type": "ref", "ref": "com.atproto.admin.repo#view"}
+        "repo": {"type": "ref", "ref": "#repoView"}
       }
     },
     "recordViewDetail": {

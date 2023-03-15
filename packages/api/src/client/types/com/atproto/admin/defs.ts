@@ -5,10 +5,7 @@ import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
-import * as ComAtprotoAdminRepo from './repo'
-import * as ComAtprotoAdminRecord from './record'
-import * as ComAtprotoReportReasonType from '../report/reasonType'
-import * as ComAtprotoAdminModerationAction from './moderationAction'
+import * as ComAtprotoModerationDefs from '../moderation/defs'
 
 export interface ActionView {
   id: number
@@ -21,7 +18,7 @@ export interface ActionView {
   reason: string
   createdBy: string
   createdAt: string
-  reversal?: ActionType
+  reversal?: ActionReversal
   resolvedReportIds: number[]
   [k: string]: unknown
 }
@@ -41,10 +38,7 @@ export function validateActionView(v: unknown): ValidationResult {
 export interface ActionViewDetail {
   id: number
   action: ActionType
-  subject:
-    | ComAtprotoAdminRepo.View
-    | ComAtprotoAdminRecord.View
-    | { $type: string; [k: string]: unknown }
+  subject: RepoView | RecordView | { $type: string; [k: string]: unknown }
   subjectBlobs: BlobView[]
   reason: string
   createdBy: string
@@ -118,13 +112,13 @@ export const ACKNOWLEDGE = 'com.atproto.admin.defs#acknowledge'
 
 export interface ReportView {
   id: number
-  reasonType: ComAtprotoReportReasonType.Main
+  reasonType: ComAtprotoModerationDefs.ReasonType
   reason?: string
   subject:
     | RepoRef
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
-  reportedByDid: string
+  reportedBy: string
   createdAt: string
   resolvedByActionIds: number[]
   [k: string]: unknown
@@ -144,15 +138,12 @@ export function validateReportView(v: unknown): ValidationResult {
 
 export interface ReportViewDetail {
   id: number
-  reasonType: ComAtprotoReportReasonType.Main
+  reasonType: ComAtprotoModerationDefs.ReasonType
   reason?: string
-  subject:
-    | ComAtprotoAdminRepo.View
-    | ComAtprotoAdminRecord.View
-    | { $type: string; [k: string]: unknown }
-  reportedByDid: string
+  subject: RepoView | RecordView | { $type: string; [k: string]: unknown }
+  reportedBy: string
   createdAt: string
-  resolvedByActions: ComAtprotoAdminModerationAction.View[]
+  resolvedByActions: ActionView[]
   [k: string]: unknown
 }
 
@@ -236,7 +227,7 @@ export interface RecordView {
   blobCids: string[]
   indexedAt: string
   moderation: Moderation
-  repo: ComAtprotoAdminRepo.View
+  repo: RepoView
   [k: string]: unknown
 }
 

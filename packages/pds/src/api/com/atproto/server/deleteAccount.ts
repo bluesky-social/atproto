@@ -4,7 +4,7 @@ import AppContext from '../../../../context'
 import Database from '../../../../db'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.account.delete(async ({ input }) => {
+  server.com.atproto.server.deleteAccount(async ({ input }) => {
     const { did, password, token } = input.body
     const validPass = await ctx.services
       .account(ctx.db)
