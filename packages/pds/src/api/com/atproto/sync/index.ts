@@ -7,6 +7,7 @@ import getCommitPath from './getCommitPath'
 import getHead from './getHead'
 import getRecord from './getRecord'
 import getRepo from './getRepo'
+import listBlobs from './listBlobs'
 import subscribe from './subscribeAllRepos'
 
 export default function (server: Server, ctx: AppContext) {
@@ -17,5 +18,6 @@ export default function (server: Server, ctx: AppContext) {
   getHead(server, ctx)
   getRecord(server, ctx)
   getRepo(server, ctx)
+  listBlobs(server, ctx)
   subscribe(server, ctx)
 }
