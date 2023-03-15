@@ -79,12 +79,8 @@ describe('sync', () => {
     await sc.follow(carol, alice)
     await sc.follow(bob, alice)
     await sc.follow(dan, bob)
-    await sc.vote('down', bob, sc.posts[alice][1].ref) // Reversed
-    await sc.vote('up', bob, sc.posts[alice][2].ref) // Reversed
-    await sc.vote('up', carol, sc.posts[alice][1].ref) // Reversed
-    await sc.vote('down', carol, sc.posts[alice][2].ref) // Reversed
-    await sc.vote('up', dan, sc.posts[alice][1].ref) // Identical
-    await sc.vote('up', alice, sc.posts[carol][0].ref) // Identical
+    await sc.like(dan, sc.posts[alice][1].ref) // Identical
+    await sc.like(alice, sc.posts[carol][0].ref) // Identical
     await agent.api.app.bsky.actor.updateProfile(
       { displayName: 'ali!' },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
@@ -96,14 +92,14 @@ describe('sync', () => {
 
     // Table comparator
     const getTableDump = async () => {
-      const [post, profile, vote, follow, dupes] = await Promise.all([
+      const [post, profile, like, follow, dupes] = await Promise.all([
         dumpTable(db, 'post', ['uri']),
         dumpTable(db, 'profile', ['uri']),
-        dumpTable(db, 'vote', ['creator', 'subject']),
+        dumpTable(db, 'like', ['creator', 'subject']),
         dumpTable(db, 'follow', ['creator', 'subjectDid']),
         dumpTable(db, 'duplicate_record', ['uri']),
       ])
-      return { post, profile, vote, follow, dupes }
+      return { post, profile, like, follow, dupes }
     }
 
     // Mark originals
@@ -161,7 +157,7 @@ describe('sync', () => {
     'post_embed_external',
     'post_embed_record',
     'repost',
-    'vote',
+    'like',
     /* Not these:
      * 'record', // Shared, but governed by pds
      * 'ipld_block',

@@ -88,8 +88,7 @@ describe('pds author feed views', () => {
 
     aliceForCarol.data.feed.forEach((postView) => {
       const { viewer, uri } = postView.post
-      expect(viewer?.upvote).toEqual(sc.votes.up[carol]?.[uri]?.toString())
-      expect(viewer?.downvote).toEqual(sc.votes.down[carol]?.[uri]?.toString())
+      expect(viewer?.like).toEqual(sc.likes[carol]?.[uri]?.toString())
       expect(viewer?.repost).toEqual(sc.reposts[carol][uri]?.toString())
     })
 

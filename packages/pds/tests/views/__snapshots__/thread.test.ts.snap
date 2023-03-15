@@ -21,8 +21,8 @@ Object {
       },
     },
     "cid": "cids(0)",
-    "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -40,7 +40,6 @@ Object {
     },
     "replyCount": 0,
     "repostCount": 1,
-    "upvoteCount": 0,
     "uri": "record(0)",
     "viewer": Object {
       "repost": "record(5)",
@@ -71,8 +70,8 @@ Object {
       },
     },
     "cid": "cids(0)",
-    "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -90,7 +89,6 @@ Object {
     },
     "replyCount": 0,
     "repostCount": 1,
-    "upvoteCount": 0,
     "uri": "record(0)",
     "viewer": Object {
       "repost": "record(5)",
@@ -116,8 +114,8 @@ Object {
       },
     },
     "cid": "cids(0)",
-    "downvoteCount": 1,
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 3,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -125,10 +123,9 @@ Object {
     },
     "replyCount": 2,
     "repostCount": 1,
-    "upvoteCount": 2,
     "uri": "record(0)",
     "viewer": Object {
-      "upvote": "record(3)",
+      "like": "record(3)",
     },
   },
   "replies": Array [
@@ -145,7 +142,6 @@ Object {
           },
         },
         "cid": "cids(1)",
-        "downvoteCount": 0,
         "embed": Object {
           "$type": "app.bsky.embed.images#presented",
           "images": Array [
@@ -157,6 +153,7 @@ Object {
           ],
         },
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -186,7 +183,6 @@ Object {
         },
         "replyCount": 1,
         "repostCount": 0,
-        "upvoteCount": 0,
         "uri": "record(4)",
         "viewer": Object {},
       },
@@ -206,8 +202,8 @@ Object {
               },
             },
             "cid": "cids(3)",
-            "downvoteCount": 0,
             "indexedAt": "1970-01-01T00:00:00.000Z",
+            "likeCount": 0,
             "record": Object {
               "$type": "app.bsky.feed.post",
               "createdAt": "1970-01-01T00:00:00.000Z",
@@ -225,7 +221,6 @@ Object {
             },
             "replyCount": 0,
             "repostCount": 1,
-            "upvoteCount": 0,
             "uri": "record(5)",
             "viewer": Object {
               "repost": "record(6)",
@@ -255,8 +250,8 @@ Object {
       },
     },
     "cid": "cids(0)",
-    "downvoteCount": 1,
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 3,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -264,10 +259,9 @@ Object {
     },
     "replyCount": 2,
     "repostCount": 1,
-    "upvoteCount": 2,
     "uri": "record(0)",
     "viewer": Object {
-      "upvote": "record(3)",
+      "like": "record(3)",
     },
   },
   "replies": Array [
@@ -284,7 +278,6 @@ Object {
           },
         },
         "cid": "cids(1)",
-        "downvoteCount": 0,
         "embed": Object {
           "$type": "app.bsky.embed.images#presented",
           "images": Array [
@@ -296,6 +289,7 @@ Object {
           ],
         },
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -325,7 +319,6 @@ Object {
         },
         "replyCount": 1,
         "repostCount": 0,
-        "upvoteCount": 0,
         "uri": "record(4)",
         "viewer": Object {},
       },
@@ -355,8 +348,8 @@ Object {
           },
         },
         "cid": "cids(1)",
-        "downvoteCount": 1,
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -364,10 +357,9 @@ Object {
         },
         "replyCount": 2,
         "repostCount": 1,
-        "upvoteCount": 2,
         "uri": "record(3)",
         "viewer": Object {
-          "upvote": "record(6)",
+          "like": "record(6)",
         },
       },
       "replies": Array [],
@@ -383,7 +375,6 @@ Object {
         },
       },
       "cid": "cids(2)",
-      "downvoteCount": 0,
       "embed": Object {
         "$type": "app.bsky.embed.images#presented",
         "images": Array [
@@ -395,6 +386,7 @@ Object {
         ],
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
@@ -424,7 +416,6 @@ Object {
       },
       "replyCount": 1,
       "repostCount": 0,
-      "upvoteCount": 0,
       "uri": "record(4)",
       "viewer": Object {},
     },
@@ -443,8 +434,8 @@ Object {
       },
     },
     "cid": "cids(0)",
-    "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -462,7 +453,6 @@ Object {
     },
     "replyCount": 0,
     "repostCount": 1,
-    "upvoteCount": 0,
     "uri": "record(0)",
     "viewer": Object {
       "repost": "record(5)",
@@ -488,8 +478,8 @@ Object {
       },
     },
     "cid": "cids(0)",
-    "downvoteCount": 1,
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 3,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -497,10 +487,9 @@ Object {
     },
     "replyCount": 2,
     "repostCount": 1,
-    "upvoteCount": 2,
     "uri": "record(0)",
     "viewer": Object {
-      "upvote": "record(3)",
+      "like": "record(3)",
     },
   },
   "replies": Array [
@@ -516,8 +505,8 @@ Object {
           },
         },
         "cid": "cids(1)",
-        "downvoteCount": 0,
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -535,7 +524,6 @@ Object {
         },
         "replyCount": 0,
         "repostCount": 0,
-        "upvoteCount": 0,
         "uri": "record(4)",
         "viewer": Object {},
       },
@@ -554,7 +542,6 @@ Object {
           },
         },
         "cid": "cids(2)",
-        "downvoteCount": 0,
         "embed": Object {
           "$type": "app.bsky.embed.images#presented",
           "images": Array [
@@ -566,6 +553,7 @@ Object {
           ],
         },
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -595,7 +583,6 @@ Object {
         },
         "replyCount": 1,
         "repostCount": 0,
-        "upvoteCount": 0,
         "uri": "record(6)",
         "viewer": Object {},
       },
@@ -615,8 +602,8 @@ Object {
               },
             },
             "cid": "cids(4)",
-            "downvoteCount": 0,
             "indexedAt": "1970-01-01T00:00:00.000Z",
+            "likeCount": 0,
             "record": Object {
               "$type": "app.bsky.feed.post",
               "createdAt": "1970-01-01T00:00:00.000Z",
@@ -634,7 +621,6 @@ Object {
             },
             "replyCount": 0,
             "repostCount": 1,
-            "upvoteCount": 0,
             "uri": "record(7)",
             "viewer": Object {
               "repost": "record(8)",
@@ -664,8 +650,8 @@ Object {
       },
     },
     "cid": "cids(0)",
-    "downvoteCount": 1,
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 3,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -673,10 +659,9 @@ Object {
     },
     "replyCount": 2,
     "repostCount": 1,
-    "upvoteCount": 2,
     "uri": "record(0)",
     "viewer": Object {
-      "upvote": "record(3)",
+      "like": "record(3)",
     },
   },
   "replies": Array [
@@ -692,8 +677,8 @@ Object {
           },
         },
         "cid": "cids(1)",
-        "downvoteCount": 0,
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -711,7 +696,6 @@ Object {
         },
         "replyCount": 0,
         "repostCount": 0,
-        "upvoteCount": 0,
         "uri": "record(4)",
         "viewer": Object {},
       },
@@ -729,7 +713,6 @@ Object {
           },
         },
         "cid": "cids(2)",
-        "downvoteCount": 0,
         "embed": Object {
           "$type": "app.bsky.embed.images#presented",
           "images": Array [
@@ -741,6 +724,7 @@ Object {
           ],
         },
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -770,7 +754,6 @@ Object {
         },
         "replyCount": 1,
         "repostCount": 0,
-        "upvoteCount": 0,
         "uri": "record(6)",
         "viewer": Object {},
       },
@@ -795,8 +778,8 @@ Object {
       },
     },
     "cid": "cids(0)",
-    "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -804,7 +787,6 @@ Object {
     },
     "replyCount": 1,
     "repostCount": 0,
-    "upvoteCount": 0,
     "uri": "record(0)",
     "viewer": Object {},
   },
@@ -822,8 +804,8 @@ Object {
           },
         },
         "cid": "cids(1)",
-        "downvoteCount": 0,
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -841,7 +823,6 @@ Object {
         },
         "replyCount": 1,
         "repostCount": 0,
-        "upvoteCount": 0,
         "uri": "record(3)",
         "viewer": Object {},
       },
@@ -861,8 +842,8 @@ Object {
               },
             },
             "cid": "cids(2)",
-            "downvoteCount": 0,
             "indexedAt": "1970-01-01T00:00:00.000Z",
+            "likeCount": 0,
             "record": Object {
               "$type": "app.bsky.feed.post",
               "createdAt": "1970-01-01T00:00:00.000Z",
@@ -880,7 +861,6 @@ Object {
             },
             "replyCount": 0,
             "repostCount": 0,
-            "upvoteCount": 0,
             "uri": "record(4)",
             "viewer": Object {},
           },
@@ -908,8 +888,8 @@ Object {
       },
     },
     "cid": "cids(0)",
-    "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -917,7 +897,6 @@ Object {
     },
     "replyCount": 0,
     "repostCount": 0,
-    "upvoteCount": 0,
     "uri": "record(0)",
     "viewer": Object {},
   },
@@ -946,8 +925,8 @@ Object {
       },
     },
     "cid": "cids(0)",
-    "downvoteCount": 0,
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -965,7 +944,6 @@ Object {
     },
     "replyCount": 0,
     "repostCount": 0,
-    "upvoteCount": 0,
     "uri": "record(0)",
     "viewer": Object {},
   },
@@ -989,8 +967,8 @@ Object {
       },
     },
     "cid": "cids(0)",
-    "downvoteCount": 1,
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 3,
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -998,10 +976,9 @@ Object {
     },
     "replyCount": 2,
     "repostCount": 1,
-    "upvoteCount": 2,
     "uri": "record(0)",
     "viewer": Object {
-      "upvote": "record(3)",
+      "like": "record(3)",
     },
   },
   "replies": Array [
@@ -1017,8 +994,8 @@ Object {
           },
         },
         "cid": "cids(1)",
-        "downvoteCount": 0,
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -1036,7 +1013,6 @@ Object {
         },
         "replyCount": 0,
         "repostCount": 0,
-        "upvoteCount": 0,
         "uri": "record(4)",
         "viewer": Object {},
       },
@@ -1055,7 +1031,6 @@ Object {
           },
         },
         "cid": "cids(2)",
-        "downvoteCount": 0,
         "embed": Object {
           "$type": "app.bsky.embed.images#presented",
           "images": Array [
@@ -1067,6 +1042,7 @@ Object {
           ],
         },
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
@@ -1096,7 +1072,6 @@ Object {
         },
         "replyCount": 1,
         "repostCount": 0,
-        "upvoteCount": 0,
         "uri": "record(6)",
         "viewer": Object {},
       },
@@ -1116,8 +1091,8 @@ Object {
               },
             },
             "cid": "cids(4)",
-            "downvoteCount": 0,
             "indexedAt": "1970-01-01T00:00:00.000Z",
+            "likeCount": 0,
             "record": Object {
               "$type": "app.bsky.feed.post",
               "createdAt": "1970-01-01T00:00:00.000Z",
@@ -1135,7 +1110,6 @@ Object {
             },
             "replyCount": 0,
             "repostCount": 1,
-            "upvoteCount": 0,
             "uri": "record(7)",
             "viewer": Object {
               "repost": "record(8)",
