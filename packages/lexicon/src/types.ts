@@ -50,6 +50,20 @@ export const lexString = z.object({
 })
 export type LexString = z.infer<typeof lexString>
 
+export const lexBytes = z.object({
+  type: z.literal('bytes'),
+  description: z.string().optional(),
+  maxLength: z.number().optional(),
+  minLength: z.number().optional(),
+})
+export type LexBytes = z.infer<typeof lexBytes>
+
+export const lexCidInternalRef = z.object({
+  type: z.literal('cid-internal-ref'),
+  description: z.string().optional(),
+})
+export type LexCidInternalRef = z.infer<typeof lexCidInternalRef>
+
 export const lexUnknown = z.object({
   type: z.literal('unknown'),
   description: z.string().optional(),
@@ -61,6 +75,8 @@ export const lexPrimitive = z.union([
   lexNumber,
   lexInteger,
   lexString,
+  lexBytes,
+  lexCidInternalRef,
   lexUnknown,
 ])
 export type LexPrimitive = z.infer<typeof lexPrimitive>
@@ -262,6 +278,8 @@ export const lexUserType = z.union([
   lexNumber,
   lexInteger,
   lexString,
+  lexBytes,
+  lexCidInternalRef,
   lexUnknown,
 ])
 export type LexUserType = z.infer<typeof lexUserType>

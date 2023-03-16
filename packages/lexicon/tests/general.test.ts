@@ -1,3 +1,4 @@
+import { CID } from 'multiformats/cid'
 import { Lexicons } from '../src/index'
 import LexiconDocs from './_scaffolds/lexicons'
 
@@ -53,6 +54,10 @@ describe('General validation', () => {
         atUri: 'at://did:web:example.com/com.example.test/self',
         did: 'did:web:example.com',
         cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        bytes: new Uint8Array([0, 1, 2, 3]),
+        cidRef: CID.parse(
+          'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        ),
       })
       expect(res.success).toBe(true)
     }
@@ -87,27 +92,33 @@ describe('General validation', () => {
 describe('Record validation', () => {
   const lex = new Lexicons(LexiconDocs)
 
-  it('Passes valid schemas', () => {
-    lex.assertValidRecord('com.example.kitchenSink', {
-      $type: 'com.example.kitchenSink',
-      object: {
-        object: { boolean: true },
-        array: ['one', 'two'],
-        boolean: true,
-        number: 123.45,
-        integer: 123,
-        string: 'string',
-      },
+  const passingSink = {
+    $type: 'com.example.kitchenSink',
+    object: {
+      object: { boolean: true },
       array: ['one', 'two'],
       boolean: true,
       number: 123.45,
       integer: 123,
       string: 'string',
-      datetime: new Date().toISOString(),
-      atUri: 'at://did:web:example.com/com.example.test/self',
-      did: 'did:web:example.com',
-      cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
-    })
+    },
+    array: ['one', 'two'],
+    boolean: true,
+    number: 123.45,
+    integer: 123,
+    string: 'string',
+    datetime: new Date().toISOString(),
+    atUri: 'at://did:web:example.com/com.example.test/self',
+    did: 'did:web:example.com',
+    cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+    bytes: new Uint8Array([0, 1, 2, 3]),
+    cidRef: CID.parse(
+      'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+    ),
+  }
+
+  it('Passes valid schemas', () => {
+    lex.assertValidRecord('com.example.kitchenSink', passingSink)
   })
 
   it('Fails invalid input types', () => {
@@ -144,21 +155,16 @@ describe('Record validation', () => {
         atUri: 'at://did:web:example.com/com.example.test/self',
         did: 'did:web:example.com',
         cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        bytes: new Uint8Array([0, 1, 2, 3]),
+        cidRef: CID.parse(
+          'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        ),
       }),
     ).toThrow('Record must have the property "object"')
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
+        ...passingSink,
         object: undefined,
-        array: ['one', 'two'],
-        boolean: true,
-        number: 123.45,
-        integer: 123,
-        string: 'string',
-        datetime: new Date().toISOString(),
-        atUri: 'at://did:web:example.com/com.example.test/self',
-        did: 'did:web:example.com',
-        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
     ).toThrow('Record must have the property "object"')
   })
@@ -166,151 +172,61 @@ describe('Record validation', () => {
   it('Fails incorrect types', () => {
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
+        ...passingSink,
         object: {
+          ...passingSink.object,
           object: { boolean: '1234' },
-          array: ['one', 'two'],
-          boolean: true,
-          number: 123.45,
-          integer: 123,
-          string: 'string',
         },
-        array: ['one', 'two'],
-        boolean: true,
-        number: 123.45,
-        integer: 123,
-        string: 'string',
-        datetime: new Date().toISOString(),
-        atUri: 'at://did:web:example.com/com.example.test/self',
-        did: 'did:web:example.com',
-        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
     ).toThrow('Record/object/object/boolean must be a boolean')
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
+        ...passingSink,
         object: true,
-        array: ['one', 'two'],
-        boolean: true,
-        number: 123.45,
-        integer: 123,
-        string: 'string',
-        datetime: new Date().toISOString(),
-        atUri: 'at://did:web:example.com/com.example.test/self',
-        did: 'did:web:example.com',
-        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
     ).toThrow('Record/object must be an object')
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
-        object: {
-          object: { boolean: true },
-          array: ['one', 'two'],
-          boolean: true,
-          number: 123.45,
-          integer: 123,
-          string: 'string',
-        },
+        ...passingSink,
         array: 1234,
-        boolean: true,
-        number: 123.45,
-        integer: 123,
-        string: 'string',
-        datetime: new Date().toISOString(),
-        atUri: 'at://did:web:example.com/com.example.test/self',
-        did: 'did:web:example.com',
-        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
     ).toThrow('Record/array must be an array')
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
-        object: {
-          object: { boolean: true },
-          array: ['one', 'two'],
-          boolean: true,
-          number: 123.45,
-          integer: 123,
-          string: 'string',
-        },
-        array: ['one', 'two'],
-        boolean: true,
+        ...passingSink,
         number: 'string',
-        integer: 123,
-        string: 'string',
-        datetime: new Date().toISOString(),
-        atUri: 'at://did:web:example.com/com.example.test/self',
-        did: 'did:web:example.com',
-        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
     ).toThrow('Record/number must be a number')
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
-        object: {
-          object: { boolean: true },
-          array: ['one', 'two'],
-          boolean: true,
-          number: 123.45,
-          integer: 123,
-          string: 'string',
-        },
-        array: ['one', 'two'],
-        boolean: true,
-        number: 123.45,
+        ...passingSink,
         integer: true,
-        string: 'string',
-        datetime: new Date().toISOString(),
-        atUri: 'at://did:web:example.com/com.example.test/self',
-        did: 'did:web:example.com',
-        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
     ).toThrow('Record/integer must be a number')
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
-        object: {
-          object: { boolean: true },
-          array: ['one', 'two'],
-          boolean: true,
-          number: 123.45,
-          integer: 123,
-          string: 'string',
-        },
-        array: ['one', 'two'],
-        boolean: true,
-        number: 123.45,
-        integer: 123,
+        ...passingSink,
         string: {},
-        datetime: new Date().toISOString(),
-        atUri: 'at://did:web:example.com/com.example.test/self',
-        did: 'did:web:example.com',
-        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
     ).toThrow('Record/string must be a string')
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
-        object: {
-          object: { boolean: true },
-          array: ['one', 'two'],
-          boolean: true,
-          number: 123.45,
-          integer: 123,
-          string: 'string',
-        },
-        array: ['one', 'two'],
-        boolean: true,
-        number: 123.45,
-        integer: 123,
-        string: 'string',
+        ...passingSink,
         datetime: 1234,
-        atUri: 'at://did:web:example.com/com.example.test/self',
-        did: 'did:web:example.com',
-        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
     ).toThrow('Record/datetime must be a string')
+    expect(() =>
+      lex.assertValidRecord('com.example.kitchenSink', {
+        ...passingSink,
+        bytes: 1234,
+      }),
+    ).toThrow('Record/bytes must be a byte array')
+    expect(() =>
+      lex.assertValidRecord('com.example.kitchenSink', {
+        ...passingSink,
+        cidRef: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+      }),
+    ).toThrow('Record/cidRef must be a CID')
   })
 
   it('Handles optional properties correctly', () => {
@@ -668,7 +584,26 @@ describe('Record validation', () => {
         $type: 'com.example.cid',
         cid: 'abapsdofiuwrpoiasdfuaspdfoiu',
       }),
-    ).toThrow('Record/cid must be a cid')
+    ).toThrow('Record/cid must be a CID string')
+  })
+
+  it('Applies bytes length constraints', () => {
+    lex.assertValidRecord('com.example.byteLength', {
+      $type: 'com.example.byteLength',
+      bytes: new Uint8Array([1, 2, 3]),
+    })
+    expect(() =>
+      lex.assertValidRecord('com.example.byteLength', {
+        $type: 'com.example.byteLength',
+        bytes: new Uint8Array([1]),
+      }),
+    ).toThrow('Record/bytes must not be smaller than 2 bytes')
+    expect(() =>
+      lex.assertValidRecord('com.example.byteLength', {
+        $type: 'com.example.byteLength',
+        bytes: new Uint8Array([1, 2, 3, 4, 5]),
+      }),
+    ).toThrow('Record/bytes must not be larger than 4 bytes')
   })
 })
 
