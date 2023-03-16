@@ -1,4 +1,5 @@
 import { AtUri } from '@atproto/uri'
+import * as common from '@atproto/common'
 import { isValidISODateString } from 'iso-datestring-validator'
 import { CID } from 'multiformats/cid'
 import { Lexicons } from '../lexicons'
@@ -229,7 +230,7 @@ export function string(
 
   // maxLength
   if (typeof def.maxLength === 'number') {
-    if ((value as string).length > def.maxLength) {
+    if (common.utf8Len(value) > def.maxLength) {
       return {
         success: false,
         error: new ValidationError(
@@ -241,11 +242,35 @@ export function string(
 
   // minLength
   if (typeof def.minLength === 'number') {
-    if ((value as string).length < def.minLength) {
+    if (common.utf8Len(value) < def.minLength) {
       return {
         success: false,
         error: new ValidationError(
           `${path} must not be shorter than ${def.minLength} characters`,
+        ),
+      }
+    }
+  }
+
+  // maxGraphemes
+  if (typeof def.maxGraphemes === 'number') {
+    if (common.graphemeLen(value) > def.maxGraphemes) {
+      return {
+        success: false,
+        error: new ValidationError(
+          `${path} must not be longer than ${def.maxGraphemes} graphemes`,
+        ),
+      }
+    }
+  }
+
+  // minGraphemes
+  if (typeof def.minGraphemes === 'number') {
+    if (common.graphemeLen(value) < def.minGraphemes) {
+      return {
+        success: false,
+        error: new ValidationError(
+          `${path} must not be shorter than ${def.minGraphemes} graphemes`,
         ),
       }
     }

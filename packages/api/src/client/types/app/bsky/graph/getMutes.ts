@@ -5,7 +5,7 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
-import * as AppBskyActorRef from '../actor/ref'
+import * as AppBskyActorDefs from '../actor/defs'
 
 export interface QueryParams {
   limit?: number
@@ -16,7 +16,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  mutes: AppBskyActorRef.WithInfo[]
+  mutes: AppBskyActorDefs.WithInfo[]
   [k: string]: unknown
 }
 

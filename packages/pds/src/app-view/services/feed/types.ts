@@ -12,13 +12,11 @@ export type PostInfo = {
   creator: string
   recordBytes: Uint8Array
   indexedAt: string
-  upvoteCount: number
-  downvoteCount: number
+  likeCount: number
   repostCount: number
   replyCount: number
   requesterRepost: string | null
-  requesterUpvote: string | null
-  requesterDownvote: string | null
+  requesterLike: string | null
 }
 
 export type PostInfoMap = { [uri: string]: PostInfo }

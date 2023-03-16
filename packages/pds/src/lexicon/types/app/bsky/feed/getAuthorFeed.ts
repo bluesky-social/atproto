@@ -5,8 +5,9 @@ import express from 'express'
 import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
+import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyFeedFeedViewPost from './feedViewPost'
+import * as AppBskyFeedDefs from './defs'
 
 export interface QueryParams {
   actor: string
@@ -18,7 +19,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  feed: AppBskyFeedFeedViewPost.Main[]
+  feed: AppBskyFeedDefs.FeedViewPost[]
   [k: string]: unknown
 }
 

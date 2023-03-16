@@ -53,14 +53,14 @@ describe('file uploads', () => {
   })
 
   it('registers users', async () => {
-    const res = await agent.api.com.atproto.account.create({
+    const res = await agent.api.com.atproto.server.createAccount({
       email: alice.email,
       handle: alice.handle,
       password: alice.password,
     })
     aliceAgent.api.setHeader('authorization', `Bearer ${res.data.accessJwt}`)
     alice.did = res.data.did
-    const res2 = await agent.api.com.atproto.account.create({
+    const res2 = await agent.api.com.atproto.server.createAccount({
       email: bob.email,
       handle: bob.handle,
       password: bob.password,
@@ -80,7 +80,7 @@ describe('file uploads', () => {
       process.nextTick(() => abortController.abort())
       return _putTemp.call(this, ...args)
     }
-    const response = fetch(`${server.url}/xrpc/com.atproto.blob.upload`, {
+    const response = fetch(`${server.url}/xrpc/com.atproto.repo.uploadBlob`, {
       method: 'post',
       body: Buffer.alloc(5000000), // Enough bytes to get some chunking going on
       signal: abortController.signal,
@@ -98,7 +98,7 @@ describe('file uploads', () => {
 
   it('uploads files', async () => {
     smallFile = await fs.readFile('tests/image/fixtures/key-portrait-small.jpg')
-    const res = await aliceAgent.api.com.atproto.blob.upload(smallFile, {
+    const res = await aliceAgent.api.com.atproto.repo.uploadBlob(smallFile, {
       encoding: 'image/jpeg',
     } as any)
     smallCid = CID.parse(res.data.cid)
@@ -170,7 +170,7 @@ describe('file uploads', () => {
 
   it('does not allow referencing a file that is outside blob constraints', async () => {
     largeFile = await fs.readFile('tests/image/fixtures/hd-key.jpg')
-    const res = await aliceAgent.api.com.atproto.blob.upload(largeFile, {
+    const res = await aliceAgent.api.com.atproto.repo.uploadBlob(largeFile, {
       encoding: 'image/jpeg',
     } as any)
     largeCid = CID.parse(res.data.cid)
@@ -198,15 +198,18 @@ describe('file uploads', () => {
     const file = await fs.readFile(
       'tests/image/fixtures/key-landscape-small.jpg',
     )
-    const { data: uploadA } = await aliceAgent.api.com.atproto.blob.upload(
+    const { data: uploadA } = await aliceAgent.api.com.atproto.repo.uploadBlob(
       file,
       {
         encoding: 'image/jpeg',
       } as any,
     )
-    const { data: uploadB } = await bobAgent.api.com.atproto.blob.upload(file, {
-      encoding: 'image/jpeg',
-    } as any)
+    const { data: uploadB } = await bobAgent.api.com.atproto.repo.uploadBlob(
+      file,
+      {
+        encoding: 'image/jpeg',
+      } as any,
+    )
     expect(uploadA).toEqual(uploadB)
     const { data: profileA } =
       await aliceAgent.api.app.bsky.actor.updateProfile({
@@ -220,7 +223,7 @@ describe('file uploads', () => {
     })
     expect((profileB.record as any).avatar.cid).toEqual(uploadA.cid)
     const { data: uploadAfterPermanent } =
-      await aliceAgent.api.com.atproto.blob.upload(file, {
+      await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
         encoding: 'image/jpeg',
       } as any)
     expect(uploadAfterPermanent).toEqual(uploadA)
@@ -233,7 +236,7 @@ describe('file uploads', () => {
   })
 
   it('supports compression during upload', async () => {
-    const { data: uploaded } = await aliceAgent.api.com.atproto.blob.upload(
+    const { data: uploaded } = await aliceAgent.api.com.atproto.repo.uploadBlob(
       gzipSync(smallFile),
       {
         encoding: 'image/jpeg',
@@ -249,7 +252,7 @@ describe('file uploads', () => {
     const file = await fs.readFile(
       'tests/image/fixtures/key-landscape-large.jpg',
     )
-    const res = await aliceAgent.api.com.atproto.blob.upload(file, {
+    const res = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
       encoding: 'video/mp4',
     } as any)
 
@@ -266,7 +269,7 @@ describe('file uploads', () => {
 
   it('handles pngs', async () => {
     const file = await fs.readFile('tests/image/fixtures/at.png')
-    const res = await aliceAgent.api.com.atproto.blob.upload(file, {
+    const res = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
       encoding: 'image/png',
     })
 
@@ -283,7 +286,7 @@ describe('file uploads', () => {
 
   it('handles unknown mimetypes', async () => {
     const file = await randomBytes(20000)
-    const res = await aliceAgent.api.com.atproto.blob.upload(file, {
+    const res = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
       encoding: 'test/fake',
     } as any)
 

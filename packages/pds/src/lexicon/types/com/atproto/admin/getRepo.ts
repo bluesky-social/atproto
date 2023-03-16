@@ -5,15 +5,16 @@ import express from 'express'
 import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
+import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as ComAtprotoAdminRepo from './repo'
+import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
   did: string
 }
 
 export type InputSchema = undefined
-export type OutputSchema = ComAtprotoAdminRepo.ViewDetail
+export type OutputSchema = ComAtprotoAdminDefs.RepoViewDetail
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {

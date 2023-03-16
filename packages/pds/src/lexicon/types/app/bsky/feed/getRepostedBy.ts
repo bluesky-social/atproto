@@ -5,8 +5,9 @@ import express from 'express'
 import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
+import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyActorRef from '../actor/ref'
+import * as AppBskyActorDefs from '../actor/defs'
 
 export interface QueryParams {
   uri: string
@@ -21,7 +22,7 @@ export interface OutputSchema {
   uri: string
   cid?: string
   cursor?: string
-  repostedBy: AppBskyActorRef.WithInfo[]
+  repostedBy: AppBskyActorDefs.WithInfo[]
   [k: string]: unknown
 }
 

@@ -1,6 +1,6 @@
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
 import { AtUri } from '@atproto/uri'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { Database } from '../../src'
 import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
 import { RecordRef, SeedClient } from '../seeds/client'
@@ -80,7 +80,7 @@ describe('pds thread views', () => {
   })
 
   it('includes the muted status of post authors.', async () => {
-    await agent.api.app.bsky.graph.mute(
+    await agent.api.app.bsky.graph.muteActor(
       { actor: alice },
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
@@ -91,7 +91,7 @@ describe('pds thread views', () => {
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
-    await agent.api.app.bsky.graph.unmute(
+    await agent.api.app.bsky.graph.unmuteActor(
       { actor: alice },
       { encoding: 'application/json', headers: sc.getHeaders(bob) },
     )
@@ -152,7 +152,7 @@ describe('pds thread views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.repo.repoRef',
+            $type: 'com.atproto.admin.defs#repoRef',
             did: alice,
           },
           createdBy: 'did:example:admin',
@@ -194,7 +194,7 @@ describe('pds thread views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.repo.repoRef',
+            $type: 'com.atproto.admin.defs#repoRef',
             did: carol,
           },
           createdBy: 'did:example:admin',
@@ -234,7 +234,7 @@ describe('pds thread views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.repo.repoRef',
+            $type: 'com.atproto.admin.defs#repoRef',
             did: bob,
           },
           createdBy: 'did:example:admin',

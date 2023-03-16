@@ -3,7 +3,7 @@ import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import Database from '../../../db'
 import * as Post from './plugins/post'
-import * as Vote from './plugins/vote'
+import * as Like from './plugins/like'
 import * as Repost from './plugins/repost'
 import * as Follow from './plugins/follow'
 import * as Profile from './plugins/profile'
@@ -12,7 +12,7 @@ import { MessageQueue } from '../../../event-stream/types'
 export class IndexingService {
   records: {
     post: Post.PluginType
-    vote: Vote.PluginType
+    like: Like.PluginType
     repost: Repost.PluginType
     follow: Follow.PluginType
     profile: Profile.PluginType
@@ -25,7 +25,7 @@ export class IndexingService {
   ) {
     this.records = {
       post: Post.makePlugin(this.db.db),
-      vote: Vote.makePlugin(this.db.db),
+      like: Like.makePlugin(this.db.db),
       repost: Repost.makePlugin(this.db.db),
       follow: Follow.makePlugin(this.db.db),
       profile: Profile.makePlugin(this.db.db),
@@ -112,7 +112,7 @@ export class IndexingService {
       this.db.db.deleteFrom('post').where('creator', '=', did).execute(),
       this.db.db.deleteFrom('profile').where('creator', '=', did).execute(),
       this.db.db.deleteFrom('repost').where('creator', '=', did).execute(),
-      this.db.db.deleteFrom('vote').where('creator', '=', did).execute(),
+      this.db.db.deleteFrom('like').where('creator', '=', did).execute(),
     ])
   }
 }

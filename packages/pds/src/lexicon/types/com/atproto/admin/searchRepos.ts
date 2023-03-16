@@ -5,8 +5,9 @@ import express from 'express'
 import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
+import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as ComAtprotoAdminRepo from './repo'
+import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
   term?: string
@@ -18,7 +19,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  repos: ComAtprotoAdminRepo.View[]
+  repos: ComAtprotoAdminDefs.RepoView[]
   [k: string]: unknown
 }
 

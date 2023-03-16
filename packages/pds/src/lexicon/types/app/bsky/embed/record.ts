@@ -4,8 +4,9 @@
 import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
+import { CID } from 'multiformats/cid'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
-import * as AppBskyActorRef from '../actor/ref'
+import * as AppBskyActorDefs from '../actor/defs'
 
 export interface Main {
   record: ComAtprotoRepoStrongRef.Main
@@ -48,7 +49,7 @@ export function validatePresented(v: unknown): ValidationResult {
 export interface PresentedRecord {
   uri: string
   cid: string
-  author: AppBskyActorRef.WithInfo
+  author: AppBskyActorDefs.WithInfo
   record: {}
   [k: string]: unknown
 }

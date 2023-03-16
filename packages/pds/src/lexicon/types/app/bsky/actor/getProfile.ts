@@ -5,15 +5,16 @@ import express from 'express'
 import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
+import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyActorProfile from './profile'
+import * as AppBskyActorDefs from './defs'
 
 export interface QueryParams {
   actor: string
 }
 
 export type InputSchema = undefined
-export type OutputSchema = AppBskyActorProfile.View
+export type OutputSchema = AppBskyActorDefs.ProfileView
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {

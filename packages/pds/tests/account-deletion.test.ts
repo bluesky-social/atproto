@@ -12,7 +12,7 @@ import { RepoRoot } from '../src/db/tables/repo-root'
 import { UserAccount } from '../src/db/tables/user-account'
 import { IpldBlock } from '../src/db/tables/ipld-block'
 import { Post } from '../src/app-view/db/tables/post'
-import { Vote } from '../src/app-view/db/tables/vote'
+import { Like } from '../src/app-view/db/tables/like'
 import { Repost } from '../src/app-view/db/tables/repost'
 import { Follow } from '../src/app-view/db/tables/follow'
 import { RepoBlob } from '../src/db/tables/repo-blob'
@@ -88,7 +88,7 @@ describe('account deletion', () => {
 
   it('requests account deletion', async () => {
     const mail = await getMailFrom(
-      agent.api.com.atproto.account.requestDelete(undefined, {
+      agent.api.com.atproto.server.requestAccountDelete(undefined, {
         headers: sc.getHeaders(carol.did),
       }),
     )
@@ -103,7 +103,7 @@ describe('account deletion', () => {
   })
 
   it('fails account deletion with a bad token', async () => {
-    const attempt = agent.api.com.atproto.account.delete({
+    const attempt = agent.api.com.atproto.server.deleteAccount({
       token: '123456',
       did: carol.did,
       password: carol.password,
@@ -112,7 +112,7 @@ describe('account deletion', () => {
   })
 
   it('fails account deletion with a bad password', async () => {
-    const attempt = agent.api.com.atproto.account.delete({
+    const attempt = agent.api.com.atproto.server.deleteAccount({
       token,
       did: carol.did,
       password: 'bad-pass',
@@ -121,7 +121,7 @@ describe('account deletion', () => {
   })
 
   it('deletes account with a valid token & password', async () => {
-    await agent.api.com.atproto.account.delete({
+    await agent.api.com.atproto.server.deleteAccount({
       token,
       did: carol.did,
       password: carol.password,
@@ -129,7 +129,7 @@ describe('account deletion', () => {
   })
 
   it('no longer lets the user log in', async () => {
-    const attempt = agent.api.com.atproto.session.create({
+    const attempt = agent.api.com.atproto.server.createSession({
       handle: carol.handle,
       password: carol.password,
     })
@@ -167,8 +167,8 @@ describe('account deletion', () => {
     expect(updatedDbContents.posts).toEqual(
       initialDbContents.posts.filter((row) => row.creator !== carol.did),
     )
-    expect(updatedDbContents.votes).toEqual(
-      initialDbContents.votes.filter((row) => row.creator !== carol.did),
+    expect(updatedDbContents.likes).toEqual(
+      initialDbContents.likes.filter((row) => row.creator !== carol.did),
     )
     expect(updatedDbContents.reposts).toEqual(
       initialDbContents.reposts.filter((row) => row.creator !== carol.did),
@@ -223,9 +223,12 @@ describe('account deletion', () => {
   })
 
   it('removes notifications from the user', async () => {
-    const notifs = await agent.api.app.bsky.notification.list(undefined, {
-      headers: sc.getHeaders(sc.dids.alice),
-    })
+    const notifs = await agent.api.app.bsky.notification.listNotifications(
+      undefined,
+      {
+        headers: sc.getHeaders(sc.dids.alice),
+      },
+    )
     const found = notifs.data.notifications.filter(
       (item) => item.author.did === sc.dids.carol,
     )
@@ -240,7 +243,7 @@ describe('account deletion', () => {
     })
 
     const mail = await getMailFrom(
-      agent.api.com.atproto.account.requestDelete(undefined, {
+      agent.api.com.atproto.server.requestAccountDelete(undefined, {
         headers: sc.getHeaders(eve.did),
       }),
     )
@@ -249,7 +252,7 @@ describe('account deletion', () => {
     if (!token) {
       return expect(token).toBeDefined()
     }
-    await agent.api.com.atproto.account.delete({
+    await agent.api.com.atproto.server.deleteAccount({
       token,
       did: eve.did,
       password: eve.password,
@@ -270,7 +273,7 @@ type DbContents = {
   postImages: PostEmbedImage[]
   postExternals: PostEmbedExternal[]
   postRecords: PostEmbedRecord[]
-  votes: Vote[]
+  likes: Like[]
   reposts: Repost[]
   follows: Follow[]
   repoBlobs: RepoBlob[]
@@ -291,7 +294,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     postImages,
     postExternals,
     postRecords,
-    votes,
+    likes,
     reposts,
     follows,
     repoBlobs,
@@ -337,7 +340,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
       .orderBy('postUri')
       .selectAll()
       .execute(),
-    db.db.selectFrom('vote').orderBy('uri').selectAll().execute(),
+    db.db.selectFrom('like').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('repost').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('follow').orderBy('uri').selectAll().execute(),
     db.db
@@ -362,7 +365,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     postImages,
     postExternals,
     postRecords,
-    votes,
+    likes,
     reposts,
     follows,
     repoBlobs,

@@ -1,9 +1,9 @@
 import { AtUri } from '@atproto/uri'
 import AtpAgent from '@atproto/api'
 import {
-  SPAM,
-  OTHER,
-} from '@atproto/api/src/client/types/com/atproto/report/reasonType'
+  REASONSPAM,
+  REASONOTHER,
+} from '@atproto/api/src/client/types/com/atproto/moderation/defs'
 import { DevEnv } from '../index'
 import { ServerType } from '../types'
 import { genServerCfg } from '../util'
@@ -84,7 +84,7 @@ export async function generateMockSetup(env: DevEnv) {
 
   let _i = 1
   for (const user of users) {
-    const res = await clients.loggedout.api.com.atproto.account.create({
+    const res = await clients.loggedout.api.com.atproto.server.createAccount({
       email: user.email,
       handle: user.handle,
       password: user.password,
@@ -102,11 +102,11 @@ export async function generateMockSetup(env: DevEnv) {
 
   // Report one user
   const reporter = picka(users)
-  await reporter.agent.api.com.atproto.report.create({
-    reasonType: picka([SPAM, OTHER]),
+  await reporter.agent.api.com.atproto.moderation.createReport({
+    reasonType: picka([REASONSPAM, REASONOTHER]),
     reason: picka(["Didn't look right to me", undefined, undefined]),
     subject: {
-      $type: 'com.atproto.repo.repoRef',
+      $type: 'com.atproto.admin.defs#repoRef',
       did: picka(users).did,
     },
   })
@@ -152,8 +152,8 @@ export async function generateMockSetup(env: DevEnv) {
     }
     if (rand(6) === 0) {
       const reporter = picka(users)
-      await reporter.agent.api.com.atproto.report.create({
-        reasonType: picka([SPAM, OTHER]),
+      await reporter.agent.api.com.atproto.moderation.createReport({
+        reasonType: picka([REASONSPAM, REASONOTHER]),
         reason: picka(["Didn't look right to me", undefined, undefined]),
         subject: {
           $type: 'com.atproto.repo.recordRef',
@@ -187,14 +187,13 @@ export async function generateMockSetup(env: DevEnv) {
     )
   }
 
-  // a set of up/downvotes
+  // a set of likes
   for (const post of posts) {
     for (const user of users) {
       if (rand(3) === 0) {
-        await user.agent.api.app.bsky.feed.vote.create(
+        await user.agent.api.app.bsky.feed.like.create(
           { did: user.did },
           {
-            direction: rand(3) !== 0 ? 'up' : 'down',
             subject: post,
             createdAt: date.next().value,
           },

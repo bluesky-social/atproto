@@ -33,66 +33,6 @@
           }
         }
       }
-    },
-    "view": {
-      "type": "object",
-      "required": ["did", "handle", "creator", "followersCount", "followsCount", "postsCount"],
-      "properties": {
-        "did": {"type": "string", "format": "did"},
-        "handle": {"type": "string"},
-        "displayName": {
-          "type": "string",
-          "maxLength": 64
-        },
-        "description": {
-          "type": "string",
-          "maxLength": 256
-        },
-        "avatar": { "type": "string" },
-        "banner": { "type": "string" },
-        "followersCount": {"type": "integer"},
-        "followsCount": {"type": "integer"},
-        "postsCount": {"type": "integer"},
-        "creator": {"type": "string"},
-        "indexedAt": {"type": "string", "format": "datetime"},
-        "viewer": {"type": "ref", "ref": "#viewerState"},
-        "myState": {"type": "ref", "ref": "#myState", "description": "Deprecated"}
-      }
-    },
-    "viewBasic": {
-      "type": "object",
-      "required": ["did", "handle"],
-      "properties": {
-        "did": {"type": "string", "format":"did"},
-        "handle": {"type": "string"},
-        "displayName": {
-          "type": "string",
-          "maxLength": 64
-        },
-        "description": {
-          "type": "string",
-          "maxLength": 256
-        },
-        "avatar": { "type": "string" },
-        "indexedAt": {"type": "string", "format": "datetime"},
-        "viewer": {"type": "ref", "ref": "#viewerState"}
-      }
-    },
-    "viewerState": {
-      "type": "object",
-      "properties": {
-        "muted": {"type": "boolean"},
-        "following": {"type": "string", "format": "at-uri"},
-        "followedBy": {"type": "string", "format": "at-uri"}
-      }
-    },
-    "myState": {
-      "type": "object",
-      "description": "Deprecated in favor of #viewerState",
-      "properties": {
-        "follow": {"type": "string", "format": "at-uri"},
-        "muted": {"type": "boolean"}
-      }
     }
   }
 }
