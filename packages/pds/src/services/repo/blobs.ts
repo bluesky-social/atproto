@@ -2,7 +2,7 @@ import stream from 'stream'
 import { CID } from 'multiformats/cid'
 import bytes from 'bytes'
 import { fromStream as fileTypeFromStream } from 'file-type'
-import { BlobStore, WriteOpAction } from '@atproto/repo'
+import { BlobStore, CidSet, WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { sha256Stream } from '@atproto/crypto'
 import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
@@ -120,6 +120,19 @@ export class RepoBlobs {
       })
       .onConflict((oc) => oc.doNothing())
       .execute()
+  }
+
+  async listForCommits(did: string, commits: CID[]): Promise<CID[]> {
+    if (commits.length < 1) return []
+    const commitStrs = commits.map((c) => c.toString())
+    const res = await this.db.db
+      .selectFrom('repo_blob')
+      .where('did', '=', did)
+      .where('commit', 'in', commitStrs)
+      .select('cid')
+      .execute()
+    const cids = res.map((row) => CID.parse(row.cid))
+    return new CidSet(cids).toList()
   }
 
   async deleteForUser(did: string): Promise<void> {

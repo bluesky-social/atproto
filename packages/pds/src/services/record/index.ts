@@ -93,8 +93,8 @@ export class RecordService {
     collection: string,
     limit: number,
     reverse: boolean,
-    before?: string,
-    after?: string,
+    rkeyStart?: string,
+    rkeyEnd?: string,
     includeSoftDeleted = false,
   ): Promise<{ uri: string; cid: string; value: object }[]> {
     const { ref } = this.db.db.dynamic
@@ -114,11 +114,11 @@ export class RecordService {
       .limit(limit)
       .selectAll()
 
-    if (before !== undefined) {
-      builder = builder.where('record.rkey', '<', before)
+    if (rkeyStart !== undefined) {
+      builder = builder.where('record.rkey', '>', rkeyStart)
     }
-    if (after !== undefined) {
-      builder = builder.where('record.rkey', '>', after)
+    if (rkeyEnd !== undefined) {
+      builder = builder.where('record.rkey', '<', rkeyEnd)
     }
     const res = await builder.execute()
     return res.map((row) => {

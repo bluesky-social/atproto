@@ -159,7 +159,7 @@ describe('pds admin get moderation reports view', () => {
     const results = (results) => results.flatMap((res) => res.reports)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.com.atproto.admin.getModerationReports(
-        { before: cursor, limit: 3 },
+        { cursor, limit: 3 },
         { headers: { authorization: adminAuth() } },
       )
       return res.data

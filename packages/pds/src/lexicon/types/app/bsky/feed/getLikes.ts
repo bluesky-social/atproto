@@ -12,7 +12,7 @@ export interface QueryParams {
   uri: string
   cid?: string
   limit: number
-  before?: string
+  cursor?: string
 }
 
 export type InputSchema = undefined

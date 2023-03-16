@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.list({
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
-      const { limit, before } = params
+      const { limit, cursor } = params
       const requester = auth.credentials.did
       const { ref } = ctx.db.db.dynamic
 
@@ -54,7 +54,7 @@ export default function (server: Server, ctx: AppContext) {
         ref('notif.recordCid'),
       )
       notifBuilder = paginate(notifBuilder, {
-        before,
+        cursor,
         limit,
         keyset,
       })

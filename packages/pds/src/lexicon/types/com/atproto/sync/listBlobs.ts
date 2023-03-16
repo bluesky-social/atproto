@@ -6,19 +6,20 @@ import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as ComAtprotoAdminRepo from './repo'
 
 export interface QueryParams {
-  term?: string
-  limit: number
-  cursor?: string
+  /** The DID of the repo. */
+  did: string
+  /** The most recent commit */
+  latest?: string
+  /** The earliest commit to start from */
+  earliest?: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor?: string
-  repos: ComAtprotoAdminRepo.View[]
+  cids: string[]
   [k: string]: unknown
 }
 

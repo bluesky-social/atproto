@@ -92,7 +92,7 @@ describe('pds admin repo search view', () => {
     const results = (results) => results.flatMap((res) => res.users)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.com.atproto.admin.searchRepos(
-        { term: 'p', before: cursor, limit: 3 },
+        { term: 'p', cursor, limit: 3 },
         { headers },
       )
       return res.data
@@ -116,7 +116,7 @@ describe('pds admin repo search view', () => {
     const results = (results) => results.flatMap((res) => res.repos)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.com.atproto.admin.searchRepos(
-        { before: cursor, limit: 3 },
+        { cursor, limit: 3 },
         { headers },
       )
       return res.data

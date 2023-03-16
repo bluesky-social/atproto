@@ -88,7 +88,7 @@ describe('pds follow views', () => {
       const res = await agent.api.app.bsky.graph.getFollowers(
         {
           actor: sc.dids.alice,
-          before: cursor,
+          cursor,
           limit: 2,
         },
         { headers: sc.getHeaders(alice) },
@@ -203,7 +203,7 @@ describe('pds follow views', () => {
       const res = await agent.api.app.bsky.graph.getFollows(
         {
           actor: sc.dids.alice,
-          before: cursor,
+          cursor,
           limit: 2,
         },
         { headers: sc.getHeaders(alice) },

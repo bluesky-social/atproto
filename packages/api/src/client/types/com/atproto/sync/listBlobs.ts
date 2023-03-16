@@ -5,19 +5,20 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
-import * as AppBskyFeedFeedViewPost from './feedViewPost'
 
 export interface QueryParams {
-  algorithm?: string
-  limit?: number
-  cursor?: string
+  /** The DID of the repo. */
+  did: string
+  /** The most recent commit */
+  latest?: string
+  /** The earliest commit to start from */
+  earliest?: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor?: string
-  feed: AppBskyFeedFeedViewPost.Main[]
+  cids: string[]
   [k: string]: unknown
 }
 

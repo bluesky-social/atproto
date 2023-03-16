@@ -7,7 +7,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getLikes({
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
-      const { uri, limit, before, cid } = params
+      const { uri, limit, cursor, cid } = params
       const requester = auth.credentials.did
       const { services, db } = ctx
       const { ref } = db.db.dynamic
@@ -36,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
       const keyset = new TimeCidKeyset(ref('like.createdAt'), ref('like.cid'))
       builder = paginate(builder, {
         limit,
-        before,
+        cursor,
         keyset,
       })
 

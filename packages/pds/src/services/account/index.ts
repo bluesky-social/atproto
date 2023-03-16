@@ -187,7 +187,7 @@ export class AccountService {
   async search(opts: {
     term: string
     limit: number
-    before?: string
+    cursor?: string
     includeSoftDeleted?: boolean
   }): Promise<(RepoRoot & DidHandle & { distance: number })[]> {
     const builder =
@@ -208,10 +208,10 @@ export class AccountService {
 
   async list(opts: {
     limit: number
-    before?: string
+    cursor?: string
     includeSoftDeleted?: boolean
   }): Promise<(RepoRoot & DidHandle)[]> {
-    const { limit, before, includeSoftDeleted } = opts
+    const { limit, cursor, includeSoftDeleted } = opts
     const { ref } = this.db.db.dynamic
 
     const builder = this.db.db
@@ -227,7 +227,7 @@ export class AccountService {
 
     return await paginate(builder, {
       limit,
-      before,
+      cursor,
       keyset,
     }).execute()
   }

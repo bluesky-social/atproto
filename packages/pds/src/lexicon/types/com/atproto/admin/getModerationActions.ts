@@ -11,7 +11,7 @@ import * as ComAtprotoAdminModerationAction from './moderationAction'
 export interface QueryParams {
   subject?: string
   limit: number
-  before?: string
+  cursor?: string
 }
 
 export type InputSchema = undefined

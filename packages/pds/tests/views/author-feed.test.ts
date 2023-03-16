@@ -127,7 +127,7 @@ describe('pds author feed views', () => {
       const res = await agent.api.app.bsky.feed.getAuthorFeed(
         {
           actor: sc.accounts[alice].handle,
-          before: cursor,
+          cursor,
           limit: 2,
         },
         { headers: sc.getHeaders(dan) },

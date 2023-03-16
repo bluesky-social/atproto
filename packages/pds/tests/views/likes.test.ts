@@ -72,7 +72,7 @@ describe('pds like views', () => {
       const res = await agent.api.app.bsky.feed.getLikes(
         {
           uri: sc.posts[alice][1].ref.uriStr,
-          before: cursor,
+          cursor,
           limit: 2,
         },
         { headers: sc.getHeaders(alice) },
