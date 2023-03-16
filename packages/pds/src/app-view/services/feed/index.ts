@@ -4,7 +4,7 @@ import Database from '../../../db'
 import { countAll, notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
 import { isPresented as isPresentedImage } from '../../../lexicon/types/app/bsky/embed/images'
-import { View as PostView } from '../../../lexicon/types/app/bsky/feed/post'
+import { PostView } from '../../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
 
 export * from './types'
@@ -147,17 +147,10 @@ export class FeedService {
         'post.indexedAt as indexedAt',
         'ipld_block.content as recordBytes',
         db
-          .selectFrom('vote')
+          .selectFrom('like')
           .whereRef('subject', '=', ref('post.uri'))
-          .where('direction', '=', 'up')
           .select(countAll.as('count'))
-          .as('upvoteCount'),
-        db
-          .selectFrom('vote')
-          .whereRef('subject', '=', ref('post.uri'))
-          .where('direction', '=', 'down')
-          .select(countAll.as('count'))
-          .as('downvoteCount'),
+          .as('likeCount'),
         db
           .selectFrom('repost')
           .whereRef('subject', '=', ref('post.uri'))
@@ -175,19 +168,11 @@ export class FeedService {
           .select('uri')
           .as('requesterRepost'),
         db
-          .selectFrom('vote')
+          .selectFrom('like')
           .where('creator', '=', requester)
           .whereRef('subject', '=', ref('post.uri'))
-          .where('direction', '=', 'up')
           .select('uri')
-          .as('requesterUpvote'),
-        db
-          .selectFrom('vote')
-          .where('creator', '=', requester)
-          .whereRef('subject', '=', ref('post.uri'))
-          .where('direction', '=', 'down')
-          .select('uri')
-          .as('requesterDownvote'),
+          .as('requesterLike'),
       ])
       .execute()
     return posts.reduce(
@@ -320,13 +305,11 @@ export class FeedService {
       embed: embeds[uri],
       replyCount: post.replyCount,
       repostCount: post.repostCount,
-      upvoteCount: post.upvoteCount,
-      downvoteCount: post.downvoteCount,
+      likeCount: post.likeCount,
       indexedAt: post.indexedAt,
       viewer: {
         repost: post.requesterRepost ?? undefined,
-        upvote: post.requesterUpvote ?? undefined,
-        downvote: post.requesterDownvote ?? undefined,
+        like: post.requesterLike ?? undefined,
       },
     }
   }

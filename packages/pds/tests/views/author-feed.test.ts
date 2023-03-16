@@ -1,6 +1,6 @@
 import AtpAgent from '@atproto/api'
 import { AtUri } from '@atproto/uri'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
   runTestServer,
   forSnapshot,
@@ -88,8 +88,7 @@ describe('pds author feed views', () => {
 
     aliceForCarol.data.feed.forEach((postView) => {
       const { viewer, uri } = postView.post
-      expect(viewer?.upvote).toEqual(sc.votes.up[carol]?.[uri]?.toString())
-      expect(viewer?.downvote).toEqual(sc.votes.down[carol]?.[uri]?.toString())
+      expect(viewer?.like).toEqual(sc.likes[carol]?.[uri]?.toString())
       expect(viewer?.repost).toEqual(sc.reposts[carol][uri]?.toString())
     })
 
@@ -97,11 +96,11 @@ describe('pds author feed views', () => {
   })
 
   it('omits reposts from muted users.', async () => {
-    await agent.api.app.bsky.graph.mute(
+    await agent.api.app.bsky.graph.muteActor(
       { actor: alice }, // Has a repost by dan: will be omitted from dan's feed
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
-    await agent.api.app.bsky.graph.mute(
+    await agent.api.app.bsky.graph.muteActor(
       { actor: dan }, // Feed author: their posts will still appear
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
@@ -112,11 +111,11 @@ describe('pds author feed views', () => {
 
     expect(forSnapshot(bobForDan.data.feed)).toMatchSnapshot()
 
-    await agent.api.app.bsky.graph.unmute(
+    await agent.api.app.bsky.graph.unmuteActor(
       { actor: alice },
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
-    await agent.api.app.bsky.graph.unmute(
+    await agent.api.app.bsky.graph.unmuteActor(
       { actor: dan },
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
@@ -165,7 +164,7 @@ describe('pds author feed views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.repo.repoRef',
+            $type: 'com.atproto.admin.defs#repoRef',
             did: alice,
           },
           createdBy: 'did:example:admin',

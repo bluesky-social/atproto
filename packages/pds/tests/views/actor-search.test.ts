@@ -1,5 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
   runTestServer,
   forSnapshot,
@@ -35,7 +35,7 @@ describe('pds user search views', () => {
   })
 
   it('typeahead gives relevant results', async () => {
-    const result = await agent.api.app.bsky.actor.searchTypeahead(
+    const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'car' },
       { headers },
     )
@@ -79,7 +79,7 @@ describe('pds user search views', () => {
   })
 
   it('typeahead gives empty result set when provided empty term', async () => {
-    const result = await agent.api.app.bsky.actor.searchTypeahead(
+    const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: '' },
       { headers },
     )
@@ -88,14 +88,14 @@ describe('pds user search views', () => {
   })
 
   it('typeahead applies limit', async () => {
-    const full = await agent.api.app.bsky.actor.searchTypeahead(
+    const full = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'p' },
       { headers },
     )
 
     expect(full.data.actors.length).toBeGreaterThan(5)
 
-    const limited = await agent.api.app.bsky.actor.searchTypeahead(
+    const limited = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'p', limit: 5 },
       { headers },
     )
@@ -104,7 +104,7 @@ describe('pds user search views', () => {
   })
 
   it('search gives relevant results', async () => {
-    const result = await agent.api.app.bsky.actor.search(
+    const result = await agent.api.app.bsky.actor.searchActors(
       { term: 'car' },
       { headers },
     )
@@ -148,7 +148,7 @@ describe('pds user search views', () => {
   })
 
   it('search gives empty result set when provided empty term', async () => {
-    const result = await agent.api.app.bsky.actor.search(
+    const result = await agent.api.app.bsky.actor.searchActors(
       { term: '' },
       { headers },
     )
@@ -159,7 +159,7 @@ describe('pds user search views', () => {
   it('paginates', async () => {
     const results = (results) => results.flatMap((res) => res.actors)
     const paginator = async (cursor?: string) => {
-      const res = await agent.api.app.bsky.actor.search(
+      const res = await agent.api.app.bsky.actor.searchActors(
         { term: 'p', cursor, limit: 3 },
         { headers },
       )
@@ -171,7 +171,7 @@ describe('pds user search views', () => {
       expect(res.actors.length).toBeLessThanOrEqual(3),
     )
 
-    const full = await agent.api.app.bsky.actor.search(
+    const full = await agent.api.app.bsky.actor.searchActors(
       { term: 'p' },
       { headers },
     )
@@ -183,7 +183,7 @@ describe('pds user search views', () => {
   it('search handles bad input', async () => {
     // Mostly for sqlite's benefit, since it uses LIKE and these are special characters that will
     // get stripped. This input triggers a special case where there are no "safe" words for sqlite to search on.
-    const result = await agent.api.app.bsky.actor.search(
+    const result = await agent.api.app.bsky.actor.searchActors(
       { term: ' % _ ' },
       { headers },
     )
@@ -196,7 +196,7 @@ describe('pds user search views', () => {
       {
         action: TAKEDOWN,
         subject: {
-          $type: 'com.atproto.repo.repoRef',
+          $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids['cara-wiegand69.test'],
         },
         createdBy: 'did:example:admin',
@@ -207,7 +207,7 @@ describe('pds user search views', () => {
         headers: { authorization: adminAuth() },
       },
     )
-    const result = await agent.api.app.bsky.actor.searchTypeahead(
+    const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'car' },
       { headers },
     )

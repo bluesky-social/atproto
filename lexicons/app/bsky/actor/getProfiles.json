@@ -23,7 +23,7 @@
           "properties": {
             "profiles": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.actor.profile#view"}
+              "items": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"}
             }
           }
         }
