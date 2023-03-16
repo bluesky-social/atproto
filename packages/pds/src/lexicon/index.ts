@@ -566,6 +566,7 @@ export class BskyNS {
   feed: FeedNS
   graph: GraphNS
   notification: NotificationNS
+  richtext: RichtextNS
 
   constructor(server: Server) {
     this._server = server
@@ -574,6 +575,7 @@ export class BskyNS {
     this.feed = new FeedNS(server)
     this.graph = new GraphNS(server)
     this.notification = new NotificationNS(server)
+    this.richtext = new RichtextNS(server)
   }
 }
 
@@ -747,6 +749,14 @@ export class NotificationNS {
   ) {
     const nsid = 'app.bsky.notification.updateSeen' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class RichtextNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
   }
 }
 

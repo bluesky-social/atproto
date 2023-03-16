@@ -159,7 +159,7 @@ export class SeedClient {
   async post(
     by: string,
     text: string,
-    entities?: any,
+    facets?: any,
     images?: ImageRef[],
     quote?: RecordRef,
   ) {
@@ -179,7 +179,7 @@ export class SeedClient {
       { did: by },
       {
         text: text,
-        entities,
+        facets,
         embed,
         createdAt: new Date().toISOString(),
       },
@@ -235,7 +235,7 @@ export class SeedClient {
     root: RecordRef,
     parent: RecordRef,
     text: string,
-    entities?: any,
+    facets?: any,
     images?: ImageRef[],
   ) {
     const embed = images
@@ -252,7 +252,7 @@ export class SeedClient {
           root: root.raw,
           parent: parent.raw,
         },
-        entities,
+        facets,
         embed,
         createdAt: new Date().toISOString(),
       },

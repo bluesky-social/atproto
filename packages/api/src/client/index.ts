@@ -90,6 +90,7 @@ import * as AppBskyGraphUnmute from './types/app/bsky/graph/unmute'
 import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
 import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 
 export * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
 export * as ComAtprotoAccountCreateInviteCode from './types/com/atproto/account/createInviteCode'
@@ -175,6 +176,7 @@ export * as AppBskyGraphUnmute from './types/app/bsky/graph/unmute'
 export * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
 export * as AppBskyNotificationList from './types/app/bsky/notification/list'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 
 export const COM_ATPROTO_ADMIN = {
   ModerationActionTakedown: 'com.atproto.admin.moderationAction#takedown',
@@ -818,6 +820,7 @@ export class BskyNS {
   feed: FeedNS
   graph: GraphNS
   notification: NotificationNS
+  richtext: RichtextNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
@@ -826,6 +829,7 @@ export class BskyNS {
     this.feed = new FeedNS(service)
     this.graph = new GraphNS(service)
     this.notification = new NotificationNS(service)
+    this.richtext = new RichtextNS(service)
   }
 }
 
@@ -1390,5 +1394,13 @@ export class NotificationNS {
       .catch((e) => {
         throw AppBskyNotificationUpdateSeen.toKnownErr(e)
       })
+  }
+}
+
+export class RichtextNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
   }
 }
