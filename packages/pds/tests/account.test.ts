@@ -82,7 +82,7 @@ describe('account', () => {
     const host = split.slice(0, -1).join('.')
     const code = split.at(-1)
     expect(host).toBe('pds.public.url') // Hostname of public url
-    expect(code?.length).toBe(5)
+    expect(code?.length).toBe(7)
   })
 
   it('serves the accounts system config', async () => {

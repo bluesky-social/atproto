@@ -9,13 +9,13 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, req }) => {
       const { useCount } = input.body
 
-      // generate a 5 char b32 invite code - preceded by the hostname
+      // generate a 7 char b32 invite code - preceded by the hostname
       // with '.'s replaced by '-'s so it is not mistakable for a link
       // ex: bsky-app-abc12
       const code =
         ctx.cfg.publicHostname.replaceAll('.', '-') +
         '-' +
-        uint8arrays.toString(await crypto.randomBytes(5), 'base32').slice(0, 5)
+        uint8arrays.toString(await crypto.randomBytes(7), 'base32').slice(0, 7)
 
       await ctx.db.db
         .insertInto('invite_code')
