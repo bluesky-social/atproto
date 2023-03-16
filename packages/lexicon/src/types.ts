@@ -44,6 +44,8 @@ export const lexString = z.object({
   default: z.string().optional(),
   minLength: z.number().int().optional(),
   maxLength: z.number().int().optional(),
+  minGraphemes: z.number().int().optional(),
+  maxGraphemes: z.number().int().optional(),
   enum: z.string().array().optional(),
   const: z.string().optional(),
   knownValues: z.string().array().optional(),

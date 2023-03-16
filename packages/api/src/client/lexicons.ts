@@ -3540,7 +3540,8 @@ export const schemaDict = {
           properties: {
             text: {
               type: 'string',
-              maxLength: 256,
+              maxLength: 3000,
+              maxGraphemes: 300,
             },
             entities: {
               type: 'array',
