@@ -1,8 +1,10 @@
-import { cborBytesToRecord, chunkArray } from '@atproto/common'
+import assert from 'assert'
 import { sql } from 'kysely'
+import { cborBytesToRecord, chunkArray } from '@atproto/common'
 import AppContext from '../context'
 import Database from '../db'
 import { appMigration } from '../db/leader'
+import { countAll } from '../db/util'
 import { MessageDispatcher } from '../event-stream/message-queue'
 import { ids } from '../lexicon/lexicons'
 import { prepareUpdate, prepareDelete, assertValidRecord } from '../repo'
@@ -48,7 +50,7 @@ async function main(tx: Database, ctx: AppContext) {
   let didsComplete = 0
   let updatesComplete = 0
   const updatesTurnedDeletes: string[] = []
-  const chunks = chunkArray(allDids, Math.ceil(allDids.length / 10))
+  const chunks = chunkArray(allDids, Math.ceil(allDids.length / 20))
 
   await Promise.all(
     chunks.map(async (dids) => {
@@ -84,7 +86,9 @@ async function main(tx: Database, ctx: AppContext) {
           }),
         )
 
-        await repoTx.processWrites(did, updates, now)
+        if (updates.length) {
+          await repoTx.processWrites(did, updates, now)
+        }
 
         didsComplete += 1
         updatesComplete += follows.length
@@ -101,10 +105,6 @@ async function main(tx: Database, ctx: AppContext) {
     `${updatesTurnedDeletes.length} updates-turned-deletes`,
     updatesTurnedDeletes,
   )
-
-  if (updatesTurnedDeletes.length > followCount / 1000) {
-    throw new Error('Too many updates-turned-deletes.')
-  }
 
   // Update indexes for deleted, invalid follows
 
@@ -139,7 +139,84 @@ async function main(tx: Database, ctx: AppContext) {
     `updated ${Number(updated.numUpdatedRows)} follow cids in index`,
   )
 
-  console.log(SHORT_NAME, 'complete')
+  console.log(SHORT_NAME, 'running dummy check')
+  await dummyCheck(tx, {
+    followCount,
+    deleteCount: updatesTurnedDeletes.length,
+  })
+
+  console.log(
+    SHORT_NAME,
+    'complete in',
+    (Date.now() - Date.parse(now)) / 1000,
+    'sec',
+  )
+}
+
+async function dummyCheck(
+  db: Database,
+  original: { followCount: number; deleteCount: number },
+) {
+  // Check 1: rogue deletions
+  assert(
+    original.deleteCount < original.followCount / 1000,
+    `${SHORT_NAME} dummy check failed: too many updates-turned-deletes.`,
+  )
+
+  // Check 2: record index size reflects updates/deletes
+  const { followCount } = await db.db
+    .selectFrom('record')
+    .where('collection', '=', ids.AppBskyGraphFollow)
+    .select(countAll.as('followCount'))
+    .executeTakeFirstOrThrow()
+  assert(
+    followCount === original.followCount - original.deleteCount,
+    `${SHORT_NAME} dummy check failed: ${followCount} follows doesn't match ${JSON.stringify(
+      original,
+    )}`,
+  )
+
+  // Check 3. follow index
+  const { indexMismatchedCount } = await db.db
+    .selectFrom('follow')
+    .innerJoin('record', 'record.uri', 'follow.uri')
+    .whereRef('follow.cid', '!=', 'record.cid')
+    .select(countAll.as('indexMismatchedCount'))
+    .executeTakeFirstOrThrow()
+  assert(
+    indexMismatchedCount === 0,
+    `${SHORT_NAME} dummy check failed: ${indexMismatchedCount} mismatched records from follow index`,
+  )
+
+  // Check 4: cids and content
+  const pct = Math.min(50 / followCount, 1) // Aim for around 50 random tests cases
+  const testCases = await db.db
+    .selectFrom('record')
+    .leftJoin('ipld_block', (join) =>
+      join
+        .onRef('ipld_block.cid', '=', 'record.cid')
+        .onRef('ipld_block.creator', '=', 'record.did'),
+    )
+    .where('collection', '=', ids.AppBskyGraphFollow)
+    .where(sql`random()`, '<', pct)
+    .select(['uri', 'ipld_block.content as bytes'])
+    .execute()
+
+  console.log(`${SHORT_NAME} dummy check ${testCases.length} test cases`)
+
+  for (const { uri, bytes } of testCases) {
+    assert(bytes, `${SHORT_NAME} dummy check failed: ${uri} missing bytes`)
+    const record = cborBytesToRecord(bytes)
+    assert(
+      record['$type'] === ids.AppBskyGraphFollow,
+      `${SHORT_NAME} dummy check failed: ${uri} bad record type`,
+    )
+    try {
+      assertValidRecord(record)
+    } catch {
+      throw new Error(`${SHORT_NAME} dummy check failed: ${uri} invalid record`)
+    }
+  }
 }
 
 async function getAllDids(db: Database) {

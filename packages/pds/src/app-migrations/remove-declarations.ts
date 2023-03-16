@@ -1,7 +1,9 @@
+import assert from 'assert'
 import { chunkArray } from '@atproto/common'
 import AppContext from '../context'
 import Database from '../db'
 import { appMigration } from '../db/leader'
+import { countAll } from '../db/util'
 import { MessageDispatcher } from '../event-stream/message-queue'
 import { PreparedDelete, prepareDelete } from '../repo'
 import { RepoService } from '../services/repo'
@@ -35,7 +37,6 @@ async function main(tx: Database, ctx: AppContext) {
   // Should be 4-5k records
   const recordsToDelete = await tx.db
     .selectFrom('record')
-    .innerJoin('repo_root', 'repo_root.did', 'record.did') // Ignore any records not in a repo
     .where('collection', 'in', [
       'app.bsky.system.declaration',
       'app.bsky.graph.assertion',
@@ -49,16 +50,16 @@ async function main(tx: Database, ctx: AppContext) {
     collect[record.did].push(prepareDelete(record))
     return collect
   }, {} as Record<string, PreparedDelete[]>)
-  const entries = Object.entries(deletionsByDid)
+  const didDeletions = Object.entries(deletionsByDid)
 
   console.log(
     SHORT_NAME,
-    `${recordsToDelete.length} deletions across ${entries.length} dids`,
+    `${recordsToDelete.length} deletions across ${didDeletions.length} dids`,
   )
 
   let didsComplete = 0
   let deletionsComplete = 0
-  const chunks = chunkArray(entries, Math.ceil(entries.length / 50))
+  const chunks = chunkArray(didDeletions, Math.ceil(didDeletions.length / 50))
 
   await Promise.all(
     chunks.map(async (chunk) => {
@@ -68,11 +69,35 @@ async function main(tx: Database, ctx: AppContext) {
         deletionsComplete += deletions.length
         console.log(
           SHORT_NAME,
-          `(${didsComplete}/${entries.length}) dids, (${deletionsComplete}/${recordsToDelete.length}) records`,
+          `(${didsComplete}/${didDeletions.length}) dids, (${deletionsComplete}/${recordsToDelete.length}) records`,
         )
       }
     }),
   )
 
-  console.log(SHORT_NAME, 'complete')
+  console.log(SHORT_NAME, 'running dummy check')
+  await dummyCheck(tx)
+
+  console.log(
+    SHORT_NAME,
+    'complete in',
+    (Date.now() - Date.parse(now)) / 1000,
+    'sec',
+  )
+}
+
+async function dummyCheck(db: Database) {
+  const { count } = await db.db
+    .selectFrom('record')
+    .where('collection', 'in', [
+      'app.bsky.system.declaration',
+      'app.bsky.graph.assertion',
+      'app.bsky.graph.confirmation',
+    ])
+    .select(countAll.as('count'))
+    .executeTakeFirstOrThrow()
+  assert(
+    count === 0,
+    `${SHORT_NAME} dummy check failed: ${count} records remaining`,
+  )
 }

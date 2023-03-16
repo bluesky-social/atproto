@@ -1,5 +1,6 @@
-import { cborBytesToRecord, chunkArray } from '@atproto/common'
+import assert from 'assert'
 import { sql } from 'kysely'
+import { cborBytesToRecord, chunkArray } from '@atproto/common'
 import AppContext from '../context'
 import Database from '../db'
 import { appMigration } from '../db/leader'
@@ -7,6 +8,7 @@ import { MessageDispatcher } from '../event-stream/message-queue'
 import { ids } from '../lexicon/lexicons'
 import { prepareCreate, prepareDelete, assertValidRecord } from '../repo'
 import { RepoService } from '../services/repo'
+import { countAll } from '../db/util'
 
 const MIGRATION_NAME = '2023-03-15-votes-to-likes'
 const SHORT_NAME = 'votes-to-likes'
@@ -48,8 +50,9 @@ async function main(tx: Database, ctx: AppContext) {
 
   let didsComplete = 0
   let votesComplete = 0
+  let processedDownvotes = 0
   const createsTurnedDeletes: string[] = []
-  const chunks = chunkArray(didsWithVotes, Math.ceil(didsWithVotes.length / 5))
+  const chunks = chunkArray(didsWithVotes, Math.ceil(didsWithVotes.length / 10))
 
   await Promise.all(
     chunks.map(async (dids) => {
@@ -67,6 +70,7 @@ async function main(tx: Database, ctx: AppContext) {
             })
 
             if (record.direction !== 'up') {
+              processedDownvotes++
               return del // Delete downvotes
             }
 
@@ -96,7 +100,10 @@ async function main(tx: Database, ctx: AppContext) {
 
         // Chunk to avoid hitting e.g. postgres param limits
         for (const writeChunk of chunkArray(writeResults, 1000)) {
-          await repoTx.processWrites(did, writeChunk.flat(), now)
+          const writes = writeChunk.flat()
+          if (writes.length) {
+            await repoTx.processWrites(did, writes, now)
+          }
         }
 
         didsComplete += 1
@@ -114,10 +121,6 @@ async function main(tx: Database, ctx: AppContext) {
     `${createsTurnedDeletes.length} creates-turned-deletes`,
     createsTurnedDeletes,
   )
-
-  if (createsTurnedDeletes.length > voteCount / 1000) {
-    throw new Error('Too many creates-turned-deletes.')
-  }
 
   // Update indexes for deleted, invalid votes
 
@@ -167,12 +170,102 @@ async function main(tx: Database, ctx: AppContext) {
     `updated ${Number(updatedCids.numUpdatedRows)} like cids in index`,
   )
 
+  console.log(SHORT_NAME, 'running dummy check')
+  await dummyCheck(tx, {
+    voteCount,
+    deleteInvalidCount: createsTurnedDeletes.length,
+    deleteDownvoteCount: processedDownvotes,
+  })
+
   console.log(
     SHORT_NAME,
     'complete in',
-    (Date.now() - new Date(now).getTime()) / 1000,
+    (Date.now() - Date.parse(now)) / 1000,
     'sec',
   )
+}
+
+async function dummyCheck(
+  db: Database,
+  original: {
+    voteCount: number
+    deleteInvalidCount: number
+    deleteDownvoteCount: number
+  },
+) {
+  // Check 1: rogue deletions
+  assert(
+    original.deleteInvalidCount < original.voteCount / 1000,
+    `${SHORT_NAME} dummy check failed: too many creates-turned-deletes.`,
+  )
+
+  // Check 2: record index size reflects creates/deletes
+  const { likeCount } = await db.db
+    .selectFrom('record')
+    .where('collection', '=', ids.AppBskyFeedLike)
+    .select(countAll.as('likeCount'))
+    .executeTakeFirstOrThrow()
+  const { voteCount } = await db.db
+    .selectFrom('record')
+    .where('collection', '=', VOTE_LEX_ID)
+    .select(countAll.as('voteCount'))
+    .executeTakeFirstOrThrow()
+  assert(
+    voteCount === 0,
+    `${SHORT_NAME} dummy check failed: ${voteCount} votes remain`,
+  )
+  assert(
+    likeCount ===
+      original.voteCount -
+        original.deleteInvalidCount -
+        original.deleteDownvoteCount,
+    `${SHORT_NAME} dummy check failed: ${likeCount} likes doesn't match ${JSON.stringify(
+      original,
+    )}`,
+  )
+
+  // Check 3. like index
+  const { indexMismatchedCount } = await db.db
+    .selectFrom('like')
+    .innerJoin('record', 'record.uri', 'like.uri')
+    .whereRef('like.cid', '!=', 'record.cid')
+    .orWhere('record.collection', '!=', ids.AppBskyFeedLike)
+    .select(countAll.as('indexMismatchedCount'))
+    .executeTakeFirstOrThrow()
+  assert(
+    indexMismatchedCount === 0,
+    `${SHORT_NAME} dummy check failed: ${indexMismatchedCount} mismatched records from like index`,
+  )
+
+  // Check 4: record cids and content
+  const pct = Math.min(50 / likeCount, 1) // Aim for around 50 random tests cases
+  const testCases = await db.db
+    .selectFrom('record')
+    .leftJoin('ipld_block', (join) =>
+      join
+        .onRef('ipld_block.cid', '=', 'record.cid')
+        .onRef('ipld_block.creator', '=', 'record.did'),
+    )
+    .where('collection', '=', ids.AppBskyFeedLike)
+    .where(sql`random()`, '<', pct)
+    .select(['uri', 'ipld_block.content as bytes'])
+    .execute()
+
+  console.log(`${SHORT_NAME} dummy check ${testCases.length} test cases`)
+
+  for (const { uri, bytes } of testCases) {
+    assert(bytes, `${SHORT_NAME} dummy check failed: ${uri} missing bytes`)
+    const record = cborBytesToRecord(bytes)
+    assert(
+      record['$type'] === ids.AppBskyFeedLike,
+      `${SHORT_NAME} dummy check failed: ${uri} bad record type`,
+    )
+    try {
+      assertValidRecord(record)
+    } catch {
+      throw new Error(`${SHORT_NAME} dummy check failed: ${uri} invalid record`)
+    }
+  }
 }
 
 async function getDidsWithVotes(db: Database) {
@@ -202,7 +295,7 @@ async function getVotes(db: Database, did: string) {
 async function getVoteCount(db: Database) {
   const { count } = await db.db
     .selectFrom('record')
-    .select(sql`count(*)`.as('count'))
+    .select(countAll.as('count'))
     .where('collection', '=', VOTE_LEX_ID)
     .executeTakeFirstOrThrow()
   return Number(count)
