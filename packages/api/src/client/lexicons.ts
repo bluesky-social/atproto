@@ -2646,9 +2646,9 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyActorSearchActor: {
+  AppBskyActorSearchActors: {
     lexicon: 1,
-    id: 'app.bsky.actor.searchActor',
+    id: 'app.bsky.actor.searchActors',
     defs: {
       main: {
         type: 'query',
@@ -2692,9 +2692,9 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyActorSearchActorTypeahead: {
+  AppBskyActorSearchActorsTypeahead: {
     lexicon: 1,
-    id: 'app.bsky.actor.searchActorTypeahead',
+    id: 'app.bsky.actor.searchActorsTypeahead',
     defs: {
       main: {
         type: 'query',
@@ -4002,8 +4002,8 @@ export const ids = {
   AppBskyActorGetProfiles: 'app.bsky.actor.getProfiles',
   AppBskyActorGetSuggestions: 'app.bsky.actor.getSuggestions',
   AppBskyActorProfile: 'app.bsky.actor.profile',
-  AppBskyActorSearchActor: 'app.bsky.actor.searchActor',
-  AppBskyActorSearchActorTypeahead: 'app.bsky.actor.searchActorTypeahead',
+  AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
+  AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
   AppBskyActorUpdateProfile: 'app.bsky.actor.updateProfile',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',

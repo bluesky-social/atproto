@@ -35,7 +35,7 @@ describe('pds user search views', () => {
   })
 
   it('typeahead gives relevant results', async () => {
-    const result = await agent.api.app.bsky.actor.searchActorTypeahead(
+    const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'car' },
       { headers },
     )
@@ -79,7 +79,7 @@ describe('pds user search views', () => {
   })
 
   it('typeahead gives empty result set when provided empty term', async () => {
-    const result = await agent.api.app.bsky.actor.searchActorTypeahead(
+    const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: '' },
       { headers },
     )
@@ -88,14 +88,14 @@ describe('pds user search views', () => {
   })
 
   it('typeahead applies limit', async () => {
-    const full = await agent.api.app.bsky.actor.searchActorTypeahead(
+    const full = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'p' },
       { headers },
     )
 
     expect(full.data.actors.length).toBeGreaterThan(5)
 
-    const limited = await agent.api.app.bsky.actor.searchActorTypeahead(
+    const limited = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'p', limit: 5 },
       { headers },
     )
@@ -104,7 +104,7 @@ describe('pds user search views', () => {
   })
 
   it('search gives relevant results', async () => {
-    const result = await agent.api.app.bsky.actor.searchActor(
+    const result = await agent.api.app.bsky.actor.searchActors(
       { term: 'car' },
       { headers },
     )
@@ -148,7 +148,7 @@ describe('pds user search views', () => {
   })
 
   it('search gives empty result set when provided empty term', async () => {
-    const result = await agent.api.app.bsky.actor.searchActor(
+    const result = await agent.api.app.bsky.actor.searchActors(
       { term: '' },
       { headers },
     )
@@ -159,7 +159,7 @@ describe('pds user search views', () => {
   it('paginates', async () => {
     const results = (results) => results.flatMap((res) => res.actors)
     const paginator = async (cursor?: string) => {
-      const res = await agent.api.app.bsky.actor.searchActor(
+      const res = await agent.api.app.bsky.actor.searchActors(
         { term: 'p', cursor, limit: 3 },
         { headers },
       )
@@ -171,7 +171,7 @@ describe('pds user search views', () => {
       expect(res.actors.length).toBeLessThanOrEqual(3),
     )
 
-    const full = await agent.api.app.bsky.actor.searchActor(
+    const full = await agent.api.app.bsky.actor.searchActors(
       { term: 'p' },
       { headers },
     )
@@ -183,7 +183,7 @@ describe('pds user search views', () => {
   it('search handles bad input', async () => {
     // Mostly for sqlite's benefit, since it uses LIKE and these are special characters that will
     // get stripped. This input triggers a special case where there are no "safe" words for sqlite to search on.
-    const result = await agent.api.app.bsky.actor.searchActor(
+    const result = await agent.api.app.bsky.actor.searchActors(
       { term: ' % _ ' },
       { headers },
     )
@@ -207,7 +207,7 @@ describe('pds user search views', () => {
         headers: { authorization: adminAuth() },
       },
     )
-    const result = await agent.api.app.bsky.actor.searchActorTypeahead(
+    const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'car' },
       { headers },
     )

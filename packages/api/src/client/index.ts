@@ -57,8 +57,8 @@ import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
-import * as AppBskyActorSearchActor from './types/app/bsky/actor/searchActor'
-import * as AppBskyActorSearchActorTypeahead from './types/app/bsky/actor/searchActorTypeahead'
+import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
+import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
 import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images'
@@ -135,8 +135,8 @@ export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 export * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 export * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
-export * as AppBskyActorSearchActor from './types/app/bsky/actor/searchActor'
-export * as AppBskyActorSearchActorTypeahead from './types/app/bsky/actor/searchActorTypeahead'
+export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
+export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
 export * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images'
@@ -816,25 +816,25 @@ export class ActorNS {
       })
   }
 
-  searchActor(
-    params?: AppBskyActorSearchActor.QueryParams,
-    opts?: AppBskyActorSearchActor.CallOptions,
-  ): Promise<AppBskyActorSearchActor.Response> {
+  searchActors(
+    params?: AppBskyActorSearchActors.QueryParams,
+    opts?: AppBskyActorSearchActors.CallOptions,
+  ): Promise<AppBskyActorSearchActors.Response> {
     return this._service.xrpc
-      .call('app.bsky.actor.searchActor', params, undefined, opts)
+      .call('app.bsky.actor.searchActors', params, undefined, opts)
       .catch((e) => {
-        throw AppBskyActorSearchActor.toKnownErr(e)
+        throw AppBskyActorSearchActors.toKnownErr(e)
       })
   }
 
-  searchActorTypeahead(
-    params?: AppBskyActorSearchActorTypeahead.QueryParams,
-    opts?: AppBskyActorSearchActorTypeahead.CallOptions,
-  ): Promise<AppBskyActorSearchActorTypeahead.Response> {
+  searchActorsTypeahead(
+    params?: AppBskyActorSearchActorsTypeahead.QueryParams,
+    opts?: AppBskyActorSearchActorsTypeahead.CallOptions,
+  ): Promise<AppBskyActorSearchActorsTypeahead.Response> {
     return this._service.xrpc
-      .call('app.bsky.actor.searchActorTypeahead', params, undefined, opts)
+      .call('app.bsky.actor.searchActorsTypeahead', params, undefined, opts)
       .catch((e) => {
-        throw AppBskyActorSearchActorTypeahead.toKnownErr(e)
+        throw AppBskyActorSearchActorsTypeahead.toKnownErr(e)
       })
   }
 

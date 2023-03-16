@@ -1,15 +1,16 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.actor.searchActorTypeahead",
+  "id": "app.bsky.actor.searchActors",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Find actor suggestions for a search term.",
+      "description": "Find actors matching search criteria.",
       "parameters": {
         "type": "params",
         "properties": {
           "term": {"type": "string"},
-          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50}
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
+          "cursor": {"type": "string"}
         }
       },
       "output": {
@@ -18,9 +19,10 @@
           "type": "object",
           "required": ["actors"],
           "properties": {
+            "cursor": {"type": "string"},
             "actors": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.actor.defs#withInfo"}
+              "items": {"type": "ref", "ref": "app.bsky.actor.defs#profileViewBasic"}
             }
           }
         }

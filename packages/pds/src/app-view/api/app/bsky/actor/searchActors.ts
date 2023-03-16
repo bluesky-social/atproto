@@ -3,7 +3,7 @@ import AppContext from '../../../../../context'
 import Database from '../../../../../db'
 import { DidHandle } from '../../../../../db/tables/did-handle'
 import { Server } from '../../../../../lexicon'
-import * as Method from '../../../../../lexicon/types/app/bsky/actor/searchActor'
+import * as Method from '../../../../../lexicon/types/app/bsky/actor/searchActors'
 import {
   cleanTerm,
   getUserSearchQueryPg,
@@ -12,7 +12,7 @@ import {
 } from '../../../../../services/util/search'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.actor.searchActor({
+  server.app.bsky.actor.searchActors({
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {
       const { services, db } = ctx

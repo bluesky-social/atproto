@@ -55,8 +55,8 @@ import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscrib
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
-import * as AppBskyActorSearchActor from './types/app/bsky/actor/searchActor'
-import * as AppBskyActorSearchActorTypeahead from './types/app/bsky/actor/searchActorTypeahead'
+import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
+import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
 import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
@@ -570,20 +570,20 @@ export class ActorNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  searchActor<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyActorSearchActor.Handler<ExtractAuth<AV>>>,
+  searchActors<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyActorSearchActors.Handler<ExtractAuth<AV>>>,
   ) {
-    const nsid = 'app.bsky.actor.searchActor' // @ts-ignore
+    const nsid = 'app.bsky.actor.searchActors' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  searchActorTypeahead<AV extends AuthVerifier>(
+  searchActorsTypeahead<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      AppBskyActorSearchActorTypeahead.Handler<ExtractAuth<AV>>
+      AppBskyActorSearchActorsTypeahead.Handler<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'app.bsky.actor.searchActorTypeahead' // @ts-ignore
+    const nsid = 'app.bsky.actor.searchActorsTypeahead' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

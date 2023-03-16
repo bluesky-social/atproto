@@ -9,8 +9,8 @@ import getProfiles from './actor/getProfiles'
 import getRepostedBy from './feed/getRepostedBy'
 import getFollowers from './graph/getFollowers'
 import getFollows from './graph/getFollows'
-import getUsersSearch from './actor/searchActor'
-import getUsersTypeahead from './actor/searchActorTypeahead'
+import getUsersSearch from './actor/searchActors'
+import getUsersTypeahead from './actor/searchActorsTypeahead'
 import getSuggestions from './actor/getSuggestions'
 
 export default function (server: Server, ctx: AppContext) {

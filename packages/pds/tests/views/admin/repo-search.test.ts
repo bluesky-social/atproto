@@ -81,9 +81,6 @@ describe('pds admin repo search view', () => {
 
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
-    console.log(result.data.repos)
-    console.log(forSnapshot(result.data.repos))
-
     if (db.dialect === 'pg') {
       expect(forSnapshot(result.data.repos)).toMatchInlineSnapshot(snapPg)
     } else {
