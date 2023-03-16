@@ -9,8 +9,24 @@ const cidSchema = z
   })
   .transform((obj: unknown) => mf.CID.asCID(obj) as mf.CID)
 
+const blobRefType = z.union([
+  z.literal('blob'),
+  z.literal('image'),
+  z.literal('video'),
+  z.literal('audio'),
+])
+
+const jsonBlobRefSchema = z.object({
+  $type: blobRefType,
+  ref: z.object({
+    '/': z.string(),
+  }),
+  mimeType: z.string(),
+})
+
 export const schema = {
   cid: cidSchema,
+  jsonBlobRef: jsonBlobRefSchema,
   bytes: z.instanceof(Uint8Array),
   string: z.string(),
   array: z.array(z.unknown()),

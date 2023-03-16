@@ -6,6 +6,7 @@ import * as mf from 'multiformats'
 import { base64 } from 'multiformats/bases/base64'
 import * as cborCodec from '@ipld/dag-cbor'
 import { check, schema } from '.'
+import { AudioRef, BlobRef, ImageRef, VideoRef } from './blob-refs'
 
 export const cborEncode = cborCodec.encode
 export const cborDecode = cborCodec.decode
@@ -57,22 +58,27 @@ export type JsonValue =
   | number
   | string
   | null
-  | bigint
   | Array<JsonValue>
   | { [key: string]: JsonValue }
   | { [key: number]: JsonValue }
 
 export type IpldValue =
-  | boolean
-  | number
-  | string
-  | null
-  | bigint
+  | JsonValue
   | CID
   | Uint8Array
   | Array<IpldValue>
   | { [key: string]: IpldValue }
   | { [key: number]: IpldValue }
+
+export type LexValue =
+  | IpldValue
+  | BlobRef
+  | ImageRef
+  | VideoRef
+  | AudioRef
+  | Array<LexValue>
+  | { [key: string]: LexValue }
+  | { [key: number]: LexValue }
 
 export const jsonToIpldValue = (val: JsonValue): IpldValue => {
   if (check.is(val, schema.array)) {
@@ -141,3 +147,63 @@ export const stringifyIpld = (val: IpldValue): string => {
 export const parseJsonStringToIpld = (str: string): IpldValue => {
   return jsonToIpldValue(JSON.parse(str))
 }
+
+export const lexValueToIpld = (val: LexValue): IpldValue => {
+  if (check.is(val, schema.array)) {
+    return val.map((item) => lexValueToIpld(item))
+  } else if (check.is(val, schema.bytes)) {
+    return {
+      '/': {
+        bytes: base64.encode(val).slice(1), // no mbase prefix (taken from dag-json code)
+      },
+    }
+  } else if (check.is(val, schema.cid)) {
+    return {
+      '/': val.toString(),
+    }
+  } else if (check.is(val, schema.record)) {
+    const toReturn = {}
+    for (const key of Object.keys(val)) {
+      toReturn[key] = ipldValueToJson(val[key])
+    }
+    return toReturn
+  } else {
+    return val
+  }
+}
+
+// export const ipldValueToLex = (val: IpldValue): LexValue => {
+//   if (check.is(val, schema.array)) {
+//     return val.map((item) => ipldValueToLex(item))
+//   } else if (check.is(val, schema.record)) {
+//     const maybeCid = val['/']
+//     if (maybeCid) {
+//       if (Object.keys(val).length > 1) {
+//         throw new Error()
+//       }
+//       const maybeBytes = maybeCid['bytes']
+//       if (maybeBytes) {
+//         if (
+//           Object.keys(maybeCid).length > 1 ||
+//           typeof maybeBytes !== 'string'
+//         ) {
+//           console.log('this err')
+//           throw new Error()
+//         }
+//         return base64.decode(`m${maybeBytes}`) // add mbase prefix according to dag-json code
+//       }
+//       if (typeof maybeCid !== 'string') {
+//         throw new Error()
+//       }
+//       return CID.parse(maybeCid)
+//     } else {
+//       const toReturn = {}
+//       for (const key of Object.keys(val)) {
+//         toReturn[key] = jsonToIpldValue(val[key])
+//       }
+//       return toReturn
+//     }
+//   } else {
+//     return val
+//   }
+// }
