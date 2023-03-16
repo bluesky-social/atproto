@@ -286,7 +286,7 @@ function getBacklinks(uri: AtUri, record: unknown): Backlink[] {
     const subject = record['subject']
     const validLink =
       typeof subject['uri'] === 'string' &&
-      atUriFormat('subject', subject['uri']).success
+      atUriFormat('subject.uri', subject['uri']).success
     if (!validLink) return []
     return [
       {
