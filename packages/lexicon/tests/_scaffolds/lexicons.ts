@@ -381,6 +381,25 @@ export default [
   },
   {
     lexicon: 1,
+    id: 'com.example.stringLengthUtf8',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            string: {
+              type: 'string',
+              minUtf8: 2,
+              maxUtf8: 4,
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'com.example.stringEnum',
     defs: {
       main: {
