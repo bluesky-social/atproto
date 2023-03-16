@@ -3004,7 +3004,7 @@ export const schemaDict = {
     defs: {
       postView: {
         type: 'object',
-        required: ['uri', 'cid', 'author', 'record', 'indexedAt', 'viewer'],
+        required: ['uri', 'cid', 'author', 'record', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',

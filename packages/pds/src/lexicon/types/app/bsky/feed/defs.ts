@@ -23,7 +23,7 @@ export interface PostView {
   repostCount?: number
   likeCount?: number
   indexedAt: string
-  viewer: ViewerState
+  viewer?: ViewerState
   [k: string]: unknown
 }
 
