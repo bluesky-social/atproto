@@ -1,5 +1,4 @@
 import fs from 'fs/promises'
-import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import AtpAgent from '@atproto/api'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
@@ -7,6 +6,7 @@ import { adminAuth, CloseFn, paginateAll, runTestServer } from './_util'
 import { BlobNotFoundError } from '@atproto/repo'
 import AppContext from '../src/context'
 import { TAKEDOWN } from '../src/lexicon/types/com/atproto/admin/defs'
+import { BlobRef } from '@atproto/lexicon'
 
 const alice = {
   email: 'alice@test.com',
@@ -167,15 +167,12 @@ describe('crud operations', () => {
     const file = await fs.readFile(
       'tests/image/fixtures/key-landscape-small.jpg',
     )
-    const { data: image } = await aliceAgent.api.com.atproto.repo.uploadBlob(
-      file,
-      {
-        encoding: 'image/jpeg',
-      },
-    )
-    const imageCid = CID.parse(image.cid)
+    const uploadedRes = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
+      encoding: 'image/jpeg',
+    })
+    const uploaded = uploadedRes.data.blob
     // Expect blobstore not to have image yet
-    await expect(ctx.blobstore.getBytes(imageCid)).rejects.toThrow(
+    await expect(ctx.blobstore.getBytes(uploaded.ref)).rejects.toThrow(
       BlobNotFoundError,
     )
     // Associate image with post, image should be placed in blobstore
@@ -187,9 +184,7 @@ describe('crud operations', () => {
         createdAt: new Date().toISOString(),
         embed: {
           $type: 'app.bsky.embed.images',
-          images: [
-            { image: { cid: image.cid, mimeType: 'image/jpeg' }, alt: '' },
-          ],
+          images: [{ image: uploaded, alt: '' }],
         },
       },
     )
@@ -199,11 +194,11 @@ describe('crud operations', () => {
       rkey: postUri.rkey,
       repo: alice.did,
     })
-    const images = post.value.embed?.images as { image: { cid: string } }[]
+    const images = post.value.embed?.images as { image: BlobRef }[]
     expect(images.length).toEqual(1)
-    expect(images[0].image.cid).toEqual(image.cid)
+    expect(uploaded.ref.equals(images[0].image.ref)).toBeTruthy()
     // Ensure that the uploaded image is now in the blobstore, i.e. doesn't throw BlobNotFoundError
-    await ctx.blobstore.getBytes(imageCid)
+    await ctx.blobstore.getBytes(uploaded.ref)
     // Cleanup
     await aliceAgent.api.app.bsky.feed.post.delete({
       rkey: postUri.rkey,

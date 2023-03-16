@@ -11,7 +11,7 @@ export interface QueryParams {}
 export type InputSchema = string | Uint8Array
 
 export interface OutputSchema {
-  cid: string
+  blob: BlobRef
   [k: string]: unknown
 }
 

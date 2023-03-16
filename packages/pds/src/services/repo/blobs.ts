@@ -7,7 +7,7 @@ import { AtUri } from '@atproto/uri'
 import { sha256Stream } from '@atproto/crypto'
 import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { BlobRef, PreparedWrite } from '../../repo/types'
+import { PreparedBlobRef, PreparedWrite } from '../../repo/types'
 import Database from '../../db'
 import { Blob as BlobTable } from '../../db/tables/blob'
 import * as img from '../../image'
@@ -19,7 +19,7 @@ export class RepoBlobs {
     creator: string,
     userSuggestedMime: string,
     blobStream: stream.Readable,
-  ): Promise<CID> {
+  ): Promise<{ cid: CID; mimeType: string }> {
     const [tempKey, size, sha256, imgInfo, sniffedMime] = await Promise.all([
       this.blobstore.putTemp(cloneStream(blobStream)),
       streamSize(cloneStream(blobStream)),
@@ -29,13 +29,14 @@ export class RepoBlobs {
     ])
 
     const cid = sha256RawToCid(sha256)
+    const mimeType = sniffedMime || userSuggestedMime
 
     await this.db.db
       .insertInto('blob')
       .values({
         creator,
         cid: cid.toString(),
-        mimeType: sniffedMime || userSuggestedMime,
+        mimeType,
         size,
         tempKey,
         width: imgInfo?.width || null,
@@ -49,7 +50,7 @@ export class RepoBlobs {
           .where('blob.tempKey', 'is not', null),
       )
       .execute()
-    return cid
+    return { cid, mimeType }
   }
 
   async processWriteBlobs(did: string, commit: CID, writes: PreparedWrite[]) {
@@ -70,7 +71,7 @@ export class RepoBlobs {
 
   async verifyBlobAndMakePermanent(
     creator: string,
-    blob: BlobRef,
+    blob: PreparedBlobRef,
   ): Promise<void> {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
@@ -105,7 +106,7 @@ export class RepoBlobs {
   }
 
   async associateBlob(
-    blob: BlobRef,
+    blob: PreparedBlobRef,
     recordUri: AtUri,
     commit: CID,
     did: string,
@@ -192,7 +193,7 @@ function acceptedMime(mime: string, accepted: string[]): boolean {
   return accepted.includes(mime)
 }
 
-function verifyBlob(blob: BlobRef, found: BlobTable) {
+function verifyBlob(blob: PreparedBlobRef, found: BlobTable) {
   const throwInvalid = (msg: string, errName = 'InvalidBlob') => {
     throw new InvalidRequestError(msg, errName)
   }

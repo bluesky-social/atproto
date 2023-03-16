@@ -20,7 +20,7 @@ export type RawBlobConstraint = {
 
 export type BlobConstraint = RawBlobConstraint | ImageConstraint
 
-export type BlobRef = {
+export type PreparedBlobRef = {
   cid: CID
   mimeType: string
   constraints: BlobConstraint
@@ -31,7 +31,7 @@ export type PreparedCreate = {
   uri: AtUri
   cid: CID
   record: Record<string, unknown>
-  blobs: BlobRef[]
+  blobs: PreparedBlobRef[]
 }
 
 export type PreparedUpdate = {
@@ -39,7 +39,7 @@ export type PreparedUpdate = {
   uri: AtUri
   cid: CID
   record: Record<string, unknown>
-  blobs: BlobRef[]
+  blobs: PreparedBlobRef[]
 }
 
 export type PreparedDelete = {

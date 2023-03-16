@@ -132,8 +132,8 @@ describe('pds profile views', () => {
 
     await agent.api.app.bsky.actor.updateProfile(
       {
-        avatar: { cid: avatarRes.data.cid, mimeType: 'image/jpeg' },
-        banner: { cid: bannerRes.data.cid, mimeType: 'image/jpeg' },
+        avatar: avatarRes.data.blob,
+        banner: bannerRes.data.blob,
       },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )

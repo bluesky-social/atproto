@@ -1,4 +1,7 @@
 import {
+  cborBytesToRecord,
+  cborDecode,
+  cborEncode,
   check,
   IpldValue,
   ipldValueToJson,
@@ -61,4 +64,12 @@ export const stringifyLex = (val: LexValue): string => {
 
 export const jsonStringToLex = (val: string): LexValue => {
   return jsonToLexValue(JSON.parse(val))
+}
+
+export const cborToLex = (val: Uint8Array): LexValue => {
+  return ipldToLexValue(cborDecode(val))
+}
+
+export const lexToCbor = (val: LexValue): Uint8Array => {
+  return cborEncode(lexValueToIpld(val))
 }

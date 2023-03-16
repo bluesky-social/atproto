@@ -1528,11 +1528,10 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['cid'],
+            required: ['blob'],
             properties: {
-              cid: {
-                type: 'string',
-                format: 'cid',
+              blob: {
+                type: 'blob',
               },
             },
           },

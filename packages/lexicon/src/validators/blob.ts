@@ -1,4 +1,4 @@
-import { BlobRef, BlobRefType } from '../blob-refs'
+import { BlobRef } from '../blob-refs'
 import { Lexicons } from '../lexicons'
 import { LexUserType, ValidationResult, ValidationError } from '../types'
 
@@ -7,12 +7,11 @@ export function blob(
   path: string,
   def: LexUserType,
   value: unknown,
-  blobType: BlobRefType = 'blob',
 ): ValidationResult {
-  if (!value || !(value instanceof BlobRef) || value.$type !== blobType) {
+  if (!value || !(value instanceof BlobRef)) {
     return {
       success: false,
-      error: new ValidationError(`${path} should be a ${blobType} ref`),
+      error: new ValidationError(`${path} should be a blob ref`),
     }
   }
   return { success: true, value }
@@ -24,7 +23,7 @@ export function image(
   def: LexUserType,
   value: unknown,
 ): ValidationResult {
-  return blob(lexicons, path, def, value, 'image')
+  return blob(lexicons, path, def, value)
 }
 
 export function video(
@@ -33,7 +32,7 @@ export function video(
   def: LexUserType,
   value: unknown,
 ): ValidationResult {
-  return blob(lexicons, path, def, value, 'video')
+  return blob(lexicons, path, def, value)
 }
 
 export function audio(
@@ -42,5 +41,5 @@ export function audio(
   def: LexUserType,
   value: unknown,
 ): ValidationResult {
-  return blob(lexicons, path, def, value, 'audio')
+  return blob(lexicons, path, def, value)
 }
