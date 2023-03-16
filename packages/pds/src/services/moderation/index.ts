@@ -152,7 +152,7 @@ export class ModerationService {
       .where('reversedAt', 'is', null)
     if ('did' in subject) {
       builder = builder
-        .where('subjectType', '=', 'com.atproto.repo.repoRef')
+        .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
         .where('subjectDid', '=', subject.did)
     } else if ('uri' in subject) {
       builder = builder
@@ -197,7 +197,7 @@ export class ModerationService {
       const repo = await new SqlRepoStorage(this.db, subject.did).getHead()
       if (!repo) throw new InvalidRequestError('Repo not found')
       subjectInfo = {
-        subjectType: 'com.atproto.repo.repoRef',
+        subjectType: 'com.atproto.admin.defs#repoRef',
         subjectDid: subject.did,
         subjectUri: null,
         subjectCid: null,
@@ -453,7 +453,7 @@ export class ModerationService {
       const repo = await new SqlRepoStorage(this.db, subject.did).getHead()
       if (!repo) throw new InvalidRequestError('Repo not found')
       subjectInfo = {
-        subjectType: 'com.atproto.repo.repoRef',
+        subjectType: 'com.atproto.admin.defs#repoRef',
         subjectDid: subject.did,
         subjectUri: null,
         subjectCid: null,
@@ -493,7 +493,7 @@ export type ModerationReportRow = Selectable<ModerationReport>
 
 export type SubjectInfo =
   | {
-      subjectType: 'com.atproto.repo.repoRef'
+      subjectType: 'com.atproto.admin.defs#repoRef'
       subjectDid: string
       subjectUri: null
       subjectCid: null

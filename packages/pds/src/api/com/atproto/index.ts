@@ -1,23 +1,17 @@
 import AppContext from '../../../context'
 import { Server } from '../../../lexicon'
-import account from './account'
 import admin from './admin'
-import blob from './blob'
-import getAccountsConfig from './getAccountsConfig'
-import handle from './handle'
+import identity from './identity'
+import moderation from './moderation'
 import repo from './repo'
-import report from './report'
-import session from './session'
+import serverMethods from './server'
 import sync from './sync'
 
 export default function (server: Server, ctx: AppContext) {
-  account(server, ctx)
   admin(server, ctx)
-  blob(server, ctx)
-  getAccountsConfig(server, ctx)
-  handle(server, ctx)
+  identity(server, ctx)
+  moderation(server, ctx)
   repo(server, ctx)
-  report(server, ctx)
-  session(server, ctx)
+  serverMethods(server, ctx)
   sync(server, ctx)
 }

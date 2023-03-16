@@ -1,5 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
   runTestServer,
   forSnapshot,
@@ -11,7 +11,7 @@ import {
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { Database } from '../../src'
-import { Notification } from '../../src/lexicon/types/app/bsky/notification/list'
+import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
 
 describe('pds notification views', () => {
   let server: TestServerInfo
@@ -49,14 +49,15 @@ describe('pds notification views', () => {
   }
 
   it('fetches notification count without a last-seen', async () => {
-    const notifCountAlice = await agent.api.app.bsky.notification.getCount(
-      {},
-      { headers: sc.getHeaders(alice) },
-    )
+    const notifCountAlice =
+      await agent.api.app.bsky.notification.getUnreadCount(
+        {},
+        { headers: sc.getHeaders(alice) },
+      )
 
     expect(notifCountAlice.data.count).toBe(11)
 
-    const notifCountBob = await agent.api.app.bsky.notification.getCount(
+    const notifCountBob = await agent.api.app.bsky.notification.getUnreadCount(
       {},
       { headers: sc.getHeaders(sc.dids.bob) },
     )
@@ -75,14 +76,15 @@ describe('pds notification views', () => {
     )
     await server.ctx.messageQueue.processAll()
 
-    const notifCountAlice = await agent.api.app.bsky.notification.getCount(
-      {},
-      { headers: sc.getHeaders(alice) },
-    )
+    const notifCountAlice =
+      await agent.api.app.bsky.notification.getUnreadCount(
+        {},
+        { headers: sc.getHeaders(alice) },
+      )
 
     expect(notifCountAlice.data.count).toBe(12)
 
-    const notifCountBob = await agent.api.app.bsky.notification.getCount(
+    const notifCountBob = await agent.api.app.bsky.notification.getUnreadCount(
       {},
       { headers: sc.getHeaders(sc.dids.bob) },
     )
@@ -91,7 +93,7 @@ describe('pds notification views', () => {
   })
 
   it('fetches notifications without a last-seen', async () => {
-    const notifRes = await agent.api.app.bsky.notification.list(
+    const notifRes = await agent.api.app.bsky.notification.listNotifications(
       {},
       { headers: sc.getHeaders(alice) },
     )
@@ -109,20 +111,20 @@ describe('pds notification views', () => {
   })
 
   it('fetches notifications omitting mentions and replies by a muted user', async () => {
-    await agent.api.app.bsky.graph.mute(
+    await agent.api.app.bsky.graph.muteActor(
       { actor: sc.dids.carol }, // Replier
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
-    await agent.api.app.bsky.graph.mute(
+    await agent.api.app.bsky.graph.muteActor(
       { actor: sc.dids.dan }, // Mentioner
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
 
-    const notifRes = await agent.api.app.bsky.notification.list(
+    const notifRes = await agent.api.app.bsky.notification.listNotifications(
       {},
       { headers: sc.getHeaders(alice) },
     )
-    const notifCount = await agent.api.app.bsky.notification.getCount(
+    const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
       {},
       { headers: sc.getHeaders(alice) },
     )
@@ -133,11 +135,11 @@ describe('pds notification views', () => {
     expect(notifCount.data.count).toBe(9)
 
     // Cleanup
-    await agent.api.app.bsky.graph.unmute(
+    await agent.api.app.bsky.graph.unmuteActor(
       { actor: sc.dids.carol },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
-    await agent.api.app.bsky.graph.unmute(
+    await agent.api.app.bsky.graph.unmuteActor(
       { actor: sc.dids.dan },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
@@ -166,11 +168,11 @@ describe('pds notification views', () => {
       ),
     )
 
-    const notifRes = await agent.api.app.bsky.notification.list(
+    const notifRes = await agent.api.app.bsky.notification.listNotifications(
       {},
       { headers: sc.getHeaders(alice) },
     )
-    const notifCount = await agent.api.app.bsky.notification.getCount(
+    const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
       {},
       { headers: sc.getHeaders(alice) },
     )
@@ -202,7 +204,7 @@ describe('pds notification views', () => {
     const results = (results) =>
       sort(results.flatMap((res) => res.notifications))
     const paginator = async (cursor?: string) => {
-      const res = await agent.api.app.bsky.notification.list(
+      const res = await agent.api.app.bsky.notification.listNotifications(
         {
           cursor,
           limit: 6,
@@ -217,7 +219,7 @@ describe('pds notification views', () => {
       expect(res.notifications.length).toBeLessThanOrEqual(6),
     )
 
-    const full = await agent.api.app.bsky.notification.list(
+    const full = await agent.api.app.bsky.notification.listNotifications(
       {},
       {
         headers: sc.getHeaders(alice),
@@ -229,7 +231,7 @@ describe('pds notification views', () => {
   })
 
   it('updates notifications last seen', async () => {
-    const full = await agent.api.app.bsky.notification.list(
+    const full = await agent.api.app.bsky.notification.listNotifications(
       {},
       {
         headers: sc.getHeaders(alice),
@@ -250,7 +252,7 @@ describe('pds notification views', () => {
   })
 
   it('fetches notification count with a last-seen', async () => {
-    const notifCount = await agent.api.app.bsky.notification.getCount(
+    const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
       {},
       { headers: sc.getHeaders(alice) },
     )
@@ -259,7 +261,7 @@ describe('pds notification views', () => {
   })
 
   it('fetches notifications with a last-seen', async () => {
-    const notifRes = await agent.api.app.bsky.notification.list(
+    const notifRes = await agent.api.app.bsky.notification.listNotifications(
       {},
       {
         headers: sc.getHeaders(alice),

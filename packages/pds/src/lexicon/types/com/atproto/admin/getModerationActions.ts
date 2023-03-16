@@ -6,7 +6,7 @@ import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as ComAtprotoAdminModerationAction from './moderationAction'
+import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
   subject?: string
@@ -18,7 +18,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  actions: ComAtprotoAdminModerationAction.View[]
+  actions: ComAtprotoAdminDefs.ActionView[]
   [k: string]: unknown
 }
 

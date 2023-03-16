@@ -5,11 +5,11 @@ Object {
   "createdAt": "1970-01-01T00:00:00.000Z",
   "id": 2,
   "reason": "defamation",
-  "reasonType": "com.atproto.report.reasonType#other",
+  "reasonType": "com.atproto.moderation.defs#reasonOther",
   "reportedBy": "user(0)",
   "resolvedByActions": Array [
     Object {
-      "action": "com.atproto.admin.moderationAction#takedown",
+      "action": "com.atproto.admin.defs#takedown",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "createdBy": "did:example:admin",
       "id": 2,
@@ -25,7 +25,7 @@ Object {
       "subjectBlobCids": Array [],
     },
     Object {
-      "action": "com.atproto.admin.moderationAction#flag",
+      "action": "com.atproto.admin.defs#flag",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "createdBy": "did:example:admin",
       "id": 1,
@@ -40,7 +40,7 @@ Object {
         "reason": "X",
       },
       "subject": Object {
-        "$type": "com.atproto.repo.repoRef",
+        "$type": "com.atproto.admin.defs#repoRef",
         "did": "user(1)",
       },
       "subjectBlobCids": Array [],
@@ -53,7 +53,7 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {
       "currentAction": Object {
-        "action": "com.atproto.admin.moderationAction#takedown",
+        "action": "com.atproto.admin.defs#takedown",
         "id": 2,
       },
     },
@@ -91,11 +91,11 @@ exports[`pds admin get moderation action view gets moderation report for a repo.
 Object {
   "createdAt": "1970-01-01T00:00:00.000Z",
   "id": 1,
-  "reasonType": "com.atproto.report.reasonType#spam",
+  "reasonType": "com.atproto.moderation.defs#reasonSpam",
   "reportedBy": "user(0)",
   "resolvedByActions": Array [
     Object {
-      "action": "com.atproto.admin.moderationAction#flag",
+      "action": "com.atproto.admin.defs#flag",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "createdBy": "did:example:admin",
       "id": 1,
@@ -110,7 +110,7 @@ Object {
         "reason": "X",
       },
       "subject": Object {
-        "$type": "com.atproto.repo.repoRef",
+        "$type": "com.atproto.admin.defs#repoRef",
         "did": "user(1)",
       },
       "subjectBlobCids": Array [],

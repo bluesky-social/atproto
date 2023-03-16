@@ -6,7 +6,7 @@ import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyActorRef from '../actor/ref'
+import * as AppBskyActorDefs from '../actor/defs'
 
 export interface QueryParams {
   actor: string
@@ -17,9 +17,9 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  subject: AppBskyActorRef.WithInfo
+  subject: AppBskyActorDefs.WithInfo
   cursor?: string
-  follows: AppBskyActorRef.WithInfo[]
+  follows: AppBskyActorDefs.WithInfo[]
   [k: string]: unknown
 }
 

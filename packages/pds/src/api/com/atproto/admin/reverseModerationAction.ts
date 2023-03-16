@@ -2,7 +2,7 @@ import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { TAKEDOWN } from '../../../../lexicon/types/com/atproto/admin/moderationAction'
+import { TAKEDOWN } from '../../../../lexicon/types/com/atproto/admin/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.reverseModerationAction({
@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
 
         if (
           result.action === TAKEDOWN &&
-          result.subjectType === 'com.atproto.repo.repoRef' &&
+          result.subjectType === 'com.atproto.admin.defs#repoRef' &&
           result.subjectDid
         ) {
           await moderationTxn.reverseTakedownRepo({
