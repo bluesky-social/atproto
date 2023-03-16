@@ -50,6 +50,24 @@ export const lexString = z.object({
 })
 export type LexString = z.infer<typeof lexString>
 
+export const lexUnknown = z.object({
+  type: z.literal('unknown'),
+  description: z.string().optional(),
+})
+export type LexUnknown = z.infer<typeof lexUnknown>
+
+export const lexPrimitive = z.union([
+  lexBoolean,
+  lexNumber,
+  lexInteger,
+  lexString,
+  lexUnknown,
+])
+export type LexPrimitive = z.infer<typeof lexPrimitive>
+
+// ipld/binary types
+// =
+
 export const lexBytes = z.object({
   type: z.literal('bytes'),
   description: z.string().optional(),
@@ -64,22 +82,7 @@ export const lexCidInternalRef = z.object({
 })
 export type LexCidInternalRef = z.infer<typeof lexCidInternalRef>
 
-export const lexUnknown = z.object({
-  type: z.literal('unknown'),
-  description: z.string().optional(),
-})
-export type LexUnknown = z.infer<typeof lexUnknown>
-
-export const lexPrimitive = z.union([
-  lexBoolean,
-  lexNumber,
-  lexInteger,
-  lexString,
-  lexBytes,
-  lexCidInternalRef,
-  lexUnknown,
-])
-export type LexPrimitive = z.infer<typeof lexPrimitive>
+export const lexBinaryType = z.union([lexBytes, lexCidInternalRef])
 
 // references
 // =
@@ -152,7 +155,7 @@ export type LexBlobVariant = z.infer<typeof lexBlobVariant>
 export const lexArray = z.object({
   type: z.literal('array'),
   description: z.string().optional(),
-  items: z.union([lexPrimitive, lexBlobVariant, lexRefVariant]),
+  items: z.union([lexPrimitive, lexBinaryType, lexBlobVariant, lexRefVariant]),
   minLength: z.number().int().optional(),
   maxLength: z.number().int().optional(),
 })
@@ -177,7 +180,15 @@ export const lexObject = z.object({
   required: z.string().array().optional(),
   nullable: z.string().array().optional(),
   properties: z
-    .record(z.union([lexRefVariant, lexArray, lexBlobVariant, lexPrimitive]))
+    .record(
+      z.union([
+        lexRefVariant,
+        lexBinaryType,
+        lexArray,
+        lexBlobVariant,
+        lexPrimitive,
+      ]),
+    )
     .optional(),
 })
 export type LexObject = z.infer<typeof lexObject>

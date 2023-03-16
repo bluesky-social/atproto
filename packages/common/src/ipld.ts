@@ -133,3 +133,11 @@ export const ipldValueToJson = (val: IpldValue): JsonValue => {
     return val
   }
 }
+
+export const stringifyIpld = (val: IpldValue): string => {
+  return JSON.stringify(ipldValueToJson(val))
+}
+
+export const parseJsonStringToIpld = (str: string): IpldValue => {
+  return jsonToIpldValue(JSON.parse(str))
+}
