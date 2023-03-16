@@ -5,12 +5,19 @@ import { WriteOpAction } from '@atproto/repo'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import { notSoftDeletedClause } from '../../db/util'
+import { Backlink } from '../../db/tables/backlink'
 import { MessageQueue } from '../../event-stream/types'
 import {
   indexRecord,
   deleteRecord,
   deleteRepo,
 } from '../../event-stream/messages'
+import { assertValidRecord } from '../../repo'
+import { ids } from '../../lexicon/lexicons'
+import {
+  atUriFormat,
+  didFormat,
+} from '@atproto/lexicon/src/validators/primitives'
 
 export class RecordService {
   constructor(public db: Database, public messageDispatcher: MessageQueue) {}
@@ -43,6 +50,8 @@ export class RecordService {
     } else if (record.rkey.length < 1) {
       throw new Error('Expected indexed URI to contain a record key')
     }
+
+    // Track current version of record
     await this.db.db
       .insertInto('record')
       .values(record)
@@ -53,6 +62,21 @@ export class RecordService {
       )
       .execute()
 
+    // Maintain backlinks
+    const backlinks = getBacklinks(uri, obj)
+    if (action === WriteOpAction.Update) {
+      // On update just recreate backlinks from scratch for the record, so we can clear out
+      // the old ones. E.g. for weird cases like updating a follow to be for a different did.
+      await this.db.db
+        .deleteFrom('backlink')
+        .where('uri', '=', uri.toString())
+        .execute()
+    }
+    if (backlinks.length) {
+      await this.db.db.insertInto('backlink').values(backlinks).execute()
+    }
+
+    // Send to indexers
     await this.messageDispatcher.send(
       this.db,
       indexRecord(uri, cid, obj, action, record.indexedAt),
@@ -68,7 +92,10 @@ export class RecordService {
       .deleteFrom('record')
       .where('uri', '=', uri.toString())
       .execute()
-
+    await this.db.db
+      .deleteFrom('backlink')
+      .where('uri', '=', uri.toString())
+      .execute()
     await Promise.all([
       this.messageDispatcher.send(this.db, deleteRecord(uri, cascading)),
       deleteQuery,
@@ -199,4 +226,42 @@ export class RecordService {
         .execute(),
     ])
   }
+}
+
+// @NOTE in the future this can be replaced with a more generic routine that pulls backlinks based on lex docs.
+// For now we just want to ensure we're tracking links from follows, likes, and reposts.
+
+function getBacklinks(uri: AtUri, record: unknown): Backlink[] {
+  if (record?.['$type'] === ids.AppBskyGraphFollow) {
+    const subject = record['subject']
+    const validLink =
+      typeof subject === 'string' && didFormat('subject', subject).success
+    if (!validLink) return []
+    return [
+      {
+        uri: uri.toString(),
+        path: 'subject',
+        linkToDid: subject,
+        linkToUri: null,
+      },
+    ]
+  }
+  if (
+    record?.['$type'] === ids.AppBskyFeedLike ||
+    record?.['$type'] === ids.AppBskyFeedRepost
+  ) {
+    const subject = record['subject']
+    const validLink =
+      typeof subject === 'string' && atUriFormat('subject', subject).success
+    if (!validLink) return []
+    return [
+      {
+        uri: uri.toString(),
+        path: 'subject',
+        linkToUri: subject,
+        linkToDid: null,
+      },
+    ]
+  }
+  return []
 }
