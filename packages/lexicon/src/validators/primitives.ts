@@ -225,7 +225,7 @@ export function string(
 
   // maxLength
   if (typeof def.maxLength === 'number') {
-    if (common.graphemeLen(value) > def.maxLength) {
+    if (common.utf8Len(value) > def.maxLength) {
       return {
         success: false,
         error: new ValidationError(
@@ -237,7 +237,7 @@ export function string(
 
   // minLength
   if (typeof def.minLength === 'number') {
-    if (common.graphemeLen(value) < def.minLength) {
+    if (common.utf8Len(value) < def.minLength) {
       return {
         success: false,
         error: new ValidationError(
@@ -247,25 +247,25 @@ export function string(
     }
   }
 
-  // maxUtf8
-  if (typeof def.maxUtf8 === 'number') {
-    if (common.utf8Len(value) > def.maxUtf8) {
+  // maxGrapheme
+  if (typeof def.maxGrapheme === 'number') {
+    if (common.graphemeLen(value) > def.maxGrapheme) {
       return {
         success: false,
         error: new ValidationError(
-          `${path} must not be longer than ${def.maxUtf8} characters utf8`,
+          `${path} must not be longer than ${def.maxGrapheme} graphemes`,
         ),
       }
     }
   }
 
-  // minUtf8
-  if (typeof def.minUtf8 === 'number') {
-    if (common.utf8Len(value) < def.minUtf8) {
+  // minGrapheme
+  if (typeof def.minGrapheme === 'number') {
+    if (common.graphemeLen(value) < def.minGrapheme) {
       return {
         success: false,
         error: new ValidationError(
-          `${path} must not be shorter than ${def.minUtf8} characters utf8`,
+          `${path} must not be shorter than ${def.minGrapheme} graphemes`,
         ),
       }
     }

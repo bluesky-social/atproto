@@ -381,7 +381,7 @@ export default [
   },
   {
     lexicon: 1,
-    id: 'com.example.stringLengthUtf8',
+    id: 'com.example.stringLengthGrapheme',
     defs: {
       main: {
         type: 'record',
@@ -390,8 +390,8 @@ export default [
           properties: {
             string: {
               type: 'string',
-              minUtf8: 2,
-              maxUtf8: 4,
+              minGrapheme: 2,
+              maxGrapheme: 4,
             },
           },
         },

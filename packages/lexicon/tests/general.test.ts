@@ -553,12 +553,12 @@ describe('Record validation', () => {
   it('Applies string length constraint', () => {
     lex.assertValidRecord('com.example.stringLength', {
       $type: 'com.example.stringLength',
-      string: '12👨‍👩‍👧‍👧',
+      string: '123',
     })
     expect(() =>
       lex.assertValidRecord('com.example.stringLength', {
         $type: 'com.example.stringLength',
-        string: '👨‍👩‍👧‍👧',
+        string: '1',
       }),
     ).toThrow('Record/string must not be shorter than 2 characters')
     expect(() =>
@@ -567,31 +567,31 @@ describe('Record validation', () => {
         string: '12345',
       }),
     ).toThrow('Record/string must not be longer than 4 characters')
-  })
-
-  it('Applies utf8 string length constraint', () => {
-    lex.assertValidRecord('com.example.stringLengthUtf8', {
-      $type: 'com.example.stringLengthUtf8',
-      string: '123',
-    })
     expect(() =>
-      lex.assertValidRecord('com.example.stringLengthUtf8', {
-        $type: 'com.example.stringLengthUtf8',
-        string: '1',
-      }),
-    ).toThrow('Record/string must not be shorter than 2 characters utf8')
-    expect(() =>
-      lex.assertValidRecord('com.example.stringLengthUtf8', {
-        $type: 'com.example.stringLengthUtf8',
-        string: '12345',
-      }),
-    ).toThrow('Record/string must not be longer than 4 characters utf8')
-    expect(() =>
-      lex.assertValidRecord('com.example.stringLengthUtf8', {
-        $type: 'com.example.stringLengthUtf8',
+      lex.assertValidRecord('com.example.stringLength', {
+        $type: 'com.example.stringLength',
         string: '👨‍👩‍👧‍👧',
       }),
-    ).toThrow('Record/string must not be longer than 4 characters utf8')
+    ).toThrow('Record/string must not be longer than 4 characters')
+  })
+
+  it('Applies grapheme string length constraint', () => {
+    lex.assertValidRecord('com.example.stringLengthGrapheme', {
+      $type: 'com.example.stringLengthGrapheme',
+      string: '12👨‍👩‍👧‍👧',
+    })
+    expect(() =>
+      lex.assertValidRecord('com.example.stringLengthGrapheme', {
+        $type: 'com.example.stringLengthGrapheme',
+        string: '👨‍👩‍👧‍👧',
+      }),
+    ).toThrow('Record/string must not be shorter than 2 graphemes')
+    expect(() =>
+      lex.assertValidRecord('com.example.stringLengthGrapheme', {
+        $type: 'com.example.stringLengthGrapheme',
+        string: '12345',
+      }),
+    ).toThrow('Record/string must not be longer than 4 graphemes')
   })
 
   it('Applies string enum constraint', () => {
