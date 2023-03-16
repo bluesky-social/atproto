@@ -100,8 +100,7 @@ export interface View {
     | { $type: string; [k: string]: unknown }
   replyCount: number
   repostCount: number
-  upvoteCount: number
-  downvoteCount: number
+  likeCount: number
   indexedAt: string
   viewer: ViewerState
   [k: string]: unknown
@@ -119,8 +118,7 @@ export function validateView(v: unknown): ValidationResult {
 
 export interface ViewerState {
   repost?: string
-  upvote?: string
-  downvote?: string
+  like?: string
   [k: string]: unknown
 }
 

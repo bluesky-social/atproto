@@ -12,7 +12,7 @@ import { RepoRoot } from '../src/db/tables/repo-root'
 import { UserAccount } from '../src/db/tables/user-account'
 import { IpldBlock } from '../src/db/tables/ipld-block'
 import { Post } from '../src/app-view/db/tables/post'
-import { Vote } from '../src/app-view/db/tables/vote'
+import { Like } from '../src/app-view/db/tables/like'
 import { Repost } from '../src/app-view/db/tables/repost'
 import { Follow } from '../src/app-view/db/tables/follow'
 import { RepoBlob } from '../src/db/tables/repo-blob'
@@ -167,8 +167,8 @@ describe('account deletion', () => {
     expect(updatedDbContents.posts).toEqual(
       initialDbContents.posts.filter((row) => row.creator !== carol.did),
     )
-    expect(updatedDbContents.votes).toEqual(
-      initialDbContents.votes.filter((row) => row.creator !== carol.did),
+    expect(updatedDbContents.likes).toEqual(
+      initialDbContents.likes.filter((row) => row.creator !== carol.did),
     )
     expect(updatedDbContents.reposts).toEqual(
       initialDbContents.reposts.filter((row) => row.creator !== carol.did),
@@ -270,7 +270,7 @@ type DbContents = {
   postImages: PostEmbedImage[]
   postExternals: PostEmbedExternal[]
   postRecords: PostEmbedRecord[]
-  votes: Vote[]
+  likes: Like[]
   reposts: Repost[]
   follows: Follow[]
   repoBlobs: RepoBlob[]
@@ -291,7 +291,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     postImages,
     postExternals,
     postRecords,
-    votes,
+    likes,
     reposts,
     follows,
     repoBlobs,
@@ -337,7 +337,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
       .orderBy('postUri')
       .selectAll()
       .execute(),
-    db.db.selectFrom('vote').orderBy('uri').selectAll().execute(),
+    db.db.selectFrom('like').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('repost').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('follow').orderBy('uri').selectAll().execute(),
     db.db
@@ -362,7 +362,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     postImages,
     postExternals,
     postRecords,
-    votes,
+    likes,
     reposts,
     follows,
     repoBlobs,

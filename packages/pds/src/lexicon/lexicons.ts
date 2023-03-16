@@ -3237,6 +3237,83 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetLikes: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getLikes',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['uri'],
+          properties: {
+            uri: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            cid: {
+              type: 'string',
+              format: 'cid',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri', 'likes'],
+            properties: {
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              cursor: {
+                type: 'string',
+              },
+              likes: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.getLikes#like',
+                },
+              },
+            },
+          },
+        },
+      },
+      like: {
+        type: 'object',
+        required: ['indexedAt', 'createdAt', 'actor'],
+        properties: {
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          actor: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.ref#withInfo',
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -3426,86 +3503,25 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyFeedGetVotes: {
+  AppBskyFeedLike: {
     lexicon: 1,
-    id: 'app.bsky.feed.getVotes',
+    id: 'app.bsky.feed.like',
     defs: {
       main: {
-        type: 'query',
-        parameters: {
-          type: 'params',
-          required: ['uri'],
+        type: 'record',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['subject', 'createdAt'],
           properties: {
-            uri: {
+            subject: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            createdAt: {
               type: 'string',
-              format: 'at-uri',
+              format: 'datetime',
             },
-            cid: {
-              type: 'string',
-              format: 'cid',
-            },
-            direction: {
-              type: 'string',
-              enum: ['up', 'down'],
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['uri', 'votes'],
-            properties: {
-              uri: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              cid: {
-                type: 'string',
-                format: 'cid',
-              },
-              cursor: {
-                type: 'string',
-              },
-              votes: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.getVotes#vote',
-                },
-              },
-            },
-          },
-        },
-      },
-      vote: {
-        type: 'object',
-        required: ['direction', 'indexedAt', 'createdAt', 'actor'],
-        properties: {
-          direction: {
-            type: 'string',
-            enum: ['up', 'down'],
-          },
-          indexedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          actor: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.ref#withInfo',
           },
         },
       },
@@ -3608,8 +3624,7 @@ export const schemaDict = {
           'record',
           'replyCount',
           'repostCount',
-          'upvoteCount',
-          'downvoteCount',
+          'likeCount',
           'indexedAt',
           'viewer',
         ],
@@ -3641,10 +3656,7 @@ export const schemaDict = {
           repostCount: {
             type: 'integer',
           },
-          upvoteCount: {
-            type: 'integer',
-          },
-          downvoteCount: {
+          likeCount: {
             type: 'integer',
           },
           indexedAt: {
@@ -3662,12 +3674,11 @@ export const schemaDict = {
         properties: {
           repost: {
             type: 'string',
+            format: 'at-uri',
           },
-          upvote: {
+          like: {
             type: 'string',
-          },
-          downvote: {
-            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -3687,77 +3698,6 @@ export const schemaDict = {
             subject: {
               type: 'ref',
               ref: 'lex:com.atproto.repo.strongRef',
-            },
-            createdAt: {
-              type: 'string',
-              format: 'datetime',
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyFeedSetVote: {
-    lexicon: 1,
-    id: 'app.bsky.feed.setVote',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: "Upvote, downvote, or clear the user's vote for a post.",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['subject', 'direction'],
-            properties: {
-              subject: {
-                type: 'ref',
-                ref: 'lex:com.atproto.repo.strongRef',
-              },
-              direction: {
-                type: 'string',
-                enum: ['up', 'down', 'none'],
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {
-              upvote: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              downvote: {
-                type: 'string',
-                format: 'at-uri',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyFeedVote: {
-    lexicon: 1,
-    id: 'app.bsky.feed.vote',
-    defs: {
-      main: {
-        type: 'record',
-        key: 'tid',
-        record: {
-          type: 'object',
-          required: ['subject', 'direction', 'createdAt'],
-          properties: {
-            subject: {
-              type: 'ref',
-              ref: 'lex:com.atproto.repo.strongRef',
-            },
-            direction: {
-              type: 'string',
-              enum: ['up', 'down'],
             },
             createdAt: {
               type: 'string',
@@ -4092,15 +4032,8 @@ export const schemaDict = {
           reason: {
             type: 'string',
             description:
-              "Expected values are 'vote', 'repost', 'follow', 'invite', 'mention' and 'reply'.",
-            knownValues: [
-              'vote',
-              'repost',
-              'follow',
-              'invite',
-              'mention',
-              'reply',
-            ],
+              "Expected values are 'like', 'repost', 'follow', 'mention' and 'reply'.",
+            knownValues: ['like', 'repost', 'follow', 'mention', 'reply'],
           },
           reasonSubject: {
             type: 'string',
@@ -4216,14 +4149,13 @@ export const ids = {
   AppBskyEmbedRecord: 'app.bsky.embed.record',
   AppBskyFeedFeedViewPost: 'app.bsky.feed.feedViewPost',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
+  AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetTimeline: 'app.bsky.feed.getTimeline',
-  AppBskyFeedGetVotes: 'app.bsky.feed.getVotes',
+  AppBskyFeedLike: 'app.bsky.feed.like',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
-  AppBskyFeedSetVote: 'app.bsky.feed.setVote',
-  AppBskyFeedVote: 'app.bsky.feed.vote',
   AppBskyGraphAssertCreator: 'app.bsky.graph.assertCreator',
   AppBskyGraphAssertMember: 'app.bsky.graph.assertMember',
   AppBskyGraphFollow: 'app.bsky.graph.follow',

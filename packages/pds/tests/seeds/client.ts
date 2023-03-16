@@ -67,10 +67,7 @@ export class SeedClient {
     string,
     { text: string; ref: RecordRef; images: ImageRef[]; quote?: RecordRef }[]
   >
-  votes: {
-    up: Record<string, Record<string, AtUri>>
-    down: Record<string, Record<string, AtUri>>
-  }
+  likes: Record<string, Record<string, AtUri>>
   replies: Record<string, { text: string; ref: RecordRef }[]>
   reposts: Record<string, RecordRef[]>
   dids: Record<string, string>
@@ -80,7 +77,7 @@ export class SeedClient {
     this.profiles = {}
     this.follows = {}
     this.posts = {}
-    this.votes = { up: {}, down: {} }
+    this.likes = {}
     this.replies = {}
     this.reposts = {}
     this.dids = {}
@@ -222,15 +219,15 @@ export class SeedClient {
     return { image: { cid: res.data.cid, mimeType: encoding }, alt: filePath }
   }
 
-  async vote(direction: 'up' | 'down', by: string, subject: RecordRef) {
-    const res = await this.agent.api.app.bsky.feed.vote.create(
+  async like(by: string, subject: RecordRef) {
+    const res = await this.agent.api.app.bsky.feed.like.create(
       { did: by },
-      { direction, subject: subject.raw, createdAt: new Date().toISOString() },
+      { subject: subject.raw, createdAt: new Date().toISOString() },
       this.getHeaders(by),
     )
-    this.votes[direction][by] ??= {}
-    this.votes[direction][by][subject.uriStr] = new AtUri(res.uri)
-    return this.votes[direction][by][subject.uriStr]
+    this.likes[by] ??= {}
+    this.likes[by][subject.uriStr] = new AtUri(res.uri)
+    return this.likes[by][subject.uriStr]
   }
 
   async reply(

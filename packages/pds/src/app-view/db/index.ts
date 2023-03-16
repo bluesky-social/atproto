@@ -6,10 +6,10 @@ import * as postEntity from './tables/post-entity'
 import * as postHierarchy from './tables/post-hierarchy'
 import * as repost from './tables/repost'
 import * as follow from './tables/follow'
-import * as vote from './tables/vote'
+import * as like from './tables/like'
 import * as subscription from './tables/subscription'
 
-// @NOTE app-view also shares did-handle, record, repo-root, and vote tables w/ main pds
+// @NOTE app-view also shares did-handle, record, and repo-root tables w/ main pds
 export type DatabaseSchemaType = duplicateRecords.PartialDB &
   profile.PartialDB &
   post.PartialDB &
@@ -18,5 +18,5 @@ export type DatabaseSchemaType = duplicateRecords.PartialDB &
   postHierarchy.PartialDB &
   repost.PartialDB &
   follow.PartialDB &
-  vote.PartialDB &
+  like.PartialDB &
   subscription.PartialDB

@@ -8,7 +8,6 @@ import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
 export interface Record {
   subject: ComAtprotoRepoStrongRef.Main
-  direction: 'up' | 'down'
   createdAt: string
   [k: string]: unknown
 }
@@ -17,10 +16,10 @@ export function isRecord(v: unknown): v is Record {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.feed.vote#main' || v.$type === 'app.bsky.feed.vote')
+    (v.$type === 'app.bsky.feed.like#main' || v.$type === 'app.bsky.feed.like')
   )
 }
 
 export function validateRecord(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.vote#main', v)
+  return lexicons.validate('app.bsky.feed.like#main', v)
 }

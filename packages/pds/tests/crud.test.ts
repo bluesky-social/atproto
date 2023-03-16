@@ -427,10 +427,10 @@ describe('crud operations', () => {
       aliceAgent.api.com.atproto.repo.createRecord({
         did: alice.did,
         collection: 'app.bsky.feed.post',
-        record: { $type: 'app.bsky.feed.vote' },
+        record: { $type: 'app.bsky.feed.like' },
       }),
     ).rejects.toThrow(
-      'Invalid $type: expected app.bsky.feed.post, got app.bsky.feed.vote',
+      'Invalid $type: expected app.bsky.feed.post, got app.bsky.feed.like',
     )
   })
 
