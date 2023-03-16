@@ -9,7 +9,7 @@
         "type": "object",
         "required": ["text", "createdAt"],
         "properties": {
-          "text": {"type": "string", "maxLength": 300},
+          "text": {"type": "string", "maxLength": 300, "maxUtf8": 3000},
           "entities": {
             "type": "array",
             "items": {"type": "ref", "ref": "#entity"}
