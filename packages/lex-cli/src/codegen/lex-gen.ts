@@ -487,7 +487,7 @@ export function primitiveOrBlobToType(
     case 'image':
     case 'video':
     case 'audio':
-      return `{cid: string; mimeType: string; [k: string]: unknown}`
+      return 'BlobRef'
     case 'bytes':
       return 'Uint8Array'
     case 'cid-internal-ref':

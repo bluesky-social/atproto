@@ -1,7 +1,7 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
@@ -9,8 +9,8 @@ import { CID } from 'multiformats/cid'
 export interface Record {
   displayName: string
   description?: string
-  avatar?: { cid: string; mimeType: string; [k: string]: unknown }
-  banner?: { cid: string; mimeType: string; [k: string]: unknown }
+  avatar?: BlobRef
+  banner?: BlobRef
   [k: string]: unknown
 }
 

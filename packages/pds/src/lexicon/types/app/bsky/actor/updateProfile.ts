@@ -2,7 +2,7 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
@@ -13,8 +13,8 @@ export interface QueryParams {}
 export interface InputSchema {
   displayName?: string
   description?: string | null
-  avatar?: { cid: string; mimeType: string; [k: string]: unknown } | null
-  banner?: { cid: string; mimeType: string; [k: string]: unknown } | null
+  avatar?: BlobRef | null
+  banner?: BlobRef | null
   [k: string]: unknown
 }
 

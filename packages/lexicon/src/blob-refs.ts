@@ -1,7 +1,12 @@
-import { check, IpldValue, schema } from '@atproto/common'
+import {
+  check,
+  IpldValue,
+  jsonToIpldValue,
+  JsonValue,
+  schema,
+} from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { z } from 'zod'
-import { LexUserType } from './types'
 
 export const blobRefType = z.union([
   z.literal('blob'),
@@ -35,7 +40,7 @@ export class BlobRef {
   constructor(
     public json: JsonBlobRef,
     public $type: BlobRefType,
-    public cid: CID,
+    public ref: CID,
     public mimeType: string,
   ) {}
 
@@ -50,82 +55,32 @@ export class BlobRef {
     if (check.is(json, typedJsonBlobRef)) {
       return new BlobRef(json, json.$type, json.ref, json.mimeType)
     } else {
-      return new BlobRef(json, 'blob', CID.parse(json.cid), json.mimeType)
+      return new BlobRef(
+        json,
+        mimeToBlobRefType(json.mimeType),
+        CID.parse(json.cid),
+        json.mimeType,
+      )
     }
   }
 
-  get ref(): TypedJsonBlobRef {
+  ipld(): TypedJsonBlobRef {
     return {
       $type: this.$type,
-      ref: this.cid,
+      ref: this.ref,
       mimeType: this.mimeType,
     }
   }
 }
 
-// export type LexValue =
-//   | IpldValue
-//   | BlobRef
-//   | Array<LexValue>
-//   | { [key: string]: LexValue }
-//   | { [key: number]: LexValue }
-
-export const lexValueToIpld = (val: LexUserType): IpldValue => {
-  if (check.is(val, schema.array)) {
-    return val.map((item) => lexValueToIpld(item))
-  } else if (check.is(val, schema.bytes)) {
-    return {
-      '/': {
-        bytes: base64.encode(val).slice(1), // no mbase prefix (taken from dag-json code)
-      },
-    }
-  } else if (check.is(val, schema.cid)) {
-    return {
-      '/': val.toString(),
-    }
-  } else if (check.is(val, schema.record)) {
-    const toReturn = {}
-    for (const key of Object.keys(val)) {
-      toReturn[key] = ipldValueToJson(val[key])
-    }
-    return toReturn
-  } else {
-    return val
+export const mimeToBlobRefType = (mime: string): BlobRefType => {
+  switch (mime.split('/')[0]) {
+    case 'image':
+      return 'image'
+    case 'video':
+      return 'video'
+    case 'audio':
+      return 'audio'
   }
+  return 'blob'
 }
-
-// export const ipldValueToLex = (val: IpldValue): LexValue => {
-//   if (check.is(val, schema.array)) {
-//     return val.map((item) => ipldValueToLex(item))
-//   } else if (check.is(val, schema.record)) {
-//     const maybeCid = val['/']
-//     if (maybeCid) {
-//       if (Object.keys(val).length > 1) {
-//         throw new Error()
-//       }
-//       const maybeBytes = maybeCid['bytes']
-//       if (maybeBytes) {
-//         if (
-//           Object.keys(maybeCid).length > 1 ||
-//           typeof maybeBytes !== 'string'
-//         ) {
-//           console.log('this err')
-//           throw new Error()
-//         }
-//         return base64.decode(`m${maybeBytes}`) // add mbase prefix according to dag-json code
-//       }
-//       if (typeof maybeCid !== 'string') {
-//         throw new Error()
-//       }
-//       return CID.parse(maybeCid)
-//     } else {
-//       const toReturn = {}
-//       for (const key of Object.keys(val)) {
-//         toReturn[key] = jsonToIpldValue(val[key])
-//       }
-//       return toReturn
-//     }
-//   } else {
-//     return val
-//   }
-// }

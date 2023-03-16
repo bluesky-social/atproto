@@ -79,7 +79,7 @@ const insertFn = async (
     embed = images.map((img, i) => ({
       postUri: uri.toString(),
       position: i,
-      imageCid: img.image.cid,
+      imageCid: img.image.ref.toString(),
       alt: img.alt,
     }))
     await db.insertInto('post_embed_image').values(embed).execute()
@@ -90,7 +90,7 @@ const insertFn = async (
       uri: external.uri,
       title: external.title,
       description: external.description,
-      thumbCid: external.thumb?.cid || null,
+      thumbCid: external.thumb?.ref?.toString() || null,
     }
     await db.insertInto('post_embed_external').values(embed).execute()
   } else if (isEmbedRecord(obj.embed)) {

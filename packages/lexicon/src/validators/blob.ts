@@ -1,29 +1,18 @@
+import { BlobRef, BlobRefType } from '../blob-refs'
 import { Lexicons } from '../lexicons'
 import { LexUserType, ValidationResult, ValidationError } from '../types'
-import { isObj, hasProp } from '../types'
 
 export function blob(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,
   value: unknown,
+  blobType: BlobRefType = 'blob',
 ): ValidationResult {
-  if (!isObj(value)) {
+  if (!value || !(value instanceof BlobRef) || value.$type !== blobType) {
     return {
       success: false,
-      error: new ValidationError(`${path} should be an object`),
-    }
-  }
-  if (!hasProp(value, 'cid') || typeof value.cid !== 'string') {
-    return {
-      success: false,
-      error: new ValidationError(`${path}/cid should be a string`),
-    }
-  }
-  if (!hasProp(value, 'mimeType') || typeof value.mimeType !== 'string') {
-    return {
-      success: false,
-      error: new ValidationError(`${path}/mimeType should be a string`),
+      error: new ValidationError(`${path} should be a ${blobType} ref`),
     }
   }
   return { success: true, value }
@@ -35,7 +24,7 @@ export function image(
   def: LexUserType,
   value: unknown,
 ): ValidationResult {
-  return blob(lexicons, path, def, value)
+  return blob(lexicons, path, def, value, 'image')
 }
 
 export function video(
@@ -44,7 +33,7 @@ export function video(
   def: LexUserType,
   value: unknown,
 ): ValidationResult {
-  return blob(lexicons, path, def, value)
+  return blob(lexicons, path, def, value, 'video')
 }
 
 export function audio(
@@ -53,5 +42,5 @@ export function audio(
   def: LexUserType,
   value: unknown,
 ): ValidationResult {
-  return blob(lexicons, path, def, value)
+  return blob(lexicons, path, def, value, 'audio')
 }
