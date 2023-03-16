@@ -10,7 +10,7 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
-  displayName?: string
+  displayName?: string | null
   description?: string | null
   avatar?: { cid: string; mimeType: string; [k: string]: unknown } | null
   banner?: { cid: string; mimeType: string; [k: string]: unknown } | null

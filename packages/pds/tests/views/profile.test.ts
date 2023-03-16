@@ -148,7 +148,7 @@ describe('pds profile views', () => {
 
   it('handles unsetting profile fields', async () => {
     await agent.api.app.bsky.actor.updateProfile(
-      { description: null, avatar: null, banner: null },
+      { displayName: null, description: null, avatar: null, banner: null },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
 
@@ -157,6 +157,7 @@ describe('pds profile views', () => {
       { headers: sc.getHeaders(alice) },
     )
 
+    expect(aliceForAlice.data.displayName).toBeUndefined()
     expect(aliceForAlice.data.description).toBeUndefined()
     expect(aliceForAlice.data.avatar).toBeUndefined()
     expect(aliceForAlice.data.banner).toBeUndefined()

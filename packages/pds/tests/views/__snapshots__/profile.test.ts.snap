@@ -204,7 +204,6 @@ exports[`pds profile views handles unsetting profile fields 1`] = `
 Object {
   "creator": "user(0)",
   "did": "user(0)",
-  "displayName": "ali",
   "followersCount": 2,
   "followsCount": 3,
   "handle": "alice.test",

@@ -35,7 +35,10 @@ export default function (server: Server, ctx: AppContext) {
             }
             updated = {
               ...current,
-              displayName: input.body.displayName || current.displayName,
+              displayName: unsetIfNull(
+                input.body.displayName,
+                current.displayName,
+              ),
               description: unsetIfNull(
                 input.body.description,
                 current.description,
@@ -46,7 +49,7 @@ export default function (server: Server, ctx: AppContext) {
           } else {
             updated = {
               $type: profileNsid,
-              displayName: input.body.displayName,
+              displayName: unsetIfNull(input.body.displayName),
               description: unsetIfNull(input.body.description),
               avatar: unsetIfNull(input.body.avatar),
               banner: unsetIfNull(input.body.banner),
