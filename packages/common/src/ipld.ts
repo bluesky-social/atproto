@@ -138,6 +138,6 @@ export const stringifyIpld = (val: IpldValue): string => {
   return JSON.stringify(ipldValueToJson(val))
 }
 
-export const parseJsonStringToIpld = (str: string): IpldValue => {
+export const jsonStringToIpld = (str: string): IpldValue => {
   return jsonToIpldValue(JSON.parse(str))
 }
