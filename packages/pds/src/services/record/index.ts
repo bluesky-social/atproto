@@ -230,7 +230,11 @@ export class RecordService {
 
   async addBacklinks(backlinks: Backlink[]) {
     if (backlinks.length === 0) return
-    await this.db.db.insertInto('backlink').values(backlinks).execute()
+    await this.db.db
+      .insertInto('backlink')
+      .values(backlinks)
+      .onConflict((oc) => oc.doNothing())
+      .execute()
   }
 
   async getRecordBacklinks(opts: {
