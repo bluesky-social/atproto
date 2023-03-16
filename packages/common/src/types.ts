@@ -13,6 +13,7 @@ export const schema = {
   cid: cidSchema,
   bytes: z.instanceof(Uint8Array),
   string: z.string(),
+  array: z.array(z.unknown()),
   record: z.record(z.string(), z.unknown()),
   unknown: z.unknown(),
 }

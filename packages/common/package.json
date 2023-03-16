@@ -1,7 +1,7 @@
 {
   "name": "@atproto/common",
   "version": "0.1.1",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "license": "MIT",
   "scripts": {
     "test": "jest",
