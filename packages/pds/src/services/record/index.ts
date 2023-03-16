@@ -12,7 +12,6 @@ import {
   deleteRecord,
   deleteRepo,
 } from '../../event-stream/messages'
-import { assertValidRecord } from '../../repo'
 import { ids } from '../../lexicon/lexicons'
 import {
   atUriFormat,
@@ -67,14 +66,9 @@ export class RecordService {
     if (action === WriteOpAction.Update) {
       // On update just recreate backlinks from scratch for the record, so we can clear out
       // the old ones. E.g. for weird cases like updating a follow to be for a different did.
-      await this.db.db
-        .deleteFrom('backlink')
-        .where('uri', '=', uri.toString())
-        .execute()
+      await this.removeBacklinksByUri(uri)
     }
-    if (backlinks.length) {
-      await this.db.db.insertInto('backlink').values(backlinks).execute()
-    }
+    await this.addBacklinks(backlinks)
 
     // Send to indexers
     await this.messageDispatcher.send(
@@ -225,6 +219,36 @@ export class RecordService {
         .where('author', '=', did)
         .execute(),
     ])
+  }
+
+  async removeBacklinksByUri(uri: AtUri) {
+    await this.db.db
+      .deleteFrom('backlink')
+      .where('uri', '=', uri.toString())
+      .execute()
+  }
+
+  async addBacklinks(backlinks: Backlink[]) {
+    if (backlinks.length === 0) return
+    await this.db.db.insertInto('backlink').values(backlinks).execute()
+  }
+
+  async getRecordBacklinks(opts: {
+    did: string
+    collection: string
+    path: string
+    linkToUri: string
+  }) {
+    const { did, collection, path, linkToUri } = opts
+    return await this.db.db
+      .selectFrom('record')
+      .innerJoin('backlink', 'backlink.uri', 'record.uri')
+      .where('backlink.path', '=', path)
+      .where('backlink.linkToUri', '=', linkToUri)
+      .where('record.did', '=', did)
+      .where('record.collection', '=', collection)
+      .selectAll('record')
+      .execute()
   }
 }
 
