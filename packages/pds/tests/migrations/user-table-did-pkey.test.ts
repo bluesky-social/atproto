@@ -1,6 +1,5 @@
 import { Database } from '../../src'
 import { randomStr } from '@atproto/crypto'
-import { cidForCbor } from '@atproto/common'
 import { Kysely } from 'kysely'
 
 describe('user table did pkey migration', () => {

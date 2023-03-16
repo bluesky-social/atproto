@@ -20,11 +20,11 @@
           "type": "object",
           "required": ["subject", "follows"],
           "properties": {
-            "subject": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
+            "subject": {"type": "ref", "ref": "app.bsky.actor.defs#withInfo"},
             "cursor": {"type": "string"},
             "follows": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"}
+              "items": {"type": "ref", "ref": "app.bsky.actor.defs#withInfo"}
             }
           }
         }

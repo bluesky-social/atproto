@@ -2,12 +2,12 @@ import fs from 'fs/promises'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import AtpAgent from '@atproto/api'
+import { cidForCbor, TID } from '@atproto/common'
+import { BlobNotFoundError } from '@atproto/repo'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
 import { adminAuth, CloseFn, paginateAll, runTestServer } from './_util'
-import { BlobNotFoundError } from '@atproto/repo'
 import AppContext from '../src/context'
-import { TAKEDOWN } from '../src/lexicon/types/com/atproto/admin/moderationAction'
-import { cidForCbor, TID } from '@atproto/common'
+import { TAKEDOWN } from '../src/lexicon/types/com/atproto/admin/defs'
 
 const alice = {
   email: 'alice@test.com',
@@ -45,14 +45,14 @@ describe('crud operations', () => {
   })
 
   it('registers users', async () => {
-    const res = await agent.api.com.atproto.account.create({
+    const res = await agent.api.com.atproto.server.createAccount({
       email: alice.email,
       handle: alice.handle,
       password: alice.password,
     })
     aliceAgent.api.setHeader('authorization', `Bearer ${res.data.accessJwt}`)
     alice.did = res.data.did
-    const res2 = await agent.api.com.atproto.account.create({
+    const res2 = await agent.api.com.atproto.server.createAccount({
       email: bob.email,
       handle: bob.handle,
       password: bob.password,
@@ -62,12 +62,12 @@ describe('crud operations', () => {
   })
 
   it('describes repo', async () => {
-    const description = await agent.api.com.atproto.repo.describe({
+    const description = await agent.api.com.atproto.repo.describeRepo({
       repo: alice.did,
     })
     expect(description.data.handle).toBe(alice.handle)
     expect(description.data.did).toBe(alice.did)
-    const description2 = await agent.api.com.atproto.repo.describe({
+    const description2 = await agent.api.com.atproto.repo.describeRepo({
       repo: bob.did,
     })
     expect(description2.data.handle).toBe(bob.handle)
@@ -171,9 +171,12 @@ describe('crud operations', () => {
     const file = await fs.readFile(
       'tests/image/fixtures/key-landscape-small.jpg',
     )
-    const { data: image } = await aliceAgent.api.com.atproto.blob.upload(file, {
-      encoding: 'image/jpeg',
-    })
+    const { data: image } = await aliceAgent.api.com.atproto.repo.uploadBlob(
+      file,
+      {
+        encoding: 'image/jpeg',
+      },
+    )
     const imageCid = CID.parse(image.cid)
     // Expect blobstore not to have image yet
     await expect(ctx.blobstore.getBytes(imageCid)).rejects.toThrow(

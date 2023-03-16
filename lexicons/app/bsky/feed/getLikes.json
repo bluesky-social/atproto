@@ -37,7 +37,7 @@
       "properties": {
         "indexedAt": {"type": "string", "format": "datetime"},
         "createdAt": {"type": "string", "format": "datetime"},
-        "actor": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"}
+        "actor": {"type": "ref", "ref": "app.bsky.actor.defs#withInfo"}
       }
     }
   }
