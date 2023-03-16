@@ -77,21 +77,35 @@ async function getBacklinkDeletions(
     record,
     uri: { host: did, collection },
   } = write
+  const toDelete = ({ rkey }: { rkey: string }) =>
+    prepareDelete({ did, collection, rkey })
+
   if (
-    [
-      ids.AppBskyGraphFollow,
-      ids.AppBskyFeedLike,
-      ids.AppBskyFeedRepost,
-    ].includes(collection) &&
+    collection === ids.AppBskyGraphFollow &&
     typeof record['subject'] === 'string'
   ) {
     const backlinks = await recordTxn.getRecordBacklinks({
       did,
       collection,
       path: 'subject',
-      linkToUri: record['subject'],
+      linkTo: record['subject'],
     })
-    return backlinks.map(({ rkey }) => prepareDelete({ did, collection, rkey }))
+    return backlinks.map(toDelete)
   }
+
+  if (
+    (collection === ids.AppBskyFeedLike ||
+      collection === ids.AppBskyFeedRepost) &&
+    typeof record['subject']?.['uri'] === 'string'
+  ) {
+    const backlinks = await recordTxn.getRecordBacklinks({
+      did,
+      collection,
+      path: 'subject.uri',
+      linkTo: record['subject']['uri'],
+    })
+    return backlinks.map(toDelete)
+  }
+
   return []
 }

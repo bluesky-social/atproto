@@ -37,7 +37,7 @@ export async function up(db: Kysely<Schema>): Promise<void> {
         .select([
           'duplicate_record.uri',
           'like.subject',
-          sql`${'subject'}`.as('path'),
+          sql`${'subject.uri'}`.as('path'),
         ]),
     )
     .execute()
@@ -62,7 +62,7 @@ export async function up(db: Kysely<Schema>): Promise<void> {
         .select([
           'duplicate_record.uri',
           'repost.subject',
-          sql`${'subject'}`.as('path'),
+          sql`${'subject.uri'}`.as('path'),
         ]),
     )
     .execute()

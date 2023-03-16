@@ -2,6 +2,10 @@ import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import * as common from '@atproto/common'
 import { WriteOpAction } from '@atproto/repo'
+import {
+  atUriFormat,
+  didFormat,
+} from '@atproto/lexicon/src/validators/primitives'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import { notSoftDeletedClause } from '../../db/util'
@@ -13,10 +17,6 @@ import {
   deleteRepo,
 } from '../../event-stream/messages'
 import { ids } from '../../lexicon/lexicons'
-import {
-  atUriFormat,
-  didFormat,
-} from '@atproto/lexicon/src/validators/primitives'
 
 export class RecordService {
   constructor(public db: Database, public messageDispatcher: MessageQueue) {}
@@ -237,14 +237,19 @@ export class RecordService {
     did: string
     collection: string
     path: string
-    linkToUri: string
+    linkTo: string
   }) {
-    const { did, collection, path, linkToUri } = opts
+    const { did, collection, path, linkTo } = opts
     return await this.db.db
       .selectFrom('record')
       .innerJoin('backlink', 'backlink.uri', 'record.uri')
       .where('backlink.path', '=', path)
-      .where('backlink.linkToUri', '=', linkToUri)
+      .if(linkTo.startsWith('at://'), (q) =>
+        q.where('backlink.linkToUri', '=', linkTo),
+      )
+      .if(!linkTo.startsWith('at://'), (q) =>
+        q.where('backlink.linkToDid', '=', linkTo),
+      )
       .where('record.did', '=', did)
       .where('record.collection', '=', collection)
       .selectAll('record')
@@ -276,13 +281,14 @@ function getBacklinks(uri: AtUri, record: unknown): Backlink[] {
   ) {
     const subject = record['subject']
     const validLink =
-      typeof subject === 'string' && atUriFormat('subject', subject).success
+      typeof subject['uri'] === 'string' &&
+      atUriFormat('subject', subject['uri']).success
     if (!validLink) return []
     return [
       {
         uri: uri.toString(),
-        path: 'subject',
-        linkToUri: subject,
+        path: 'subject.uri',
+        linkToUri: subject.uri,
         linkToDid: null,
       },
     ]
