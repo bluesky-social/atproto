@@ -247,25 +247,25 @@ export function string(
     }
   }
 
-  // maxGrapheme
-  if (typeof def.maxGrapheme === 'number') {
-    if (common.graphemeLen(value) > def.maxGrapheme) {
+  // maxGraphemes
+  if (typeof def.maxGraphemes === 'number') {
+    if (common.graphemeLen(value) > def.maxGraphemes) {
       return {
         success: false,
         error: new ValidationError(
-          `${path} must not be longer than ${def.maxGrapheme} graphemes`,
+          `${path} must not be longer than ${def.maxGraphemes} graphemes`,
         ),
       }
     }
   }
 
-  // minGrapheme
-  if (typeof def.minGrapheme === 'number') {
-    if (common.graphemeLen(value) < def.minGrapheme) {
+  // minGraphemes
+  if (typeof def.minGraphemes === 'number') {
+    if (common.graphemeLen(value) < def.minGraphemes) {
       return {
         success: false,
         error: new ValidationError(
-          `${path} must not be shorter than ${def.minGrapheme} graphemes`,
+          `${path} must not be shorter than ${def.minGraphemes} graphemes`,
         ),
       }
     }

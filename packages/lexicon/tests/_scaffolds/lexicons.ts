@@ -390,8 +390,8 @@ export default [
           properties: {
             string: {
               type: 'string',
-              minGrapheme: 2,
-              maxGrapheme: 4,
+              minGraphemes: 2,
+              maxGraphemes: 4,
             },
           },
         },
