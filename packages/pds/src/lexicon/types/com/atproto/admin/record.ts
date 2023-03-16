@@ -4,6 +4,7 @@
 import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
+import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminRepo from './repo'
 import * as ComAtprotoAdminBlob from './blob'
 import * as ComAtprotoAdminModerationAction from './moderationAction'

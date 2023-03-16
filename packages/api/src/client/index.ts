@@ -6,6 +6,7 @@ import {
   ServiceClient as XrpcServiceClient,
 } from '@atproto/xrpc'
 import { schemas } from './lexicons'
+import { CID } from 'multiformats/cid'
 import * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
 import * as ComAtprotoAccountCreateInviteCode from './types/com/atproto/account/createInviteCode'
 import * as ComAtprotoAccountDelete from './types/com/atproto/account/delete'
