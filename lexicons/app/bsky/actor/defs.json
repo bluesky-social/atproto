@@ -19,7 +19,7 @@
     },
     "profileView": {
       "type": "object",
-      "required": ["did", "handle", "creator", "followersCount", "followsCount", "postsCount"],
+      "required": ["did", "handle", "creator"],
       "properties": {
         "did": {"type": "string", "format": "did"},
         "handle": {"type": "string"},

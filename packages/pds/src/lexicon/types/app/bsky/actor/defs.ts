@@ -33,9 +33,9 @@ export interface ProfileView {
   description?: string
   avatar?: string
   banner?: string
-  followersCount: number
-  followsCount: number
-  postsCount: number
+  followersCount?: number
+  followsCount?: number
+  postsCount?: number
   creator: string
   indexedAt?: string
   viewer?: ViewerState

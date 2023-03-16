@@ -2381,14 +2381,7 @@ export const schemaDict = {
       },
       profileView: {
         type: 'object',
-        required: [
-          'did',
-          'handle',
-          'creator',
-          'followersCount',
-          'followsCount',
-          'postsCount',
-        ],
+        required: ['did', 'handle', 'creator'],
         properties: {
           did: {
             type: 'string',
@@ -3011,17 +3004,7 @@ export const schemaDict = {
     defs: {
       postView: {
         type: 'object',
-        required: [
-          'uri',
-          'cid',
-          'author',
-          'record',
-          'replyCount',
-          'repostCount',
-          'likeCount',
-          'indexedAt',
-          'viewer',
-        ],
+        required: ['uri', 'cid', 'author', 'record', 'indexedAt', 'viewer'],
         properties: {
           uri: {
             type: 'string',
