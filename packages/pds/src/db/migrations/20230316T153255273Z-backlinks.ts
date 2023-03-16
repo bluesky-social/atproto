@@ -24,7 +24,7 @@ export async function up(db: Kysely<Schema>): Promise<void> {
     .expression((exp) =>
       exp
         .selectFrom('like')
-        .select(['like.uri', 'like.subject', sql`${'subject'}`.as('path')]),
+        .select(['like.uri', 'like.subject', sql`${'subject.uri'}`.as('path')]),
     )
     .execute()
   await db
@@ -49,7 +49,11 @@ export async function up(db: Kysely<Schema>): Promise<void> {
     .expression((exp) =>
       exp
         .selectFrom('repost')
-        .select(['repost.uri', 'repost.subject', sql`${'subject'}`.as('path')]),
+        .select([
+          'repost.uri',
+          'repost.subject',
+          sql`${'subject.uri'}`.as('path'),
+        ]),
     )
     .execute()
   await db
