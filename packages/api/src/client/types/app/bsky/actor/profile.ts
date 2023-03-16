@@ -6,7 +6,7 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
 export interface Record {
-  displayName: string
+  displayName?: string
   description?: string
   avatar?: { cid: string; mimeType: string; [k: string]: unknown }
   banner?: { cid: string; mimeType: string; [k: string]: unknown }

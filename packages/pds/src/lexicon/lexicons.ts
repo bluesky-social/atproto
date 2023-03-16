@@ -2617,7 +2617,7 @@ export const schemaDict = {
         key: 'literal:self',
         record: {
           type: 'object',
-          required: ['displayName'],
+          required: [],
           properties: {
             displayName: {
               type: 'string',
