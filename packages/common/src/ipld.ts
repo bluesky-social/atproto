@@ -6,7 +6,10 @@ import * as mf from 'multiformats'
 import { base64 } from 'multiformats/bases/base64'
 import * as cborCodec from '@ipld/dag-cbor'
 import { check, schema } from '.'
-import { AudioRef, BlobRef, ImageRef, VideoRef } from './blob-refs'
+<<<<<<< Updated upstream
+=======
+import { BlobRef } from './blob-refs'
+>>>>>>> Stashed changes
 
 export const cborEncode = cborCodec.encode
 export const cborDecode = cborCodec.decode
@@ -69,16 +72,6 @@ export type IpldValue =
   | Array<IpldValue>
   | { [key: string]: IpldValue }
   | { [key: number]: IpldValue }
-
-export type LexValue =
-  | IpldValue
-  | BlobRef
-  | ImageRef
-  | VideoRef
-  | AudioRef
-  | Array<LexValue>
-  | { [key: string]: LexValue }
-  | { [key: number]: LexValue }
 
 export const jsonToIpldValue = (val: JsonValue): IpldValue => {
   if (check.is(val, schema.array)) {
@@ -148,29 +141,39 @@ export const parseJsonStringToIpld = (str: string): IpldValue => {
   return jsonToIpldValue(JSON.parse(str))
 }
 
-export const lexValueToIpld = (val: LexValue): IpldValue => {
-  if (check.is(val, schema.array)) {
-    return val.map((item) => lexValueToIpld(item))
-  } else if (check.is(val, schema.bytes)) {
-    return {
-      '/': {
-        bytes: base64.encode(val).slice(1), // no mbase prefix (taken from dag-json code)
-      },
-    }
-  } else if (check.is(val, schema.cid)) {
-    return {
-      '/': val.toString(),
-    }
-  } else if (check.is(val, schema.record)) {
-    const toReturn = {}
-    for (const key of Object.keys(val)) {
-      toReturn[key] = ipldValueToJson(val[key])
-    }
-    return toReturn
-  } else {
-    return val
-  }
-}
+// export type LexValue =
+//   | IpldValue
+//   | BlobRef
+//   | ImageRef
+//   | VideoRef
+//   | AudioRef
+//   | Array<LexValue>
+//   | { [key: string]: LexValue }
+//   | { [key: number]: LexValue }
+
+// export const lexValueToIpld = (val: LexValue): IpldValue => {
+//   if (check.is(val, schema.array)) {
+//     return val.map((item) => lexValueToIpld(item))
+//   } else if (check.is(val, schema.bytes)) {
+//     return {
+//       '/': {
+//         bytes: base64.encode(val).slice(1), // no mbase prefix (taken from dag-json code)
+//       },
+//     }
+//   } else if (check.is(val, schema.cid)) {
+//     return {
+//       '/': val.toString(),
+//     }
+//   } else if (check.is(val, schema.record)) {
+//     const toReturn = {}
+//     for (const key of Object.keys(val)) {
+//       toReturn[key] = ipldValueToJson(val[key])
+//     }
+//     return toReturn
+//   } else {
+//     return val
+//   }
+// }
 
 // export const ipldValueToLex = (val: IpldValue): LexValue => {
 //   if (check.is(val, schema.array)) {
