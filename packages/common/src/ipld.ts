@@ -6,6 +6,7 @@ import * as mf from 'multiformats'
 import { base64 } from 'multiformats/bases/base64'
 import * as cborCodec from '@ipld/dag-cbor'
 import { check, schema } from '.'
+import { z } from 'zod'
 
 export const cborEncode = cborCodec.encode
 export const cborDecode = cborCodec.decode
@@ -74,30 +75,32 @@ export type IpldValue =
   | { [key: string]: IpldValue }
   | { [key: number]: IpldValue }
 
+const dagJsonCid = z.object({
+  '/': z.string(),
+})
+
+const dagJsonBytes = z.object({
+  '/': z.object({
+    bytes: z.string(),
+  }),
+})
+
+const dagJsonVal = z.union([dagJsonCid, dagJsonBytes])
+const dagJsonValStrict = z.union([dagJsonCid.strict(), dagJsonBytes.strict()])
+
 export const jsonToIpldValue = (val: JsonValue): IpldValue => {
   if (check.is(val, schema.array)) {
     return val.map((item) => jsonToIpldValue(item))
   } else if (check.is(val, schema.record)) {
-    const maybeCid = val['/']
-    if (maybeCid) {
-      if (Object.keys(val).length > 1) {
-        throw new Error()
+    if (check.is(val, dagJsonVal)) {
+      if (!check.is(val, dagJsonValStrict)) {
+        throw new Error(`improperly formatted dag-json: ${val}`)
       }
-      const maybeBytes = maybeCid['bytes']
-      if (maybeBytes) {
-        if (
-          Object.keys(maybeCid).length > 1 ||
-          typeof maybeBytes !== 'string'
-        ) {
-          console.log('this err')
-          throw new Error()
-        }
-        return base64.decode(`m${maybeBytes}`) // add mbase prefix according to dag-json code
+      if (check.is(val, dagJsonCid)) {
+        return CID.parse(val['/'])
+      } else {
+        return base64.decode(`m${val['/'].bytes}`) // add mbase prefix according to dag-json code
       }
-      if (typeof maybeCid !== 'string') {
-        throw new Error()
-      }
-      return CID.parse(maybeCid)
     } else {
       const toReturn = {}
       for (const key of Object.keys(val)) {
