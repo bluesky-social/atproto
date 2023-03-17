@@ -100,7 +100,7 @@ export function cid(path: string, value: string): ValidationResult {
   } catch {
     return {
       success: false,
-      error: new ValidationError(`${path} must be a cid`),
+      error: new ValidationError(`${path} must be a cid string`),
     }
   }
   return { success: true, value }
