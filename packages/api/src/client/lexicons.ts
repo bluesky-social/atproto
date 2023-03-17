@@ -1069,7 +1069,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Apply a batch transaction of creates, puts, and deletes.',
+        description:
+          'Apply a batch transaction of creates, updates, and deletes.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -1113,6 +1114,7 @@ export const schemaDict = {
       },
       create: {
         type: 'object',
+        description: 'Create a new record.',
         required: ['action', 'collection', 'value'],
         properties: {
           collection: {
@@ -1128,6 +1130,7 @@ export const schemaDict = {
       },
       update: {
         type: 'object',
+        description: 'Update an existing record.',
         required: ['action', 'collection', 'rkey', 'value'],
         properties: {
           collection: {
@@ -1143,6 +1146,7 @@ export const schemaDict = {
       },
       delete: {
         type: 'object',
+        description: 'Delete an existing record.',
         required: ['action', 'collection', 'rkey'],
         properties: {
           collection: {
@@ -1226,7 +1230,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Delete a record.',
+        description: "Delete a record, or ensure it doesn't exist.",
         input: {
           encoding: 'application/json',
           schema: {
@@ -1330,7 +1334,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Fetch a record.',
+        description: 'Get a record.',
         parameters: {
           type: 'params',
           required: ['repo', 'collection', 'rkey'],
@@ -1465,7 +1469,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Write a record.',
+        description: 'Write a record, creating or updating it as needed.',
         input: {
           encoding: 'application/json',
           schema: {
