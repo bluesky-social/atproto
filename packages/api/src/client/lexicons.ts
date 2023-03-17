@@ -3479,9 +3479,17 @@ export const schemaDict = {
             },
             entities: {
               type: 'array',
+              description: 'Deprecated: replaced by app.bsky.richtext.facet.',
               items: {
                 type: 'ref',
                 ref: 'lex:app.bsky.feed.post#entity',
+              },
+            },
+            facets: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.richtext.facet',
               },
             },
             reply: {
@@ -3944,6 +3952,65 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyRichtextFacet: {
+    lexicon: 1,
+    id: 'app.bsky.richtext.facet',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['index', 'value'],
+        properties: {
+          index: {
+            type: 'ref',
+            ref: 'lex:app.bsky.richtext.facet#textSlice',
+          },
+          value: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.richtext.facet#mention',
+              'lex:app.bsky.richtext.facet#link',
+            ],
+          },
+        },
+      },
+      mention: {
+        type: 'object',
+        description: 'A facet value for actor mentions.',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+      link: {
+        type: 'object',
+        description: 'A facet value for links.',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+        },
+      },
+      textSlice: {
+        type: 'object',
+        description: 'A text segment. Start is inclusive, end is exclusive.',
+        required: ['start', 'end'],
+        properties: {
+          start: {
+            type: 'integer',
+            minimum: 0,
+          },
+          end: {
+            type: 'integer',
+            minimum: 0,
+          },
+        },
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -4030,4 +4097,5 @@ export const ids = {
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
+  AppBskyRichtextFacet: 'app.bsky.richtext.facet',
 }
