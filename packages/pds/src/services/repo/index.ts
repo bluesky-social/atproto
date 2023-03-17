@@ -4,7 +4,7 @@ import { BlobStore, CommitData, Repo, WriteOpAction } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
-import SqlRepoStorage from '../../sql-repo-storage'
+import SqlRepoStorage, { PinnedSqlRepoStorage } from '../../sql-repo-storage'
 import { PreparedCreate, PreparedWrite } from '../../repo/types'
 import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
@@ -50,12 +50,14 @@ export class RepoService {
     did: string,
     writes: PreparedWrite[],
     now: string,
-    rootForUpdate?: CID | null, // Pass this param if head has already been taken for update
+    pinnedForUpdate?: PinnedSqlRepoStorage,
   ) {
     this.db.assertTransaction()
-    const storage = new SqlRepoStorage(this.db, did, now)
-    const currRoot =
-      rootForUpdate === undefined ? await storage.getHead(true) : rootForUpdate
+    const storage =
+      pinnedForUpdate?.storage ?? new SqlRepoStorage(this.db, did, now)
+    const currRoot = pinnedForUpdate
+      ? pinnedForUpdate.head
+      : await storage.getHead(true)
     if (!currRoot) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,

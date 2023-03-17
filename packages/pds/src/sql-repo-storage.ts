@@ -57,6 +57,12 @@ export class SqlRepoStorage extends RepoStorage {
     return CID.parse(found.root)
   }
 
+  async getPinnedAtHead(): Promise<PinnedSqlRepoStorage> {
+    this.db.assertTransaction()
+    const head = await this.getHead(true)
+    return { head, storage: this }
+  }
+
   async getBytes(cid: CID): Promise<Uint8Array | null> {
     const cached = this.cache.get(cid)
     if (cached) return cached
@@ -287,3 +293,5 @@ export class SqlRepoStorage extends RepoStorage {
 }
 
 export default SqlRepoStorage
+
+export type PinnedSqlRepoStorage = { storage: SqlRepoStorage; head: CID | null }
