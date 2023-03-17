@@ -2,13 +2,13 @@ import fs from 'fs/promises'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import AtpAgent from '@atproto/api'
+import { TID } from '@atproto/common'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
 import { adminAuth, CloseFn, paginateAll, runTestServer } from './_util'
 import { BlobNotFoundError } from '@atproto/repo'
 import AppContext from '../src/context'
 import { TAKEDOWN } from '../src/lexicon/types/com/atproto/admin/defs'
 import { ids } from '../src/lexicon/lexicons'
-import { TID } from '@atproto/common'
 
 const alice = {
   email: 'alice@test.com',
@@ -413,7 +413,6 @@ describe('crud operations', () => {
         ...profilePath,
         did: bob.did,
         record: {
-          $type: ids.AppBskyActorProfile,
           displayName: 'Robert',
         },
       })
@@ -435,7 +434,6 @@ describe('crud operations', () => {
         ...profilePath,
         did: bob.did,
         record: {
-          $type: ids.AppBskyActorProfile,
           displayName: 'Robert',
           description: 'Dog lover',
         },
@@ -460,7 +458,6 @@ describe('crud operations', () => {
         collection: ids.AppBskyGraphFollow,
         rkey: TID.nextStr(),
         record: {
-          $type: ids.AppBskyGraphFollow,
           subject: alice.did,
           createdAt: new Date().toISOString(),
         },
@@ -477,7 +474,6 @@ describe('crud operations', () => {
         collection: ids.AppBskyGraphFollow,
         rkey: TID.nextStr(),
         record: {
-          $type: ids.AppBskyGraphFollow,
           subject: alice.did,
           createdAt: new Date().toISOString(),
         },
@@ -491,7 +487,6 @@ describe('crud operations', () => {
         ...profilePath,
         did: bob.did,
         record: {
-          $type: ids.AppBskyActorProfile,
           displayName: 'Robert',
           description: 3.141,
         },

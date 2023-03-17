@@ -2732,81 +2732,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyActorUpdateProfile: {
-    lexicon: 1,
-    id: 'app.bsky.actor.updateProfile',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: "Update an actor's profile.",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            nullable: ['displayName', 'description', 'avatar', 'banner'],
-            properties: {
-              displayName: {
-                type: 'string',
-                maxLength: 64,
-              },
-              description: {
-                type: 'string',
-                maxLength: 256,
-              },
-              avatar: {
-                type: 'image',
-                accept: ['image/png', 'image/jpeg'],
-                maxWidth: 500,
-                maxHeight: 500,
-                maxSize: 100000,
-              },
-              banner: {
-                type: 'image',
-                accept: ['image/png', 'image/jpeg'],
-                maxWidth: 1500,
-                maxHeight: 500,
-                maxSize: 500000,
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['uri', 'cid', 'record'],
-            properties: {
-              uri: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              cid: {
-                type: 'string',
-                format: 'cid',
-              },
-              record: {
-                type: 'unknown',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidBlob',
-          },
-          {
-            name: 'BlobTooLarge',
-          },
-          {
-            name: 'InvalidMimeType',
-          },
-          {
-            name: 'InvalidImageDimensions',
-          },
-        ],
-      },
-    },
-  },
   AppBskyEmbedExternal: {
     lexicon: 1,
     id: 'app.bsky.embed.external',
@@ -4005,7 +3930,6 @@ export const ids = {
   AppBskyActorProfile: 'app.bsky.actor.profile',
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
   AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
-  AppBskyActorUpdateProfile: 'app.bsky.actor.updateProfile',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
   AppBskyEmbedRecord: 'app.bsky.embed.record',
