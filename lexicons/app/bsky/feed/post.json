@@ -12,7 +12,12 @@
           "text": {"type": "string", "maxLength": 3000, "maxGraphemes": 300},
           "entities": {
             "type": "array",
+            "description": "Deprecated: replaced by app.bsky.richtext.facet.",
             "items": {"type": "ref", "ref": "#entity"}
+          },
+          "facets": {
+            "type": "array",
+            "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
           },
           "reply": {"type": "ref", "ref": "#replyRef"},
           "embed": {
