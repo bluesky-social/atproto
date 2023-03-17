@@ -89,6 +89,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       return []
     }
 
+    // we don't chunk because this is only ever used with a limit of 50
     const seqs = events.map((evt) => evt.seq)
 
     const getBlocks = this.db.db
