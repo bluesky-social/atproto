@@ -1115,10 +1115,6 @@ export const schemaDict = {
         type: 'object',
         required: ['action', 'collection', 'value'],
         properties: {
-          action: {
-            type: 'string',
-            const: 'create',
-          },
           collection: {
             type: 'string',
           },
@@ -1134,10 +1130,6 @@ export const schemaDict = {
         type: 'object',
         required: ['action', 'collection', 'rkey', 'value'],
         properties: {
-          action: {
-            type: 'string',
-            const: 'update',
-          },
           collection: {
             type: 'string',
           },
@@ -1153,10 +1145,6 @@ export const schemaDict = {
         type: 'object',
         required: ['action', 'collection', 'rkey'],
         properties: {
-          action: {
-            type: 'string',
-            const: 'delete',
-          },
           collection: {
             type: 'string',
           },

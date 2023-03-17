@@ -1,7 +1,11 @@
-import { WriteOpAction } from '@atproto/repo'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import * as repo from '../../../../repo'
 import { Server } from '../../../../lexicon'
+import {
+  isCreate,
+  isUpdate,
+  isDelete,
+} from '../../../../lexicon/types/com/atproto/repo/applyWrites'
 import { InvalidRecordError, PreparedWrite } from '../../../../repo'
 import AppContext from '../../../../context'
 import SqlRepoStorage from '../../../../sql-repo-storage'
@@ -22,9 +26,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const hasUpdate = tx.writes.some(
-        (write) => write.action === WriteOpAction.Update,
-      )
+      const hasUpdate = tx.writes.some(isUpdate)
       if (hasUpdate) {
         throw new InvalidRequestError(`Updates are not yet supported.`)
       }
@@ -33,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
       try {
         writes = await Promise.all(
           tx.writes.map((write) => {
-            if (write.action === WriteOpAction.Create) {
+            if (isCreate(write)) {
               return repo.prepareCreate({
                 did,
                 collection: write.collection,
@@ -41,7 +43,7 @@ export default function (server: Server, ctx: AppContext) {
                 rkey: write.rkey,
                 validate,
               })
-            } else if (write.action === WriteOpAction.Delete) {
+            } else if (isDelete(write)) {
               return repo.prepareDelete({
                 did,
                 collection: write.collection,
@@ -49,7 +51,7 @@ export default function (server: Server, ctx: AppContext) {
               })
             } else {
               throw new InvalidRequestError(
-                `Action not supported: ${write.action}`,
+                `Action not supported: ${write['$type']}`,
               )
             }
           }),

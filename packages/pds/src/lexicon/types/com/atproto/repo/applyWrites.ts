@@ -40,7 +40,6 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
 }) => Promise<HandlerOutput> | HandlerOutput
 
 export interface Create {
-  action: 'create'
   collection: string
   rkey?: string
   value: {}
@@ -60,7 +59,6 @@ export function validateCreate(v: unknown): ValidationResult {
 }
 
 export interface Update {
-  action: 'update'
   collection: string
   rkey: string
   value: {}
@@ -80,7 +78,6 @@ export function validateUpdate(v: unknown): ValidationResult {
 }
 
 export interface Delete {
-  action: 'delete'
   collection: string
   rkey: string
   [k: string]: unknown
