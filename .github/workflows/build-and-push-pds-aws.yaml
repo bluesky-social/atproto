@@ -1,18 +1,16 @@
-name: build-and-push-pds
+name: build-and-push-pds-aws
 on:
   push:
     branches:
       - main
 env:
-  REGISTRY: ghcr.io
-  USERNAME: ${{ github.actor }}
-  PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-
-  # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ github.repository }}
+  REGISTRY: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_REGISTRY }}
+  USERNAME: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_USERNAME }}
+  PASSWORD: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_PASSWORD }}
+  IMAGE_NAME: pds
 
 jobs:
-  pds-container:
+  pds-container-aws:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -30,7 +28,7 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ env.USERNAME }}
+          username: ${{ env.USERNAME}}
           password: ${{ env.PASSWORD }}
 
       - name: Extract Docker metadata
@@ -40,7 +38,7 @@ jobs:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=sha,enable=true,priority=100,prefix=pds:,suffix=,format=long
+            type=sha,enable=true,priority=100,prefix=,suffix=,format=long
 
       - name: Build and push Docker image
         id: build-and-push

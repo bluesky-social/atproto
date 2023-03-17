@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/handle",
+  "name": "@atproto/identifier",
   "version": "0.0.1",
   "main": "src/index.ts",
   "scripts": {
@@ -19,7 +19,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@atproto/common": "*",
-    "@sideway/address": "^5.0.0"
+    "@atproto/common": "*"
   }
 }
