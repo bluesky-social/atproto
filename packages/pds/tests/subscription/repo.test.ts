@@ -112,7 +112,7 @@ describe('sync', () => {
     // Destroy subscription state
     const { numDeletedRows } = await db.db
       .deleteFrom('subscription')
-      .where('method', '=', 'com.atproto.sync.subscribeAllRepos')
+      .where('method', '=', 'com.atproto.sync.subscribeRepos')
       .executeTakeFirst()
     expect(Number(numDeletedRows)).toEqual(1)
 

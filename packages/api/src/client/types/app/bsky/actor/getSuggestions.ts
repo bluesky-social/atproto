@@ -5,7 +5,7 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
-import * as AppBskyActorProfile from './profile'
+import * as AppBskyActorDefs from './defs'
 
 export interface QueryParams {
   limit?: number
@@ -16,7 +16,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  actors: AppBskyActorProfile.ViewBasic[]
+  actors: AppBskyActorDefs.ProfileViewBasic[]
   [k: string]: unknown
 }
 

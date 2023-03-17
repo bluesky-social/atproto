@@ -14,7 +14,7 @@
       },
       "output": {
         "encoding": "application/json",
-        "schema": {"type": "ref", "ref": "com.atproto.admin.moderationReport#viewDetail"}
+        "schema": {"type": "ref", "ref": "com.atproto.admin.defs#reportViewDetail"}
       }
     }
   }

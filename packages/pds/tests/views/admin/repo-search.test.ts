@@ -1,5 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
   runTestServer,
   forSnapshot,
@@ -38,7 +38,7 @@ describe('pds admin repo search view', () => {
     await sc.takeModerationAction({
       action: TAKEDOWN,
       subject: {
-        $type: 'com.atproto.repo.repoRef',
+        $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids['cara-wiegand69.test'],
       },
     })
@@ -152,7 +152,7 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {
       "currentAction": Object {
-        "action": "com.atproto.admin.moderationAction#takedown",
+        "action": "com.atproto.admin.defs#takedown",
         "id": 1,
       },
     },
@@ -302,7 +302,7 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {
       "currentAction": Object {
-        "action": "com.atproto.admin.moderationAction#takedown",
+        "action": "com.atproto.admin.defs#takedown",
         "id": 1,
       },
     },

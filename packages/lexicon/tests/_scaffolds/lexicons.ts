@@ -381,6 +381,25 @@ export default [
   },
   {
     lexicon: 1,
+    id: 'com.example.stringLengthGrapheme',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            string: {
+              type: 'string',
+              minGraphemes: 2,
+              maxGraphemes: 4,
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'com.example.stringEnum',
     defs: {
       main: {
