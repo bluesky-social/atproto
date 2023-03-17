@@ -2424,11 +2424,6 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#viewerState',
           },
-          myState: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#myState',
-            description: 'Deprecated',
-          },
         },
       },
       profileViewBasic: {
@@ -2476,19 +2471,6 @@ export const schemaDict = {
           followedBy: {
             type: 'string',
             format: 'at-uri',
-          },
-        },
-      },
-      myState: {
-        type: 'object',
-        description: 'Deprecated in favor of #viewerState',
-        properties: {
-          follow: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          muted: {
-            type: 'boolean',
           },
         },
       },

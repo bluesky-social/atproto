@@ -40,7 +40,7 @@ describe('pds author feed views', () => {
     await close()
   })
 
-  it('fetches full author feeds for self (sorted, minimal myState).', async () => {
+  it('fetches full author feeds for self (sorted, minimal viewer state).', async () => {
     const aliceForAlice = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
       {
