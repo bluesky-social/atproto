@@ -46,10 +46,22 @@ export class RepoService {
     ])
   }
 
-  async processWrites(did: string, writes: PreparedWrite[], now: string) {
+  async processWrites(
+    did: string,
+    writes: PreparedWrite[],
+    now: string,
+    rootForUpdate?: CID | null, // Pass this param if head has already been taken for update
+  ) {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
-    const commitData = await this.formatCommit(storage, did, writes)
+    const currRoot =
+      rootForUpdate === undefined ? await storage.getHead(true) : rootForUpdate
+    if (!currRoot) {
+      throw new InvalidRequestError(
+        `${did} is not a registered repo on this server`,
+      )
+    }
+    const commitData = await this.formatCommit(storage, currRoot, writes)
     await Promise.all([
       // persist the commit to repo storage
       await storage.applyCommit(commitData),
@@ -60,32 +72,14 @@ export class RepoService {
     ])
   }
 
-  async formatCommit(
+  private async formatCommit(
     storage: SqlRepoStorage,
-    did: string,
+    root: CID,
     writes: PreparedWrite[],
   ): Promise<CommitData> {
-    const currRoot = await storage.getHead(true)
-    if (!currRoot) {
-      throw new InvalidRequestError(
-        `${did} is not a registered repo on this server`,
-      )
-    }
     const writeOps = writes.map(writeToOp)
-    const repo = await Repo.load(storage, currRoot)
+    const repo = await Repo.load(storage, root)
     return repo.formatCommit(writeOps, this.repoSigningKey)
-  }
-
-  async applyCommit(
-    did: string,
-    writes: PreparedWrite[],
-    now: string,
-  ): Promise<CID> {
-    this.db.assertTransaction()
-    const storage = new SqlRepoStorage(this.db, did, now)
-    const commit = await this.formatCommit(storage, did, writes)
-    await storage.applyCommit(commit)
-    return commit.commit
   }
 
   async indexWrites(writes: PreparedWrite[], now: string) {

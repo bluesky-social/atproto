@@ -12,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
       throw new InvalidRequestError(`Could not find repo: ${repo}`)
     }
 
-    const uri = new AtUri(`${did}/${collection}/${rkey}`)
+    const uri = AtUri.make(did, collection, rkey)
 
     const record = await ctx.services.record(ctx.db).getRecord(uri, cid || null)
     if (!record) {
