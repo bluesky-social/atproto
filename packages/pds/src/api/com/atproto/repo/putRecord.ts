@@ -9,12 +9,21 @@ import {
   PreparedCreate,
   PreparedUpdate,
 } from '../../../../repo'
+import SqlRepoStorage from '../../../../sql-repo-storage'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth, input }) => {
-      const { did, collection, rkey, record, validate } = input.body
+      const {
+        did,
+        collection,
+        rkey,
+        record,
+        validate,
+        swapCommit,
+        swapRecord,
+      } = input.body
 
       if (did !== auth.credentials.did) {
         throw new ForbiddenError()
@@ -32,12 +41,16 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const write = await ctx.db.transaction(async (dbTxn) => {
-        const now = new Date().toISOString()
-        const uri = AtUri.make(did, collection, rkey)
         const recordTxn = ctx.services.record(dbTxn)
         const repoTxn = ctx.services.repo(dbTxn)
-        const writeInfo = { did, collection, rkey, record, validate }
+
+        const now = new Date().toISOString()
+        const storage = new SqlRepoStorage(dbTxn, did, now)
+        const pinned = await storage.getPinnedAtHead()
+
+        const uri = AtUri.make(did, collection, rkey)
         const current = await recordTxn.getRecord(uri, null, true)
+        const writeInfo = { did, collection, rkey, record, validate }
 
         let write: PreparedCreate | PreparedUpdate
         try {
@@ -51,7 +64,23 @@ export default function (server: Server, ctx: AppContext) {
           throw err
         }
 
-        await repoTxn.processWrites(did, [write], now)
+        if (swapCommit && swapCommit !== pinned.head?.toString()) {
+          throw new InvalidRequestError(
+            `Commit was at ${pinned.head?.toString() ?? 'null'}`,
+            'InvalidSwap',
+          )
+        }
+        if (
+          (swapRecord === null && current !== null) ||
+          (swapRecord && swapRecord !== current?.cid)
+        ) {
+          throw new InvalidRequestError(
+            `Record was at ${current?.cid.toString() ?? 'null'}`,
+            'InvalidSwap',
+          )
+        }
+
+        await repoTxn.processWrites(did, [write], now, pinned)
         return write
       })
 

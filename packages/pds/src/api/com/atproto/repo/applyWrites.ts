@@ -1,16 +1,17 @@
+import { WriteOpAction } from '@atproto/repo'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import * as repo from '../../../../repo'
 import { Server } from '../../../../lexicon'
 import { InvalidRecordError, PreparedWrite } from '../../../../repo'
 import AppContext from '../../../../context'
-import { WriteOpAction } from '@atproto/repo'
+import SqlRepoStorage from '../../../../sql-repo-storage'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.applyWrites({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ input, auth }) => {
       const tx = input.body
-      const { did, validate } = tx
+      const { did, validate, swapCommit } = tx
       const requester = auth.credentials.did
       if (did !== requester) {
         throw new AuthRequiredError()
@@ -63,7 +64,15 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.db.transaction(async (dbTxn) => {
         const now = new Date().toISOString()
         const repoTxn = ctx.services.repo(dbTxn)
-        await repoTxn.processWrites(did, writes, now)
+        const storage = new SqlRepoStorage(dbTxn, did, now)
+        const pinned = await storage.getPinnedAtHead()
+        if (swapCommit && swapCommit !== pinned.head?.toString()) {
+          throw new InvalidRequestError(
+            `Commit was at ${pinned.head?.toString() ?? 'null'}`,
+            'InvalidSwap',
+          )
+        }
+        await repoTxn.processWrites(did, writes, now, pinned)
       })
     },
   })

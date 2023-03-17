@@ -3,14 +3,13 @@ import * as repo from '../../../../repo'
 import { Server } from '../../../../lexicon'
 import { InvalidRecordError, PreparedCreate } from '../../../../repo'
 import AppContext from '../../../../context'
+import SqlRepoStorage from '../../../../sql-repo-storage'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.createRecord({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ input, auth }) => {
-      const { did, collection, record } = input.body
-      const validate =
-        typeof input.body.validate === 'boolean' ? input.body.validate : true
+      const { did, collection, record, swapCommit, validate } = input.body
       const requester = auth.credentials.did
       if (did !== requester) {
         throw new AuthRequiredError()
@@ -43,7 +42,15 @@ export default function (server: Server, ctx: AppContext) {
 
       await ctx.db.transaction(async (dbTxn) => {
         const repoTxn = ctx.services.repo(dbTxn)
-        await repoTxn.processWrites(did, [write], now)
+        const storage = new SqlRepoStorage(dbTxn, did, now)
+        const pinned = await storage.getPinnedAtHead()
+        if (swapCommit && swapCommit !== pinned.head?.toString()) {
+          throw new InvalidRequestError(
+            `Commit was at ${pinned.head?.toString() ?? 'null'}`,
+            'InvalidSwap',
+          )
+        }
+        await repoTxn.processWrites(did, [write], now, pinned)
       })
 
       return {
