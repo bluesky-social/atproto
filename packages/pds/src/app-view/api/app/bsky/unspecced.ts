@@ -15,6 +15,8 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.db
       const { ref } = db.dynamic
 
+      console.log('here')
+
       const feedService = ctx.services.appView.feed(ctx.db)
 
       let postsQb = ctx.db.db
@@ -32,7 +34,7 @@ export default function (server: Server, ctx: AppContext) {
             .on('repost.creator', '=', 'did:plc:ea2eqamjmtuo6f4rvhl3g6ne')
             .onRef('repost.subject', '=', 'post.uri'),
         )
-        .where('vote_counts.count', '>', 5)
+        .where('vote_counts.count', '>=', 5)
         .orWhere('repost.creator', 'is not', null)
         .select([
           sql<FeedItemType>`${'post'}`.as('type'),
