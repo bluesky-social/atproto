@@ -29,8 +29,15 @@ export interface Response {
   headers: Headers
 }
 
+export class InvalidSwapError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
+    if (e.error === 'InvalidSwap') return new InvalidSwapError(e)
   }
   return e
 }

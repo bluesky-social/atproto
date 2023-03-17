@@ -1105,6 +1105,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'InvalidSwap',
+          },
+        ],
       },
       create: {
         type: 'object',
@@ -1219,6 +1224,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'InvalidSwap',
+          },
+        ],
       },
     },
   },
@@ -1263,6 +1273,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'InvalidSwap',
+          },
+        ],
       },
     },
   },
@@ -1524,6 +1539,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'InvalidSwap',
+          },
+        ],
       },
     },
   },

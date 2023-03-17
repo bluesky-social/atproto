@@ -31,6 +31,7 @@ export interface HandlerInput {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'InvalidSwap'
 }
 
 export type HandlerOutput = HandlerError | void

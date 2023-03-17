@@ -57,7 +57,10 @@
             "cid": {"type": "string", "format": "cid"}
           }
         }
-      }
+      },
+      "errors": [
+        {"name": "InvalidSwap"}
+      ]
     }
   }
 }

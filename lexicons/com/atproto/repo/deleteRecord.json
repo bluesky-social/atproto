@@ -36,7 +36,10 @@
             }
           }
         }
-      }
+      },
+      "errors": [
+        {"name": "InvalidSwap"}
+      ]
     }
   }
 }

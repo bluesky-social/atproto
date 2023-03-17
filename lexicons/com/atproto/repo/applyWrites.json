@@ -31,7 +31,10 @@
             }
           }
         }
-      }
+      },
+      "errors": [
+        {"name": "InvalidSwap"}
+      ]
     },
     "create": {
       "type": "object",
