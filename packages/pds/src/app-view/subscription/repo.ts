@@ -1,5 +1,4 @@
 import assert from 'node:assert'
-import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { cborDecode, wait } from '@atproto/common'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
@@ -163,15 +162,14 @@ async function getOps(msg: Message): Promise<PreparedWrite[]> {
       op.action === WriteOpAction.Update
     ) {
       assert(op.cid)
-      const cid = CID.parse(op.cid)
-      const record = car.blocks.get(cid)
+      const record = car.blocks.get(op.cid)
       assert(record)
       return {
         action:
           op.action === WriteOpAction.Create
             ? WriteOpAction.Create
             : WriteOpAction.Update,
-        cid,
+        cid: op.cid,
         record: cborDecode(record),
         blobs: [], // @TODO need to determine how the app-view provides URLs for processed blobs
         uri: AtUri.make(msg.repo, collection, rkey),

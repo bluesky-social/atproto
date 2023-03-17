@@ -8,7 +8,11 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "handle": {"type": "string", "description": "The handle to resolve. If not supplied, will resolve the host's own handle."}
+          "handle": {
+            "type": "string",
+            "format": "handle",
+            "description": "The handle to resolve. If not supplied, will resolve the host's own handle."
+          }
         }
       },
       "output": {

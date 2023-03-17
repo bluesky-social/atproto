@@ -11,7 +11,7 @@
           "type": "object",
           "required": ["handle", "did"],
           "properties": {
-            "handle": {"type": "string"},
+            "handle": {"type": "string", "format": "handle"},
             "did": {"type": "string", "format": "did"}
           }
         }

@@ -11,7 +11,11 @@
           "type": "object",
           "required": ["password"],
           "properties": {
-            "identifier": {"type": "string", "description": "Handle or other identifier supported by the server for the authenticating user."},
+            "identifier": {
+              "type": "string",
+              "format": "at-identifier",
+              "description": "Handle or other identifier supported by the server for the authenticating user."
+            },
             "password": {"type": "string"}
           }
         }
@@ -24,7 +28,7 @@
           "properties": {
             "accessJwt": {"type": "string"},
             "refreshJwt": {"type": "string"},
-            "handle": {"type": "string"},
+            "handle": {"type": "string", "format": "handle"},
             "did": {"type": "string", "format": "did"}
           }
         }

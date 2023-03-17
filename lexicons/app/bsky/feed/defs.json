@@ -6,8 +6,8 @@
       "type": "object",
       "required": ["uri", "cid", "author", "record", "replyCount", "repostCount", "likeCount", "indexedAt", "viewer"],
       "properties": {
-        "uri": {"type": "string"},
-        "cid": {"type": "string"},
+        "uri": {"type": "string", "format": "at-uri"},
+        "cid": {"type": "string", "format": "cid"},
         "author": {"type": "ref", "ref": "app.bsky.actor.defs#withInfo"},
         "record": {"type": "unknown"},
         "embed": {

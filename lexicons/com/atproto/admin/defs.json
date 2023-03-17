@@ -124,7 +124,7 @@
       "required": ["did", "handle", "relatedRecords", "indexedAt", "moderation"],
       "properties": {
         "did": {"type": "string", "format": "did"},
-        "handle": {"type": "string"},
+        "handle": {"type": "string", "format": "handle"},
         "email": {"type": "string"},
         "relatedRecords": {"type": "array", "items": {"type": "unknown"}},
         "indexedAt": {"type": "string", "format": "datetime"},
@@ -136,7 +136,7 @@
       "required": ["did", "handle", "relatedRecords", "indexedAt", "moderation"],
       "properties": {
         "did": {"type": "string", "format": "did"},
-        "handle": {"type": "string"},
+        "handle": {"type": "string", "format": "handle"},
         "email": {"type": "string"},
         "relatedRecords": {"type": "array", "items": {"type": "unknown"}},
         "indexedAt": {"type": "string", "format": "datetime"},
