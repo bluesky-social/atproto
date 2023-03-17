@@ -21,20 +21,21 @@ export default function (server: Server, ctx: AppContext) {
         const recordTxn = ctx.services.record(dbTxn)
         const storage = new SqlRepoStorage(dbTxn, did, now)
         const pinned = await storage.getPinnedAtHead()
+        const record = await recordTxn.getRecord(write.uri, null, true)
         if (swapCommit && swapCommit !== pinned.head?.toString()) {
           throw new InvalidRequestError(
             `Commit was at ${pinned.head?.toString() ?? 'null'}`,
             'InvalidSwap',
           )
         }
-        if (swapRecord) {
-          const record = await recordTxn.getRecord(write.uri, null, true)
-          if (swapRecord !== record?.cid) {
-            throw new InvalidRequestError(
-              `Record was at ${record?.cid.toString() ?? 'null'}`,
-              'InvalidSwap',
-            )
-          }
+        if (swapRecord && swapRecord !== record?.cid) {
+          throw new InvalidRequestError(
+            `Record was at ${record?.cid.toString() ?? 'null'}`,
+            'InvalidSwap',
+          )
+        }
+        if (!record) {
+          return // No-op if record already doesn't exist
         }
         await repoTxn.processWrites(did, [write], now, pinned)
       })
