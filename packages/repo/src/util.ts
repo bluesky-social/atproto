@@ -3,7 +3,7 @@ import * as cbor from '@ipld/dag-cbor'
 import { CarReader } from '@ipld/car/reader'
 import { BlockWriter, CarWriter } from '@ipld/car/writer'
 import { Block as CarBlock } from '@ipld/car/api'
-import { def, streamToArray, verifyCidForBytes } from '@atproto/common'
+import { streamToArray, verifyCidForBytes } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import Repo from './repo'
 import { MST } from './mst'
@@ -124,25 +124,25 @@ export const diffToWriteDescripts = (
   return Promise.all([
     ...diff.addList().map(async (add) => {
       const { collection, rkey } = parseDataKey(add.key)
-      const value = await parse.getAndParse(blocks, add.cid, def.record)
+      const value = await parse.getAndParseRecord(blocks, add.cid)
       return {
         action: WriteOpAction.Create,
         collection,
         rkey,
         cid: add.cid,
-        record: value.obj,
+        record: value.record,
       } as RecordCreateDescript
     }),
     ...diff.updateList().map(async (upd) => {
       const { collection, rkey } = parseDataKey(upd.key)
-      const value = await parse.getAndParse(blocks, upd.cid, def.record)
+      const value = await parse.getAndParseRecord(blocks, upd.cid)
       return {
         action: WriteOpAction.Update,
         collection,
         rkey,
         cid: upd.cid,
         prev: upd.prev,
-        record: value.obj,
+        record: value.record,
       } as RecordUpdateDescript
     }),
     ...diff.deleteList().map((del) => {

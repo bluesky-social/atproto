@@ -6,6 +6,7 @@ import { ImageUriBuilder } from '../../../image/uri'
 import { isPresented as isPresentedImage } from '../../../lexicon/types/app/bsky/embed/images'
 import { PostView } from '../../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
+import { cborToLexRecord } from '@atproto/lexicon'
 
 export * from './types'
 
@@ -301,7 +302,7 @@ export class FeedService {
       uri: post.uri,
       cid: post.cid,
       author: author,
-      record: common.cborDecode(post.recordBytes),
+      record: cborToLexRecord(post.recordBytes),
       embed: embeds[uri],
       replyCount: post.replyCount,
       repostCount: post.repostCount,

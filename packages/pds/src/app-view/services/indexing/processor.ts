@@ -4,6 +4,7 @@ import * as common from '@atproto/common'
 import DatabaseSchema from '../../../db/database-schema'
 import { Message } from '../../../event-stream/messages'
 import { lexicons } from '../../../lexicon/lexicons'
+import { cborToLexRecord } from '@atproto/lexicon'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
 // (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).
@@ -169,7 +170,7 @@ export class RecordProcessor<T, S> {
       if (!found) {
         return this.params.eventsForDelete(deleted, null)
       }
-      const record = common.cborDecode(found.content)
+      const record = cborToLexRecord(found.content)
       if (!this.matchesSchema(record)) {
         return this.params.eventsForDelete(deleted, null)
       }

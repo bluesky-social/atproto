@@ -1,5 +1,5 @@
 import { AtUri } from '@atproto/uri'
-import { cidForCbor, TID } from '@atproto/common'
+import { TID } from '@atproto/common'
 import {
   PreparedCreate,
   PreparedUpdate,
@@ -12,9 +12,9 @@ import {
 
 import * as lex from '../lexicon/lexicons'
 import {
+  cidForRecord,
   LexiconDefNotFoundError,
-  LexValue,
-  lexValueToIpld,
+  RepoRecord,
 } from '@atproto/lexicon'
 import {
   RecordDeleteOp,
@@ -23,7 +23,6 @@ import {
   RecordWriteOp,
   WriteOpAction,
 } from '@atproto/repo'
-import { CID } from 'multiformats/cid'
 
 // @TODO do this dynamically off of schemas
 export const blobsForWrite = (record: any): PreparedBlobRef[] => {
@@ -94,7 +93,7 @@ export const assertValidRecord = (record: Record<string, unknown>) => {
 
 export const setCollectionName = (
   collection: string,
-  record: Record<string, unknown>,
+  record: RepoRecord,
   validate: boolean,
 ) => {
   if (!record.$type) {
@@ -125,7 +124,7 @@ export const determineRkey = (collection: string): string => {
 export const prepareCreate = async (opts: {
   did: string
   collection: string
-  record: Record<string, unknown>
+  record: RepoRecord
   rkey?: string
   validate?: boolean
 }): Promise<PreparedCreate> => {
@@ -148,7 +147,7 @@ export const prepareUpdate = async (opts: {
   did: string
   collection: string
   rkey: string
-  record: Record<string, unknown>
+  record: RepoRecord
   validate?: boolean
 }): Promise<PreparedUpdate> => {
   const { did, collection, rkey, validate = true } = opts
@@ -177,29 +176,18 @@ export const prepareDelete = (opts: {
   }
 }
 
-const cidForRecord = async (record: Record<string, unknown>): Promise<CID> => {
-  return cidForCbor(lexToRecord(record))
-}
-
-// @TODO better types around this stuff, but we know this is safe
-const lexToRecord = (
-  record: Record<string, unknown>,
-): Record<string, unknown> => {
-  return lexValueToIpld(record as LexValue) as Record<string, unknown>
-}
-
 export const createWriteToOp = (write: PreparedCreate): RecordCreateOp => ({
   action: WriteOpAction.Create,
   collection: write.uri.collection,
   rkey: write.uri.rkey,
-  record: lexToRecord(write.record),
+  record: write.record,
 })
 
 export const updateWriteToOp = (write: PreparedUpdate): RecordUpdateOp => ({
   action: WriteOpAction.Update,
   collection: write.uri.collection,
   rkey: write.uri.rkey,
-  record: lexToRecord(write.record),
+  record: write.record,
 })
 
 export const deleteWriteToOp = (write: PreparedDelete): RecordDeleteOp => ({

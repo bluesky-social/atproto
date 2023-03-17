@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import { cborDecode, wait } from '@atproto/common'
+import { wait } from '@atproto/common'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
 import { WriteOpAction, readCarWithRoot } from '@atproto/repo'
 import { PreparedWrite } from '../../repo'
@@ -11,6 +11,7 @@ import Database from '../../db'
 import AppContext from '../../context'
 import { Leader } from '../../db/leader'
 import { appViewLogger } from '../logger'
+import { cborToLexRecord } from '@atproto/lexicon'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
 export const REPO_SUB_ID = 1000
@@ -172,7 +173,7 @@ async function getOps(msg: Message): Promise<PreparedWrite[]> {
             ? WriteOpAction.Create
             : WriteOpAction.Update,
         cid,
-        record: cborDecode(record),
+        record: cborToLexRecord(record),
         blobs: [], // @TODO need to determine how the app-view provides URLs for processed blobs
         uri: AtUri.make(msg.repo, collection, rkey),
       }

@@ -163,8 +163,11 @@ Object {
               Object {
                 "alt": "tests/image/fixtures/key-landscape-small.jpg",
                 "image": Object {
-                  "cid": "cids(2)",
+                  "$type": "blob",
                   "mimeType": "image/jpeg",
+                  "ref": Object {
+                    "/": "cids(2)",
+                  },
                 },
               },
             ],
@@ -299,8 +302,11 @@ Object {
               Object {
                 "alt": "tests/image/fixtures/key-landscape-small.jpg",
                 "image": Object {
-                  "cid": "cids(2)",
+                  "$type": "blob",
                   "mimeType": "image/jpeg",
+                  "ref": Object {
+                    "/": "cids(2)",
+                  },
                 },
               },
             ],
@@ -396,8 +402,11 @@ Object {
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
               "image": Object {
-                "cid": "cids(3)",
+                "$type": "blob",
                 "mimeType": "image/jpeg",
+                "ref": Object {
+                  "/": "cids(3)",
+                },
               },
             },
           ],
@@ -563,8 +572,11 @@ Object {
               Object {
                 "alt": "tests/image/fixtures/key-landscape-small.jpg",
                 "image": Object {
-                  "cid": "cids(3)",
+                  "$type": "blob",
                   "mimeType": "image/jpeg",
+                  "ref": Object {
+                    "/": "cids(3)",
+                  },
                 },
               },
             ],
@@ -734,8 +746,11 @@ Object {
               Object {
                 "alt": "tests/image/fixtures/key-landscape-small.jpg",
                 "image": Object {
-                  "cid": "cids(3)",
+                  "$type": "blob",
                   "mimeType": "image/jpeg",
+                  "ref": Object {
+                    "/": "cids(3)",
+                  },
                 },
               },
             ],
@@ -1052,8 +1067,11 @@ Object {
               Object {
                 "alt": "tests/image/fixtures/key-landscape-small.jpg",
                 "image": Object {
-                  "cid": "cids(3)",
+                  "$type": "blob",
                   "mimeType": "image/jpeg",
+                  "ref": Object {
+                    "/": "cids(3)",
+                  },
                 },
               },
             ],

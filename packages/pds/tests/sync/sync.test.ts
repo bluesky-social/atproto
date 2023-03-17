@@ -302,18 +302,14 @@ describe('repo sync', () => {
     const blobsForRepo = await agent.api.com.atproto.sync.listBlobs({
       did,
     })
+    const cid1 = img1.image.ref.toString()
+    const cid2 = img2.image.ref.toString()
 
-    expect(blobsForFirst.data.cids).toEqual([img1.image.cid])
-    expect(blobsForSecond.data.cids.sort()).toEqual(
-      [img1.image.cid, img2.image.cid].sort(),
-    )
-    expect(blobsForThird.data.cids).toEqual([img2.image.cid])
-    expect(blobsForRange.data.cids.sort()).toEqual(
-      [img1.image.cid, img2.image.cid].sort(),
-    )
-    expect(blobsForRepo.data.cids.sort()).toEqual(
-      [img1.image.cid, img2.image.cid].sort(),
-    )
+    expect(blobsForFirst.data.cids).toEqual([cid1])
+    expect(blobsForSecond.data.cids.sort()).toEqual([cid1, cid2].sort())
+    expect(blobsForThird.data.cids).toEqual([cid2])
+    expect(blobsForRange.data.cids.sort()).toEqual([cid1, cid2].sort())
+    expect(blobsForRepo.data.cids.sort()).toEqual([cid1, cid2].sort())
   })
 })
 

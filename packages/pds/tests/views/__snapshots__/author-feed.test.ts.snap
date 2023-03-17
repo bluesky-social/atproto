@@ -71,8 +71,11 @@ Array [
               Object {
                 "alt": "tests/image/fixtures/key-landscape-small.jpg",
                 "image": Object {
-                  "cid": "cids(3)",
+                  "$type": "blob",
                   "mimeType": "image/jpeg",
+                  "ref": Object {
+                    "/": "cids(3)",
+                  },
                 },
               },
             ],
@@ -270,8 +273,11 @@ Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
               "image": Object {
-                "cid": "cids(1)",
+                "$type": "blob",
                 "mimeType": "image/jpeg",
+                "ref": Object {
+                  "/": "cids(1)",
+                },
               },
             },
           ],
@@ -576,15 +582,21 @@ Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
               "image": Object {
-                "cid": "cids(4)",
+                "$type": "blob",
                 "mimeType": "image/jpeg",
+                "ref": Object {
+                  "/": "cids(4)",
+                },
               },
             },
             Object {
               "alt": "tests/image/fixtures/key-alt.jpg",
               "image": Object {
-                "cid": "cids(5)",
+                "$type": "blob",
                 "mimeType": "image/jpeg",
+                "ref": Object {
+                  "/": "cids(5)",
+                },
               },
             },
           ],
@@ -836,8 +848,11 @@ Array [
               Object {
                 "alt": "tests/image/fixtures/key-landscape-small.jpg",
                 "image": Object {
-                  "cid": "cids(3)",
+                  "$type": "blob",
                   "mimeType": "image/jpeg",
+                  "ref": Object {
+                    "/": "cids(3)",
+                  },
                 },
               },
             ],

@@ -144,36 +144,36 @@ describe('sync', () => {
       forSnapshot(originalTableDump),
     )
   })
-
-  const indexedTables = [
-    'duplicate_record',
-    'user_notification',
-    'profile',
-    'follow',
-    'post',
-    'post_hierarchy',
-    'post_entity',
-    'post_embed_image',
-    'post_embed_external',
-    'post_embed_record',
-    'repost',
-    'like',
-    /* Not these:
-     * 'record', // Shared, but governed by pds
-     * 'ipld_block',
-     * 'blob',
-     * 'repo_blob',
-     * 'user',
-     * 'did_handle',
-     * 'refresh_token',
-     * 'repo_root',
-     * 'invite_code',
-     * 'invite_code_use',
-     * 'message_queue',
-     * 'message_queue_cursor',
-     */
-  ]
 })
+
+const indexedTables = [
+  'duplicate_record',
+  'user_notification',
+  'profile',
+  'follow',
+  'post',
+  'post_hierarchy',
+  'post_entity',
+  'post_embed_image',
+  'post_embed_external',
+  'post_embed_record',
+  'repost',
+  'like',
+  /* Not these:
+   * 'record', // Shared, but governed by pds
+   * 'ipld_block',
+   * 'blob',
+   * 'repo_blob',
+   * 'user',
+   * 'did_handle',
+   * 'refresh_token',
+   * 'repo_root',
+   * 'invite_code',
+   * 'invite_code_use',
+   * 'message_queue',
+   * 'message_queue_cursor',
+   */
+]
 
 async function processFullSequence(ctx: AppContext, sub: RepoSubscription) {
   const { db } = ctx.db

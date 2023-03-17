@@ -58,6 +58,8 @@ export type JsonValue =
   | number
   | string
   | null
+  | undefined
+  | unknown
   | Array<JsonValue>
   | { [key: string]: JsonValue }
   | { [key: number]: JsonValue }
@@ -84,50 +86,56 @@ const dagJsonVal = z.union([dagJsonCid, dagJsonBytes])
 const dagJsonValStrict = z.union([dagJsonCid.strict(), dagJsonBytes.strict()])
 
 export const jsonToIpldValue = (val: JsonValue): IpldValue => {
+  // check for dag json values
+  if (check.is(val, dagJsonVal)) {
+    if (!check.is(val, dagJsonValStrict)) {
+      // enforce strictly. don't allow other values in dag-json formatted fields
+      throw new Error(`improperly formatted dag-json: ${val}`)
+    }
+    if (check.is(val, dagJsonCid)) {
+      return CID.parse(val['/'])
+    }
+    return base64.decode(`m${val['/'].bytes}`) // add mbase prefix according to dag-json code
+  }
+  // walk rest
   if (check.is(val, schema.array)) {
     return val.map((item) => jsonToIpldValue(item))
-  } else if (check.is(val, schema.record)) {
-    if (check.is(val, dagJsonVal)) {
-      if (!check.is(val, dagJsonValStrict)) {
-        throw new Error(`improperly formatted dag-json: ${val}`)
-      }
-      if (check.is(val, dagJsonCid)) {
-        return CID.parse(val['/'])
-      } else {
-        return base64.decode(`m${val['/'].bytes}`) // add mbase prefix according to dag-json code
-      }
-    } else {
-      const toReturn = {}
-      for (const key of Object.keys(val)) {
-        toReturn[key] = jsonToIpldValue(val[key])
-      }
-      return toReturn
-    }
-  } else {
-    return val
   }
+  if (check.is(val, schema.record)) {
+    const toReturn = {}
+    for (const key of Object.keys(val)) {
+      toReturn[key] = jsonToIpldValue(val[key])
+    }
+    return toReturn
+  }
+  return val
 }
 
 export const ipldValueToJson = (val: IpldValue): JsonValue => {
-  if (check.is(val, schema.array)) {
-    return val.map((item) => ipldValueToJson(item))
-  } else if (check.is(val, schema.bytes)) {
+  // convert bytes
+  if (check.is(val, schema.bytes)) {
     return {
       '/': {
         bytes: base64.encode(val).slice(1), // no mbase prefix (taken from dag-json code)
       },
     }
-  } else if (check.is(val, schema.cid)) {
+  }
+  // convert cids
+  if (check.is(val, schema.cid)) {
     return {
       '/': val.toString(),
     }
-  } else if (check.is(val, schema.record)) {
+  }
+  // walk rest
+  if (check.is(val, schema.array)) {
+    return val.map((item) => ipldValueToJson(item))
+  }
+  if (check.is(val, schema.record)) {
     const toReturn = {}
     for (const key of Object.keys(val)) {
       toReturn[key] = ipldValueToJson(val[key])
     }
     return toReturn
-  } else {
-    return val
   }
+  return val as JsonValue
 }

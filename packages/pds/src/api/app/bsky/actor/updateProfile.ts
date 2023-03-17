@@ -7,6 +7,7 @@ import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
 import * as common from '@atproto/common'
 import * as repo from '../../../../repo'
 import AppContext from '../../../../context'
+import { RepoRecord } from '@atproto/lexicon'
 
 const profileNsid = lexicons.ids.AppBskyActorProfile
 
@@ -25,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
           const repoTxn = ctx.services.repo(dbTxn)
           const now = new Date().toISOString()
 
-          let updated
+          let updated: RepoRecord
           const uri = AtUri.make(did, profileNsid, 'self')
           const current = (await recordTxn.getRecord(uri, null, true))?.value
           if (current) {

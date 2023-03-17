@@ -1,8 +1,9 @@
 import {
-  cborBytesToRecord,
   cborDecode,
   cborEncode,
   check,
+  cidForCbor,
+  dataToCborBlock,
   IpldValue,
   ipldValueToJson,
   jsonToIpldValue,
@@ -18,12 +19,22 @@ export type LexValue =
   | { [key: string]: LexValue }
   | { [key: number]: LexValue }
 
+export type RepoRecord = Record<string, LexValue>
+
 export const lexValueToIpld = (val: LexValue): IpldValue => {
+  // convert blobs
+  if (val instanceof BlobRef) {
+    return val.original
+  }
+  // retain cids & bytes
+  if (check.is(val, schema.cid) || check.is(val, schema.bytes)) {
+    return val
+  }
+  // walk rest
   if (check.is(val, schema.array)) {
     return val.map((item) => lexValueToIpld(item))
-  } else if (val instanceof BlobRef) {
-    return val.ipld()
-  } else if (check.is(val, schema.record)) {
+  }
+  if (check.is(val, schema.record)) {
     const toReturn = {}
     for (const key of Object.keys(val)) {
       toReturn[key] = lexValueToIpld(val[key])
@@ -35,17 +46,26 @@ export const lexValueToIpld = (val: LexValue): IpldValue => {
 }
 
 export const ipldToLexValue = (val: IpldValue): LexValue => {
+  // convert blobs
+  if (check.is(val, jsonBlobRef)) {
+    return BlobRef.fromJsonRef(val)
+  }
+  // retain cids & bytes
+  if (check.is(val, schema.cid) || check.is(val, schema.bytes)) {
+    return val
+  }
+  // walk rest
   if (check.is(val, schema.array)) {
     return val.map((item) => ipldToLexValue(item))
-  } else if (check.is(val, jsonBlobRef)) {
-    return BlobRef.fromJsonRef(val)
-  } else if (check.is(val, schema.record)) {
+  }
+  if (check.is(val, schema.record)) {
     const toReturn = {}
     for (const key of Object.keys(val)) {
       toReturn[key] = ipldToLexValue(val[key])
     }
     return toReturn
-  } else {
+  }
+  {
     return val
   }
 }
@@ -72,4 +92,20 @@ export const cborToLex = (val: Uint8Array): LexValue => {
 
 export const lexToCbor = (val: LexValue): Uint8Array => {
   return cborEncode(lexValueToIpld(val))
+}
+
+export const lexToCborBlock = async (val: LexValue) => {
+  return dataToCborBlock(lexValueToIpld(val))
+}
+
+export const cidForRecord = async (val: LexValue) => {
+  return cidForCbor(lexValueToIpld(val))
+}
+
+export const cborToLexRecord = (val: Uint8Array): RepoRecord => {
+  const parsed = cborToLex(val)
+  if (!check.is(parsed, schema.record)) {
+    throw new Error('lexicon records be a json object')
+  }
+  return parsed
 }

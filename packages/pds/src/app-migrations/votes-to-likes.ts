@@ -9,6 +9,7 @@ import { ids } from '../lexicon/lexicons'
 import { prepareCreate, prepareDelete, assertValidRecord } from '../repo'
 import { RepoService } from '../services/repo'
 import { countAll } from '../db/util'
+import { cborToLexRecord } from '@atproto/lexicon'
 
 const MIGRATION_NAME = '2023-03-15-votes-to-likes'
 const SHORT_NAME = 'votes-to-likes'
@@ -62,7 +63,7 @@ async function main(tx: Database, ctx: AppContext) {
 
         const writeResults = await Promise.all(
           votes.map(async (vote) => {
-            const record = cborBytesToRecord(vote.bytes)
+            const record = cborToLexRecord(vote.bytes)
             const del = prepareDelete({
               did,
               collection: VOTE_LEX_ID,

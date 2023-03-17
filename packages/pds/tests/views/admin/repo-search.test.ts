@@ -285,8 +285,11 @@ Array [
       Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
-          "cid": "cids(0)",
+          "$type": "blob",
           "mimeType": "image/jpeg",
+          "ref": Object {
+            "/": "cids(0)",
+          },
         },
         "description": "",
         "displayName": "Carlton Abernathy IV",
@@ -330,8 +333,11 @@ Array [
       Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
-          "cid": "cids(0)",
+          "$type": "blob",
           "mimeType": "image/jpeg",
+          "ref": Object {
+            "/": "cids(0)",
+          },
         },
         "description": "",
         "displayName": "Latoya Windler",
@@ -350,8 +356,11 @@ Array [
       Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
-          "cid": "cids(0)",
+          "$type": "blob",
           "mimeType": "image/jpeg",
+          "ref": Object {
+            "/": "cids(0)",
+          },
         },
         "description": "",
         "displayName": "Carol Littel",
@@ -370,8 +379,11 @@ Array [
       Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
-          "cid": "cids(0)",
+          "$type": "blob",
           "mimeType": "image/jpeg",
+          "ref": Object {
+            "/": "cids(0)",
+          },
         },
         "description": "",
         "displayName": "Sadie Carter",

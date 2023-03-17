@@ -11,7 +11,7 @@ import {
   deleteRecord,
   deleteRepo,
 } from '../../event-stream/messages'
-import { cborToLex } from '@atproto/lexicon'
+import { cborToLex, cborToLexRecord } from '@atproto/lexicon'
 
 export class RecordService {
   constructor(public db: Database, public messageDispatcher: MessageQueue) {}
@@ -126,7 +126,7 @@ export class RecordService {
       return {
         uri: row.uri,
         cid: row.cid,
-        value: common.cborDecode(row.content),
+        value: cborToLexRecord(row.content),
       }
     })
   }

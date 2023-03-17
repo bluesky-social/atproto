@@ -245,7 +245,7 @@ describe('file uploads', () => {
         },
       } as any,
     )
-    expect(uploaded.cid).toEqual(smallBlob.ref.toString())
+    expect(uploaded.blob.ref.equals(smallBlob.ref)).toBeTruthy()
   })
 
   it('corrects a bad mimetype', async () => {
