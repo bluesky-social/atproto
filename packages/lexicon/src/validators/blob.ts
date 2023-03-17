@@ -8,6 +8,7 @@ export function blob(
   def: LexUserType,
   value: unknown,
 ): ValidationResult {
+  // check
   if (!value || !(value instanceof BlobRef)) {
     return {
       success: false,

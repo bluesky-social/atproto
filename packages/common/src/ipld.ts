@@ -122,7 +122,9 @@ export const ipldToJson = (val: IpldValue): JsonValue => {
   }
   // convert cids
   if (check.is(val, schema.cid)) {
-    return val.toJSON()
+    return {
+      '/': val.toString(),
+    }
   }
   // walk rest
   if (check.is(val, schema.array)) {

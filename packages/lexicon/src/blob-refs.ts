@@ -1,4 +1,4 @@
-import { check, schema } from '@atproto/common'
+import { check, ipldToJson, schema } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { z } from 'zod'
 
@@ -57,9 +57,6 @@ export class BlobRef {
   }
 
   toJSON() {
-    return {
-      ...this.ipld(),
-      ref: this.ref.toJSON(),
-    }
+    return ipldToJson(this.ipld())
   }
 }

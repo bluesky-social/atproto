@@ -3,7 +3,7 @@ import { createDeflate, createGunzip } from 'zlib'
 import express from 'express'
 import mime from 'mime-types'
 import {
-  jsonToLexValue,
+  jsonToLex,
   Lexicons,
   LexXrpcProcedure,
   LexXrpcQuery,
@@ -125,7 +125,7 @@ export function validateInput(
   // if input schema, validate
   if (def.input?.schema) {
     try {
-      const lexBody = req.body ? jsonToLexValue(req.body) : req.body
+      const lexBody = req.body ? jsonToLex(req.body) : req.body
       req.body = lexicons.assertValidXrpcInput(nsid, lexBody)
     } catch (e) {
       throw new InvalidRequestError(e instanceof Error ? e.message : String(e))
