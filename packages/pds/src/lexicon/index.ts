@@ -73,6 +73,7 @@ import * as AppBskyGraphUnmute from './types/app/bsky/graph/unmute'
 import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
 import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 
 export const COM_ATPROTO_ADMIN = {
   ModerationActionTakedown: 'com.atproto.admin.moderationAction#takedown',
@@ -571,6 +572,7 @@ export class BskyNS {
   graph: GraphNS
   notification: NotificationNS
   system: SystemNS
+  unspecced: UnspeccedNS
 
   constructor(server: Server) {
     this._server = server
@@ -580,6 +582,7 @@ export class BskyNS {
     this.graph = new GraphNS(server)
     this.notification = new NotificationNS(server)
     this.system = new SystemNS(server)
+    this.unspecced = new UnspeccedNS(server)
   }
 }
 
@@ -768,6 +771,21 @@ export class SystemNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+}
+
+export class UnspeccedNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getPopular<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyUnspeccedGetPopular.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.unspecced.getPopular' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 

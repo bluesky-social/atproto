@@ -4202,6 +4202,49 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetPopular: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getPopular',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'An unspecced view of globablly popular items',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.feedViewPost',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -4300,4 +4343,5 @@ export const ids = {
   AppBskySystemActorUser: 'app.bsky.system.actorUser',
   AppBskySystemDeclRef: 'app.bsky.system.declRef',
   AppBskySystemDeclaration: 'app.bsky.system.declaration',
+  AppBskyUnspeccedGetPopular: 'app.bsky.unspecced.getPopular',
 }
