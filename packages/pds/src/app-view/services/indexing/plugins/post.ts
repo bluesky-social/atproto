@@ -5,6 +5,10 @@ import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/po
 import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecord } from '../../../../lexicon/types/app/bsky/embed/record'
+import {
+  isMention,
+  isLink,
+} from '../../../../lexicon/types/app/bsky/richtext/facet'
 import * as lex from '../../../../lexicon/lexicons'
 import * as messages from '../../../../event-stream/messages'
 import { Message } from '../../../../event-stream/messages'
@@ -16,13 +20,12 @@ import RecordProcessor from '../processor'
 import { PostHierarchy } from '../../../db/tables/post-hierarchy'
 
 type Post = DatabaseSchemaType['post']
-type PostEntity = DatabaseSchemaType['post_entity']
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
 type PostEmbedExternal = DatabaseSchemaType['post_embed_external']
 type PostEmbedRecord = DatabaseSchemaType['post_embed_record']
 type IndexedPost = {
   post: Post
-  entities: PostEntity[]
+  facets: { type: 'mention' | 'link'; value: string }[]
   embed?: PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord
   ancestors: PostHierarchy[]
 }
@@ -57,22 +60,22 @@ const insertFn = async (
   if (!insertedPost) {
     return null // Post already indexed
   }
-  const entities = (obj.entities || []).map((entity) => ({
-    postUri: uri.toString(),
-    startIndex: entity.index.start,
-    endIndex: entity.index.end,
-    type: entity.type,
-    value: entity.value,
-  }))
-  // Entity and embed indices
-  let insertedEntities: PostEntity[] = []
-  if (entities.length > 0) {
-    insertedEntities = await db
-      .insertInto('post_entity')
-      .values(entities)
-      .returningAll()
-      .execute()
-  }
+  const facets = (obj.facets || []).flatMap((facet) => {
+    if (isMention(facet.value)) {
+      return {
+        type: 'mention' as const,
+        value: facet.value.did,
+      }
+    }
+    if (isLink(facet.value)) {
+      return {
+        type: 'link' as const,
+        value: facet.value.uri,
+      }
+    }
+    return []
+  })
+  // Embed indices
   let embed: PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord | undefined
   if (isEmbedImage(obj.embed)) {
     const { images } = obj.embed
@@ -131,7 +134,7 @@ const insertFn = async (
       .returningAll()
       .execute()
   }
-  return { post: insertedPost, entities: insertedEntities, embed, ancestors }
+  return { post: insertedPost, facets, embed, ancestors }
 }
 
 const findDuplicate = async (): Promise<AtUri | null> => {
@@ -140,12 +143,12 @@ const findDuplicate = async (): Promise<AtUri | null> => {
 
 const eventsForInsert = (obj: IndexedPost) => {
   const notifs: Message[] = []
-  for (const entity of obj.entities || []) {
-    if (entity.type === 'mention') {
-      if (entity.value !== obj.post.creator) {
+  for (const facet of obj.facets) {
+    if (facet.type === 'mention') {
+      if (facet.value !== obj.post.creator) {
         notifs.push(
           messages.createNotification({
-            userDid: entity.value,
+            userDid: facet.value,
             author: obj.post.creator,
             recordUri: obj.post.uri,
             recordCid: obj.post.cid,
@@ -185,11 +188,6 @@ const deleteFn = async (
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
-  const deletedEntities = await db
-    .deleteFrom('post_entity')
-    .where('postUri', '=', uri.toString())
-    .returningAll()
-    .execute()
   let deletedEmbed:
     | PostEmbedImage[]
     | PostEmbedExternal
@@ -227,7 +225,7 @@ const deleteFn = async (
   return deleted
     ? {
         post: deleted,
-        entities: deletedEntities,
+        facets: [], // Not used
         embed: deletedEmbed,
         ancestors,
       }

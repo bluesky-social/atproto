@@ -84,6 +84,7 @@ import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
@@ -162,6 +163,7 @@ export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 
 export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
@@ -764,6 +766,7 @@ export class BskyNS {
   feed: FeedNS
   graph: GraphNS
   notification: NotificationNS
+  richtext: RichtextNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
@@ -772,6 +775,7 @@ export class BskyNS {
     this.feed = new FeedNS(service)
     this.graph = new GraphNS(service)
     this.notification = new NotificationNS(service)
+    this.richtext = new RichtextNS(service)
   }
 }
 
@@ -1336,5 +1340,13 @@ export class NotificationNS {
       .catch((e) => {
         throw AppBskyNotificationUpdateSeen.toKnownErr(e)
       })
+  }
+}
+
+export class RichtextNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
   }
 }

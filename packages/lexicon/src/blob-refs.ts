@@ -55,4 +55,11 @@ export class BlobRef {
       mimeType: this.mimeType,
     }
   }
+
+  toJSON() {
+    return {
+      ...this.ipld(),
+      ref: this.ref.toJSON(),
+    }
+  }
 }

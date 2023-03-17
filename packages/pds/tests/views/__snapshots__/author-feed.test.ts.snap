@@ -150,14 +150,16 @@ Array [
           "record": Object {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "entities": Array [
+            "facets": Array [
               Object {
                 "index": Object {
                   "end": 18,
                   "start": 0,
                 },
-                "type": "mention",
-                "value": "user(0)",
+                "value": Object {
+                  "$type": "app.bsky.richtext.facet#mention",
+                  "did": "user(0)",
+                },
               },
             ],
             "text": "@alice.bluesky.xyz is the best",
@@ -426,14 +428,16 @@ Array [
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "entities": Array [
+        "facets": Array [
           Object {
             "index": Object {
               "end": 18,
               "start": 0,
             },
-            "type": "mention",
-            "value": "user(1)",
+            "value": Object {
+              "$type": "app.bsky.richtext.facet#mention",
+              "did": "user(1)",
+            },
           },
         ],
         "text": "@alice.bluesky.xyz is the best",
@@ -669,14 +673,16 @@ Array [
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "entities": Array [
+        "facets": Array [
           Object {
             "index": Object {
               "end": 18,
               "start": 0,
             },
-            "type": "mention",
-            "value": "user(0)",
+            "value": Object {
+              "$type": "app.bsky.richtext.facet#mention",
+              "did": "user(0)",
+            },
           },
         ],
         "text": "@alice.bluesky.xyz is the best",
@@ -731,14 +737,16 @@ Array [
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "entities": Array [
+        "facets": Array [
           Object {
             "index": Object {
               "end": 18,
               "start": 0,
             },
-            "type": "mention",
-            "value": "user(1)",
+            "value": Object {
+              "$type": "app.bsky.richtext.facet#mention",
+              "did": "user(1)",
+            },
           },
         ],
         "text": "@alice.bluesky.xyz is the best",
@@ -932,14 +940,16 @@ Array [
           "record": Object {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
-            "entities": Array [
+            "facets": Array [
               Object {
                 "index": Object {
                   "end": 18,
                   "start": 0,
                 },
-                "type": "mention",
-                "value": "user(0)",
+                "value": Object {
+                  "$type": "app.bsky.richtext.facet#mention",
+                  "did": "user(0)",
+                },
               },
             ],
             "text": "@alice.bluesky.xyz is the best",
