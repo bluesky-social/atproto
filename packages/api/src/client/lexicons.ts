@@ -1316,7 +1316,7 @@ export const schemaDict = {
             },
             collection: {
               type: 'string',
-              description: 'The NSID of the collection.',
+              description: 'The NSID of the record collection.',
             },
             rkey: {
               type: 'string',
@@ -1454,11 +1454,11 @@ export const schemaDict = {
               },
               collection: {
                 type: 'string',
-                description: 'The NSID of the record type.',
+                description: 'The NSID of the record collection.',
               },
               rkey: {
                 type: 'string',
-                description: 'The TID of the record.',
+                description: 'The key of the record.',
               },
               validate: {
                 type: 'boolean',
@@ -1467,7 +1467,7 @@ export const schemaDict = {
               },
               record: {
                 type: 'unknown',
-                description: 'The record to create.',
+                description: 'The record to write.',
               },
             },
           },

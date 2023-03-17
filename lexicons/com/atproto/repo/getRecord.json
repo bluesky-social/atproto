@@ -10,11 +10,11 @@
         "required": ["repo", "collection", "rkey"],
         "properties": {
           "repo": {"type": "string", "description": "The handle or DID of the repo."},
-          "collection": {"type": "string", "description": "The NSID of the collection."},
+          "collection": {"type": "string", "description": "The NSID of the record collection."},
           "rkey": {"type": "string", "description": "The key of the record."},
           "cid": {
             "type": "string",
-            "format": "cid", 
+            "format": "cid",
             "description": "The CID of the version of the record. If not specified, then return the most recent version."
           }
         }
