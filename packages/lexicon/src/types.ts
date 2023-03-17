@@ -34,7 +34,16 @@ export const lexInteger = z.object({
 })
 export type LexInteger = z.infer<typeof lexInteger>
 
-export const lexStringFormat = z.enum(['datetime', 'at-uri', 'did', 'cid'])
+export const lexStringFormat = z.enum([
+  'datetime',
+  'uri',
+  'at-uri',
+  'did',
+  'handle',
+  'at-identifier',
+  'nsid',
+  'cid',
+])
 export type LexStringFormat = z.infer<typeof lexStringFormat>
 
 export const lexString = z.object({
