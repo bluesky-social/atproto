@@ -20,6 +20,8 @@ export default [
             'atUri',
             'did',
             'cid',
+            'bytes',
+            'cidRef',
           ],
           properties: {
             object: { type: 'ref', ref: '#object' },
@@ -32,6 +34,8 @@ export default [
             atUri: { type: 'string', format: 'at-uri' },
             did: { type: 'string', format: 'did' },
             cid: { type: 'string', format: 'cid' },
+            bytes: { type: 'bytes' },
+            cidRef: { type: 'cid-internal-ref' },
           },
         },
       },
@@ -500,6 +504,25 @@ export default [
             cid: {
               type: 'string',
               format: 'cid',
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.byteLength',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            bytes: {
+              type: 'bytes',
+              minLength: 2,
+              maxLength: 4,
             },
           },
         },

@@ -1,4 +1,5 @@
 import * as common from '@atproto/common'
+import { CID } from 'multiformats/cid'
 import { Lexicons } from '../lexicons'
 import * as formats from './formats'
 import {
@@ -9,6 +10,7 @@ import {
   LexString,
   ValidationResult,
   ValidationError,
+  LexBytes,
 } from '../types'
 
 export function validate(
@@ -26,6 +28,10 @@ export function validate(
       return integer(lexicons, path, def, value)
     case 'string':
       return string(lexicons, path, def, value)
+    case 'bytes':
+      return bytes(lexicons, path, def, value)
+    case 'cid-internal-ref':
+      return cidInternalRef(lexicons, path, def, value)
     case 'unknown':
       return unknown(lexicons, path, def, value)
     default:
@@ -287,6 +293,64 @@ export function string(
         return formats.nsid(path, value)
       case 'cid':
         return formats.cid(path, value)
+    }
+  }
+
+  return { success: true, value }
+}
+
+export function bytes(
+  lexicons: Lexicons,
+  path: string,
+  def: LexUserType,
+  value: unknown,
+): ValidationResult {
+  def = def as LexBytes
+
+  if (!value || !(value instanceof Uint8Array)) {
+    return {
+      success: false,
+      error: new ValidationError(`${path} must be a byte array`),
+    }
+  }
+
+  // maxLength
+  if (typeof def.maxLength === 'number') {
+    if (value.byteLength > def.maxLength) {
+      return {
+        success: false,
+        error: new ValidationError(
+          `${path} must not be larger than ${def.maxLength} bytes`,
+        ),
+      }
+    }
+  }
+
+  // minLength
+  if (typeof def.minLength === 'number') {
+    if (value.byteLength < def.minLength) {
+      return {
+        success: false,
+        error: new ValidationError(
+          `${path} must not be smaller than ${def.minLength} bytes`,
+        ),
+      }
+    }
+  }
+
+  return { success: true, value }
+}
+
+export function cidInternalRef(
+  lexicons: Lexicons,
+  path: string,
+  def: LexUserType,
+  value: unknown,
+): ValidationResult {
+  if (CID.asCID(value) === null) {
+    return {
+      success: false,
+      error: new ValidationError(`${path} must be a CID`),
     }
   }
 
