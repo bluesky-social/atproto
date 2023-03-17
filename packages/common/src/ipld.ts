@@ -85,7 +85,7 @@ const dagJsonBytes = z.object({
 const dagJsonVal = z.union([dagJsonCid, dagJsonBytes])
 const dagJsonValStrict = z.union([dagJsonCid.strict(), dagJsonBytes.strict()])
 
-export const jsonToIpldValue = (val: JsonValue): IpldValue => {
+export const jsonToIpld = (val: JsonValue): IpldValue => {
   // check for dag json values
   if (check.is(val, dagJsonVal)) {
     if (!check.is(val, dagJsonValStrict)) {
@@ -99,19 +99,19 @@ export const jsonToIpldValue = (val: JsonValue): IpldValue => {
   }
   // walk rest
   if (check.is(val, schema.array)) {
-    return val.map((item) => jsonToIpldValue(item))
+    return val.map((item) => jsonToIpld(item))
   }
   if (check.is(val, schema.record)) {
     const toReturn = {}
     for (const key of Object.keys(val)) {
-      toReturn[key] = jsonToIpldValue(val[key])
+      toReturn[key] = jsonToIpld(val[key])
     }
     return toReturn
   }
   return val
 }
 
-export const ipldValueToJson = (val: IpldValue): JsonValue => {
+export const ipldToJson = (val: IpldValue): JsonValue => {
   // convert bytes
   if (check.is(val, schema.bytes)) {
     return {
@@ -126,12 +126,12 @@ export const ipldValueToJson = (val: IpldValue): JsonValue => {
   }
   // walk rest
   if (check.is(val, schema.array)) {
-    return val.map((item) => ipldValueToJson(item))
+    return val.map((item) => ipldToJson(item))
   }
   if (check.is(val, schema.record)) {
     const toReturn = {}
     for (const key of Object.keys(val)) {
-      toReturn[key] = ipldValueToJson(val[key])
+      toReturn[key] = ipldToJson(val[key])
     }
     return toReturn
   }

@@ -5,8 +5,8 @@ import {
   cidForCbor,
   dataToCborBlock,
   IpldValue,
-  ipldValueToJson,
-  jsonToIpldValue,
+  ipldToJson,
+  jsonToIpld,
   JsonValue,
   schema,
 } from '@atproto/common'
@@ -21,8 +21,8 @@ export type LexValue =
 
 export type RepoRecord = Record<string, LexValue>
 
-export const lexValueToIpld = (val: LexValue): IpldValue => {
-  // convert blobs
+export const lexToIpld = (val: LexValue): IpldValue => {
+  // convert blobs, leaving the original encoding so that we don't change CIDs on re-encode
   if (val instanceof BlobRef) {
     return val.original
   }
@@ -32,12 +32,12 @@ export const lexValueToIpld = (val: LexValue): IpldValue => {
   }
   // walk rest
   if (check.is(val, schema.array)) {
-    return val.map((item) => lexValueToIpld(item))
+    return val.map((item) => lexToIpld(item))
   }
   if (check.is(val, schema.record)) {
     const toReturn = {}
     for (const key of Object.keys(val)) {
-      toReturn[key] = lexValueToIpld(val[key])
+      toReturn[key] = lexToIpld(val[key])
     }
     return toReturn
   } else {
@@ -45,7 +45,7 @@ export const lexValueToIpld = (val: LexValue): IpldValue => {
   }
 }
 
-export const ipldToLexValue = (val: IpldValue): LexValue => {
+export const ipldToLex = (val: IpldValue): LexValue => {
   // convert blobs
   if (check.is(val, jsonBlobRef)) {
     return BlobRef.fromJsonRef(val)
@@ -56,12 +56,12 @@ export const ipldToLexValue = (val: IpldValue): LexValue => {
   }
   // walk rest
   if (check.is(val, schema.array)) {
-    return val.map((item) => ipldToLexValue(item))
+    return val.map((item) => ipldToLex(item))
   }
   if (check.is(val, schema.record)) {
     const toReturn = {}
     for (const key of Object.keys(val)) {
-      toReturn[key] = ipldToLexValue(val[key])
+      toReturn[key] = ipldToLex(val[key])
     }
     return toReturn
   }
@@ -70,36 +70,36 @@ export const ipldToLexValue = (val: IpldValue): LexValue => {
   }
 }
 
-export const jsonToLexValue = (val: JsonValue): LexValue => {
-  return ipldToLexValue(jsonToIpldValue(val))
-}
-
-export const lexValueToJson = (val: LexValue): JsonValue => {
-  return ipldValueToJson(lexValueToIpld(val))
+export const lexToJson = (val: LexValue): JsonValue => {
+  return ipldToJson(lexToIpld(val))
 }
 
 export const stringifyLex = (val: LexValue): string => {
-  return JSON.stringify(lexValueToJson(val))
-}
-
-export const jsonStringToLex = (val: string): LexValue => {
-  return jsonToLexValue(JSON.parse(val))
-}
-
-export const cborToLex = (val: Uint8Array): LexValue => {
-  return ipldToLexValue(cborDecode(val))
+  return JSON.stringify(lexToJson(val))
 }
 
 export const lexToCbor = (val: LexValue): Uint8Array => {
-  return cborEncode(lexValueToIpld(val))
+  return cborEncode(lexToIpld(val))
 }
 
 export const lexToCborBlock = async (val: LexValue) => {
-  return dataToCborBlock(lexValueToIpld(val))
+  return dataToCborBlock(lexToIpld(val))
 }
 
 export const cidForRecord = async (val: LexValue) => {
-  return cidForCbor(lexValueToIpld(val))
+  return cidForCbor(lexToIpld(val))
+}
+
+export const jsonToLex = (val: JsonValue): LexValue => {
+  return ipldToLex(jsonToIpld(val))
+}
+
+export const jsonStringToLex = (val: string): LexValue => {
+  return jsonToLex(JSON.parse(val))
+}
+
+export const cborToLex = (val: Uint8Array): LexValue => {
+  return ipldToLex(cborDecode(val))
 }
 
 export const cborToLexRecord = (val: Uint8Array): RepoRecord => {
