@@ -152,7 +152,6 @@ describe('sync', () => {
     'follow',
     'post',
     'post_hierarchy',
-    'post_facet',
     'post_embed_image',
     'post_embed_external',
     'post_embed_record',

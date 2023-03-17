@@ -20,13 +20,12 @@ import RecordProcessor from '../processor'
 import { PostHierarchy } from '../../../db/tables/post-hierarchy'
 
 type Post = DatabaseSchemaType['post']
-type PostFacet = DatabaseSchemaType['post_facet']
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
 type PostEmbedExternal = DatabaseSchemaType['post_embed_external']
 type PostEmbedRecord = DatabaseSchemaType['post_embed_record']
 type IndexedPost = {
   post: Post
-  facets: PostFacet[]
+  facets: { type: 'mention' | 'link'; value: string }[]
   embed?: PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord
   ancestors: PostHierarchy[]
 }
@@ -61,36 +60,22 @@ const insertFn = async (
   if (!insertedPost) {
     return null // Post already indexed
   }
-  const facets = (obj.facets || []).flatMap((facet): PostFacet | [] => {
+  const facets = (obj.facets || []).flatMap((facet) => {
     if (isMention(facet.value)) {
       return {
-        type: 'mention',
+        type: 'mention' as const,
         value: facet.value.did,
-        postUri: uri.toString(),
-        startIndex: facet.index.start,
-        endIndex: facet.index.end,
       }
     }
     if (isLink(facet.value)) {
       return {
-        type: 'link',
+        type: 'link' as const,
         value: facet.value.uri,
-        postUri: uri.toString(),
-        startIndex: facet.index.start,
-        endIndex: facet.index.end,
       }
     }
     return []
   })
-  // Facet and embed indices
-  let insertedFacets: PostFacet[] = []
-  if (facets.length > 0) {
-    insertedFacets = await db
-      .insertInto('post_facet')
-      .values(facets)
-      .returningAll()
-      .execute()
-  }
+  // Embed indices
   let embed: PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord | undefined
   if (isEmbedImage(obj.embed)) {
     const { images } = obj.embed
@@ -149,7 +134,7 @@ const insertFn = async (
       .returningAll()
       .execute()
   }
-  return { post: insertedPost, facets: insertedFacets, embed, ancestors }
+  return { post: insertedPost, facets, embed, ancestors }
 }
 
 const findDuplicate = async (): Promise<AtUri | null> => {
@@ -203,11 +188,6 @@ const deleteFn = async (
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
-  const deletedFacet = await db
-    .deleteFrom('post_facet')
-    .where('postUri', '=', uri.toString())
-    .returningAll()
-    .execute()
   let deletedEmbed:
     | PostEmbedImage[]
     | PostEmbedExternal
@@ -245,7 +225,7 @@ const deleteFn = async (
   return deleted
     ? {
         post: deleted,
-        facets: deletedFacet,
+        facets: [], // Not used
         embed: deletedEmbed,
         ancestors,
       }
