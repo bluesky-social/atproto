@@ -97,6 +97,7 @@ import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/up
 import * as AppBskySystemActorUser from './types/app/bsky/system/actorUser'
 import * as AppBskySystemDeclRef from './types/app/bsky/system/declRef'
 import * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
+import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 
 export * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
 export * as ComAtprotoAccountCreateInviteCode from './types/com/atproto/account/createInviteCode'
@@ -189,6 +190,7 @@ export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/up
 export * as AppBskySystemActorUser from './types/app/bsky/system/actorUser'
 export * as AppBskySystemDeclRef from './types/app/bsky/system/declRef'
 export * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
+export * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 
 export const COM_ATPROTO_ADMIN = {
   ModerationActionTakedown: 'com.atproto.admin.moderationAction#takedown',
@@ -836,6 +838,7 @@ export class BskyNS {
   graph: GraphNS
   notification: NotificationNS
   system: SystemNS
+  unspecced: UnspeccedNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
@@ -845,6 +848,7 @@ export class BskyNS {
     this.graph = new GraphNS(service)
     this.notification = new NotificationNS(service)
     this.system = new SystemNS(service)
+    this.unspecced = new UnspeccedNS(service)
   }
 }
 
@@ -1629,5 +1633,24 @@ export class DeclarationRecord {
       { collection: 'app.bsky.system.declaration', ...params },
       { headers },
     )
+  }
+}
+
+export class UnspeccedNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  getPopular(
+    params?: AppBskyUnspeccedGetPopular.QueryParams,
+    opts?: AppBskyUnspeccedGetPopular.CallOptions,
+  ): Promise<AppBskyUnspeccedGetPopular.Response> {
+    return this._service.xrpc
+      .call('app.bsky.unspecced.getPopular', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedGetPopular.toKnownErr(e)
+      })
   }
 }
