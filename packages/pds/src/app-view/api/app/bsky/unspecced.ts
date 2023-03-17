@@ -15,8 +15,6 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.db
       const { ref } = db.dynamic
 
-      console.log('here')
-
       const feedService = ctx.services.appView.feed(ctx.db)
 
       let postsQb = ctx.db.db
@@ -30,6 +28,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('post')
         .innerJoin('vote_counts', 'vote_counts.subject', 'post.uri')
         .leftJoin('repost', (join) =>
+          // this works well for one curating user. reassess if adding more
           join
             .on('repost.creator', '=', 'did:plc:ea2eqamjmtuo6f4rvhl3g6ne')
             .onRef('repost.subject', '=', 'post.uri'),
