@@ -81,10 +81,6 @@ export class IndexingService {
 
     await Promise.all([
       this.db.db
-        .deleteFrom('post_entity')
-        .where('post_entity.postUri', 'in', postByUser)
-        .execute(),
-      this.db.db
         .deleteFrom('post_embed_image')
         .where('post_embed_image.postUri', 'in', postByUser)
         .execute(),

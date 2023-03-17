@@ -1,4 +1,5 @@
 import { MessageQueue } from '../../src/event-stream/types'
+import { ids } from '../../src/lexicon/lexicons'
 import { SeedClient } from './client'
 import usersSeed from './users'
 
@@ -34,8 +35,10 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
   await sc.post(dan, posts.dan[1], [
     {
       index: { start: 0, end: 18 },
-      type: 'mention',
-      value: alice,
+      value: {
+        $type: `${ids.AppBskyRichtextFacet}#mention`,
+        did: alice,
+      },
     },
   ])
   await sc.post(alice, posts.alice[1])
