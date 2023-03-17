@@ -19,6 +19,10 @@ export interface InputSchema {
   validate?: boolean
   /** The record to write. */
   record: {}
+  /** Compare and swap with the previous record by cid. */
+  swapRecord?: string | null
+  /** Compare and swap with the previous commit by cid. */
+  swapCommit?: string
   [k: string]: unknown
 }
 

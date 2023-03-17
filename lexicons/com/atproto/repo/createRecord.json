@@ -28,6 +28,11 @@
             "record": {
               "type": "unknown",
               "description": "The record to create."
+            },
+            "swapCommit": {
+              "type": "string",
+              "format": "cid",
+              "description": "Compare and swap with the previous commit by cid."
             }
           }
         }

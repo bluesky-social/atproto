@@ -1098,6 +1098,10 @@ export const schemaDict = {
                   closed: true,
                 },
               },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+              },
             },
           },
         },
@@ -1189,6 +1193,12 @@ export const schemaDict = {
                 type: 'unknown',
                 description: 'The record to create.',
               },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous commit by cid.',
+              },
             },
           },
         },
@@ -1237,6 +1247,18 @@ export const schemaDict = {
               rkey: {
                 type: 'string',
                 description: 'The key of the record.',
+              },
+              swapRecord: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous record by cid.',
+              },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous commit by cid.',
               },
             },
           },
@@ -1446,6 +1468,7 @@ export const schemaDict = {
           schema: {
             type: 'object',
             required: ['did', 'collection', 'rkey', 'record'],
+            nullable: ['swapRecord'],
             properties: {
               did: {
                 type: 'string',
@@ -1468,6 +1491,18 @@ export const schemaDict = {
               record: {
                 type: 'unknown',
                 description: 'The record to write.',
+              },
+              swapRecord: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous record by cid.',
+              },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous commit by cid.',
               },
             },
           },

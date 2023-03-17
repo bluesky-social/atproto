@@ -14,6 +14,7 @@ export interface InputSchema {
   /** Validate the records? */
   validate?: boolean
   writes: (Create | Update | Delete)[]
+  swapCommit?: string
   [k: string]: unknown
 }
 
