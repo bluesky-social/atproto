@@ -209,38 +209,38 @@ describe('account', () => {
       })
     }
     await expect(tryHandle('did:john')).rejects.toThrow(
-      'Cannot register a handle that starts with `did:`',
+      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
     )
     await expect(tryHandle('john.bsky.io')).rejects.toThrow(
       'Not a supported handle domain',
     )
     await expect(tryHandle('j.test')).rejects.toThrow('Handle too short')
-    await expect(tryHandle('jayromy-johnber123456.test')).rejects.toThrow(
+    await expect(tryHandle('jayromy-johnber12345678910.test')).rejects.toThrow(
       'Handle too long',
     )
     await expect(tryHandle('jo_hn.test')).rejects.toThrow(
-      'Invalid characters in handle',
+      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
     )
     await expect(tryHandle('jo!hn.test')).rejects.toThrow(
-      'Invalid characters in handle',
+      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
     )
     await expect(tryHandle('jo%hn.test')).rejects.toThrow(
-      'Invalid characters in handle',
+      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
     )
     await expect(tryHandle('jo&hn.test')).rejects.toThrow(
-      'Invalid characters in handle',
+      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
     )
     await expect(tryHandle('jo*hn.test')).rejects.toThrow(
-      'Invalid characters in handle',
+      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
     )
     await expect(tryHandle('jo|hn.test')).rejects.toThrow(
-      'Invalid characters in handle',
+      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
     )
     await expect(tryHandle('jo:hn.test')).rejects.toThrow(
-      'Invalid characters in handle',
+      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
     )
     await expect(tryHandle('jo/hn.test')).rejects.toThrow(
-      'Invalid characters in handle',
+      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
     )
     await expect(tryHandle('about.test')).rejects.toThrow('Reserved handle')
     await expect(tryHandle('atp.test')).rejects.toThrow('Reserved handle')
