@@ -99,6 +99,17 @@ export async function up(db: Kysely<Schema>): Promise<void> {
         ]),
     )
     .execute()
+
+  await db.schema
+    .createIndex('backlink_path_to_uri_idx')
+    .on('backlink')
+    .columns(['path', 'linkToUri'])
+    .execute()
+  await db.schema
+    .createIndex('backlink_path_to_did_idx')
+    .on('backlink')
+    .columns(['path', 'linkToDid'])
+    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
