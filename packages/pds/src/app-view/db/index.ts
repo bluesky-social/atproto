@@ -2,7 +2,6 @@ import * as duplicateRecords from './tables/duplicate-record'
 import * as profile from './tables/profile'
 import * as post from './tables/post'
 import * as postEmbed from './tables/post-embed'
-import * as postEntity from './tables/post-entity'
 import * as postHierarchy from './tables/post-hierarchy'
 import * as repost from './tables/repost'
 import * as follow from './tables/follow'
@@ -14,7 +13,6 @@ export type DatabaseSchemaType = duplicateRecords.PartialDB &
   profile.PartialDB &
   post.PartialDB &
   postEmbed.PartialDB &
-  postEntity.PartialDB &
   postHierarchy.PartialDB &
   repost.PartialDB &
   follow.PartialDB &

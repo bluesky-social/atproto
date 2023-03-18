@@ -2381,14 +2381,7 @@ export const schemaDict = {
       },
       profileView: {
         type: 'object',
-        required: [
-          'did',
-          'handle',
-          'creator',
-          'followersCount',
-          'followsCount',
-          'postsCount',
-        ],
+        required: ['did', 'handle', 'creator'],
         properties: {
           did: {
             type: 'string',
@@ -2430,11 +2423,6 @@ export const schemaDict = {
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#viewerState',
-          },
-          myState: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#myState',
-            description: 'Deprecated',
           },
         },
       },
@@ -2483,19 +2471,6 @@ export const schemaDict = {
           followedBy: {
             type: 'string',
             format: 'at-uri',
-          },
-        },
-      },
-      myState: {
-        type: 'object',
-        description: 'Deprecated in favor of #viewerState',
-        properties: {
-          follow: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          muted: {
-            type: 'boolean',
           },
         },
       },
@@ -2936,17 +2911,7 @@ export const schemaDict = {
     defs: {
       postView: {
         type: 'object',
-        required: [
-          'uri',
-          'cid',
-          'author',
-          'record',
-          'replyCount',
-          'repostCount',
-          'likeCount',
-          'indexedAt',
-          'viewer',
-        ],
+        required: ['uri', 'cid', 'author', 'record', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
@@ -3404,9 +3369,17 @@ export const schemaDict = {
             },
             entities: {
               type: 'array',
+              description: 'Deprecated: replaced by app.bsky.richtext.facet.',
               items: {
                 type: 'ref',
                 ref: 'lex:app.bsky.feed.post#entity',
+              },
+            },
+            facets: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.richtext.facet',
               },
             },
             reply: {
@@ -3869,6 +3842,108 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyRichtextFacet: {
+    lexicon: 1,
+    id: 'app.bsky.richtext.facet',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['index', 'value'],
+        properties: {
+          index: {
+            type: 'ref',
+            ref: 'lex:app.bsky.richtext.facet#textSlice',
+          },
+          value: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.richtext.facet#mention',
+              'lex:app.bsky.richtext.facet#link',
+            ],
+          },
+        },
+      },
+      mention: {
+        type: 'object',
+        description: 'A facet value for actor mentions.',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+      link: {
+        type: 'object',
+        description: 'A facet value for links.',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+        },
+      },
+      textSlice: {
+        type: 'object',
+        description: 'A text segment. Start is inclusive, end is exclusive.',
+        required: ['start', 'end'],
+        properties: {
+          start: {
+            type: 'integer',
+            minimum: 0,
+          },
+          end: {
+            type: 'integer',
+            minimum: 0,
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetPopular: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getPopular',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'An unspecced view of globally popular items',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -3954,4 +4029,6 @@ export const ids = {
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
+  AppBskyRichtextFacet: 'app.bsky.richtext.facet',
+  AppBskyUnspeccedGetPopular: 'app.bsky.unspecced.getPopular',
 }

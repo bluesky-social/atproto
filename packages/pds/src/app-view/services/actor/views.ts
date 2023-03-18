@@ -104,10 +104,6 @@ export class ActorViews {
           following: profileInfo?.requesterFollowing || undefined,
           followedBy: profileInfo?.requesterFollowedBy || undefined,
         },
-        myState: {
-          follow: profileInfo?.requesterFollowing || undefined,
-          muted: !!profileInfo?.requesterMuted,
-        },
       }
     })
 

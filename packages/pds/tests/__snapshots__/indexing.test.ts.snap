@@ -20,14 +20,16 @@ Object {
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "entities": Array [
+        "facets": Array [
           Object {
             "index": Object {
               "end": 9,
               "start": 0,
             },
-            "type": "mention",
-            "value": "user(1)",
+            "value": Object {
+              "$type": "app.bsky.richtext.facet#mention",
+              "did": "user(1)",
+            },
           },
         ],
         "text": "@bob.test how are you?",
@@ -62,14 +64,16 @@ Object {
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "entities": Array [
+        "facets": Array [
           Object {
             "index": Object {
               "end": 11,
               "start": 0,
             },
-            "type": "mention",
-            "value": "user(1)",
+            "value": Object {
+              "$type": "app.bsky.richtext.facet#mention",
+              "did": "user(1)",
+            },
           },
         ],
         "text": "@carol.test how are you?",
@@ -121,9 +125,6 @@ Object {
   "followsCount": 0,
   "handle": "dan.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
-  "myState": Object {
-    "muted": false,
-  },
   "postsCount": 0,
   "viewer": Object {
     "muted": false,
@@ -140,9 +141,6 @@ Object {
   "followsCount": 0,
   "handle": "dan.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
-  "myState": Object {
-    "muted": false,
-  },
   "postsCount": 0,
   "viewer": Object {
     "muted": false,
@@ -157,9 +155,6 @@ Object {
   "followersCount": 0,
   "followsCount": 0,
   "handle": "dan.test",
-  "myState": Object {
-    "muted": false,
-  },
   "postsCount": 0,
   "viewer": Object {
     "muted": false,

@@ -2,10 +2,10 @@ import fs from 'fs/promises'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import AtpAgent from '@atproto/api'
-import { TID } from '@atproto/common'
+import { cidForCbor, TID } from '@atproto/common'
+import { BlobNotFoundError } from '@atproto/repo'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
 import { adminAuth, CloseFn, paginateAll, runTestServer } from './_util'
-import { BlobNotFoundError } from '@atproto/repo'
 import AppContext from '../src/context'
 import { TAKEDOWN } from '../src/lexicon/types/com/atproto/admin/defs'
 import { ids } from '../src/lexicon/lexicons'
@@ -560,6 +560,187 @@ describe('crud operations', () => {
     ).rejects.toThrow(
       'Invalid app.bsky.feed.post record: Record must have the property "text"',
     )
+  })
+
+  it('prevents duplicate likes', async () => {
+    const now = new Date().toISOString()
+    const uriA = AtUri.make(bob.did, 'app.bsky.feed.post', TID.nextStr())
+    const cidA = await cidForCbor({ post: 'a' })
+    const uriB = AtUri.make(bob.did, 'app.bsky.feed.post', TID.nextStr())
+    const cidB = await cidForCbor({ post: 'b' })
+
+    const { data: like1 } = await aliceAgent.api.com.atproto.repo.createRecord({
+      did: alice.did,
+      collection: 'app.bsky.feed.like',
+      record: {
+        $type: 'app.bsky.feed.like',
+        subject: { uri: uriA.toString(), cid: cidA.toString() },
+        createdAt: now,
+      },
+    })
+    const { data: like2 } = await aliceAgent.api.com.atproto.repo.createRecord({
+      did: alice.did,
+      collection: 'app.bsky.feed.like',
+      record: {
+        $type: 'app.bsky.feed.like',
+        subject: { uri: uriB.toString(), cid: cidB.toString() },
+        createdAt: now,
+      },
+    })
+    const { data: like3 } = await aliceAgent.api.com.atproto.repo.createRecord({
+      did: alice.did,
+      collection: 'app.bsky.feed.like',
+      record: {
+        $type: 'app.bsky.feed.like',
+        subject: { uri: uriA.toString(), cid: cidA.toString() },
+        createdAt: now,
+      },
+    })
+
+    const getLike1 = aliceAgent.api.com.atproto.repo.getRecord({
+      repo: alice.did,
+      collection: 'app.bsky.feed.like',
+      rkey: new AtUri(like1.uri).rkey,
+    })
+
+    await expect(getLike1).rejects.toThrow('Could not locate record:')
+
+    const getLike2 = aliceAgent.api.com.atproto.repo.getRecord({
+      repo: alice.did,
+      collection: 'app.bsky.feed.like',
+      rkey: new AtUri(like2.uri).rkey,
+    })
+
+    await expect(getLike2).resolves.toBeDefined()
+
+    const getLike3 = aliceAgent.api.com.atproto.repo.getRecord({
+      repo: alice.did,
+      collection: 'app.bsky.feed.like',
+      rkey: new AtUri(like3.uri).rkey,
+    })
+
+    await expect(getLike3).resolves.toBeDefined()
+  })
+
+  it('prevents duplicate reposts', async () => {
+    const now = new Date().toISOString()
+    const uriA = AtUri.make(bob.did, 'app.bsky.feed.post', TID.nextStr())
+    const cidA = await cidForCbor({ post: 'a' })
+    const uriB = AtUri.make(bob.did, 'app.bsky.feed.post', TID.nextStr())
+    const cidB = await cidForCbor({ post: 'b' })
+
+    const { data: repost1 } =
+      await aliceAgent.api.com.atproto.repo.createRecord({
+        did: alice.did,
+        collection: 'app.bsky.feed.repost',
+        record: {
+          $type: 'app.bsky.feed.repost',
+          subject: { uri: uriA.toString(), cid: cidA.toString() },
+          createdAt: now,
+        },
+      })
+    const { data: repost2 } =
+      await aliceAgent.api.com.atproto.repo.createRecord({
+        did: alice.did,
+        collection: 'app.bsky.feed.repost',
+        record: {
+          $type: 'app.bsky.feed.repost',
+          subject: { uri: uriB.toString(), cid: cidB.toString() },
+          createdAt: now,
+        },
+      })
+    const { data: repost3 } =
+      await aliceAgent.api.com.atproto.repo.createRecord({
+        did: alice.did,
+        collection: 'app.bsky.feed.repost',
+        record: {
+          $type: 'app.bsky.feed.repost',
+          subject: { uri: uriA.toString(), cid: cidA.toString() },
+          createdAt: now,
+        },
+      })
+
+    const getRepost1 = aliceAgent.api.com.atproto.repo.getRecord({
+      repo: alice.did,
+      collection: 'app.bsky.feed.repost',
+      rkey: new AtUri(repost1.uri).rkey,
+    })
+
+    await expect(getRepost1).rejects.toThrow('Could not locate record:')
+
+    const getRepost2 = aliceAgent.api.com.atproto.repo.getRecord({
+      repo: alice.did,
+      collection: 'app.bsky.feed.repost',
+      rkey: new AtUri(repost2.uri).rkey,
+    })
+
+    await expect(getRepost2).resolves.toBeDefined()
+
+    const getRepost3 = aliceAgent.api.com.atproto.repo.getRecord({
+      repo: alice.did,
+      collection: 'app.bsky.feed.repost',
+      rkey: new AtUri(repost3.uri).rkey,
+    })
+
+    await expect(getRepost3).resolves.toBeDefined()
+  })
+
+  it('prevents duplicate follows', async () => {
+    const now = new Date().toISOString()
+
+    const { data: follow1 } =
+      await aliceAgent.api.com.atproto.repo.createRecord({
+        did: alice.did,
+        collection: 'app.bsky.graph.follow',
+        record: {
+          $type: 'app.bsky.graph.follow',
+          subject: bob.did,
+          createdAt: now,
+        },
+      })
+    const { data: follow2 } = await bobAgent.api.com.atproto.repo.createRecord({
+      did: bob.did,
+      collection: 'app.bsky.graph.follow',
+      record: {
+        $type: 'app.bsky.graph.follow',
+        subject: alice.did,
+        createdAt: now,
+      },
+    })
+    const { data: follow3 } =
+      await aliceAgent.api.com.atproto.repo.createRecord({
+        did: alice.did,
+        collection: 'app.bsky.graph.follow',
+        record: {
+          $type: 'app.bsky.graph.follow',
+          subject: bob.did,
+          createdAt: now,
+        },
+      })
+
+    const getFollow1 = aliceAgent.api.com.atproto.repo.getRecord({
+      repo: alice.did,
+      collection: 'app.bsky.graph.follow',
+      rkey: new AtUri(follow1.uri).rkey,
+    })
+
+    await expect(getFollow1).rejects.toThrow('Could not locate record:')
+
+    const getFollow2 = aliceAgent.api.com.atproto.repo.getRecord({
+      repo: bob.did,
+      collection: 'app.bsky.graph.follow',
+      rkey: new AtUri(follow2.uri).rkey,
+    })
+
+    await expect(getFollow2).resolves.toBeDefined()
+
+    const getFollow3 = aliceAgent.api.com.atproto.repo.getRecord({
+      repo: alice.did,
+      collection: 'app.bsky.graph.follow',
+      rkey: new AtUri(follow3.uri).rkey,
+    })
+
+    await expect(getFollow3).resolves.toBeDefined()
   })
 
   // Moderation
