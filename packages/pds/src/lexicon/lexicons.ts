@@ -2947,7 +2947,7 @@ export const schemaDict = {
       },
       viewRecord: {
         type: 'object',
-        required: ['uri', 'cid', 'author', 'record'],
+        required: ['uri', 'cid', 'author', 'record', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
@@ -2963,6 +2963,21 @@ export const schemaDict = {
           },
           record: {
             type: 'unknown',
+          },
+          embeds: {
+            type: 'array',
+            items: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.embed.images#view',
+                'lex:app.bsky.embed.external#view',
+                'lex:app.bsky.embed.record#view',
+              ],
+            },
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
           },
         },
       },

@@ -32,15 +32,21 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
   )
   await sc.post(carol, posts.carol[0], undefined, [img1, img2])
   await sc.post(dan, posts.dan[0])
-  await sc.post(dan, posts.dan[1], [
-    {
-      index: { start: 0, end: 18 },
-      value: {
-        $type: `${ids.AppBskyRichtextFacet}#mention`,
-        did: alice,
+  await sc.post(
+    dan,
+    posts.dan[1],
+    [
+      {
+        index: { start: 0, end: 18 },
+        value: {
+          $type: `${ids.AppBskyRichtextFacet}#mention`,
+          did: alice,
+        },
       },
-    },
-  ])
+    ],
+    undefined,
+    sc.posts[carol][0].ref, // This post contains an images embed
+  )
   await sc.post(alice, posts.alice[1])
   await sc.post(bob, posts.bob[1])
   await sc.post(
@@ -48,7 +54,7 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
     posts.alice[2],
     undefined,
     undefined,
-    sc.posts[dan][1].ref,
+    sc.posts[dan][1].ref, // This post contains a record embed which contains an images embed
   )
   await sc.like(bob, sc.posts[alice][1].ref)
   await sc.like(bob, sc.posts[alice][2].ref)

@@ -184,8 +184,12 @@ export class FeedService {
     )
   }
 
-  async embedsForPosts(uris: string[], requester: string): Promise<FeedEmbeds> {
-    if (uris.length < 1) {
+  async embedsForPosts(
+    uris: string[],
+    requester: string,
+    _depth = 0,
+  ): Promise<FeedEmbeds> {
+    if (uris.length < 1 || _depth > 1) {
       return {}
     }
     const imgPromise = this.db.db
@@ -211,7 +215,7 @@ export class FeedService {
       extPromise,
       recordPromise,
     ])
-    const [postViews, actorViews] = await Promise.all([
+    const [postViews, actorViews, deepEmbedViews] = await Promise.all([
       this.getPostViews(
         records.map((p) => p.uri),
         requester,
@@ -219,6 +223,11 @@ export class FeedService {
       this.getActorViews(
         records.map((p) => p.did),
         requester,
+      ),
+      this.embedsForPosts(
+        records.map((p) => p.uri),
+        requester,
+        _depth + 1,
       ),
     ])
     let embeds = images.reduce((acc, cur) => {
@@ -265,7 +274,7 @@ export class FeedService {
           cur.uri,
           actorViews,
           postViews,
-          {},
+          deepEmbedViews,
         )
         acc[cur.postUri] = {
           $type: 'app.bsky.embed.record#view',
@@ -276,6 +285,12 @@ export class FeedService {
                 cid: formatted.cid,
                 author: formatted.author,
                 record: formatted.record,
+                embeds: formatted.embed
+                  ? [formatted.embed]
+                  : _depth < 1
+                  ? []
+                  : undefined,
+                indexedAt: formatted.indexedAt,
               }
             : {
                 $type: 'app.bsky.embed.record#viewNotFound',

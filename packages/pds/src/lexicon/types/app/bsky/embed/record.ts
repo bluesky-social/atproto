@@ -6,6 +6,8 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 import * as AppBskyActorDefs from '../actor/defs'
+import * as AppBskyEmbedImages from './images'
+import * as AppBskyEmbedExternal from './external'
 
 export interface Main {
   record: ComAtprotoRepoStrongRef.Main
@@ -45,6 +47,13 @@ export interface ViewRecord {
   cid: string
   author: AppBskyActorDefs.WithInfo
   record: {}
+  embeds?: (
+    | AppBskyEmbedImages.View
+    | AppBskyEmbedExternal.View
+    | View
+    | { $type: string; [k: string]: unknown }
+  )[]
+  indexedAt: string
   [k: string]: unknown
 }
 
