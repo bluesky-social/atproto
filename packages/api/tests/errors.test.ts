@@ -24,12 +24,12 @@ describe('errors', () => {
 
   it('constructs the correct error instance', async () => {
     const res = client.api.com.atproto.server.createAccount({
-      handle: 'admin',
+      handle: 'admin.blah',
       email: 'admin@test.com',
       password: 'password',
     })
     await expect(res).rejects.toThrow(
-      ComAtprotoServerCreateAccount.InvalidHandleError,
+      ComAtprotoServerCreateAccount.UnsupportedDomainError,
     )
   })
 })

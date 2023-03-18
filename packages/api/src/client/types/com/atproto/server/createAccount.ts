@@ -62,12 +62,19 @@ export class HandleNotAvailableError extends XRPCError {
   }
 }
 
+export class UnsupportedDomainError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'InvalidHandle') return new InvalidHandleError(e)
     if (e.error === 'InvalidPassword') return new InvalidPasswordError(e)
     if (e.error === 'InvalidInviteCode') return new InvalidInviteCodeError(e)
     if (e.error === 'HandleNotAvailable') return new HandleNotAvailableError(e)
+    if (e.error === 'UnsupportedDomain') return new UnsupportedDomainError(e)
   }
   return e
 }

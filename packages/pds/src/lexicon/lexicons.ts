@@ -1625,6 +1625,9 @@ export const schemaDict = {
           {
             name: 'HandleNotAvailable',
           },
+          {
+            name: 'UnsupportedDomain',
+          },
         ],
       },
     },
