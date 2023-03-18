@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.createRecord({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ input, auth }) => {
-      const { did, collection, record, swapCommit, validate } = input.body
+      const { did, collection, rkey, record, swapCommit, validate } = input.body
       const requester = auth.credentials.did
       if (did !== requester) {
         throw new AuthRequiredError()
@@ -20,17 +20,15 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      // determine key type. if undefined, repo assigns a TID
-      const rkey = repo.determineRkey(collection)
-
       const now = new Date().toISOString()
+
       let write: PreparedCreate
       try {
         write = await repo.prepareCreate({
           did,
           collection,
           record,
-          rkey,
+          rkey: rkey || repo.determineRkey(),
           validate,
         })
       } catch (err) {

@@ -13,6 +13,8 @@ export interface InputSchema {
   did: string
   /** The NSID of the record collection. */
   collection: string
+  /** The key of the record. */
+  rkey?: string
   /** Validate the record? */
   validate?: boolean
   /** The record to create. */

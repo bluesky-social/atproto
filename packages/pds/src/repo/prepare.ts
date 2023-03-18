@@ -104,18 +104,9 @@ export const setCollectionName = (
   return record
 }
 
-export const determineRkey = (collection: string): string => {
-  const doc = lex.lexicons.getDef(collection)
-  let keyType: string | undefined
-  if (doc && doc.type === 'record') {
-    keyType = doc.key
-  }
-  if (keyType && keyType.startsWith('literal')) {
-    const split = keyType.split(':')
-    return split[1]
-  } else {
-    return TID.nextStr()
-  }
+export const determineRkey = (): string => {
+  // Intentionally ignoring collection
+  return TID.nextStr()
 }
 
 export const prepareCreate = async (opts: {
@@ -130,7 +121,7 @@ export const prepareCreate = async (opts: {
   if (validate) {
     assertValidRecord(record)
   }
-  const rkey = opts.rkey || determineRkey(collection)
+  const rkey = opts.rkey || determineRkey()
   return {
     action: WriteOpAction.Create,
     uri: AtUri.make(did, collection, rkey),

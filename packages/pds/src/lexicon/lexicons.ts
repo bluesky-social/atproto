@@ -1181,6 +1181,10 @@ export const schemaDict = {
                 type: 'string',
                 description: 'The NSID of the record collection.',
               },
+              rkey: {
+                type: 'string',
+                description: 'The key of the record.',
+              },
               validate: {
                 type: 'boolean',
                 default: true,
