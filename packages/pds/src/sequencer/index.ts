@@ -177,7 +177,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
           time: evt.sequencedAt,
           repo: evt.did,
           commit: evt.commit,
-          prev: evt.prev || undefined,
+          prev: evt.prev ?? undefined,
           blocks: carSlice,
           ops,
           blobs,

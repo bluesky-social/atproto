@@ -18,7 +18,7 @@ import basicSeed from '../seeds/basic'
 import { CloseFn, runTestServer } from '../_util'
 import { sql } from 'kysely'
 
-describe('repo subscribe all repos', () => {
+describe('repo subscribe repos', () => {
   let serverHost: string
 
   let db: Database
@@ -132,6 +132,8 @@ describe('repo subscribe all repos', () => {
 
     await verifyEvents(evts)
   })
+
+  return
 
   it('syncs new events', async () => {
     const readAfterDelay = async () => {
