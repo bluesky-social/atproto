@@ -40,8 +40,15 @@ export interface Notification {
   uri: string
   cid: string
   author: AppBskyActorDefs.WithInfo
-  /** Expected values are 'like', 'repost', 'follow', 'mention' and 'reply'. */
-  reason: 'like' | 'repost' | 'follow' | 'mention' | 'reply' | (string & {})
+  /** Expected values are 'like', 'repost', 'follow', 'mention', 'reply', and 'quote'. */
+  reason:
+    | 'like'
+    | 'repost'
+    | 'follow'
+    | 'mention'
+    | 'reply'
+    | 'quote'
+    | (string & {})
   reasonSubject?: string
   record: {}
   isRead: boolean

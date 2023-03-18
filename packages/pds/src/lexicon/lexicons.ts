@@ -3886,8 +3886,15 @@ export const schemaDict = {
           reason: {
             type: 'string',
             description:
-              "Expected values are 'like', 'repost', 'follow', 'mention' and 'reply'.",
-            knownValues: ['like', 'repost', 'follow', 'mention', 'reply'],
+              "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', and 'quote'.",
+            knownValues: [
+              'like',
+              'repost',
+              'follow',
+              'mention',
+              'reply',
+              'quote',
+            ],
           },
           reasonSubject: {
             type: 'string',
