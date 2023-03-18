@@ -133,8 +133,6 @@ describe('repo subscribe repos', () => {
     await verifyEvents(evts)
   })
 
-  return
-
   it('syncs new events', async () => {
     const readAfterDelay = async () => {
       await wait(200) // wait just a hair so that we catch it during cutover

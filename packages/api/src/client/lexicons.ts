@@ -2320,12 +2320,10 @@ export const schemaDict = {
                 format: 'did',
               },
               commit: {
-                type: 'string',
-                format: 'cid',
+                type: 'cid-internal-ref',
               },
               prev: {
-                type: 'string',
-                format: 'cid',
+                type: 'cid-internal-ref',
               },
               blocks: {
                 type: 'unknown',
@@ -2340,8 +2338,7 @@ export const schemaDict = {
               blobs: {
                 type: 'array',
                 items: {
-                  type: 'string',
-                  format: 'cid',
+                  type: 'cid-internal-ref',
                 },
               },
               time: {
@@ -2375,8 +2372,7 @@ export const schemaDict = {
             type: 'string',
           },
           cid: {
-            type: 'string',
-            format: 'cid',
+            type: 'cid-internal-ref',
           },
         },
       },
