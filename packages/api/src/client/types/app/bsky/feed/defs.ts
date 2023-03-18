@@ -19,11 +19,11 @@ export interface PostView {
     | AppBskyEmbedExternal.Presented
     | AppBskyEmbedRecord.Presented
     | { $type: string; [k: string]: unknown }
-  replyCount: number
-  repostCount: number
-  likeCount: number
+  replyCount?: number
+  repostCount?: number
+  likeCount?: number
   indexedAt: string
-  viewer: ViewerState
+  viewer?: ViewerState
   [k: string]: unknown
 }
 

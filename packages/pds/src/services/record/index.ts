@@ -1,17 +1,22 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import * as common from '@atproto/common'
 import { WriteOpAction } from '@atproto/repo'
+import {
+  atUriFormat,
+  didFormat,
+} from '@atproto/lexicon/src/validators/primitives'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import { notSoftDeletedClause } from '../../db/util'
+import { Backlink } from '../../db/tables/backlink'
 import { MessageQueue } from '../../event-stream/types'
 import {
   indexRecord,
   deleteRecord,
   deleteRepo,
 } from '../../event-stream/messages'
-import { cborToLex, cborToLexRecord } from '@atproto/lexicon'
+import { cborToLexRecord } from '@atproto/lexicon'
+import { ids } from '../../lexicon/lexicons'
 
 export class RecordService {
   constructor(public db: Database, public messageDispatcher: MessageQueue) {}
@@ -44,6 +49,8 @@ export class RecordService {
     } else if (record.rkey.length < 1) {
       throw new Error('Expected indexed URI to contain a record key')
     }
+
+    // Track current version of record
     await this.db.db
       .insertInto('record')
       .values(record)
@@ -54,6 +61,16 @@ export class RecordService {
       )
       .execute()
 
+    // Maintain backlinks
+    const backlinks = getBacklinks(uri, obj)
+    if (action === WriteOpAction.Update) {
+      // On update just recreate backlinks from scratch for the record, so we can clear out
+      // the old ones. E.g. for weird cases like updating a follow to be for a different did.
+      await this.removeBacklinksByUri(uri)
+    }
+    await this.addBacklinks(backlinks)
+
+    // Send to indexers
     await this.messageDispatcher.send(
       this.db,
       indexRecord(uri, cid, obj, action, record.indexedAt),
@@ -69,7 +86,10 @@ export class RecordService {
       .deleteFrom('record')
       .where('uri', '=', uri.toString())
       .execute()
-
+    await this.db.db
+      .deleteFrom('backlink')
+      .where('uri', '=', uri.toString())
+      .execute()
     await Promise.all([
       this.messageDispatcher.send(this.db, deleteRecord(uri, cascading)),
       deleteQuery,
@@ -163,7 +183,7 @@ export class RecordService {
     return {
       uri: record.uri,
       cid: record.cid,
-      value: cborToLex(record.content) as object,
+      value: cborToLexRecord(record.content),
       indexedAt: record.indexedAt,
       takedownId: record.takedownId,
     }
@@ -200,4 +220,82 @@ export class RecordService {
         .execute(),
     ])
   }
+
+  async removeBacklinksByUri(uri: AtUri) {
+    await this.db.db
+      .deleteFrom('backlink')
+      .where('uri', '=', uri.toString())
+      .execute()
+  }
+
+  async addBacklinks(backlinks: Backlink[]) {
+    if (backlinks.length === 0) return
+    await this.db.db
+      .insertInto('backlink')
+      .values(backlinks)
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+  }
+
+  async getRecordBacklinks(opts: {
+    did: string
+    collection: string
+    path: string
+    linkTo: string
+  }) {
+    const { did, collection, path, linkTo } = opts
+    return await this.db.db
+      .selectFrom('record')
+      .innerJoin('backlink', 'backlink.uri', 'record.uri')
+      .where('backlink.path', '=', path)
+      .if(linkTo.startsWith('at://'), (q) =>
+        q.where('backlink.linkToUri', '=', linkTo),
+      )
+      .if(!linkTo.startsWith('at://'), (q) =>
+        q.where('backlink.linkToDid', '=', linkTo),
+      )
+      .where('record.did', '=', did)
+      .where('record.collection', '=', collection)
+      .selectAll('record')
+      .execute()
+  }
+}
+
+// @NOTE in the future this can be replaced with a more generic routine that pulls backlinks based on lex docs.
+// For now we just want to ensure we're tracking links from follows, likes, and reposts.
+
+function getBacklinks(uri: AtUri, record: unknown): Backlink[] {
+  if (record?.['$type'] === ids.AppBskyGraphFollow) {
+    const subject = record['subject']
+    const validLink =
+      typeof subject === 'string' && didFormat('subject', subject).success
+    if (!validLink) return []
+    return [
+      {
+        uri: uri.toString(),
+        path: 'subject',
+        linkToDid: subject,
+        linkToUri: null,
+      },
+    ]
+  }
+  if (
+    record?.['$type'] === ids.AppBskyFeedLike ||
+    record?.['$type'] === ids.AppBskyFeedRepost
+  ) {
+    const subject = record['subject']
+    const validLink =
+      typeof subject['uri'] === 'string' &&
+      atUriFormat('subject.uri', subject['uri']).success
+    if (!validLink) return []
+    return [
+      {
+        uri: uri.toString(),
+        path: 'subject.uri',
+        linkToUri: subject.uri,
+        linkToDid: null,
+      },
+    ]
+  }
+  return []
 }
