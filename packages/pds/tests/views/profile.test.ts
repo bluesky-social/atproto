@@ -264,7 +264,7 @@ describe('pds profile views', () => {
       { headers: sc.getHeaders(bob) },
     )
 
-    expect(initial.myState?.muted).toEqual(false)
+    expect(initial.viewer?.muted).toEqual(false)
 
     await agent.api.app.bsky.graph.muteActor(
       { actor: alice },
@@ -275,7 +275,7 @@ describe('pds profile views', () => {
       { headers: sc.getHeaders(bob) },
     )
 
-    expect(muted.myState?.muted).toEqual(true)
+    expect(muted.viewer?.muted).toEqual(true)
 
     const { data: fromBobUnrelated } =
       await agent.api.app.bsky.actor.getProfile(
@@ -288,8 +288,8 @@ describe('pds profile views', () => {
         { headers: sc.getHeaders(dan) },
       )
 
-    expect(fromBobUnrelated.myState?.muted).toEqual(false)
-    expect(toAliceUnrelated.myState?.muted).toEqual(false)
+    expect(fromBobUnrelated.viewer?.muted).toEqual(false)
+    expect(toAliceUnrelated.viewer?.muted).toEqual(false)
 
     await agent.api.app.bsky.graph.unmuteActor(
       { actor: alice },

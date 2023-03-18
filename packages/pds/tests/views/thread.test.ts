@@ -33,7 +33,7 @@ describe('pds thread views', () => {
   })
 
   beforeAll(async () => {
-    // Add a repost of a reply so that we can confirm myState in the thread
+    // Add a repost of a reply so that we can confirm viewer state in the thread
     await sc.repost(bob, sc.replies[alice][0].ref)
   })
 
