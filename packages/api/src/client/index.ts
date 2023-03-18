@@ -900,7 +900,7 @@ export class ProfileRecord {
     const res = await this._service.xrpc.call(
       'com.atproto.repo.createRecord',
       undefined,
-      { collection: 'app.bsky.actor.profile', ...params, record },
+      { collection: 'app.bsky.actor.profile', rkey: 'self', ...params, record },
       { encoding: 'application/json', headers },
     )
     return res.data

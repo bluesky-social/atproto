@@ -3,7 +3,7 @@ import * as common from '@atproto/common'
 import Database from '../../../db'
 import { countAll, notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
-import { isPresented as isPresentedImage } from '../../../lexicon/types/app/bsky/embed/images'
+import { isView as isViewImage } from '../../../lexicon/types/app/bsky/embed/images'
 import { PostView } from '../../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
 
@@ -223,11 +223,11 @@ export class FeedService {
     ])
     let embeds = images.reduce((acc, cur) => {
       const embed = (acc[cur.postUri] ??= {
-        $type: 'app.bsky.embed.images#presented',
-        images: [],
+        $type: 'app.bsky.embed.images#view',
+        value: [],
       })
-      if (!isPresentedImage(embed)) return acc
-      embed.images.push({
+      if (!isViewImage(embed)) return acc
+      embed.value.push({
         thumb: this.imgUriBuilder.getCommonSignedUri(
           'feed_thumbnail',
           cur.imageCid,
@@ -243,8 +243,8 @@ export class FeedService {
     embeds = externals.reduce((acc, cur) => {
       if (!acc[cur.postUri]) {
         acc[cur.postUri] = {
-          $type: 'app.bsky.embed.external#presented',
-          external: {
+          $type: 'app.bsky.embed.external#view',
+          value: {
             uri: cur.uri,
             title: cur.title,
             description: cur.description,
@@ -268,17 +268,17 @@ export class FeedService {
           {},
         )
         acc[cur.postUri] = {
-          $type: 'app.bsky.embed.record#presented',
-          record: formatted
+          $type: 'app.bsky.embed.record#view',
+          value: formatted
             ? {
-                $type: 'app.bsky.embed.record#presentedRecord',
+                $type: 'app.bsky.embed.record#viewRecord',
                 uri: formatted.uri,
                 cid: formatted.cid,
                 author: formatted.author,
                 record: formatted.record,
               }
             : {
-                $type: 'app.bsky.embed.record#presentedNotFound',
+                $type: 'app.bsky.embed.record#viewNotFound',
                 uri: cur.uri,
               },
         }

@@ -10,14 +10,14 @@
         "record": {"type": "ref", "ref": "com.atproto.repo.strongRef"}
       }
     },
-    "presented": {
+    "view": {
       "type": "object",
       "required":  ["record"],
       "properties": {
-        "record": {"type": "union", "refs": ["#presentedRecord", "#presentedNotFound"]}
+        "value": {"type": "union", "refs": ["#viewRecord", "#viewNotFound"]}
       }
     },
-    "presentedRecord": {
+    "viewRecord": {
       "type": "object",
       "required":  ["uri", "cid", "author", "record"],
       "properties": {
@@ -27,7 +27,7 @@
         "record": {"type": "unknown"}
       }
     },
-    "presentedNotFound": {
+    "viewNotFound": {
       "type": "object",
       "required":  ["uri"],
       "properties": {

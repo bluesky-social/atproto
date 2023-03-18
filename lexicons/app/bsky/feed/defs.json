@@ -13,9 +13,9 @@
         "embed": {
           "type": "union",
           "refs": [
-            "app.bsky.embed.images#presented",
-            "app.bsky.embed.external#presented",
-            "app.bsky.embed.record#presented"
+            "app.bsky.embed.images#view",
+            "app.bsky.embed.external#view",
+            "app.bsky.embed.record#view"
           ]
         },
         "replyCount": {"type": "integer"},

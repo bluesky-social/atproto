@@ -15,9 +15,9 @@ export interface PostView {
   author: AppBskyActorDefs.WithInfo
   record: {}
   embed?:
-    | AppBskyEmbedImages.Presented
-    | AppBskyEmbedExternal.Presented
-    | AppBskyEmbedRecord.Presented
+    | AppBskyEmbedImages.View
+    | AppBskyEmbedExternal.View
+    | AppBskyEmbedRecord.View
     | { $type: string; [k: string]: unknown }
   replyCount?: number
   repostCount?: number

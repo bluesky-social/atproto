@@ -133,9 +133,9 @@ Array [
       },
       "cid": "cids(4)",
       "embed": Object {
-        "$type": "app.bsky.embed.record#presented",
-        "record": Object {
-          "$type": "app.bsky.embed.record#presentedNotFound",
+        "$type": "app.bsky.embed.record#view",
+        "value": Object {
+          "$type": "app.bsky.embed.record#viewNotFound",
           "uri": "record(7)",
         },
       },
@@ -197,8 +197,8 @@ Array [
       },
       "cid": "cids(6)",
       "embed": Object {
-        "$type": "app.bsky.embed.images#presented",
-        "images": Array [
+        "$type": "app.bsky.embed.images#view",
+        "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
             "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -443,9 +443,9 @@ Array [
       },
       "cid": "cids(4)",
       "embed": Object {
-        "$type": "app.bsky.embed.record#presented",
-        "record": Object {
-          "$type": "app.bsky.embed.record#presentedNotFound",
+        "$type": "app.bsky.embed.record#view",
+        "value": Object {
+          "$type": "app.bsky.embed.record#viewNotFound",
           "uri": "record(8)",
         },
       },
@@ -558,8 +558,8 @@ Array [
       },
       "cid": "cids(8)",
       "embed": Object {
-        "$type": "app.bsky.embed.images#presented",
-        "images": Array [
+        "$type": "app.bsky.embed.images#view",
+        "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
             "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -798,8 +798,8 @@ Array [
         },
         "cid": "cids(3)",
         "embed": Object {
-          "$type": "app.bsky.embed.images#presented",
-          "images": Array [
+          "$type": "app.bsky.embed.images#view",
+          "value": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
               "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -964,8 +964,8 @@ Array [
       },
       "cid": "cids(3)",
       "embed": Object {
-        "$type": "app.bsky.embed.images#presented",
-        "images": Array [
+        "$type": "app.bsky.embed.images#view",
+        "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
             "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -1069,9 +1069,9 @@ Array [
       },
       "cid": "cids(6)",
       "embed": Object {
-        "$type": "app.bsky.embed.record#presented",
-        "record": Object {
-          "$type": "app.bsky.embed.record#presentedRecord",
+        "$type": "app.bsky.embed.record#view",
+        "value": Object {
+          "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
             "did": "user(1)",
             "handle": "dan.test",
@@ -1246,8 +1246,8 @@ Array [
       },
       "cid": "cids(9)",
       "embed": Object {
-        "$type": "app.bsky.embed.images#presented",
-        "images": Array [
+        "$type": "app.bsky.embed.images#view",
+        "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
             "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -1448,8 +1448,8 @@ Array [
         },
         "cid": "cids(3)",
         "embed": Object {
-          "$type": "app.bsky.embed.images#presented",
-          "images": Array [
+          "$type": "app.bsky.embed.images#view",
+          "value": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
               "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -1623,8 +1623,8 @@ Array [
       },
       "cid": "cids(3)",
       "embed": Object {
-        "$type": "app.bsky.embed.images#presented",
-        "images": Array [
+        "$type": "app.bsky.embed.images#view",
+        "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
             "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -1738,9 +1738,9 @@ Array [
       },
       "cid": "cids(6)",
       "embed": Object {
-        "$type": "app.bsky.embed.record#presented",
-        "record": Object {
-          "$type": "app.bsky.embed.record#presentedRecord",
+        "$type": "app.bsky.embed.record#view",
+        "value": Object {
+          "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
             "did": "user(0)",
             "handle": "dan.test",
@@ -1858,8 +1858,8 @@ Array [
       },
       "cid": "cids(8)",
       "embed": Object {
-        "$type": "app.bsky.embed.images#presented",
-        "images": Array [
+        "$type": "app.bsky.embed.images#view",
+        "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
             "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -2061,8 +2061,8 @@ Array [
         },
         "cid": "cids(3)",
         "embed": Object {
-          "$type": "app.bsky.embed.images#presented",
-          "images": Array [
+          "$type": "app.bsky.embed.images#view",
+          "value": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
               "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -2237,9 +2237,9 @@ Array [
       },
       "cid": "cids(6)",
       "embed": Object {
-        "$type": "app.bsky.embed.record#presented",
-        "record": Object {
-          "$type": "app.bsky.embed.record#presentedRecord",
+        "$type": "app.bsky.embed.record#view",
+        "value": Object {
+          "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
             "did": "user(0)",
             "handle": "dan.test",
@@ -2330,8 +2330,8 @@ Array [
       },
       "cid": "cids(7)",
       "embed": Object {
-        "$type": "app.bsky.embed.images#presented",
-        "images": Array [
+        "$type": "app.bsky.embed.images#view",
+        "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
             "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -2462,8 +2462,8 @@ Array [
       },
       "cid": "cids(1)",
       "embed": Object {
-        "$type": "app.bsky.embed.images#presented",
-        "images": Array [
+        "$type": "app.bsky.embed.images#view",
+        "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
             "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -2763,8 +2763,8 @@ Array [
         },
         "cid": "cids(2)",
         "embed": Object {
-          "$type": "app.bsky.embed.images#presented",
-          "images": Array [
+          "$type": "app.bsky.embed.images#view",
+          "value": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
               "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -2844,9 +2844,9 @@ Array [
       },
       "cid": "cids(4)",
       "embed": Object {
-        "$type": "app.bsky.embed.record#presented",
-        "record": Object {
-          "$type": "app.bsky.embed.record#presentedRecord",
+        "$type": "app.bsky.embed.record#view",
+        "value": Object {
+          "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
             "did": "user(1)",
             "handle": "dan.test",

@@ -2804,7 +2804,6 @@ export const schemaDict = {
         properties: {
           uri: {
             type: 'string',
-            format: 'at-uri',
           },
           title: {
             type: 'string',
@@ -2821,23 +2820,22 @@ export const schemaDict = {
           },
         },
       },
-      presented: {
+      view: {
         type: 'object',
         required: ['external'],
         properties: {
-          external: {
+          value: {
             type: 'ref',
-            ref: 'lex:app.bsky.embed.external#presentedExternal',
+            ref: 'lex:app.bsky.embed.external#viewExternal',
           },
         },
       },
-      presentedExternal: {
+      viewExternal: {
         type: 'object',
         required: ['uri', 'title', 'description'],
         properties: {
           uri: {
             type: 'string',
-            format: 'at-uri',
           },
           title: {
             type: 'string',
@@ -2887,21 +2885,21 @@ export const schemaDict = {
           },
         },
       },
-      presented: {
+      view: {
         type: 'object',
-        required: ['images'],
+        required: ['value'],
         properties: {
-          images: {
+          value: {
             type: 'array',
             items: {
               type: 'ref',
-              ref: 'lex:app.bsky.embed.images#presentedImage',
+              ref: 'lex:app.bsky.embed.images#viewImage',
             },
             maxLength: 4,
           },
         },
       },
-      presentedImage: {
+      viewImage: {
         type: 'object',
         required: ['thumb', 'fullsize', 'alt'],
         properties: {
@@ -2934,20 +2932,20 @@ export const schemaDict = {
           },
         },
       },
-      presented: {
+      view: {
         type: 'object',
         required: ['record'],
         properties: {
-          record: {
+          value: {
             type: 'union',
             refs: [
-              'lex:app.bsky.embed.record#presentedRecord',
-              'lex:app.bsky.embed.record#presentedNotFound',
+              'lex:app.bsky.embed.record#viewRecord',
+              'lex:app.bsky.embed.record#viewNotFound',
             ],
           },
         },
       },
-      presentedRecord: {
+      viewRecord: {
         type: 'object',
         required: ['uri', 'cid', 'author', 'record'],
         properties: {
@@ -2968,7 +2966,7 @@ export const schemaDict = {
           },
         },
       },
-      presentedNotFound: {
+      viewNotFound: {
         type: 'object',
         required: ['uri'],
         properties: {
@@ -3004,9 +3002,9 @@ export const schemaDict = {
           embed: {
             type: 'union',
             refs: [
-              'lex:app.bsky.embed.images#presented',
-              'lex:app.bsky.embed.external#presented',
-              'lex:app.bsky.embed.record#presented',
+              'lex:app.bsky.embed.images#view',
+              'lex:app.bsky.embed.external#view',
+              'lex:app.bsky.embed.record#view',
             ],
           },
           replyCount: {

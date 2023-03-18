@@ -51,8 +51,8 @@ Array [
         },
         "cid": "cids(2)",
         "embed": Object {
-          "$type": "app.bsky.embed.images#presented",
-          "images": Array [
+          "$type": "app.bsky.embed.images#view",
+          "value": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
               "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -132,9 +132,9 @@ Array [
       },
       "cid": "cids(4)",
       "embed": Object {
-        "$type": "app.bsky.embed.record#presented",
-        "record": Object {
-          "$type": "app.bsky.embed.record#presentedRecord",
+        "$type": "app.bsky.embed.record#view",
+        "value": Object {
+          "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
             "did": "user(2)",
             "handle": "dan.test",
@@ -252,8 +252,8 @@ Array [
       },
       "cid": "cids(0)",
       "embed": Object {
-        "$type": "app.bsky.embed.images#presented",
-        "images": Array [
+        "$type": "app.bsky.embed.images#view",
+        "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
             "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -555,8 +555,8 @@ Array [
       },
       "cid": "cids(3)",
       "embed": Object {
-        "$type": "app.bsky.embed.images#presented",
-        "images": Array [
+        "$type": "app.bsky.embed.images#view",
+        "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
             "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -824,8 +824,8 @@ Array [
         },
         "cid": "cids(2)",
         "embed": Object {
-          "$type": "app.bsky.embed.images#presented",
-          "images": Array [
+          "$type": "app.bsky.embed.images#view",
+          "value": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
               "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -911,9 +911,9 @@ Array [
       },
       "cid": "cids(4)",
       "embed": Object {
-        "$type": "app.bsky.embed.record#presented",
-        "record": Object {
-          "$type": "app.bsky.embed.record#presentedRecord",
+        "$type": "app.bsky.embed.record#view",
+        "value": Object {
+          "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
             "did": "user(2)",
             "handle": "dan.test",
