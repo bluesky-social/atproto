@@ -67,6 +67,26 @@ export const lexPrimitive = z.union([
 ])
 export type LexPrimitive = z.infer<typeof lexPrimitive>
 
+// ipld types
+// =
+
+export const lexBytes = z.object({
+  type: z.literal('bytes'),
+  description: z.string().optional(),
+  maxLength: z.number().optional(),
+  minLength: z.number().optional(),
+})
+export type LexBytes = z.infer<typeof lexBytes>
+
+export const lexCidInternalRef = z.object({
+  type: z.literal('cid-internal-ref'),
+  description: z.string().optional(),
+})
+export type LexCidInternalRef = z.infer<typeof lexCidInternalRef>
+
+export const lexIpldType = z.union([lexBytes, lexCidInternalRef])
+export type LexIpldType = z.infer<typeof lexIpldType>
+
 // references
 // =
 
@@ -138,7 +158,7 @@ export type LexBlobVariant = z.infer<typeof lexBlobVariant>
 export const lexArray = z.object({
   type: z.literal('array'),
   description: z.string().optional(),
-  items: z.union([lexPrimitive, lexBlobVariant, lexRefVariant]),
+  items: z.union([lexPrimitive, lexIpldType, lexBlobVariant, lexRefVariant]),
   minLength: z.number().int().optional(),
   maxLength: z.number().int().optional(),
 })
@@ -163,7 +183,15 @@ export const lexObject = z.object({
   required: z.string().array().optional(),
   nullable: z.string().array().optional(),
   properties: z
-    .record(z.union([lexRefVariant, lexArray, lexBlobVariant, lexPrimitive]))
+    .record(
+      z.union([
+        lexRefVariant,
+        lexIpldType,
+        lexArray,
+        lexBlobVariant,
+        lexPrimitive,
+      ]),
+    )
     .optional(),
 })
 export type LexObject = z.infer<typeof lexObject>
@@ -264,6 +292,8 @@ export const lexUserType = z.union([
   lexNumber,
   lexInteger,
   lexString,
+  lexBytes,
+  lexCidInternalRef,
   lexUnknown,
 ])
 export type LexUserType = z.infer<typeof lexUserType>

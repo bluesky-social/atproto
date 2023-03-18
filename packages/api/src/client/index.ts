@@ -6,6 +6,7 @@ import {
   ServiceClient as XrpcServiceClient,
 } from '@atproto/xrpc'
 import { schemas } from './lexicons'
+import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
 import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
