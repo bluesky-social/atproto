@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const feedService = ctx.services.appView.feed(ctx.db)
 
-      let postsQb = ctx.db.db
+      const postsQb = ctx.db.db
         .with('vote_counts', (qb) =>
           qb
             .selectFrom('vote')
@@ -48,9 +48,10 @@ export default function (server: Server, ctx: AppContext) {
 
       const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
 
-      postsQb = paginate(postsQb, { limit, before, keyset })
+      let feedQb = ctx.db.db.selectFrom(postsQb.as('feed_items')).selectAll()
+      feedQb = paginate(feedQb, { limit, before, keyset })
 
-      const feedItems: FeedRow[] = await postsQb.execute()
+      const feedItems: FeedRow[] = await feedQb.execute()
       const feed = await composeFeed(feedService, feedItems, requester)
 
       return {
