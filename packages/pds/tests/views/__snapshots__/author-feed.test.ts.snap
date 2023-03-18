@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds author feed views fetches full author feeds for self (sorted, minimal myState). 1`] = `
+exports[`pds author feed views fetches full author feeds for self (sorted, minimal viewer state). 1`] = `
 Array [
   Object {
     "post": Object {
@@ -237,7 +237,7 @@ Array [
 ]
 `;
 
-exports[`pds author feed views fetches full author feeds for self (sorted, minimal myState). 2`] = `
+exports[`pds author feed views fetches full author feeds for self (sorted, minimal viewer state). 2`] = `
 Array [
   Object {
     "post": Object {
@@ -405,7 +405,7 @@ Array [
 ]
 `;
 
-exports[`pds author feed views fetches full author feeds for self (sorted, minimal myState). 3`] = `
+exports[`pds author feed views fetches full author feeds for self (sorted, minimal viewer state). 3`] = `
 Array [
   Object {
     "post": Object {
@@ -604,7 +604,7 @@ Array [
 ]
 `;
 
-exports[`pds author feed views fetches full author feeds for self (sorted, minimal myState). 4`] = `
+exports[`pds author feed views fetches full author feeds for self (sorted, minimal viewer state). 4`] = `
 Array [
   Object {
     "post": Object {

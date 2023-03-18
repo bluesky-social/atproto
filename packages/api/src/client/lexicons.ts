@@ -2381,14 +2381,7 @@ export const schemaDict = {
       },
       profileView: {
         type: 'object',
-        required: [
-          'did',
-          'handle',
-          'creator',
-          'followersCount',
-          'followsCount',
-          'postsCount',
-        ],
+        required: ['did', 'handle', 'creator'],
         properties: {
           did: {
             type: 'string',
@@ -2430,11 +2423,6 @@ export const schemaDict = {
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#viewerState',
-          },
-          myState: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#myState',
-            description: 'Deprecated',
           },
         },
       },
@@ -2483,19 +2471,6 @@ export const schemaDict = {
           followedBy: {
             type: 'string',
             format: 'at-uri',
-          },
-        },
-      },
-      myState: {
-        type: 'object',
-        description: 'Deprecated in favor of #viewerState',
-        properties: {
-          follow: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          muted: {
-            type: 'boolean',
           },
         },
       },
@@ -3011,17 +2986,7 @@ export const schemaDict = {
     defs: {
       postView: {
         type: 'object',
-        required: [
-          'uri',
-          'cid',
-          'author',
-          'record',
-          'replyCount',
-          'repostCount',
-          'likeCount',
-          'indexedAt',
-          'viewer',
-        ],
+        required: ['uri', 'cid', 'author', 'record', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
