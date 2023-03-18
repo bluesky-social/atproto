@@ -13,7 +13,6 @@
           "properties": {
             "identifier": {
               "type": "string",
-              "format": "at-identifier",
               "description": "Handle or other identifier supported by the server for the authenticating user."
             },
             "password": {"type": "string"}

@@ -583,7 +583,7 @@ describe('Record validation', () => {
         $type: 'com.example.atUri',
         atUri: 'http://not-atproto.com',
       }),
-    ).toThrow('Record/atUri must be an at-uri')
+    ).toThrow('Record/atUri must be a valid at-uri')
   })
 
   it('Applies did formatting constraint', () => {
@@ -601,13 +601,13 @@ describe('Record validation', () => {
         $type: 'com.example.did',
         did: 'bad did',
       }),
-    ).toThrow('Record/did must be a did')
+    ).toThrow('Record/did must be a valid did')
     expect(() =>
       lex.assertValidRecord('com.example.did', {
         $type: 'com.example.did',
         did: 'did:short',
       }),
-    ).toThrow('Record/did must be a did')
+    ).toThrow('Record/did must be a valid did')
   })
 
   it('Applies handle formatting constraint', () => {
@@ -625,13 +625,13 @@ describe('Record validation', () => {
         $type: 'com.example.handle',
         handle: 'bad handle',
       }),
-    ).toThrow('Record/handle must be a handle')
+    ).toThrow('Record/handle must be a valid handle')
     expect(() =>
       lex.assertValidRecord('com.example.handle', {
         $type: 'com.example.handle',
         handle: '-bad-.test',
       }),
-    ).toThrow('Record/handle must be a handle')
+    ).toThrow('Record/handle must be a valid handle')
   })
 
   it('Applies at-identifier formatting constraint', () => {
@@ -649,13 +649,13 @@ describe('Record validation', () => {
         $type: 'com.example.atIdentifier',
         atIdentifier: 'bad id',
       }),
-    ).toThrow('Record/atIdentifier must be a did or a handle')
+    ).toThrow('Record/atIdentifier must be a valid did or a handle')
     expect(() =>
       lex.assertValidRecord('com.example.atIdentifier', {
         $type: 'com.example.atIdentifier',
         atIdentifier: '-bad-.test',
       }),
-    ).toThrow('Record/atIdentifier must be a did or a handle')
+    ).toThrow('Record/atIdentifier must be a valid did or a handle')
   })
 
   it('Applies nsid formatting constraint', () => {
@@ -673,13 +673,13 @@ describe('Record validation', () => {
         $type: 'com.example.nsid',
         nsid: 'bad nsid',
       }),
-    ).toThrow('Record/nsid must be an nsid')
+    ).toThrow('Record/nsid must be a valid nsid')
     expect(() =>
       lex.assertValidRecord('com.example.nsid', {
         $type: 'com.example.nsid',
         nsid: 'com.bad-.foo',
       }),
-    ).toThrow('Record/nsid must be an nsid')
+    ).toThrow('Record/nsid must be a valid nsid')
   })
 
   it('Applies cid formatting constraint', () => {

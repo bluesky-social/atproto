@@ -10,7 +10,7 @@ import { CID } from 'multiformats/cid'
 export interface RepoOp {
   action: 'create' | 'update' | 'delete' | (string & {})
   path: string
-  cid: CID | null
+  cid: string | null
   [k: string]: unknown
 }
 

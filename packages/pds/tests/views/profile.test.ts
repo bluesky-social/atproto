@@ -67,7 +67,7 @@ describe('pds profile views', () => {
         actors: [
           alice,
           'bob.test',
-          'did:missing',
+          'did:example:missing',
           'carol.test',
           dan,
           'missing.test',

@@ -3,6 +3,7 @@ import { AtUri } from '@atproto/uri'
 import { cborDecode, wait } from '@atproto/common'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
 import { WriteOpAction, readCarWithRoot } from '@atproto/repo'
+import { CID } from 'multiformats/cid'
 import { PreparedWrite } from '../../repo'
 import { OutputSchema as Message } from '../../lexicon/types/com/atproto/sync/subscribeRepos'
 import { ids, lexicons } from '../../lexicon/lexicons'
@@ -162,14 +163,15 @@ async function getOps(msg: Message): Promise<PreparedWrite[]> {
       op.action === WriteOpAction.Update
     ) {
       assert(op.cid)
-      const record = car.blocks.get(op.cid)
+      const cid = CID.parse(op.cid)
+      const record = car.blocks.get(cid)
       assert(record)
       return {
         action:
           op.action === WriteOpAction.Create
             ? WriteOpAction.Create
             : WriteOpAction.Update,
-        cid: op.cid,
+        cid,
         record: cborDecode(record),
         blobs: [], // @TODO need to determine how the app-view provides URLs for processed blobs
         uri: AtUri.make(msg.repo, collection, rkey),

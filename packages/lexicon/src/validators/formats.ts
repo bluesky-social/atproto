@@ -38,7 +38,7 @@ export function atUri(path: string, value: string): ValidationResult {
   } catch {
     return {
       success: false,
-      error: new ValidationError(`${path} must be an at-uri`),
+      error: new ValidationError(`${path} must be a valid at-uri`),
     }
   }
   return { success: true, value }
@@ -50,7 +50,7 @@ export function did(path: string, value: string): ValidationResult {
   } catch {
     return {
       success: false,
-      error: new ValidationError(`${path} must be a did`),
+      error: new ValidationError(`${path} must be a valid did`),
     }
   }
   return { success: true, value }
@@ -62,7 +62,7 @@ export function handle(path: string, value: string): ValidationResult {
   } catch {
     return {
       success: false,
-      error: new ValidationError(`${path} must be a handle`),
+      error: new ValidationError(`${path} must be a valid handle`),
     }
   }
   return { success: true, value }
@@ -75,7 +75,7 @@ export function atIdentifier(path: string, value: string): ValidationResult {
     if (!isHandle.success) {
       return {
         success: false,
-        error: new ValidationError(`${path} must be a did or a handle`),
+        error: new ValidationError(`${path} must be a valid did or a handle`),
       }
     }
   }
@@ -88,7 +88,7 @@ export function nsid(path: string, value: string): ValidationResult {
   } catch {
     return {
       success: false,
-      error: new ValidationError(`${path} must be an nsid`),
+      error: new ValidationError(`${path} must be a valid nsid`),
     }
   }
   return { success: true, value }

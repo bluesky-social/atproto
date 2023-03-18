@@ -1678,7 +1678,6 @@ export const schemaDict = {
             properties: {
               identifier: {
                 type: 'string',
-                format: 'at-identifier',
                 description:
                   'Handle or other identifier supported by the server for the authenticating user.',
               },
@@ -2318,10 +2317,12 @@ export const schemaDict = {
                 format: 'did',
               },
               commit: {
-                type: 'cid-internal-ref',
+                type: 'string',
+                format: 'cid',
               },
               prev: {
-                type: 'cid-internal-ref',
+                type: 'string',
+                format: 'cid',
               },
               blocks: {
                 type: 'unknown',
@@ -2336,7 +2337,8 @@ export const schemaDict = {
               blobs: {
                 type: 'array',
                 items: {
-                  type: 'cid-internal-ref',
+                  type: 'string',
+                  format: 'cid',
                 },
               },
               time: {
@@ -2370,7 +2372,8 @@ export const schemaDict = {
             type: 'string',
           },
           cid: {
-            type: 'cid-internal-ref',
+            type: 'string',
+            format: 'cid',
           },
         },
       },
