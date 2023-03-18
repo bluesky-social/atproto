@@ -1,5 +1,5 @@
 import ApiAgent from '@atproto/api'
-import * as handleLib from '@atproto/handle'
+import * as ident from '@atproto/identifier'
 import { httpLogger as log } from '../../../../logger'
 
 export const resolveExternalHandle = async (
@@ -7,10 +7,10 @@ export const resolveExternalHandle = async (
   handle: string,
 ): Promise<string | undefined> => {
   try {
-    const did = await handleLib.resolveDns(handle)
+    const did = await ident.resolveDns(handle)
     return did
   } catch (err) {
-    if (err instanceof handleLib.NoHandleRecordError) {
+    if (err instanceof ident.NoHandleRecordError) {
       // no worries it's just not found
     } else {
       log.error({ err, handle }, 'could not resolve dns handle')

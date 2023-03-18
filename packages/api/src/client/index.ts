@@ -82,6 +82,8 @@ import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
+import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
@@ -159,6 +161,8 @@ export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
+export * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 
 export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
@@ -761,6 +765,8 @@ export class BskyNS {
   feed: FeedNS
   graph: GraphNS
   notification: NotificationNS
+  richtext: RichtextNS
+  unspecced: UnspeccedNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
@@ -769,6 +775,8 @@ export class BskyNS {
     this.feed = new FeedNS(service)
     this.graph = new GraphNS(service)
     this.notification = new NotificationNS(service)
+    this.richtext = new RichtextNS(service)
+    this.unspecced = new UnspeccedNS(service)
   }
 }
 
@@ -1321,6 +1329,33 @@ export class NotificationNS {
       .call('app.bsky.notification.updateSeen', opts?.qp, data, opts)
       .catch((e) => {
         throw AppBskyNotificationUpdateSeen.toKnownErr(e)
+      })
+  }
+}
+
+export class RichtextNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+}
+
+export class UnspeccedNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  getPopular(
+    params?: AppBskyUnspeccedGetPopular.QueryParams,
+    opts?: AppBskyUnspeccedGetPopular.CallOptions,
+  ): Promise<AppBskyUnspeccedGetPopular.Response> {
+    return this._service.xrpc
+      .call('app.bsky.unspecced.getPopular', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedGetPopular.toKnownErr(e)
       })
   }
 }

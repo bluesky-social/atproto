@@ -70,6 +70,7 @@ import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 
 export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
@@ -530,6 +531,8 @@ export class BskyNS {
   feed: FeedNS
   graph: GraphNS
   notification: NotificationNS
+  richtext: RichtextNS
+  unspecced: UnspeccedNS
 
   constructor(server: Server) {
     this._server = server
@@ -538,6 +541,8 @@ export class BskyNS {
     this.feed = new FeedNS(server)
     this.graph = new GraphNS(server)
     this.notification = new NotificationNS(server)
+    this.richtext = new RichtextNS(server)
+    this.unspecced = new UnspeccedNS(server)
   }
 }
 
@@ -712,6 +717,29 @@ export class NotificationNS {
     cfg: ConfigOf<AV, AppBskyNotificationUpdateSeen.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.notification.updateSeen' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class RichtextNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+}
+
+export class UnspeccedNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getPopular<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyUnspeccedGetPopular.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.unspecced.getPopular' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
