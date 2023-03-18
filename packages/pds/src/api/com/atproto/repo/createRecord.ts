@@ -1,3 +1,4 @@
+import { TID } from '@atproto/common'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import * as repo from '../../../../repo'
 import { Server } from '../../../../lexicon'
@@ -28,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
           did,
           collection,
           record,
-          rkey: rkey || repo.determineRkey(),
+          rkey: rkey || TID.nextStr(),
           validate,
         })
       } catch (err) {

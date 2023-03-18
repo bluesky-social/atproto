@@ -104,11 +104,6 @@ export const setCollectionName = (
   return record
 }
 
-export const determineRkey = (): string => {
-  // Intentionally ignoring collection
-  return TID.nextStr()
-}
-
 export const prepareCreate = async (opts: {
   did: string
   collection: string
@@ -121,7 +116,7 @@ export const prepareCreate = async (opts: {
   if (validate) {
     assertValidRecord(record)
   }
-  const rkey = opts.rkey || determineRkey()
+  const rkey = opts.rkey || TID.nextStr()
   return {
     action: WriteOpAction.Create,
     uri: AtUri.make(did, collection, rkey),
