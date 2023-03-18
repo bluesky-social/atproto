@@ -4,7 +4,7 @@
   "defs": {
     "postView": {
       "type": "object",
-      "required": ["uri", "cid", "author", "record", "replyCount", "repostCount", "likeCount", "indexedAt", "viewer"],
+      "required": ["uri", "cid", "author", "record", "indexedAt"],
       "properties": {
         "uri": {"type": "string"},
         "cid": {"type": "string"},

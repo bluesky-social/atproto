@@ -1,6 +1,6 @@
 import { Kysely, sql } from 'kysely'
 
-// Goal here is just to make displayName nullable. Need to recreate table due to dqlite limitations.
+// Goal here is just to make displayName nullable. Need to recreate table due to sqlite limitations.
 
 export async function up(db: Kysely<Schema>, dialect): Promise<void> {
   // Drop old indices
