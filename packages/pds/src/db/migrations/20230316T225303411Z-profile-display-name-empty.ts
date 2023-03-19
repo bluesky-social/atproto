@@ -1,4 +1,4 @@
-import { Kysely, sql } from 'kysely'
+import { Kysely } from 'kysely'
 
 export async function up(db: Kysely<Schema>, dialect): Promise<void> {
   if (dialect === 'pg') {
@@ -14,9 +14,6 @@ export async function up(db: Kysely<Schema>, dialect): Promise<void> {
 
   // Drop old indices
   await db.schema.dropIndex('profile_creator_idx').execute()
-  if (dialect === 'pg') {
-    await db.schema.dropIndex('profile_display_name_tgrm_idx').execute()
-  }
   // Create table w/ change
   await db.schema
     .createTable('profile_temp')
@@ -44,14 +41,6 @@ export async function up(db: Kysely<Schema>, dialect): Promise<void> {
     .on('profile')
     .column('creator')
     .execute()
-  if (dialect === 'pg') {
-    await db.schema // Supports user search
-      .createIndex(`profile_display_name_tgrm_idx`)
-      .on('profile')
-      .using('gist')
-      .expression(sql`"displayName" gist_trgm_ops`)
-      .execute()
-  }
 }
 
 export async function down(db: Kysely<Schema>, dialect): Promise<void> {
@@ -68,9 +57,6 @@ export async function down(db: Kysely<Schema>, dialect): Promise<void> {
 
   // Drop old indices
   await db.schema.dropIndex('profile_creator_idx').execute()
-  if (dialect === 'pg') {
-    await db.schema.dropIndex('profile_display_name_tgrm_idx').execute()
-  }
   // Create table w/ change
   await db.schema
     .createTable('profile_temp')
@@ -98,14 +84,6 @@ export async function down(db: Kysely<Schema>, dialect): Promise<void> {
     .on('profile')
     .column('creator')
     .execute()
-  if (dialect === 'pg') {
-    await db.schema // Supports user search
-      .createIndex(`profile_display_name_tgrm_idx`)
-      .on('profile')
-      .using('gist')
-      .expression(sql`"displayName" gist_trgm_ops`)
-      .execute()
-  }
 }
 
 type Schema = {
