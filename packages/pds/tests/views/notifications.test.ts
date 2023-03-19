@@ -92,6 +92,15 @@ describe('pds notification views', () => {
     expect(notifCountBob.data.count).toBe(4)
   })
 
+  it('generates notifications for quotes', async () => {
+    // Dan was quoted by alice
+    const notifsDan = await agent.api.app.bsky.notification.listNotifications(
+      {},
+      { headers: sc.getHeaders(sc.dids.dan) },
+    )
+    expect(forSnapshot(notifsDan.data)).toMatchSnapshot()
+  })
+
   it('fetches notifications without a last-seen', async () => {
     const notifRes = await agent.api.app.bsky.notification.listNotifications(
       {},
