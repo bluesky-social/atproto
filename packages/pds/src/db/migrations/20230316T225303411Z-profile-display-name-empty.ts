@@ -1,8 +1,17 @@
 import { Kysely, sql } from 'kysely'
 
-// Goal here is just to make displayName nullable. Need to recreate table due to sqlite limitations.
-
 export async function up(db: Kysely<Schema>, dialect): Promise<void> {
+  if (dialect === 'pg') {
+    await db.schema
+      .alterTable('profile')
+      .alterColumn('displayName')
+      .dropNotNull()
+      .execute()
+    return
+  }
+
+  // Sqlite version below: Need to recreate table due to sqlite limitations.
+
   // Drop old indices
   await db.schema.dropIndex('profile_creator_idx').execute()
   if (dialect === 'pg') {
@@ -46,6 +55,17 @@ export async function up(db: Kysely<Schema>, dialect): Promise<void> {
 }
 
 export async function down(db: Kysely<Schema>, dialect): Promise<void> {
+  if (dialect === 'pg') {
+    await db.schema
+      .alterTable('profile')
+      .alterColumn('displayName')
+      .setNotNull()
+      .execute()
+    return
+  }
+
+  // Sqlite version below: Need to recreate table due to sqlite limitations.
+
   // Drop old indices
   await db.schema.dropIndex('profile_creator_idx').execute()
   if (dialect === 'pg') {
