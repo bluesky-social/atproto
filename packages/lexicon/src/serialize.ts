@@ -17,7 +17,6 @@ export type LexValue =
   | BlobRef
   | Array<LexValue>
   | { [key: string]: LexValue }
-  | { [key: number]: LexValue }
 
 export type RepoRecord = Record<string, LexValue>
 

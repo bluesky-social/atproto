@@ -62,7 +62,6 @@ export type JsonValue =
   | unknown
   | Array<JsonValue>
   | { [key: string]: JsonValue }
-  | { [key: number]: JsonValue }
 
 export type IpldValue =
   | JsonValue
@@ -70,7 +69,6 @@ export type IpldValue =
   | Uint8Array
   | Array<IpldValue>
   | { [key: string]: IpldValue }
-  | { [key: number]: IpldValue }
 
 const dagJsonCid = z.object({
   '/': z.string(),

@@ -93,7 +93,7 @@ const insertFn = async (
       uri: external.uri,
       title: external.title,
       description: external.description,
-      thumbCid: external.thumb?.ref?.toString() || null,
+      thumbCid: external.thumb?.ref.toString() || null,
     }
     await db.insertInto('post_embed_external').values(embed).execute()
   } else if (isEmbedRecord(obj.embed)) {
