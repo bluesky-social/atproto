@@ -3,6 +3,7 @@ import * as common from '@atproto/common'
 import Database from '../../../db'
 import { countAll, notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
+import { ViewRecord } from '../../../lexicon/types/app/bsky/embed/record'
 import { isView as isViewImage } from '../../../lexicon/types/app/bsky/embed/images'
 import { PostView } from '../../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
@@ -190,6 +191,10 @@ export class FeedService {
     _depth = 0,
   ): Promise<FeedEmbeds> {
     if (uris.length < 1 || _depth > 1) {
+      // If a post has a record embed which contains additional embeds, the depth check
+      // above ensures that we don't recurse indefinitely into those additional embeds.
+      // In short, you receive up to two layers of embeds for the post: this allows us to
+      // handle the case that a post has a record embed, which in turn has images embedded in it.
       return {}
     }
     const imgPromise = this.db.db
@@ -276,6 +281,13 @@ export class FeedService {
           postViews,
           deepEmbedViews,
         )
+        let embeds: ViewRecord['embed'][] | undefined
+        if (_depth < 1) {
+          // Omit field entirely when too deep: e.g. don't include it on the embeds within a record embed.
+          // Otherwise list any embeds that appear within the record. A consumer may discover an embed
+          // within the raw record, then look within this array to find the presented view of it.
+          embeds = formatted?.embed ? [formatted?.embed] : []
+        }
         acc[cur.postUri] = {
           $type: 'app.bsky.embed.record#view',
           value: formatted
@@ -285,11 +297,7 @@ export class FeedService {
                 cid: formatted.cid,
                 author: formatted.author,
                 record: formatted.record,
-                embeds: formatted.embed
-                  ? [formatted.embed]
-                  : _depth < 1
-                  ? []
-                  : undefined,
+                embeds,
                 indexedAt: formatted.indexedAt,
               }
             : {
