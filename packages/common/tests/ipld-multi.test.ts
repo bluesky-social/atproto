@@ -4,7 +4,7 @@ import * as ui8 from 'uint8arrays'
 import { cborEncode } from '../src'
 
 describe('ipld decode multi', () => {
-  it('decodes concatenated dag-cobr messages', async () => {
+  it('decodes concatenated dag-cbor messages', async () => {
     const one = {
       a: 123,
       b: CID.parse(
