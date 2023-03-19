@@ -22,7 +22,7 @@ export function datetime(path: string, value: string): ValidationResult {
 }
 
 export function uri(path: string, value: string): ValidationResult {
-  const isUri = value.match(/^\w+:(?:\/\/)?[^\s\/][^\s]*$/) !== null
+  const isUri = value.match(/^\w+:(?:\/\/)?[^\s/][^\s]*$/) !== null
   if (!isUri) {
     return {
       success: false,
