@@ -1,3 +1,4 @@
+import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
@@ -11,9 +12,6 @@ import {
   PreparedCreate,
   PreparedUpdate,
 } from '../../../../repo'
-import SqlRepoStorage from '../../../../sql-repo-storage'
-import { CID } from 'multiformats/cid'
-import { WriteOpAction } from '@atproto/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
@@ -55,12 +53,19 @@ export default function (server: Server, ctx: AppContext) {
         const recordTxn = ctx.services.record(dbTxn)
 
         const current = await recordTxn.getRecord(uri, null, true)
-        const writeInfo = { did, collection, rkey, record, validate }
+        const writeInfo = {
+          did,
+          collection,
+          rkey,
+          record,
+          swapCid: swapRecordCid,
+          validate,
+        }
 
         let write: PreparedCreate | PreparedUpdate
         try {
           write = current
-            ? await repo.prepareUpdate({ ...writeInfo, swapCid: swapRecordCid })
+            ? await repo.prepareUpdate(writeInfo)
             : await repo.prepareCreate(writeInfo)
         } catch (err) {
           if (err instanceof InvalidRecordError) {
@@ -70,10 +75,6 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         try {
-          if (write.action === WriteOpAction.Create && swapRecordCid) {
-            // A compare-and-swap on a create will fail, since the record doesn't exist
-            throw new BadRecordSwapError(null)
-          }
           await repoTxn.processWrites(did, [write], now, swapCommitCid)
         } catch (err) {
           if (

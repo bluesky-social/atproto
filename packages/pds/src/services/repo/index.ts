@@ -87,13 +87,23 @@ export class RepoService {
     }
     const recordTxn = this.services.record(this.db)
     for (const write of writes) {
-      if ('swapCid' in write && write.swapCid !== undefined) {
-        const { uri, swapCid } = write
-        const record = await recordTxn.getRecord(uri, null, true)
-        const currRecord = record && CID.parse(record.cid)
-        if ((currRecord || swapCid) && !currRecord?.equals(swapCid)) {
-          throw new BadRecordSwapError(currRecord)
-        }
+      const { action, uri, swapCid } = write
+      if (swapCid === undefined) {
+        continue
+      }
+      const record = await recordTxn.getRecord(uri, null, true)
+      const currRecord = record && CID.parse(record.cid)
+      if (action === WriteOpAction.Create && swapCid !== null) {
+        throw new BadRecordSwapError(currRecord) // There should be no current record for a create
+      }
+      if (action === WriteOpAction.Update && swapCid === null) {
+        throw new BadRecordSwapError(currRecord) // There should be a current record for an update
+      }
+      if (action === WriteOpAction.Delete && swapCid === null) {
+        throw new BadRecordSwapError(currRecord) // There should be a current record for a delete
+      }
+      if ((currRecord || swapCid) && !currRecord?.equals(swapCid)) {
+        throw new BadRecordSwapError(currRecord)
       }
     }
     const writeOps = writes.map(writeToOp)

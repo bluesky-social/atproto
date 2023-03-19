@@ -30,6 +30,7 @@ export type PreparedCreate = {
   action: WriteOpAction.Create
   uri: AtUri
   cid: CID
+  swapCid?: CID | null
   record: Record<string, unknown>
   blobs: BlobRef[]
 }
@@ -46,7 +47,7 @@ export type PreparedUpdate = {
 export type PreparedDelete = {
   action: WriteOpAction.Delete
   uri: AtUri
-  swapCid?: CID
+  swapCid?: CID | null
 }
 
 export type PreparedWrite = PreparedCreate | PreparedUpdate | PreparedDelete
