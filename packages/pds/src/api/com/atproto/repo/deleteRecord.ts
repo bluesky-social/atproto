@@ -2,7 +2,8 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import * as repo from '../../../../repo'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import SqlRepoStorage from '../../../../sql-repo-storage'
+import { BadCommitSwapError, BadRecordSwapError } from '../../../../repo'
+import { CID } from 'multiformats/cid'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.deleteRecord({
@@ -15,28 +16,30 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const now = new Date().toISOString()
-      const write = repo.prepareDelete({ did, collection, rkey })
+      const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
+      const swapRecordCid = swapRecord ? CID.parse(swapRecord) : undefined
+
+      const write = repo.prepareDelete({
+        did,
+        collection,
+        rkey,
+        swapCid: swapRecordCid,
+      })
+
       await ctx.db.transaction(async (dbTxn) => {
         const repoTxn = ctx.services.repo(dbTxn)
-        const recordTxn = ctx.services.record(dbTxn)
-        const storage = new SqlRepoStorage(dbTxn, did, now)
-        const pinned = await storage.getPinnedAtHead()
-        if (swapCommit && swapCommit !== pinned.head?.toString()) {
-          throw new InvalidRequestError(
-            `Commit was at ${pinned.head?.toString() ?? 'null'}`,
-            'InvalidSwap',
-          )
-        }
-        if (swapRecord) {
-          const record = await recordTxn.getRecord(write.uri, null, true)
-          if (swapRecord !== record?.cid) {
-            throw new InvalidRequestError(
-              `Record was at ${record?.cid.toString() ?? 'null'}`,
-              'InvalidSwap',
-            )
+        try {
+          await repoTxn.processWrites(did, [write], now, swapCommitCid)
+        } catch (err) {
+          if (
+            err instanceof BadCommitSwapError ||
+            err instanceof BadRecordSwapError
+          ) {
+            throw new InvalidRequestError(err.message, 'InvalidSwap')
+          } else {
+            throw err
           }
         }
-        await repoTxn.processWrites(did, [write], now, pinned)
       })
     },
   })
