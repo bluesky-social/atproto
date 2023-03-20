@@ -7,11 +7,14 @@ Validation logic for AT identifiers - DIDs & Handles
 ```typescript
 import * as identifier from '@atproto/identifier'
 
-isValid('alice.test', ['.test']) // returns true
-ensureValid('alice.test', ['.test']) // returns void
+isValidHandle('alice.test') // returns true
+ensureValidHandle('alice.test') // returns void
 
-isValid('al!ce.test', ['.test']) // returns false
-ensureValid('al!ce.test', ['.test']) // throws
+isValidHandle('al!ce.test') // returns false
+ensureValidHandle('al!ce.test') // throws
+
+ensureValidDid('did:method:val') // returns void
+ensureValidDid(':did:method:val') // throws
 ```
 
 ## License
