@@ -1121,7 +1121,7 @@ export const schemaDict = {
         properties: {
           collection: {
             type: 'string',
-            const: 'nsid',
+            format: 'nsid',
           },
           rkey: {
             type: 'string',
@@ -1137,7 +1137,7 @@ export const schemaDict = {
         properties: {
           collection: {
             type: 'string',
-            const: 'nsid',
+            format: 'nsid',
           },
           rkey: {
             type: 'string',
@@ -1153,7 +1153,7 @@ export const schemaDict = {
         properties: {
           collection: {
             type: 'string',
-            const: 'nsid',
+            format: 'nsid',
           },
           rkey: {
             type: 'string',

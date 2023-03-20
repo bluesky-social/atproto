@@ -44,7 +44,7 @@ export function toKnownErr(e: any) {
 }
 
 export interface Create {
-  collection: 'nsid'
+  collection: string
   rkey?: string
   value: {}
   [k: string]: unknown
@@ -63,7 +63,7 @@ export function validateCreate(v: unknown): ValidationResult {
 }
 
 export interface Update {
-  collection: 'nsid'
+  collection: string
   rkey: string
   value: {}
   [k: string]: unknown
@@ -82,7 +82,7 @@ export function validateUpdate(v: unknown): ValidationResult {
 }
 
 export interface Delete {
-  collection: 'nsid'
+  collection: string
   rkey: string
   [k: string]: unknown
 }
