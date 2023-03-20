@@ -107,10 +107,6 @@ describe('Record validation', () => {
     number: 123.45,
     integer: 123,
     string: 'string',
-    datetime: new Date().toISOString(),
-    atUri: 'at://did:web:example.com/com.example.test/self',
-    did: 'did:web:example.com',
-    cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
     bytes: new Uint8Array([0, 1, 2, 3]),
     cidRef: CID.parse(
       'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
@@ -209,12 +205,6 @@ describe('Record validation', () => {
         string: {},
       }),
     ).toThrow('Record/string must be a string')
-    expect(() =>
-      lex.assertValidRecord('com.example.kitchenSink', {
-        ...passingSink,
-        datetime: 1234,
-      }),
-    ).toThrow('Record/datetime must be a string')
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
         ...passingSink,
@@ -562,6 +552,27 @@ describe('Record validation', () => {
     ).toThrow('Record/datetime must be an iso8601 formatted datetime')
   })
 
+  it('Applies uri formatting constraint', () => {
+    for (const uri of [
+      'https://example.com',
+      'https://example.com/with/path',
+      'https://example.com/with/path?and=query',
+      'at://bsky.social',
+      'did:example:test',
+    ]) {
+      lex.assertValidRecord('com.example.uri', {
+        $type: 'com.example.uri',
+        uri,
+      })
+    }
+    expect(() =>
+      lex.assertValidRecord('com.example.uri', {
+        $type: 'com.example.uri',
+        uri: 'not a uri',
+      }),
+    ).toThrow('Record/uri must be a uri')
+  })
+
   it('Applies at-uri formatting constraint', () => {
     lex.assertValidRecord('com.example.atUri', {
       $type: 'com.example.atUri',
@@ -572,7 +583,7 @@ describe('Record validation', () => {
         $type: 'com.example.atUri',
         atUri: 'http://not-atproto.com',
       }),
-    ).toThrow('Record/atUri must be an at-uri')
+    ).toThrow('Record/atUri must be a valid at-uri')
   })
 
   it('Applies did formatting constraint', () => {
@@ -590,13 +601,85 @@ describe('Record validation', () => {
         $type: 'com.example.did',
         did: 'bad did',
       }),
-    ).toThrow('Record/did must be a did')
+    ).toThrow('Record/did must be a valid did')
     expect(() =>
       lex.assertValidRecord('com.example.did', {
         $type: 'com.example.did',
         did: 'did:short',
       }),
-    ).toThrow('Record/did must be a did')
+    ).toThrow('Record/did must be a valid did')
+  })
+
+  it('Applies handle formatting constraint', () => {
+    lex.assertValidRecord('com.example.handle', {
+      $type: 'com.example.handle',
+      handle: 'test.bsky.social',
+    })
+    lex.assertValidRecord('com.example.handle', {
+      $type: 'com.example.handle',
+      handle: 'bsky.test',
+    })
+
+    expect(() =>
+      lex.assertValidRecord('com.example.handle', {
+        $type: 'com.example.handle',
+        handle: 'bad handle',
+      }),
+    ).toThrow('Record/handle must be a valid handle')
+    expect(() =>
+      lex.assertValidRecord('com.example.handle', {
+        $type: 'com.example.handle',
+        handle: '-bad-.test',
+      }),
+    ).toThrow('Record/handle must be a valid handle')
+  })
+
+  it('Applies at-identifier formatting constraint', () => {
+    lex.assertValidRecord('com.example.atIdentifier', {
+      $type: 'com.example.atIdentifier',
+      atIdentifier: 'bsky.test',
+    })
+    lex.assertValidRecord('com.example.atIdentifier', {
+      $type: 'com.example.atIdentifier',
+      atIdentifier: 'did:plc:12345678abcdefghijklmnop',
+    })
+
+    expect(() =>
+      lex.assertValidRecord('com.example.atIdentifier', {
+        $type: 'com.example.atIdentifier',
+        atIdentifier: 'bad id',
+      }),
+    ).toThrow('Record/atIdentifier must be a valid did or a handle')
+    expect(() =>
+      lex.assertValidRecord('com.example.atIdentifier', {
+        $type: 'com.example.atIdentifier',
+        atIdentifier: '-bad-.test',
+      }),
+    ).toThrow('Record/atIdentifier must be a valid did or a handle')
+  })
+
+  it('Applies nsid formatting constraint', () => {
+    lex.assertValidRecord('com.example.nsid', {
+      $type: 'com.example.nsid',
+      nsid: 'com.atproto.test',
+    })
+    lex.assertValidRecord('com.example.nsid', {
+      $type: 'com.example.nsid',
+      nsid: 'app.bsky.nested.test',
+    })
+
+    expect(() =>
+      lex.assertValidRecord('com.example.nsid', {
+        $type: 'com.example.nsid',
+        nsid: 'bad nsid',
+      }),
+    ).toThrow('Record/nsid must be a valid nsid')
+    expect(() =>
+      lex.assertValidRecord('com.example.nsid', {
+        $type: 'com.example.nsid',
+        nsid: 'com.bad-.foo',
+      }),
+    ).toThrow('Record/nsid must be a valid nsid')
   })
 
   it('Applies cid formatting constraint', () => {
@@ -609,7 +692,7 @@ describe('Record validation', () => {
         $type: 'com.example.cid',
         cid: 'abapsdofiuwrpoiasdfuaspdfoiu',
       }),
-    ).toThrow('Record/cid must be a CID string')
+    ).toThrow('Record/cid must be a cid string')
   })
 
   it('Applies bytes length constraints', () => {

@@ -17,11 +17,11 @@ export interface OutputSchema {
   seq: number
   event: 'repo_append' | 'rebase' | (string & {})
   repo: string
-  commit: string
-  prev: string | null
+  commit: CID
+  prev: CID | null
   blocks: {}
   ops: RepoOp[]
-  blobs: string[]
+  blobs: CID[]
   time: string
   [k: string]: unknown
 }
@@ -38,7 +38,7 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
 export interface RepoOp {
   action: 'create' | 'update' | 'delete' | (string & {})
   path: string
-  cid: string | null
+  cid: CID | null
   [k: string]: unknown
 }
 

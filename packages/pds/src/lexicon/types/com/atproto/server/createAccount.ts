@@ -45,6 +45,7 @@ export interface HandlerError {
     | 'InvalidPassword'
     | 'InvalidInviteCode'
     | 'HandleNotAvailable'
+    | 'UnsupportedDomain'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

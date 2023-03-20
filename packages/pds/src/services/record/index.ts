@@ -1,10 +1,7 @@
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri, ensureValidAtUri } from '@atproto/uri'
+import * as ident from '@atproto/identifier'
 import { WriteOpAction } from '@atproto/repo'
-import {
-  atUriFormat,
-  didFormat,
-} from '@atproto/lexicon/src/validators/primitives'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import { notSoftDeletedClause } from '../../db/util'
@@ -267,9 +264,14 @@ export class RecordService {
 function getBacklinks(uri: AtUri, record: unknown): Backlink[] {
   if (record?.['$type'] === ids.AppBskyGraphFollow) {
     const subject = record['subject']
-    const validLink =
-      typeof subject === 'string' && didFormat('subject', subject).success
-    if (!validLink) return []
+    if (typeof subject !== 'string') {
+      return []
+    }
+    try {
+      ident.ensureValidDid(subject)
+    } catch {
+      return []
+    }
     return [
       {
         uri: uri.toString(),
@@ -284,10 +286,14 @@ function getBacklinks(uri: AtUri, record: unknown): Backlink[] {
     record?.['$type'] === ids.AppBskyFeedRepost
   ) {
     const subject = record['subject']
-    const validLink =
-      typeof subject['uri'] === 'string' &&
-      atUriFormat('subject.uri', subject['uri']).success
-    if (!validLink) return []
+    if (typeof subject['uri'] !== 'string') {
+      return []
+    }
+    try {
+      ensureValidAtUri(subject['uri'])
+    } catch {
+      return []
+    }
     return [
       {
         uri: uri.toString(),

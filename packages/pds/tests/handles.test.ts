@@ -57,13 +57,6 @@ describe('handles', () => {
     expect(res.data.did).toBe(alice)
   })
 
-  it('does not resolve a root "available domain" for the service', async () => {
-    const promise = agent.api.com.atproto.identity.resolveHandle({
-      handle: 'test',
-    })
-    await expect(promise).rejects.toThrow('Unable to resolve handle')
-  })
-
   it('does not resolve a "handle" for the service', async () => {
     const promise = agent.api.com.atproto.identity.resolveHandle()
     await expect(promise).rejects.toThrow('Unable to resolve handle')
@@ -148,7 +141,7 @@ describe('handles', () => {
       )
     }
     await expect(tryHandle('did:john')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('john.bsky.io')).rejects.toThrow(
       'External handle did not resolve to DID',
@@ -158,28 +151,28 @@ describe('handles', () => {
       'Handle too long',
     )
     await expect(tryHandle('jo_hn.test')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo!hn.test')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo%hn.test')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo&hn.test')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo*hn.test')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo|hn.test')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo:hn.test')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo/hn.test')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('about.test')).rejects.toThrow('Reserved handle')
     await expect(tryHandle('atp.test')).rejects.toThrow('Reserved handle')
