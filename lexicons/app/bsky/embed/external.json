@@ -17,7 +17,7 @@
       "type": "object",
       "required":  ["uri", "title", "description"],
       "properties": {
-        "uri": {"type": "string", "format": "at-uri"},
+        "uri": {"type": "string"},
         "title": {"type": "string"},
         "description": {"type": "string"},
         "thumb": {
@@ -29,21 +29,21 @@
         }
       }
     },
-    "presented": {
+    "view": {
       "type": "object",
       "required": ["external"],
       "properties": {
-        "external": {
+        "value": {
           "type": "ref",
-          "ref": "#presentedExternal"
+          "ref": "#viewExternal"
         }
       }
     },
-    "presentedExternal": {
+    "viewExternal": {
       "type": "object",
       "required":  ["uri", "title", "description"],
       "properties": {
-        "uri": {"type": "string", "format": "at-uri"},
+        "uri": {"type": "string"},
         "title": {"type": "string"},
         "description": {"type": "string"},
         "thumb": {"type": "string"}

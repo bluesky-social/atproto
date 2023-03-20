@@ -71,6 +71,7 @@ export type NotificationReason =
   | 'follow'
   | 'mention'
   | 'reply'
+  | 'quote'
 
 export type DeleteNotifications = {
   type: 'delete_notifications'

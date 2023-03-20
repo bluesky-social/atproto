@@ -1,9 +1,9 @@
-import { Presented as PresentedImage } from '../../../lexicon/types/app/bsky/embed/images'
-import { Presented as PresentedExternal } from '../../../lexicon/types/app/bsky/embed/external'
-import { Presented as PresentedRecord } from '../../../lexicon/types/app/bsky/embed/record'
+import { View as ViewImage } from '../../../lexicon/types/app/bsky/embed/images'
+import { View as ViewExternal } from '../../../lexicon/types/app/bsky/embed/external'
+import { View as ViewRecord } from '../../../lexicon/types/app/bsky/embed/record'
 
 export type FeedEmbeds = {
-  [uri: string]: PresentedImage | PresentedExternal | PresentedRecord
+  [uri: string]: ViewImage | ViewExternal | ViewRecord
 }
 
 export type PostInfo = {

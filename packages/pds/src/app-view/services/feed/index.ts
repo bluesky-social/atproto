@@ -3,7 +3,8 @@ import * as common from '@atproto/common'
 import Database from '../../../db'
 import { countAll, notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
-import { isPresented as isPresentedImage } from '../../../lexicon/types/app/bsky/embed/images'
+import { ViewRecord } from '../../../lexicon/types/app/bsky/embed/record'
+import { isView as isViewImage } from '../../../lexicon/types/app/bsky/embed/images'
 import { PostView } from '../../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
 import { cborToLexRecord } from '@atproto/lexicon'
@@ -185,8 +186,16 @@ export class FeedService {
     )
   }
 
-  async embedsForPosts(uris: string[], requester: string): Promise<FeedEmbeds> {
-    if (uris.length < 1) {
+  async embedsForPosts(
+    uris: string[],
+    requester: string,
+    _depth = 0,
+  ): Promise<FeedEmbeds> {
+    if (uris.length < 1 || _depth > 1) {
+      // If a post has a record embed which contains additional embeds, the depth check
+      // above ensures that we don't recurse indefinitely into those additional embeds.
+      // In short, you receive up to two layers of embeds for the post: this allows us to
+      // handle the case that a post has a record embed, which in turn has images embedded in it.
       return {}
     }
     const imgPromise = this.db.db
@@ -212,7 +221,7 @@ export class FeedService {
       extPromise,
       recordPromise,
     ])
-    const [postViews, actorViews] = await Promise.all([
+    const [postViews, actorViews, deepEmbedViews] = await Promise.all([
       this.getPostViews(
         records.map((p) => p.uri),
         requester,
@@ -221,14 +230,19 @@ export class FeedService {
         records.map((p) => p.did),
         requester,
       ),
+      this.embedsForPosts(
+        records.map((p) => p.uri),
+        requester,
+        _depth + 1,
+      ),
     ])
     let embeds = images.reduce((acc, cur) => {
       const embed = (acc[cur.postUri] ??= {
-        $type: 'app.bsky.embed.images#presented',
-        images: [],
+        $type: 'app.bsky.embed.images#view',
+        value: [],
       })
-      if (!isPresentedImage(embed)) return acc
-      embed.images.push({
+      if (!isViewImage(embed)) return acc
+      embed.value.push({
         thumb: this.imgUriBuilder.getCommonSignedUri(
           'feed_thumbnail',
           cur.imageCid,
@@ -244,8 +258,8 @@ export class FeedService {
     embeds = externals.reduce((acc, cur) => {
       if (!acc[cur.postUri]) {
         acc[cur.postUri] = {
-          $type: 'app.bsky.embed.external#presented',
-          external: {
+          $type: 'app.bsky.embed.external#view',
+          value: {
             uri: cur.uri,
             title: cur.title,
             description: cur.description,
@@ -266,20 +280,29 @@ export class FeedService {
           cur.uri,
           actorViews,
           postViews,
-          {},
+          deepEmbedViews,
         )
+        let embeds: ViewRecord['embed'][] | undefined
+        if (_depth < 1) {
+          // Omit field entirely when too deep: e.g. don't include it on the embeds within a record embed.
+          // Otherwise list any embeds that appear within the record. A consumer may discover an embed
+          // within the raw record, then look within this array to find the presented view of it.
+          embeds = formatted?.embed ? [formatted?.embed] : []
+        }
         acc[cur.postUri] = {
-          $type: 'app.bsky.embed.record#presented',
-          record: formatted
+          $type: 'app.bsky.embed.record#view',
+          value: formatted
             ? {
-                $type: 'app.bsky.embed.record#presentedRecord',
+                $type: 'app.bsky.embed.record#viewRecord',
                 uri: formatted.uri,
                 cid: formatted.cid,
                 author: formatted.author,
                 record: formatted.record,
+                embeds,
+                indexedAt: formatted.indexedAt,
               }
             : {
-                $type: 'app.bsky.embed.record#presentedNotFound',
+                $type: 'app.bsky.embed.record#viewNotFound',
                 uri: cur.uri,
               },
         }

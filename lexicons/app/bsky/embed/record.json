@@ -10,24 +10,36 @@
         "record": {"type": "ref", "ref": "com.atproto.repo.strongRef"}
       }
     },
-    "presented": {
+    "view": {
       "type": "object",
       "required":  ["record"],
       "properties": {
-        "record": {"type": "union", "refs": ["#presentedRecord", "#presentedNotFound"]}
+        "value": {"type": "union", "refs": ["#viewRecord", "#viewNotFound"]}
       }
     },
-    "presentedRecord": {
+    "viewRecord": {
       "type": "object",
-      "required":  ["uri", "cid", "author", "record"],
+      "required":  ["uri", "cid", "author", "record", "indexedAt"],
       "properties": {
         "uri": {"type": "string", "format": "at-uri"},
         "cid": {"type": "string", "format": "cid"},
         "author": {"type": "ref", "ref": "app.bsky.actor.defs#withInfo"},
-        "record": {"type": "unknown"}
+        "record": {"type": "unknown"},
+        "embeds": {
+          "type": "array",
+          "items": {
+            "type": "union",
+            "refs": [
+              "app.bsky.embed.images#view",
+              "app.bsky.embed.external#view",
+              "app.bsky.embed.record#view"
+            ]
+          }
+        },
+        "indexedAt": {"type": "string", "format": "datetime"}
       }
     },
-    "presentedNotFound": {
+    "viewNotFound": {
       "type": "object",
       "required":  ["uri"],
       "properties": {

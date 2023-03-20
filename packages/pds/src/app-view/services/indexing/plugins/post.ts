@@ -143,38 +143,48 @@ const findDuplicate = async (): Promise<AtUri | null> => {
 
 const eventsForInsert = (obj: IndexedPost) => {
   const notifs: Message[] = []
-  for (const facet of obj.facets) {
-    if (facet.type === 'mention') {
-      if (facet.value !== obj.post.creator) {
-        notifs.push(
-          messages.createNotification({
-            userDid: facet.value,
-            author: obj.post.creator,
-            recordUri: obj.post.uri,
-            recordCid: obj.post.cid,
-            reason: 'mention',
-          }),
-        )
-      }
+  const notified = new Set([obj.post.creator])
+  const maybeNotify = (notif: messages.NotificationInfo) => {
+    if (!notified.has(notif.userDid)) {
+      notified.add(notif.userDid)
+      notifs.push(messages.createNotification(notif))
     }
   }
-  const notified = new Set([obj.post.creator])
+  for (const facet of obj.facets) {
+    if (facet.type === 'mention') {
+      maybeNotify({
+        userDid: facet.value,
+        reason: 'mention',
+        author: obj.post.creator,
+        recordUri: obj.post.uri,
+        recordCid: obj.post.cid,
+      })
+    }
+  }
+  if (obj.embed && 'embedUri' in obj.embed) {
+    const embedUri = new AtUri(obj.embed.embedUri)
+    if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+      maybeNotify({
+        userDid: embedUri.host,
+        reason: 'quote',
+        reasonSubject: embedUri.toString(),
+        author: obj.post.creator,
+        recordUri: obj.post.uri,
+        recordCid: obj.post.cid,
+      })
+    }
+  }
   const ancestors = [...obj.ancestors].sort((a, b) => a.depth - b.depth)
   for (const relation of ancestors) {
     const ancestorUri = new AtUri(relation.ancestorUri)
-    if (!notified.has(ancestorUri.host)) {
-      notified.add(ancestorUri.host)
-      notifs.push(
-        messages.createNotification({
-          userDid: ancestorUri.host,
-          author: obj.post.creator,
-          recordUri: obj.post.uri,
-          recordCid: obj.post.cid,
-          reason: 'reply',
-          reasonSubject: ancestorUri.toString(),
-        }),
-      )
-    }
+    maybeNotify({
+      userDid: ancestorUri.host,
+      reason: 'reply',
+      reasonSubject: ancestorUri.toString(),
+      author: obj.post.creator,
+      recordUri: obj.post.uri,
+      recordCid: obj.post.cid,
+    })
   }
   return notifs
 }
