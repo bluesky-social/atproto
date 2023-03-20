@@ -8,7 +8,7 @@
 //      - "%" is used only for "percent encoding" and must be followed by two hex characters (and thus can't end in "%")
 //      - query ("?") and fragment ("#") stuff is defined for "DID URIs", but not as part of identifier itself
 //      - "The current specification does not take a position on the maximum length of a DID"
-//   - in current atproto, only allowing did:plc and did:web. But not *forcing* this at lexico layer
+//   - in current atproto, only allowing did:plc and did:web. But not *forcing* this at lexicon layer
 //   - hard length limit of 8KBytes
 //   - not going to validate "percent encoding" here
 export const ensureValidDid = (did: string): void => {
