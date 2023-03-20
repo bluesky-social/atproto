@@ -4,6 +4,7 @@
 import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
+import { CID } from 'multiformats/cid'
 
 export interface Main {
   external: External
