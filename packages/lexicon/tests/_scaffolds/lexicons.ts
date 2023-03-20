@@ -16,10 +16,8 @@ export default [
             'number',
             'integer',
             'string',
-            'datetime',
-            'atUri',
-            'did',
-            'cid',
+            'bytes',
+            'cidRef',
           ],
           properties: {
             object: { type: 'ref', ref: '#object' },
@@ -28,10 +26,8 @@ export default [
             number: { type: 'number' },
             integer: { type: 'integer' },
             string: { type: 'string' },
-            datetime: { type: 'string', format: 'datetime' },
-            atUri: { type: 'string', format: 'at-uri' },
-            did: { type: 'string', format: 'did' },
-            cid: { type: 'string', format: 'cid' },
+            bytes: { type: 'bytes' },
+            cidRef: { type: 'cid-internal-ref' },
           },
         },
       },
@@ -145,7 +141,6 @@ export default [
             number: { type: 'number', default: 0 },
             integer: { type: 'integer', default: 0 },
             string: { type: 'string', default: '' },
-            datetime: { type: 'string', format: 'datetime' },
             object: { type: 'ref', ref: '#object' },
           },
         },
@@ -443,10 +438,22 @@ export default [
         record: {
           type: 'object',
           properties: {
-            datetime: {
-              type: 'string',
-              format: 'datetime',
-            },
+            datetime: { type: 'string', format: 'datetime' },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.uri',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            uri: { type: 'string', format: 'uri' },
           },
         },
       },
@@ -461,10 +468,7 @@ export default [
         record: {
           type: 'object',
           properties: {
-            atUri: {
-              type: 'string',
-              format: 'at-uri',
-            },
+            atUri: { type: 'string', format: 'at-uri' },
           },
         },
       },
@@ -479,10 +483,52 @@ export default [
         record: {
           type: 'object',
           properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-            },
+            did: { type: 'string', format: 'did' },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.handle',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            handle: { type: 'string', format: 'handle' },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.atIdentifier',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            atIdentifier: { type: 'string', format: 'at-identifier' },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.nsid',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            nsid: { type: 'string', format: 'nsid' },
           },
         },
       },
@@ -497,9 +543,25 @@ export default [
         record: {
           type: 'object',
           properties: {
-            cid: {
-              type: 'string',
-              format: 'cid',
+            cid: { type: 'string', format: 'cid' },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.byteLength',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            bytes: {
+              type: 'bytes',
+              minLength: 2,
+              maxLength: 4,
             },
           },
         },

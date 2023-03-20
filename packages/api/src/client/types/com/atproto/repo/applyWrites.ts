@@ -5,6 +5,7 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
+import { CID } from 'multiformats/cid'
 
 export interface QueryParams {}
 
@@ -43,7 +44,7 @@ export function toKnownErr(e: any) {
 }
 
 export interface Create {
-  collection: string
+  collection: 'nsid'
   rkey?: string
   value: {}
   [k: string]: unknown
@@ -62,7 +63,7 @@ export function validateCreate(v: unknown): ValidationResult {
 }
 
 export interface Update {
-  collection: string
+  collection: 'nsid'
   rkey: string
   value: {}
   [k: string]: unknown
@@ -81,7 +82,7 @@ export function validateUpdate(v: unknown): ValidationResult {
 }
 
 export interface Delete {
-  collection: string
+  collection: 'nsid'
   rkey: string
   [k: string]: unknown
 }

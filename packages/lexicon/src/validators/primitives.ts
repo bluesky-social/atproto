@@ -1,8 +1,7 @@
-import { AtUri } from '@atproto/uri'
 import * as common from '@atproto/common'
-import { isValidISODateString } from 'iso-datestring-validator'
 import { CID } from 'multiformats/cid'
 import { Lexicons } from '../lexicons'
+import * as formats from './formats'
 import {
   LexUserType,
   LexBoolean,
@@ -11,6 +10,7 @@ import {
   LexString,
   ValidationResult,
   ValidationError,
+  LexBytes,
 } from '../types'
 
 export function validate(
@@ -28,6 +28,10 @@ export function validate(
       return integer(lexicons, path, def, value)
     case 'string':
       return string(lexicons, path, def, value)
+    case 'bytes':
+      return bytes(lexicons, path, def, value)
+    case 'cid-internal-ref':
+      return cidInternalRef(lexicons, path, def, value)
     case 'unknown':
       return unknown(lexicons, path, def, value)
     default:
@@ -274,73 +278,82 @@ export function string(
   if (typeof def.format === 'string') {
     switch (def.format) {
       case 'datetime':
-        return datetimeFormat(path, value)
+        return formats.datetime(path, value)
+      case 'uri':
+        return formats.uri(path, value)
       case 'at-uri':
-        return atUriFormat(path, value)
+        return formats.atUri(path, value)
       case 'did':
-        return didFormat(path, value)
+        return formats.did(path, value)
+      case 'handle':
+        return formats.handle(path, value)
+      case 'at-identifier':
+        return formats.atIdentifier(path, value)
+      case 'nsid':
+        return formats.nsid(path, value)
       case 'cid':
-        return cidFormat(path, value)
+        return formats.cid(path, value)
     }
   }
 
   return { success: true, value }
 }
 
-export function datetimeFormat(path: string, value: string): ValidationResult {
-  try {
-    if (!isValidISODateString(value)) {
-      throw new Error()
-    }
-  } catch {
+export function bytes(
+  lexicons: Lexicons,
+  path: string,
+  def: LexUserType,
+  value: unknown,
+): ValidationResult {
+  def = def as LexBytes
+
+  if (!value || !(value instanceof Uint8Array)) {
     return {
       success: false,
-      error: new ValidationError(
-        `${path} must be an iso8601 formatted datetime`,
-      ),
+      error: new ValidationError(`${path} must be a byte array`),
     }
   }
+
+  // maxLength
+  if (typeof def.maxLength === 'number') {
+    if (value.byteLength > def.maxLength) {
+      return {
+        success: false,
+        error: new ValidationError(
+          `${path} must not be larger than ${def.maxLength} bytes`,
+        ),
+      }
+    }
+  }
+
+  // minLength
+  if (typeof def.minLength === 'number') {
+    if (value.byteLength < def.minLength) {
+      return {
+        success: false,
+        error: new ValidationError(
+          `${path} must not be smaller than ${def.minLength} bytes`,
+        ),
+      }
+    }
+  }
+
   return { success: true, value }
 }
 
-export function atUriFormat(path: string, value: string): ValidationResult {
-  try {
-    if (!value.startsWith('at://')) {
-      throw new Error()
-    }
-    const uri = new AtUri(value)
-    if (!uri.host) {
-      throw new Error()
-    }
-  } catch {
+export function cidInternalRef(
+  lexicons: Lexicons,
+  path: string,
+  def: LexUserType,
+  value: unknown,
+): ValidationResult {
+  if (CID.asCID(value) === null) {
     return {
       success: false,
-      error: new ValidationError(`${path} must be an at-uri`),
+      error: new ValidationError(`${path} must be a CID`),
     }
   }
-  return { success: true, value }
-}
 
-export function didFormat(path: string, value: string): ValidationResult {
-  const parts = value.split(':')
-  if (parts[0] !== 'did' || !parts[1] || !parts[2]) {
-    return {
-      success: false,
-      error: new ValidationError(`${path} must be a did`),
-    }
-  }
-  return { success: true, value }
-}
-
-export function cidFormat(path: string, value: string): ValidationResult {
-  try {
-    CID.parse(value)
-  } catch {
-    return {
-      success: false,
-      error: new ValidationError(`${path} must be a cid`),
-    }
-  }
   return { success: true, value }
 }
 

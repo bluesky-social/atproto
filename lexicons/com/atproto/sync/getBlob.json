@@ -9,8 +9,8 @@
         "type": "params",
         "required": ["did", "cid"],
         "properties": {
-          "did": {"type": "string", "description": "The DID of the repo."},
-          "cid": {"type": "string", "description": "The CID of the blob to fetch"}
+          "did": {"type": "string", "format": "did", "description": "The DID of the repo."},
+          "cid": {"type": "string", "format": "cid", "description": "The CID of the blob to fetch"}
         }
       },
       "output": {

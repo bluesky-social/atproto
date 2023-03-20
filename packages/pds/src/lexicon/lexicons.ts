@@ -280,6 +280,7 @@ export const schemaDict = {
           },
           handle: {
             type: 'string',
+            format: 'handle',
           },
           email: {
             type: 'string',
@@ -316,6 +317,7 @@ export const schemaDict = {
           },
           handle: {
             type: 'string',
+            format: 'handle',
           },
           email: {
             type: 'string',
@@ -926,6 +928,7 @@ export const schemaDict = {
           properties: {
             handle: {
               type: 'string',
+              format: 'handle',
               description:
                 "The handle to resolve. If not supplied, will resolve the host's own handle.",
             },
@@ -962,6 +965,7 @@ export const schemaDict = {
             properties: {
               handle: {
                 type: 'string',
+                format: 'handle',
               },
             },
           },
@@ -1117,6 +1121,7 @@ export const schemaDict = {
         properties: {
           collection: {
             type: 'string',
+            const: 'nsid',
           },
           rkey: {
             type: 'string',
@@ -1132,6 +1137,7 @@ export const schemaDict = {
         properties: {
           collection: {
             type: 'string',
+            const: 'nsid',
           },
           rkey: {
             type: 'string',
@@ -1147,6 +1153,7 @@ export const schemaDict = {
         properties: {
           collection: {
             type: 'string',
+            const: 'nsid',
           },
           rkey: {
             type: 'string',
@@ -1175,6 +1182,7 @@ export const schemaDict = {
               },
               collection: {
                 type: 'string',
+                format: 'nsid',
                 description: 'The NSID of the record collection.',
               },
               validate: {
@@ -1240,6 +1248,7 @@ export const schemaDict = {
               },
               collection: {
                 type: 'string',
+                format: 'nsid',
                 description: 'The NSID of the record collection.',
               },
               rkey: {
@@ -1283,6 +1292,7 @@ export const schemaDict = {
           properties: {
             repo: {
               type: 'string',
+              format: 'at-identifier',
               description: 'The handle or DID of the repo.',
             },
           },
@@ -1301,6 +1311,7 @@ export const schemaDict = {
             properties: {
               handle: {
                 type: 'string',
+                format: 'handle',
               },
               did: {
                 type: 'string',
@@ -1313,6 +1324,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'string',
+                  format: 'nsid',
                 },
               },
               handleIsCorrect: {
@@ -1337,10 +1349,12 @@ export const schemaDict = {
           properties: {
             repo: {
               type: 'string',
+              format: 'at-identifier',
               description: 'The handle or DID of the repo.',
             },
             collection: {
               type: 'string',
+              format: 'nsid',
               description: 'The NSID of the record collection.',
             },
             rkey: {
@@ -1391,10 +1405,12 @@ export const schemaDict = {
           properties: {
             repo: {
               type: 'string',
+              format: 'at-identifier',
               description: 'The handle or DID of the repo.',
             },
             collection: {
               type: 'string',
+              format: 'nsid',
               description: 'The NSID of the record type.',
             },
             limit: {
@@ -1480,6 +1496,7 @@ export const schemaDict = {
               },
               collection: {
                 type: 'string',
+                format: 'nsid',
                 description: 'The NSID of the record collection.',
               },
               rkey: {
@@ -1601,6 +1618,7 @@ export const schemaDict = {
               },
               handle: {
                 type: 'string',
+                format: 'handle',
               },
               inviteCode: {
                 type: 'string',
@@ -1628,6 +1646,7 @@ export const schemaDict = {
               },
               handle: {
                 type: 'string',
+                format: 'handle',
               },
               did: {
                 type: 'string',
@@ -1648,6 +1667,9 @@ export const schemaDict = {
           },
           {
             name: 'HandleNotAvailable',
+          },
+          {
+            name: 'UnsupportedDomain',
           },
         ],
       },
@@ -1725,6 +1747,7 @@ export const schemaDict = {
               },
               handle: {
                 type: 'string',
+                format: 'handle',
               },
               did: {
                 type: 'string',
@@ -1847,6 +1870,7 @@ export const schemaDict = {
             properties: {
               handle: {
                 type: 'string',
+                format: 'handle',
               },
               did: {
                 type: 'string',
@@ -1879,6 +1903,7 @@ export const schemaDict = {
               },
               handle: {
                 type: 'string',
+                format: 'handle',
               },
               did: {
                 type: 'string',
@@ -1973,10 +1998,12 @@ export const schemaDict = {
           properties: {
             did: {
               type: 'string',
+              format: 'did',
               description: 'The DID of the repo.',
             },
             cid: {
               type: 'string',
+              format: 'cid',
               description: 'The CID of the blob to fetch',
             },
           },
@@ -2148,6 +2175,7 @@ export const schemaDict = {
             },
             collection: {
               type: 'string',
+              format: 'nsid',
             },
             rkey: {
               type: 'string',
@@ -2214,14 +2242,17 @@ export const schemaDict = {
           properties: {
             did: {
               type: 'string',
+              format: 'did',
               description: 'The DID of the repo.',
             },
             latest: {
               type: 'string',
+              format: 'cid',
               description: 'The most recent commit',
             },
             earliest: {
               type: 'string',
+              format: 'cid',
               description: 'The earliest commit to start from',
             },
           },
@@ -2236,6 +2267,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'string',
+                  format: 'cid',
                 },
               },
             },
@@ -2331,12 +2363,10 @@ export const schemaDict = {
                 format: 'did',
               },
               commit: {
-                type: 'string',
-                format: 'cid',
+                type: 'cid-internal-ref',
               },
               prev: {
-                type: 'string',
-                format: 'cid',
+                type: 'cid-internal-ref',
               },
               blocks: {
                 type: 'unknown',
@@ -2351,8 +2381,7 @@ export const schemaDict = {
               blobs: {
                 type: 'array',
                 items: {
-                  type: 'string',
-                  format: 'cid',
+                  type: 'cid-internal-ref',
                 },
               },
               time: {
@@ -2386,8 +2415,7 @@ export const schemaDict = {
             type: 'string',
           },
           cid: {
-            type: 'string',
-            format: 'cid',
+            type: 'cid-internal-ref',
           },
         },
       },
@@ -2408,6 +2436,7 @@ export const schemaDict = {
           },
           handle: {
             type: 'string',
+            format: 'handle',
           },
           displayName: {
             type: 'string',
@@ -2432,6 +2461,7 @@ export const schemaDict = {
           },
           handle: {
             type: 'string',
+            format: 'handle',
           },
           displayName: {
             type: 'string',
@@ -2458,6 +2488,7 @@ export const schemaDict = {
           },
           creator: {
             type: 'string',
+            format: 'did',
           },
           indexedAt: {
             type: 'string',
@@ -2479,6 +2510,7 @@ export const schemaDict = {
           },
           handle: {
             type: 'string',
+            format: 'handle',
           },
           displayName: {
             type: 'string',
@@ -2531,6 +2563,7 @@ export const schemaDict = {
           properties: {
             actor: {
               type: 'string',
+              format: 'at-identifier',
             },
           },
         },
@@ -2558,6 +2591,7 @@ export const schemaDict = {
               type: 'array',
               items: {
                 type: 'string',
+                format: 'at-identifier',
               },
               maxLength: 25,
             },
@@ -2635,7 +2669,6 @@ export const schemaDict = {
         key: 'literal:self',
         record: {
           type: 'object',
-          required: [],
           properties: {
             displayName: {
               type: 'string',
@@ -2772,7 +2805,7 @@ export const schemaDict = {
         properties: {
           uri: {
             type: 'string',
-            format: 'at-uri',
+            format: 'uri',
           },
           title: {
             type: 'string',
@@ -2789,23 +2822,23 @@ export const schemaDict = {
           },
         },
       },
-      presented: {
+      view: {
         type: 'object',
         required: ['external'],
         properties: {
-          external: {
+          value: {
             type: 'ref',
-            ref: 'lex:app.bsky.embed.external#presentedExternal',
+            ref: 'lex:app.bsky.embed.external#viewExternal',
           },
         },
       },
-      presentedExternal: {
+      viewExternal: {
         type: 'object',
         required: ['uri', 'title', 'description'],
         properties: {
           uri: {
             type: 'string',
-            format: 'at-uri',
+            format: 'uri',
           },
           title: {
             type: 'string',
@@ -2855,21 +2888,21 @@ export const schemaDict = {
           },
         },
       },
-      presented: {
+      view: {
         type: 'object',
-        required: ['images'],
+        required: ['value'],
         properties: {
-          images: {
+          value: {
             type: 'array',
             items: {
               type: 'ref',
-              ref: 'lex:app.bsky.embed.images#presentedImage',
+              ref: 'lex:app.bsky.embed.images#viewImage',
             },
             maxLength: 4,
           },
         },
       },
-      presentedImage: {
+      viewImage: {
         type: 'object',
         required: ['thumb', 'fullsize', 'alt'],
         properties: {
@@ -2902,22 +2935,22 @@ export const schemaDict = {
           },
         },
       },
-      presented: {
+      view: {
         type: 'object',
         required: ['record'],
         properties: {
-          record: {
+          value: {
             type: 'union',
             refs: [
-              'lex:app.bsky.embed.record#presentedRecord',
-              'lex:app.bsky.embed.record#presentedNotFound',
+              'lex:app.bsky.embed.record#viewRecord',
+              'lex:app.bsky.embed.record#viewNotFound',
             ],
           },
         },
       },
-      presentedRecord: {
+      viewRecord: {
         type: 'object',
-        required: ['uri', 'cid', 'author', 'record'],
+        required: ['uri', 'cid', 'author', 'record', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
@@ -2934,9 +2967,24 @@ export const schemaDict = {
           record: {
             type: 'unknown',
           },
+          embeds: {
+            type: 'array',
+            items: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.embed.images#view',
+                'lex:app.bsky.embed.external#view',
+                'lex:app.bsky.embed.record#view',
+              ],
+            },
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
         },
       },
-      presentedNotFound: {
+      viewNotFound: {
         type: 'object',
         required: ['uri'],
         properties: {
@@ -2958,9 +3006,11 @@ export const schemaDict = {
         properties: {
           uri: {
             type: 'string',
+            format: 'at-uri',
           },
           cid: {
             type: 'string',
+            format: 'cid',
           },
           author: {
             type: 'ref',
@@ -2972,9 +3022,9 @@ export const schemaDict = {
           embed: {
             type: 'union',
             refs: [
-              'lex:app.bsky.embed.images#presented',
-              'lex:app.bsky.embed.external#presented',
-              'lex:app.bsky.embed.record#presented',
+              'lex:app.bsky.embed.images#view',
+              'lex:app.bsky.embed.external#view',
+              'lex:app.bsky.embed.record#view',
             ],
           },
           replyCount: {
@@ -3111,6 +3161,7 @@ export const schemaDict = {
           properties: {
             actor: {
               type: 'string',
+              format: 'at-identifier',
             },
             limit: {
               type: 'integer',
@@ -3577,6 +3628,7 @@ export const schemaDict = {
           properties: {
             actor: {
               type: 'string',
+              format: 'at-identifier',
             },
             limit: {
               type: 'integer',
@@ -3628,6 +3680,7 @@ export const schemaDict = {
           properties: {
             actor: {
               type: 'string',
+              format: 'at-identifier',
             },
             limit: {
               type: 'integer',
@@ -3724,6 +3777,7 @@ export const schemaDict = {
             properties: {
               actor: {
                 type: 'string',
+                format: 'at-identifier',
               },
             },
           },
@@ -3746,6 +3800,7 @@ export const schemaDict = {
             properties: {
               actor: {
                 type: 'string',
+                format: 'at-identifier',
               },
             },
           },
@@ -3841,8 +3896,15 @@ export const schemaDict = {
           reason: {
             type: 'string',
             description:
-              "Expected values are 'like', 'repost', 'follow', 'mention' and 'reply'.",
-            knownValues: ['like', 'repost', 'follow', 'mention', 'reply'],
+              "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', and 'quote'.",
+            knownValues: [
+              'like',
+              'repost',
+              'follow',
+              'mention',
+              'reply',
+              'quote',
+            ],
           },
           reasonSubject: {
             type: 'string',
@@ -3924,6 +3986,7 @@ export const schemaDict = {
         properties: {
           uri: {
             type: 'string',
+            format: 'uri',
           },
         },
       },

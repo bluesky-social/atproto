@@ -8,7 +8,7 @@
         "type": "params",
         "required": ["actor"],
         "properties": {
-          "actor": {"type": "string"}
+          "actor": {"type": "string", "format": "at-identifier"}
         }
       },
       "output": {

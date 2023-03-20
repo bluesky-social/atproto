@@ -5,6 +5,7 @@ import { Headers, XRPCError } from '@atproto/xrpc'
 import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
+import { CID } from 'multiformats/cid'
 import * as AppBskyActorDefs from '../actor/defs'
 
 export interface QueryParams {
@@ -40,8 +41,15 @@ export interface Notification {
   uri: string
   cid: string
   author: AppBskyActorDefs.WithInfo
-  /** Expected values are 'like', 'repost', 'follow', 'mention' and 'reply'. */
-  reason: 'like' | 'repost' | 'follow' | 'mention' | 'reply' | (string & {})
+  /** Expected values are 'like', 'repost', 'follow', 'mention', 'reply', and 'quote'. */
+  reason:
+    | 'like'
+    | 'repost'
+    | 'follow'
+    | 'mention'
+    | 'reply'
+    | 'quote'
+    | (string & {})
   reasonSubject?: string
   record: {}
   isRead: boolean

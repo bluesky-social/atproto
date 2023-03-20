@@ -1,6 +1,5 @@
-import * as cborx from 'cbor-x'
 import * as uint8arrays from 'uint8arrays'
-import { cborEncode } from '@atproto/common'
+import { cborEncode, cborDecodeMulti } from '@atproto/common'
 import {
   frameHeader,
   FrameHeader,
@@ -33,19 +32,15 @@ export abstract class Frame {
     return this.op === FrameType.Error
   }
   static fromBytes(bytes: Uint8Array) {
-    let i = 0
-    let header: unknown
+    const decoded = cborDecodeMulti(bytes)
+    if (decoded.length > 2) {
+      throw new Error('Too many CBOR data items in frame')
+    }
+    const header = decoded[0]
     let body: unknown = kUnset
-    cborx.decodeMultiple(bytes, (item) => {
-      if (i === 0) {
-        header = item
-      } else if (i === 1) {
-        body = item
-      } else {
-        throw new Error('Too many CBOR data items in frame')
-      }
-      i++
-    })
+    if (decoded.length > 1) {
+      body = decoded[1]
+    }
     const parsedHeader = frameHeader.safeParse(header)
     if (!parsedHeader.success) {
       throw new Error(`Invalid frame header: ${parsedHeader.error.message}`)

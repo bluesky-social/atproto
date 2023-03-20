@@ -1,5 +1,4 @@
 import assert from 'node:assert'
-import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { cborDecode, wait } from '@atproto/common'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
@@ -163,7 +162,7 @@ async function getOps(msg: Message): Promise<PreparedWrite[]> {
       op.action === WriteOpAction.Update
     ) {
       assert(op.cid)
-      const cid = CID.parse(op.cid)
+      const cid = op.cid
       const record = car.blocks.get(cid)
       assert(record)
       return {

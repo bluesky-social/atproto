@@ -8,7 +8,11 @@ import {
   LexXrpcQuery,
   LexXrpcSubscription,
 } from '@atproto/lexicon'
-import { forwardStreamErrors, MaxSizeChecker } from '@atproto/common'
+import {
+  forwardStreamErrors,
+  jsonToIpldValue,
+  MaxSizeChecker,
+} from '@atproto/common'
 import {
   UndecodedParams,
   Params,
@@ -124,7 +128,8 @@ export function validateInput(
   // if input schema, validate
   if (def.input?.schema) {
     try {
-      req.body = lexicons.assertValidXrpcInput(nsid, req.body)
+      const ipld = req.body ? jsonToIpldValue(req.body) : req.body
+      req.body = lexicons.assertValidXrpcInput(nsid, ipld)
     } catch (e) {
       throw new InvalidRequestError(e instanceof Error ? e.message : String(e))
     }
