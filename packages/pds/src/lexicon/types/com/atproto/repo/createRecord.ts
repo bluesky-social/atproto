@@ -19,6 +19,8 @@ export interface InputSchema {
   validate: boolean
   /** The record to create. */
   record: {}
+  /** Compare and swap with the previous commit by cid. */
+  swapCommit?: string
   [k: string]: unknown
 }
 
@@ -41,6 +43,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'InvalidSwap'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

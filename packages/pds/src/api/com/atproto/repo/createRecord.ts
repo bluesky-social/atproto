@@ -1,7 +1,9 @@
+import { CID } from 'multiformats/cid'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import * as repo from '../../../../repo'
 import { Server } from '../../../../lexicon'
 import {
+  BadCommitSwapError,
   InvalidRecordError,
   PreparedCreate,
   prepareDelete,
@@ -14,9 +16,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.createRecord({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ input, auth }) => {
-      const { did, collection, record } = input.body
-      const validate =
-        typeof input.body.validate === 'boolean' ? input.body.validate : true
+      const { did, collection, record, swapCommit, validate } = input.body
       const requester = auth.credentials.did
       if (did !== requester) {
         throw new AuthRequiredError()
@@ -28,9 +28,10 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // determine key type. if undefined, repo assigns a TID
-      const rkey = repo.determineRkey(collection)
-
       const now = new Date().toISOString()
+      const rkey = repo.determineRkey(collection)
+      const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
+
       let write: PreparedCreate
       try {
         write = await repo.prepareCreate({
@@ -52,7 +53,20 @@ export default function (server: Server, ctx: AppContext) {
         const backlinkDeletions = validate
           ? await getBacklinkDeletions(dbTxn, ctx, write)
           : []
-        await repoTxn.processWrites(did, [...backlinkDeletions, write], now)
+        try {
+          await repoTxn.processWrites(
+            did,
+            [...backlinkDeletions, write],
+            now,
+            swapCommitCid,
+          )
+        } catch (err) {
+          if (err instanceof BadCommitSwapError) {
+            throw new InvalidRequestError(err.message, 'InvalidSwap')
+          } else {
+            throw err
+          }
+        }
       })
 
       return {

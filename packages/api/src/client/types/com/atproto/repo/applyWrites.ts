@@ -15,6 +15,7 @@ export interface InputSchema {
   /** Validate the records? */
   validate?: boolean
   writes: (Create | Update | Delete)[]
+  swapCommit?: string
   [k: string]: unknown
 }
 
@@ -29,15 +30,21 @@ export interface Response {
   headers: Headers
 }
 
+export class InvalidSwapError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
+    if (e.error === 'InvalidSwap') return new InvalidSwapError(e)
   }
   return e
 }
 
 export interface Create {
-  action: 'create'
-  collection: 'nsid'
+  collection: string
   rkey?: string
   value: {}
   [k: string]: unknown
@@ -56,8 +63,7 @@ export function validateCreate(v: unknown): ValidationResult {
 }
 
 export interface Update {
-  action: 'update'
-  collection: 'nsid'
+  collection: string
   rkey: string
   value: {}
   [k: string]: unknown
@@ -76,8 +82,7 @@ export function validateUpdate(v: unknown): ValidationResult {
 }
 
 export interface Delete {
-  action: 'delete'
-  collection: 'nsid'
+  collection: string
   rkey: string
   [k: string]: unknown
 }

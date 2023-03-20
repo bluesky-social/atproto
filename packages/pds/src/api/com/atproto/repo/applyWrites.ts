@@ -1,16 +1,25 @@
+import { CID } from 'multiformats/cid'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import * as repo from '../../../../repo'
 import { Server } from '../../../../lexicon'
-import { InvalidRecordError, PreparedWrite } from '../../../../repo'
+import {
+  isCreate,
+  isUpdate,
+  isDelete,
+} from '../../../../lexicon/types/com/atproto/repo/applyWrites'
+import {
+  BadCommitSwapError,
+  InvalidRecordError,
+  PreparedWrite,
+} from '../../../../repo'
 import AppContext from '../../../../context'
-import { WriteOpAction } from '@atproto/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.applyWrites({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ input, auth }) => {
       const tx = input.body
-      const { did, validate } = tx
+      const { did, validate, swapCommit } = tx
       const requester = auth.credentials.did
       if (did !== requester) {
         throw new AuthRequiredError()
@@ -21,9 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const hasUpdate = tx.writes.some(
-        (write) => write.action === WriteOpAction.Update,
-      )
+      const hasUpdate = tx.writes.some(isUpdate)
       if (hasUpdate) {
         throw new InvalidRequestError(`Updates are not yet supported.`)
       }
@@ -32,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
       try {
         writes = await Promise.all(
           tx.writes.map((write) => {
-            if (write.action === WriteOpAction.Create) {
+            if (isCreate(write)) {
               return repo.prepareCreate({
                 did,
                 collection: write.collection,
@@ -40,7 +47,7 @@ export default function (server: Server, ctx: AppContext) {
                 rkey: write.rkey,
                 validate,
               })
-            } else if (write.action === WriteOpAction.Delete) {
+            } else if (isDelete(write)) {
               return repo.prepareDelete({
                 did,
                 collection: write.collection,
@@ -48,7 +55,7 @@ export default function (server: Server, ctx: AppContext) {
               })
             } else {
               throw new InvalidRequestError(
-                `Action not supported: ${write.action}`,
+                `Action not supported: ${write['$type']}`,
               )
             }
           }),
@@ -60,10 +67,20 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
+      const now = new Date().toISOString()
+      const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
+
       await ctx.db.transaction(async (dbTxn) => {
-        const now = new Date().toISOString()
         const repoTxn = ctx.services.repo(dbTxn)
-        await repoTxn.processWrites(did, writes, now)
+        try {
+          await repoTxn.processWrites(did, writes, now, swapCommitCid)
+        } catch (err) {
+          if (err instanceof BadCommitSwapError) {
+            throw new InvalidRequestError(err.message, 'InvalidSwap')
+          } else {
+            throw err
+          }
+        }
       })
     },
   })

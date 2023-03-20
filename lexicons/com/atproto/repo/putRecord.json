@@ -10,6 +10,7 @@
         "schema": {
           "type": "object",
           "required": ["did", "collection", "rkey", "record"],
+          "nullable": ["swapRecord"],
           "properties": {
             "did": {
               "type": "string",
@@ -33,6 +34,16 @@
             "record": {
               "type": "unknown",
               "description": "The record to write."
+            },
+            "swapRecord": {
+              "type": "string",
+              "format": "cid",
+              "description": "Compare and swap with the previous record by cid."
+            },
+            "swapCommit": {
+              "type": "string",
+              "format": "cid",
+              "description": "Compare and swap with the previous commit by cid."
             }
           }
         }
@@ -47,7 +58,10 @@
             "cid": {"type": "string", "format": "cid"}
           }
         }
-      }
+      },
+      "errors": [
+        {"name": "InvalidSwap"}
+      ]
     }
   }
 }

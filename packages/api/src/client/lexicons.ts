@@ -1102,21 +1102,26 @@ export const schemaDict = {
                   closed: true,
                 },
               },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+              },
             },
           },
         },
+        errors: [
+          {
+            name: 'InvalidSwap',
+          },
+        ],
       },
       create: {
         type: 'object',
         required: ['action', 'collection', 'value'],
         properties: {
-          action: {
-            type: 'string',
-            const: 'create',
-          },
           collection: {
             type: 'string',
-            const: 'nsid',
+            format: 'nsid',
           },
           rkey: {
             type: 'string',
@@ -1130,13 +1135,9 @@ export const schemaDict = {
         type: 'object',
         required: ['action', 'collection', 'rkey', 'value'],
         properties: {
-          action: {
-            type: 'string',
-            const: 'update',
-          },
           collection: {
             type: 'string',
-            const: 'nsid',
+            format: 'nsid',
           },
           rkey: {
             type: 'string',
@@ -1150,13 +1151,9 @@ export const schemaDict = {
         type: 'object',
         required: ['action', 'collection', 'rkey'],
         properties: {
-          action: {
-            type: 'string',
-            const: 'delete',
-          },
           collection: {
             type: 'string',
-            const: 'nsid',
+            format: 'nsid',
           },
           rkey: {
             type: 'string',
@@ -1197,6 +1194,12 @@ export const schemaDict = {
                 type: 'unknown',
                 description: 'The record to create.',
               },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous commit by cid.',
+              },
             },
           },
         },
@@ -1217,6 +1220,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'InvalidSwap',
+          },
+        ],
       },
     },
   },
@@ -1247,9 +1255,26 @@ export const schemaDict = {
                 type: 'string',
                 description: 'The key of the record.',
               },
+              swapRecord: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous record by cid.',
+              },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous commit by cid.',
+              },
             },
           },
         },
+        errors: [
+          {
+            name: 'InvalidSwap',
+          },
+        ],
       },
     },
   },
@@ -1462,6 +1487,7 @@ export const schemaDict = {
           schema: {
             type: 'object',
             required: ['did', 'collection', 'rkey', 'record'],
+            nullable: ['swapRecord'],
             properties: {
               did: {
                 type: 'string',
@@ -1486,6 +1512,18 @@ export const schemaDict = {
                 type: 'unknown',
                 description: 'The record to write.',
               },
+              swapRecord: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous record by cid.',
+              },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous commit by cid.',
+              },
             },
           },
         },
@@ -1506,6 +1544,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'InvalidSwap',
+          },
+        ],
       },
     },
   },

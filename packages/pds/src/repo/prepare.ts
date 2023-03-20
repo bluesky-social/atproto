@@ -121,11 +121,12 @@ export const determineRkey = (collection: string): string => {
 export const prepareCreate = async (opts: {
   did: string
   collection: string
-  record: Record<string, unknown>
   rkey?: string
+  swapCid?: CID | null
+  record: Record<string, unknown>
   validate?: boolean
 }): Promise<PreparedCreate> => {
-  const { did, collection, validate = true } = opts
+  const { did, collection, swapCid, validate = true } = opts
   const record = setCollectionName(collection, opts.record, validate)
   if (validate) {
     assertValidRecord(record)
@@ -135,6 +136,7 @@ export const prepareCreate = async (opts: {
     action: WriteOpAction.Create,
     uri: AtUri.make(did, collection, rkey),
     cid: await cidForCbor(record),
+    swapCid,
     record,
     blobs: blobsForWrite(record),
   }
@@ -144,10 +146,11 @@ export const prepareUpdate = async (opts: {
   did: string
   collection: string
   rkey: string
+  swapCid?: CID | null
   record: Record<string, unknown>
   validate?: boolean
 }): Promise<PreparedUpdate> => {
-  const { did, collection, rkey, validate = true } = opts
+  const { did, collection, rkey, swapCid, validate = true } = opts
   const record = setCollectionName(collection, opts.record, validate)
   if (validate) {
     assertValidRecord(record)
@@ -156,6 +159,7 @@ export const prepareUpdate = async (opts: {
     action: WriteOpAction.Update,
     uri: AtUri.make(did, collection, rkey),
     cid: await cidForCbor(record),
+    swapCid,
     record,
     blobs: blobsForWrite(record),
   }
@@ -165,11 +169,13 @@ export const prepareDelete = (opts: {
   did: string
   collection: string
   rkey: string
+  swapCid?: CID | null
 }): PreparedDelete => {
-  const { did, collection, rkey } = opts
+  const { did, collection, rkey, swapCid } = opts
   return {
     action: WriteOpAction.Delete,
     uri: AtUri.make(did, collection, rkey),
+    swapCid,
   }
 }
 
