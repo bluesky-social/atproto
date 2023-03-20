@@ -89,7 +89,7 @@ Object {
           "$type": "blob",
           "mimeType": "image/jpeg",
           "ref": Object {
-            "/": "cids(1)",
+            "$link": "cids(1)",
           },
         },
         "description": "its me!",
@@ -195,7 +195,7 @@ Object {
           "$type": "blob",
           "mimeType": "image/jpeg",
           "ref": Object {
-            "/": "cids(1)",
+            "$link": "cids(1)",
           },
         },
         "description": "its me!",

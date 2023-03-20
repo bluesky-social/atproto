@@ -15,12 +15,10 @@ describe('ipld', () => {
     expect(json).toEqual({
       one: 1,
       two: {
-        '/': 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        $link: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       },
       three: {
-        '/': {
-          bytes: 'AAECAw',
-        },
+        $bytes: 'AAECAw',
       },
     })
   })
@@ -29,12 +27,10 @@ describe('ipld', () => {
     const json = {
       one: 1,
       two: {
-        '/': 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        $link: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       },
       three: {
-        '/': {
-          bytes: 'AAECAw',
-        },
+        $bytes: 'AAECAw',
       },
     }
     const expectedCid = CID.parse(
@@ -65,7 +61,8 @@ describe('ipld', () => {
       a: {
         b: [
           {
-            '/': 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+            $link:
+              'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
           },
         ],
       },
@@ -77,7 +74,8 @@ describe('ipld', () => {
       a: {
         b: [
           {
-            '/': 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+            $link:
+              'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
           },
         ],
       },

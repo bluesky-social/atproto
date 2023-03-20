@@ -3,7 +3,7 @@ import * as Block from 'multiformats/block'
 import * as rawCodec from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
 import * as mf from 'multiformats'
-import { base64 } from 'multiformats/bases/base64'
+import * as ui8 from 'uint8arrays'
 import * as cborCodec from '@ipld/dag-cbor'
 import { check, schema } from '.'
 import { z } from 'zod'
@@ -70,30 +70,27 @@ export type IpldValue =
   | Array<IpldValue>
   | { [key: string]: IpldValue }
 
-const dagJsonCid = z.object({
-  '/': z.string(),
-})
+const dagJsonCid = z
+  .object({
+    $link: z.string(),
+  })
+  .strict()
 
-const dagJsonBytes = z.object({
-  '/': z.object({
-    bytes: z.string(),
-  }),
-})
+const dagJsonBytes = z
+  .object({
+    $bytes: z.string(),
+  })
+  .strict()
 
 const dagJsonVal = z.union([dagJsonCid, dagJsonBytes])
-const dagJsonValStrict = z.union([dagJsonCid.strict(), dagJsonBytes.strict()])
 
 export const jsonToIpld = (val: JsonValue): IpldValue => {
   // check for dag json values
   if (check.is(val, dagJsonVal)) {
-    if (!check.is(val, dagJsonValStrict)) {
-      // enforce strictly. don't allow other values in dag-json formatted fields
-      throw new Error(`improperly formatted dag-json: ${val}`)
-    }
     if (check.is(val, dagJsonCid)) {
-      return CID.parse(val['/'])
+      return CID.parse(val.$link)
     }
-    return base64.decode(`m${val['/'].bytes}`) // add mbase prefix according to dag-json code
+    return ui8.fromString(val.$bytes, 'base64')
   }
   // walk rest
   if (check.is(val, schema.array)) {
@@ -113,15 +110,13 @@ export const ipldToJson = (val: IpldValue): JsonValue => {
   // convert bytes
   if (check.is(val, schema.bytes)) {
     return {
-      '/': {
-        bytes: base64.encode(val).slice(1), // no mbase prefix (taken from dag-json code)
-      },
+      $bytes: ui8.toString(val, 'base64'),
     }
   }
   // convert cids
   if (check.is(val, schema.cid)) {
     return {
-      '/': val.toString(),
+      $link: val.toString(),
     }
   }
   // walk rest

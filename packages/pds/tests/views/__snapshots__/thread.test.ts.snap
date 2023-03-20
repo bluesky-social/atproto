@@ -166,7 +166,7 @@ Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
                   "ref": Object {
-                    "/": "cids(2)",
+                    "$link": "cids(2)",
                   },
                 },
               },
@@ -305,7 +305,7 @@ Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
                   "ref": Object {
-                    "/": "cids(2)",
+                    "$link": "cids(2)",
                   },
                 },
               },
@@ -405,7 +405,7 @@ Object {
                 "$type": "blob",
                 "mimeType": "image/jpeg",
                 "ref": Object {
-                  "/": "cids(3)",
+                  "$link": "cids(3)",
                 },
               },
             },
@@ -575,7 +575,7 @@ Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
                   "ref": Object {
-                    "/": "cids(3)",
+                    "$link": "cids(3)",
                   },
                 },
               },
@@ -749,7 +749,7 @@ Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
                   "ref": Object {
-                    "/": "cids(3)",
+                    "$link": "cids(3)",
                   },
                 },
               },
@@ -1070,7 +1070,7 @@ Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
                   "ref": Object {
-                    "/": "cids(3)",
+                    "$link": "cids(3)",
                   },
                 },
               },

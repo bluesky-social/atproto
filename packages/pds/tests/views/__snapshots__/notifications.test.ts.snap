@@ -55,7 +55,7 @@ Array [
               "$type": "blob",
               "mimeType": "image/jpeg",
               "ref": Object {
-                "/": "cids(3)",
+                "$link": "cids(3)",
               },
             },
           },
@@ -337,7 +337,7 @@ Array [
               "$type": "blob",
               "mimeType": "image/jpeg",
               "ref": Object {
-                "/": "cids(5)",
+                "$link": "cids(5)",
               },
             },
           },
@@ -651,7 +651,7 @@ Array [
               "$type": "blob",
               "mimeType": "image/jpeg",
               "ref": Object {
-                "/": "cids(6)",
+                "$link": "cids(6)",
               },
             },
           },
@@ -1004,7 +1004,7 @@ Array [
               "$type": "blob",
               "mimeType": "image/jpeg",
               "ref": Object {
-                "/": "cids(6)",
+                "$link": "cids(6)",
               },
             },
           },
