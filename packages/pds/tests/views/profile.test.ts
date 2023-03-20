@@ -1,6 +1,7 @@
 import fs from 'fs/promises'
 import AtpAgent from '@atproto/api'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { ids } from '../../src/lexicon/lexicons'
 import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -87,24 +88,11 @@ describe('pds profile views', () => {
   })
 
   it('updates profile', async () => {
-    await agent.api.app.bsky.actor.updateProfile(
-      { displayName: 'ali', description: 'new descript' },
-      { headers: sc.getHeaders(alice), encoding: 'application/json' },
-    )
-
-    const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
-      { actor: alice },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
-  })
-
-  it('handles partial updates', async () => {
-    await agent.api.app.bsky.actor.updateProfile(
-      { description: 'blah blah' },
-      { headers: sc.getHeaders(alice), encoding: 'application/json' },
-    )
+    await updateProfile(agent, alice, {
+      displayName: 'ali',
+      description: 'new descript',
+      avatar: sc.profiles[alice].avatar,
+    })
 
     const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
@@ -130,13 +118,12 @@ describe('pds profile views', () => {
       encoding: 'image/jpeg',
     })
 
-    await agent.api.app.bsky.actor.updateProfile(
-      {
-        avatar: { cid: avatarRes.data.cid, mimeType: 'image/jpeg' },
-        banner: { cid: bannerRes.data.cid, mimeType: 'image/jpeg' },
-      },
-      { headers: sc.getHeaders(alice), encoding: 'application/json' },
-    )
+    await updateProfile(agent, alice, {
+      displayName: 'ali',
+      description: 'new descript',
+      avatar: { cid: avatarRes.data.cid, mimeType: 'image/jpeg' },
+      banner: { cid: bannerRes.data.cid, mimeType: 'image/jpeg' },
+    })
 
     const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
@@ -147,10 +134,7 @@ describe('pds profile views', () => {
   })
 
   it('handles unsetting profile fields', async () => {
-    await agent.api.app.bsky.actor.updateProfile(
-      { displayName: null, description: null, avatar: null, banner: null },
-      { headers: sc.getHeaders(alice), encoding: 'application/json' },
-    )
+    await updateProfile(agent, alice, {})
 
     const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
@@ -165,10 +149,7 @@ describe('pds profile views', () => {
   })
 
   it('creates new profile', async () => {
-    await agent.api.app.bsky.actor.updateProfile(
-      { displayName: 'danny boy' },
-      { headers: sc.getHeaders(dan), encoding: 'application/json' },
-    )
+    await updateProfile(agent, dan, { displayName: 'danny boy' })
 
     const danForDan = await agent.api.app.bsky.actor.getProfile(
       { actor: dan },
@@ -186,10 +167,7 @@ describe('pds profile views', () => {
     }
     await Promise.all(
       descriptions.map(async (description) => {
-        await agent.api.app.bsky.actor.updateProfile(
-          { description },
-          { headers: sc.getHeaders(alice), encoding: 'application/json' },
-        )
+        await updateProfile(agent, alice, { description })
       }),
     )
 
@@ -297,4 +275,20 @@ describe('pds profile views', () => {
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
   })
+
+  async function updateProfile(
+    agent: AtpAgent,
+    did: string,
+    record: Record<string, unknown>,
+  ) {
+    return await agent.api.com.atproto.repo.putRecord(
+      {
+        did,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+        record,
+      },
+      { headers: sc.getHeaders(did), encoding: 'application/json' },
+    )
+  }
 })

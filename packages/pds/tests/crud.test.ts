@@ -8,6 +8,7 @@ import * as Post from '../src/lexicon/types/app/bsky/feed/post'
 import { adminAuth, CloseFn, paginateAll, runTestServer } from './_util'
 import AppContext from '../src/context'
 import { TAKEDOWN } from '../src/lexicon/types/com/atproto/admin/defs'
+import { ids } from '../src/lexicon/lexicons'
 
 const alice = {
   email: 'alice@test.com',
@@ -394,6 +395,114 @@ describe('crud operations', () => {
       expect(forwards.records.length).toEqual(5)
       expect(reverse.records.length).toEqual(5)
       expect(forwards.records.reverse()).toEqual(reverse.records)
+    })
+  })
+
+  describe('putRecord', () => {
+    const profilePath = {
+      collection: ids.AppBskyActorProfile,
+      rkey: 'self',
+    }
+
+    it("creates a new record if it doesn't already exist", async () => {
+      const { repo } = bobAgent.api.com.atproto
+      const exists = repo.getRecord({ ...profilePath, repo: bob.did })
+      await expect(exists).rejects.toThrow('Could not locate record')
+
+      const { data: put } = await repo.putRecord({
+        ...profilePath,
+        did: bob.did,
+        record: {
+          displayName: 'Robert',
+        },
+      })
+      expect(put.uri).toEqual(`at://${bob.did}/${ids.AppBskyActorProfile}/self`)
+
+      const { data: profile } = await repo.getRecord({
+        ...profilePath,
+        repo: bob.did,
+      })
+      expect(profile.value).toEqual({
+        $type: ids.AppBskyActorProfile,
+        displayName: 'Robert',
+      })
+    })
+
+    it('updates a record if it already exists', async () => {
+      const { repo } = bobAgent.api.com.atproto
+      const { data: put } = await repo.putRecord({
+        ...profilePath,
+        did: bob.did,
+        record: {
+          displayName: 'Robert',
+          description: 'Dog lover',
+        },
+      })
+      expect(put.uri).toEqual(`at://${bob.did}/${ids.AppBskyActorProfile}/self`)
+
+      const { data: profile } = await repo.getRecord({
+        ...profilePath,
+        repo: bob.did,
+      })
+      expect(profile.value).toEqual({
+        $type: ids.AppBskyActorProfile,
+        displayName: 'Robert',
+        description: 'Dog lover',
+      })
+    })
+
+    it('temporarily only puts profile records', async () => {
+      const { repo } = bobAgent.api.com.atproto
+      const put = repo.putRecord({
+        did: bob.did,
+        collection: ids.AppBskyGraphFollow,
+        rkey: TID.nextStr(),
+        record: {
+          subject: alice.did,
+          createdAt: new Date().toISOString(),
+        },
+      })
+      await expect(put).rejects.toThrow(
+        'Temporarily only accepting puts for app.bsky.actor.profile/self',
+      )
+    })
+
+    it('fails on user mismatch', async () => {
+      const { repo } = aliceAgent.api.com.atproto
+      const put = repo.putRecord({
+        did: bob.did,
+        collection: ids.AppBskyGraphFollow,
+        rkey: TID.nextStr(),
+        record: {
+          subject: alice.did,
+          createdAt: new Date().toISOString(),
+        },
+      })
+      await expect(put).rejects.toThrow('Forbidden')
+    })
+
+    it('fails on invalid record', async () => {
+      const { repo } = bobAgent.api.com.atproto
+      const put = repo.putRecord({
+        ...profilePath,
+        did: bob.did,
+        record: {
+          displayName: 'Robert',
+          description: 3.141,
+        },
+      })
+      await expect(put).rejects.toThrow(
+        'Invalid app.bsky.actor.profile record: Record/description must be a string',
+      )
+      const { data: profile } = await repo.getRecord({
+        ...profilePath,
+        repo: bob.did,
+      })
+      expect(profile.value).toEqual({
+        $type: ids.AppBskyActorProfile,
+        displayName: 'Robert',
+        description: 'Dog lover',
+      })
     })
   })
 

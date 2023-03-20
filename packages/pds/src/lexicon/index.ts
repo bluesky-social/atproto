@@ -57,7 +57,6 @@ import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
-import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
@@ -589,13 +588,6 @@ export class ActorNS {
     >,
   ) {
     const nsid = 'app.bsky.actor.searchActorsTypeahead' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  updateProfile<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyActorUpdateProfile.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'app.bsky.actor.updateProfile' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

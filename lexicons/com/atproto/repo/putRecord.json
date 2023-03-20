@@ -19,11 +19,11 @@
             "collection": {
               "type": "string",
               "format": "nsid",
-              "description": "The NSID of the record type."
+              "description": "The NSID of the record collection."
             },
             "rkey": {
               "type": "string",
-              "description": "The TID of the record."
+              "description": "The key of the record."
             },
             "validate": {
               "type": "boolean",
@@ -32,7 +32,7 @@
             },
             "record": {
               "type": "unknown",
-              "description": "The record to create."
+              "description": "The record to write."
             }
           }
         }

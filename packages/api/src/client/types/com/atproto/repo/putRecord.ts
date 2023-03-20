@@ -12,13 +12,13 @@ export interface QueryParams {}
 export interface InputSchema {
   /** The DID of the repo. */
   did: string
-  /** The NSID of the record type. */
+  /** The NSID of the record collection. */
   collection: string
-  /** The TID of the record. */
+  /** The key of the record. */
   rkey: string
   /** Validate the record? */
   validate?: boolean
-  /** The record to create. */
+  /** The record to write. */
   record: {}
   [k: string]: unknown
 }
