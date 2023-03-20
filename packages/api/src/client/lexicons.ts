@@ -2626,7 +2626,6 @@ export const schemaDict = {
         key: 'literal:self',
         record: {
           type: 'object',
-          required: ['displayName'],
           properties: {
             displayName: {
               type: 'string',
@@ -2752,7 +2751,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            nullable: ['description', 'avatar', 'banner'],
+            nullable: ['displayName', 'description', 'avatar', 'banner'],
             properties: {
               displayName: {
                 type: 'string',
