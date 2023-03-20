@@ -3,7 +3,6 @@ import { AtUri } from '@atproto/uri'
 import { cborDecode, wait } from '@atproto/common'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
 import { WriteOpAction, readCarWithRoot } from '@atproto/repo'
-import { CID } from 'multiformats/cid'
 import { PreparedWrite } from '../../repo'
 import { OutputSchema as Message } from '../../lexicon/types/com/atproto/sync/subscribeRepos'
 import { ids, lexicons } from '../../lexicon/lexicons'
@@ -163,7 +162,7 @@ async function getOps(msg: Message): Promise<PreparedWrite[]> {
       op.action === WriteOpAction.Update
     ) {
       assert(op.cid)
-      const cid = CID.parse(op.cid)
+      const cid = op.cid
       const record = car.blocks.get(cid)
       assert(record)
       return {

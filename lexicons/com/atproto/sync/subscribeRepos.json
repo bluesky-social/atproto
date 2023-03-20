@@ -29,8 +29,8 @@
               ]
             },
             "repo": {"type": "string", "format": "did"},
-            "commit": {"type": "string", "format": "cid"},
-            "prev": {"type": "string", "format": "cid"},
+            "commit": {"type": "cid-internal-ref"},
+            "prev": {"type": "cid-internal-ref"},
             "blocks": {"type": "unknown"},
             "ops": {
               "type": "array", 
@@ -38,7 +38,7 @@
             },
             "blobs": {
               "type": "array",
-              "items": {"type": "string", "format": "cid"}
+              "items": {"type": "cid-internal-ref"}
             },
             "time": {"type": "string", "format": "datetime"}
           }
@@ -65,7 +65,7 @@
           ]
         },
         "path": {"type": "string"},
-        "cid": {"type": "string", "format": "cid"}
+        "cid": {"type": "cid-internal-ref"}
       }
     }
   }
