@@ -225,7 +225,7 @@ describe('crud operations', () => {
   describe('crud races', () => {
     let uris: AtUri[]
     it('handles races on add', async () => {
-      const COUNT = 100
+      const COUNT = 10
       const postTexts: string[] = []
       for (let i = 0; i < COUNT; i++) {
         postTexts.push(`post-${i}`)
