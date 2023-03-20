@@ -4,8 +4,11 @@
 import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
+import { CID } from 'multiformats/cid'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 import * as AppBskyActorDefs from '../actor/defs'
+import * as AppBskyEmbedImages from './images'
+import * as AppBskyEmbedExternal from './external'
 
 export interface Main {
   record: ComAtprotoRepoStrongRef.Main
@@ -25,59 +28,61 @@ export function validateMain(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.embed.record#main', v)
 }
 
-export interface Presented {
-  record:
-    | PresentedRecord
-    | PresentedNotFound
-    | { $type: string; [k: string]: unknown }
+export interface View {
+  value?: ViewRecord | ViewNotFound | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
 
-export function isPresented(v: unknown): v is Presented {
+export function isView(v: unknown): v is View {
   return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.embed.record#presented'
+    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.embed.record#view'
   )
 }
 
-export function validatePresented(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.record#presented', v)
+export function validateView(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.record#view', v)
 }
 
-export interface PresentedRecord {
+export interface ViewRecord {
   uri: string
   cid: string
   author: AppBskyActorDefs.WithInfo
   record: {}
+  embeds?: (
+    | AppBskyEmbedImages.View
+    | AppBskyEmbedExternal.View
+    | View
+    | { $type: string; [k: string]: unknown }
+  )[]
+  indexedAt: string
   [k: string]: unknown
 }
 
-export function isPresentedRecord(v: unknown): v is PresentedRecord {
+export function isViewRecord(v: unknown): v is ViewRecord {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.embed.record#presentedRecord'
+    v.$type === 'app.bsky.embed.record#viewRecord'
   )
 }
 
-export function validatePresentedRecord(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.record#presentedRecord', v)
+export function validateViewRecord(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.record#viewRecord', v)
 }
 
-export interface PresentedNotFound {
+export interface ViewNotFound {
   uri: string
   [k: string]: unknown
 }
 
-export function isPresentedNotFound(v: unknown): v is PresentedNotFound {
+export function isViewNotFound(v: unknown): v is ViewNotFound {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.embed.record#presentedNotFound'
+    v.$type === 'app.bsky.embed.record#viewNotFound'
   )
 }
 
-export function validatePresentedNotFound(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.record#presentedNotFound', v)
+export function validateViewNotFound(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.record#viewNotFound', v)
 }

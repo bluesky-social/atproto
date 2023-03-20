@@ -23,7 +23,7 @@
       "description": "A facet value for links.",
       "required": ["uri"],
       "properties": {
-        "uri": {"type": "string"}
+        "uri": {"type": "string", "format": "uri"}
       }
     },
     "textSlice": {

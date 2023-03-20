@@ -1,13 +1,19 @@
-import { Kysely, sql } from 'kysely'
-
-// Goal here is just to make displayName nullable. Need to recreate table due to sqlite limitations.
+import { Kysely } from 'kysely'
 
 export async function up(db: Kysely<Schema>, dialect): Promise<void> {
+  if (dialect === 'pg') {
+    await db.schema
+      .alterTable('profile')
+      .alterColumn('displayName')
+      .dropNotNull()
+      .execute()
+    return
+  }
+
+  // Sqlite version below: Need to recreate table due to sqlite limitations.
+
   // Drop old indices
   await db.schema.dropIndex('profile_creator_idx').execute()
-  if (dialect === 'pg') {
-    await db.schema.dropIndex('profile_display_name_tgrm_idx').execute()
-  }
   // Create table w/ change
   await db.schema
     .createTable('profile_temp')
@@ -35,22 +41,22 @@ export async function up(db: Kysely<Schema>, dialect): Promise<void> {
     .on('profile')
     .column('creator')
     .execute()
-  if (dialect === 'pg') {
-    await db.schema // Supports user search
-      .createIndex(`profile_display_name_tgrm_idx`)
-      .on('profile')
-      .using('gist')
-      .expression(sql`"displayName" gist_trgm_ops`)
-      .execute()
-  }
 }
 
 export async function down(db: Kysely<Schema>, dialect): Promise<void> {
+  if (dialect === 'pg') {
+    await db.schema
+      .alterTable('profile')
+      .alterColumn('displayName')
+      .setNotNull()
+      .execute()
+    return
+  }
+
+  // Sqlite version below: Need to recreate table due to sqlite limitations.
+
   // Drop old indices
   await db.schema.dropIndex('profile_creator_idx').execute()
-  if (dialect === 'pg') {
-    await db.schema.dropIndex('profile_display_name_tgrm_idx').execute()
-  }
   // Create table w/ change
   await db.schema
     .createTable('profile_temp')
@@ -78,14 +84,6 @@ export async function down(db: Kysely<Schema>, dialect): Promise<void> {
     .on('profile')
     .column('creator')
     .execute()
-  if (dialect === 'pg') {
-    await db.schema // Supports user search
-      .createIndex(`profile_display_name_tgrm_idx`)
-      .on('profile')
-      .using('gist')
-      .expression(sql`"displayName" gist_trgm_ops`)
-      .execute()
-  }
 }
 
 type Schema = {

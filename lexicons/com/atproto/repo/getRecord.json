@@ -9,8 +9,16 @@
         "type": "params",
         "required": ["repo", "collection", "rkey"],
         "properties": {
-          "repo": {"type": "string", "description": "The handle or DID of the repo."},
-          "collection": {"type": "string", "description": "The NSID of the record collection."},
+          "repo": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "The handle or DID of the repo."
+          },
+          "collection": {
+            "type": "string",
+            "format": "nsid",
+            "description": "The NSID of the record collection."
+          },
           "rkey": {"type": "string", "description": "The key of the record."},
           "cid": {
             "type": "string",

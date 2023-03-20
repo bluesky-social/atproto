@@ -26,6 +26,10 @@ export function validate(
       return Primitives.integer(lexicons, path, def, value)
     case 'string':
       return Primitives.string(lexicons, path, def, value)
+    case 'bytes':
+      return Primitives.bytes(lexicons, path, def, value)
+    case 'cid-internal-ref':
+      return Primitives.cidInternalRef(lexicons, path, def, value)
     case 'unknown':
       return Primitives.unknown(lexicons, path, def, value)
     case 'object':

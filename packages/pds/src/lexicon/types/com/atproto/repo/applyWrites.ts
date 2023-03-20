@@ -5,6 +5,7 @@ import express from 'express'
 import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
+import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {}
@@ -39,7 +40,7 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
 
 export interface Create {
   action: 'create'
-  collection: string
+  collection: 'nsid'
   rkey?: string
   value: {}
   [k: string]: unknown
@@ -59,7 +60,7 @@ export function validateCreate(v: unknown): ValidationResult {
 
 export interface Update {
   action: 'update'
-  collection: string
+  collection: 'nsid'
   rkey: string
   value: {}
   [k: string]: unknown
@@ -79,7 +80,7 @@ export function validateUpdate(v: unknown): ValidationResult {
 
 export interface Delete {
   action: 'delete'
-  collection: string
+  collection: 'nsid'
   rkey: string
   [k: string]: unknown
 }

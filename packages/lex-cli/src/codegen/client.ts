@@ -80,6 +80,12 @@ const indexTs = (
     file
       .addImportDeclaration({ moduleSpecifier: './lexicons' })
       .addNamedImports([{ name: 'schemas' }])
+    //= import {CID} from 'multiformats/cid'
+    file
+      .addImportDeclaration({
+        moduleSpecifier: 'multiformats/cid',
+      })
+      .addNamedImports([{ name: 'CID' }])
 
     // generate type imports and re-exports
     for (const lexicon of lexiconDocs) {
@@ -505,6 +511,12 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
             .join('/')}/lexicons`,
         })
         .addNamedImports([{ name: 'lexicons' }])
+      //= import {CID} from 'multiformats/cid'
+      file
+        .addImportDeclaration({
+          moduleSpecifier: 'multiformats/cid',
+        })
+        .addNamedImports([{ name: 'CID' }])
 
       for (const defId in lexiconDoc.defs) {
         const def = lexiconDoc.defs[defId]

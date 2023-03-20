@@ -4,6 +4,7 @@
 import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
+import { CID } from 'multiformats/cid'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as AppBskyEmbedImages from '../embed/images'
 import * as AppBskyEmbedExternal from '../embed/external'
@@ -15,9 +16,9 @@ export interface PostView {
   author: AppBskyActorDefs.WithInfo
   record: {}
   embed?:
-    | AppBskyEmbedImages.Presented
-    | AppBskyEmbedExternal.Presented
-    | AppBskyEmbedRecord.Presented
+    | AppBskyEmbedImages.View
+    | AppBskyEmbedExternal.View
+    | AppBskyEmbedRecord.View
     | { $type: string; [k: string]: unknown }
   replyCount?: number
   repostCount?: number

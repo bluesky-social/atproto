@@ -3,8 +3,13 @@ import * as Block from 'multiformats/block'
 import * as rawCodec from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
 import * as mf from 'multiformats'
+import { base64 } from 'multiformats/bases/base64'
 import * as cborCodec from '@ipld/dag-cbor'
 import { check, schema } from '.'
+import { z } from 'zod'
+
+export const cborEncode = cborCodec.encode
+export const cborDecode = cborCodec.decode
 
 export const dataToCborBlock = async (data: unknown) => {
   return Block.encode({
@@ -12,6 +17,21 @@ export const dataToCborBlock = async (data: unknown) => {
     codec: cborCodec,
     hasher: sha256,
   })
+}
+
+export const cidForCbor = async (data: unknown): Promise<CID> => {
+  const block = await dataToCborBlock(data)
+  return block.cid
+}
+
+export const cborBytesToRecord = (
+  bytes: Uint8Array,
+): Record<string, unknown> => {
+  const val = cborDecode(bytes)
+  if (!check.is(val, schema.record)) {
+    throw new Error(`Expected object, got: ${val}`)
+  }
+  return val
 }
 
 export const verifyCidForBytes = async (cid: CID, bytes: Uint8Array) => {
@@ -24,25 +44,103 @@ export const verifyCidForBytes = async (cid: CID, bytes: Uint8Array) => {
   }
 }
 
-export const sha256RawToCid = (hash: Uint8Array): CID => {
+export const sha256ToCid = (hash: Uint8Array, codec: number): CID => {
   const digest = mf.digest.create(sha256.code, hash)
-  return CID.createV1(rawCodec.code, digest)
+  return CID.createV1(codec, digest)
 }
 
-export const cidForCbor = async (data: unknown): Promise<CID> => {
-  const block = await dataToCborBlock(data)
-  return block.cid
+export const sha256RawToCid = (hash: Uint8Array): CID => {
+  return sha256ToCid(hash, rawCodec.code)
 }
 
-export const cborEncode = cborCodec.encode
-export const cborDecode = cborCodec.decode
+export type JsonValue =
+  | boolean
+  | number
+  | string
+  | null
+  | bigint
+  | Array<JsonValue>
+  | { [key: string]: JsonValue }
+  | { [key: number]: JsonValue }
 
-export const cborBytesToRecord = (
-  bytes: Uint8Array,
-): Record<string, unknown> => {
-  const val = cborDecode(bytes)
-  if (!check.is(val, schema.record)) {
-    throw new Error(`Expected object, got: ${val}`)
+export type IpldValue =
+  | boolean
+  | number
+  | string
+  | null
+  | bigint
+  | CID
+  | Uint8Array
+  | Array<IpldValue>
+  | { [key: string]: IpldValue }
+  | { [key: number]: IpldValue }
+
+const dagJsonCid = z.object({
+  '/': z.string(),
+})
+
+const dagJsonBytes = z.object({
+  '/': z.object({
+    bytes: z.string(),
+  }),
+})
+
+const dagJsonVal = z.union([dagJsonCid, dagJsonBytes])
+const dagJsonValStrict = z.union([dagJsonCid.strict(), dagJsonBytes.strict()])
+
+export const jsonToIpldValue = (val: JsonValue): IpldValue => {
+  if (check.is(val, schema.array)) {
+    return val.map((item) => jsonToIpldValue(item))
+  } else if (check.is(val, schema.record)) {
+    if (check.is(val, dagJsonVal)) {
+      if (!check.is(val, dagJsonValStrict)) {
+        throw new Error(`improperly formatted dag-json: ${val}`)
+      }
+      if (check.is(val, dagJsonCid)) {
+        return CID.parse(val['/'])
+      } else {
+        return base64.decode(`m${val['/'].bytes}`) // add mbase prefix according to dag-json code
+      }
+    } else {
+      const toReturn = {}
+      for (const key of Object.keys(val)) {
+        toReturn[key] = jsonToIpldValue(val[key])
+      }
+      return toReturn
+    }
+  } else {
+    return val
   }
-  return val
+}
+
+export const ipldValueToJson = (val: IpldValue): JsonValue => {
+  if (check.is(val, schema.array)) {
+    return val.map((item) => ipldValueToJson(item))
+  } else if (check.is(val, schema.bytes)) {
+    return {
+      '/': {
+        bytes: base64.encode(val).slice(1), // no mbase prefix (taken from dag-json code)
+      },
+    }
+  } else if (check.is(val, schema.cid)) {
+    return {
+      '/': val.toString(),
+    }
+  } else if (check.is(val, schema.record)) {
+    const toReturn = {}
+    for (const key of Object.keys(val)) {
+      toReturn[key] = ipldValueToJson(val[key])
+    }
+    return toReturn
+  } else {
+    return val
+  }
+}
+
+export const stringifyIpld = (val: IpldValue): string => {
+  return JSON.stringify(ipldValueToJson(val))
+}
+
+export const jsonStringToIpld = (str: string): IpldValue => {
+  return jsonToIpldValue(JSON.parse(str))
 }

@@ -34,7 +34,7 @@
       "required": ["action", "collection", "value"],
       "properties": {
         "action": {"type": "string", "const": "create"},
-        "collection": {"type": "string"},
+        "collection": {"type": "string", "const": "nsid"},
         "rkey": {"type": "string"},
         "value": {"type": "unknown"}
       }
@@ -44,7 +44,7 @@
       "required": ["action", "collection", "rkey", "value"],
       "properties": {
         "action": {"type": "string", "const": "update"},
-        "collection": {"type": "string"},
+        "collection": {"type": "string", "const": "nsid"},
         "rkey": {"type": "string"},
         "value": {"type": "unknown"}
       }
@@ -54,7 +54,7 @@
       "required": ["action", "collection", "rkey"],
       "properties": {
         "action": {"type": "string", "const": "delete"},
-        "collection": {"type": "string"},
+        "collection": {"type": "string", "const": "nsid"},
         "rkey": {"type": "string"}
       }
     }

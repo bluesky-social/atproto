@@ -64,7 +64,7 @@ describe('sequencer', () => {
   const evtToDbRow = (e: RepoAppendEvent) => ({
     seq: e.seq,
     did: e.repo,
-    commit: e.commit,
+    commit: e.commit.toString(),
     eventType: 'repo_append',
     sequencedAt: e.time,
   })
