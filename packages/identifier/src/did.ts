@@ -14,30 +14,30 @@
 export const ensureValidDid = (did: string): void => {
   // check that all chars are boring ASCII
   if (!/^[a-zA-Z0-9._:%-]*$/.test(did)) {
-    throw new Error(
+    throw new InvalidDidError(
       'Disallowed characters in DID (ASCII letters, digits, and a couple other characters only)',
     )
   }
 
   const parts = did.split(':')
   if (parts.length < 3) {
-    throw new Error('DID requires prefix, method, and method-specific content')
+    throw new InvalidDidError('DID requires prefix, method, and method-specific content')
   }
 
   if (parts[0] != 'did') {
-    throw new Error('DID requires "did:" prefix')
+    throw new InvalidDidError('DID requires "did:" prefix')
   }
 
   if (!/^[a-z]+$/.test(parts[1])) {
-    throw new Error('DID method must be lower-case letters')
+    throw new InvalidDidError('DID method must be lower-case letters')
   }
 
   if (did.endsWith(':') || did.endsWith('%')) {
-    throw new Error('DID can not end with ":" or "%"')
+    throw new InvalidDidError('DID can not end with ":" or "%"')
   }
 
   if (did.length > 8 * 1024) {
-    throw new Error('DID is far too long')
+    throw new InvalidDidError('DID is far too long')
   }
 }
 
@@ -45,10 +45,12 @@ export const ensureValidDidRegex = (did: string): void => {
   // simple regex to enforce most constraints via just regex and length.
   // hand wrote this regex based on above constraints
   if (!/^did:[a-z]+:[a-zA-Z0-9._:%-]*[a-zA-Z0-9._-]$/.test(did)) {
-    throw new Error("DID didn't validate via regex")
+    throw new InvalidDidError("DID didn't validate via regex")
   }
 
   if (did.length > 8 * 1024) {
-    throw new Error('DID is far too long')
+    throw new InvalidDidError('DID is far too long')
   }
 }
+
+export class InvalidDidError extends Error {}
