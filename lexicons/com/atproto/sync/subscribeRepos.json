@@ -17,7 +17,8 @@
       "message": {
         "type": "union",
         "refs": [
-          "#repo",
+          "#commit",
+          "#signpost",
           "#handle",
           "#migrate",
           "#tombstone",
@@ -28,7 +29,7 @@
         {"name": "FutureCursor"}
       ]
     },
-    "repo": {
+    "commit": {
       "type": "object",
       "required": ["seq", "event", "repo", "commit", "prev", "blocks", "ops", "blobs", "time"],
       "nullable": ["prev"],
@@ -53,6 +54,25 @@
           "type": "array",
           "items": {"type": "string"}
         },
+        "time": {"type": "datetime"}
+      }
+    },
+    "signpost": {
+      "type": "object",
+      "required": ["seq", "event", "repo", "commit", "prev", "time"],
+      "nullable": ["prev"],
+      "properties": {
+        "seq": {"type": "integer"},
+        "event": { 
+          "type": "string",
+          "knownValues": [
+            "append",
+            "rebase"
+          ]
+        },
+        "repo": {"type": "string"},
+        "commit": {"type": "string"},
+        "prev": {"type": "string"},
         "time": {"type": "datetime"}
       }
     },
