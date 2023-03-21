@@ -55,7 +55,7 @@ describe('General validation', () => {
         did: 'did:web:example.com',
         cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
         bytes: new Uint8Array([0, 1, 2, 3]),
-        cidRef: CID.parse(
+        cidLink: CID.parse(
           'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
         ),
       })
@@ -108,7 +108,7 @@ describe('Record validation', () => {
     integer: 123,
     string: 'string',
     bytes: new Uint8Array([0, 1, 2, 3]),
-    cidRef: CID.parse(
+    cidLink: CID.parse(
       'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
     ),
   }
@@ -152,7 +152,7 @@ describe('Record validation', () => {
         did: 'did:web:example.com',
         cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
         bytes: new Uint8Array([0, 1, 2, 3]),
-        cidRef: CID.parse(
+        cidLink: CID.parse(
           'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
         ),
       }),
@@ -214,9 +214,9 @@ describe('Record validation', () => {
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
         ...passingSink,
-        cidRef: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        cidLink: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
-    ).toThrow('Record/cidRef must be a CID')
+    ).toThrow('Record/cidLink must be a CID')
   })
 
   it('Handles optional properties correctly', () => {

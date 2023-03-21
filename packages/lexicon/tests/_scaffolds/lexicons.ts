@@ -17,7 +17,7 @@ export default [
             'integer',
             'string',
             'bytes',
-            'cidRef',
+            'cidLink',
           ],
           properties: {
             object: { type: 'ref', ref: '#object' },
@@ -27,7 +27,7 @@ export default [
             integer: { type: 'integer' },
             string: { type: 'string' },
             bytes: { type: 'bytes' },
-            cidRef: { type: 'cid-internal-ref' },
+            cidLink: { type: 'cid-link' },
           },
         },
       },
