@@ -4,7 +4,6 @@ import {
   PreparedCreate,
   PreparedUpdate,
   PreparedDelete,
-  ImageConstraint,
   InvalidRecordError,
   PreparedWrite,
   PreparedBlobRef,
@@ -33,14 +32,14 @@ export const blobsForWrite = (record: any): PreparedBlobRef[] => {
       refs.push({
         cid: record.avatar.ref,
         mimeType: record.avatar.mimeType,
-        constraints: doc.defs.main.record.properties.avatar as ImageConstraint,
+        constraints: doc.defs.main.record.properties.avatar,
       })
     }
     if (record.banner) {
       refs.push({
         cid: record.banner.ref,
         mimeType: record.banner.mimeType,
-        constraints: doc.defs.main.record.properties.banner as ImageConstraint,
+        constraints: doc.defs.main.record.properties.banner,
       })
     }
     return refs
@@ -54,7 +53,7 @@ export const blobsForWrite = (record: any): PreparedBlobRef[] => {
         refs.push({
           cid: img.image.ref,
           mimeType: img.image.mimeType,
-          constraints: doc.defs.image.properties.image as ImageConstraint,
+          constraints: doc.defs.image.properties.image,
         })
       }
     } else if (
@@ -65,7 +64,7 @@ export const blobsForWrite = (record: any): PreparedBlobRef[] => {
       refs.push({
         cid: embed.external.thumb.ref,
         mimeType: embed.external.thumb.mimeType,
-        constraints: doc.defs.external.properties.thumb as ImageConstraint,
+        constraints: doc.defs.external.properties.thumb,
       })
     }
     return refs
