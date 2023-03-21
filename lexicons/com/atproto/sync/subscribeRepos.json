@@ -18,7 +18,7 @@
         "type": "union",
         "refs": [
           "#commit",
-          "#signpost",
+          "#tooLarge",
           "#handle",
           "#migrate",
           "#tombstone",
@@ -45,7 +45,10 @@
         "repo": {"type": "string"},
         "commit": {"type": "string"},
         "prev": {"type": "string"},
-        "blocks": {"type": "unknown"},
+        "blocks": {
+          "type": "unknown",
+          "description": "CAR file containing relevant blocks"
+        },
         "ops": {
           "type": "array", 
           "items": { "type": "ref", "ref": "#repoOp"}
@@ -57,9 +60,10 @@
         "time": {"type": "datetime"}
       }
     },
-    "signpost": {
+    "tooLarge": {
       "type": "object",
-      "required": ["seq", "event", "repo", "commit", "prev", "time"],
+      "description": "A signpost for a large commit that should be fetched out of band",
+      "required": ["seq", "event", "repo", "commit", "prev", "block", "prev", "time"],
       "nullable": ["prev"],
       "properties": {
         "seq": {"type": "integer"},
@@ -73,6 +77,10 @@
         "repo": {"type": "string"},
         "commit": {"type": "string"},
         "prev": {"type": "string"},
+        "block": {
+          "type": "unknown",
+          "description": "dag-cbor encoded commit block"
+        },
         "time": {"type": "datetime"}
       }
     },
@@ -110,6 +118,9 @@
         "name": {
           "type": "string",
           "knownValues": ["OutdatedCursor"]
+        },
+        "message": {
+          "type": "string"
         }
       }
     },
