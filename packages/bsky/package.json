@@ -29,6 +29,7 @@
     "@atproto/common": "*",
     "@atproto/crypto": "*",
     "@atproto/did-resolver": "*",
+    "@atproto/handle": "*",
     "@atproto/lexicon": "*",
     "@atproto/repo": "*",
     "@atproto/uri": "*",
@@ -48,12 +49,11 @@
   },
   "devDependencies": {
     "@atproto/api": "*",
+    "@atproto/pds": "*",
     "@atproto/lex-cli": "*",
+    "@atproto/xrpc": "*",
     "@did-plc/server": "^0.0.1",
-    "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
-    "@types/jsonwebtoken": "^8.5.9",
-    "@types/nodemailer": "^6.4.6",
     "@types/pg": "^8.6.5",
     "@types/sharp": "^0.31.0",
     "axios": "^0.27.2"
