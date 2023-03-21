@@ -16,7 +16,7 @@ const LEXICONS = [
           properties: {
             str: { type: 'string', minLength: 2, maxLength: 10 },
             int: { type: 'integer', minimum: 2, maximum: 10 },
-            num: { type: 'number', minimum: 2, maximum: 10 },
+            num: { type: 'float', minimum: 2, maximum: 10 },
             bool: { type: 'boolean' },
             arr: { type: 'array', items: { type: 'integer' }, maxLength: 2 },
             def: { type: 'integer', default: 0 },

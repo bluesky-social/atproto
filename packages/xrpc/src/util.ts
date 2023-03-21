@@ -59,7 +59,7 @@ export function constructMethodCallUri(
 export function encodeQueryParam(
   type:
     | 'string'
-    | 'number'
+    | 'float'
     | 'integer'
     | 'boolean'
     | 'datetime'
@@ -70,7 +70,7 @@ export function encodeQueryParam(
   if (type === 'string' || type === 'unknown') {
     return String(value)
   }
-  if (type === 'number') {
+  if (type === 'float') {
     return String(Number(value))
   } else if (type === 'integer') {
     return String(Number(value) | 0)
