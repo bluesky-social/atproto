@@ -73,7 +73,7 @@ export function genUserType(
     case 'bytes':
     case 'cid-link':
     case 'boolean':
-    case 'number':
+    case 'float':
     case 'integer':
     case 'string':
     case 'unknown':
@@ -504,7 +504,7 @@ export function primitiveToType(def: LexPrimitive): string {
         return JSON.stringify(def.const)
       }
       return 'string'
-    case 'number':
+    case 'float':
     case 'integer':
       if (def.enum) {
         return def.enum.map((v) => JSON.stringify(v)).join(' | ')

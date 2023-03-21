@@ -5,7 +5,7 @@ import * as formats from './formats'
 import {
   LexUserType,
   LexBoolean,
-  LexNumber,
+  LexFloat,
   LexInteger,
   LexString,
   ValidationResult,
@@ -22,8 +22,8 @@ export function validate(
   switch (def.type) {
     case 'boolean':
       return boolean(lexicons, path, def, value)
-    case 'number':
-      return number(lexicons, path, def, value)
+    case 'float':
+      return float(lexicons, path, def, value)
     case 'integer':
       return integer(lexicons, path, def, value)
     case 'string':
@@ -80,13 +80,13 @@ export function boolean(
   return { success: true, value }
 }
 
-export function number(
+export function float(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,
   value: unknown,
 ): ValidationResult {
-  def = def as LexNumber
+  def = def as LexFloat
 
   // type
   const type = typeof value
@@ -163,7 +163,7 @@ export function integer(
   def = def as LexInteger
 
   // run number validation
-  const numRes = number(lexicons, path, def, value)
+  const numRes = float(lexicons, path, def, value)
   if (!numRes.success) {
     return numRes
   } else {
