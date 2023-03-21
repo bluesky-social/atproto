@@ -18,7 +18,6 @@
         "type": "union",
         "refs": [
           "#commit",
-          "#tooLarge",
           "#handle",
           "#migrate",
           "#tombstone",
@@ -31,17 +30,12 @@
     },
     "commit": {
       "type": "object",
-      "required": ["seq", "event", "repo", "commit", "prev", "blocks", "ops", "blobs", "time"],
+      "required": ["seq", "rebase", "tooBig", "repo", "commit", "prev", "blocks", "ops", "blobs", "time"],
       "nullable": ["prev"],
       "properties": {
         "seq": {"type": "integer"},
-        "event": { 
-          "type": "string",
-          "knownValues": [
-            "append",
-            "rebase"
-          ]
-        },
+        "rebase": {"type": "boolean"},
+        "tooBig": {"type": "boolean"},
         "repo": {"type": "string"},
         "commit": {"type": "string"},
         "prev": {"type": "string"},
@@ -56,30 +50,6 @@
         "blobs": {
           "type": "array",
           "items": {"type": "string"}
-        },
-        "time": {"type": "datetime"}
-      }
-    },
-    "tooLarge": {
-      "type": "object",
-      "description": "A signpost for a large commit that should be fetched out of band",
-      "required": ["seq", "event", "repo", "commit", "prev", "block", "prev", "time"],
-      "nullable": ["prev"],
-      "properties": {
-        "seq": {"type": "integer"},
-        "event": { 
-          "type": "string",
-          "knownValues": [
-            "append",
-            "rebase"
-          ]
-        },
-        "repo": {"type": "string"},
-        "commit": {"type": "string"},
-        "prev": {"type": "string"},
-        "block": {
-          "type": "unknown",
-          "description": "dag-cbor encoded commit block"
         },
         "time": {"type": "datetime"}
       }
