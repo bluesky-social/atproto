@@ -21,7 +21,9 @@ export const ensureValidDid = (did: string): void => {
 
   const parts = did.split(':')
   if (parts.length < 3) {
-    throw new InvalidDidError('DID requires prefix, method, and method-specific content')
+    throw new InvalidDidError(
+      'DID requires prefix, method, and method-specific content',
+    )
   }
 
   if (parts[0] != 'did') {
