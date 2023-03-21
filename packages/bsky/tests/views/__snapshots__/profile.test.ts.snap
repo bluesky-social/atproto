@@ -3,7 +3,7 @@
 exports[`pds profile views fetches multiple profiles 1`] = `
 Array [
   Object {
-    "avatar": "https://bsky.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
     "creator": "user(0)",
     "declaration": Object {
       "actorType": "",
@@ -26,14 +26,14 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-    "creator": "user(1)",
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+    "creator": "user(2)",
     "declaration": Object {
       "actorType": "",
       "cid": "",
     },
     "description": "hi im bob",
-    "did": "user(1)",
+    "did": "user(2)",
     "displayName": "bobby",
     "followersCount": 2,
     "followsCount": 2,
@@ -44,12 +44,12 @@ Array [
     "viewer": Object {},
   },
   Object {
-    "creator": "user(2)",
+    "creator": "user(4)",
     "declaration": Object {
       "actorType": "",
       "cid": "",
     },
-    "did": "user(2)",
+    "did": "user(4)",
     "followersCount": 2,
     "followsCount": 1,
     "handle": "carol.test",
@@ -62,12 +62,12 @@ Array [
     },
   },
   Object {
-    "creator": "user(3)",
+    "creator": "user(5)",
     "declaration": Object {
       "actorType": "",
       "cid": "",
     },
-    "did": "user(3)",
+    "did": "user(5)",
     "followersCount": 1,
     "followsCount": 1,
     "handle": "dan.test",
@@ -82,7 +82,7 @@ Array [
 
 exports[`pds profile views fetches other's profile, with a follow 1`] = `
 Object {
-  "avatar": "https://bsky.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+  "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
   "creator": "user(0)",
   "declaration": Object {
     "actorType": "",
@@ -127,7 +127,7 @@ Object {
 
 exports[`pds profile views fetches own profile 1`] = `
 Object {
-  "avatar": "https://bsky.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+  "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
   "creator": "user(0)",
   "declaration": Object {
     "actorType": "",
@@ -148,8 +148,8 @@ Object {
 
 exports[`pds profile views presents avatars & banners 1`] = `
 Object {
-  "avatar": "https://bsky.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-  "banner": "https://bsky.public.url/image/ejOTK5gy9tlarOXM6MhrPOs0C18LFpfd9qQ9lBrcIBE/rs:fill:3000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+  "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+  "banner": "https://bsky.public.url/image/sig()/rs:fill:3000:1000:1:0/plain/user(1)/cids(1)@jpeg",
   "creator": "user(0)",
   "declaration": Object {
     "actorType": "",

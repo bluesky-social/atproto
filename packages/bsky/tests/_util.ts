@@ -51,7 +51,7 @@ export const runTestServer = async (
   const plcUrl = `http://localhost:${plcPort}`
 
   // run pds
-  const recoveryKey = await crypto.Secp256k1Keypair.create()
+  const recoveryKey = await crypto.Secp256k1Keypair.create({ exportable: true })
 
   const pdsCfg = new pds.ServerConfig({
     debugMode: true,
@@ -208,6 +208,18 @@ export const forSnapshot = (obj: unknown) => {
     }
     if (str.match(/^\d+::bafy/)) {
       return constantKeysetCursor
+    }
+    if (str.match(/\/image\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
+      // Match image urls
+      const match = str.match(
+        /\/image\/([^/]+)\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
+      )
+      if (!match) return str
+      const [, sig, did, cid] = match
+      return str
+        .replace(sig, 'sig()')
+        .replace(did, take(users, did))
+        .replace(cid, take(cids, cid))
     }
     let isCid: boolean
     try {
