@@ -43,6 +43,7 @@ export function toKnownErr(e: any) {
   return e
 }
 
+/** Create a new record. */
 export interface Create {
   collection: string
   rkey?: string
@@ -62,6 +63,7 @@ export function validateCreate(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.repo.applyWrites#create', v)
 }
 
+/** Update an existing record. */
 export interface Update {
   collection: string
   rkey: string
@@ -81,6 +83,7 @@ export function validateUpdate(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.repo.applyWrites#update', v)
 }
 
+/** Delete an existing record. */
 export interface Delete {
   collection: string
   rkey: string

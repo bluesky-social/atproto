@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Fetch a record.",
+      "description": "Get a record.",
       "parameters": {
         "type": "params",
         "required": ["repo", "collection", "rkey"],

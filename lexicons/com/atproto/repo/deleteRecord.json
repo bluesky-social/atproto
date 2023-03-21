@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Delete a record.",
+      "description": "Delete a record, or ensure it doesn't exist.",
       "input": {
         "encoding": "application/json",
         "schema": {

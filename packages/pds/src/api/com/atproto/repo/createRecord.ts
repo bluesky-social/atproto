@@ -1,4 +1,5 @@
 import { CID } from 'multiformats/cid'
+import { TID } from '@atproto/common'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import * as repo from '../../../../repo'
 import { Server } from '../../../../lexicon'
@@ -16,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.createRecord({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ input, auth }) => {
-      const { did, collection, record, swapCommit, validate } = input.body
+      const { did, collection, rkey, record, swapCommit, validate } = input.body
       const requester = auth.credentials.did
       if (did !== requester) {
         throw new AuthRequiredError()
@@ -27,9 +28,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      // determine key type. if undefined, repo assigns a TID
       const now = new Date().toISOString()
-      const rkey = repo.determineRkey(collection)
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
 
       let write: PreparedCreate
@@ -38,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
           did,
           collection,
           record,
-          rkey,
+          rkey: rkey || TID.nextStr(),
           validate,
         })
       } catch (err) {

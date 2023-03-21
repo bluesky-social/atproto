@@ -28,6 +28,11 @@ export default function (server: Server, ctx: AppContext) {
 
       await ctx.db.transaction(async (dbTxn) => {
         const repoTxn = ctx.services.repo(dbTxn)
+        const recordTxn = ctx.services.record(dbTxn)
+        const record = await recordTxn.getRecord(write.uri, null, true)
+        if (!record) {
+          return // No-op if record already doesn't exist
+        }
         try {
           await repoTxn.processWrites(did, [write], now, swapCommitCid)
         } catch (err) {

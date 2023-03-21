@@ -402,6 +402,56 @@ describe('crud operations', () => {
     })
   })
 
+  describe('deleteRecord', () => {
+    it('deletes a record if it exists', async () => {
+      const { repo } = aliceAgent.api.com.atproto
+      const { data: post } = await repo.createRecord({
+        did: alice.did,
+        collection: ids.AppBskyFeedPost,
+        record: { text: 'post', createdAt: new Date().toISOString() },
+      })
+      const uri = new AtUri(post.uri)
+      await repo.deleteRecord({
+        did: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+      const checkPost = repo.getRecord({
+        repo: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+      await expect(checkPost).rejects.toThrow('Could not locate record')
+    })
+
+    it("no-ops if record doesn't exist", async () => {
+      const { repo } = aliceAgent.api.com.atproto
+      const { data: post } = await repo.createRecord({
+        did: alice.did,
+        collection: ids.AppBskyFeedPost,
+        record: { text: 'post', createdAt: new Date().toISOString() },
+      })
+      const uri = new AtUri(post.uri)
+      await repo.deleteRecord({
+        did: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+      const checkPost = repo.getRecord({
+        repo: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+      await expect(checkPost).rejects.toThrow('Could not locate record')
+      const attemptDelete = repo.deleteRecord({
+        did: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+      await expect(attemptDelete).resolves.toBeDefined()
+    })
+  })
+
   describe('putRecord', () => {
     const profilePath = {
       collection: ids.AppBskyActorProfile,
