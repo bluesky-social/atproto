@@ -4,6 +4,8 @@
 import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
+import { CID } from 'multiformats/cid'
+import * as AppBskyRichtextFacet from '../richtext/facet'
 import * as AppBskyEmbedImages from '../embed/images'
 import * as AppBskyEmbedExternal from '../embed/external'
 import * as AppBskyEmbedRecord from '../embed/record'
@@ -11,7 +13,9 @@ import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
 export interface Record {
   text: string
+  /** Deprecated: replaced by app.bsky.richtext.facet. */
   entities?: Entity[]
+  facets?: AppBskyRichtextFacet.Main[]
   reply?: ReplyRef
   embed?:
     | AppBskyEmbedImages.Main

@@ -1,3 +1,4 @@
+import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
@@ -5,11 +6,12 @@ import { ids } from '../../../../lexicon/lexicons'
 import * as repo from '../../../../repo'
 import AppContext from '../../../../context'
 import {
+  BadCommitSwapError,
+  BadRecordSwapError,
   InvalidRecordError,
   PreparedCreate,
   PreparedUpdate,
 } from '../../../../repo'
-import SqlRepoStorage from '../../../../sql-repo-storage'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
@@ -40,17 +42,25 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      const now = new Date().toISOString()
+      const uri = AtUri.make(did, collection, rkey)
+      const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
+      const swapRecordCid =
+        typeof swapRecord === 'string' ? CID.parse(swapRecord) : swapRecord
+
       const write = await ctx.db.transaction(async (dbTxn) => {
-        const recordTxn = ctx.services.record(dbTxn)
         const repoTxn = ctx.services.repo(dbTxn)
+        const recordTxn = ctx.services.record(dbTxn)
 
-        const now = new Date().toISOString()
-        const storage = new SqlRepoStorage(dbTxn, did, now)
-        const pinned = await storage.getPinnedAtHead()
-
-        const uri = AtUri.make(did, collection, rkey)
         const current = await recordTxn.getRecord(uri, null, true)
-        const writeInfo = { did, collection, rkey, record, validate }
+        const writeInfo = {
+          did,
+          collection,
+          rkey,
+          record,
+          swapCid: swapRecordCid,
+          validate,
+        }
 
         let write: PreparedCreate | PreparedUpdate
         try {
@@ -64,23 +74,18 @@ export default function (server: Server, ctx: AppContext) {
           throw err
         }
 
-        if (swapCommit && swapCommit !== pinned.head?.toString()) {
-          throw new InvalidRequestError(
-            `Commit was at ${pinned.head?.toString() ?? 'null'}`,
-            'InvalidSwap',
-          )
+        try {
+          await repoTxn.processWrites(did, [write], now, swapCommitCid)
+        } catch (err) {
+          if (
+            err instanceof BadCommitSwapError ||
+            err instanceof BadRecordSwapError
+          ) {
+            throw new InvalidRequestError(err.message, 'InvalidSwap')
+          } else {
+            throw err
+          }
         }
-        if (
-          (swapRecord === null && current !== null) ||
-          (swapRecord && swapRecord !== current?.cid)
-        ) {
-          throw new InvalidRequestError(
-            `Record was at ${current?.cid.toString() ?? 'null'}`,
-            'InvalidSwap',
-          )
-        }
-
-        await repoTxn.processWrites(did, [write], now, pinned)
         return write
       })
 

@@ -17,7 +17,6 @@ import { Repost } from '../src/app-view/db/tables/repost'
 import { Follow } from '../src/app-view/db/tables/follow'
 import { RepoBlob } from '../src/db/tables/repo-blob'
 import { Blob } from '../src/db/tables/blob'
-import { PostEntity } from '../src/app-view/db/tables/post-entity'
 import {
   PostEmbedImage,
   PostEmbedExternal,
@@ -176,11 +175,6 @@ describe('account deletion', () => {
     expect(updatedDbContents.follows).toEqual(
       initialDbContents.follows.filter((row) => row.creator !== carol.did),
     )
-    expect(updatedDbContents.postEntities).toEqual(
-      initialDbContents.postEntities.filter(
-        (row) => !row.postUri.includes(carol.did),
-      ),
-    )
     expect(updatedDbContents.postImages).toEqual(
       initialDbContents.postImages.filter(
         (row) => !row.postUri.includes(carol.did),
@@ -269,7 +263,6 @@ type DbContents = {
   commitBlocks: RepoCommitBlock[]
   records: Record[]
   posts: Post[]
-  postEntities: PostEntity[]
   postImages: PostEmbedImage[]
   postExternals: PostEmbedExternal[]
   postRecords: PostEmbedRecord[]
@@ -290,7 +283,6 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     commitBlocks,
     records,
     posts,
-    postEntities,
     postImages,
     postExternals,
     postRecords,
@@ -324,7 +316,6 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
       .execute(),
     db.db.selectFrom('record').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('post').orderBy('uri').selectAll().execute(),
-    db.db.selectFrom('post_entity').orderBy('postUri').selectAll().execute(),
     db.db
       .selectFrom('post_embed_image')
       .orderBy('postUri')
@@ -361,7 +352,6 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     commitBlocks,
     records,
     posts,
-    postEntities,
     postImages,
     postExternals,
     postRecords,

@@ -8,7 +8,7 @@
       "required": ["did", "handle"],
       "properties": {
         "did": {"type": "string", "format": "did"},
-        "handle": {"type": "string"},
+        "handle": {"type": "string", "format": "handle"},
         "displayName": {
           "type": "string",
           "maxLength": 64
@@ -19,10 +19,10 @@
     },
     "profileView": {
       "type": "object",
-      "required": ["did", "handle", "creator", "followersCount", "followsCount", "postsCount"],
+      "required": ["did", "handle", "creator"],
       "properties": {
         "did": {"type": "string", "format": "did"},
-        "handle": {"type": "string"},
+        "handle": {"type": "string", "format": "handle"},
         "displayName": {
           "type": "string",
           "maxLength": 64
@@ -36,10 +36,9 @@
         "followersCount": {"type": "integer"},
         "followsCount": {"type": "integer"},
         "postsCount": {"type": "integer"},
-        "creator": {"type": "string"},
+        "creator": {"type": "string", "format": "did"},
         "indexedAt": {"type": "string", "format": "datetime"},
-        "viewer": {"type": "ref", "ref": "#viewerState"},
-        "myState": {"type": "ref", "ref": "#myState", "description": "Deprecated"}
+        "viewer": {"type": "ref", "ref": "#viewerState"}
       }
     },
     "profileViewBasic": {
@@ -47,7 +46,7 @@
       "required": ["did", "handle"],
       "properties": {
         "did": {"type": "string", "format":"did"},
-        "handle": {"type": "string"},
+        "handle": {"type": "string", "format":"handle"},
         "displayName": {
           "type": "string",
           "maxLength": 64
@@ -67,14 +66,6 @@
         "muted": {"type": "boolean"},
         "following": {"type": "string", "format": "at-uri"},
         "followedBy": {"type": "string", "format": "at-uri"}
-      }
-    },
-    "myState": {
-      "type": "object",
-      "description": "Deprecated in favor of #viewerState",
-      "properties": {
-        "follow": {"type": "string", "format": "at-uri"},
-        "muted": {"type": "boolean"}
       }
     }
   }

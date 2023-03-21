@@ -9,9 +9,6 @@ Object {
   "followsCount": 1,
   "handle": "dan.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
-  "myState": Object {
-    "muted": false,
-  },
   "postsCount": 2,
   "viewer": Object {
     "muted": false,
@@ -31,10 +28,6 @@ Array [
     "followsCount": 3,
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "myState": Object {
-      "follow": "record(0)",
-      "muted": false,
-    },
     "postsCount": 4,
     "viewer": Object {
       "followedBy": "record(1)",
@@ -52,9 +45,6 @@ Array [
     "followsCount": 2,
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "myState": Object {
-      "muted": false,
-    },
     "postsCount": 3,
     "viewer": Object {
       "muted": false,
@@ -66,10 +56,6 @@ Array [
     "followersCount": 2,
     "followsCount": 1,
     "handle": "carol.test",
-    "myState": Object {
-      "follow": "record(2)",
-      "muted": false,
-    },
     "postsCount": 2,
     "viewer": Object {
       "following": "record(2)",
@@ -82,9 +68,6 @@ Array [
     "followersCount": 1,
     "followsCount": 1,
     "handle": "dan.test",
-    "myState": Object {
-      "muted": false,
-    },
     "postsCount": 2,
     "viewer": Object {
       "followedBy": "record(3)",
@@ -105,10 +88,6 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
-  "myState": Object {
-    "follow": "record(0)",
-    "muted": false,
-  },
   "postsCount": 4,
   "viewer": Object {
     "followedBy": "record(1)",
@@ -125,9 +104,6 @@ Object {
   "followersCount": 1,
   "followsCount": 1,
   "handle": "dan.test",
-  "myState": Object {
-    "muted": false,
-  },
   "postsCount": 2,
   "viewer": Object {
     "followedBy": "record(0)",
@@ -147,9 +123,6 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
-  "myState": Object {
-    "muted": false,
-  },
   "postsCount": 4,
   "viewer": Object {
     "muted": false,
@@ -169,9 +142,6 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
-  "myState": Object {
-    "muted": false,
-  },
   "postsCount": 4,
   "viewer": Object {
     "muted": false,
@@ -187,9 +157,6 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
-  "myState": Object {
-    "muted": false,
-  },
   "postsCount": 4,
   "viewer": Object {
     "muted": false,
@@ -208,9 +175,6 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
-  "myState": Object {
-    "muted": false,
-  },
   "postsCount": 4,
   "viewer": Object {
     "muted": false,

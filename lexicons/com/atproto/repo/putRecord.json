@@ -19,6 +19,7 @@
             },
             "collection": {
               "type": "string",
+              "format": "nsid",
               "description": "The NSID of the record collection."
             },
             "rkey": {

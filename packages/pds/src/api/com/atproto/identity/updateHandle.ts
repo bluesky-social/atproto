@@ -1,5 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as handleLib from '@atproto/handle'
+import * as ident from '@atproto/identifier'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { UserAlreadyExistsError } from '../../../../services/account'
@@ -12,9 +12,9 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       let handle: string
       try {
-        handle = handleLib.normalizeAndEnsureValid(input.body.handle)
+        handle = ident.normalizeAndEnsureValidHandle(input.body.handle)
       } catch (err) {
-        if (err instanceof handleLib.InvalidHandleError) {
+        if (err instanceof ident.InvalidHandleError) {
           throw new InvalidRequestError(err.message, 'InvalidHandle')
         }
         throw err
@@ -23,18 +23,21 @@ export default function (server: Server, ctx: AppContext) {
       // test against our service constraints
       // if not a supported domain, then we must check that the domain correctly links to the DID
       try {
-        handleLib.ensureServiceConstraints(handle, ctx.cfg.availableUserDomains)
+        ident.ensureHandleServiceConstraints(
+          handle,
+          ctx.cfg.availableUserDomains,
+        )
       } catch (err) {
-        if (err instanceof handleLib.UnsupportedDomainError) {
+        if (err instanceof ident.UnsupportedDomainError) {
           const did = await resolveExternalHandle(ctx.cfg.scheme, handle)
           if (did !== requester) {
             throw new InvalidRequestError(
               'External handle did not resolve to DID',
             )
           }
-        } else if (err instanceof handleLib.InvalidHandleError) {
+        } else if (err instanceof ident.InvalidHandleError) {
           throw new InvalidRequestError(err.message, 'InvalidHandle')
-        } else if (err instanceof handleLib.ReservedHandleError) {
+        } else if (err instanceof ident.ReservedHandleError) {
           throw new InvalidRequestError(err.message, 'HandleNotAvailable')
         } else {
           throw err

@@ -31,7 +31,7 @@
     { "path": "./packages/crypto/tsconfig.build.json" },
     { "path": "./packages/dev-env" },
     { "path": "./packages/did-resolver/tsconfig.build.json" },
-    { "path": "./packages/handle/tsconfig.build.json" },
+    { "path": "./packages/identifier/tsconfig.build.json" },
     { "path": "./packages/lexicon/tsconfig.build.json" },
     { "path": "./packages/lex-cli/tsconfig.build.json" },
     { "path": "./packages/nsid/tsconfig.build.json" },

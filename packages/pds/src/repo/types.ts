@@ -30,6 +30,7 @@ export type PreparedCreate = {
   action: WriteOpAction.Create
   uri: AtUri
   cid: CID
+  swapCid?: CID | null
   record: Record<string, unknown>
   blobs: BlobRef[]
 }
@@ -38,6 +39,7 @@ export type PreparedUpdate = {
   action: WriteOpAction.Update
   uri: AtUri
   cid: CID
+  swapCid?: CID | null
   record: Record<string, unknown>
   blobs: BlobRef[]
 }
@@ -45,8 +47,21 @@ export type PreparedUpdate = {
 export type PreparedDelete = {
   action: WriteOpAction.Delete
   uri: AtUri
+  swapCid?: CID | null
 }
 
 export type PreparedWrite = PreparedCreate | PreparedUpdate | PreparedDelete
 
 export class InvalidRecordError extends Error {}
+
+export class BadCommitSwapError extends Error {
+  constructor(public cid: CID) {
+    super(`Commit was at ${cid.toString()}`)
+  }
+}
+
+export class BadRecordSwapError extends Error {
+  constructor(public cid: CID | null) {
+    super(`Record was at ${cid?.toString() ?? 'null'}`)
+  }
+}

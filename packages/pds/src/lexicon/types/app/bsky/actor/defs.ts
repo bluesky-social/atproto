@@ -4,6 +4,7 @@
 import { ValidationResult } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
+import { CID } from 'multiformats/cid'
 
 export interface WithInfo {
   did: string
@@ -33,13 +34,12 @@ export interface ProfileView {
   description?: string
   avatar?: string
   banner?: string
-  followersCount: number
-  followsCount: number
-  postsCount: number
+  followersCount?: number
+  followsCount?: number
+  postsCount?: number
   creator: string
   indexedAt?: string
   viewer?: ViewerState
-  myState?: MyState
   [k: string]: unknown
 }
 
@@ -95,21 +95,4 @@ export function isViewerState(v: unknown): v is ViewerState {
 
 export function validateViewerState(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#viewerState', v)
-}
-
-/** Deprecated in favor of #viewerState */
-export interface MyState {
-  follow?: string
-  muted?: boolean
-  [k: string]: unknown
-}
-
-export function isMyState(v: unknown): v is MyState {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.actor.defs#myState'
-  )
-}
-
-export function validateMyState(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.actor.defs#myState', v)
 }

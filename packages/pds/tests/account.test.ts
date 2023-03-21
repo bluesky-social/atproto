@@ -82,7 +82,7 @@ describe('account', () => {
     const host = split.slice(0, -1).join('.')
     const code = split.at(-1)
     expect(host).toBe('pds.public.url') // Hostname of public url
-    expect(code?.length).toBe(5)
+    expect(code?.length).toBe(7)
   })
 
   it('serves the accounts system config', async () => {
@@ -103,9 +103,7 @@ describe('account', () => {
       password: 'asdf',
       inviteCode,
     })
-    await expect(promise).rejects.toThrow(
-      ComAtprotoServerCreateAccount.InvalidHandleError,
-    )
+    await expect(promise).rejects.toThrow('Input/handle must be a valid handle')
   })
 
   it('fails on bad invite code', async () => {
@@ -209,38 +207,38 @@ describe('account', () => {
       })
     }
     await expect(tryHandle('did:john')).rejects.toThrow(
-      'Cannot register a handle that starts with `did:`',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('john.bsky.io')).rejects.toThrow(
       'Not a supported handle domain',
     )
     await expect(tryHandle('j.test')).rejects.toThrow('Handle too short')
-    await expect(tryHandle('jayromy-johnber123456.test')).rejects.toThrow(
+    await expect(tryHandle('jayromy-johnber12345678910.test')).rejects.toThrow(
       'Handle too long',
     )
     await expect(tryHandle('jo_hn.test')).rejects.toThrow(
-      'Invalid characters in handle',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo!hn.test')).rejects.toThrow(
-      'Invalid characters in handle',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo%hn.test')).rejects.toThrow(
-      'Invalid characters in handle',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo&hn.test')).rejects.toThrow(
-      'Invalid characters in handle',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo*hn.test')).rejects.toThrow(
-      'Invalid characters in handle',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo|hn.test')).rejects.toThrow(
-      'Invalid characters in handle',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo:hn.test')).rejects.toThrow(
-      'Invalid characters in handle',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo/hn.test')).rejects.toThrow(
-      'Invalid characters in handle',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('about.test')).rejects.toThrow('Reserved handle')
     await expect(tryHandle('atp.test')).rejects.toThrow('Reserved handle')

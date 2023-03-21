@@ -41,7 +41,7 @@
       "description": "Create a new record.",
       "required": ["action", "collection", "value"],
       "properties": {
-        "collection": {"type": "string"},
+        "collection": {"type": "string", "format": "nsid"},
         "rkey": {"type": "string"},
         "value": {"type": "unknown"}
       }
@@ -51,7 +51,7 @@
       "description": "Update an existing record.",
       "required": ["action", "collection", "rkey", "value"],
       "properties": {
-        "collection": {"type": "string"},
+        "collection": {"type": "string", "format": "nsid"},
         "rkey": {"type": "string"},
         "value": {"type": "unknown"}
       }
@@ -61,7 +61,7 @@
       "description": "Delete an existing record.",
       "required": ["action", "collection", "rkey"],
       "properties": {
-        "collection": {"type": "string"},
+        "collection": {"type": "string", "format": "nsid"},
         "rkey": {"type": "string"}
       }
     }
