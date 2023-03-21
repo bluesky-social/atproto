@@ -19,7 +19,7 @@ export interface OutputSchema {
   repo: string
   commit: CID
   prev: CID | null
-  blocks: {}
+  blocks: Uint8Array
   ops: RepoOp[]
   blobs: CID[]
   time: string

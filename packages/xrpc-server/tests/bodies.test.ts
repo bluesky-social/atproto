@@ -1,7 +1,8 @@
 import * as http from 'http'
 import { Readable } from 'stream'
 import { gzipSync } from 'zlib'
-import xrpc from '@atproto/xrpc'
+import getPort from 'get-port'
+import xrpc, { ServiceClient } from '@atproto/xrpc'
 import { bytesToStream, cidForCbor } from '@atproto/common'
 import { randomBytes } from '@atproto/crypto'
 import { createServer, closeServer } from './_util'
@@ -120,11 +121,15 @@ describe('Bodies', () => {
       }
     },
   )
-  const url = `http://localhost:8892`
-  const client = xrpc.service(url)
   xrpc.addLexicons(LEXICONS)
+
+  let client: ServiceClient
+  let url: string
   beforeAll(async () => {
-    s = await createServer(8892, server)
+    const port = await getPort()
+    s = await createServer(port, server)
+    url = `http://localhost:${port}`
+    client = xrpc.service(url)
   })
   afterAll(async () => {
     await closeServer(s)

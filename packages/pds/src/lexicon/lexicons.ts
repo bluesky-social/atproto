@@ -2325,7 +2325,7 @@ export const schemaDict = {
                 type: 'cid-link',
               },
               blocks: {
-                type: 'unknown',
+                type: 'bytes',
               },
               ops: {
                 type: 'array',
