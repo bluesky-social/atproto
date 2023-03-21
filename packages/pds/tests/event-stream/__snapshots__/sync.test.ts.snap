@@ -96,6 +96,7 @@ Array [
                     "ref": Object {
                       "$link": "cids(3)",
                     },
+                    "size": 4114,
                   },
                 },
                 Object {
@@ -106,6 +107,7 @@ Array [
                     "ref": Object {
                       "$link": "cids(4)",
                     },
+                    "size": 12736,
                   },
                 },
               ],
@@ -228,6 +230,7 @@ Array [
                     "ref": Object {
                       "$link": "cids(3)",
                     },
+                    "size": 4114,
                   },
                 },
                 Object {
@@ -238,6 +241,7 @@ Array [
                     "ref": Object {
                       "$link": "cids(4)",
                     },
+                    "size": 12736,
                   },
                 },
               ],
@@ -418,6 +422,7 @@ Array [
                 "ref": Object {
                   "$link": "cids(3)",
                 },
+                "size": 4114,
               },
             },
             Object {
@@ -428,6 +433,7 @@ Array [
                 "ref": Object {
                   "$link": "cids(4)",
                 },
+                "size": 12736,
               },
             },
           ],
@@ -482,6 +488,7 @@ Array [
                 "ref": Object {
                   "$link": "cids(3)",
                 },
+                "size": 4114,
               },
             },
           ],
@@ -680,6 +687,7 @@ Array [
                   "ref": Object {
                     "$link": "cids(3)",
                   },
+                  "size": 4114,
                 },
               },
             ],
@@ -781,6 +789,7 @@ Array [
                           "ref": Object {
                             "$link": "cids(3)",
                           },
+                          "size": 4114,
                         },
                       },
                       Object {
@@ -791,6 +800,7 @@ Array [
                           "ref": Object {
                             "$link": "cids(4)",
                           },
+                          "size": 12736,
                         },
                       },
                     ],

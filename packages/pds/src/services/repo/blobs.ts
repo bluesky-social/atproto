@@ -11,6 +11,7 @@ import { PreparedBlobRef, PreparedWrite } from '../../repo/types'
 import Database from '../../db'
 import { Blob as BlobTable } from '../../db/tables/blob'
 import * as img from '../../image'
+import { BlobRef } from '@atproto/lexicon'
 
 export class RepoBlobs {
   constructor(public db: Database, public blobstore: BlobStore) {}
@@ -19,7 +20,7 @@ export class RepoBlobs {
     creator: string,
     userSuggestedMime: string,
     blobStream: stream.Readable,
-  ): Promise<{ cid: CID; mimeType: string }> {
+  ): Promise<BlobRef> {
     const [tempKey, size, sha256, imgInfo, sniffedMime] = await Promise.all([
       this.blobstore.putTemp(cloneStream(blobStream)),
       streamSize(cloneStream(blobStream)),
@@ -50,7 +51,7 @@ export class RepoBlobs {
           .where('blob.tempKey', 'is not', null),
       )
       .execute()
-    return { cid, mimeType }
+    return new BlobRef(cid, mimeType, size)
   }
 
   async processWriteBlobs(did: string, commit: CID, writes: PreparedWrite[]) {

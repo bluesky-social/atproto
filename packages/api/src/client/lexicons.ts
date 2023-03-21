@@ -2319,10 +2319,10 @@ export const schemaDict = {
                 format: 'did',
               },
               commit: {
-                type: 'cid-internal-ref',
+                type: 'cid-link',
               },
               prev: {
-                type: 'cid-internal-ref',
+                type: 'cid-link',
               },
               blocks: {
                 type: 'unknown',
@@ -2337,7 +2337,7 @@ export const schemaDict = {
               blobs: {
                 type: 'array',
                 items: {
-                  type: 'cid-internal-ref',
+                  type: 'cid-link',
                 },
               },
               time: {
@@ -2371,7 +2371,7 @@ export const schemaDict = {
             type: 'string',
           },
           cid: {
-            type: 'cid-internal-ref',
+            type: 'cid-link',
           },
         },
       },
@@ -2636,17 +2636,13 @@ export const schemaDict = {
               maxLength: 256,
             },
             avatar: {
-              type: 'image',
+              type: 'blob',
               accept: ['image/png', 'image/jpeg'],
-              maxWidth: 2000,
-              maxHeight: 2000,
               maxSize: 1000000,
             },
             banner: {
-              type: 'image',
+              type: 'blob',
               accept: ['image/png', 'image/jpeg'],
-              maxWidth: 6000,
-              maxHeight: 2000,
               maxSize: 1000000,
             },
           },
@@ -2762,17 +2758,13 @@ export const schemaDict = {
                 maxLength: 256,
               },
               avatar: {
-                type: 'image',
+                type: 'blob',
                 accept: ['image/png', 'image/jpeg'],
-                maxWidth: 500,
-                maxHeight: 500,
                 maxSize: 100000,
               },
               banner: {
-                type: 'image',
+                type: 'blob',
                 accept: ['image/png', 'image/jpeg'],
-                maxWidth: 1500,
-                maxHeight: 500,
                 maxSize: 500000,
               },
             },
@@ -2846,10 +2838,8 @@ export const schemaDict = {
             type: 'string',
           },
           thumb: {
-            type: 'image',
+            type: 'blob',
             accept: ['image/*'],
-            maxWidth: 2000,
-            maxHeight: 2000,
             maxSize: 1000000,
           },
         },
@@ -2909,10 +2899,8 @@ export const schemaDict = {
         required: ['image', 'alt'],
         properties: {
           image: {
-            type: 'image',
+            type: 'blob',
             accept: ['image/*'],
-            maxWidth: 2000,
-            maxHeight: 2000,
             maxSize: 1000000,
           },
           alt: {

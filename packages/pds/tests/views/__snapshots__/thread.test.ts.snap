@@ -168,6 +168,7 @@ Object {
                   "ref": Object {
                     "$link": "cids(2)",
                   },
+                  "size": 4114,
                 },
               },
             ],
@@ -307,6 +308,7 @@ Object {
                   "ref": Object {
                     "$link": "cids(2)",
                   },
+                  "size": 4114,
                 },
               },
             ],
@@ -407,6 +409,7 @@ Object {
                 "ref": Object {
                   "$link": "cids(3)",
                 },
+                "size": 4114,
               },
             },
           ],
@@ -577,6 +580,7 @@ Object {
                   "ref": Object {
                     "$link": "cids(3)",
                   },
+                  "size": 4114,
                 },
               },
             ],
@@ -751,6 +755,7 @@ Object {
                   "ref": Object {
                     "$link": "cids(3)",
                   },
+                  "size": 4114,
                 },
               },
             ],
@@ -1072,6 +1077,7 @@ Object {
                   "ref": Object {
                     "$link": "cids(3)",
                   },
+                  "size": 4114,
                 },
               },
             ],

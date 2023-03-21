@@ -53,6 +53,7 @@ Object {
             "ref": Object {
               "$link": "cids(1)",
             },
+            "size": 3976,
           },
           "description": "its me!",
           "displayName": "ali",
@@ -131,6 +132,7 @@ Object {
           "ref": Object {
             "$link": "cids(0)",
           },
+          "size": 3976,
         },
         "description": "its me!",
         "displayName": "ali",

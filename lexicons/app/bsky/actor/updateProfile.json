@@ -20,17 +20,13 @@
               "maxLength": 256
             },
             "avatar": {
-              "type": "image",
+              "type": "blob",
               "accept": ["image/png", "image/jpeg"],
-              "maxWidth": 500,
-              "maxHeight": 500,
               "maxSize": 100000
             },
             "banner": {
-              "type": "image",
+              "type": "blob",
               "accept": ["image/png", "image/jpeg"],
-              "maxWidth": 1500,
-              "maxHeight": 500,
               "maxSize": 500000
             }
           }

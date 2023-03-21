@@ -17,7 +17,7 @@ const LEXICONS = [
             type: 'object',
             properties: {
               cid: {
-                type: 'cid-internal-ref',
+                type: 'cid-link',
               },
               bytes: {
                 type: 'bytes',
@@ -31,7 +31,7 @@ const LEXICONS = [
             type: 'object',
             properties: {
               cid: {
-                type: 'cid-internal-ref',
+                type: 'cid-link',
               },
               bytes: {
                 type: 'bytes',

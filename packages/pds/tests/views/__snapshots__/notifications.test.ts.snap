@@ -57,6 +57,7 @@ Array [
               "ref": Object {
                 "$link": "cids(3)",
               },
+              "size": 4114,
             },
           },
         ],
@@ -339,6 +340,7 @@ Array [
               "ref": Object {
                 "$link": "cids(5)",
               },
+              "size": 4114,
             },
           },
         ],
@@ -653,6 +655,7 @@ Array [
               "ref": Object {
                 "$link": "cids(6)",
               },
+              "size": 4114,
             },
           },
         ],
@@ -1006,6 +1009,7 @@ Array [
               "ref": Object {
                 "$link": "cids(6)",
               },
+              "size": 4114,
             },
           },
         ],
