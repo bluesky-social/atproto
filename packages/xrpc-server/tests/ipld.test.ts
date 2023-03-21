@@ -1,6 +1,7 @@
 import * as http from 'http'
-import xrpc from '@atproto/xrpc'
+import xrpc, { ServiceClient } from '@atproto/xrpc'
 import { CID } from 'multiformats/cid'
+import getPort from 'get-port'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
 
@@ -61,10 +62,13 @@ describe('Ipld vals', () => {
       return { encoding: 'application/json', body: ctx.input?.body }
     },
   )
-  const client = xrpc.service(`http://localhost:8891`)
   xrpc.addLexicons(LEXICONS)
+
+  let client: ServiceClient
   beforeAll(async () => {
-    s = await createServer(8891, server)
+    const port = await getPort()
+    s = await createServer(port, server)
+    client = xrpc.service(`http://localhost:${port}`)
   })
   afterAll(async () => {
     await closeServer(s)

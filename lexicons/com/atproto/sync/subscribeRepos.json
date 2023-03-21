@@ -31,7 +31,7 @@
             "repo": {"type": "string", "format": "did"},
             "commit": {"type": "cid-link"},
             "prev": {"type": "cid-link"},
-            "blocks": {"type": "unknown"},
+            "blocks": {"type": "bytes"},
             "ops": {
               "type": "array", 
               "items": { "type": "ref", "ref": "#repoOp"}
