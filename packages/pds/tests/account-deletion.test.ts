@@ -208,7 +208,7 @@ describe('account deletion', () => {
       initialDbContents.repoBlobs.filter((row) => row.did !== carol.did),
     )
     expect(updatedDbContents.blobs).toEqual(
-      initialDbContents.blobs.filter((row) => row.cid !== second.toString()),
+      initialDbContents.blobs.filter((row) => row.creator !== carol.did),
     )
   })
 

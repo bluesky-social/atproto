@@ -12,6 +12,7 @@ import getFollows from './graph/getFollows'
 import getUsersSearch from './actor/search'
 import getUsersTypeahead from './actor/searchTypeahead'
 import getSuggestions from './actor/getSuggestions'
+import unspecced from './unspecced'
 
 export default function (server: Server, ctx: AppContext) {
   getTimeline(server, ctx)
@@ -26,4 +27,5 @@ export default function (server: Server, ctx: AppContext) {
   getUsersSearch(server, ctx)
   getUsersTypeahead(server, ctx)
   getSuggestions(server, ctx)
+  unspecced(server, ctx)
 }

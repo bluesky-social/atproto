@@ -1,3 +1,5 @@
+export * from './validation'
+
 export const ATP_URI_REGEX =
   // proto-    --did--------------   --name-------------   --path----   --query--   --hash--
   /^(at:\/\/)?((?:did:[a-z0-9:%-]+)|(?:[a-z][a-z0-9.:-]*))(\/[^?#\s]*)?(\?[^#\s]+)?(#[^\s]+)?$/i

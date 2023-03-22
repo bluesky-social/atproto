@@ -7,9 +7,11 @@ import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import { AppContext } from '../../src'
 import { CloseFn, runTestServer } from '../_util'
+import { SeedClient } from '../seeds/client'
 
 describe('repo sync', () => {
   let agent: AtpAgent
+  let sc: SeedClient
   let did: string
 
   const repoData: repo.RepoContents = {}
@@ -27,13 +29,14 @@ describe('repo sync', () => {
     ctx = server.ctx
     close = server.close
     agent = new AtpAgent({ service: server.url })
-    const res = await agent.api.com.atproto.account.create({
+    sc = new SeedClient(agent)
+    await sc.createAccount('alice', {
       email: 'alice@test.com',
       handle: 'alice.test',
       password: 'alice-pass',
     })
-    agent.api.setHeader('authorization', `Bearer ${res.data.accessJwt}`)
-    did = res.data.did
+    did = sc.dids.alice
+    agent.api.setHeader('authorization', `Bearer ${sc.accounts[did].accessJwt}`)
     repoData['app.bsky.system.declaration'] = {
       self: {
         $type: 'app.bsky.system.declaration',
@@ -49,7 +52,7 @@ describe('repo sync', () => {
   it('creates and syncs some records', async () => {
     const ADD_COUNT = 10
     for (let i = 0; i < ADD_COUNT; i++) {
-      const { obj, uri } = await makePost(agent, did)
+      const { obj, uri } = await makePost(sc, did)
       if (!repoData[uri.collection]) {
         repoData[uri.collection] = {}
       }
@@ -78,7 +81,7 @@ describe('repo sync', () => {
     const ADD_COUNT = 10
     const DEL_COUNT = 4
     for (let i = 0; i < ADD_COUNT; i++) {
-      const { obj, uri } = await makePost(agent, did)
+      const { obj, uri } = await makePost(sc, did)
       if (!repoData[uri.collection]) {
         repoData[uri.collection] = {}
       }
@@ -90,7 +93,7 @@ describe('repo sync', () => {
       const uri = uris[i * 5]
       await agent.api.app.bsky.feed.post.delete({
         did,
-        colleciton: uri.collection,
+        collection: uri.collection,
         rkey: uri.rkey,
       })
       delete repoData[uri.collection][uri.rkey]
@@ -266,15 +269,70 @@ describe('repo sync', () => {
     expect(car.roots.length).toBe(0)
     expect(car.blocks.equals(proofBlocks.blocks))
   })
+
+  it('syncs images', async () => {
+    const img1 = await sc.uploadFile(
+      did,
+      'tests/image/fixtures/key-landscape-small.jpg',
+      'image/jpeg',
+    )
+    const img2 = await sc.uploadFile(
+      did,
+      'tests/image/fixtures/key-portrait-small.jpg',
+      'image/jpeg',
+    )
+    await sc.post(did, 'blah', undefined, [img1])
+    await sc.post(did, 'blah', undefined, [img1, img2])
+    await sc.post(did, 'blah', undefined, [img2])
+    const res = await agent.api.com.atproto.sync.getCommitPath({ did })
+    const commits = res.data.commits
+    const blobsForFirst = await agent.api.com.atproto.sync.listBlobs({
+      did,
+      earliest: commits.at(-4),
+      latest: commits.at(-3),
+    })
+    const blobsForSecond = await agent.api.com.atproto.sync.listBlobs({
+      did,
+      earliest: commits.at(-3),
+      latest: commits.at(-2),
+    })
+    const blobsForThird = await agent.api.com.atproto.sync.listBlobs({
+      did,
+      earliest: commits.at(-2),
+      latest: commits.at(-1),
+    })
+    const blobsForRange = await agent.api.com.atproto.sync.listBlobs({
+      did,
+      earliest: commits.at(-4),
+    })
+    const blobsForRepo = await agent.api.com.atproto.sync.listBlobs({
+      did,
+    })
+
+    expect(blobsForFirst.data.cids).toEqual([img1.image.cid])
+    expect(blobsForSecond.data.cids.sort()).toEqual(
+      [img1.image.cid, img2.image.cid].sort(),
+    )
+    expect(blobsForThird.data.cids).toEqual([img2.image.cid])
+    expect(blobsForRange.data.cids.sort()).toEqual(
+      [img1.image.cid, img2.image.cid].sort(),
+    )
+    expect(blobsForRepo.data.cids.sort()).toEqual(
+      [img1.image.cid, img2.image.cid].sort(),
+    )
+  })
 })
 
-const makePost = async (agent: AtpAgent, did: string) => {
-  const obj = {
-    $type: 'app.bsky.feed.post',
-    text: randomStr(32, 'base32'),
-    createdAt: new Date().toISOString(),
+const makePost = async (sc: SeedClient, did: string) => {
+  const res = await sc.post(did, randomStr(32, 'base32'))
+  const uri = res.ref.uri
+  const record = await sc.agent.api.com.atproto.repo.getRecord({
+    user: did,
+    collection: uri.collection,
+    rkey: uri.rkey,
+  })
+  return {
+    uri,
+    obj: record.data.value,
   }
-  const res = await agent.api.app.bsky.feed.post.create({ did }, obj)
-  const uri = new AtUri(res.uri)
-  return { obj, uri }
 }

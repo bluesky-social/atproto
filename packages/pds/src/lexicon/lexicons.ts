@@ -2025,6 +2025,33 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncGetBlob: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getBlob',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a blob associated with a given repo.',
+        parameters: {
+          type: 'params',
+          required: ['did', 'cid'],
+          properties: {
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
+            cid: {
+              type: 'string',
+              description: 'The CID of the blob to fetch',
+            },
+          },
+        },
+        output: {
+          encoding: '*/*',
+        },
+      },
+    },
+  },
   ComAtprotoSyncGetBlocks: {
     lexicon: 1,
     id: 'com.atproto.sync.getBlocks',
@@ -2224,6 +2251,49 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncListBlobs: {
+    lexicon: 1,
+    id: 'com.atproto.sync.listBlobs',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List blob cids for some range of commits',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              description: 'The DID of the repo.',
+            },
+            latest: {
+              type: 'string',
+              description: 'The most recent commit',
+            },
+            earliest: {
+              type: 'string',
+              description: 'The earliest commit to start from',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['cids'],
+            properties: {
+              cids: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoSyncNotifyOfUpdate: {
     lexicon: 1,
     id: 'com.atproto.sync.notifyOfUpdate',
@@ -2232,6 +2302,17 @@ export const schemaDict = {
         type: 'query',
         description:
           'Notify a crawling service of a recent update. Often when a long break between updates causes the connection with the crawling service to break.',
+        parameters: {
+          type: 'params',
+          required: ['hostname'],
+          properties: {
+            hostname: {
+              type: 'string',
+              description:
+                'Hostname of the service that is notifying of update.',
+            },
+          },
+        },
       },
     },
   },
@@ -2246,7 +2327,7 @@ export const schemaDict = {
           type: 'params',
           required: ['hostname'],
           properties: {
-            host: {
+            hostname: {
               type: 'string',
               description:
                 'Hostname of the service that is requesting to be crawled.',
@@ -4121,6 +4202,49 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetPopular: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getPopular',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'An unspecced view of globablly popular items',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            before: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.feedViewPost',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -4171,12 +4295,14 @@ export const ids = {
   ComAtprotoSessionDelete: 'com.atproto.session.delete',
   ComAtprotoSessionGet: 'com.atproto.session.get',
   ComAtprotoSessionRefresh: 'com.atproto.session.refresh',
+  ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
   ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
   ComAtprotoSyncGetCommitPath: 'com.atproto.sync.getCommitPath',
   ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
+  ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeAllRepos: 'com.atproto.sync.subscribeAllRepos',
@@ -4217,4 +4343,5 @@ export const ids = {
   AppBskySystemActorUser: 'app.bsky.system.actorUser',
   AppBskySystemDeclRef: 'app.bsky.system.declRef',
   AppBskySystemDeclaration: 'app.bsky.system.declaration',
+  AppBskyUnspeccedGetPopular: 'app.bsky.unspecced.getPopular',
 }
