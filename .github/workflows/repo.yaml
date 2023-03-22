@@ -22,7 +22,7 @@ jobs:
         with:
           node-version: 18
           cache: "yarn"
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: /tmp/jest_rt
           key: ${{ hashFiles('**/yarn.lock') }}-${{ matrix.shard }}
