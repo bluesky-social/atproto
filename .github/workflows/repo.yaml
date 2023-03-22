@@ -19,9 +19,6 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn build
   test:
-    strategy: 
-      matrix:
-        shard: [1/3, 2/3, 3/3]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -32,9 +29,9 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: /tmp/jest_rt
-          key: ${{ hashFiles('**/yarn.lock') }}-${{ matrix.shard }}
+          key: ${{ hashFiles('**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn test:withFlags --maxWorkers=2 --shard=${{ matrix.shard }}
+      - run: yarn test:withFlags --maxWorkers=2
   verify:
     runs-on: ubuntu-latest
     steps:
