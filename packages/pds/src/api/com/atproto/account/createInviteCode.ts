@@ -11,7 +11,8 @@ export default function (server: Server, ctx: AppContext) {
 
       // generate a 7 char b32 invite code - preceded by the hostname
       // with '.'s replaced by '-'s so it is not mistakable for a link
-      // ex: bsky-app-abc12
+      // ex: bsky-app-abc2345
+      // regex: bsky-app-[a-z2-7]{7}
       const code =
         ctx.cfg.publicHostname.replaceAll('.', '-') +
         '-' +

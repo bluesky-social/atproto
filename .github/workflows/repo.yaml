@@ -1,5 +1,12 @@
 name: repo
-on: [push]
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+concurrency:
+  group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-latest
