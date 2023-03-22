@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.sync.subscribeRepos",
+  "id": "com.atproto.sync.subscribeAllRepos",
   "defs": {
     "main": {
       "type": "subscription",
