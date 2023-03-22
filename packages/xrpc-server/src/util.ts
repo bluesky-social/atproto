@@ -56,7 +56,7 @@ export function decodeQueryParam(
   if (type === 'string' || type === 'datetime') {
     return String(value)
   }
-  if (type === 'number') {
+  if (type === 'float') {
     return Number(String(value))
   } else if (type === 'integer') {
     return Number(String(value)) | 0

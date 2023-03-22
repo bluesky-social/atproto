@@ -13,7 +13,7 @@ export default [
             'object',
             'array',
             'boolean',
-            'number',
+            'float',
             'integer',
             'string',
             'bytes',
@@ -23,7 +23,7 @@ export default [
             object: { type: 'ref', ref: '#object' },
             array: { type: 'array', items: { type: 'string' } },
             boolean: { type: 'boolean' },
-            number: { type: 'number' },
+            float: { type: 'float' },
             integer: { type: 'integer' },
             string: { type: 'string' },
             bytes: { type: 'bytes' },
@@ -33,12 +33,12 @@ export default [
       },
       object: {
         type: 'object',
-        required: ['object', 'array', 'boolean', 'number', 'integer', 'string'],
+        required: ['object', 'array', 'boolean', 'float', 'integer', 'string'],
         properties: {
           object: { type: 'ref', ref: '#subobject' },
           array: { type: 'array', items: { type: 'string' } },
           boolean: { type: 'boolean' },
-          number: { type: 'number' },
+          float: { type: 'float' },
           integer: { type: 'integer' },
           string: { type: 'string' },
         },
@@ -61,10 +61,10 @@ export default [
         description: 'A query',
         parameters: {
           type: 'params',
-          required: ['boolean', 'number', 'integer'],
+          required: ['boolean', 'float', 'integer'],
           properties: {
             boolean: { type: 'boolean' },
-            number: { type: 'number' },
+            float: { type: 'float' },
             integer: { type: 'integer' },
             string: { type: 'string' },
             array: { type: 'array', items: { type: 'string' } },
@@ -87,10 +87,10 @@ export default [
         description: 'A procedure',
         parameters: {
           type: 'params',
-          required: ['boolean', 'number', 'integer'],
+          required: ['boolean', 'float', 'integer'],
           properties: {
             boolean: { type: 'boolean' },
-            number: { type: 'number' },
+            float: { type: 'float' },
             integer: { type: 'integer' },
             string: { type: 'string' },
             array: { type: 'array', items: { type: 'string' } },
@@ -119,7 +119,7 @@ export default [
             object: { type: 'ref', ref: 'com.example.kitchenSink#object' },
             array: { type: 'array', items: { type: 'string' } },
             boolean: { type: 'boolean' },
-            number: { type: 'number' },
+            float: { type: 'float' },
             integer: { type: 'integer' },
             string: { type: 'string' },
           },
@@ -138,7 +138,7 @@ export default [
           required: ['boolean'],
           properties: {
             boolean: { type: 'boolean', default: false },
-            number: { type: 'number', default: 0 },
+            float: { type: 'float', default: 0 },
             integer: { type: 'integer', default: 0 },
             string: { type: 'string', default: '' },
             object: { type: 'ref', ref: '#object' },
@@ -149,7 +149,7 @@ export default [
         type: 'object',
         properties: {
           boolean: { type: 'boolean', default: true },
-          number: { type: 'number', default: 1.5 },
+          float: { type: 'float', default: 1.5 },
           integer: { type: 'integer', default: 1 },
           string: { type: 'string', default: 'x' },
         },
@@ -220,7 +220,7 @@ export default [
               type: 'array',
               minLength: 2,
               maxLength: 4,
-              items: { type: 'number' },
+              items: { type: 'float' },
             },
           },
         },
@@ -247,15 +247,15 @@ export default [
   },
   {
     lexicon: 1,
-    id: 'com.example.numberRange',
+    id: 'com.example.floatRange',
     defs: {
       main: {
         type: 'record',
         record: {
           type: 'object',
           properties: {
-            number: {
-              type: 'number',
+            float: {
+              type: 'float',
               minimum: 2,
               maximum: 4,
             },
@@ -266,15 +266,15 @@ export default [
   },
   {
     lexicon: 1,
-    id: 'com.example.numberEnum',
+    id: 'com.example.floatEnum',
     defs: {
       main: {
         type: 'record',
         record: {
           type: 'object',
           properties: {
-            number: {
-              type: 'number',
+            float: {
+              type: 'float',
               enum: [1, 1.5, 2],
             },
           },
@@ -284,15 +284,15 @@ export default [
   },
   {
     lexicon: 1,
-    id: 'com.example.numberConst',
+    id: 'com.example.floatConst',
     defs: {
       main: {
         type: 'record',
         record: {
           type: 'object',
           properties: {
-            number: {
-              type: 'number',
+            float: {
+              type: 'float',
               const: 0,
             },
           },

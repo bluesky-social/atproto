@@ -23,7 +23,7 @@ const LEXICONS = [
             required: ['foo'],
             properties: {
               foo: { type: 'string' },
-              bar: { type: 'number' },
+              bar: { type: 'float' },
             },
           },
         },
@@ -34,7 +34,7 @@ const LEXICONS = [
             required: ['foo'],
             properties: {
               foo: { type: 'string' },
-              bar: { type: 'number' },
+              bar: { type: 'float' },
             },
           },
         },
@@ -54,7 +54,7 @@ const LEXICONS = [
             required: ['foo'],
             properties: {
               foo: { type: 'string' },
-              bar: { type: 'number' },
+              bar: { type: 'float' },
             },
           },
         },
