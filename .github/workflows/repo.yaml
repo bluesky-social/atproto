@@ -25,7 +25,7 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: /tmp/jest_rt
-          key: ${{ hashFiles(**/yarn.lock) }}-${{ matrix.shard }}
+          key: ${{ hashFiles('**/yarn.lock') }}-${{ matrix.shard }}
       - run: yarn install --frozen-lockfile
       - run: yarn test:withFlags --maxWorkers=2 --shard=${{ matrix.shard }}
   verify:
