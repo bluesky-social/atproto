@@ -7,7 +7,7 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 
 export interface Record {
-  displayName: string
+  displayName?: string
   description?: string
   avatar?: BlobRef
   banner?: BlobRef

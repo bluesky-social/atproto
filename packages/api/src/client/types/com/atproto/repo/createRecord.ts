@@ -14,10 +14,14 @@ export interface InputSchema {
   did: string
   /** The NSID of the record collection. */
   collection: string
+  /** The key of the record. */
+  rkey?: string
   /** Validate the record? */
   validate?: boolean
   /** The record to create. */
   record: {}
+  /** Compare and swap with the previous commit by cid. */
+  swapCommit?: string
   [k: string]: unknown
 }
 
@@ -39,8 +43,15 @@ export interface Response {
   data: OutputSchema
 }
 
+export class InvalidSwapError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
+    if (e.error === 'InvalidSwap') return new InvalidSwapError(e)
   }
   return e
 }

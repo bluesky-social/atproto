@@ -7,6 +7,7 @@ import { forSnapshot, runTestServer, TestServerInfo } from '../_util'
 import { AppContext, Database } from '../../src'
 import { RepoSubscription } from '../../src/app-view/subscription/repo'
 import { DatabaseSchemaType } from '../../src/app-view/db'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('sync', () => {
   let server: TestServerInfo
@@ -81,14 +82,8 @@ describe('sync', () => {
     await sc.follow(dan, bob)
     await sc.like(dan, sc.posts[alice][1].ref) // Identical
     await sc.like(alice, sc.posts[carol][0].ref) // Identical
-    await agent.api.app.bsky.actor.updateProfile(
-      { displayName: 'ali!' },
-      { headers: sc.getHeaders(alice), encoding: 'application/json' },
-    )
-    await agent.api.app.bsky.actor.updateProfile(
-      { displayName: 'robert!' },
-      { headers: sc.getHeaders(bob), encoding: 'application/json' },
-    )
+    await updateProfile(agent, alice, { displayName: 'ali!' })
+    await updateProfile(agent, bob, { displayName: 'robert!' })
 
     // Table comparator
     const getTableDump = async () => {
@@ -144,35 +139,51 @@ describe('sync', () => {
       forSnapshot(originalTableDump),
     )
   })
-})
 
-const indexedTables = [
-  'duplicate_record',
-  'user_notification',
-  'profile',
-  'follow',
-  'post',
-  'post_hierarchy',
-  'post_embed_image',
-  'post_embed_external',
-  'post_embed_record',
-  'repost',
-  'like',
-  /* Not these:
-   * 'record', // Shared, but governed by pds
-   * 'ipld_block',
-   * 'blob',
-   * 'repo_blob',
-   * 'user',
-   * 'did_handle',
-   * 'refresh_token',
-   * 'repo_root',
-   * 'invite_code',
-   * 'invite_code_use',
-   * 'message_queue',
-   * 'message_queue_cursor',
-   */
-]
+  async function updateProfile(
+    agent: AtpAgent,
+    did: string,
+    record: Record<string, unknown>,
+  ) {
+    return await agent.api.com.atproto.repo.putRecord(
+      {
+        did,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+        record,
+      },
+      { headers: sc.getHeaders(did), encoding: 'application/json' },
+    )
+  }
+
+  const indexedTables = [
+    'duplicate_record',
+    'user_notification',
+    'profile',
+    'follow',
+    'post',
+    'post_hierarchy',
+    'post_embed_image',
+    'post_embed_external',
+    'post_embed_record',
+    'repost',
+    'like',
+    /* Not these:
+     * 'record', // Shared, but governed by pds
+     * 'ipld_block',
+     * 'blob',
+     * 'repo_blob',
+     * 'user',
+     * 'did_handle',
+     * 'refresh_token',
+     * 'repo_root',
+     * 'invite_code',
+     * 'invite_code_use',
+     * 'message_queue',
+     * 'message_queue_cursor',
+     */
+  ]
+})
 
 async function processFullSequence(ctx: AppContext, sub: RepoSubscription) {
   const { db } = ctx.db

@@ -17,6 +17,10 @@ export interface InputSchema {
   collection: string
   /** The key of the record. */
   rkey: string
+  /** Compare and swap with the previous record by cid. */
+  swapRecord?: string
+  /** Compare and swap with the previous commit by cid. */
+  swapCommit?: string
   [k: string]: unknown
 }
 
@@ -28,6 +32,7 @@ export interface HandlerInput {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'InvalidSwap'
 }
 
 export type HandlerOutput = HandlerError | void

@@ -13,14 +13,18 @@ export interface QueryParams {}
 export interface InputSchema {
   /** The DID of the repo. */
   did: string
-  /** The NSID of the record type. */
+  /** The NSID of the record collection. */
   collection: string
-  /** The TID of the record. */
+  /** The key of the record. */
   rkey: string
   /** Validate the record? */
   validate: boolean
-  /** The record to create. */
+  /** The record to write. */
   record: {}
+  /** Compare and swap with the previous record by cid. */
+  swapRecord?: string | null
+  /** Compare and swap with the previous commit by cid. */
+  swapCommit?: string
   [k: string]: unknown
 }
 
@@ -43,6 +47,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'InvalidSwap'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

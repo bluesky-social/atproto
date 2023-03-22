@@ -10,7 +10,7 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {
   /** The handle or DID of the repo. */
   repo: string
-  /** The NSID of the collection. */
+  /** The NSID of the record collection. */
   collection: string
   /** The key of the record. */
   rkey: string

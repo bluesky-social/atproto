@@ -15,10 +15,14 @@ export interface InputSchema {
   did: string
   /** The NSID of the record collection. */
   collection: string
+  /** The key of the record. */
+  rkey?: string
   /** Validate the record? */
   validate: boolean
   /** The record to create. */
   record: {}
+  /** Compare and swap with the previous commit by cid. */
+  swapCommit?: string
   [k: string]: unknown
 }
 
@@ -41,6 +45,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'InvalidSwap'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

@@ -4,25 +4,25 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Fetch a record.",
+      "description": "Get a record.",
       "parameters": {
         "type": "params",
         "required": ["repo", "collection", "rkey"],
         "properties": {
           "repo": {
-            "type": "string", 
+            "type": "string",
             "format": "at-identifier",
             "description": "The handle or DID of the repo."
           },
           "collection": {
             "type": "string",
             "format": "nsid",
-            "description": "The NSID of the collection."
+            "description": "The NSID of the record collection."
           },
           "rkey": {"type": "string", "description": "The key of the record."},
           "cid": {
             "type": "string",
-            "format": "cid", 
+            "format": "cid",
             "description": "The CID of the version of the record. If not specified, then return the most recent version."
           }
         }

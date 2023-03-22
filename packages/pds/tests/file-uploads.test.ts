@@ -9,6 +9,7 @@ import * as image from '../src/image'
 import axios from 'axios'
 import { randomBytes } from '@atproto/crypto'
 import { BlobRef } from '@atproto/lexicon'
+import { ids } from '../src/lexicon/lexicons'
 
 const alice = {
   email: 'alice@test.com',
@@ -25,7 +26,6 @@ const bob = {
 
 describe('file uploads', () => {
   let server: TestServerInfo
-  let agent: AtpAgent
   let aliceAgent: AtpAgent
   let bobAgent: AtpAgent
   let blobstore: DiskBlobStore
@@ -41,7 +41,6 @@ describe('file uploads', () => {
     blobstore = server.ctx.blobstore as DiskBlobStore
     db = server.ctx.db
     close = server.close
-    agent = new AtpAgent({ service: server.url })
     aliceAgent = new AtpAgent({ service: server.url })
     bobAgent = new AtpAgent({ service: server.url })
     cfg = server.ctx.cfg
@@ -53,19 +52,17 @@ describe('file uploads', () => {
   })
 
   it('registers users', async () => {
-    const res = await agent.api.com.atproto.server.createAccount({
+    const res = await aliceAgent.createAccount({
       email: alice.email,
       handle: alice.handle,
       password: alice.password,
     })
-    aliceAgent.api.setHeader('authorization', `Bearer ${res.data.accessJwt}`)
     alice.did = res.data.did
-    const res2 = await agent.api.com.atproto.server.createAccount({
+    const res2 = await bobAgent.createAccount({
       email: bob.email,
       handle: bob.handle,
       password: bob.password,
     })
-    bobAgent.api.setHeader('authorization', `Bearer ${res2.data.accessJwt}`)
     bob.did = res2.data.did
   })
 
@@ -86,7 +83,7 @@ describe('file uploads', () => {
       signal: abortController.signal,
       headers: {
         'content-type': 'image/jpeg',
-        authorization: aliceAgent.api.xrpc.headers.authorization,
+        authorization: `Bearer ${aliceAgent.session?.accessJwt}`,
       },
     })
     await expect(response).rejects.toThrow('operation was aborted')
@@ -118,7 +115,7 @@ describe('file uploads', () => {
   })
 
   it('can reference the file', async () => {
-    await aliceAgent.api.app.bsky.actor.updateProfile({
+    await updateProfile(aliceAgent, {
       displayName: 'Alice',
       avatar: smallBlob,
     })
@@ -175,7 +172,7 @@ describe('file uploads', () => {
     })
     largeBlob = res.data.blob
 
-    const profilePromise = aliceAgent.api.app.bsky.actor.updateProfile({
+    const profilePromise = updateProfile(aliceAgent, {
       avatar: largeBlob,
     })
 
@@ -211,17 +208,25 @@ describe('file uploads', () => {
       } as any,
     )
     expect(uploadA).toEqual(uploadB)
-    const { data: profileA } =
-      await aliceAgent.api.app.bsky.actor.updateProfile({
-        displayName: 'Alice',
-        avatar: uploadA.blob,
-      })
-    expect((profileA.record as any).avatar.cid).toEqual(uploadA.cid)
-    const { data: profileB } = await bobAgent.api.app.bsky.actor.updateProfile({
+
+    await updateProfile(aliceAgent, {
+      displayName: 'Alice',
+      avatar: uploadA.blob,
+    })
+    const profileA = await aliceAgent.api.app.bsky.actor.profile.get({
+      repo: alice.did,
+      rkey: 'self',
+    })
+    expect((profileA.value as any).avatar.cid).toEqual(uploadA.cid)
+    await updateProfile(bobAgent, {
       displayName: 'Bob',
       avatar: uploadB.blob,
     })
-    expect((profileB.record as any).avatar.cid).toEqual(uploadA.cid)
+    const profileB = await bobAgent.api.app.bsky.actor.profile.get({
+      repo: bob.did,
+      rkey: 'self',
+    })
+    expect((profileB.value as any).avatar.cid).toEqual(uploadA.cid)
     const { data: uploadAfterPermanent } =
       await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
         encoding: 'image/jpeg',
@@ -299,3 +304,12 @@ describe('file uploads', () => {
     expect(found?.mimeType).toBe('test/fake')
   })
 })
+
+async function updateProfile(agent: AtpAgent, record: Record<string, unknown>) {
+  return await agent.api.com.atproto.repo.putRecord({
+    did: agent.session?.did ?? '',
+    collection: ids.AppBskyActorProfile,
+    rkey: 'self',
+    record,
+  })
+}

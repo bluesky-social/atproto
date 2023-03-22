@@ -1,6 +1,10 @@
 import fs from 'fs/promises'
 import { AtUri } from '@atproto/uri'
 import AtpAgent from '@atproto/api'
+import * as createRecord from '@atproto/api/src/client/types/com/atproto/repo/createRecord'
+import * as putRecord from '@atproto/api/src/client/types/com/atproto/repo/putRecord'
+import * as deleteRecord from '@atproto/api/src/client/types/com/atproto/repo/deleteRecord'
+import * as applyWrites from '@atproto/api/src/client/types/com/atproto/repo/applyWrites'
 import { cidForCbor, TID } from '@atproto/common'
 import { BlobNotFoundError } from '@atproto/repo'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
@@ -8,6 +12,7 @@ import { adminAuth, CloseFn, paginateAll, runTestServer } from './_util'
 import AppContext from '../src/context'
 import { TAKEDOWN } from '../src/lexicon/types/com/atproto/admin/defs'
 import { BlobRef } from '@atproto/lexicon'
+import { ids } from '../src/lexicon/lexicons'
 
 const alice = {
   email: 'alice@test.com',
@@ -392,6 +397,164 @@ describe('crud operations', () => {
     })
   })
 
+  describe('deleteRecord', () => {
+    it('deletes a record if it exists', async () => {
+      const { repo } = aliceAgent.api.com.atproto
+      const { data: post } = await repo.createRecord({
+        did: alice.did,
+        collection: ids.AppBskyFeedPost,
+        record: { text: 'post', createdAt: new Date().toISOString() },
+      })
+      const uri = new AtUri(post.uri)
+      await repo.deleteRecord({
+        did: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+      const checkPost = repo.getRecord({
+        repo: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+      await expect(checkPost).rejects.toThrow('Could not locate record')
+    })
+
+    it("no-ops if record doesn't exist", async () => {
+      const { repo } = aliceAgent.api.com.atproto
+      const { data: post } = await repo.createRecord({
+        did: alice.did,
+        collection: ids.AppBskyFeedPost,
+        record: { text: 'post', createdAt: new Date().toISOString() },
+      })
+      const uri = new AtUri(post.uri)
+      await repo.deleteRecord({
+        did: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+      const checkPost = repo.getRecord({
+        repo: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+      await expect(checkPost).rejects.toThrow('Could not locate record')
+      const attemptDelete = repo.deleteRecord({
+        did: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+      await expect(attemptDelete).resolves.toBeDefined()
+    })
+  })
+
+  describe('putRecord', () => {
+    const profilePath = {
+      collection: ids.AppBskyActorProfile,
+      rkey: 'self',
+    }
+
+    it("creates a new record if it doesn't already exist", async () => {
+      const { repo } = bobAgent.api.com.atproto
+      const exists = repo.getRecord({ ...profilePath, repo: bob.did })
+      await expect(exists).rejects.toThrow('Could not locate record')
+
+      const { data: put } = await repo.putRecord({
+        ...profilePath,
+        did: bob.did,
+        record: {
+          displayName: 'Robert',
+        },
+      })
+      expect(put.uri).toEqual(`at://${bob.did}/${ids.AppBskyActorProfile}/self`)
+
+      const { data: profile } = await repo.getRecord({
+        ...profilePath,
+        repo: bob.did,
+      })
+      expect(profile.value).toEqual({
+        $type: ids.AppBskyActorProfile,
+        displayName: 'Robert',
+      })
+    })
+
+    it('updates a record if it already exists', async () => {
+      const { repo } = bobAgent.api.com.atproto
+      const { data: put } = await repo.putRecord({
+        ...profilePath,
+        did: bob.did,
+        record: {
+          displayName: 'Robert',
+          description: 'Dog lover',
+        },
+      })
+      expect(put.uri).toEqual(`at://${bob.did}/${ids.AppBskyActorProfile}/self`)
+
+      const { data: profile } = await repo.getRecord({
+        ...profilePath,
+        repo: bob.did,
+      })
+      expect(profile.value).toEqual({
+        $type: ids.AppBskyActorProfile,
+        displayName: 'Robert',
+        description: 'Dog lover',
+      })
+    })
+
+    it('temporarily only puts profile records', async () => {
+      const { repo } = bobAgent.api.com.atproto
+      const put = repo.putRecord({
+        did: bob.did,
+        collection: ids.AppBskyGraphFollow,
+        rkey: TID.nextStr(),
+        record: {
+          subject: alice.did,
+          createdAt: new Date().toISOString(),
+        },
+      })
+      await expect(put).rejects.toThrow(
+        'Temporarily only accepting puts for app.bsky.actor.profile/self',
+      )
+    })
+
+    it('fails on user mismatch', async () => {
+      const { repo } = aliceAgent.api.com.atproto
+      const put = repo.putRecord({
+        did: bob.did,
+        collection: ids.AppBskyGraphFollow,
+        rkey: TID.nextStr(),
+        record: {
+          subject: alice.did,
+          createdAt: new Date().toISOString(),
+        },
+      })
+      await expect(put).rejects.toThrow('Forbidden')
+    })
+
+    it('fails on invalid record', async () => {
+      const { repo } = bobAgent.api.com.atproto
+      const put = repo.putRecord({
+        ...profilePath,
+        did: bob.did,
+        record: {
+          displayName: 'Robert',
+          description: 3.141,
+        },
+      })
+      await expect(put).rejects.toThrow(
+        'Invalid app.bsky.actor.profile record: Record/description must be a string',
+      )
+      const { data: profile } = await repo.getRecord({
+        ...profilePath,
+        repo: bob.did,
+      })
+      expect(profile.value).toEqual({
+        $type: ids.AppBskyActorProfile,
+        displayName: 'Robert',
+        description: 'Dog lover',
+      })
+    })
+  })
+
   // Validation
   // --------------
 
@@ -446,6 +609,295 @@ describe('crud operations', () => {
     ).rejects.toThrow(
       'Invalid app.bsky.feed.post record: Record must have the property "text"',
     )
+  })
+
+  describe('compare-and-swap', () => {
+    let recordCount = 0 // Ensures unique cids
+    const postRecord = () => ({
+      text: `post (${++recordCount})`,
+      createdAt: new Date().toISOString(),
+    })
+    const profileRecord = () => ({
+      displayName: `ali (${++recordCount})`,
+    })
+
+    it('createRecord succeeds on proper commit cas', async () => {
+      const { repo, sync } = aliceAgent.api.com.atproto
+      const { data: head } = await sync.getHead({ did: alice.did })
+      const { data: post } = await repo.createRecord({
+        did: alice.did,
+        collection: ids.AppBskyFeedPost,
+        swapCommit: head.root,
+        record: postRecord(),
+      })
+      const uri = new AtUri(post.uri)
+      const checkPost = repo.getRecord({
+        repo: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+      await expect(checkPost).resolves.toBeDefined()
+    })
+
+    it('createRecord fails on bad commit cas', async () => {
+      const { repo, sync } = aliceAgent.api.com.atproto
+      const { data: staleHead } = await sync.getHead({ did: alice.did })
+      // Update repo, change head
+      await repo.createRecord({
+        did: alice.did,
+        collection: ids.AppBskyFeedPost,
+        record: postRecord(),
+      })
+      const attemptCreate = repo.createRecord({
+        did: alice.did,
+        collection: ids.AppBskyFeedPost,
+        swapCommit: staleHead.root,
+        record: postRecord(),
+      })
+      await expect(attemptCreate).rejects.toThrow(createRecord.InvalidSwapError)
+    })
+
+    it('deleteRecord succeeds on proper commit cas', async () => {
+      const { repo, sync } = aliceAgent.api.com.atproto
+      const { data: post } = await repo.createRecord({
+        did: alice.did,
+        collection: ids.AppBskyFeedPost,
+        record: postRecord(),
+      })
+      const { data: head } = await sync.getHead({ did: alice.did })
+      const uri = new AtUri(post.uri)
+      await repo.deleteRecord({
+        did: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+        swapCommit: head.root,
+      })
+      const checkPost = repo.getRecord({
+        repo: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+      await expect(checkPost).rejects.toThrow('Could not locate record')
+    })
+
+    it('deleteRecord fails on bad commit cas', async () => {
+      const { repo, sync } = aliceAgent.api.com.atproto
+      const { data: staleHead } = await sync.getHead({ did: alice.did })
+      const { data: post } = await repo.createRecord({
+        did: alice.did,
+        collection: ids.AppBskyFeedPost,
+        record: postRecord(),
+      })
+      const uri = new AtUri(post.uri)
+      const attempDelete = repo.deleteRecord({
+        did: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+        swapCommit: staleHead.root,
+      })
+      await expect(attempDelete).rejects.toThrow(deleteRecord.InvalidSwapError)
+      const checkPost = repo.getRecord({
+        repo: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+      await expect(checkPost).resolves.toBeDefined()
+    })
+
+    it('deleteRecord succeeds on proper record cas', async () => {
+      const { repo } = aliceAgent.api.com.atproto
+      const { data: post } = await repo.createRecord({
+        did: alice.did,
+        collection: ids.AppBskyFeedPost,
+        record: postRecord(),
+      })
+      const uri = new AtUri(post.uri)
+      await repo.deleteRecord({
+        did: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+        swapRecord: post.cid,
+      })
+      const checkPost = repo.getRecord({
+        repo: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+      await expect(checkPost).rejects.toThrow('Could not locate record')
+    })
+
+    it('deleteRecord fails on bad record cas', async () => {
+      const { repo } = aliceAgent.api.com.atproto
+      const { data: post } = await repo.createRecord({
+        did: alice.did,
+        collection: ids.AppBskyFeedPost,
+        record: postRecord(),
+      })
+      const uri = new AtUri(post.uri)
+      const attempDelete = repo.deleteRecord({
+        did: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+        swapRecord: (await cidForCbor({})).toString(),
+      })
+      await expect(attempDelete).rejects.toThrow(deleteRecord.InvalidSwapError)
+      const checkPost = repo.getRecord({
+        repo: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+      await expect(checkPost).resolves.toBeDefined()
+    })
+
+    it('putRecord succeeds on proper commit cas', async () => {
+      const { repo, sync } = aliceAgent.api.com.atproto
+      const { data: head } = await sync.getHead({ did: alice.did })
+      const { data: profile } = await repo.putRecord({
+        did: alice.did,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+        swapCommit: head.root,
+        record: profileRecord(),
+      })
+      const { data: checkProfile } = await repo.getRecord({
+        repo: alice.did,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+      })
+      expect(checkProfile.cid).toEqual(profile.cid)
+    })
+
+    it('putRecord fails on bad commit cas', async () => {
+      const { repo, sync } = aliceAgent.api.com.atproto
+      const { data: staleHead } = await sync.getHead({ did: alice.did })
+      // Update repo, change head
+      await repo.createRecord({
+        did: alice.did,
+        collection: ids.AppBskyFeedPost,
+        record: postRecord(),
+      })
+      const attemptPut = repo.putRecord({
+        did: alice.did,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+        swapCommit: staleHead.root,
+        record: profileRecord(),
+      })
+      await expect(attemptPut).rejects.toThrow(putRecord.InvalidSwapError)
+    })
+
+    it('putRecord succeeds on proper record cas', async () => {
+      const { repo } = aliceAgent.api.com.atproto
+      // Start with missing profile record, to test swapRecord=null
+      await repo.deleteRecord({
+        did: alice.did,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+      })
+      // Test swapRecord w/ null (ensures create)
+      const { data: profile1 } = await repo.putRecord({
+        did: alice.did,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+        swapRecord: null,
+        record: profileRecord(),
+      })
+      const { data: checkProfile1 } = await repo.getRecord({
+        repo: alice.did,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+      })
+      expect(checkProfile1.cid).toEqual(profile1.cid)
+      // Test swapRecord w/ cid (ensures update)
+      const { data: profile2 } = await repo.putRecord({
+        did: alice.did,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+        swapRecord: profile1.cid,
+        record: profileRecord(),
+      })
+      const { data: checkProfile2 } = await repo.getRecord({
+        repo: alice.did,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+      })
+      expect(checkProfile2.cid).toEqual(profile2.cid)
+    })
+
+    it('putRecord fails on bad record cas', async () => {
+      const { repo } = aliceAgent.api.com.atproto
+      // Test swapRecord w/ null (ensures create)
+      const attemptPut1 = repo.putRecord({
+        did: alice.did,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+        swapRecord: null,
+        record: profileRecord(),
+      })
+      await expect(attemptPut1).rejects.toThrow(putRecord.InvalidSwapError)
+      // Test swapRecord w/ cid (ensures update)
+      const attemptPut2 = repo.putRecord({
+        did: alice.did,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+        swapRecord: (await cidForCbor({})).toString(),
+        record: profileRecord(),
+      })
+      await expect(attemptPut2).rejects.toThrow(putRecord.InvalidSwapError)
+    })
+
+    it('applyWrites succeeds on proper commit cas', async () => {
+      const { repo, sync } = aliceAgent.api.com.atproto
+      const { data: head } = await sync.getHead({ did: alice.did })
+      const rkey = TID.nextStr()
+      await repo.applyWrites({
+        did: alice.did,
+        swapCommit: head.root,
+        writes: [
+          {
+            $type: `${ids.ComAtprotoRepoApplyWrites}#create`,
+            action: 'create',
+            collection: ids.AppBskyFeedPost,
+            rkey,
+            value: { $type: ids.AppBskyFeedPost, ...postRecord() },
+          },
+        ],
+      })
+      const uri = AtUri.make(alice.did, ids.AppBskyFeedPost, rkey)
+      const checkPost = repo.getRecord({
+        repo: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+      await expect(checkPost).resolves.toBeDefined()
+    })
+
+    it('applyWrites fails on bad commit cas', async () => {
+      const { repo, sync } = aliceAgent.api.com.atproto
+      const { data: staleHead } = await sync.getHead({ did: alice.did })
+      // Update repo, change head
+      await repo.createRecord({
+        did: alice.did,
+        collection: ids.AppBskyFeedPost,
+        record: postRecord(),
+      })
+      const attemptApplyWrite = repo.applyWrites({
+        did: alice.did,
+        swapCommit: staleHead.root,
+        writes: [
+          {
+            $type: `${ids.ComAtprotoRepoApplyWrites}#create`,
+            action: 'create',
+            collection: ids.AppBskyFeedPost,
+            rkey: TID.nextStr(),
+            value: { $type: ids.AppBskyFeedPost, ...postRecord() },
+          },
+        ],
+      })
+      await expect(attemptApplyWrite).rejects.toThrow(
+        applyWrites.InvalidSwapError,
+      )
+    })
   })
 
   it('prevents duplicate likes', async () => {

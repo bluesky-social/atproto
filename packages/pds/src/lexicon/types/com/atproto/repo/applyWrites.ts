@@ -16,6 +16,7 @@ export interface InputSchema {
   /** Validate the records? */
   validate: boolean
   writes: (Create | Update | Delete)[]
+  swapCommit?: string
   [k: string]: unknown
 }
 
@@ -27,6 +28,7 @@ export interface HandlerInput {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'InvalidSwap'
 }
 
 export type HandlerOutput = HandlerError | void
@@ -38,9 +40,9 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
   res: express.Response
 }) => Promise<HandlerOutput> | HandlerOutput
 
+/** Create a new record. */
 export interface Create {
-  action: 'create'
-  collection: 'nsid'
+  collection: string
   rkey?: string
   value: {}
   [k: string]: unknown
@@ -58,9 +60,9 @@ export function validateCreate(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.repo.applyWrites#create', v)
 }
 
+/** Update an existing record. */
 export interface Update {
-  action: 'update'
-  collection: 'nsid'
+  collection: string
   rkey: string
   value: {}
   [k: string]: unknown
@@ -78,9 +80,9 @@ export function validateUpdate(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.repo.applyWrites#update', v)
 }
 
+/** Delete an existing record. */
 export interface Delete {
-  action: 'delete'
-  collection: 'nsid'
+  collection: string
   rkey: string
   [k: string]: unknown
 }

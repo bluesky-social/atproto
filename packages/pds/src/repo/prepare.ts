@@ -1,3 +1,4 @@
+import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { TID } from '@atproto/common'
 import {
@@ -106,37 +107,25 @@ export const setCollectionName = (
   return record
 }
 
-export const determineRkey = (collection: string): string => {
-  const doc = lex.lexicons.getDef(collection)
-  let keyType: string | undefined
-  if (doc && doc.type === 'record') {
-    keyType = doc.key
-  }
-  if (keyType && keyType.startsWith('literal')) {
-    const split = keyType.split(':')
-    return split[1]
-  } else {
-    return TID.nextStr()
-  }
-}
-
 export const prepareCreate = async (opts: {
   did: string
   collection: string
-  record: RepoRecord
   rkey?: string
+  swapCid?: CID | null
+  record: RepoRecord
   validate?: boolean
 }): Promise<PreparedCreate> => {
-  const { did, collection, validate = true } = opts
+  const { did, collection, swapCid, validate = true } = opts
   const record = setCollectionName(collection, opts.record, validate)
   if (validate) {
     assertValidRecord(record)
   }
-  const rkey = opts.rkey || determineRkey(collection)
+  const rkey = opts.rkey || TID.nextStr()
   return {
     action: WriteOpAction.Create,
     uri: AtUri.make(did, collection, rkey),
     cid: await cidForRecord(record),
+    swapCid,
     record,
     blobs: blobsForWrite(record),
   }
@@ -146,10 +135,11 @@ export const prepareUpdate = async (opts: {
   did: string
   collection: string
   rkey: string
+  swapCid?: CID | null
   record: RepoRecord
   validate?: boolean
 }): Promise<PreparedUpdate> => {
-  const { did, collection, rkey, validate = true } = opts
+  const { did, collection, rkey, swapCid, validate = true } = opts
   const record = setCollectionName(collection, opts.record, validate)
   if (validate) {
     assertValidRecord(record)
@@ -158,6 +148,7 @@ export const prepareUpdate = async (opts: {
     action: WriteOpAction.Update,
     uri: AtUri.make(did, collection, rkey),
     cid: await cidForRecord(record),
+    swapCid,
     record,
     blobs: blobsForWrite(record),
   }
@@ -167,11 +158,13 @@ export const prepareDelete = (opts: {
   did: string
   collection: string
   rkey: string
+  swapCid?: CID | null
 }): PreparedDelete => {
-  const { did, collection, rkey } = opts
+  const { did, collection, rkey, swapCid } = opts
   return {
     action: WriteOpAction.Delete,
     uri: AtUri.make(did, collection, rkey),
+    swapCid,
   }
 }
 
