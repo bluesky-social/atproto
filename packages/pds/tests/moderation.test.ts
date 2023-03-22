@@ -568,8 +568,8 @@ describe('moderation', () => {
 
     it('only allows blob to have one current action.', async () => {
       const img = sc.posts[sc.dids.carol][0].images[0]
-      const postA = await sc.post(sc.dids.alice, 'image A', undefined, [img])
-      const postB = await sc.post(sc.dids.alice, 'image B', undefined, [img])
+      const postA = await sc.post(sc.dids.carol, 'image A', undefined, [img])
+      const postB = await sc.post(sc.dids.carol, 'image B', undefined, [img])
       const { data: acknowledge } =
         await agent.api.com.atproto.admin.takeModerationAction(
           {

@@ -1,0 +1,21 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.sync.getBlob",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get a blob associated with a given repo.",
+      "parameters": {
+        "type": "params",
+        "required": ["did", "cid"],
+        "properties": {
+          "did": {"type": "string", "description": "The DID of the repo."},
+          "cid": {"type": "string", "description": "The CID of the blob to fetch"}
+        }
+      },
+      "output": {
+        "encoding": "*/*"
+      }
+    }
+  }
+}

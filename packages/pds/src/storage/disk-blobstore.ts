@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { randomStr } from '@atproto/crypto'
 import { httpLogger as log } from '../logger'
-import { isErrnoException } from '@atproto/common'
+import { isErrnoException, fileExists } from '@atproto/common'
 
 export class DiskBlobStore implements BlobStore {
   location: string
@@ -112,36 +112,17 @@ export class DiskBlobStore implements BlobStore {
   }
 
   async getStream(cid: CID): Promise<stream.Readable> {
-    try {
-      const handle = await fs.open(this.getStoredPath(cid), 'r')
-      return handle.createReadStream()
-    } catch (err) {
-      if (isErrnoException(err) && err.code === 'ENOENT') {
-        throw new BlobNotFoundError()
-      }
-      throw err
+    const path = this.getStoredPath(cid)
+    const exists = await fileExists(path)
+    if (!exists) {
+      throw new BlobNotFoundError()
     }
+    return fsSync.createReadStream(path)
   }
 
   async delete(cid: CID): Promise<void> {
     await fs.rm(this.getStoredPath(cid))
   }
-}
-
-const fileExists = (location: string): Promise<boolean> => {
-  return new Promise((resolve, reject) => {
-    fsSync.stat(location, (err) => {
-      if (err) {
-        if (err.code === 'ENOENT') {
-          return resolve(false)
-        } else {
-          return reject(err)
-        }
-      } else {
-        resolve(true)
-      }
-    })
-  })
 }
 
 export default DiskBlobStore

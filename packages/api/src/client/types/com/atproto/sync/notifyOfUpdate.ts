@@ -6,7 +6,10 @@ import { ValidationResult } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 
-export interface QueryParams {}
+export interface QueryParams {
+  /** Hostname of the service that is notifying of update. */
+  hostname: string
+}
 
 export type InputSchema = undefined
 

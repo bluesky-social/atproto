@@ -30,7 +30,7 @@
     "@atproto/common": "*",
     "@atproto/crypto": "*",
     "@atproto/did-resolver": "*",
-    "@atproto/handle": "*",
+    "@atproto/identifier": "*",
     "@atproto/lexicon": "*",
     "@atproto/repo": "*",
     "@atproto/uri": "*",

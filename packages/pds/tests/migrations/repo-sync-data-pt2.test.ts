@@ -27,7 +27,7 @@ describe('repo sync data migration', () => {
   })
 
   it('migrates down to pt2', async () => {
-    await db.migrateToOrThrow('_20230127T224743452Z')
+    await db.migrateToOrThrow('_20230201T200606704Z')
   })
 
   const getSnapshot = async () => {

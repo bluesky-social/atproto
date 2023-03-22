@@ -93,19 +93,19 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const access = ctx.auth.createAccessToken(user.did)
-      const refresh = ctx.auth.createRefreshToken(user.did)
 
-      await ctx.db.transaction(async (dbTxn) => {
+      const refresh = await ctx.db.transaction(async (dbTxn) => {
         const authTxn = ctx.services.auth(dbTxn)
-        const revoked = await authTxn.revokeRefreshToken(lastRefreshId)
-        if (!revoked) {
-          throw new InvalidRequestError(
-            'Token has been revoked',
-            'ExpiredToken',
-          )
-        }
+        const nextId = await authTxn.rotateRefreshToken(lastRefreshId)
+        if (!nextId) return null
+        const refresh = ctx.auth.createRefreshToken(user.did, nextId)
         await authTxn.grantRefreshToken(refresh.payload)
+        return refresh
       })
+
+      if (refresh === null) {
+        throw new InvalidRequestError('Token has been revoked', 'ExpiredToken')
+      }
 
       return {
         encoding: 'application/json',

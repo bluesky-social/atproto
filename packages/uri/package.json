@@ -18,5 +18,8 @@
     "postpublish": "npm run update-main-to-src"
   },
   "license": "MIT",
-  "dependencies": {}
+  "dependencies": {
+    "@atproto/identifier": "*",
+    "@atproto/nsid": "*"
+  }
 }
