@@ -52,7 +52,7 @@ import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
-import * as ComAtprotoSyncSubscribeAllRepos from './types/com/atproto/sync/subscribeAllRepos'
+import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
@@ -546,10 +546,10 @@ export class SyncNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  subscribeAllRepos<AV extends StreamAuthVerifier>(
-    cfg: ConfigOf<AV, ComAtprotoSyncSubscribeAllRepos.Handler<ExtractAuth<AV>>>,
+  subscribeRepos<AV extends StreamAuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncSubscribeRepos.Handler<ExtractAuth<AV>>>,
   ) {
-    const nsid = 'com.atproto.sync.subscribeAllRepos' // @ts-ignore
+    const nsid = 'com.atproto.sync.subscribeRepos' // @ts-ignore
     return this._server.xrpc.streamMethod(nsid, cfg)
   }
 }

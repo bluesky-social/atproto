@@ -54,7 +54,12 @@ export class Subscription<T = unknown> {
       try {
         const cancelable = { signal: ac.signal }
         for await (const message of byMessage(ws, cancelable)) {
-          const result = this.opts.validate(message.body) // @TODO map $type
+          const t = message.header.t
+          const body = message.body
+          if (body && t !== undefined) {
+            body['$type'] = t.startsWith('#') ? this.opts.method + t : t
+          }
+          const result = this.opts.validate(body)
           if (result !== undefined) {
             yield result
           }

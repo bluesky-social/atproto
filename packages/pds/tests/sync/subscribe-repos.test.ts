@@ -9,16 +9,19 @@ import {
 import { randomStr } from '@atproto/crypto'
 import * as repo from '@atproto/repo'
 import { getWriteLog, MemoryBlockstore, WriteOpAction } from '@atproto/repo'
-import { byFrame, ErrorFrame, Frame, InfoFrame } from '@atproto/xrpc-server'
+import { byFrame, ErrorFrame, Frame, MessageFrame } from '@atproto/xrpc-server'
 import { WebSocket } from 'ws'
-import { OutputSchema as RepoEvent } from '../../src/lexicon/types/com/atproto/sync/subscribeAllRepos'
+import {
+  Commit as CommitEvt,
+  isInfo,
+} from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
 import { AppContext, Database } from '../../src'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { CloseFn, runTestServer } from '../_util'
 import { sql } from 'kysely'
 
-describe('repo subscribe all repos', () => {
+describe('repo subscribe repos', () => {
   let serverHost: string
 
   let db: Database
@@ -35,7 +38,7 @@ describe('repo subscribe all repos', () => {
 
   beforeAll(async () => {
     const server = await runTestServer({
-      dbPostgresSchema: 'repo_subscribe_all_repos',
+      dbPostgresSchema: 'repo_subscribe_repos',
     })
     serverHost = server.url.replace('http://', '')
     ctx = server.ctx
@@ -68,11 +71,11 @@ describe('repo subscribe all repos', () => {
 
   const verifyEvents = async (evts: Frame[]) => {
     const byUser = evts.reduce((acc, cur) => {
-      const evt = cur.body as RepoEvent
+      const evt = cur.body as CommitEvt
       acc[evt.repo] ??= []
       acc[evt.repo].push(evt)
       return acc
-    }, {} as Record<string, RepoEvent[]>)
+    }, {} as Record<string, CommitEvt[]>)
 
     await verifyRepo(alice, byUser[alice])
     await verifyRepo(bob, byUser[bob])
@@ -80,7 +83,7 @@ describe('repo subscribe all repos', () => {
     await verifyRepo(dan, byUser[dan])
   }
 
-  const verifyRepo = async (did: string, evts: RepoEvent[]) => {
+  const verifyRepo = async (did: string, evts: CommitEvt[]) => {
     const didRepo = await getRepo(did)
     const writeLog = await getWriteLog(didRepo.storage, didRepo.cid, null)
     const commits = await didRepo.storage.getCommits(didRepo.cid, null)
@@ -123,7 +126,7 @@ describe('repo subscribe all repos', () => {
 
   it('sync backfilled events', async () => {
     const ws = new WebSocket(
-      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeAllRepos?cursor=${-1}`,
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
     )
 
     const gen = byFrame(ws)
@@ -137,7 +140,7 @@ describe('repo subscribe all repos', () => {
     const readAfterDelay = async () => {
       await wait(200) // wait just a hair so that we catch it during cutover
       const ws = new WebSocket(
-        `ws://${serverHost}/xrpc/com.atproto.sync.subscribeAllRepos?cursor=${-1}`,
+        `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
       )
       const evts = await readFromGenerator(byFrame(ws))
       ws.terminate()
@@ -151,7 +154,7 @@ describe('repo subscribe all repos', () => {
 
   it('handles no backfill', async () => {
     const ws = new WebSocket(
-      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeAllRepos`,
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos`,
     )
 
     const makePostsAfterWait = async () => {
@@ -180,14 +183,14 @@ describe('repo subscribe all repos', () => {
     const midPointSeq = seqs[midPoint].seq
 
     const ws = new WebSocket(
-      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeAllRepos?cursor=${midPointSeq}`,
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${midPointSeq}`,
     )
     const evts = await readFromGenerator(byFrame(ws))
     ws.terminate()
     const seqSlice = seqs.slice(midPoint + 1)
     expect(evts.length).toBe(seqSlice.length)
     for (let i = 0; i < evts.length; i++) {
-      const evt = evts[i].body as RepoEvent
+      const evt = evts[i].body as CommitEvt
       const seq = seqSlice[i]
       expect(evt.time).toEqual(seq.sequencedAt)
       expect(evt.commit).toEqual(seq.commit)
@@ -220,21 +223,23 @@ describe('repo subscribe all repos', () => {
       .execute()
 
     const ws = new WebSocket(
-      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeAllRepos?cursor=${newSeqs[0]}`,
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${newSeqs[0]}`,
     )
     const [info, ...evts] = await readFromGenerator(byFrame(ws))
     ws.terminate()
 
-    if (!(info instanceof InfoFrame)) {
-      throw new Error('Expected first frame to be an InfoFrame')
+    if (!(info instanceof MessageFrame)) {
+      throw new Error('Expected first frame to be a MessageFrame')
     }
-    expect(info.code).toBe('OutdatedCursor')
+    expect(info.header.t).toBe('#info')
+    const body = info.body as Record<string, unknown>
+    expect(body.name).toEqual('OutdatedCursor')
     expect(evts.length).toBe(movedToFuture.length)
   })
 
   it('errors on future cursor', async () => {
     const ws = new WebSocket(
-      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeAllRepos?cursor=${100000}`,
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${100000}`,
     )
     const frames = await readFromGenerator(byFrame(ws))
     ws.terminate()

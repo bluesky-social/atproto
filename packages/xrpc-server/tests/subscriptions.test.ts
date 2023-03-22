@@ -52,10 +52,6 @@ const LEXICONS = [
             type: 'union',
             refs: ['#even', '#odd'],
           },
-          codes: {
-            '#even': 0,
-            'io.example.stream2#odd': 1,
-          },
         },
       },
       even: {
@@ -99,12 +95,10 @@ describe('Subscriptions', () => {
     const countdown = Number(params.countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
       yield {
-        $type:
-          i % 2 === 0 ? 'io.example.stream2#even' : 'io.example.stream2#odd',
+        $type: i % 2 === 0 ? '#even' : '#odd',
         count: i,
       }
     }
-    yield { $type: 'io.example.stream2#done' }
   })
 
   server.streamMethod('io.example.streamAuth', {
@@ -152,13 +146,12 @@ describe('Subscriptions', () => {
     }
 
     expect(frames).toEqual([
-      new MessageFrame({ count: 5 }, { type: 1 }),
-      new MessageFrame({ count: 4 }, { type: 0 }),
-      new MessageFrame({ count: 3 }, { type: 1 }),
-      new MessageFrame({ count: 2 }, { type: 0 }),
-      new MessageFrame({ count: 1 }, { type: 1 }),
-      new MessageFrame({ count: 0 }, { type: 0 }),
-      new MessageFrame({ $type: 'io.example.stream2#done' }),
+      new MessageFrame({ count: 5 }, { type: '#odd' }),
+      new MessageFrame({ count: 4 }, { type: '#even' }),
+      new MessageFrame({ count: 3 }, { type: '#odd' }),
+      new MessageFrame({ count: 2 }, { type: '#even' }),
+      new MessageFrame({ count: 1 }, { type: '#odd' }),
+      new MessageFrame({ count: 0 }, { type: '#even' }),
     ])
   })
 

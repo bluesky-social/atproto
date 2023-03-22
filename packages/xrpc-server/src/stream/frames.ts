@@ -5,11 +5,8 @@ import {
   frameHeader,
   FrameHeader,
   FrameType,
-  InfoFrameHeader,
   MessageFrameHeader,
   ErrorFrameHeader,
-  infoFrameBody,
-  InfoFrameBody,
   ErrorFrameBody,
   errorFrameBody,
 } from './types'
@@ -25,9 +22,6 @@ export abstract class Frame {
   }
   isMessage(): this is MessageFrame<unknown> {
     return this.op === FrameType.Message
-  }
-  isInfo(): this is InfoFrame {
-    return this.op === FrameType.Info
   }
   isError(): this is ErrorFrame {
     return this.op === FrameType.Error
@@ -58,12 +52,6 @@ export abstract class Frame {
       return new MessageFrame(body, {
         type: parsedHeader.data.t,
       })
-    } else if (frameOp === FrameType.Info) {
-      const parsedBody = infoFrameBody.safeParse(body)
-      if (!parsedBody.success) {
-        throw new Error(`Invalid info frame body: ${parsedBody.error.message}`)
-      }
-      return new InfoFrame(parsedBody.data)
     } else if (frameOp === FrameType.Error) {
       const parsedBody = errorFrameBody.safeParse(body)
       if (!parsedBody.success) {
@@ -80,7 +68,7 @@ export abstract class Frame {
 export class MessageFrame<T = Record<string, unknown>> extends Frame {
   header: MessageFrameHeader
   body: T
-  constructor(body: T, opts?: { type?: number }) {
+  constructor(body: T, opts?: { type?: string }) {
     super()
     this.header =
       opts?.type !== undefined
@@ -90,22 +78,6 @@ export class MessageFrame<T = Record<string, unknown>> extends Frame {
   }
   get type() {
     return this.header.t
-  }
-}
-
-export class InfoFrame<T extends string = string> extends Frame {
-  header: InfoFrameHeader
-  body: InfoFrameBody<T>
-  constructor(body: InfoFrameBody<T>) {
-    super()
-    this.header = { op: FrameType.Info }
-    this.body = body
-  }
-  get code() {
-    return this.body.info
-  }
-  get message() {
-    return this.body.message
   }
 }
 
