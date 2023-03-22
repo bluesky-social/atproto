@@ -65,7 +65,7 @@ export class ReadableRepo {
     for (const entry of entries) {
       const { collection, rkey } = util.parseDataKey(entry.key)
       contents[collection] ??= {}
-      const parsed = await parse.getAndParse(blocks, entry.value, def.record)
+      const parsed = await parse.getAndParse(blocks, entry.value, def.map)
       contents[collection][rkey] = parsed.obj
     }
     return contents

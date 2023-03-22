@@ -41,7 +41,7 @@ export const verifyCheckout = async (
     if (!contents[collection]) {
       contents[collection] = {}
     }
-    contents[collection][rkey] = await storage.readObj(add.cid, def.record)
+    contents[collection][rkey] = await storage.readObj(add.cid, def.map)
   }
 
   return {
@@ -169,7 +169,7 @@ export const verifyProofs = async (
     const found = await mst.get(
       util.formatDataKey(claim.collection, claim.rkey),
     )
-    const record = found ? await blockstore.readObj(found, def.record) : null
+    const record = found ? await blockstore.readObj(found, def.map) : null
     if (claim.record === null) {
       if (record === null) {
         verified.push(claim)
@@ -211,7 +211,7 @@ export const verifyRecords = async (
   const leaves = await mst.reachableLeaves()
   for (const leaf of leaves) {
     const { collection, rkey } = util.parseDataKey(leaf.key)
-    const record = await blockstore.attemptRead(leaf.value, def.record)
+    const record = await blockstore.attemptRead(leaf.value, def.map)
     if (record) {
       records.push({
         collection,

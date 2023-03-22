@@ -124,7 +124,7 @@ export const diffToWriteDescripts = (
   return Promise.all([
     ...diff.addList().map(async (add) => {
       const { collection, rkey } = parseDataKey(add.key)
-      const value = await parse.getAndParse(blocks, add.cid, def.record)
+      const value = await parse.getAndParse(blocks, add.cid, def.map)
       return {
         action: WriteOpAction.Create,
         collection,
@@ -135,7 +135,7 @@ export const diffToWriteDescripts = (
     }),
     ...diff.updateList().map(async (upd) => {
       const { collection, rkey } = parseDataKey(upd.key)
-      const value = await parse.getAndParse(blocks, upd.cid, def.record)
+      const value = await parse.getAndParse(blocks, upd.cid, def.map)
       return {
         action: WriteOpAction.Update,
         collection,

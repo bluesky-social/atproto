@@ -95,9 +95,12 @@ describe('Subscriptions', () => {
     const countdown = Number(params.countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
       yield {
-        $type: i % 2 === 0 ? '#even' : '#odd',
+        $type: i % 2 === 0 ? '#even' : 'io.example.stream2#odd',
         count: i,
       }
+    }
+    yield {
+      $type: 'io.example.otherNsid#done',
     }
   })
 
@@ -152,6 +155,7 @@ describe('Subscriptions', () => {
       new MessageFrame({ count: 2 }, { type: '#even' }),
       new MessageFrame({ count: 1 }, { type: '#odd' }),
       new MessageFrame({ count: 0 }, { type: '#even' }),
+      new MessageFrame({}, { type: 'io.example.otherNsid#done' }),
     ])
   })
 
