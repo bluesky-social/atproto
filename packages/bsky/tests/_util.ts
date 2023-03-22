@@ -1,12 +1,11 @@
 import assert from 'assert'
 import { AddressInfo } from 'net'
-import ApiAgent from '@atproto/api'
-import { defaultFetchHandler } from '@atproto/xrpc'
 import * as crypto from '@atproto/crypto'
 import * as pds from '@atproto/pds'
 import { wait } from '@atproto/common'
 import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
 import { AtUri } from '@atproto/uri'
+import { DidResolver } from '@atproto/did-resolver'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import { BskyAppView, ServerConfig, Database } from '../src'
@@ -134,21 +133,23 @@ export const runTestServer = async (
   const bskyServer = await bsky.start()
   const bskyPort = (bskyServer.address() as AddressInfo).port
 
-  // Map pds public url to its local url
-  ApiAgent.configure({
-    fetch: (httpUri, ...args) => {
-      if (httpUri.startsWith(pdsServer.ctx.cfg.publicUrl)) {
-        return defaultFetchHandler(
-          httpUri.replace(
-            pdsServer.ctx.cfg.publicUrl,
-            `http://localhost:${pdsPort}`,
-          ),
-          ...args,
-        )
-      }
-      return defaultFetchHandler(httpUri, ...args)
-    },
-  })
+  // Map pds public url to its local url when resolving from plc
+  const origResolveDid = DidResolver.prototype.resolveDid
+  DidResolver.prototype.resolveDid = async function (did, options) {
+    const result = await (origResolveDid.call(this, did, options) as ReturnType<
+      typeof origResolveDid
+    >)
+    const service = result.didDocument?.service?.find(
+      (svc) => svc.id === '#atproto_pds',
+    )
+    if (typeof service?.serviceEndpoint === 'string') {
+      service.serviceEndpoint = service.serviceEndpoint.replace(
+        pdsServer.ctx.cfg.publicUrl,
+        `http://localhost:${pdsPort}`,
+      )
+    }
+    return result
+  }
 
   return {
     ctx: bsky.ctx,

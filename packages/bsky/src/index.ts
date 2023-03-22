@@ -53,13 +53,15 @@ export class BskyAppView {
     const app = express()
     app.use(loggerMiddleware)
 
+    const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
+
     let imgUriEndpoint = config.imgUriEndpoint
     if (!imgUriEndpoint) {
       const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
       const imgProcessingServer = new ImageProcessingServer(
         config.imgUriSalt,
         config.imgUriKey,
-        blobstore,
+        didResolver,
         imgProcessingCache,
       )
       app.use('/image', imgProcessingServer.app)
@@ -72,7 +74,6 @@ export class BskyAppView {
       config.imgUriKey,
     )
 
-    const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
     const services = createServices({
       imgUriBuilder,
       didResolver,

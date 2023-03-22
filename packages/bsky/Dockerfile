@@ -10,7 +10,7 @@ COPY ./packages/aws ./packages/aws
 COPY ./packages/common ./packages/common
 COPY ./packages/crypto ./packages/crypto
 COPY ./packages/did-resolver ./packages/did-resolver
-COPY ./packages/handle ./packages/handle
+COPY ./packages/identifier ./packages/identifier
 COPY ./packages/lex-cli ./packages/lex-cli
 COPY ./packages/lexicon ./packages/lexicon
 COPY ./packages/nsid ./packages/nsid

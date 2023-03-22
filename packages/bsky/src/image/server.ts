@@ -7,7 +7,7 @@ import axios, { AxiosError } from 'axios'
 import express, { ErrorRequestHandler, NextFunction } from 'express'
 import createError, { isHttpError } from 'http-errors'
 import { BlobNotFoundError } from '@atproto/repo'
-import { DidResolver } from '@atproto/did-resolver'
+import { DidResolver, NoResolveDidError } from '@atproto/did-resolver'
 import {
   cloneStream,
   forwardStreamErrors,
@@ -62,10 +62,9 @@ export class ImageProcessingServer {
 
       const { pds } = await this.didResolver.resolveAtpData(options.did) // @TODO cache did info
       const getBlob = await axios.get(`${pds}/xrpc/com.atproto.sync.getBlob`, {
-        params: { did: options.did, cid: options.cid },
+        params: { did: options.did, cid: options.cid.toString() },
         decompress: true,
         responseType: 'stream',
-        validateStatus: null,
         timeout: 2000, // 2sec of inactivity on the connection
       })
 
@@ -99,6 +98,9 @@ export class ImageProcessingServer {
         if (!err.response || err.response.status >= 500) {
           return next(createError(502))
         }
+        return next(createError(404, 'Image not found'))
+      }
+      if (err instanceof NoResolveDidError) {
         return next(createError(404, 'Image not found'))
       }
       return next(err)
@@ -137,7 +139,7 @@ export interface BlobCache {
 export class BlobDiskCache implements BlobCache {
   tempDir: string
   constructor(basePath?: string) {
-    this.tempDir = basePath || path.join(os.tmpdir(), 'pds--processed-images')
+    this.tempDir = basePath || path.join(os.tmpdir(), 'bsky--processed-images')
     if (!path.isAbsolute(this.tempDir)) {
       throw new Error('Must provide an absolute path')
     }
