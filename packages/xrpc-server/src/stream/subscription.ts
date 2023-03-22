@@ -55,9 +55,9 @@ export class Subscription<T = unknown> {
         const cancelable = { signal: ac.signal }
         for await (const message of byMessage(ws, cancelable)) {
           const t = message.header.t
-          let clone
-          if (message.body && t !== undefined) {
-            clone = { ...message.body }
+          const clone =
+            message.body !== undefined ? { ...message.body } : undefined
+          if (clone !== undefined && t !== undefined) {
             clone['$type'] = t.startsWith('#') ? this.opts.method + t : t
           }
           const result = this.opts.validate(clone)
