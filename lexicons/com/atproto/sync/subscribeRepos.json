@@ -15,14 +15,16 @@
         }
       },
       "message": {
-        "type": "union",
-        "refs": [
-          "#commit",
-          "#handle",
-          "#migrate",
-          "#tombstone",
-          "#info"
-        ]
+        "schema": {
+          "type": "union",
+          "refs": [
+            "#commit",
+            "#handle",
+            "#migrate",
+            "#tombstone",
+            "#info"
+          ]
+        }
       },
       "errors": [
         {"name": "FutureCursor"}

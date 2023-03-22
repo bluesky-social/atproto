@@ -8,7 +8,7 @@ import getHead from './getHead'
 import getRecord from './getRecord'
 import getRepo from './getRepo'
 import listBlobs from './listBlobs'
-import subscribe from './subscribeAllRepos'
+import subscribe from './subscribeRepos'
 
 export default function (server: Server, ctx: AppContext) {
   getBlob(server, ctx)

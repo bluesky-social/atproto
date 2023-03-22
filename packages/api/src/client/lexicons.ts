@@ -2337,9 +2337,9 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoSyncSubscribeAllRepos: {
+  ComAtprotoSyncSubscribeRepos: {
     lexicon: 1,
-    id: 'com.atproto.sync.subscribeAllRepos',
+    id: 'com.atproto.sync.subscribeRepos',
     defs: {
       main: {
         type: 'subscription',
@@ -2354,69 +2354,132 @@ export const schemaDict = {
           },
         },
         message: {
-          schema: {
-            type: 'object',
-            required: [
-              'seq',
-              'event',
-              'repo',
-              'commit',
-              'prev',
-              'blocks',
-              'ops',
-              'blobs',
-              'time',
-            ],
-            nullable: ['prev'],
-            properties: {
-              seq: {
-                type: 'integer',
-              },
-              event: {
-                type: 'string',
-                knownValues: ['repo_append', 'rebase'],
-              },
-              repo: {
-                type: 'string',
-              },
-              commit: {
-                type: 'string',
-              },
-              prev: {
-                type: 'string',
-              },
-              blocks: {
-                type: 'unknown',
-              },
-              ops: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.sync.subscribeAllRepos#repoOp',
-                },
-              },
-              blobs: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                },
-              },
-              time: {
-                type: 'datetime',
-              },
-            },
-          },
+          type: 'union',
+          refs: [
+            'lex:com.atproto.sync.subscribeRepos#commit',
+            'lex:com.atproto.sync.subscribeRepos#handle',
+            'lex:com.atproto.sync.subscribeRepos#migrate',
+            'lex:com.atproto.sync.subscribeRepos#tombstone',
+            'lex:com.atproto.sync.subscribeRepos#info',
+          ],
         },
-        infos: [
-          {
-            name: 'OutdatedCursor',
-          },
-        ],
         errors: [
           {
             name: 'FutureCursor',
           },
         ],
+      },
+      commit: {
+        type: 'object',
+        required: [
+          'seq',
+          'rebase',
+          'tooBig',
+          'repo',
+          'commit',
+          'prev',
+          'blocks',
+          'ops',
+          'blobs',
+          'time',
+        ],
+        nullable: ['prev'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+          rebase: {
+            type: 'boolean',
+          },
+          tooBig: {
+            type: 'boolean',
+          },
+          repo: {
+            type: 'string',
+          },
+          commit: {
+            type: 'string',
+          },
+          prev: {
+            type: 'string',
+          },
+          blocks: {
+            type: 'unknown',
+            description: 'CAR file containing relevant blocks',
+          },
+          ops: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.sync.subscribeRepos#repoOp',
+            },
+          },
+          blobs: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+          time: {
+            type: 'datetime',
+          },
+        },
+      },
+      handle: {
+        type: 'object',
+        required: ['seq', 'did', 'handle'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+          },
+          handle: {
+            type: 'string',
+          },
+        },
+      },
+      migrate: {
+        type: 'object',
+        required: ['seq', 'did', 'migrateTo'],
+        nullable: ['migrateTo'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+          },
+          migrateTo: {
+            type: 'string',
+          },
+        },
+      },
+      tombstone: {
+        type: 'object',
+        required: ['seq', 'did'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+          },
+        },
+      },
+      info: {
+        type: 'object',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            knownValues: ['OutdatedCursor'],
+          },
+          message: {
+            type: 'string',
+          },
+        },
       },
       repoOp: {
         type: 'object',
@@ -4208,7 +4271,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'An unspecced view of globablly popular items',
+        description: 'An unspecced view of globally popular items',
         parameters: {
           type: 'params',
           properties: {
@@ -4305,7 +4368,7 @@ export const ids = {
   ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
-  ComAtprotoSyncSubscribeAllRepos: 'com.atproto.sync.subscribeAllRepos',
+  ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
   AppBskyActorGetProfiles: 'app.bsky.actor.getProfiles',
   AppBskyActorGetSuggestions: 'app.bsky.actor.getSuggestions',
