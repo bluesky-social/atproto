@@ -74,8 +74,9 @@ Array [
                   "$type": "blob",
                   "mimeType": "image/jpeg",
                   "ref": Object {
-                    "/": "cids(3)",
+                    "$link": "cids(3)",
                   },
+                  "size": 4114,
                 },
               },
             ],
@@ -175,8 +176,9 @@ Array [
                           "$type": "blob",
                           "mimeType": "image/jpeg",
                           "ref": Object {
-                            "/": "cids(3)",
+                            "$link": "cids(3)",
                           },
+                          "size": 4114,
                         },
                       },
                       Object {
@@ -185,8 +187,9 @@ Array [
                           "$type": "blob",
                           "mimeType": "image/jpeg",
                           "ref": Object {
-                            "/": "cids(7)",
+                            "$link": "cids(7)",
                           },
+                          "size": 12736,
                         },
                       },
                     ],
@@ -336,8 +339,9 @@ Array [
                 "$type": "blob",
                 "mimeType": "image/jpeg",
                 "ref": Object {
-                  "/": "cids(1)",
+                  "$link": "cids(1)",
                 },
+                "size": 4114,
               },
             },
           ],
@@ -523,8 +527,9 @@ Array [
                     "$type": "blob",
                     "mimeType": "image/jpeg",
                     "ref": Object {
-                      "/": "cids(2)",
+                      "$link": "cids(2)",
                     },
+                    "size": 4114,
                   },
                 },
                 Object {
@@ -533,8 +538,9 @@ Array [
                     "$type": "blob",
                     "mimeType": "image/jpeg",
                     "ref": Object {
-                      "/": "cids(3)",
+                      "$link": "cids(3)",
                     },
+                    "size": 12736,
                   },
                 },
               ],
@@ -717,8 +723,9 @@ Array [
                 "$type": "blob",
                 "mimeType": "image/jpeg",
                 "ref": Object {
-                  "/": "cids(2)",
+                  "$link": "cids(2)",
                 },
+                "size": 4114,
               },
             },
             Object {
@@ -727,8 +734,9 @@ Array [
                 "$type": "blob",
                 "mimeType": "image/jpeg",
                 "ref": Object {
-                  "/": "cids(3)",
+                  "$link": "cids(3)",
                 },
+                "size": 12736,
               },
             },
           ],
@@ -838,8 +846,9 @@ Array [
                     "$type": "blob",
                     "mimeType": "image/jpeg",
                     "ref": Object {
-                      "/": "cids(3)",
+                      "$link": "cids(3)",
                     },
+                    "size": 4114,
                   },
                 },
                 Object {
@@ -848,8 +857,9 @@ Array [
                     "$type": "blob",
                     "mimeType": "image/jpeg",
                     "ref": Object {
-                      "/": "cids(4)",
+                      "$link": "cids(4)",
                     },
+                    "size": 12736,
                   },
                 },
               ],
@@ -973,8 +983,9 @@ Array [
                     "$type": "blob",
                     "mimeType": "image/jpeg",
                     "ref": Object {
-                      "/": "cids(2)",
+                      "$link": "cids(2)",
                     },
+                    "size": 4114,
                   },
                 },
                 Object {
@@ -983,8 +994,9 @@ Array [
                     "$type": "blob",
                     "mimeType": "image/jpeg",
                     "ref": Object {
-                      "/": "cids(3)",
+                      "$link": "cids(3)",
                     },
+                    "size": 12736,
                   },
                 },
               ],
@@ -1128,8 +1140,9 @@ Array [
                   "$type": "blob",
                   "mimeType": "image/jpeg",
                   "ref": Object {
-                    "/": "cids(3)",
+                    "$link": "cids(3)",
                   },
+                  "size": 4114,
                 },
               },
             ],
@@ -1232,8 +1245,9 @@ Array [
                           "$type": "blob",
                           "mimeType": "image/jpeg",
                           "ref": Object {
-                            "/": "cids(3)",
+                            "$link": "cids(3)",
                           },
+                          "size": 4114,
                         },
                       },
                       Object {
@@ -1242,8 +1256,9 @@ Array [
                           "$type": "blob",
                           "mimeType": "image/jpeg",
                           "ref": Object {
-                            "/": "cids(7)",
+                            "$link": "cids(7)",
                           },
+                          "size": 12736,
                         },
                       },
                     ],

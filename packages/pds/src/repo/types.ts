@@ -3,23 +3,10 @@ import { AtUri } from '@atproto/uri'
 import { WriteOpAction } from '@atproto/repo'
 import { RepoRecord } from '@atproto/lexicon'
 
-export type ImageConstraint = {
-  type: 'image'
-  accept?: string[]
-  maxHeight?: number
-  maxWidth?: number
-  minHeight?: number
-  minWidth?: number
-  maxSize?: number
-}
-
-export type RawBlobConstraint = {
-  type: 'blob'
+export type BlobConstraint = {
   accept?: string[]
   maxSize?: number
 }
-
-export type BlobConstraint = RawBlobConstraint | ImageConstraint
 
 export type PreparedBlobRef = {
   cid: CID

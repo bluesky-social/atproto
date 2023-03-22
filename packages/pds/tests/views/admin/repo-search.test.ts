@@ -270,7 +270,6 @@ Array [
   },
 ]
 `
-
 const snapSqlite = `
 Array [
   Object {
@@ -288,8 +287,9 @@ Array [
           "$type": "blob",
           "mimeType": "image/jpeg",
           "ref": Object {
-            "/": "cids(0)",
+            "$link": "cids(0)",
           },
+          "size": 3976,
         },
         "description": "",
         "displayName": "Carlton Abernathy IV",
@@ -336,8 +336,9 @@ Array [
           "$type": "blob",
           "mimeType": "image/jpeg",
           "ref": Object {
-            "/": "cids(0)",
+            "$link": "cids(0)",
           },
+          "size": 3976,
         },
         "description": "",
         "displayName": "Latoya Windler",
@@ -359,8 +360,9 @@ Array [
           "$type": "blob",
           "mimeType": "image/jpeg",
           "ref": Object {
-            "/": "cids(0)",
+            "$link": "cids(0)",
           },
+          "size": 3976,
         },
         "description": "",
         "displayName": "Carol Littel",
@@ -382,8 +384,9 @@ Array [
           "$type": "blob",
           "mimeType": "image/jpeg",
           "ref": Object {
-            "/": "cids(0)",
+            "$link": "cids(0)",
           },
+          "size": 3976,
         },
         "description": "",
         "displayName": "Sadie Carter",

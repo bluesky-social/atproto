@@ -87,13 +87,13 @@ export const lexBytes = z.object({
 })
 export type LexBytes = z.infer<typeof lexBytes>
 
-export const lexCidInternalRef = z.object({
-  type: z.literal('cid-internal-ref'),
+export const lexCidLink = z.object({
+  type: z.literal('cid-link'),
   description: z.string().optional(),
 })
-export type LexCidInternalRef = z.infer<typeof lexCidInternalRef>
+export type LexCidLink = z.infer<typeof lexCidLink>
 
-export const lexIpldType = z.union([lexBytes, lexCidInternalRef])
+export const lexIpldType = z.union([lexBytes, lexCidLink])
 export type LexIpldType = z.infer<typeof lexIpldType>
 
 // references
@@ -128,46 +128,13 @@ export const lexBlob = z.object({
 })
 export type LexBlob = z.infer<typeof lexBlob>
 
-export const lexImage = z.object({
-  type: z.literal('image'),
-  description: z.string().optional(),
-  accept: z.string().array().optional(),
-  maxSize: z.number().optional(),
-  maxWidth: z.number().int().optional(),
-  maxHeight: z.number().int().optional(),
-})
-export type LexImage = z.infer<typeof lexImage>
-
-export const lexVideo = z.object({
-  type: z.literal('video'),
-  description: z.string().optional(),
-  accept: z.string().array().optional(),
-  maxSize: z.number().optional(),
-  maxWidth: z.number().int().optional(),
-  maxHeight: z.number().int().optional(),
-  maxLength: z.number().int().optional(),
-})
-export type LexVideo = z.infer<typeof lexVideo>
-
-export const lexAudio = z.object({
-  type: z.literal('audio'),
-  description: z.string().optional(),
-  accept: z.string().array().optional(),
-  maxSize: z.number().optional(),
-  maxLength: z.number().int().optional(),
-})
-export type LexAudio = z.infer<typeof lexAudio>
-
-export const lexBlobVariant = z.union([lexBlob, lexImage, lexVideo, lexAudio])
-export type LexBlobVariant = z.infer<typeof lexBlobVariant>
-
 // complex types
 // =
 
 export const lexArray = z.object({
   type: z.literal('array'),
   description: z.string().optional(),
-  items: z.union([lexPrimitive, lexIpldType, lexBlobVariant, lexRefVariant]),
+  items: z.union([lexPrimitive, lexIpldType, lexBlob, lexRefVariant]),
   minLength: z.number().int().optional(),
   maxLength: z.number().int().optional(),
 })
@@ -193,13 +160,7 @@ export const lexObject = z.object({
   nullable: z.string().array().optional(),
   properties: z
     .record(
-      z.union([
-        lexRefVariant,
-        lexIpldType,
-        lexArray,
-        lexBlobVariant,
-        lexPrimitive,
-      ]),
+      z.union([lexRefVariant, lexIpldType, lexArray, lexBlob, lexPrimitive]),
     )
     .optional(),
 })
@@ -289,9 +250,6 @@ export const lexUserType = z.union([
   lexXrpcSubscription,
 
   lexBlob,
-  lexImage,
-  lexVideo,
-  lexAudio,
 
   lexArray,
   lexToken,
@@ -302,7 +260,7 @@ export const lexUserType = z.union([
   lexInteger,
   lexString,
   lexBytes,
-  lexCidInternalRef,
+  lexCidLink,
   lexUnknown,
 ])
 export type LexUserType = z.infer<typeof lexUserType>

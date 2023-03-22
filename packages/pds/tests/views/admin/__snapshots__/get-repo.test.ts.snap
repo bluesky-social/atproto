@@ -79,8 +79,9 @@ Object {
         "$type": "blob",
         "mimeType": "image/jpeg",
         "ref": Object {
-          "/": "cids(0)",
+          "$link": "cids(0)",
         },
+        "size": 3976,
       },
       "description": "its me!",
       "displayName": "ali",

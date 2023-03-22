@@ -30,8 +30,8 @@ export function validate(
       return string(lexicons, path, def, value)
     case 'bytes':
       return bytes(lexicons, path, def, value)
-    case 'cid-internal-ref':
-      return cidInternalRef(lexicons, path, def, value)
+    case 'cid-link':
+      return cidLink(lexicons, path, def, value)
     case 'unknown':
       return unknown(lexicons, path, def, value)
     default:
@@ -341,7 +341,7 @@ export function bytes(
   return { success: true, value }
 }
 
-export function cidInternalRef(
+export function cidLink(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,

@@ -7,6 +7,7 @@ export const typedJsonBlobRef = z
     $type: z.literal('blob'),
     ref: schema.cid,
     mimeType: z.string(),
+    size: z.number(),
   })
   .strict()
 export type TypedJsonBlobRef = z.infer<typeof typedJsonBlobRef>
@@ -25,11 +26,17 @@ export type JsonBlobRef = z.infer<typeof jsonBlobRef>
 export class BlobRef {
   public original: JsonBlobRef
 
-  constructor(public ref: CID, public mimeType: string, json?: JsonBlobRef) {
-    this.original = json ?? {
+  constructor(
+    public ref: CID,
+    public mimeType: string,
+    public size: number,
+    original?: JsonBlobRef,
+  ) {
+    this.original = original ?? {
       $type: 'blob',
       ref,
       mimeType,
+      size,
     }
   }
 
@@ -42,9 +49,9 @@ export class BlobRef {
 
   static fromJsonRef(json: JsonBlobRef): BlobRef {
     if (check.is(json, typedJsonBlobRef)) {
-      return new BlobRef(json.ref, json.mimeType)
+      return new BlobRef(json.ref, json.mimeType, json.size)
     } else {
-      return new BlobRef(CID.parse(json.cid), json.mimeType, json)
+      return new BlobRef(CID.parse(json.cid), json.mimeType, -1, json)
     }
   }
 
@@ -53,6 +60,7 @@ export class BlobRef {
       $type: 'blob',
       ref: this.ref,
       mimeType: this.mimeType,
+      size: this.size,
     }
   }
 

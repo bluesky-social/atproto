@@ -17,30 +17,3 @@ export function blob(
   }
   return { success: true, value }
 }
-
-export function image(
-  lexicons: Lexicons,
-  path: string,
-  def: LexUserType,
-  value: unknown,
-): ValidationResult {
-  return blob(lexicons, path, def, value)
-}
-
-export function video(
-  lexicons: Lexicons,
-  path: string,
-  def: LexUserType,
-  value: unknown,
-): ValidationResult {
-  return blob(lexicons, path, def, value)
-}
-
-export function audio(
-  lexicons: Lexicons,
-  path: string,
-  def: LexUserType,
-  value: unknown,
-): ValidationResult {
-  return blob(lexicons, path, def, value)
-}

@@ -89,8 +89,9 @@ Object {
           "$type": "blob",
           "mimeType": "image/jpeg",
           "ref": Object {
-            "/": "cids(1)",
+            "$link": "cids(1)",
           },
+          "size": 3976,
         },
         "description": "its me!",
         "displayName": "ali",
@@ -195,8 +196,9 @@ Object {
           "$type": "blob",
           "mimeType": "image/jpeg",
           "ref": Object {
-            "/": "cids(1)",
+            "$link": "cids(1)",
           },
+          "size": 3976,
         },
         "description": "its me!",
         "displayName": "ali",
