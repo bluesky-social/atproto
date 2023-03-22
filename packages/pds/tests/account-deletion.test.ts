@@ -190,9 +190,9 @@ describe('account deletion', () => {
   it('deletes relevant blobs', async () => {
     const imgs = sc.posts[carol.did][0].images
     // carols first blob is used by other accounts
-    const first = CID.parse(imgs[0].image.cid)
+    const first = imgs[0].image.ref
     // carols second blob is used by only her
-    const second = CID.parse(imgs[1].image.cid)
+    const second = imgs[1].image.ref
     const got = await blobstore.getBytes(first)
     expect(got).toBeDefined()
     const attempt = blobstore.getBytes(second)

@@ -1,8 +1,10 @@
 import * as http from 'http'
+import getPort from 'get-port'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
 import xrpc, {
   Client,
+  ServiceClient,
   XRPCError,
   XRPCInvalidResponseError,
 } from '@atproto/xrpc'
@@ -115,13 +117,17 @@ describe('Errors', () => {
   server.method('io.example.procedure', () => {
     return undefined
   })
-  const client = xrpc.service(`http://localhost:8893`)
   xrpc.addLexicons(LEXICONS)
   const badXrpc = new Client()
-  const badClient = badXrpc.service(`http://localhost:8893`)
   badXrpc.addLexicons(MISMATCHED_LEXICONS)
+
+  let client: ServiceClient
+  let badClient: ServiceClient
   beforeAll(async () => {
-    s = await createServer(8893, server)
+    const port = await getPort()
+    s = await createServer(port, server)
+    client = xrpc.service(`http://localhost:${port}`)
+    badClient = badXrpc.service(`http://localhost:${port}`)
   })
   afterAll(async () => {
     await closeServer(s)

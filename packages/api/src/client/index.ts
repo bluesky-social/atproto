@@ -60,6 +60,7 @@ import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestio
 import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
+import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 import * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
@@ -139,6 +140,7 @@ export * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestio
 export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
+export * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 export * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
@@ -842,6 +844,17 @@ export class ActorNS {
       .call('app.bsky.actor.searchActorsTypeahead', params, undefined, opts)
       .catch((e) => {
         throw AppBskyActorSearchActorsTypeahead.toKnownErr(e)
+      })
+  }
+
+  updateProfile(
+    data?: AppBskyActorUpdateProfile.InputSchema,
+    opts?: AppBskyActorUpdateProfile.CallOptions,
+  ): Promise<AppBskyActorUpdateProfile.Response> {
+    return this._service.xrpc
+      .call('app.bsky.actor.updateProfile', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyActorUpdateProfile.toKnownErr(e)
       })
   }
 }

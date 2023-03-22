@@ -1596,11 +1596,10 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['cid'],
+            required: ['blob'],
             properties: {
-              cid: {
-                type: 'string',
-                format: 'cid',
+              blob: {
+                type: 'blob',
               },
             },
           },
@@ -2371,13 +2370,13 @@ export const schemaDict = {
                 format: 'did',
               },
               commit: {
-                type: 'cid-internal-ref',
+                type: 'cid-link',
               },
               prev: {
-                type: 'cid-internal-ref',
+                type: 'cid-link',
               },
               blocks: {
-                type: 'unknown',
+                type: 'bytes',
               },
               ops: {
                 type: 'array',
@@ -2389,7 +2388,7 @@ export const schemaDict = {
               blobs: {
                 type: 'array',
                 items: {
-                  type: 'cid-internal-ref',
+                  type: 'cid-link',
                 },
               },
               time: {
@@ -2423,7 +2422,7 @@ export const schemaDict = {
             type: 'string',
           },
           cid: {
-            type: 'cid-internal-ref',
+            type: 'cid-link',
           },
         },
       },
@@ -2687,17 +2686,13 @@ export const schemaDict = {
               maxLength: 256,
             },
             avatar: {
-              type: 'image',
+              type: 'blob',
               accept: ['image/png', 'image/jpeg'],
-              maxWidth: 2000,
-              maxHeight: 2000,
               maxSize: 1000000,
             },
             banner: {
-              type: 'image',
+              type: 'blob',
               accept: ['image/png', 'image/jpeg'],
-              maxWidth: 6000,
-              maxHeight: 2000,
               maxSize: 1000000,
             },
           },
@@ -2791,6 +2786,77 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyActorUpdateProfile: {
+    lexicon: 1,
+    id: 'app.bsky.actor.updateProfile',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Update an actor's profile.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            nullable: ['description', 'avatar', 'banner'],
+            properties: {
+              displayName: {
+                type: 'string',
+                maxLength: 64,
+              },
+              description: {
+                type: 'string',
+                maxLength: 256,
+              },
+              avatar: {
+                type: 'blob',
+                accept: ['image/png', 'image/jpeg'],
+                maxSize: 100000,
+              },
+              banner: {
+                type: 'blob',
+                accept: ['image/png', 'image/jpeg'],
+                maxSize: 500000,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri', 'cid', 'record'],
+            properties: {
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              record: {
+                type: 'unknown',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidBlob',
+          },
+          {
+            name: 'BlobTooLarge',
+          },
+          {
+            name: 'InvalidMimeType',
+          },
+          {
+            name: 'InvalidImageDimensions',
+          },
+        ],
+      },
+    },
+  },
   AppBskyEmbedExternal: {
     lexicon: 1,
     id: 'app.bsky.embed.external',
@@ -2822,10 +2888,8 @@ export const schemaDict = {
             type: 'string',
           },
           thumb: {
-            type: 'image',
+            type: 'blob',
             accept: ['image/*'],
-            maxWidth: 2000,
-            maxHeight: 2000,
             maxSize: 1000000,
           },
         },
@@ -2885,10 +2949,8 @@ export const schemaDict = {
         required: ['image', 'alt'],
         properties: {
           image: {
-            type: 'image',
+            type: 'blob',
             accept: ['image/*'],
-            maxWidth: 2000,
-            maxHeight: 2000,
             maxSize: 1000000,
           },
           alt: {
@@ -4119,6 +4181,7 @@ export const ids = {
   AppBskyActorProfile: 'app.bsky.actor.profile',
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
   AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
+  AppBskyActorUpdateProfile: 'app.bsky.actor.updateProfile',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
   AppBskyEmbedRecord: 'app.bsky.embed.record',

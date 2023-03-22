@@ -20,7 +20,7 @@ export class SyncStorage extends ReadableBlockstore {
     const fromStaged = await this.staged.getBlocks(cids)
     const fromSaved = await this.saved.getBlocks(fromStaged.missing)
     const blocks = fromStaged.blocks
-    blocks.add(fromSaved.blocks)
+    blocks.addMap(fromSaved.blocks)
     return {
       blocks,
       missing: fromSaved.missing,

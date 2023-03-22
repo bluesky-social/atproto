@@ -3,7 +3,7 @@ import * as Block from 'multiformats/block'
 import * as rawCodec from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
 import * as mf from 'multiformats'
-import { base64 } from 'multiformats/bases/base64'
+import * as ui8 from 'uint8arrays'
 import * as cborCodec from '@ipld/dag-cbor'
 import { check, schema } from '.'
 import { z } from 'zod'
@@ -58,89 +58,77 @@ export type JsonValue =
   | number
   | string
   | null
-  | bigint
+  | undefined
+  | unknown
   | Array<JsonValue>
   | { [key: string]: JsonValue }
-  | { [key: number]: JsonValue }
 
 export type IpldValue =
-  | boolean
-  | number
-  | string
-  | null
-  | bigint
+  | JsonValue
   | CID
   | Uint8Array
   | Array<IpldValue>
   | { [key: string]: IpldValue }
-  | { [key: number]: IpldValue }
 
-const dagJsonCid = z.object({
-  '/': z.string(),
-})
+const dagJsonCid = z
+  .object({
+    $link: z.string(),
+  })
+  .strict()
 
-const dagJsonBytes = z.object({
-  '/': z.object({
-    bytes: z.string(),
-  }),
-})
+const dagJsonBytes = z
+  .object({
+    $bytes: z.string(),
+  })
+  .strict()
 
 const dagJsonVal = z.union([dagJsonCid, dagJsonBytes])
-const dagJsonValStrict = z.union([dagJsonCid.strict(), dagJsonBytes.strict()])
 
-export const jsonToIpldValue = (val: JsonValue): IpldValue => {
-  if (check.is(val, schema.array)) {
-    return val.map((item) => jsonToIpldValue(item))
-  } else if (check.is(val, schema.record)) {
-    if (check.is(val, dagJsonVal)) {
-      if (!check.is(val, dagJsonValStrict)) {
-        throw new Error(`improperly formatted dag-json: ${val}`)
-      }
-      if (check.is(val, dagJsonCid)) {
-        return CID.parse(val['/'])
-      } else {
-        return base64.decode(`m${val['/'].bytes}`) // add mbase prefix according to dag-json code
-      }
-    } else {
-      const toReturn = {}
-      for (const key of Object.keys(val)) {
-        toReturn[key] = jsonToIpldValue(val[key])
-      }
-      return toReturn
+export const jsonToIpld = (val: JsonValue): IpldValue => {
+  // check for dag json values
+  if (check.is(val, dagJsonVal)) {
+    if (check.is(val, dagJsonCid)) {
+      return CID.parse(val.$link)
     }
-  } else {
-    return val
+    return ui8.fromString(val.$bytes, 'base64')
   }
-}
-
-export const ipldValueToJson = (val: IpldValue): JsonValue => {
+  // walk rest
   if (check.is(val, schema.array)) {
-    return val.map((item) => ipldValueToJson(item))
-  } else if (check.is(val, schema.bytes)) {
-    return {
-      '/': {
-        bytes: base64.encode(val).slice(1), // no mbase prefix (taken from dag-json code)
-      },
-    }
-  } else if (check.is(val, schema.cid)) {
-    return {
-      '/': val.toString(),
-    }
-  } else if (check.is(val, schema.record)) {
+    return val.map((item) => jsonToIpld(item))
+  }
+  if (check.is(val, schema.record)) {
     const toReturn = {}
     for (const key of Object.keys(val)) {
-      toReturn[key] = ipldValueToJson(val[key])
+      toReturn[key] = jsonToIpld(val[key])
     }
     return toReturn
-  } else {
-    return val
   }
+  return val
 }
 
-export const stringifyIpld = (val: IpldValue): string => {
-  return JSON.stringify(ipldValueToJson(val))
-}
-
-export const jsonStringToIpld = (str: string): IpldValue => {
-  return jsonToIpldValue(JSON.parse(str))
+export const ipldToJson = (val: IpldValue): JsonValue => {
+  // convert bytes
+  if (check.is(val, schema.bytes)) {
+    return {
+      $bytes: ui8.toString(val, 'base64'),
+    }
+  }
+  // convert cids
+  if (check.is(val, schema.cid)) {
+    return {
+      $link: val.toString(),
+    }
+  }
+  // walk rest
+  if (check.is(val, schema.array)) {
+    return val.map((item) => ipldToJson(item))
+  }
+  if (check.is(val, schema.record)) {
+    const toReturn = {}
+    for (const key of Object.keys(val)) {
+      toReturn[key] = ipldToJson(val[key])
+    }
+    return toReturn
+  }
+  return val as JsonValue
 }

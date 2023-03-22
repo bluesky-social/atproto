@@ -9,6 +9,7 @@ import { MessageDispatcher } from '../event-stream/message-queue'
 import { ids } from '../lexicon/lexicons'
 import { prepareUpdate, prepareDelete, assertValidRecord } from '../repo'
 import { RepoService } from '../services/repo'
+import { cborToLexRecord } from '@atproto/lexicon'
 
 const MIGRATION_NAME = '2023-03-14-update-follow-subjects'
 const SHORT_NAME = 'update-follow-subjects'
@@ -60,7 +61,7 @@ async function main(tx: Database, ctx: AppContext) {
 
         const updates = await Promise.all(
           follows.map((follow) => {
-            const record = cborBytesToRecord(follow.bytes)
+            const record = cborToLexRecord(follow.bytes)
             if (typeof record['subject']?.['did'] === 'string') {
               // Map old app.bsky.actor.ref to did
               record['subject'] = record['subject']['did']

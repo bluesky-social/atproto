@@ -41,13 +41,13 @@ describe('General validation', () => {
           object: { boolean: true },
           array: ['one', 'two'],
           boolean: true,
-          number: 123.45,
+          float: 123.45,
           integer: 123,
           string: 'string',
         },
         array: ['one', 'two'],
         boolean: true,
-        number: 123.45,
+        float: 123.45,
         integer: 123,
         string: 'string',
         datetime: new Date().toISOString(),
@@ -55,7 +55,7 @@ describe('General validation', () => {
         did: 'did:web:example.com',
         cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
         bytes: new Uint8Array([0, 1, 2, 3]),
-        cidRef: CID.parse(
+        cidLink: CID.parse(
           'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
         ),
       })
@@ -74,7 +74,7 @@ describe('General validation', () => {
         object: { boolean: true },
         array: ['one', 'two'],
         boolean: true,
-        number: 123.45,
+        float: 123.45,
         integer: 123,
         string: 'string',
       })
@@ -98,17 +98,17 @@ describe('Record validation', () => {
       object: { boolean: true },
       array: ['one', 'two'],
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
       string: 'string',
     },
     array: ['one', 'two'],
     boolean: true,
-    number: 123.45,
+    float: 123.45,
     integer: 123,
     string: 'string',
     bytes: new Uint8Array([0, 1, 2, 3]),
-    cidRef: CID.parse(
+    cidLink: CID.parse(
       'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
     ),
   }
@@ -144,7 +144,7 @@ describe('Record validation', () => {
         $type: 'com.example.kitchenSink',
         array: ['one', 'two'],
         boolean: true,
-        number: 123.45,
+        float: 123.45,
         integer: 123,
         string: 'string',
         datetime: new Date().toISOString(),
@@ -152,7 +152,7 @@ describe('Record validation', () => {
         did: 'did:web:example.com',
         cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
         bytes: new Uint8Array([0, 1, 2, 3]),
-        cidRef: CID.parse(
+        cidLink: CID.parse(
           'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
         ),
       }),
@@ -190,9 +190,9 @@ describe('Record validation', () => {
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
         ...passingSink,
-        number: 'string',
+        float: 'string',
       }),
-    ).toThrow('Record/number must be a number')
+    ).toThrow('Record/float must be a number')
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
         ...passingSink,
@@ -214,9 +214,9 @@ describe('Record validation', () => {
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
         ...passingSink,
-        cidRef: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        cidLink: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       }),
-    ).toThrow('Record/cidRef must be a CID')
+    ).toThrow('Record/cidLink must be a CID')
   })
 
   it('Handles optional properties correctly', () => {
@@ -234,12 +234,12 @@ describe('Record validation', () => {
       $type: 'com.example.default',
       boolean: false,
       integer: 0,
-      number: 0,
+      float: 0,
       string: '',
       object: {
         boolean: true,
         integer: 1,
-        number: 1.5,
+        float: 1.5,
         string: 'x',
       },
     })
@@ -254,7 +254,7 @@ describe('Record validation', () => {
         object: { boolean: true },
         array: ['one', 'two'],
         boolean: true,
-        number: 123.45,
+        float: 123.45,
         integer: 123,
         string: 'string',
       },
@@ -357,49 +357,49 @@ describe('Record validation', () => {
     ).toThrow('Record/boolean must be false')
   })
 
-  it('Applies number range constraint', () => {
-    lex.assertValidRecord('com.example.numberRange', {
-      $type: 'com.example.numberRange',
-      number: 2.5,
+  it('Applies float range constraint', () => {
+    lex.assertValidRecord('com.example.floatRange', {
+      $type: 'com.example.floatRange',
+      float: 2.5,
     })
     expect(() =>
-      lex.assertValidRecord('com.example.numberRange', {
-        $type: 'com.example.numberRange',
-        number: 1,
+      lex.assertValidRecord('com.example.floatRange', {
+        $type: 'com.example.floatRange',
+        float: 1,
       }),
-    ).toThrow('Record/number can not be less than 2')
+    ).toThrow('Record/float can not be less than 2')
     expect(() =>
-      lex.assertValidRecord('com.example.numberRange', {
-        $type: 'com.example.numberRange',
-        number: 5,
+      lex.assertValidRecord('com.example.floatRange', {
+        $type: 'com.example.floatRange',
+        float: 5,
       }),
-    ).toThrow('Record/number can not be greater than 4')
+    ).toThrow('Record/float can not be greater than 4')
   })
 
-  it('Applies number enum constraint', () => {
-    lex.assertValidRecord('com.example.numberEnum', {
-      $type: 'com.example.numberEnum',
-      number: 1.5,
+  it('Applies float enum constraint', () => {
+    lex.assertValidRecord('com.example.floatEnum', {
+      $type: 'com.example.floatEnum',
+      float: 1.5,
     })
     expect(() =>
-      lex.assertValidRecord('com.example.numberEnum', {
-        $type: 'com.example.numberEnum',
-        number: 0,
+      lex.assertValidRecord('com.example.floatEnum', {
+        $type: 'com.example.floatEnum',
+        float: 0,
       }),
-    ).toThrow('Record/number must be one of (1|1.5|2)')
+    ).toThrow('Record/float must be one of (1|1.5|2)')
   })
 
-  it('Applies number const constraint', () => {
-    lex.assertValidRecord('com.example.numberConst', {
-      $type: 'com.example.numberConst',
-      number: 0,
+  it('Applies float const constraint', () => {
+    lex.assertValidRecord('com.example.floatConst', {
+      $type: 'com.example.floatConst',
+      float: 0,
     })
     expect(() =>
-      lex.assertValidRecord('com.example.numberConst', {
-        $type: 'com.example.numberConst',
-        number: 1,
+      lex.assertValidRecord('com.example.floatConst', {
+        $type: 'com.example.floatConst',
+        float: 1,
       }),
-    ).toThrow('Record/number must be 0')
+    ).toThrow('Record/float must be 0')
   })
 
   it('Applies integer range constraint', () => {
@@ -721,14 +721,14 @@ describe('XRPC parameter validation', () => {
   it('Passes valid parameters', () => {
     const queryResult = lex.assertValidXrpcParams('com.example.query', {
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
       string: 'string',
       array: ['x', 'y'],
     })
     expect(queryResult).toEqual({
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
       string: 'string',
       array: ['x', 'y'],
@@ -736,7 +736,7 @@ describe('XRPC parameter validation', () => {
     })
     const paramResult = lex.assertValidXrpcParams('com.example.procedure', {
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
       string: 'string',
       array: ['x', 'y'],
@@ -744,7 +744,7 @@ describe('XRPC parameter validation', () => {
     })
     expect(paramResult).toEqual({
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
       string: 'string',
       array: ['x', 'y'],
@@ -755,19 +755,19 @@ describe('XRPC parameter validation', () => {
   it('Handles required correctly', () => {
     lex.assertValidXrpcParams('com.example.query', {
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
     })
     expect(() =>
       lex.assertValidXrpcParams('com.example.query', {
         boolean: true,
-        number: 123.45,
+        float: 123.45,
       }),
     ).toThrow('Params must have the property "integer"')
     expect(() =>
       lex.assertValidXrpcParams('com.example.query', {
         boolean: true,
-        number: 123.45,
+        float: 123.45,
         integer: undefined,
       }),
     ).toThrow('Params must have the property "integer"')
@@ -777,7 +777,7 @@ describe('XRPC parameter validation', () => {
     expect(() =>
       lex.assertValidXrpcParams('com.example.query', {
         boolean: 'string',
-        number: 123.45,
+        float: 123.45,
         integer: 123,
         string: 'string',
       }),
@@ -785,15 +785,15 @@ describe('XRPC parameter validation', () => {
     expect(() =>
       lex.assertValidXrpcParams('com.example.procedure', {
         boolean: true,
-        number: true,
+        float: true,
         integer: 123,
         string: 'string',
       }),
-    ).toThrow('number must be a number')
+    ).toThrow('float must be a number')
     expect(() =>
       lex.assertValidXrpcParams('com.example.query', {
         boolean: true,
-        number: 123.45,
+        float: 123.45,
         integer: 123,
         string: 'string',
         array: 'x',
@@ -810,7 +810,7 @@ describe('XRPC input validation', () => {
       object: { boolean: true },
       array: ['one', 'two'],
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
       string: 'string',
     })
@@ -823,7 +823,7 @@ describe('XRPC input validation', () => {
         object: { boolean: 'string' },
         array: ['one', 'two'],
         boolean: true,
-        number: 123.45,
+        float: 123.45,
         integer: 123,
         string: 'string',
       }),
@@ -842,7 +842,7 @@ describe('XRPC output validation', () => {
       object: { boolean: true },
       array: ['one', 'two'],
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
       string: 'string',
     })
@@ -850,7 +850,7 @@ describe('XRPC output validation', () => {
       object: { boolean: true },
       array: ['one', 'two'],
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
       string: 'string',
     })
@@ -863,7 +863,7 @@ describe('XRPC output validation', () => {
         object: { boolean: 'string' },
         array: ['one', 'two'],
         boolean: true,
-        number: 123.45,
+        float: 123.45,
         integer: 123,
         string: 'string',
       }),

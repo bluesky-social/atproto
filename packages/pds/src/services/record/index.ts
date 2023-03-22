@@ -1,6 +1,5 @@
 import { CID } from 'multiformats/cid'
 import { AtUri, ensureValidAtUri } from '@atproto/uri'
-import * as common from '@atproto/common'
 import * as ident from '@atproto/identifier'
 import { WriteOpAction } from '@atproto/repo'
 import { dbLogger as log } from '../../logger'
@@ -13,6 +12,7 @@ import {
   deleteRecord,
   deleteRepo,
 } from '../../event-stream/messages'
+import { cborToLexRecord } from '@atproto/lexicon'
 import { ids } from '../../lexicon/lexicons'
 
 export class RecordService {
@@ -143,7 +143,7 @@ export class RecordService {
       return {
         uri: row.uri,
         cid: row.cid,
-        value: common.cborDecode(row.content),
+        value: cborToLexRecord(row.content),
       }
     })
   }
@@ -180,7 +180,7 @@ export class RecordService {
     return {
       uri: record.uri,
       cid: record.cid,
-      value: common.cborDecode(record.content),
+      value: cborToLexRecord(record.content),
       indexedAt: record.indexedAt,
       takedownId: record.takedownId,
     }

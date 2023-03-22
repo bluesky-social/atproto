@@ -18,7 +18,6 @@ import {
   REASONOTHER,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
-import { CID } from 'multiformats/cid'
 import { BlobNotFoundError } from '@atproto/repo'
 
 describe('moderation', () => {
@@ -613,7 +612,7 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postA.ref.uriStr,
             },
-            subjectBlobCids: [img.image.cid],
+            subjectBlobCids: [img.image.ref.toString()],
             createdBy: 'did:example:admin',
             reason: 'Y',
           },
@@ -629,7 +628,7 @@ describe('moderation', () => {
             $type: 'com.atproto.repo.recordRef',
             uri: postB.ref.uriStr,
           },
-          subjectBlobCids: [img.image.cid],
+          subjectBlobCids: [img.image.ref.toString()],
           createdBy: 'did:example:admin',
           reason: 'Y',
         },
@@ -661,7 +660,7 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postB.ref.uriStr,
             },
-            subjectBlobCids: [img.image.cid],
+            subjectBlobCids: [img.image.ref.toString()],
             createdBy: 'did:example:admin',
             reason: 'Y',
           },
@@ -695,7 +694,7 @@ describe('moderation', () => {
       post = sc.posts[sc.dids.carol][0]
       blob = post.images[1]
       imageUri = server.ctx.imgUriBuilder
-        .getCommonSignedUri('feed_thumbnail', blob.image.cid)
+        .getCommonSignedUri('feed_thumbnail', blob.image.ref.toString())
         .replace(server.ctx.cfg.publicUrl, server.url)
       // Warm image server cache
       await fetch(imageUri)
@@ -708,7 +707,7 @@ describe('moderation', () => {
             $type: 'com.atproto.repo.recordRef',
             uri: post.ref.uriStr,
           },
-          subjectBlobCids: [blob.image.cid],
+          subjectBlobCids: [blob.image.ref.toString()],
           createdBy: 'did:example:admin',
           reason: 'Y',
         },
@@ -721,9 +720,7 @@ describe('moderation', () => {
     })
 
     it('removes blob from the store', async () => {
-      const tryGetBytes = server.ctx.blobstore.getBytes(
-        CID.parse(blob.image.cid),
-      )
+      const tryGetBytes = server.ctx.blobstore.getBytes(blob.image.ref)
       await expect(tryGetBytes).rejects.toThrow(BlobNotFoundError)
     })
 
@@ -733,7 +730,7 @@ describe('moderation', () => {
         'tests/image/fixtures/key-alt.jpg',
         'image/jpeg',
       )
-      expect(uploaded.image.cid).toEqual(blob.image.cid)
+      expect(uploaded.image.ref.equals(blob.image.ref)).toBeTruthy()
       const referenceBlob = sc.post(sc.dids.alice, 'pic', [], [blob])
       await expect(referenceBlob).rejects.toThrow('Could not find blob:')
     })
@@ -759,7 +756,7 @@ describe('moderation', () => {
 
       // Can post and reference blob
       const post = await sc.post(sc.dids.alice, 'pic', [], [blob])
-      expect(post.images[0].image.cid).toEqual(blob.image.cid)
+      expect(post.images[0].image.ref.equals(blob.image.ref)).toBeTruthy()
 
       // Can fetch through image server
       const fetchImage = await fetch(imageUri)

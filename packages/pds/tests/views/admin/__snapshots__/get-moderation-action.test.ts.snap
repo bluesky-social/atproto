@@ -48,8 +48,12 @@ Object {
         Object {
           "$type": "app.bsky.actor.profile",
           "avatar": Object {
-            "cid": "cids(1)",
+            "$type": "blob",
             "mimeType": "image/jpeg",
+            "ref": Object {
+              "$link": "cids(1)",
+            },
+            "size": 3976,
           },
           "description": "its me!",
           "displayName": "ali",
@@ -123,8 +127,12 @@ Object {
       Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
-          "cid": "cids(0)",
+          "$type": "blob",
           "mimeType": "image/jpeg",
+          "ref": Object {
+            "$link": "cids(0)",
+          },
+          "size": 3976,
         },
         "description": "its me!",
         "displayName": "ali",

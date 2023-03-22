@@ -1,4 +1,5 @@
 import { check } from '@atproto/common'
+import { cborToLexRecord, RepoRecord } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import BlockMap from '../block-map'
 import { MissingBlockError } from '../error'
@@ -15,7 +16,7 @@ export abstract class ReadableBlockstore {
   ): Promise<{ obj: T; bytes: Uint8Array } | null> {
     const bytes = await this.getBytes(cid)
     if (!bytes) return null
-    return parse.parseObj(bytes, cid, def)
+    return parse.parseObjByDef(bytes, cid, def)
   }
 
   async readObjAndBytes<T>(
@@ -24,7 +25,7 @@ export abstract class ReadableBlockstore {
   ): Promise<{ obj: T; bytes: Uint8Array }> {
     const read = await this.attemptRead(cid, def)
     if (!read) {
-      throw new MissingBlockError(cid, def)
+      throw new MissingBlockError(cid, def.name)
     }
     return read
   }
@@ -32,6 +33,22 @@ export abstract class ReadableBlockstore {
   async readObj<T>(cid: CID, def: check.Def<T>): Promise<T> {
     const obj = await this.readObjAndBytes(cid, def)
     return obj.obj
+  }
+
+  async attemptReadRecord(cid: CID): Promise<RepoRecord | null> {
+    try {
+      return await this.readRecord(cid)
+    } catch {
+      return null
+    }
+  }
+
+  async readRecord(cid: CID): Promise<RepoRecord> {
+    const bytes = await this.getBytes(cid)
+    if (!bytes) {
+      throw new MissingBlockError(cid)
+    }
+    return cborToLexRecord(bytes)
   }
 }
 

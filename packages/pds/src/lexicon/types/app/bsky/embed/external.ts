@@ -1,7 +1,7 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
@@ -28,7 +28,7 @@ export interface External {
   uri: string
   title: string
   description: string
-  thumb?: { cid: string; mimeType: string; [k: string]: unknown }
+  thumb?: BlobRef
   [k: string]: unknown
 }
 

@@ -5,6 +5,7 @@ import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import { adminAuth } from '../_util'
+import { BlobRef } from '@atproto/lexicon'
 
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.
@@ -12,7 +13,7 @@ import { adminAuth } from '../_util'
 let AVATAR_IMG: Uint8Array | undefined
 
 export type ImageRef = {
-  image: { cid: string; mimeType: string }
+  image: BlobRef
   alt: string
 }
 
@@ -112,13 +113,13 @@ export class SeedClient {
       'tests/image/fixtures/key-portrait-small.jpg',
     )
 
-    let avatarCid
+    let avatarBlob
     {
       const res = await this.agent.api.com.atproto.repo.uploadBlob(AVATAR_IMG, {
         encoding: 'image/jpeg',
         headers: this.getHeaders(fromUser || by),
       } as any)
-      avatarCid = res.data.cid
+      avatarBlob = res.data.blob
     }
 
     {
@@ -127,14 +128,14 @@ export class SeedClient {
         {
           displayName,
           description,
-          avatar: { cid: avatarCid, mimeType: 'image/jpeg' },
+          avatar: avatarBlob,
         },
         this.getHeaders(fromUser || by),
       )
       this.profiles[by] = {
         displayName,
         description,
-        avatar: { cid: avatarCid, mimeType: 'image/jpeg' },
+        avatar: avatarBlob,
         ref: new RecordRef(res.uri, res.cid),
       }
     }
@@ -215,7 +216,7 @@ export class SeedClient {
       headers: this.getHeaders(by),
       encoding,
     } as any)
-    return { image: { cid: res.data.cid, mimeType: encoding }, alt: filePath }
+    return { image: res.data.blob, alt: filePath }
   }
 
   async like(by: string, subject: RecordRef) {

@@ -490,12 +490,12 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
         })
         xrpcImport.addNamedImports([{ name: 'Headers' }, { name: 'XRPCError' }])
       }
-      //= import {ValidationResult} from '@atproto/lexicon'
+      //= import {ValidationResult, BlobRef} from '@atproto/lexicon'
       file
         .addImportDeclaration({
           moduleSpecifier: '@atproto/lexicon',
         })
-        .addNamedImports([{ name: 'ValidationResult' }])
+        .addNamedImports([{ name: 'ValidationResult' }, { name: 'BlobRef' }])
       //= import {isObj, hasProp} from '../../util.ts'
       file
         .addImportDeclaration({

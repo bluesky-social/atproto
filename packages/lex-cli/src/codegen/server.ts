@@ -311,12 +311,12 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
           })
         }
       }
-      //= import {ValidationResult} from '@atproto/lexicon'
+      //= import {ValidationResult, BlobRef} from '@atproto/lexicon'
       file
         .addImportDeclaration({
           moduleSpecifier: '@atproto/lexicon',
         })
-        .addNamedImports([{ name: 'ValidationResult' }])
+        .addNamedImports([{ name: 'ValidationResult' }, { name: 'BlobRef' }])
       //= import {lexicons} from '../../lexicons.ts'
       file
         .addImportDeclaration({

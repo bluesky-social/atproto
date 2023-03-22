@@ -1,5 +1,6 @@
 import * as http from 'http'
-import xrpc, { XRPCError } from '@atproto/xrpc'
+import getPort from 'get-port'
+import xrpc, { ServiceClient, XRPCError } from '@atproto/xrpc'
 import * as xrpcServer from '../src'
 import {
   createServer,
@@ -54,10 +55,13 @@ describe('Auth', () => {
       }
     },
   })
-  const client = xrpc.service(`http://localhost:8894`)
   xrpc.addLexicons(LEXICONS)
+
+  let client: ServiceClient
   beforeAll(async () => {
-    s = await createServer(8894, server)
+    const port = await getPort()
+    s = await createServer(port, server)
+    client = xrpc.service(`http://localhost:${port}`)
   })
   afterAll(async () => {
     await closeServer(s)

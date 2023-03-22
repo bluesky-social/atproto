@@ -1,5 +1,9 @@
-import { jsonStringToIpld, stringifyIpld } from '@atproto/common'
-import { LexXrpcProcedure, LexXrpcQuery } from '@atproto/lexicon'
+import {
+  jsonStringToLex,
+  LexXrpcProcedure,
+  LexXrpcQuery,
+  stringifyLex,
+} from '@atproto/lexicon'
 import {
   CallOptions,
   Headers,
@@ -55,7 +59,7 @@ export function constructMethodCallUri(
 export function encodeQueryParam(
   type:
     | 'string'
-    | 'number'
+    | 'float'
     | 'integer'
     | 'boolean'
     | 'datetime'
@@ -66,7 +70,7 @@ export function encodeQueryParam(
   if (type === 'string' || type === 'unknown') {
     return String(value)
   }
-  if (type === 'number') {
+  if (type === 'float') {
     return String(Number(value))
   } else if (type === 'integer') {
     return String(Number(value) | 0)
@@ -114,7 +118,7 @@ export function encodeMethodCallBody(
     return new TextEncoder().encode(data.toString())
   }
   if (headers['Content-Type'].startsWith('application/json')) {
-    return new TextEncoder().encode(stringifyIpld(data))
+    return new TextEncoder().encode(stringifyLex(data))
   }
   return data
 }
@@ -145,7 +149,7 @@ export function httpResponseBodyParse(
     if (mimeType.includes('application/json') && data?.byteLength) {
       try {
         const str = new TextDecoder().decode(data)
-        return jsonStringToIpld(str)
+        return jsonStringToLex(str)
       } catch (e) {
         throw new XRPCError(
           ResponseType.InvalidResponse,

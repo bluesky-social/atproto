@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
-import { ipldValueToJson, jsonToIpldValue } from '../src'
+import { ipldToJson, jsonToIpld } from '../src'
 
 describe('ipld', () => {
   it('converts ipld to json', () => {
@@ -11,16 +11,14 @@ describe('ipld', () => {
       ),
       three: new Uint8Array([0, 1, 2, 3]),
     }
-    const json = ipldValueToJson(ipld)
+    const json = ipldToJson(ipld)
     expect(json).toEqual({
       one: 1,
       two: {
-        '/': 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        $link: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       },
       three: {
-        '/': {
-          bytes: 'AAECAw',
-        },
+        $bytes: 'AAECAw',
       },
     })
   })
@@ -29,19 +27,17 @@ describe('ipld', () => {
     const json = {
       one: 1,
       two: {
-        '/': 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        $link: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       },
       three: {
-        '/': {
-          bytes: 'AAECAw',
-        },
+        $bytes: 'AAECAw',
       },
     }
     const expectedCid = CID.parse(
       'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
     )
 
-    const ipld = jsonToIpldValue(json)
+    const ipld = jsonToIpld(json)
     if (!ipld) {
       throw new Error()
     }
@@ -60,12 +56,13 @@ describe('ipld', () => {
         ],
       },
     }
-    const json = ipldValueToJson(ipld)
+    const json = ipldToJson(ipld)
     expect(json).toEqual({
       a: {
         b: [
           {
-            '/': 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+            $link:
+              'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
           },
         ],
       },
@@ -77,12 +74,13 @@ describe('ipld', () => {
       a: {
         b: [
           {
-            '/': 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+            $link:
+              'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
           },
         ],
       },
     }
-    const ipld = jsonToIpldValue(json)
+    const ipld = jsonToIpld(json)
     const expectedCid = CID.parse(
       'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
     )

@@ -21,10 +21,8 @@
         "title": {"type": "string"},
         "description": {"type": "string"},
         "thumb": {
-          "type": "image",
+          "type": "blob",
           "accept": ["image/*"],
-          "maxWidth": 2000,
-          "maxHeight": 2000,
           "maxSize": 1000000
         }
       }

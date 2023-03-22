@@ -3,7 +3,7 @@
  */
 import express from 'express'
 import stream from 'stream'
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
@@ -14,7 +14,7 @@ export interface QueryParams {}
 export type InputSchema = string | Uint8Array
 
 export interface OutputSchema {
-  cid: string
+  blob: BlobRef
   [k: string]: unknown
 }
 

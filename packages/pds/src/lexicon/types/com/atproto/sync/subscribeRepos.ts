@@ -1,7 +1,7 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
@@ -19,7 +19,7 @@ export interface OutputSchema {
   repo: string
   commit: CID
   prev: CID | null
-  blocks: {}
+  blocks: Uint8Array
   ops: RepoOp[]
   blobs: CID[]
   time: string

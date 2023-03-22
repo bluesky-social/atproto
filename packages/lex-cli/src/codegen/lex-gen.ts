@@ -6,12 +6,12 @@ import {
   LexObject,
   LexArray,
   LexPrimitive,
-  LexBlobVariant,
+  LexBlob,
   LexXrpcProcedure,
   LexXrpcQuery,
   LexToken,
   LexXrpcSubscription,
-  LexCidInternalRef,
+  LexCidLink,
   LexBytes,
   LexIpldType,
 } from '@atproto/lexicon'
@@ -70,13 +70,10 @@ export function genUserType(
       break
 
     case 'blob':
-    case 'image':
-    case 'video':
-    case 'audio':
     case 'bytes':
-    case 'cid-internal-ref':
+    case 'cid-link':
     case 'boolean':
-    case 'number':
+    case 'float':
     case 'integer':
     case 'string':
     case 'unknown':
@@ -252,7 +249,7 @@ export function genArray(
 export function genPrimitiveOrBlob(
   file: SourceFile,
   lexUri: string,
-  def: LexPrimitive | LexBlobVariant | LexIpldType,
+  def: LexPrimitive | LexBlob | LexIpldType,
 ) {
   genComment(
     file.addTypeAlias({
@@ -452,7 +449,7 @@ export function getHash(uri: string): string {
   return uri.split('#').pop() || ''
 }
 
-export function ipldToType(def: LexCidInternalRef | LexBytes) {
+export function ipldToType(def: LexCidLink | LexBytes) {
   if (def.type === 'bytes') {
     return 'Uint8Array'
   }
@@ -480,17 +477,14 @@ export function refToType(
 }
 
 export function primitiveOrBlobToType(
-  def: LexBlobVariant | LexPrimitive | LexIpldType,
+  def: LexBlob | LexPrimitive | LexIpldType,
 ): string {
   switch (def.type) {
     case 'blob':
-    case 'image':
-    case 'video':
-    case 'audio':
-      return `{cid: string; mimeType: string; [k: string]: unknown}`
+      return 'BlobRef'
     case 'bytes':
       return 'Uint8Array'
-    case 'cid-internal-ref':
+    case 'cid-link':
       return 'CID'
     default:
       return primitiveToType(def)
@@ -510,7 +504,7 @@ export function primitiveToType(def: LexPrimitive): string {
         return JSON.stringify(def.const)
       }
       return 'string'
-    case 'number':
+    case 'float':
     case 'integer':
       if (def.enum) {
         return def.enum.map((v) => JSON.stringify(v)).join(' | ')

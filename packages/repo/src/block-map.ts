@@ -1,12 +1,12 @@
-import { dataToCborBlock } from '@atproto/common'
+import { lexToCborBlock, LexValue } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 
 export class BlockMap {
   private map: Map<string, Uint8Array> = new Map()
 
-  async add(value: unknown): Promise<CID> {
-    const block = await dataToCborBlock(value)
+  async add(value: LexValue): Promise<CID> {
+    const block = await lexToCborBlock(value)
     this.set(block.cid, block.bytes)
     return block.cid
   }

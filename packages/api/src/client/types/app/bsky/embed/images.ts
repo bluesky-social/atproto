@@ -1,7 +1,7 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
@@ -25,7 +25,7 @@ export function validateMain(v: unknown): ValidationResult {
 }
 
 export interface Image {
-  image: { cid: string; mimeType: string; [k: string]: unknown }
+  image: BlobRef
   alt: string
   [k: string]: unknown
 }

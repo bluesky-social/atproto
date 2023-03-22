@@ -121,8 +121,8 @@ describe('pds profile views', () => {
     await updateProfile(agent, alice, {
       displayName: 'ali',
       description: 'new descript',
-      avatar: { cid: avatarRes.data.cid, mimeType: 'image/jpeg' },
-      banner: { cid: bannerRes.data.cid, mimeType: 'image/jpeg' },
+      avatar: avatarRes.data.blob,
+      banner: bannerRes.data.blob,
     })
 
     const aliceForAlice = await agent.api.app.bsky.actor.getProfile(

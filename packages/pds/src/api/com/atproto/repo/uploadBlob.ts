@@ -6,14 +6,14 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
-      const cid = await ctx.services
+      const blob = await ctx.services
         .repo(ctx.db)
         .blobs.addUntetheredBlob(requester, input.encoding, input.body)
 
       return {
         encoding: 'application/json',
         body: {
-          cid: cid.toString(),
+          blob,
         },
       }
     },

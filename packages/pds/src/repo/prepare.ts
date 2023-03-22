@@ -1,18 +1,21 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import { cidForCbor, TID } from '@atproto/common'
+import { TID } from '@atproto/common'
 import {
   PreparedCreate,
   PreparedUpdate,
   PreparedDelete,
-  BlobRef,
-  ImageConstraint,
   InvalidRecordError,
   PreparedWrite,
+  PreparedBlobRef,
 } from './types'
 
 import * as lex from '../lexicon/lexicons'
-import { LexiconDefNotFoundError } from '@atproto/lexicon'
+import {
+  cidForRecord,
+  LexiconDefNotFoundError,
+  RepoRecord,
+} from '@atproto/lexicon'
 import {
   RecordDeleteOp,
   RecordCreateOp,
@@ -22,47 +25,47 @@ import {
 } from '@atproto/repo'
 
 // @TODO do this dynamically off of schemas
-export const blobsForWrite = (record: any): BlobRef[] => {
+export const blobsForWrite = (record: any): PreparedBlobRef[] => {
   if (record.$type === lex.ids.AppBskyActorProfile) {
     const doc = lex.schemaDict.AppBskyActorProfile
-    const refs: BlobRef[] = []
+    const refs: PreparedBlobRef[] = []
     if (record.avatar) {
       refs.push({
-        cid: CID.parse(record.avatar.cid),
+        cid: record.avatar.ref,
         mimeType: record.avatar.mimeType,
-        constraints: doc.defs.main.record.properties.avatar as ImageConstraint,
+        constraints: doc.defs.main.record.properties.avatar,
       })
     }
     if (record.banner) {
       refs.push({
-        cid: CID.parse(record.banner.cid),
+        cid: record.banner.ref,
         mimeType: record.banner.mimeType,
-        constraints: doc.defs.main.record.properties.banner as ImageConstraint,
+        constraints: doc.defs.main.record.properties.banner,
       })
     }
     return refs
   } else if (record.$type === lex.ids.AppBskyFeedPost) {
-    const refs: BlobRef[] = []
+    const refs: PreparedBlobRef[] = []
     const embed = record?.embed
     if (embed?.$type === 'app.bsky.embed.images') {
       const doc = lex.schemaDict.AppBskyEmbedImages
       for (let i = 0; i < embed.images?.length || 0; i++) {
         const img = embed.images[i]
         refs.push({
-          cid: CID.parse(img.image.cid),
+          cid: img.image.ref,
           mimeType: img.image.mimeType,
-          constraints: doc.defs.image.properties.image as ImageConstraint,
+          constraints: doc.defs.image.properties.image,
         })
       }
     } else if (
       record?.embed?.$type === 'app.bsky.embed.external' &&
-      embed.external.thumb?.cid
+      embed.external.thumb
     ) {
       const doc = lex.schemaDict.AppBskyEmbedExternal
       refs.push({
-        cid: CID.parse(embed.external.thumb.cid),
+        cid: embed.external.thumb.ref,
         mimeType: embed.external.thumb.mimeType,
-        constraints: doc.defs.external.properties.thumb as ImageConstraint,
+        constraints: doc.defs.external.properties.thumb,
       })
     }
     return refs
@@ -90,7 +93,7 @@ export const assertValidRecord = (record: Record<string, unknown>) => {
 
 export const setCollectionName = (
   collection: string,
-  record: Record<string, unknown>,
+  record: RepoRecord,
   validate: boolean,
 ) => {
   if (!record.$type) {
@@ -109,7 +112,7 @@ export const prepareCreate = async (opts: {
   collection: string
   rkey?: string
   swapCid?: CID | null
-  record: Record<string, unknown>
+  record: RepoRecord
   validate?: boolean
 }): Promise<PreparedCreate> => {
   const { did, collection, swapCid, validate = true } = opts
@@ -121,7 +124,7 @@ export const prepareCreate = async (opts: {
   return {
     action: WriteOpAction.Create,
     uri: AtUri.make(did, collection, rkey),
-    cid: await cidForCbor(record),
+    cid: await cidForRecord(record),
     swapCid,
     record,
     blobs: blobsForWrite(record),
@@ -133,7 +136,7 @@ export const prepareUpdate = async (opts: {
   collection: string
   rkey: string
   swapCid?: CID | null
-  record: Record<string, unknown>
+  record: RepoRecord
   validate?: boolean
 }): Promise<PreparedUpdate> => {
   const { did, collection, rkey, swapCid, validate = true } = opts
@@ -144,7 +147,7 @@ export const prepareUpdate = async (opts: {
   return {
     action: WriteOpAction.Update,
     uri: AtUri.make(did, collection, rkey),
-    cid: await cidForCbor(record),
+    cid: await cidForRecord(record),
     swapCid,
     record,
     blobs: blobsForWrite(record),

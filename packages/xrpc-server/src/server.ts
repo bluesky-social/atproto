@@ -6,6 +6,7 @@ import express, {
 } from 'express'
 import {
   Lexicons,
+  lexToJson,
   LexXrpcProcedure,
   LexXrpcQuery,
   LexXrpcSubscription,
@@ -35,7 +36,7 @@ import {
   validateOutput,
 } from './util'
 import log from './logger'
-import { forwardStreamErrors, ipldValueToJson } from '@atproto/common'
+import { forwardStreamErrors } from '@atproto/common'
 
 export function createServer(lexicons?: unknown[], options?: Options) {
   return new Server(lexicons, options)
@@ -222,7 +223,7 @@ export class Server {
             output?.encoding === 'application/json' ||
             output?.encoding === 'json'
           ) {
-            const json = ipldValueToJson(output.body)
+            const json = lexToJson(output.body)
             res.status(200).json(json)
           } else if (output?.body instanceof Readable) {
             res.header('Content-Type', output.encoding)
