@@ -27,7 +27,7 @@ jobs:
           path: /tmp/jest_rt
           key: ${{ hashFiles(**/yarn.lock) }}-${{ matrix.shard }}
       - run: yarn install --frozen-lockfile
-      - run: yarn test:ci --maxWorkers=2 --shard=${{ matrix.shard }}
+      - run: yarn test:withFlags --maxWorkers=2 --shard=${{ matrix.shard }}
   verify:
     runs-on: ubuntu-latest
     steps:
