@@ -1,0 +1,115 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.sync.subscribeRepos",
+  "defs": {
+    "main": {
+      "type": "subscription",
+      "description": "Subscribe to repo updates",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "cursor": {
+            "type": "integer",
+            "description": "The last known event to backfill from."
+          }
+        }
+      },
+      "message": {
+        "type": "union",
+        "refs": [
+          "#commit",
+          "#handle",
+          "#migrate",
+          "#tombstone",
+          "#info"
+        ]
+      },
+      "errors": [
+        {"name": "FutureCursor"}
+      ]
+    },
+    "commit": {
+      "type": "object",
+      "required": ["seq", "rebase", "tooBig", "repo", "commit", "prev", "blocks", "ops", "blobs", "time"],
+      "nullable": ["prev"],
+      "properties": {
+        "seq": {"type": "integer"},
+        "rebase": {"type": "boolean"},
+        "tooBig": {"type": "boolean"},
+        "repo": {"type": "string"},
+        "commit": {"type": "string"},
+        "prev": {"type": "string"},
+        "blocks": {
+          "type": "unknown",
+          "description": "CAR file containing relevant blocks"
+        },
+        "ops": {
+          "type": "array", 
+          "items": { "type": "ref", "ref": "#repoOp"}
+        },
+        "blobs": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "time": {"type": "datetime"}
+      }
+    },
+    "handle": {
+      "type": "object",
+      "required": ["seq", "did", "handle"],
+      "properties": {
+        "seq": {"type": "integer"},
+        "did": {"type": "string"},
+        "handle": {"type": "string"}
+      }
+    },
+    "migrate": {
+      "type": "object",
+      "required": ["seq", "did", "migrateTo"],
+      "nullable": ["migrateTo"],
+      "properties": {
+        "seq": {"type": "integer"},
+        "did": {"type": "string"},
+        "migrateTo": {"type": "string"}
+      }
+    },
+    "tombstone": {
+      "type": "object",
+      "required": ["seq", "did"],
+      "properties": {
+        "seq": {"type": "integer"},
+        "did": {"type": "string"}
+      }
+    },
+    "info": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "knownValues": ["OutdatedCursor"]
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "repoOp": {
+      "type": "object",
+      "required": ["action", "path", "cid"],
+      "nullable": ["cid"],
+      "properties": {
+        "action": {
+          "type": "string",
+          "knownValues": [
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        "path": {"type": "string"},
+        "cid": {"type": "string"}
+      }
+    }
+  }
+}
