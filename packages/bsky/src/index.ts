@@ -7,8 +7,10 @@ import 'express-async-errors' // @TODO(bsky) remove
 import express from 'express'
 import http from 'http'
 import events from 'events'
+import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import { BlobStore } from '@atproto/repo'
-import API, { health } from './api'
+import { DidResolver } from '@atproto/did-resolver'
+import API, { health, blobResolver } from './api'
 import Database from './db'
 import * as error from './error'
 import { loggerMiddleware } from './logger'
@@ -17,10 +19,8 @@ import { createServer } from './lexicon'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
-import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import AppContext from './context'
 import { RepoSubscription } from './subscription/repo'
-import { DidResolver } from '@atproto/did-resolver'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -56,15 +56,15 @@ export class BskyAppView {
     const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
 
     let imgUriEndpoint = config.imgUriEndpoint
+    let imgProcessingServer: ImageProcessingServer | undefined
     if (!imgUriEndpoint) {
       const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
-      const imgProcessingServer = new ImageProcessingServer(
+      imgProcessingServer = new ImageProcessingServer(
         config.imgUriSalt,
         config.imgUriKey,
         didResolver,
         imgProcessingCache,
       )
-      app.use('/image', imgProcessingServer.app)
       imgUriEndpoint = `${config.publicUrl}/image`
     }
 
@@ -99,6 +99,10 @@ export class BskyAppView {
     server = API(server, ctx)
 
     app.use(health.createRouter(ctx))
+    app.use(blobResolver.createRouter(ctx))
+    if (imgProcessingServer) {
+      app.use('/image', imgProcessingServer.app)
+    }
     app.use(server.xrpc.router)
     app.use(error.handler)
 
