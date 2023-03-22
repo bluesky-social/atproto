@@ -49,12 +49,14 @@ import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 import * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 import * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
+import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
 import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeAllRepos from './types/com/atproto/sync/subscribeAllRepos'
@@ -95,6 +97,7 @@ import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/up
 import * as AppBskySystemActorUser from './types/app/bsky/system/actorUser'
 import * as AppBskySystemDeclRef from './types/app/bsky/system/declRef'
 import * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
+import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 
 export * as ComAtprotoAccountCreate from './types/com/atproto/account/create'
 export * as ComAtprotoAccountCreateInviteCode from './types/com/atproto/account/createInviteCode'
@@ -139,12 +142,14 @@ export * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 export * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 export * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 export * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
+export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
 export * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
 export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+export * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeAllRepos from './types/com/atproto/sync/subscribeAllRepos'
@@ -185,6 +190,7 @@ export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/up
 export * as AppBskySystemActorUser from './types/app/bsky/system/actorUser'
 export * as AppBskySystemDeclRef from './types/app/bsky/system/declRef'
 export * as AppBskySystemDeclaration from './types/app/bsky/system/declaration'
+export * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 
 export const COM_ATPROTO_ADMIN = {
   ModerationActionTakedown: 'com.atproto.admin.moderationAction#takedown',
@@ -703,6 +709,17 @@ export class SyncNS {
     this._service = service
   }
 
+  getBlob(
+    params?: ComAtprotoSyncGetBlob.QueryParams,
+    opts?: ComAtprotoSyncGetBlob.CallOptions,
+  ): Promise<ComAtprotoSyncGetBlob.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getBlob', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetBlob.toKnownErr(e)
+      })
+  }
+
   getBlocks(
     params?: ComAtprotoSyncGetBlocks.QueryParams,
     opts?: ComAtprotoSyncGetBlocks.CallOptions,
@@ -769,6 +786,17 @@ export class SyncNS {
       })
   }
 
+  listBlobs(
+    params?: ComAtprotoSyncListBlobs.QueryParams,
+    opts?: ComAtprotoSyncListBlobs.CallOptions,
+  ): Promise<ComAtprotoSyncListBlobs.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.listBlobs', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncListBlobs.toKnownErr(e)
+      })
+  }
+
   notifyOfUpdate(
     params?: ComAtprotoSyncNotifyOfUpdate.QueryParams,
     opts?: ComAtprotoSyncNotifyOfUpdate.CallOptions,
@@ -810,6 +838,7 @@ export class BskyNS {
   graph: GraphNS
   notification: NotificationNS
   system: SystemNS
+  unspecced: UnspeccedNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
@@ -819,6 +848,7 @@ export class BskyNS {
     this.graph = new GraphNS(service)
     this.notification = new NotificationNS(service)
     this.system = new SystemNS(service)
+    this.unspecced = new UnspeccedNS(service)
   }
 }
 
@@ -1603,5 +1633,24 @@ export class DeclarationRecord {
       { collection: 'app.bsky.system.declaration', ...params },
       { headers },
     )
+  }
+}
+
+export class UnspeccedNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  getPopular(
+    params?: AppBskyUnspeccedGetPopular.QueryParams,
+    opts?: AppBskyUnspeccedGetPopular.CallOptions,
+  ): Promise<AppBskyUnspeccedGetPopular.Response> {
+    return this._service.xrpc
+      .call('app.bsky.unspecced.getPopular', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedGetPopular.toKnownErr(e)
+      })
   }
 }

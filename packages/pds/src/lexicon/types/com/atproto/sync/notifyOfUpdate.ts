@@ -7,7 +7,10 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
-export interface QueryParams {}
+export interface QueryParams {
+  /** Hostname of the service that is notifying of update. */
+  hostname: string
+}
 
 export type InputSchema = undefined
 export type HandlerInput = undefined

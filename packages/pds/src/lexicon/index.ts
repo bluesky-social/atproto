@@ -42,12 +42,14 @@ import * as ComAtprotoSessionCreate from './types/com/atproto/session/create'
 import * as ComAtprotoSessionDelete from './types/com/atproto/session/delete'
 import * as ComAtprotoSessionGet from './types/com/atproto/session/get'
 import * as ComAtprotoSessionRefresh from './types/com/atproto/session/refresh'
+import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
 import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
+import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeAllRepos from './types/com/atproto/sync/subscribeAllRepos'
@@ -71,6 +73,7 @@ import * as AppBskyGraphUnmute from './types/app/bsky/graph/unmute'
 import * as AppBskyNotificationGetCount from './types/app/bsky/notification/getCount'
 import * as AppBskyNotificationList from './types/app/bsky/notification/list'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 
 export const COM_ATPROTO_ADMIN = {
   ModerationActionTakedown: 'com.atproto.admin.moderationAction#takedown',
@@ -473,6 +476,13 @@ export class SyncNS {
     this._server = server
   }
 
+  getBlob<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncGetBlob.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.getBlob' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getBlocks<AV extends AuthVerifier>(
     cfg: ConfigOf<AV, ComAtprotoSyncGetBlocks.Handler<ExtractAuth<AV>>>,
   ) {
@@ -512,6 +522,13 @@ export class SyncNS {
     cfg: ConfigOf<AV, ComAtprotoSyncGetRepo.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.sync.getRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listBlobs<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncListBlobs.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.listBlobs' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -555,6 +572,7 @@ export class BskyNS {
   graph: GraphNS
   notification: NotificationNS
   system: SystemNS
+  unspecced: UnspeccedNS
 
   constructor(server: Server) {
     this._server = server
@@ -564,6 +582,7 @@ export class BskyNS {
     this.graph = new GraphNS(server)
     this.notification = new NotificationNS(server)
     this.system = new SystemNS(server)
+    this.unspecced = new UnspeccedNS(server)
   }
 }
 
@@ -752,6 +771,21 @@ export class SystemNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+}
+
+export class UnspeccedNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getPopular<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyUnspeccedGetPopular.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.unspecced.getPopular' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 

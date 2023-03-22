@@ -1,5 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as handleLib from '@atproto/handle'
+import * as ident from '@atproto/identifier'
 import { cidForCbor } from '@atproto/common'
 import * as plc from '@did-plc/lib'
 import { Server, APP_BSKY_SYSTEM } from '../../../../lexicon'
@@ -15,14 +15,14 @@ export default function (server: Server, ctx: AppContext) {
 
     let handle: string
     try {
-      handle = handleLib.normalizeAndEnsureValid(input.body.handle)
-      handleLib.ensureServiceConstraints(handle, ctx.cfg.availableUserDomains)
+      handle = ident.normalizeAndEnsureValidHandle(input.body.handle)
+      ident.ensureHandleServiceConstraints(handle, ctx.cfg.availableUserDomains)
     } catch (err) {
-      if (err instanceof handleLib.InvalidHandleError) {
+      if (err instanceof ident.InvalidHandleError) {
         throw new InvalidRequestError(err.message, 'InvalidHandle')
-      } else if (err instanceof handleLib.ReservedHandleError) {
+      } else if (err instanceof ident.ReservedHandleError) {
         throw new InvalidRequestError(err.message, 'HandleNotAvailable')
-      } else if (err instanceof handleLib.UnsupportedDomainError) {
+      } else if (err instanceof ident.UnsupportedDomainError) {
         throw new InvalidRequestError(err.message, 'UnsupportedDomain')
       }
       throw err
