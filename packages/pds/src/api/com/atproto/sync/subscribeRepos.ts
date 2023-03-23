@@ -32,12 +32,19 @@ export default function (server: Server, ctx: AppContext) {
 
     for await (const evt of outbox.events(cursor, backfillTime)) {
       if (evt.type === 'commit') {
+        // @TODO clean this up after lex-refactor lands
         const { commit, prev, ...rest } = evt.evt
+        const ops = evt.evt.ops.map((op) => ({
+          action: op.action,
+          path: op.path,
+          cid: op.cid?.toString() ?? null,
+        }))
         yield {
           ...rest,
           $type: '#commit',
           commit: commit.toString(),
           prev: prev?.toString() ?? null,
+          ops,
           seq: evt.seq,
           time: evt.time,
         }

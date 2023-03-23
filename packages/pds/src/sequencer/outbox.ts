@@ -101,6 +101,7 @@ export class Outbox {
       // if we're within 50 of the sequencer, we call it good & switch to cutover
       const seqCursor = this.sequencer.lastSeen ?? -1
       if (seqCursor - this.lastSeen < 50) break
+      if (evts.length < 1) break
     }
   }
 }

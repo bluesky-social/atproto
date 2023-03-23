@@ -1,6 +1,6 @@
 import AtpAgent from '@atproto/api'
 import {
-  cidForCbor,
+  cborDecode,
   HOUR,
   MINUTE,
   readFromGenerator,
@@ -11,15 +11,13 @@ import * as repo from '@atproto/repo'
 import { getWriteLog, MemoryBlockstore, WriteOpAction } from '@atproto/repo'
 import { byFrame, ErrorFrame, Frame, MessageFrame } from '@atproto/xrpc-server'
 import { WebSocket } from 'ws'
-import {
-  Commit as CommitEvt,
-  isInfo,
-} from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
+import { Commit as CommitEvt } from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
 import { AppContext, Database } from '../../src'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { CloseFn, runTestServer } from '../_util'
 import { sql } from 'kysely'
+import { CID } from 'multiformats/cid'
 
 describe('repo subscribe repos', () => {
   let serverHost: string
@@ -192,8 +190,9 @@ describe('repo subscribe repos', () => {
     for (let i = 0; i < evts.length; i++) {
       const evt = evts[i].body as CommitEvt
       const seq = seqSlice[i]
+      const seqEvt = cborDecode(seq.event) as { commit: CID }
       expect(evt.time).toEqual(seq.sequencedAt)
-      expect(evt.commit).toEqual(seq.commit)
+      expect(evt.commit).toEqual(seqEvt.commit.toString())
       expect(evt.repo).toEqual(seq.did)
     }
   })
@@ -201,12 +200,11 @@ describe('repo subscribe repos', () => {
   it('sends info frame on out of date cursor', async () => {
     // we stick three new seqs in with a date past the backfill cutoff
     // then we increment the sequence number of everything else to test out of date cursor
-    const cid = await cidForCbor({ test: 123 })
     const overAnHourAgo = new Date(Date.now() - HOUR - MINUTE).toISOString()
     const dummySeq = {
       did: 'did:example:test',
-      commit: cid.toString(),
-      eventType: 'repo_append' as const,
+      eventType: 'append' as const,
+      event: new Uint8Array([1, 2, 3, 4]),
       sequencedAt: overAnHourAgo,
     }
     const newRows = await db.db

@@ -1,7 +1,7 @@
 import AtpAgent from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
-import { readFromGenerator, wait } from '@atproto/common'
-import Sequencer, { RepoAppendEvent } from '../src/sequencer'
+import { cborEncode, readFromGenerator, wait } from '@atproto/common'
+import Sequencer, { SeqEvt } from '../src/sequencer'
 import Outbox, { StreamConsumerTooSlowError } from '../src/sequencer/outbox'
 import { Database } from '../src'
 import { SeedClient } from './seeds/client'
@@ -61,13 +61,17 @@ describe('sequencer', () => {
       .execute()
   }
 
-  const evtToDbRow = (e: RepoAppendEvent) => ({
-    seq: e.seq,
-    did: e.repo,
-    commit: e.commit,
-    eventType: 'repo_append',
-    sequencedAt: e.time,
-  })
+  const evtToDbRow = (e: SeqEvt) => {
+    const did = e.type === 'commit' ? e.evt.repo : e.evt.did
+    return {
+      seq: e.seq,
+      did,
+      eventType: 'append',
+      event: Buffer.from(cborEncode(e.evt)),
+      invalidatedBy: null,
+      sequencedAt: e.time,
+    }
+  }
 
   it('sends to outbox', async () => {
     const count = 20
