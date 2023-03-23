@@ -91,71 +91,96 @@ F: 0 1 2 3 4 5 6 7 8 910   // string indices
    ^-------^               // target slice {start: 0, end: 5}
  */
 
-import { AppBskyFeedPost } from '../client'
+import { AppBskyFeedPost, AppBskyRichtextFacet } from '../client'
 import { sanitizeRichText } from './sanitize'
 
+export type Facet = AppBskyRichtextFacet.Main
+export type FacetLink = AppBskyRichtextFacet.Link
+export type FacetMention = AppBskyRichtextFacet.Mention
 export type Entity = AppBskyFeedPost.Entity
+
+export interface RichTextProps {
+  text: string
+  facets?: Facet[]
+  /**
+   * @deprecated Use facets instead
+   */
+  entities?: Entity[]
+}
+
 export interface RichTextOpts {
   cleanNewlines?: boolean
 }
 
-interface RichTextSlice {
+export interface RichTextSegment {
   text: string
-  entity?: Entity
+  facet?: Facet
 }
 
 export class RichText {
-  constructor(
-    public text: string,
-    public entities?: Entity[],
-    opts?: RichTextOpts,
-  ) {
+  text: string
+  facets?: Facet[]
+
+  constructor(props: RichTextProps, opts?: RichTextOpts) {
+    this.text = props.text
+    this.facets = props.facets
+    if (!this.facets?.length && props.entities?.length) {
+      this.facets = entitiesToFacets(props.entities)
+    }
     if (opts?.cleanNewlines) {
       sanitizeRichText(this, { cleanNewlines: true }).copyInto(this)
     }
   }
 
   clone() {
-    return new RichText(this.text, cloneDeep(this.entities))
+    return new RichText(
+      cloneDeep({
+        text: this.text,
+        facets: this.facets,
+      }),
+    )
   }
 
   copyInto(target: RichText) {
     target.text = this.text
-    target.entities = cloneDeep(this.entities)
+    target.facets = cloneDeep(this.facets)
   }
 
-  *segments(): Generator<RichTextSlice, void, void> {
-    const entities = this.entities || []
-    if (!entities.length) {
+  *segments(): Generator<RichTextSegment, void, void> {
+    const facets = this.facets || []
+    if (!facets.length) {
       yield { text: this.text }
       return
     }
 
     let textCursor = 0
-    let entCursor = 0
+    let facetCursor = 0
     do {
-      const currEnt = entities[entCursor]
-      if (textCursor < currEnt.index.start) {
-        yield { text: this.text.slice(textCursor, currEnt.index.start) }
-      } else if (textCursor > currEnt.index.start) {
-        entCursor++
+      const currFacet = facets[facetCursor]
+      if (textCursor < currFacet.index.start) {
+        yield { text: this.text.slice(textCursor, currFacet.index.start) }
+      } else if (textCursor > currFacet.index.start) {
+        facetCursor++
         continue
       }
-      if (currEnt.index.start < currEnt.index.end) {
-        const subtext = this.text.slice(currEnt.index.start, currEnt.index.end)
+      if (currFacet.index.start < currFacet.index.end) {
+        const subtext = this.text.slice(
+          currFacet.index.start,
+          currFacet.index.end,
+        )
         if (!subtext.trim()) {
           // dont empty string entities
           yield { text: subtext }
         } else {
           yield {
-            entity: currEnt,
+            facet: currFacet,
             text: subtext,
           }
         }
       }
-      textCursor = currEnt.index.end
-      entCursor++
-    } while (entCursor < entities.length)
+      textCursor = currFacet.index.end
+      facetCursor++
+    } while (facetCursor < facets.length)
     if (textCursor < this.text.length) {
       yield { text: this.text.slice(textCursor, this.text.length) }
     }
@@ -167,12 +192,12 @@ export class RichText {
       insertText +
       this.text.slice(insertIndex)
 
-    if (!this.entities?.length) {
+    if (!this.facets?.length) {
       return this
     }
 
     const numCharsAdded = insertText.length
-    for (const ent of this.entities) {
+    for (const ent of this.facets) {
       // see comment at top of file for labels of each scenario
       // scenario A (before)
       if (insertIndex <= ent.index.start) {
@@ -195,12 +220,12 @@ export class RichText {
     this.text =
       this.text.slice(0, removeStartIndex) + this.text.slice(removeEndIndex)
 
-    if (!this.entities?.length) {
+    if (!this.facets?.length) {
       return this
     }
 
     const numCharsRemoved = removeEndIndex - removeStartIndex
-    for (const ent of this.entities) {
+    for (const ent of this.facets) {
       // see comment at top of file for labels of each scenario
       // scenario A (entirely outer)
       if (
@@ -250,12 +275,30 @@ export class RichText {
       }
     }
 
-    // filter out any entities that were made irrelevant
-    this.entities = this.entities.filter(
-      (ent) => ent.index.start < ent.index.end,
-    )
+    // filter out any facets that were made irrelevant
+    this.facets = this.facets.filter((ent) => ent.index.start < ent.index.end)
     return this
   }
+}
+
+function entitiesToFacets(entities: Entity[]): Facet[] {
+  const facets: Facet[] = []
+  for (const ent of entities) {
+    if (ent.type === 'link') {
+      facets.push({
+        $type: 'app.bsky.richtext.facet',
+        index: ent.index,
+        value: { $type: 'app.bsky.richtext.facet#link', uri: ent.value },
+      })
+    } else if (ent.type === 'mention') {
+      facets.push({
+        $type: 'app.bsky.richtext.facet',
+        index: ent.index,
+        value: { $type: 'app.bsky.richtext.facet#mention', did: ent.value },
+      })
+    }
+  }
+  return facets
 }
 
 function cloneDeep<T>(v: T): T {
