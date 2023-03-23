@@ -126,7 +126,7 @@ export class RichText {
     this.text = new UnicodeString(props.text)
     this.facets = props.facets
     if (!this.facets?.length && props.entities?.length) {
-      this.facets = entitiesToFacets(props.entities)
+      this.facets = entitiesToFacets(this.text, props.entities)
     }
     if (opts?.cleanNewlines) {
       sanitizeRichText(this, { cleanNewlines: true }).copyInto(this)
@@ -282,19 +282,25 @@ export class RichText {
   }
 }
 
-function entitiesToFacets(entities: Entity[]): Facet[] {
+function entitiesToFacets(text: UnicodeString, entities: Entity[]): Facet[] {
   const facets: Facet[] = []
   for (const ent of entities) {
     if (ent.type === 'link') {
       facets.push({
         $type: 'app.bsky.richtext.facet',
-        index: ent.index,
+        index: {
+          start: text.utf16IndexToUtf8Index(ent.index.start),
+          end: text.utf16IndexToUtf8Index(ent.index.end),
+        },
         value: { $type: 'app.bsky.richtext.facet#link', uri: ent.value },
       })
     } else if (ent.type === 'mention') {
       facets.push({
         $type: 'app.bsky.richtext.facet',
-        index: ent.index,
+        index: {
+          start: text.utf16IndexToUtf8Index(ent.index.start),
+          end: text.utf16IndexToUtf8Index(ent.index.end),
+        },
         value: { $type: 'app.bsky.richtext.facet#mention', did: ent.value },
       })
     }

@@ -41,6 +41,46 @@ describe('RichText', () => {
       },
     ])
   })
+  it('converts entity utf16 indices to facet utf8 indices', () => {
+    const rt = new RichText({
+      text: '👨‍👩‍👧‍👧👨‍👩‍👧‍👧👨‍👩‍👧‍👧',
+      entities: [
+        {
+          index: { start: 0, end: 11 },
+          type: 'link',
+          value: 'https://example.com',
+        },
+        {
+          index: { start: 11, end: 22 },
+          type: 'mention',
+          value: 'did:plc:1234',
+        },
+        {
+          index: { start: 22, end: 33 },
+          type: 'other',
+          value: 'willbedropped',
+        },
+      ],
+    })
+    expect(rt.facets).toEqual([
+      {
+        $type: 'app.bsky.richtext.facet',
+        index: { start: 0, end: 25 },
+        value: {
+          $type: 'app.bsky.richtext.facet#link',
+          uri: 'https://example.com',
+        },
+      },
+      {
+        $type: 'app.bsky.richtext.facet',
+        index: { start: 25, end: 50 },
+        value: {
+          $type: 'app.bsky.richtext.facet#mention',
+          did: 'did:plc:1234',
+        },
+      },
+    ])
+  })
 })
 
 describe('RichText#insert', () => {
