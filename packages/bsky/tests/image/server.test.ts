@@ -35,7 +35,7 @@ describe('image processing server', () => {
     if (server) server.close()
   })
 
-  it('processes image from storage.', async () => {
+  it('processes image from blob resolver.', async () => {
     const res = await client.get(
       server.ctx.imgUriBuilder.getSignedPath({
         did: fileDid,

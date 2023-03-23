@@ -21,6 +21,7 @@ import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
 import AppContext from './context'
 import { RepoSubscription } from './subscription/repo'
+import { AddressInfo } from 'net'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -55,21 +56,8 @@ export class BskyAppView {
 
     const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
 
-    let imgUriEndpoint = config.imgUriEndpoint
-    let imgProcessingServer: ImageProcessingServer | undefined
-    if (!imgUriEndpoint) {
-      const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
-      imgProcessingServer = new ImageProcessingServer(
-        config.imgUriSalt,
-        config.imgUriKey,
-        didResolver,
-        imgProcessingCache,
-      )
-      imgUriEndpoint = `${config.publicUrl}/image`
-    }
-
     const imgUriBuilder = new ImageUriBuilder(
-      imgUriEndpoint,
+      config.imgUriEndpoint || `${config.publicUrl}/image`,
       config.imgUriSalt,
       config.imgUriKey,
     )
@@ -87,6 +75,12 @@ export class BskyAppView {
       imgUriBuilder,
       didResolver,
     })
+
+    let imgProcessingServer: ImageProcessingServer | undefined
+    if (!config.imgUriEndpoint) {
+      const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
+      imgProcessingServer = new ImageProcessingServer(ctx, imgProcessingCache)
+    }
 
     let server = createServer({
       payload: {
@@ -120,6 +114,8 @@ export class BskyAppView {
     this.server = server
     this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
+    const { port } = server.address() as AddressInfo
+    this.ctx.cfg.assignPort(port)
     this.sub.run() // Don't await, backgrounded
     return server
   }

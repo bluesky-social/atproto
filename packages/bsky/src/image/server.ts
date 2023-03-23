@@ -7,7 +7,7 @@ import axios, { AxiosError } from 'axios'
 import express, { ErrorRequestHandler, NextFunction } from 'express'
 import createError, { isHttpError } from 'http-errors'
 import { BlobNotFoundError } from '@atproto/repo'
-import { DidResolver, NoResolveDidError } from '@atproto/did-resolver'
+import { NoResolveDidError } from '@atproto/did-resolver'
 import {
   cloneStream,
   forwardStreamErrors,
@@ -17,18 +17,18 @@ import { BadPathError, ImageUriBuilder } from './uri'
 import log from './logger'
 import { resize } from './sharp'
 import { formatsToMimes, Options } from './util'
+import AppContext from '../context'
 
 export class ImageProcessingServer {
   app = express()
   uriBuilder: ImageUriBuilder
 
-  constructor(
-    protected salt: string | Uint8Array,
-    protected key: string | Uint8Array,
-    public didResolver: DidResolver,
-    public cache: BlobCache,
-  ) {
-    this.uriBuilder = new ImageUriBuilder('', salt, key)
+  constructor(public ctx: AppContext, public cache: BlobCache) {
+    this.uriBuilder = new ImageUriBuilder(
+      '',
+      ctx.cfg.imgUriSalt,
+      ctx.cfg.imgUriKey,
+    )
     this.app.get('*', this.handler.bind(this))
     this.app.use(errorMiddleware)
   }
@@ -60,13 +60,19 @@ export class ImageProcessingServer {
 
       // Non-cached flow
 
-      const { pds } = await this.didResolver.resolveAtpData(options.did) // @TODO cache did info
-      const getBlob = await axios.get(`${pds}/xrpc/com.atproto.sync.getBlob`, {
-        params: { did: options.did, cid: options.cid.toString() },
-        decompress: true,
-        responseType: 'stream',
-        timeout: 2000, // 2sec of inactivity on the connection
-      })
+      const { localUrl } = this.ctx.cfg
+      const did = options.did
+      const cidStr = options.cid.toString()
+      const enc = encodeURIComponent
+
+      const getBlob = await axios.get(
+        `${localUrl}/blob/${enc(did)}/${enc(cidStr)}`,
+        {
+          decompress: true,
+          responseType: 'stream',
+          timeout: 2000, // 2sec of inactivity on the connection
+        },
+      )
 
       const imageStream: Readable = getBlob.data
       const processedImage = await resize(imageStream, options)
