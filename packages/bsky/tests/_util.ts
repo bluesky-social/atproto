@@ -50,7 +50,7 @@ export const runTestServer = async (
   const plcUrl = `http://localhost:${plcPort}`
 
   // run pds
-  const recoveryKey = await crypto.Secp256k1Keypair.create({ exportable: true })
+  const recoveryKey = await crypto.Secp256k1Keypair.create()
 
   const pdsCfg = new pds.ServerConfig({
     debugMode: true,

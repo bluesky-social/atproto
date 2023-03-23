@@ -7,6 +7,7 @@ import { ensureValidDid } from '@atproto/identifier'
 import { VerifyCidTransform } from '@atproto/common'
 import { NoResolveDidError } from '@atproto/did-resolver'
 import AppContext from '../context'
+import { httpLogger as log } from '../logger'
 
 // Resolve and verify blob from its origin host
 
@@ -50,9 +51,17 @@ export const createRouter = (ctx: AppContext): express.Router => {
     } catch (err) {
       if (err instanceof AxiosError) {
         if (err.code === AxiosError.ETIMEDOUT) {
+          log.warn(
+            { host: err.request?.host, path: err.request?.path },
+            'blob resolution timeout',
+          )
           return next(createError(504)) // Gateway timeout
         }
         if (!err.response || err.response.status >= 500) {
+          log.warn(
+            { host: err.request?.host, path: err.request?.path },
+            'blob resolution failed upstream',
+          )
           return next(createError(502))
         }
         return next(createError(404, 'Blob not found'))
