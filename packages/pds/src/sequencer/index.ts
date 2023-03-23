@@ -66,6 +66,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       .selectFrom('repo_seq')
       .selectAll()
       .orderBy('seq', 'asc')
+      .where('invalidatedBy', 'is', null)
     if (earliestSeq !== undefined) {
       seqQb = seqQb.where('seq', '>', earliestSeq)
     }
@@ -174,7 +175,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       did,
       handle,
     }
-    await dbTxn.db
+    const res = await dbTxn.db
       .insertInto('repo_seq')
       .values({
         did,
@@ -182,6 +183,17 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         event: cborEncode(evt),
         sequencedAt: new Date().toISOString(),
       })
+      .returningAll()
+      .executeTakeFirst()
+    if (!res) {
+      throw new Error(`could not sequence handle change: ${evt}`)
+    }
+    await dbTxn.db
+      .updateTable('repo_seq')
+      .where('eventType', '=', 'handle')
+      .where('did', '=', did)
+      .where('seq', '!=', res.seq)
+      .set({ invalidatedBy: res.seq })
       .execute()
     await dbTxn.notify('repo_seq')
   }

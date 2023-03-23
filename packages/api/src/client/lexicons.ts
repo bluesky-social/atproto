@@ -2429,7 +2429,7 @@ export const schemaDict = {
       },
       handle: {
         type: 'object',
-        required: ['seq', 'did', 'handle'],
+        required: ['seq', 'did', 'handle', 'time'],
         properties: {
           seq: {
             type: 'integer',
@@ -2447,7 +2447,7 @@ export const schemaDict = {
       },
       migrate: {
         type: 'object',
-        required: ['seq', 'did', 'migrateTo'],
+        required: ['seq', 'did', 'migrateTo', 'time'],
         nullable: ['migrateTo'],
         properties: {
           seq: {
@@ -2466,7 +2466,7 @@ export const schemaDict = {
       },
       tombstone: {
         type: 'object',
-        required: ['seq', 'did'],
+        required: ['seq', 'did', 'time'],
         properties: {
           seq: {
             type: 'integer',

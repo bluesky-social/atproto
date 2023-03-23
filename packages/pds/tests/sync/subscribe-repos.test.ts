@@ -11,7 +11,10 @@ import * as repo from '@atproto/repo'
 import { getWriteLog, MemoryBlockstore, WriteOpAction } from '@atproto/repo'
 import { byFrame, ErrorFrame, Frame, MessageFrame } from '@atproto/xrpc-server'
 import { WebSocket } from 'ws'
-import { Commit as CommitEvt } from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
+import {
+  Commit as CommitEvt,
+  Handle as HandleEvt,
+} from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
 import { AppContext, Database } from '../../src'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -67,11 +70,25 @@ describe('repo subscribe repos', () => {
     return repo.Repo.load(storage, synced.root)
   }
 
-  const verifyEvents = async (evts: Frame[]) => {
+  const verifyHandleEvent = (frame: Frame, did: string, handle: string) => {
+    if (!(frame instanceof MessageFrame)) {
+      throw new Error('expected meesage frame')
+    }
+    expect(frame.header.t).toEqual('#handle')
+    const evt = frame.body as HandleEvt
+    expect(evt.did).toBe(did)
+    expect(evt.handle).toBe(handle)
+    expect(typeof evt.time).toBe('string')
+    expect(typeof evt.seq).toBe('number')
+  }
+
+  const verifyCommitEvents = async (evts: Frame[]) => {
     const byUser = evts.reduce((acc, cur) => {
-      const evt = cur.body as CommitEvt
-      acc[evt.repo] ??= []
-      acc[evt.repo].push(evt)
+      if (cur instanceof MessageFrame && cur.header.t === '#commit') {
+        const evt = cur.body as CommitEvt
+        acc[evt.repo] ??= []
+        acc[evt.repo].push(evt)
+      }
       return acc
     }, {} as Record<string, CommitEvt[]>)
 
@@ -131,7 +148,25 @@ describe('repo subscribe repos', () => {
     const evts = await readFromGenerator(gen)
     ws.terminate()
 
-    await verifyEvents(evts)
+    await verifyCommitEvents(evts)
+  })
+
+  it('syncs handle changes', async () => {
+    await sc.updateHandle(alice, 'alice2.test')
+    await sc.updateHandle(bob, 'bob2.test')
+
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
+    )
+
+    const gen = byFrame(ws)
+    const evts = await readFromGenerator(gen)
+    ws.terminate()
+
+    await verifyCommitEvents(evts)
+    const lastTwo = evts.slice(-2)
+    verifyHandleEvent(lastTwo[0], alice, 'alice2.test')
+    verifyHandleEvent(lastTwo[1], bob, 'bob2.test')
   })
 
   it('syncs new events', async () => {
@@ -147,7 +182,7 @@ describe('repo subscribe repos', () => {
 
     const [evts] = await Promise.all([readAfterDelay(), makePosts()])
 
-    await verifyEvents(evts)
+    await verifyCommitEvents(evts)
   })
 
   it('handles no backfill', async () => {

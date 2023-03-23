@@ -33,7 +33,9 @@ export default function (server: Server, ctx: AppContext) {
     for await (const evt of outbox.events(cursor, backfillTime)) {
       if (evt.type === 'commit') {
         // @TODO clean this up after lex-refactor lands
-        const { commit, prev, ...rest } = evt.evt
+        const { rebase, tooBig, repo, blocks } = evt.evt
+        const commit = evt.evt.commit.toString()
+        const prev = evt.evt.prev?.toString() ?? null
         const ops = evt.evt.ops.map((op) => ({
           action: op.action,
           path: op.path,
@@ -41,20 +43,25 @@ export default function (server: Server, ctx: AppContext) {
         }))
         const blobs = evt.evt.blobs.map((blob) => blob.toString())
         yield {
-          ...rest,
           $type: '#commit',
-          commit: commit.toString(),
-          prev: prev?.toString() ?? null,
+          seq: evt.seq,
+          rebase,
+          tooBig,
+          repo,
+          commit,
+          prev,
+          blocks,
           ops,
           blobs,
-          seq: evt.seq,
           time: evt.time,
         }
       } else if (evt.type === 'handle') {
+        const { handle, did } = evt.evt
         yield {
-          ...evt,
           $type: '#handle',
           seq: evt.seq,
+          handle,
+          did,
           time: evt.time,
         }
       }
