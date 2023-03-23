@@ -6,6 +6,7 @@ import 'express-async-errors' // @TODO(bsky) remove
 
 import express from 'express'
 import http from 'http'
+import { AddressInfo } from 'net'
 import events from 'events'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import { BlobStore } from '@atproto/repo'
@@ -21,7 +22,6 @@ import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
 import AppContext from './context'
 import { RepoSubscription } from './subscription/repo'
-import { AddressInfo } from 'net'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
