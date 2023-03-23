@@ -19,7 +19,7 @@
     },
     "profileView": {
       "type": "object",
-      "required": ["did", "handle", "creator"],
+      "required": ["did", "handle"],
       "properties": {
         "did": {"type": "string", "format": "did"},
         "handle": {"type": "string", "format": "handle"},
@@ -36,7 +36,6 @@
         "followersCount": {"type": "integer"},
         "followsCount": {"type": "integer"},
         "postsCount": {"type": "integer"},
-        "creator": {"type": "string", "format": "did"},
         "indexedAt": {"type": "string", "format": "datetime"},
         "viewer": {"type": "ref", "ref": "#viewerState"}
       }

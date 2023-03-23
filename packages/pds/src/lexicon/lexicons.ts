@@ -2460,7 +2460,7 @@ export const schemaDict = {
       },
       profileView: {
         type: 'object',
-        required: ['did', 'handle', 'creator'],
+        required: ['did', 'handle'],
         properties: {
           did: {
             type: 'string',
@@ -2492,10 +2492,6 @@ export const schemaDict = {
           },
           postsCount: {
             type: 'integer',
-          },
-          creator: {
-            type: 'string',
-            format: 'did',
           },
           indexedAt: {
             type: 'string',
