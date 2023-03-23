@@ -47,6 +47,7 @@ export const blobsForWrite = (record: any): PreparedBlobRef[] => {
   } else if (record.$type === lex.ids.AppBskyFeedPost) {
     const refs: PreparedBlobRef[] = []
     const embed = record?.embed
+    const imagesEmbed = record?.images
     if (embed?.$type === 'app.bsky.embed.images') {
       const doc = lex.schemaDict.AppBskyEmbedImages
       for (let i = 0; i < embed.images?.length || 0; i++) {
@@ -67,6 +68,17 @@ export const blobsForWrite = (record: any): PreparedBlobRef[] => {
         mimeType: embed.external.thumb.mimeType,
         constraints: doc.defs.external.properties.thumb,
       })
+    }
+    if (imagesEmbed) {
+      const doc = lex.schemaDict.AppBskyEmbedImages
+      for (let i = 0; i < imagesEmbed.images?.length || 0; i++) {
+        const img = imagesEmbed.images[i]
+        refs.push({
+          cid: img.image.ref,
+          mimeType: img.image.mimeType,
+          constraints: doc.defs.image.properties.image,
+        })
+      }
     }
     return refs
   }

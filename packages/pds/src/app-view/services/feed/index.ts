@@ -1,10 +1,8 @@
 import { sql } from 'kysely'
-import * as common from '@atproto/common'
 import Database from '../../../db'
 import { countAll, notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
 import { ViewRecord } from '../../../lexicon/types/app/bsky/embed/record'
-import { isView as isViewImage } from '../../../lexicon/types/app/bsky/embed/images'
 import { PostView } from '../../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
 import { cborToLexRecord } from '@atproto/lexicon'
@@ -237,12 +235,9 @@ export class FeedService {
       ),
     ])
     let embeds = images.reduce((acc, cur) => {
-      const embed = (acc[cur.postUri] ??= {
-        $type: 'app.bsky.embed.images#view',
-        value: [],
-      })
-      if (!isViewImage(embed)) return acc
-      embed.value.push({
+      acc[cur.postUri] ??= {}
+      acc[cur.postUri].images ??= { value: [] }
+      acc[cur.postUri].images?.value.push({
         thumb: this.imgUriBuilder.getCommonSignedUri(
           'feed_thumbnail',
           cur.imageCid,
@@ -256,40 +251,50 @@ export class FeedService {
       return acc
     }, {} as FeedEmbeds)
     embeds = externals.reduce((acc, cur) => {
-      if (!acc[cur.postUri]) {
-        acc[cur.postUri] = {
-          $type: 'app.bsky.embed.external#view',
-          value: {
-            uri: cur.uri,
-            title: cur.title,
-            description: cur.description,
-            thumb: cur.thumbCid
-              ? this.imgUriBuilder.getCommonSignedUri(
-                  'feed_thumbnail',
-                  cur.thumbCid,
-                )
-              : undefined,
-          },
-        }
+      acc[cur.postUri] ??= {}
+      acc[cur.postUri].other ??= {
+        $type: 'app.bsky.embed.external#view',
+        value: {
+          uri: cur.uri,
+          title: cur.title,
+          description: cur.description,
+          thumb: cur.thumbCid
+            ? this.imgUriBuilder.getCommonSignedUri(
+                'feed_thumbnail',
+                cur.thumbCid,
+              )
+            : undefined,
+        },
       }
       return acc
     }, embeds)
     embeds = records.reduce((acc, cur) => {
-      if (!acc[cur.postUri]) {
+      if (!acc[cur.postUri]?.other) {
         const formatted = this.formatPostView(
           cur.uri,
           actorViews,
           postViews,
           deepEmbedViews,
         )
-        let embeds: ViewRecord['embed'][] | undefined
+        let embeds: ViewRecord['embeds'] | undefined
         if (_depth < 1) {
           // Omit field entirely when too deep: e.g. don't include it on the embeds within a record embed.
           // Otherwise list any embeds that appear within the record. A consumer may discover an embed
           // within the raw record, then look within this array to find the presented view of it.
-          embeds = formatted?.embed ? [formatted?.embed] : []
+          if (formatted?.images) {
+            embeds ??= []
+            embeds.push({
+              $type: 'app.bsky.embed.images#view',
+              ...formatted.images,
+            })
+          }
+          if (formatted?.embed) {
+            embeds ??= []
+            embeds.push(formatted.embed)
+          }
         }
-        acc[cur.postUri] = {
+        acc[cur.postUri] ??= {}
+        acc[cur.postUri].other ??= {
           $type: 'app.bsky.embed.record#view',
           value: formatted
             ? {
@@ -326,7 +331,8 @@ export class FeedService {
       cid: post.cid,
       author: author,
       record: cborToLexRecord(post.recordBytes),
-      embed: embeds[uri],
+      images: embeds[uri]?.images,
+      embed: embeds[uri]?.other,
       replyCount: post.replyCount,
       repostCount: post.repostCount,
       likeCount: post.likeCount,

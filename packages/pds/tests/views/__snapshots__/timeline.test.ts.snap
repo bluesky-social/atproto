@@ -196,8 +196,7 @@ Array [
         },
       },
       "cid": "cids(6)",
-      "embed": Object {
-        "$type": "app.bsky.embed.images#view",
+      "images": Object {
         "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -565,8 +564,7 @@ Array [
         },
       },
       "cid": "cids(8)",
-      "embed": Object {
-        "$type": "app.bsky.embed.images#view",
+      "images": Object {
         "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -887,8 +885,7 @@ Array [
           },
         },
         "cid": "cids(6)",
-        "embed": Object {
-          "$type": "app.bsky.embed.images#view",
+        "images": Object {
           "value": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -902,8 +899,7 @@ Array [
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "embed": Object {
-            "$type": "app.bsky.embed.images",
+          "images": Object {
             "images": Array [
               Object {
                 "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -1057,8 +1053,7 @@ Array [
         },
       },
       "cid": "cids(6)",
-      "embed": Object {
-        "$type": "app.bsky.embed.images#view",
+      "images": Object {
         "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -1072,8 +1067,7 @@ Array [
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "embed": Object {
-          "$type": "app.bsky.embed.images",
+        "images": Object {
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -1477,8 +1471,7 @@ Array [
         },
       },
       "cid": "cids(2)",
-      "embed": Object {
-        "$type": "app.bsky.embed.images#view",
+      "images": Object {
         "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -1760,8 +1753,7 @@ Array [
           },
         },
         "cid": "cids(6)",
-        "embed": Object {
-          "$type": "app.bsky.embed.images#view",
+        "images": Object {
           "value": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -1775,8 +1767,7 @@ Array [
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "embed": Object {
-            "$type": "app.bsky.embed.images",
+          "images": Object {
             "images": Array [
               Object {
                 "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -1939,8 +1930,7 @@ Array [
         },
       },
       "cid": "cids(6)",
-      "embed": Object {
-        "$type": "app.bsky.embed.images#view",
+      "images": Object {
         "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -1954,8 +1944,7 @@ Array [
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "embed": Object {
-          "$type": "app.bsky.embed.images",
+        "images": Object {
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -2237,8 +2226,7 @@ Array [
         },
       },
       "cid": "cids(1)",
-      "embed": Object {
-        "$type": "app.bsky.embed.images#view",
+      "images": Object {
         "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -2520,8 +2508,7 @@ Array [
           },
         },
         "cid": "cids(6)",
-        "embed": Object {
-          "$type": "app.bsky.embed.images#view",
+        "images": Object {
           "value": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -2535,8 +2522,7 @@ Array [
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "embed": Object {
-            "$type": "app.bsky.embed.images",
+          "images": Object {
             "images": Array [
               Object {
                 "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -2851,8 +2837,7 @@ Array [
         },
       },
       "cid": "cids(1)",
-      "embed": Object {
-        "$type": "app.bsky.embed.images#view",
+      "images": Object {
         "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -2991,8 +2976,7 @@ Array [
         },
       },
       "cid": "cids(1)",
-      "embed": Object {
-        "$type": "app.bsky.embed.images#view",
+      "images": Object {
         "value": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -3006,8 +2990,7 @@ Array [
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "embed": Object {
-          "$type": "app.bsky.embed.images",
+        "images": Object {
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -3368,8 +3351,7 @@ Array [
           },
         },
         "cid": "cids(2)",
-        "embed": Object {
-          "$type": "app.bsky.embed.images#view",
+        "images": Object {
           "value": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
@@ -3383,8 +3365,7 @@ Array [
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "embed": Object {
-            "$type": "app.bsky.embed.images",
+          "images": Object {
             "images": Array [
               Object {
                 "alt": "tests/image/fixtures/key-landscape-small.jpg",

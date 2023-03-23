@@ -238,12 +238,6 @@ export class SeedClient {
     facets?: any,
     images?: ImageRef[],
   ) {
-    const embed = images
-      ? {
-          $type: 'app.bsky.embed.images',
-          images,
-        }
-      : undefined
     const res = await this.agent.api.app.bsky.feed.post.create(
       { did: by },
       {
@@ -253,7 +247,7 @@ export class SeedClient {
           parent: parent.raw,
         },
         facets,
-        embed,
+        images: images && { images },
         createdAt: new Date().toISOString(),
       },
       this.getHeaders(by),

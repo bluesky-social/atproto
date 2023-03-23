@@ -2,7 +2,10 @@ import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
-import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
+import {
+  isMain as isEmbedImages,
+  Main as EmbedImages,
+} from '../../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecord } from '../../../../lexicon/types/app/bsky/embed/record'
 import {
@@ -26,7 +29,8 @@ type PostEmbedRecord = DatabaseSchemaType['post_embed_record']
 type IndexedPost = {
   post: Post
   facets: { type: 'mention' | 'link'; value: string }[]
-  embed?: PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord
+  images?: PostEmbedImage[]
+  embed?: PostEmbedExternal | PostEmbedRecord
   ancestors: PostHierarchy[]
 }
 
@@ -76,17 +80,19 @@ const insertFn = async (
     return []
   })
   // Embed indices
-  let embed: PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord | undefined
-  if (isEmbedImage(obj.embed)) {
-    const { images } = obj.embed
-    embed = images.map((img, i) => ({
+  let images: PostEmbedImage[] | undefined
+  let embed: PostEmbedExternal | PostEmbedRecord | undefined
+  if (obj.images || isEmbedImages(obj.embed)) {
+    const { images: embeddedImages } = obj.images || (obj.embed as EmbedImages)
+    images = embeddedImages.map((img, i) => ({
       postUri: uri.toString(),
       position: i,
       imageCid: img.image.ref.toString(),
       alt: img.alt,
     }))
-    await db.insertInto('post_embed_image').values(embed).execute()
-  } else if (isEmbedExternal(obj.embed)) {
+    await db.insertInto('post_embed_image').values(images).execute()
+  }
+  if (isEmbedExternal(obj.embed)) {
     const { external } = obj.embed
     embed = {
       postUri: uri.toString(),
@@ -134,7 +140,7 @@ const insertFn = async (
       .returningAll()
       .execute()
   }
-  return { post: insertedPost, facets, embed, ancestors }
+  return { post: insertedPost, facets, images, embed, ancestors }
 }
 
 const findDuplicate = async (): Promise<AtUri | null> => {
@@ -198,25 +204,18 @@ const deleteFn = async (
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
-  let deletedEmbed:
-    | PostEmbedImage[]
-    | PostEmbedExternal
-    | PostEmbedRecord
-    | undefined
   const deletedImgs = await db
     .deleteFrom('post_embed_image')
     .where('postUri', '=', uri.toString())
     .returningAll()
     .execute()
-  deletedEmbed = deletedImgs.length ? deletedImgs : undefined
-  if (!deletedEmbed) {
-    const deletedExternals = await db
-      .deleteFrom('post_embed_external')
-      .where('postUri', '=', uri.toString())
-      .returningAll()
-      .executeTakeFirst()
-    deletedEmbed = deletedExternals
-  }
+  let deletedEmbed: PostEmbedExternal | PostEmbedRecord | undefined
+  const deletedExternals = await db
+    .deleteFrom('post_embed_external')
+    .where('postUri', '=', uri.toString())
+    .returningAll()
+    .executeTakeFirst()
+  deletedEmbed = deletedExternals
   if (!deletedEmbed) {
     const deletedPosts = await db
       .deleteFrom('post_embed_record')
@@ -237,6 +236,7 @@ const deleteFn = async (
         post: deleted,
         facets: [], // Not used
         embed: deletedEmbed,
+        images: deletedImgs,
         ancestors,
       }
     : null
