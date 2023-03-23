@@ -35,6 +35,8 @@ async function main(ctx: AppContext, tx: Database) {
     }),
   )
 
+  console.log(`deleted ${sceneDids.length} scenes`)
+
   // sanity check
 
   const check1 = tx.db
