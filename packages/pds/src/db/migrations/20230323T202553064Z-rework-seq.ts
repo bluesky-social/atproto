@@ -56,10 +56,10 @@ export async function down(
   db: Kysely<unknown>,
   dialect: Dialect,
 ): Promise<void> {
-  await db.schema.dropTable(repoSeqTable).execute()
-  await db.schema.dropIndex(repoSeqDidIndex).execute()
-  await db.schema.dropIndex(repoSeqEventTypeIndex).execute()
   await db.schema.dropIndex(repoSeqSequencedAtIndex).execute()
+  await db.schema.dropIndex(repoSeqEventTypeIndex).execute()
+  await db.schema.dropIndex(repoSeqDidIndex).execute()
+  await db.schema.dropTable(repoSeqTable).execute()
 
   let builder = db.schema.createTable(repoSeqTable)
   if (dialect === 'pg') {

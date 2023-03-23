@@ -39,12 +39,14 @@ export default function (server: Server, ctx: AppContext) {
           path: op.path,
           cid: op.cid?.toString() ?? null,
         }))
+        const blobs = evt.evt.blobs.map((blob) => blob.toString())
         yield {
           ...rest,
           $type: '#commit',
           commit: commit.toString(),
           prev: prev?.toString() ?? null,
           ops,
+          blobs,
           seq: evt.seq,
           time: evt.time,
         }
