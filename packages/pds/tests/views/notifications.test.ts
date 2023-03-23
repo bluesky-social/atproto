@@ -62,7 +62,7 @@ describe('pds notification views', () => {
       { headers: sc.getHeaders(sc.dids.bob) },
     )
 
-    expect(notifCountBob.data.count).toBe(3)
+    expect(notifCountBob.data.count).toBe(4)
   })
 
   it('generates notifications for all reply ancestors', async () => {
@@ -89,7 +89,7 @@ describe('pds notification views', () => {
       { headers: sc.getHeaders(sc.dids.bob) },
     )
 
-    expect(notifCountBob.data.count).toBe(4)
+    expect(notifCountBob.data.count).toBe(5)
   })
 
   it('generates notifications for quotes', async () => {

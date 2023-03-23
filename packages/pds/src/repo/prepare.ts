@@ -11,6 +11,10 @@ import {
 } from './types'
 
 import * as lex from '../lexicon/lexicons'
+import { isRecord as isPostRecord } from '../lexicon/types/app/bsky/feed/post'
+import { isRecord as isProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
+import { isMain as isImagesEmbed } from '@atproto/api/src/client/types/app/bsky/embed/images'
+import { isMain as isExternalEmbed } from '@atproto/api/src/client/types/app/bsky/embed/external'
 import {
   cidForRecord,
   LexiconDefNotFoundError,
@@ -26,7 +30,7 @@ import {
 
 // @TODO do this dynamically off of schemas
 export const blobsForWrite = (record: any): PreparedBlobRef[] => {
-  if (record.$type === lex.ids.AppBskyActorProfile) {
+  if (isProfileRecord(record)) {
     const doc = lex.schemaDict.AppBskyActorProfile
     const refs: PreparedBlobRef[] = []
     if (record.avatar) {
@@ -44,11 +48,11 @@ export const blobsForWrite = (record: any): PreparedBlobRef[] => {
       })
     }
     return refs
-  } else if (record.$type === lex.ids.AppBskyFeedPost) {
+  } else if (isPostRecord(record)) {
     const refs: PreparedBlobRef[] = []
     const embed = record?.embed
     const imagesEmbed = record?.images
-    if (embed?.$type === 'app.bsky.embed.images') {
+    if (isImagesEmbed(embed)) {
       const doc = lex.schemaDict.AppBskyEmbedImages
       for (let i = 0; i < embed.images?.length || 0; i++) {
         const img = embed.images[i]
@@ -58,10 +62,7 @@ export const blobsForWrite = (record: any): PreparedBlobRef[] => {
           constraints: doc.defs.image.properties.image,
         })
       }
-    } else if (
-      record?.embed?.$type === 'app.bsky.embed.external' &&
-      embed.external.thumb
-    ) {
+    } else if (isExternalEmbed(embed) && embed.external.thumb) {
       const doc = lex.schemaDict.AppBskyEmbedExternal
       refs.push({
         cid: embed.external.thumb.ref,

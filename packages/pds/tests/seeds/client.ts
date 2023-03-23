@@ -163,24 +163,16 @@ export class SeedClient {
     images?: ImageRef[],
     quote?: RecordRef,
   ) {
-    if (images && quote) throw new Error("Can't embed images and a quote")
-    const embed = images
-      ? {
-          $type: 'app.bsky.embed.images',
-          images,
-        }
-      : quote
-      ? {
-          $type: 'app.bsky.embed.record',
-          record: { uri: quote.uriStr, cid: quote.cidStr },
-        }
-      : undefined
     const res = await this.agent.api.app.bsky.feed.post.create(
       { did: by },
       {
         text: text,
         facets,
-        embed,
+        images: images && { images },
+        embed: quote && {
+          $type: 'app.bsky.embed.record',
+          record: { uri: quote.uriStr, cid: quote.cidStr },
+        },
         createdAt: new Date().toISOString(),
       },
       this.getHeaders(by),
