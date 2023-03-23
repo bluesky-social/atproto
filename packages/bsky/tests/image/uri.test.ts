@@ -6,6 +6,7 @@ describe('image uri builder', () => {
   let uriBuilder: ImageUriBuilder
   let cid: CID
   const did = 'plc:did:xyz'
+
   beforeAll(async () => {
     const endpoint = 'https://example.com'
     const salt = '9dd04221f5755bce5f55f47464c27e1e'
@@ -23,7 +24,6 @@ describe('image uri builder', () => {
       height: 200,
       width: 300,
     })
-    console.log(path)
     expect(path).toEqual(
       `/1Hl07jYd8LUqPDAGVVw3Le2iT0OaH4l4dPbmh2lL21Y/rs:fill:300:200:0:0/plain/${did}/${cid.toString()}@png`,
     )

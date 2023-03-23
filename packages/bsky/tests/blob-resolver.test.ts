@@ -48,7 +48,7 @@ describe('blob resolver', () => {
     expect(status).toEqual(404)
     expect(data).toEqual({
       error: 'NotFoundError',
-      message: 'Image not found',
+      message: 'Blob not found',
     })
   })
 

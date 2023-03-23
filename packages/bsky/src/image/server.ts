@@ -7,7 +7,6 @@ import axios, { AxiosError } from 'axios'
 import express, { ErrorRequestHandler, NextFunction } from 'express'
 import createError, { isHttpError } from 'http-errors'
 import { BlobNotFoundError } from '@atproto/repo'
-import { NoResolveDidError } from '@atproto/did-resolver'
 import {
   cloneStream,
   forwardStreamErrors,
@@ -104,9 +103,9 @@ export class ImageProcessingServer {
         if (!err.response || err.response.status >= 500) {
           return next(createError(502))
         }
-        return next(createError(404, 'Image not found'))
-      }
-      if (err instanceof NoResolveDidError) {
+        if (err.response.status === 400) {
+          return next(createError(400))
+        }
         return next(createError(404, 'Image not found'))
       }
       return next(err)

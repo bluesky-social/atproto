@@ -55,10 +55,10 @@ export const createRouter = (ctx: AppContext): express.Router => {
         if (!err.response || err.response.status >= 500) {
           return next(createError(502))
         }
-        return next(createError(404, 'Image not found'))
+        return next(createError(404, 'Blob not found'))
       }
       if (err instanceof NoResolveDidError) {
-        return next(createError(404, 'Image not found'))
+        return next(createError(404, 'Blob not found'))
       }
       return next(err)
     }
