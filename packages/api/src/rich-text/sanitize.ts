@@ -1,4 +1,5 @@
 import { RichText } from './rich-text'
+import { UnicodeString } from './unicode'
 
 const EXCESS_SPACE_RE = /[\r\n]([\u00AD\u2060\u200D\u200C\u200B\s]*[\r\n]){2,}/
 const REPLACEMENT_STR = '\n\n'
@@ -20,17 +21,17 @@ function clean(
 ): RichText {
   richText = richText.clone()
 
-  let match = richText.text.match(targetRegexp)
+  let match = richText.text.utf16.match(targetRegexp)
   while (match && typeof match.index !== 'undefined') {
     const oldText = richText.text
-    const removeStartIndex = match.index
-    const removeEndIndex = removeStartIndex + match[0].length
+    const removeStartIndex = richText.text.utf16IndexToUtf8Index(match.index)
+    const removeEndIndex = removeStartIndex + new UnicodeString(match[0]).length
     richText.delete(removeStartIndex, removeEndIndex)
-    if (richText.text === oldText) {
+    if (richText.text.utf16 === oldText.utf16) {
       break // sanity check
     }
     richText.insert(removeStartIndex, replacementString)
-    match = richText.text.match(targetRegexp)
+    match = richText.text.utf16.match(targetRegexp)
   }
 
   return richText

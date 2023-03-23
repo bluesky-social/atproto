@@ -93,6 +93,7 @@ F: 0 1 2 3 4 5 6 7 8 910   // string indices
 
 import { AppBskyFeedPost, AppBskyRichtextFacet } from '../client'
 import { sanitizeRichText } from './sanitize'
+import { UnicodeString } from './unicode'
 
 export type Facet = AppBskyRichtextFacet.Main
 export type FacetLink = AppBskyRichtextFacet.Link
@@ -118,11 +119,11 @@ export interface RichTextSegment {
 }
 
 export class RichText {
-  text: string
+  text: UnicodeString
   facets?: Facet[]
 
   constructor(props: RichTextProps, opts?: RichTextOpts) {
-    this.text = props.text
+    this.text = new UnicodeString(props.text)
     this.facets = props.facets
     if (!this.facets?.length && props.entities?.length) {
       this.facets = entitiesToFacets(props.entities)
@@ -133,12 +134,10 @@ export class RichText {
   }
 
   clone() {
-    return new RichText(
-      cloneDeep({
-        text: this.text,
-        facets: this.facets,
-      }),
-    )
+    return new RichText({
+      text: this.text.utf16,
+      facets: cloneDeep(this.facets),
+    })
   }
 
   copyInto(target: RichText) {
@@ -149,7 +148,7 @@ export class RichText {
   *segments(): Generator<RichTextSegment, void, void> {
     const facets = this.facets || []
     if (!facets.length) {
-      yield { text: this.text }
+      yield { text: this.text.utf16 }
       return
     }
 
@@ -187,10 +186,11 @@ export class RichText {
   }
 
   insert(insertIndex: number, insertText: string) {
-    this.text =
+    this.text = new UnicodeString(
       this.text.slice(0, insertIndex) +
-      insertText +
-      this.text.slice(insertIndex)
+        insertText +
+        this.text.slice(insertIndex),
+    )
 
     if (!this.facets?.length) {
       return this
@@ -217,8 +217,9 @@ export class RichText {
   }
 
   delete(removeStartIndex: number, removeEndIndex: number) {
-    this.text =
-      this.text.slice(0, removeStartIndex) + this.text.slice(removeEndIndex)
+    this.text = new UnicodeString(
+      this.text.slice(0, removeStartIndex) + this.text.slice(removeEndIndex),
+    )
 
     if (!this.facets?.length) {
       return this
