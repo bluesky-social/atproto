@@ -21,8 +21,9 @@
           },
           "reply": {"type": "ref", "ref": "#replyRef"},
           "images": {
-            "type": "ref",
-            "ref": "app.bsky.embed.images"
+            "type": "array",
+            "items": {"type": "ref", "ref": "app.bsky.embed.images#image"},
+            "maxLength": 4
           },
           "embed": {
             "type": "union",
@@ -51,7 +52,7 @@
         "index": {"type": "ref", "ref": "#textSlice"},
         "type": {
           "type": "string",
-          "description": "Expected values are 'mention', 'hashtag', and 'link'."
+          "description": "Expected values are 'mention' and 'link'."
         },
         "value": {"type": "string"}
       }

@@ -17,7 +17,7 @@ export interface Record {
   entities?: Entity[]
   facets?: AppBskyRichtextFacet.Main[]
   reply?: ReplyRef
-  images?: AppBskyEmbedImages.Main
+  images?: AppBskyEmbedImages.Image[]
   embed?:
     | AppBskyEmbedExternal.Main
     | AppBskyEmbedRecord.Main
@@ -57,7 +57,7 @@ export function validateReplyRef(v: unknown): ValidationResult {
 
 export interface Entity {
   index: TextSlice
-  /** Expected values are 'mention', 'hashtag', and 'link'. */
+  /** Expected values are 'mention' and 'link'. */
   type: string
   value: string
   [k: string]: unknown

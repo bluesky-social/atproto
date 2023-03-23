@@ -52,7 +52,7 @@ Array [
       "cid": "cids(1)",
       "embed": Object {
         "$type": "app.bsky.embed.record#view",
-        "value": Object {
+        "record": Object {
           "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
             "did": "user(2)",
@@ -67,7 +67,7 @@ Array [
           "embeds": Array [
             Object {
               "$type": "app.bsky.embed.images#view",
-              "value": Array [
+              "images": Array [
                 Object {
                   "alt": "tests/image/fixtures/key-landscape-small.jpg",
                   "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -82,7 +82,7 @@ Array [
             },
             Object {
               "$type": "app.bsky.embed.record#view",
-              "value": Object {
+              "record": Object {
                 "$type": "app.bsky.embed.record#viewRecord",
                 "author": Object {
                   "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -97,17 +97,18 @@ Array [
                 },
                 "cid": "cids(3)",
                 "indexedAt": "1970-01-01T00:00:00.000Z",
-                "record": Object {
+                "uri": "record(6)",
+                "value": Object {
                   "$type": "app.bsky.feed.post",
                   "createdAt": "1970-01-01T00:00:00.000Z",
                   "text": "bob back at it again!",
                 },
-                "uri": "record(6)",
               },
             },
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "record": Object {
+          "uri": "record(3)",
+          "value": Object {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "embed": Object {
@@ -117,35 +118,32 @@ Array [
                 "uri": "record(6)",
               },
             },
-            "images": Object {
-              "images": Array [
-                Object {
-                  "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                  "image": Object {
-                    "$type": "blob",
-                    "mimeType": "image/jpeg",
-                    "ref": Object {
-                      "$link": "cids(4)",
-                    },
-                    "size": 4114,
+            "images": Array [
+              Object {
+                "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                "image": Object {
+                  "$type": "blob",
+                  "mimeType": "image/jpeg",
+                  "ref": Object {
+                    "$link": "cids(4)",
                   },
+                  "size": 4114,
                 },
-                Object {
-                  "alt": "tests/image/fixtures/key-alt.jpg",
-                  "image": Object {
-                    "$type": "blob",
-                    "mimeType": "image/jpeg",
-                    "ref": Object {
-                      "$link": "cids(5)",
-                    },
-                    "size": 12736,
+              },
+              Object {
+                "alt": "tests/image/fixtures/key-alt.jpg",
+                "image": Object {
+                  "$type": "blob",
+                  "mimeType": "image/jpeg",
+                  "ref": Object {
+                    "$link": "cids(5)",
                   },
+                  "size": 12736,
                 },
-              ],
-            },
+              },
+            ],
             "text": "hi im carol",
           },
-          "uri": "record(3)",
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -217,7 +215,7 @@ Array [
       "cid": "cids(1)",
       "embed": Object {
         "$type": "app.bsky.embed.record#view",
-        "value": Object {
+        "record": Object {
           "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
             "did": "user(2)",
@@ -232,7 +230,7 @@ Array [
           "embeds": Array [
             Object {
               "$type": "app.bsky.embed.images#view",
-              "value": Array [
+              "images": Array [
                 Object {
                   "alt": "tests/image/fixtures/key-landscape-small.jpg",
                   "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
@@ -247,7 +245,7 @@ Array [
             },
             Object {
               "$type": "app.bsky.embed.record#view",
-              "value": Object {
+              "record": Object {
                 "$type": "app.bsky.embed.record#viewRecord",
                 "author": Object {
                   "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -262,17 +260,18 @@ Array [
                 },
                 "cid": "cids(3)",
                 "indexedAt": "1970-01-01T00:00:00.000Z",
-                "record": Object {
+                "uri": "record(6)",
+                "value": Object {
                   "$type": "app.bsky.feed.post",
                   "createdAt": "1970-01-01T00:00:00.000Z",
                   "text": "bob back at it again!",
                 },
-                "uri": "record(6)",
               },
             },
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "record": Object {
+          "uri": "record(3)",
+          "value": Object {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "embed": Object {
@@ -282,35 +281,32 @@ Array [
                 "uri": "record(6)",
               },
             },
-            "images": Object {
-              "images": Array [
-                Object {
-                  "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                  "image": Object {
-                    "$type": "blob",
-                    "mimeType": "image/jpeg",
-                    "ref": Object {
-                      "$link": "cids(4)",
-                    },
-                    "size": 4114,
+            "images": Array [
+              Object {
+                "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                "image": Object {
+                  "$type": "blob",
+                  "mimeType": "image/jpeg",
+                  "ref": Object {
+                    "$link": "cids(4)",
                   },
+                  "size": 4114,
                 },
-                Object {
-                  "alt": "tests/image/fixtures/key-alt.jpg",
-                  "image": Object {
-                    "$type": "blob",
-                    "mimeType": "image/jpeg",
-                    "ref": Object {
-                      "$link": "cids(5)",
-                    },
-                    "size": 12736,
+              },
+              Object {
+                "alt": "tests/image/fixtures/key-alt.jpg",
+                "image": Object {
+                  "$type": "blob",
+                  "mimeType": "image/jpeg",
+                  "ref": Object {
+                    "$link": "cids(5)",
                   },
+                  "size": 12736,
                 },
-              ],
-            },
+              },
+            ],
             "text": "hi im carol",
           },
-          "uri": "record(3)",
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -455,7 +451,7 @@ Array [
       "cid": "cids(2)",
       "embed": Object {
         "$type": "app.bsky.embed.record#view",
-        "value": Object {
+        "record": Object {
           "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
             "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -470,28 +466,26 @@ Array [
           },
           "cid": "cids(3)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "record": Object {
+          "uri": "record(6)",
+          "value": Object {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "text": "bob back at it again!",
           },
-          "uri": "record(6)",
         },
       },
-      "images": Object {
-        "value": Array [
-          Object {
-            "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-            "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          },
-          Object {
-            "alt": "tests/image/fixtures/key-alt.jpg",
-            "fullsize": "https://pds.public.url/image/xC2No-8rKVDIwIMmCiEBm9EiGLDBBOpf36PHoGf-GDw/rs:fit:2000:2000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
-            "thumb": "https://pds.public.url/image/g7yazUpNwN8LKumZ2Zmn_ptQbtMLs1Pti5-GDn7H8_8/rs:fit:1000:1000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
-          },
-        ],
-      },
+      "images": Array [
+        Object {
+          "alt": "tests/image/fixtures/key-landscape-small.jpg",
+          "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+          "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+        },
+        Object {
+          "alt": "tests/image/fixtures/key-alt.jpg",
+          "fullsize": "https://pds.public.url/image/xC2No-8rKVDIwIMmCiEBm9EiGLDBBOpf36PHoGf-GDw/rs:fit:2000:2000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
+          "thumb": "https://pds.public.url/image/g7yazUpNwN8LKumZ2Zmn_ptQbtMLs1Pti5-GDn7H8_8/rs:fit:1000:1000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
+        },
+      ],
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "likeCount": 2,
       "record": Object {
@@ -504,32 +498,30 @@ Array [
             "uri": "record(6)",
           },
         },
-        "images": Object {
-          "images": Array [
-            Object {
-              "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "image": Object {
-                "$type": "blob",
-                "mimeType": "image/jpeg",
-                "ref": Object {
-                  "$link": "cids(4)",
-                },
-                "size": 4114,
+        "images": Array [
+          Object {
+            "alt": "tests/image/fixtures/key-landscape-small.jpg",
+            "image": Object {
+              "$type": "blob",
+              "mimeType": "image/jpeg",
+              "ref": Object {
+                "$link": "cids(4)",
               },
+              "size": 4114,
             },
-            Object {
-              "alt": "tests/image/fixtures/key-alt.jpg",
-              "image": Object {
-                "$type": "blob",
-                "mimeType": "image/jpeg",
-                "ref": Object {
-                  "$link": "cids(5)",
-                },
-                "size": 12736,
+          },
+          Object {
+            "alt": "tests/image/fixtures/key-alt.jpg",
+            "image": Object {
+              "$type": "blob",
+              "mimeType": "image/jpeg",
+              "ref": Object {
+                "$link": "cids(5)",
               },
+              "size": 12736,
             },
-          ],
-        },
+          },
+        ],
         "text": "hi im carol",
       },
       "replyCount": 0,
@@ -554,35 +546,31 @@ Array [
         },
       },
       "cid": "cids(8)",
-      "images": Object {
-        "value": Array [
-          Object {
-            "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-            "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          },
-        ],
-      },
+      "images": Array [
+        Object {
+          "alt": "tests/image/fixtures/key-landscape-small.jpg",
+          "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+          "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+        },
+      ],
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
-        "images": Object {
-          "images": Array [
-            Object {
-              "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "image": Object {
-                "$type": "blob",
-                "mimeType": "image/jpeg",
-                "ref": Object {
-                  "$link": "cids(4)",
-                },
-                "size": 4114,
+        "images": Array [
+          Object {
+            "alt": "tests/image/fixtures/key-landscape-small.jpg",
+            "image": Object {
+              "$type": "blob",
+              "mimeType": "image/jpeg",
+              "ref": Object {
+                "$link": "cids(4)",
               },
+              "size": 4114,
             },
-          ],
-        },
+          },
+        ],
         "reply": Object {
           "parent": Object {
             "cid": "cids(0)",
@@ -751,35 +739,31 @@ Array [
           },
         },
         "cid": "cids(8)",
-        "images": Object {
-          "value": Array [
-            Object {
-              "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-              "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-            },
-          ],
-        },
+        "images": Array [
+          Object {
+            "alt": "tests/image/fixtures/key-landscape-small.jpg",
+            "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+          },
+        ],
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
           "createdAt": "1970-01-01T00:00:00.000Z",
-          "images": Object {
-            "images": Array [
-              Object {
-                "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                "image": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(4)",
-                  },
-                  "size": 4114,
+          "images": Array [
+            Object {
+              "alt": "tests/image/fixtures/key-landscape-small.jpg",
+              "image": Object {
+                "$type": "blob",
+                "mimeType": "image/jpeg",
+                "ref": Object {
+                  "$link": "cids(4)",
                 },
+                "size": 4114,
               },
-            ],
-          },
+            },
+          ],
           "reply": Object {
             "parent": Object {
               "cid": "cids(0)",
@@ -836,7 +820,7 @@ Array [
       "cid": "cids(11)",
       "embed": Object {
         "$type": "app.bsky.embed.record#view",
-        "value": Object {
+        "record": Object {
           "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
             "did": "user(1)",
@@ -850,7 +834,7 @@ Array [
           "embeds": Array [
             Object {
               "$type": "app.bsky.embed.record#view",
-              "value": Object {
+              "record": Object {
                 "$type": "app.bsky.embed.record#viewRecord",
                 "author": Object {
                   "did": "user(2)",
@@ -863,7 +847,8 @@ Array [
                 },
                 "cid": "cids(2)",
                 "indexedAt": "1970-01-01T00:00:00.000Z",
-                "record": Object {
+                "uri": "record(3)",
+                "value": Object {
                   "$type": "app.bsky.feed.post",
                   "createdAt": "1970-01-01T00:00:00.000Z",
                   "embed": Object {
@@ -873,40 +858,38 @@ Array [
                       "uri": "record(6)",
                     },
                   },
-                  "images": Object {
-                    "images": Array [
-                      Object {
-                        "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                        "image": Object {
-                          "$type": "blob",
-                          "mimeType": "image/jpeg",
-                          "ref": Object {
-                            "$link": "cids(4)",
-                          },
-                          "size": 4114,
+                  "images": Array [
+                    Object {
+                      "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                      "image": Object {
+                        "$type": "blob",
+                        "mimeType": "image/jpeg",
+                        "ref": Object {
+                          "$link": "cids(4)",
                         },
+                        "size": 4114,
                       },
-                      Object {
-                        "alt": "tests/image/fixtures/key-alt.jpg",
-                        "image": Object {
-                          "$type": "blob",
-                          "mimeType": "image/jpeg",
-                          "ref": Object {
-                            "$link": "cids(5)",
-                          },
-                          "size": 12736,
+                    },
+                    Object {
+                      "alt": "tests/image/fixtures/key-alt.jpg",
+                      "image": Object {
+                        "$type": "blob",
+                        "mimeType": "image/jpeg",
+                        "ref": Object {
+                          "$link": "cids(5)",
                         },
+                        "size": 12736,
                       },
-                    ],
-                  },
+                    },
+                  ],
                   "text": "hi im carol",
                 },
-                "uri": "record(3)",
               },
             },
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
-          "record": Object {
+          "uri": "record(2)",
+          "value": Object {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "embed": Object {
@@ -930,7 +913,6 @@ Array [
             ],
             "text": "@alice.bluesky.xyz is the best",
           },
-          "uri": "record(2)",
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",

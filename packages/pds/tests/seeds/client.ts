@@ -168,7 +168,7 @@ export class SeedClient {
       {
         text: text,
         facets,
-        images: images && { images },
+        images,
         embed: quote && {
           $type: 'app.bsky.embed.record',
           record: { uri: quote.uriStr, cid: quote.cidStr },
@@ -239,7 +239,7 @@ export class SeedClient {
           parent: parent.raw,
         },
         facets,
-        images: images && { images },
+        images,
         createdAt: new Date().toISOString(),
       },
       this.getHeaders(by),

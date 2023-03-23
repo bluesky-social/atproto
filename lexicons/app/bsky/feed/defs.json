@@ -11,8 +11,9 @@
         "author": {"type": "ref", "ref": "app.bsky.actor.defs#withInfo"},
         "record": {"type": "unknown"},
         "images": {
-          "type": "ref",
-          "ref": "app.bsky.embed.images#view"
+          "type": "array",
+          "items": {"type": "ref", "ref": "app.bsky.embed.images#viewImage"},
+          "maxLength": 4
         },
         "embed": {
           "type": "union",

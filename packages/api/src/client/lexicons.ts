@@ -2898,7 +2898,7 @@ export const schemaDict = {
         type: 'object',
         required: ['external'],
         properties: {
-          value: {
+          external: {
             type: 'ref',
             ref: 'lex:app.bsky.embed.external#viewExternal',
           },
@@ -2960,9 +2960,9 @@ export const schemaDict = {
       },
       view: {
         type: 'object',
-        required: ['value'],
+        required: ['images'],
         properties: {
-          value: {
+          images: {
             type: 'array',
             items: {
               type: 'ref',
@@ -3009,7 +3009,7 @@ export const schemaDict = {
         type: 'object',
         required: ['record'],
         properties: {
-          value: {
+          record: {
             type: 'union',
             refs: [
               'lex:app.bsky.embed.record#viewRecord',
@@ -3034,7 +3034,7 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#withInfo',
           },
-          record: {
+          value: {
             type: 'unknown',
           },
           embeds: {
@@ -3090,8 +3090,12 @@ export const schemaDict = {
             type: 'unknown',
           },
           images: {
-            type: 'ref',
-            ref: 'lex:app.bsky.embed.images#view',
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.embed.images#viewImage',
+            },
+            maxLength: 4,
           },
           embed: {
             type: 'union',
@@ -3554,8 +3558,12 @@ export const schemaDict = {
               ref: 'lex:app.bsky.feed.post#replyRef',
             },
             images: {
-              type: 'ref',
-              ref: 'lex:app.bsky.embed.images',
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.embed.images#image',
+              },
+              maxLength: 4,
             },
             embed: {
               type: 'union',
@@ -3596,8 +3604,7 @@ export const schemaDict = {
           },
           type: {
             type: 'string',
-            description:
-              "Expected values are 'mention', 'hashtag', and 'link'.",
+            description: "Expected values are 'mention' and 'link'.",
           },
           value: {
             type: 'string',

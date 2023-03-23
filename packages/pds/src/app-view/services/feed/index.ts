@@ -236,8 +236,11 @@ export class FeedService {
     ])
     let embeds = images.reduce((acc, cur) => {
       acc[cur.postUri] ??= {}
-      acc[cur.postUri].images ??= { value: [] }
-      acc[cur.postUri].images?.value.push({
+      acc[cur.postUri].images ??= {
+        $type: 'app.bsky.embed.images#view',
+        images: [],
+      }
+      acc[cur.postUri].images?.images.push({
         thumb: this.imgUriBuilder.getCommonSignedUri(
           'feed_thumbnail',
           cur.imageCid,
@@ -254,7 +257,7 @@ export class FeedService {
       acc[cur.postUri] ??= {}
       acc[cur.postUri].other ??= {
         $type: 'app.bsky.embed.external#view',
-        value: {
+        external: {
           uri: cur.uri,
           title: cur.title,
           description: cur.description,
@@ -285,7 +288,7 @@ export class FeedService {
             embeds ??= []
             embeds.push({
               $type: 'app.bsky.embed.images#view',
-              ...formatted.images,
+              images: formatted.images,
             })
           }
           if (formatted?.embed) {
@@ -296,13 +299,13 @@ export class FeedService {
         acc[cur.postUri] ??= {}
         acc[cur.postUri].other ??= {
           $type: 'app.bsky.embed.record#view',
-          value: formatted
+          record: formatted
             ? {
                 $type: 'app.bsky.embed.record#viewRecord',
                 uri: formatted.uri,
                 cid: formatted.cid,
                 author: formatted.author,
-                record: formatted.record,
+                value: formatted.record,
                 embeds,
                 indexedAt: formatted.indexedAt,
               }
@@ -331,7 +334,7 @@ export class FeedService {
       cid: post.cid,
       author: author,
       record: cborToLexRecord(post.recordBytes),
-      images: embeds[uri]?.images,
+      images: embeds[uri]?.images?.images,
       embed: embeds[uri]?.other,
       replyCount: post.replyCount,
       repostCount: post.repostCount,

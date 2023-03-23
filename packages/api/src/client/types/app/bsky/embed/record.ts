@@ -29,7 +29,7 @@ export function validateMain(v: unknown): ValidationResult {
 }
 
 export interface View {
-  value?: ViewRecord | ViewNotFound | { $type: string; [k: string]: unknown }
+  record: ViewRecord | ViewNotFound | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
 
@@ -47,7 +47,7 @@ export interface ViewRecord {
   uri: string
   cid: string
   author: AppBskyActorDefs.WithInfo
-  record: {}
+  value?: {}
   embeds?: (
     | AppBskyEmbedImages.View
     | AppBskyEmbedExternal.View

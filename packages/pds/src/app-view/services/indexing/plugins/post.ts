@@ -83,7 +83,7 @@ const insertFn = async (
   let images: PostEmbedImage[] | undefined
   let embed: PostEmbedExternal | PostEmbedRecord | undefined
   if (obj.images || isEmbedImages(obj.embed)) {
-    const { images: embeddedImages } = obj.images || (obj.embed as EmbedImages)
+    const embeddedImages = obj.images || (obj.embed as EmbedImages).images
     images = embeddedImages.map((img, i) => ({
       postUri: uri.toString(),
       position: i,
