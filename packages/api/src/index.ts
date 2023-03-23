@@ -1,4 +1,8 @@
+export { AtUri } from '@atproto/uri'
 export * from './types'
 export * from './client'
 export * from './agent'
+export * from './rich-text/rich-text'
+export * from './rich-text/sanitize'
+export { BskyAgent } from './bsky-agent'
 export { AtpAgent as default } from './agent'

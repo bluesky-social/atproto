@@ -7,6 +7,7 @@ import {
   ComAtprotoServerCreateSession,
   ComAtprotoServerGetSession,
   ComAtprotoServerRefreshSession,
+  ComAtprotoRepoUploadBlob,
 } from './client'
 import {
   AtpSessionData,
@@ -33,6 +34,10 @@ export class AtpAgent {
   private _baseClient: AtpBaseClient
   private _persistSession?: AtpPersistSessionHandler
   private _refreshSessionPromise: Promise<void> | undefined
+
+  get com() {
+    return this.api.com
+  }
 
   /**
    * The `fetch` implementation; must be implemented for your platform.
@@ -271,6 +276,34 @@ export class AtpAgent {
     // propagate in the _fetch() handler's second attempt to run
     // the request
   }
+
+  /**
+   * Upload a binary blob to the server
+   */
+  uploadBlob: typeof this.api.com.atproto.repo.uploadBlob = (data, opts) =>
+    this.api.com.atproto.repo.uploadBlob(data, opts)
+
+  /**
+   * Resolve a handle to a DID
+   */
+  resolveHandle: typeof this.api.com.atproto.identity.resolveHandle = (
+    params,
+    opts,
+  ) => this.api.com.atproto.identity.resolveHandle(params, opts)
+
+  /**
+   * Change the user's handle
+   */
+  updateHandle: typeof this.api.com.atproto.identity.updateHandle = (
+    data,
+    opts,
+  ) => this.api.com.atproto.identity.updateHandle(data, opts)
+
+  /**
+   * Create a moderation report
+   */
+  createModerationReport: typeof this.api.com.atproto.moderation.createReport =
+    (data, opts) => this.api.com.atproto.moderation.createReport(data, opts)
 }
 
 function isErrorObject(v: unknown): v is ErrorResponseBody {
