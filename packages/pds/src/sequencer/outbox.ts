@@ -34,7 +34,7 @@ export class Outbox {
     // catch up as much as we can
     if (backfillCursor !== undefined) {
       for await (const evt of this.getBackfill(backfillCursor, backFillTime)) {
-        this.lastSeen = evt.evt.seq
+        this.lastSeen = evt.seq
         yield evt
       }
     } else {
@@ -72,8 +72,8 @@ export class Outbox {
     while (true) {
       try {
         for await (const evt of this.outBuffer.events()) {
-          if (evt.evt.seq > this.lastSeen) {
-            this.lastSeen = evt.evt.seq
+          if (evt.seq > this.lastSeen) {
+            this.lastSeen = evt.seq
             yield evt
           }
         }

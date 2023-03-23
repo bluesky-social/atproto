@@ -5,6 +5,7 @@ export interface RepoSeq {
   did: string
   eventType: 'append' | 'rebase' | 'handle' | 'migrate' | 'tombstone'
   event: Uint8Array
+  invalidatedBy: number | null
   sequencedAt: string
 }
 

@@ -38,11 +38,15 @@ export default function (server: Server, ctx: AppContext) {
           $type: '#commit',
           commit: commit.toString(),
           prev: prev?.toString() ?? null,
+          seq: evt.seq,
+          time: evt.time,
         }
       } else if (evt.type === 'handle') {
         yield {
           ...evt,
           $type: '#handle',
+          seq: evt.seq,
+          time: evt.time,
         }
       }
     }

@@ -145,7 +145,7 @@ export class SqlRepoStorage extends RepoStorage {
     const commitBlocks: RepoCommitBlock[] = []
     const commitHistory: RepoCommitHistory[] = []
     for (const commit of commits) {
-      const commitCids = commit.relatedCids || []
+      const commitCids: CID[] = []
       for (const block of commit.blocks.entries()) {
         commitCids.push(block.cid)
         allBlocks.set(block.cid, block.bytes)
