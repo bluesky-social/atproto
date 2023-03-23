@@ -1,4 +1,4 @@
-import { ensureValidDid, ensureValidDidRegex } from '../src'
+import { ensureValidDid, ensureValidDidRegex, InvalidDidError } from '../src'
 
 describe('DID permissive validation', () => {
   const expectValid = (h: string) => {
@@ -6,8 +6,8 @@ describe('DID permissive validation', () => {
     ensureValidDidRegex(h)
   }
   const expectInvalid = (h: string) => {
-    expect(() => ensureValidDid(h)).toThrow()
-    expect(() => ensureValidDidRegex(h)).toThrow()
+    expect(() => ensureValidDid(h)).toThrow(InvalidDidError)
+    expect(() => ensureValidDidRegex(h)).toThrow(InvalidDidError)
   }
 
   it('enforces spec details', () => {

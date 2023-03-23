@@ -58,23 +58,10 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     limit?: number
   }): Promise<RepoAppendEvent[]> {
     const { earliestSeq, earliestTime, limit } = opts
+
     let seqQb = this.db.db
       .selectFrom('repo_seq')
-      .selectAll()
-      .orderBy('seq', 'asc')
-    if (earliestSeq !== undefined) {
-      seqQb = seqQb.where('seq', '>', earliestSeq)
-    }
-    if (earliestTime !== undefined) {
-      seqQb = seqQb.where('sequencedAt', '>=', earliestTime)
-    }
-    if (limit !== undefined) {
-      seqQb = seqQb.limit(limit)
-    }
-
-    const getEvents = this.db.db
-      .selectFrom(seqQb.as('repo_seq'))
-      .leftJoin('repo_commit_history', (join) =>
+      .innerJoin('repo_commit_history', (join) =>
         join
           .onRef('repo_commit_history.creator', '=', 'repo_seq.did')
           .onRef('repo_commit_history.commit', '=', 'repo_seq.commit'),
@@ -87,10 +74,27 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         'repo_commit_history.prev as prev',
       ])
       .orderBy('seq', 'asc')
-      .execute()
+    if (earliestSeq !== undefined) {
+      seqQb = seqQb.where('seq', '>', earliestSeq)
+    }
+    if (earliestTime !== undefined) {
+      seqQb = seqQb.where('sequencedAt', '>=', earliestTime)
+    }
+    if (limit !== undefined) {
+      seqQb = seqQb.limit(limit)
+    }
+
+    const events = await seqQb.execute()
+    if (events.length < 1) {
+      return []
+    }
+
+    // we don't chunk because this is only ever used with a limit of 50
+    const seqs = events.map((evt) => evt.seq)
 
     const getBlocks = this.db.db
-      .selectFrom(seqQb.as('repo_seq'))
+      .selectFrom('repo_seq')
+      .where('repo_seq.seq', 'in', seqs)
       .innerJoin('repo_commit_block', (join) =>
         join
           .onRef('repo_commit_block.creator', '=', 'repo_seq.did')
@@ -109,7 +113,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       .execute()
 
     const getBlobs = this.db.db
-      .selectFrom(seqQb.as('repo_seq'))
+      .selectFrom('repo_seq')
+      .where('repo_seq.seq', 'in', seqs)
       .innerJoin('repo_blob', (join) =>
         join
           .onRef('repo_blob.did', '=', 'repo_seq.did')
@@ -119,7 +124,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       .execute()
 
     const getOps = this.db.db
-      .selectFrom(seqQb.as('repo_seq'))
+      .selectFrom('repo_seq')
+      .where('repo_seq.seq', 'in', seqs)
       .innerJoin('repo_op', (join) =>
         join
           .onRef('repo_op.did', '=', 'repo_seq.did')
@@ -133,8 +139,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       ])
       .execute()
 
-    const [events, blocks, blobs, ops] = await Promise.all([
-      getEvents,
+    const [blocks, blobs, ops] = await Promise.all([
       getBlocks,
       getBlobs,
       getOps,
