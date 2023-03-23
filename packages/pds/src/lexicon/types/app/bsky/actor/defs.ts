@@ -37,7 +37,6 @@ export interface ProfileView {
   followersCount?: number
   followsCount?: number
   postsCount?: number
-  creator: string
   indexedAt?: string
   viewer?: ViewerState
   [k: string]: unknown

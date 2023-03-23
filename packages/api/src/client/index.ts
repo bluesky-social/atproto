@@ -60,7 +60,6 @@ import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestio
 import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
-import * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 import * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
@@ -73,8 +72,6 @@ import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedLike from './types/app/bsky/feed/like'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
-import * as AppBskyGraphAssertCreator from './types/app/bsky/graph/assertCreator'
-import * as AppBskyGraphAssertMember from './types/app/bsky/graph/assertMember'
 import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
@@ -140,7 +137,6 @@ export * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestio
 export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
 export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
-export * as AppBskyActorUpdateProfile from './types/app/bsky/actor/updateProfile'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 export * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
@@ -153,8 +149,6 @@ export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 export * as AppBskyFeedLike from './types/app/bsky/feed/like'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
-export * as AppBskyGraphAssertCreator from './types/app/bsky/graph/assertCreator'
-export * as AppBskyGraphAssertMember from './types/app/bsky/graph/assertMember'
 export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
@@ -175,10 +169,6 @@ export const COM_ATPROTO_ADMIN = {
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
-}
-export const APP_BSKY_GRAPH = {
-  AssertCreator: 'app.bsky.graph.assertCreator',
-  AssertMember: 'app.bsky.graph.assertMember',
 }
 
 export class AtpBaseClient {
@@ -844,17 +834,6 @@ export class ActorNS {
       .call('app.bsky.actor.searchActorsTypeahead', params, undefined, opts)
       .catch((e) => {
         throw AppBskyActorSearchActorsTypeahead.toKnownErr(e)
-      })
-  }
-
-  updateProfile(
-    data?: AppBskyActorUpdateProfile.InputSchema,
-    opts?: AppBskyActorUpdateProfile.CallOptions,
-  ): Promise<AppBskyActorUpdateProfile.Response> {
-    return this._service.xrpc
-      .call('app.bsky.actor.updateProfile', opts?.qp, data, opts)
-      .catch((e) => {
-        throw AppBskyActorUpdateProfile.toKnownErr(e)
       })
   }
 }

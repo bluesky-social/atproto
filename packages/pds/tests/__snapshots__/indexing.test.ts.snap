@@ -118,7 +118,6 @@ Object {
 
 exports[`indexing indexes profiles. 1`] = `
 Object {
-  "creator": "user(0)",
   "did": "user(0)",
   "displayName": "dan",
   "followersCount": 0,
@@ -134,7 +133,6 @@ Object {
 
 exports[`indexing indexes profiles. 2`] = `
 Object {
-  "creator": "user(0)",
   "did": "user(0)",
   "displayName": "danny",
   "followersCount": 0,
@@ -150,7 +148,6 @@ Object {
 
 exports[`indexing indexes profiles. 3`] = `
 Object {
-  "creator": "user(0)",
   "did": "user(0)",
   "followersCount": 0,
   "followsCount": 0,

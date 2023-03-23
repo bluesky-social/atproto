@@ -2460,7 +2460,7 @@ export const schemaDict = {
       },
       profileView: {
         type: 'object',
-        required: ['did', 'handle', 'creator'],
+        required: ['did', 'handle'],
         properties: {
           did: {
             type: 'string',
@@ -2492,10 +2492,6 @@ export const schemaDict = {
           },
           postsCount: {
             type: 'integer',
-          },
-          creator: {
-            type: 'string',
-            format: 'did',
           },
           indexedAt: {
             type: 'string',
@@ -2783,77 +2779,6 @@ export const schemaDict = {
             },
           },
         },
-      },
-    },
-  },
-  AppBskyActorUpdateProfile: {
-    lexicon: 1,
-    id: 'app.bsky.actor.updateProfile',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: "Update an actor's profile.",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            nullable: ['description', 'avatar', 'banner'],
-            properties: {
-              displayName: {
-                type: 'string',
-                maxLength: 64,
-              },
-              description: {
-                type: 'string',
-                maxLength: 256,
-              },
-              avatar: {
-                type: 'blob',
-                accept: ['image/png', 'image/jpeg'],
-                maxSize: 100000,
-              },
-              banner: {
-                type: 'blob',
-                accept: ['image/png', 'image/jpeg'],
-                maxSize: 500000,
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['uri', 'cid', 'record'],
-            properties: {
-              uri: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              cid: {
-                type: 'string',
-                format: 'cid',
-              },
-              record: {
-                type: 'unknown',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidBlob',
-          },
-          {
-            name: 'BlobTooLarge',
-          },
-          {
-            name: 'InvalidMimeType',
-          },
-          {
-            name: 'InvalidImageDimensions',
-          },
-        ],
       },
     },
   },
@@ -3638,28 +3563,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyGraphAssertCreator: {
-    lexicon: 1,
-    id: 'app.bsky.graph.assertCreator',
-    defs: {
-      main: {
-        type: 'token',
-        description:
-          "Assertion type: Creator. Defined for app.bsky.graph.assertions's assertion.",
-      },
-    },
-  },
-  AppBskyGraphAssertMember: {
-    lexicon: 1,
-    id: 'app.bsky.graph.assertMember',
-    defs: {
-      main: {
-        type: 'token',
-        description:
-          "Assertion type: Member. Defined for app.bsky.graph.assertions's assertion.",
-      },
-    },
-  },
   AppBskyGraphFollow: {
     lexicon: 1,
     id: 'app.bsky.graph.follow',
@@ -4181,7 +4084,6 @@ export const ids = {
   AppBskyActorProfile: 'app.bsky.actor.profile',
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
   AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
-  AppBskyActorUpdateProfile: 'app.bsky.actor.updateProfile',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
   AppBskyEmbedRecord: 'app.bsky.embed.record',
@@ -4194,8 +4096,6 @@ export const ids = {
   AppBskyFeedLike: 'app.bsky.feed.like',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
-  AppBskyGraphAssertCreator: 'app.bsky.graph.assertCreator',
-  AppBskyGraphAssertMember: 'app.bsky.graph.assertMember',
   AppBskyGraphFollow: 'app.bsky.graph.follow',
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',

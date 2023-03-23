@@ -97,7 +97,6 @@ export class ActorViews {
         followsCount: profileInfo?.followsCount ?? 0,
         followersCount: profileInfo?.followersCount ?? 0,
         postsCount: profileInfo?.postsCount ?? 0,
-        creator: result.did,
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: {
           muted: !!profileInfo?.requesterMuted,
