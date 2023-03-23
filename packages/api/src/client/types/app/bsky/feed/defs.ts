@@ -19,7 +19,6 @@ export interface PostView {
   embed?:
     | AppBskyEmbedExternal.View
     | AppBskyEmbedRecord.View
-    | AppBskyEmbedImages.View
     | { $type: string; [k: string]: unknown }
   replyCount?: number
   repostCount?: number

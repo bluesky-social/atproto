@@ -3098,7 +3098,6 @@ export const schemaDict = {
             refs: [
               'lex:app.bsky.embed.external#view',
               'lex:app.bsky.embed.record#view',
-              'lex:app.bsky.embed.images#view',
             ],
           },
           replyCount: {
