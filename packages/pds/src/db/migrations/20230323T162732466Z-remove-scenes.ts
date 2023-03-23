@@ -5,7 +5,6 @@ export async function up(db: Kysely<any>): Promise<void> {
   await db.schema.dropTable('trend').execute()
   await db.schema.dropTable('scene_member_count').execute()
   await db.schema.dropTable('scene_votes_on_post').execute()
-  // Migration code
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
