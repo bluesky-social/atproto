@@ -26,12 +26,17 @@ import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/re
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { AccountService } from '../account'
 import { RecordService } from '../record'
+import Sequencer from '../../sequencer'
 
 export class ModerationViews {
-  constructor(private db: Database, private messageDispatcher: MessageQueue) {}
+  constructor(
+    private db: Database,
+    private messageDispatcher: MessageQueue,
+    private sequencer: Sequencer,
+  ) {}
 
   services = {
-    account: AccountService.creator(),
+    account: AccountService.creator(this.sequencer),
     record: RecordService.creator(this.messageDispatcher),
   }
 

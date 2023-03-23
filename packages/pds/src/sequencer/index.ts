@@ -161,25 +161,29 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       .insertInto('repo_seq')
       .values({
         did,
-        eventType: 'append' as const,
+        eventType: 'append',
         event: cborEncode(evt),
         sequencedAt: new Date().toISOString(),
       })
       .execute()
-    await this.db.notify('repo_seq')
+    await dbTxn.notify('repo_seq')
   }
 
-  async sequenceHandleUpdate(did: string, handle: string) {
+  async sequenceHandleUpdate(dbTxn: Database, did: string, handle: string) {
     const evt: HandleEvt = {
       did,
       handle,
     }
-    await this.db.db.insertInto('repo_seq').values({
-      did,
-      eventType: 'handle',
-      event: cborEncode(evt),
-      sequencedAt: new Date().toISOString(),
-    })
+    await dbTxn.db
+      .insertInto('repo_seq')
+      .values({
+        did,
+        eventType: 'handle',
+        event: cborEncode(evt),
+        sequencedAt: new Date().toISOString(),
+      })
+      .execute()
+    await dbTxn.notify('repo_seq')
   }
 }
 

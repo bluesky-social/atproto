@@ -92,9 +92,11 @@ describe('sequencer', () => {
     totalEvts += count
     const outbox = new Outbox(sequencer)
     const [evts] = await Promise.all([
-      readFromGenerator(outbox.events(-1)),
+      readFromGenerator(outbox.events(-1), undefined, 10000),
       createPosts(count),
     ])
+    const res = await db.db.selectFrom('repo_seq').select('seq').execute()
+
     expect(evts.length).toBe(totalEvts)
 
     const fromDb = await loadFromDb(-1)

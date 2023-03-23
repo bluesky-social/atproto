@@ -11,12 +11,14 @@ import { ModerationViews } from './views'
 import SqlRepoStorage from '../../sql-repo-storage'
 import { ImageInvalidator } from '../../image/invalidator'
 import { ImageUriBuilder } from '../../image/uri'
+import Sequencer from '../../sequencer'
 
 export class ModerationService {
   constructor(
     public db: Database,
     public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
+    public sequencer: Sequencer,
     public imgUriBuilder: ImageUriBuilder,
     public imgInvalidator: ImageInvalidator,
   ) {}
@@ -24,6 +26,7 @@ export class ModerationService {
   static creator(
     messageDispatcher: MessageQueue,
     blobstore: BlobStore,
+    sequencer: Sequencer,
     imgUriBuilder: ImageUriBuilder,
     imgInvalidator: ImageInvalidator,
   ) {
@@ -32,12 +35,13 @@ export class ModerationService {
         db,
         messageDispatcher,
         blobstore,
+        sequencer,
         imgUriBuilder,
         imgInvalidator,
       )
   }
 
-  views = new ModerationViews(this.db, this.messageDispatcher)
+  views = new ModerationViews(this.db, this.messageDispatcher, this.sequencer)
 
   services = {
     record: RecordService.creator(this.messageDispatcher),

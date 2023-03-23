@@ -34,7 +34,7 @@ export function createServices(resources: {
     imgInvalidator,
   } = resources
   return {
-    account: AccountService.creator(),
+    account: AccountService.creator(sequencer),
     auth: AuthService.creator(),
     record: RecordService.creator(messageDispatcher),
     repo: RepoService.creator(
@@ -46,6 +46,7 @@ export function createServices(resources: {
     moderation: ModerationService.creator(
       messageDispatcher,
       blobstore,
+      sequencer,
       imgUriBuilder,
       imgInvalidator,
     ),
