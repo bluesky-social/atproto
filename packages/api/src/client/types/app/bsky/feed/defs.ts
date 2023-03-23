@@ -15,10 +15,11 @@ export interface PostView {
   cid: string
   author: AppBskyActorDefs.WithInfo
   record: {}
+  images?: AppBskyEmbedImages.View
   embed?:
-    | AppBskyEmbedImages.View
     | AppBskyEmbedExternal.View
     | AppBskyEmbedRecord.View
+    | AppBskyEmbedImages.View
     | { $type: string; [k: string]: unknown }
   replyCount?: number
   repostCount?: number

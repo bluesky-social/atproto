@@ -3089,12 +3089,16 @@ export const schemaDict = {
           record: {
             type: 'unknown',
           },
+          images: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.images#view',
+          },
           embed: {
             type: 'union',
             refs: [
-              'lex:app.bsky.embed.images#view',
               'lex:app.bsky.embed.external#view',
               'lex:app.bsky.embed.record#view',
+              'lex:app.bsky.embed.images#view',
             ],
           },
           replyCount: {
@@ -3550,12 +3554,16 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:app.bsky.feed.post#replyRef',
             },
+            images: {
+              type: 'ref',
+              ref: 'lex:app.bsky.embed.images',
+            },
             embed: {
               type: 'union',
               refs: [
-                'lex:app.bsky.embed.images',
                 'lex:app.bsky.embed.external',
                 'lex:app.bsky.embed.record',
+                'lex:app.bsky.embed.images',
               ],
             },
             createdAt: {

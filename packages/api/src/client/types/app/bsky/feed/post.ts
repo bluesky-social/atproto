@@ -17,10 +17,11 @@ export interface Record {
   entities?: Entity[]
   facets?: AppBskyRichtextFacet.Main[]
   reply?: ReplyRef
+  images?: AppBskyEmbedImages.Main
   embed?:
-    | AppBskyEmbedImages.Main
     | AppBskyEmbedExternal.Main
     | AppBskyEmbedRecord.Main
+    | AppBskyEmbedImages.Main
     | { $type: string; [k: string]: unknown }
   createdAt: string
   [k: string]: unknown

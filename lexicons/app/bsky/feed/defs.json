@@ -10,12 +10,16 @@
         "cid": {"type": "string", "format": "cid"},
         "author": {"type": "ref", "ref": "app.bsky.actor.defs#withInfo"},
         "record": {"type": "unknown"},
+        "images": {
+          "type": "ref",
+          "ref": "app.bsky.embed.images#view"
+        },
         "embed": {
           "type": "union",
           "refs": [
-            "app.bsky.embed.images#view",
             "app.bsky.embed.external#view",
-            "app.bsky.embed.record#view"
+            "app.bsky.embed.record#view",
+            "app.bsky.embed.images#view"
           ]
         },
         "replyCount": {"type": "integer"},

@@ -20,12 +20,16 @@
             "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
           },
           "reply": {"type": "ref", "ref": "#replyRef"},
+          "images": {
+            "type": "ref",
+            "ref": "app.bsky.embed.images"
+          },
           "embed": {
             "type": "union",
             "refs": [
-              "app.bsky.embed.images",
               "app.bsky.embed.external",
-              "app.bsky.embed.record"
+              "app.bsky.embed.record",
+              "app.bsky.embed.images"
             ]
           },
           "createdAt": {"type": "string", "format": "datetime"}
