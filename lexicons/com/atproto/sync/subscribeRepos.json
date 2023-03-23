@@ -62,7 +62,8 @@
       "properties": {
         "seq": {"type": "integer"},
         "did": {"type": "string"},
-        "handle": {"type": "string"}
+        "handle": {"type": "string"},
+        "time": {"type": "datetime"}
       }
     },
     "migrate": {
@@ -72,7 +73,8 @@
       "properties": {
         "seq": {"type": "integer"},
         "did": {"type": "string"},
-        "migrateTo": {"type": "string"}
+        "migrateTo": {"type": "string"},
+        "time": {"type": "datetime"}
       }
     },
     "tombstone": {
@@ -80,7 +82,8 @@
       "required": ["seq", "did"],
       "properties": {
         "seq": {"type": "integer"},
-        "did": {"type": "string"}
+        "did": {"type": "string"},
+        "time": {"type": "datetime"}
       }
     },
     "info": {

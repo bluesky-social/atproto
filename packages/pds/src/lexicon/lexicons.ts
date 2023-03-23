@@ -2440,6 +2440,9 @@ export const schemaDict = {
           handle: {
             type: 'string',
           },
+          time: {
+            type: 'datetime',
+          },
         },
       },
       migrate: {
@@ -2456,6 +2459,9 @@ export const schemaDict = {
           migrateTo: {
             type: 'string',
           },
+          time: {
+            type: 'datetime',
+          },
         },
       },
       tombstone: {
@@ -2467,6 +2473,9 @@ export const schemaDict = {
           },
           did: {
             type: 'string',
+          },
+          time: {
+            type: 'datetime',
           },
         },
       },

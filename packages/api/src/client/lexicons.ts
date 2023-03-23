@@ -2354,14 +2354,16 @@ export const schemaDict = {
           },
         },
         message: {
-          type: 'union',
-          refs: [
-            'lex:com.atproto.sync.subscribeRepos#commit',
-            'lex:com.atproto.sync.subscribeRepos#handle',
-            'lex:com.atproto.sync.subscribeRepos#migrate',
-            'lex:com.atproto.sync.subscribeRepos#tombstone',
-            'lex:com.atproto.sync.subscribeRepos#info',
-          ],
+          schema: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.sync.subscribeRepos#commit',
+              'lex:com.atproto.sync.subscribeRepos#handle',
+              'lex:com.atproto.sync.subscribeRepos#migrate',
+              'lex:com.atproto.sync.subscribeRepos#tombstone',
+              'lex:com.atproto.sync.subscribeRepos#info',
+            ],
+          },
         },
         errors: [
           {
@@ -2438,6 +2440,9 @@ export const schemaDict = {
           handle: {
             type: 'string',
           },
+          time: {
+            type: 'datetime',
+          },
         },
       },
       migrate: {
@@ -2454,6 +2459,9 @@ export const schemaDict = {
           migrateTo: {
             type: 'string',
           },
+          time: {
+            type: 'datetime',
+          },
         },
       },
       tombstone: {
@@ -2465,6 +2473,9 @@ export const schemaDict = {
           },
           did: {
             type: 'string',
+          },
+          time: {
+            type: 'datetime',
           },
         },
       },
