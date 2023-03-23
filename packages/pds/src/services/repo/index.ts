@@ -56,7 +56,7 @@ export class RepoService {
       // & send to indexing
       this.indexWrites(writes, now),
       // do any other processing needed after write
-      this.afterWriteProcessing(did, commitData.commit, writes),
+      this.afterWriteProcessing(did, commitData, writes),
     ])
   }
 
@@ -113,13 +113,13 @@ export class RepoService {
 
   async afterWriteProcessing(
     did: string,
-    commit: CID,
+    commitData: CommitData,
     writes: PreparedWrite[],
   ) {
     await Promise.all([
-      this.blobs.processWriteBlobs(did, commit, writes),
-      this.indexRepoOps(did, commit, writes),
-      this.sequenceWrite(did, commit),
+      this.blobs.processWriteBlobs(did, commitData.commit, writes),
+      this.indexRepoOps(did, commitData.commit, writes),
+      this.sequenceWrite(did, commitData, writes),
     ])
   }
 
@@ -138,7 +138,26 @@ export class RepoService {
     await this.db.db.insertInto('repo_op').values(ops).execute()
   }
 
-  async sequenceWrite(did: string, commit: CID) {
+  async sequenceWrite(
+    did: string,
+    commitData: CommitData,
+    writes: PreparedWrite[],
+  ) {
+    const ops = writes.map((w) => {
+      const path = w.uri.collection + '/' + w.uri.rkey
+      const cid = w.action === WriteOpAction.Delete ? null : w.cid
+      return { action: w.action, path, cid }
+    })
+    const evt = {
+      rebase: false,
+      tooBig: false,
+      repo: did,
+      commit: commitData.commit,
+      prev: commitData.prev,
+      ops,
+      blobs: [], // @TODO
+      time: new Date().toISOString(),
+    }
     await this.db.db
       .insertInto('repo_seq')
       .values({
