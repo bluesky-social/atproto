@@ -3089,13 +3089,9 @@ export const schemaDict = {
           record: {
             type: 'unknown',
           },
-          images: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:app.bsky.embed.images#viewImage',
-            },
-            maxLength: 4,
+          media: {
+            type: 'union',
+            refs: ['lex:app.bsky.embed.images#view'],
           },
           embed: {
             type: 'union',
@@ -3557,13 +3553,9 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:app.bsky.feed.post#replyRef',
             },
-            images: {
-              type: 'array',
-              items: {
-                type: 'ref',
-                ref: 'lex:app.bsky.embed.images#image',
-              },
-              maxLength: 4,
+            media: {
+              type: 'union',
+              refs: ['lex:app.bsky.embed.images'],
             },
             embed: {
               type: 'union',

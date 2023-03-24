@@ -20,10 +20,11 @@
             "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
           },
           "reply": {"type": "ref", "ref": "#replyRef"},
-          "images": {
-            "type": "array",
-            "items": {"type": "ref", "ref": "app.bsky.embed.images#image"},
-            "maxLength": 4
+          "media": {
+            "type": "union",
+            "refs": [
+              "app.bsky.embed.images"
+            ]
           },
           "embed": {
             "type": "union",

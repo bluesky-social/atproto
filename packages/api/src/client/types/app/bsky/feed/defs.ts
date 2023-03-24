@@ -15,7 +15,7 @@ export interface PostView {
   cid: string
   author: AppBskyActorDefs.WithInfo
   record: {}
-  images?: AppBskyEmbedImages.ViewImage[]
+  media?: AppBskyEmbedImages.View | { $type: string; [k: string]: unknown }
   embed?:
     | AppBskyEmbedExternal.View
     | AppBskyEmbedRecord.View

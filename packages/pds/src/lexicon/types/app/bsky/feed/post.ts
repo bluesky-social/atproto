@@ -17,7 +17,7 @@ export interface Record {
   entities?: Entity[]
   facets?: AppBskyRichtextFacet.Main[]
   reply?: ReplyRef
-  images?: AppBskyEmbedImages.Image[]
+  media?: AppBskyEmbedImages.Main | { $type: string; [k: string]: unknown }
   embed?:
     | AppBskyEmbedExternal.Main
     | AppBskyEmbedRecord.Main
