@@ -61,7 +61,7 @@ export function validateLink(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.richtext.facet#link', v)
 }
 
-/** A text segment. Start is inclusive, end is exclusive. */
+/** A text segment. Start is inclusive, end is exclusive. Indices are for utf8-encoded strings. */
 export interface TextSlice {
   start: number
   end: number

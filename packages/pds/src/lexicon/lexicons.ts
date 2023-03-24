@@ -3581,6 +3581,7 @@ export const schemaDict = {
       },
       entity: {
         type: 'object',
+        description: 'Deprecated. Use app.bsky.richtext instead.',
         required: ['index', 'type', 'value'],
         properties: {
           index: {
@@ -3599,7 +3600,8 @@ export const schemaDict = {
       },
       textSlice: {
         type: 'object',
-        description: 'A text segment. Start is inclusive, end is exclusive.',
+        description:
+          'Deprecated. Use app.bsky.richtext instead -- A text segment. Start is inclusive, end is exclusive. Indices are for utf16-encoded strings.',
         required: ['start', 'end'],
         properties: {
           start: {
@@ -4062,7 +4064,8 @@ export const schemaDict = {
       },
       textSlice: {
         type: 'object',
-        description: 'A text segment. Start is inclusive, end is exclusive.',
+        description:
+          'A text segment. Start is inclusive, end is exclusive. Indices are for utf8-encoded strings.',
         required: ['start', 'end'],
         properties: {
           start: {
