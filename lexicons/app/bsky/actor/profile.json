@@ -7,7 +7,6 @@
       "key": "literal:self",
       "record": {
         "type": "object",
-        "required": ["displayName"],
         "properties": {
           "displayName": {
             "type": "string",
@@ -18,82 +17,16 @@
             "maxLength": 256
           },
           "avatar": {
-            "type": "image",
+            "type": "blob",
             "accept": ["image/png", "image/jpeg"],
-            "maxWidth": 2000,
-            "maxHeight": 2000,
             "maxSize": 1000000
           },
           "banner": {
-            "type": "image",
+            "type": "blob",
             "accept": ["image/png", "image/jpeg"],
-            "maxWidth": 6000,
-            "maxHeight": 2000,
             "maxSize": 1000000
           }
         }
-      }
-    },
-    "view": {
-      "type": "object",
-      "required": ["did", "declaration", "handle", "creator", "followersCount", "followsCount", "postsCount"],
-      "properties": {
-        "did": {"type": "string"},
-        "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
-        "handle": {"type": "string"},
-        "displayName": {
-          "type": "string",
-          "maxLength": 64
-        },
-        "description": {
-          "type": "string",
-          "maxLength": 256
-        },
-        "avatar": { "type": "string" },
-        "banner": { "type": "string" },
-        "followersCount": {"type": "integer"},
-        "followsCount": {"type": "integer"},
-        "postsCount": {"type": "integer"},
-        "creator": {"type": "string"},
-        "indexedAt": {"type": "datetime"},
-        "viewer": {"type": "ref", "ref": "#viewerState"},
-        "myState": {"type": "ref", "ref": "#myState", "description": "Deprecated"}
-      }
-    },
-    "viewBasic": {
-      "type": "object",
-      "required": ["did", "declaration", "handle"],
-      "properties": {
-        "did": {"type": "string"},
-        "declaration": {"type": "ref", "ref": "app.bsky.system.declRef"},
-        "handle": {"type": "string"},
-        "displayName": {
-          "type": "string",
-          "maxLength": 64
-        },
-        "description": {
-          "type": "string",
-          "maxLength": 256
-        },
-        "avatar": { "type": "string" },
-        "indexedAt": {"type": "datetime"},
-        "viewer": {"type": "ref", "ref": "#viewerState"}
-      }
-    },
-    "viewerState": {
-      "type": "object",
-      "properties": {
-        "muted": {"type": "boolean"},
-        "following": {"type": "string"},
-        "followedBy": {"type": "string"}
-      }
-    },
-    "myState": {
-      "type": "object",
-      "description": "Deprecated in favor of #viewerState",
-      "properties": {
-        "follow": {"type": "string"},
-        "muted": {"type": "boolean"}
       }
     }
   }

@@ -13,7 +13,7 @@
           "properties": {
             "actionId": {"type": "integer"},
             "reportIds": {"type": "array", "items": {"type": "integer"}},
-            "createdBy": {"type": "string"}
+            "createdBy": {"type": "string", "format": "did"}
           }
         }
       },
@@ -21,7 +21,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "ref",
-          "ref": "com.atproto.admin.moderationAction#view"
+          "ref": "com.atproto.admin.defs#actionView"
         }
       }
     }

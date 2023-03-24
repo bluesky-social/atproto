@@ -1,0 +1,49 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.moderation.createReport",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Report a repo or a record.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["reasonType", "subject"],
+          "properties": {
+            "reasonType": {"type": "ref", "ref": "com.atproto.moderation.defs#reasonType"},
+            "reason": {"type": "string"},
+            "subject": {
+              "type": "union",
+              "refs": [
+                "com.atproto.admin.defs#repoRef",
+                "com.atproto.repo.strongRef"
+              ]
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["id", "reasonType", "subject", "reportedBy", "createdAt"],
+          "properties": {
+            "id": {"type": "integer"},
+            "reasonType": {"type": "ref", "ref": "com.atproto.moderation.defs#reasonType"},
+            "reason": {"type": "string"},
+            "subject": {
+              "type": "union",
+              "refs": [
+                "com.atproto.admin.defs#repoRef",
+                "com.atproto.repo.strongRef"
+              ]
+            },
+            "reportedBy": {"type": "string", "format": "did"},
+            "createdAt": {"type": "string", "format": "datetime"}
+          }
+        }
+      }
+    }
+  }
+}

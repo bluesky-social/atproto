@@ -13,9 +13,11 @@ import {
   ACKNOWLEDGE,
   FLAG,
   TAKEDOWN,
-} from '../src/lexicon/types/com/atproto/admin/moderationAction'
-import { OTHER, SPAM } from '../src/lexicon/types/com/atproto/report/reasonType'
-import { CID } from 'multiformats/cid'
+} from '../src/lexicon/types/com/atproto/admin/defs'
+import {
+  REASONOTHER,
+  REASONSPAM,
+} from '../src/lexicon/types/com/atproto/moderation/defs'
 import { BlobNotFoundError } from '@atproto/repo'
 
 describe('moderation', () => {
@@ -40,36 +42,44 @@ describe('moderation', () => {
 
   describe('reporting', () => {
     it('creates reports of a repo.', async () => {
-      const { data: reportA } = await agent.api.com.atproto.report.create(
-        {
-          reasonType: SPAM,
-          subject: {
-            $type: 'com.atproto.repo.repoRef',
-            did: sc.dids.bob,
+      const { data: reportA } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONSPAM,
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: sc.dids.bob,
+            },
           },
-        },
-        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
-      )
-      const { data: reportB } = await agent.api.com.atproto.report.create(
-        {
-          reasonType: OTHER,
-          reason: 'impersonation',
-          subject: {
-            $type: 'com.atproto.repo.repoRef',
-            did: sc.dids.bob,
+          {
+            headers: sc.getHeaders(sc.dids.alice),
+            encoding: 'application/json',
           },
-        },
-        { headers: sc.getHeaders(sc.dids.carol), encoding: 'application/json' },
-      )
+        )
+      const { data: reportB } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONOTHER,
+            reason: 'impersonation',
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: sc.dids.bob,
+            },
+          },
+          {
+            headers: sc.getHeaders(sc.dids.carol),
+            encoding: 'application/json',
+          },
+        )
       expect(forSnapshot([reportA, reportB])).toMatchSnapshot()
     })
 
     it("fails reporting a repo that doesn't exist.", async () => {
-      const promise = agent.api.com.atproto.report.create(
+      const promise = agent.api.com.atproto.moderation.createReport(
         {
-          reasonType: SPAM,
+          reasonType: REASONSPAM,
           subject: {
-            $type: 'com.atproto.repo.repoRef',
+            $type: 'com.atproto.admin.defs#repoRef',
             did: 'did:plc:unknown',
           },
         },
@@ -81,28 +91,36 @@ describe('moderation', () => {
     it('creates reports of a record.', async () => {
       const postA = sc.posts[sc.dids.bob][0].ref
       const postB = sc.posts[sc.dids.bob][1].ref
-      const { data: reportA } = await agent.api.com.atproto.report.create(
-        {
-          reasonType: SPAM,
-          subject: {
-            $type: 'com.atproto.repo.recordRef',
-            uri: postA.uri.toString(),
+      const { data: reportA } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONSPAM,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postA.uri.toString(),
+            },
           },
-        },
-        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
-      )
-      const { data: reportB } = await agent.api.com.atproto.report.create(
-        {
-          reasonType: OTHER,
-          reason: 'defamation',
-          subject: {
-            $type: 'com.atproto.repo.recordRef',
-            uri: postB.uri.toString(),
-            cid: postB.cidStr,
+          {
+            headers: sc.getHeaders(sc.dids.alice),
+            encoding: 'application/json',
           },
-        },
-        { headers: sc.getHeaders(sc.dids.carol), encoding: 'application/json' },
-      )
+        )
+      const { data: reportB } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONOTHER,
+            reason: 'defamation',
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postB.uri.toString(),
+              cid: postB.cidStr,
+            },
+          },
+          {
+            headers: sc.getHeaders(sc.dids.carol),
+            encoding: 'application/json',
+          },
+        )
       expect(forSnapshot([reportA, reportB])).toMatchSnapshot()
     })
 
@@ -112,9 +130,9 @@ describe('moderation', () => {
       const postUriBad = new AtUri(postA.uriStr)
       postUriBad.rkey = 'badrkey'
 
-      const promiseA = agent.api.com.atproto.report.create(
+      const promiseA = agent.api.com.atproto.moderation.createReport(
         {
-          reasonType: SPAM,
+          reasonType: REASONSPAM,
           subject: {
             $type: 'com.atproto.repo.recordRef',
             uri: postUriBad.toString(),
@@ -124,9 +142,9 @@ describe('moderation', () => {
       )
       await expect(promiseA).rejects.toThrow('Record not found')
 
-      const promiseB = agent.api.com.atproto.report.create(
+      const promiseB = agent.api.com.atproto.moderation.createReport(
         {
-          reasonType: OTHER,
+          reasonType: REASONOTHER,
           reason: 'defamation',
           subject: {
             $type: 'com.atproto.repo.recordRef',
@@ -142,37 +160,45 @@ describe('moderation', () => {
 
   describe('actioning', () => {
     it('resolves reports on repos and records.', async () => {
-      const { data: reportA } = await agent.api.com.atproto.report.create(
-        {
-          reasonType: SPAM,
-          subject: {
-            $type: 'com.atproto.repo.repoRef',
-            did: sc.dids.bob,
+      const { data: reportA } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONSPAM,
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: sc.dids.bob,
+            },
           },
-        },
-        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
-      )
+          {
+            headers: sc.getHeaders(sc.dids.alice),
+            encoding: 'application/json',
+          },
+        )
       const post = sc.posts[sc.dids.bob][1].ref
-      const { data: reportB } = await agent.api.com.atproto.report.create(
-        {
-          reasonType: OTHER,
-          reason: 'defamation',
-          subject: {
-            $type: 'com.atproto.repo.recordRef',
-            uri: post.uri.toString(),
+      const { data: reportB } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONOTHER,
+            reason: 'defamation',
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: post.uri.toString(),
+            },
           },
-        },
-        { headers: sc.getHeaders(sc.dids.carol), encoding: 'application/json' },
-      )
+          {
+            headers: sc.getHeaders(sc.dids.carol),
+            encoding: 'application/json',
+          },
+        )
       const { data: action } =
         await agent.api.com.atproto.admin.takeModerationAction(
           {
             action: TAKEDOWN,
             subject: {
-              $type: 'com.atproto.repo.repoRef',
+              $type: 'com.atproto.admin.defs#repoRef',
               did: sc.dids.bob,
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -185,7 +211,7 @@ describe('moderation', () => {
           {
             actionId: action.id,
             reportIds: [reportB.id, reportA.id],
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
           },
           {
             encoding: 'application/json',
@@ -199,7 +225,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: action.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -210,25 +236,29 @@ describe('moderation', () => {
     })
 
     it('does not resolve report for mismatching repo.', async () => {
-      const { data: report } = await agent.api.com.atproto.report.create(
-        {
-          reasonType: SPAM,
-          subject: {
-            $type: 'com.atproto.repo.repoRef',
-            did: sc.dids.bob,
+      const { data: report } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONSPAM,
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: sc.dids.bob,
+            },
           },
-        },
-        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
-      )
+          {
+            headers: sc.getHeaders(sc.dids.alice),
+            encoding: 'application/json',
+          },
+        )
       const { data: action } =
         await agent.api.com.atproto.admin.takeModerationAction(
           {
             action: TAKEDOWN,
             subject: {
-              $type: 'com.atproto.repo.repoRef',
+              $type: 'com.atproto.admin.defs#repoRef',
               did: sc.dids.carol,
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -241,7 +271,7 @@ describe('moderation', () => {
         {
           actionId: action.id,
           reportIds: [report.id],
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
         },
         {
           encoding: 'application/json',
@@ -257,7 +287,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: action.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -270,16 +300,20 @@ describe('moderation', () => {
     it('does not resolve report for mismatching record.', async () => {
       const postUri1 = sc.posts[sc.dids.alice][0].ref.uri
       const postUri2 = sc.posts[sc.dids.bob][0].ref.uri
-      const { data: report } = await agent.api.com.atproto.report.create(
-        {
-          reasonType: SPAM,
-          subject: {
-            $type: 'com.atproto.repo.recordRef',
-            uri: postUri1.toString(),
+      const { data: report } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONSPAM,
+            subject: {
+              $type: 'com.atproto.repo.recordRef',
+              uri: postUri1.toString(),
+            },
           },
-        },
-        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
-      )
+          {
+            headers: sc.getHeaders(sc.dids.alice),
+            encoding: 'application/json',
+          },
+        )
       const { data: action } =
         await agent.api.com.atproto.admin.takeModerationAction(
           {
@@ -288,7 +322,7 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postUri2.toString(),
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -301,7 +335,7 @@ describe('moderation', () => {
         {
           actionId: action.id,
           reportIds: [report.id],
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
         },
         {
           encoding: 'application/json',
@@ -317,7 +351,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: action.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -338,7 +372,7 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postRef1.uri.toString(),
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -364,7 +398,7 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postRef2.uri.toString(),
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -386,7 +420,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: action1.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -397,7 +431,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: action2.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -417,7 +451,7 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postUri.toString(),
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -432,7 +466,7 @@ describe('moderation', () => {
             $type: 'com.atproto.repo.recordRef',
             uri: postUri.toString(),
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -448,7 +482,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: acknowledge.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -464,7 +498,7 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postUri.toString(),
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -477,7 +511,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: flag.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -493,10 +527,10 @@ describe('moderation', () => {
           {
             action: ACKNOWLEDGE,
             subject: {
-              $type: 'com.atproto.repo.repoRef',
+              $type: 'com.atproto.admin.defs#repoRef',
               did: sc.dids.alice,
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -508,10 +542,10 @@ describe('moderation', () => {
         {
           action: FLAG,
           subject: {
-            $type: 'com.atproto.repo.repoRef',
+            $type: 'com.atproto.admin.defs#repoRef',
             did: sc.dids.alice,
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -527,7 +561,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: acknowledge.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -540,10 +574,10 @@ describe('moderation', () => {
           {
             action: FLAG,
             subject: {
-              $type: 'com.atproto.repo.repoRef',
+              $type: 'com.atproto.admin.defs#repoRef',
               did: sc.dids.alice,
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -556,7 +590,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: flag.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -578,8 +612,8 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postA.ref.uriStr,
             },
-            subjectBlobCids: [img.image.cid],
-            createdBy: 'X',
+            subjectBlobCids: [img.image.ref.toString()],
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -594,8 +628,8 @@ describe('moderation', () => {
             $type: 'com.atproto.repo.recordRef',
             uri: postB.ref.uriStr,
           },
-          subjectBlobCids: [img.image.cid],
-          createdBy: 'X',
+          subjectBlobCids: [img.image.ref.toString()],
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -610,7 +644,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: acknowledge.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -626,8 +660,8 @@ describe('moderation', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postB.ref.uriStr,
             },
-            subjectBlobCids: [img.image.cid],
-            createdBy: 'X',
+            subjectBlobCids: [img.image.ref.toString()],
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -640,7 +674,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: flag.id,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -660,7 +694,7 @@ describe('moderation', () => {
       post = sc.posts[sc.dids.carol][0]
       blob = post.images[1]
       imageUri = server.ctx.imgUriBuilder
-        .getCommonSignedUri('feed_thumbnail', blob.image.cid)
+        .getCommonSignedUri('feed_thumbnail', blob.image.ref.toString())
         .replace(server.ctx.cfg.publicUrl, server.url)
       // Warm image server cache
       await fetch(imageUri)
@@ -673,8 +707,8 @@ describe('moderation', () => {
             $type: 'com.atproto.repo.recordRef',
             uri: post.ref.uriStr,
           },
-          subjectBlobCids: [blob.image.cid],
-          createdBy: 'X',
+          subjectBlobCids: [blob.image.ref.toString()],
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -686,9 +720,7 @@ describe('moderation', () => {
     })
 
     it('removes blob from the store', async () => {
-      const tryGetBytes = server.ctx.blobstore.getBytes(
-        CID.parse(blob.image.cid),
-      )
+      const tryGetBytes = server.ctx.blobstore.getBytes(blob.image.ref)
       await expect(tryGetBytes).rejects.toThrow(BlobNotFoundError)
     })
 
@@ -698,7 +730,7 @@ describe('moderation', () => {
         'tests/image/fixtures/key-alt.jpg',
         'image/jpeg',
       )
-      expect(uploaded.image.cid).toEqual(blob.image.cid)
+      expect(uploaded.image.ref.equals(blob.image.ref)).toBeTruthy()
       const referenceBlob = sc.post(sc.dids.alice, 'pic', [], [blob])
       await expect(referenceBlob).rejects.toThrow('Could not find blob:')
     })
@@ -713,7 +745,7 @@ describe('moderation', () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
           id: actionId,
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -724,7 +756,7 @@ describe('moderation', () => {
 
       // Can post and reference blob
       const post = await sc.post(sc.dids.alice, 'pic', [], [blob])
-      expect(post.images[0].image.cid).toEqual(blob.image.cid)
+      expect(post.images[0].image.ref.equals(blob.image.ref)).toBeTruthy()
 
       // Can fetch through image server
       const fetchImage = await fetch(imageUri)

@@ -1,13 +1,12 @@
 import { ArrayEl } from '@atproto/common'
-import { WithInfo as ActorWithInfo } from '../../../lexicon/types/app/bsky/actor/ref'
+import { WithInfo as ActorWithInfo } from '../../../lexicon/types/app/bsky/actor/defs'
 import {
-  View as ProfileView,
-  ViewBasic as ProfileViewBasic,
-} from '../../../lexicon/types/app/bsky/actor/profile'
+  ProfileView,
+  ProfileViewBasic,
+} from '../../../lexicon/types/app/bsky/actor/defs'
 import { DidHandle } from '../../../db/tables/did-handle'
 import { countAll } from '../../../db/util'
 import Database from '../../../db'
-import { getDeclarationSimple } from '../../../api/app/bsky/util'
 import { ImageUriBuilder } from '../../../image/uri'
 
 export class ActorViews {
@@ -90,7 +89,6 @@ export class ActorViews {
         : undefined
       return {
         did: result.did,
-        declaration: getDeclarationSimple(result),
         handle: result.handle,
         displayName: profileInfo?.displayName || undefined,
         description: profileInfo?.description || undefined,
@@ -99,16 +97,11 @@ export class ActorViews {
         followsCount: profileInfo?.followsCount ?? 0,
         followersCount: profileInfo?.followersCount ?? 0,
         postsCount: profileInfo?.postsCount ?? 0,
-        creator: result.did,
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: {
           muted: !!profileInfo?.requesterMuted,
           following: profileInfo?.requesterFollowing || undefined,
           followedBy: profileInfo?.requesterFollowedBy || undefined,
-        },
-        myState: {
-          follow: profileInfo?.requesterFollowing || undefined,
-          muted: !!profileInfo?.requesterMuted,
         },
       }
     })
@@ -177,7 +170,6 @@ export class ActorViews {
         : undefined
       return {
         did: result.did,
-        declaration: getDeclarationSimple(result),
         handle: result.handle,
         displayName: profileInfo?.displayName || undefined,
         description: profileInfo?.description || undefined,
@@ -207,7 +199,6 @@ export class ActorViews {
     const profiles = await this.profileBasic(results, viewer)
     const views = profiles.map((view) => ({
       did: view.did,
-      declaration: view.declaration,
       handle: view.handle,
       displayName: view.displayName,
       avatar: view.avatar,

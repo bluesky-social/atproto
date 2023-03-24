@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Delete a record.",
+      "description": "Delete a record, or ensure it doesn't exist.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -13,19 +13,34 @@
           "properties": {
             "did": {
               "type": "string",
+              "format": "did",
               "description": "The DID of the repo."
             },
             "collection": {
               "type": "string",
+              "format": "nsid",
               "description": "The NSID of the record collection."
             },
             "rkey": {
               "type": "string",
               "description": "The key of the record."
+            },
+            "swapRecord": {
+              "type": "string",
+              "format": "cid",
+              "description": "Compare and swap with the previous record by cid."
+            },
+            "swapCommit": {
+              "type": "string",
+              "format": "cid",
+              "description": "Compare and swap with the previous commit by cid."
             }
           }
         }
-      }
+      },
+      "errors": [
+        {"name": "InvalidSwap"}
+      ]
     }
   }
 }

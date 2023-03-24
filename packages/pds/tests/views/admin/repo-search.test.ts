@@ -1,5 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
   runTestServer,
   forSnapshot,
@@ -38,7 +38,7 @@ describe('pds admin repo search view', () => {
     await sc.takeModerationAction({
       action: TAKEDOWN,
       subject: {
-        $type: 'com.atproto.repo.repoRef',
+        $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids['cara-wiegand69.test'],
       },
     })
@@ -92,7 +92,7 @@ describe('pds admin repo search view', () => {
     const results = (results) => results.flatMap((res) => res.users)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.com.atproto.admin.searchRepos(
-        { term: 'p', before: cursor, limit: 3 },
+        { term: 'p', cursor, limit: 3 },
         { headers },
       )
       return res.data
@@ -116,7 +116,7 @@ describe('pds admin repo search view', () => {
     const results = (results) => results.flatMap((res) => res.repos)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.com.atproto.admin.searchRepos(
-        { before: cursor, limit: 3 },
+        { cursor, limit: 3 },
         { headers },
       )
       return res.data
@@ -151,14 +151,12 @@ Array [
     "handle": "cara-wiegand69.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {
-      "takedownId": 1,
-    },
-    "relatedRecords": Array [
-      Object {
-        "$type": "app.bsky.system.declaration",
-        "actorType": "app.bsky.system.actorUser",
+      "currentAction": Object {
+        "action": "com.atproto.admin.defs#takedown",
+        "id": 1,
       },
-    ],
+    },
+    "relatedRecords": Array [],
   },
   Object {
     "account": Object {
@@ -169,10 +167,6 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {},
     "relatedRecords": Array [
-      Object {
-        "$type": "app.bsky.system.declaration",
-        "actorType": "app.bsky.system.actorUser",
-      },
       Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
@@ -193,10 +187,6 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {},
     "relatedRecords": Array [
-      Object {
-        "$type": "app.bsky.system.declaration",
-        "actorType": "app.bsky.system.actorUser",
-      },
       Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
@@ -218,10 +208,6 @@ Array [
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
-        "$type": "app.bsky.system.declaration",
-        "actorType": "app.bsky.system.actorUser",
-      },
-      Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
           "cid": "cids(0)",
@@ -240,12 +226,7 @@ Array [
     "handle": "carlos6.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {},
-    "relatedRecords": Array [
-      Object {
-        "$type": "app.bsky.system.declaration",
-        "actorType": "app.bsky.system.actorUser",
-      },
-    ],
+    "relatedRecords": Array [],
   },
   Object {
     "account": Object {
@@ -256,10 +237,6 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {},
     "relatedRecords": Array [
-      Object {
-        "$type": "app.bsky.system.declaration",
-        "actorType": "app.bsky.system.actorUser",
-      },
       Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
@@ -281,10 +258,6 @@ Array [
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
-        "$type": "app.bsky.system.declaration",
-        "actorType": "app.bsky.system.actorUser",
-      },
-      Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
           "cid": "cids(0)",
@@ -297,7 +270,6 @@ Array [
   },
 ]
 `
-
 const snapSqlite = `
 Array [
   Object {
@@ -310,14 +282,14 @@ Array [
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
-        "$type": "app.bsky.system.declaration",
-        "actorType": "app.bsky.system.actorUser",
-      },
-      Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
-          "cid": "cids(0)",
+          "$type": "blob",
           "mimeType": "image/jpeg",
+          "ref": Object {
+            "$link": "cids(0)",
+          },
+          "size": 3976,
         },
         "description": "",
         "displayName": "Carlton Abernathy IV",
@@ -333,16 +305,11 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {
       "currentAction": Object {
-        "action": "com.atproto.admin.moderationAction#takedown",
+        "action": "com.atproto.admin.defs#takedown",
         "id": 1,
       },
     },
-    "relatedRecords": Array [
-      Object {
-        "$type": "app.bsky.system.declaration",
-        "actorType": "app.bsky.system.actorUser",
-      },
-    ],
+    "relatedRecords": Array [],
   },
   Object {
     "account": Object {
@@ -352,12 +319,7 @@ Array [
     "handle": "carlos6.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {},
-    "relatedRecords": Array [
-      Object {
-        "$type": "app.bsky.system.declaration",
-        "actorType": "app.bsky.system.actorUser",
-      },
-    ],
+    "relatedRecords": Array [],
   },
   Object {
     "account": Object {
@@ -369,14 +331,14 @@ Array [
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
-        "$type": "app.bsky.system.declaration",
-        "actorType": "app.bsky.system.actorUser",
-      },
-      Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
-          "cid": "cids(0)",
+          "$type": "blob",
           "mimeType": "image/jpeg",
+          "ref": Object {
+            "$link": "cids(0)",
+          },
+          "size": 3976,
         },
         "description": "",
         "displayName": "Latoya Windler",
@@ -393,14 +355,14 @@ Array [
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
-        "$type": "app.bsky.system.declaration",
-        "actorType": "app.bsky.system.actorUser",
-      },
-      Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
-          "cid": "cids(0)",
+          "$type": "blob",
           "mimeType": "image/jpeg",
+          "ref": Object {
+            "$link": "cids(0)",
+          },
+          "size": 3976,
         },
         "description": "",
         "displayName": "Carol Littel",
@@ -417,14 +379,14 @@ Array [
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
-        "$type": "app.bsky.system.declaration",
-        "actorType": "app.bsky.system.actorUser",
-      },
-      Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
-          "cid": "cids(0)",
+          "$type": "blob",
           "mimeType": "image/jpeg",
+          "ref": Object {
+            "$link": "cids(0)",
+          },
+          "size": 3976,
         },
         "description": "",
         "displayName": "Sadie Carter",

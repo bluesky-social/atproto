@@ -55,17 +55,17 @@ describe('popular views', () => {
 
   it('returns well liked posts', async () => {
     const one = await sc.post(alice, 'like this')
-    await sc.vote('up', bob, one.ref)
-    await sc.vote('up', carol, one.ref)
-    await sc.vote('up', dan, one.ref)
-    await sc.vote('up', eve, one.ref)
-    await sc.vote('up', frank, one.ref)
+    await sc.like(bob, one.ref)
+    await sc.like(carol, one.ref)
+    await sc.like(dan, one.ref)
+    await sc.like(eve, one.ref)
+    await sc.like(frank, one.ref)
     const two = await sc.post(bob, 'like this')
-    await sc.vote('up', alice, two.ref)
-    await sc.vote('up', carol, two.ref)
-    await sc.vote('up', dan, two.ref)
-    await sc.vote('up', eve, two.ref)
-    await sc.vote('up', frank, two.ref)
+    await sc.like(alice, two.ref)
+    await sc.like(carol, two.ref)
+    await sc.like(dan, two.ref)
+    await sc.like(eve, two.ref)
+    await sc.like(frank, two.ref)
     const res = await agent.api.app.bsky.unspecced.getPopular(
       {},
       { headers: sc.getHeaders(alice) },

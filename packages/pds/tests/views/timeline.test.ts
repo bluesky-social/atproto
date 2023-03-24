@@ -1,6 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
-import { Main as FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/feedViewPost'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 import {
   runTestServer,
   forSnapshot,
@@ -109,12 +109,12 @@ describe('timeline views', () => {
   })
 
   it('omits posts and reposts of muted authors.', async () => {
-    await agent.api.app.bsky.graph.mute(
-      { user: bob },
+    await agent.api.app.bsky.graph.muteActor(
+      { actor: bob },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
-    await agent.api.app.bsky.graph.mute(
-      { user: carol },
+    await agent.api.app.bsky.graph.muteActor(
+      { actor: carol },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
 
@@ -126,12 +126,12 @@ describe('timeline views', () => {
     expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
 
     // Cleanup
-    await agent.api.app.bsky.graph.unmute(
-      { user: bob },
+    await agent.api.app.bsky.graph.unmuteActor(
+      { actor: bob },
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
-    await agent.api.app.bsky.graph.unmute(
-      { user: carol },
+    await agent.api.app.bsky.graph.unmuteActor(
+      { actor: carol },
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
   })
@@ -142,7 +142,7 @@ describe('timeline views', () => {
       const res = await agent.api.app.bsky.feed.getTimeline(
         {
           algorithm: FeedAlgorithm.ReverseChronological,
-          before: cursor,
+          cursor,
           limit: 4,
         },
         { headers: sc.getHeaders(carol) },
@@ -173,10 +173,10 @@ describe('timeline views', () => {
           {
             action: TAKEDOWN,
             subject: {
-              $type: 'com.atproto.repo.repoRef',
+              $type: 'com.atproto.admin.defs#repoRef',
               did,
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -200,7 +200,7 @@ describe('timeline views', () => {
         agent.api.com.atproto.admin.reverseModerationAction(
           {
             id: result.data.id,
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -224,7 +224,7 @@ describe('timeline views', () => {
               $type: 'com.atproto.repo.recordRef',
               uri: postUri.toString(),
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -248,7 +248,7 @@ describe('timeline views', () => {
         agent.api.com.atproto.admin.reverseModerationAction(
           {
             id: result.data.id,
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {

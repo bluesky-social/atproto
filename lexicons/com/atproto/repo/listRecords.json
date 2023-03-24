@@ -7,13 +7,13 @@
       "description": "List a range of records in a collection.",
       "parameters": {
         "type": "params",
-        "required": ["user", "collection"],
+        "required": ["repo", "collection"],
         "properties": {
-          "user": {"type": "string", "description": "The handle or DID of the repo."},
-          "collection": {"type": "string", "description": "The NSID of the record type."},
+          "repo": {"type": "string", "format": "at-identifier", "description": "The handle or DID of the repo."},
+          "collection": {"type": "string", "format": "nsid", "description": "The NSID of the record type."},
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50, "description": "The number of records to return."},
-          "before": {"type": "string", "description": "A TID to filter the range of records returned."},
-          "after": {"type": "string", "description": "A TID to filter the range of records returned."},
+          "rkeyStart": {"type": "string", "description": "The lowest sort-ordered rkey to start from (exclusive)"},
+          "rkeyEnd": {"type": "string", "description": "The highest sort-ordered rkey to stop at (exclusive)"},
           "reverse": {"type": "boolean", "description": "Reverse the order of the returned records?"}
         }
       },
@@ -36,8 +36,8 @@
       "type": "object",
       "required": ["uri", "cid", "value"],
       "properties": {
-        "uri": {"type": "string"},
-        "cid": {"type": "string"},
+        "uri": {"type": "string", "format": "at-uri"},
+        "cid": {"type": "string", "format": "cid"},
         "value": {"type": "unknown"}
       }
     }

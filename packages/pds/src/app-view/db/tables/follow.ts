@@ -4,7 +4,6 @@ export interface Follow {
   cid: string
   creator: string
   subjectDid: string
-  subjectDeclarationCid: string
   createdAt: string
   indexedAt: string
 }

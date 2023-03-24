@@ -2,17 +2,18 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
-import * as ComAtprotoAdminRepo from './repo'
+import { CID } from 'multiformats/cid'
+import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
   did: string
 }
 
 export type InputSchema = undefined
-export type OutputSchema = ComAtprotoAdminRepo.ViewDetail
+export type OutputSchema = ComAtprotoAdminDefs.RepoViewDetail
 
 export interface CallOptions {
   headers?: Headers

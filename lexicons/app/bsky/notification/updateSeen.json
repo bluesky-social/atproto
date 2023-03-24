@@ -11,7 +11,7 @@
           "type": "object",
           "required": ["seenAt"],
           "properties": {
-            "seenAt": { "type": "datetime" }
+            "seenAt": { "type": "string", "format": "datetime"}
           }
         }
       }

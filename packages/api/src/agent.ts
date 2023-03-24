@@ -3,23 +3,23 @@ import { defaultFetchHandler } from '@atproto/xrpc'
 import {
   AtpBaseClient,
   AtpServiceClient,
-  ComAtprotoAccountCreate,
-  ComAtprotoSessionCreate,
-  ComAtprotoSessionGet,
-  ComAtprotoSessionRefresh,
+  ComAtprotoServerCreateAccount,
+  ComAtprotoServerCreateSession,
+  ComAtprotoServerGetSession,
+  ComAtprotoServerRefreshSession,
 } from './client'
 import {
   AtpSessionData,
   AtpAgentCreateAccountOpts,
   AtpAgentLoginOpts,
-  AptAgentFetchHandler,
+  AtpAgentFetchHandler,
   AtpAgentFetchHandlerResponse,
   AtpAgentGlobalOpts,
   AtpPersistSessionHandler,
   AtpAgentOpts,
 } from './types'
 
-const REFRESH_SESSION = 'com.atproto.session.refresh'
+const REFRESH_SESSION = 'com.atproto.server.refreshSession'
 
 /**
  * An ATP "Agent"
@@ -37,7 +37,7 @@ export class AtpAgent {
   /**
    * The `fetch` implementation; must be implemented for your platform.
    */
-  static fetch: AptAgentFetchHandler | undefined = defaultFetchHandler
+  static fetch: AtpAgentFetchHandler | undefined = defaultFetchHandler
 
   /**
    * Configures the API globally.
@@ -77,9 +77,9 @@ export class AtpAgent {
    */
   async createAccount(
     opts: AtpAgentCreateAccountOpts,
-  ): Promise<ComAtprotoAccountCreate.Response> {
+  ): Promise<ComAtprotoServerCreateAccount.Response> {
     try {
-      const res = await this.api.com.atproto.account.create({
+      const res = await this.api.com.atproto.server.createAccount({
         handle: opts.handle,
         password: opts.password,
         email: opts.email,
@@ -109,9 +109,9 @@ export class AtpAgent {
    */
   async login(
     opts: AtpAgentLoginOpts,
-  ): Promise<ComAtprotoSessionCreate.Response> {
+  ): Promise<ComAtprotoServerCreateSession.Response> {
     try {
-      const res = await this.api.com.atproto.session.create({
+      const res = await this.api.com.atproto.server.createSession({
         identifier: opts.identifier,
         password: opts.password,
       })
@@ -139,10 +139,10 @@ export class AtpAgent {
    */
   async resumeSession(
     session: AtpSessionData,
-  ): Promise<ComAtprotoSessionGet.Response> {
+  ): Promise<ComAtprotoServerGetSession.Response> {
     try {
       this.session = session
-      const res = await this.api.com.atproto.session.get()
+      const res = await this.api.com.atproto.server.getSession()
       if (!res.success || res.data.did !== this.session.did) {
         throw new Error('Invalid session')
       }
@@ -295,9 +295,12 @@ function isErrorResponse(
 function isNewSessionObject(
   client: AtpBaseClient,
   v: unknown,
-): v is ComAtprotoSessionRefresh.OutputSchema {
+): v is ComAtprotoServerRefreshSession.OutputSchema {
   try {
-    client.xrpc.lex.assertValidXrpcOutput('com.atproto.session.refresh', v)
+    client.xrpc.lex.assertValidXrpcOutput(
+      'com.atproto.server.refreshSession',
+      v,
+    )
     return true
   } catch {
     return false

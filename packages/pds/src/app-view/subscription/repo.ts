@@ -1,9 +1,8 @@
 import assert from 'node:assert'
-import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import { cborDecode, wait } from '@atproto/common'
+import { wait } from '@atproto/common'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
-import { WriteOpAction, readCarWithRoot } from '@atproto/repo'
+import { WriteOpAction, readCarWithRoot, cborToLexRecord } from '@atproto/repo'
 import { PreparedWrite } from '../../repo'
 import {
   Commit,
@@ -174,7 +173,7 @@ async function getOps(msg: Commit): Promise<PreparedWrite[]> {
       op.action === WriteOpAction.Update
     ) {
       assert(op.cid)
-      const cid = CID.parse(op.cid)
+      const cid = op.cid
       const record = car.blocks.get(cid)
       assert(record)
       return {
@@ -183,7 +182,7 @@ async function getOps(msg: Commit): Promise<PreparedWrite[]> {
             ? WriteOpAction.Create
             : WriteOpAction.Update,
         cid,
-        record: cborDecode(record),
+        record: cborToLexRecord(record),
         blobs: [], // @TODO need to determine how the app-view provides URLs for processed blobs
         uri: AtUri.make(msg.repo, collection, rkey),
       }

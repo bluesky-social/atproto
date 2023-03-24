@@ -20,14 +20,16 @@ export function validate(
   switch (def.type) {
     case 'boolean':
       return Primitives.boolean(lexicons, path, def, value)
-    case 'number':
-      return Primitives.number(lexicons, path, def, value)
+    case 'float':
+      return Primitives.float(lexicons, path, def, value)
     case 'integer':
       return Primitives.integer(lexicons, path, def, value)
     case 'string':
       return Primitives.string(lexicons, path, def, value)
-    case 'datetime':
-      return Primitives.datetime(lexicons, path, def, value)
+    case 'bytes':
+      return Primitives.bytes(lexicons, path, def, value)
+    case 'cid-link':
+      return Primitives.cidLink(lexicons, path, def, value)
     case 'unknown':
       return Primitives.unknown(lexicons, path, def, value)
     case 'object':
@@ -36,12 +38,6 @@ export function validate(
       return array(lexicons, path, def, value)
     case 'blob':
       return Blob.blob(lexicons, path, def, value)
-    case 'image':
-      return Blob.image(lexicons, path, def, value)
-    case 'video':
-      return Blob.video(lexicons, path, def, value)
-    case 'audio':
-      return Blob.audio(lexicons, path, def, value)
     default:
       return {
         success: false,

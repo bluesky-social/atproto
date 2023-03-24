@@ -5,6 +5,7 @@ import * as didHandle from './tables/did-handle'
 import * as repoRoot from './tables/repo-root'
 import * as refreshToken from './tables/refresh-token'
 import * as record from './tables/record'
+import * as backlink from './tables/backlink'
 import * as repoCommitBlock from './tables/repo-commit-block'
 import * as repoCommitHistory from './tables/repo-commit-history'
 import * as ipldBlock from './tables/ipld-block'
@@ -29,6 +30,7 @@ export type DatabaseSchemaType = appView.DatabaseSchemaType &
   refreshToken.PartialDB &
   repoRoot.PartialDB &
   record.PartialDB &
+  backlink.PartialDB &
   repoCommitBlock.PartialDB &
   repoCommitHistory.PartialDB &
   ipldBlock.PartialDB &

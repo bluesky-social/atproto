@@ -1,7 +1,8 @@
 import * as http from 'http'
+import getPort from 'get-port'
+import xrpc, { ServiceClient } from '@atproto/xrpc'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
-import xrpc from '@atproto/xrpc'
 
 const LEXICONS = [
   {
@@ -83,10 +84,13 @@ describe('Queries', () => {
       body: { message: ctx.params.message },
     }
   })
-  const client = xrpc.service(`http://localhost:8890`)
   xrpc.addLexicons(LEXICONS)
+
+  let client: ServiceClient
   beforeAll(async () => {
-    s = await createServer(8890, server)
+    const port = await getPort()
+    s = await createServer(port, server)
+    client = xrpc.service(`http://localhost:${port}`)
   })
   afterAll(async () => {
     await closeServer(s)

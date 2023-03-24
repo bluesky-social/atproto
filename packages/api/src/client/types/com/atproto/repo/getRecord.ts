@@ -2,14 +2,15 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
+import { CID } from 'multiformats/cid'
 
 export interface QueryParams {
   /** The handle or DID of the repo. */
-  user: string
-  /** The NSID of the collection. */
+  repo: string
+  /** The NSID of the record collection. */
   collection: string
   /** The key of the record. */
   rkey: string

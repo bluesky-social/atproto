@@ -1,12 +1,10 @@
 import { sql } from 'kysely'
-import * as common from '@atproto/common'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import * as scrypt from '../../db/scrypt'
 import { UserAccount } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
-import { Record as DeclarationRecord } from '../../lexicon/types/app/bsky/system/declaration'
 import { notSoftDeletedClause } from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
@@ -19,7 +17,7 @@ export class AccountService {
     return (db: Database) => new AccountService(db)
   }
 
-  async getUser(
+  async getAccount(
     handleOrDid: string,
     includeSoftDeleted = false,
   ): Promise<(UserAccount & DidHandle & RepoRoot) | null> {
@@ -45,7 +43,7 @@ export class AccountService {
     return result || null
   }
 
-  async getUserByEmail(
+  async getAccountByEmail(
     email: string,
     includeSoftDeleted = false,
   ): Promise<(UserAccount & DidHandle & RepoRoot) | null> {
@@ -88,11 +86,9 @@ export class AccountService {
     handle: string,
     did: string,
     password: string,
-    declaration: DeclarationRecord,
   ) {
     this.db.assertTransaction()
     log.debug({ handle, email }, 'registering user')
-    const declarationCid = await common.cidForCbor(declaration)
     const registerUserAccnt = this.db.db
       .insertInto('user_account')
       .values({
@@ -106,12 +102,7 @@ export class AccountService {
       .executeTakeFirst()
     const registerDidHandle = this.db.db
       .insertInto('did_handle')
-      .values({
-        handle,
-        did,
-        actorType: declaration.actorType,
-        declarationCid: declarationCid.toString(),
-      })
+      .values({ did, handle })
       .onConflict((oc) => oc.doNothing())
       .returning('handle')
       .executeTakeFirst()
@@ -198,7 +189,7 @@ export class AccountService {
   async search(opts: {
     term: string
     limit: number
-    before?: string
+    cursor?: string
     includeSoftDeleted?: boolean
   }): Promise<(RepoRoot & DidHandle & { distance: number })[]> {
     const builder =
@@ -219,10 +210,10 @@ export class AccountService {
 
   async list(opts: {
     limit: number
-    before?: string
+    cursor?: string
     includeSoftDeleted?: boolean
   }): Promise<(RepoRoot & DidHandle)[]> {
-    const { limit, before, includeSoftDeleted } = opts
+    const { limit, cursor, includeSoftDeleted } = opts
     const { ref } = this.db.db.dynamic
 
     const builder = this.db.db
@@ -238,12 +229,12 @@ export class AccountService {
 
     return await paginate(builder, {
       limit,
-      before,
+      cursor,
       keyset,
     }).execute()
   }
 
-  async deleteUser(did: string): Promise<void> {
+  async deleteAccount(did: string): Promise<void> {
     this.db.assertTransaction()
     await Promise.all([
       this.db.db.deleteFrom('refresh_token').where('did', '=', did).execute(),

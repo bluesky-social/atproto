@@ -1,14 +1,16 @@
-import { isValidISODateString } from 'iso-datestring-validator'
+import { utf8Len, graphemeLen } from '@atproto/common-web'
+import { CID } from 'multiformats/cid'
 import { Lexicons } from '../lexicons'
+import * as formats from './formats'
 import {
   LexUserType,
   LexBoolean,
-  LexNumber,
+  LexFloat,
   LexInteger,
   LexString,
-  LexDatetime,
   ValidationResult,
   ValidationError,
+  LexBytes,
 } from '../types'
 
 export function validate(
@@ -20,14 +22,16 @@ export function validate(
   switch (def.type) {
     case 'boolean':
       return boolean(lexicons, path, def, value)
-    case 'number':
-      return number(lexicons, path, def, value)
+    case 'float':
+      return float(lexicons, path, def, value)
     case 'integer':
       return integer(lexicons, path, def, value)
     case 'string':
       return string(lexicons, path, def, value)
-    case 'datetime':
-      return datetime(lexicons, path, def, value)
+    case 'bytes':
+      return bytes(lexicons, path, def, value)
+    case 'cid-link':
+      return cidLink(lexicons, path, def, value)
     case 'unknown':
       return unknown(lexicons, path, def, value)
     default:
@@ -76,13 +80,13 @@ export function boolean(
   return { success: true, value }
 }
 
-export function number(
+export function float(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,
   value: unknown,
 ): ValidationResult {
-  def = def as LexNumber
+  def = def as LexFloat
 
   // type
   const type = typeof value
@@ -159,7 +163,7 @@ export function integer(
   def = def as LexInteger
 
   // run number validation
-  const numRes = number(lexicons, path, def, value)
+  const numRes = float(lexicons, path, def, value)
   if (!numRes.success) {
     return numRes
   } else {
@@ -186,8 +190,7 @@ export function string(
   def = def as LexString
 
   // type
-  const type = typeof value
-  if (type === 'undefined') {
+  if (typeof value === 'undefined') {
     if (typeof def.default === 'string') {
       return { success: true, value: def.default }
     }
@@ -195,7 +198,7 @@ export function string(
       success: false,
       error: new ValidationError(`${path} must be a string`),
     }
-  } else if (type !== 'string') {
+  } else if (typeof value !== 'string') {
     return {
       success: false,
       error: new ValidationError(`${path} must be a string`),
@@ -226,7 +229,7 @@ export function string(
 
   // maxLength
   if (typeof def.maxLength === 'number') {
-    if ((value as string).length > def.maxLength) {
+    if (utf8Len(value) > def.maxLength) {
       return {
         success: false,
         error: new ValidationError(
@@ -238,7 +241,7 @@ export function string(
 
   // minLength
   if (typeof def.minLength === 'number') {
-    if ((value as string).length < def.minLength) {
+    if (utf8Len(value) < def.minLength) {
       return {
         success: false,
         error: new ValidationError(
@@ -248,36 +251,106 @@ export function string(
     }
   }
 
+  // maxGraphemes
+  if (typeof def.maxGraphemes === 'number') {
+    if (graphemeLen(value) > def.maxGraphemes) {
+      return {
+        success: false,
+        error: new ValidationError(
+          `${path} must not be longer than ${def.maxGraphemes} graphemes`,
+        ),
+      }
+    }
+  }
+
+  // minGraphemes
+  if (typeof def.minGraphemes === 'number') {
+    if (graphemeLen(value) < def.minGraphemes) {
+      return {
+        success: false,
+        error: new ValidationError(
+          `${path} must not be shorter than ${def.minGraphemes} graphemes`,
+        ),
+      }
+    }
+  }
+
+  if (typeof def.format === 'string') {
+    switch (def.format) {
+      case 'datetime':
+        return formats.datetime(path, value)
+      case 'uri':
+        return formats.uri(path, value)
+      case 'at-uri':
+        return formats.atUri(path, value)
+      case 'did':
+        return formats.did(path, value)
+      case 'handle':
+        return formats.handle(path, value)
+      case 'at-identifier':
+        return formats.atIdentifier(path, value)
+      case 'nsid':
+        return formats.nsid(path, value)
+      case 'cid':
+        return formats.cid(path, value)
+    }
+  }
+
   return { success: true, value }
 }
 
-export function datetime(
+export function bytes(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,
   value: unknown,
 ): ValidationResult {
-  def = def as LexDatetime
+  def = def as LexBytes
 
-  // type
-  const type = typeof value
-  if (type !== 'string') {
+  if (!value || !(value instanceof Uint8Array)) {
     return {
       success: false,
-      error: new ValidationError(`${path} must be a string`),
+      error: new ValidationError(`${path} must be a byte array`),
     }
   }
 
-  // valid iso-8601
-  {
-    try {
-      if (typeof value !== 'string' || !isValidISODateString(value)) {
-        throw new ValidationError(
-          `${path} must be an iso8601 formatted datetime`,
-        )
+  // maxLength
+  if (typeof def.maxLength === 'number') {
+    if (value.byteLength > def.maxLength) {
+      return {
+        success: false,
+        error: new ValidationError(
+          `${path} must not be larger than ${def.maxLength} bytes`,
+        ),
       }
-    } catch {
-      throw new ValidationError(`${path} must be an iso8601 formatted datetime`)
+    }
+  }
+
+  // minLength
+  if (typeof def.minLength === 'number') {
+    if (value.byteLength < def.minLength) {
+      return {
+        success: false,
+        error: new ValidationError(
+          `${path} must not be smaller than ${def.minLength} bytes`,
+        ),
+      }
+    }
+  }
+
+  return { success: true, value }
+}
+
+export function cidLink(
+  lexicons: Lexicons,
+  path: string,
+  def: LexUserType,
+  value: unknown,
+): ValidationResult {
+  if (CID.asCID(value) === null) {
+    return {
+      success: false,
+      error: new ValidationError(`${path} must be a CID`),
     }
   }
 

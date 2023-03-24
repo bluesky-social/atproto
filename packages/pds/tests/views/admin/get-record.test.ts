@@ -3,11 +3,11 @@ import { AtUri } from '@atproto/uri'
 import {
   ACKNOWLEDGE,
   TAKEDOWN,
-} from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+} from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
-  OTHER,
-  SPAM,
-} from '../../../src/lexicon/types/com/atproto/report/reasonType'
+  REASONOTHER,
+  REASONSPAM,
+} from '../../../src/lexicon/types/com/atproto/moderation/defs'
 import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../../_util'
 import { SeedClient } from '../../seeds/client'
 import basicSeed from '../../seeds/basic'
@@ -40,16 +40,16 @@ describe('pds admin get record view', () => {
       },
     })
     await sc.createReport({
-      reportedByDid: sc.dids.bob,
-      reasonType: SPAM,
+      reportedBy: sc.dids.bob,
+      reasonType: REASONSPAM,
       subject: {
         $type: 'com.atproto.repo.recordRef',
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
       },
     })
     await sc.createReport({
-      reportedByDid: sc.dids.carol,
-      reasonType: OTHER,
+      reportedBy: sc.dids.carol,
+      reasonType: REASONOTHER,
       reason: 'defamation',
       subject: {
         $type: 'com.atproto.repo.recordRef',

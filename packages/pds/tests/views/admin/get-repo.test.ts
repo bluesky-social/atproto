@@ -2,11 +2,11 @@ import AtpAgent from '@atproto/api'
 import {
   ACKNOWLEDGE,
   TAKEDOWN,
-} from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+} from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
-  OTHER,
-  SPAM,
-} from '../../../src/lexicon/types/com/atproto/report/reasonType'
+  REASONOTHER,
+  REASONSPAM,
+} from '../../../src/lexicon/types/com/atproto/moderation/defs'
 import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../../_util'
 import { SeedClient } from '../../seeds/client'
 import basicSeed from '../../seeds/basic'
@@ -34,24 +34,24 @@ describe('pds admin get repo view', () => {
     const acknowledge = await sc.takeModerationAction({
       action: ACKNOWLEDGE,
       subject: {
-        $type: 'com.atproto.repo.repoRef',
+        $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
       },
     })
     await sc.createReport({
-      reportedByDid: sc.dids.bob,
-      reasonType: SPAM,
+      reportedBy: sc.dids.bob,
+      reasonType: REASONSPAM,
       subject: {
-        $type: 'com.atproto.repo.repoRef',
+        $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
       },
     })
     await sc.createReport({
-      reportedByDid: sc.dids.carol,
-      reasonType: OTHER,
+      reportedBy: sc.dids.carol,
+      reasonType: REASONOTHER,
       reason: 'defamation',
       subject: {
-        $type: 'com.atproto.repo.repoRef',
+        $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
       },
     })
@@ -59,7 +59,7 @@ describe('pds admin get repo view', () => {
     await sc.takeModerationAction({
       action: TAKEDOWN,
       subject: {
-        $type: 'com.atproto.repo.repoRef',
+        $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
       },
     })

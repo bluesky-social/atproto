@@ -3,11 +3,11 @@ import {
   ACKNOWLEDGE,
   FLAG,
   TAKEDOWN,
-} from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+} from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
-  OTHER,
-  SPAM,
-} from '../../../src/lexicon/types/com/atproto/report/reasonType'
+  REASONOTHER,
+  REASONSPAM,
+} from '../../../src/lexicon/types/com/atproto/moderation/defs'
 import {
   runTestServer,
   forSnapshot,
@@ -72,7 +72,7 @@ describe('pds admin get moderation actions view', () => {
         await sc.takeModerationAction({
           action: getAction(i),
           subject: {
-            $type: 'com.atproto.repo.repoRef',
+            $type: 'com.atproto.admin.defs#repoRef',
             did,
           },
         }),
@@ -84,8 +84,8 @@ describe('pds admin get moderation actions view', () => {
       const action = someRecordActions[i]
       const ab = oneIn(2)(action, i)
       const report = await sc.createReport({
-        reportedByDid: ab ? sc.dids.carol : sc.dids.alice,
-        reasonType: ab ? SPAM : OTHER,
+        reportedBy: ab ? sc.dids.carol : sc.dids.alice,
+        reasonType: ab ? REASONSPAM : REASONOTHER,
         subject: {
           $type: 'com.atproto.repo.recordRef',
           uri: action.subject.uri,
@@ -103,10 +103,10 @@ describe('pds admin get moderation actions view', () => {
       const action = someRepoActions[i]
       const ab = oneIn(2)(action, i)
       const report = await sc.createReport({
-        reportedByDid: ab ? sc.dids.carol : sc.dids.alice,
-        reasonType: ab ? SPAM : OTHER,
+        reportedBy: ab ? sc.dids.carol : sc.dids.alice,
+        reasonType: ab ? REASONSPAM : REASONOTHER,
         subject: {
-          $type: 'com.atproto.repo.repoRef',
+          $type: 'com.atproto.admin.defs#repoRef',
           did: action.subject.did,
         },
       })
@@ -147,7 +147,7 @@ describe('pds admin get moderation actions view', () => {
     const results = (results) => results.flatMap((res) => res.actions)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.com.atproto.admin.getModerationActions(
-        { before: cursor, limit: 3 },
+        { cursor, limit: 3 },
         { headers: { authorization: adminAuth() } },
       )
       return res.data

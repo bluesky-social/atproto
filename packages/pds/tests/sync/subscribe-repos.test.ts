@@ -21,7 +21,6 @@ import basicSeed from '../seeds/basic'
 import { CloseFn, runTestServer } from '../_util'
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import handle from '../../src/api/com/atproto/handle'
 
 describe('repo subscribe repos', () => {
   let serverHost: string
@@ -117,8 +116,8 @@ describe('repo subscribe repos', () => {
       const commit = commits[i]
       const evt = evts[i]
       expect(evt.repo).toEqual(did)
-      expect(evt.commit).toEqual(commit.commit.toString())
-      expect(evt.prev).toEqual(commits[i - 1]?.commit?.toString() ?? null)
+      expect(evt.commit.toString()).toEqual(commit.commit.toString())
+      expect(evt.prev?.toString()).toEqual(commits[i - 1]?.commit?.toString())
       const car = await repo.readCarWithRoot(evt.blocks as Uint8Array)
       expect(car.root.equals(commit.commit))
       expect(car.blocks.equals(commit.blocks))
@@ -127,7 +126,9 @@ describe('repo subscribe repos', () => {
         path: w.collection + '/' + w.rkey,
         cid: w.action === WriteOpAction.Delete ? null : w.cid.toString(),
       }))
-      const sortedOps = evt.ops.sort((a, b) => a.path.localeCompare(b.path))
+      const sortedOps = evt.ops
+        .sort((a, b) => a.path.localeCompare(b.path))
+        .map((op) => ({ ...op, cid: op.cid?.toString() ?? null }))
       const sortedWrites = writes.sort((a, b) => a.path.localeCompare(b.path))
       expect(sortedOps).toEqual(sortedWrites)
     }
@@ -255,7 +256,7 @@ describe('repo subscribe repos', () => {
       const seq = seqSlice[i]
       const seqEvt = cborDecode(seq.event) as { commit: CID }
       expect(evt.time).toEqual(seq.sequencedAt)
-      expect(evt.commit).toEqual(seqEvt.commit.toString())
+      expect(evt.commit.equals(seqEvt.commit)).toBeTruthy()
       expect(evt.repo).toEqual(seq.did)
     }
   })
