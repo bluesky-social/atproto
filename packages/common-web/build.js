@@ -17,6 +17,7 @@ require('esbuild').build({
   bundle: true,
   sourcemap: true,
   outdir: 'dist',
-  platform: 'node',
+  platform: 'browser',
+  format: 'cjs',
   plugins: buildShallow ? [nodeExternalsPlugin()] : [],
 })
