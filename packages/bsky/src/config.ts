@@ -23,7 +23,7 @@ export class ServerConfig {
     const version = process.env.BSKY_VERSION || '0.0.0'
     const publicUrl = process.env.PUBLIC_URL || undefined
     const envPort = parseInt(process.env.PORT || '', 10)
-    const port = isNaN(envPort) ? 2583 : envPort
+    const port = isNaN(envPort) ? 2584 : envPort
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
     const blobstoreLocation = process.env.BLOBSTORE_LOC
     const blobstoreTmp = process.env.BLOBSTORE_TMP
