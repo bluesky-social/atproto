@@ -19,6 +19,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@atproto/common": "*"
+    "@atproto/common-web": "*"
   }
 }
