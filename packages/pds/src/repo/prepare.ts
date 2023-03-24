@@ -11,17 +11,14 @@ import {
 } from './types'
 
 import * as lex from '../lexicon/lexicons'
-import {
-  cidForRecord,
-  LexiconDefNotFoundError,
-  RepoRecord,
-} from '@atproto/lexicon'
+import { LexiconDefNotFoundError, RepoRecord } from '@atproto/lexicon'
 import {
   RecordDeleteOp,
   RecordCreateOp,
   RecordUpdateOp,
   RecordWriteOp,
   WriteOpAction,
+  cidForRecord,
 } from '@atproto/repo'
 
 // @TODO do this dynamically off of schemas

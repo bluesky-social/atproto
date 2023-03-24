@@ -24,5 +24,11 @@
     "multiformats": "^9.6.4",
     "pino": "^8.6.1",
     "zod": "^3.14.2"
+  },
+  "browser": {
+    "./src/fs.ts": false,
+    "./src/ipld-cbor.ts": false,
+    "./src/logger.ts": false,
+    "./src/streams.ts": false
   }
 }

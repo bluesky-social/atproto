@@ -2,7 +2,7 @@ import assert from 'node:assert'
 import { AtUri } from '@atproto/uri'
 import { wait } from '@atproto/common'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
-import { WriteOpAction, readCarWithRoot } from '@atproto/repo'
+import { WriteOpAction, readCarWithRoot, cborToLexRecord } from '@atproto/repo'
 import { PreparedWrite } from '../../repo'
 import { OutputSchema as Message } from '../../lexicon/types/com/atproto/sync/subscribeRepos'
 import { ids, lexicons } from '../../lexicon/lexicons'
@@ -10,7 +10,6 @@ import Database from '../../db'
 import AppContext from '../../context'
 import { Leader } from '../../db/leader'
 import { appViewLogger } from '../logger'
-import { cborToLexRecord } from '@atproto/lexicon'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
 export const REPO_SUB_ID = 1000

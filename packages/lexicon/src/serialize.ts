@@ -1,9 +1,5 @@
 import {
-  cborDecode,
-  cborEncode,
   check,
-  cidForCbor,
-  dataToCborBlock,
   IpldValue,
   ipldToJson,
   jsonToIpld,
@@ -77,34 +73,10 @@ export const stringifyLex = (val: LexValue): string => {
   return JSON.stringify(lexToJson(val))
 }
 
-export const lexToCbor = (val: LexValue): Uint8Array => {
-  return cborEncode(lexToIpld(val))
-}
-
-export const lexToCborBlock = async (val: LexValue) => {
-  return dataToCborBlock(lexToIpld(val))
-}
-
-export const cidForRecord = async (val: LexValue) => {
-  return cidForCbor(lexToIpld(val))
-}
-
 export const jsonToLex = (val: JsonValue): LexValue => {
   return ipldToLex(jsonToIpld(val))
 }
 
 export const jsonStringToLex = (val: string): LexValue => {
   return jsonToLex(JSON.parse(val))
-}
-
-export const cborToLex = (val: Uint8Array): LexValue => {
-  return ipldToLex(cborDecode(val))
-}
-
-export const cborToLexRecord = (val: Uint8Array): RepoRecord => {
-  const parsed = cborToLex(val)
-  if (!check.is(parsed, schema.record)) {
-    throw new Error('lexicon records be a json object')
-  }
-  return parsed
 }

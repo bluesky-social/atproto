@@ -20,5 +20,8 @@
   "license": "MIT",
   "dependencies": {
     "@atproto/common": "*"
+  },
+  "browser": {
+    "dns/promises": false
   }
 }
