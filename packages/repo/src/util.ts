@@ -3,7 +3,16 @@ import * as cbor from '@ipld/dag-cbor'
 import { CarReader } from '@ipld/car/reader'
 import { BlockWriter, CarWriter } from '@ipld/car/writer'
 import { Block as CarBlock } from '@ipld/car/api'
-import { streamToArray, verifyCidForBytes } from '@atproto/common'
+import {
+  streamToArray,
+  verifyCidForBytes,
+  cborDecode,
+  check,
+  schema,
+  cidForCbor,
+} from '@atproto/common'
+import { ipldToLex, lexToIpld, LexValue, RepoRecord } from '@atproto/lexicon'
+
 import * as crypto from '@atproto/crypto'
 import Repo from './repo'
 import { MST } from './mst'
@@ -241,4 +250,20 @@ export const verifyCommitSig = async (
   const { sig, ...rest } = commit
   const encoded = cbor.encode(rest)
   return crypto.verifySignature(didKey, encoded, sig)
+}
+
+export const cborToLex = (val: Uint8Array): LexValue => {
+  return ipldToLex(cborDecode(val))
+}
+
+export const cborToLexRecord = (val: Uint8Array): RepoRecord => {
+  const parsed = cborToLex(val)
+  if (!check.is(parsed, schema.record)) {
+    throw new Error('lexicon records be a json object')
+  }
+  return parsed
+}
+
+export const cidForRecord = async (val: LexValue) => {
+  return cidForCbor(lexToIpld(val))
 }

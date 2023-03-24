@@ -1,11 +1,11 @@
 import { sql } from 'kysely'
+import { cborToLexRecord } from '@atproto/repo'
 import Database from '../../../db'
 import { countAll, notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
 import { ViewRecord } from '../../../lexicon/types/app/bsky/embed/record'
 import { PostView } from '../../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
-import { cborToLexRecord } from '@atproto/lexicon'
 
 export * from './types'
 

@@ -1,4 +1,4 @@
-import { isErrnoException } from '@atproto/common'
+import { isErrnoException } from '@atproto/common-web'
 import dns from 'dns/promises'
 
 const SUBDOMAIN = '_atproto'

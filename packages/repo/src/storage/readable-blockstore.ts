@@ -1,9 +1,10 @@
 import { check } from '@atproto/common'
-import { cborToLexRecord, RepoRecord } from '@atproto/lexicon'
+import { RepoRecord } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import BlockMap from '../block-map'
 import { MissingBlockError } from '../error'
 import * as parse from '../parse'
+import { cborToLexRecord } from '../util'
 
 export abstract class ReadableBlockstore {
   abstract getBytes(cid: CID): Promise<Uint8Array | null>

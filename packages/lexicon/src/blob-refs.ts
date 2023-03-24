@@ -1,4 +1,4 @@
-import { check, ipldToJson, schema } from '@atproto/common'
+import { check, ipldToJson, schema } from '@atproto/common-web'
 import { CID } from 'multiformats/cid'
 import { z } from 'zod'
 

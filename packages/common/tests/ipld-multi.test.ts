@@ -1,7 +1,6 @@
 import { CID } from 'multiformats/cid'
-import { cborDecodeMulti } from '../src'
 import * as ui8 from 'uint8arrays'
-import { cborEncode } from '../src'
+import { cborEncode, cborDecodeMulti } from '../src'
 
 describe('ipld decode multi', () => {
   it('decodes concatenated dag-cbor messages', async () => {

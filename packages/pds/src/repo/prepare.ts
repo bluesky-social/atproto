@@ -1,6 +1,7 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { TID } from '@atproto/common'
+import { LexiconDefNotFoundError, RepoRecord } from '@atproto/lexicon'
 import {
   PreparedCreate,
   PreparedUpdate,
@@ -9,18 +10,13 @@ import {
   PreparedWrite,
   PreparedBlobRef,
 } from './types'
-
 import * as lex from '../lexicon/lexicons'
 import { isRecord as isPostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { isRecord as isProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
-import { isMain as isImagesEmbed } from '@atproto/api/src/client/types/app/bsky/embed/images'
-import { isMain as isExternalEmbed } from '@atproto/api/src/client/types/app/bsky/embed/external'
+import { isMain as isImagesEmbed } from '../lexicon/types/app/bsky/embed/images'
+import { isMain as isExternalEmbed } from '../lexicon/types/app/bsky/embed/external'
 import {
   cidForRecord,
-  LexiconDefNotFoundError,
-  RepoRecord,
-} from '@atproto/lexicon'
-import {
   RecordDeleteOp,
   RecordCreateOp,
   RecordUpdateOp,
