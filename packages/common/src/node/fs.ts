@@ -1,5 +1,5 @@
 import fs from 'fs/promises'
-import { isErrnoException } from './util'
+import { isErrnoException } from '../util'
 
 export const fileExists = async (location: string): Promise<boolean> => {
   try {

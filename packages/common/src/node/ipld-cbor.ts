@@ -5,7 +5,7 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import * as mf from 'multiformats'
 import * as cborx from 'cbor-x'
 import * as cborCodec from '@ipld/dag-cbor'
-import { check, schema } from '.'
+import { check, schema } from '..'
 
 export const cborEncode = cborCodec.encode
 export const cborDecode = cborCodec.decode

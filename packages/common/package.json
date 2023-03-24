@@ -26,9 +26,9 @@
     "zod": "^3.14.2"
   },
   "browser": {
-    "./src/fs.ts": false,
-    "./src/ipld-cbor.ts": false,
-    "./src/logger.ts": false,
-    "./src/streams.ts": false
+    "./src/node/fs.ts": false,
+    "./src/node/ipld-cbor.ts": false,
+    "./src/node/logger.ts": false,
+    "./src/node/streams.ts": false
   }
 }
