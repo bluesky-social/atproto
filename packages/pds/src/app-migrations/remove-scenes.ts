@@ -57,10 +57,17 @@ async function main(ctx: AppContext, tx: Database) {
     .selectAll()
     .execute()
 
-  const checks = await Promise.all([check1, check2, check3])
+  const check4 = tx.db
+    .selectFrom('assertion')
+    .where('creator', 'in', sceneDids)
+    .selectAll()
+    .execute()
+
+  const checks = await Promise.all([check1, check2, check3, check4])
   assert(checks[0].length === 0)
   assert(checks[1].length === 0)
   assert(checks[2].length === 0)
+  assert(checks[3].length === 0)
 
   console.log(SHORT_NAME, 'complete')
 }
