@@ -203,20 +203,23 @@ Array [
           "uri": "record(9)",
         },
       },
-      "images": Array [
-        Object {
-          "alt": "tests/image/fixtures/key-landscape-small.jpg",
-          "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-        },
-        Object {
-          "alt": "tests/image/fixtures/key-alt.jpg",
-          "fullsize": "https://pds.public.url/image/xC2No-8rKVDIwIMmCiEBm9EiGLDBBOpf36PHoGf-GDw/rs:fit:2000:2000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
-          "thumb": "https://pds.public.url/image/g7yazUpNwN8LKumZ2Zmn_ptQbtMLs1Pti5-GDn7H8_8/rs:fit:1000:1000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
-        },
-      ],
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "likeCount": 2,
+      "media": Object {
+        "$type": "app.bsky.embed.images#view",
+        "images": Array [
+          Object {
+            "alt": "tests/image/fixtures/key-landscape-small.jpg",
+            "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+          },
+          Object {
+            "alt": "tests/image/fixtures/key-alt.jpg",
+            "fullsize": "https://pds.public.url/image/xC2No-8rKVDIwIMmCiEBm9EiGLDBBOpf36PHoGf-GDw/rs:fit:2000:2000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
+            "thumb": "https://pds.public.url/image/g7yazUpNwN8LKumZ2Zmn_ptQbtMLs1Pti5-GDn7H8_8/rs:fit:1000:1000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
+          },
+        ],
+      },
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
@@ -227,30 +230,33 @@ Array [
             "uri": "record(9)",
           },
         },
-        "images": Array [
-          Object {
-            "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "image": Object {
-              "$type": "blob",
-              "mimeType": "image/jpeg",
-              "ref": Object {
-                "$link": "cids(8)",
+        "media": Object {
+          "$type": "app.bsky.embed.images",
+          "images": Array [
+            Object {
+              "alt": "tests/image/fixtures/key-landscape-small.jpg",
+              "image": Object {
+                "$type": "blob",
+                "mimeType": "image/jpeg",
+                "ref": Object {
+                  "$link": "cids(8)",
+                },
+                "size": 4114,
               },
-              "size": 4114,
             },
-          },
-          Object {
-            "alt": "tests/image/fixtures/key-alt.jpg",
-            "image": Object {
-              "$type": "blob",
-              "mimeType": "image/jpeg",
-              "ref": Object {
-                "$link": "cids(9)",
+            Object {
+              "alt": "tests/image/fixtures/key-alt.jpg",
+              "image": Object {
+                "$type": "blob",
+                "mimeType": "image/jpeg",
+                "ref": Object {
+                  "$link": "cids(9)",
+                },
+                "size": 12736,
               },
-              "size": 12736,
             },
-          },
-        ],
+          ],
+        },
         "text": "hi im carol",
       },
       "replyCount": 0,
@@ -598,20 +604,23 @@ Array [
           },
         },
       },
-      "images": Array [
-        Object {
-          "alt": "tests/image/fixtures/key-landscape-small.jpg",
-          "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-        },
-        Object {
-          "alt": "tests/image/fixtures/key-alt.jpg",
-          "fullsize": "https://pds.public.url/image/xC2No-8rKVDIwIMmCiEBm9EiGLDBBOpf36PHoGf-GDw/rs:fit:2000:2000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
-          "thumb": "https://pds.public.url/image/g7yazUpNwN8LKumZ2Zmn_ptQbtMLs1Pti5-GDn7H8_8/rs:fit:1000:1000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
-        },
-      ],
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "likeCount": 2,
+      "media": Object {
+        "$type": "app.bsky.embed.images#view",
+        "images": Array [
+          Object {
+            "alt": "tests/image/fixtures/key-landscape-small.jpg",
+            "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+          },
+          Object {
+            "alt": "tests/image/fixtures/key-alt.jpg",
+            "fullsize": "https://pds.public.url/image/xC2No-8rKVDIwIMmCiEBm9EiGLDBBOpf36PHoGf-GDw/rs:fit:2000:2000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
+            "thumb": "https://pds.public.url/image/g7yazUpNwN8LKumZ2Zmn_ptQbtMLs1Pti5-GDn7H8_8/rs:fit:1000:1000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
+          },
+        ],
+      },
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
@@ -622,30 +631,33 @@ Array [
             "uri": "record(14)",
           },
         },
-        "images": Array [
-          Object {
-            "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "image": Object {
-              "$type": "blob",
-              "mimeType": "image/jpeg",
-              "ref": Object {
-                "$link": "cids(10)",
+        "media": Object {
+          "$type": "app.bsky.embed.images",
+          "images": Array [
+            Object {
+              "alt": "tests/image/fixtures/key-landscape-small.jpg",
+              "image": Object {
+                "$type": "blob",
+                "mimeType": "image/jpeg",
+                "ref": Object {
+                  "$link": "cids(10)",
+                },
+                "size": 4114,
               },
-              "size": 4114,
             },
-          },
-          Object {
-            "alt": "tests/image/fixtures/key-alt.jpg",
-            "image": Object {
-              "$type": "blob",
-              "mimeType": "image/jpeg",
-              "ref": Object {
-                "$link": "cids(11)",
+            Object {
+              "alt": "tests/image/fixtures/key-alt.jpg",
+              "image": Object {
+                "$type": "blob",
+                "mimeType": "image/jpeg",
+                "ref": Object {
+                  "$link": "cids(11)",
+                },
+                "size": 12736,
               },
-              "size": 12736,
             },
-          },
-        ],
+          ],
+        },
         "text": "hi im carol",
       },
       "replyCount": 0,
@@ -829,30 +841,33 @@ Array [
                 "uri": "record(6)",
               },
             },
-            "images": Array [
-              Object {
-                "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                "image": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(4)",
+            "media": Object {
+              "$type": "app.bsky.embed.images",
+              "images": Array [
+                Object {
+                  "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                  "image": Object {
+                    "$type": "blob",
+                    "mimeType": "image/jpeg",
+                    "ref": Object {
+                      "$link": "cids(4)",
+                    },
+                    "size": 4114,
                   },
-                  "size": 4114,
                 },
-              },
-              Object {
-                "alt": "tests/image/fixtures/key-alt.jpg",
-                "image": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(5)",
+                Object {
+                  "alt": "tests/image/fixtures/key-alt.jpg",
+                  "image": Object {
+                    "$type": "blob",
+                    "mimeType": "image/jpeg",
+                    "ref": Object {
+                      "$link": "cids(5)",
+                    },
+                    "size": 12736,
                   },
-                  "size": 12736,
                 },
-              },
-            ],
+              ],
+            },
             "text": "hi im carol",
           },
         },
@@ -950,31 +965,37 @@ Array [
           },
         },
         "cid": "cids(7)",
-        "images": Array [
-          Object {
-            "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-            "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          },
-        ],
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "likeCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
+        "media": Object {
+          "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "image": Object {
-                "$type": "blob",
-                "mimeType": "image/jpeg",
-                "ref": Object {
-                  "$link": "cids(4)",
-                },
-                "size": 4114,
-              },
+              "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+              "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
             },
           ],
+        },
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "media": Object {
+            "$type": "app.bsky.embed.images",
+            "images": Array [
+              Object {
+                "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                "image": Object {
+                  "$type": "blob",
+                  "mimeType": "image/jpeg",
+                  "ref": Object {
+                    "$link": "cids(4)",
+                  },
+                  "size": 4114,
+                },
+              },
+            ],
+          },
           "reply": Object {
             "parent": Object {
               "cid": "cids(0)",
@@ -1114,31 +1135,37 @@ Array [
         },
       },
       "cid": "cids(7)",
-      "images": Array [
-        Object {
-          "alt": "tests/image/fixtures/key-landscape-small.jpg",
-          "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-        },
-      ],
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "likeCount": 0,
-      "record": Object {
-        "$type": "app.bsky.feed.post",
-        "createdAt": "1970-01-01T00:00:00.000Z",
+      "media": Object {
+        "$type": "app.bsky.embed.images#view",
         "images": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "image": Object {
-              "$type": "blob",
-              "mimeType": "image/jpeg",
-              "ref": Object {
-                "$link": "cids(4)",
-              },
-              "size": 4114,
-            },
+            "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
           },
         ],
+      },
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "media": Object {
+          "$type": "app.bsky.embed.images",
+          "images": Array [
+            Object {
+              "alt": "tests/image/fixtures/key-landscape-small.jpg",
+              "image": Object {
+                "$type": "blob",
+                "mimeType": "image/jpeg",
+                "ref": Object {
+                  "$link": "cids(4)",
+                },
+                "size": 4114,
+              },
+            },
+          ],
+        },
         "reply": Object {
           "parent": Object {
             "cid": "cids(0)",
@@ -1257,30 +1284,33 @@ Array [
                       "uri": "record(6)",
                     },
                   },
-                  "images": Array [
-                    Object {
-                      "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                      "image": Object {
-                        "$type": "blob",
-                        "mimeType": "image/jpeg",
-                        "ref": Object {
-                          "$link": "cids(4)",
+                  "media": Object {
+                    "$type": "app.bsky.embed.images",
+                    "images": Array [
+                      Object {
+                        "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                        "image": Object {
+                          "$type": "blob",
+                          "mimeType": "image/jpeg",
+                          "ref": Object {
+                            "$link": "cids(4)",
+                          },
+                          "size": 4114,
                         },
-                        "size": 4114,
                       },
-                    },
-                    Object {
-                      "alt": "tests/image/fixtures/key-alt.jpg",
-                      "image": Object {
-                        "$type": "blob",
-                        "mimeType": "image/jpeg",
-                        "ref": Object {
-                          "$link": "cids(5)",
+                      Object {
+                        "alt": "tests/image/fixtures/key-alt.jpg",
+                        "image": Object {
+                          "$type": "blob",
+                          "mimeType": "image/jpeg",
+                          "ref": Object {
+                            "$link": "cids(5)",
+                          },
+                          "size": 12736,
                         },
-                        "size": 12736,
                       },
-                    },
-                  ],
+                    ],
+                  },
                   "text": "hi im carol",
                 },
               },
@@ -1465,30 +1495,33 @@ Array [
                 "uri": "record(6)",
               },
             },
-            "images": Array [
-              Object {
-                "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                "image": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(4)",
+            "media": Object {
+              "$type": "app.bsky.embed.images",
+              "images": Array [
+                Object {
+                  "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                  "image": Object {
+                    "$type": "blob",
+                    "mimeType": "image/jpeg",
+                    "ref": Object {
+                      "$link": "cids(4)",
+                    },
+                    "size": 4114,
                   },
-                  "size": 4114,
                 },
-              },
-              Object {
-                "alt": "tests/image/fixtures/key-alt.jpg",
-                "image": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(5)",
+                Object {
+                  "alt": "tests/image/fixtures/key-alt.jpg",
+                  "image": Object {
+                    "$type": "blob",
+                    "mimeType": "image/jpeg",
+                    "ref": Object {
+                      "$link": "cids(5)",
+                    },
+                    "size": 12736,
                   },
-                  "size": 12736,
                 },
-              },
-            ],
+              ],
+            },
             "text": "hi im carol",
           },
         },
@@ -1586,20 +1619,23 @@ Array [
           },
         },
       },
-      "images": Array [
-        Object {
-          "alt": "tests/image/fixtures/key-landscape-small.jpg",
-          "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-        },
-        Object {
-          "alt": "tests/image/fixtures/key-alt.jpg",
-          "fullsize": "https://pds.public.url/image/xC2No-8rKVDIwIMmCiEBm9EiGLDBBOpf36PHoGf-GDw/rs:fit:2000:2000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
-          "thumb": "https://pds.public.url/image/g7yazUpNwN8LKumZ2Zmn_ptQbtMLs1Pti5-GDn7H8_8/rs:fit:1000:1000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
-        },
-      ],
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "likeCount": 2,
+      "media": Object {
+        "$type": "app.bsky.embed.images#view",
+        "images": Array [
+          Object {
+            "alt": "tests/image/fixtures/key-landscape-small.jpg",
+            "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+          },
+          Object {
+            "alt": "tests/image/fixtures/key-alt.jpg",
+            "fullsize": "https://pds.public.url/image/xC2No-8rKVDIwIMmCiEBm9EiGLDBBOpf36PHoGf-GDw/rs:fit:2000:2000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
+            "thumb": "https://pds.public.url/image/g7yazUpNwN8LKumZ2Zmn_ptQbtMLs1Pti5-GDn7H8_8/rs:fit:1000:1000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
+          },
+        ],
+      },
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
@@ -1610,30 +1646,33 @@ Array [
             "uri": "record(6)",
           },
         },
-        "images": Array [
-          Object {
-            "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "image": Object {
-              "$type": "blob",
-              "mimeType": "image/jpeg",
-              "ref": Object {
-                "$link": "cids(4)",
+        "media": Object {
+          "$type": "app.bsky.embed.images",
+          "images": Array [
+            Object {
+              "alt": "tests/image/fixtures/key-landscape-small.jpg",
+              "image": Object {
+                "$type": "blob",
+                "mimeType": "image/jpeg",
+                "ref": Object {
+                  "$link": "cids(4)",
+                },
+                "size": 4114,
               },
-              "size": 4114,
             },
-          },
-          Object {
-            "alt": "tests/image/fixtures/key-alt.jpg",
-            "image": Object {
-              "$type": "blob",
-              "mimeType": "image/jpeg",
-              "ref": Object {
-                "$link": "cids(5)",
+            Object {
+              "alt": "tests/image/fixtures/key-alt.jpg",
+              "image": Object {
+                "$type": "blob",
+                "mimeType": "image/jpeg",
+                "ref": Object {
+                  "$link": "cids(5)",
+                },
+                "size": 12736,
               },
-              "size": 12736,
             },
-          },
-        ],
+          ],
+        },
         "text": "hi im carol",
       },
       "replyCount": 0,
@@ -1777,30 +1816,33 @@ Array [
                 "uri": "record(4)",
               },
             },
-            "images": Array [
-              Object {
-                "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                "image": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(3)",
+            "media": Object {
+              "$type": "app.bsky.embed.images",
+              "images": Array [
+                Object {
+                  "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                  "image": Object {
+                    "$type": "blob",
+                    "mimeType": "image/jpeg",
+                    "ref": Object {
+                      "$link": "cids(3)",
+                    },
+                    "size": 4114,
                   },
-                  "size": 4114,
                 },
-              },
-              Object {
-                "alt": "tests/image/fixtures/key-alt.jpg",
-                "image": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(4)",
+                Object {
+                  "alt": "tests/image/fixtures/key-alt.jpg",
+                  "image": Object {
+                    "$type": "blob",
+                    "mimeType": "image/jpeg",
+                    "ref": Object {
+                      "$link": "cids(4)",
+                    },
+                    "size": 12736,
                   },
-                  "size": 12736,
                 },
-              },
-            ],
+              ],
+            },
             "text": "hi im carol",
           },
         },
@@ -1897,31 +1939,37 @@ Array [
           },
         },
         "cid": "cids(7)",
-        "images": Array [
-          Object {
-            "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-            "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          },
-        ],
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "likeCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
+        "media": Object {
+          "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "image": Object {
-                "$type": "blob",
-                "mimeType": "image/jpeg",
-                "ref": Object {
-                  "$link": "cids(3)",
-                },
-                "size": 4114,
-              },
+              "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+              "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
             },
           ],
+        },
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "media": Object {
+            "$type": "app.bsky.embed.images",
+            "images": Array [
+              Object {
+                "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                "image": Object {
+                  "$type": "blob",
+                  "mimeType": "image/jpeg",
+                  "ref": Object {
+                    "$link": "cids(3)",
+                  },
+                  "size": 4114,
+                },
+              },
+            ],
+          },
           "reply": Object {
             "parent": Object {
               "cid": "cids(6)",
@@ -2070,31 +2118,37 @@ Array [
         },
       },
       "cid": "cids(7)",
-      "images": Array [
-        Object {
-          "alt": "tests/image/fixtures/key-landscape-small.jpg",
-          "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-        },
-      ],
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "likeCount": 0,
-      "record": Object {
-        "$type": "app.bsky.feed.post",
-        "createdAt": "1970-01-01T00:00:00.000Z",
+      "media": Object {
+        "$type": "app.bsky.embed.images#view",
         "images": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "image": Object {
-              "$type": "blob",
-              "mimeType": "image/jpeg",
-              "ref": Object {
-                "$link": "cids(3)",
-              },
-              "size": 4114,
-            },
+            "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
           },
         ],
+      },
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "media": Object {
+          "$type": "app.bsky.embed.images",
+          "images": Array [
+            Object {
+              "alt": "tests/image/fixtures/key-landscape-small.jpg",
+              "image": Object {
+                "$type": "blob",
+                "mimeType": "image/jpeg",
+                "ref": Object {
+                  "$link": "cids(3)",
+                },
+                "size": 4114,
+              },
+            },
+          ],
+        },
         "reply": Object {
           "parent": Object {
             "cid": "cids(6)",
@@ -2222,30 +2276,33 @@ Array [
                       "uri": "record(4)",
                     },
                   },
-                  "images": Array [
-                    Object {
-                      "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                      "image": Object {
-                        "$type": "blob",
-                        "mimeType": "image/jpeg",
-                        "ref": Object {
-                          "$link": "cids(3)",
+                  "media": Object {
+                    "$type": "app.bsky.embed.images",
+                    "images": Array [
+                      Object {
+                        "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                        "image": Object {
+                          "$type": "blob",
+                          "mimeType": "image/jpeg",
+                          "ref": Object {
+                            "$link": "cids(3)",
+                          },
+                          "size": 4114,
                         },
-                        "size": 4114,
                       },
-                    },
-                    Object {
-                      "alt": "tests/image/fixtures/key-alt.jpg",
-                      "image": Object {
-                        "$type": "blob",
-                        "mimeType": "image/jpeg",
-                        "ref": Object {
-                          "$link": "cids(4)",
+                      Object {
+                        "alt": "tests/image/fixtures/key-alt.jpg",
+                        "image": Object {
+                          "$type": "blob",
+                          "mimeType": "image/jpeg",
+                          "ref": Object {
+                            "$link": "cids(4)",
+                          },
+                          "size": 12736,
                         },
-                        "size": 12736,
                       },
-                    },
-                  ],
+                    ],
+                  },
                   "text": "hi im carol",
                 },
               },
@@ -2389,20 +2446,23 @@ Array [
           },
         },
       },
-      "images": Array [
-        Object {
-          "alt": "tests/image/fixtures/key-landscape-small.jpg",
-          "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-        },
-        Object {
-          "alt": "tests/image/fixtures/key-alt.jpg",
-          "fullsize": "https://pds.public.url/image/xC2No-8rKVDIwIMmCiEBm9EiGLDBBOpf36PHoGf-GDw/rs:fit:2000:2000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
-          "thumb": "https://pds.public.url/image/g7yazUpNwN8LKumZ2Zmn_ptQbtMLs1Pti5-GDn7H8_8/rs:fit:1000:1000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
-        },
-      ],
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "likeCount": 2,
+      "media": Object {
+        "$type": "app.bsky.embed.images#view",
+        "images": Array [
+          Object {
+            "alt": "tests/image/fixtures/key-landscape-small.jpg",
+            "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+          },
+          Object {
+            "alt": "tests/image/fixtures/key-alt.jpg",
+            "fullsize": "https://pds.public.url/image/xC2No-8rKVDIwIMmCiEBm9EiGLDBBOpf36PHoGf-GDw/rs:fit:2000:2000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
+            "thumb": "https://pds.public.url/image/g7yazUpNwN8LKumZ2Zmn_ptQbtMLs1Pti5-GDn7H8_8/rs:fit:1000:1000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
+          },
+        ],
+      },
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
@@ -2413,30 +2473,33 @@ Array [
             "uri": "record(4)",
           },
         },
-        "images": Array [
-          Object {
-            "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "image": Object {
-              "$type": "blob",
-              "mimeType": "image/jpeg",
-              "ref": Object {
-                "$link": "cids(3)",
+        "media": Object {
+          "$type": "app.bsky.embed.images",
+          "images": Array [
+            Object {
+              "alt": "tests/image/fixtures/key-landscape-small.jpg",
+              "image": Object {
+                "$type": "blob",
+                "mimeType": "image/jpeg",
+                "ref": Object {
+                  "$link": "cids(3)",
+                },
+                "size": 4114,
               },
-              "size": 4114,
             },
-          },
-          Object {
-            "alt": "tests/image/fixtures/key-alt.jpg",
-            "image": Object {
-              "$type": "blob",
-              "mimeType": "image/jpeg",
-              "ref": Object {
-                "$link": "cids(4)",
+            Object {
+              "alt": "tests/image/fixtures/key-alt.jpg",
+              "image": Object {
+                "$type": "blob",
+                "mimeType": "image/jpeg",
+                "ref": Object {
+                  "$link": "cids(4)",
+                },
+                "size": 12736,
               },
-              "size": 12736,
             },
-          },
-        ],
+          ],
+        },
         "text": "hi im carol",
       },
       "replyCount": 0,
@@ -2579,30 +2642,33 @@ Array [
                 "uri": "record(2)",
               },
             },
-            "images": Array [
-              Object {
-                "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                "image": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(3)",
+            "media": Object {
+              "$type": "app.bsky.embed.images",
+              "images": Array [
+                Object {
+                  "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                  "image": Object {
+                    "$type": "blob",
+                    "mimeType": "image/jpeg",
+                    "ref": Object {
+                      "$link": "cids(3)",
+                    },
+                    "size": 4114,
                   },
-                  "size": 4114,
                 },
-              },
-              Object {
-                "alt": "tests/image/fixtures/key-alt.jpg",
-                "image": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(4)",
+                Object {
+                  "alt": "tests/image/fixtures/key-alt.jpg",
+                  "image": Object {
+                    "$type": "blob",
+                    "mimeType": "image/jpeg",
+                    "ref": Object {
+                      "$link": "cids(4)",
+                    },
+                    "size": 12736,
                   },
-                  "size": 12736,
                 },
-              },
-            ],
+              ],
+            },
             "text": "hi im carol",
           },
         },
@@ -2701,31 +2767,37 @@ Array [
           },
         },
         "cid": "cids(7)",
-        "images": Array [
-          Object {
-            "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-            "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          },
-        ],
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "likeCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
+        "media": Object {
+          "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "image": Object {
-                "$type": "blob",
-                "mimeType": "image/jpeg",
-                "ref": Object {
-                  "$link": "cids(3)",
-                },
-                "size": 4114,
-              },
+              "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+              "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
             },
           ],
+        },
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "media": Object {
+            "$type": "app.bsky.embed.images",
+            "images": Array [
+              Object {
+                "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                "image": Object {
+                  "$type": "blob",
+                  "mimeType": "image/jpeg",
+                  "ref": Object {
+                    "$link": "cids(3)",
+                  },
+                  "size": 4114,
+                },
+              },
+            ],
+          },
           "reply": Object {
             "parent": Object {
               "cid": "cids(6)",
@@ -2912,30 +2984,33 @@ Array [
                       "uri": "record(2)",
                     },
                   },
-                  "images": Array [
-                    Object {
-                      "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                      "image": Object {
-                        "$type": "blob",
-                        "mimeType": "image/jpeg",
-                        "ref": Object {
-                          "$link": "cids(3)",
+                  "media": Object {
+                    "$type": "app.bsky.embed.images",
+                    "images": Array [
+                      Object {
+                        "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                        "image": Object {
+                          "$type": "blob",
+                          "mimeType": "image/jpeg",
+                          "ref": Object {
+                            "$link": "cids(3)",
+                          },
+                          "size": 4114,
                         },
-                        "size": 4114,
                       },
-                    },
-                    Object {
-                      "alt": "tests/image/fixtures/key-alt.jpg",
-                      "image": Object {
-                        "$type": "blob",
-                        "mimeType": "image/jpeg",
-                        "ref": Object {
-                          "$link": "cids(4)",
+                      Object {
+                        "alt": "tests/image/fixtures/key-alt.jpg",
+                        "image": Object {
+                          "$type": "blob",
+                          "mimeType": "image/jpeg",
+                          "ref": Object {
+                            "$link": "cids(4)",
+                          },
+                          "size": 12736,
                         },
-                        "size": 12736,
                       },
-                    },
-                  ],
+                    ],
+                  },
                   "text": "hi im carol",
                 },
               },
@@ -3054,20 +3129,23 @@ Array [
           },
         },
       },
-      "images": Array [
-        Object {
-          "alt": "tests/image/fixtures/key-landscape-small.jpg",
-          "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-        },
-        Object {
-          "alt": "tests/image/fixtures/key-alt.jpg",
-          "fullsize": "https://pds.public.url/image/xC2No-8rKVDIwIMmCiEBm9EiGLDBBOpf36PHoGf-GDw/rs:fit:2000:2000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
-          "thumb": "https://pds.public.url/image/g7yazUpNwN8LKumZ2Zmn_ptQbtMLs1Pti5-GDn7H8_8/rs:fit:1000:1000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
-        },
-      ],
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "likeCount": 2,
+      "media": Object {
+        "$type": "app.bsky.embed.images#view",
+        "images": Array [
+          Object {
+            "alt": "tests/image/fixtures/key-landscape-small.jpg",
+            "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+          },
+          Object {
+            "alt": "tests/image/fixtures/key-alt.jpg",
+            "fullsize": "https://pds.public.url/image/xC2No-8rKVDIwIMmCiEBm9EiGLDBBOpf36PHoGf-GDw/rs:fit:2000:2000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
+            "thumb": "https://pds.public.url/image/g7yazUpNwN8LKumZ2Zmn_ptQbtMLs1Pti5-GDn7H8_8/rs:fit:1000:1000:1:0/plain/bafkreifdklbbcdsyanjz3oqe5pf2omuq5ansthokxlbleagg3eenx62h7e@jpeg",
+          },
+        ],
+      },
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
@@ -3078,30 +3156,33 @@ Array [
             "uri": "record(2)",
           },
         },
-        "images": Array [
-          Object {
-            "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "image": Object {
-              "$type": "blob",
-              "mimeType": "image/jpeg",
-              "ref": Object {
-                "$link": "cids(3)",
+        "media": Object {
+          "$type": "app.bsky.embed.images",
+          "images": Array [
+            Object {
+              "alt": "tests/image/fixtures/key-landscape-small.jpg",
+              "image": Object {
+                "$type": "blob",
+                "mimeType": "image/jpeg",
+                "ref": Object {
+                  "$link": "cids(3)",
+                },
+                "size": 4114,
               },
-              "size": 4114,
             },
-          },
-          Object {
-            "alt": "tests/image/fixtures/key-alt.jpg",
-            "image": Object {
-              "$type": "blob",
-              "mimeType": "image/jpeg",
-              "ref": Object {
-                "$link": "cids(4)",
+            Object {
+              "alt": "tests/image/fixtures/key-alt.jpg",
+              "image": Object {
+                "$type": "blob",
+                "mimeType": "image/jpeg",
+                "ref": Object {
+                  "$link": "cids(4)",
+                },
+                "size": 12736,
               },
-              "size": 12736,
             },
-          },
-        ],
+          ],
+        },
         "text": "hi im carol",
       },
       "replyCount": 0,
@@ -3195,31 +3276,37 @@ Array [
         },
       },
       "cid": "cids(1)",
-      "images": Array [
-        Object {
-          "alt": "tests/image/fixtures/key-landscape-small.jpg",
-          "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-        },
-      ],
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "likeCount": 0,
-      "record": Object {
-        "$type": "app.bsky.feed.post",
-        "createdAt": "1970-01-01T00:00:00.000Z",
+      "media": Object {
+        "$type": "app.bsky.embed.images#view",
         "images": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "image": Object {
-              "$type": "blob",
-              "mimeType": "image/jpeg",
-              "ref": Object {
-                "$link": "cids(2)",
-              },
-              "size": 4114,
-            },
+            "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
           },
         ],
+      },
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "media": Object {
+          "$type": "app.bsky.embed.images",
+          "images": Array [
+            Object {
+              "alt": "tests/image/fixtures/key-landscape-small.jpg",
+              "image": Object {
+                "$type": "blob",
+                "mimeType": "image/jpeg",
+                "ref": Object {
+                  "$link": "cids(2)",
+                },
+                "size": 4114,
+              },
+            },
+          ],
+        },
         "reply": Object {
           "parent": Object {
             "cid": "cids(0)",
@@ -3395,30 +3482,33 @@ Array [
                 "uri": "record(9)",
               },
             },
-            "images": Array [
-              Object {
-                "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                "image": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(2)",
+            "media": Object {
+              "$type": "app.bsky.embed.images",
+              "images": Array [
+                Object {
+                  "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                  "image": Object {
+                    "$type": "blob",
+                    "mimeType": "image/jpeg",
+                    "ref": Object {
+                      "$link": "cids(2)",
+                    },
+                    "size": 4114,
                   },
-                  "size": 4114,
                 },
-              },
-              Object {
-                "alt": "tests/image/fixtures/key-alt.jpg",
-                "image": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(7)",
+                Object {
+                  "alt": "tests/image/fixtures/key-alt.jpg",
+                  "image": Object {
+                    "$type": "blob",
+                    "mimeType": "image/jpeg",
+                    "ref": Object {
+                      "$link": "cids(7)",
+                    },
+                    "size": 12736,
                   },
-                  "size": 12736,
                 },
-              },
-            ],
+              ],
+            },
             "text": "hi im carol",
           },
         },
@@ -3594,31 +3684,37 @@ Array [
           },
         },
         "cid": "cids(2)",
-        "images": Array [
-          Object {
-            "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-            "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
-          },
-        ],
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "likeCount": 0,
-        "record": Object {
-          "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
+        "media": Object {
+          "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "image": Object {
-                "$type": "blob",
-                "mimeType": "image/jpeg",
-                "ref": Object {
-                  "$link": "cids(3)",
-                },
-                "size": 4114,
-              },
+              "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+              "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
             },
           ],
+        },
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "media": Object {
+            "$type": "app.bsky.embed.images",
+            "images": Array [
+              Object {
+                "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                "image": Object {
+                  "$type": "blob",
+                  "mimeType": "image/jpeg",
+                  "ref": Object {
+                    "$link": "cids(3)",
+                  },
+                  "size": 4114,
+                },
+              },
+            ],
+          },
           "reply": Object {
             "parent": Object {
               "cid": "cids(0)",
@@ -3713,30 +3809,33 @@ Array [
                       "uri": "record(11)",
                     },
                   },
-                  "images": Array [
-                    Object {
-                      "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                      "image": Object {
-                        "$type": "blob",
-                        "mimeType": "image/jpeg",
-                        "ref": Object {
-                          "$link": "cids(3)",
+                  "media": Object {
+                    "$type": "app.bsky.embed.images",
+                    "images": Array [
+                      Object {
+                        "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                        "image": Object {
+                          "$type": "blob",
+                          "mimeType": "image/jpeg",
+                          "ref": Object {
+                            "$link": "cids(3)",
+                          },
+                          "size": 4114,
                         },
-                        "size": 4114,
                       },
-                    },
-                    Object {
-                      "alt": "tests/image/fixtures/key-alt.jpg",
-                      "image": Object {
-                        "$type": "blob",
-                        "mimeType": "image/jpeg",
-                        "ref": Object {
-                          "$link": "cids(8)",
+                      Object {
+                        "alt": "tests/image/fixtures/key-alt.jpg",
+                        "image": Object {
+                          "$type": "blob",
+                          "mimeType": "image/jpeg",
+                          "ref": Object {
+                            "$link": "cids(8)",
+                          },
+                          "size": 12736,
                         },
-                        "size": 12736,
                       },
-                    },
-                  ],
+                    ],
+                  },
                   "text": "hi im carol",
                 },
               },
@@ -3894,30 +3993,33 @@ Array [
                 "uri": "record(11)",
               },
             },
-            "images": Array [
-              Object {
-                "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                "image": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(3)",
+            "media": Object {
+              "$type": "app.bsky.embed.images",
+              "images": Array [
+                Object {
+                  "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                  "image": Object {
+                    "$type": "blob",
+                    "mimeType": "image/jpeg",
+                    "ref": Object {
+                      "$link": "cids(3)",
+                    },
+                    "size": 4114,
                   },
-                  "size": 4114,
                 },
-              },
-              Object {
-                "alt": "tests/image/fixtures/key-alt.jpg",
-                "image": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(8)",
+                Object {
+                  "alt": "tests/image/fixtures/key-alt.jpg",
+                  "image": Object {
+                    "$type": "blob",
+                    "mimeType": "image/jpeg",
+                    "ref": Object {
+                      "$link": "cids(8)",
+                    },
+                    "size": 12736,
                   },
-                  "size": 12736,
                 },
-              },
-            ],
+              ],
+            },
             "text": "hi im carol",
           },
         },

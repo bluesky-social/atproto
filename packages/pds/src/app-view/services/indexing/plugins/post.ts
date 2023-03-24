@@ -82,15 +82,21 @@ const insertFn = async (
   // Embed indices
   let images: PostEmbedImage[] | undefined
   let embed: PostEmbedExternal | PostEmbedRecord | undefined
-  if (obj.images || isEmbedImages(obj.embed)) {
-    const embeddedImages = obj.images || (obj.embed as EmbedImages).images
+  if (isEmbedImages(obj.media) || isEmbedImages(obj.embed)) {
+    const embeddedImages = isEmbedImages(obj.media)
+      ? obj.media.images
+      : isEmbedImages(obj.embed)
+      ? obj.embed.images
+      : []
     images = embeddedImages.map((img, i) => ({
       postUri: uri.toString(),
       position: i,
       imageCid: img.image.ref.toString(),
       alt: img.alt,
     }))
-    await db.insertInto('post_embed_image').values(images).execute()
+    if (images.length) {
+      await db.insertInto('post_embed_image').values(images).execute()
+    }
   }
   if (isEmbedExternal(obj.embed)) {
     const { external } = obj.embed

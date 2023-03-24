@@ -50,7 +50,7 @@ export const blobsForWrite = (record: any): PreparedBlobRef[] => {
     return refs
   } else if (isPostRecord(record)) {
     const refs: PreparedBlobRef[] = []
-    const { embed, images } = record
+    const { embed, media } = record
     if (isImagesEmbed(embed)) {
       const doc = lex.schemaDict.AppBskyEmbedImages
       for (let i = 0; i < embed.images?.length || 0; i++) {
@@ -69,10 +69,10 @@ export const blobsForWrite = (record: any): PreparedBlobRef[] => {
         constraints: doc.defs.external.properties.thumb,
       })
     }
-    if (images) {
+    if (isImagesEmbed(media)) {
       const doc = lex.schemaDict.AppBskyEmbedImages
-      for (let i = 0; i < images.length || 0; i++) {
-        const img = images[i]
+      for (let i = 0; i < media.images.length || 0; i++) {
+        const img = media.images[i]
         refs.push({
           cid: img.image.ref,
           mimeType: img.image.mimeType,

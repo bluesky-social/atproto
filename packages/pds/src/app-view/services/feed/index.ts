@@ -284,12 +284,9 @@ export class FeedService {
           // Omit field entirely when too deep: e.g. don't include it on the embeds within a record embed.
           // Otherwise list any embeds that appear within the record. A consumer may discover an embed
           // within the raw record, then look within this array to find the presented view of it.
-          if (formatted?.images) {
+          if (formatted?.media) {
             embeds ??= []
-            embeds.push({
-              $type: 'app.bsky.embed.images#view',
-              images: formatted.images,
-            })
+            embeds.push(formatted.media)
           }
           if (formatted?.embed) {
             embeds ??= []
@@ -334,7 +331,7 @@ export class FeedService {
       cid: post.cid,
       author: author,
       record: cborToLexRecord(post.recordBytes),
-      images: embeds[uri]?.images?.images,
+      media: embeds[uri]?.images,
       embed: embeds[uri]?.other,
       replyCount: post.replyCount,
       repostCount: post.repostCount,
