@@ -13,14 +13,12 @@ import { ModerationService } from './moderation'
 import { ActorService } from '../app-view/services/actor'
 import { FeedService } from '../app-view/services/feed'
 import { IndexingService } from '../app-view/services/indexing'
-import Sequencer from '../sequencer'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
   messageQueue: MessageQueue
   messageDispatcher: MessageDispatcher
   blobstore: BlobStore
-  sequencer: Sequencer
   imgUriBuilder: ImageUriBuilder
   imgInvalidator: ImageInvalidator
 }): Services {
@@ -29,24 +27,17 @@ export function createServices(resources: {
     messageQueue,
     messageDispatcher,
     blobstore,
-    sequencer,
     imgUriBuilder,
     imgInvalidator,
   } = resources
   return {
-    account: AccountService.creator(sequencer),
+    account: AccountService.creator(),
     auth: AuthService.creator(),
     record: RecordService.creator(messageDispatcher),
-    repo: RepoService.creator(
-      repoSigningKey,
-      messageDispatcher,
-      blobstore,
-      sequencer,
-    ),
+    repo: RepoService.creator(repoSigningKey, messageDispatcher, blobstore),
     moderation: ModerationService.creator(
       messageDispatcher,
       blobstore,
-      sequencer,
       imgUriBuilder,
       imgInvalidator,
     ),

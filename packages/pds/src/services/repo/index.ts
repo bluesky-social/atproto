@@ -9,7 +9,7 @@ import { PreparedCreate, PreparedWrite } from '../../repo/types'
 import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { RecordService } from '../record'
-import Sequencer from '../../sequencer'
+import { sequenceCommit } from '../../sequencer'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -19,7 +19,6 @@ export class RepoService {
     public repoSigningKey: crypto.Keypair,
     public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
-    public sequencer: Sequencer,
   ) {
     this.blobs = new RepoBlobs(db, blobstore)
   }
@@ -28,10 +27,9 @@ export class RepoService {
     keypair: crypto.Keypair,
     messageDispatcher: MessageQueue,
     blobstore: BlobStore,
-    sequencer: Sequencer,
   ) {
     return (db: Database) =>
-      new RepoService(db, keypair, messageDispatcher, blobstore, sequencer)
+      new RepoService(db, keypair, messageDispatcher, blobstore)
   }
 
   services = {
@@ -127,7 +125,7 @@ export class RepoService {
   ) {
     await Promise.all([
       this.blobs.processWriteBlobs(did, commitData.commit, writes),
-      this.sequencer.sequenceCommit(this.db, did, commitData, writes),
+      sequenceCommit(this.db, did, commitData, writes),
     ])
   }
 

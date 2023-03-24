@@ -122,7 +122,6 @@ export class PDS {
       messageQueue,
       messageDispatcher,
       blobstore,
-      sequencer,
       imgUriBuilder,
       imgInvalidator,
     })

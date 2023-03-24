@@ -10,13 +10,13 @@ import { Record as DeclarationRecord } from '../../lexicon/types/app/bsky/system
 import { notSoftDeletedClause } from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
-import Sequencer from '../../sequencer'
+import { sequenceHandleUpdate } from '../../sequencer'
 
 export class AccountService {
-  constructor(public db: Database, public sequencer: Sequencer) {}
+  constructor(public db: Database) {}
 
-  static creator(sequencer: Sequencer) {
-    return (db: Database) => new AccountService(db, sequencer)
+  static creator() {
+    return (db: Database) => new AccountService(db)
   }
 
   async getUser(
@@ -151,7 +151,7 @@ export class AccountService {
     if (res.numUpdatedRows < 1) {
       throw new UserAlreadyExistsError()
     }
-    await this.sequencer.sequenceHandleUpdate(this.db, did, handle)
+    await sequenceHandleUpdate(this.db, did, handle)
   }
 
   async updateUserPassword(did: string, password: string) {
