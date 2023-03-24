@@ -91,11 +91,11 @@ describe('RichText#insert', () => {
 
   it('correctly adjusts facets (scenario A - before)', () => {
     const output = input.clone().insert(0, 'test')
-    expect(String(output.text)).toEqual('testhello world')
+    expect(output.text).toEqual('testhello world')
     expect(output.facets?.[0].index.start).toEqual(6)
     expect(output.facets?.[0].index.end).toEqual(11)
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[0].index.start,
         output.facets?.[0].index.end,
       ),
@@ -104,11 +104,11 @@ describe('RichText#insert', () => {
 
   it('correctly adjusts facets (scenario B - inner)', () => {
     const output = input.clone().insert(4, 'test')
-    expect(String(output.text)).toEqual('helltesto world')
+    expect(output.text).toEqual('helltesto world')
     expect(output.facets?.[0].index.start).toEqual(2)
     expect(output.facets?.[0].index.end).toEqual(11)
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[0].index.start,
         output.facets?.[0].index.end,
       ),
@@ -117,11 +117,11 @@ describe('RichText#insert', () => {
 
   it('correctly adjusts facets (scenario C - after)', () => {
     const output = input.clone().insert(8, 'test')
-    expect(String(output.text)).toEqual('hello wotestrld')
+    expect(output.text).toEqual('hello wotestrld')
     expect(output.facets?.[0].index.start).toEqual(2)
     expect(output.facets?.[0].index.end).toEqual(7)
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[0].index.start,
         output.facets?.[0].index.end,
       ),
@@ -141,21 +141,21 @@ describe('RichText#insert w/fat unicode', () => {
 
   it('correctly adjusts facets (scenario A - before)', () => {
     const output = input.clone().insert(0, 'test')
-    expect(String(output.text)).toEqual('testone👨‍👩‍👧‍👧 two👨‍👩‍👧‍👧 three👨‍👩‍👧‍👧')
+    expect(output.text).toEqual('testone👨‍👩‍👧‍👧 two👨‍👩‍👧‍👧 three👨‍👩‍👧‍👧')
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[0].index.start,
         output.facets?.[0].index.end,
       ),
     ).toEqual('one👨‍👩‍👧‍👧')
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[1].index.start,
         output.facets?.[1].index.end,
       ),
     ).toEqual('two👨‍👩‍👧‍👧')
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[2].index.start,
         output.facets?.[2].index.end,
       ),
@@ -164,21 +164,21 @@ describe('RichText#insert w/fat unicode', () => {
 
   it('correctly adjusts facets (scenario B - inner)', () => {
     const output = input.clone().insert(3, 'test')
-    expect(String(output.text)).toEqual('onetest👨‍👩‍👧‍👧 two👨‍👩‍👧‍👧 three👨‍👩‍👧‍👧')
+    expect(output.text).toEqual('onetest👨‍👩‍👧‍👧 two👨‍👩‍👧‍👧 three👨‍👩‍👧‍👧')
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[0].index.start,
         output.facets?.[0].index.end,
       ),
     ).toEqual('onetest👨‍👩‍👧‍👧')
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[1].index.start,
         output.facets?.[1].index.end,
       ),
     ).toEqual('two👨‍👩‍👧‍👧')
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[2].index.start,
         output.facets?.[2].index.end,
       ),
@@ -187,21 +187,21 @@ describe('RichText#insert w/fat unicode', () => {
 
   it('correctly adjusts facets (scenario C - after)', () => {
     const output = input.clone().insert(28, 'test')
-    expect(String(output.text)).toEqual('one👨‍👩‍👧‍👧test two👨‍👩‍👧‍👧 three👨‍👩‍👧‍👧')
+    expect(output.text).toEqual('one👨‍👩‍👧‍👧test two👨‍👩‍👧‍👧 three👨‍👩‍👧‍👧')
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[0].index.start,
         output.facets?.[0].index.end,
       ),
     ).toEqual('one👨‍👩‍👧‍👧')
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[1].index.start,
         output.facets?.[1].index.end,
       ),
     ).toEqual('two👨‍👩‍👧‍👧')
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[2].index.start,
         output.facets?.[2].index.end,
       ),
@@ -217,17 +217,17 @@ describe('RichText#delete', () => {
 
   it('correctly adjusts facets (scenario A - entirely outer)', () => {
     const output = input.clone().delete(0, 9)
-    expect(String(output.text)).toEqual('ld')
+    expect(output.text).toEqual('ld')
     expect(output.facets?.length).toEqual(0)
   })
 
   it('correctly adjusts facets (scenario B - entirely after)', () => {
     const output = input.clone().delete(7, 11)
-    expect(String(output.text)).toEqual('hello w')
+    expect(output.text).toEqual('hello w')
     expect(output.facets?.[0].index.start).toEqual(2)
     expect(output.facets?.[0].index.end).toEqual(7)
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[0].index.start,
         output.facets?.[0].index.end,
       ),
@@ -236,11 +236,11 @@ describe('RichText#delete', () => {
 
   it('correctly adjusts facets (scenario C - partially after)', () => {
     const output = input.clone().delete(4, 11)
-    expect(String(output.text)).toEqual('hell')
+    expect(output.text).toEqual('hell')
     expect(output.facets?.[0].index.start).toEqual(2)
     expect(output.facets?.[0].index.end).toEqual(4)
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[0].index.start,
         output.facets?.[0].index.end,
       ),
@@ -249,11 +249,11 @@ describe('RichText#delete', () => {
 
   it('correctly adjusts facets (scenario D - entirely inner)', () => {
     const output = input.clone().delete(3, 5)
-    expect(String(output.text)).toEqual('hel world')
+    expect(output.text).toEqual('hel world')
     expect(output.facets?.[0].index.start).toEqual(2)
     expect(output.facets?.[0].index.end).toEqual(5)
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[0].index.start,
         output.facets?.[0].index.end,
       ),
@@ -262,11 +262,11 @@ describe('RichText#delete', () => {
 
   it('correctly adjusts facets (scenario E - partially before)', () => {
     const output = input.clone().delete(1, 5)
-    expect(String(output.text)).toEqual('h world')
+    expect(output.text).toEqual('h world')
     expect(output.facets?.[0].index.start).toEqual(1)
     expect(output.facets?.[0].index.end).toEqual(3)
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[0].index.start,
         output.facets?.[0].index.end,
       ),
@@ -275,11 +275,11 @@ describe('RichText#delete', () => {
 
   it('correctly adjusts facets (scenario F - entirely before)', () => {
     const output = input.clone().delete(0, 2)
-    expect(String(output.text)).toEqual('llo world')
+    expect(output.text).toEqual('llo world')
     expect(output.facets?.[0].index.start).toEqual(0)
     expect(output.facets?.[0].index.end).toEqual(5)
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[0].index.start,
         output.facets?.[0].index.end,
       ),
@@ -295,17 +295,17 @@ describe('RichText#delete w/fat unicode', () => {
 
   it('correctly adjusts facets (scenario A - entirely outer)', () => {
     const output = input.clone().delete(28, 58)
-    expect(String(output.text)).toEqual('one👨‍👩‍👧‍👧three👨‍👩‍👧‍👧')
+    expect(output.text).toEqual('one👨‍👩‍👧‍👧three👨‍👩‍👧‍👧')
     expect(output.facets?.length).toEqual(0)
   })
 
   it('correctly adjusts facets (scenario B - entirely after)', () => {
     const output = input.clone().delete(57, 88)
-    expect(String(output.text)).toEqual('one👨‍👩‍👧‍👧 two👨‍👩‍👧‍👧')
+    expect(output.text).toEqual('one👨‍👩‍👧‍👧 two👨‍👩‍👧‍👧')
     expect(output.facets?.[0].index.start).toEqual(29)
     expect(output.facets?.[0].index.end).toEqual(57)
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[0].index.start,
         output.facets?.[0].index.end,
       ),
@@ -314,11 +314,11 @@ describe('RichText#delete w/fat unicode', () => {
 
   it('correctly adjusts facets (scenario C - partially after)', () => {
     const output = input.clone().delete(31, 88)
-    expect(String(output.text)).toEqual('one👨‍👩‍👧‍👧 tw')
+    expect(output.text).toEqual('one👨‍👩‍👧‍👧 tw')
     expect(output.facets?.[0].index.start).toEqual(29)
     expect(output.facets?.[0].index.end).toEqual(31)
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[0].index.start,
         output.facets?.[0].index.end,
       ),
@@ -327,11 +327,11 @@ describe('RichText#delete w/fat unicode', () => {
 
   it('correctly adjusts facets (scenario D - entirely inner)', () => {
     const output = input.clone().delete(30, 32)
-    expect(String(output.text)).toEqual('one👨‍👩‍👧‍👧 t👨‍👩‍👧‍👧 three👨‍👩‍👧‍👧')
+    expect(output.text).toEqual('one👨‍👩‍👧‍👧 t👨‍👩‍👧‍👧 three👨‍👩‍👧‍👧')
     expect(output.facets?.[0].index.start).toEqual(29)
     expect(output.facets?.[0].index.end).toEqual(55)
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[0].index.start,
         output.facets?.[0].index.end,
       ),
@@ -340,11 +340,11 @@ describe('RichText#delete w/fat unicode', () => {
 
   it('correctly adjusts facets (scenario E - partially before)', () => {
     const output = input.clone().delete(28, 31)
-    expect(String(output.text)).toEqual('one👨‍👩‍👧‍👧o👨‍👩‍👧‍👧 three👨‍👩‍👧‍👧')
+    expect(output.text).toEqual('one👨‍👩‍👧‍👧o👨‍👩‍👧‍👧 three👨‍👩‍👧‍👧')
     expect(output.facets?.[0].index.start).toEqual(28)
     expect(output.facets?.[0].index.end).toEqual(54)
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[0].index.start,
         output.facets?.[0].index.end,
       ),
@@ -353,11 +353,11 @@ describe('RichText#delete w/fat unicode', () => {
 
   it('correctly adjusts facets (scenario F - entirely before)', () => {
     const output = input.clone().delete(0, 2)
-    expect(String(output.text)).toEqual('e👨‍👩‍👧‍👧 two👨‍👩‍👧‍👧 three👨‍👩‍👧‍👧')
+    expect(output.text).toEqual('e👨‍👩‍👧‍👧 two👨‍👩‍👧‍👧 three👨‍👩‍👧‍👧')
     expect(output.facets?.[0].index.start).toEqual(27)
     expect(output.facets?.[0].index.end).toEqual(55)
     expect(
-      output.text.slice(
+      output.unicodeText.slice(
         output.facets?.[0].index.start,
         output.facets?.[0].index.end,
       ),
@@ -484,6 +484,40 @@ describe('RichText#segments', () => {
         facet: { index: { start: 58, end: 88 }, value: { $type: '' } },
       },
     ])
+  })
+
+  it('correctly identifies mentions and links', () => {
+    const input = new RichText({
+      text: 'one two three',
+      facets: [
+        {
+          index: { start: 0, end: 3 },
+          value: {
+            $type: 'app.bsky.richtext.facet#mention',
+            did: 'did:plc:123',
+          },
+        },
+        {
+          index: { start: 4, end: 7 },
+          value: {
+            $type: 'app.bsky.richtext.facet#link',
+            uri: 'https://example.com',
+          },
+        },
+        { index: { start: 8, end: 13 }, value: { $type: 'other' } },
+      ],
+    })
+    const segments = Array.from(input.segments())
+    expect(segments[0].isLink()).toBe(false)
+    expect(segments[0].isMention()).toBe(true)
+    expect(segments[1].isLink()).toBe(false)
+    expect(segments[1].isMention()).toBe(false)
+    expect(segments[2].isLink()).toBe(true)
+    expect(segments[2].isMention()).toBe(false)
+    expect(segments[3].isLink()).toBe(false)
+    expect(segments[3].isMention()).toBe(false)
+    expect(segments[4].isLink()).toBe(false)
+    expect(segments[4].isMention()).toBe(false)
   })
 
   it('skips facets that incorrectly overlap (left edge)', () => {

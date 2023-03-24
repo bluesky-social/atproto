@@ -21,17 +21,19 @@ function clean(
 ): RichText {
   richText = richText.clone()
 
-  let match = richText.text.utf16.match(targetRegexp)
+  let match = richText.unicodeText.utf16.match(targetRegexp)
   while (match && typeof match.index !== 'undefined') {
-    const oldText = richText.text
-    const removeStartIndex = richText.text.utf16IndexToUtf8Index(match.index)
+    const oldText = richText.unicodeText
+    const removeStartIndex = richText.unicodeText.utf16IndexToUtf8Index(
+      match.index,
+    )
     const removeEndIndex = removeStartIndex + new UnicodeString(match[0]).length
     richText.delete(removeStartIndex, removeEndIndex)
-    if (richText.text.utf16 === oldText.utf16) {
+    if (richText.unicodeText.utf16 === oldText.utf16) {
       break // sanity check
     }
     richText.insert(removeStartIndex, replacementString)
-    match = richText.text.utf16.match(targetRegexp)
+    match = richText.unicodeText.utf16.match(targetRegexp)
   }
 
   return richText

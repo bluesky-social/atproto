@@ -115,42 +115,53 @@ export interface RichTextOpts {
   cleanNewlines?: boolean
 }
 
-export interface RichTextSegment {
-  text: string
-  facet?: Facet
+export class RichTextSegment {
+  constructor(public text: string, public facet?: Facet) {}
+
+  isLink() {
+    return this.facet?.value.$type === 'app.bsky.richtext.facet#link'
+  }
+
+  isMention() {
+    return this.facet?.value.$type === 'app.bsky.richtext.facet#mention'
+  }
 }
 
 export class RichText {
-  text: UnicodeString
+  unicodeText: UnicodeString
   facets?: Facet[]
 
   constructor(props: RichTextProps, opts?: RichTextOpts) {
-    this.text = new UnicodeString(props.text)
+    this.unicodeText = new UnicodeString(props.text)
     this.facets = props.facets
     if (!this.facets?.length && props.entities?.length) {
-      this.facets = entitiesToFacets(this.text, props.entities)
+      this.facets = entitiesToFacets(this.unicodeText, props.entities)
     }
     if (opts?.cleanNewlines) {
       sanitizeRichText(this, { cleanNewlines: true }).copyInto(this)
     }
   }
 
+  get text() {
+    return this.unicodeText.toString()
+  }
+
   clone() {
     return new RichText({
-      text: this.text.utf16,
+      text: this.unicodeText.utf16,
       facets: cloneDeep(this.facets),
     })
   }
 
   copyInto(target: RichText) {
-    target.text = this.text
+    target.unicodeText = this.unicodeText
     target.facets = cloneDeep(this.facets)
   }
 
   *segments(): Generator<RichTextSegment, void, void> {
     const facets = this.facets || []
     if (!facets.length) {
-      yield { text: this.text.utf16 }
+      yield new RichTextSegment(this.unicodeText.utf16)
       return
     }
 
@@ -159,39 +170,40 @@ export class RichText {
     do {
       const currFacet = facets[facetCursor]
       if (textCursor < currFacet.index.start) {
-        yield { text: this.text.slice(textCursor, currFacet.index.start) }
+        yield new RichTextSegment(
+          this.unicodeText.slice(textCursor, currFacet.index.start),
+        )
       } else if (textCursor > currFacet.index.start) {
         facetCursor++
         continue
       }
       if (currFacet.index.start < currFacet.index.end) {
-        const subtext = this.text.slice(
+        const subtext = this.unicodeText.slice(
           currFacet.index.start,
           currFacet.index.end,
         )
         if (!subtext.trim()) {
           // dont empty string entities
-          yield { text: subtext }
+          yield new RichTextSegment(subtext)
         } else {
-          yield {
-            facet: currFacet,
-            text: subtext,
-          }
+          yield new RichTextSegment(subtext, currFacet)
         }
       }
       textCursor = currFacet.index.end
       facetCursor++
     } while (facetCursor < facets.length)
-    if (textCursor < this.text.length) {
-      yield { text: this.text.slice(textCursor, this.text.length) }
+    if (textCursor < this.unicodeText.length) {
+      yield new RichTextSegment(
+        this.unicodeText.slice(textCursor, this.unicodeText.length),
+      )
     }
   }
 
   insert(insertIndex: number, insertText: string) {
-    this.text = new UnicodeString(
-      this.text.slice(0, insertIndex) +
+    this.unicodeText = new UnicodeString(
+      this.unicodeText.slice(0, insertIndex) +
         insertText +
-        this.text.slice(insertIndex),
+        this.unicodeText.slice(insertIndex),
     )
 
     if (!this.facets?.length) {
@@ -219,8 +231,9 @@ export class RichText {
   }
 
   delete(removeStartIndex: number, removeEndIndex: number) {
-    this.text = new UnicodeString(
-      this.text.slice(0, removeStartIndex) + this.text.slice(removeEndIndex),
+    this.unicodeText = new UnicodeString(
+      this.unicodeText.slice(0, removeStartIndex) +
+        this.unicodeText.slice(removeEndIndex),
     )
 
     if (!this.facets?.length) {
@@ -287,7 +300,7 @@ export class RichText {
    * Overwrites the existing facets with auto-detected facets
    */
   async detectFacets(agent: AtpAgent) {
-    this.facets = await detectFacets(agent, this.text)
+    this.facets = await detectFacets(agent, this.unicodeText)
   }
 }
 

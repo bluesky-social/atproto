@@ -6,7 +6,9 @@ describe('sanitizeRichText: cleanNewlines', () => {
       text: 'test\n\n\n\n\ntest\n\n\n\n\n\n\ntest\n\n\n\n\n\n\ntest\n\n\n\n\n\n\ntest',
     })
     const output = sanitizeRichText(input, { cleanNewlines: true })
-    expect(String(output.text)).toEqual('test\n\ntest\n\ntest\n\ntest\n\ntest')
+    expect(String(output.unicodeText)).toEqual(
+      'test\n\ntest\n\ntest\n\ntest\n\ntest',
+    )
   })
 
   it('removes more than two consecutive new lines w/fat unicode', () => {
@@ -14,7 +16,7 @@ describe('sanitizeRichText: cleanNewlines', () => {
       text: 'test👨‍👩‍👧‍👧\n\n\n\n\n👨‍👩‍👧‍👧test\n\n\n\n\n\n\ntest👨‍👩‍👧‍👧\n\n\n\n\n\n\ntest\n\n\n\n\n\n\n👨‍👩‍👧‍👧test',
     })
     const output = sanitizeRichText(input, { cleanNewlines: true })
-    expect(String(output.text)).toEqual(
+    expect(String(output.unicodeText)).toEqual(
       'test👨‍👩‍👧‍👧\n\n👨‍👩‍👧‍👧test\n\ntest👨‍👩‍👧‍👧\n\ntest\n\n👨‍👩‍👧‍👧test',
     )
   })
@@ -24,25 +26,27 @@ describe('sanitizeRichText: cleanNewlines', () => {
       text: 'test\n\n\n\n\ntest\n \n \n \n \n\n\ntest\n\n\n\n\n\n\ntest\n\n\n\n\n  \n\ntest',
     })
     const output = sanitizeRichText(input, { cleanNewlines: true })
-    expect(String(output.text)).toEqual('test\n\ntest\n\ntest\n\ntest\n\ntest')
+    expect(String(output.unicodeText)).toEqual(
+      'test\n\ntest\n\ntest\n\ntest\n\ntest',
+    )
   })
 
   it('returns original string if there are no consecutive new lines', () => {
     const input = new RichText({ text: 'test\n\ntest\n\ntest\n\ntest\n\ntest' })
     const output = sanitizeRichText(input, { cleanNewlines: true })
-    expect(String(output.text)).toEqual(String(input.text))
+    expect(String(output.unicodeText)).toEqual(String(input.unicodeText))
   })
 
   it('returns original string if there are no new lines', () => {
     const input = new RichText({ text: 'test test          test test test' })
     const output = sanitizeRichText(input, { cleanNewlines: true })
-    expect(String(output.text)).toEqual(String(input.text))
+    expect(String(output.unicodeText)).toEqual(String(input.unicodeText))
   })
 
   it('returns empty string if input is empty', () => {
     const input = new RichText({ text: '' })
     const output = sanitizeRichText(input, { cleanNewlines: true })
-    expect(String(output.text)).toEqual('')
+    expect(String(output.unicodeText)).toEqual('')
   })
 
   it('works with different types of new line characters', () => {
@@ -50,7 +54,7 @@ describe('sanitizeRichText: cleanNewlines', () => {
       text: 'test\r\ntest\n\rtest\rtest\n\n\n\ntest\n\r \n \n \n \n\n\ntest',
     })
     const output = sanitizeRichText(input, { cleanNewlines: true })
-    expect(String(output.text)).toEqual(
+    expect(String(output.unicodeText)).toEqual(
       'test\r\ntest\n\rtest\rtest\n\ntest\n\ntest',
     )
   })
@@ -60,7 +64,9 @@ describe('sanitizeRichText: cleanNewlines', () => {
       text: 'test\n\n\n\n\ntest\n\u200B\u200B\n\n\n\ntest\n \u200B\u200B \n\n\n\ntest\n\n\n\n\n\n\ntest',
     })
     const output = sanitizeRichText(input, { cleanNewlines: true })
-    expect(String(output.text)).toEqual('test\n\ntest\n\ntest\n\ntest\n\ntest')
+    expect(String(output.unicodeText)).toEqual(
+      'test\n\ntest\n\ntest\n\ntest\n\ntest',
+    )
   })
 
   it('removes more than two consecutive new lines with zero width non-joiner', () => {
@@ -68,7 +74,9 @@ describe('sanitizeRichText: cleanNewlines', () => {
       text: 'test\n\n\n\n\ntest\n\u200C\u200C\n\n\n\ntest\n \u200C\u200C \n\n\n\ntest\n\n\n\n\n\n\ntest',
     })
     const output = sanitizeRichText(input, { cleanNewlines: true })
-    expect(String(output.text)).toEqual('test\n\ntest\n\ntest\n\ntest\n\ntest')
+    expect(String(output.unicodeText)).toEqual(
+      'test\n\ntest\n\ntest\n\ntest\n\ntest',
+    )
   })
 
   it('removes more than two consecutive new lines with zero width joiner', () => {
@@ -76,7 +84,9 @@ describe('sanitizeRichText: cleanNewlines', () => {
       text: 'test\n\n\n\n\ntest\n\u200D\u200D\n\n\n\ntest\n \u200D\u200D \n\n\n\ntest\n\n\n\n\n\n\ntest',
     })
     const output = sanitizeRichText(input, { cleanNewlines: true })
-    expect(String(output.text)).toEqual('test\n\ntest\n\ntest\n\ntest\n\ntest')
+    expect(String(output.unicodeText)).toEqual(
+      'test\n\ntest\n\ntest\n\ntest\n\ntest',
+    )
   })
 
   it('removes more than two consecutive new lines with soft hyphen', () => {
@@ -84,7 +94,9 @@ describe('sanitizeRichText: cleanNewlines', () => {
       text: 'test\n\n\n\n\ntest\n\u00AD\u00AD\n\n\n\ntest\n \u00AD\u00AD \n\n\n\ntest\n\n\n\n\n\n\ntest',
     })
     const output = sanitizeRichText(input, { cleanNewlines: true })
-    expect(String(output.text)).toEqual('test\n\ntest\n\ntest\n\ntest\n\ntest')
+    expect(String(output.unicodeText)).toEqual(
+      'test\n\ntest\n\ntest\n\ntest\n\ntest',
+    )
   })
 
   it('removes more than two consecutive new lines with word joiner', () => {
@@ -92,7 +104,9 @@ describe('sanitizeRichText: cleanNewlines', () => {
       text: 'test\n\n\n\n\ntest\n\u2060\u2060\n\n\n\ntest\n \u2060\u2060 \n\n\n\ntest\n\n\n\n\n\n\ntest',
     })
     const output = sanitizeRichText(input, { cleanNewlines: true })
-    expect(String(output.text)).toEqual('test\n\ntest\n\ntest\n\ntest\n\ntest')
+    expect(String(output.unicodeText)).toEqual(
+      'test\n\ntest\n\ntest\n\ntest\n\ntest',
+    )
   })
 })
 
@@ -108,24 +122,30 @@ describe('sanitizeRichText w/facets: cleanNewlines', () => {
       ],
     })
     const output = sanitizeRichText(input, { cleanNewlines: true })
-    expect(facetToStr(String(input.text), input.facets?.[0])).toEqual(
+    expect(facetToStr(String(input.unicodeText), input.facets?.[0])).toEqual(
       'test\n\n\n\n\ntest',
     )
-    expect(facetToStr(String(input.text), input.facets?.[1])).toEqual(
+    expect(facetToStr(String(input.unicodeText), input.facets?.[1])).toEqual(
       '\n\n\n\n\n\n\ntest',
     )
-    expect(facetToStr(String(input.text), input.facets?.[2])).toEqual(
+    expect(facetToStr(String(input.unicodeText), input.facets?.[2])).toEqual(
       'test\n\n',
     )
-    expect(facetToStr(String(input.text), input.facets?.[3])).toEqual(
+    expect(facetToStr(String(input.unicodeText), input.facets?.[3])).toEqual(
       '\n\n\n\n\n',
     )
-    expect(String(output.text)).toEqual('test\n\ntest\n\ntest\n\ntest\n\ntest')
-    expect(facetToStr(String(output.text), output.facets?.[0])).toEqual(
+    expect(String(output.unicodeText)).toEqual(
+      'test\n\ntest\n\ntest\n\ntest\n\ntest',
+    )
+    expect(facetToStr(String(output.unicodeText), output.facets?.[0])).toEqual(
       'test\n\ntest',
     )
-    expect(facetToStr(String(output.text), output.facets?.[1])).toEqual('test')
-    expect(facetToStr(String(output.text), output.facets?.[2])).toEqual('test')
+    expect(facetToStr(String(output.unicodeText), output.facets?.[1])).toEqual(
+      'test',
+    )
+    expect(facetToStr(String(output.unicodeText), output.facets?.[2])).toEqual(
+      'test',
+    )
     expect(output.facets?.[3]).toEqual(undefined)
   })
 
@@ -152,26 +172,28 @@ describe('sanitizeRichText w/facets: cleanNewlines', () => {
       ],
     })
     const output = sanitizeRichText(input, { cleanNewlines: true })
-    expect(facetToStr(String(input.text), input.facets?.[0])).toEqual(
+    expect(facetToStr(String(input.unicodeText), input.facets?.[0])).toEqual(
       '👨‍👩‍👧‍👧test\n\n\n\n\n👨‍👩‍👧‍👧test',
     )
-    expect(facetToStr(String(input.text), input.facets?.[1])).toEqual(
+    expect(facetToStr(String(input.unicodeText), input.facets?.[1])).toEqual(
       '\n\n\n\n\n👨‍👩‍👧‍👧test',
     )
-    expect(facetToStr(String(input.text), input.facets?.[2])).toEqual(
+    expect(facetToStr(String(input.unicodeText), input.facets?.[2])).toEqual(
       '👨‍👩‍👧‍👧test\n\n',
     )
-    expect(facetToStr(String(input.text), input.facets?.[3])).toEqual('\n\n')
-    expect(String(output.text)).toEqual(
+    expect(facetToStr(String(input.unicodeText), input.facets?.[3])).toEqual(
+      '\n\n',
+    )
+    expect(String(output.unicodeText)).toEqual(
       '👨‍👩‍👧‍👧test\n\n👨‍👩‍👧‍👧test\n\n👨‍👩‍👧‍👧test\n\n👨‍👩‍👧‍👧test\n\n👨‍👩‍👧‍👧test\n\n👨‍👩‍👧‍👧test\n\n👨‍👩‍👧‍👧test\n\n',
     )
-    expect(facetToStr(String(output.text), output.facets?.[0])).toEqual(
+    expect(facetToStr(String(output.unicodeText), output.facets?.[0])).toEqual(
       '👨‍👩‍👧‍👧test\n\n👨‍👩‍👧‍👧test',
     )
-    expect(facetToStr(String(output.text), output.facets?.[1])).toEqual(
+    expect(facetToStr(String(output.unicodeText), output.facets?.[1])).toEqual(
       '👨‍👩‍👧‍👧test',
     )
-    expect(facetToStr(String(output.text), output.facets?.[2])).toEqual(
+    expect(facetToStr(String(output.unicodeText), output.facets?.[2])).toEqual(
       '👨‍👩‍👧‍👧test',
     )
     expect(output.facets?.[3]).toEqual(undefined)
