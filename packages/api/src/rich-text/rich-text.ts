@@ -297,10 +297,31 @@ export class RichText {
   }
 
   /**
-   * Overwrites the existing facets with auto-detected facets
+   * Detects facets such as links and mentions
+   * Note: Overwrites the existing facets with auto-detected facets
    */
   async detectFacets(agent: AtpAgent) {
-    this.facets = await detectFacets(agent, this.unicodeText)
+    this.facets = detectFacets(this.unicodeText)
+    if (this.facets) {
+      for (const facet of this.facets) {
+        if (AppBskyRichtextFacet.isMention(facet.value)) {
+          const did = await agent
+            .resolveHandle({ handle: facet.value.did })
+            .catch((_) => undefined)
+            .then((res) => res?.data.did)
+          facet.value.did = did || ''
+        }
+      }
+    }
+  }
+
+  /**
+   * Detects facets such as links and mentions but does not resolve them
+   * Will produce invalid facets! For instance, mentions will not have their DIDs set.
+   * Note: Overwrites the existing facets with auto-detected facets
+   */
+  detectFacetsWithoutResolution() {
+    this.facets = detectFacets(this.unicodeText)
   }
 }
 

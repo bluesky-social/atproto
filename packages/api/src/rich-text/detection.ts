@@ -1,14 +1,10 @@
 import TLDs from 'tlds'
-import { AtpAgent } from '../agent'
 import { AppBskyRichtextFacet } from '../client'
 import { UnicodeString } from './unicode'
 
 export type Facet = AppBskyRichtextFacet.Main
 
-export async function detectFacets(
-  agent: AtpAgent,
-  text: UnicodeString,
-): Promise<Facet[] | undefined> {
+export function detectFacets(text: UnicodeString): Facet[] | undefined {
   let match
   const facets: Facet[] = []
   {
@@ -17,14 +13,6 @@ export async function detectFacets(
     while ((match = re.exec(text.utf16))) {
       if (!isValidDomain(match[3]) && !match[3].endsWith('.test')) {
         continue // probably not a handle
-      }
-
-      const did = await agent
-        .resolveHandle({ handle: match[3] })
-        .catch((_) => undefined)
-        .then((res) => res?.data.did)
-      if (!did) {
-        continue
       }
 
       const start = text.utf16.indexOf(match[3], match.index) - 1
@@ -36,7 +24,7 @@ export async function detectFacets(
         },
         value: {
           $type: 'app.bsky.richtext.facet#mention',
-          did: did,
+          did: match[3], // must be resolved afterwards
         },
       })
     }
