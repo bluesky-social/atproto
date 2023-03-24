@@ -2,17 +2,18 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
-import * as ComAtprotoAdminModerationReport from './moderationReport'
+import { CID } from 'multiformats/cid'
+import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
   id: number
 }
 
 export type InputSchema = undefined
-export type OutputSchema = ComAtprotoAdminModerationReport.ViewDetail
+export type OutputSchema = ComAtprotoAdminDefs.ReportViewDetail
 
 export interface CallOptions {
   headers?: Headers

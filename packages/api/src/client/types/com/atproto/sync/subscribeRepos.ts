@@ -2,21 +2,22 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
+import { CID } from 'multiformats/cid'
 
 export interface Commit {
   seq: number
   rebase: boolean
   tooBig: boolean
   repo: string
-  commit: string
-  prev: string | null
+  commit: CID
+  prev: CID | null
   /** CAR file containing relevant blocks */
-  blocks: {}
+  blocks: Uint8Array
   ops: RepoOp[]
-  blobs: string[]
+  blobs: CID[]
   time: string
   [k: string]: unknown
 }
@@ -110,7 +111,7 @@ export function validateInfo(v: unknown): ValidationResult {
 export interface RepoOp {
   action: 'create' | 'update' | 'delete' | (string & {})
   path: string
-  cid: string | null
+  cid: CID | null
   [k: string]: unknown
 }
 

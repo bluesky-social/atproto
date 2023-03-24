@@ -9,13 +9,13 @@
         "type": "params",
         "required": ["uri"],
         "properties": {
-          "uri": {"type": "string"},
-          "cid": {"type": "string"}
+          "uri": {"type": "string", "format": "at-uri"},
+          "cid": {"type": "string", "format": "cid"}
         }
       },
       "output": {
         "encoding": "application/json",
-        "schema": {"type": "ref", "ref": "com.atproto.admin.record#viewDetail"}
+        "schema": {"type": "ref", "ref": "com.atproto.admin.defs#recordViewDetail"}
       }
     }
   }

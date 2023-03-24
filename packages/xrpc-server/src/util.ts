@@ -3,6 +3,7 @@ import { createDeflate, createGunzip } from 'zlib'
 import express from 'express'
 import mime from 'mime-types'
 import {
+  jsonToLex,
   Lexicons,
   LexXrpcProcedure,
   LexXrpcQuery,
@@ -55,7 +56,7 @@ export function decodeQueryParam(
   if (type === 'string' || type === 'datetime') {
     return String(value)
   }
-  if (type === 'number') {
+  if (type === 'float') {
     return Number(String(value))
   } else if (type === 'integer') {
     return Number(String(value)) | 0
@@ -124,7 +125,8 @@ export function validateInput(
   // if input schema, validate
   if (def.input?.schema) {
     try {
-      req.body = lexicons.assertValidXrpcInput(nsid, req.body)
+      const lexBody = req.body ? jsonToLex(req.body) : req.body
+      req.body = lexicons.assertValidXrpcInput(nsid, lexBody)
     } catch (e) {
       throw new InvalidRequestError(e instanceof Error ? e.message : String(e))
     }

@@ -2,24 +2,24 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
-import * as ComAtprotoRepoRepoRef from '../repo/repoRef'
-import * as ComAtprotoRepoRecordRef from '../repo/recordRef'
-import * as ComAtprotoAdminModerationAction from './moderationAction'
+import { CID } from 'multiformats/cid'
+import * as ComAtprotoAdminDefs from './defs'
+import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
 
 export interface QueryParams {}
 
 export interface InputSchema {
   action:
-    | 'com.atproto.admin.moderationAction#takedown'
-    | 'com.atproto.admin.moderationAction#flag'
-    | 'com.atproto.admin.moderationAction#acknowledge'
+    | 'com.atproto.admin.defs#takedown'
+    | 'com.atproto.admin.defs#flag'
+    | 'com.atproto.admin.defs#acknowledge'
     | (string & {})
   subject:
-    | ComAtprotoRepoRepoRef.Main
-    | ComAtprotoRepoRecordRef.Main
+    | ComAtprotoAdminDefs.RepoRef
+    | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
   subjectBlobCids?: string[]
   reason: string
@@ -27,7 +27,7 @@ export interface InputSchema {
   [k: string]: unknown
 }
 
-export type OutputSchema = ComAtprotoAdminModerationAction.View
+export type OutputSchema = ComAtprotoAdminDefs.ActionView
 
 export interface CallOptions {
   headers?: Headers

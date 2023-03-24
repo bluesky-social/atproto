@@ -38,11 +38,11 @@
         "seq": {"type": "integer"},
         "rebase": {"type": "boolean"},
         "tooBig": {"type": "boolean"},
-        "repo": {"type": "string"},
-        "commit": {"type": "string"},
-        "prev": {"type": "string"},
+        "repo": {"type": "string", "format": "did"},
+        "commit": {"type": "cid-link"},
+        "prev": {"type": "cid-link"},
         "blocks": {
-          "type": "unknown",
+          "type": "bytes",
           "description": "CAR file containing relevant blocks"
         },
         "ops": {
@@ -51,9 +51,9 @@
         },
         "blobs": {
           "type": "array",
-          "items": {"type": "string"}
+          "items": {"type": "cid-link"}
         },
-        "time": {"type": "datetime"}
+        "time": {"type": "string", "format": "datetime"}
       }
     },
     "handle": {
@@ -61,8 +61,8 @@
       "required": ["seq", "did", "handle"],
       "properties": {
         "seq": {"type": "integer"},
-        "did": {"type": "string"},
-        "handle": {"type": "string"}
+        "did": {"type": "string", "format": "did"},
+        "handle": {"type": "string", "format": "handle"}
       }
     },
     "migrate": {
@@ -71,7 +71,7 @@
       "nullable": ["migrateTo"],
       "properties": {
         "seq": {"type": "integer"},
-        "did": {"type": "string"},
+        "did": {"type": "string", "format": "did"},
         "migrateTo": {"type": "string"}
       }
     },
@@ -80,7 +80,7 @@
       "required": ["seq", "did"],
       "properties": {
         "seq": {"type": "integer"},
-        "did": {"type": "string"}
+        "did": {"type": "string", "format": "did"}
       }
     },
     "info": {
@@ -110,7 +110,7 @@
           ]
         },
         "path": {"type": "string"},
-        "cid": {"type": "string"}
+        "cid": {"type": "cid-link"}
       }
     }
   }

@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import * as common from '@atproto/common'
+import { cborToLexRecord } from '@atproto/repo'
 import DatabaseSchema from '../../../db/database-schema'
 import { Message } from '../../../event-stream/messages'
 import { lexicons } from '../../../lexicon/lexicons'
@@ -169,7 +169,7 @@ export class RecordProcessor<T, S> {
       if (!found) {
         return this.params.eventsForDelete(deleted, null)
       }
-      const record = common.cborDecode(found.content)
+      const record = cborToLexRecord(found.content)
       if (!this.matchesSchema(record)) {
         return this.params.eventsForDelete(deleted, null)
       }

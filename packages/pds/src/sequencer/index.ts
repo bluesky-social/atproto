@@ -159,7 +159,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
     const opsBySeq = ops.reduce((acc, cur) => {
       acc[cur.seq] ??= []
-      const { action, path, cid } = cur
+      const { action, path } = cur
+      const cid = cur.cid ? CID.parse(cur.cid) : null
       acc[cur.seq].push({ action, path, cid })
       return acc
     }, {} as Record<number, RepoAppendOp[]>)
@@ -167,6 +168,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     return Promise.all(
       events.map(async (evt) => {
         const commit = CID.parse(evt.commit)
+        const prev = evt.prev ? CID.parse(evt.prev) : undefined
         const carSlice = await writeCar(commit, async (car) => {
           const blocks = blocksBySeq[evt.seq]
           if (blocks) {
@@ -175,14 +177,15 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
             }
           }
         })
-        const blobs = blobsBySeq[evt.seq] || []
+        const blobStrs = blobsBySeq[evt.seq] || []
+        const blobs = blobStrs.map((c) => CID.parse(c))
         const ops = opsBySeq[evt.seq] || []
         return {
           seq: evt.seq,
           time: evt.sequencedAt,
           repo: evt.did,
-          commit: evt.commit,
-          prev: evt.prev || undefined,
+          commit,
+          prev,
           blocks: carSlice,
           ops,
           blobs,
@@ -216,17 +219,17 @@ export type RepoAppendEvent = {
   seq: number
   time: string
   repo: string
-  commit: string
-  prev?: string
+  commit: CID
+  prev?: CID
   blocks: Uint8Array
   ops: RepoAppendOp[]
-  blobs: string[]
+  blobs: CID[]
 }
 
 export type RepoAppendOp = {
   action: string
   path: string
-  cid: string | null
+  cid: CID | null
 }
 
 type SequencerEvents = {

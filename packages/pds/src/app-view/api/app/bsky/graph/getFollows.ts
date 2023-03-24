@@ -8,16 +8,16 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollows({
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
-      const { user, limit, before } = params
+      const { actor, limit, cursor } = params
       const requester = auth.credentials.did
       const { services, db } = ctx
       const { ref } = db.db.dynamic
 
       const actorService = services.appView.actor(db)
 
-      const creatorRes = await actorService.getUser(user)
+      const creatorRes = await actorService.getActor(actor)
       if (!creatorRes) {
-        throw new InvalidRequestError(`User not found: ${user}`)
+        throw new InvalidRequestError(`Actor not found: ${actor}`)
       }
 
       let followsReq = ctx.db.db
@@ -39,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
       )
       followsReq = paginate(followsReq, {
         limit,
-        before,
+        cursor,
         keyset,
       })
 

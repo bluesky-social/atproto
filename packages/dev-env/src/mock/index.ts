@@ -1,9 +1,9 @@
 import { AtUri } from '@atproto/uri'
 import AtpAgent from '@atproto/api'
 import {
-  SPAM,
-  OTHER,
-} from '@atproto/api/src/client/types/com/atproto/report/reasonType'
+  REASONSPAM,
+  REASONOTHER,
+} from '@atproto/api/src/client/types/com/atproto/moderation/defs'
 import { DevEnv } from '../index'
 import { ServerType } from '../types'
 import { genServerCfg } from '../util'
@@ -51,7 +51,6 @@ export async function generateMockSetup(env: DevEnv) {
   interface User {
     email: string
     did: string
-    declarationCid: string
     handle: string
     password: string
     agent: AtpAgent
@@ -60,7 +59,6 @@ export async function generateMockSetup(env: DevEnv) {
     {
       email: 'alice@test.com',
       did: '',
-      declarationCid: '',
       handle: `alice.test`,
       password: 'hunter2',
       agent: clients.alice,
@@ -68,7 +66,6 @@ export async function generateMockSetup(env: DevEnv) {
     {
       email: 'bob@test.com',
       did: '',
-      declarationCid: '',
       handle: `bob.test`,
       password: 'hunter2',
       agent: clients.bob,
@@ -76,7 +73,6 @@ export async function generateMockSetup(env: DevEnv) {
     {
       email: 'carla@test.com',
       did: '',
-      declarationCid: '',
       handle: `carla.test`,
       password: 'hunter2',
       agent: clients.carla,
@@ -88,17 +84,13 @@ export async function generateMockSetup(env: DevEnv) {
 
   let _i = 1
   for (const user of users) {
-    const res = await clients.loggedout.api.com.atproto.account.create({
+    const res = await clients.loggedout.api.com.atproto.server.createAccount({
       email: user.email,
       handle: user.handle,
       password: user.password,
     })
     user.agent.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)
-    const { data: profile } = await user.agent.api.app.bsky.actor.getProfile({
-      actor: user.handle,
-    })
     user.did = res.data.did
-    user.declarationCid = profile.declaration.cid
     await user.agent.api.app.bsky.actor.profile.create(
       { did: user.did },
       {
@@ -110,11 +102,11 @@ export async function generateMockSetup(env: DevEnv) {
 
   // Report one user
   const reporter = picka(users)
-  await reporter.agent.api.com.atproto.report.create({
-    reasonType: picka([SPAM, OTHER]),
+  await reporter.agent.api.com.atproto.moderation.createReport({
+    reasonType: picka([REASONSPAM, REASONOTHER]),
     reason: picka(["Didn't look right to me", undefined, undefined]),
     subject: {
-      $type: 'com.atproto.repo.repoRef',
+      $type: 'com.atproto.admin.defs#repoRef',
       did: picka(users).did,
     },
   })
@@ -124,10 +116,7 @@ export async function generateMockSetup(env: DevEnv) {
     await author.agent.api.app.bsky.graph.follow.create(
       { did: author.did },
       {
-        subject: {
-          did: subject.did,
-          declarationCid: subject.declarationCid,
-        },
+        subject: subject.did,
         createdAt: date.next().value,
       },
     )
@@ -163,8 +152,8 @@ export async function generateMockSetup(env: DevEnv) {
     }
     if (rand(6) === 0) {
       const reporter = picka(users)
-      await reporter.agent.api.com.atproto.report.create({
-        reasonType: picka([SPAM, OTHER]),
+      await reporter.agent.api.com.atproto.moderation.createReport({
+        reasonType: picka([REASONSPAM, REASONOTHER]),
         reason: picka(["Didn't look right to me", undefined, undefined]),
         subject: {
           $type: 'com.atproto.repo.recordRef',
@@ -179,7 +168,7 @@ export async function generateMockSetup(env: DevEnv) {
     const targetUri = picka(posts).uri
     const urip = new AtUri(targetUri)
     const target = await alice.agent.api.app.bsky.feed.post.get({
-      user: urip.host,
+      repo: urip.host,
       rkey: urip.rkey,
     })
     const author = picka(users)
@@ -198,14 +187,13 @@ export async function generateMockSetup(env: DevEnv) {
     )
   }
 
-  // a set of up/downvotes
+  // a set of likes
   for (const post of posts) {
     for (const user of users) {
       if (rand(3) === 0) {
-        await user.agent.api.app.bsky.feed.vote.create(
+        await user.agent.api.app.bsky.feed.like.create(
           { did: user.did },
           {
-            direction: rand(3) !== 0 ? 'up' : 'down',
             subject: post,
             createdAt: date.next().value,
           },

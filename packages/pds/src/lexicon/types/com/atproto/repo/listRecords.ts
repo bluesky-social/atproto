@@ -2,22 +2,23 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
+import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {
   /** The handle or DID of the repo. */
-  user: string
+  repo: string
   /** The NSID of the record type. */
   collection: string
   /** The number of records to return. */
   limit: number
-  /** A TID to filter the range of records returned. */
-  before?: string
-  /** A TID to filter the range of records returned. */
-  after?: string
+  /** The lowest sort-ordered rkey to start from (exclusive) */
+  rkeyStart?: string
+  /** The highest sort-ordered rkey to stop at (exclusive) */
+  rkeyEnd?: string
   /** Reverse the order of the returned records? */
   reverse?: boolean
 }

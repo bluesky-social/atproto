@@ -10,7 +10,7 @@
         "properties": {
           "term": {"type": "string"},
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "before": {"type": "string"}
+          "cursor": {"type": "string"}
         }
       },
       "output": {
@@ -20,7 +20,7 @@
           "required": ["repos"],
           "properties": {
             "cursor": {"type": "string"},
-            "repos": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.repo#view"}}
+            "repos": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.defs#repoView"}}
           }
         }
       }

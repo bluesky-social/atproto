@@ -11,10 +11,7 @@ import * as repo from '@atproto/repo'
 import { getWriteLog, MemoryBlockstore, WriteOpAction } from '@atproto/repo'
 import { byFrame, ErrorFrame, Frame, MessageFrame } from '@atproto/xrpc-server'
 import { WebSocket } from 'ws'
-import {
-  Commit as CommitEvt,
-  isInfo,
-} from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
+import { Commit as CommitEvt } from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
 import { AppContext, Database } from '../../src'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -96,8 +93,8 @@ describe('repo subscribe repos', () => {
       const commit = commits[i]
       const evt = evts[i]
       expect(evt.repo).toEqual(did)
-      expect(evt.commit).toEqual(commit.commit.toString())
-      expect(evt.prev).toEqual(commits[i - 1]?.commit?.toString() ?? null)
+      expect(evt.commit.toString()).toEqual(commit.commit.toString())
+      expect(evt.prev?.toString()).toEqual(commits[i - 1]?.commit?.toString())
       const car = await repo.readCarWithRoot(evt.blocks as Uint8Array)
       expect(car.root.equals(commit.commit))
       expect(car.blocks.equals(commit.blocks))
@@ -106,7 +103,9 @@ describe('repo subscribe repos', () => {
         path: w.collection + '/' + w.rkey,
         cid: w.action === WriteOpAction.Delete ? null : w.cid.toString(),
       }))
-      const sortedOps = evt.ops.sort((a, b) => a.path.localeCompare(b.path))
+      const sortedOps = evt.ops
+        .map((op) => ({ ...op, cid: op.cid?.toString() }))
+        .sort((a, b) => a.path.localeCompare(b.path))
       const sortedWrites = writes.sort((a, b) => a.path.localeCompare(b.path))
       expect(sortedOps).toEqual(sortedWrites)
     }
@@ -193,7 +192,7 @@ describe('repo subscribe repos', () => {
       const evt = evts[i].body as CommitEvt
       const seq = seqSlice[i]
       expect(evt.time).toEqual(seq.sequencedAt)
-      expect(evt.commit).toEqual(seq.commit)
+      expect(evt.commit.toString()).toEqual(seq.commit)
       expect(evt.repo).toEqual(seq.did)
     }
   })

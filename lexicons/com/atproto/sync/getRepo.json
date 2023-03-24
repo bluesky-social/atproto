@@ -9,9 +9,21 @@
         "type": "params",
         "required": ["did"],
         "properties": {
-          "did": {"type": "string", "description": "The DID of the repo."},
-          "earliest": {"type": "string", "description": "The earliest commit in the commit range (not inclusive)"},
-          "latest": {"type": "string", "description": "The latest commit you in the commit range (inclusive"}
+          "did": {
+            "type": "string",
+            "format": "did",
+            "description": "The DID of the repo."
+          },
+          "earliest": {
+            "type": "string",
+            "format": "cid",
+            "description": "The earliest commit in the commit range (not inclusive)"
+          },
+          "latest": {
+            "type": "string",
+            "format": "cid",
+            "description": "The latest commit you in the commit range (inclusive"
+          }
         }
       },
       "output": {

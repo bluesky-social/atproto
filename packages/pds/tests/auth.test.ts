@@ -1,8 +1,8 @@
 import AtpAgent from '@atproto/api'
 import * as jwt from 'jsonwebtoken'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
-import * as CreateSession from '@atproto/api/src/client/types/com/atproto/session/create'
-import * as RefreshSession from '@atproto/api/src/client/types/com/atproto/session/refresh'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import * as CreateSession from '@atproto/api/src/client/types/com/atproto/server/createSession'
+import * as RefreshSession from '@atproto/api/src/client/types/com/atproto/server/refreshSession'
 import { SeedClient } from './seeds/client'
 import { adminAuth, CloseFn, runTestServer, TestServerInfo } from './_util'
 
@@ -24,11 +24,11 @@ describe('auth', () => {
   })
 
   const createAccount = async (info) => {
-    const { data } = await agent.api.com.atproto.account.create(info)
+    const { data } = await agent.api.com.atproto.server.createAccount(info)
     return data
   }
   const getSession = async (jwt) => {
-    const { data } = await agent.api.com.atproto.session.get(
+    const { data } = await agent.api.com.atproto.server.getSession(
       {},
       {
         headers: SeedClient.getHeaders(jwt),
@@ -37,18 +37,21 @@ describe('auth', () => {
     return data
   }
   const createSession = async (info) => {
-    const { data } = await agent.api.com.atproto.session.create(info)
+    const { data } = await agent.api.com.atproto.server.createSession(info)
     return data
   }
   const deleteSession = async (jwt) => {
-    await agent.api.com.atproto.session.delete(undefined, {
+    await agent.api.com.atproto.server.deleteSession(undefined, {
       headers: SeedClient.getHeaders(jwt),
     })
   }
   const refreshSession = async (jwt) => {
-    const { data } = await agent.api.com.atproto.session.refresh(undefined, {
-      headers: SeedClient.getHeaders(jwt),
-    })
+    const { data } = await agent.api.com.atproto.server.refreshSession(
+      undefined,
+      {
+        headers: SeedClient.getHeaders(jwt),
+      },
+    )
     return data
   }
 
@@ -243,10 +246,10 @@ describe('auth', () => {
       {
         action: TAKEDOWN,
         subject: {
-          $type: 'com.atproto.repo.repoRef',
+          $type: 'com.atproto.admin.defs#repoRef',
           did: account.did,
         },
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {
@@ -269,10 +272,10 @@ describe('auth', () => {
       {
         action: TAKEDOWN,
         subject: {
-          $type: 'com.atproto.repo.repoRef',
+          $type: 'com.atproto.admin.defs#repoRef',
           did: account.did,
         },
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {

@@ -3,9 +3,9 @@
 exports[`pds admin get moderation actions view gets all moderation actions for a record. 1`] = `
 Array [
   Object {
-    "action": "com.atproto.admin.moderationAction#flag",
+    "action": "com.atproto.admin.defs#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 1,
     "reason": "X",
     "resolvedReportIds": Array [
@@ -13,7 +13,7 @@ Array [
     ],
     "reversal": Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "createdBy": "Y",
+      "createdBy": "did:example:admin",
       "reason": "X",
     },
     "subject": Object {
@@ -29,24 +29,24 @@ Array [
 exports[`pds admin get moderation actions view gets all moderation actions for a repo. 1`] = `
 Array [
   Object {
-    "action": "com.atproto.admin.moderationAction#flag",
+    "action": "com.atproto.admin.defs#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 5,
     "reason": "X",
     "resolvedReportIds": Array [
       3,
     ],
     "subject": Object {
-      "$type": "com.atproto.repo.repoRef",
+      "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
     },
     "subjectBlobCids": Array [],
   },
   Object {
-    "action": "com.atproto.admin.moderationAction#acknowledge",
+    "action": "com.atproto.admin.defs#acknowledge",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 2,
     "reason": "X",
     "resolvedReportIds": Array [],
@@ -58,9 +58,9 @@ Array [
     "subjectBlobCids": Array [],
   },
   Object {
-    "action": "com.atproto.admin.moderationAction#flag",
+    "action": "com.atproto.admin.defs#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 1,
     "reason": "X",
     "resolvedReportIds": Array [
@@ -68,7 +68,7 @@ Array [
     ],
     "reversal": Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "createdBy": "Y",
+      "createdBy": "did:example:admin",
       "reason": "X",
     },
     "subject": Object {
@@ -84,37 +84,37 @@ Array [
 exports[`pds admin get moderation actions view gets all moderation actions. 1`] = `
 Array [
   Object {
-    "action": "com.atproto.admin.moderationAction#acknowledge",
+    "action": "com.atproto.admin.defs#acknowledge",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 6,
     "reason": "X",
     "resolvedReportIds": Array [],
     "subject": Object {
-      "$type": "com.atproto.repo.repoRef",
+      "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
     },
     "subjectBlobCids": Array [],
   },
   Object {
-    "action": "com.atproto.admin.moderationAction#flag",
+    "action": "com.atproto.admin.defs#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 5,
     "reason": "X",
     "resolvedReportIds": Array [
       3,
     ],
     "subject": Object {
-      "$type": "com.atproto.repo.repoRef",
+      "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(1)",
     },
     "subjectBlobCids": Array [],
   },
   Object {
-    "action": "com.atproto.admin.moderationAction#flag",
+    "action": "com.atproto.admin.defs#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 4,
     "reason": "X",
     "resolvedReportIds": Array [],
@@ -126,9 +126,9 @@ Array [
     "subjectBlobCids": Array [],
   },
   Object {
-    "action": "com.atproto.admin.moderationAction#takedown",
+    "action": "com.atproto.admin.defs#takedown",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 3,
     "reason": "X",
     "resolvedReportIds": Array [],
@@ -140,9 +140,9 @@ Array [
     "subjectBlobCids": Array [],
   },
   Object {
-    "action": "com.atproto.admin.moderationAction#acknowledge",
+    "action": "com.atproto.admin.defs#acknowledge",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 2,
     "reason": "X",
     "resolvedReportIds": Array [],
@@ -154,9 +154,9 @@ Array [
     "subjectBlobCids": Array [],
   },
   Object {
-    "action": "com.atproto.admin.moderationAction#flag",
+    "action": "com.atproto.admin.defs#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "id": 1,
     "reason": "X",
     "resolvedReportIds": Array [
@@ -164,7 +164,7 @@ Array [
     ],
     "reversal": Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
-      "createdBy": "Y",
+      "createdBy": "did:example:admin",
       "reason": "X",
     },
     "subject": Object {

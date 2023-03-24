@@ -17,33 +17,31 @@
       "type": "object",
       "required":  ["uri", "title", "description"],
       "properties": {
-        "uri": {"type": "string"},
+        "uri": {"type": "string", "format": "uri"},
         "title": {"type": "string"},
         "description": {"type": "string"},
         "thumb": {
-          "type": "image",
+          "type": "blob",
           "accept": ["image/*"],
-          "maxWidth": 2000,
-          "maxHeight": 2000,
           "maxSize": 1000000
         }
       }
     },
-    "presented": {
+    "view": {
       "type": "object",
       "required": ["external"],
       "properties": {
-        "external": {
+        "value": {
           "type": "ref",
-          "ref": "#presentedExternal"
+          "ref": "#viewExternal"
         }
       }
     },
-    "presentedExternal": {
+    "viewExternal": {
       "type": "object",
       "required":  ["uri", "title", "description"],
       "properties": {
-        "uri": {"type": "string"},
+        "uri": {"type": "string", "format": "uri"},
         "title": {"type": "string"},
         "description": {"type": "string"},
         "thumb": {"type": "string"}

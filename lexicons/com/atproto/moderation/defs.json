@@ -1,0 +1,21 @@
+{
+    "lexicon": 1,
+    "id": "com.atproto.moderation.defs",
+    "defs": {
+      "reasonType": {
+        "type": "string",
+        "knownValues": [
+          "com.atproto.moderation.defs#reasonSpam",
+          "com.atproto.moderation.defs#reasonOther"
+        ]
+      },
+      "reasonSpam": {
+        "type": "token",
+        "description": "Moderation report reason: Spam."
+      },
+      "reasonOther": {
+        "type": "token",
+        "description": "Moderation report reason: Other."
+      }
+    }
+  }

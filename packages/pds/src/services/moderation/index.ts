@@ -60,9 +60,9 @@ export class ModerationService {
   async getActions(opts: {
     subject?: string
     limit: number
-    before?: string
+    cursor?: string
   }): Promise<ModerationActionRow[]> {
-    const { subject, limit, before } = opts
+    const { subject, limit, cursor } = opts
     let builder = this.db.db.selectFrom('moderation_action')
     if (subject) {
       builder = builder.where((qb) => {
@@ -71,12 +71,12 @@ export class ModerationService {
           .orWhere('subjectUri', '=', subject)
       })
     }
-    if (before) {
-      const beforeNumeric = parseInt(before, 10)
-      if (isNaN(beforeNumeric)) {
+    if (cursor) {
+      const cursorNumeric = parseInt(cursor, 10)
+      if (isNaN(cursorNumeric)) {
         throw new InvalidRequestError('Malformed cursor')
       }
-      builder = builder.where('id', '<', beforeNumeric)
+      builder = builder.where('id', '<', cursorNumeric)
     }
     return await builder
       .selectAll()
@@ -97,9 +97,9 @@ export class ModerationService {
     subject?: string
     resolved?: boolean
     limit: number
-    before?: string
+    cursor?: string
   }): Promise<ModerationReportRow[]> {
-    const { subject, resolved, limit, before } = opts
+    const { subject, resolved, limit, cursor } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_report')
     if (subject) {
@@ -122,12 +122,12 @@ export class ModerationService {
         ? builder.whereExists(resolutionsQuery)
         : builder.whereNotExists(resolutionsQuery)
     }
-    if (before) {
-      const beforeNumeric = parseInt(before, 10)
-      if (isNaN(beforeNumeric)) {
+    if (cursor) {
+      const cursorNumeric = parseInt(cursor, 10)
+      if (isNaN(cursorNumeric)) {
         throw new InvalidRequestError('Malformed cursor')
       }
-      builder = builder.where('id', '<', beforeNumeric)
+      builder = builder.where('id', '<', cursorNumeric)
     }
     return await builder
       .selectAll()
@@ -152,7 +152,7 @@ export class ModerationService {
       .where('reversedAt', 'is', null)
     if ('did' in subject) {
       builder = builder
-        .where('subjectType', '=', 'com.atproto.repo.repoRef')
+        .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
         .where('subjectDid', '=', subject.did)
     } else if ('uri' in subject) {
       builder = builder
@@ -197,7 +197,7 @@ export class ModerationService {
       const repo = await new SqlRepoStorage(this.db, subject.did).getHead()
       if (!repo) throw new InvalidRequestError('Repo not found')
       subjectInfo = {
-        subjectType: 'com.atproto.repo.repoRef',
+        subjectType: 'com.atproto.admin.defs#repoRef',
         subjectDid: subject.did,
         subjectUri: null,
         subjectCid: null,
@@ -436,13 +436,13 @@ export class ModerationService {
     reasonType: ModerationReportRow['reasonType']
     reason?: string
     subject: { did: string } | { uri: AtUri; cid?: CID }
-    reportedByDid: string
+    reportedBy: string
     createdAt?: Date
   }): Promise<ModerationReportRow> {
     const {
       reasonType,
       reason,
-      reportedByDid,
+      reportedBy,
       createdAt = new Date(),
       subject,
     } = info
@@ -453,7 +453,7 @@ export class ModerationService {
       const repo = await new SqlRepoStorage(this.db, subject.did).getHead()
       if (!repo) throw new InvalidRequestError('Repo not found')
       subjectInfo = {
-        subjectType: 'com.atproto.repo.repoRef',
+        subjectType: 'com.atproto.admin.defs#repoRef',
         subjectDid: subject.did,
         subjectUri: null,
         subjectCid: null,
@@ -477,7 +477,7 @@ export class ModerationService {
         reasonType,
         reason: reason || null,
         createdAt: createdAt.toISOString(),
-        reportedByDid,
+        reportedByDid: reportedBy,
         ...subjectInfo,
       })
       .returningAll()
@@ -493,7 +493,7 @@ export type ModerationReportRow = Selectable<ModerationReport>
 
 export type SubjectInfo =
   | {
-      subjectType: 'com.atproto.repo.repoRef'
+      subjectType: 'com.atproto.admin.defs#repoRef'
       subjectDid: string
       subjectUri: null
       subjectCid: null

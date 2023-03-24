@@ -10,7 +10,7 @@
         "properties": {
           "algorithm": {"type": "string"},
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "before": {"type": "string"}
+          "cursor": {"type": "string"}
         }
       },
       "output": {
@@ -22,7 +22,7 @@
             "cursor": {"type": "string"},
             "feed": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.feed.feedViewPost"}
+              "items": {"type": "ref", "ref": "app.bsky.feed.defs#feedViewPost"}
             }
           }
         }

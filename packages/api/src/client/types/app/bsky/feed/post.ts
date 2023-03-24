@@ -1,18 +1,21 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
+import { CID } from 'multiformats/cid'
+import * as AppBskyRichtextFacet from '../richtext/facet'
 import * as AppBskyEmbedImages from '../embed/images'
 import * as AppBskyEmbedExternal from '../embed/external'
 import * as AppBskyEmbedRecord from '../embed/record'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
-import * as AppBskyActorRef from '../actor/ref'
 
 export interface Record {
   text: string
+  /** Deprecated: replaced by app.bsky.richtext.facet. */
   entities?: Entity[]
+  facets?: AppBskyRichtextFacet.Main[]
   reply?: ReplyRef
   embed?:
     | AppBskyEmbedImages.Main
@@ -86,52 +89,4 @@ export function isTextSlice(v: unknown): v is TextSlice {
 
 export function validateTextSlice(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.post#textSlice', v)
-}
-
-export interface View {
-  uri: string
-  cid: string
-  author: AppBskyActorRef.WithInfo
-  record: {}
-  embed?:
-    | AppBskyEmbedImages.Presented
-    | AppBskyEmbedExternal.Presented
-    | AppBskyEmbedRecord.Presented
-    | { $type: string; [k: string]: unknown }
-  replyCount: number
-  repostCount: number
-  upvoteCount: number
-  downvoteCount: number
-  indexedAt: string
-  viewer: ViewerState
-  [k: string]: unknown
-}
-
-export function isView(v: unknown): v is View {
-  return (
-    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.feed.post#view'
-  )
-}
-
-export function validateView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.post#view', v)
-}
-
-export interface ViewerState {
-  repost?: string
-  upvote?: string
-  downvote?: string
-  [k: string]: unknown
-}
-
-export function isViewerState(v: unknown): v is ViewerState {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.post#viewerState'
-  )
-}
-
-export function validateViewerState(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.post#viewerState', v)
 }

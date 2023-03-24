@@ -66,13 +66,12 @@ export type NotificationInfo = {
 }
 
 export type NotificationReason =
-  | 'vote'
-  | 'assertion'
+  | 'like'
   | 'repost'
   | 'follow'
-  | 'invite'
   | 'mention'
   | 'reply'
+  | 'quote'
 
 export type DeleteNotifications = {
   type: 'delete_notifications'

@@ -2,11 +2,12 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
+import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as ComAtprotoAdminRecord from './record'
+import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
   uri: string
@@ -14,7 +15,7 @@ export interface QueryParams {
 }
 
 export type InputSchema = undefined
-export type OutputSchema = ComAtprotoAdminRecord.ViewDetail
+export type OutputSchema = ComAtprotoAdminDefs.RecordViewDetail
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {

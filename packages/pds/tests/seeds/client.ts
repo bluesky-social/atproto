@@ -1,10 +1,11 @@
 import fs from 'fs/promises'
 import AtpAgent from '@atproto/api'
 import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/takeModerationAction'
-import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/report/create'
+import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/moderation/createReport'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import { adminAuth } from '../_util'
+import { BlobRef } from '@atproto/lexicon'
 
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.
@@ -12,7 +13,7 @@ import { adminAuth } from '../_util'
 let AVATAR_IMG: Uint8Array | undefined
 
 export type ImageRef = {
-  image: { cid: string; mimeType: string }
+  image: BlobRef
   alt: string
 }
 
@@ -41,27 +42,6 @@ export class RecordRef {
   }
 }
 
-export class ActorRef {
-  did: string
-  declarationCid: CID
-
-  constructor(did: string, declarationCid: CID | string) {
-    this.did = did
-    this.declarationCid = CID.parse(declarationCid.toString())
-  }
-
-  get raw(): { did: string; declarationCid: string } {
-    return {
-      did: this.did.toString(),
-      declarationCid: this.declarationCid.toString(),
-    }
-  }
-
-  get declarationStr(): string {
-    return this.declarationCid.toString()
-  }
-}
-
 export class SeedClient {
   accounts: Record<
     string,
@@ -72,7 +52,6 @@ export class SeedClient {
       handle: string
       email: string
       password: string
-      ref: ActorRef
     }
   >
   profiles: Record<
@@ -89,10 +68,7 @@ export class SeedClient {
     string,
     { text: string; ref: RecordRef; images: ImageRef[]; quote?: RecordRef }[]
   >
-  votes: {
-    up: Record<string, Record<string, AtUri>>
-    down: Record<string, Record<string, AtUri>>
-  }
+  likes: Record<string, Record<string, AtUri>>
   replies: Record<string, { text: string; ref: RecordRef }[]>
   reposts: Record<string, RecordRef[]>
   dids: Record<string, string>
@@ -102,7 +78,7 @@ export class SeedClient {
     this.profiles = {}
     this.follows = {}
     this.posts = {}
-    this.votes = { up: {}, down: {} }
+    this.likes = {}
     this.replies = {}
     this.reposts = {}
     this.dids = {}
@@ -116,21 +92,13 @@ export class SeedClient {
       password: string
     },
   ) {
-    const { data: account } = await this.agent.api.com.atproto.account.create(
-      params,
-    )
-    const { data: profile } = await this.agent.api.app.bsky.actor.getProfile(
-      {
-        actor: params.handle,
-      },
-      { headers: SeedClient.getHeaders(account.accessJwt) },
-    )
+    const { data: account } =
+      await this.agent.api.com.atproto.server.createAccount(params)
     this.dids[shortName] = account.did
     this.accounts[account.did] = {
       ...account,
       email: params.email,
       password: params.password,
-      ref: new ActorRef(account.did, profile.declaration.cid),
     }
     return this.accounts[account.did]
   }
@@ -145,13 +113,13 @@ export class SeedClient {
       'tests/image/fixtures/key-portrait-small.jpg',
     )
 
-    let avatarCid
+    let avatarBlob
     {
-      const res = await this.agent.api.com.atproto.blob.upload(AVATAR_IMG, {
+      const res = await this.agent.api.com.atproto.repo.uploadBlob(AVATAR_IMG, {
         encoding: 'image/jpeg',
         headers: this.getHeaders(fromUser || by),
       } as any)
-      avatarCid = res.data.cid
+      avatarBlob = res.data.blob
     }
 
     {
@@ -160,38 +128,38 @@ export class SeedClient {
         {
           displayName,
           description,
-          avatar: { cid: avatarCid, mimeType: 'image/jpeg' },
+          avatar: avatarBlob,
         },
         this.getHeaders(fromUser || by),
       )
       this.profiles[by] = {
         displayName,
         description,
-        avatar: { cid: avatarCid, mimeType: 'image/jpeg' },
+        avatar: avatarBlob,
         ref: new RecordRef(res.uri, res.cid),
       }
     }
     return this.profiles[by]
   }
 
-  async follow(from: string, to: ActorRef) {
+  async follow(from: string, to: string) {
     const res = await this.agent.api.app.bsky.graph.follow.create(
       { did: from },
       {
-        subject: to.raw,
+        subject: to,
         createdAt: new Date().toISOString(),
       },
       this.getHeaders(from),
     )
     this.follows[from] ??= {}
-    this.follows[from][to.did] = new RecordRef(res.uri, res.cid)
-    return this.follows[from][to.did]
+    this.follows[from][to] = new RecordRef(res.uri, res.cid)
+    return this.follows[from][to]
   }
 
   async post(
     by: string,
     text: string,
-    entities?: any,
+    facets?: any,
     images?: ImageRef[],
     quote?: RecordRef,
   ) {
@@ -211,7 +179,7 @@ export class SeedClient {
       { did: by },
       {
         text: text,
-        entities,
+        facets,
         embed,
         createdAt: new Date().toISOString(),
       },
@@ -244,22 +212,22 @@ export class SeedClient {
     encoding: string,
   ): Promise<ImageRef> {
     const file = await fs.readFile(filePath)
-    const res = await this.agent.api.com.atproto.blob.upload(file, {
+    const res = await this.agent.api.com.atproto.repo.uploadBlob(file, {
       headers: this.getHeaders(by),
       encoding,
     } as any)
-    return { image: { cid: res.data.cid, mimeType: encoding }, alt: filePath }
+    return { image: res.data.blob, alt: filePath }
   }
 
-  async vote(direction: 'up' | 'down', by: string, subject: RecordRef) {
-    const res = await this.agent.api.app.bsky.feed.vote.create(
+  async like(by: string, subject: RecordRef) {
+    const res = await this.agent.api.app.bsky.feed.like.create(
       { did: by },
-      { direction, subject: subject.raw, createdAt: new Date().toISOString() },
+      { subject: subject.raw, createdAt: new Date().toISOString() },
       this.getHeaders(by),
     )
-    this.votes[direction][by] ??= {}
-    this.votes[direction][by][subject.uriStr] = new AtUri(res.uri)
-    return this.votes[direction][by][subject.uriStr]
+    this.likes[by] ??= {}
+    this.likes[by][subject.uriStr] = new AtUri(res.uri)
+    return this.likes[by][subject.uriStr]
   }
 
   async reply(
@@ -267,7 +235,7 @@ export class SeedClient {
     root: RecordRef,
     parent: RecordRef,
     text: string,
-    entities?: any,
+    facets?: any,
     images?: ImageRef[],
   ) {
     const embed = images
@@ -284,7 +252,7 @@ export class SeedClient {
           root: root.raw,
           parent: parent.raw,
         },
-        entities,
+        facets,
         embed,
         createdAt: new Date().toISOString(),
       },
@@ -311,17 +279,18 @@ export class SeedClient {
     return repost
   }
 
-  actorRef(did: string): ActorRef {
-    return this.accounts[did].ref
-  }
-
   async takeModerationAction(opts: {
     action: TakeActionInput['action']
     subject: TakeActionInput['subject']
     reason?: string
     createdBy?: string
   }) {
-    const { action, subject, reason = 'X', createdBy = 'Y' } = opts
+    const {
+      action,
+      subject,
+      reason = 'X',
+      createdBy = 'did:example:admin',
+    } = opts
     const result = await this.agent.api.com.atproto.admin.takeModerationAction(
       { action, subject, createdBy, reason },
       {
@@ -337,7 +306,7 @@ export class SeedClient {
     reason?: string
     createdBy?: string
   }) {
-    const { id, reason = 'X', createdBy = 'Y' } = opts
+    const { id, reason = 'X', createdBy = 'did:example:admin' } = opts
     const result =
       await this.agent.api.com.atproto.admin.reverseModerationAction(
         { id, reason, createdBy },
@@ -354,7 +323,7 @@ export class SeedClient {
     reportIds: number[]
     createdBy?: string
   }) {
-    const { actionId, reportIds, createdBy = 'Y' } = opts
+    const { actionId, reportIds, createdBy = 'did:example:admin' } = opts
     const result =
       await this.agent.api.com.atproto.admin.resolveModerationReports(
         { actionId, createdBy, reportIds },
@@ -370,14 +339,14 @@ export class SeedClient {
     reasonType: CreateReportInput['reasonType']
     subject: CreateReportInput['subject']
     reason?: string
-    reportedByDid: string
+    reportedBy: string
   }) {
-    const { reasonType, subject, reason, reportedByDid } = opts
-    const result = await this.agent.api.com.atproto.report.create(
+    const { reasonType, subject, reason, reportedBy } = opts
+    const result = await this.agent.api.com.atproto.moderation.createReport(
       { reasonType, subject, reason },
       {
         encoding: 'application/json',
-        headers: this.getHeaders(reportedByDid),
+        headers: this.getHeaders(reportedBy),
       },
     )
     return result.data
