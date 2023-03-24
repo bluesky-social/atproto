@@ -1,13 +1,13 @@
-import * as mf from 'multiformats/cid'
+import { CID } from 'multiformats/cid'
 import { z } from 'zod'
 import { Def } from './check'
 
 const cidSchema = z
   .any()
-  .refine((obj: unknown) => mf.CID.asCID(obj) !== null, {
+  .refine((obj: unknown) => CID.asCID(obj) !== null, {
     message: 'Not a CID',
   })
-  .transform((obj: unknown) => mf.CID.asCID(obj) as mf.CID)
+  .transform((obj: unknown) => CID.asCID(obj) as CID)
 
 export const schema = {
   cid: cidSchema,
@@ -22,7 +22,7 @@ export const def = {
   cid: {
     name: 'cid',
     schema: schema.cid,
-  } as Def<mf.CID>,
+  } as Def<CID>,
   bytes: {
     name: 'bytes',
     schema: schema.bytes,

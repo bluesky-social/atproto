@@ -28,6 +28,7 @@
     { "path": "./packages/api/tsconfig.build.json" },
     { "path": "./packages/aws/tsconfig.build.json" },
     { "path": "./packages/common/tsconfig.build.json" },
+    { "path": "./packages/common-web/tsconfig.build.json" },
     { "path": "./packages/crypto/tsconfig.build.json" },
     { "path": "./packages/dev-env" },
     { "path": "./packages/did-resolver/tsconfig.build.json" },

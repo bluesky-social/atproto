@@ -1,4 +1,4 @@
-import * as common from '@atproto/common'
+import { utf8Len, graphemeLen } from '@atproto/common-web'
 import { CID } from 'multiformats/cid'
 import { Lexicons } from '../lexicons'
 import * as formats from './formats'
@@ -229,7 +229,7 @@ export function string(
 
   // maxLength
   if (typeof def.maxLength === 'number') {
-    if (common.utf8Len(value) > def.maxLength) {
+    if (utf8Len(value) > def.maxLength) {
       return {
         success: false,
         error: new ValidationError(
@@ -241,7 +241,7 @@ export function string(
 
   // minLength
   if (typeof def.minLength === 'number') {
-    if (common.utf8Len(value) < def.minLength) {
+    if (utf8Len(value) < def.minLength) {
       return {
         success: false,
         error: new ValidationError(
@@ -253,7 +253,7 @@ export function string(
 
   // maxGraphemes
   if (typeof def.maxGraphemes === 'number') {
-    if (common.graphemeLen(value) > def.maxGraphemes) {
+    if (graphemeLen(value) > def.maxGraphemes) {
       return {
         success: false,
         error: new ValidationError(
@@ -265,7 +265,7 @@ export function string(
 
   // minGraphemes
   if (typeof def.minGraphemes === 'number') {
-    if (common.graphemeLen(value) < def.minGraphemes) {
+    if (graphemeLen(value) < def.minGraphemes) {
       return {
         success: false,
         error: new ValidationError(
