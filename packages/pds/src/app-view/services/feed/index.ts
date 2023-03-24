@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import * as common from '@atproto/common'
+import { cborToLexRecord } from '@atproto/repo'
 import Database from '../../../db'
 import { countAll, notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
@@ -7,7 +7,6 @@ import { ViewRecord } from '../../../lexicon/types/app/bsky/embed/record'
 import { isView as isViewImage } from '../../../lexicon/types/app/bsky/embed/images'
 import { PostView } from '../../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
-import { cborToLexRecord } from '@atproto/lexicon'
 
 export * from './types'
 

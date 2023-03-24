@@ -1,7 +1,7 @@
 import { CID } from 'multiformats/cid'
 import { AtUri, ensureValidAtUri } from '@atproto/uri'
 import * as ident from '@atproto/identifier'
-import { WriteOpAction } from '@atproto/repo'
+import { cborToLexRecord, WriteOpAction } from '@atproto/repo'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import { notSoftDeletedClause } from '../../db/util'
@@ -12,7 +12,6 @@ import {
   deleteRecord,
   deleteRepo,
 } from '../../event-stream/messages'
-import { cborToLexRecord } from '@atproto/lexicon'
 import { ids } from '../../lexicon/lexicons'
 
 export class RecordService {

@@ -11,12 +11,9 @@ import {
 } from './types'
 
 import * as lex from '../lexicon/lexicons'
+import { LexiconDefNotFoundError, RepoRecord } from '@atproto/lexicon'
 import {
   cidForRecord,
-  LexiconDefNotFoundError,
-  RepoRecord,
-} from '@atproto/lexicon'
-import {
   RecordDeleteOp,
   RecordCreateOp,
   RecordUpdateOp,

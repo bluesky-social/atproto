@@ -1,10 +1,9 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import * as common from '@atproto/common'
+import { cborToLexRecord } from '@atproto/repo'
 import DatabaseSchema from '../../../db/database-schema'
 import { Message } from '../../../event-stream/messages'
 import { lexicons } from '../../../lexicon/lexicons'
-import { cborToLexRecord } from '@atproto/lexicon'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
 // (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).
