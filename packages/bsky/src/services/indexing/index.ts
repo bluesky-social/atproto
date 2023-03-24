@@ -3,7 +3,7 @@ import ApiAgent from '@atproto/api'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { DidResolver } from '@atproto/did-resolver'
-import * as handleLib from '@atproto/handle'
+import * as ident from '@atproto/identifier'
 import Database from '../../db'
 import * as Post from './plugins/post'
 import * as Vote from './plugins/vote'
@@ -73,7 +73,7 @@ export class IndexingService {
       return // @TODO deal with handle updates
     }
     const { pds, handle } = await this.didResolver.resolveAtpData(did)
-    const handleToDid = await resolveExternalHandle(pds, handle)
+    const handleToDid = await resolveExternalHandle(handle)
     if (did !== handleToDid) {
       return // No bidirectional link between did and handle
     }
@@ -147,21 +147,20 @@ export class IndexingService {
 }
 
 const resolveExternalHandle = async (
-  pds: string,
   handle: string,
 ): Promise<string | undefined> => {
   try {
-    const did = await handleLib.resolveDns(handle)
+    const did = await ident.resolveDns(handle)
     return did
   } catch (err) {
-    if (err instanceof handleLib.NoHandleRecordError) {
+    if (err instanceof ident.NoHandleRecordError) {
       // no worries it's just not found
     } else {
       subLogger.error({ err, handle }, 'could not resolve dns handle')
     }
   }
   try {
-    const agent = new ApiAgent({ service: pds }) // @TODO all good to use pds rather than the handle itself?
+    const agent = new ApiAgent({ service: `https://${handle}` }) // @TODO we don't need non-tls for our tests, but it might be useful to support
     const res = await agent.api.com.atproto.handle.resolve({ handle })
     return res.data.did
   } catch (err) {

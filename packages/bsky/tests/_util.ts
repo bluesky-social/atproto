@@ -134,17 +134,19 @@ export const runTestServer = async (
   const bskyServer = await bsky.start()
   const bskyPort = (bskyServer.address() as AddressInfo).port
 
-  // Map pds public url to its local url
+  // Map pds public url and handles to pds local url
   ApiAgent.configure({
     fetch: (httpUri, ...args) => {
-      if (httpUri.startsWith(pdsServer.ctx.cfg.publicUrl)) {
-        return defaultFetchHandler(
-          httpUri.replace(
-            pdsServer.ctx.cfg.publicUrl,
-            `http://localhost:${pdsPort}`,
-          ),
-          ...args,
-        )
+      const url = new URL(httpUri)
+      const pdsUrl = pdsServer.ctx.cfg.publicUrl
+      const pdsHandleDomains = pdsServer.ctx.cfg.availableUserDomains
+      if (
+        url.host === pdsUrl ||
+        pdsHandleDomains.some((handleDomain) => url.host.endsWith(handleDomain))
+      ) {
+        url.protocol = 'http:'
+        url.host = `localhost:${pdsPort}`
+        return defaultFetchHandler(url.href, ...args)
       }
       return defaultFetchHandler(httpUri, ...args)
     },
