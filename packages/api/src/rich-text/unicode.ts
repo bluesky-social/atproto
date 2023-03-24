@@ -7,11 +7,8 @@
  * and utf16, and that's precisely what this library handles.
  */
 
-// import { AppBskyRichtextFacet } from '../client'
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
-
-// type MatcherFn = (utf16: string) => Generator<AppBskyRichtextFacet.Main>
 
 export class UnicodeString {
   utf16: string
@@ -37,11 +34,4 @@ export class UnicodeString {
   toString() {
     return this.utf16
   }
-
-  // detectFacets(matcher: MatcherFn): AppBskyRichtextFacet.Main[] {
-  //   const facets = Array.from(matcher(this.utf16))
-  //   if (this.mode === 'utf8') {
-  //   }
-  //   return facets
-  // }
 }
