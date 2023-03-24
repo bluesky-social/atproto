@@ -104,8 +104,8 @@ describe('repo subscribe repos', () => {
         cid: w.action === WriteOpAction.Delete ? null : w.cid.toString(),
       }))
       const sortedOps = evt.ops
-        .map((op) => ({ ...op, cid: op.cid?.toString() }))
         .sort((a, b) => a.path.localeCompare(b.path))
+        .map((op) => ({ ...op, cid: op.cid?.toString() ?? null }))
       const sortedWrites = writes.sort((a, b) => a.path.localeCompare(b.path))
       expect(sortedOps).toEqual(sortedWrites)
     }
