@@ -21,6 +21,7 @@ import basicSeed from '../seeds/basic'
 import { CloseFn, runTestServer } from '../_util'
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
+import handle from '../../src/api/com/atproto/handle'
 
 describe('repo subscribe repos', () => {
   let serverHost: string
@@ -70,12 +71,17 @@ describe('repo subscribe repos', () => {
     return repo.Repo.load(storage, synced.root)
   }
 
-  const verifyHandleEvent = (frame: Frame, did: string, handle: string) => {
-    if (!(frame instanceof MessageFrame)) {
-      throw new Error('expected meesage frame')
+  const getHandleEvts = (frames: Frame[]): HandleEvt[] => {
+    const evts: HandleEvt[] = []
+    for (const frame of frames) {
+      if (frame instanceof MessageFrame && frame.header.t === '#handle') {
+        evts.push(frame.body)
+      }
     }
-    expect(frame.header.t).toEqual('#handle')
-    const evt = frame.body as HandleEvt
+    return evts
+  }
+
+  const verifyHandleEvent = (evt: HandleEvt, did: string, handle: string) => {
     expect(evt.did).toBe(did)
     expect(evt.handle).toBe(handle)
     expect(typeof evt.time).toBe('string')
@@ -164,9 +170,31 @@ describe('repo subscribe repos', () => {
     ws.terminate()
 
     await verifyCommitEvents(evts)
-    const lastTwo = evts.slice(-2)
-    verifyHandleEvent(lastTwo[0], alice, 'alice2.test')
-    verifyHandleEvent(lastTwo[1], bob, 'bob2.test')
+    const handleEvts = getHandleEvts(evts.slice(-2))
+    verifyHandleEvent(handleEvts[0], alice, 'alice2.test')
+    verifyHandleEvent(handleEvts[1], bob, 'bob2.test')
+  })
+
+  it('does not return invalidated events', async () => {
+    await sc.updateHandle(alice, 'alice3.test')
+    await sc.updateHandle(alice, 'alice4.test')
+    await sc.updateHandle(alice, 'alice5.test')
+    await sc.updateHandle(bob, 'bob3.test')
+    await sc.updateHandle(bob, 'bob4.test')
+    await sc.updateHandle(bob, 'bob5.test')
+
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
+    )
+
+    const gen = byFrame(ws)
+    const evts = await readFromGenerator(gen)
+    ws.terminate()
+
+    const handleEvts = getHandleEvts(evts)
+    expect(handleEvts.length).toBe(2)
+    verifyHandleEvent(handleEvts[0], alice, 'alice5.test')
+    verifyHandleEvent(handleEvts[1], bob, 'bob5.test')
   })
 
   it('syncs new events', async () => {
@@ -252,6 +280,7 @@ describe('repo subscribe repos', () => {
       .updateTable('repo_seq')
       .set({ seq: sql`seq+1000` })
       .where('seq', 'not in', newSeqs)
+      .where('invalidatedBy', 'is', null)
       .returning('seq')
       .execute()
 
