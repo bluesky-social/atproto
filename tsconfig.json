@@ -25,6 +25,7 @@
   "exclude": ["node_modules", "**/*/dist"],
   "references": [
     { "path": "./packages/pds/tsconfig.build.json" },
+    { "path": "./packages/bsky/tsconfig.build.json" },
     { "path": "./packages/api/tsconfig.build.json" },
     { "path": "./packages/aws/tsconfig.build.json" },
     { "path": "./packages/common/tsconfig.build.json" },
