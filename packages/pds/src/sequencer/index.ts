@@ -5,7 +5,13 @@ import { seqLogger as log } from '../logger'
 import { RepoSeqEntry } from '../db/tables/repo-seq'
 import { z } from 'zod'
 import { cborDecode, cborEncode, check, schema } from '@atproto/common'
-import { blocksToCar, CidSet, CommitData, WriteOpAction } from '@atproto/repo'
+import {
+  BlockMap,
+  blocksToCar,
+  CidSet,
+  CommitData,
+  WriteOpAction,
+} from '@atproto/repo'
 import { PreparedWrite } from '../repo'
 import { CID } from 'multiformats/cid'
 
@@ -131,26 +137,38 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     commitData: CommitData,
     writes: PreparedWrite[],
   ) {
-    // @TODO handle too big
+    let tooBig: boolean
     const ops: CommitEvtOp[] = []
     const blobs = new CidSet()
-    for (const w of writes) {
-      const path = w.uri.collection + '/' + w.uri.rkey
-      let cid: CID | null
-      if (w.action === WriteOpAction.Delete) {
-        cid = null
-      } else {
-        cid = w.cid
-        w.blobs.forEach((blob) => {
-          blobs.add(blob.cid)
-        })
+    let carSlice: Uint8Array
+
+    // max 200 ops or 1MB of data
+    if (writes.length > 200 || commitData.blocks.byteSize > 1024000) {
+      tooBig = true
+      const justRoot = new BlockMap()
+      justRoot.add(commitData.blocks.get(commitData.commit))
+      carSlice = await blocksToCar(commitData.commit, justRoot)
+    } else {
+      tooBig = false
+      for (const w of writes) {
+        const path = w.uri.collection + '/' + w.uri.rkey
+        let cid: CID | null
+        if (w.action === WriteOpAction.Delete) {
+          cid = null
+        } else {
+          cid = w.cid
+          w.blobs.forEach((blob) => {
+            blobs.add(blob.cid)
+          })
+        }
+        ops.push({ action: w.action, path, cid })
       }
-      ops.push({ action: w.action, path, cid })
+      carSlice = await blocksToCar(commitData.commit, commitData.blocks)
     }
-    const carSlice = await blocksToCar(commitData.commit, commitData.blocks)
+
     const evt: CommitEvt = {
       rebase: false,
-      tooBig: false,
+      tooBig,
       repo: did,
       commit: commitData.commit,
       prev: commitData.prev,

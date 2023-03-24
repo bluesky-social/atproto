@@ -63,6 +63,14 @@ export class BlockMap {
     return this.map.size
   }
 
+  get byteSize(): number {
+    let size = 0
+    this.forEach((bytes) => {
+      size += bytes.length
+    })
+    return size
+  }
+
   equals(other: BlockMap): boolean {
     if (this.size !== other.size) {
       return false
