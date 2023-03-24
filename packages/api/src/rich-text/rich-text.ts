@@ -91,9 +91,11 @@ F: 0 1 2 3 4 5 6 7 8 910   // string indices
    ^-------^               // target slice {start: 0, end: 5}
  */
 
+import { AtpAgent } from '../agent'
 import { AppBskyFeedPost, AppBskyRichtextFacet } from '../client'
-import { sanitizeRichText } from './sanitize'
 import { UnicodeString } from './unicode'
+import { sanitizeRichText } from './sanitization'
+import { detectFacets } from './detection'
 
 export type Facet = AppBskyRichtextFacet.Main
 export type FacetLink = AppBskyRichtextFacet.Link
@@ -279,6 +281,13 @@ export class RichText {
     // filter out any facets that were made irrelevant
     this.facets = this.facets.filter((ent) => ent.index.start < ent.index.end)
     return this
+  }
+
+  /**
+   * Overwrites the existing facets with auto-detected facets
+   */
+  async detectFacets(agent: AtpAgent) {
+    this.facets = await detectFacets(agent, this.text)
   }
 }
 
