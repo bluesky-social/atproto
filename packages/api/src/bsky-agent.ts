@@ -1,6 +1,10 @@
 import { AtUri } from '@atproto/uri'
 import { AtpAgent } from './agent'
-import { AppBskyFeedPost } from './client'
+import {
+  AppBskyFeedPost,
+  AppBskyActorProfile,
+  ComAtprotoRepoPutRecord,
+} from './client'
 
 export class BskyAgent extends AtpAgent {
   get app() {
@@ -148,6 +152,63 @@ export class BskyAgent extends AtpAgent {
       did: followUrip.hostname,
       rkey: followUrip.rkey,
     })
+  }
+
+  async upsertProfile(
+    updateFn: (
+      existing: AppBskyActorProfile.Record | undefined,
+    ) => AppBskyActorProfile.Record | Promise<AppBskyActorProfile.Record>,
+  ) {
+    if (!this.session) {
+      throw new Error('Not logged in')
+    }
+
+    let retriesRemaining = 5
+    while (retriesRemaining >= 0) {
+      // fetch existing
+      const existing = await this.com.atproto.repo
+        .getRecord({
+          repo: this.session.did,
+          collection: 'app.bsky.actor.profile',
+          rkey: 'self',
+        })
+        .catch((_) => undefined)
+
+      // run the update
+      const updated = await updateFn(existing?.data.value)
+      if (updated) {
+        updated.$type = 'app.bsky.actor.profile'
+      }
+
+      // validate the record
+      const validation = AppBskyActorProfile.validateRecord(updated)
+      if (!validation.success) {
+        throw validation.error
+      }
+
+      try {
+        // attempt the put
+        await this.com.atproto.repo.putRecord({
+          did: this.session.did,
+          collection: 'app.bsky.actor.profile',
+          rkey: 'self',
+          record: updated,
+          swapRecord: existing?.data.cid || null,
+        })
+      } catch (e: unknown) {
+        if (
+          retriesRemaining > 0 &&
+          e instanceof ComAtprotoRepoPutRecord.InvalidSwapError
+        ) {
+          // try again
+          retriesRemaining--
+          continue
+        } else {
+          throw e
+        }
+      }
+      break
+    }
   }
 
   async mute(actor: string) {

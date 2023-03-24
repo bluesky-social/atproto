@@ -75,6 +75,7 @@ await agent.deleteFollow(followUri)
 
 // Actors
 await agent.getProfile(params, opts)
+await agent.upsertProfile(updateFn)
 await agent.getProfiles(params, opts)
 await agent.searchActors(params, opts)
 await agent.searchActorsTypeahead(params, opts)
