@@ -14,17 +14,17 @@
       "type": "object",
       "required":  ["record"],
       "properties": {
-        "value": {"type": "union", "refs": ["#viewRecord", "#viewNotFound"]}
+        "record": {"type": "union", "refs": ["#viewRecord", "#viewNotFound"]}
       }
     },
     "viewRecord": {
       "type": "object",
-      "required":  ["uri", "cid", "author", "record", "indexedAt"],
+      "required":  ["uri", "cid", "author", "value", "indexedAt"],
       "properties": {
         "uri": {"type": "string", "format": "at-uri"},
         "cid": {"type": "string", "format": "cid"},
         "author": {"type": "ref", "ref": "app.bsky.actor.defs#withInfo"},
-        "record": {"type": "unknown"},
+        "value": {"type": "unknown"},
         "embeds": {
           "type": "array",
           "items": {
