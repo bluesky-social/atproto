@@ -15,7 +15,9 @@
           "refs": [
             "app.bsky.embed.images#view",
             "app.bsky.embed.external#view",
-            "app.bsky.embed.record#view"
+            "app.bsky.embed.record#view",
+            "app.bsky.embed.comboExternalImages#view",
+            "app.bsky.embed.comboRecordImages#view"
           ]
         },
         "replyCount": {"type": "integer"},

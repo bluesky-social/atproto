@@ -1,0 +1,37 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.embed.comboRecordImages",
+  "description": "A combination of a record and an images embed",
+  "defs": {
+    "main": {
+      "type": "object",
+      "required": ["record", "images"],
+      "properties": {
+        "record": {
+          "type": "ref",
+          "ref": "com.atproto.repo.strongRef"
+        },
+        "images": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "com.atproto.embed.image#image"},
+          "maxLength": 4
+        }
+      }
+    },
+    "view": {
+      "type": "object",
+      "required": ["record", "images"],
+      "properties": {
+        "record": {
+          "type": "union",
+          "refs": ["com.atproto.embed.record#viewRecord", "com.atproto.embed.record#viewNotFound"]
+        },
+        "images": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "com.atproto.embed.image#viewImage"},
+          "maxLength": 4
+        }
+      }
+    }
+  }
+}

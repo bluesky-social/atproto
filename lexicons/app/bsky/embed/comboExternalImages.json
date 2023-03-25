@@ -1,0 +1,37 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.embed.comboExternalImages",
+  "description": "A combination of an external and an images embed",
+  "defs": {
+    "main": {
+      "type": "object",
+      "required": ["external", "images"],
+      "properties": {
+        "external": {
+          "type": "ref",
+          "ref": "com.atproto.embed.external#external"
+        },
+        "images": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "com.atproto.embed.image#image"},
+          "maxLength": 4
+        }
+      }
+    },
+    "view": {
+      "type": "object",
+      "required": ["external", "images"],
+      "properties": {
+        "external": {
+          "type": "ref",
+          "ref": "com.atproto.embed.external#viewExternal"
+        },
+        "images": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "com.atproto.embed.image#viewImage"},
+          "maxLength": 4
+        }
+      }
+    }
+  }
+}

@@ -25,7 +25,9 @@
             "refs": [
               "app.bsky.embed.images",
               "app.bsky.embed.external",
-              "app.bsky.embed.record"
+              "app.bsky.embed.record",
+              "app.bsky.embed.comboExternalImages",
+              "app.bsky.embed.comboRecordImages"
             ]
           },
           "createdAt": {"type": "string", "format": "datetime"}
