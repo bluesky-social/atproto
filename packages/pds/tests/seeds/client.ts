@@ -124,7 +124,7 @@ export class SeedClient {
 
     {
       const res = await this.agent.api.app.bsky.actor.profile.create(
-        { did: by },
+        { repo: by },
         {
           displayName,
           description,
@@ -144,7 +144,7 @@ export class SeedClient {
 
   async follow(from: string, to: string) {
     const res = await this.agent.api.app.bsky.graph.follow.create(
-      { did: from },
+      { repo: from },
       {
         subject: to,
         createdAt: new Date().toISOString(),
@@ -176,7 +176,7 @@ export class SeedClient {
         }
       : undefined
     const res = await this.agent.api.app.bsky.feed.post.create(
-      { did: by },
+      { repo: by },
       {
         text: text,
         facets,
@@ -199,7 +199,7 @@ export class SeedClient {
   async deletePost(by: string, uri: AtUri) {
     await this.agent.api.app.bsky.feed.post.delete(
       {
-        did: by,
+        repo: by,
         rkey: uri.rkey,
       },
       this.getHeaders(by),
@@ -221,7 +221,7 @@ export class SeedClient {
 
   async like(by: string, subject: RecordRef) {
     const res = await this.agent.api.app.bsky.feed.like.create(
-      { did: by },
+      { repo: by },
       { subject: subject.raw, createdAt: new Date().toISOString() },
       this.getHeaders(by),
     )
@@ -245,7 +245,7 @@ export class SeedClient {
         }
       : undefined
     const res = await this.agent.api.app.bsky.feed.post.create(
-      { did: by },
+      { repo: by },
       {
         text: text,
         reply: {
@@ -269,7 +269,7 @@ export class SeedClient {
 
   async repost(by: string, subject: RecordRef) {
     const res = await this.agent.api.app.bsky.feed.repost.create(
-      { did: by },
+      { repo: by },
       { subject: subject.raw, createdAt: new Date().toISOString() },
       this.getHeaders(by),
     )
