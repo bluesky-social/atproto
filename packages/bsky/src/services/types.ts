@@ -10,7 +10,7 @@ export type PostInfo = {
   uri: string
   cid: string
   creator: string
-  recordBytes: Uint8Array
+  recordJson: string
   indexedAt: string
   upvoteCount: number
   downvoteCount: number

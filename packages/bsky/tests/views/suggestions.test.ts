@@ -1,5 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { runTestServer, CloseFn } from '../_util'
+import { runTestServer, CloseFn, processAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
@@ -14,8 +14,10 @@ describe('pds user search views', () => {
     })
     close = server.close
     agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
+    await processAll(server)
   })
 
   afterAll(async () => {
@@ -25,7 +27,7 @@ describe('pds user search views', () => {
   it('actor suggestion gives users', async () => {
     const result = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 3 },
-      { headers: sc.getHeaders(sc.dids.carol) },
+      { headers: sc.getHeaders(sc.dids.carol, true) },
     )
 
     const handles = result.data.actors.map((u) => u.handle)
@@ -47,7 +49,7 @@ describe('pds user search views', () => {
   it('does not suggest followed users', async () => {
     const result = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 3 },
-      { headers: sc.getHeaders(sc.dids.alice) },
+      { headers: sc.getHeaders(sc.dids.alice, true) },
     )
 
     // alice follows everyone
@@ -57,11 +59,11 @@ describe('pds user search views', () => {
   it('paginates', async () => {
     const result1 = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 1 },
-      { headers: sc.getHeaders(sc.dids.carol) },
+      { headers: sc.getHeaders(sc.dids.carol, true) },
     )
     const result2 = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 1, cursor: result1.data.cursor },
-      { headers: sc.getHeaders(sc.dids.carol) },
+      { headers: sc.getHeaders(sc.dids.carol, true) },
     )
 
     expect(result1.data.actors.length).toBe(1)

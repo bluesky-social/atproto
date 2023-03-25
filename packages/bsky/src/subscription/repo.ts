@@ -15,9 +15,13 @@ const METHOD = ids.ComAtprotoSyncSubscribeAllRepos
 export const REPO_SUB_ID = 1000
 
 export class RepoSubscription {
-  leader = new Leader(REPO_SUB_ID, this.ctx.db)
+  leader = new Leader(this.subLockId, this.ctx.db)
   destroyed = false
-  constructor(public ctx: AppContext, public service: string) {}
+  constructor(
+    public ctx: AppContext,
+    public service: string,
+    public subLockId = REPO_SUB_ID,
+  ) {}
 
   async run() {
     const { db } = this.ctx
@@ -29,7 +33,10 @@ export class RepoSubscription {
             try {
               const ops = await getOps(msg)
               await db.transaction(async (tx) => {
-                await this.handleOps(tx, ops, msg.time)
+                await Promise.all([
+                  this.handleOps(tx, ops, msg.time),
+                  this.handleActor(tx, msg.repo, msg.time),
+                ])
                 await this.setState(tx, { cursor: msg.seq })
               })
             } catch (err) {
@@ -91,6 +98,12 @@ export class RepoSubscription {
         )
       }
     }
+  }
+
+  private async handleActor(tx: Database, did: string, timestamp: string) {
+    const { services } = this.ctx
+    const indexingTx = services.indexing(tx)
+    await indexingTx.indexActor(did, timestamp)
   }
 
   async getState(): Promise<State> {
@@ -185,7 +198,7 @@ async function getOps(msg: Message): Promise<PreparedWrite[]> {
             : WriteOpAction.Update,
         cid,
         record: cborDecode(record),
-        blobs: [], // @TODO need to determine how the app-view provides URLs for processed blobs
+        blobs: [], // @TODO(bsky) need to determine how the app-view provides URLs for processed blobs
         uri: AtUri.make(msg.repo, collection, rkey),
       }
     } else if (op.action === WriteOpAction.Delete) {

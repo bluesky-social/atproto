@@ -8,13 +8,11 @@ export const isEnum = <T extends { [s: string]: unknown }>(
   return Object.values(object).includes(possibleValue)
 }
 
-export const getDeclarationSimple = (info: {
-  actorType: string
-  declarationCid: string
-}): Declaration => {
+// @TODO(lex) remove declaration, stubbed for now
+export const getDeclarationSimple = (): Declaration => {
   return {
-    actorType: info.actorType,
-    cid: info.declarationCid,
+    actorType: '',
+    cid: '',
   }
 }
 

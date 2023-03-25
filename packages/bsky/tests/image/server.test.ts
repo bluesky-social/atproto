@@ -4,11 +4,11 @@ import path from 'path'
 import fs from 'fs'
 import { AddressInfo } from 'net'
 import axios, { AxiosInstance } from 'axios'
+import { CID } from 'multiformats/cid'
+import { cidForCbor } from '@atproto/common'
 import { getInfo } from '../../src/image/sharp'
 import { BlobDiskCache, ImageProcessingServer } from '../../src/image/server'
-import { DiskBlobStore } from '../../src'
-import { cidForCbor } from '@atproto/common'
-import { CID } from 'multiformats/cid'
+import { DiskBlobStore } from '../../src/storage'
 
 describe('image processing server', () => {
   let server: ImageProcessingServer

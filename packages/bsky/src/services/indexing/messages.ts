@@ -15,10 +15,8 @@ export type NotificationInfo = {
 
 export type NotificationReason =
   | 'vote'
-  | 'assertion'
   | 'repost'
   | 'follow'
-  | 'invite'
   | 'mention'
   | 'reply'
 

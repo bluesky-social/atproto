@@ -1,5 +1,11 @@
 import AtpAgent from '@atproto/api'
-import { runTestServer, forSnapshot, CloseFn, paginateAll } from '../_util'
+import {
+  runTestServer,
+  forSnapshot,
+  CloseFn,
+  paginateAll,
+  processAll,
+} from '../_util'
 import { SeedClient } from '../seeds/client'
 import repostsSeed from '../seeds/reposts'
 
@@ -18,8 +24,10 @@ describe('pds repost views', () => {
     })
     close = server.close
     agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    sc = new SeedClient(pdsAgent)
     await repostsSeed(sc)
+    await processAll(server)
     alice = sc.dids.alice
     bob = sc.dids.bob
   })
@@ -31,7 +39,7 @@ describe('pds repost views', () => {
   it('fetches reposted-by for a post', async () => {
     const view = await agent.api.app.bsky.feed.getRepostedBy(
       { uri: sc.posts[alice][2].ref.uriStr },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
     expect(view.data.uri).toEqual(sc.posts[sc.dids.alice][2].ref.uriStr)
     expect(forSnapshot(view.data.repostedBy)).toMatchSnapshot()
@@ -40,7 +48,7 @@ describe('pds repost views', () => {
   it('fetches reposted-by for a reply', async () => {
     const view = await agent.api.app.bsky.feed.getRepostedBy(
       { uri: sc.replies[bob][0].ref.uriStr },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
     expect(view.data.uri).toEqual(sc.replies[sc.dids.bob][0].ref.uriStr)
     expect(forSnapshot(view.data.repostedBy)).toMatchSnapshot()
@@ -55,7 +63,7 @@ describe('pds repost views', () => {
           before: cursor,
           limit: 2,
         },
-        { headers: sc.getHeaders(alice) },
+        { headers: sc.getHeaders(alice, true) },
       )
       return res.data
     }
@@ -67,7 +75,7 @@ describe('pds repost views', () => {
 
     const full = await agent.api.app.bsky.feed.getRepostedBy(
       { uri: sc.posts[alice][2].ref.uriStr },
-      { headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice, true) },
     )
 
     expect(full.data.repostedBy.length).toEqual(4)

@@ -1,12 +1,10 @@
-// @NOTE also used by app-view (moderation)
 export interface Record {
   uri: string
   cid: string
   did: string
-  collection: string
-  rkey: string
+  json: string
   indexedAt: string
-  takedownId: number | null
+  takedownId: number | null // @TODO(bsky)
 }
 
 export const tableName = 'record'

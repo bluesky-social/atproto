@@ -26,10 +26,10 @@ describe('db', () => {
     it('commits changes', async () => {
       const result = await db.transaction(async (dbTxn) => {
         return await dbTxn.db
-          .insertInto('repo_root')
+          .insertInto('actor')
           .values({
             did: 'x',
-            root: 'x',
+            handle: 'x',
             indexedAt: 'bad-date',
           })
           .returning('did')
@@ -43,14 +43,14 @@ describe('db', () => {
       expect(result.did).toEqual('x')
 
       const row = await db.db
-        .selectFrom('repo_root')
+        .selectFrom('actor')
         .selectAll()
         .where('did', '=', 'x')
         .executeTakeFirst()
 
       expect(row).toEqual({
         did: 'x',
-        root: 'x',
+        handle: 'x',
         indexedAt: 'bad-date',
         takedownId: null,
       })
@@ -59,10 +59,10 @@ describe('db', () => {
     it('rolls-back changes on failure', async () => {
       const promise = db.transaction(async (dbTxn) => {
         await dbTxn.db
-          .insertInto('repo_root')
+          .insertInto('actor')
           .values({
             did: 'y',
-            root: 'y',
+            handle: 'y',
             indexedAt: 'bad-date',
           })
           .returning('did')
@@ -74,7 +74,7 @@ describe('db', () => {
       await expect(promise).rejects.toThrow('Oops!')
 
       const row = await db.db
-        .selectFrom('repo_root')
+        .selectFrom('actor')
         .selectAll()
         .where('did', '=', 'y')
         .executeTakeFirst()
@@ -112,8 +112,11 @@ describe('db', () => {
       const leader2 = new Leader(777, db)
       const leader3 = new Leader(777, db)
       const result1 = await leader1.run(task)
+      await wait(1) // Short grace period for pg to close session
       const result2 = await leader2.run(task)
+      await wait(1)
       const result3 = await leader3.run(task)
+      await wait(1)
       const result4 = await leader3.run(task)
       expect([result1, result2, result3, result4]).toEqual([
         { ran: true, result: 'complete' },
@@ -124,6 +127,7 @@ describe('db', () => {
     })
 
     it('only allows one leader at a time.', async () => {
+      await wait(1)
       const task = async () => {
         await wait(25)
         return 'complete'
@@ -142,6 +146,7 @@ describe('db', () => {
     })
 
     it('leaders with different ids do not conflict.', async () => {
+      await wait(1)
       const task = async () => {
         await wait(25)
         return 'complete'
@@ -159,17 +164,18 @@ describe('db', () => {
     })
 
     it('supports abort.', async () => {
+      await wait(1)
       const task = async (ctx: { signal: AbortSignal }) => {
+        wait(10).then(abort)
         return await Promise.race([
-          wait(100),
+          wait(50),
           once(ctx.signal, 'abort').then(() => ctx.signal.reason),
         ])
       }
       const leader = new Leader(777, db)
-      setTimeout(
-        () => leader.session?.abortController.abort(new Error('Oops!')),
-        25,
-      )
+      const abort = () => {
+        leader.session?.abortController.abort(new Error('Oops!'))
+      }
       const result = await leader.run(task)
       expect(result).toEqual({ ran: true, result: new Error('Oops!') })
     })

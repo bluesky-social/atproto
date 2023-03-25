@@ -14,6 +14,7 @@ export interface ServerConfigValues {
   imgUriEndpoint?: string
   blobCacheLocation?: string
   repoProvider: string
+  repoSubLockId?: number
 }
 
 export class ServerConfig {
@@ -107,5 +108,9 @@ export class ServerConfig {
 
   get repoProvider() {
     return this.cfg.repoProvider
+  }
+
+  get repoSubLockId() {
+    return this.cfg.repoSubLockId
   }
 }

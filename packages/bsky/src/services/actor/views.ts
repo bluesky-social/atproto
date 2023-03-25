@@ -4,7 +4,7 @@ import {
   View as ProfileView,
   ViewBasic as ProfileViewBasic,
 } from '../../lexicon/types/app/bsky/actor/profile'
-import { DidHandle } from '../../db/tables/did-handle'
+import { Actor } from '../../db/tables/actor'
 import { countAll } from '../../db/util'
 import Database from '../../db'
 import { getDeclarationSimple } from '../../api/app/bsky/util'
@@ -25,15 +25,15 @@ export class ActorViews {
     const { ref } = this.db.db.dynamic
 
     const profileInfos = await this.db.db
-      .selectFrom('did_handle')
+      .selectFrom('actor')
       .where(
-        'did_handle.did',
+        'actor.did',
         'in',
         results.map((r) => r.did),
       )
-      .leftJoin('profile', 'profile.creator', 'did_handle.did')
+      .leftJoin('profile', 'profile.creator', 'actor.did')
       .select([
-        'did_handle.did as did',
+        'actor.did as did',
         'profile.uri as profileUri',
         'profile.displayName as displayName',
         'profile.description as description',
@@ -42,28 +42,28 @@ export class ActorViews {
         'profile.indexedAt as indexedAt',
         this.db.db
           .selectFrom('follow')
-          .whereRef('creator', '=', ref('did_handle.did'))
+          .whereRef('creator', '=', ref('actor.did'))
           .select(countAll.as('count'))
           .as('followsCount'),
         this.db.db
           .selectFrom('follow')
-          .whereRef('subjectDid', '=', ref('did_handle.did'))
+          .whereRef('subjectDid', '=', ref('actor.did'))
           .select(countAll.as('count'))
           .as('followersCount'),
         this.db.db
           .selectFrom('post')
-          .whereRef('creator', '=', ref('did_handle.did'))
+          .whereRef('creator', '=', ref('actor.did'))
           .select(countAll.as('count'))
           .as('postsCount'),
         this.db.db
           .selectFrom('follow')
           .where('creator', '=', viewer)
-          .whereRef('subjectDid', '=', ref('did_handle.did'))
+          .whereRef('subjectDid', '=', ref('actor.did'))
           .select('uri')
           .as('requesterFollowing'),
         this.db.db
           .selectFrom('follow')
-          .whereRef('creator', '=', ref('did_handle.did'))
+          .whereRef('creator', '=', ref('actor.did'))
           .where('subjectDid', '=', viewer)
           .select('uri')
           .as('requesterFollowedBy'),
@@ -84,7 +84,7 @@ export class ActorViews {
         : undefined
       return {
         did: result.did,
-        declaration: getDeclarationSimple(result),
+        declaration: getDeclarationSimple(),
         handle: result.handle,
         displayName: profileInfo?.displayName || undefined,
         description: profileInfo?.description || undefined,
@@ -125,15 +125,15 @@ export class ActorViews {
     const { ref } = this.db.db.dynamic
 
     const profileInfos = await this.db.db
-      .selectFrom('did_handle')
+      .selectFrom('actor')
       .where(
-        'did_handle.did',
+        'actor.did',
         'in',
         results.map((r) => r.did),
       )
-      .leftJoin('profile', 'profile.creator', 'did_handle.did')
+      .leftJoin('profile', 'profile.creator', 'actor.did')
       .select([
-        'did_handle.did as did',
+        'actor.did as did',
         'profile.uri as profileUri',
         'profile.displayName as displayName',
         'profile.description as description',
@@ -142,12 +142,12 @@ export class ActorViews {
         this.db.db
           .selectFrom('follow')
           .where('creator', '=', viewer)
-          .whereRef('subjectDid', '=', ref('did_handle.did'))
+          .whereRef('subjectDid', '=', ref('actor.did'))
           .select('uri')
           .as('requesterFollowing'),
         this.db.db
           .selectFrom('follow')
-          .whereRef('creator', '=', ref('did_handle.did'))
+          .whereRef('creator', '=', ref('actor.did'))
           .where('subjectDid', '=', viewer)
           .select('uri')
           .as('requesterFollowedBy'),
@@ -165,7 +165,7 @@ export class ActorViews {
         : undefined
       return {
         did: result.did,
-        declaration: getDeclarationSimple(result),
+        declaration: getDeclarationSimple(),
         handle: result.handle,
         displayName: profileInfo?.displayName || undefined,
         description: profileInfo?.description || undefined,
@@ -206,4 +206,4 @@ export class ActorViews {
   }
 }
 
-type ActorResult = DidHandle
+type ActorResult = Actor

@@ -20,6 +20,7 @@ import { createServices } from './services'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import AppContext from './context'
 import { RepoSubscription } from './subscription/repo'
+import { DidResolver } from '@atproto/did-resolver'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -71,8 +72,10 @@ export class BskyAppView {
       config.imgUriKey,
     )
 
+    const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
     const services = createServices({
       imgUriBuilder,
+      didResolver,
     })
 
     const ctx = new AppContext({
@@ -81,6 +84,7 @@ export class BskyAppView {
       cfg: config,
       services,
       imgUriBuilder,
+      didResolver,
     })
 
     let server = createServer({
@@ -97,7 +101,11 @@ export class BskyAppView {
     app.use(server.xrpc.router)
     app.use(error.handler)
 
-    const sub = new RepoSubscription(ctx, config.repoProvider)
+    const sub = new RepoSubscription(
+      ctx,
+      config.repoProvider,
+      config.repoSubLockId,
+    )
 
     return new BskyAppView({ ctx, app, sub })
   }

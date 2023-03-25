@@ -16,26 +16,26 @@ export default function (server: Server, ctx: AppContext) {
 
       const feedService = ctx.services.feed(ctx.db)
 
-      const userLookupCol = author.startsWith('did:')
-        ? 'did_handle.did'
-        : 'did_handle.handle'
-      const userQb = db
-        .selectFrom('did_handle')
-        .selectAll()
-        .where(userLookupCol, '=', author)
+      let did = ''
+      if (author.startsWith('did:')) {
+        did = author
+      } else {
+        const actor = await db
+          .selectFrom('actor')
+          .select('did')
+          .where('handle', '=', author)
+          .executeTakeFirst()
+        if (actor) {
+          did = actor?.did
+        }
+      }
 
       // @NOTE mutes applied on pds
-      const postsQb = feedService
-        .selectPostQb()
-        .whereExists(
-          userQb.whereRef('did_handle.did', '=', ref('post.creator')),
-        )
+      const postsQb = feedService.selectPostQb().where('post.creator', '=', did)
 
       const repostsQb = feedService
         .selectRepostQb()
-        .whereExists(
-          userQb.whereRef('did_handle.did', '=', ref('repost.creator')),
-        )
+        .where('repost.creator', '=', did)
 
       const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
       let feedItemsQb = db

@@ -16,13 +16,8 @@ export default function (server: Server, ctx: AppContext) {
       let builder = db.db
         .selectFrom('repost')
         .where('repost.subject', '=', uri)
-        .innerJoin('did_handle as creator', 'creator.did', 'repost.creator')
-        .innerJoin(
-          'repo_root as creator_repo',
-          'creator_repo.did',
-          'repost.creator',
-        )
-        .where(notSoftDeletedClause(ref('creator_repo')))
+        .innerJoin('actor as creator', 'creator.did', 'repost.creator')
+        .where(notSoftDeletedClause(ref('creator')))
         .selectAll('creator')
         .select(['repost.cid as cid', 'repost.createdAt as createdAt'])
 

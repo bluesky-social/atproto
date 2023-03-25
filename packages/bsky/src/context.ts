@@ -1,7 +1,8 @@
 import * as plc from '@did-plc/lib'
+import { DidResolver } from '@atproto/did-resolver'
+import { BlobStore } from '@atproto/repo'
 import { Database } from './db'
 import { ServerConfig } from './config'
-import { BlobStore } from '@atproto/repo'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 
@@ -13,6 +14,7 @@ export class AppContext {
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       services: Services
+      didResolver: DidResolver
     },
   ) {}
 
@@ -38,6 +40,10 @@ export class AppContext {
 
   get plcClient(): plc.Client {
     return new plc.Client(this.cfg.didPlcUrl)
+  }
+
+  get didResolver(): DidResolver {
+    return this.opts.didResolver
   }
 }
 

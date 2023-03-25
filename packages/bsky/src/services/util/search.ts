@@ -4,8 +4,7 @@ import Database from '../../db'
 import { notSoftDeletedClause, DbRef } from '../../db/util'
 import { GenericKeyset, paginate } from '../../db/pagination'
 
-// @TODO utilized in both pds and app-view
-export const getUserSearchQueryPg = (
+export const getUserSearchQuery = (
   db: Database,
   opts: {
     term: string
@@ -25,13 +24,12 @@ export const getUserSearchQueryPg = (
   // Matching user accounts based on handle
   const distanceAccount = distance(term, ref('handle'))
   let accountsQb = db.db
-    .selectFrom('did_handle')
-    .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+    .selectFrom('actor')
     .if(!includeSoftDeleted, (qb) =>
-      qb.where(notSoftDeletedClause(ref('repo_root'))),
+      qb.where(notSoftDeletedClause(ref('actor'))),
     )
     .where(distanceAccount, '<', threshold)
-    .select(['did_handle.did as did', distanceAccount.as('distance')])
+    .select(['actor.did as did', distanceAccount.as('distance')])
   accountsQb = paginate(accountsQb, {
     limit,
     before,
@@ -43,13 +41,12 @@ export const getUserSearchQueryPg = (
   const distanceProfile = distance(term, ref('displayName'))
   let profilesQb = db.db
     .selectFrom('profile')
-    .innerJoin('did_handle', 'did_handle.did', 'profile.creator')
-    .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+    .innerJoin('actor', 'actor.did', 'profile.creator')
     .if(!includeSoftDeleted, (qb) =>
-      qb.where(notSoftDeletedClause(ref('repo_root'))),
+      qb.where(notSoftDeletedClause(ref('actor'))),
     )
     .where(distanceProfile, '<', threshold)
-    .select(['did_handle.did as did', distanceProfile.as('distance')])
+    .select(['actor.did as did', distanceProfile.as('distance')])
   profilesQb = paginate(profilesQb, {
     limit,
     before,
@@ -59,7 +56,7 @@ export const getUserSearchQueryPg = (
 
   // Combine user account and profile results, taking best matches from each
   const emptyQb = db.db
-    .selectFrom('did_handle')
+    .selectFrom('actor')
     .where(sql`1 = 0`)
     .select([sql.literal('').as('did'), sql<number>`0`.as('distance')])
   const resultsQb = db.db
@@ -77,7 +74,7 @@ export const getUserSearchQueryPg = (
   // Sort and paginate all user results
   const allQb = db.db
     .selectFrom(resultsQb.as('results'))
-    .innerJoin('did_handle', 'did_handle.did', 'results.did')
+    .innerJoin('actor', 'actor.did', 'results.did')
   return paginate(allQb, {
     limit,
     before,
@@ -110,23 +107,22 @@ export const getUserSearchQuerySqlite = (
 
   if (!safeWords.length) {
     // Return no results. This could happen with weird input like ' % _ '.
-    return db.db.selectFrom('did_handle').where(sql`1 = 0`)
+    return db.db.selectFrom('actor').where(sql`1 = 0`)
   }
 
   // We'll ensure there's a space before each word in both textForMatch and in safeWords,
   // so that we can reliably match word prefixes using LIKE operator.
   const textForMatch = sql`lower(' ' || ${ref(
-    'did_handle.handle',
+    'actor.handle',
   )} || ' ' || coalesce(${ref('profile.displayName')}, ''))`
 
   const keyset = new SearchKeyset(sql``, sql``)
   const cursor = keyset.unpackCursor(before)
 
   return db.db
-    .selectFrom('did_handle')
-    .innerJoin('repo_root as _repo_root', '_repo_root.did', 'did_handle.did')
+    .selectFrom('actor')
     .if(!includeSoftDeleted, (qb) =>
-      qb.where(notSoftDeletedClause(ref('_repo_root'))),
+      qb.where(notSoftDeletedClause(ref('actor'))),
     )
     .where((q) => {
       safeWords.forEach((word) => {

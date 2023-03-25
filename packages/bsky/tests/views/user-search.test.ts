@@ -1,11 +1,10 @@
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
 import {
   runTestServer,
   forSnapshot,
   CloseFn,
   paginateAll,
-  adminAuth,
+  processAll,
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
@@ -22,14 +21,37 @@ describe('pds user search views', () => {
     })
     close = server.close
     agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    sc = new SeedClient(pdsAgent)
     await usersBulkSeed(sc)
-    headers = sc.getHeaders(Object.values(sc.dids)[0])
+
+    // Skip did/handle resolution for expediency
+    server.bsky.sub.destroy()
+    const { db } = server.ctx
+    const now = new Date().toISOString()
+    await db.db
+      .insertInto('actor')
+      .values(
+        Object.entries(sc.dids).map(([handle, did]) => ({
+          did,
+          handle,
+          indexedAt: now,
+        })),
+      )
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+
+    // Process remaining profiles
+    server.bsky.sub.resume()
+    await processAll(server, 20000)
+    headers = sc.getHeaders(Object.values(sc.dids)[0], true)
   })
 
   afterAll(async () => {
     await close()
   })
+
+  // @TODO(bsky) search blocks by actor takedown via labels.
 
   it('typeahead gives relevant results', async () => {
     const result = await agent.api.app.bsky.actor.searchTypeahead(
@@ -64,7 +86,7 @@ describe('pds user search views', () => {
 
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
-    expect(forSnapshot(result.data.users)).toEqual(snapTypeaheadPg)
+    expect(forSnapshot(result.data.users)).toMatchSnapshot()
   })
 
   it('typeahead gives empty result set when provided empty term', async () => {
@@ -125,7 +147,7 @@ describe('pds user search views', () => {
 
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
-    expect(forSnapshot(result.data.users)).toEqual(snapSearchPg)
+    expect(forSnapshot(result.data.users)).toMatchSnapshot()
   })
 
   it('search gives empty result set when provided empty term', async () => {
@@ -171,157 +193,4 @@ describe('pds user search views', () => {
 
     expect(result.data.users).toEqual([])
   })
-
-  it('search blocks by actor takedown', async () => {
-    await agent.api.com.atproto.admin.takeModerationAction(
-      {
-        action: TAKEDOWN,
-        subject: {
-          $type: 'com.atproto.repo.repoRef',
-          did: sc.dids['cara-wiegand69.test'],
-        },
-        createdBy: 'X',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
-    const result = await agent.api.app.bsky.actor.searchTypeahead(
-      { term: 'car' },
-      { headers },
-    )
-    const handles = result.data.users.map((u) => u.handle)
-    expect(handles).toContain('carlos6.test')
-    expect(handles).toContain('carolina-mcdermott77.test')
-    expect(handles).not.toContain('cara-wiegand69.test')
-  })
 })
-
-// Not using jest snapshots because it doesn't handle the conditional pg/sqlite very well:
-// you can achieve it using named snapshots, but when you run the tests for pg the test suite fails
-// since the sqlite snapshots appear obsolete to jest (and vice-versa when you run the sqlite suite).
-
-const declaration = {
-  actorType: 'app.bsky.system.actorUser',
-  cid: 'cids(0)',
-}
-
-const avatar =
-  'https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg'
-
-const snapTypeaheadPg = [
-  {
-    did: 'user(0)',
-    declaration,
-    handle: 'cara-wiegand69.test',
-    viewer: { muted: false },
-  },
-  {
-    did: 'user(1)',
-    declaration,
-    displayName: 'Carol Littel',
-    handle: 'eudora-dietrich4.test',
-    avatar,
-    viewer: { muted: false },
-  },
-  {
-    did: 'user(2)',
-    declaration,
-    displayName: 'Sadie Carter',
-    handle: 'shane-torphy52.test',
-    avatar,
-    viewer: { muted: false },
-  },
-  {
-    did: 'user(3)',
-    declaration,
-    displayName: 'Carlton Abernathy IV',
-    handle: 'aliya-hodkiewicz.test',
-    avatar,
-    viewer: { muted: false },
-  },
-  {
-    did: 'user(4)',
-    declaration,
-    handle: 'carlos6.test',
-    viewer: { muted: false },
-  },
-  {
-    did: 'user(5)',
-    declaration,
-    displayName: 'Latoya Windler',
-    handle: 'carolina-mcdermott77.test',
-    avatar,
-    viewer: { muted: false },
-  },
-  {
-    did: 'user(6)',
-    declaration,
-    displayName: 'Rachel Kshlerin',
-    handle: 'cayla-marquardt39.test',
-    avatar,
-    viewer: { muted: false },
-  },
-]
-
-const snapSearchPg = [
-  {
-    declaration,
-    did: 'user(0)',
-    handle: 'cara-wiegand69.test',
-    viewer: { muted: false },
-  },
-  {
-    did: 'user(1)',
-    declaration,
-    displayName: 'Carol Littel',
-    indexedAt: '1970-01-01T00:00:00.000Z',
-    handle: 'eudora-dietrich4.test',
-    avatar,
-    viewer: { muted: false },
-  },
-  {
-    did: 'user(2)',
-    declaration,
-    displayName: 'Sadie Carter',
-    indexedAt: '1970-01-01T00:00:00.000Z',
-    handle: 'shane-torphy52.test',
-    avatar,
-    viewer: { muted: false },
-  },
-  {
-    did: 'user(3)',
-    declaration,
-    displayName: 'Carlton Abernathy IV',
-    indexedAt: '1970-01-01T00:00:00.000Z',
-    handle: 'aliya-hodkiewicz.test',
-    avatar,
-    viewer: { muted: false },
-  },
-  {
-    did: 'user(4)',
-    declaration,
-    handle: 'carlos6.test',
-    viewer: { muted: false },
-  },
-  {
-    did: 'user(5)',
-    declaration,
-    displayName: 'Latoya Windler',
-    indexedAt: '1970-01-01T00:00:00.000Z',
-    handle: 'carolina-mcdermott77.test',
-    avatar,
-    viewer: { muted: false },
-  },
-  {
-    did: 'user(6)',
-    declaration,
-    displayName: 'Rachel Kshlerin',
-    indexedAt: '1970-01-01T00:00:00.000Z',
-    handle: 'cayla-marquardt39.test',
-    avatar,
-    viewer: { muted: false },
-  },
-]

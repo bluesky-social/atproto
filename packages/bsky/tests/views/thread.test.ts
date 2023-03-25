@@ -1,13 +1,18 @@
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
-import { AtUri } from '@atproto/uri'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
 import { Database } from '../../src'
-import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
+import {
+  runTestServer,
+  forSnapshot,
+  CloseFn,
+  processAll,
+  TestServerInfo,
+} from '../_util'
 import { RecordRef, SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import threadSeed, { walk, item, Item } from '../seeds/thread'
 
 describe('pds thread views', () => {
+  let server: TestServerInfo
   let agent: AtpAgent
   let db: Database
   let close: CloseFn
@@ -16,35 +21,41 @@ describe('pds thread views', () => {
   // account dids, for convenience
   let alice: string
   let bob: string
-  let carol: string
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    server = await runTestServer({
       dbPostgresSchema: 'views_thread',
     })
     db = server.ctx.db
     close = server.close
     agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
-    carol = sc.dids.carol
   })
 
   beforeAll(async () => {
     // Add a repost of a reply so that we can confirm myState in the thread
     await sc.repost(bob, sc.replies[alice][0].ref)
+    await processAll(server)
   })
 
   afterAll(async () => {
     await close()
   })
 
+  // @TODO(bsky) blocks post by actor takedown via labels.
+  // @TODO(bsky) blocks post by record takedown via labels.
+  // @TODO(bsky) blocks replies by actor takedown via labels.
+  // @TODO(bsky) blocks ancestors by record takedown via labels.
+  // @TODO(bsky) blocks ancestors by actor takedown via labels.
+
   it('fetches deep post thread', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: sc.getHeaders(bob) },
+      { headers: sc.getHeaders(bob, true) },
     )
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -53,7 +64,7 @@ describe('pds thread views', () => {
   it('fetches shallow post thread', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
-      { headers: sc.getHeaders(bob) },
+      { headers: sc.getHeaders(bob, true) },
     )
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -62,7 +73,7 @@ describe('pds thread views', () => {
   it('fetches ancestors', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
-      { headers: sc.getHeaders(bob) },
+      { headers: sc.getHeaders(bob, true) },
     )
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -71,29 +82,11 @@ describe('pds thread views', () => {
   it('fails for an unknown post', async () => {
     const promise = agent.api.app.bsky.feed.getPostThread(
       { uri: 'does.not.exist' },
-      { headers: sc.getHeaders(bob) },
+      { headers: sc.getHeaders(bob, true) },
     )
 
     await expect(promise).rejects.toThrow(
       AppBskyFeedGetPostThread.NotFoundError,
-    )
-  })
-
-  it('includes the muted status of post authors.', async () => {
-    await agent.api.app.bsky.graph.mute(
-      { user: alice },
-      { headers: sc.getHeaders(bob), encoding: 'application/json' },
-    )
-    const thread = await agent.api.app.bsky.feed.getPostThread(
-      { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: sc.getHeaders(bob) },
-    )
-
-    expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
-
-    await agent.api.app.bsky.graph.unmute(
-      { user: alice },
-      { encoding: 'application/json', headers: sc.getHeaders(bob) },
     )
   })
 
@@ -124,296 +117,28 @@ describe('pds thread views', () => {
       'Reply reply',
     )
     indexes.aliceReplyReply = sc.replies[alice].length - 1
+    await processAll(server)
 
     const thread1 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
-      { headers: sc.getHeaders(bob) },
+      { headers: sc.getHeaders(bob, true) },
     )
     expect(forSnapshot(thread1.data.thread)).toMatchSnapshot()
 
     await sc.deletePost(bob, sc.replies[bob][indexes.bobReply].ref.uri)
+    await processAll(server)
 
     const thread2 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
-      { headers: sc.getHeaders(bob) },
+      { headers: sc.getHeaders(bob, true) },
     )
     expect(forSnapshot(thread2.data.thread)).toMatchSnapshot()
 
     const thread3 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.replies[alice][indexes.aliceReplyReply].ref.uriStr },
-      { headers: sc.getHeaders(bob) },
+      { headers: sc.getHeaders(bob, true) },
     )
     expect(forSnapshot(thread3.data.thread)).toMatchSnapshot()
-  })
-
-  it('blocks post by actor takedown', async () => {
-    const { data: modAction } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.repo.repoRef',
-            did: alice,
-          },
-          createdBy: 'X',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
-
-    // Same as shallow post thread test, minus alice
-    const promise = agent.api.app.bsky.feed.getPostThread(
-      { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
-      { headers: sc.getHeaders(bob) },
-    )
-
-    await expect(promise).rejects.toThrow(
-      AppBskyFeedGetPostThread.NotFoundError,
-    )
-
-    // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      {
-        id: modAction.id,
-        createdBy: 'X',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
-  })
-
-  it('blocks replies by actor takedown', async () => {
-    const { data: modAction } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.repo.repoRef',
-            did: carol,
-          },
-          createdBy: 'X',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
-
-    // Same as deep post thread test, minus carol
-    const thread = await agent.api.app.bsky.feed.getPostThread(
-      { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: sc.getHeaders(bob) },
-    )
-
-    expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
-
-    // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      {
-        id: modAction.id,
-        createdBy: 'X',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
-  })
-
-  it('blocks ancestors by actor takedown', async () => {
-    const { data: modAction } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.repo.repoRef',
-            did: bob,
-          },
-          createdBy: 'X',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
-
-    // Same as ancestor post thread test, minus bob
-    const thread = await agent.api.app.bsky.feed.getPostThread(
-      { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
-      { headers: sc.getHeaders(bob) },
-    )
-
-    expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
-
-    // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      {
-        id: modAction.id,
-        createdBy: 'X',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
-  })
-
-  it('blocks post by record takedown', async () => {
-    const postUri = sc.posts[alice][1].ref.uri
-    const { data: modAction } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.repo.recordRef',
-            uri: postUri.toString(),
-          },
-          createdBy: 'X',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
-
-    const promise = agent.api.app.bsky.feed.getPostThread(
-      { depth: 1, uri: postUri.toString() },
-      { headers: sc.getHeaders(bob) },
-    )
-
-    await expect(promise).rejects.toThrow(
-      AppBskyFeedGetPostThread.NotFoundError,
-    )
-
-    // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      {
-        id: modAction.id,
-        createdBy: 'X',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
-  })
-
-  it('blocks ancestors by record takedown', async () => {
-    const threadPreTakedown = await agent.api.app.bsky.feed.getPostThread(
-      { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
-      { headers: sc.getHeaders(bob) },
-    )
-    const postUri = new AtUri(
-      threadPreTakedown.data.thread.parent?.['post'].uri,
-    )
-
-    const { data: modAction } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.repo.recordRef',
-            uri: postUri.toString(),
-          },
-          createdBy: 'X',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
-
-    // Same as ancestor post thread test, minus parent post
-    const thread = await agent.api.app.bsky.feed.getPostThread(
-      { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
-      { headers: sc.getHeaders(bob) },
-    )
-
-    expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
-
-    // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      {
-        id: modAction.id,
-        createdBy: 'X',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
-  })
-
-  it('blocks replies by record takedown', async () => {
-    const threadPreTakedown = await agent.api.app.bsky.feed.getPostThread(
-      { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: sc.getHeaders(bob) },
-    )
-    const postUri1 = new AtUri(
-      threadPreTakedown.data.thread.replies?.[0].post.uri,
-    )
-    const postUri2 = new AtUri(
-      threadPreTakedown.data.thread.replies?.[1].replies[0].post.uri,
-    )
-
-    const actionResults = await Promise.all(
-      [postUri1, postUri2].map((postUri) =>
-        agent.api.com.atproto.admin.takeModerationAction(
-          {
-            action: TAKEDOWN,
-            subject: {
-              $type: 'com.atproto.repo.recordRef',
-              uri: postUri.toString(),
-            },
-            createdBy: 'X',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: { authorization: adminAuth() },
-          },
-        ),
-      ),
-    )
-
-    // Same as deep post thread test, minus some replies
-    const thread = await agent.api.app.bsky.feed.getPostThread(
-      { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: sc.getHeaders(bob) },
-    )
-
-    expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
-
-    // Cleanup
-    await Promise.all(
-      actionResults.map((result) =>
-        agent.api.com.atproto.admin.reverseModerationAction(
-          {
-            id: result.data.id,
-            createdBy: 'X',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: { authorization: adminAuth() },
-          },
-        ),
-      ),
-    )
   })
 
   it('builds post hierarchy index.', async () => {
@@ -422,7 +147,10 @@ describe('pds thread views', () => {
       item(5, [item(6), item(7, [item(9, [item(11)]), item(10)]), item(8)]),
       item(12),
     ]
+
     await threadSeed(sc, sc.dids.alice, threads)
+    await processAll(server)
+
     let closureSize = 0
     const itemByUri: Record<string, Item> = {}
 
