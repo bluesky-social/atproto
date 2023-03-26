@@ -312,7 +312,7 @@ export class FeedService {
       uri: post.uri,
       cid: post.cid,
       author: author,
-      record: JSON.parse(post.recordJson),
+      record: JSON.parse(post.recordJson), // @TODO(bsky) post-lex refactor, consider whether we want lex deserializer
       embed: embeds[uri],
       replyCount: post.replyCount,
       repostCount: post.repostCount,

@@ -3,7 +3,7 @@ FROM node:18-alpine as build
 # Move files into the image and install
 WORKDIR /app
 COPY ./*.* ./
-# NOTE pds's transitive dependencies go here: if that changes, this needs to be updated.
+# NOTE bsky's transitive dependencies go here: if that changes, this needs to be updated.
 COPY ./packages/bsky ./packages/bsky
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws

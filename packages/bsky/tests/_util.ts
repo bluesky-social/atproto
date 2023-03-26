@@ -5,6 +5,7 @@ import * as pds from '@atproto/pds'
 import { wait } from '@atproto/common'
 import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
 import { AtUri } from '@atproto/uri'
+import { AtpAgent } from '@atproto/api'
 import { DidResolver } from '@atproto/did-resolver'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
@@ -13,6 +14,7 @@ import { Main as FeedViewPost } from '../src/lexicon/types/app/bsky/feed/feedVie
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import MemoryBlobStore from '../src/storage/memory-blobstore'
 import AppContext from '../src/context'
+import { defaultFetchHandler } from '@atproto/xrpc'
 
 const ADMIN_PASSWORD = 'admin-pass'
 
@@ -150,6 +152,24 @@ export const runTestServer = async (
     }
     return result
   }
+
+  // Map pds public url and handles to pds local url
+  AtpAgent.configure({
+    fetch: (httpUri, ...args) => {
+      const url = new URL(httpUri)
+      const pdsUrl = pdsServer.ctx.cfg.publicUrl
+      const pdsHandleDomains = pdsServer.ctx.cfg.availableUserDomains
+      if (
+        url.origin === pdsUrl ||
+        pdsHandleDomains.some((handleDomain) => url.host.endsWith(handleDomain))
+      ) {
+        url.protocol = 'http:'
+        url.host = `localhost:${pdsPort}`
+        return defaultFetchHandler(url.href, ...args)
+      }
+      return defaultFetchHandler(httpUri, ...args)
+    },
+  })
 
   return {
     ctx: bsky.ctx,

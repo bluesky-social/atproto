@@ -62,7 +62,7 @@ export class RecordProcessor<T, S> {
         uri: uri.toString(),
         cid: cid.toString(),
         did: uri.host,
-        json: JSON.stringify(obj),
+        json: JSON.stringify(obj), // @TODO(bsky) post-lex refactor, ensure we use the lex serializer
         indexedAt: timestamp,
       })
       .onConflict((oc) => oc.doNothing())

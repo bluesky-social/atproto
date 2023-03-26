@@ -4208,7 +4208,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'An unspecced view of globablly popular items',
+        description: 'An unspecced view of globally popular items',
         parameters: {
           type: 'params',
           properties: {

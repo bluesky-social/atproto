@@ -1,5 +1,5 @@
 {
-  "name": "plc-service",
+  "name": "bsky-app-view-service",
   "private": true,
   "dependencies": {
     "dd-trace": "^3.8.0"
