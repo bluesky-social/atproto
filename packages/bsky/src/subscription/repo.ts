@@ -10,13 +10,18 @@ import Database from '../db'
 import AppContext from '../context'
 import { Leader } from '../db/leader'
 import { subLogger } from '../logger'
+import { ConsecutiveList, LatestQueue, PartitionedQueue } from './util'
 
 const METHOD = ids.ComAtprotoSyncSubscribeAllRepos
 export const REPO_SUB_ID = 1000
 
 export class RepoSubscription {
   leader = new Leader(this.subLockId, this.ctx.db)
+  repoQueue = new PartitionedQueue()
+  cursorQueue = new LatestQueue()
+  consecutive = new ConsecutiveList<Message>()
   destroyed = false
+
   constructor(
     public ctx: AppContext,
     public service: string,
@@ -24,58 +29,89 @@ export class RepoSubscription {
   ) {}
 
   async run() {
-    const { db } = this.ctx
     while (!this.destroyed) {
       try {
         const { ran } = await this.leader.run(async ({ signal }) => {
           const sub = this.getSubscription({ signal })
           for await (const msg of sub) {
-            try {
-              const ops = await getOps(msg)
-              await db.transaction(async (tx) => {
-                await Promise.all([
-                  this.handleOps(tx, ops, msg.time),
-                  this.handleActor(tx, msg.repo, msg.time),
-                ])
-                await this.setState(tx, { cursor: msg.seq })
+            const item = this.consecutive.push(msg)
+            this.repoQueue
+              .add(msg.repo, () => this.handleMessage(msg))
+              .catch((err) => {
+                subLogger.error(
+                  {
+                    err,
+                    provider: this.service,
+                    message: {
+                      seq: msg.seq,
+                      repo: msg.repo,
+                      commit: msg.commit,
+                      time: msg.time,
+                    },
+                  },
+                  'message errored',
+                )
               })
-            } catch (err) {
-              throw new ProcessingError(msg, { cause: err })
-            }
+              .finally(() => {
+                const latest = item.complete().at(-1)
+                if (!latest) return
+                this.cursorQueue
+                  .add(() => this.handleCursor(latest))
+                  .catch((err) => {
+                    subLogger.error(
+                      { err, provider: this.service },
+                      'repo subscription cursor error',
+                    )
+                  })
+              })
           }
         })
         if (ran && !this.destroyed) {
           throw new Error('Repo sub completed, but should be persistent')
         }
-      } catch (_err) {
-        const msg = _err instanceof ProcessingError ? _err.msg : undefined
-        const err = _err instanceof ProcessingError ? _err.cause : _err
+      } catch (err) {
         subLogger.error(
-          {
-            err,
-            seq: msg?.seq,
-            repo: msg?.repo,
-            commit: msg?.commit,
-            time: msg?.time,
-            service: this.service,
-          },
-          'repo subscription errored',
+          { err, provider: this.service },
+          'repo subscription error',
         )
       }
       if (!this.destroyed) {
-        await wait(5000 + jitter(1000))
+        await wait(5000 + jitter(1000)) // wait then try to become leader
       }
     }
   }
 
-  destroy() {
+  async destroy() {
     this.destroyed = true
+    await this.repoQueue.destroy()
+    await this.cursorQueue.destroy()
     this.leader.destroy(new DisconnectError())
   }
 
   async resume() {
     this.destroyed = false
+    this.repoQueue = new PartitionedQueue()
+    this.cursorQueue = new LatestQueue()
+    this.consecutive = new ConsecutiveList<Message>()
     await this.run()
+  }
+
+  private async handleMessage(msg: Message) {
+    const { db } = this.ctx
+    const ops = await getOps(msg)
+    await db.transaction(async (tx) => {
+      await Promise.all([
+        this.handleOps(tx, ops, msg.time),
+        this.handleActor(tx, msg.repo, msg.time),
+      ])
+    })
+  }
+
+  private async handleCursor(msg: Message) {
+    const { db } = this.ctx
+    await db.transaction(async (tx) => {
+      await this.setState(tx, { cursor: msg.seq })
+    })
   }
 
   private async handleOps(
@@ -222,12 +258,6 @@ function ifString(val: unknown): string | undefined {
 
 function ifNumber(val: unknown): number | undefined {
   return typeof val === 'number' ? val : undefined
-}
-
-class ProcessingError extends Error {
-  constructor(public msg: Message, opts: { cause: unknown }) {
-    super('processing error', opts)
-  }
 }
 
 type State = { cursor: number }

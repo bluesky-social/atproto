@@ -31,6 +31,22 @@ export class PartitionedQueue {
   }
 }
 
+export class LatestQueue {
+  queue = new PQueue({ concurrency: 1 })
+
+  async add(task: () => Promise<void>) {
+    if (this.queue.isPaused) return
+    this.queue.clear() // Only queue the latest task, invalidate any previous ones
+    return this.queue.add(task)
+  }
+
+  async destroy() {
+    this.queue.pause()
+    this.queue.clear()
+    await this.queue.onIdle() // All in-flight work completes
+  }
+}
+
 /**
  * Add items to a list, and mark those items as
  * completed. Upon item completion, get list of consecutive
@@ -54,7 +70,7 @@ export class ConsecutiveList<T> {
     return item
   }
 
-  complete() {
+  complete(): T[] {
     let i = 0
     while (this.list[i]?.isComplete) {
       i += 1
