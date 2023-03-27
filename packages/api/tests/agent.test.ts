@@ -11,8 +11,6 @@ import {
   AtpSessionData,
 } from '..'
 
-const loaded = Date.now()
-
 describe('agent', () => {
   let server: TestServerInfo
   let close: CloseFn
@@ -26,7 +24,6 @@ describe('agent', () => {
 
   afterAll(async () => {
     await close()
-    console.log('done: ', Date.now() - loaded)
   })
 
   it('creates a new session on account creation.', async () => {
