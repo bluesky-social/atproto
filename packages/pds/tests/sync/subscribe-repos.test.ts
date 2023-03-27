@@ -262,31 +262,18 @@ describe('repo subscribe repos', () => {
   })
 
   it('sends info frame on out of date cursor', async () => {
-    // we stick three new seqs in with a date past the backfill cutoff
-    // then we increment the sequence number of everything else to test out of date cursor
+    // we rewrite the sequenceAt time for existing seqs to be past the backfill cutoff
+    // then we create some new posts
     const overAnHourAgo = new Date(Date.now() - HOUR - MINUTE).toISOString()
-    const dummySeq = {
-      did: 'did:example:test',
-      eventType: 'append' as const,
-      event: new Uint8Array([1, 2, 3, 4]),
-      sequencedAt: overAnHourAgo,
-    }
-    const newRows = await db.db
-      .insertInto('repo_seq')
-      .values([dummySeq, dummySeq, dummySeq])
-      .returning('seq')
-      .execute()
-    const newSeqs = newRows.map((r) => r.seq)
-    const movedToFuture = await db.db
+    await db.db
       .updateTable('repo_seq')
-      .set({ seq: sql`seq+1000` })
-      .where('seq', 'not in', newSeqs)
-      .where('invalidatedBy', 'is', null)
-      .returning('seq')
+      .set({ sequencedAt: overAnHourAgo })
       .execute()
 
+    await makePosts()
+
     const ws = new WebSocket(
-      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${newSeqs[0]}`,
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
     )
     const [info, ...evts] = await readFromGenerator(byFrame(ws))
     ws.terminate()
@@ -297,7 +284,7 @@ describe('repo subscribe repos', () => {
     expect(info.header.t).toBe('#info')
     const body = info.body as Record<string, unknown>
     expect(body.name).toEqual('OutdatedCursor')
-    expect(evts.length).toBe(movedToFuture.length)
+    expect(evts.length).toBe(40)
   })
 
   it('errors on future cursor', async () => {
