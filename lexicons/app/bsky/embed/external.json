@@ -1,7 +1,7 @@
 {
   "lexicon": 1,
   "id": "app.bsky.embed.external",
-  "description": "An representation of some externally linked content, embedded in another form of content",
+  "description": "A representation of some externally linked content, embedded in another form of content",
   "defs": {
     "main": {
       "type": "object",
@@ -31,7 +31,7 @@
       "type": "object",
       "required": ["external"],
       "properties": {
-        "value": {
+        "external": {
           "type": "ref",
           "ref": "#viewExternal"
         }

@@ -9,6 +9,7 @@ import * as AppBskyActorDefs from '../actor/defs'
 import * as AppBskyEmbedImages from '../embed/images'
 import * as AppBskyEmbedExternal from '../embed/external'
 import * as AppBskyEmbedRecord from '../embed/record'
+import * as AppBskyEmbedComplexRecord from '../embed/complexRecord'
 
 export interface PostView {
   uri: string
@@ -19,6 +20,7 @@ export interface PostView {
     | AppBskyEmbedImages.View
     | AppBskyEmbedExternal.View
     | AppBskyEmbedRecord.View
+    | AppBskyEmbedComplexRecord.View
     | { $type: string; [k: string]: unknown }
   replyCount?: number
   repostCount?: number

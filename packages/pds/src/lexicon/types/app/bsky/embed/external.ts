@@ -45,7 +45,7 @@ export function validateExternal(v: unknown): ValidationResult {
 }
 
 export interface View {
-  value?: ViewExternal
+  external: ViewExternal
   [k: string]: unknown
 }
 
