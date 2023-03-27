@@ -10,8 +10,8 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** The DID of the repo. */
-  did: string
+  /** The handle or DID of the repo. */
+  repo: string
   /** The NSID of the record collection. */
   collection: string
   /** The key of the record. */

@@ -1,7 +1,7 @@
 import { CID } from 'multiformats/cid'
 import { TID } from '@atproto/common'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
-import * as repo from '../../../../repo'
+import { prepareCreate } from '../../../../repo'
 import { Server } from '../../../../lexicon'
 import {
   BadCommitSwapError,
@@ -17,9 +17,14 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.createRecord({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ input, auth }) => {
-      const { did, collection, rkey, record, swapCommit, validate } = input.body
-      const requester = auth.credentials.did
-      if (did !== requester) {
+      const { repo, collection, rkey, record, swapCommit, validate } =
+        input.body
+      const did = await ctx.services.account(ctx.db).getDidForActor(repo)
+
+      if (!did) {
+        throw new InvalidRequestError(`Could not find repo: ${repo}`)
+      }
+      if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
       }
       if (validate === false) {
@@ -33,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
 
       let write: PreparedCreate
       try {
-        write = await repo.prepareCreate({
+        write = await prepareCreate({
           did,
           collection,
           record,

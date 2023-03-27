@@ -307,7 +307,7 @@ describe('file uploads', () => {
 
 async function updateProfile(agent: AtpAgent, record: Record<string, unknown>) {
   return await agent.api.com.atproto.repo.putRecord({
-    did: agent.session?.did ?? '',
+    repo: agent.session?.did ?? '',
     collection: ids.AppBskyActorProfile,
     rkey: 'self',
     record,
