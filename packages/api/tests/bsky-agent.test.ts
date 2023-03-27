@@ -70,7 +70,7 @@ describe('agent', () => {
     await agent.upsertProfile(async (existing) => {
       if (!hasConflicted) {
         await agent.com.atproto.repo.putRecord({
-          did: agent.session?.did || '',
+          repo: agent.session?.did || '',
           collection: 'app.bsky.actor.profile',
           rkey: 'self',
           record: {
@@ -106,7 +106,7 @@ describe('agent', () => {
 
     const p = agent.upsertProfile(async (existing) => {
       await agent.com.atproto.repo.putRecord({
-        did: agent.session?.did || '',
+        repo: agent.session?.did || '',
         collection: 'app.bsky.actor.profile',
         rkey: 'self',
         record: {
