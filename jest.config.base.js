@@ -9,9 +9,6 @@ module.exports = {
   roots: ['<rootDir>/src', '<rootDir>/tests'],
   transform: {
     "^.+\\.(t|j)s?$": "@swc/jest",
-
-    // '^.+\\.ts$': 'ts-jest',
-    // "^.+\\.js?$": "babel-jest"
   },
   transformIgnorePatterns: [`<rootDir>/node_modules/(?!${esModules})`],
   testRegex: '(/tests/.*.(test|spec)).(jsx?|tsx?)$',
