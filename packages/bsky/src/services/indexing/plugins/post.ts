@@ -19,9 +19,10 @@ type PostEmbedExternal = DatabaseSchemaType['post_embed_external']
 type PostEmbedRecord = DatabaseSchemaType['post_embed_record']
 type IndexedPost = {
   post: Post
-  entities: PostEntity[]
+  entities?: PostEntity[]
   embed?: PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord
-  ancestors: PostHierarchy[]
+  ancestors?: PostHierarchy[]
+  descendents?: IndexedPost[]
 }
 
 const lexId = lex.ids.AppBskyFeedPost
@@ -62,7 +63,7 @@ const insertFn = async (
     value: entity.value,
   }))
   // Entity and embed indices
-  let insertedEntities: PostEntity[] = []
+  let insertedEntities: PostEntity[] | undefined
   if (entities.length > 0) {
     insertedEntities = await db
       .insertInto('post_entity')
@@ -99,19 +100,46 @@ const insertFn = async (
     }
     await db.insertInto('post_embed_record').values(embed).execute()
   }
-  // Thread index
+
+  // Thread indexing
+
+  // Concurrent, out-of-order updates are difficult, so we essentially
+  // take a lock on the thread for indexing, by locking the thread's root post.
   await db
-    .insertInto('post_hierarchy')
-    .values({
-      uri: post.uri,
-      ancestorUri: post.uri,
-      depth: 0,
-    })
-    .onConflict((oc) => oc.doNothing()) // Supports post updates
+    .selectFrom('post')
+    .forUpdate()
+    .selectAll()
+    .where('uri', '=', post.replyRoot ?? post.uri)
     .execute()
-  let ancestors: PostHierarchy[] = []
+
+  // Track the minimum we know about the post hierarchy: the post and its parent.
+  // Importantly, this works even if the parent hasn't been indexed yet.
+  const ancestors = await db
+    .insertInto('post_hierarchy')
+    .values([
+      {
+        uri: post.uri,
+        ancestorUri: post.uri,
+        depth: 0,
+      },
+      ...(post.replyParent
+        ? [
+            {
+              uri: post.uri,
+              ancestorUri: post.replyParent,
+              depth: 1,
+            },
+          ]
+        : []),
+    ])
+    .onConflict((oc) => oc.doNothing())
+    .returningAll()
+    .execute()
+
+  // Copy all the parent's relations down to the post.
+  // It's possible that the parent hasn't been indexed yet and this will no-op.
   if (post.replyParent) {
-    ancestors = await db
+    const deepAncestors = await db
       .insertInto('post_hierarchy')
       .columns(['uri', 'ancestorUri', 'depth'])
       .expression(
@@ -124,11 +152,43 @@ const insertFn = async (
             sql`depth + 1`.as('depth'),
           ]),
       )
-      .onConflict((oc) => oc.doNothing()) // Supports post updates
+      .onConflict((oc) => oc.doNothing())
       .returningAll()
       .execute()
+    ancestors.push(...deepAncestors)
   }
-  return { post: insertedPost, entities: insertedEntities, embed, ancestors }
+
+  // Copy all post's relations down to its descendents. This ensures
+  // that out-of-order indexing (i.e. descendent before parent) is resolved.
+  const descendents = await db
+    .insertInto('post_hierarchy')
+    .columns(['uri', 'ancestorUri', 'depth'])
+    .expression(
+      db
+        .selectFrom('post_hierarchy as target')
+        .innerJoin(
+          'post_hierarchy as source',
+          'source.ancestorUri',
+          'target.uri',
+        )
+        .where('target.uri', '=', post.uri)
+        .select([
+          'source.uri as uri',
+          'target.ancestorUri as ancestorUri',
+          sql`source.depth + target.depth`.as('depth'),
+        ]),
+    )
+    .onConflict((oc) => oc.doNothing())
+    .returningAll()
+    .execute()
+
+  return {
+    post: insertedPost,
+    entities: insertedEntities,
+    embed,
+    ancestors,
+    descendents: await collateDescendents(db, descendents),
+  }
 }
 
 const findDuplicate = async (): Promise<AtUri | null> => {
@@ -153,8 +213,11 @@ const eventsForInsert = (obj: IndexedPost) => {
     }
   }
   const notified = new Set([obj.post.creator])
-  const ancestors = [...obj.ancestors].sort((a, b) => a.depth - b.depth)
+  const ancestors = [...(obj.ancestors ?? [])].sort((a, b) => a.depth - b.depth)
   for (const relation of ancestors) {
+    if (relation.depth < 1) {
+      continue // no need to notify self
+    }
     const ancestorUri = new AtUri(relation.ancestorUri)
     if (!notified.has(ancestorUri.host)) {
       notified.add(ancestorUri.host)
@@ -170,6 +233,14 @@ const eventsForInsert = (obj: IndexedPost) => {
       )
     }
   }
+
+  if (obj.descendents) {
+    // May generate notifications for out-of-order indexing of replies
+    for (const descendent of obj.descendents) {
+      notifs.push(...eventsForInsert(descendent))
+    }
+  }
+
   return notifs
 }
 
@@ -256,3 +327,29 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
 }
 
 export default makePlugin
+
+async function collateDescendents(
+  db: DatabaseSchema,
+  descendents: PostHierarchy[],
+): Promise<IndexedPost[] | undefined> {
+  if (!descendents.length) return
+
+  const ancestorsByUri = descendents.reduce((acc, descendent) => {
+    acc[descendent.uri] ??= []
+    acc[descendent.uri].push(descendent)
+    return acc
+  }, {} as Record<string, PostHierarchy[]>)
+
+  const descendentPosts = await db
+    .selectFrom('post')
+    .selectAll()
+    .where('uri', 'in', Object.keys(ancestorsByUri))
+    .execute()
+
+  return descendentPosts.map((post) => {
+    return {
+      post,
+      ancestors: ancestorsByUri[post.uri],
+    }
+  })
+}
