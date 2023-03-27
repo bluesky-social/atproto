@@ -1,9 +1,9 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
-import * as repo from '../../../../repo'
+import { prepareUpdate, prepareCreate } from '../../../../repo'
 import AppContext from '../../../../context'
 import {
   BadCommitSwapError,
@@ -18,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth, input }) => {
       const {
-        did,
+        repo,
         collection,
         rkey,
         record,
@@ -26,9 +26,13 @@ export default function (server: Server, ctx: AppContext) {
         swapCommit,
         swapRecord,
       } = input.body
+      const did = await ctx.services.account(ctx.db).getDidForActor(repo)
 
+      if (!did) {
+        throw new InvalidRequestError(`Could not find repo: ${repo}`)
+      }
       if (did !== auth.credentials.did) {
-        throw new ForbiddenError()
+        throw new AuthRequiredError()
       }
       if (collection !== ids.AppBskyActorProfile || rkey !== 'self') {
         // @TODO temporary
@@ -65,8 +69,8 @@ export default function (server: Server, ctx: AppContext) {
         let write: PreparedCreate | PreparedUpdate
         try {
           write = current
-            ? await repo.prepareUpdate(writeInfo)
-            : await repo.prepareCreate(writeInfo)
+            ? await prepareUpdate(writeInfo)
+            : await prepareCreate(writeInfo)
         } catch (err) {
           if (err instanceof InvalidRecordError) {
             throw new InvalidRequestError(err.message)

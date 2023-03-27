@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
-import * as repo from '../../../../repo'
+import { prepareCreate, prepareDelete } from '../../../../repo'
 import { Server } from '../../../../lexicon'
 import {
   isCreate,
@@ -19,9 +19,13 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ input, auth }) => {
       const tx = input.body
-      const { did, validate, swapCommit } = tx
-      const requester = auth.credentials.did
-      if (did !== requester) {
+      const { repo, validate, swapCommit } = tx
+      const did = await ctx.services.account(ctx.db).getDidForActor(repo)
+
+      if (!did) {
+        throw new InvalidRequestError(`Could not find repo: ${repo}`)
+      }
+      if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
       }
       if (validate === false) {
@@ -40,7 +44,7 @@ export default function (server: Server, ctx: AppContext) {
         writes = await Promise.all(
           tx.writes.map((write) => {
             if (isCreate(write)) {
-              return repo.prepareCreate({
+              return prepareCreate({
                 did,
                 collection: write.collection,
                 record: write.value,
@@ -48,7 +52,7 @@ export default function (server: Server, ctx: AppContext) {
                 validate,
               })
             } else if (isDelete(write)) {
-              return repo.prepareDelete({
+              return prepareDelete({
                 did,
                 collection: write.collection,
                 rkey: write.rkey,

@@ -92,7 +92,7 @@ export async function generateMockSetup(env: DevEnv) {
     user.agent.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)
     user.did = res.data.did
     await user.agent.api.app.bsky.actor.profile.create(
-      { did: user.did },
+      { repo: user.did },
       {
         displayName: ucfirst(user.handle).slice(0, -5),
         description: `Test user ${_i++}`,
@@ -114,7 +114,7 @@ export async function generateMockSetup(env: DevEnv) {
   // everybody follows everybody
   const follow = async (author: User, subject: User) => {
     await author.agent.api.app.bsky.graph.follow.create(
-      { did: author.did },
+      { repo: author.did },
       {
         subject: subject.did,
         createdAt: date.next().value,
@@ -133,7 +133,7 @@ export async function generateMockSetup(env: DevEnv) {
   for (let i = 0; i < postTexts.length; i++) {
     const author = picka(users)
     const post = await author.agent.api.app.bsky.feed.post.create(
-      { did: author.did },
+      { repo: author.did },
       {
         text: postTexts[i],
         createdAt: date.next().value,
@@ -143,7 +143,7 @@ export async function generateMockSetup(env: DevEnv) {
     if (rand(10) === 0) {
       const reposter = picka(users)
       await reposter.agent.api.app.bsky.feed.repost.create(
-        { did: reposter.did },
+        { repo: reposter.did },
         {
           subject: picka(posts),
           createdAt: date.next().value,
@@ -174,7 +174,7 @@ export async function generateMockSetup(env: DevEnv) {
     const author = picka(users)
     posts.push(
       await author.agent.api.app.bsky.feed.post.create(
-        { did: author.did },
+        { repo: author.did },
         {
           text: picka(replyTexts),
           reply: {
@@ -192,7 +192,7 @@ export async function generateMockSetup(env: DevEnv) {
     for (const user of users) {
       if (rand(3) === 0) {
         await user.agent.api.app.bsky.feed.like.create(
-          { did: user.did },
+          { repo: user.did },
           {
             subject: post,
             createdAt: date.next().value,

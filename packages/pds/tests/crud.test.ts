@@ -82,7 +82,7 @@ describe('crud operations', () => {
   let uri: AtUri
   it('creates records', async () => {
     const res = await aliceAgent.api.com.atproto.repo.createRecord({
-      did: alice.did,
+      repo: alice.did,
       collection: 'app.bsky.feed.post',
       record: {
         $type: 'app.bsky.feed.post',
@@ -134,7 +134,7 @@ describe('crud operations', () => {
 
   it('deletes records', async () => {
     await aliceAgent.api.com.atproto.repo.deleteRecord({
-      did: alice.did,
+      repo: alice.did,
       collection: 'app.bsky.feed.post',
       rkey: uri.rkey,
     })
@@ -147,7 +147,7 @@ describe('crud operations', () => {
 
   it('CRUDs records with the semantic sugars', async () => {
     const res1 = await aliceAgent.api.app.bsky.feed.post.create(
-      { did: alice.did },
+      { repo: alice.did },
       {
         $type: 'app.bsky.feed.post',
         text: 'Hello, world!',
@@ -162,7 +162,7 @@ describe('crud operations', () => {
     expect(res2.records.length).toBe(1)
 
     await aliceAgent.api.app.bsky.feed.post.delete({
-      did: alice.did,
+      repo: alice.did,
       rkey: uri.rkey,
     })
 
@@ -186,7 +186,7 @@ describe('crud operations', () => {
     )
     // Associate image with post, image should be placed in blobstore
     const res = await aliceAgent.api.app.bsky.feed.post.create(
-      { did: alice.did },
+      { repo: alice.did },
       {
         $type: 'app.bsky.feed.post',
         text: "Here's a key!",
@@ -211,13 +211,13 @@ describe('crud operations', () => {
     // Cleanup
     await aliceAgent.api.app.bsky.feed.post.delete({
       rkey: postUri.rkey,
-      did: alice.did,
+      repo: alice.did,
     })
   })
 
   it('creates records with the correct key described by the schema', async () => {
     const res1 = await aliceAgent.api.app.bsky.actor.profile.create(
-      { did: alice.did },
+      { repo: alice.did },
       {
         displayName: 'alice',
         createdAt: new Date().toISOString(),
@@ -238,7 +238,7 @@ describe('crud operations', () => {
       const responses = await Promise.all(
         postTexts.map((text) =>
           aliceAgent.api.app.bsky.feed.post.create(
-            { did: alice.did },
+            { repo: alice.did },
             {
               text,
               createdAt: new Date().toISOString(),
@@ -265,7 +265,7 @@ describe('crud operations', () => {
       await Promise.all(
         uris.map((uri) =>
           aliceAgent.api.app.bsky.feed.post.delete({
-            did: alice.did,
+            repo: alice.did,
             rkey: uri.rkey,
           }),
         ),
@@ -292,7 +292,7 @@ describe('crud operations', () => {
     beforeAll(async () => {
       const createPost = async (text: string) => {
         const res = await aliceAgent.api.app.bsky.feed.post.create(
-          { did: alice.did },
+          { repo: alice.did },
           {
             $type: 'app.bsky.feed.post',
             text,
@@ -312,7 +312,7 @@ describe('crud operations', () => {
       await Promise.all(
         [uri1, uri2, uri3, uri4, uri5].map((uri) =>
           aliceAgent.api.app.bsky.feed.post.delete({
-            did: alice.did,
+            repo: alice.did,
             rkey: uri.rkey,
           }),
         ),
@@ -401,13 +401,13 @@ describe('crud operations', () => {
     it('deletes a record if it exists', async () => {
       const { repo } = aliceAgent.api.com.atproto
       const { data: post } = await repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyFeedPost,
         record: { text: 'post', createdAt: new Date().toISOString() },
       })
       const uri = new AtUri(post.uri)
       await repo.deleteRecord({
-        did: uri.host,
+        repo: uri.host,
         collection: uri.collection,
         rkey: uri.rkey,
       })
@@ -422,13 +422,13 @@ describe('crud operations', () => {
     it("no-ops if record doesn't exist", async () => {
       const { repo } = aliceAgent.api.com.atproto
       const { data: post } = await repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyFeedPost,
         record: { text: 'post', createdAt: new Date().toISOString() },
       })
       const uri = new AtUri(post.uri)
       await repo.deleteRecord({
-        did: uri.host,
+        repo: uri.host,
         collection: uri.collection,
         rkey: uri.rkey,
       })
@@ -439,7 +439,7 @@ describe('crud operations', () => {
       })
       await expect(checkPost).rejects.toThrow('Could not locate record')
       const attemptDelete = repo.deleteRecord({
-        did: uri.host,
+        repo: uri.host,
         collection: uri.collection,
         rkey: uri.rkey,
       })
@@ -460,7 +460,7 @@ describe('crud operations', () => {
 
       const { data: put } = await repo.putRecord({
         ...profilePath,
-        did: bob.did,
+        repo: bob.did,
         record: {
           displayName: 'Robert',
         },
@@ -481,7 +481,7 @@ describe('crud operations', () => {
       const { repo } = bobAgent.api.com.atproto
       const { data: put } = await repo.putRecord({
         ...profilePath,
-        did: bob.did,
+        repo: bob.did,
         record: {
           displayName: 'Robert',
           description: 'Dog lover',
@@ -503,7 +503,7 @@ describe('crud operations', () => {
     it('temporarily only puts profile records', async () => {
       const { repo } = bobAgent.api.com.atproto
       const put = repo.putRecord({
-        did: bob.did,
+        repo: bob.did,
         collection: ids.AppBskyGraphFollow,
         rkey: TID.nextStr(),
         record: {
@@ -519,7 +519,7 @@ describe('crud operations', () => {
     it('fails on user mismatch', async () => {
       const { repo } = aliceAgent.api.com.atproto
       const put = repo.putRecord({
-        did: bob.did,
+        repo: bob.did,
         collection: ids.AppBskyGraphFollow,
         rkey: TID.nextStr(),
         record: {
@@ -527,14 +527,14 @@ describe('crud operations', () => {
           createdAt: new Date().toISOString(),
         },
       })
-      await expect(put).rejects.toThrow('Forbidden')
+      await expect(put).rejects.toThrow('Authentication Required')
     })
 
     it('fails on invalid record', async () => {
       const { repo } = bobAgent.api.com.atproto
       const put = repo.putRecord({
         ...profilePath,
-        did: bob.did,
+        repo: bob.did,
         record: {
           displayName: 'Robert',
           description: 3.141,
@@ -560,7 +560,7 @@ describe('crud operations', () => {
 
   it('defaults an undefined $type on records', async () => {
     const res = await aliceAgent.api.com.atproto.repo.createRecord({
-      did: alice.did,
+      repo: alice.did,
       collection: 'app.bsky.feed.post',
       record: {
         text: 'blah',
@@ -578,7 +578,7 @@ describe('crud operations', () => {
 
   it('requires the schema to be known if validating', async () => {
     const prom = aliceAgent.api.com.atproto.repo.createRecord({
-      did: alice.did,
+      repo: alice.did,
       collection: 'com.example.foobar',
       record: { $type: 'com.example.foobar' },
     })
@@ -590,7 +590,7 @@ describe('crud operations', () => {
   it('requires the $type to match the schema', async () => {
     await expect(
       aliceAgent.api.com.atproto.repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: 'app.bsky.feed.post',
         record: { $type: 'app.bsky.feed.like' },
       }),
@@ -602,7 +602,7 @@ describe('crud operations', () => {
   it('validates the record on write', async () => {
     await expect(
       aliceAgent.api.com.atproto.repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: 'app.bsky.feed.post',
         record: { $type: 'app.bsky.feed.post' },
       }),
@@ -625,7 +625,7 @@ describe('crud operations', () => {
       const { repo, sync } = aliceAgent.api.com.atproto
       const { data: head } = await sync.getHead({ did: alice.did })
       const { data: post } = await repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyFeedPost,
         swapCommit: head.root,
         record: postRecord(),
@@ -644,12 +644,12 @@ describe('crud operations', () => {
       const { data: staleHead } = await sync.getHead({ did: alice.did })
       // Update repo, change head
       await repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyFeedPost,
         record: postRecord(),
       })
       const attemptCreate = repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyFeedPost,
         swapCommit: staleHead.root,
         record: postRecord(),
@@ -660,14 +660,14 @@ describe('crud operations', () => {
     it('deleteRecord succeeds on proper commit cas', async () => {
       const { repo, sync } = aliceAgent.api.com.atproto
       const { data: post } = await repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyFeedPost,
         record: postRecord(),
       })
       const { data: head } = await sync.getHead({ did: alice.did })
       const uri = new AtUri(post.uri)
       await repo.deleteRecord({
-        did: uri.host,
+        repo: uri.host,
         collection: uri.collection,
         rkey: uri.rkey,
         swapCommit: head.root,
@@ -684,13 +684,13 @@ describe('crud operations', () => {
       const { repo, sync } = aliceAgent.api.com.atproto
       const { data: staleHead } = await sync.getHead({ did: alice.did })
       const { data: post } = await repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyFeedPost,
         record: postRecord(),
       })
       const uri = new AtUri(post.uri)
       const attempDelete = repo.deleteRecord({
-        did: uri.host,
+        repo: uri.host,
         collection: uri.collection,
         rkey: uri.rkey,
         swapCommit: staleHead.root,
@@ -707,13 +707,13 @@ describe('crud operations', () => {
     it('deleteRecord succeeds on proper record cas', async () => {
       const { repo } = aliceAgent.api.com.atproto
       const { data: post } = await repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyFeedPost,
         record: postRecord(),
       })
       const uri = new AtUri(post.uri)
       await repo.deleteRecord({
-        did: uri.host,
+        repo: uri.host,
         collection: uri.collection,
         rkey: uri.rkey,
         swapRecord: post.cid,
@@ -729,13 +729,13 @@ describe('crud operations', () => {
     it('deleteRecord fails on bad record cas', async () => {
       const { repo } = aliceAgent.api.com.atproto
       const { data: post } = await repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyFeedPost,
         record: postRecord(),
       })
       const uri = new AtUri(post.uri)
       const attempDelete = repo.deleteRecord({
-        did: uri.host,
+        repo: uri.host,
         collection: uri.collection,
         rkey: uri.rkey,
         swapRecord: (await cidForCbor({})).toString(),
@@ -753,7 +753,7 @@ describe('crud operations', () => {
       const { repo, sync } = aliceAgent.api.com.atproto
       const { data: head } = await sync.getHead({ did: alice.did })
       const { data: profile } = await repo.putRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyActorProfile,
         rkey: 'self',
         swapCommit: head.root,
@@ -772,12 +772,12 @@ describe('crud operations', () => {
       const { data: staleHead } = await sync.getHead({ did: alice.did })
       // Update repo, change head
       await repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyFeedPost,
         record: postRecord(),
       })
       const attemptPut = repo.putRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyActorProfile,
         rkey: 'self',
         swapCommit: staleHead.root,
@@ -790,13 +790,13 @@ describe('crud operations', () => {
       const { repo } = aliceAgent.api.com.atproto
       // Start with missing profile record, to test swapRecord=null
       await repo.deleteRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyActorProfile,
         rkey: 'self',
       })
       // Test swapRecord w/ null (ensures create)
       const { data: profile1 } = await repo.putRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyActorProfile,
         rkey: 'self',
         swapRecord: null,
@@ -810,7 +810,7 @@ describe('crud operations', () => {
       expect(checkProfile1.cid).toEqual(profile1.cid)
       // Test swapRecord w/ cid (ensures update)
       const { data: profile2 } = await repo.putRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyActorProfile,
         rkey: 'self',
         swapRecord: profile1.cid,
@@ -828,7 +828,7 @@ describe('crud operations', () => {
       const { repo } = aliceAgent.api.com.atproto
       // Test swapRecord w/ null (ensures create)
       const attemptPut1 = repo.putRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyActorProfile,
         rkey: 'self',
         swapRecord: null,
@@ -837,7 +837,7 @@ describe('crud operations', () => {
       await expect(attemptPut1).rejects.toThrow(putRecord.InvalidSwapError)
       // Test swapRecord w/ cid (ensures update)
       const attemptPut2 = repo.putRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyActorProfile,
         rkey: 'self',
         swapRecord: (await cidForCbor({})).toString(),
@@ -851,7 +851,7 @@ describe('crud operations', () => {
       const { data: head } = await sync.getHead({ did: alice.did })
       const rkey = TID.nextStr()
       await repo.applyWrites({
-        did: alice.did,
+        repo: alice.did,
         swapCommit: head.root,
         writes: [
           {
@@ -877,12 +877,12 @@ describe('crud operations', () => {
       const { data: staleHead } = await sync.getHead({ did: alice.did })
       // Update repo, change head
       await repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: ids.AppBskyFeedPost,
         record: postRecord(),
       })
       const attemptApplyWrite = repo.applyWrites({
-        did: alice.did,
+        repo: alice.did,
         swapCommit: staleHead.root,
         writes: [
           {
@@ -908,7 +908,7 @@ describe('crud operations', () => {
     const cidB = await cidForCbor({ post: 'b' })
 
     const { data: like1 } = await aliceAgent.api.com.atproto.repo.createRecord({
-      did: alice.did,
+      repo: alice.did,
       collection: 'app.bsky.feed.like',
       record: {
         $type: 'app.bsky.feed.like',
@@ -917,7 +917,7 @@ describe('crud operations', () => {
       },
     })
     const { data: like2 } = await aliceAgent.api.com.atproto.repo.createRecord({
-      did: alice.did,
+      repo: alice.did,
       collection: 'app.bsky.feed.like',
       record: {
         $type: 'app.bsky.feed.like',
@@ -926,7 +926,7 @@ describe('crud operations', () => {
       },
     })
     const { data: like3 } = await aliceAgent.api.com.atproto.repo.createRecord({
-      did: alice.did,
+      repo: alice.did,
       collection: 'app.bsky.feed.like',
       record: {
         $type: 'app.bsky.feed.like',
@@ -969,7 +969,7 @@ describe('crud operations', () => {
 
     const { data: repost1 } =
       await aliceAgent.api.com.atproto.repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: 'app.bsky.feed.repost',
         record: {
           $type: 'app.bsky.feed.repost',
@@ -979,7 +979,7 @@ describe('crud operations', () => {
       })
     const { data: repost2 } =
       await aliceAgent.api.com.atproto.repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: 'app.bsky.feed.repost',
         record: {
           $type: 'app.bsky.feed.repost',
@@ -989,7 +989,7 @@ describe('crud operations', () => {
       })
     const { data: repost3 } =
       await aliceAgent.api.com.atproto.repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: 'app.bsky.feed.repost',
         record: {
           $type: 'app.bsky.feed.repost',
@@ -1028,7 +1028,7 @@ describe('crud operations', () => {
 
     const { data: follow1 } =
       await aliceAgent.api.com.atproto.repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: 'app.bsky.graph.follow',
         record: {
           $type: 'app.bsky.graph.follow',
@@ -1037,7 +1037,7 @@ describe('crud operations', () => {
         },
       })
     const { data: follow2 } = await bobAgent.api.com.atproto.repo.createRecord({
-      did: bob.did,
+      repo: bob.did,
       collection: 'app.bsky.graph.follow',
       record: {
         $type: 'app.bsky.graph.follow',
@@ -1047,7 +1047,7 @@ describe('crud operations', () => {
     })
     const { data: follow3 } =
       await aliceAgent.api.com.atproto.repo.createRecord({
-        did: alice.did,
+        repo: alice.did,
         collection: 'app.bsky.graph.follow',
         record: {
           $type: 'app.bsky.graph.follow',
@@ -1086,7 +1086,7 @@ describe('crud operations', () => {
 
   it("doesn't serve taken-down record", async () => {
     const created = await aliceAgent.api.app.bsky.feed.post.create(
-      { did: alice.did },
+      { repo: alice.did },
       {
         $type: 'app.bsky.feed.post',
         text: 'Hello, world!',
