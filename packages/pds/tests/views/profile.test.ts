@@ -283,7 +283,7 @@ describe('pds profile views', () => {
   ) {
     return await agent.api.com.atproto.repo.putRecord(
       {
-        did,
+        repo: did,
         collection: ids.AppBskyActorProfile,
         rkey: 'self',
         record,

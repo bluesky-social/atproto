@@ -50,6 +50,7 @@ async function main(tx: Database, ctx: AppContext) {
 
   let didsComplete = 0
   let updatesComplete = 0
+  let sceneDeleteCount = 0
   const updatesTurnedDeletes: string[] = []
   const chunks = chunkArray(allDids, Math.ceil(allDids.length / 20))
 
@@ -68,6 +69,10 @@ async function main(tx: Database, ctx: AppContext) {
             }
             try {
               assertValidRecord(record)
+              if (sceneDids.has(record['subject'] as string)) {
+                sceneDeleteCount += 1
+                throw new Error('Follow was for scene')
+              }
             } catch {
               const del = prepareDelete({
                 did,
@@ -143,6 +148,7 @@ async function main(tx: Database, ctx: AppContext) {
   console.log(SHORT_NAME, 'running dummy check')
   await dummyCheck(tx, {
     followCount,
+    sceneDeleteCount,
     deleteCount: updatesTurnedDeletes.length,
   })
 
@@ -156,11 +162,16 @@ async function main(tx: Database, ctx: AppContext) {
 
 async function dummyCheck(
   db: Database,
-  original: { followCount: number; deleteCount: number },
+  original: {
+    followCount: number
+    deleteCount: number
+    sceneDeleteCount: number
+  },
 ) {
   // Check 1: rogue deletions
   assert(
-    original.deleteCount < original.followCount / 1000,
+    original.deleteCount - original.sceneDeleteCount <
+      original.followCount / 1000,
     `${SHORT_NAME} dummy check failed: too many updates-turned-deletes.`,
   )
 
@@ -247,3 +258,36 @@ async function getFollowCount(db: Database) {
     .executeTakeFirstOrThrow()
   return Number(count)
 }
+
+const sceneDids = new Set([
+  'did:plc:6uow4ajxchftgyvvppnqa6uj', // prod
+  'did:plc:jo6qdnxnyqdio6cq36xgc6tx',
+  'did:plc:ata4ssnzkxdpi2q5pebgbxag',
+  'did:plc:vww6spsbf7vpyoestb5lzk44',
+  'did:plc:vlsacc3tgj3clrelfdiiqb2o',
+  'did:plc:r6ye7ovouy2sv6rkg3yocxrd',
+  'did:plc:wmr3iirixxka36wgzfkkmakd',
+  'did:plc:nrdqipi4jisuhbkg6h3svnfu',
+  'did:plc:snihgjzh7r7b2g3liy6vq6hl',
+  'did:plc:yj4flg2llw33a74vf47kuz3f',
+  'did:plc:xvgvtntxzol3fa2qeozuxgpr',
+  'did:plc:fpmwl2k2mh4r4xhq4wv7oahl',
+  'did:plc:go2yr6gc7yzubof477ef5n5q',
+  'did:plc:ws3kkwvk5tjyjnlqjfl7ypec',
+  'did:plc:rrlz7tykdtbqro6akp7i3rjv',
+  'did:plc:ynfpe5pj6tdvai26q54pik2k',
+  'did:plc:lzjigfl7mxejfe6s4qva2h4w',
+  'did:plc:jdn2cv7yrfh57kl3xxkxk2zb',
+  'did:plc:qvvur7brkpbmwfgrxwwljqfx',
+  'did:plc:sxezckld4n7edlj74nwdfs6n',
+  'did:plc:rty42f6wxdsup346k4jvhiag',
+  'did:plc:l5n4qwodg5vfvpqxbcwub76b',
+  'did:plc:tlybz2j2q3ip7h5pbykn523y', // staging
+  'did:plc:5xa243y3abbkq5ra6qcqr5g5',
+  'did:plc:zrlfy63x2phdx4be2fykinbg',
+  'did:plc:z7rueyi53jgrkj53hcdfp52u',
+  'did:plc:katepdoxo76ngjqandjsaj5u',
+  'did:plc:mvlsw6iyi5ewcr3c6ns4fqih',
+  'did:plc:yld7vxrxpeymtbgwkes3sam3',
+  'did:plc:ahy3hicg6ubuco7oabmqhi2t',
+])

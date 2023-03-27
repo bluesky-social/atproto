@@ -9,12 +9,12 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["did", "writes"],
+          "required": ["repo", "writes"],
           "properties": {
-            "did": {
+            "repo": {
               "type": "string",
-              "format": "did",
-              "description": "The DID of the repo."
+              "format": "at-identifier",
+              "description": "The handle or DID of the repo."
             },
             "validate": {
               "type": "boolean",

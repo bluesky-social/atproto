@@ -54,6 +54,7 @@ export function validateReplyRef(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.post#replyRef', v)
 }
 
+/** Deprecated. Use app.bsky.richtext instead. */
 export interface Entity {
   index: TextSlice
   /** Expected values are 'mention', 'hashtag', and 'link'. */
@@ -72,7 +73,7 @@ export function validateEntity(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.post#entity', v)
 }
 
-/** A text segment. Start is inclusive, end is exclusive. */
+/** Deprecated. Use app.bsky.richtext instead -- A text segment. Start is inclusive, end is exclusive. Indices are for utf16-encoded strings. */
 export interface TextSlice {
   start: number
   end: number

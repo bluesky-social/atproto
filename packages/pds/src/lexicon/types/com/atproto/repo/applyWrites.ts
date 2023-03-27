@@ -11,8 +11,8 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** The DID of the repo. */
-  did: string
+  /** The handle or DID of the repo. */
+  repo: string
   /** Validate the records? */
   validate: boolean
   writes: (Create | Update | Delete)[]
