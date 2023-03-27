@@ -7,6 +7,8 @@
  * and utf16, and that's precisely what this library handles.
  */
 
+import { graphemeLen } from '@atproto/common-web'
+
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
@@ -21,6 +23,10 @@ export class UnicodeString {
 
   get length() {
     return this.utf8.byteLength
+  }
+
+  get graphemeLength() {
+    return graphemeLen(this.utf16)
   }
 
   slice(start?: number, end?: number): string {

@@ -146,6 +146,14 @@ export class RichText {
     return this.unicodeText.toString()
   }
 
+  get length() {
+    return this.unicodeText.length
+  }
+
+  get graphemeLength() {
+    return this.unicodeText.graphemeLength
+  }
+
   clone() {
     return new RichText({
       text: this.unicodeText.utf16,
