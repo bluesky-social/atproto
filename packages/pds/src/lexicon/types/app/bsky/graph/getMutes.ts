@@ -18,7 +18,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  mutes: AppBskyActorDefs.WithInfo[]
+  mutes: AppBskyActorDefs.ProfileView[]
   [k: string]: unknown
 }
 

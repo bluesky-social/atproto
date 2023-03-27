@@ -2433,7 +2433,7 @@ export const schemaDict = {
     id: 'app.bsky.actor.defs',
     description: 'A reference to an actor in the network.',
     defs: {
-      withInfo: {
+      profileViewBasic: {
         type: 'object',
         required: ['did', 'handle'],
         properties: {
@@ -2481,18 +2481,6 @@ export const schemaDict = {
           avatar: {
             type: 'string',
           },
-          banner: {
-            type: 'string',
-          },
-          followersCount: {
-            type: 'integer',
-          },
-          followsCount: {
-            type: 'integer',
-          },
-          postsCount: {
-            type: 'integer',
-          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
@@ -2503,7 +2491,7 @@ export const schemaDict = {
           },
         },
       },
-      profileViewBasic: {
+      profileViewDetailed: {
         type: 'object',
         required: ['did', 'handle'],
         properties: {
@@ -2525,6 +2513,18 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
+          },
+          banner: {
+            type: 'string',
+          },
+          followersCount: {
+            type: 'integer',
+          },
+          followsCount: {
+            type: 'integer',
+          },
+          postsCount: {
+            type: 'integer',
           },
           indexedAt: {
             type: 'string',
@@ -2574,7 +2574,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#profileView',
+            ref: 'lex:app.bsky.actor.defs#profileViewDetailed',
           },
         },
       },
@@ -2610,7 +2610,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileView',
+                  ref: 'lex:app.bsky.actor.defs#profileViewDetailed',
                 },
               },
             },
@@ -2654,7 +2654,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
             },
@@ -2733,7 +2733,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
             },
@@ -2773,7 +2773,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#withInfo',
+                  ref: 'lex:app.bsky.actor.defs#profileViewBasic',
                 },
               },
             },
@@ -2957,7 +2957,7 @@ export const schemaDict = {
           },
           author: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#withInfo',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
           },
           record: {
             type: 'unknown',
@@ -3009,7 +3009,7 @@ export const schemaDict = {
           },
           author: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#withInfo',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
           },
           record: {
             type: 'unknown',
@@ -3092,7 +3092,7 @@ export const schemaDict = {
         properties: {
           by: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#withInfo',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
           },
           indexedAt: {
             type: 'string',
@@ -3262,7 +3262,7 @@ export const schemaDict = {
           },
           actor: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#withInfo',
+            ref: 'lex:app.bsky.actor.defs#profileView',
           },
         },
       },
@@ -3361,7 +3361,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#withInfo',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
             },
@@ -3624,7 +3624,7 @@ export const schemaDict = {
             properties: {
               subject: {
                 type: 'ref',
-                ref: 'lex:app.bsky.actor.defs#withInfo',
+                ref: 'lex:app.bsky.actor.defs#profileView',
               },
               cursor: {
                 type: 'string',
@@ -3633,7 +3633,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#withInfo',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
             },
@@ -3676,7 +3676,7 @@ export const schemaDict = {
             properties: {
               subject: {
                 type: 'ref',
-                ref: 'lex:app.bsky.actor.defs#withInfo',
+                ref: 'lex:app.bsky.actor.defs#profileView',
               },
               cursor: {
                 type: 'string',
@@ -3685,7 +3685,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#withInfo',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
             },
@@ -3728,7 +3728,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#withInfo',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
             },
@@ -3866,7 +3866,7 @@ export const schemaDict = {
           },
           author: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#withInfo',
+            ref: 'lex:app.bsky.actor.defs#profileView',
           },
           reason: {
             type: 'string',

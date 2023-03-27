@@ -13,7 +13,7 @@ import * as AppBskyEmbedRecord from '../embed/record'
 export interface PostView {
   uri: string
   cid: string
-  author: AppBskyActorDefs.WithInfo
+  author: AppBskyActorDefs.ProfileViewBasic
   record: {}
   embed?:
     | AppBskyEmbedImages.View
@@ -92,7 +92,7 @@ export function validateReplyRef(v: unknown): ValidationResult {
 }
 
 export interface ReasonRepost {
-  by: AppBskyActorDefs.WithInfo
+  by: AppBskyActorDefs.ProfileViewBasic
   indexedAt: string
   [k: string]: unknown
 }

@@ -25,7 +25,7 @@
             "cursor": {"type": "string"},
             "repostedBy": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.actor.defs#withInfo"}
+              "items": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"}
             }
           }
         }

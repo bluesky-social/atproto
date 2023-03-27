@@ -13,7 +13,7 @@ export interface QueryParams {
 }
 
 export type InputSchema = undefined
-export type OutputSchema = AppBskyActorDefs.ProfileView
+export type OutputSchema = AppBskyActorDefs.ProfileViewDetailed
 
 export interface CallOptions {
   headers?: Headers

@@ -40,7 +40,7 @@ export function toKnownErr(e: any) {
 export interface Notification {
   uri: string
   cid: string
-  author: AppBskyActorDefs.WithInfo
+  author: AppBskyActorDefs.ProfileView
   /** Expected values are 'like', 'repost', 'follow', 'mention', 'reply', and 'quote'. */
   reason:
     | 'like'

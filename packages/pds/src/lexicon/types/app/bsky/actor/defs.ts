@@ -6,7 +6,7 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 
-export interface WithInfo {
+export interface ProfileViewBasic {
   did: string
   handle: string
   displayName?: string
@@ -15,16 +15,16 @@ export interface WithInfo {
   [k: string]: unknown
 }
 
-export function isWithInfo(v: unknown): v is WithInfo {
+export function isProfileViewBasic(v: unknown): v is ProfileViewBasic {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.actor.defs#withInfo'
+    v.$type === 'app.bsky.actor.defs#profileViewBasic'
   )
 }
 
-export function validateWithInfo(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.actor.defs#withInfo', v)
+export function validateProfileViewBasic(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#profileViewBasic', v)
 }
 
 export interface ProfileView {
@@ -33,10 +33,6 @@ export interface ProfileView {
   displayName?: string
   description?: string
   avatar?: string
-  banner?: string
-  followersCount?: number
-  followsCount?: number
-  postsCount?: number
   indexedAt?: string
   viewer?: ViewerState
   [k: string]: unknown
@@ -54,27 +50,31 @@ export function validateProfileView(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#profileView', v)
 }
 
-export interface ProfileViewBasic {
+export interface ProfileViewDetailed {
   did: string
   handle: string
   displayName?: string
   description?: string
   avatar?: string
+  banner?: string
+  followersCount?: number
+  followsCount?: number
+  postsCount?: number
   indexedAt?: string
   viewer?: ViewerState
   [k: string]: unknown
 }
 
-export function isProfileViewBasic(v: unknown): v is ProfileViewBasic {
+export function isProfileViewDetailed(v: unknown): v is ProfileViewDetailed {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.actor.defs#profileViewBasic'
+    v.$type === 'app.bsky.actor.defs#profileViewDetailed'
   )
 }
 
-export function validateProfileViewBasic(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.actor.defs#profileViewBasic', v)
+export function validateProfileViewDetailed(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#profileViewDetailed', v)
 }
 
 export interface ViewerState {

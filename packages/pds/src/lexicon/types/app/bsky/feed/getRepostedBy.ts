@@ -22,7 +22,7 @@ export interface OutputSchema {
   uri: string
   cid?: string
   cursor?: string
-  repostedBy: AppBskyActorDefs.WithInfo[]
+  repostedBy: AppBskyActorDefs.ProfileView[]
   [k: string]: unknown
 }
 
