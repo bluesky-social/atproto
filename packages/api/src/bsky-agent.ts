@@ -189,7 +189,7 @@ export class BskyAgent extends AtpAgent {
       try {
         // attempt the put
         await this.com.atproto.repo.putRecord({
-          did: this.session.did,
+          repo: this.session.did,
           collection: 'app.bsky.actor.profile',
           rkey: 'self',
           record: updated,
