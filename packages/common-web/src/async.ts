@@ -1,4 +1,4 @@
-import { wait } from './util'
+import { bailableWait } from './util'
 
 // reads values from a generator into a list
 // breaks when isDone signals `true` AND `waitFor` completes OR when a max length is reached
@@ -10,11 +10,16 @@ export const readFromGenerator = async <T>(
   maxLength = Number.MAX_SAFE_INTEGER,
 ): Promise<T[]> => {
   const evts: T[] = []
+  let bail: undefined | (() => void)
+  let hasBroke = false
   const awaitDone = async () => {
     if (await isDone(evts.at(-1))) {
       return true
     }
-    await wait(20)
+    const bailable = bailableWait(20)
+    await bailable.wait()
+    bail = bailable.bail
+    if (hasBroke) return false
     return await awaitDone()
   }
   const breakOn: Promise<void> = new Promise((resolve) => {
@@ -23,12 +28,17 @@ export const readFromGenerator = async <T>(
     })
   })
 
-  while (evts.length < maxLength) {
-    const maybeEvt = await Promise.race([gen.next(), breakOn])
-    if (!maybeEvt) break
-    const evt = maybeEvt as IteratorResult<T>
-    if (evt.done) break
-    evts.push(evt.value)
+  try {
+    while (evts.length < maxLength) {
+      const maybeEvt = await Promise.race([gen.next(), breakOn])
+      if (!maybeEvt) break
+      const evt = maybeEvt as IteratorResult<T>
+      if (evt.done) break
+      evts.push(evt.value)
+    }
+  } finally {
+    hasBroke = true
+    bail && bail()
   }
   return evts
 }
