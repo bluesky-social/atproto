@@ -31,20 +31,30 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('eventType', 'varchar', (col) => col.notNull())
     .addColumn('event', binaryDatatype, (col) => col.notNull())
     .addColumn('sequencedAt', 'varchar', (col) => col.notNull())
+    .addForeignKeyConstraint(
+      'invalidated_by_fkey',
+      // @ts-ignore
+      ['invalidatedBy'],
+      'repo_seq',
+      ['seq'],
+    )
     .execute()
 
+  // for filtering seqs based on did
   await db.schema
     .createIndex(repoSeqDidIndex)
     .on(repoSeqTable)
     .column('did')
     .execute()
 
+  // for filtering seqs based on event type
   await db.schema
     .createIndex(repoSeqEventTypeIndex)
     .on(repoSeqTable)
     .column('eventType')
     .execute()
 
+  // for entering into the seq stream at a particular time
   await db.schema
     .createIndex(repoSeqSequencedAtIndex)
     .on(repoSeqTable)

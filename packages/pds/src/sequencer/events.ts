@@ -23,7 +23,7 @@ export const sequenceCommit = async (
   let carSlice: Uint8Array
 
   // max 200 ops or 1MB of data
-  if (writes.length > 200 || commitData.blocks.byteSize > 1024000) {
+  if (writes.length > 200 || commitData.blocks.byteSize > 1000000) {
     tooBig = true
     const justRoot = new BlockMap()
     justRoot.add(commitData.blocks.get(commitData.commit))

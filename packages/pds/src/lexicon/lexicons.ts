@@ -2398,6 +2398,7 @@ export const schemaDict = {
           blocks: {
             type: 'bytes',
             description: 'CAR file containing relevant blocks',
+            maxLength: 1000000,
           },
           ops: {
             type: 'array',
@@ -2405,6 +2406,7 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.sync.subscribeRepos#repoOp',
             },
+            maxLength: 200,
           },
           blobs: {
             type: 'array',

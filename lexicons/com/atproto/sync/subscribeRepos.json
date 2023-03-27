@@ -43,11 +43,13 @@
         "prev": {"type": "cid-link"},
         "blocks": {
           "type": "bytes",
-          "description": "CAR file containing relevant blocks"
+          "description": "CAR file containing relevant blocks",
+          "maxLength": 1000000
         },
         "ops": {
           "type": "array", 
-          "items": { "type": "ref", "ref": "#repoOp"}
+          "items": { "type": "ref", "ref": "#repoOp"},
+          "maxLength": 200
         },
         "blobs": {
           "type": "array",
