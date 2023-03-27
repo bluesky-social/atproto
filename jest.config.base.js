@@ -8,8 +8,7 @@ const esModules = ['get-port', 'node-fetch'].join('|')
 module.exports = {
   roots: ['<rootDir>/src', '<rootDir>/tests'],
   transform: {
-    '^.+\\.ts$': 'ts-jest',
-    "^.+\\.js?$": "babel-jest"
+    "^.+\\.(t|j)s?$": "@swc/jest",
   },
   transformIgnorePatterns: [`<rootDir>/node_modules/(?!${esModules})`],
   testRegex: '(/tests/.*.(test|spec)).(jsx?|tsx?)$',
