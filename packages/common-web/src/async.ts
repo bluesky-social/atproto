@@ -1,14 +1,12 @@
 import { wait } from './util'
 
-export const emptyPromise: Promise<void> = new Promise((resolve) => resolve())
-
 // reads values from a generator into a list
 // breaks when isDone signals `true` AND `waitFor` completes OR when a max length is reached
 // NOTE: does not signal generator to close. it *will* continue to produce values
 export const readFromGenerator = async <T>(
   gen: AsyncGenerator<T>,
   isDone: (last?: T) => Promise<boolean> | boolean,
-  waitFor: Promise<unknown> = emptyPromise,
+  waitFor: Promise<unknown> = Promise.resolve(),
   maxLength = Number.MAX_SAFE_INTEGER,
 ): Promise<T[]> => {
   const evts: T[] = []
