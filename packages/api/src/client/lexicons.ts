@@ -3548,7 +3548,7 @@ export const schemaDict = {
       },
       entity: {
         type: 'object',
-        description: 'Deprecated. Use app.bsky.richtext instead.',
+        description: 'Deprecated: use facets instead.',
         required: ['index', 'type', 'value'],
         properties: {
           index: {
@@ -3557,8 +3557,7 @@ export const schemaDict = {
           },
           type: {
             type: 'string',
-            description:
-              "Expected values are 'mention', 'hashtag', and 'link'.",
+            description: "Expected values are 'mention' and 'link'.",
           },
           value: {
             type: 'string',

@@ -56,10 +56,10 @@ export function validateReplyRef(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.post#replyRef', v)
 }
 
-/** Deprecated. Use app.bsky.richtext instead. */
+/** Deprecated: use facets instead. */
 export interface Entity {
   index: TextSlice
-  /** Expected values are 'mention', 'hashtag', and 'link'. */
+  /** Expected values are 'mention' and 'link'. */
   type: string
   value: string
   [k: string]: unknown
