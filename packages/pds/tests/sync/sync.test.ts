@@ -86,7 +86,7 @@ describe('repo sync', () => {
     for (let i = 0; i < DEL_COUNT; i++) {
       const uri = uris[i * 5]
       await agent.api.app.bsky.feed.post.delete({
-        did,
+        repo: did,
         collection: uri.collection,
         rkey: uri.rkey,
       })
