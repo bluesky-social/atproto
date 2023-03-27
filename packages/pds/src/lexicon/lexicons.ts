@@ -1079,12 +1079,12 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['did', 'writes'],
+            required: ['repo', 'writes'],
             properties: {
-              did: {
+              repo: {
                 type: 'string',
-                format: 'did',
-                description: 'The DID of the repo.',
+                format: 'at-identifier',
+                description: 'The handle or DID of the repo.',
               },
               validate: {
                 type: 'boolean',
@@ -1177,12 +1177,12 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['did', 'collection', 'record'],
+            required: ['repo', 'collection', 'record'],
             properties: {
-              did: {
+              repo: {
                 type: 'string',
-                format: 'did',
-                description: 'The DID of the repo.',
+                format: 'at-identifier',
+                description: 'The handle or DID of the repo.',
               },
               collection: {
                 type: 'string',
@@ -1247,12 +1247,12 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['did', 'collection', 'rkey'],
+            required: ['repo', 'collection', 'rkey'],
             properties: {
-              did: {
+              repo: {
                 type: 'string',
-                format: 'did',
-                description: 'The DID of the repo.',
+                format: 'at-identifier',
+                description: 'The handle or DID of the repo.',
               },
               collection: {
                 type: 'string',
@@ -1494,13 +1494,13 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['did', 'collection', 'rkey', 'record'],
+            required: ['repo', 'collection', 'rkey', 'record'],
             nullable: ['swapRecord'],
             properties: {
-              did: {
+              repo: {
                 type: 'string',
-                format: 'did',
-                description: 'The DID of the repo.',
+                format: 'at-identifier',
+                description: 'The handle or DID of the repo.',
               },
               collection: {
                 type: 'string',
@@ -3589,6 +3589,7 @@ export const schemaDict = {
       },
       entity: {
         type: 'object',
+        description: 'Deprecated. Use app.bsky.richtext instead.',
         required: ['index', 'type', 'value'],
         properties: {
           index: {
@@ -3607,7 +3608,8 @@ export const schemaDict = {
       },
       textSlice: {
         type: 'object',
-        description: 'A text segment. Start is inclusive, end is exclusive.',
+        description:
+          'Deprecated. Use app.bsky.richtext instead -- A text segment. Start is inclusive, end is exclusive. Indices are for utf16-encoded strings.',
         required: ['start', 'end'],
         properties: {
           start: {
@@ -4048,7 +4050,8 @@ export const schemaDict = {
       },
       textSlice: {
         type: 'object',
-        description: 'A text segment. Start is inclusive, end is exclusive.',
+        description:
+          'A text segment. Start is inclusive, end is exclusive. Indices are for utf8-encoded strings.',
         required: ['start', 'end'],
         properties: {
           start: {

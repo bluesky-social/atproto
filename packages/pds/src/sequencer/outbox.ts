@@ -6,7 +6,7 @@ export type OutboxOpts = {
 }
 
 export class Outbox {
-  caughtUp = false
+  private caughtUp = false
   lastSeen = -1
 
   cutoverBuffer: SeqEvt[]
