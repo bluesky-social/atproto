@@ -3,8 +3,9 @@ import { cborToLexRecord } from '@atproto/repo'
 import Database from '../../../db'
 import { countAll, notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
-import { ViewRecord } from '../../../lexicon/types/app/bsky/embed/record'
-import { isView as isViewImage } from '../../../lexicon/types/app/bsky/embed/images'
+import { isView as isViewImages } from '../../../lexicon/types/app/bsky/embed/images'
+import { isView as isViewExternal } from '../../../lexicon/types/app/bsky/embed/external'
+import { View as ViewRecord } from '../../../lexicon/types/app/bsky/embed/record'
 import { PostView } from '../../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
 
@@ -238,10 +239,10 @@ export class FeedService {
     let embeds = images.reduce((acc, cur) => {
       const embed = (acc[cur.postUri] ??= {
         $type: 'app.bsky.embed.images#view',
-        value: [],
+        images: [],
       })
-      if (!isViewImage(embed)) return acc
-      embed.value.push({
+      if (!isViewImages(embed)) return acc
+      embed.images.push({
         thumb: this.imgUriBuilder.getCommonSignedUri(
           'feed_thumbnail',
           cur.imageCid,
@@ -258,7 +259,7 @@ export class FeedService {
       if (!acc[cur.postUri]) {
         acc[cur.postUri] = {
           $type: 'app.bsky.embed.external#view',
-          value: {
+          external: {
             uri: cur.uri,
             title: cur.title,
             description: cur.description,
@@ -274,36 +275,48 @@ export class FeedService {
       return acc
     }, embeds)
     embeds = records.reduce((acc, cur) => {
-      if (!acc[cur.postUri]) {
-        const formatted = this.formatPostView(
-          cur.uri,
-          actorViews,
-          postViews,
-          deepEmbedViews,
-        )
-        let embeds: ViewRecord['embed'][] | undefined
-        if (_depth < 1) {
-          // Omit field entirely when too deep: e.g. don't include it on the embeds within a record embed.
-          // Otherwise list any embeds that appear within the record. A consumer may discover an embed
-          // within the raw record, then look within this array to find the presented view of it.
-          embeds = formatted?.embed ? [formatted?.embed] : []
+      const formatted = this.formatPostView(
+        cur.uri,
+        actorViews,
+        postViews,
+        deepEmbedViews,
+      )
+      let deepEmbeds: ViewRecord['embeds'] | undefined
+      if (_depth < 1) {
+        // Omit field entirely when too deep: e.g. don't include it on the embeds within a record embed.
+        // Otherwise list any embeds that appear within the record. A consumer may discover an embed
+        // within the raw record, then look within this array to find the presented view of it.
+        deepEmbeds = formatted?.embed ? [formatted.embed] : []
+      }
+      const recordEmbed = {
+        record: formatted
+          ? {
+              $type: 'app.bsky.embed.record#viewRecord',
+              uri: formatted.uri,
+              cid: formatted.cid,
+              author: formatted.author,
+              value: formatted.record,
+              embeds: deepEmbeds,
+              indexedAt: formatted.indexedAt,
+            }
+          : {
+              $type: 'app.bsky.embed.record#viewNotFound',
+              uri: cur.uri,
+            },
+      }
+      if (acc[cur.postUri]) {
+        const mediaEmbed = acc[cur.postUri]
+        if (isViewImages(mediaEmbed) || isViewExternal(mediaEmbed)) {
+          acc[cur.postUri] = {
+            $type: 'app.bsky.embed.complexRecord#view',
+            record: recordEmbed,
+            media: mediaEmbed,
+          }
         }
+      } else {
         acc[cur.postUri] = {
           $type: 'app.bsky.embed.record#view',
-          value: formatted
-            ? {
-                $type: 'app.bsky.embed.record#viewRecord',
-                uri: formatted.uri,
-                cid: formatted.cid,
-                author: formatted.author,
-                record: formatted.record,
-                embeds,
-                indexedAt: formatted.indexedAt,
-              }
-            : {
-                $type: 'app.bsky.embed.record#viewNotFound',
-                uri: cur.uri,
-              },
+          ...recordEmbed,
         }
       }
       return acc

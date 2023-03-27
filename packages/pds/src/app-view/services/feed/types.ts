@@ -1,9 +1,10 @@
-import { View as ViewImage } from '../../../lexicon/types/app/bsky/embed/images'
+import { View as ViewImages } from '../../../lexicon/types/app/bsky/embed/images'
 import { View as ViewExternal } from '../../../lexicon/types/app/bsky/embed/external'
 import { View as ViewRecord } from '../../../lexicon/types/app/bsky/embed/record'
+import { View as ViewComplexRecord } from '../../../lexicon/types/app/bsky/embed/complexRecord'
 
 export type FeedEmbeds = {
-  [uri: string]: ViewImage | ViewExternal | ViewRecord
+  [uri: string]: ViewImages | ViewExternal | ViewRecord | ViewComplexRecord
 }
 
 export type PostInfo = {

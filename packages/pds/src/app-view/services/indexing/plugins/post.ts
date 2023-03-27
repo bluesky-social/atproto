@@ -5,6 +5,7 @@ import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/po
 import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecord } from '../../../../lexicon/types/app/bsky/embed/record'
+import { isMain as isEmbedComplexRecord } from '../../../../lexicon/types/app/bsky/embed/complexRecord'
 import {
   isMention,
   isLink,
@@ -26,7 +27,7 @@ type PostEmbedRecord = DatabaseSchemaType['post_embed_record']
 type IndexedPost = {
   post: Post
   facets: { type: 'mention' | 'link'; value: string }[]
-  embed?: PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord
+  embeds?: (PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord)[]
   ancestors: PostHierarchy[]
 }
 
@@ -76,34 +77,47 @@ const insertFn = async (
     return []
   })
   // Embed indices
-  let embed: PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord | undefined
-  if (isEmbedImage(obj.embed)) {
-    const { images } = obj.embed
-    embed = images.map((img, i) => ({
-      postUri: uri.toString(),
-      position: i,
-      imageCid: img.image.ref.toString(),
-      alt: img.alt,
-    }))
-    await db.insertInto('post_embed_image').values(embed).execute()
-  } else if (isEmbedExternal(obj.embed)) {
-    const { external } = obj.embed
-    embed = {
-      postUri: uri.toString(),
-      uri: external.uri,
-      title: external.title,
-      description: external.description,
-      thumbCid: external.thumb?.ref.toString() || null,
+  const embeds: (PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord)[] = []
+  const postEmbeds = isEmbedComplexRecord(obj.embed)
+    ? [
+        { $type: lex.ids.AppBskyEmbedRecord, ...obj.embed.record },
+        obj.embed.media,
+      ]
+    : obj.embed
+    ? [obj.embed]
+    : []
+  for (const postEmbed of postEmbeds) {
+    if (isEmbedImage(postEmbed)) {
+      const { images } = postEmbed
+      const imagesEmbed = images.map((img, i) => ({
+        postUri: uri.toString(),
+        position: i,
+        imageCid: img.image.ref.toString(),
+        alt: img.alt,
+      }))
+      embeds.push(imagesEmbed)
+      await db.insertInto('post_embed_image').values(imagesEmbed).execute()
+    } else if (isEmbedExternal(postEmbed)) {
+      const { external } = postEmbed
+      const externalEmbed = {
+        postUri: uri.toString(),
+        uri: external.uri,
+        title: external.title,
+        description: external.description,
+        thumbCid: external.thumb?.ref.toString() || null,
+      }
+      embeds.push(externalEmbed)
+      await db.insertInto('post_embed_external').values(externalEmbed).execute()
+    } else if (isEmbedRecord(postEmbed)) {
+      const { record } = postEmbed
+      const recordEmbed = {
+        postUri: uri.toString(),
+        embedUri: record.uri,
+        embedCid: record.cid,
+      }
+      embeds.push(recordEmbed)
+      await db.insertInto('post_embed_record').values(recordEmbed).execute()
     }
-    await db.insertInto('post_embed_external').values(embed).execute()
-  } else if (isEmbedRecord(obj.embed)) {
-    const { record } = obj.embed
-    embed = {
-      postUri: uri.toString(),
-      embedUri: record.uri,
-      embedCid: record.cid,
-    }
-    await db.insertInto('post_embed_record').values(embed).execute()
   }
   // Thread index
   await db
@@ -134,7 +148,7 @@ const insertFn = async (
       .returningAll()
       .execute()
   }
-  return { post: insertedPost, facets, embed, ancestors }
+  return { post: insertedPost, facets, embeds, ancestors }
 }
 
 const findDuplicate = async (): Promise<AtUri | null> => {
@@ -161,17 +175,19 @@ const eventsForInsert = (obj: IndexedPost) => {
       })
     }
   }
-  if (obj.embed && 'embedUri' in obj.embed) {
-    const embedUri = new AtUri(obj.embed.embedUri)
-    if (embedUri.collection === lex.ids.AppBskyFeedPost) {
-      maybeNotify({
-        userDid: embedUri.host,
-        reason: 'quote',
-        reasonSubject: embedUri.toString(),
-        author: obj.post.creator,
-        recordUri: obj.post.uri,
-        recordCid: obj.post.cid,
-      })
+  for (const embed of obj.embeds ?? []) {
+    if ('embedUri' in embed) {
+      const embedUri = new AtUri(embed.embedUri)
+      if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+        maybeNotify({
+          userDid: embedUri.host,
+          reason: 'quote',
+          reasonSubject: embedUri.toString(),
+          author: obj.post.creator,
+          recordUri: obj.post.uri,
+          recordCid: obj.post.cid,
+        })
+      }
     }
   }
   const ancestors = [...obj.ancestors].sort((a, b) => a.depth - b.depth)
@@ -198,32 +214,36 @@ const deleteFn = async (
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
-  let deletedEmbed:
+  const deletedEmbeds: (
     | PostEmbedImage[]
     | PostEmbedExternal
     | PostEmbedRecord
-    | undefined
-  const deletedImgs = await db
-    .deleteFrom('post_embed_image')
-    .where('postUri', '=', uri.toString())
-    .returningAll()
-    .execute()
-  deletedEmbed = deletedImgs.length ? deletedImgs : undefined
-  if (!deletedEmbed) {
-    const deletedExternals = await db
+  )[] = []
+  const [deletedImgs, deletedExternals, deletedPosts] = await Promise.all([
+    db
+      .deleteFrom('post_embed_image')
+      .where('postUri', '=', uri.toString())
+      .returningAll()
+      .execute(),
+    db
       .deleteFrom('post_embed_external')
       .where('postUri', '=', uri.toString())
       .returningAll()
-      .executeTakeFirst()
-    deletedEmbed = deletedExternals
-  }
-  if (!deletedEmbed) {
-    const deletedPosts = await db
+      .executeTakeFirst(),
+    db
       .deleteFrom('post_embed_record')
       .where('postUri', '=', uri.toString())
       .returningAll()
-      .executeTakeFirst()
-    deletedEmbed = deletedPosts
+      .executeTakeFirst(),
+  ])
+  if (deletedImgs.length) {
+    deletedEmbeds.push(deletedImgs)
+  }
+  if (deletedExternals) {
+    deletedEmbeds.push(deletedExternals)
+  }
+  if (deletedPosts) {
+    deletedEmbeds.push(deletedPosts)
   }
   // Do not delete, maintain thread hierarchy even if post no longer exists
   const ancestors = await db
@@ -236,7 +256,7 @@ const deleteFn = async (
     ? {
         post: deleted,
         facets: [], // Not used
-        embed: deletedEmbed,
+        embeds: deletedEmbeds,
         ancestors,
       }
     : null

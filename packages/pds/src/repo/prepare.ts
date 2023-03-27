@@ -1,16 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { TID } from '@atproto/common'
-import {
-  PreparedCreate,
-  PreparedUpdate,
-  PreparedDelete,
-  InvalidRecordError,
-  PreparedWrite,
-  PreparedBlobRef,
-} from './types'
-
-import * as lex from '../lexicon/lexicons'
 import { LexiconDefNotFoundError, RepoRecord } from '@atproto/lexicon'
 import {
   cidForRecord,
@@ -20,10 +10,24 @@ import {
   RecordWriteOp,
   WriteOpAction,
 } from '@atproto/repo'
+import {
+  PreparedCreate,
+  PreparedUpdate,
+  PreparedDelete,
+  InvalidRecordError,
+  PreparedWrite,
+  PreparedBlobRef,
+} from './types'
+import * as lex from '../lexicon/lexicons'
+import { isMain as isExternalEmbed } from '../lexicon/types/app/bsky/embed/external'
+import { isMain as isImagesEmbed } from '../lexicon/types/app/bsky/embed/images'
+import { isMain as isComplexRecordEmbed } from '../lexicon/types/app/bsky/embed/complexRecord'
+import { isRecord as isPost } from '../lexicon/types/app/bsky/feed/post'
+import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
 
 // @TODO do this dynamically off of schemas
-export const blobsForWrite = (record: any): PreparedBlobRef[] => {
-  if (record.$type === lex.ids.AppBskyActorProfile) {
+export const blobsForWrite = (record: unknown): PreparedBlobRef[] => {
+  if (isProfile(record)) {
     const doc = lex.schemaDict.AppBskyActorProfile
     const refs: PreparedBlobRef[] = []
     if (record.avatar) {
@@ -41,29 +45,35 @@ export const blobsForWrite = (record: any): PreparedBlobRef[] => {
       })
     }
     return refs
-  } else if (record.$type === lex.ids.AppBskyFeedPost) {
+  } else if (isPost(record)) {
     const refs: PreparedBlobRef[] = []
-    const embed = record?.embed
-    if (embed?.$type === 'app.bsky.embed.images') {
-      const doc = lex.schemaDict.AppBskyEmbedImages
-      for (let i = 0; i < embed.images?.length || 0; i++) {
-        const img = embed.images[i]
+    const embeds = isComplexRecordEmbed(record.embed)
+      ? [
+          { $type: 'app.bsky.embed.record', ...record.embed.record },
+          record.embed.media,
+        ]
+      : record.embed
+      ? [record.embed]
+      : []
+    for (const embed of embeds) {
+      if (isImagesEmbed(embed)) {
+        const doc = lex.schemaDict.AppBskyEmbedImages
+        for (let i = 0; i < embed.images.length || 0; i++) {
+          const img = embed.images[i]
+          refs.push({
+            cid: img.image.ref,
+            mimeType: img.image.mimeType,
+            constraints: doc.defs.image.properties.image,
+          })
+        }
+      } else if (isExternalEmbed(embed) && embed.external.thumb) {
+        const doc = lex.schemaDict.AppBskyEmbedExternal
         refs.push({
-          cid: img.image.ref,
-          mimeType: img.image.mimeType,
-          constraints: doc.defs.image.properties.image,
+          cid: embed.external.thumb.ref,
+          mimeType: embed.external.thumb.mimeType,
+          constraints: doc.defs.external.properties.thumb,
         })
       }
-    } else if (
-      record?.embed?.$type === 'app.bsky.embed.external' &&
-      embed.external.thumb
-    ) {
-      const doc = lex.schemaDict.AppBskyEmbedExternal
-      refs.push({
-        cid: embed.external.thumb.ref,
-        mimeType: embed.external.thumb.mimeType,
-        constraints: doc.defs.external.properties.thumb,
-      })
     }
     return refs
   }
