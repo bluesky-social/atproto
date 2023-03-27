@@ -11,7 +11,7 @@ describe('agent', () => {
 
   beforeAll(async () => {
     server = await runTestServer({
-      dbPostgresSchema: 'session',
+      dbPostgresSchema: 'bsky_agent',
     })
     close = server.close
   })

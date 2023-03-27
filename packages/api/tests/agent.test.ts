@@ -17,7 +17,7 @@ describe('agent', () => {
 
   beforeAll(async () => {
     server = await runTestServer({
-      dbPostgresSchema: 'session',
+      dbPostgresSchema: 'api_agent',
     })
     close = server.close
   })
