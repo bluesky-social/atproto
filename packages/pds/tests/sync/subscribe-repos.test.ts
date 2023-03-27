@@ -123,30 +123,51 @@ describe('repo subscribe repos', () => {
     await Promise.all(promises)
   }
 
+  const readTillCaughtUp = async <T>(
+    gen: AsyncGenerator<T>,
+    waitFor?: Promise<unknown>,
+  ) => {
+    const isDone = async (evt: any) => {
+      if (evt === undefined) return false
+      if (evt instanceof ErrorFrame) return true
+      const curr = await db.db
+        .selectFrom('repo_seq')
+        .select('seq')
+        .limit(1)
+        .orderBy('seq', 'desc')
+        .executeTakeFirst()
+      return curr !== undefined && evt.body.seq === curr.seq
+    }
+
+    return readFromGenerator(gen, isDone, waitFor)
+  }
+
   it('sync backfilled events', async () => {
     const ws = new WebSocket(
       `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
     )
 
     const gen = byFrame(ws)
-    const evts = await readFromGenerator(gen)
+    const evts = await readTillCaughtUp(gen)
     ws.terminate()
 
     await verifyEvents(evts)
   })
 
   it('syncs new events', async () => {
+    const postPromise = makePosts()
+
     const readAfterDelay = async () => {
       await wait(200) // wait just a hair so that we catch it during cutover
       const ws = new WebSocket(
         `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
       )
-      const evts = await readFromGenerator(byFrame(ws))
+      const evts = await readTillCaughtUp(byFrame(ws), postPromise)
       ws.terminate()
       return evts
     }
 
-    const [evts] = await Promise.all([readAfterDelay(), makePosts()])
+    const [evts] = await Promise.all([readAfterDelay(), postPromise])
 
     await verifyEvents(evts)
   })
@@ -162,9 +183,11 @@ describe('repo subscribe repos', () => {
       await makePosts()
     }
 
+    const postPromise = makePostsAfterWait()
+
     const [evts] = await Promise.all([
-      readFromGenerator(byFrame(ws)),
-      makePostsAfterWait(),
+      readTillCaughtUp(byFrame(ws), postPromise),
+      postPromise,
     ])
 
     ws.terminate()
@@ -184,7 +207,7 @@ describe('repo subscribe repos', () => {
     const ws = new WebSocket(
       `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${midPointSeq}`,
     )
-    const evts = await readFromGenerator(byFrame(ws))
+    const evts = await readTillCaughtUp(byFrame(ws))
     ws.terminate()
     const seqSlice = seqs.slice(midPoint + 1)
     expect(evts.length).toBe(seqSlice.length)
@@ -224,7 +247,7 @@ describe('repo subscribe repos', () => {
     const ws = new WebSocket(
       `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${newSeqs[0]}`,
     )
-    const [info, ...evts] = await readFromGenerator(byFrame(ws))
+    const [info, ...evts] = await readTillCaughtUp(byFrame(ws))
     ws.terminate()
 
     if (!(info instanceof MessageFrame)) {
@@ -240,7 +263,7 @@ describe('repo subscribe repos', () => {
     const ws = new WebSocket(
       `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${100000}`,
     )
-    const frames = await readFromGenerator(byFrame(ws))
+    const frames = await readTillCaughtUp(byFrame(ws))
     ws.terminate()
     expect(frames.length).toBe(1)
     if (!(frames[0] instanceof ErrorFrame)) {
