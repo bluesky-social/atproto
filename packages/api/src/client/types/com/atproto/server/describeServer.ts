@@ -14,6 +14,8 @@ export type InputSchema = undefined
 export interface OutputSchema {
   inviteCodeRequired?: boolean
   availableUserDomains: string[]
+  repoSigningKey: string
+  plcRotationKeys?: string[]
   links?: Links
   [k: string]: unknown
 }

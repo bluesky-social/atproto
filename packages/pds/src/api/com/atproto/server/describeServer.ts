@@ -5,6 +5,8 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.describeServer(() => {
     const availableUserDomains = ctx.cfg.availableUserDomains
     const inviteCodeRequired = ctx.cfg.inviteRequired
+    const repoSigningKey = ctx.repoSigningKey.did()
+    const plcRotationKeys = [ctx.cfg.recoveryKey, ctx.plcRotationKey.did()]
     const privacyPolicy = ctx.cfg.privacyPolicyUrl
     const termsOfService = ctx.cfg.termsOfServiceUrl
 
@@ -13,6 +15,8 @@ export default function (server: Server, ctx: AppContext) {
       body: {
         availableUserDomains,
         inviteCodeRequired,
+        repoSigningKey,
+        plcRotationKeys,
         links: { privacyPolicy, termsOfService },
       },
     }

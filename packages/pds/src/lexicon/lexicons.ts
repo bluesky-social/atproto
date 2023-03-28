@@ -1627,6 +1627,10 @@ export const schemaDict = {
                 type: 'string',
                 format: 'handle',
               },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
               inviteCode: {
                 type: 'string',
               },
@@ -1830,7 +1834,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['availableUserDomains'],
+            required: ['availableUserDomains', 'repoSigningKey'],
             properties: {
               inviteCodeRequired: {
                 type: 'boolean',
@@ -1840,6 +1844,16 @@ export const schemaDict = {
                 items: {
                   type: 'string',
                 },
+              },
+              repoSigningKey: {
+                type: 'string',
+              },
+              plcRotationKeys: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                maxLength: 4,
               },
               links: {
                 type: 'ref',

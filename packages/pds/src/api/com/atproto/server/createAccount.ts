@@ -5,6 +5,7 @@ import { Server } from '../../../../lexicon'
 import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
+import { resolveExternalHandle } from '../identity/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount(async ({ input, req }) => {
@@ -20,9 +21,62 @@ export default function (server: Server, ctx: AppContext) {
       } else if (err instanceof ident.ReservedHandleError) {
         throw new InvalidRequestError(err.message, 'HandleNotAvailable')
       } else if (err instanceof ident.UnsupportedDomainError) {
-        throw new InvalidRequestError(err.message, 'UnsupportedDomain')
+        if (input.body.did === undefined) {
+          throw new InvalidRequestError(err.message, 'UnsupportedDomain')
+        }
+        const resolvedHandleDid = await resolveExternalHandle(
+          ctx.cfg.scheme,
+          input.body.handle,
+        )
+        if (input.body.did !== resolvedHandleDid) {
+          throw new InvalidRequestError(
+            'External handle did not resolve to DID',
+          )
+        }
       }
       throw err
+    }
+
+    let did: string
+    let plcCreateOp: plc.Operation | null = null
+    if (input.body.did) {
+      const didData = await ctx.didResolver.resolveAtpData(input.body.did)
+      if (didData.signingKey !== ctx.repoSigningKey.did()) {
+        throw new InvalidRequestError(
+          `did document signingKey did not match service signingKey: ${ctx.repoSigningKey.did()}`,
+          'InvalidDidDoc',
+        )
+      }
+      if (didData.handle !== handle) {
+        throw new InvalidRequestError(
+          'did document handle did not match requested handle',
+          'InvalidDidDoc',
+        )
+      }
+      if (didData.pds !== ctx.cfg.publicUrl) {
+        throw new InvalidRequestError(
+          `did document AtprotoPersonalDataServer did not match service publicUrl: ${ctx.cfg.publicUrl}`,
+          'InvalidDidDoc',
+        )
+      }
+
+      // @TODO should we throw if the rotation key does not match?
+      did = didData.did
+    } else {
+      const rotationKeys = [ctx.cfg.recoveryKey, ctx.plcRotationKey.did()]
+      if (recoveryKey) {
+        rotationKeys.unshift(recoveryKey)
+      }
+      // format create op, but don't send until we ensure the username & email are available
+      const plcCreate = await plc.createOp({
+        signingKey: ctx.repoSigningKey.did(),
+        rotationKeys,
+        handle,
+        pds: ctx.cfg.publicUrl,
+        signer: ctx.plcRotationKey,
+      })
+      did = plcCreate.did
+      plcCreateOp = plcCreate.op
     }
 
     const now = new Date().toISOString()
@@ -61,20 +115,6 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const rotationKeys = [ctx.cfg.recoveryKey, ctx.plcRotationKey.did()]
-      if (recoveryKey) {
-        rotationKeys.unshift(recoveryKey)
-      }
-      // format create op, but don't send until we ensure the username & email are available
-      const plcCreate = await plc.createOp({
-        signingKey: ctx.repoSigningKey.did(),
-        rotationKeys,
-        handle,
-        pds: ctx.cfg.publicUrl,
-        signer: ctx.plcRotationKey,
-      })
-      const did = plcCreate.did
-
       // Register user before going out to PLC to get a real did
       try {
         await actorTxn.registerUser(email, handle, did, password)
@@ -91,14 +131,16 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // Generate a real did with PLC
-      try {
-        await ctx.plcClient.sendOperation(did, plcCreate.op)
-      } catch (err) {
-        req.log.error(
-          { didKey: ctx.plcRotationKey.did(), handle },
-          'failed to create did:plc',
-        )
-        throw err
+      if (plcCreateOp !== null) {
+        try {
+          await ctx.plcClient.sendOperation(did, plcCreateOp)
+        } catch (err) {
+          req.log.error(
+            { didKey: ctx.plcRotationKey.did(), handle },
+            'failed to create did:plc',
+          )
+          throw err
+        }
       }
 
       if (ctx.cfg.inviteRequired && inviteCode) {
@@ -120,7 +162,6 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.services.auth(dbTxn).grantRefreshToken(refresh.payload)
 
       return {
-        did,
         accessJwt: access.jwt,
         refreshJwt: refresh.jwt,
       }
@@ -130,7 +171,7 @@ export default function (server: Server, ctx: AppContext) {
       encoding: 'application/json',
       body: {
         handle,
-        did: result.did,
+        did,
         accessJwt: result.accessJwt,
         refreshJwt: result.refreshJwt,
       },
