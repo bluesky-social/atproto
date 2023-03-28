@@ -9,6 +9,7 @@ import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as AppBskyEmbedImages from './images'
 import * as AppBskyEmbedExternal from './external'
+import * as AppBskyEmbedRecordWithMedia from './recordWithMedia'
 
 export interface Main {
   record: ComAtprotoRepoStrongRef.Main
@@ -29,7 +30,7 @@ export function validateMain(v: unknown): ValidationResult {
 }
 
 export interface View {
-  value?: ViewRecord | ViewNotFound | { $type: string; [k: string]: unknown }
+  record: ViewRecord | ViewNotFound | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
 
@@ -47,11 +48,12 @@ export interface ViewRecord {
   uri: string
   cid: string
   author: AppBskyActorDefs.ProfileViewBasic
-  record: {}
+  value: {}
   embeds?: (
     | AppBskyEmbedImages.View
     | AppBskyEmbedExternal.View
     | View
+    | AppBskyEmbedRecordWithMedia.View
     | { $type: string; [k: string]: unknown }
   )[]
   indexedAt: string

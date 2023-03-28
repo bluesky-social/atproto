@@ -2786,7 +2786,7 @@ export const schemaDict = {
     lexicon: 1,
     id: 'app.bsky.embed.external',
     description:
-      'An representation of some externally linked content, embedded in another form of content',
+      'A representation of some externally linked content, embedded in another form of content',
     defs: {
       main: {
         type: 'object',
@@ -2823,7 +2823,7 @@ export const schemaDict = {
         type: 'object',
         required: ['external'],
         properties: {
-          value: {
+          external: {
             type: 'ref',
             ref: 'lex:app.bsky.embed.external#viewExternal',
           },
@@ -2885,9 +2885,9 @@ export const schemaDict = {
       },
       view: {
         type: 'object',
-        required: ['value'],
+        required: ['images'],
         properties: {
-          value: {
+          images: {
             type: 'array',
             items: {
               type: 'ref',
@@ -2918,7 +2918,7 @@ export const schemaDict = {
     lexicon: 1,
     id: 'app.bsky.embed.record',
     description:
-      'An representation of a record embedded in another form of content',
+      'A representation of a record embedded in another form of content',
     defs: {
       main: {
         type: 'object',
@@ -2934,7 +2934,7 @@ export const schemaDict = {
         type: 'object',
         required: ['record'],
         properties: {
-          value: {
+          record: {
             type: 'union',
             refs: [
               'lex:app.bsky.embed.record#viewRecord',
@@ -2945,7 +2945,7 @@ export const schemaDict = {
       },
       viewRecord: {
         type: 'object',
-        required: ['uri', 'cid', 'author', 'record', 'indexedAt'],
+        required: ['uri', 'cid', 'author', 'value', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
@@ -2959,7 +2959,7 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileViewBasic',
           },
-          record: {
+          value: {
             type: 'unknown',
           },
           embeds: {
@@ -2970,6 +2970,7 @@ export const schemaDict = {
                 'lex:app.bsky.embed.images#view',
                 'lex:app.bsky.embed.external#view',
                 'lex:app.bsky.embed.record#view',
+                'lex:app.bsky.embed.recordWithMedia#view',
               ],
             },
           },
@@ -2986,6 +2987,45 @@ export const schemaDict = {
           uri: {
             type: 'string',
             format: 'at-uri',
+          },
+        },
+      },
+    },
+  },
+  AppBskyEmbedRecordWithMedia: {
+    lexicon: 1,
+    id: 'app.bsky.embed.recordWithMedia',
+    description:
+      'A representation of a record embedded in another form of content, alongside other compatible embeds',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['record', 'media'],
+        properties: {
+          record: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.record',
+          },
+          media: {
+            type: 'union',
+            refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.external'],
+          },
+        },
+      },
+      view: {
+        type: 'object',
+        required: ['record', 'media'],
+        properties: {
+          record: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.record#view',
+          },
+          media: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.embed.images#view',
+              'lex:app.bsky.embed.external#view',
+            ],
           },
         },
       },
@@ -3020,6 +3060,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.images#view',
               'lex:app.bsky.embed.external#view',
               'lex:app.bsky.embed.record#view',
+              'lex:app.bsky.embed.recordWithMedia#view',
             ],
           },
           replyCount: {
@@ -3481,6 +3522,7 @@ export const schemaDict = {
                 'lex:app.bsky.embed.images',
                 'lex:app.bsky.embed.external',
                 'lex:app.bsky.embed.record',
+                'lex:app.bsky.embed.recordWithMedia',
               ],
             },
             createdAt: {
@@ -3506,7 +3548,7 @@ export const schemaDict = {
       },
       entity: {
         type: 'object',
-        description: 'Deprecated. Use app.bsky.richtext instead.',
+        description: 'Deprecated: use facets instead.',
         required: ['index', 'type', 'value'],
         properties: {
           index: {
@@ -3515,8 +3557,7 @@ export const schemaDict = {
           },
           type: {
             type: 'string',
-            description:
-              "Expected values are 'mention', 'hashtag', and 'link'.",
+            description: "Expected values are 'mention' and 'link'.",
           },
           value: {
             type: 'string',
@@ -4090,6 +4131,7 @@ export const ids = {
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
   AppBskyEmbedRecord: 'app.bsky.embed.record',
+  AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
   AppBskyFeedDefs: 'app.bsky.feed.defs',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
