@@ -141,9 +141,9 @@ const postRecord = {
 let markdown = ''
 for (const segment of rt.segments()) {
   if (segment.isLink()) {
-    markdown += `[${segment.text}](${segment.facet?.value.uri})`
+    markdown += `[${segment.text}](${segment.link?.uri})`
   } else if (segment.isMention()) {
-    markdown += `[${segment.text}](https://my-bsky-app.com/user/${segment.facet?.value.did})`
+    markdown += `[${segment.text}](https://my-bsky-app.com/user/${segment.mention?.did})`
   } else {
     markdown += segment.text
   }

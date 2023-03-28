@@ -19,13 +19,15 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
       facets.push({
         $type: 'app.bsky.richtext.facet',
         index: {
-          start: text.utf16IndexToUtf8Index(start),
-          end: text.utf16IndexToUtf8Index(start + match[3].length + 1),
+          byteStart: text.utf16IndexToUtf8Index(start),
+          byteEnd: text.utf16IndexToUtf8Index(start + match[3].length + 1),
         },
-        value: {
-          $type: 'app.bsky.richtext.facet#mention',
-          did: match[3], // must be resolved afterwards
-        },
+        features: [
+          {
+            $type: 'app.bsky.richtext.facet#mention',
+            did: match[3], // must be resolved afterwards
+          },
+        ],
       })
     }
   }
@@ -55,13 +57,15 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
       }
       facets.push({
         index: {
-          start: text.utf16IndexToUtf8Index(index.start),
-          end: text.utf16IndexToUtf8Index(index.end),
+          byteStart: text.utf16IndexToUtf8Index(index.start),
+          byteEnd: text.utf16IndexToUtf8Index(index.end),
         },
-        value: {
-          type: 'app.bsky.richtext.facet#link',
-          uri,
-        },
+        features: [
+          {
+            $type: 'app.bsky.richtext.facet#link',
+            uri,
+          },
+        ],
       })
     }
   }

@@ -1,5 +1,6 @@
 import fs from 'fs/promises'
 import AtpAgent from '@atproto/api'
+import { Main as Facet } from '@atproto/api/src/client/types/app/bsky/richtext/facet'
 import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/takeModerationAction'
 import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/moderation/createReport'
 import { AtUri } from '@atproto/uri'
@@ -166,7 +167,7 @@ export class SeedClient {
   async post(
     by: string,
     text: string,
-    facets?: any,
+    facets?: Facet[],
     images?: ImageRef[],
     quote?: RecordRef,
   ) {
@@ -247,7 +248,7 @@ export class SeedClient {
     root: RecordRef,
     parent: RecordRef,
     text: string,
-    facets?: any,
+    facets?: Facet[],
     images?: ImageRef[],
   ) {
     const embed = images

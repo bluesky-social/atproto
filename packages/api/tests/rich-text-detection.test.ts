@@ -214,8 +214,15 @@ function segmentToOutput(segment: RichTextSegment): string[] {
   if (segment.facet) {
     return [
       segment.text,
-      // @ts-ignore it's fine
-      segment.facet.value.did || segment.facet.value.uri,
+      segment.facet?.features.map((f) => {
+        if (f.did) {
+          return String(f.did)
+        }
+        if (f.uri) {
+          return String(f.uri)
+        }
+        return undefined
+      })?.[0] || '',
     ]
   }
   return [segment.text]

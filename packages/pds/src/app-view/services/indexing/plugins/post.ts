@@ -61,21 +61,23 @@ const insertFn = async (
   if (!insertedPost) {
     return null // Post already indexed
   }
-  const facets = (obj.facets || []).flatMap((facet) => {
-    if (isMention(facet.value)) {
-      return {
-        type: 'mention' as const,
-        value: facet.value.did,
+  const facets = (obj.facets || [])
+    .flatMap((facet) => facet.features)
+    .flatMap((feature) => {
+      if (isMention(feature)) {
+        return {
+          type: 'mention' as const,
+          value: feature.did,
+        }
       }
-    }
-    if (isLink(facet.value)) {
-      return {
-        type: 'link' as const,
-        value: facet.value.uri,
+      if (isLink(feature)) {
+        return {
+          type: 'link' as const,
+          value: feature.uri,
+        }
       }
-    }
-    return []
-  })
+      return []
+    })
   // Embed indices
   const embeds: (PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord)[] = []
   const postEmbeds = separateEmbeds(obj.embed)
