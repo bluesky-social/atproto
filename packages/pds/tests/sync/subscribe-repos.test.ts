@@ -320,6 +320,10 @@ describe('repo subscribe repos', () => {
     expect(car.blocks.size).toBe(1)
     expect(car.roots.length).toBe(1)
     expect(car.roots[0].toString()).toEqual(currHead.data.root)
+
+    // did not affect other users
+    const bobEvts = getCommitEvents(bob, frames)
+    expect(bobEvts.length).toBeGreaterThan(10)
   })
 
   it('sends info frame on out of date cursor', async () => {
