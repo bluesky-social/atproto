@@ -199,7 +199,7 @@ const agent = new AtpAgent({service: 'https://example.com'})
 
 ### Non-browser configuration
 
-In non-browser environments you'll need to specify a fetch polyfill.
+In non-browser environments you'll need to specify a fetch polyfill. [See the example react-native polyfill here.](./docs/rn-fetch-handler.ts)
 
 ```typescript
 import { BskyAgent } from '@atproto/api'
