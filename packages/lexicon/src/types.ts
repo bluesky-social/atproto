@@ -187,7 +187,6 @@ export type LexXrpcBody = z.infer<typeof lexXrpcBody>
 export const lexXrpcSubscriptionMessage = z.object({
   description: z.string().optional(),
   schema: z.union([lexRefVariant, lexObject]).optional(),
-  codes: z.record(z.number().int()).optional(),
 })
 export type LexXrpcSubscriptionMessage = z.infer<
   typeof lexXrpcSubscriptionMessage

@@ -14,7 +14,7 @@ export const schema = {
   bytes: z.instanceof(Uint8Array),
   string: z.string(),
   array: z.array(z.unknown()),
-  record: z.record(z.string(), z.unknown()),
+  map: z.record(z.string(), z.unknown()),
   unknown: z.unknown(),
 }
 
@@ -31,9 +31,9 @@ export const def = {
     name: 'string',
     schema: schema.string,
   } as Def<string>,
-  record: {
-    name: 'record',
-    schema: schema.record,
+  map: {
+    name: 'map',
+    schema: schema.map,
   } as Def<Record<string, unknown>>,
   unknown: {
     name: 'unknown',

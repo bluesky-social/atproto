@@ -46,7 +46,7 @@ export const jsonToIpld = (val: JsonValue): IpldValue => {
   if (check.is(val, schema.array)) {
     return val.map((item) => jsonToIpld(item))
   }
-  if (check.is(val, schema.record)) {
+  if (check.is(val, schema.map)) {
     const toReturn = {}
     for (const key of Object.keys(val)) {
       toReturn[key] = jsonToIpld(val[key])
@@ -73,7 +73,7 @@ export const ipldToJson = (val: IpldValue): JsonValue => {
   if (check.is(val, schema.array)) {
     return val.map((item) => ipldToJson(item))
   }
-  if (check.is(val, schema.record)) {
+  if (check.is(val, schema.map)) {
     const toReturn = {}
     for (const key of Object.keys(val)) {
       toReturn[key] = ipldToJson(val[key])

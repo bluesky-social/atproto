@@ -8,6 +8,7 @@ import { RepoRoot } from '../../db/tables/repo-root'
 import { notSoftDeletedClause } from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
+import { sequenceHandleUpdate } from '../../sequencer'
 
 export class AccountService {
   constructor(public db: Database) {}
@@ -141,6 +142,7 @@ export class AccountService {
     if (res.numUpdatedRows < 1) {
       throw new UserAlreadyExistsError()
     }
+    await sequenceHandleUpdate(this.db, did, handle)
   }
 
   async updateUserPassword(did: string, password: string) {

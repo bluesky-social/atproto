@@ -170,7 +170,7 @@ export const verifyProofs = async (
     const found = await mst.get(
       util.formatDataKey(claim.collection, claim.rkey),
     )
-    const record = found ? await blockstore.readObj(found, def.record) : null
+    const record = found ? await blockstore.readObj(found, def.map) : null
     if (claim.record === null) {
       if (record === null) {
         verified.push(claim)

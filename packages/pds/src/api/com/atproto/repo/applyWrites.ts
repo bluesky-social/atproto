@@ -33,6 +33,9 @@ export default function (server: Server, ctx: AppContext) {
           'Unvalidated writes are not yet supported.',
         )
       }
+      if (tx.writes.length > 200) {
+        throw new InvalidRequestError('Too many writes. Max: 200')
+      }
 
       const hasUpdate = tx.writes.some(isUpdate)
       if (hasUpdate) {

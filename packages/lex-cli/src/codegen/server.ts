@@ -498,11 +498,7 @@ function genServerXrpcStreaming(
 
   file.addImportDeclaration({
     moduleSpecifier: '@atproto/xrpc-server',
-    namedImports: [
-      { name: 'HandlerAuth' },
-      { name: 'InfoFrame' },
-      { name: 'ErrorFrame' },
-    ],
+    namedImports: [{ name: 'HandlerAuth' }, { name: 'ErrorFrame' }],
   })
 
   file.addImportDeclaration({
@@ -517,20 +513,11 @@ function genServerXrpcStreaming(
     type: `ErrorFrame<${arrayToUnion(def.errors?.map((e) => e.name))}>`,
   })
 
-  // export type HandlerInfo = ...
-  file.addTypeAlias({
-    name: 'HandlerInfo',
-    isExported: true,
-    type: `InfoFrame<${arrayToUnion(def.infos?.map((e) => e.name))}>`,
-  })
-
   // export type HandlerOutput = ...
   file.addTypeAlias({
     isExported: true,
     name: 'HandlerOutput',
-    type: `HandlerInfo | HandlerError | ${
-      def.message?.schema ? 'OutputSchema' : 'void'
-    }`,
+    type: `HandlerError | ${def.message?.schema ? 'OutputSchema' : 'void'}`,
   })
 
   file.addTypeAlias({

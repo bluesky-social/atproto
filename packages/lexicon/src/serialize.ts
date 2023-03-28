@@ -29,7 +29,7 @@ export const lexToIpld = (val: LexValue): IpldValue => {
   if (check.is(val, schema.array)) {
     return val.map((item) => lexToIpld(item))
   }
-  if (check.is(val, schema.record)) {
+  if (check.is(val, schema.map)) {
     const toReturn = {}
     for (const key of Object.keys(val)) {
       toReturn[key] = lexToIpld(val[key])
@@ -53,7 +53,7 @@ export const ipldToLex = (val: IpldValue): LexValue => {
   if (check.is(val, schema.array)) {
     return val.map((item) => ipldToLex(item))
   }
-  if (check.is(val, schema.record)) {
+  if (check.is(val, schema.map)) {
     const toReturn = {}
     for (const key of Object.keys(val)) {
       toReturn[key] = ipldToLex(val[key])

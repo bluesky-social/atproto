@@ -5,7 +5,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth, InfoFrame, ErrorFrame } from '@atproto/xrpc-server'
+import { HandlerAuth, ErrorFrame } from '@atproto/xrpc-server'
 import { IncomingMessage } from 'http'
 
 export interface QueryParams {
@@ -13,12 +13,29 @@ export interface QueryParams {
   cursor?: number
 }
 
-export interface OutputSchema {
+export type OutputSchema =
+  | Commit
+  | Handle
+  | Migrate
+  | Tombstone
+  | Info
+  | { $type: string; [k: string]: unknown }
+export type HandlerError = ErrorFrame<'FutureCursor'>
+export type HandlerOutput = HandlerError | OutputSchema
+export type Handler<HA extends HandlerAuth = never> = (ctx: {
+  auth: HA
+  params: QueryParams
+  req: IncomingMessage
+}) => AsyncIterable<HandlerOutput>
+
+export interface Commit {
   seq: number
-  event: 'repo_append' | 'rebase' | (string & {})
+  rebase: boolean
+  tooBig: boolean
   repo: string
   commit: CID
   prev: CID | null
+  /** CAR file containing relevant blocks */
   blocks: Uint8Array
   ops: RepoOp[]
   blobs: CID[]
@@ -26,14 +43,94 @@ export interface OutputSchema {
   [k: string]: unknown
 }
 
-export type HandlerError = ErrorFrame<'FutureCursor'>
-export type HandlerInfo = InfoFrame<'OutdatedCursor'>
-export type HandlerOutput = HandlerInfo | HandlerError | OutputSchema
-export type Handler<HA extends HandlerAuth = never> = (ctx: {
-  auth: HA
-  params: QueryParams
-  req: IncomingMessage
-}) => AsyncIterable<HandlerOutput>
+export function isCommit(v: unknown): v is Commit {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.sync.subscribeRepos#commit'
+  )
+}
+
+export function validateCommit(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.sync.subscribeRepos#commit', v)
+}
+
+export interface Handle {
+  seq: number
+  did: string
+  handle: string
+  time: string
+  [k: string]: unknown
+}
+
+export function isHandle(v: unknown): v is Handle {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.sync.subscribeRepos#handle'
+  )
+}
+
+export function validateHandle(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.sync.subscribeRepos#handle', v)
+}
+
+export interface Migrate {
+  seq: number
+  did: string
+  migrateTo: string | null
+  time: string
+  [k: string]: unknown
+}
+
+export function isMigrate(v: unknown): v is Migrate {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.sync.subscribeRepos#migrate'
+  )
+}
+
+export function validateMigrate(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.sync.subscribeRepos#migrate', v)
+}
+
+export interface Tombstone {
+  seq: number
+  did: string
+  time: string
+  [k: string]: unknown
+}
+
+export function isTombstone(v: unknown): v is Tombstone {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.sync.subscribeRepos#tombstone'
+  )
+}
+
+export function validateTombstone(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.sync.subscribeRepos#tombstone', v)
+}
+
+export interface Info {
+  name: 'OutdatedCursor' | (string & {})
+  message?: string
+  [k: string]: unknown
+}
+
+export function isInfo(v: unknown): v is Info {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.sync.subscribeRepos#info'
+  )
+}
+
+export function validateInfo(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.sync.subscribeRepos#info', v)
+}
 
 export interface RepoOp {
   action: 'create' | 'update' | 'delete' | (string & {})

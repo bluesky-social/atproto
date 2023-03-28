@@ -11,6 +11,7 @@ import {
   LexXrpcQuery,
   LexXrpcSubscription,
 } from '@atproto/lexicon'
+import { check, forwardStreamErrors, schema } from '@atproto/common'
 import { ErrorFrame, Frame, MessageFrame, XrpcStreamServer } from './stream'
 import {
   XRPCHandler,
@@ -36,7 +37,6 @@ import {
   validateOutput,
 } from './util'
 import log from './logger'
-import { forwardStreamErrors } from '@atproto/common'
 
 export function createServer(lexicons?: unknown[], options?: Options) {
   return new Server(lexicons, options)
@@ -256,7 +256,6 @@ export class Server {
   ) {
     const assertValidXrpcParams = (params: unknown) =>
       this.lex.assertValidXrpcParams(nsid, params)
-    const resolveLexUri = (ref: string) => this.lex.resolveLexUri(nsid, ref)
     this.subscriptions.set(
       nsid,
       new XrpcStreamServer({
@@ -280,22 +279,26 @@ export class Server {
             for await (const item of items) {
               if (item instanceof Frame) {
                 yield item
-              } else if (
-                typeof item?.['$type'] === 'string' &&
-                def.message?.codes
-              ) {
-                const typeUri = resolveLexUri(item['$type'])
-                if (def.message.codes[typeUri] !== undefined) {
-                  const code = def.message.codes[typeUri]
-                  const clone = { ...item }
-                  delete clone['$type']
-                  yield new MessageFrame(clone, { type: code })
-                } else {
-                  yield new MessageFrame(item)
-                }
-              } else {
-                yield new MessageFrame(item)
+                continue
               }
+              const type = item?.['$type']
+              if (!check.is(item, schema.map) || typeof type !== 'string') {
+                yield new MessageFrame(item)
+                continue
+              }
+              const split = type.split('#')
+              let t: string
+              if (
+                split.length === 2 &&
+                (split[0] === '' || split[0] === nsid)
+              ) {
+                t = `#${split[1]}`
+              } else {
+                t = type
+              }
+              const clone = { ...item }
+              delete clone['$type']
+              yield new MessageFrame(clone, { type: t })
             }
           } catch (err) {
             const xrpcErrPayload = XRPCError.fromError(err).payload

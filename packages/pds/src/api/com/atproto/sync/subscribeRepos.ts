@@ -1,8 +1,7 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import Outbox from '../../../../sequencer/outbox'
-import { OutputSchema as RepoEvent } from '../../../../lexicon/types/com/atproto/sync/subscribeRepos'
-import { InfoFrame, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.subscribeRepos(async function* ({ params }) {
@@ -20,10 +19,11 @@ export default function (server: Server, ctx: AppContext) {
         ctx.sequencer.curr(),
       ])
       if (next && next.sequencedAt < backfillTime) {
-        yield new InfoFrame({
-          info: 'OutdatedCursor',
+        yield {
+          $type: '#info',
+          name: 'OutdatedCursor',
           message: 'Requested cursor exceeded limit. Possibly missing events',
-        })
+        }
       }
       if (curr && cursor > curr.seq) {
         throw new InvalidRequestError('Cursor in the future.', 'FutureCursor')
@@ -31,19 +31,21 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     for await (const evt of outbox.events(cursor, backfillTime)) {
-      const { seq, time, repo, commit, prev, blocks, ops, blobs } = evt
-      const toYield: RepoEvent = {
-        seq,
-        event: 'repo_append',
-        repo,
-        commit,
-        blocks,
-        ops,
-        blobs,
-        time,
-        prev: prev ?? null,
+      if (evt.type === 'commit') {
+        yield {
+          $type: '#commit',
+          seq: evt.seq,
+          time: evt.time,
+          ...evt.evt,
+        }
+      } else if (evt.type === 'handle') {
+        yield {
+          $type: '#handle',
+          seq: evt.seq,
+          time: evt.time,
+          ...evt.evt,
+        }
       }
-      yield toYield
     }
   })
 }

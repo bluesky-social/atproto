@@ -1,6 +1,6 @@
 import AtpAgent from '@atproto/api'
 import {
-  cidForCbor,
+  cborDecode,
   HOUR,
   MINUTE,
   readFromGenerator,
@@ -9,14 +9,17 @@ import {
 import { randomStr } from '@atproto/crypto'
 import * as repo from '@atproto/repo'
 import { getWriteLog, MemoryBlockstore, WriteOpAction } from '@atproto/repo'
-import { byFrame, ErrorFrame, Frame, InfoFrame } from '@atproto/xrpc-server'
+import { byFrame, ErrorFrame, Frame, MessageFrame } from '@atproto/xrpc-server'
 import { WebSocket } from 'ws'
-import { OutputSchema as RepoEvent } from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
+import {
+  Commit as CommitEvt,
+  Handle as HandleEvt,
+} from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
 import { AppContext, Database } from '../../src'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { CloseFn, runTestServer } from '../_util'
-import { sql } from 'kysely'
+import { CID } from 'multiformats/cid'
 
 describe('repo subscribe repos', () => {
   let serverHost: string
@@ -66,13 +69,32 @@ describe('repo subscribe repos', () => {
     return repo.Repo.load(storage, synced.root)
   }
 
-  const verifyEvents = async (evts: Frame[]) => {
+  const getHandleEvts = (frames: Frame[]): HandleEvt[] => {
+    const evts: HandleEvt[] = []
+    for (const frame of frames) {
+      if (frame instanceof MessageFrame && frame.header.t === '#handle') {
+        evts.push(frame.body)
+      }
+    }
+    return evts
+  }
+
+  const verifyHandleEvent = (evt: HandleEvt, did: string, handle: string) => {
+    expect(evt.did).toBe(did)
+    expect(evt.handle).toBe(handle)
+    expect(typeof evt.time).toBe('string')
+    expect(typeof evt.seq).toBe('number')
+  }
+
+  const verifyCommitEvents = async (evts: Frame[]) => {
     const byUser = evts.reduce((acc, cur) => {
-      const evt = cur.body as RepoEvent
-      acc[evt.repo] ??= []
-      acc[evt.repo].push(evt)
+      if (cur instanceof MessageFrame && cur.header.t === '#commit') {
+        const evt = cur.body as CommitEvt
+        acc[evt.repo] ??= []
+        acc[evt.repo].push(evt)
+      }
       return acc
-    }, {} as Record<string, RepoEvent[]>)
+    }, {} as Record<string, CommitEvt[]>)
 
     await verifyRepo(alice, byUser[alice])
     await verifyRepo(bob, byUser[bob])
@@ -80,7 +102,7 @@ describe('repo subscribe repos', () => {
     await verifyRepo(dan, byUser[dan])
   }
 
-  const verifyRepo = async (did: string, evts: RepoEvent[]) => {
+  const verifyRepo = async (did: string, evts: CommitEvt[]) => {
     const didRepo = await getRepo(did)
     const writeLog = await getWriteLog(didRepo.storage, didRepo.cid, null)
     const commits = await didRepo.storage.getCommits(didRepo.cid, null)
@@ -104,8 +126,8 @@ describe('repo subscribe repos', () => {
         cid: w.action === WriteOpAction.Delete ? null : w.cid.toString(),
       }))
       const sortedOps = evt.ops
-        .map((op) => ({ ...op, cid: op.cid?.toString() }))
         .sort((a, b) => a.path.localeCompare(b.path))
+        .map((op) => ({ ...op, cid: op.cid?.toString() ?? null }))
       const sortedWrites = writes.sort((a, b) => a.path.localeCompare(b.path))
       expect(sortedOps).toEqual(sortedWrites)
     }
@@ -151,7 +173,47 @@ describe('repo subscribe repos', () => {
     const evts = await readTillCaughtUp(gen)
     ws.terminate()
 
-    await verifyEvents(evts)
+    await verifyCommitEvents(evts)
+  })
+
+  it('syncs handle changes', async () => {
+    await sc.updateHandle(alice, 'alice2.test')
+    await sc.updateHandle(bob, 'bob2.test')
+
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
+    )
+
+    const gen = byFrame(ws)
+    const evts = await readTillCaughtUp(gen)
+    ws.terminate()
+
+    await verifyCommitEvents(evts)
+    const handleEvts = getHandleEvts(evts.slice(-2))
+    verifyHandleEvent(handleEvts[0], alice, 'alice2.test')
+    verifyHandleEvent(handleEvts[1], bob, 'bob2.test')
+  })
+
+  it('does not return invalidated events', async () => {
+    await sc.updateHandle(alice, 'alice3.test')
+    await sc.updateHandle(alice, 'alice4.test')
+    await sc.updateHandle(alice, 'alice5.test')
+    await sc.updateHandle(bob, 'bob3.test')
+    await sc.updateHandle(bob, 'bob4.test')
+    await sc.updateHandle(bob, 'bob5.test')
+
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
+    )
+
+    const gen = byFrame(ws)
+    const evts = await readTillCaughtUp(gen)
+    ws.terminate()
+
+    const handleEvts = getHandleEvts(evts)
+    expect(handleEvts.length).toBe(2)
+    verifyHandleEvent(handleEvts[0], alice, 'alice5.test')
+    verifyHandleEvent(handleEvts[1], bob, 'bob5.test')
   })
 
   it('syncs new events', async () => {
@@ -169,7 +231,7 @@ describe('repo subscribe repos', () => {
 
     const [evts] = await Promise.all([readAfterDelay(), postPromise])
 
-    await verifyEvents(evts)
+    await verifyCommitEvents(evts)
   })
 
   it('handles no backfill', async () => {
@@ -212,49 +274,39 @@ describe('repo subscribe repos', () => {
     const seqSlice = seqs.slice(midPoint + 1)
     expect(evts.length).toBe(seqSlice.length)
     for (let i = 0; i < evts.length; i++) {
-      const evt = evts[i].body as RepoEvent
+      const evt = evts[i].body as CommitEvt
       const seq = seqSlice[i]
+      const seqEvt = cborDecode(seq.event) as { commit: CID }
       expect(evt.time).toEqual(seq.sequencedAt)
-      expect(evt.commit.toString()).toEqual(seq.commit)
+      expect(evt.commit.equals(seqEvt.commit)).toBeTruthy()
       expect(evt.repo).toEqual(seq.did)
     }
   })
 
   it('sends info frame on out of date cursor', async () => {
-    // we stick three new seqs in with a date past the backfill cutoff
-    // then we increment the sequence number of everything else to test out of date cursor
-    const cid = await cidForCbor({ test: 123 })
+    // we rewrite the sequenceAt time for existing seqs to be past the backfill cutoff
+    // then we create some new posts
     const overAnHourAgo = new Date(Date.now() - HOUR - MINUTE).toISOString()
-    const dummySeq = {
-      did: 'did:example:test',
-      commit: cid.toString(),
-      eventType: 'repo_append' as const,
-      sequencedAt: overAnHourAgo,
-    }
-    const newRows = await db.db
-      .insertInto('repo_seq')
-      .values([dummySeq, dummySeq, dummySeq])
-      .returning('seq')
-      .execute()
-    const newSeqs = newRows.map((r) => r.seq)
-    const movedToFuture = await db.db
+    await db.db
       .updateTable('repo_seq')
-      .set({ seq: sql`seq+1000` })
-      .where('seq', 'not in', newSeqs)
-      .returning('seq')
+      .set({ sequencedAt: overAnHourAgo })
       .execute()
 
+    await makePosts()
+
     const ws = new WebSocket(
-      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${newSeqs[0]}`,
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
     )
     const [info, ...evts] = await readTillCaughtUp(byFrame(ws))
     ws.terminate()
 
-    if (!(info instanceof InfoFrame)) {
-      throw new Error('Expected first frame to be an InfoFrame')
+    if (!(info instanceof MessageFrame)) {
+      throw new Error('Expected first frame to be a MessageFrame')
     }
-    expect(info.code).toBe('OutdatedCursor')
-    expect(evts.length).toBe(movedToFuture.length)
+    expect(info.header.t).toBe('#info')
+    const body = info.body as Record<string, unknown>
+    expect(body.name).toEqual('OutdatedCursor')
+    expect(evts.length).toBe(40)
   })
 
   it('errors on future cursor', async () => {

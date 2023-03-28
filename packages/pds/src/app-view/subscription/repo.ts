@@ -4,7 +4,11 @@ import { wait } from '@atproto/common'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
 import { WriteOpAction, readCarWithRoot, cborToLexRecord } from '@atproto/repo'
 import { PreparedWrite } from '../../repo'
-import { OutputSchema as Message } from '../../lexicon/types/com/atproto/sync/subscribeRepos'
+import {
+  Commit,
+  isCommit,
+  OutputSchema as Message,
+} from '../../lexicon/types/com/atproto/sync/subscribeRepos'
 import { ids, lexicons } from '../../lexicon/lexicons'
 import Database from '../../db'
 import AppContext from '../../context'
@@ -26,6 +30,13 @@ export class RepoSubscription {
         const { ran } = await this.leader.run(async ({ signal }) => {
           const sub = this.getSubscription({ signal })
           for await (const msg of sub) {
+            if (!isCommit(msg)) {
+              appViewLogger.warn(
+                { msg },
+                'unexpected message on repo subscription stream',
+              )
+              continue
+            }
             try {
               const ops = await getOps(msg)
               await db.transaction(async (tx) => {
@@ -151,7 +162,7 @@ export class RepoSubscription {
   }
 }
 
-async function getOps(msg: Message): Promise<PreparedWrite[]> {
+async function getOps(msg: Commit): Promise<PreparedWrite[]> {
   const { ops } = msg
   const car = await readCarWithRoot(msg.blocks as Uint8Array)
   return ops.map((op) => {

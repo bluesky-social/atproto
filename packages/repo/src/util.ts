@@ -258,7 +258,7 @@ export const cborToLex = (val: Uint8Array): LexValue => {
 
 export const cborToLexRecord = (val: Uint8Array): RepoRecord => {
   const parsed = cborToLex(val)
-  if (!check.is(parsed, schema.record)) {
+  if (!check.is(parsed, schema.map)) {
     throw new Error('lexicon records be a json object')
   }
   return parsed

@@ -103,6 +103,13 @@ export class SeedClient {
     return this.accounts[account.did]
   }
 
+  async updateHandle(by: string, handle: string) {
+    await this.agent.api.com.atproto.identity.updateHandle(
+      { handle },
+      { encoding: 'application/json', headers: this.getHeaders(by) },
+    )
+  }
+
   async createProfile(
     by: string,
     displayName: string,

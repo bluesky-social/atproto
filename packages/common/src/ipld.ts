@@ -26,7 +26,7 @@ export const cborBytesToRecord = (
   bytes: Uint8Array,
 ): Record<string, unknown> => {
   const val = cborDecode(bytes)
-  if (!check.is(val, schema.record)) {
+  if (!check.is(val, schema.map)) {
     throw new Error(`Expected object, got: ${val}`)
   }
   return val

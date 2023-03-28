@@ -2344,70 +2344,153 @@ export const schemaDict = {
         },
         message: {
           schema: {
-            type: 'object',
-            required: [
-              'seq',
-              'event',
-              'repo',
-              'commit',
-              'prev',
-              'blocks',
-              'ops',
-              'blobs',
-              'time',
+            type: 'union',
+            refs: [
+              'lex:com.atproto.sync.subscribeRepos#commit',
+              'lex:com.atproto.sync.subscribeRepos#handle',
+              'lex:com.atproto.sync.subscribeRepos#migrate',
+              'lex:com.atproto.sync.subscribeRepos#tombstone',
+              'lex:com.atproto.sync.subscribeRepos#info',
             ],
-            nullable: ['prev'],
-            properties: {
-              seq: {
-                type: 'integer',
-              },
-              event: {
-                type: 'string',
-                knownValues: ['repo_append', 'rebase'],
-              },
-              repo: {
-                type: 'string',
-                format: 'did',
-              },
-              commit: {
-                type: 'cid-link',
-              },
-              prev: {
-                type: 'cid-link',
-              },
-              blocks: {
-                type: 'bytes',
-              },
-              ops: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.sync.subscribeRepos#repoOp',
-                },
-              },
-              blobs: {
-                type: 'array',
-                items: {
-                  type: 'cid-link',
-                },
-              },
-              time: {
-                type: 'string',
-                format: 'datetime',
-              },
-            },
           },
         },
-        infos: [
-          {
-            name: 'OutdatedCursor',
-          },
-        ],
         errors: [
           {
             name: 'FutureCursor',
           },
         ],
+      },
+      commit: {
+        type: 'object',
+        required: [
+          'seq',
+          'rebase',
+          'tooBig',
+          'repo',
+          'commit',
+          'prev',
+          'blocks',
+          'ops',
+          'blobs',
+          'time',
+        ],
+        nullable: ['prev'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+          rebase: {
+            type: 'boolean',
+          },
+          tooBig: {
+            type: 'boolean',
+          },
+          repo: {
+            type: 'string',
+            format: 'did',
+          },
+          commit: {
+            type: 'cid-link',
+          },
+          prev: {
+            type: 'cid-link',
+          },
+          blocks: {
+            type: 'bytes',
+            description: 'CAR file containing relevant blocks',
+            maxLength: 1000000,
+          },
+          ops: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.sync.subscribeRepos#repoOp',
+            },
+            maxLength: 200,
+          },
+          blobs: {
+            type: 'array',
+            items: {
+              type: 'cid-link',
+            },
+          },
+          time: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      handle: {
+        type: 'object',
+        required: ['seq', 'did', 'handle', 'time'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          time: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      migrate: {
+        type: 'object',
+        required: ['seq', 'did', 'migrateTo', 'time'],
+        nullable: ['migrateTo'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          migrateTo: {
+            type: 'string',
+          },
+          time: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      tombstone: {
+        type: 'object',
+        required: ['seq', 'did', 'time'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          time: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      info: {
+        type: 'object',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            knownValues: ['OutdatedCursor'],
+          },
+          message: {
+            type: 'string',
+          },
+        },
       },
       repoOp: {
         type: 'object',
