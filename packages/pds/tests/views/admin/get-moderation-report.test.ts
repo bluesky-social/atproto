@@ -44,8 +44,9 @@ describe('pds admin get moderation action view', () => {
       reasonType: REASONOTHER,
       reason: 'defamation',
       subject: {
-        $type: 'com.atproto.repo.recordRef',
+        $type: 'com.atproto.repo.strongRef',
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+        cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       },
     })
     const flagRepo = await sc.takeModerationAction({
@@ -58,8 +59,9 @@ describe('pds admin get moderation action view', () => {
     const takedownRecord = await sc.takeModerationAction({
       action: TAKEDOWN,
       subject: {
-        $type: 'com.atproto.repo.recordRef',
+        $type: 'com.atproto.repo.strongRef',
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+        cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       },
     })
     await sc.resolveReports({

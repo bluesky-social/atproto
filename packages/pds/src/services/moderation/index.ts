@@ -156,7 +156,7 @@ export class ModerationService {
         .where('subjectDid', '=', subject.did)
     } else if ('uri' in subject) {
       builder = builder
-        .where('subjectType', '=', 'com.atproto.repo.recordRef')
+        .where('subjectType', '=', 'com.atproto.repo.strongRef')
         .where('subjectUri', '=', subject.uri.toString())
     } else {
       const blobsForAction = this.db.db
@@ -175,7 +175,7 @@ export class ModerationService {
 
   async logAction(info: {
     action: ModerationActionRow['action']
-    subject: { did: string } | { uri: AtUri; cid?: CID }
+    subject: { did: string } | { uri: AtUri; cid: CID }
     subjectBlobCids?: CID[]
     reason: string
     createdBy: string
@@ -208,10 +208,10 @@ export class ModerationService {
     } else {
       const record = await this.services
         .record(this.db)
-        .getRecord(subject.uri, subject.cid?.toString() ?? null, true)
+        .getRecord(subject.uri, subject.cid.toString() ?? null, true)
       if (!record) throw new InvalidRequestError('Record not found')
       subjectInfo = {
-        subjectType: 'com.atproto.repo.recordRef',
+        subjectType: 'com.atproto.repo.strongRef',
         subjectDid: subject.uri.host,
         subjectUri: subject.uri.toString(),
         subjectCid: record.cid,
@@ -407,8 +407,8 @@ export class ModerationService {
         )
       }
       if (
-        action.subjectType === 'com.atproto.repo.recordRef' &&
-        report.subjectType === 'com.atproto.repo.recordRef' &&
+        action.subjectType === 'com.atproto.repo.strongRef' &&
+        report.subjectType === 'com.atproto.repo.strongRef' &&
         report.subjectUri !== action.subjectUri
       ) {
         // If report and action are both for a record, they must be for the same record
@@ -464,7 +464,7 @@ export class ModerationService {
         .getRecord(subject.uri, subject.cid?.toString() ?? null, true)
       if (!record) throw new InvalidRequestError('Record not found')
       subjectInfo = {
-        subjectType: 'com.atproto.repo.recordRef',
+        subjectType: 'com.atproto.repo.strongRef',
         subjectDid: subject.uri.host,
         subjectUri: subject.uri.toString(),
         subjectCid: record.cid,
@@ -499,7 +499,7 @@ export type SubjectInfo =
       subjectCid: null
     }
   | {
-      subjectType: 'com.atproto.repo.recordRef'
+      subjectType: 'com.atproto.repo.strongRef'
       subjectDid: string
       subjectUri: string
       subjectCid: string

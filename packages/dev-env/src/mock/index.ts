@@ -156,8 +156,9 @@ export async function generateMockSetup(env: DevEnv) {
         reasonType: picka([REASONSPAM, REASONOTHER]),
         reason: picka(["Didn't look right to me", undefined, undefined]),
         subject: {
-          $type: 'com.atproto.repo.recordRef',
+          $type: 'com.atproto.repo.strongRef',
           uri: post.uri,
+          cid: post.cid,
         },
       })
     }

@@ -168,7 +168,7 @@ export class ModerationViews {
       this.db.db
         .selectFrom('moderation_action')
         .where('reversedAt', 'is', null)
-        .where('subjectType', '=', 'com.atproto.repo.recordRef')
+        .where('subjectType', '=', 'com.atproto.repo.strongRef')
         .where(
           'subjectUri',
           'in',
@@ -220,14 +220,14 @@ export class ModerationViews {
       this.record(result),
       this.db.db
         .selectFrom('moderation_report')
-        .where('subjectType', '=', 'com.atproto.repo.recordRef')
+        .where('subjectType', '=', 'com.atproto.repo.strongRef')
         .where('subjectUri', '=', result.uri)
         .orderBy('id', 'desc')
         .selectAll()
         .execute(),
       this.db.db
         .selectFrom('moderation_action')
-        .where('subjectType', '=', 'com.atproto.repo.recordRef')
+        .where('subjectType', '=', 'com.atproto.repo.strongRef')
         .where('subjectUri', '=', result.uri)
         .orderBy('id', 'desc')
         .selectAll()
@@ -462,7 +462,7 @@ export class ModerationViews {
       subject = await this.repo(repoResult)
       subject.$type = 'com.atproto.admin.repo#view'
     } else if (
-      result.subjectType === 'com.atproto.repo.recordRef' &&
+      result.subjectType === 'com.atproto.repo.strongRef' &&
       result.subjectUri !== null
     ) {
       const recordResult = await this.services

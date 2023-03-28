@@ -20,18 +20,32 @@ async function main(tx: Database) {
     .set({ method: 'com.atproto.sync.subscribeRepos' })
     .execute()
 
-  const actionSubject = tx.db
+  const actionSubjectRepo = tx.db
     .updateTable('moderation_action')
     // @ts-ignore
     .where('subjectType', '=', 'com.atproto.repo.repoRef')
     .set({ subjectType: 'com.atproto.admin.defs#repoRef' })
     .execute()
 
-  const reportSubject = tx.db
+  const actionSubjectRecord = tx.db
+    .updateTable('moderation_action')
+    // @ts-ignore
+    .where('subjectType', '=', 'com.atproto.repo.recordRef')
+    .set({ subjectType: 'com.atproto.repo.strongRef' })
+    .execute()
+
+  const reportSubjectRepo = tx.db
     .updateTable('moderation_report')
     // @ts-ignore
     .where('subjectType', '=', 'com.atproto.repo.repoRef')
     .set({ subjectType: 'com.atproto.admin.defs#repoRef' })
+    .execute()
+
+  const reportSubjectRecord = tx.db
+    .updateTable('moderation_report')
+    // @ts-ignore
+    .where('subjectType', '=', 'com.atproto.repo.recordRef')
+    .set({ subjectType: 'com.atproto.repo.strongRef' })
     .execute()
 
   const reportSpam = tx.db
@@ -50,8 +64,10 @@ async function main(tx: Database) {
 
   await Promise.all([
     subscriptMethod,
-    actionSubject,
-    reportSubject,
+    actionSubjectRepo,
+    actionSubjectRecord,
+    reportSubjectRepo,
+    reportSubjectRecord,
     reportSpam,
     reportOther,
   ])
@@ -72,32 +88,56 @@ async function main(tx: Database) {
     .execute()
 
   const check3 = tx.db
-    .selectFrom('moderation_report')
+    .selectFrom('moderation_action')
     // @ts-ignore
-    .where('subjectType', '=', 'com.atproto.repo.repoRef')
+    .where('subjectType', '=', 'com.atproto.repo.recordRef')
     .selectAll()
     .execute()
 
   const check4 = tx.db
     .selectFrom('moderation_report')
     // @ts-ignore
-    .where('reasonType', '=', 'com.atproto.report.reasonType#spam')
+    .where('subjectType', '=', 'com.atproto.repo.repoRef')
     .selectAll()
     .execute()
 
   const check5 = tx.db
     .selectFrom('moderation_report')
     // @ts-ignore
+    .where('subjectType', '=', 'com.atproto.repo.recordRef')
+    .selectAll()
+    .execute()
+
+  const check6 = tx.db
+    .selectFrom('moderation_report')
+    // @ts-ignore
+    .where('reasonType', '=', 'com.atproto.report.reasonType#spam')
+    .selectAll()
+    .execute()
+
+  const check7 = tx.db
+    .selectFrom('moderation_report')
+    // @ts-ignore
     .where('reasonType', '=', 'com.atproto.report.reasonType#other')
     .selectAll()
     .execute()
 
-  const res = await Promise.all([check1, check2, check3, check4, check5])
+  const res = await Promise.all([
+    check1,
+    check2,
+    check3,
+    check4,
+    check5,
+    check6,
+    check7,
+  ])
   assert(res[0].length === 0)
   assert(res[1].length === 0)
   assert(res[2].length === 0)
   assert(res[3].length === 0)
   assert(res[4].length === 0)
+  assert(res[5].length === 0)
+  assert(res[6].length === 0)
 
   console.log(SHORT_NAME, 'complete')
 }
