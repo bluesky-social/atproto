@@ -460,7 +460,7 @@ export class ModerationViews {
         )
       }
       subject = await this.repo(repoResult)
-      subject.$type = 'com.atproto.admin.repo#view'
+      subject.$type = 'com.atproto.admin.defs#repoView'
     } else if (
       result.subjectType === 'com.atproto.repo.strongRef' &&
       result.subjectUri !== null
@@ -474,7 +474,7 @@ export class ModerationViews {
         )
       }
       subject = await this.record(recordResult)
-      subject.$type = 'com.atproto.admin.record#view'
+      subject.$type = 'com.atproto.admin.defs#recordView'
     } else {
       throw new Error(`Bad subject data: (${result.id}) ${result.subjectType}`)
     }
