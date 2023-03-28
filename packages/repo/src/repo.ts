@@ -193,15 +193,20 @@ export class Repo extends ReadableRepo {
     const commitCid = await blocks.add(commit)
     return {
       commit: commitCid,
+      rebased: this.cid,
       blocks,
       preservedCids: preservedCids.toList(),
     }
   }
 
+  async applyRebase(rebase: RebaseData): Promise<Repo> {
+    await this.storage.applyRebase(rebase)
+    return Repo.load(this.storage, rebase.commit)
+  }
+
   async rebase(keypair: crypto.Keypair): Promise<Repo> {
     const rebaseData = await this.formatRebase(keypair)
-    await this.storage.applyRebase(rebaseData)
-    return Repo.load(this.storage, rebaseData.commit)
+    return this.applyRebase(rebaseData)
   }
 }
 

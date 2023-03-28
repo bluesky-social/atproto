@@ -124,6 +124,14 @@ export class RepoBlobs {
       .execute()
   }
 
+  async processRebaseBlobs(did: string, newRoot: CID) {
+    await this.db.db
+      .updateTable('repo_blob')
+      .set({ commit: newRoot.toString() })
+      .where('did', '=', did)
+      .execute()
+  }
+
   async listForCommits(did: string, commits: CID[]): Promise<CID[]> {
     if (commits.length < 1) return []
     const commitStrs = commits.map((c) => c.toString())

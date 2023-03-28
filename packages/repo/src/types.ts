@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { BlockWriter } from '@ipld/car/writer'
 import { schema as common, def as commonDef } from '@atproto/common'
 import { CID } from 'multiformats'
 import BlockMap from './block-map'
@@ -103,6 +102,7 @@ export type CommitData = CommitBlockData & {
 
 export type RebaseData = {
   commit: CID
+  rebased: CID
   blocks: BlockMap
   preservedCids: CID[]
 }
