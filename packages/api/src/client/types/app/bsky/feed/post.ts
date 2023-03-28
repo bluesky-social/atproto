@@ -9,7 +9,7 @@ import * as AppBskyRichtextFacet from '../richtext/facet'
 import * as AppBskyEmbedImages from '../embed/images'
 import * as AppBskyEmbedExternal from '../embed/external'
 import * as AppBskyEmbedRecord from '../embed/record'
-import * as AppBskyEmbedComplexRecord from '../embed/complexRecord'
+import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
 export interface Record {
@@ -22,7 +22,7 @@ export interface Record {
     | AppBskyEmbedImages.Main
     | AppBskyEmbedExternal.Main
     | AppBskyEmbedRecord.Main
-    | AppBskyEmbedComplexRecord.Main
+    | AppBskyEmbedRecordWithMedia.Main
     | { $type: string; [k: string]: unknown }
   createdAt: string
   [k: string]: unknown

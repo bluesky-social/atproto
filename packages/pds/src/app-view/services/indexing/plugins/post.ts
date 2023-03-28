@@ -5,7 +5,7 @@ import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/po
 import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecord } from '../../../../lexicon/types/app/bsky/embed/record'
-import { isMain as isEmbedComplexRecord } from '../../../../lexicon/types/app/bsky/embed/complexRecord'
+import { isMain as isEmbedComplexRecord } from '../../../../lexicon/types/app/bsky/embed/recordWithMedia'
 import {
   isMention,
   isLink,

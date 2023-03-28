@@ -308,7 +308,7 @@ export class FeedService {
         const mediaEmbed = acc[cur.postUri]
         if (isViewImages(mediaEmbed) || isViewExternal(mediaEmbed)) {
           acc[cur.postUri] = {
-            $type: 'app.bsky.embed.complexRecord#view',
+            $type: 'app.bsky.embed.recordWithMedia#view',
             record: recordEmbed,
             media: mediaEmbed,
           }

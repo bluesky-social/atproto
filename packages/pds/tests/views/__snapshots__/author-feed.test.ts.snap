@@ -169,7 +169,7 @@ Array [
                   "$type": "app.bsky.feed.post",
                   "createdAt": "1970-01-01T00:00:00.000Z",
                   "embed": Object {
-                    "$type": "app.bsky.embed.complexRecord",
+                    "$type": "app.bsky.embed.recordWithMedia",
                     "media": Object {
                       "$type": "app.bsky.embed.images",
                       "images": Array [
@@ -508,7 +508,7 @@ Array [
           "cid": "cids(1)",
           "embeds": Array [
             Object {
-              "$type": "app.bsky.embed.complexRecord#view",
+              "$type": "app.bsky.embed.recordWithMedia#view",
               "media": Object {
                 "$type": "app.bsky.embed.images#view",
                 "images": Array [
@@ -555,7 +555,7 @@ Array [
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "embed": Object {
-              "$type": "app.bsky.embed.complexRecord",
+              "$type": "app.bsky.embed.recordWithMedia",
               "media": Object {
                 "$type": "app.bsky.embed.images",
                 "images": Array [
@@ -739,7 +739,7 @@ Array [
       },
       "cid": "cids(1)",
       "embed": Object {
-        "$type": "app.bsky.embed.complexRecord#view",
+        "$type": "app.bsky.embed.recordWithMedia#view",
         "media": Object {
           "$type": "app.bsky.embed.images#view",
           "images": Array [
@@ -786,7 +786,7 @@ Array [
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "embed": Object {
-          "$type": "app.bsky.embed.complexRecord",
+          "$type": "app.bsky.embed.recordWithMedia",
           "media": Object {
             "$type": "app.bsky.embed.images",
             "images": Array [
@@ -898,7 +898,7 @@ Array [
           "cid": "cids(2)",
           "embeds": Array [
             Object {
-              "$type": "app.bsky.embed.complexRecord#view",
+              "$type": "app.bsky.embed.recordWithMedia#view",
               "media": Object {
                 "$type": "app.bsky.embed.images#view",
                 "images": Array [
@@ -945,7 +945,7 @@ Array [
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "embed": Object {
-              "$type": "app.bsky.embed.complexRecord",
+              "$type": "app.bsky.embed.recordWithMedia",
               "media": Object {
                 "$type": "app.bsky.embed.images",
                 "images": Array [
@@ -1070,7 +1070,7 @@ Array [
           "cid": "cids(1)",
           "embeds": Array [
             Object {
-              "$type": "app.bsky.embed.complexRecord#view",
+              "$type": "app.bsky.embed.recordWithMedia#view",
               "media": Object {
                 "$type": "app.bsky.embed.images#view",
                 "images": Array [
@@ -1116,7 +1116,7 @@ Array [
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "embed": Object {
-              "$type": "app.bsky.embed.complexRecord",
+              "$type": "app.bsky.embed.recordWithMedia",
               "media": Object {
                 "$type": "app.bsky.embed.images",
                 "images": Array [
@@ -1387,7 +1387,7 @@ Array [
                   "$type": "app.bsky.feed.post",
                   "createdAt": "1970-01-01T00:00:00.000Z",
                   "embed": Object {
-                    "$type": "app.bsky.embed.complexRecord",
+                    "$type": "app.bsky.embed.recordWithMedia",
                     "media": Object {
                       "$type": "app.bsky.embed.images",
                       "images": Array [

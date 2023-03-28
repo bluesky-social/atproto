@@ -21,7 +21,7 @@ import {
 import * as lex from '../lexicon/lexicons'
 import { isMain as isExternalEmbed } from '../lexicon/types/app/bsky/embed/external'
 import { isMain as isImagesEmbed } from '../lexicon/types/app/bsky/embed/images'
-import { isMain as isComplexRecordEmbed } from '../lexicon/types/app/bsky/embed/complexRecord'
+import { isMain as isComplexRecordEmbed } from '../lexicon/types/app/bsky/embed/recordWithMedia'
 import { isRecord as isPost } from '../lexicon/types/app/bsky/feed/post'
 import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
 

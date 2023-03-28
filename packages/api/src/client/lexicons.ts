@@ -2782,45 +2782,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyEmbedComplexRecord: {
-    lexicon: 1,
-    id: 'app.bsky.embed.complexRecord',
-    description:
-      'A representation of a record embedded in another form of content, alongside other compatible embeds',
-    defs: {
-      main: {
-        type: 'object',
-        required: ['record', 'media'],
-        properties: {
-          record: {
-            type: 'ref',
-            ref: 'lex:app.bsky.embed.record',
-          },
-          media: {
-            type: 'union',
-            refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.external'],
-          },
-        },
-      },
-      view: {
-        type: 'object',
-        required: ['record', 'media'],
-        properties: {
-          record: {
-            type: 'ref',
-            ref: 'lex:app.bsky.embed.record#view',
-          },
-          media: {
-            type: 'union',
-            refs: [
-              'lex:app.bsky.embed.images#view',
-              'lex:app.bsky.embed.external#view',
-            ],
-          },
-        },
-      },
-    },
-  },
   AppBskyEmbedExternal: {
     lexicon: 1,
     id: 'app.bsky.embed.external',
@@ -3009,7 +2970,7 @@ export const schemaDict = {
                 'lex:app.bsky.embed.images#view',
                 'lex:app.bsky.embed.external#view',
                 'lex:app.bsky.embed.record#view',
-                'lex:app.bsky.embed.complexRecord#view',
+                'lex:app.bsky.embed.recordWithMedia#view',
               ],
             },
           },
@@ -3026,6 +2987,45 @@ export const schemaDict = {
           uri: {
             type: 'string',
             format: 'at-uri',
+          },
+        },
+      },
+    },
+  },
+  AppBskyEmbedRecordWithMedia: {
+    lexicon: 1,
+    id: 'app.bsky.embed.recordWithMedia',
+    description:
+      'A representation of a record embedded in another form of content, alongside other compatible embeds',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['record', 'media'],
+        properties: {
+          record: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.record',
+          },
+          media: {
+            type: 'union',
+            refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.external'],
+          },
+        },
+      },
+      view: {
+        type: 'object',
+        required: ['record', 'media'],
+        properties: {
+          record: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.record#view',
+          },
+          media: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.embed.images#view',
+              'lex:app.bsky.embed.external#view',
+            ],
           },
         },
       },
@@ -3060,7 +3060,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.images#view',
               'lex:app.bsky.embed.external#view',
               'lex:app.bsky.embed.record#view',
-              'lex:app.bsky.embed.complexRecord#view',
+              'lex:app.bsky.embed.recordWithMedia#view',
             ],
           },
           replyCount: {
@@ -3522,7 +3522,7 @@ export const schemaDict = {
                 'lex:app.bsky.embed.images',
                 'lex:app.bsky.embed.external',
                 'lex:app.bsky.embed.record',
-                'lex:app.bsky.embed.complexRecord',
+                'lex:app.bsky.embed.recordWithMedia',
               ],
             },
             createdAt: {
@@ -4128,10 +4128,10 @@ export const ids = {
   AppBskyActorProfile: 'app.bsky.actor.profile',
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
   AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
-  AppBskyEmbedComplexRecord: 'app.bsky.embed.complexRecord',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
   AppBskyEmbedRecord: 'app.bsky.embed.record',
+  AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
   AppBskyFeedDefs: 'app.bsky.feed.defs',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',

@@ -173,7 +173,7 @@ export class SeedClient {
     const embed =
       imageEmbed && recordEmbed
         ? {
-            $type: 'app.bsky.embed.complexRecord',
+            $type: 'app.bsky.embed.recordWithMedia',
             record: recordEmbed,
             media: imageEmbed,
           }

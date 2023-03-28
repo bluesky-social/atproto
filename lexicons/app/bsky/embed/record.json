@@ -33,7 +33,7 @@
               "app.bsky.embed.images#view",
               "app.bsky.embed.external#view",
               "app.bsky.embed.record#view",
-              "app.bsky.embed.complexRecord#view"
+              "app.bsky.embed.recordWithMedia#view"
             ]
           }
         },

@@ -22,13 +22,13 @@ export function isMain(v: unknown): v is Main {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.embed.complexRecord#main' ||
-      v.$type === 'app.bsky.embed.complexRecord')
+    (v.$type === 'app.bsky.embed.recordWithMedia#main' ||
+      v.$type === 'app.bsky.embed.recordWithMedia')
   )
 }
 
 export function validateMain(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.complexRecord#main', v)
+  return lexicons.validate('app.bsky.embed.recordWithMedia#main', v)
 }
 
 export interface View {
@@ -44,10 +44,10 @@ export function isView(v: unknown): v is View {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.embed.complexRecord#view'
+    v.$type === 'app.bsky.embed.recordWithMedia#view'
   )
 }
 
 export function validateView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.complexRecord#view', v)
+  return lexicons.validate('app.bsky.embed.recordWithMedia#view', v)
 }

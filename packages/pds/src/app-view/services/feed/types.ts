@@ -1,7 +1,7 @@
 import { View as ViewImages } from '../../../lexicon/types/app/bsky/embed/images'
 import { View as ViewExternal } from '../../../lexicon/types/app/bsky/embed/external'
 import { View as ViewRecord } from '../../../lexicon/types/app/bsky/embed/record'
-import { View as ViewComplexRecord } from '../../../lexicon/types/app/bsky/embed/complexRecord'
+import { View as ViewComplexRecord } from '../../../lexicon/types/app/bsky/embed/recordWithMedia'
 
 export type FeedEmbeds = {
   [uri: string]: ViewImages | ViewExternal | ViewRecord | ViewComplexRecord

@@ -26,7 +26,7 @@
               "app.bsky.embed.images",
               "app.bsky.embed.external",
               "app.bsky.embed.record",
-              "app.bsky.embed.complexRecord"
+              "app.bsky.embed.recordWithMedia"
             ]
           },
           "createdAt": {"type": "string", "format": "datetime"}

@@ -9,7 +9,7 @@ import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as AppBskyEmbedImages from './images'
 import * as AppBskyEmbedExternal from './external'
-import * as AppBskyEmbedComplexRecord from './complexRecord'
+import * as AppBskyEmbedRecordWithMedia from './recordWithMedia'
 
 export interface Main {
   record: ComAtprotoRepoStrongRef.Main
@@ -53,7 +53,7 @@ export interface ViewRecord {
     | AppBskyEmbedImages.View
     | AppBskyEmbedExternal.View
     | View
-    | AppBskyEmbedComplexRecord.View
+    | AppBskyEmbedRecordWithMedia.View
     | { $type: string; [k: string]: unknown }
   )[]
   indexedAt: string
