@@ -153,6 +153,9 @@ export class RichText {
     if (!this.facets?.length && props.entities?.length) {
       this.facets = entitiesToFacets(this.unicodeText, props.entities)
     }
+    if (this.facets) {
+      this.facets.sort(facetSort)
+    }
     if (opts?.cleanNewlines) {
       sanitizeRichText(this, { cleanNewlines: true }).copyInto(this)
     }
@@ -343,6 +346,7 @@ export class RichText {
           }
         }
       }
+      this.facets.sort(facetSort)
     }
   }
 
@@ -353,8 +357,13 @@ export class RichText {
    */
   detectFacetsWithoutResolution() {
     this.facets = detectFacets(this.unicodeText)
+    if (this.facets) {
+      this.facets.sort(facetSort)
+    }
   }
 }
+
+const facetSort = (a, b) => a.index.byteStart - b.index.byteStart
 
 function entitiesToFacets(text: UnicodeString, entities: Entity[]): Facet[] {
   const facets: Facet[] = []

@@ -126,13 +126,13 @@ describe('sanitizeRichText w/facets: cleanNewlines', () => {
       'test\n\n\n\n\ntest',
     )
     expect(facetToStr(String(input.unicodeText), input.facets?.[1])).toEqual(
-      '\n\n\n\n\n\n\ntest',
+      '\n\n\n\n\n',
     )
     expect(facetToStr(String(input.unicodeText), input.facets?.[2])).toEqual(
       'test\n\n',
     )
     expect(facetToStr(String(input.unicodeText), input.facets?.[3])).toEqual(
-      '\n\n\n\n\n',
+      '\n\n\n\n\n\n\ntest',
     )
     expect(String(output.unicodeText)).toEqual(
       'test\n\ntest\n\ntest\n\ntest\n\ntest',
