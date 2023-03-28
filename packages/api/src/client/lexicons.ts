@@ -3969,24 +3969,27 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'object',
-        required: ['index', 'value'],
+        required: ['index', 'features'],
         properties: {
           index: {
             type: 'ref',
-            ref: 'lex:app.bsky.richtext.facet#textSlice',
+            ref: 'lex:app.bsky.richtext.facet#byteSlice',
           },
-          value: {
-            type: 'union',
-            refs: [
-              'lex:app.bsky.richtext.facet#mention',
-              'lex:app.bsky.richtext.facet#link',
-            ],
+          features: {
+            type: 'array',
+            items: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.richtext.facet#mention',
+                'lex:app.bsky.richtext.facet#link',
+              ],
+            },
           },
         },
       },
       mention: {
         type: 'object',
-        description: 'A facet value for actor mentions.',
+        description: 'A facet feature for actor mentions.',
         required: ['did'],
         properties: {
           did: {
@@ -3997,7 +4000,7 @@ export const schemaDict = {
       },
       link: {
         type: 'object',
-        description: 'A facet value for links.',
+        description: 'A facet feature for links.',
         required: ['uri'],
         properties: {
           uri: {
@@ -4006,17 +4009,17 @@ export const schemaDict = {
           },
         },
       },
-      textSlice: {
+      byteSlice: {
         type: 'object',
         description:
           'A text segment. Start is inclusive, end is exclusive. Indices are for utf8-encoded strings.',
-        required: ['start', 'end'],
+        required: ['byteStart', 'byteEnd'],
         properties: {
-          start: {
+          byteStart: {
             type: 'integer',
             minimum: 0,
           },
-          end: {
+          byteEnd: {
             type: 'integer',
             minimum: 0,
           },
