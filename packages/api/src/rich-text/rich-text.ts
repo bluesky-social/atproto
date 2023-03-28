@@ -118,12 +118,28 @@ export interface RichTextOpts {
 export class RichTextSegment {
   constructor(public text: string, public facet?: Facet) {}
 
+  get link(): FacetLink | undefined {
+    const link = this.facet?.features.find(AppBskyRichtextFacet.isLink)
+    if (AppBskyRichtextFacet.isLink(link)) {
+      return link
+    }
+    return undefined
+  }
+
   isLink() {
-    return this.facet?.value.$type === 'app.bsky.richtext.facet#link'
+    return !!this.link
+  }
+
+  get mention(): FacetMention | undefined {
+    const mention = this.facet?.features.find(AppBskyRichtextFacet.isMention)
+    if (AppBskyRichtextFacet.isMention(mention)) {
+      return mention
+    }
+    return undefined
   }
 
   isMention() {
-    return this.facet?.value.$type === 'app.bsky.richtext.facet#mention'
+    return !!this.mention
   }
 }
 
@@ -177,18 +193,18 @@ export class RichText {
     let facetCursor = 0
     do {
       const currFacet = facets[facetCursor]
-      if (textCursor < currFacet.index.start) {
+      if (textCursor < currFacet.index.byteStart) {
         yield new RichTextSegment(
-          this.unicodeText.slice(textCursor, currFacet.index.start),
+          this.unicodeText.slice(textCursor, currFacet.index.byteStart),
         )
-      } else if (textCursor > currFacet.index.start) {
+      } else if (textCursor > currFacet.index.byteStart) {
         facetCursor++
         continue
       }
-      if (currFacet.index.start < currFacet.index.end) {
+      if (currFacet.index.byteStart < currFacet.index.byteEnd) {
         const subtext = this.unicodeText.slice(
-          currFacet.index.start,
-          currFacet.index.end,
+          currFacet.index.byteStart,
+          currFacet.index.byteEnd,
         )
         if (!subtext.trim()) {
           // dont empty string entities
@@ -197,7 +213,7 @@ export class RichText {
           yield new RichTextSegment(subtext, currFacet)
         }
       }
-      textCursor = currFacet.index.end
+      textCursor = currFacet.index.byteEnd
       facetCursor++
     } while (facetCursor < facets.length)
     if (textCursor < this.unicodeText.length) {
@@ -222,15 +238,18 @@ export class RichText {
     for (const ent of this.facets) {
       // see comment at top of file for labels of each scenario
       // scenario A (before)
-      if (insertIndex <= ent.index.start) {
+      if (insertIndex <= ent.index.byteStart) {
         // move both by num added
-        ent.index.start += numCharsAdded
-        ent.index.end += numCharsAdded
+        ent.index.byteStart += numCharsAdded
+        ent.index.byteEnd += numCharsAdded
       }
       // scenario B (inner)
-      else if (insertIndex >= ent.index.start && insertIndex < ent.index.end) {
+      else if (
+        insertIndex >= ent.index.byteStart &&
+        insertIndex < ent.index.byteEnd
+      ) {
         // move end by num added
-        ent.index.end += numCharsAdded
+        ent.index.byteEnd += numCharsAdded
       }
       // scenario C (after)
       // noop
@@ -253,54 +272,56 @@ export class RichText {
       // see comment at top of file for labels of each scenario
       // scenario A (entirely outer)
       if (
-        removeStartIndex <= ent.index.start &&
-        removeEndIndex >= ent.index.end
+        removeStartIndex <= ent.index.byteStart &&
+        removeEndIndex >= ent.index.byteEnd
       ) {
         // delete slice (will get removed in final pass)
-        ent.index.start = 0
-        ent.index.end = 0
+        ent.index.byteStart = 0
+        ent.index.byteEnd = 0
       }
       // scenario B (entirely after)
-      else if (removeStartIndex > ent.index.end) {
+      else if (removeStartIndex > ent.index.byteEnd) {
         // noop
       }
       // scenario C (partially after)
       else if (
-        removeStartIndex > ent.index.start &&
-        removeStartIndex <= ent.index.end &&
-        removeEndIndex > ent.index.end
+        removeStartIndex > ent.index.byteStart &&
+        removeStartIndex <= ent.index.byteEnd &&
+        removeEndIndex > ent.index.byteEnd
       ) {
         // move end to remove start
-        ent.index.end = removeStartIndex
+        ent.index.byteEnd = removeStartIndex
       }
       // scenario D (entirely inner)
       else if (
-        removeStartIndex >= ent.index.start &&
-        removeEndIndex <= ent.index.end
+        removeStartIndex >= ent.index.byteStart &&
+        removeEndIndex <= ent.index.byteEnd
       ) {
         // move end by num removed
-        ent.index.end -= numCharsRemoved
+        ent.index.byteEnd -= numCharsRemoved
       }
       // scenario E (partially before)
       else if (
-        removeStartIndex < ent.index.start &&
-        removeEndIndex >= ent.index.start &&
-        removeEndIndex <= ent.index.end
+        removeStartIndex < ent.index.byteStart &&
+        removeEndIndex >= ent.index.byteStart &&
+        removeEndIndex <= ent.index.byteEnd
       ) {
         // move start to remove-start index, move end by num removed
-        ent.index.start = removeStartIndex
-        ent.index.end -= numCharsRemoved
+        ent.index.byteStart = removeStartIndex
+        ent.index.byteEnd -= numCharsRemoved
       }
       // scenario F (entirely before)
-      else if (removeEndIndex < ent.index.start) {
+      else if (removeEndIndex < ent.index.byteStart) {
         // move both by num removed
-        ent.index.start -= numCharsRemoved
-        ent.index.end -= numCharsRemoved
+        ent.index.byteStart -= numCharsRemoved
+        ent.index.byteEnd -= numCharsRemoved
       }
     }
 
     // filter out any facets that were made irrelevant
-    this.facets = this.facets.filter((ent) => ent.index.start < ent.index.end)
+    this.facets = this.facets.filter(
+      (ent) => ent.index.byteStart < ent.index.byteEnd,
+    )
     return this
   }
 
@@ -312,12 +333,14 @@ export class RichText {
     this.facets = detectFacets(this.unicodeText)
     if (this.facets) {
       for (const facet of this.facets) {
-        if (AppBskyRichtextFacet.isMention(facet.value)) {
-          const did = await agent
-            .resolveHandle({ handle: facet.value.did })
-            .catch((_) => undefined)
-            .then((res) => res?.data.did)
-          facet.value.did = did || ''
+        for (const feature of facet.features) {
+          if (AppBskyRichtextFacet.isMention(feature)) {
+            const did = await agent
+              .resolveHandle({ handle: feature.did })
+              .catch((_) => undefined)
+              .then((res) => res?.data.did)
+            feature.did = did || ''
+          }
         }
       }
     }
@@ -340,19 +363,21 @@ function entitiesToFacets(text: UnicodeString, entities: Entity[]): Facet[] {
       facets.push({
         $type: 'app.bsky.richtext.facet',
         index: {
-          start: text.utf16IndexToUtf8Index(ent.index.start),
-          end: text.utf16IndexToUtf8Index(ent.index.end),
+          byteStart: text.utf16IndexToUtf8Index(ent.index.start),
+          byteEnd: text.utf16IndexToUtf8Index(ent.index.end),
         },
-        value: { $type: 'app.bsky.richtext.facet#link', uri: ent.value },
+        features: [{ $type: 'app.bsky.richtext.facet#link', uri: ent.value }],
       })
     } else if (ent.type === 'mention') {
       facets.push({
         $type: 'app.bsky.richtext.facet',
         index: {
-          start: text.utf16IndexToUtf8Index(ent.index.start),
-          end: text.utf16IndexToUtf8Index(ent.index.end),
+          byteStart: text.utf16IndexToUtf8Index(ent.index.start),
+          byteEnd: text.utf16IndexToUtf8Index(ent.index.end),
         },
-        value: { $type: 'app.bsky.richtext.facet#mention', did: ent.value },
+        features: [
+          { $type: 'app.bsky.richtext.facet#mention', did: ent.value },
+        ],
       })
     }
   }
