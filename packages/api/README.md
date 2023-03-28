@@ -149,6 +149,13 @@ for (const segment of rt.segments()) {
   }
 }
 
+// calculating string lengths
+const rt2 = new RichText({text: 'Hello'})
+console.log(rt2.length) // => 5
+console.log(rt2.graphemeLength) // => 5
+const rt3 = new RichText({text: '👨‍👩‍👧‍👧'})
+console.log(rt3.length) // => 25
+console.log(rt3.graphemeLength) // => 1
 ```
 
 ## Advanced

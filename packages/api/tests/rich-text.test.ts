@@ -41,6 +41,7 @@ describe('RichText', () => {
       },
     ])
   })
+
   it('converts entity utf16 indices to facet utf8 indices', () => {
     const rt = new RichText({
       text: '👨‍👩‍👧‍👧👨‍👩‍👧‍👧👨‍👩‍👧‍👧',
@@ -80,6 +81,24 @@ describe('RichText', () => {
         },
       },
     ])
+  })
+
+  it('calculates bytelength and grapheme length correctly', () => {
+    {
+      const rt = new RichText({ text: 'Hello!' })
+      expect(rt.length).toBe(6)
+      expect(rt.graphemeLength).toBe(6)
+    }
+    {
+      const rt = new RichText({ text: '👨‍👩‍👧‍👧' })
+      expect(rt.length).toBe(25)
+      expect(rt.graphemeLength).toBe(1)
+    }
+    {
+      const rt = new RichText({ text: '👨‍👩‍👧‍👧🔥 good!✅' })
+      expect(rt.length).toBe(38)
+      expect(rt.graphemeLength).toBe(9)
+    }
   })
 })
 
