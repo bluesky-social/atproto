@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: await actorService.views.profile(actorRes, requester),
+        body: await actorService.views.profileDetailed(actorRes, requester),
       }
     },
   })

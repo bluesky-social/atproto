@@ -7,7 +7,7 @@ export default async (sc: SeedClient) => {
   await sc.createAccount('dan', users.dan)
   await sc.createAccount('eve', users.eve)
   for (const name in sc.dids) {
-    await sc.createProfile(sc.dids[name], '', '')
+    await sc.createProfile(sc.dids[name], `display-${name}`, `descript-${name}`)
   }
   const alice = sc.dids.alice
   const bob = sc.dids.bob

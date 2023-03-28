@@ -39,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           actors: await services.appView
             .actor(db)
-            .views.actorWithInfo(results, requester),
+            .views.profileBasic(results, requester),
         },
       }
     },

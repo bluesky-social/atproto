@@ -14,7 +14,7 @@ export interface QueryParams {
 }
 
 export type InputSchema = undefined
-export type OutputSchema = AppBskyActorDefs.ProfileView
+export type OutputSchema = AppBskyActorDefs.ProfileViewDetailed
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {
