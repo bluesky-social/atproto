@@ -121,7 +121,7 @@ export class BskyAppView {
   }
 
   async destroy(): Promise<void> {
-    this.sub.destroy()
+    await this.sub.destroy()
     await this.terminator?.terminate()
     await this.ctx.db.close()
   }

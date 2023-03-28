@@ -73,7 +73,7 @@ describe('sync', () => {
     const originalTableDump = await getTableDump()
 
     // Reprocess repos via sync subscription, on top of existing indices
-    server.bsky.sub.destroy()
+    await server.bsky.sub.destroy()
     await server.bsky.sub.resetState()
     server.bsky.sub.resume()
     await processAll(server)

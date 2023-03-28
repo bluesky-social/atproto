@@ -1,4 +1,5 @@
 import AtpAgent from '@atproto/api'
+import { wait } from '@atproto/common'
 import {
   runTestServer,
   forSnapshot,
@@ -23,10 +24,12 @@ describe('pds user search views', () => {
     agent = new AtpAgent({ service: server.url })
     const pdsAgent = new AtpAgent({ service: server.pdsUrl })
     sc = new SeedClient(pdsAgent)
+
+    await wait(50) // allow pending sub to be established
+    await server.bsky.sub.destroy()
     await usersBulkSeed(sc)
 
     // Skip did/handle resolution for expediency
-    server.bsky.sub.destroy()
     const { db } = server.ctx
     const now = new Date().toISOString()
     await db.db

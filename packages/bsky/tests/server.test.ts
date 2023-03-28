@@ -83,7 +83,7 @@ describe('server', () => {
   })
 
   it('healthcheck fails when database is unavailable.', async () => {
-    server.bsky.sub.destroy()
+    await server.bsky.sub.destroy()
     await db.close()
     let error: AxiosError
     try {

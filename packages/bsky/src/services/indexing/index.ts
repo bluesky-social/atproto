@@ -72,7 +72,7 @@ export class IndexingService {
     if (actor) {
       return // @TODO deal with handle updates
     }
-    const { pds, handle } = await this.didResolver.resolveAtpData(did)
+    const { handle } = await this.didResolver.resolveAtpData(did)
     const handleToDid = await resolveExternalHandle(handle)
     if (did !== handleToDid) {
       return // No bidirectional link between did and handle
