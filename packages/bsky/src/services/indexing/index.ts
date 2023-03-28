@@ -3,7 +3,7 @@ import ApiAgent from '@atproto/api'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { DidResolver } from '@atproto/did-resolver'
-import * as ident from '@atproto/identifier'
+import { NoHandleRecordError, resolveDns } from '@atproto/identifier'
 import Database from '../../db'
 import * as Post from './plugins/post'
 import * as Vote from './plugins/vote'
@@ -150,10 +150,10 @@ const resolveExternalHandle = async (
   handle: string,
 ): Promise<string | undefined> => {
   try {
-    const did = await ident.resolveDns(handle)
+    const did = await resolveDns(handle)
     return did
   } catch (err) {
-    if (err instanceof ident.NoHandleRecordError) {
+    if (err instanceof NoHandleRecordError) {
       // no worries it's just not found
     } else {
       subLogger.error({ err, handle }, 'could not resolve dns handle')

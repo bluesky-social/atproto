@@ -18,6 +18,7 @@ export interface ServerConfigValues {
 }
 
 export class ServerConfig {
+  private assignedPort?: number
   constructor(private cfg: ServerConfigValues) {}
 
   static readEnv(overrides?: Partial<ServerConfigValues>) {
@@ -58,12 +59,25 @@ export class ServerConfig {
     })
   }
 
+  assignPort(port: number) {
+    assert(
+      !this.cfg.port || this.cfg.port === port,
+      'Conflicting port in config',
+    )
+    this.assignedPort = port
+  }
+
   get version() {
     return this.cfg.version
   }
 
   get port() {
-    return this.cfg.port
+    return this.assignedPort || this.cfg.port
+  }
+
+  get localUrl() {
+    assert(this.port, 'No port assigned')
+    return `http://localhost:${this.port}`
   }
 
   get publicUrl() {

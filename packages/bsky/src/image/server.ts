@@ -3,9 +3,10 @@ import fsSync from 'fs'
 import os from 'os'
 import path from 'path'
 import { Readable } from 'stream'
+import axios, { AxiosError } from 'axios'
 import express, { ErrorRequestHandler, NextFunction } from 'express'
 import createError, { isHttpError } from 'http-errors'
-import { BlobNotFoundError, BlobStore } from '@atproto/repo'
+import { BlobNotFoundError } from '@atproto/repo'
 import {
   cloneStream,
   forwardStreamErrors,
@@ -15,18 +16,18 @@ import { BadPathError, ImageUriBuilder } from './uri'
 import log from './logger'
 import { resize } from './sharp'
 import { formatsToMimes, Options } from './util'
+import AppContext from '../context'
 
 export class ImageProcessingServer {
   app = express()
   uriBuilder: ImageUriBuilder
 
-  constructor(
-    protected salt: string | Uint8Array,
-    protected key: string | Uint8Array,
-    protected storage: BlobStore,
-    public cache: BlobCache,
-  ) {
-    this.uriBuilder = new ImageUriBuilder('', salt, key)
+  constructor(public ctx: AppContext, public cache: BlobCache) {
+    this.uriBuilder = new ImageUriBuilder(
+      '',
+      ctx.cfg.imgUriSalt,
+      ctx.cfg.imgUriKey,
+    )
     this.app.get('*', this.handler.bind(this))
     this.app.use(errorMiddleware)
   }
@@ -58,7 +59,21 @@ export class ImageProcessingServer {
 
       // Non-cached flow
 
-      const imageStream = await this.storage.getStream(options.cid)
+      const { localUrl } = this.ctx.cfg
+      const did = options.did
+      const cidStr = options.cid.toString()
+      const enc = encodeURIComponent
+
+      const getBlob = await axios.get(
+        `${localUrl}/blob/${enc(did)}/${enc(cidStr)}`,
+        {
+          decompress: true,
+          responseType: 'stream',
+          timeout: 2000, // 2sec of inactivity on the connection
+        },
+      )
+
+      const imageStream: Readable = getBlob.data
       const processedImage = await resize(imageStream, options)
 
       // Cache in the background
@@ -81,7 +96,16 @@ export class ImageProcessingServer {
       if (err instanceof BadPathError) {
         return next(createError(400, err))
       }
-      if (err instanceof BlobNotFoundError) {
+      if (err instanceof AxiosError) {
+        if (err.code === AxiosError.ETIMEDOUT) {
+          return next(createError(504)) // Gateway timeout
+        }
+        if (!err.response || err.response.status >= 500) {
+          return next(createError(502))
+        }
+        if (err.response.status === 400) {
+          return next(createError(400))
+        }
         return next(createError(404, 'Image not found'))
       }
       return next(err)
@@ -120,7 +144,7 @@ export interface BlobCache {
 export class BlobDiskCache implements BlobCache {
   tempDir: string
   constructor(basePath?: string) {
-    this.tempDir = basePath || path.join(os.tmpdir(), 'pds--processed-images')
+    this.tempDir = basePath || path.join(os.tmpdir(), 'bsky--processed-images')
     if (!path.isAbsolute(this.tempDir)) {
       throw new Error('Must provide an absolute path')
     }

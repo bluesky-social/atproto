@@ -1,3 +1,5 @@
+import crypto from 'crypto'
+import { Transform, TransformCallback } from 'stream'
 import { CID } from 'multiformats/cid'
 import * as Block from 'multiformats/block'
 import * as rawCodec from 'multiformats/codecs/raw'
@@ -45,4 +47,39 @@ export const cborBytesToRecord = (
     throw new Error(`Expected object, got: ${val}`)
   }
   return val
+}
+
+export class VerifyCidTransform extends Transform {
+  hasher = crypto.createHash('sha256')
+  constructor(public cid: CID) {
+    super()
+  }
+
+  _transform(chunk: Uint8Array, _enc: BufferEncoding, cb: TransformCallback) {
+    this.hasher.update(chunk)
+    cb(null, chunk)
+  }
+
+  _flush(cb: TransformCallback) {
+    try {
+      const cid = sha256RawToCid(this.hasher.digest())
+      if (this.cid.equals(cid)) {
+        return cb()
+      } else {
+        return cb(new VerifyCidError(this.cid, cid))
+      }
+    } catch (_err) {
+      const err =
+        _err instanceof Error
+          ? _err
+          : new Error('Unexpected error', { cause: _err })
+      return cb(err)
+    }
+  }
+}
+
+export class VerifyCidError extends Error {
+  constructor(public expected: CID, public actual: CID) {
+    super('Bad cid check')
+  }
 }

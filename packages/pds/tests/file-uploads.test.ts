@@ -142,6 +142,7 @@ describe('file uploads', () => {
       did: alice.did,
       cid: smallCid.toString(),
     })
+    expect(fetchedFile.headers['content-type']).toEqual('image/jpeg')
     expect(
       uint8arrays.equals(smallFile, new Uint8Array(fetchedFile.data)),
     ).toBeTruthy()

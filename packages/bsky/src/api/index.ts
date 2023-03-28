@@ -15,6 +15,8 @@ import getSuggestions from './app/bsky/actor/getSuggestions'
 
 export * as health from './health'
 
+export * as blobResolver from './blob-resolver'
+
 export default function (server: Server, ctx: AppContext) {
   getTimeline(server, ctx)
   getAuthorFeed(server, ctx)

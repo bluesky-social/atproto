@@ -8,19 +8,34 @@ import { isObj, hasProp } from '../../../../util'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {
-  /** Hostname of the service that is notifying of update. */
-  hostname: string
+  /** The DID of the repo. */
+  did: string
+  /** The most recent commit */
+  latest?: string
+  /** The earliest commit to start from */
+  earliest?: string
 }
 
 export type InputSchema = undefined
+
+export interface OutputSchema {
+  cids: string[]
+  [k: string]: unknown
+}
+
 export type HandlerInput = undefined
+
+export interface HandlerSuccess {
+  encoding: 'application/json'
+  body: OutputSchema
+}
 
 export interface HandlerError {
   status: number
   message?: string
 }
 
-export type HandlerOutput = HandlerError | void
+export type HandlerOutput = HandlerError | HandlerSuccess
 export type Handler<HA extends HandlerAuth = never> = (ctx: {
   auth: HA
   params: QueryParams

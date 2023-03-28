@@ -6,9 +6,12 @@ import 'express-async-errors' // @TODO(bsky) remove
 
 import express from 'express'
 import http from 'http'
+import { AddressInfo } from 'net'
 import events from 'events'
+import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import { BlobStore } from '@atproto/repo'
-import API, { health } from './api'
+import { DidResolver } from '@atproto/did-resolver'
+import API, { health, blobResolver } from './api'
 import Database from './db'
 import * as error from './error'
 import { loggerMiddleware } from './logger'
@@ -17,10 +20,8 @@ import { createServer } from './lexicon'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
-import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import AppContext from './context'
 import { RepoSubscription } from './subscription/repo'
-import { DidResolver } from '@atproto/did-resolver'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -53,26 +54,14 @@ export class BskyAppView {
     const app = express()
     app.use(loggerMiddleware)
 
-    let imgUriEndpoint = config.imgUriEndpoint
-    if (!imgUriEndpoint) {
-      const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
-      const imgProcessingServer = new ImageProcessingServer(
-        config.imgUriSalt,
-        config.imgUriKey,
-        blobstore,
-        imgProcessingCache,
-      )
-      app.use('/image', imgProcessingServer.app)
-      imgUriEndpoint = `${config.publicUrl}/image`
-    }
+    const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
 
     const imgUriBuilder = new ImageUriBuilder(
-      imgUriEndpoint,
+      config.imgUriEndpoint || `${config.publicUrl}/image`,
       config.imgUriSalt,
       config.imgUriKey,
     )
 
-    const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
     const services = createServices({
       imgUriBuilder,
       didResolver,
@@ -87,6 +76,12 @@ export class BskyAppView {
       didResolver,
     })
 
+    let imgProcessingServer: ImageProcessingServer | undefined
+    if (!config.imgUriEndpoint) {
+      const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
+      imgProcessingServer = new ImageProcessingServer(ctx, imgProcessingCache)
+    }
+
     let server = createServer({
       payload: {
         jsonLimit: 100 * 1024, // 100kb
@@ -98,6 +93,10 @@ export class BskyAppView {
     server = API(server, ctx)
 
     app.use(health.createRouter(ctx))
+    app.use(blobResolver.createRouter(ctx))
+    if (imgProcessingServer) {
+      app.use('/image', imgProcessingServer.app)
+    }
     app.use(server.xrpc.router)
     app.use(error.handler)
 
@@ -115,6 +114,8 @@ export class BskyAppView {
     this.server = server
     this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
+    const { port } = server.address() as AddressInfo
+    this.ctx.cfg.assignPort(port)
     this.sub.run() // Don't await, backgrounded
     return server
   }
