@@ -3,7 +3,6 @@ import { CID } from 'multiformats'
 
 import { ReadableBlockstore } from '../storage'
 import { schema as common, cidForCbor } from '@atproto/common'
-import { DataStore } from '../types'
 import { BlockWriter } from '@ipld/car/api'
 import * as util from './util'
 import BlockMap from '../block-map'
@@ -68,7 +67,7 @@ export type MstOpts = {
   layer: number
 }
 
-export class MST implements DataStore {
+export class MST {
   storage: ReadableBlockstore
   entries: NodeEntry[] | null
   layer: number | null

@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { Commit, def, DataStore, RepoContents } from './types'
+import { Commit, def, RepoContents } from './types'
 import { ReadableBlockstore } from './storage'
 import { MST } from './mst'
 import log from './logger'
@@ -9,14 +9,14 @@ import { MissingBlocksError } from './error'
 
 type Params = {
   storage: ReadableBlockstore
-  data: DataStore
+  data: MST
   commit: Commit
   cid: CID
 }
 
 export class ReadableRepo {
   storage: ReadableBlockstore
-  data: DataStore
+  data: MST
   commit: Commit
   cid: CID
 

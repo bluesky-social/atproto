@@ -3,11 +3,11 @@ import * as crypto from '@atproto/crypto'
 import {
   Commit,
   def,
-  DataStore,
   RecordCreateOp,
   RecordWriteOp,
   CommitData,
   WriteOpAction,
+  RebaseData,
 } from './types'
 import { RepoStorage } from './storage'
 import { MST } from './mst'
@@ -19,7 +19,7 @@ import * as util from './util'
 
 type Params = {
   storage: RepoStorage
-  data: DataStore
+  data: MST
   commit: Commit
   cid: CID
 }
@@ -176,6 +176,32 @@ export class Repo extends ReadableRepo {
   ): Promise<Repo> {
     const commit = await this.formatCommit(toWrite, keypair)
     return this.applyCommit(commit)
+  }
+
+  async formatRebase(keypair: crypto.Keypair): Promise<RebaseData> {
+    const preservedCids = await this.data.allCids()
+    const blocks = new BlockMap()
+    const commit = await util.signCommit(
+      {
+        did: this.did,
+        version: 2,
+        prev: this.cid,
+        data: this.commit.data,
+      },
+      keypair,
+    )
+    const commitCid = await blocks.add(commit)
+    return {
+      commit: commitCid,
+      blocks,
+      preservedCids: preservedCids.toList(),
+    }
+  }
+
+  async rebase(keypair: crypto.Keypair): Promise<Repo> {
+    const rebaseData = await this.formatRebase(keypair)
+    await this.storage.applyRebase(rebaseData)
+    return Repo.load(this.storage, rebaseData.commit)
   }
 }
 

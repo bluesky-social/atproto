@@ -77,6 +77,18 @@ export class RepoService {
     ])
   }
 
+  // async rebaseRepo(did: string, now: string, swapCommit?: CID) {
+  //   const storage = new SqlRepoStorage(this.db, did, now)
+  //   const currRoot = await storage.getHead(true)
+  //   if (!currRoot) {
+  //     throw new InvalidRequestError(
+  //       `${did} is not a registered repo on this server`,
+  //     )
+  //   }
+  //   const repo = await Repo.load(storage, currRoot)
+  //   const contents = await repo.data.getContents()
+  // }
+
   private async formatCommit(
     storage: SqlRepoStorage,
     did: string,

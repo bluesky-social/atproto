@@ -101,12 +101,26 @@ export type CommitData = CommitBlockData & {
   prev: CID | null
 }
 
+export type RebaseData = {
+  commit: CID
+  blocks: BlockMap
+  preservedCids: CID[]
+}
+
+export type CommitCidData = {
+  commit: CID
+  prev: CID | null
+  cids: CID[]
+}
+
 export type RepoUpdate = CommitData & {
   ops: RecordWriteOp[]
 }
 
 export type CollectionContents = Record<string, RepoRecord>
 export type RepoContents = Record<string, CollectionContents>
+
+export type DatastoreContents = Record<string, CID>
 
 export type RecordPath = {
   collection: string
@@ -117,24 +131,4 @@ export type RecordClaim = {
   collection: string
   rkey: string
   record: RepoRecord | null
-}
-
-// DataStores
-// ---------------
-
-export type DataValue = {
-  key: string
-  value: CID
-}
-
-export interface DataStore {
-  add(key: string, value: CID): Promise<DataStore>
-  update(key: string, value: CID): Promise<DataStore>
-  delete(key: string): Promise<DataStore>
-  get(key: string): Promise<CID | null>
-  list(count?: number, after?: string, before?: string): Promise<DataValue[]>
-  listWithPrefix(prefix: string, count?: number): Promise<DataValue[]>
-  getUnstoredBlocks(): Promise<{ root: CID; blocks: BlockMap }>
-  writeToCarStream(car: BlockWriter): Promise<void>
-  cidsForPath(key: string): Promise<CID[]>
 }
