@@ -65,7 +65,7 @@ export class FeedService {
       ])
   }
 
-  // @NOTE keep in sync with actorService.views.actorWithInfo()
+  // @NOTE keep in sync with actorService.views.profile()
   async getActorViews(
     dids: string[],
     requester: string,

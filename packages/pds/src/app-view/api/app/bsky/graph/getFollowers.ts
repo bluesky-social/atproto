@@ -45,8 +45,8 @@ export default function (server: Server, ctx: AppContext) {
 
       const followersRes = await followersReq.execute()
       const [followers, subject] = await Promise.all([
-        actorService.views.actorWithInfo(followersRes, requester),
-        actorService.views.actorWithInfo(subjectRes, requester),
+        actorService.views.profile(followersRes, requester),
+        actorService.views.profile(subjectRes, requester),
       ])
 
       return {

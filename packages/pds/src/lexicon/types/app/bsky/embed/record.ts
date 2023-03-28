@@ -47,7 +47,7 @@ export function validateView(v: unknown): ValidationResult {
 export interface ViewRecord {
   uri: string
   cid: string
-  author: AppBskyActorDefs.WithInfo
+  author: AppBskyActorDefs.ProfileViewBasic
   value: {}
   embeds?: (
     | AppBskyEmbedImages.View

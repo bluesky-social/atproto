@@ -60,7 +60,7 @@ export default function (server: Server, ctx: AppContext) {
           cursor: keyset.packFromResult(suggestionsRes),
           actors: await services.appView
             .actor(ctx.db)
-            .views.profileBasic(suggestionsRes, requester),
+            .views.profile(suggestionsRes, requester),
         },
       }
     },
