@@ -213,16 +213,17 @@ describe('timeline views', () => {
   })
 
   it('blocks posts, reposts, replies by record takedown.', async () => {
-    const postUri1 = sc.posts[dan][1].ref.uri // Repost
-    const postUri2 = sc.replies[bob][0].ref.uri // Post and reply parent
+    const postRef1 = sc.posts[dan][1].ref // Repost
+    const postRef2 = sc.replies[bob][0].ref // Post and reply parent
     const actionResults = await Promise.all(
-      [postUri1, postUri2].map((postUri) =>
+      [postRef1, postRef2].map((postRef) =>
         agent.api.com.atproto.admin.takeModerationAction(
           {
             action: TAKEDOWN,
             subject: {
-              $type: 'com.atproto.repo.recordRef',
-              uri: postUri.toString(),
+              $type: 'com.atproto.repo.strongRef',
+              uri: postRef.uriStr,
+              cid: postRef.cidStr,
             },
             createdBy: 'did:example:admin',
             reason: 'Y',

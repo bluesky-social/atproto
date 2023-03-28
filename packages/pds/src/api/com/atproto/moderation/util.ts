@@ -25,16 +25,15 @@ export const getSubject = (subject: SubjectInput) => {
     return { did: subject.did }
   }
   if (
-    subject.$type === 'com.atproto.repo.recordRef' &&
+    subject.$type === 'com.atproto.repo.strongRef' &&
     typeof subject.uri === 'string' &&
-    (subject.cid === undefined || typeof subject.cid === 'string')
+    typeof subject.cid === 'string'
   ) {
     return {
       uri: new AtUri(subject.uri),
-      cid: subject.cid ? parseCidParam(subject.cid) : undefined,
+      cid: parseCidParam(subject.cid),
     }
   }
-  console.log(subject)
   throw new InvalidRequestError('Invalid subject')
 }
 

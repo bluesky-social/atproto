@@ -155,16 +155,17 @@ describe('pds notification views', () => {
   })
 
   it('fetches notifications omitting mentions and replies for taken-down posts', async () => {
-    const postUri1 = sc.replies[sc.dids.carol][0].ref.uri // Reply
-    const postUri2 = sc.posts[sc.dids.dan][1].ref.uri // Mention
+    const postRef1 = sc.replies[sc.dids.carol][0].ref // Reply
+    const postRef2 = sc.posts[sc.dids.dan][1].ref // Mention
     const actionResults = await Promise.all(
-      [postUri1, postUri2].map((postUri) =>
+      [postRef1, postRef2].map((postRef) =>
         agent.api.com.atproto.admin.takeModerationAction(
           {
             action: TAKEDOWN,
             subject: {
-              $type: 'com.atproto.repo.recordRef',
-              uri: postUri.toString(),
+              $type: 'com.atproto.repo.strongRef',
+              uri: postRef.uriStr,
+              cid: postRef.cidStr,
             },
             createdBy: 'did:example:admin',
             reason: 'Y',

@@ -39,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
 
         if (
           result.action === TAKEDOWN &&
-          result.subjectType === 'com.atproto.repo.recordRef' &&
+          result.subjectType === 'com.atproto.repo.strongRef' &&
           result.subjectUri
         ) {
           await moderationTxn.takedownRecord({

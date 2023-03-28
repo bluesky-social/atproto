@@ -53,8 +53,9 @@ describe('pds admin get moderation actions view', () => {
         await sc.takeModerationAction({
           action: getAction(i),
           subject: {
-            $type: 'com.atproto.repo.recordRef',
+            $type: 'com.atproto.repo.strongRef',
             uri: post.ref.uriStr,
+            cid: post.ref.cidStr,
           },
         }),
       )
@@ -87,8 +88,9 @@ describe('pds admin get moderation actions view', () => {
         reportedBy: ab ? sc.dids.carol : sc.dids.alice,
         reasonType: ab ? REASONSPAM : REASONOTHER,
         subject: {
-          $type: 'com.atproto.repo.recordRef',
+          $type: 'com.atproto.repo.strongRef',
           uri: action.subject.uri,
+          cid: action.subject.cid,
         },
       })
       if (ab) {

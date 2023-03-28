@@ -1,5 +1,4 @@
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
-import { AtUri } from '@atproto/uri'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { Database } from '../../src'
 import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
@@ -269,14 +268,15 @@ describe('pds thread views', () => {
   })
 
   it('blocks post by record takedown', async () => {
-    const postUri = sc.posts[alice][1].ref.uri
+    const postRef = sc.posts[alice][1].ref
     const { data: modAction } =
       await agent.api.com.atproto.admin.takeModerationAction(
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.repo.recordRef',
-            uri: postUri.toString(),
+            $type: 'com.atproto.repo.strongRef',
+            uri: postRef.uriStr,
+            cid: postRef.cidStr,
           },
           createdBy: 'did:example:admin',
           reason: 'Y',
@@ -288,7 +288,7 @@ describe('pds thread views', () => {
       )
 
     const promise = agent.api.app.bsky.feed.getPostThread(
-      { depth: 1, uri: postUri.toString() },
+      { depth: 1, uri: postRef.uriStr },
       { headers: sc.getHeaders(bob) },
     )
 
@@ -315,17 +315,17 @@ describe('pds thread views', () => {
       { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
       { headers: sc.getHeaders(bob) },
     )
-    const postUri = new AtUri(
-      threadPreTakedown.data.thread.parent?.['post'].uri,
-    )
+
+    const parent = threadPreTakedown.data.thread.parent?.['post']
 
     const { data: modAction } =
       await agent.api.com.atproto.admin.takeModerationAction(
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.repo.recordRef',
-            uri: postUri.toString(),
+            $type: 'com.atproto.repo.strongRef',
+            uri: parent.uri,
+            cid: parent.cid,
           },
           createdBy: 'did:example:admin',
           reason: 'Y',
@@ -363,21 +363,18 @@ describe('pds thread views', () => {
       { uri: sc.posts[alice][1].ref.uriStr },
       { headers: sc.getHeaders(bob) },
     )
-    const postUri1 = new AtUri(
-      threadPreTakedown.data.thread.replies?.[0].post.uri,
-    )
-    const postUri2 = new AtUri(
-      threadPreTakedown.data.thread.replies?.[1].replies[0].post.uri,
-    )
+    const post1 = threadPreTakedown.data.thread.replies?.[0].post
+    const post2 = threadPreTakedown.data.thread.replies?.[1].replies[0].post
 
     const actionResults = await Promise.all(
-      [postUri1, postUri2].map((postUri) =>
+      [post1, post2].map((post) =>
         agent.api.com.atproto.admin.takeModerationAction(
           {
             action: TAKEDOWN,
             subject: {
-              $type: 'com.atproto.repo.recordRef',
-              uri: postUri.toString(),
+              $type: 'com.atproto.repo.strongRef',
+              uri: post.uri,
+              cid: post.cid,
             },
             createdBy: 'did:example:admin',
             reason: 'Y',
