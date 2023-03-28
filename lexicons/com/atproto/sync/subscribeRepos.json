@@ -43,11 +43,13 @@
         "prev": {"type": "cid-link"},
         "blocks": {
           "type": "bytes",
-          "description": "CAR file containing relevant blocks"
+          "description": "CAR file containing relevant blocks",
+          "maxLength": 1000000
         },
         "ops": {
           "type": "array", 
-          "items": { "type": "ref", "ref": "#repoOp"}
+          "items": { "type": "ref", "ref": "#repoOp"},
+          "maxLength": 200
         },
         "blobs": {
           "type": "array",
@@ -58,29 +60,32 @@
     },
     "handle": {
       "type": "object",
-      "required": ["seq", "did", "handle"],
+      "required": ["seq", "did", "handle", "time"],
       "properties": {
         "seq": {"type": "integer"},
         "did": {"type": "string", "format": "did"},
-        "handle": {"type": "string", "format": "handle"}
+        "handle": {"type": "string", "format": "handle"},
+        "time": {"type": "string", "format": "datetime"}
       }
     },
     "migrate": {
       "type": "object",
-      "required": ["seq", "did", "migrateTo"],
+      "required": ["seq", "did", "migrateTo", "time"],
       "nullable": ["migrateTo"],
       "properties": {
         "seq": {"type": "integer"},
         "did": {"type": "string", "format": "did"},
-        "migrateTo": {"type": "string"}
+        "migrateTo": {"type": "string"},
+        "time": {"type": "string", "format": "datetime"}
       }
     },
     "tombstone": {
       "type": "object",
-      "required": ["seq", "did"],
+      "required": ["seq", "did", "time"],
       "properties": {
         "seq": {"type": "integer"},
-        "did": {"type": "string", "format": "did"}
+        "did": {"type": "string", "format": "did"},
+        "time": {"type": "string", "format": "datetime"}
       }
     },
     "info": {

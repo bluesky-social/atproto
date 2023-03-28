@@ -14,6 +14,7 @@ import {
 import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { RecordService } from '../record'
+import { sequenceCommit } from '../../sequencer'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -44,10 +45,16 @@ export class RepoService {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
     const writeOps = writes.map(createWriteToOp)
-    const repo = await Repo.create(storage, did, this.repoSigningKey, writeOps)
+    const commit = await Repo.formatInitCommit(
+      storage,
+      did,
+      this.repoSigningKey,
+      writeOps,
+    )
+    await storage.applyCommit(commit)
     await Promise.all([
       this.indexWrites(writes, now),
-      this.afterWriteProcessing(did, repo.cid, writes),
+      this.afterWriteProcessing(did, commit, writes),
     ])
   }
 
@@ -66,7 +73,7 @@ export class RepoService {
       // & send to indexing
       this.indexWrites(writes, now),
       // do any other processing needed after write
-      this.afterWriteProcessing(did, commitData.commit, writes),
+      this.afterWriteProcessing(did, commitData, writes),
     ])
   }
 
@@ -136,45 +143,13 @@ export class RepoService {
 
   async afterWriteProcessing(
     did: string,
-    commit: CID,
+    commitData: CommitData,
     writes: PreparedWrite[],
   ) {
     await Promise.all([
-      this.blobs.processWriteBlobs(did, commit, writes),
-      this.indexRepoOps(did, commit, writes),
-      this.sequenceWrite(did, commit),
+      this.blobs.processWriteBlobs(did, commitData.commit, writes),
+      sequenceCommit(this.db, did, commitData, writes),
     ])
-  }
-
-  async indexRepoOps(did: string, commit: CID, writes: PreparedWrite[]) {
-    if (!writes.length) {
-      return
-    }
-    const ops = writes.map((w) => {
-      const path = w.uri.collection + '/' + w.uri.rkey
-      const cid = w.action === WriteOpAction.Delete ? null : w.cid.toString()
-      return {
-        did,
-        commit: commit.toString(),
-        action: w.action,
-        path,
-        cid,
-      }
-    })
-    await this.db.db.insertInto('repo_op').values(ops).execute()
-  }
-
-  async sequenceWrite(did: string, commit: CID) {
-    await this.db.db
-      .insertInto('repo_seq')
-      .values({
-        did,
-        commit: commit.toString(),
-        eventType: 'repo_append',
-        sequencedAt: new Date().toISOString(),
-      })
-      .execute()
-    await this.db.notify('repo_seq')
   }
 
   async deleteRepo(did: string) {

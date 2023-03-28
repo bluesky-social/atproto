@@ -59,6 +59,7 @@ export interface Handle {
   seq: number
   did: string
   handle: string
+  time: string
   [k: string]: unknown
 }
 
@@ -78,6 +79,7 @@ export interface Migrate {
   seq: number
   did: string
   migrateTo: string | null
+  time: string
   [k: string]: unknown
 }
 
@@ -96,6 +98,7 @@ export function validateMigrate(v: unknown): ValidationResult {
 export interface Tombstone {
   seq: number
   did: string
+  time: string
   [k: string]: unknown
 }
 

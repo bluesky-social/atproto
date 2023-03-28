@@ -2398,6 +2398,7 @@ export const schemaDict = {
           blocks: {
             type: 'bytes',
             description: 'CAR file containing relevant blocks',
+            maxLength: 1000000,
           },
           ops: {
             type: 'array',
@@ -2405,6 +2406,7 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.sync.subscribeRepos#repoOp',
             },
+            maxLength: 200,
           },
           blobs: {
             type: 'array',
@@ -2420,7 +2422,7 @@ export const schemaDict = {
       },
       handle: {
         type: 'object',
-        required: ['seq', 'did', 'handle'],
+        required: ['seq', 'did', 'handle', 'time'],
         properties: {
           seq: {
             type: 'integer',
@@ -2433,11 +2435,15 @@ export const schemaDict = {
             type: 'string',
             format: 'handle',
           },
+          time: {
+            type: 'string',
+            format: 'datetime',
+          },
         },
       },
       migrate: {
         type: 'object',
-        required: ['seq', 'did', 'migrateTo'],
+        required: ['seq', 'did', 'migrateTo', 'time'],
         nullable: ['migrateTo'],
         properties: {
           seq: {
@@ -2450,11 +2456,15 @@ export const schemaDict = {
           migrateTo: {
             type: 'string',
           },
+          time: {
+            type: 'string',
+            format: 'datetime',
+          },
         },
       },
       tombstone: {
         type: 'object',
-        required: ['seq', 'did'],
+        required: ['seq', 'did', 'time'],
         properties: {
           seq: {
             type: 'integer',
@@ -2462,6 +2472,10 @@ export const schemaDict = {
           did: {
             type: 'string',
             format: 'did',
+          },
+          time: {
+            type: 'string',
+            format: 'datetime',
           },
         },
       },
