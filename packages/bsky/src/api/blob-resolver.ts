@@ -47,7 +47,14 @@ export const createRouter = (ctx: AppContext): express.Router => {
         'content-type',
         getBlob.headers['content-type'] || 'application/octet-stream',
       )
-      pipeline([imageStream, verifyCid, res], ignore)
+      pipeline(imageStream, verifyCid, res, (err) => {
+        if (err) {
+          log.warn(
+            { err, did, cid: cidStr, pds },
+            'blob resolution failed during transmission',
+          )
+        }
+      })
     } catch (err) {
       if (err instanceof AxiosError) {
         if (err.code === AxiosError.ETIMEDOUT) {
@@ -75,5 +82,3 @@ export const createRouter = (ctx: AppContext): express.Router => {
 
   return router
 }
-
-function ignore() {}
