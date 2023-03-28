@@ -5,7 +5,7 @@ import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/po
 import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecord } from '../../../../lexicon/types/app/bsky/embed/record'
-import { isMain as isEmbedComplexRecord } from '../../../../lexicon/types/app/bsky/embed/recordWithMedia'
+import { isMain as isEmbedRecordWithMedia } from '../../../../lexicon/types/app/bsky/embed/recordWithMedia'
 import {
   isMention,
   isLink,
@@ -78,14 +78,7 @@ const insertFn = async (
   })
   // Embed indices
   const embeds: (PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord)[] = []
-  const postEmbeds = isEmbedComplexRecord(obj.embed)
-    ? [
-        { $type: lex.ids.AppBskyEmbedRecord, ...obj.embed.record },
-        obj.embed.media,
-      ]
-    : obj.embed
-    ? [obj.embed]
-    : []
+  const postEmbeds = separateEmbeds(obj.embed)
   for (const postEmbed of postEmbeds) {
     if (isEmbedImage(postEmbed)) {
       const { images } = postEmbed
@@ -287,3 +280,13 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
 }
 
 export default makePlugin
+
+function separateEmbeds(embed: PostRecord['embed']) {
+  if (!embed) {
+    return []
+  }
+  if (isEmbedRecordWithMedia(embed)) {
+    return [{ $type: lex.ids.AppBskyEmbedRecord, ...embed.record }, embed.media]
+  }
+  return [embed]
+}

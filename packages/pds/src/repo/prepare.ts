@@ -21,8 +21,11 @@ import {
 import * as lex from '../lexicon/lexicons'
 import { isMain as isExternalEmbed } from '../lexicon/types/app/bsky/embed/external'
 import { isMain as isImagesEmbed } from '../lexicon/types/app/bsky/embed/images'
-import { isMain as isComplexRecordEmbed } from '../lexicon/types/app/bsky/embed/recordWithMedia'
-import { isRecord as isPost } from '../lexicon/types/app/bsky/feed/post'
+import { isMain as isRecordWithMediaEmbed } from '../lexicon/types/app/bsky/embed/recordWithMedia'
+import {
+  Record as PostRecord,
+  isRecord as isPost,
+} from '../lexicon/types/app/bsky/feed/post'
 import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
 
 // @TODO do this dynamically off of schemas
@@ -47,14 +50,7 @@ export const blobsForWrite = (record: unknown): PreparedBlobRef[] => {
     return refs
   } else if (isPost(record)) {
     const refs: PreparedBlobRef[] = []
-    const embeds = isComplexRecordEmbed(record.embed)
-      ? [
-          { $type: 'app.bsky.embed.record', ...record.embed.record },
-          record.embed.media,
-        ]
-      : record.embed
-      ? [record.embed]
-      : []
+    const embeds = separateEmbeds(record.embed)
     for (const embed of embeds) {
       if (isImagesEmbed(embed)) {
         const doc = lex.schemaDict.AppBskyEmbedImages
@@ -206,4 +202,14 @@ export const writeToOp = (write: PreparedWrite): RecordWriteOp => {
     default:
       throw new Error(`Unrecognized action: ${write}`)
   }
+}
+
+function separateEmbeds(embed: PostRecord['embed']) {
+  if (!embed) {
+    return []
+  }
+  if (isRecordWithMediaEmbed(embed)) {
+    return [{ $type: lex.ids.AppBskyEmbedRecord, ...embed.record }, embed.media]
+  }
+  return [embed]
 }
