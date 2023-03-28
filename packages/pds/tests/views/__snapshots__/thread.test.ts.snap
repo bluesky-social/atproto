@@ -2,9 +2,9 @@
 
 exports[`pds thread views blocks ancestors by actor takedown 1`] = `
 Object {
-  "$type": "app.bsky.feed.getPostThread#threadViewPost",
+  "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": Object {
-    "$type": "app.bsky.feed.getPostThread#notFoundPost",
+    "$type": "app.bsky.feed.defs#notFoundPost",
     "notFound": true,
     "uri": "record(4)",
   },
@@ -51,9 +51,9 @@ Object {
 
 exports[`pds thread views blocks ancestors by record takedown 1`] = `
 Object {
-  "$type": "app.bsky.feed.getPostThread#threadViewPost",
+  "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": Object {
-    "$type": "app.bsky.feed.getPostThread#notFoundPost",
+    "$type": "app.bsky.feed.defs#notFoundPost",
     "notFound": true,
     "uri": "record(4)",
   },
@@ -100,7 +100,7 @@ Object {
 
 exports[`pds thread views blocks replies by actor takedown 1`] = `
 Object {
-  "$type": "app.bsky.feed.getPostThread#threadViewPost",
+  "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
     "author": Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -130,7 +130,7 @@ Object {
   },
   "replies": Array [
     Object {
-      "$type": "app.bsky.feed.getPostThread#threadViewPost",
+      "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -192,7 +192,7 @@ Object {
       },
       "replies": Array [
         Object {
-          "$type": "app.bsky.feed.getPostThread#threadViewPost",
+          "$type": "app.bsky.feed.defs#threadViewPost",
           "post": Object {
             "author": Object {
               "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -240,7 +240,7 @@ Object {
 
 exports[`pds thread views blocks replies by record takedown 1`] = `
 Object {
-  "$type": "app.bsky.feed.getPostThread#threadViewPost",
+  "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
     "author": Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -270,7 +270,7 @@ Object {
   },
   "replies": Array [
     Object {
-      "$type": "app.bsky.feed.getPostThread#threadViewPost",
+      "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -338,11 +338,11 @@ Object {
 
 exports[`pds thread views fetches ancestors 1`] = `
 Object {
-  "$type": "app.bsky.feed.getPostThread#threadViewPost",
+  "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": Object {
-    "$type": "app.bsky.feed.getPostThread#threadViewPost",
+    "$type": "app.bsky.feed.defs#threadViewPost",
     "parent": Object {
-      "$type": "app.bsky.feed.getPostThread#threadViewPost",
+      "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -476,7 +476,7 @@ Object {
 
 exports[`pds thread views fetches deep post thread 1`] = `
 Object {
-  "$type": "app.bsky.feed.getPostThread#threadViewPost",
+  "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
     "author": Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -506,7 +506,7 @@ Object {
   },
   "replies": Array [
     Object {
-      "$type": "app.bsky.feed.getPostThread#threadViewPost",
+      "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
         "author": Object {
           "did": "user(1)",
@@ -542,7 +542,7 @@ Object {
       "replies": Array [],
     },
     Object {
-      "$type": "app.bsky.feed.getPostThread#threadViewPost",
+      "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -604,7 +604,7 @@ Object {
       },
       "replies": Array [
         Object {
-          "$type": "app.bsky.feed.getPostThread#threadViewPost",
+          "$type": "app.bsky.feed.defs#threadViewPost",
           "post": Object {
             "author": Object {
               "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -652,7 +652,7 @@ Object {
 
 exports[`pds thread views fetches shallow post thread 1`] = `
 Object {
-  "$type": "app.bsky.feed.getPostThread#threadViewPost",
+  "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
     "author": Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -682,7 +682,7 @@ Object {
   },
   "replies": Array [
     Object {
-      "$type": "app.bsky.feed.getPostThread#threadViewPost",
+      "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
         "author": Object {
           "did": "user(1)",
@@ -717,7 +717,7 @@ Object {
       },
     },
     Object {
-      "$type": "app.bsky.feed.getPostThread#threadViewPost",
+      "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -784,7 +784,7 @@ Object {
 
 exports[`pds thread views handles deleted posts correctly 1`] = `
 Object {
-  "$type": "app.bsky.feed.getPostThread#threadViewPost",
+  "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
     "author": Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -812,7 +812,7 @@ Object {
   },
   "replies": Array [
     Object {
-      "$type": "app.bsky.feed.getPostThread#threadViewPost",
+      "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -848,7 +848,7 @@ Object {
       },
       "replies": Array [
         Object {
-          "$type": "app.bsky.feed.getPostThread#threadViewPost",
+          "$type": "app.bsky.feed.defs#threadViewPost",
           "post": Object {
             "author": Object {
               "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -894,7 +894,7 @@ Object {
 
 exports[`pds thread views handles deleted posts correctly 2`] = `
 Object {
-  "$type": "app.bsky.feed.getPostThread#threadViewPost",
+  "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
     "author": Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -926,9 +926,9 @@ Object {
 
 exports[`pds thread views handles deleted posts correctly 3`] = `
 Object {
-  "$type": "app.bsky.feed.getPostThread#threadViewPost",
+  "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": Object {
-    "$type": "app.bsky.feed.getPostThread#notFoundPost",
+    "$type": "app.bsky.feed.defs#notFoundPost",
     "notFound": true,
     "uri": "record(4)",
   },
@@ -973,7 +973,7 @@ Object {
 
 exports[`pds thread views includes the muted status of post authors. 1`] = `
 Object {
-  "$type": "app.bsky.feed.getPostThread#threadViewPost",
+  "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
     "author": Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -1003,7 +1003,7 @@ Object {
   },
   "replies": Array [
     Object {
-      "$type": "app.bsky.feed.getPostThread#threadViewPost",
+      "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
         "author": Object {
           "did": "user(1)",
@@ -1039,7 +1039,7 @@ Object {
       "replies": Array [],
     },
     Object {
-      "$type": "app.bsky.feed.getPostThread#threadViewPost",
+      "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
@@ -1101,7 +1101,7 @@ Object {
       },
       "replies": Array [
         Object {
-          "$type": "app.bsky.feed.getPostThread#threadViewPost",
+          "$type": "app.bsky.feed.defs#threadViewPost",
           "post": Object {
             "author": Object {
               "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
