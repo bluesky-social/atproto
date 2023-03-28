@@ -18,10 +18,13 @@ describe('Rebases', () => {
   })
 
   it('rebases the repo & preserves contents', async () => {
+    const dataCidBefore = await repo.data.getPointer()
     const contents = await repo.getContents()
     repo = await repo.rebase(keypair)
     const rebasedContents = await repo.getContents()
     expect(rebasedContents).toEqual(contents)
+    const dataCidAfter = await repo.data.getPointer()
+    expect(dataCidAfter.equals(dataCidBefore)).toBeTruthy()
   })
 
   it('only keeps around relevant cids', async () => {

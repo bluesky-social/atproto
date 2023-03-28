@@ -185,7 +185,7 @@ export class Repo extends ReadableRepo {
       {
         did: this.did,
         version: 2,
-        prev: this.cid,
+        prev: null,
         data: this.commit.data,
       },
       keypair,
