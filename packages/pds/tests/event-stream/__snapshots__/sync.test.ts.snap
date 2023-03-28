@@ -167,13 +167,15 @@ Array [
         },
         "facets": Array [
           Object {
+            "features": Array [
+              Object {
+                "$type": "app.bsky.richtext.facet#mention",
+                "did": "user(0)",
+              },
+            ],
             "index": Object {
-              "end": 18,
-              "start": 0,
-            },
-            "value": Object {
-              "$type": "app.bsky.richtext.facet#mention",
-              "did": "user(0)",
+              "byteEnd": 18,
+              "byteStart": 0,
             },
           },
         ],
@@ -337,13 +339,15 @@ Array [
         },
         "facets": Array [
           Object {
+            "features": Array [
+              Object {
+                "$type": "app.bsky.richtext.facet#mention",
+                "did": "user(0)",
+              },
+            ],
             "index": Object {
-              "end": 18,
-              "start": 0,
-            },
-            "value": Object {
-              "$type": "app.bsky.richtext.facet#mention",
-              "did": "user(0)",
+              "byteEnd": 18,
+              "byteStart": 0,
             },
           },
         ],
@@ -943,13 +947,15 @@ Array [
             },
             "facets": Array [
               Object {
+                "features": Array [
+                  Object {
+                    "$type": "app.bsky.richtext.facet#mention",
+                    "did": "user(0)",
+                  },
+                ],
                 "index": Object {
-                  "end": 18,
-                  "start": 0,
-                },
-                "value": Object {
-                  "$type": "app.bsky.richtext.facet#mention",
-                  "did": "user(0)",
+                  "byteEnd": 18,
+                  "byteStart": 0,
                 },
               },
             ],

@@ -43,11 +43,13 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
     posts.dan[1],
     [
       {
-        index: { start: 0, end: 18 },
-        value: {
-          $type: `${ids.AppBskyRichtextFacet}#mention`,
-          did: alice,
-        },
+        index: { byteStart: 0, byteEnd: 18 },
+        features: [
+          {
+            $type: `${ids.AppBskyRichtextFacet}#mention`,
+            did: alice,
+          },
+        ],
       },
     ],
     undefined,

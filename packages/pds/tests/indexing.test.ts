@@ -38,11 +38,13 @@ describe('indexing', () => {
         text: '@bob.test how are you?',
         facets: [
           {
-            index: { start: 0, end: 9 },
-            value: {
-              $type: `${ids.AppBskyRichtextFacet}#mention`,
-              did: sc.dids.bob,
-            },
+            index: { byteStart: 0, byteEnd: 9 },
+            features: [
+              {
+                $type: `${ids.AppBskyRichtextFacet}#mention`,
+                did: sc.dids.bob,
+              },
+            ],
           },
         ],
         createdAt,
@@ -58,11 +60,13 @@ describe('indexing', () => {
         text: '@carol.test how are you?',
         facets: [
           {
-            index: { start: 0, end: 11 },
-            value: {
-              $type: `${ids.AppBskyRichtextFacet}#mention`,
-              did: sc.dids.carol,
-            },
+            index: { byteStart: 0, byteEnd: 11 },
+            features: [
+              {
+                $type: `${ids.AppBskyRichtextFacet}#mention`,
+                did: sc.dids.carol,
+              },
+            ],
           },
         ],
         createdAt,

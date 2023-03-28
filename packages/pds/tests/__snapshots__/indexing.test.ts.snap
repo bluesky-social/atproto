@@ -22,13 +22,15 @@ Object {
         "createdAt": "1970-01-01T00:00:00.000Z",
         "facets": Array [
           Object {
+            "features": Array [
+              Object {
+                "$type": "app.bsky.richtext.facet#mention",
+                "did": "user(1)",
+              },
+            ],
             "index": Object {
-              "end": 9,
-              "start": 0,
-            },
-            "value": Object {
-              "$type": "app.bsky.richtext.facet#mention",
-              "did": "user(1)",
+              "byteEnd": 9,
+              "byteStart": 0,
             },
           },
         ],
@@ -66,13 +68,15 @@ Object {
         "createdAt": "1970-01-01T00:00:00.000Z",
         "facets": Array [
           Object {
+            "features": Array [
+              Object {
+                "$type": "app.bsky.richtext.facet#mention",
+                "did": "user(1)",
+              },
+            ],
             "index": Object {
-              "end": 11,
-              "start": 0,
-            },
-            "value": Object {
-              "$type": "app.bsky.richtext.facet#mention",
-              "did": "user(1)",
+              "byteEnd": 11,
+              "byteStart": 0,
             },
           },
         ],
