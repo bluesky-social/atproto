@@ -1,7 +1,5 @@
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
-import { check, schema } from '.'
-import { z } from 'zod'
 
 export type JsonValue =
   | boolean
@@ -20,65 +18,60 @@ export type IpldValue =
   | Array<IpldValue>
   | { [key: string]: IpldValue }
 
-const dagJsonCid = z
-  .object({
-    $link: z.string(),
-  })
-  .strict()
-
-const dagJsonBytes = z
-  .object({
-    $bytes: z.string(),
-  })
-  .strict()
-
-const dagJsonVal = z.union([dagJsonCid, dagJsonBytes])
+// @NOTE avoiding use of check.is() here only because it makes
+// these implementations slow, and they often live it hot paths.
 
 export const jsonToIpld = (val: JsonValue): IpldValue => {
-  // check for dag json values
-  if (check.is(val, dagJsonVal)) {
-    if (check.is(val, dagJsonCid)) {
-      return CID.parse(val.$link)
-    }
-    return ui8.fromString(val.$bytes, 'base64')
-  }
-  // walk rest
-  if (check.is(val, schema.array)) {
+  // walk arrays
+  if (Array.isArray(val)) {
     return val.map((item) => jsonToIpld(item))
   }
-  if (check.is(val, schema.map)) {
+  // objects
+  if (val && typeof val === 'object') {
+    // check for dag json values
+    if (typeof val['$link'] === 'string' && Object.keys(val).length === 1) {
+      return CID.parse(val['$link'])
+    }
+    if (typeof val['$bytes'] === 'string' && Object.keys(val).length === 1) {
+      return ui8.fromString(val['$bytes'], 'base64')
+    }
+    // walk plain objects
     const toReturn = {}
     for (const key of Object.keys(val)) {
       toReturn[key] = jsonToIpld(val[key])
     }
     return toReturn
   }
+  // pass through
   return val
 }
 
 export const ipldToJson = (val: IpldValue): JsonValue => {
-  // convert bytes
-  if (check.is(val, schema.bytes)) {
-    return {
-      $bytes: ui8.toString(val, 'base64'),
-    }
-  }
-  // convert cids
-  if (check.is(val, schema.cid)) {
-    return {
-      $link: val.toString(),
-    }
-  }
-  // walk rest
-  if (check.is(val, schema.array)) {
+  // walk arrays
+  if (Array.isArray(val)) {
     return val.map((item) => ipldToJson(item))
   }
-  if (check.is(val, schema.map)) {
+  // objects
+  if (val && typeof val === 'object') {
+    // convert bytes
+    if (val instanceof Uint8Array) {
+      return {
+        $bytes: ui8.toString(val, 'base64'),
+      }
+    }
+    // convert cids
+    if (CID.asCID(val)) {
+      return {
+        $link: (val as CID).toString(),
+      }
+    }
+    // walk plain objects
     const toReturn = {}
     for (const key of Object.keys(val)) {
       toReturn[key] = ipldToJson(val[key])
     }
     return toReturn
   }
+  // pass through
   return val as JsonValue
 }
