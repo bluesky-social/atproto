@@ -31,6 +31,7 @@ export class Repo extends ReadableRepo {
 
   constructor(params: Params) {
     super(params)
+    this.storage = params.storage
   }
 
   static async formatInitCommit(

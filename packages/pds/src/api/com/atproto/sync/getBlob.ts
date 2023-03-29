@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
     res.setHeader('Content-Length', found.size)
     // @TODO better codegen for */* mimetype
     return {
-      encoding: 'application/octet-stream' as any,
+      encoding: (found.mimeType || 'application/octet-stream') as '*/*',
       body: blobStream,
     }
   })

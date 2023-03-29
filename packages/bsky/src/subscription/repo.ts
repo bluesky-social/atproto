@@ -38,18 +38,16 @@ export class RepoSubscription {
             this.repoQueue
               .add(msg.repo, () => this.handleMessage(msg))
               .catch((err) => {
+                // We log messages we can't process and move on. Barring a
+                // durable queue this is the best we can do for now: otherwise
+                // the cursor would get stuck on a poison message.
                 subLogger.error(
                   {
                     err,
                     provider: this.service,
-                    message: {
-                      seq: msg.seq,
-                      repo: msg.repo,
-                      commit: msg.commit,
-                      time: msg.time,
-                    },
+                    message: loggableMessage(msg),
                   },
-                  'message errored',
+                  'repo subscription message processing error',
                 )
               })
               .finally(() => {
@@ -258,6 +256,11 @@ function ifString(val: unknown): string | undefined {
 
 function ifNumber(val: unknown): number | undefined {
   return typeof val === 'number' ? val : undefined
+}
+
+function loggableMessage(msg: Message) {
+  const { seq, event, prev, repo, commit, time } = msg
+  return { seq, event, prev, repo, commit, time }
 }
 
 type State = { cursor: number }

@@ -1,12 +1,12 @@
 import assert from 'assert'
 import { AddressInfo } from 'net'
-import ApiAgent from '@atproto/api'
-import { defaultFetchHandler } from '@atproto/xrpc'
 import * as crypto from '@atproto/crypto'
 import * as pds from '@atproto/pds'
 import { wait } from '@atproto/common'
 import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
 import { AtUri } from '@atproto/uri'
+import { AtpAgent } from '@atproto/api'
+import { DidResolver } from '@atproto/did-resolver'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import { BskyAppView, ServerConfig, Database } from '../src'
@@ -14,6 +14,7 @@ import { Main as FeedViewPost } from '../src/lexicon/types/app/bsky/feed/feedVie
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import MemoryBlobStore from '../src/storage/memory-blobstore'
 import AppContext from '../src/context'
+import { defaultFetchHandler } from '@atproto/xrpc'
 
 const ADMIN_PASSWORD = 'admin-pass'
 
@@ -134,14 +135,32 @@ export const runTestServer = async (
   const bskyServer = await bsky.start()
   const bskyPort = (bskyServer.address() as AddressInfo).port
 
+  // Map pds public url to its local url when resolving from plc
+  const origResolveDid = DidResolver.prototype.resolveDid
+  DidResolver.prototype.resolveDid = async function (did, options) {
+    const result = await (origResolveDid.call(this, did, options) as ReturnType<
+      typeof origResolveDid
+    >)
+    const service = result.didDocument?.service?.find(
+      (svc) => svc.id === '#atproto_pds',
+    )
+    if (typeof service?.serviceEndpoint === 'string') {
+      service.serviceEndpoint = service.serviceEndpoint.replace(
+        pdsServer.ctx.cfg.publicUrl,
+        `http://localhost:${pdsPort}`,
+      )
+    }
+    return result
+  }
+
   // Map pds public url and handles to pds local url
-  ApiAgent.configure({
+  AtpAgent.configure({
     fetch: (httpUri, ...args) => {
       const url = new URL(httpUri)
       const pdsUrl = pdsServer.ctx.cfg.publicUrl
       const pdsHandleDomains = pdsServer.ctx.cfg.availableUserDomains
       if (
-        url.host === pdsUrl ||
+        url.origin === pdsUrl ||
         pdsHandleDomains.some((handleDomain) => url.host.endsWith(handleDomain))
       ) {
         url.protocol = 'http:'
@@ -210,6 +229,18 @@ export const forSnapshot = (obj: unknown) => {
     }
     if (str.match(/^\d+::bafy/)) {
       return constantKeysetCursor
+    }
+    if (str.match(/\/image\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
+      // Match image urls
+      const match = str.match(
+        /\/image\/([^/]+)\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
+      )
+      if (!match) return str
+      const [, sig, did, cid] = match
+      return str
+        .replace(sig, 'sig()')
+        .replace(did, take(users, did))
+        .replace(cid, take(cids, cid))
     }
     let isCid: boolean
     try {

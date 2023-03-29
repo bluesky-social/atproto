@@ -54,7 +54,7 @@ Object {
     },
     Object {
       "actor": Object {
-        "avatar": "https://bsky.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(0)@jpeg",
         "declaration": Object {
           "actorType": "",
           "cid": "",

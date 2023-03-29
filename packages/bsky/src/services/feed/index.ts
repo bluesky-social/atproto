@@ -1,3 +1,4 @@
+import { AtUri } from '@atproto/uri'
 import { sql } from 'kysely'
 import { getDeclarationSimple } from '../../api/app/bsky/util'
 import Database from '../../db'
@@ -100,7 +101,11 @@ export class FeedService {
           handle: cur.handle,
           displayName: cur.displayName || undefined,
           avatar: cur.avatarCid
-            ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
+            ? this.imgUriBuilder.getCommonSignedUri(
+                'avatar',
+                cur.did,
+                cur.avatarCid,
+              )
             : undefined,
           viewer: {
             following: cur?.requesterFollowing || undefined,
@@ -228,13 +233,16 @@ export class FeedService {
         images: [],
       })
       if (!isPresentedImage(embed)) return acc
+      const postUri = new AtUri(cur.postUri)
       embed.images.push({
         thumb: this.imgUriBuilder.getCommonSignedUri(
           'feed_thumbnail',
+          postUri.host,
           cur.imageCid,
         ),
         fullsize: this.imgUriBuilder.getCommonSignedUri(
           'feed_fullsize',
+          postUri.host,
           cur.imageCid,
         ),
         alt: cur.alt,
@@ -243,6 +251,7 @@ export class FeedService {
     }, {} as FeedEmbeds)
     embeds = externals.reduce((acc, cur) => {
       if (!acc[cur.postUri]) {
+        const postUri = new AtUri(cur.postUri)
         acc[cur.postUri] = {
           $type: 'app.bsky.embed.external#presented',
           external: {
@@ -252,6 +261,7 @@ export class FeedService {
             thumb: cur.thumbCid
               ? this.imgUriBuilder.getCommonSignedUri(
                   'feed_thumbnail',
+                  postUri.host,
                   cur.thumbCid,
                 )
               : undefined,

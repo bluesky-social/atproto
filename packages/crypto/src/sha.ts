@@ -1,7 +1,7 @@
-import * as mf from 'multiformats/hashes/sha2'
-import * as uint8arrays from 'uint8arrays'
 import crypto from 'crypto'
 import { Readable } from 'stream'
+import * as mf from 'multiformats/hashes/sha2'
+import * as uint8arrays from 'uint8arrays'
 
 // takes either bytes of utf8 input
 export const sha256 = async (

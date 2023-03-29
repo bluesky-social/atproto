@@ -114,24 +114,23 @@ const insertFn = async (
 
   // Track the minimum we know about the post hierarchy: the post and its parent.
   // Importantly, this works even if the parent hasn't been indexed yet.
+  const minimalPostHierarchy = [
+    {
+      uri: post.uri,
+      ancestorUri: post.uri,
+      depth: 0,
+    },
+  ]
+  if (post.replyParent) {
+    minimalPostHierarchy.push({
+      uri: post.uri,
+      ancestorUri: post.replyParent,
+      depth: 1,
+    })
+  }
   const ancestors = await db
     .insertInto('post_hierarchy')
-    .values([
-      {
-        uri: post.uri,
-        ancestorUri: post.uri,
-        depth: 0,
-      },
-      ...(post.replyParent
-        ? [
-            {
-              uri: post.uri,
-              ancestorUri: post.replyParent,
-              depth: 1,
-            },
-          ]
-        : []),
-    ])
+    .values(minimalPostHierarchy)
     .onConflict((oc) => oc.doNothing())
     .returningAll()
     .execute()
@@ -213,11 +212,10 @@ const eventsForInsert = (obj: IndexedPost) => {
     }
   }
   const notified = new Set([obj.post.creator])
-  const ancestors = [...(obj.ancestors ?? [])].sort((a, b) => a.depth - b.depth)
+  const ancestors = (obj.ancestors ?? [])
+    .filter((a) => a.depth > 0) // no need to notify self
+    .sort((a, b) => a.depth - b.depth)
   for (const relation of ancestors) {
-    if (relation.depth < 1) {
-      continue // no need to notify self
-    }
     const ancestorUri = new AtUri(relation.ancestorUri)
     if (!notified.has(ancestorUri.host)) {
       notified.add(ancestorUri.host)

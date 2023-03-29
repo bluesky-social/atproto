@@ -6,6 +6,8 @@ import { Options } from './util'
 // @NOTE if there are any additions here, ensure to include them on ImageUriBuilder.commonSignedUris
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
+const PATH_REGEX = /^\/(.+)\/plain\/(.+?)\/(.+?)@(.+)$/
+
 export class ImageUriBuilder {
   public endpoint: string
   private salt: Uint8Array
@@ -23,7 +25,7 @@ export class ImageUriBuilder {
       typeof key === 'string' ? uint8arrays.fromString(key, 'hex') : key
   }
 
-  getSignedPath(opts: Options & { cid: CID }): string {
+  getSignedPath(opts: Options & BlobLocation): string {
     const path = ImageUriBuilder.getPath(opts)
     const saltedPath = uint8arrays.concat([
       this.salt,
@@ -33,7 +35,7 @@ export class ImageUriBuilder {
     return `/${sig}${path}`
   }
 
-  getSignedUri(opts: Options & { cid: CID }): string {
+  getSignedUri(opts: Options & BlobLocation): string {
     const path = this.getSignedPath(opts)
     return this.endpoint + path
   }
@@ -45,9 +47,14 @@ export class ImageUriBuilder {
     'feed_fullsize',
   ]
 
-  getCommonSignedUri(id: CommonSignedUris, cid: string | CID): string {
+  getCommonSignedUri(
+    id: CommonSignedUris,
+    did: string,
+    cid: string | CID,
+  ): string {
     if (id === 'avatar') {
       return this.getSignedUri({
+        did,
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
         fit: 'cover',
@@ -57,6 +64,7 @@ export class ImageUriBuilder {
       })
     } else if (id === 'banner') {
       return this.getSignedUri({
+        did,
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
         fit: 'cover',
@@ -66,6 +74,7 @@ export class ImageUriBuilder {
       })
     } else if (id === 'feed_fullsize') {
       return this.getSignedUri({
+        did,
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
         fit: 'inside',
@@ -75,6 +84,7 @@ export class ImageUriBuilder {
       })
     } else if (id === 'feed_thumbnail') {
       return this.getSignedUri({
+        did,
         cid: typeof cid === 'string' ? CID.parse(cid) : cid,
         format: 'jpeg',
         fit: 'inside',
@@ -90,7 +100,9 @@ export class ImageUriBuilder {
     }
   }
 
-  getVerifiedOptions(path: string): Options & { cid: CID; signature: string } {
+  getVerifiedOptions(
+    path: string,
+  ): Options & BlobLocation & { signature: string } {
     if (path.at(0) !== '/') {
       throw new BadPathError('Invalid path: does not start with a slash')
     }
@@ -115,7 +127,7 @@ export class ImageUriBuilder {
     }
   }
 
-  static getPath(opts: Options & { cid: CID }) {
+  static getPath(opts: Options & BlobLocation) {
     const fit = opts.fit === 'inside' ? 'fit' : 'fill' // fit default is 'cover'
     const enlarge = opts.min === true ? 1 : 0 // min default is false
     const resize = `rs:${fit}:${opts.width}:${opts.height}:${enlarge}:0` // final ':0' is for interop with imgproxy
@@ -127,23 +139,20 @@ export class ImageUriBuilder {
     return (
       `/` +
       [resize, minWidth, minHeight, quality].filter(Boolean).join('/') +
-      `/plain/${opts.cid.toString()}@${opts.format}`
+      `/plain/${opts.did}/${opts.cid.toString()}@${opts.format}`
     )
   }
 
-  static getOptions(path: string): Options & { cid: CID } {
-    if (path.at(0) !== '/') {
-      throw new BadPathError('Invalid path: does not start with a slash')
-    }
-    const parts = path.split('/')
-    if (parts.at(-2) !== 'plain') {
+  static getOptions(path: string): Options & BlobLocation {
+    const match = path.match(PATH_REGEX)
+    if (!match) {
       throw new BadPathError('Invalid path')
     }
-    const cidAndFormat = parts.at(-1)
-    const [cid, format, ...others] = cidAndFormat?.split('@') ?? []
-    if (!cid || (format !== 'png' && format !== 'jpeg') || others.length) {
-      throw new BadPathError('Invalid path: bad cid/format part')
+    const [, partsStr, did, cid, format] = match
+    if (format !== 'png' && format !== 'jpeg') {
+      throw new BadPathError('Invalid path: bad format')
     }
+    const parts = partsStr.split('/')
     const resizePart = parts.find((part) => part.startsWith('rs:'))
     const qualityPart = parts.find((part) => part.startsWith('q:'))
     const minWidthPart = parts.find((part) => part.startsWith('mw:'))
@@ -174,6 +183,7 @@ export class ImageUriBuilder {
       throw new BadPathError('Invalid path: bad min width/height param')
     }
     return {
+      did,
       cid: CID.parse(cid),
       format,
       height: toInt(height),
@@ -187,6 +197,8 @@ export class ImageUriBuilder {
     }
   }
 }
+
+type BlobLocation = { cid: CID; did: string }
 
 export class BadPathError extends Error {}
 

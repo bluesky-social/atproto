@@ -6,7 +6,7 @@ Object {
     "$type": "app.bsky.feed.getPostThread#threadViewPost",
     "post": Object {
       "author": Object {
-        "avatar": "https://bsky.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "declaration": Object {
           "actorType": "",
           "cid": "",
@@ -29,7 +29,7 @@ Object {
               "start": 0,
             },
             "type": "mention",
-            "value": "user(1)",
+            "value": "user(2)",
           },
         ],
         "text": "@bob.test how are you?",
@@ -51,7 +51,7 @@ Object {
     "$type": "app.bsky.feed.getPostThread#threadViewPost",
     "post": Object {
       "author": Object {
-        "avatar": "https://bsky.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "declaration": Object {
           "actorType": "",
           "cid": "",
@@ -74,7 +74,7 @@ Object {
               "start": 0,
             },
             "type": "mention",
-            "value": "user(1)",
+            "value": "user(2)",
           },
         ],
         "text": "@carol.test how are you?",
