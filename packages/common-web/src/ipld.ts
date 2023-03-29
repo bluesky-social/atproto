@@ -19,7 +19,7 @@ export type IpldValue =
   | { [key: string]: IpldValue }
 
 // @NOTE avoiding use of check.is() here only because it makes
-// these implementations slow, and they often live it hot paths.
+// these implementations slow, and they often live in hot paths.
 
 export const jsonToIpld = (val: JsonValue): IpldValue => {
   // walk arrays

@@ -17,7 +17,7 @@ export type LexValue =
 export type RepoRecord = Record<string, LexValue>
 
 // @NOTE avoiding use of check.is() here only because it makes
-// these implementations slow, and they often live it hot paths.
+// these implementations slow, and they often live in hot paths.
 
 export const lexToIpld = (val: LexValue): IpldValue => {
   // walk arrays
