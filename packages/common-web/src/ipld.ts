@@ -87,11 +87,11 @@ export const ipldEquals = (a: IpldValue, b: IpldValue): boolean => {
   }
   // objects
   if (a && b && typeof a === 'object' && typeof b === 'object') {
-    // convert bytes
+    // check bytes
     if (a instanceof Uint8Array && b instanceof Uint8Array) {
       return ui8.equals(a, b)
     }
-    // convert cids
+    // check cids
     if (CID.asCID(a) && CID.asCID(b)) {
       return CID.asCID(a)?.equals(CID.asCID(b))
     }

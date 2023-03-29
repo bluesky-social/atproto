@@ -1,4 +1,4 @@
-import { check, IpldValue, schema } from '@atproto/common-web'
+import { check, schema } from '@atproto/common-web'
 import { CID } from 'multiformats/cid'
 import * as Block from 'multiformats/block'
 import * as rawCodec from 'multiformats/codecs/raw'
