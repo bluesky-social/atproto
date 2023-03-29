@@ -2,6 +2,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as ident from '@atproto/identifier'
 import * as plc from '@did-plc/lib'
 import { Server } from '../../../../lexicon'
+import { InputSchema } from '@atproto/api/src/client/types/com/atproto/server/createAccount'
 import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
@@ -11,47 +12,38 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount(async ({ input, req }) => {
     const { email, password, inviteCode, recoveryKey } = input.body
 
-    let handle: string
-    try {
-      handle = ident.normalizeAndEnsureValidHandle(input.body.handle)
-      ident.ensureHandleServiceConstraints(handle, ctx.cfg.availableUserDomains)
-    } catch (err) {
-      if (err instanceof ident.InvalidHandleError) {
-        throw new InvalidRequestError(err.message, 'InvalidHandle')
-      } else if (err instanceof ident.ReservedHandleError) {
-        throw new InvalidRequestError(err.message, 'HandleNotAvailable')
-      } else if (err instanceof ident.UnsupportedDomainError) {
-        if (input.body.did === undefined) {
-          throw new InvalidRequestError(err.message, 'UnsupportedDomain')
-        }
-        const resolvedHandleDid = await resolveExternalHandle(
-          ctx.cfg.scheme,
-          input.body.handle,
-        )
-        if (input.body.did !== resolvedHandleDid) {
-          throw new InvalidRequestError(
-            'External handle did not resolve to DID',
-          )
-        }
-      }
-      throw err
-    }
+    // normalize & ensure valid handle
+    const handle = await ensureValidHandle(ctx, input.body)
 
     let did: string
     let plcCreateOp: plc.Operation | null = null
     if (input.body.did) {
       const didData = await ctx.didResolver.resolveAtpData(input.body.did)
+      let canChange: boolean
+      if (!didData.did.startsWith('did:plc:')) {
+        canChange = false
+      } else {
+        const data = await ctx.plcClient.getDocumentData(didData.did)
+        canChange = data.rotationKeys.includes(ctx.plcRotationKey.did())
+      }
+      const toUpdate = {} as any
       if (didData.signingKey !== ctx.repoSigningKey.did()) {
-        throw new InvalidRequestError(
-          `did document signingKey did not match service signingKey: ${ctx.repoSigningKey.did()}`,
-          'InvalidDidDoc',
-        )
+        if (!canChange) {
+          throw new InvalidRequestError(
+            `did document signingKey did not match service signingKey: ${ctx.repoSigningKey.did()}`,
+            'InvalidDidDoc',
+          )
+        }
+        toUpdate.signingKey = ctx.repoSigningKey.did()
       }
       if (didData.handle !== handle) {
-        throw new InvalidRequestError(
-          'did document handle did not match requested handle',
-          'InvalidDidDoc',
-        )
+        if (!canChange) {
+          throw new InvalidRequestError(
+            'did document handle did not match requested handle',
+            'InvalidDidDoc',
+          )
+        }
+        toUpdate.handle = handle
       }
       if (didData.pds !== ctx.cfg.publicUrl) {
         throw new InvalidRequestError(
@@ -177,4 +169,73 @@ export default function (server: Server, ctx: AppContext) {
       },
     }
   })
+}
+
+const ensureValidHandle = async (
+  ctx: AppContext,
+  input: InputSchema,
+): Promise<string> => {
+  try {
+    const handle = ident.normalizeAndEnsureValidHandle(input.handle)
+    ident.ensureHandleServiceConstraints(handle, ctx.cfg.availableUserDomains)
+    return handle
+  } catch (err) {
+    if (err instanceof ident.InvalidHandleError) {
+      throw new InvalidRequestError(err.message, 'InvalidHandle')
+    } else if (err instanceof ident.ReservedHandleError) {
+      throw new InvalidRequestError(err.message, 'HandleNotAvailable')
+    } else if (err instanceof ident.UnsupportedDomainError) {
+      if (input.did === undefined) {
+        throw new InvalidRequestError(err.message, 'UnsupportedDomain')
+      }
+      const resolvedHandleDid = await resolveExternalHandle(
+        ctx.cfg.scheme,
+        input.handle,
+      )
+      if (input.did !== resolvedHandleDid) {
+        throw new InvalidRequestError('External handle did not resolve to DID')
+      }
+    }
+    throw err
+  }
+}
+
+const validateMigratingDid = async (
+  ctx: AppContext,
+  did: string,
+  handle: string,
+) => {
+  const atpData = await ctx.didResolver.resolveAtpData(did)
+  let canChange: boolean
+  if (!atpData.did.startsWith('did:plc:')) {
+    canChange = false
+  } else {
+    const plcData = await ctx.plcClient.getDocumentData(atpData.did)
+    canChange = plcData.rotationKeys.includes(ctx.plcRotationKey.did())
+  }
+  const toUpdate = {} as any
+  if (atpData.signingKey !== ctx.repoSigningKey.did()) {
+    if (!canChange) {
+      throw new InvalidRequestError(
+        `did document signingKey did not match service signingKey: ${ctx.repoSigningKey.did()}`,
+        'InvalidDidDoc',
+      )
+    }
+    toUpdate.signingKey = ctx.repoSigningKey.did()
+  }
+  if (atpData.handle !== handle) {
+    if (!canChange) {
+      throw new InvalidRequestError(
+        'did document handle did not match requested handle',
+        'InvalidDidDoc',
+      )
+    }
+    toUpdate.handle = handle
+  }
+  if (atpData.pds !== ctx.cfg.publicUrl) {
+    throw new InvalidRequestError(
+      `did document AtprotoPersonalDataServer did not match service publicUrl: ${ctx.cfg.publicUrl}`,
+      'InvalidDidDoc',
+    )
+  }
 }

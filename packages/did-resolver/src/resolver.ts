@@ -33,7 +33,6 @@ export class DidResolver {
     did: string,
     options: DIDResolutionOptions = {},
   ): Promise<DIDResolutionResult> {
-    log.info({ did }, 'resolving did')
     const res = await this.resolver.resolve(did, options)
     log.info({ did, res }, 'resolved did')
     return res
