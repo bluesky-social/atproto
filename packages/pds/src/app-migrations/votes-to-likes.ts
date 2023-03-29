@@ -215,15 +215,27 @@ async function dummyCheck(
     voteCount === 0,
     `${SHORT_NAME} dummy check failed: ${voteCount} votes remain`,
   )
-  assert(
-    likeCount ===
-      original.voteCount -
-        original.deleteInvalidCount -
-        original.deleteDownvoteCount,
-    `${SHORT_NAME} dummy check failed: ${likeCount} likes doesn't match ${JSON.stringify(
-      original,
-    )}`,
+  console.log(
+    SHORT_NAME,
+    'dummy count',
+    likeCount,
+    'from',
+    original.voteCount -
+      original.deleteInvalidCount -
+      original.deleteDownvoteCount,
+    original,
   )
+  /** Not appropriate for live migration
+   *  assert(
+   *    likeCount ===
+   *      original.voteCount -
+   *        original.deleteInvalidCount -
+   *        original.deleteDownvoteCount,
+   *    `${SHORT_NAME} dummy check failed: ${likeCount} likes doesn't match ${JSON.stringify(
+   *      original,
+   *    )}`,
+   *  )
+   */
 
   // Check 3. like index
   const { indexMismatchedCount } = await db.db

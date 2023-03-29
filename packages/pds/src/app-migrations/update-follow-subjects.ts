@@ -181,12 +181,22 @@ async function dummyCheck(
     .where('collection', '=', ids.AppBskyGraphFollow)
     .select(countAll.as('followCount'))
     .executeTakeFirstOrThrow()
-  assert(
-    followCount === original.followCount - original.deleteCount,
-    `${SHORT_NAME} dummy check failed: ${followCount} follows doesn't match ${JSON.stringify(
-      original,
-    )}`,
+  console.log(
+    SHORT_NAME,
+    'dummy count',
+    followCount,
+    'from',
+    original.followCount - original.deleteCount,
+    original,
   )
+  /** Not appropriate for live migration
+   *  assert(
+   *    followCount === original.followCount - original.deleteCount,
+   *    `${SHORT_NAME} dummy check failed: ${followCount} follows doesn't match ${JSON.stringify(
+   *      original,
+   *    )}`,
+   *  )
+   */
 
   // Check 3. follow index
   const { indexMismatchedCount } = await db.db
