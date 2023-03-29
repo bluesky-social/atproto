@@ -1,0 +1,23 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.repo.uploadRepo",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Upload a full repo, overwriting existing",
+      "input": {
+        "encoding": "application/vnd.ipld.car"
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["head"],
+          "properties": {
+            "head": {"type": "string", "format": "cid"}
+          }
+        }
+      }
+    }
+  }
+}

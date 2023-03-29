@@ -1607,6 +1607,32 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoRepoUploadRepo: {
+    lexicon: 1,
+    id: 'com.atproto.repo.uploadRepo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Upload a full repo, overwriting existing',
+        input: {
+          encoding: 'application/vnd.ipld.car',
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['head'],
+            properties: {
+              head: {
+                type: 'string',
+                format: 'cid',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoServerCreateAccount: {
     lexicon: 1,
     id: 'com.atproto.server.createAccount',
@@ -4153,6 +4179,7 @@ export const ids = {
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoRepoUploadBlob: 'com.atproto.repo.uploadBlob',
+  ComAtprotoRepoUploadRepo: 'com.atproto.repo.uploadRepo',
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',
   ComAtprotoServerCreateInviteCode: 'com.atproto.server.createInviteCode',
   ComAtprotoServerCreateSession: 'com.atproto.server.createSession',

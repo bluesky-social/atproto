@@ -30,6 +30,7 @@ import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
+import * as ComAtprotoRepoUploadRepo from './types/com/atproto/repo/uploadRepo'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
@@ -327,6 +328,13 @@ export class RepoNS {
     cfg: ConfigOf<AV, ComAtprotoRepoUploadBlob.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.repo.uploadBlob' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  uploadRepo<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoRepoUploadRepo.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.repo.uploadRepo' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
