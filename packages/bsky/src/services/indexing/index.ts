@@ -1,13 +1,11 @@
 import { CID } from 'multiformats/cid'
 import ApiAgent, { AtpAgent } from '@atproto/api'
 import {
-  def,
   MemoryBlockstore,
-  parseDataKey,
   readCarWithRoot,
-  verifyCheckoutToRepo,
   WriteOpAction,
-  DataDiff,
+  verifyCheckoutWithCids,
+  RepoContentsWithCids,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { DidResolver } from '@atproto/did-resolver'
@@ -111,22 +109,24 @@ export class IndexingService {
     const { data: car } = await sync.getCheckout({ did, commit })
     const { root, blocks } = await readCarWithRoot(new Uint8Array(car))
     const storage = new MemoryBlockstore(blocks)
-    const repo = await verifyCheckoutToRepo(storage, root, did, signingKey)
+    const checkout = await verifyCheckoutWithCids(
+      storage,
+      root,
+      did,
+      signingKey,
+    )
 
     // First, replace the user with just their current profile if it exists
     await this.db.transaction(async (tx) => {
       const indexingTx = new IndexingService(tx, this.didResolver)
       await indexingTx.deleteForUser(did)
-      const profileCid = await repo.data.get(`${ids.AppBskyActorProfile}/self`)
-      const profile =
-        profileCid &&
-        (await repo.storage.attemptRead(profileCid, def.unknown))?.obj
+      const profile = checkout.contents[ids.AppBskyActorProfile]?.self
       if (profile) {
         const profileUri = AtUri.make(did, ids.AppBskyActorProfile, 'self')
         await indexingTx.indexRecord(
           profileUri,
-          profileCid,
-          profile,
+          profile.cid,
+          profile.value,
           WriteOpAction.Create,
           now,
         )
@@ -134,20 +134,22 @@ export class IndexingService {
     })
 
     // Then iterate over all records and index them in batches
-    const diff = await DataDiff.of(repo.data, null)
-    const chunks = chunkArray(diff.addList(), 100)
+    const contentList = [...walkContentsWithCids(checkout.contents)]
+    const chunks = chunkArray(contentList, 100)
+
     for (const chunk of chunks) {
-      const prepareChunk = chunk.map(async ({ cid, key }) => {
-        const { collection, rkey } = parseDataKey(key)
-        const uri = AtUri.make(did, collection, rkey)
-        const obj = await storage.readObj(cid, def.record)
-        return { uri, cid, obj }
-      })
-      const prepared = await Promise.all(prepareChunk)
       await this.db.transaction(async (tx) => {
         const indexingTx = new IndexingService(tx, this.didResolver)
-        const processChunk = prepared.map(async ({ uri, cid, obj }) => {
-          await indexingTx.indexRecord(uri, cid, obj, WriteOpAction.Create, now)
+        const processChunk = chunk.map(async (item) => {
+          const { cid, collection, rkey, record } = item
+          const uri = AtUri.make(did, collection, rkey)
+          await indexingTx.indexRecord(
+            uri,
+            cid,
+            record,
+            WriteOpAction.Create,
+            now,
+          )
         })
         await Promise.all(processChunk)
       })
@@ -226,5 +228,14 @@ const resolveExternalHandle = async (
     return res.data.did
   } catch (err) {
     return undefined
+  }
+}
+
+function* walkContentsWithCids(contents: RepoContentsWithCids) {
+  for (const collection of Object.keys(contents)) {
+    for (const rkey of Object.keys(contents[collection])) {
+      const { cid, value } = contents[collection][rkey]
+      yield { collection, rkey, cid, record: value }
+    }
   }
 }

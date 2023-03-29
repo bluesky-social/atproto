@@ -109,6 +109,10 @@ export type RepoRecord = Record<string, unknown>
 export type CollectionContents = Record<string, RepoRecord>
 export type RepoContents = Record<string, CollectionContents>
 
+export type RepoRecordWithCid = { cid: CID; value: RepoRecord }
+export type CollectionContentsWithCids = Record<string, RepoRecordWithCid>
+export type RepoContentsWithCids = Record<string, CollectionContentsWithCids>
+
 export type RecordPath = {
   collection: string
   rkey: string
