@@ -20,7 +20,7 @@
     "@atproto/did-resolver": "*",
     "@atproto/pds": "*",
     "@atproto/uri": "*",
-    "@did-plc/lib": "^0.0.1",
+    "@did-plc/lib": "0.0.3",
     "@did-plc/server": "^0.0.1",
     "better-sqlite3": "^7.6.2",
     "chalk": "^5.0.1",

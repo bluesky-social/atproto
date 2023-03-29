@@ -7,69 +7,17 @@ import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
 import { resolveExternalHandle } from '../identity/util'
+import { AtprotoData } from '@atproto/did-resolver'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount(async ({ input, req }) => {
-    const { email, password, inviteCode, recoveryKey } = input.body
+    const { email, password, inviteCode } = input.body
 
     // normalize & ensure valid handle
     const handle = await ensureValidHandle(ctx, input.body)
-
-    let did: string
-    let plcCreateOp: plc.Operation | null = null
-    if (input.body.did) {
-      const didData = await ctx.didResolver.resolveAtpData(input.body.did)
-      let canChange: boolean
-      if (!didData.did.startsWith('did:plc:')) {
-        canChange = false
-      } else {
-        const data = await ctx.plcClient.getDocumentData(didData.did)
-        canChange = data.rotationKeys.includes(ctx.plcRotationKey.did())
-      }
-      const toUpdate = {} as any
-      if (didData.signingKey !== ctx.repoSigningKey.did()) {
-        if (!canChange) {
-          throw new InvalidRequestError(
-            `did document signingKey did not match service signingKey: ${ctx.repoSigningKey.did()}`,
-            'InvalidDidDoc',
-          )
-        }
-        toUpdate.signingKey = ctx.repoSigningKey.did()
-      }
-      if (didData.handle !== handle) {
-        if (!canChange) {
-          throw new InvalidRequestError(
-            'did document handle did not match requested handle',
-            'InvalidDidDoc',
-          )
-        }
-        toUpdate.handle = handle
-      }
-      if (didData.pds !== ctx.cfg.publicUrl) {
-        throw new InvalidRequestError(
-          `did document AtprotoPersonalDataServer did not match service publicUrl: ${ctx.cfg.publicUrl}`,
-          'InvalidDidDoc',
-        )
-      }
-
-      // @TODO should we throw if the rotation key does not match?
-      did = didData.did
-    } else {
-      const rotationKeys = [ctx.cfg.recoveryKey, ctx.plcRotationKey.did()]
-      if (recoveryKey) {
-        rotationKeys.unshift(recoveryKey)
-      }
-      // format create op, but don't send until we ensure the username & email are available
-      const plcCreate = await plc.createOp({
-        signingKey: ctx.repoSigningKey.did(),
-        rotationKeys,
-        handle,
-        pds: ctx.cfg.publicUrl,
-        signer: ctx.plcRotationKey,
-      })
-      did = plcCreate.did
-      plcCreateOp = plcCreate.op
-    }
+    // determine the did & any plc ops we need to send
+    // if the did document is poorly setup & we aren't able to update it, we throw
+    const { did, plcOp } = await getDidAndPlcOp(ctx, handle, input.body)
 
     const now = new Date().toISOString()
 
@@ -123,9 +71,9 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // Generate a real did with PLC
-      if (plcCreateOp !== null) {
+      if (plcOp !== null) {
         try {
-          await ctx.plcClient.sendOperation(did, plcCreateOp)
+          await ctx.plcClient.sendOperation(did, plcOp)
         } catch (err) {
           req.log.error(
             { didKey: ctx.plcRotationKey.did(), handle },
@@ -200,42 +148,127 @@ const ensureValidHandle = async (
   }
 }
 
-const validateMigratingDid = async (
+const getDidAndPlcOp = async (
   ctx: AppContext,
-  did: string,
   handle: string,
-) => {
-  const atpData = await ctx.didResolver.resolveAtpData(did)
+  input: InputSchema,
+): Promise<{
+  did: string
+  plcOp: plc.Operation | null
+}> => {
+  // if the user is not bringing a DID, then we format a create op for PLC
+  // but we don't send until we ensure the username & email are available
+  if (!input.did) {
+    const rotationKeys = [ctx.cfg.recoveryKey, ctx.plcRotationKey.did()]
+    if (input.recoveryKey) {
+      rotationKeys.unshift(input.recoveryKey)
+    }
+    const plcCreate = await plc.createOp({
+      signingKey: ctx.repoSigningKey.did(),
+      rotationKeys,
+      handle,
+      pds: ctx.cfg.publicUrl,
+      signer: ctx.plcRotationKey,
+    })
+    return {
+      did: plcCreate.did,
+      plcOp: plcCreate.op,
+    }
+  }
+
+  // determine if we have the ability to make changes to the user's did document
+
+  const atpData = await ctx.didResolver.resolveAtpData(input.did)
+  const didData = {
+    ...atpData,
+    rotationKeys: null as string[] | null,
+  }
+
   let canChange: boolean
-  if (!atpData.did.startsWith('did:plc:')) {
+  if (!input.did.startsWith('did:plc:')) {
     canChange = false
   } else {
-    const plcData = await ctx.plcClient.getDocumentData(atpData.did)
-    canChange = plcData.rotationKeys.includes(ctx.plcRotationKey.did())
+    const data = await ctx.plcClient.getDocumentData(input.did)
+    didData.rotationKeys = data.rotationKeys
+    canChange = data.rotationKeys.includes(ctx.plcRotationKey.did())
   }
-  const toUpdate = {} as any
-  if (atpData.signingKey !== ctx.repoSigningKey.did()) {
-    if (!canChange) {
-      throw new InvalidRequestError(
-        `did document signingKey did not match service signingKey: ${ctx.repoSigningKey.did()}`,
-        'InvalidDidDoc',
-      )
+
+  // if not, then we very that the did document is formatted correctly
+  const updates = determineDidDocUpdates(
+    ctx,
+    didData,
+    handle,
+    input.recoveryKey,
+  )
+
+  if (!canChange && Object.keys(updates).length > 0) {
+    let err: string | undefined
+    if (updates.signingKey) {
+      err = `did document signingKey did not match service signingKey: ${ctx.repoSigningKey.did()}`
+    } else if (updates.handle) {
+      err = `did document handle did not match requested handle: ${handle}`
+    } else if (updates.pds) {
+      err = `did document AtprotoPersonalDataServer did not match service publicUrl: ${ctx.cfg.publicUrl}`
     }
-    toUpdate.signingKey = ctx.repoSigningKey.did()
-  }
-  if (atpData.handle !== handle) {
-    if (!canChange) {
-      throw new InvalidRequestError(
-        'did document handle did not match requested handle',
-        'InvalidDidDoc',
-      )
+    if (err) {
+      throw new InvalidRequestError(err, 'InvalidDidDoc')
     }
-    toUpdate.handle = handle
   }
-  if (atpData.pds !== ctx.cfg.publicUrl) {
-    throw new InvalidRequestError(
-      `did document AtprotoPersonalDataServer did not match service publicUrl: ${ctx.cfg.publicUrl}`,
-      'InvalidDidDoc',
-    )
+
+  const last = await ctx.plcClient.ensureLastOp(input.did)
+  const plcOp = await plc.createAtprotoUpdateOp(
+    last,
+    ctx.plcRotationKey,
+    updates,
+  )
+
+  return {
+    did: input.did,
+    plcOp,
   }
+}
+
+type DidDocUpdates = Partial<{
+  signingKey: string
+  handle: string
+  pds: string
+  rotationKeys: string[]
+}>
+
+const determineDidDocUpdates = (
+  ctx: AppContext,
+  didData: AtprotoData & { rotationKeys: string[] | null },
+  handle: string,
+  userRecoveryKey?: string,
+): DidDocUpdates => {
+  const updates: DidDocUpdates = {}
+  if (didData.signingKey !== ctx.repoSigningKey.did()) {
+    updates.signingKey = ctx.repoSigningKey.did()
+  }
+  if (didData.handle !== handle) {
+    updates.handle = handle
+  }
+  if (didData.pds !== ctx.cfg.publicUrl) {
+    updates.pds = ctx.cfg.publicUrl
+  }
+  if (
+    didData.rotationKeys !== null &&
+    didData.rotationKeys.includes(ctx.repoSigningKey.did())
+  ) {
+    let rotationKeys: string[] = [...didData.rotationKeys]
+    if (!rotationKeys.includes(ctx.cfg.recoveryKey)) {
+      const index = rotationKeys.indexOf(ctx.repoSigningKey.did())
+      rotationKeys = [
+        ...rotationKeys.slice(0, index),
+        ctx.cfg.recoveryKey,
+        ...rotationKeys.slice(index),
+      ]
+      updates.rotationKeys = rotationKeys
+    }
+    if (userRecoveryKey && !didData.rotationKeys.includes(userRecoveryKey)) {
+      rotationKeys = [userRecoveryKey, ...rotationKeys]
+      updates.rotationKeys = rotationKeys
+    }
+  }
+  return updates
 }
