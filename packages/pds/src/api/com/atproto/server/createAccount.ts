@@ -176,14 +176,13 @@ const getDidAndPlcOp = async (
     }
   }
 
-  // determine if we have the ability to make changes to the user's did document
-
+  // resolve the user's did doc data, including rotationKeys if did:plc
+  // determine if we have the capability to make changes to their DID
   const atpData = await ctx.didResolver.resolveAtpData(input.did)
   const didData = {
     ...atpData,
     rotationKeys: null as string[] | null,
   }
-
   let canChange: boolean
   if (!input.did.startsWith('did:plc:')) {
     canChange = false
@@ -193,7 +192,7 @@ const getDidAndPlcOp = async (
     canChange = data.rotationKeys.includes(ctx.plcRotationKey.did())
   }
 
-  // if not, then we very that the did document is formatted correctly
+  // check what, if any, updates are needed for the did document
   const updates = determineDidDocUpdates(
     ctx,
     didData,
@@ -201,6 +200,7 @@ const getDidAndPlcOp = async (
     input.recoveryKey,
   )
 
+  // if updates are needed & we can't perform them, then throw
   if (!canChange && Object.keys(updates).length > 0) {
     let err: string | undefined
     if (updates.signingKey) {
@@ -215,12 +215,13 @@ const getDidAndPlcOp = async (
     }
   }
 
-  const last = await ctx.plcClient.ensureLastOp(input.did)
-  const plcOp = await plc.createAtprotoUpdateOp(
-    last,
-    ctx.plcRotationKey,
-    updates,
-  )
+  // if updates are needed & we can perform them, then format the needed op
+
+  let plcOp: plc.Operation | null = null
+  if (Object.keys(updates).length > 0) {
+    const last = await ctx.plcClient.ensureLastOp(input.did)
+    plcOp = await plc.createAtprotoUpdateOp(last, ctx.plcRotationKey, updates)
+  }
 
   return {
     did: input.did,
