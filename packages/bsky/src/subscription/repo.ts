@@ -39,10 +39,7 @@ export class RepoSubscription {
             if ('info' in details) {
               // These messages are not sequenced, we just log them and carry on
               subLogger.warn(
-                {
-                  provider: this.service,
-                  message: loggableMessage(msg),
-                },
+                { provider: this.service, message: loggableMessage(msg) },
                 `repo subscription ${
                   details.info ? 'info' : 'unknown'
                 } message`,
@@ -232,9 +229,9 @@ export class RepoSubscription {
               err,
               seq: ifNumber(value?.['seq']),
               repo: ifString(value?.['repo']),
-              commit: ifString(value?.['commit']),
+              commit: ifString(value?.['commit']?.toString()),
               time: ifString(value?.['time']),
-              service: this.service,
+              provider: this.service,
             },
             'repo subscription skipped invalid message',
           )
@@ -271,7 +268,7 @@ async function getOps(msg: message.Commit): Promise<PreparedWrite[]> {
             : WriteOpAction.Update,
         cid: op.cid,
         record: cborToLexRecord(record),
-        blobs: [], // @TODO(bsky) need to determine how the app-view provides URLs for processed blobs
+        blobs: [],
         uri: AtUri.make(msg.repo, collection, rkey),
       }
     } else if (op.action === WriteOpAction.Delete) {
@@ -320,6 +317,7 @@ function loggableMessage(msg: Message) {
   } else if (message.isInfo(msg)) {
     return msg
   }
+  return msg
 }
 
 type State = { cursor: number }
