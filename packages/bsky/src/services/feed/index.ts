@@ -1,14 +1,14 @@
-import { AtUri } from '@atproto/uri'
 import { sql } from 'kysely'
-import { getDeclarationSimple } from '../../api/app/bsky/util'
+import { AtUri } from '@atproto/uri'
+import { jsonStringToLex } from '@atproto/lexicon'
 import Database from '../../db'
 import { countAll, notSoftDeletedClause } from '../../db/util'
 import { ImageUriBuilder } from '../../image/uri'
-import { isPresented as isPresentedImage } from '../../lexicon/types/app/bsky/embed/images'
-import { View as PostView } from '../../lexicon/types/app/bsky/feed/post'
+import { isView as isViewImages } from '../../lexicon/types/app/bsky/embed/images'
+import { isView as isViewExternal } from '../../lexicon/types/app/bsky/embed/external'
+import { View as ViewRecord } from '../../lexicon/types/app/bsky/embed/record'
+import { PostView } from '../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from '../types'
-
-export * from '../types'
 
 export class FeedService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
@@ -60,7 +60,7 @@ export class FeedService {
       ])
   }
 
-  // @NOTE keep in sync with actorService.views.actorWithInfo()
+  // @NOTE keep in sync with actorService.views.profile()
   async getActorViews(
     dids: string[],
     requester: string,
@@ -97,7 +97,6 @@ export class FeedService {
         ...acc,
         [cur.did]: {
           did: cur.did,
-          declaration: getDeclarationSimple(),
           handle: cur.handle,
           displayName: cur.displayName || undefined,
           avatar: cur.avatarCid
@@ -138,17 +137,10 @@ export class FeedService {
         'post.indexedAt as indexedAt',
         'record.json as recordJson',
         db
-          .selectFrom('vote')
+          .selectFrom('like')
           .whereRef('subject', '=', ref('post.uri'))
-          .where('direction', '=', 'up')
           .select(countAll.as('count'))
-          .as('upvoteCount'),
-        db
-          .selectFrom('vote')
-          .whereRef('subject', '=', ref('post.uri'))
-          .where('direction', '=', 'down')
-          .select(countAll.as('count'))
-          .as('downvoteCount'),
+          .as('likeCount'),
         db
           .selectFrom('repost')
           .whereRef('subject', '=', ref('post.uri'))
@@ -166,19 +158,11 @@ export class FeedService {
           .select('uri')
           .as('requesterRepost'),
         db
-          .selectFrom('vote')
+          .selectFrom('like')
           .where('creator', '=', requester)
           .whereRef('subject', '=', ref('post.uri'))
-          .where('direction', '=', 'up')
           .select('uri')
-          .as('requesterUpvote'),
-        db
-          .selectFrom('vote')
-          .where('creator', '=', requester)
-          .whereRef('subject', '=', ref('post.uri'))
-          .where('direction', '=', 'down')
-          .select('uri')
-          .as('requesterDownvote'),
+          .as('requesterLike'),
       ])
       .execute()
     return posts.reduce(
@@ -190,8 +174,16 @@ export class FeedService {
     )
   }
 
-  async embedsForPosts(uris: string[], requester: string): Promise<FeedEmbeds> {
-    if (uris.length < 1) {
+  async embedsForPosts(
+    uris: string[],
+    requester: string,
+    _depth = 0,
+  ): Promise<FeedEmbeds> {
+    if (uris.length < 1 || _depth > 1) {
+      // If a post has a record embed which contains additional embeds, the depth check
+      // above ensures that we don't recurse indefinitely into those additional embeds.
+      // In short, you receive up to two layers of embeds for the post: this allows us to
+      // handle the case that a post has a record embed, which in turn has images embedded in it.
       return {}
     }
     const imgPromise = this.db.db
@@ -217,7 +209,7 @@ export class FeedService {
       extPromise,
       recordPromise,
     ])
-    const [postViews, actorViews] = await Promise.all([
+    const [postViews, actorViews, deepEmbedViews] = await Promise.all([
       this.getPostViews(
         records.map((p) => p.uri),
         requester,
@@ -226,13 +218,18 @@ export class FeedService {
         records.map((p) => p.did),
         requester,
       ),
+      this.embedsForPosts(
+        records.map((p) => p.uri),
+        requester,
+        _depth + 1,
+      ),
     ])
     let embeds = images.reduce((acc, cur) => {
       const embed = (acc[cur.postUri] ??= {
-        $type: 'app.bsky.embed.images#presented',
+        $type: 'app.bsky.embed.images#view',
         images: [],
       })
-      if (!isPresentedImage(embed)) return acc
+      if (!isViewImages(embed)) return acc
       const postUri = new AtUri(cur.postUri)
       embed.images.push({
         thumb: this.imgUriBuilder.getCommonSignedUri(
@@ -253,7 +250,7 @@ export class FeedService {
       if (!acc[cur.postUri]) {
         const postUri = new AtUri(cur.postUri)
         acc[cur.postUri] = {
-          $type: 'app.bsky.embed.external#presented',
+          $type: 'app.bsky.embed.external#view',
           external: {
             uri: cur.uri,
             title: cur.title,
@@ -271,27 +268,48 @@ export class FeedService {
       return acc
     }, embeds)
     embeds = records.reduce((acc, cur) => {
-      if (!acc[cur.postUri]) {
-        const formatted = this.formatPostView(
-          cur.uri,
-          actorViews,
-          postViews,
-          {},
-        )
+      const formatted = this.formatPostView(
+        cur.uri,
+        actorViews,
+        postViews,
+        deepEmbedViews,
+      )
+      let deepEmbeds: ViewRecord['embeds'] | undefined
+      if (_depth < 1) {
+        // Omit field entirely when too deep: e.g. don't include it on the embeds within a record embed.
+        // Otherwise list any embeds that appear within the record. A consumer may discover an embed
+        // within the raw record, then look within this array to find the presented view of it.
+        deepEmbeds = formatted?.embed ? [formatted.embed] : []
+      }
+      const recordEmbed = {
+        record: formatted
+          ? {
+              $type: 'app.bsky.embed.record#viewRecord',
+              uri: formatted.uri,
+              cid: formatted.cid,
+              author: formatted.author,
+              value: formatted.record,
+              embeds: deepEmbeds,
+              indexedAt: formatted.indexedAt,
+            }
+          : {
+              $type: 'app.bsky.embed.record#viewNotFound',
+              uri: cur.uri,
+            },
+      }
+      if (acc[cur.postUri]) {
+        const mediaEmbed = acc[cur.postUri]
+        if (isViewImages(mediaEmbed) || isViewExternal(mediaEmbed)) {
+          acc[cur.postUri] = {
+            $type: 'app.bsky.embed.recordWithMedia#view',
+            record: recordEmbed,
+            media: mediaEmbed,
+          }
+        }
+      } else {
         acc[cur.postUri] = {
-          $type: 'app.bsky.embed.record#presented',
-          record: formatted
-            ? {
-                $type: 'app.bsky.embed.record#presentedRecord',
-                uri: formatted.uri,
-                cid: formatted.cid,
-                author: formatted.author,
-                record: formatted.record,
-              }
-            : {
-                $type: 'app.bsky.embed.record#presentedNotFound',
-                uri: cur.uri,
-              },
+          $type: 'app.bsky.embed.record#view',
+          ...recordEmbed,
         }
       }
       return acc
@@ -312,17 +330,15 @@ export class FeedService {
       uri: post.uri,
       cid: post.cid,
       author: author,
-      record: JSON.parse(post.recordJson), // @TODO(bsky) post-lex refactor, consider whether we want lex deserializer
+      record: jsonStringToLex(post.recordJson) as Record<string, unknown>,
       embed: embeds[uri],
       replyCount: post.replyCount,
       repostCount: post.repostCount,
-      upvoteCount: post.upvoteCount,
-      downvoteCount: post.downvoteCount,
+      likeCount: post.likeCount,
       indexedAt: post.indexedAt,
       viewer: {
         repost: post.requesterRepost ?? undefined,
-        upvote: post.requesterUpvote ?? undefined,
-        downvote: post.requesterDownvote ?? undefined,
+        like: post.requesterLike ?? undefined,
       },
     }
   }
