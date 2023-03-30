@@ -1,50 +1,46 @@
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as Vote from '../../../lexicon/types/app/bsky/feed/vote'
+import * as Like from '../../../lexicon/types/app/bsky/feed/like'
 import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import * as messages from '../messages'
 import { Message } from '../messages'
 import RecordProcessor from '../processor'
 
-const lexId = lex.ids.AppBskyFeedVote
-type IndexedVote = DatabaseSchemaType['vote']
+const lexId = lex.ids.AppBskyFeedLike
+type IndexedLike = DatabaseSchemaType['like']
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
-  obj: Vote.Record,
+  obj: Like.Record,
   timestamp: string,
-): Promise<IndexedVote | null> => {
-  if (obj.direction === 'up' || obj.direction === 'down') {
-    const inserted = await db
-      .insertInto('vote')
-      .values({
-        uri: uri.toString(),
-        cid: cid.toString(),
-        direction: obj.direction,
-        creator: uri.host,
-        subject: obj.subject.uri,
-        subjectCid: obj.subject.cid,
-        createdAt: obj.createdAt,
-        indexedAt: timestamp,
-      })
-      .onConflict((oc) => oc.doNothing())
-      .returningAll()
-      .executeTakeFirst()
-    return inserted || null
-  }
-  return null
+): Promise<IndexedLike | null> => {
+  const inserted = await db
+    .insertInto('like')
+    .values({
+      uri: uri.toString(),
+      cid: cid.toString(),
+      creator: uri.host,
+      subject: obj.subject.uri,
+      subjectCid: obj.subject.cid,
+      createdAt: obj.createdAt,
+      indexedAt: timestamp,
+    })
+    .onConflict((oc) => oc.doNothing())
+    .returningAll()
+    .executeTakeFirst()
+  return inserted || null
 }
 
 const findDuplicate = async (
   db: DatabaseSchema,
   uri: AtUri,
-  obj: Vote.Record,
+  obj: Like.Record,
 ): Promise<AtUri | null> => {
   const found = await db
-    .selectFrom('vote')
+    .selectFrom('like')
     .where('creator', '=', uri.host)
     .where('subject', '=', obj.subject.uri)
     .selectAll()
@@ -52,30 +48,28 @@ const findDuplicate = async (
   return found ? new AtUri(found.uri) : null
 }
 
-const createNotif = (obj: IndexedVote) => {
+const createNotif = (obj: IndexedLike) => {
   const subjectUri = new AtUri(obj.subject)
   return messages.createNotification({
     userDid: subjectUri.host,
     author: obj.creator,
     recordUri: obj.uri,
     recordCid: obj.cid,
-    reason: 'vote',
+    reason: 'like',
     reasonSubject: subjectUri.toString(),
   })
 }
 
-const eventsForInsert = (obj: IndexedVote) => {
-  // No events for downvotes
-  if (obj.direction === 'down') return []
+const eventsForInsert = (obj: IndexedLike) => {
   return [createNotif(obj)]
 }
 
 const deleteFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-): Promise<IndexedVote | null> => {
+): Promise<IndexedLike | null> => {
   const deleted = await db
-    .deleteFrom('vote')
+    .deleteFrom('like')
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
@@ -83,20 +77,16 @@ const deleteFn = async (
 }
 
 const eventsForDelete = (
-  deleted: IndexedVote,
-  replacedBy: IndexedVote | null,
+  deleted: IndexedLike,
+  replacedBy: IndexedLike | null,
 ): Message[] => {
-  const events: Message[] = []
-  if (deleted.direction !== replacedBy?.direction) {
-    events.push(messages.deleteNotifications(deleted.uri))
-    if (replacedBy) {
-      events.push(createNotif(replacedBy))
-    }
+  if (!replacedBy) {
+    return [messages.deleteNotifications(deleted.uri)]
   }
-  return events
+  return []
 }
 
-export type PluginType = RecordProcessor<Vote.Record, IndexedVote>
+export type PluginType = RecordProcessor<Like.Record, IndexedLike>
 
 export const makePlugin = (db: DatabaseSchema): PluginType => {
   return new RecordProcessor(db, {
