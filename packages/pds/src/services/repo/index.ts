@@ -47,7 +47,11 @@ export class RepoService {
     record: RecordService.creator(this.messageDispatcher),
   }
 
-  async createRepo(did: string, writes: PreparedCreate[], now: string) {
+  async createRepo(
+    did: string,
+    writes: PreparedCreate[],
+    now: string,
+  ): Promise<CID> {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
     const writeOps = writes.map(createWriteToOp)
@@ -62,6 +66,7 @@ export class RepoService {
       this.indexWrites(writes, now),
       this.afterWriteProcessing(did, commit, writes),
     ])
+    return commit.commit
   }
 
   async processWrites(
