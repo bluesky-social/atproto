@@ -5,24 +5,27 @@ import { Record as PostRecord } from '../../../lexicon/types/app/bsky/feed/post'
 import { isMain as isEmbedImage } from '../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecord } from '../../../lexicon/types/app/bsky/embed/record'
+import { isMain as isEmbedRecordWithMedia } from '../../../lexicon/types/app/bsky/embed/recordWithMedia'
+import {
+  isMention,
+  isLink,
+} from '../../../lexicon/types/app/bsky/richtext/facet'
 import * as lex from '../../../lexicon/lexicons'
-import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
-import { PostHierarchy } from '../../../db/tables/post-hierarchy'
 import * as messages from '../messages'
 import { Message } from '../messages'
+import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
+import { PostHierarchy } from '../../../db/tables/post-hierarchy'
 
 type Post = DatabaseSchemaType['post']
-type PostEntity = DatabaseSchemaType['post_entity']
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
 type PostEmbedExternal = DatabaseSchemaType['post_embed_external']
 type PostEmbedRecord = DatabaseSchemaType['post_embed_record']
 type IndexedPost = {
   post: Post
-  entities?: PostEntity[]
-  embed?: PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord
-  ancestors?: PostHierarchy[]
-  descendents?: IndexedPost[]
+  facets: { type: 'mention' | 'link'; value: string }[]
+  embeds?: (PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord)[]
+  ancestors: PostHierarchy[]
 }
 
 const lexId = lex.ids.AppBskyFeedPost
@@ -55,90 +58,72 @@ const insertFn = async (
   if (!insertedPost) {
     return null // Post already indexed
   }
-  const entities = (obj.entities || []).map((entity) => ({
-    postUri: uri.toString(),
-    startIndex: entity.index.start,
-    endIndex: entity.index.end,
-    type: entity.type,
-    value: entity.value,
-  }))
-  // Entity and embed indices
-  let insertedEntities: PostEntity[] | undefined
-  if (entities.length > 0) {
-    insertedEntities = await db
-      .insertInto('post_entity')
-      .values(entities)
-      .returningAll()
-      .execute()
-  }
-  let embed: PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord | undefined
-  if (isEmbedImage(obj.embed)) {
-    const { images } = obj.embed
-    embed = images.map((img, i) => ({
-      postUri: uri.toString(),
-      position: i,
-      imageCid: img.image.cid,
-      alt: img.alt,
-    }))
-    await db.insertInto('post_embed_image').values(embed).execute()
-  } else if (isEmbedExternal(obj.embed)) {
-    const { external } = obj.embed
-    embed = {
-      postUri: uri.toString(),
-      uri: external.uri,
-      title: external.title,
-      description: external.description,
-      thumbCid: external.thumb?.cid || null,
+  const facets = (obj.facets || [])
+    .flatMap((facet) => facet.features)
+    .flatMap((feature) => {
+      if (isMention(feature)) {
+        return {
+          type: 'mention' as const,
+          value: feature.did,
+        }
+      }
+      if (isLink(feature)) {
+        return {
+          type: 'link' as const,
+          value: feature.uri,
+        }
+      }
+      return []
+    })
+  // Embed indices
+  const embeds: (PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord)[] = []
+  const postEmbeds = separateEmbeds(obj.embed)
+  for (const postEmbed of postEmbeds) {
+    if (isEmbedImage(postEmbed)) {
+      const { images } = postEmbed
+      const imagesEmbed = images.map((img, i) => ({
+        postUri: uri.toString(),
+        position: i,
+        imageCid: img.image.ref.toString(),
+        alt: img.alt,
+      }))
+      embeds.push(imagesEmbed)
+      await db.insertInto('post_embed_image').values(imagesEmbed).execute()
+    } else if (isEmbedExternal(postEmbed)) {
+      const { external } = postEmbed
+      const externalEmbed = {
+        postUri: uri.toString(),
+        uri: external.uri,
+        title: external.title,
+        description: external.description,
+        thumbCid: external.thumb?.ref.toString() || null,
+      }
+      embeds.push(externalEmbed)
+      await db.insertInto('post_embed_external').values(externalEmbed).execute()
+    } else if (isEmbedRecord(postEmbed)) {
+      const { record } = postEmbed
+      const recordEmbed = {
+        postUri: uri.toString(),
+        embedUri: record.uri,
+        embedCid: record.cid,
+      }
+      embeds.push(recordEmbed)
+      await db.insertInto('post_embed_record').values(recordEmbed).execute()
     }
-    await db.insertInto('post_embed_external').values(embed).execute()
-  } else if (isEmbedRecord(obj.embed)) {
-    const { record } = obj.embed
-    embed = {
-      postUri: uri.toString(),
-      embedUri: record.uri,
-      embedCid: record.cid,
-    }
-    await db.insertInto('post_embed_record').values(embed).execute()
   }
-
-  // Thread indexing
-
-  // Concurrent, out-of-order updates are difficult, so we essentially
-  // take a lock on the thread for indexing, by locking the thread's root post.
+  // Thread index
   await db
-    .selectFrom('post')
-    .forUpdate()
-    .selectAll()
-    .where('uri', '=', post.replyRoot ?? post.uri)
-    .execute()
-
-  // Track the minimum we know about the post hierarchy: the post and its parent.
-  // Importantly, this works even if the parent hasn't been indexed yet.
-  const minimalPostHierarchy = [
-    {
+    .insertInto('post_hierarchy')
+    .values({
       uri: post.uri,
       ancestorUri: post.uri,
       depth: 0,
-    },
-  ]
-  if (post.replyParent) {
-    minimalPostHierarchy.push({
-      uri: post.uri,
-      ancestorUri: post.replyParent,
-      depth: 1,
     })
-  }
-  const ancestors = await db
-    .insertInto('post_hierarchy')
-    .values(minimalPostHierarchy)
-    .onConflict((oc) => oc.doNothing())
-    .returningAll()
+    .onConflict((oc) => oc.doNothing()) // Supports post updates
     .execute()
-
-  // Copy all the parent's relations down to the post.
-  // It's possible that the parent hasn't been indexed yet and this will no-op.
+  let ancestors: PostHierarchy[] = []
   if (post.replyParent) {
-    const deepAncestors = await db
+    ancestors = await db
       .insertInto('post_hierarchy')
       .columns(['uri', 'ancestorUri', 'depth'])
       .expression(
@@ -151,43 +136,11 @@ const insertFn = async (
             sql`depth + 1`.as('depth'),
           ]),
       )
-      .onConflict((oc) => oc.doNothing())
+      .onConflict((oc) => oc.doNothing()) // Supports post updates
       .returningAll()
       .execute()
-    ancestors.push(...deepAncestors)
   }
-
-  // Copy all post's relations down to its descendents. This ensures
-  // that out-of-order indexing (i.e. descendent before parent) is resolved.
-  const descendents = await db
-    .insertInto('post_hierarchy')
-    .columns(['uri', 'ancestorUri', 'depth'])
-    .expression(
-      db
-        .selectFrom('post_hierarchy as target')
-        .innerJoin(
-          'post_hierarchy as source',
-          'source.ancestorUri',
-          'target.uri',
-        )
-        .where('target.uri', '=', post.uri)
-        .select([
-          'source.uri as uri',
-          'target.ancestorUri as ancestorUri',
-          sql`source.depth + target.depth`.as('depth'),
-        ]),
-    )
-    .onConflict((oc) => oc.doNothing())
-    .returningAll()
-    .execute()
-
-  return {
-    post: insertedPost,
-    entities: insertedEntities,
-    embed,
-    ancestors,
-    descendents: await collateDescendents(db, descendents),
-  }
+  return { post: insertedPost, facets, embeds, ancestors }
 }
 
 const findDuplicate = async (): Promise<AtUri | null> => {
@@ -196,49 +149,51 @@ const findDuplicate = async (): Promise<AtUri | null> => {
 
 const eventsForInsert = (obj: IndexedPost) => {
   const notifs: Message[] = []
-  for (const entity of obj.entities || []) {
-    if (entity.type === 'mention') {
-      if (entity.value !== obj.post.creator) {
-        notifs.push(
-          messages.createNotification({
-            userDid: entity.value,
-            author: obj.post.creator,
-            recordUri: obj.post.uri,
-            recordCid: obj.post.cid,
-            reason: 'mention',
-          }),
-        )
-      }
+  const notified = new Set([obj.post.creator])
+  const maybeNotify = (notif: messages.NotificationInfo) => {
+    if (!notified.has(notif.userDid)) {
+      notified.add(notif.userDid)
+      notifs.push(messages.createNotification(notif))
     }
   }
-  const notified = new Set([obj.post.creator])
-  const ancestors = (obj.ancestors ?? [])
-    .filter((a) => a.depth > 0) // no need to notify self
-    .sort((a, b) => a.depth - b.depth)
-  for (const relation of ancestors) {
-    const ancestorUri = new AtUri(relation.ancestorUri)
-    if (!notified.has(ancestorUri.host)) {
-      notified.add(ancestorUri.host)
-      notifs.push(
-        messages.createNotification({
-          userDid: ancestorUri.host,
+  for (const facet of obj.facets) {
+    if (facet.type === 'mention') {
+      maybeNotify({
+        userDid: facet.value,
+        reason: 'mention',
+        author: obj.post.creator,
+        recordUri: obj.post.uri,
+        recordCid: obj.post.cid,
+      })
+    }
+  }
+  for (const embed of obj.embeds ?? []) {
+    if ('embedUri' in embed) {
+      const embedUri = new AtUri(embed.embedUri)
+      if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+        maybeNotify({
+          userDid: embedUri.host,
+          reason: 'quote',
+          reasonSubject: embedUri.toString(),
           author: obj.post.creator,
           recordUri: obj.post.uri,
           recordCid: obj.post.cid,
-          reason: 'reply',
-          reasonSubject: ancestorUri.toString(),
-        }),
-      )
+        })
+      }
     }
   }
-
-  if (obj.descendents) {
-    // May generate notifications for out-of-order indexing of replies
-    for (const descendent of obj.descendents) {
-      notifs.push(...eventsForInsert(descendent))
-    }
+  const ancestors = [...obj.ancestors].sort((a, b) => a.depth - b.depth)
+  for (const relation of ancestors) {
+    const ancestorUri = new AtUri(relation.ancestorUri)
+    maybeNotify({
+      userDid: ancestorUri.host,
+      reason: 'reply',
+      reasonSubject: ancestorUri.toString(),
+      author: obj.post.creator,
+      recordUri: obj.post.uri,
+      recordCid: obj.post.cid,
+    })
   }
-
   return notifs
 }
 
@@ -251,37 +206,36 @@ const deleteFn = async (
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
-  const deletedEntities = await db
-    .deleteFrom('post_entity')
-    .where('postUri', '=', uri.toString())
-    .returningAll()
-    .execute()
-  let deletedEmbed:
+  const deletedEmbeds: (
     | PostEmbedImage[]
     | PostEmbedExternal
     | PostEmbedRecord
-    | undefined
-  const deletedImgs = await db
-    .deleteFrom('post_embed_image')
-    .where('postUri', '=', uri.toString())
-    .returningAll()
-    .execute()
-  deletedEmbed = deletedImgs.length ? deletedImgs : undefined
-  if (!deletedEmbed) {
-    const deletedExternals = await db
+  )[] = []
+  const [deletedImgs, deletedExternals, deletedPosts] = await Promise.all([
+    db
+      .deleteFrom('post_embed_image')
+      .where('postUri', '=', uri.toString())
+      .returningAll()
+      .execute(),
+    db
       .deleteFrom('post_embed_external')
       .where('postUri', '=', uri.toString())
       .returningAll()
-      .executeTakeFirst()
-    deletedEmbed = deletedExternals
-  }
-  if (!deletedEmbed) {
-    const deletedPosts = await db
+      .executeTakeFirst(),
+    db
       .deleteFrom('post_embed_record')
       .where('postUri', '=', uri.toString())
       .returningAll()
-      .executeTakeFirst()
-    deletedEmbed = deletedPosts
+      .executeTakeFirst(),
+  ])
+  if (deletedImgs.length) {
+    deletedEmbeds.push(deletedImgs)
+  }
+  if (deletedExternals) {
+    deletedEmbeds.push(deletedExternals)
+  }
+  if (deletedPosts) {
+    deletedEmbeds.push(deletedPosts)
   }
   // Do not delete, maintain thread hierarchy even if post no longer exists
   const ancestors = await db
@@ -293,8 +247,8 @@ const deleteFn = async (
   return deleted
     ? {
         post: deleted,
-        entities: deletedEntities,
-        embed: deletedEmbed,
+        facets: [], // Not used
+        embeds: deletedEmbeds,
         ancestors,
       }
     : null
@@ -326,28 +280,12 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
 
 export default makePlugin
 
-async function collateDescendents(
-  db: DatabaseSchema,
-  descendents: PostHierarchy[],
-): Promise<IndexedPost[] | undefined> {
-  if (!descendents.length) return
-
-  const ancestorsByUri = descendents.reduce((acc, descendent) => {
-    acc[descendent.uri] ??= []
-    acc[descendent.uri].push(descendent)
-    return acc
-  }, {} as Record<string, PostHierarchy[]>)
-
-  const descendentPosts = await db
-    .selectFrom('post')
-    .selectAll()
-    .where('uri', 'in', Object.keys(ancestorsByUri))
-    .execute()
-
-  return descendentPosts.map((post) => {
-    return {
-      post,
-      ancestors: ancestorsByUri[post.uri],
-    }
-  })
+function separateEmbeds(embed: PostRecord['embed']) {
+  if (!embed) {
+    return []
+  }
+  if (isEmbedRecordWithMedia(embed)) {
+    return [{ $type: lex.ids.AppBskyEmbedRecord, ...embed.record }, embed.media]
+  }
+  return [embed]
 }

@@ -1,5 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
+import { jsonStringToLex } from '@atproto/lexicon'
 import DatabaseSchema from '../../db/database-schema'
 import { lexicons } from '../../lexicon/lexicons'
 import { Message } from './messages'
@@ -186,7 +187,7 @@ export class RecordProcessor<T, S> {
       if (!found) {
         return this.params.eventsForDelete(deleted, null)
       }
-      const record = JSON.parse(found.json)
+      const record = jsonStringToLex(found.json)
       if (!this.matchesSchema(record)) {
         return this.params.eventsForDelete(deleted, null)
       }

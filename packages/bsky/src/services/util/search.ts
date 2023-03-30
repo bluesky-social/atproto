@@ -9,12 +9,12 @@ export const getUserSearchQuery = (
   opts: {
     term: string
     limit: number
-    before?: string
+    cursor?: string
     includeSoftDeleted?: boolean
   },
 ) => {
   const { ref } = db.db.dynamic
-  const { term, limit, before, includeSoftDeleted } = opts
+  const { term, limit, cursor, includeSoftDeleted } = opts
 
   // Performing matching by word using "strict word similarity" operator.
   // The more characters the user gives us, the more we can ratchet down
@@ -32,7 +32,7 @@ export const getUserSearchQuery = (
     .select(['actor.did as did', distanceAccount.as('distance')])
   accountsQb = paginate(accountsQb, {
     limit,
-    before,
+    cursor,
     direction: 'asc',
     keyset: new SearchKeyset(distanceAccount, ref('handle')),
   })
@@ -49,7 +49,7 @@ export const getUserSearchQuery = (
     .select(['actor.did as did', distanceProfile.as('distance')])
   profilesQb = paginate(profilesQb, {
     limit,
-    before,
+    cursor,
     direction: 'asc',
     keyset: new SearchKeyset(distanceProfile, ref('handle')),
   })
@@ -77,7 +77,7 @@ export const getUserSearchQuery = (
     .innerJoin('actor', 'actor.did', 'results.did')
   return paginate(allQb, {
     limit,
-    before,
+    cursor,
     direction: 'asc',
     keyset: new SearchKeyset(ref('distance'), ref('handle')),
   })
@@ -88,12 +88,12 @@ export const getUserSearchQuerySqlite = (
   opts: {
     term: string
     limit: number
-    before?: string
+    cursor?: string
     includeSoftDeleted?: boolean
   },
 ) => {
   const { ref } = db.db.dynamic
-  const { term, limit, before, includeSoftDeleted } = opts
+  const { term, limit, cursor, includeSoftDeleted } = opts
 
   // Take the first three words in the search term. We're going to build a dynamic query
   // based on the number of words, so to keep things predictable just ignore words 4 and
@@ -117,7 +117,7 @@ export const getUserSearchQuerySqlite = (
   )} || ' ' || coalesce(${ref('profile.displayName')}, ''))`
 
   const keyset = new SearchKeyset(sql``, sql``)
-  const cursor = keyset.unpackCursor(before)
+  const unpackedCursor = keyset.unpackCursor(cursor)
 
   return db.db
     .selectFrom('actor')
@@ -131,8 +131,8 @@ export const getUserSearchQuerySqlite = (
       })
       return q
     })
-    .if(!!cursor, (qb) =>
-      cursor ? qb.where('handle', '>', cursor.secondary) : qb,
+    .if(!!unpackedCursor, (qb) =>
+      unpackedCursor ? qb.where('handle', '>', unpackedCursor.secondary) : qb,
     )
     .orderBy('handle')
     .limit(limit)
