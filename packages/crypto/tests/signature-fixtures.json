@@ -1,0 +1,16 @@
+[
+  {
+    "algorithm": "ES256",
+    "publicKeyDid": "did:key:zDnaebKg3xzqP4DnpjCjaUpPkCVridQJufGQqwYWi623VPxcN",
+    "publicKeyMultibase": "zQi6N7wGYuk7GhUfU17jkaitpAPzeGyCufAyz9i7jT4T2XSC1KjbAA2QridVGidGbfXdV9X9fWotHmmkVwbeXRujR",
+    "messageBase64": "oWVoZWxsb2V3b3JsZA",
+    "signatureBase64": "/SbeL+Tx6TXUZGC7uHHkI9b+1ARoLcqTzkUYJmPBqlCVAvKkxkPowfqKwnJWpZcuF4g3MT7eVgdBROHgdUplIQ"
+  },
+  {
+    "algorithm": "ES256K",
+    "publicKeyDid": "did:key:zQ3shueETAVp1HCdE7pcrUD1wEHNhfaQiDJmWeJgCxZRmDJuy",
+    "publicKeyMultibase": "zRvvEWNhRDxCYpkWWKzvrCP5Sca54yhgXjLcSgfJsWW9Jk8Wq79d5h2PTW3BQDmNQv4prqGjRkXiEDwnfpq2tTsmp",
+    "messageBase64": "oWVoZWxsb2V3b3JsZA",
+    "signatureBase64": "FbKI9u/VoY9SFHvtsuYsZULkt3QiNRrPUP3N4bX0xTxfWIUccyoNJ7egTITlaD1xBhXAvDdBnbyC6aOZ0jyjEA"
+  }
+]
