@@ -3,9 +3,16 @@ import { cidForCbor, TID } from '@atproto/common'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import AtpAgent, { AppBskyActorProfile, AppBskyFeedPost } from '@atproto/api'
-import { CloseFn, forSnapshot, runTestServer, TestServerInfo } from './_util'
+import {
+  CloseFn,
+  forSnapshot,
+  processAll,
+  runTestServer,
+  TestServerInfo,
+} from './_util'
 import { SeedClient } from './seeds/client'
 import usersSeed from './seeds/users'
+import basicSeed from './seeds/basic'
 import { ids } from '../src/lexicon/lexicons'
 
 describe('indexing', () => {
@@ -24,12 +31,9 @@ describe('indexing', () => {
     pdsAgent = new AtpAgent({ service: server.pdsUrl })
     sc = new SeedClient(pdsAgent)
     await usersSeed(sc)
-    // Ensure actors are indexed so that views can be served
-    const now = new Date().toISOString()
-    const { db, services } = server.ctx
-    for (const did of Object.values(sc.dids)) {
-      await services.indexing(db).indexActor(did, now)
-    }
+    // Data in tests is not processed from subscription
+    await processAll(server)
+    await server.bsky.sub.destroy()
   })
 
   afterAll(async () => {
@@ -190,44 +194,131 @@ describe('indexing', () => {
     ).toMatchSnapshot()
   })
 
-  async function prepareCreate(opts: {
-    did: string
-    collection: string
-    rkey?: string
-    record: unknown
-    timestamp?: string
-  }): Promise<[AtUri, CID, unknown, WriteOpAction.Create, string]> {
-    const rkey = opts.rkey ?? TID.nextStr()
-    return [
-      AtUri.make(opts.did, opts.collection, rkey),
-      await cidForCbor(opts.record),
-      opts.record,
-      WriteOpAction.Create,
-      opts.timestamp ?? new Date().toISOString(),
-    ]
-  }
+  describe('indexRepo', () => {
+    beforeAll(async () => {
+      server.bsky.sub.resume()
+      await basicSeed(sc, false)
+      await processAll(server)
+      await server.bsky.sub.destroy()
+    })
 
-  async function prepareUpdate(opts: {
-    did: string
-    collection: string
-    rkey: string
-    record: unknown
-    timestamp?: string
-  }): Promise<[AtUri, CID, unknown, WriteOpAction.Update, string]> {
-    return [
-      AtUri.make(opts.did, opts.collection, opts.rkey),
-      await cidForCbor(opts.record),
-      opts.record,
-      WriteOpAction.Update,
-      opts.timestamp ?? new Date().toISOString(),
-    ]
-  }
+    it('preserves indexes when no record changes.', async () => {
+      const { db, services } = server.ctx
+      // Mark originals
+      const { data: origProfile } = await agent.api.app.bsky.actor.getProfile(
+        { actor: sc.dids.alice },
+        { headers: sc.getHeaders(sc.dids.alice, true) },
+      )
+      const { data: origFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
+        { author: sc.dids.alice },
+        { headers: sc.getHeaders(sc.dids.alice, true) },
+      )
+      const { data: origFollows } = await agent.api.app.bsky.graph.getFollows(
+        { user: sc.dids.alice },
+        { headers: sc.getHeaders(sc.dids.alice, true) },
+      )
+      // Index
+      const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
+        did: sc.dids.alice,
+      })
+      await services.indexing(db).indexRepo(sc.dids.alice, head.root)
+      // Check
+      const { data: profile } = await agent.api.app.bsky.actor.getProfile(
+        { actor: sc.dids.alice },
+        { headers: sc.getHeaders(sc.dids.alice, true) },
+      )
+      const { data: feed } = await agent.api.app.bsky.feed.getAuthorFeed(
+        { author: sc.dids.alice },
+        { headers: sc.getHeaders(sc.dids.alice, true) },
+      )
+      const { data: follows } = await agent.api.app.bsky.graph.getFollows(
+        { user: sc.dids.alice },
+        { headers: sc.getHeaders(sc.dids.alice, true) },
+      )
+      expect(forSnapshot([origProfile, origFeed, origFollows])).toEqual(
+        forSnapshot([profile, feed, follows]),
+      )
+    })
 
-  function prepareDelete(opts: {
-    did: string
-    collection: string
-    rkey: string
-  }): [AtUri] {
-    return [AtUri.make(opts.did, opts.collection, opts.rkey)]
-  }
+    it('updates indexes when records change.', async () => {
+      const { db, services } = server.ctx
+      // Update profile
+      await pdsAgent.api.app.bsky.actor.updateProfile(
+        { description: 'freshening things up' },
+        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
+      )
+      // Add post
+      const newPost = await sc.post(sc.dids.alice, 'fresh post!')
+      // Remove a follow
+      const removedFollow = sc.follows[sc.dids.alice][sc.dids.carol]
+      await pdsAgent.api.app.bsky.graph.follow.delete(
+        { did: sc.dids.alice, rkey: removedFollow.uri.rkey },
+        sc.getHeaders(sc.dids.alice),
+      )
+      // Index
+      const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
+        did: sc.dids.alice,
+      })
+      await services.indexing(db).indexRepo(sc.dids.alice, head.root)
+      // Check
+      const { data: profile } = await agent.api.app.bsky.actor.getProfile(
+        { actor: sc.dids.alice },
+        { headers: sc.getHeaders(sc.dids.alice, true) },
+      )
+      const { data: feed } = await agent.api.app.bsky.feed.getAuthorFeed(
+        { author: sc.dids.alice },
+        { headers: sc.getHeaders(sc.dids.alice, true) },
+      )
+      const { data: follows } = await agent.api.app.bsky.graph.getFollows(
+        { user: sc.dids.alice },
+        { headers: sc.getHeaders(sc.dids.alice, true) },
+      )
+      expect(profile.description).toEqual('freshening things up')
+      expect(feed.feed[0].post.uri).toEqual(newPost.ref.uriStr)
+      expect(feed.feed[0].post.cid).toEqual(newPost.ref.cidStr)
+      expect(follows.follows.map(({ did }) => did)).not.toContain(sc.dids.carol)
+      expect(forSnapshot([profile, feed, follows])).toMatchSnapshot()
+    })
+  })
 })
+
+async function prepareCreate(opts: {
+  did: string
+  collection: string
+  rkey?: string
+  record: unknown
+  timestamp?: string
+}): Promise<[AtUri, CID, unknown, WriteOpAction.Create, string]> {
+  const rkey = opts.rkey ?? TID.nextStr()
+  return [
+    AtUri.make(opts.did, opts.collection, rkey),
+    await cidForCbor(opts.record),
+    opts.record,
+    WriteOpAction.Create,
+    opts.timestamp ?? new Date().toISOString(),
+  ]
+}
+
+async function prepareUpdate(opts: {
+  did: string
+  collection: string
+  rkey: string
+  record: unknown
+  timestamp?: string
+}): Promise<[AtUri, CID, unknown, WriteOpAction.Update, string]> {
+  return [
+    AtUri.make(opts.did, opts.collection, opts.rkey),
+    await cidForCbor(opts.record),
+    opts.record,
+    WriteOpAction.Update,
+    opts.timestamp ?? new Date().toISOString(),
+  ]
+}
+
+function prepareDelete(opts: {
+  did: string
+  collection: string
+  rkey: string
+}): [AtUri] {
+  return [AtUri.make(opts.did, opts.collection, opts.rkey)]
+}

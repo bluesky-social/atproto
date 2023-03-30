@@ -2,8 +2,8 @@ import { MessageQueue } from '@atproto/pds/src/event-stream/types'
 import { SeedClient } from './client'
 import usersSeed from './users'
 
-export default async (sc: SeedClient, mq?: MessageQueue) => {
-  await usersSeed(sc)
+export default async (sc: SeedClient, users = true, mq?: MessageQueue) => {
+  if (users) await usersSeed(sc)
 
   const alice = sc.dids.alice
   const bob = sc.dids.bob
