@@ -32,7 +32,7 @@
       "properties": {
         "uri": {"type": "string", "format": "at-uri"},
         "cid": {"type": "string", "format": "cid" },
-        "author": {"type": "ref", "ref": "app.bsky.actor.defs#withInfo"},
+        "author": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
         "reason": {
           "type": "string",
           "description": "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', and 'quote'.",

@@ -13,7 +13,7 @@
       },
       "output": {
         "encoding": "application/json",
-        "schema": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"}
+        "schema": {"type": "ref", "ref": "app.bsky.actor.defs#profileViewDetailed"}
       }
     }
   }

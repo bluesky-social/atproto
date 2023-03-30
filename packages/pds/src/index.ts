@@ -35,6 +35,7 @@ import {
   ImageProcessingServerInvalidator,
 } from './image/invalidator'
 
+export * as appMigrations from './app-migrations'
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './db'

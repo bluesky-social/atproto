@@ -74,6 +74,9 @@ export class AsyncBuffer<T> {
   private resolve: () => void
 
   constructor(public maxSize?: number) {
+    // Initializing to satisfy types/build, immediately reset by resetPromise()
+    this.promise = Promise.resolve()
+    this.resolve = () => null
     this.resetPromise()
   }
 

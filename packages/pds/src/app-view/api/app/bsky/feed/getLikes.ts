@@ -43,7 +43,7 @@ export default function (server: Server, ctx: AppContext) {
       const likesRes = await builder.execute()
       const actors = await services.appView
         .actor(db)
-        .views.actorWithInfo(likesRes, requester)
+        .views.profile(likesRes, requester)
 
       return {
         encoding: 'application/json',

@@ -115,10 +115,10 @@ describe('sanitizeRichText w/facets: cleanNewlines', () => {
     const input = new RichText({
       text: 'test\n\n\n\n\ntest\n\n\n\n\n\n\ntest\n\n\n\n\n\n\ntest\n\n\n\n\n\n\ntest',
       facets: [
-        { index: { start: 0, end: 13 }, value: { $type: '' } },
-        { index: { start: 13, end: 24 }, value: { $type: '' } },
-        { index: { start: 9, end: 15 }, value: { $type: '' } },
-        { index: { start: 4, end: 9 }, value: { $type: '' } },
+        { index: { byteStart: 0, byteEnd: 13 }, features: [{ $type: '' }] },
+        { index: { byteStart: 13, byteEnd: 24 }, features: [{ $type: '' }] },
+        { index: { byteStart: 9, byteEnd: 15 }, features: [{ $type: '' }] },
+        { index: { byteStart: 4, byteEnd: 9 }, features: [{ $type: '' }] },
       ],
     })
     const output = sanitizeRichText(input, { cleanNewlines: true })
@@ -126,13 +126,13 @@ describe('sanitizeRichText w/facets: cleanNewlines', () => {
       'test\n\n\n\n\ntest',
     )
     expect(facetToStr(String(input.unicodeText), input.facets?.[1])).toEqual(
-      '\n\n\n\n\n\n\ntest',
+      '\n\n\n\n\n',
     )
     expect(facetToStr(String(input.unicodeText), input.facets?.[2])).toEqual(
       'test\n\n',
     )
     expect(facetToStr(String(input.unicodeText), input.facets?.[3])).toEqual(
-      '\n\n\n\n\n',
+      '\n\n\n\n\n\n\ntest',
     )
     expect(String(output.unicodeText)).toEqual(
       'test\n\ntest\n\ntest\n\ntest\n\ntest',
@@ -157,9 +157,12 @@ describe('sanitizeRichText w/facets: cleanNewlines', () => {
     const makeFacet = (match: string) => {
       const i = str.utf16.indexOf(match, lastI)
       lastI = i + match.length
-      const start = str.utf16IndexToUtf8Index(i)
-      const end = start + new UnicodeString(match).length
-      return { index: { start, end }, value: { $type: '' } }
+      const byteStart = str.utf16IndexToUtf8Index(i)
+      const byteEnd = byteStart + new UnicodeString(match).length
+      return {
+        index: { byteStart, byteEnd },
+        features: [{ $type: '' }],
+      }
     }
 
     const input = new RichText({
@@ -204,5 +207,5 @@ function facetToStr(str: string, ent?: Facet) {
   if (!ent) {
     return ''
   }
-  return new UnicodeString(str).slice(ent.index.start, ent.index.end)
+  return new UnicodeString(str).slice(ent.index.byteStart, ent.index.byteEnd)
 }

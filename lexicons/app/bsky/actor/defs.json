@@ -3,7 +3,7 @@
   "id": "app.bsky.actor.defs",
   "description": "A reference to an actor in the network.",
   "defs": {
-    "withInfo": {
+    "profileViewBasic": {
       "type": "object",
       "required": ["did", "handle"],
       "properties": {
@@ -18,6 +18,25 @@
       }
     },
     "profileView": {
+      "type": "object",
+      "required": ["did", "handle"],
+      "properties": {
+        "did": {"type": "string", "format":"did"},
+        "handle": {"type": "string", "format":"handle"},
+        "displayName": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "avatar": { "type": "string" },
+        "indexedAt": {"type": "string", "format": "datetime"},
+        "viewer": {"type": "ref", "ref": "#viewerState"}
+      }
+    },
+    "profileViewDetailed": {
       "type": "object",
       "required": ["did", "handle"],
       "properties": {
@@ -36,25 +55,6 @@
         "followersCount": {"type": "integer"},
         "followsCount": {"type": "integer"},
         "postsCount": {"type": "integer"},
-        "indexedAt": {"type": "string", "format": "datetime"},
-        "viewer": {"type": "ref", "ref": "#viewerState"}
-      }
-    },
-    "profileViewBasic": {
-      "type": "object",
-      "required": ["did", "handle"],
-      "properties": {
-        "did": {"type": "string", "format":"did"},
-        "handle": {"type": "string", "format":"handle"},
-        "displayName": {
-          "type": "string",
-          "maxLength": 64
-        },
-        "description": {
-          "type": "string",
-          "maxLength": 256
-        },
-        "avatar": { "type": "string" },
         "indexedAt": {"type": "string", "format": "datetime"},
         "viewer": {"type": "ref", "ref": "#viewerState"}
       }

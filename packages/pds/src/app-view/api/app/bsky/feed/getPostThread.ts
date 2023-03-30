@@ -68,7 +68,7 @@ const composeThread = (
   if (threadData.parent) {
     if (threadData.parent instanceof ParentNotFoundError) {
       parent = {
-        $type: 'app.bsky.feed.getPostThread#notFoundPost',
+        $type: 'app.bsky.feed.defs#notFoundPost',
         uri: threadData.parent.uri,
         notFound: true,
       }
@@ -91,7 +91,7 @@ const composeThread = (
   }
 
   return {
-    $type: 'app.bsky.feed.getPostThread#threadViewPost',
+    $type: 'app.bsky.feed.defs#threadViewPost',
     post,
     parent,
     replies,

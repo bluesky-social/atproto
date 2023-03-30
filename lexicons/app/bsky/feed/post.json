@@ -25,7 +25,8 @@
             "refs": [
               "app.bsky.embed.images",
               "app.bsky.embed.external",
-              "app.bsky.embed.record"
+              "app.bsky.embed.record",
+              "app.bsky.embed.recordWithMedia"
             ]
           },
           "createdAt": {"type": "string", "format": "datetime"}
@@ -42,13 +43,13 @@
     },
     "entity": {
       "type": "object",
-      "description": "Deprecated. Use app.bsky.richtext instead.",
+      "description": "Deprecated: use facets instead.",
       "required": ["index", "type", "value"],
       "properties": {
         "index": {"type": "ref", "ref": "#textSlice"},
         "type": {
           "type": "string",
-          "description": "Expected values are 'mention', 'hashtag', and 'link'."
+          "description": "Expected values are 'mention' and 'link'."
         },
         "value": {"type": "string"}
       }

@@ -16,7 +16,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  profiles: AppBskyActorDefs.ProfileView[]
+  profiles: AppBskyActorDefs.ProfileViewDetailed[]
   [k: string]: unknown
 }
 

@@ -4,15 +4,18 @@
   "defs": {
     "main": {
       "type": "object",
-      "required": ["index", "value"],
+      "required": ["index", "features"],
       "properties": {
-        "index": {"type": "ref", "ref": "#textSlice"},
-        "value": {"type": "union", "refs": ["#mention", "#link"]}
+        "index": {"type": "ref", "ref": "#byteSlice"},
+        "features": {
+          "type": "array",
+          "items": {"type": "union", "refs": ["#mention", "#link"]}
+        }
       }
     },
     "mention": {
       "type": "object",
-      "description": "A facet value for actor mentions.",
+      "description": "A facet feature for actor mentions.",
       "required": ["did"],
       "properties": {
         "did": {"type": "string", "format": "did"}
@@ -20,19 +23,19 @@
     },
     "link": {
       "type": "object",
-      "description": "A facet value for links.",
+      "description": "A facet feature for links.",
       "required": ["uri"],
       "properties": {
         "uri": {"type": "string", "format": "uri"}
       }
     },
-    "textSlice": {
+    "byteSlice": {
       "type": "object",
       "description": "A text segment. Start is inclusive, end is exclusive. Indices are for utf8-encoded strings.",
-      "required": ["start", "end"],
+      "required": ["byteStart", "byteEnd"],
       "properties": {
-        "start": {"type": "integer", "minimum": 0},
-        "end": {"type": "integer", "minimum": 0}
+        "byteStart": {"type": "integer", "minimum": 0},
+        "byteEnd": {"type": "integer", "minimum": 0}
       }
     }
   }

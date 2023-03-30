@@ -9,6 +9,7 @@ import * as AppBskyRichtextFacet from '../richtext/facet'
 import * as AppBskyEmbedImages from '../embed/images'
 import * as AppBskyEmbedExternal from '../embed/external'
 import * as AppBskyEmbedRecord from '../embed/record'
+import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
 export interface Record {
@@ -21,6 +22,7 @@ export interface Record {
     | AppBskyEmbedImages.Main
     | AppBskyEmbedExternal.Main
     | AppBskyEmbedRecord.Main
+    | AppBskyEmbedRecordWithMedia.Main
     | { $type: string; [k: string]: unknown }
   createdAt: string
   [k: string]: unknown
@@ -54,10 +56,10 @@ export function validateReplyRef(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.post#replyRef', v)
 }
 
-/** Deprecated. Use app.bsky.richtext instead. */
+/** Deprecated: use facets instead. */
 export interface Entity {
   index: TextSlice
-  /** Expected values are 'mention', 'hashtag', and 'link'. */
+  /** Expected values are 'mention' and 'link'. */
   type: string
   value: string
   [k: string]: unknown

@@ -205,15 +205,16 @@ describe('pds author feed views', () => {
 
     expect(preBlock.feed.length).toBeGreaterThan(0)
 
-    const postUri = new AtUri(preBlock.feed[0].post.uri)
+    const post = preBlock.feed[0].post
 
     const { data: action } =
       await agent.api.com.atproto.admin.takeModerationAction(
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.repo.recordRef',
-            uri: postUri.toString(),
+            $type: 'com.atproto.repo.strongRef',
+            uri: post.uri,
+            cid: post.cid,
           },
           createdBy: 'did:example:admin',
           reason: 'Y',
@@ -230,9 +231,7 @@ describe('pds author feed views', () => {
     )
 
     expect(postBlock.feed.length).toEqual(preBlock.feed.length - 1)
-    expect(postBlock.feed.map((item) => item.post.uri)).not.toContain(
-      postUri.toString(),
-    )
+    expect(postBlock.feed.map((item) => item.post.uri)).not.toContain(post.uri)
 
     // Cleanup
     await agent.api.com.atproto.admin.reverseModerationAction(

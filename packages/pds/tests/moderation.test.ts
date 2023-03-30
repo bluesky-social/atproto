@@ -96,8 +96,9 @@ describe('moderation', () => {
           {
             reasonType: REASONSPAM,
             subject: {
-              $type: 'com.atproto.repo.recordRef',
-              uri: postA.uri.toString(),
+              $type: 'com.atproto.repo.strongRef',
+              uri: postA.uriStr,
+              cid: postA.cidStr,
             },
           },
           {
@@ -111,8 +112,8 @@ describe('moderation', () => {
             reasonType: REASONOTHER,
             reason: 'defamation',
             subject: {
-              $type: 'com.atproto.repo.recordRef',
-              uri: postB.uri.toString(),
+              $type: 'com.atproto.repo.strongRef',
+              uri: postB.uriStr,
               cid: postB.cidStr,
             },
           },
@@ -134,8 +135,9 @@ describe('moderation', () => {
         {
           reasonType: REASONSPAM,
           subject: {
-            $type: 'com.atproto.repo.recordRef',
+            $type: 'com.atproto.repo.strongRef',
             uri: postUriBad.toString(),
+            cid: postA.cidStr,
           },
         },
         { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
@@ -147,7 +149,7 @@ describe('moderation', () => {
           reasonType: REASONOTHER,
           reason: 'defamation',
           subject: {
-            $type: 'com.atproto.repo.recordRef',
+            $type: 'com.atproto.repo.strongRef',
             uri: postB.uri.toString(),
             cid: postA.cidStr, // bad cid
           },
@@ -181,8 +183,9 @@ describe('moderation', () => {
             reasonType: REASONOTHER,
             reason: 'defamation',
             subject: {
-              $type: 'com.atproto.repo.recordRef',
+              $type: 'com.atproto.repo.strongRef',
               uri: post.uri.toString(),
+              cid: post.cid.toString(),
             },
           },
           {
@@ -298,15 +301,16 @@ describe('moderation', () => {
     })
 
     it('does not resolve report for mismatching record.', async () => {
-      const postUri1 = sc.posts[sc.dids.alice][0].ref.uri
-      const postUri2 = sc.posts[sc.dids.bob][0].ref.uri
+      const postRef1 = sc.posts[sc.dids.alice][0].ref
+      const postRef2 = sc.posts[sc.dids.bob][0].ref
       const { data: report } =
         await agent.api.com.atproto.moderation.createReport(
           {
             reasonType: REASONSPAM,
             subject: {
-              $type: 'com.atproto.repo.recordRef',
-              uri: postUri1.toString(),
+              $type: 'com.atproto.repo.strongRef',
+              uri: postRef1.uriStr,
+              cid: postRef1.cidStr,
             },
           },
           {
@@ -319,8 +323,9 @@ describe('moderation', () => {
           {
             action: TAKEDOWN,
             subject: {
-              $type: 'com.atproto.repo.recordRef',
-              uri: postUri2.toString(),
+              $type: 'com.atproto.repo.strongRef',
+              uri: postRef2.uriStr,
+              cid: postRef2.cidStr,
             },
             createdBy: 'did:example:admin',
             reason: 'Y',
@@ -369,8 +374,9 @@ describe('moderation', () => {
           {
             action: FLAG,
             subject: {
-              $type: 'com.atproto.repo.recordRef',
+              $type: 'com.atproto.repo.strongRef',
               uri: postRef1.uri.toString(),
+              cid: postRef1.cid.toString(),
             },
             createdBy: 'did:example:admin',
             reason: 'Y',
@@ -395,8 +401,9 @@ describe('moderation', () => {
           {
             action: ACKNOWLEDGE,
             subject: {
-              $type: 'com.atproto.repo.recordRef',
+              $type: 'com.atproto.repo.strongRef',
               uri: postRef2.uri.toString(),
+              cid: postRef2.cid.toString(),
             },
             createdBy: 'did:example:admin',
             reason: 'Y',
@@ -442,14 +449,15 @@ describe('moderation', () => {
     })
 
     it('only allows record to have one current action.', async () => {
-      const postUri = sc.posts[sc.dids.alice][0].ref.uri
+      const postRef = sc.posts[sc.dids.alice][0].ref
       const { data: acknowledge } =
         await agent.api.com.atproto.admin.takeModerationAction(
           {
             action: ACKNOWLEDGE,
             subject: {
-              $type: 'com.atproto.repo.recordRef',
-              uri: postUri.toString(),
+              $type: 'com.atproto.repo.strongRef',
+              uri: postRef.uriStr,
+              cid: postRef.cidStr,
             },
             createdBy: 'did:example:admin',
             reason: 'Y',
@@ -463,8 +471,9 @@ describe('moderation', () => {
         {
           action: FLAG,
           subject: {
-            $type: 'com.atproto.repo.recordRef',
-            uri: postUri.toString(),
+            $type: 'com.atproto.repo.strongRef',
+            uri: postRef.uriStr,
+            cid: postRef.cidStr,
           },
           createdBy: 'did:example:admin',
           reason: 'Y',
@@ -495,8 +504,9 @@ describe('moderation', () => {
           {
             action: FLAG,
             subject: {
-              $type: 'com.atproto.repo.recordRef',
-              uri: postUri.toString(),
+              $type: 'com.atproto.repo.strongRef',
+              uri: postRef.uriStr,
+              cid: postRef.cidStr,
             },
             createdBy: 'did:example:admin',
             reason: 'Y',
@@ -609,8 +619,9 @@ describe('moderation', () => {
           {
             action: ACKNOWLEDGE,
             subject: {
-              $type: 'com.atproto.repo.recordRef',
+              $type: 'com.atproto.repo.strongRef',
               uri: postA.ref.uriStr,
+              cid: postA.ref.cidStr,
             },
             subjectBlobCids: [img.image.ref.toString()],
             createdBy: 'did:example:admin',
@@ -625,8 +636,9 @@ describe('moderation', () => {
         {
           action: FLAG,
           subject: {
-            $type: 'com.atproto.repo.recordRef',
+            $type: 'com.atproto.repo.strongRef',
             uri: postB.ref.uriStr,
+            cid: postB.ref.cidStr,
           },
           subjectBlobCids: [img.image.ref.toString()],
           createdBy: 'did:example:admin',
@@ -657,8 +669,9 @@ describe('moderation', () => {
           {
             action: FLAG,
             subject: {
-              $type: 'com.atproto.repo.recordRef',
+              $type: 'com.atproto.repo.strongRef',
               uri: postB.ref.uriStr,
+              cid: postB.ref.cidStr,
             },
             subjectBlobCids: [img.image.ref.toString()],
             createdBy: 'did:example:admin',
@@ -704,8 +717,9 @@ describe('moderation', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.repo.recordRef',
+            $type: 'com.atproto.repo.strongRef',
             uri: post.ref.uriStr,
+            cid: post.ref.cidStr,
           },
           subjectBlobCids: [blob.image.ref.toString()],
           createdBy: 'did:example:admin',

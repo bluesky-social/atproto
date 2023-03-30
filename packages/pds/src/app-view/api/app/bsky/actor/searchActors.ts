@@ -45,7 +45,7 @@ export default function (server: Server, ctx: AppContext) {
           cursor: keyset.packFromResult(results),
           actors: await services.appView
             .actor(db)
-            .views.profileBasic(results, requester),
+            .views.profile(results, requester),
         },
       }
     },

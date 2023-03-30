@@ -9,16 +9,18 @@ import * as AppBskyActorDefs from '../actor/defs'
 import * as AppBskyEmbedImages from '../embed/images'
 import * as AppBskyEmbedExternal from '../embed/external'
 import * as AppBskyEmbedRecord from '../embed/record'
+import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia'
 
 export interface PostView {
   uri: string
   cid: string
-  author: AppBskyActorDefs.WithInfo
+  author: AppBskyActorDefs.ProfileViewBasic
   record: {}
   embed?:
     | AppBskyEmbedImages.View
     | AppBskyEmbedExternal.View
     | AppBskyEmbedRecord.View
+    | AppBskyEmbedRecordWithMedia.View
     | { $type: string; [k: string]: unknown }
   replyCount?: number
   repostCount?: number
@@ -92,7 +94,7 @@ export function validateReplyRef(v: unknown): ValidationResult {
 }
 
 export interface ReasonRepost {
-  by: AppBskyActorDefs.WithInfo
+  by: AppBskyActorDefs.ProfileViewBasic
   indexedAt: string
   [k: string]: unknown
 }
