@@ -17,7 +17,7 @@ export const reportResolutionTableName = 'moderation_report_resolution'
 export interface ModerationAction {
   id: Generated<number>
   action: typeof TAKEDOWN | typeof FLAG | typeof ACKNOWLEDGE
-  subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.recordRef'
+  subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
@@ -37,7 +37,7 @@ export interface ModerationActionSubjectBlob {
 
 export interface ModerationReport {
   id: Generated<number>
-  subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.recordRef'
+  subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null

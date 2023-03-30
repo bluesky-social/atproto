@@ -1106,8 +1106,9 @@ describe('crud operations', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.repo.recordRef',
-            uri: postUri.toString(),
+            $type: 'com.atproto.repo.strongRef',
+            uri: created.uri,
+            cid: created.cid,
           },
           createdBy: 'did:example:admin',
           reason: 'Y',

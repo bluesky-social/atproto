@@ -28,9 +28,9 @@
     },
     "view": {
       "type": "object",
-      "required": ["value"],
+      "required": ["images"],
       "properties": {
-        "value": {
+        "images": {
           "type": "array",
           "items": {"type": "ref", "ref": "#viewImage"},
           "maxLength": 4

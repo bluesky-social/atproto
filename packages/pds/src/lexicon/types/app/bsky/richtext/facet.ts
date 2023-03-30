@@ -7,8 +7,8 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 
 export interface Main {
-  index: TextSlice
-  value: Mention | Link | { $type: string; [k: string]: unknown }
+  index: ByteSlice
+  features: (Mention | Link | { $type: string; [k: string]: unknown })[]
   [k: string]: unknown
 }
 
@@ -25,7 +25,7 @@ export function validateMain(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.richtext.facet#main', v)
 }
 
-/** A facet value for actor mentions. */
+/** A facet feature for actor mentions. */
 export interface Mention {
   did: string
   [k: string]: unknown
@@ -43,7 +43,7 @@ export function validateMention(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.richtext.facet#mention', v)
 }
 
-/** A facet value for links. */
+/** A facet feature for links. */
 export interface Link {
   uri: string
   [k: string]: unknown
@@ -62,20 +62,20 @@ export function validateLink(v: unknown): ValidationResult {
 }
 
 /** A text segment. Start is inclusive, end is exclusive. Indices are for utf8-encoded strings. */
-export interface TextSlice {
-  start: number
-  end: number
+export interface ByteSlice {
+  byteStart: number
+  byteEnd: number
   [k: string]: unknown
 }
 
-export function isTextSlice(v: unknown): v is TextSlice {
+export function isByteSlice(v: unknown): v is ByteSlice {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.richtext.facet#textSlice'
+    v.$type === 'app.bsky.richtext.facet#byteSlice'
   )
 }
 
-export function validateTextSlice(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.richtext.facet#textSlice', v)
+export function validateByteSlice(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.richtext.facet#byteSlice', v)
 }

@@ -141,14 +141,21 @@ const postRecord = {
 let markdown = ''
 for (const segment of rt.segments()) {
   if (segment.isLink()) {
-    markdown += `[${segment.text}](${segment.facet?.value.uri})`
+    markdown += `[${segment.text}](${segment.link?.uri})`
   } else if (segment.isMention()) {
-    markdown += `[${segment.text}](https://my-bsky-app.com/user/${segment.facet?.value.did})`
+    markdown += `[${segment.text}](https://my-bsky-app.com/user/${segment.mention?.did})`
   } else {
     markdown += segment.text
   }
 }
 
+// calculating string lengths
+const rt2 = new RichText({text: 'Hello'})
+console.log(rt2.length) // => 5
+console.log(rt2.graphemeLength) // => 5
+const rt3 = new RichText({text: '👨‍👩‍👧‍👧'})
+console.log(rt3.length) // => 25
+console.log(rt3.graphemeLength) // => 1
 ```
 
 ## Advanced
@@ -192,7 +199,7 @@ const agent = new AtpAgent({service: 'https://example.com'})
 
 ### Non-browser configuration
 
-In non-browser environments you'll need to specify a fetch polyfill.
+In non-browser environments you'll need to specify a fetch polyfill. [See the example react-native polyfill here.](./docs/rn-fetch-handler.ts)
 
 ```typescript
 import { BskyAgent } from '@atproto/api'

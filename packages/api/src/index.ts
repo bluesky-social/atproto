@@ -1,4 +1,11 @@
 export { AtUri } from '@atproto/uri'
+export {
+  BlobRef,
+  lexToJson,
+  stringifyLex,
+  jsonToLex,
+  jsonStringToLex,
+} from '@atproto/lexicon'
 export * from './types'
 export * from './client'
 export * from './agent'

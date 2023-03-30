@@ -41,7 +41,7 @@ export function validateImage(v: unknown): ValidationResult {
 }
 
 export interface View {
-  value: ViewImage[]
+  images: ViewImage[]
   [k: string]: unknown
 }
 

@@ -14,6 +14,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@atproto/common-web": "*",
     "@atproto/uri": "*",
     "@atproto/xrpc": "*",
     "tlds": "^1.234.0",

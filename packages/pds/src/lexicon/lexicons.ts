@@ -2556,7 +2556,7 @@ export const schemaDict = {
     id: 'app.bsky.actor.defs',
     description: 'A reference to an actor in the network.',
     defs: {
-      withInfo: {
+      profileViewBasic: {
         type: 'object',
         required: ['did', 'handle'],
         properties: {
@@ -2604,18 +2604,6 @@ export const schemaDict = {
           avatar: {
             type: 'string',
           },
-          banner: {
-            type: 'string',
-          },
-          followersCount: {
-            type: 'integer',
-          },
-          followsCount: {
-            type: 'integer',
-          },
-          postsCount: {
-            type: 'integer',
-          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
@@ -2626,7 +2614,7 @@ export const schemaDict = {
           },
         },
       },
-      profileViewBasic: {
+      profileViewDetailed: {
         type: 'object',
         required: ['did', 'handle'],
         properties: {
@@ -2648,6 +2636,18 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
+          },
+          banner: {
+            type: 'string',
+          },
+          followersCount: {
+            type: 'integer',
+          },
+          followsCount: {
+            type: 'integer',
+          },
+          postsCount: {
+            type: 'integer',
           },
           indexedAt: {
             type: 'string',
@@ -2697,7 +2697,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#profileView',
+            ref: 'lex:app.bsky.actor.defs#profileViewDetailed',
           },
         },
       },
@@ -2733,7 +2733,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileView',
+                  ref: 'lex:app.bsky.actor.defs#profileViewDetailed',
                 },
               },
             },
@@ -2777,7 +2777,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
             },
@@ -2856,7 +2856,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileViewBasic',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
             },
@@ -2896,7 +2896,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#withInfo',
+                  ref: 'lex:app.bsky.actor.defs#profileViewBasic',
                 },
               },
             },
@@ -2909,7 +2909,7 @@ export const schemaDict = {
     lexicon: 1,
     id: 'app.bsky.embed.external',
     description:
-      'An representation of some externally linked content, embedded in another form of content',
+      'A representation of some externally linked content, embedded in another form of content',
     defs: {
       main: {
         type: 'object',
@@ -2946,7 +2946,7 @@ export const schemaDict = {
         type: 'object',
         required: ['external'],
         properties: {
-          value: {
+          external: {
             type: 'ref',
             ref: 'lex:app.bsky.embed.external#viewExternal',
           },
@@ -3008,9 +3008,9 @@ export const schemaDict = {
       },
       view: {
         type: 'object',
-        required: ['value'],
+        required: ['images'],
         properties: {
-          value: {
+          images: {
             type: 'array',
             items: {
               type: 'ref',
@@ -3041,7 +3041,7 @@ export const schemaDict = {
     lexicon: 1,
     id: 'app.bsky.embed.record',
     description:
-      'An representation of a record embedded in another form of content',
+      'A representation of a record embedded in another form of content',
     defs: {
       main: {
         type: 'object',
@@ -3057,7 +3057,7 @@ export const schemaDict = {
         type: 'object',
         required: ['record'],
         properties: {
-          value: {
+          record: {
             type: 'union',
             refs: [
               'lex:app.bsky.embed.record#viewRecord',
@@ -3068,7 +3068,7 @@ export const schemaDict = {
       },
       viewRecord: {
         type: 'object',
-        required: ['uri', 'cid', 'author', 'record', 'indexedAt'],
+        required: ['uri', 'cid', 'author', 'value', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
@@ -3080,9 +3080,9 @@ export const schemaDict = {
           },
           author: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#withInfo',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
           },
-          record: {
+          value: {
             type: 'unknown',
           },
           embeds: {
@@ -3093,6 +3093,7 @@ export const schemaDict = {
                 'lex:app.bsky.embed.images#view',
                 'lex:app.bsky.embed.external#view',
                 'lex:app.bsky.embed.record#view',
+                'lex:app.bsky.embed.recordWithMedia#view',
               ],
             },
           },
@@ -3109,6 +3110,45 @@ export const schemaDict = {
           uri: {
             type: 'string',
             format: 'at-uri',
+          },
+        },
+      },
+    },
+  },
+  AppBskyEmbedRecordWithMedia: {
+    lexicon: 1,
+    id: 'app.bsky.embed.recordWithMedia',
+    description:
+      'A representation of a record embedded in another form of content, alongside other compatible embeds',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['record', 'media'],
+        properties: {
+          record: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.record',
+          },
+          media: {
+            type: 'union',
+            refs: ['lex:app.bsky.embed.images', 'lex:app.bsky.embed.external'],
+          },
+        },
+      },
+      view: {
+        type: 'object',
+        required: ['record', 'media'],
+        properties: {
+          record: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.record#view',
+          },
+          media: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.embed.images#view',
+              'lex:app.bsky.embed.external#view',
+            ],
           },
         },
       },
@@ -3132,7 +3172,7 @@ export const schemaDict = {
           },
           author: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#withInfo',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
           },
           record: {
             type: 'unknown',
@@ -3143,6 +3183,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.images#view',
               'lex:app.bsky.embed.external#view',
               'lex:app.bsky.embed.record#view',
+              'lex:app.bsky.embed.recordWithMedia#view',
             ],
           },
           replyCount: {
@@ -3215,7 +3256,7 @@ export const schemaDict = {
         properties: {
           by: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#withInfo',
+            ref: 'lex:app.bsky.actor.defs#profileViewBasic',
           },
           indexedAt: {
             type: 'string',
@@ -3385,7 +3426,7 @@ export const schemaDict = {
           },
           actor: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#withInfo',
+            ref: 'lex:app.bsky.actor.defs#profileView',
           },
         },
       },
@@ -3484,7 +3525,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#withInfo',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
             },
@@ -3604,6 +3645,7 @@ export const schemaDict = {
                 'lex:app.bsky.embed.images',
                 'lex:app.bsky.embed.external',
                 'lex:app.bsky.embed.record',
+                'lex:app.bsky.embed.recordWithMedia',
               ],
             },
             createdAt: {
@@ -3629,7 +3671,7 @@ export const schemaDict = {
       },
       entity: {
         type: 'object',
-        description: 'Deprecated. Use app.bsky.richtext instead.',
+        description: 'Deprecated: use facets instead.',
         required: ['index', 'type', 'value'],
         properties: {
           index: {
@@ -3638,8 +3680,7 @@ export const schemaDict = {
           },
           type: {
             type: 'string',
-            description:
-              "Expected values are 'mention', 'hashtag', and 'link'.",
+            description: "Expected values are 'mention' and 'link'.",
           },
           value: {
             type: 'string',
@@ -3747,7 +3788,7 @@ export const schemaDict = {
             properties: {
               subject: {
                 type: 'ref',
-                ref: 'lex:app.bsky.actor.defs#withInfo',
+                ref: 'lex:app.bsky.actor.defs#profileView',
               },
               cursor: {
                 type: 'string',
@@ -3756,7 +3797,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#withInfo',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
             },
@@ -3799,7 +3840,7 @@ export const schemaDict = {
             properties: {
               subject: {
                 type: 'ref',
-                ref: 'lex:app.bsky.actor.defs#withInfo',
+                ref: 'lex:app.bsky.actor.defs#profileView',
               },
               cursor: {
                 type: 'string',
@@ -3808,7 +3849,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#withInfo',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
             },
@@ -3851,7 +3892,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#withInfo',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
             },
@@ -3989,7 +4030,7 @@ export const schemaDict = {
           },
           author: {
             type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#withInfo',
+            ref: 'lex:app.bsky.actor.defs#profileView',
           },
           reason: {
             type: 'string',
@@ -4051,24 +4092,27 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'object',
-        required: ['index', 'value'],
+        required: ['index', 'features'],
         properties: {
           index: {
             type: 'ref',
-            ref: 'lex:app.bsky.richtext.facet#textSlice',
+            ref: 'lex:app.bsky.richtext.facet#byteSlice',
           },
-          value: {
-            type: 'union',
-            refs: [
-              'lex:app.bsky.richtext.facet#mention',
-              'lex:app.bsky.richtext.facet#link',
-            ],
+          features: {
+            type: 'array',
+            items: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.richtext.facet#mention',
+                'lex:app.bsky.richtext.facet#link',
+              ],
+            },
           },
         },
       },
       mention: {
         type: 'object',
-        description: 'A facet value for actor mentions.',
+        description: 'A facet feature for actor mentions.',
         required: ['did'],
         properties: {
           did: {
@@ -4079,7 +4123,7 @@ export const schemaDict = {
       },
       link: {
         type: 'object',
-        description: 'A facet value for links.',
+        description: 'A facet feature for links.',
         required: ['uri'],
         properties: {
           uri: {
@@ -4088,17 +4132,17 @@ export const schemaDict = {
           },
         },
       },
-      textSlice: {
+      byteSlice: {
         type: 'object',
         description:
           'A text segment. Start is inclusive, end is exclusive. Indices are for utf8-encoded strings.',
-        required: ['start', 'end'],
+        required: ['byteStart', 'byteEnd'],
         properties: {
-          start: {
+          byteStart: {
             type: 'integer',
             minimum: 0,
           },
-          end: {
+          byteEnd: {
             type: 'integer',
             minimum: 0,
           },
@@ -4214,6 +4258,7 @@ export const ids = {
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',
   AppBskyEmbedRecord: 'app.bsky.embed.record',
+  AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
   AppBskyFeedDefs: 'app.bsky.feed.defs',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',

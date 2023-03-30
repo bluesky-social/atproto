@@ -35,16 +35,18 @@ describe('pds admin get record view', () => {
     const acknowledge = await sc.takeModerationAction({
       action: ACKNOWLEDGE,
       subject: {
-        $type: 'com.atproto.repo.recordRef',
+        $type: 'com.atproto.repo.strongRef',
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+        cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       },
     })
     await sc.createReport({
       reportedBy: sc.dids.bob,
       reasonType: REASONSPAM,
       subject: {
-        $type: 'com.atproto.repo.recordRef',
+        $type: 'com.atproto.repo.strongRef',
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+        cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       },
     })
     await sc.createReport({
@@ -52,16 +54,18 @@ describe('pds admin get record view', () => {
       reasonType: REASONOTHER,
       reason: 'defamation',
       subject: {
-        $type: 'com.atproto.repo.recordRef',
+        $type: 'com.atproto.repo.strongRef',
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+        cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       },
     })
     await sc.reverseModerationAction({ id: acknowledge.id })
     await sc.takeModerationAction({
       action: TAKEDOWN,
       subject: {
-        $type: 'com.atproto.repo.recordRef',
+        $type: 'com.atproto.repo.strongRef',
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,
+        cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       },
     })
   })

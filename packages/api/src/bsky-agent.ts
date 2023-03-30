@@ -66,7 +66,7 @@ export class BskyAgent extends AtpAgent {
     }
     record.createdAt = record.createdAt || new Date().toISOString()
     return this.api.app.bsky.feed.post.create(
-      { did: this.session.did },
+      { repo: this.session.did },
       record as AppBskyFeedPost.Record,
     )
   }
@@ -77,7 +77,7 @@ export class BskyAgent extends AtpAgent {
     }
     const postUrip = new AtUri(postUri)
     return await this.api.app.bsky.feed.post.delete({
-      did: postUrip.hostname,
+      repo: postUrip.hostname,
       rkey: postUrip.rkey,
     })
   }
@@ -87,7 +87,7 @@ export class BskyAgent extends AtpAgent {
       throw new Error('Not logged in')
     }
     return await this.api.app.bsky.feed.like.create(
-      { did: this.session.did },
+      { repo: this.session.did },
       {
         subject: { uri, cid },
         createdAt: new Date().toISOString(),
@@ -101,7 +101,7 @@ export class BskyAgent extends AtpAgent {
     }
     const likeUrip = new AtUri(likeUri)
     return await this.api.app.bsky.feed.like.delete({
-      did: likeUrip.hostname,
+      repo: likeUrip.hostname,
       rkey: likeUrip.rkey,
     })
   }
@@ -111,7 +111,7 @@ export class BskyAgent extends AtpAgent {
       throw new Error('Not logged in')
     }
     return await this.api.app.bsky.feed.repost.create(
-      { did: this.session.did },
+      { repo: this.session.did },
       {
         subject: { uri, cid },
         createdAt: new Date().toISOString(),
@@ -125,7 +125,7 @@ export class BskyAgent extends AtpAgent {
     }
     const repostUrip = new AtUri(repostUri)
     return await this.api.app.bsky.feed.repost.delete({
-      did: repostUrip.hostname,
+      repo: repostUrip.hostname,
       rkey: repostUrip.rkey,
     })
   }
@@ -135,7 +135,7 @@ export class BskyAgent extends AtpAgent {
       throw new Error('Not logged in')
     }
     return await this.api.app.bsky.graph.follow.create(
-      { did: this.session.did },
+      { repo: this.session.did },
       {
         subject: subjectDid,
         createdAt: new Date().toISOString(),
@@ -149,7 +149,7 @@ export class BskyAgent extends AtpAgent {
     }
     const followUrip = new AtUri(followUri)
     return await this.api.app.bsky.graph.follow.delete({
-      did: followUrip.hostname,
+      repo: followUrip.hostname,
       rkey: followUrip.rkey,
     })
   }
