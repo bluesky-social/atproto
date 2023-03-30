@@ -8,6 +8,7 @@ import { VerifyCidTransform } from '@atproto/common'
 import { NoResolveDidError } from '@atproto/did-resolver'
 import AppContext from '../context'
 import { httpLogger as log } from '../logger'
+import { retryHttp } from '../util/retry'
 
 // Resolve and verify blob from its origin host
 
@@ -30,14 +31,11 @@ export const createRouter = (ctx: AppContext): express.Router => {
       }
 
       const { pds } = await ctx.didResolver.resolveAtpData(did) // @TODO cache did info
-      const getBlob = await axios.get(`${pds}/xrpc/com.atproto.sync.getBlob`, {
-        params: { did, cid: cidStr },
-        decompress: true,
-        responseType: 'stream',
-        timeout: 2000, // 2sec of inactivity on the connection
-      })
+      const blobResult = await retryHttp(() =>
+        getBlob({ pds, did, cid: cidStr }),
+      )
 
-      const imageStream: Readable = getBlob.data
+      const imageStream: Readable = blobResult.data
       const verifyCid = new VerifyCidTransform(cid)
 
       // Send chunked response, destroying stream early (before
@@ -45,7 +43,7 @@ export const createRouter = (ctx: AppContext): express.Router => {
       res.statusCode = 200
       res.setHeader(
         'content-type',
-        getBlob.headers['content-type'] || 'application/octet-stream',
+        blobResult.headers['content-type'] || 'application/octet-stream',
       )
       pipeline(imageStream, verifyCid, res, (err) => {
         if (err) {
@@ -81,4 +79,14 @@ export const createRouter = (ctx: AppContext): express.Router => {
   })
 
   return router
+}
+
+async function getBlob(opts: { pds: string; did: string; cid: string }) {
+  const { pds, did, cid } = opts
+  return axios.get(`${pds}/xrpc/com.atproto.sync.getBlob`, {
+    params: { did, cid },
+    decompress: true,
+    responseType: 'stream',
+    timeout: 2000, // 2sec of inactivity on the connection
+  })
 }

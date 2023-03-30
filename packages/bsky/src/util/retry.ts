@@ -1,5 +1,6 @@
 import { AxiosError } from 'axios'
 import { wait } from '@atproto/common'
+import { XRPCError, ResponseType } from '@atproto/xrpc'
 
 export async function retry<T>(
   fn: () => Promise<T>,
@@ -29,6 +30,10 @@ export async function retryHttp<T>(
 }
 
 export function retryableHttp(err: unknown) {
+  if (err instanceof XRPCError) {
+    if (err.status === ResponseType.Unknown) return true
+    return retryableHttpStatusCodes.has(err.status)
+  }
   if (err instanceof AxiosError) {
     if (!err.response) return true
     return retryableHttpStatusCodes.has(err.response.status)

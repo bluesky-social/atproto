@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import ApiAgent, { AtpAgent } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import {
   MemoryBlockstore,
   readCarWithRoot,
@@ -20,6 +20,7 @@ import * as Profile from './plugins/profile'
 import RecordProcessor from './processor'
 import { subLogger } from '../../logger'
 import { ids } from '../../lexicon/lexicons'
+import { retryHttp } from '../../util/retry'
 
 export class IndexingService {
   records: {
@@ -104,9 +105,11 @@ export class IndexingService {
   async indexRepo(did: string, commit: string) {
     const now = new Date().toISOString()
     const { pds, signingKey } = await this.didResolver.resolveAtpData(did)
-    const { sync } = new AtpAgent({ service: pds }).api.com.atproto
+    const { api } = new AtpAgent({ service: pds })
 
-    const { data: car } = await sync.getCheckout({ did, commit })
+    const { data: car } = await retryHttp(() =>
+      api.com.atproto.sync.getCheckout({ did, commit }),
+    )
     const { root, blocks } = await readCarWithRoot(new Uint8Array(car))
     const storage = new MemoryBlockstore(blocks)
     const checkout = await verifyCheckoutWithCids(
@@ -223,8 +226,11 @@ const resolveExternalHandle = async (
     }
   }
   try {
-    const agent = new ApiAgent({ service: `https://${handle}` }) // @TODO we don't need non-tls for our tests, but it might be useful to support
-    const res = await agent.api.com.atproto.handle.resolve({ handle })
+    // @TODO we don't need non-tls for our tests, but it might be useful to support
+    const { api } = new AtpAgent({ service: `https://${handle}` })
+    const res = await retryHttp(() =>
+      api.com.atproto.handle.resolve({ handle }),
+    )
     return res.data.did
   } catch (err) {
     return undefined
