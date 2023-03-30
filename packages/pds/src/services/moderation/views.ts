@@ -6,23 +6,17 @@ import { MessageQueue } from '../../event-stream/types'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
 import {
-  View as RepoView,
-  ViewDetail as RepoViewDetail,
-} from '../../lexicon/types/com/atproto/admin/repo'
-import {
-  View as RecordView,
-  ViewDetail as RecordViewDetail,
-} from '../../lexicon/types/com/atproto/admin/record'
-import {
-  View as ActionView,
-  ViewDetail as ActionViewDetail,
-} from '../../lexicon/types/com/atproto/admin/moderationAction'
-import {
-  View as ReportView,
-  ViewDetail as ReportViewDetail,
-} from '../../lexicon/types/com/atproto/admin/moderationReport'
-import { View as BlobView } from '../../lexicon/types/com/atproto/admin/blob'
-import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/report/create'
+  RepoView,
+  RepoViewDetail,
+  RecordView,
+  RecordViewDetail,
+  ActionView,
+  ActionViewDetail,
+  ReportView,
+  ReportViewDetail,
+  BlobView,
+} from '../../lexicon/types/com/atproto/admin/defs'
+import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { AccountService } from '../account'
 import { RecordService } from '../record'
@@ -53,11 +47,6 @@ export class ModerationViews {
             .onRef('profile_block.cid', '=', 'profile.cid')
             .onRef('profile_block.creator', '=', 'did_handle.did'),
         )
-        .leftJoin('ipld_block as declaration_block', (join) =>
-          join
-            .onRef('declaration_block.cid', '=', 'did_handle.declarationCid')
-            .onRef('declaration_block.creator', '=', 'did_handle.did'),
-        )
         .where(
           'did_handle.did',
           'in',
@@ -67,13 +56,12 @@ export class ModerationViews {
           'did_handle.did as did',
           'user_account.email as email',
           'profile_block.content as profileBytes',
-          'declaration_block.content as declarationBytes',
         ])
         .execute(),
       this.db.db
         .selectFrom('moderation_action')
         .where('reversedAt', 'is', null)
-        .where('subjectType', '=', 'com.atproto.repo.repoRef')
+        .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
         .where(
           'subjectDid',
           'in',
@@ -93,12 +81,9 @@ export class ModerationViews {
     )
 
     const views = results.map((r) => {
-      const { email, declarationBytes, profileBytes } = infoByDid[r.did] ?? {}
+      const { email, profileBytes } = infoByDid[r.did] ?? {}
       const action = actionByDid[r.did]
       const relatedRecords: object[] = []
-      if (declarationBytes) {
-        relatedRecords.push(cborBytesToRecord(declarationBytes))
-      }
       if (profileBytes) {
         relatedRecords.push(cborBytesToRecord(profileBytes))
       }
@@ -124,14 +109,14 @@ export class ModerationViews {
     const [reportResults, actionResults] = await Promise.all([
       this.db.db
         .selectFrom('moderation_report')
-        .where('subjectType', '=', 'com.atproto.repo.repoRef')
+        .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
         .where('subjectDid', '=', repo.did)
         .orderBy('id', 'desc')
         .selectAll()
         .execute(),
       this.db.db
         .selectFrom('moderation_action')
-        .where('subjectType', '=', 'com.atproto.repo.repoRef')
+        .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
         .where('subjectDid', '=', repo.did)
         .orderBy('id', 'desc')
         .selectAll()
@@ -183,7 +168,7 @@ export class ModerationViews {
       this.db.db
         .selectFrom('moderation_action')
         .where('reversedAt', 'is', null)
-        .where('subjectType', '=', 'com.atproto.repo.recordRef')
+        .where('subjectType', '=', 'com.atproto.repo.strongRef')
         .where(
           'subjectUri',
           'in',
@@ -235,14 +220,14 @@ export class ModerationViews {
       this.record(result),
       this.db.db
         .selectFrom('moderation_report')
-        .where('subjectType', '=', 'com.atproto.repo.recordRef')
+        .where('subjectType', '=', 'com.atproto.repo.strongRef')
         .where('subjectUri', '=', result.uri)
         .orderBy('id', 'desc')
         .selectAll()
         .execute(),
       this.db.db
         .selectFrom('moderation_action')
-        .where('subjectType', '=', 'com.atproto.repo.recordRef')
+        .where('subjectType', '=', 'com.atproto.repo.strongRef')
         .where('subjectUri', '=', result.uri)
         .orderBy('id', 'desc')
         .selectAll()
@@ -309,9 +294,9 @@ export class ModerationViews {
       id: res.id,
       action: res.action,
       subject:
-        res.subjectType === 'com.atproto.repo.repoRef'
+        res.subjectType === 'com.atproto.admin.defs#repoRef'
           ? {
-              $type: 'com.atproto.repo.repoRef',
+              $type: 'com.atproto.admin.defs#repoRef',
               did: res.subjectDid,
             }
           : {
@@ -397,11 +382,11 @@ export class ModerationViews {
       createdAt: res.createdAt,
       reasonType: res.reasonType,
       reason: res.reason ?? undefined,
-      reportedByDid: res.reportedByDid,
+      reportedBy: res.reportedByDid,
       subject:
-        res.subjectType === 'com.atproto.repo.repoRef'
+        res.subjectType === 'com.atproto.admin.defs#repoRef'
           ? {
-              $type: 'com.atproto.repo.repoRef',
+              $type: 'com.atproto.admin.defs#repoRef',
               did: res.subjectDid,
             }
           : {
@@ -421,11 +406,11 @@ export class ModerationViews {
       createdAt: report.createdAt,
       reasonType: report.reasonType,
       reason: report.reason ?? undefined,
-      reportedByDid: report.reportedByDid,
+      reportedBy: report.reportedByDid,
       subject:
-        report.subjectType === 'com.atproto.repo.repoRef'
+        report.subjectType === 'com.atproto.admin.defs#repoRef'
           ? {
-              $type: 'com.atproto.repo.repoRef',
+              $type: 'com.atproto.admin.defs#repoRef',
               did: report.subjectDid,
             }
           : {
@@ -455,7 +440,7 @@ export class ModerationViews {
       createdAt: report.createdAt,
       reasonType: report.reasonType,
       reason: report.reason ?? undefined,
-      reportedByDid: report.reportedByDid,
+      reportedBy: report.reportedBy,
       subject,
       resolvedByActions,
     }
@@ -465,19 +450,19 @@ export class ModerationViews {
 
   async subject(result: SubjectResult): Promise<SubjectView> {
     let subject: SubjectView
-    if (result.subjectType === 'com.atproto.repo.repoRef') {
+    if (result.subjectType === 'com.atproto.admin.defs#repoRef') {
       const repoResult = await this.services
         .account(this.db)
-        .getUser(result.subjectDid, true)
+        .getAccount(result.subjectDid, true)
       if (!repoResult) {
         throw new Error(
           `Subject is missing: (${result.id}) ${result.subjectDid}`,
         )
       }
       subject = await this.repo(repoResult)
-      subject.$type = 'com.atproto.admin.repo#view'
+      subject.$type = 'com.atproto.admin.defs#repoView'
     } else if (
-      result.subjectType === 'com.atproto.repo.recordRef' &&
+      result.subjectType === 'com.atproto.repo.strongRef' &&
       result.subjectUri !== null
     ) {
       const recordResult = await this.services
@@ -489,7 +474,7 @@ export class ModerationViews {
         )
       }
       subject = await this.record(recordResult)
-      subject.$type = 'com.atproto.admin.record#view'
+      subject.$type = 'com.atproto.admin.defs#recordView'
     } else {
       throw new Error(`Bad subject data: (${result.id}) ${result.subjectType}`)
     }

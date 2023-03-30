@@ -9,10 +9,15 @@
         "type": "object",
         "required": ["text", "createdAt"],
         "properties": {
-          "text": {"type": "string", "maxLength": 256},
+          "text": {"type": "string", "maxLength": 3000, "maxGraphemes": 300},
           "entities": {
             "type": "array",
+            "description": "Deprecated: replaced by app.bsky.richtext.facet.",
             "items": {"type": "ref", "ref": "#entity"}
+          },
+          "facets": {
+            "type": "array",
+            "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
           },
           "reply": {"type": "ref", "ref": "#replyRef"},
           "embed": {
@@ -20,10 +25,11 @@
             "refs": [
               "app.bsky.embed.images",
               "app.bsky.embed.external",
-              "app.bsky.embed.record"
+              "app.bsky.embed.record",
+              "app.bsky.embed.recordWithMedia"
             ]
           },
-          "createdAt": {"type": "datetime"}
+          "createdAt": {"type": "string", "format": "datetime"}
         }
       }
     },
@@ -37,55 +43,24 @@
     },
     "entity": {
       "type": "object",
+      "description": "Deprecated: use facets instead.",
       "required": ["index", "type", "value"],
       "properties": {
         "index": {"type": "ref", "ref": "#textSlice"},
         "type": {
           "type": "string",
-          "description": "Expected values are 'mention', 'hashtag', and 'link'."
+          "description": "Expected values are 'mention' and 'link'."
         },
         "value": {"type": "string"}
       }
     },
     "textSlice": {
       "type": "object",
-      "description": "A text segment. Start is inclusive, end is exclusive.",
+      "description": "Deprecated. Use app.bsky.richtext instead -- A text segment. Start is inclusive, end is exclusive. Indices are for utf16-encoded strings.",
       "required": ["start", "end"],
       "properties": {
         "start": {"type": "integer", "minimum": 0},
         "end": {"type": "integer", "minimum": 0}
-      }
-    },
-    "view": {
-      "type": "object",
-      "required": ["uri", "cid", "author", "record", "replyCount", "repostCount", "upvoteCount", "downvoteCount", "indexedAt", "viewer"],
-      "properties": {
-        "uri": {"type": "string"},
-        "cid": {"type": "string"},
-        "author": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
-        "record": {"type": "unknown"},
-        "embed": {
-          "type": "union",
-          "refs": [
-            "app.bsky.embed.images#presented",
-            "app.bsky.embed.external#presented",
-            "app.bsky.embed.record#presented"
-          ]
-        },
-        "replyCount": {"type": "integer"},
-        "repostCount": {"type": "integer"},
-        "upvoteCount": {"type": "integer"},
-        "downvoteCount": {"type": "integer"},
-        "indexedAt": {"type": "datetime"},
-        "viewer": {"type": "ref", "ref": "#viewerState"}
-      }
-    },
-    "viewerState": {
-      "type": "object",
-      "properties": {
-        "repost": {"type": "string"},
-        "upvote": {"type": "string"},
-        "downvote": {"type": "string"}
       }
     }
   }

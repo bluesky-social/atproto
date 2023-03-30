@@ -1,0 +1,85 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`pds like views fetches post likes 1`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "likes": Array [
+    Object {
+      "actor": Object {
+        "did": "user(0)",
+        "handle": "eve.test",
+        "viewer": Object {
+          "muted": false,
+        },
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "actor": Object {
+        "did": "user(1)",
+        "handle": "dan.test",
+        "viewer": Object {
+          "following": "record(1)",
+          "muted": false,
+        },
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "actor": Object {
+        "did": "user(2)",
+        "handle": "carol.test",
+        "viewer": Object {
+          "followedBy": "record(3)",
+          "following": "record(2)",
+          "muted": false,
+        },
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    Object {
+      "actor": Object {
+        "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+        "description": "hi im bob",
+        "did": "user(3)",
+        "displayName": "bobby",
+        "handle": "bob.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "viewer": Object {
+          "followedBy": "record(5)",
+          "following": "record(4)",
+          "muted": false,
+        },
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+  "uri": "record(0)",
+}
+`;
+
+exports[`pds like views fetches reply likes 1`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "likes": Array [
+    Object {
+      "actor": Object {
+        "did": "user(0)",
+        "handle": "carol.test",
+        "viewer": Object {
+          "followedBy": "record(2)",
+          "following": "record(1)",
+          "muted": false,
+        },
+      },
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+  ],
+  "uri": "record(0)",
+}
+`;

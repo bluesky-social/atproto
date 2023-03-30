@@ -1,69 +1,75 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import { cidForCbor, TID } from '@atproto/common'
+import { TID } from '@atproto/common'
+import { LexiconDefNotFoundError, RepoRecord } from '@atproto/lexicon'
 import {
-  PreparedCreate,
-  PreparedUpdate,
-  PreparedDelete,
-  BlobRef,
-  ImageConstraint,
-  InvalidRecordError,
-  PreparedWrite,
-} from './types'
-
-import * as lex from '../lexicon/lexicons'
-import { LexiconDefNotFoundError } from '@atproto/lexicon'
-import {
+  cidForRecord,
   RecordDeleteOp,
   RecordCreateOp,
   RecordUpdateOp,
   RecordWriteOp,
   WriteOpAction,
 } from '@atproto/repo'
+import {
+  PreparedCreate,
+  PreparedUpdate,
+  PreparedDelete,
+  InvalidRecordError,
+  PreparedWrite,
+  PreparedBlobRef,
+} from './types'
+import * as lex from '../lexicon/lexicons'
+import { isMain as isExternalEmbed } from '../lexicon/types/app/bsky/embed/external'
+import { isMain as isImagesEmbed } from '../lexicon/types/app/bsky/embed/images'
+import { isMain as isRecordWithMediaEmbed } from '../lexicon/types/app/bsky/embed/recordWithMedia'
+import {
+  Record as PostRecord,
+  isRecord as isPost,
+} from '../lexicon/types/app/bsky/feed/post'
+import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
 
 // @TODO do this dynamically off of schemas
-export const blobsForWrite = (record: any): BlobRef[] => {
-  if (record.$type === lex.ids.AppBskyActorProfile) {
+export const blobsForWrite = (record: unknown): PreparedBlobRef[] => {
+  if (isProfile(record)) {
     const doc = lex.schemaDict.AppBskyActorProfile
-    const refs: BlobRef[] = []
+    const refs: PreparedBlobRef[] = []
     if (record.avatar) {
       refs.push({
-        cid: CID.parse(record.avatar.cid),
+        cid: record.avatar.ref,
         mimeType: record.avatar.mimeType,
-        constraints: doc.defs.main.record.properties.avatar as ImageConstraint,
+        constraints: doc.defs.main.record.properties.avatar,
       })
     }
     if (record.banner) {
       refs.push({
-        cid: CID.parse(record.banner.cid),
+        cid: record.banner.ref,
         mimeType: record.banner.mimeType,
-        constraints: doc.defs.main.record.properties.banner as ImageConstraint,
+        constraints: doc.defs.main.record.properties.banner,
       })
     }
     return refs
-  } else if (record.$type === lex.ids.AppBskyFeedPost) {
-    const refs: BlobRef[] = []
-    const embed = record?.embed
-    if (embed?.$type === 'app.bsky.embed.images') {
-      const doc = lex.schemaDict.AppBskyEmbedImages
-      for (let i = 0; i < embed.images?.length || 0; i++) {
-        const img = embed.images[i]
+  } else if (isPost(record)) {
+    const refs: PreparedBlobRef[] = []
+    const embeds = separateEmbeds(record.embed)
+    for (const embed of embeds) {
+      if (isImagesEmbed(embed)) {
+        const doc = lex.schemaDict.AppBskyEmbedImages
+        for (let i = 0; i < embed.images.length || 0; i++) {
+          const img = embed.images[i]
+          refs.push({
+            cid: img.image.ref,
+            mimeType: img.image.mimeType,
+            constraints: doc.defs.image.properties.image,
+          })
+        }
+      } else if (isExternalEmbed(embed) && embed.external.thumb) {
+        const doc = lex.schemaDict.AppBskyEmbedExternal
         refs.push({
-          cid: CID.parse(img.image.cid),
-          mimeType: img.image.mimeType,
-          constraints: doc.defs.image.properties.image as ImageConstraint,
+          cid: embed.external.thumb.ref,
+          mimeType: embed.external.thumb.mimeType,
+          constraints: doc.defs.external.properties.thumb,
         })
       }
-    } else if (
-      record?.embed?.$type === 'app.bsky.embed.external' &&
-      embed.external.thumb?.cid
-    ) {
-      const doc = lex.schemaDict.AppBskyEmbedExternal
-      refs.push({
-        cid: CID.parse(embed.external.thumb.cid),
-        mimeType: embed.external.thumb.mimeType,
-        constraints: doc.defs.external.properties.thumb as ImageConstraint,
-      })
     }
     return refs
   }
@@ -90,7 +96,7 @@ export const assertValidRecord = (record: Record<string, unknown>) => {
 
 export const setCollectionName = (
   collection: string,
-  record: Record<string, unknown>,
+  record: RepoRecord,
   validate: boolean,
 ) => {
   if (!record.$type) {
@@ -104,37 +110,25 @@ export const setCollectionName = (
   return record
 }
 
-export const determineRkey = (collection: string): string => {
-  const doc = lex.lexicons.getDef(collection)
-  let keyType: string | undefined
-  if (doc && doc.type === 'record') {
-    keyType = doc.key
-  }
-  if (keyType && keyType.startsWith('literal')) {
-    const split = keyType.split(':')
-    return split[1]
-  } else {
-    return TID.nextStr()
-  }
-}
-
 export const prepareCreate = async (opts: {
   did: string
   collection: string
-  record: Record<string, unknown>
   rkey?: string
+  swapCid?: CID | null
+  record: RepoRecord
   validate?: boolean
 }): Promise<PreparedCreate> => {
-  const { did, collection, validate = true } = opts
+  const { did, collection, swapCid, validate = true } = opts
   const record = setCollectionName(collection, opts.record, validate)
   if (validate) {
     assertValidRecord(record)
   }
-  const rkey = opts.rkey || determineRkey(collection)
+  const rkey = opts.rkey || TID.nextStr()
   return {
     action: WriteOpAction.Create,
     uri: AtUri.make(did, collection, rkey),
-    cid: await cidForCbor(record),
+    cid: await cidForRecord(record),
+    swapCid,
     record,
     blobs: blobsForWrite(record),
   }
@@ -144,10 +138,11 @@ export const prepareUpdate = async (opts: {
   did: string
   collection: string
   rkey: string
-  record: Record<string, unknown>
+  swapCid?: CID | null
+  record: RepoRecord
   validate?: boolean
 }): Promise<PreparedUpdate> => {
-  const { did, collection, rkey, validate = true } = opts
+  const { did, collection, rkey, swapCid, validate = true } = opts
   const record = setCollectionName(collection, opts.record, validate)
   if (validate) {
     assertValidRecord(record)
@@ -155,7 +150,8 @@ export const prepareUpdate = async (opts: {
   return {
     action: WriteOpAction.Update,
     uri: AtUri.make(did, collection, rkey),
-    cid: await cidForCbor(record),
+    cid: await cidForRecord(record),
+    swapCid,
     record,
     blobs: blobsForWrite(record),
   }
@@ -165,11 +161,13 @@ export const prepareDelete = (opts: {
   did: string
   collection: string
   rkey: string
+  swapCid?: CID | null
 }): PreparedDelete => {
-  const { did, collection, rkey } = opts
+  const { did, collection, rkey, swapCid } = opts
   return {
     action: WriteOpAction.Delete,
     uri: AtUri.make(did, collection, rkey),
+    swapCid,
   }
 }
 
@@ -204,4 +202,14 @@ export const writeToOp = (write: PreparedWrite): RecordWriteOp => {
     default:
       throw new Error(`Unrecognized action: ${write}`)
   }
+}
+
+function separateEmbeds(embed: PostRecord['embed']) {
+  if (!embed) {
+    return []
+  }
+  if (isRecordWithMediaEmbed(embed)) {
+    return [{ $type: lex.ids.AppBskyEmbedRecord, ...embed.record }, embed.media]
+  }
+  return [embed]
 }

@@ -1,13 +1,13 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
-import * as AppBskyActorRef from '../actor/ref'
+import { CID } from 'multiformats/cid'
 
 export interface Record {
-  subject: AppBskyActorRef.Main
+  subject: string
   createdAt: string
   [k: string]: unknown
 }

@@ -1,6 +1,6 @@
 import AtpAgent from '@atproto/api'
 import { AtUri } from '@atproto/uri'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
   runTestServer,
   forSnapshot,
@@ -40,9 +40,9 @@ describe('pds author feed views', () => {
     await close()
   })
 
-  it('fetches full author feeds for self (sorted, minimal myState).', async () => {
+  it('fetches full author feeds for self (sorted, minimal viewer state).', async () => {
     const aliceForAlice = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: sc.accounts[alice].handle },
+      { actor: sc.accounts[alice].handle },
       {
         headers: sc.getHeaders(alice),
       },
@@ -51,7 +51,7 @@ describe('pds author feed views', () => {
     expect(forSnapshot(aliceForAlice.data.feed)).toMatchSnapshot()
 
     const bobForBob = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: sc.accounts[bob].handle },
+      { actor: sc.accounts[bob].handle },
       {
         headers: sc.getHeaders(bob),
       },
@@ -60,7 +60,7 @@ describe('pds author feed views', () => {
     expect(forSnapshot(bobForBob.data.feed)).toMatchSnapshot()
 
     const carolForCarol = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: sc.accounts[carol].handle },
+      { actor: sc.accounts[carol].handle },
       {
         headers: sc.getHeaders(carol),
       },
@@ -69,7 +69,7 @@ describe('pds author feed views', () => {
     expect(forSnapshot(carolForCarol.data.feed)).toMatchSnapshot()
 
     const danForDan = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: sc.accounts[dan].handle },
+      { actor: sc.accounts[dan].handle },
       {
         headers: sc.getHeaders(dan),
       },
@@ -80,7 +80,7 @@ describe('pds author feed views', () => {
 
   it("reflects fetching user's state in the feed.", async () => {
     const aliceForCarol = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: sc.accounts[alice].handle },
+      { actor: sc.accounts[alice].handle },
       {
         headers: sc.getHeaders(carol),
       },
@@ -88,8 +88,7 @@ describe('pds author feed views', () => {
 
     aliceForCarol.data.feed.forEach((postView) => {
       const { viewer, uri } = postView.post
-      expect(viewer?.upvote).toEqual(sc.votes.up[carol]?.[uri]?.toString())
-      expect(viewer?.downvote).toEqual(sc.votes.down[carol]?.[uri]?.toString())
+      expect(viewer?.like).toEqual(sc.likes[carol]?.[uri]?.toString())
       expect(viewer?.repost).toEqual(sc.reposts[carol][uri]?.toString())
     })
 
@@ -97,27 +96,27 @@ describe('pds author feed views', () => {
   })
 
   it('omits reposts from muted users.', async () => {
-    await agent.api.app.bsky.graph.mute(
-      { user: alice }, // Has a repost by dan: will be omitted from dan's feed
+    await agent.api.app.bsky.graph.muteActor(
+      { actor: alice }, // Has a repost by dan: will be omitted from dan's feed
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
-    await agent.api.app.bsky.graph.mute(
-      { user: dan }, // Feed author: their posts will still appear
+    await agent.api.app.bsky.graph.muteActor(
+      { actor: dan }, // Feed author: their posts will still appear
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
     const bobForDan = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: sc.accounts[dan].handle },
+      { actor: sc.accounts[dan].handle },
       { headers: sc.getHeaders(bob) },
     )
 
     expect(forSnapshot(bobForDan.data.feed)).toMatchSnapshot()
 
-    await agent.api.app.bsky.graph.unmute(
-      { user: alice },
+    await agent.api.app.bsky.graph.unmuteActor(
+      { actor: alice },
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
-    await agent.api.app.bsky.graph.unmute(
-      { user: dan },
+    await agent.api.app.bsky.graph.unmuteActor(
+      { actor: dan },
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
   })
@@ -127,8 +126,8 @@ describe('pds author feed views', () => {
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getAuthorFeed(
         {
-          author: sc.accounts[alice].handle,
-          before: cursor,
+          actor: sc.accounts[alice].handle,
+          cursor,
           limit: 2,
         },
         { headers: sc.getHeaders(dan) },
@@ -143,7 +142,7 @@ describe('pds author feed views', () => {
 
     const full = await agent.api.app.bsky.feed.getAuthorFeed(
       {
-        author: sc.accounts[alice].handle,
+        actor: sc.accounts[alice].handle,
       },
       { headers: sc.getHeaders(dan) },
     )
@@ -154,7 +153,7 @@ describe('pds author feed views', () => {
 
   it('blocked by actor takedown.', async () => {
     const { data: preBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: alice },
+      { actor: alice },
       { headers: sc.getHeaders(carol) },
     )
 
@@ -165,10 +164,10 @@ describe('pds author feed views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.repo.repoRef',
+            $type: 'com.atproto.admin.defs#repoRef',
             did: alice,
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -178,7 +177,7 @@ describe('pds author feed views', () => {
       )
 
     const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: alice },
+      { actor: alice },
       { headers: sc.getHeaders(carol) },
     )
 
@@ -188,7 +187,7 @@ describe('pds author feed views', () => {
     await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: action.id,
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {
@@ -200,23 +199,24 @@ describe('pds author feed views', () => {
 
   it('blocked by record takedown.', async () => {
     const { data: preBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: alice },
+      { actor: alice },
       { headers: sc.getHeaders(carol) },
     )
 
     expect(preBlock.feed.length).toBeGreaterThan(0)
 
-    const postUri = new AtUri(preBlock.feed[0].post.uri)
+    const post = preBlock.feed[0].post
 
     const { data: action } =
       await agent.api.com.atproto.admin.takeModerationAction(
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.repo.recordRef',
-            uri: postUri.toString(),
+            $type: 'com.atproto.repo.strongRef',
+            uri: post.uri,
+            cid: post.cid,
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -226,20 +226,18 @@ describe('pds author feed views', () => {
       )
 
     const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: alice },
+      { actor: alice },
       { headers: sc.getHeaders(carol) },
     )
 
     expect(postBlock.feed.length).toEqual(preBlock.feed.length - 1)
-    expect(postBlock.feed.map((item) => item.post.uri)).not.toContain(
-      postUri.toString(),
-    )
+    expect(postBlock.feed.map((item) => item.post.uri)).not.toContain(post.uri)
 
     // Cleanup
     await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: action.id,
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {

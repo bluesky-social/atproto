@@ -1,0 +1,23 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.repo.uploadBlob",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Upload a new blob to be added to repo in a later request.",
+      "input": {
+        "encoding": "*/*"
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["blob"],
+          "properties": {
+            "blob": {"type": "blob"}
+          }
+        }
+      }
+    }
+  }
+}

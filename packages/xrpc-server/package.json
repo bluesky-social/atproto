@@ -34,6 +34,8 @@
     "@atproto/xrpc": "*",
     "@types/express": "^4.17.13",
     "@types/http-errors": "^2.0.1",
-    "@types/ws": "^8.5.4"
+    "@types/ws": "^8.5.4",
+    "get-port": "^6.1.2",
+    "multiformats": "^9.6.4"
   }
 }

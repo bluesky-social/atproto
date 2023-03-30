@@ -12,8 +12,8 @@ export const lexBoolean = z.object({
 })
 export type LexBoolean = z.infer<typeof lexBoolean>
 
-export const lexNumber = z.object({
-  type: z.literal('number'),
+export const lexFloat = z.object({
+  type: z.literal('float'),
   description: z.string().optional(),
   default: z.number().optional(),
   minimum: z.number().optional(),
@@ -21,7 +21,7 @@ export const lexNumber = z.object({
   enum: z.number().array().optional(),
   const: z.number().optional(),
 })
-export type LexNumber = z.infer<typeof lexNumber>
+export type LexFloat = z.infer<typeof lexFloat>
 
 export const lexInteger = z.object({
   type: z.literal('integer'),
@@ -34,23 +34,32 @@ export const lexInteger = z.object({
 })
 export type LexInteger = z.infer<typeof lexInteger>
 
+export const lexStringFormat = z.enum([
+  'datetime',
+  'uri',
+  'at-uri',
+  'did',
+  'handle',
+  'at-identifier',
+  'nsid',
+  'cid',
+])
+export type LexStringFormat = z.infer<typeof lexStringFormat>
+
 export const lexString = z.object({
   type: z.literal('string'),
+  format: lexStringFormat.optional(),
   description: z.string().optional(),
   default: z.string().optional(),
   minLength: z.number().int().optional(),
   maxLength: z.number().int().optional(),
+  minGraphemes: z.number().int().optional(),
+  maxGraphemes: z.number().int().optional(),
   enum: z.string().array().optional(),
   const: z.string().optional(),
   knownValues: z.string().array().optional(),
 })
 export type LexString = z.infer<typeof lexString>
-
-export const lexDatetime = z.object({
-  type: z.literal('datetime'),
-  description: z.string().optional(),
-})
-export type LexDatetime = z.infer<typeof lexDatetime>
 
 export const lexUnknown = z.object({
   type: z.literal('unknown'),
@@ -60,13 +69,32 @@ export type LexUnknown = z.infer<typeof lexUnknown>
 
 export const lexPrimitive = z.union([
   lexBoolean,
-  lexNumber,
+  lexFloat,
   lexInteger,
   lexString,
-  lexDatetime,
   lexUnknown,
 ])
 export type LexPrimitive = z.infer<typeof lexPrimitive>
+
+// ipld types
+// =
+
+export const lexBytes = z.object({
+  type: z.literal('bytes'),
+  description: z.string().optional(),
+  maxLength: z.number().optional(),
+  minLength: z.number().optional(),
+})
+export type LexBytes = z.infer<typeof lexBytes>
+
+export const lexCidLink = z.object({
+  type: z.literal('cid-link'),
+  description: z.string().optional(),
+})
+export type LexCidLink = z.infer<typeof lexCidLink>
+
+export const lexIpldType = z.union([lexBytes, lexCidLink])
+export type LexIpldType = z.infer<typeof lexIpldType>
 
 // references
 // =
@@ -100,46 +128,13 @@ export const lexBlob = z.object({
 })
 export type LexBlob = z.infer<typeof lexBlob>
 
-export const lexImage = z.object({
-  type: z.literal('image'),
-  description: z.string().optional(),
-  accept: z.string().array().optional(),
-  maxSize: z.number().optional(),
-  maxWidth: z.number().int().optional(),
-  maxHeight: z.number().int().optional(),
-})
-export type LexImage = z.infer<typeof lexImage>
-
-export const lexVideo = z.object({
-  type: z.literal('video'),
-  description: z.string().optional(),
-  accept: z.string().array().optional(),
-  maxSize: z.number().optional(),
-  maxWidth: z.number().int().optional(),
-  maxHeight: z.number().int().optional(),
-  maxLength: z.number().int().optional(),
-})
-export type LexVideo = z.infer<typeof lexVideo>
-
-export const lexAudio = z.object({
-  type: z.literal('audio'),
-  description: z.string().optional(),
-  accept: z.string().array().optional(),
-  maxSize: z.number().optional(),
-  maxLength: z.number().int().optional(),
-})
-export type LexAudio = z.infer<typeof lexAudio>
-
-export const lexBlobVariant = z.union([lexBlob, lexImage, lexVideo, lexAudio])
-export type LexBlobVariant = z.infer<typeof lexBlobVariant>
-
 // complex types
 // =
 
 export const lexArray = z.object({
   type: z.literal('array'),
   description: z.string().optional(),
-  items: z.union([lexPrimitive, lexBlobVariant, lexRefVariant]),
+  items: z.union([lexPrimitive, lexIpldType, lexBlob, lexRefVariant]),
   minLength: z.number().int().optional(),
   maxLength: z.number().int().optional(),
 })
@@ -164,7 +159,9 @@ export const lexObject = z.object({
   required: z.string().array().optional(),
   nullable: z.string().array().optional(),
   properties: z
-    .record(z.union([lexRefVariant, lexArray, lexBlobVariant, lexPrimitive]))
+    .record(
+      z.union([lexRefVariant, lexIpldType, lexArray, lexBlob, lexPrimitive]),
+    )
     .optional(),
 })
 export type LexObject = z.infer<typeof lexObject>
@@ -190,7 +187,6 @@ export type LexXrpcBody = z.infer<typeof lexXrpcBody>
 export const lexXrpcSubscriptionMessage = z.object({
   description: z.string().optional(),
   schema: z.union([lexRefVariant, lexObject]).optional(),
-  codes: z.record(z.number().int()).optional(),
 })
 export type LexXrpcSubscriptionMessage = z.infer<
   typeof lexXrpcSubscriptionMessage
@@ -253,19 +249,17 @@ export const lexUserType = z.union([
   lexXrpcSubscription,
 
   lexBlob,
-  lexImage,
-  lexVideo,
-  lexAudio,
 
   lexArray,
   lexToken,
   lexObject,
 
   lexBoolean,
-  lexNumber,
+  lexFloat,
   lexInteger,
   lexString,
-  lexDatetime,
+  lexBytes,
+  lexCidLink,
   lexUnknown,
 ])
 export type LexUserType = z.infer<typeof lexUserType>

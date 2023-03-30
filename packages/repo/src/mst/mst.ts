@@ -713,7 +713,11 @@ export class MST implements DataStore {
         throw new MissingBlocksError('mst node', fetched.missing)
       }
       for (const cid of toFetch.toList()) {
-        const found = await parse.getAndParse(fetched.blocks, cid, nodeDataDef)
+        const found = await parse.getAndParseByDef(
+          fetched.blocks,
+          cid,
+          nodeDataDef,
+        )
         await car.put({ cid, bytes: found.bytes })
         const entries = await util.deserializeNodeData(this.storage, found.obj)
 

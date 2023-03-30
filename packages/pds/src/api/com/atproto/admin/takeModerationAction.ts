@@ -1,15 +1,9 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import {
-  ACKNOWLEDGE,
-  FLAG,
-  TAKEDOWN,
-} from '../../../../lexicon/types/com/atproto/admin/moderationAction'
-import { ModerationAction } from '../../../../db/tables/moderation'
-import { InputSchema as ActionInput } from '../../../../lexicon/types/com/atproto/admin/takeModerationAction'
+import { TAKEDOWN } from '../../../../lexicon/types/com/atproto/admin/defs'
+import { getSubject, getAction } from '../moderation/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
@@ -33,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
 
         if (
           result.action === TAKEDOWN &&
-          result.subjectType === 'com.atproto.repo.repoRef' &&
+          result.subjectType === 'com.atproto.admin.defs#repoRef' &&
           result.subjectDid
         ) {
           await authTxn.revokeRefreshTokensByDid(result.subjectDid)
@@ -45,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
 
         if (
           result.action === TAKEDOWN &&
-          result.subjectType === 'com.atproto.repo.recordRef' &&
+          result.subjectType === 'com.atproto.repo.strongRef' &&
           result.subjectUri
         ) {
           await moderationTxn.takedownRecord({
@@ -64,42 +58,4 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
-}
-
-function getAction(action: ActionInput['action']) {
-  if (action === TAKEDOWN || action === FLAG || action === ACKNOWLEDGE) {
-    return action as ModerationAction['action']
-  }
-  throw new InvalidRequestError('Invalid action')
-}
-
-function getSubject(subject: ActionInput['subject']) {
-  if (
-    subject.$type === 'com.atproto.repo.repoRef' &&
-    typeof subject.did === 'string'
-  ) {
-    return { did: subject.did }
-  }
-  if (
-    subject.$type === 'com.atproto.repo.recordRef' &&
-    typeof subject.uri === 'string' &&
-    (subject.cid === undefined || typeof subject.cid === 'string')
-  ) {
-    return {
-      uri: new AtUri(subject.uri),
-      cid: subject.cid ? parseCID(subject.cid) : undefined,
-    }
-  }
-  throw new InvalidRequestError('Invalid subject')
-}
-
-function parseCID(cid: string) {
-  try {
-    return CID.parse(cid)
-  } catch (err) {
-    if (err instanceof SyntaxError) {
-      throw new InvalidRequestError('Invalid cid')
-    }
-    throw err
-  }
 }

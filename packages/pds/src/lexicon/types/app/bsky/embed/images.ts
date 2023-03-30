@@ -1,9 +1,10 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
+import { CID } from 'multiformats/cid'
 
 export interface Main {
   images: Image[]
@@ -24,7 +25,7 @@ export function validateMain(v: unknown): ValidationResult {
 }
 
 export interface Image {
-  image: { cid: string; mimeType: string; [k: string]: unknown }
+  image: BlobRef
   alt: string
   [k: string]: unknown
 }
@@ -39,38 +40,36 @@ export function validateImage(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.embed.images#image', v)
 }
 
-export interface Presented {
-  images: PresentedImage[]
+export interface View {
+  images: ViewImage[]
   [k: string]: unknown
 }
 
-export function isPresented(v: unknown): v is Presented {
+export function isView(v: unknown): v is View {
   return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.embed.images#presented'
+    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.embed.images#view'
   )
 }
 
-export function validatePresented(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.images#presented', v)
+export function validateView(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.images#view', v)
 }
 
-export interface PresentedImage {
+export interface ViewImage {
   thumb: string
   fullsize: string
   alt: string
   [k: string]: unknown
 }
 
-export function isPresentedImage(v: unknown): v is PresentedImage {
+export function isViewImage(v: unknown): v is ViewImage {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.embed.images#presentedImage'
+    v.$type === 'app.bsky.embed.images#viewImage'
   )
 }
 
-export function validatePresentedImage(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.images#presentedImage', v)
+export function validateViewImage(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.images#viewImage', v)
 }

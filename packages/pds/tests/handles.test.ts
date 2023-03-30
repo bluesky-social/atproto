@@ -51,32 +51,27 @@ describe('handles', () => {
   })
 
   it('resolves handles', async () => {
-    const res = await agent.api.com.atproto.handle.resolve({
+    const res = await agent.api.com.atproto.identity.resolveHandle({
       handle: 'alice.test',
     })
     expect(res.data.did).toBe(alice)
   })
 
-  it('does not resolve a root "available domain" for the service', async () => {
-    const promise = agent.api.com.atproto.handle.resolve({ handle: 'test' })
-    await expect(promise).rejects.toThrow('Unable to resolve handle')
-  })
-
   it('does not resolve a "handle" for the service', async () => {
-    const promise = agent.api.com.atproto.handle.resolve()
+    const promise = agent.api.com.atproto.identity.resolveHandle()
     await expect(promise).rejects.toThrow('Unable to resolve handle')
   })
 
   it('allows a user to change their handle', async () => {
-    await agent.api.com.atproto.handle.update(
+    await agent.api.com.atproto.identity.updateHandle(
       { handle: newHandle },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
-    const attemptOld = agent.api.com.atproto.handle.resolve({
+    const attemptOld = agent.api.com.atproto.identity.resolveHandle({
       handle: 'alice.test',
     })
     await expect(attemptOld).rejects.toThrow('Unable to resolve handle')
-    const attemptNew = await agent.api.com.atproto.handle.resolve({
+    const attemptNew = await agent.api.com.atproto.identity.resolveHandle({
       handle: newHandle,
     })
     expect(attemptNew.data.did).toBe(alice)
@@ -88,7 +83,7 @@ describe('handles', () => {
   })
 
   it('allows a user to login with their new handle', async () => {
-    const res = await agent.api.com.atproto.session.create({
+    const res = await agent.api.com.atproto.server.createSession({
       identifier: newHandle,
       password: sc.accounts[alice].password,
     })
@@ -116,7 +111,7 @@ describe('handles', () => {
     }
 
     const followers = await agent.api.app.bsky.graph.getFollowers(
-      { user: bob },
+      { actor: bob },
       { headers: sc.getHeaders(bob) },
     )
 
@@ -126,7 +121,7 @@ describe('handles', () => {
   })
 
   it('does not allow taking a handle that already exists', async () => {
-    const attempt = agent.api.com.atproto.handle.update(
+    const attempt = agent.api.com.atproto.identity.updateHandle(
       { handle: 'Bob.test' },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
@@ -140,13 +135,13 @@ describe('handles', () => {
 
   it('disallows improperly formatted handles', async () => {
     const tryHandle = async (handle: string) => {
-      await agent.api.com.atproto.handle.update(
+      await agent.api.com.atproto.identity.updateHandle(
         { handle },
         { headers: sc.getHeaders(alice), encoding: 'application/json' },
       )
     }
     await expect(tryHandle('did:john')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('john.bsky.io')).rejects.toThrow(
       'External handle did not resolve to DID',
@@ -156,35 +151,35 @@ describe('handles', () => {
       'Handle too long',
     )
     await expect(tryHandle('jo_hn.test')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo!hn.test')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo%hn.test')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo&hn.test')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo*hn.test')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo|hn.test')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo:hn.test')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('jo/hn.test')).rejects.toThrow(
-      'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
+      'Input/handle must be a valid handle',
     )
     await expect(tryHandle('about.test')).rejects.toThrow('Reserved handle')
     await expect(tryHandle('atp.test')).rejects.toThrow('Reserved handle')
   })
 
   it('allows updating to a dns handles', async () => {
-    await agent.api.com.atproto.handle.update(
+    await agent.api.com.atproto.identity.updateHandle(
       {
         handle: 'alice.external',
       },
@@ -201,7 +196,7 @@ describe('handles', () => {
   })
 
   it('does not allow updating to an invalid dns handle', async () => {
-    const attempt = agent.api.com.atproto.handle.update(
+    const attempt = agent.api.com.atproto.identity.updateHandle(
       {
         handle: 'bob.external',
       },
@@ -211,7 +206,7 @@ describe('handles', () => {
       'External handle did not resolve to DID',
     )
 
-    const attempt2 = agent.api.com.atproto.handle.update(
+    const attempt2 = agent.api.com.atproto.identity.updateHandle(
       {
         handle: 'noexist.external',
       },

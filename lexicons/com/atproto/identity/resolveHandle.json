@@ -1,0 +1,30 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.identity.resolveHandle",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Provides the DID of a repo.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "handle": {
+            "type": "string",
+            "format": "handle",
+            "description": "The handle to resolve. If not supplied, will resolve the host's own handle."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did"],
+          "properties": {
+            "did": {"type": "string", "format": "did"}
+          }
+        }
+      }
+    }
+  }
+}

@@ -19,27 +19,25 @@
       "required": ["image", "alt"],
       "properties": {
         "image": {
-            "type": "image",
-            "accept": ["image/*"],
-            "maxWidth": 2000,
-            "maxHeight": 2000,
-            "maxSize": 1000000
+          "type": "blob",
+          "accept": ["image/*"],
+          "maxSize": 1000000
         },
         "alt": {"type": "string"}
       }
     },
-    "presented": {
+    "view": {
       "type": "object",
       "required": ["images"],
       "properties": {
         "images": {
           "type": "array",
-          "items": {"type": "ref", "ref": "#presentedImage"},
+          "items": {"type": "ref", "ref": "#viewImage"},
           "maxLength": 4
         }
       }
     },
-    "presentedImage": {
+    "viewImage": {
       "type": "object",
       "required": ["thumb", "fullsize", "alt"],
       "properties": {

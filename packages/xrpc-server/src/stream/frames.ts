@@ -1,15 +1,11 @@
-import * as cborx from 'cbor-x'
 import * as uint8arrays from 'uint8arrays'
-import { cborEncode } from '@atproto/common'
+import { cborEncode, cborDecodeMulti } from '@atproto/common'
 import {
   frameHeader,
   FrameHeader,
   FrameType,
-  InfoFrameHeader,
   MessageFrameHeader,
   ErrorFrameHeader,
-  infoFrameBody,
-  InfoFrameBody,
   ErrorFrameBody,
   errorFrameBody,
 } from './types'
@@ -26,26 +22,19 @@ export abstract class Frame {
   isMessage(): this is MessageFrame<unknown> {
     return this.op === FrameType.Message
   }
-  isInfo(): this is InfoFrame {
-    return this.op === FrameType.Info
-  }
   isError(): this is ErrorFrame {
     return this.op === FrameType.Error
   }
   static fromBytes(bytes: Uint8Array) {
-    let i = 0
-    let header: unknown
+    const decoded = cborDecodeMulti(bytes)
+    if (decoded.length > 2) {
+      throw new Error('Too many CBOR data items in frame')
+    }
+    const header = decoded[0]
     let body: unknown = kUnset
-    cborx.decodeMultiple(bytes, (item) => {
-      if (i === 0) {
-        header = item
-      } else if (i === 1) {
-        body = item
-      } else {
-        throw new Error('Too many CBOR data items in frame')
-      }
-      i++
-    })
+    if (decoded.length > 1) {
+      body = decoded[1]
+    }
     const parsedHeader = frameHeader.safeParse(header)
     if (!parsedHeader.success) {
       throw new Error(`Invalid frame header: ${parsedHeader.error.message}`)
@@ -58,12 +47,6 @@ export abstract class Frame {
       return new MessageFrame(body, {
         type: parsedHeader.data.t,
       })
-    } else if (frameOp === FrameType.Info) {
-      const parsedBody = infoFrameBody.safeParse(body)
-      if (!parsedBody.success) {
-        throw new Error(`Invalid info frame body: ${parsedBody.error.message}`)
-      }
-      return new InfoFrame(parsedBody.data)
     } else if (frameOp === FrameType.Error) {
       const parsedBody = errorFrameBody.safeParse(body)
       if (!parsedBody.success) {
@@ -80,7 +63,7 @@ export abstract class Frame {
 export class MessageFrame<T = Record<string, unknown>> extends Frame {
   header: MessageFrameHeader
   body: T
-  constructor(body: T, opts?: { type?: number }) {
+  constructor(body: T, opts?: { type?: string }) {
     super()
     this.header =
       opts?.type !== undefined
@@ -90,22 +73,6 @@ export class MessageFrame<T = Record<string, unknown>> extends Frame {
   }
   get type() {
     return this.header.t
-  }
-}
-
-export class InfoFrame<T extends string = string> extends Frame {
-  header: InfoFrameHeader
-  body: InfoFrameBody<T>
-  constructor(body: InfoFrameBody<T>) {
-    super()
-    this.header = { op: FrameType.Info }
-    this.body = body
-  }
-  get code() {
-    return this.body.info
-  }
-  get message() {
-    return this.body.message
   }
 }
 

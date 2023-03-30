@@ -21,7 +21,7 @@
             "cursor": {"type": "string"},
             "actors": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.actor.profile#viewBasic"}
+              "items": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"}
             }
           }
         }

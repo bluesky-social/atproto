@@ -3,7 +3,16 @@ import * as cbor from '@ipld/dag-cbor'
 import { CarReader } from '@ipld/car/reader'
 import { BlockWriter, CarWriter } from '@ipld/car/writer'
 import { Block as CarBlock } from '@ipld/car/api'
-import { def, streamToArray, verifyCidForBytes } from '@atproto/common'
+import {
+  streamToArray,
+  verifyCidForBytes,
+  cborDecode,
+  check,
+  schema,
+  cidForCbor,
+} from '@atproto/common'
+import { ipldToLex, lexToIpld, LexValue, RepoRecord } from '@atproto/lexicon'
+
 import * as crypto from '@atproto/crypto'
 import Repo from './repo'
 import { MST } from './mst'
@@ -124,25 +133,25 @@ export const diffToWriteDescripts = (
   return Promise.all([
     ...diff.addList().map(async (add) => {
       const { collection, rkey } = parseDataKey(add.key)
-      const value = await parse.getAndParse(blocks, add.cid, def.record)
+      const value = await parse.getAndParseRecord(blocks, add.cid)
       return {
         action: WriteOpAction.Create,
         collection,
         rkey,
         cid: add.cid,
-        record: value.obj,
+        record: value.record,
       } as RecordCreateDescript
     }),
     ...diff.updateList().map(async (upd) => {
       const { collection, rkey } = parseDataKey(upd.key)
-      const value = await parse.getAndParse(blocks, upd.cid, def.record)
+      const value = await parse.getAndParseRecord(blocks, upd.cid)
       return {
         action: WriteOpAction.Update,
         collection,
         rkey,
         cid: upd.cid,
         prev: upd.prev,
-        record: value.obj,
+        record: value.record,
       } as RecordUpdateDescript
     }),
     ...diff.deleteList().map((del) => {
@@ -241,4 +250,20 @@ export const verifyCommitSig = async (
   const { sig, ...rest } = commit
   const encoded = cbor.encode(rest)
   return crypto.verifySignature(didKey, encoded, sig)
+}
+
+export const cborToLex = (val: Uint8Array): LexValue => {
+  return ipldToLex(cborDecode(val))
+}
+
+export const cborToLexRecord = (val: Uint8Array): RepoRecord => {
+  const parsed = cborToLex(val)
+  if (!check.is(parsed, schema.map)) {
+    throw new Error('lexicon records be a json object')
+  }
+  return parsed
+}
+
+export const cidForRecord = async (val: LexValue) => {
+  return cidForCbor(lexToIpld(val))
 }
