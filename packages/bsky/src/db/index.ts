@@ -110,9 +110,6 @@ export type PgConfig = {
   schema?: string
 }
 
-// Can use with typeof to get types for partial queries
-export const dbType = new Kysely<DatabaseSchema>({ dialect: dummyDialect })
-
 type PgOptions = {
   url: string
   pool?: PgPool
