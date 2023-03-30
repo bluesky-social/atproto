@@ -19,16 +19,13 @@ export default function (server: Server, ctx: AppContext) {
         .innerJoin('actor as creator', 'creator.did', 'repost.creator')
         .where(notSoftDeletedClause(ref('creator')))
         .selectAll('creator')
-        .select(['repost.cid as cid', 'repost.createdAt as createdAt'])
+        .select(['repost.cid as cid', 'repost.sortAt as sortAt'])
 
       if (cid) {
         builder = builder.where('repost.subjectCid', '=', cid)
       }
 
-      const keyset = new TimeCidKeyset(
-        ref('repost.createdAt'),
-        ref('repost.cid'),
-      )
+      const keyset = new TimeCidKeyset(ref('repost.sortAt'), ref('repost.cid'))
       builder = paginate(builder, {
         limit,
         before,

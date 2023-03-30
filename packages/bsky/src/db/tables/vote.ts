@@ -1,3 +1,7 @@
+import { GeneratedAlways } from 'kysely'
+
+const tableName = 'vote'
+
 // @TODO still used in pds by setVote
 export interface Vote {
   uri: string
@@ -8,8 +12,7 @@ export interface Vote {
   subjectCid: string
   createdAt: string
   indexedAt: string
+  sortAt: GeneratedAlways<string>
 }
-
-const tableName = 'vote'
 
 export type PartialDB = { [tableName]: Vote }

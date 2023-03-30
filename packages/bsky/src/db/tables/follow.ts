@@ -1,4 +1,7 @@
+import { GeneratedAlways } from 'kysely'
+
 export const tableName = 'follow'
+
 export interface Follow {
   uri: string
   cid: string
@@ -7,6 +10,7 @@ export interface Follow {
   subjectDeclarationCid: string
   createdAt: string
   indexedAt: string
+  sortAt: GeneratedAlways<string>
 }
 
 export type PartialDB = { [tableName]: Follow }

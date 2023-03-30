@@ -63,6 +63,12 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('replyParentCid', 'varchar')
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .addColumn('sortAt', 'varchar', (col) =>
+      col
+        .generatedAlwaysAs(sql`least("createdAt", "indexedAt")`)
+        .stored()
+        .notNull(),
+    )
     .execute()
   // for, eg, "postsCount" on profile views
   await db.schema
@@ -76,11 +82,10 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .on('post')
     .column('replyParent')
     .execute()
-  // @TODO keep?
   await db.schema
     .createIndex('post_order_by_idx')
     .on('post')
-    .columns(['indexedAt', 'cid'])
+    .columns(['sortAt', 'cid'])
     .execute()
 
   // postEntity
@@ -147,6 +152,12 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('subjectCid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .addColumn('sortAt', 'varchar', (col) =>
+      col
+        .generatedAlwaysAs(sql`least("createdAt", "indexedAt")`)
+        .stored()
+        .notNull(),
+    )
     .addUniqueConstraint('repost_unique_subject', ['creator', 'subject'])
     .execute()
   // for, eg, "repostCount" on posts in feed views
@@ -155,11 +166,10 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .on('repost')
     .column('subject')
     .execute()
-  // @TODO keep?
   await db.schema
     .createIndex('repost_order_by_idx')
     .on('repost')
-    .columns(['indexedAt', 'cid'])
+    .columns(['sortAt', 'cid'])
     .execute()
 
   // follow
@@ -172,6 +182,12 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('subjectDeclarationCid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .addColumn('sortAt', 'varchar', (col) =>
+      col
+        .generatedAlwaysAs(sql`least("createdAt", "indexedAt")`)
+        .stored()
+        .notNull(),
+    )
     .addUniqueConstraint('follow_unique_subject', ['creator', 'subjectDid'])
     .execute()
   // for, eg, "followersCount" on profile views
@@ -192,6 +208,12 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('subjectCid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .addColumn('sortAt', 'varchar', (col) =>
+      col
+        .generatedAlwaysAs(sql`least("createdAt", "indexedAt")`)
+        .stored()
+        .notNull(),
+    )
     .addUniqueConstraint('vote_unique_subject', ['creator', 'subject'])
     .execute()
   // for, eg, "upvoteCount" on posts in feed views

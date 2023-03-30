@@ -24,6 +24,7 @@ export default function (server: Server, ctx: AppContext) {
           'vote.direction as direction',
           'vote.createdAt as createdAt',
           'vote.indexedAt as indexedAt',
+          'vote.sortAt as sortAt',
         ])
 
       if (direction === 'up' || direction === 'down') {
@@ -34,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
         builder = builder.where('vote.subjectCid', '=', cid)
       }
 
-      const keyset = new TimeCidKeyset(ref('vote.createdAt'), ref('vote.cid'))
+      const keyset = new TimeCidKeyset(ref('vote.sortAt'), ref('vote.cid'))
       builder = paginate(builder, {
         limit,
         before,
