@@ -1,3 +1,4 @@
+import { Selectable } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Vote from '../../../lexicon/types/app/bsky/feed/vote'
@@ -8,7 +9,7 @@ import { Message } from '../messages'
 import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyFeedVote
-type IndexedVote = DatabaseSchemaType['vote']
+type IndexedVote = Selectable<DatabaseSchemaType['vote']>
 
 const insertFn = async (
   db: DatabaseSchema,

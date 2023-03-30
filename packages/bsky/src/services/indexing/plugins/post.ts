@@ -1,4 +1,4 @@
-import { sql } from 'kysely'
+import { Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { Record as PostRecord } from '../../../lexicon/types/app/bsky/feed/post'
@@ -12,7 +12,7 @@ import * as messages from '../messages'
 import { Message } from '../messages'
 import RecordProcessor from '../processor'
 
-type Post = DatabaseSchemaType['post']
+type Post = Selectable<DatabaseSchemaType['post']>
 type PostEntity = DatabaseSchemaType['post_entity']
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
 type PostEmbedExternal = DatabaseSchemaType['post_embed_external']

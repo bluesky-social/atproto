@@ -1,3 +1,4 @@
+import { Selectable } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import * as Repost from '../../../lexicon/types/app/bsky/feed/repost'
@@ -7,7 +8,7 @@ import * as messages from '../messages'
 import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyFeedRepost
-type IndexedRepost = DatabaseSchemaType['repost']
+type IndexedRepost = Selectable<DatabaseSchemaType['repost']>
 
 const insertFn = async (
   db: DatabaseSchema,
