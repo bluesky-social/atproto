@@ -11,12 +11,21 @@ if (process.argv.includes('--update-main-to-dist')) {
     .then((pkg) => pkg.save())
 }
 
-require('esbuild').build({
-  logLevel: 'info',
-  entryPoints: ['src/index.ts'],
-  bundle: true,
-  sourcemap: true,
-  outdir: 'dist',
-  platform: 'node',
-  plugins: buildShallow ? [nodeExternalsPlugin()] : [],
-})
+require('esbuild')
+  .build({
+    logLevel: 'info',
+    entryPoints: ['src/index.ts'],
+    bundle: true,
+    sourcemap: true,
+    outdir: 'dist',
+    platform: 'node',
+    plugins: buildShallow ? [nodeExternalsPlugin()] : [],
+  })
+  .then((_) => {
+    // Generate JSON schema after building main module
+    const { zodToJsonSchema } = require('zod-to-json-schema')
+    const { lexiconDoc } = require('./dist')
+    const schema = zodToJsonSchema(lexiconDoc, 'lexiconDoc')
+    const { writeFile } = require('fs/promises')
+    return writeFile('./lexicon.schema.json', JSON.stringify(schema))
+  })
