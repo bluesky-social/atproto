@@ -31,7 +31,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
-    .addColumn('displayName', 'varchar', (col) => col.notNull())
+    .addColumn('displayName', 'varchar')
     .addColumn('description', 'varchar')
     .addColumn('avatarCid', 'varchar')
     .addColumn('bannerCid', 'varchar')
@@ -81,16 +81,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createIndex('post_order_by_idx')
     .on('post')
     .columns(['indexedAt', 'cid'])
-    .execute()
-
-  // postEntity
-  await db.schema
-    .createTable('post_entity')
-    .addColumn('postUri', 'varchar', (col) => col.notNull())
-    .addColumn('startIndex', 'integer', (col) => col.notNull())
-    .addColumn('endIndex', 'integer', (col) => col.notNull())
-    .addColumn('type', 'varchar', (col) => col.notNull())
-    .addColumn('value', 'varchar', (col) => col.notNull())
     .execute()
 
   // postEmbedImage
@@ -169,7 +159,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('subjectDid', 'varchar', (col) => col.notNull())
-    .addColumn('subjectDeclarationCid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .addUniqueConstraint('follow_unique_subject', ['creator', 'subjectDid'])
@@ -181,24 +170,18 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .column('subjectDid')
     .execute()
 
-  // vote
+  // like
   await db.schema
-    .createTable('vote')
+    .createTable('like')
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
-    .addColumn('direction', 'varchar', (col) => col.notNull())
     .addColumn('subject', 'varchar', (col) => col.notNull())
     .addColumn('subjectCid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .addUniqueConstraint('vote_unique_subject', ['creator', 'subject'])
-    .execute()
-  // for, eg, "upvoteCount" on posts in feed views
-  await db.schema
-    .createIndex('vote_subject_direction_idx')
-    .on('vote')
-    .columns(['subject', 'direction'])
+    // Aids in index uniqueness plus post like counts
+    .addUniqueConstraint('like_unique_subject', ['subject', 'creator'])
     .execute()
 
   // subscription
@@ -244,8 +227,8 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('actor').execute()
   // subscription
   await db.schema.dropTable('subscription').execute()
-  // vote
-  await db.schema.dropTable('vote').execute()
+  // like
+  await db.schema.dropTable('like').execute()
   // follow
   await db.schema.dropTable('follow').execute()
   // repost
@@ -258,8 +241,6 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('post_embed_external').execute()
   // postEmbedImage
   await db.schema.dropTable('post_embed_image').execute()
-  // postEntity
-  await db.schema.dropTable('post_entity').execute()
   // post
   await db.schema.dropTable('post').execute()
   // profile
