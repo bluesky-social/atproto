@@ -57,12 +57,12 @@ describe('pds user search views', () => {
   // @TODO(bsky) search blocks by actor takedown via labels.
 
   it('typeahead gives relevant results', async () => {
-    const result = await agent.api.app.bsky.actor.searchTypeahead(
+    const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'car' },
       { headers },
     )
 
-    const handles = result.data.users.map((u) => u.handle)
+    const handles = result.data.actors.map((u) => u.handle)
 
     const shouldContain = [
       'cara-wiegand69.test',
@@ -89,41 +89,41 @@ describe('pds user search views', () => {
 
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
-    expect(forSnapshot(result.data.users)).toMatchSnapshot()
+    expect(forSnapshot(result.data.actors)).toMatchSnapshot()
   })
 
   it('typeahead gives empty result set when provided empty term', async () => {
-    const result = await agent.api.app.bsky.actor.searchTypeahead(
+    const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: '' },
       { headers },
     )
 
-    expect(result.data.users).toEqual([])
+    expect(result.data.actors).toEqual([])
   })
 
   it('typeahead applies limit', async () => {
-    const full = await agent.api.app.bsky.actor.searchTypeahead(
+    const full = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'p' },
       { headers },
     )
 
-    expect(full.data.users.length).toBeGreaterThan(5)
+    expect(full.data.actors.length).toBeGreaterThan(5)
 
-    const limited = await agent.api.app.bsky.actor.searchTypeahead(
+    const limited = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'p', limit: 5 },
       { headers },
     )
 
-    expect(limited.data.users).toEqual(full.data.users.slice(0, 5))
+    expect(limited.data.actors).toEqual(full.data.actors.slice(0, 5))
   })
 
   it('search gives relevant results', async () => {
-    const result = await agent.api.app.bsky.actor.search(
+    const result = await agent.api.app.bsky.actor.searchActors(
       { term: 'car' },
       { headers },
     )
 
-    const handles = result.data.users.map((u) => u.handle)
+    const handles = result.data.actors.map((u) => u.handle)
 
     const shouldContain = [
       'cara-wiegand69.test',
@@ -150,23 +150,23 @@ describe('pds user search views', () => {
 
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
-    expect(forSnapshot(result.data.users)).toMatchSnapshot()
+    expect(forSnapshot(result.data.actors)).toMatchSnapshot()
   })
 
   it('search gives empty result set when provided empty term', async () => {
-    const result = await agent.api.app.bsky.actor.search(
+    const result = await agent.api.app.bsky.actor.searchActors(
       { term: '' },
       { headers },
     )
 
-    expect(result.data.users).toEqual([])
+    expect(result.data.actors).toEqual([])
   })
 
   it('paginates', async () => {
     const results = (results) => results.flatMap((res) => res.users)
     const paginator = async (cursor?: string) => {
-      const res = await agent.api.app.bsky.actor.search(
-        { term: 'p', before: cursor, limit: 3 },
+      const res = await agent.api.app.bsky.actor.searchActors(
+        { term: 'p', cursor, limit: 3 },
         { headers },
       )
       return res.data
@@ -174,26 +174,26 @@ describe('pds user search views', () => {
 
     const paginatedAll = await paginateAll(paginator)
     paginatedAll.forEach((res) =>
-      expect(res.users.length).toBeLessThanOrEqual(3),
+      expect(res.actors.length).toBeLessThanOrEqual(3),
     )
 
-    const full = await agent.api.app.bsky.actor.search(
+    const full = await agent.api.app.bsky.actor.searchActors(
       { term: 'p' },
       { headers },
     )
 
-    expect(full.data.users.length).toBeGreaterThan(5)
+    expect(full.data.actors.length).toBeGreaterThan(5)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
   it('search handles bad input', async () => {
     // Mostly for sqlite's benefit, since it uses LIKE and these are special characters that will
     // get stripped. This input triggers a special case where there are no "safe" words for sqlite to search on.
-    const result = await agent.api.app.bsky.actor.search(
+    const result = await agent.api.app.bsky.actor.searchActors(
       { term: ' % _ ' },
       { headers },
     )
 
-    expect(result.data.users).toEqual([])
+    expect(result.data.actors).toEqual([])
   })
 })
