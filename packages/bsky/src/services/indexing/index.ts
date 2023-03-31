@@ -6,6 +6,7 @@ import {
   WriteOpAction,
   verifyCheckoutWithCids,
   RepoContentsWithCids,
+  Commit,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { DidResolver } from '@atproto/did-resolver'
@@ -72,7 +73,7 @@ export class IndexingService {
     return notifs
   }
 
-  async indexActor(did: string, timestamp: string) {
+  async indexHandle(did: string, timestamp: string) {
     const actor = await this.db.db
       .selectFrom('actor')
       .where('did', '=', did)
@@ -157,6 +158,24 @@ export class IndexingService {
         await Promise.all(processChunk)
       })
     }
+  }
+
+  async setCommitLastSeen(commit: Commit) {
+    await this.db.db
+      .updateTable('actor')
+      .where('did', '=', commit.did)
+      .set({ commitDataCid: commit.data.toString() })
+      .execute()
+  }
+
+  async checkCommitNeedsIndexing(commit: Commit) {
+    const actor = await this.db.db
+      .selectFrom('actor')
+      .select('commitDataCid')
+      .where('did', '=', commit.did)
+      .executeTakeFirst()
+    if (!actor) return true
+    return actor.commitDataCid !== commit.data.toString()
   }
 
   findIndexerForCollection(collection: string) {

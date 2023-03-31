@@ -2,6 +2,7 @@ export interface Actor {
   did: string
   handle: string
   indexedAt: string
+  commitDataCid: string | null
   takedownId: number | null // @TODO(bsky)
 }
 

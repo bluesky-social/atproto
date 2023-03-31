@@ -1,9 +1,15 @@
 import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import { wait } from '@atproto/common'
+import { cborDecode, wait } from '@atproto/common'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
-import { WriteOpAction, readCarWithRoot, cborToLexRecord } from '@atproto/repo'
+import {
+  WriteOpAction,
+  readCarWithRoot,
+  cborToLexRecord,
+  def,
+  Commit,
+} from '@atproto/repo'
 import { OutputSchema as Message } from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import * as message from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import { ids, lexicons } from '../lexicon/lexicons'
@@ -12,6 +18,7 @@ import AppContext from '../context'
 import { Leader } from '../db/leader'
 import { subLogger } from '../logger'
 import { ConsecutiveList, LatestQueue, PartitionedQueue } from './util'
+import { IndexingService } from '../services/indexing'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
 export const REPO_SUB_ID = 1000
@@ -124,8 +131,16 @@ export class RepoSubscription {
   // @TODO handle too-big commits and rebases
   private async handleCommit(msg: message.Commit) {
     const { db, services } = this.ctx
-    const processOps = async (tx: Database, ops: PreparedWrite[]) => {
-      const indexingTx = services.indexing(tx)
+    const { root, rootCid, ops } = await getOps(msg)
+    const indexRecords = async (indexingTx: IndexingService) => {
+      if (msg.tooBig) {
+        return await indexingTx.indexRepo(msg.repo, rootCid.toString())
+      }
+      if (msg.rebase) {
+        const needsReindex = await indexingTx.checkCommitNeedsIndexing(root)
+        if (!needsReindex) return
+        return await indexingTx.indexRepo(msg.repo, rootCid.toString())
+      }
       for (const op of ops) {
         if (op.action === WriteOpAction.Delete) {
           await indexingTx.deleteRecord(op.uri)
@@ -141,13 +156,13 @@ export class RepoSubscription {
         }
       }
     }
-    const processActor = async (tx: Database) => {
-      const indexingTx = services.indexing(tx)
-      await indexingTx.indexActor(msg.repo, msg.time)
-    }
-    const ops = await getOps(msg)
     await db.transaction(async (tx) => {
-      await Promise.all([processOps(tx, ops), processActor(tx)])
+      const indexingTx = services.indexing(tx)
+      await Promise.all([
+        indexRecords(indexingTx),
+        indexingTx.indexHandle(msg.repo, msg.time),
+      ])
+      await indexingTx.setCommitLastSeen(root)
     })
   }
 
@@ -248,10 +263,15 @@ type ProcessableMessage =
   | message.Migrate
   | message.Tombstone
 
-async function getOps(msg: message.Commit): Promise<PreparedWrite[]> {
-  const { ops } = msg
+async function getOps(
+  msg: message.Commit,
+): Promise<{ root: Commit; rootCid: CID; ops: PreparedWrite[] }> {
   const car = await readCarWithRoot(msg.blocks as Uint8Array)
-  return ops.map((op) => {
+  const rootBytes = car.blocks.get(car.root)
+  assert(rootBytes, 'Missing commit block in car slice')
+
+  const root = def.commit.schema.parse(cborDecode(rootBytes))
+  const ops: PreparedWrite[] = msg.ops.map((op) => {
     const [collection, rkey] = op.path.split('/')
     assert(collection && rkey)
     if (
@@ -280,6 +300,8 @@ async function getOps(msg: message.Commit): Promise<PreparedWrite[]> {
       throw new Error(`Unknown repo op action: ${op.action}`)
     }
   })
+
+  return { root, rootCid: car.root, ops }
 }
 
 function jitter(maxMs) {

@@ -221,6 +221,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('did', 'varchar', (col) => col.primaryKey())
     .addColumn('handle', 'varchar', (col) => col.unique())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
+    .addColumn('commitDataCid', 'varchar')
     .addColumn('takedownId', 'integer') // @TODO(bsky) add fkey when creating moderation_report table
     .execute()
   await db.schema // Supports user search
