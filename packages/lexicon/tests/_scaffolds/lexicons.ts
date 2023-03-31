@@ -13,30 +13,32 @@ export default [
             'object',
             'array',
             'boolean',
-            'number',
+            'float',
             'integer',
             'string',
-            'datetime',
+            'bytes',
+            'cidLink',
           ],
           properties: {
             object: { type: 'ref', ref: '#object' },
             array: { type: 'array', items: { type: 'string' } },
             boolean: { type: 'boolean' },
-            number: { type: 'number' },
+            float: { type: 'float' },
             integer: { type: 'integer' },
             string: { type: 'string' },
-            datetime: { type: 'datetime' },
+            bytes: { type: 'bytes' },
+            cidLink: { type: 'cid-link' },
           },
         },
       },
       object: {
         type: 'object',
-        required: ['object', 'array', 'boolean', 'number', 'integer', 'string'],
+        required: ['object', 'array', 'boolean', 'float', 'integer', 'string'],
         properties: {
           object: { type: 'ref', ref: '#subobject' },
           array: { type: 'array', items: { type: 'string' } },
           boolean: { type: 'boolean' },
-          number: { type: 'number' },
+          float: { type: 'float' },
           integer: { type: 'integer' },
           string: { type: 'string' },
         },
@@ -59,10 +61,10 @@ export default [
         description: 'A query',
         parameters: {
           type: 'params',
-          required: ['boolean', 'number', 'integer'],
+          required: ['boolean', 'float', 'integer'],
           properties: {
             boolean: { type: 'boolean' },
-            number: { type: 'number' },
+            float: { type: 'float' },
             integer: { type: 'integer' },
             string: { type: 'string' },
             array: { type: 'array', items: { type: 'string' } },
@@ -85,10 +87,10 @@ export default [
         description: 'A procedure',
         parameters: {
           type: 'params',
-          required: ['boolean', 'number', 'integer'],
+          required: ['boolean', 'float', 'integer'],
           properties: {
             boolean: { type: 'boolean' },
-            number: { type: 'number' },
+            float: { type: 'float' },
             integer: { type: 'integer' },
             string: { type: 'string' },
             array: { type: 'array', items: { type: 'string' } },
@@ -117,7 +119,7 @@ export default [
             object: { type: 'ref', ref: 'com.example.kitchenSink#object' },
             array: { type: 'array', items: { type: 'string' } },
             boolean: { type: 'boolean' },
-            number: { type: 'number' },
+            float: { type: 'float' },
             integer: { type: 'integer' },
             string: { type: 'string' },
           },
@@ -136,10 +138,9 @@ export default [
           required: ['boolean'],
           properties: {
             boolean: { type: 'boolean', default: false },
-            number: { type: 'number', default: 0 },
+            float: { type: 'float', default: 0 },
             integer: { type: 'integer', default: 0 },
             string: { type: 'string', default: '' },
-            datetime: { type: 'datetime' },
             object: { type: 'ref', ref: '#object' },
           },
         },
@@ -148,7 +149,7 @@ export default [
         type: 'object',
         properties: {
           boolean: { type: 'boolean', default: true },
-          number: { type: 'number', default: 1.5 },
+          float: { type: 'float', default: 1.5 },
           integer: { type: 'integer', default: 1 },
           string: { type: 'string', default: 'x' },
         },
@@ -219,7 +220,7 @@ export default [
               type: 'array',
               minLength: 2,
               maxLength: 4,
-              items: { type: 'number' },
+              items: { type: 'float' },
             },
           },
         },
@@ -246,15 +247,15 @@ export default [
   },
   {
     lexicon: 1,
-    id: 'com.example.numberRange',
+    id: 'com.example.floatRange',
     defs: {
       main: {
         type: 'record',
         record: {
           type: 'object',
           properties: {
-            number: {
-              type: 'number',
+            float: {
+              type: 'float',
               minimum: 2,
               maximum: 4,
             },
@@ -265,15 +266,15 @@ export default [
   },
   {
     lexicon: 1,
-    id: 'com.example.numberEnum',
+    id: 'com.example.floatEnum',
     defs: {
       main: {
         type: 'record',
         record: {
           type: 'object',
           properties: {
-            number: {
-              type: 'number',
+            float: {
+              type: 'float',
               enum: [1, 1.5, 2],
             },
           },
@@ -283,15 +284,15 @@ export default [
   },
   {
     lexicon: 1,
-    id: 'com.example.numberConst',
+    id: 'com.example.floatConst',
     defs: {
       main: {
         type: 'record',
         record: {
           type: 'object',
           properties: {
-            number: {
-              type: 'number',
+            float: {
+              type: 'float',
               const: 0,
             },
           },
@@ -375,6 +376,25 @@ export default [
   },
   {
     lexicon: 1,
+    id: 'com.example.stringLengthGrapheme',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            string: {
+              type: 'string',
+              minGraphemes: 2,
+              maxGraphemes: 4,
+            },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'com.example.stringEnum',
     defs: {
       main: {
@@ -418,8 +438,130 @@ export default [
         record: {
           type: 'object',
           properties: {
-            datetime: {
-              type: 'datetime',
+            datetime: { type: 'string', format: 'datetime' },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.uri',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            uri: { type: 'string', format: 'uri' },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.atUri',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            atUri: { type: 'string', format: 'at-uri' },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.did',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            did: { type: 'string', format: 'did' },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.handle',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            handle: { type: 'string', format: 'handle' },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.atIdentifier',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            atIdentifier: { type: 'string', format: 'at-identifier' },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.nsid',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            nsid: { type: 'string', format: 'nsid' },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.cid',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            cid: { type: 'string', format: 'cid' },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.byteLength',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            bytes: {
+              type: 'bytes',
+              minLength: 2,
+              maxLength: 4,
             },
           },
         },

@@ -3,8 +3,9 @@ import { Generated, Selectable } from 'kysely'
 export interface RepoSeq {
   seq: Generated<number>
   did: string
-  commit: string
-  eventType: 'repo_append'
+  eventType: 'append' | 'rebase' | 'handle' | 'migrate' | 'tombstone'
+  event: Uint8Array
+  invalidatedBy: number | null
   sequencedAt: string
 }
 

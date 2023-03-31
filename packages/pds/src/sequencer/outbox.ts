@@ -1,21 +1,21 @@
 import { AsyncBuffer, AsyncBufferFullError } from '@atproto/common'
-import Sequencer, { RepoAppendEvent } from '.'
+import Sequencer, { SeqEvt } from '.'
 
 export type OutboxOpts = {
   maxBufferSize: number
 }
 
 export class Outbox {
-  caughtUp = false
+  private caughtUp = false
   lastSeen = -1
 
-  cutoverBuffer: RepoAppendEvent[]
-  outBuffer: AsyncBuffer<RepoAppendEvent>
+  cutoverBuffer: SeqEvt[]
+  outBuffer: AsyncBuffer<SeqEvt>
 
   constructor(public sequencer: Sequencer, opts: Partial<OutboxOpts> = {}) {
     const { maxBufferSize = 500 } = opts
     this.cutoverBuffer = []
-    this.outBuffer = new AsyncBuffer<RepoAppendEvent>(maxBufferSize)
+    this.outBuffer = new AsyncBuffer<SeqEvt>(maxBufferSize)
   }
 
   // event stream occurs in 3 phases
@@ -30,7 +30,7 @@ export class Outbox {
   async *events(
     backfillCursor?: number,
     backFillTime?: string,
-  ): AsyncGenerator<RepoAppendEvent> {
+  ): AsyncGenerator<SeqEvt> {
     // catch up as much as we can
     if (backfillCursor !== undefined) {
       for await (const evt of this.getBackfill(backfillCursor, backFillTime)) {
@@ -98,10 +98,10 @@ export class Outbox {
       for (const evt of evts) {
         yield evt
       }
-      // we requested 50, if we get less than that then we know we're caught up & can do cutover
-      if (evts.length < 50) {
-        break
-      }
+      // if we're within 50 of the sequencer, we call it good & switch to cutover
+      const seqCursor = this.sequencer.lastSeen ?? -1
+      if (seqCursor - this.lastSeen < 50) break
+      if (evts.length < 1) break
     }
   }
 }

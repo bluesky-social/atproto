@@ -19,6 +19,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@atproto/common": "*"
+    "@atproto/common-web": "*"
+  },
+  "browser": {
+    "dns/promises": false
   }
 }

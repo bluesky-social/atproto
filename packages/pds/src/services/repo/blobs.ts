@@ -7,10 +7,11 @@ import { AtUri } from '@atproto/uri'
 import { sha256Stream } from '@atproto/crypto'
 import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { BlobRef, PreparedWrite } from '../../repo/types'
+import { PreparedBlobRef, PreparedWrite } from '../../repo/types'
 import Database from '../../db'
 import { Blob as BlobTable } from '../../db/tables/blob'
 import * as img from '../../image'
+import { BlobRef } from '@atproto/lexicon'
 
 export class RepoBlobs {
   constructor(public db: Database, public blobstore: BlobStore) {}
@@ -19,7 +20,7 @@ export class RepoBlobs {
     creator: string,
     userSuggestedMime: string,
     blobStream: stream.Readable,
-  ): Promise<CID> {
+  ): Promise<BlobRef> {
     const [tempKey, size, sha256, imgInfo, sniffedMime] = await Promise.all([
       this.blobstore.putTemp(cloneStream(blobStream)),
       streamSize(cloneStream(blobStream)),
@@ -29,13 +30,14 @@ export class RepoBlobs {
     ])
 
     const cid = sha256RawToCid(sha256)
+    const mimeType = sniffedMime || userSuggestedMime
 
     await this.db.db
       .insertInto('blob')
       .values({
         creator,
         cid: cid.toString(),
-        mimeType: sniffedMime || userSuggestedMime,
+        mimeType,
         size,
         tempKey,
         width: imgInfo?.width || null,
@@ -49,7 +51,7 @@ export class RepoBlobs {
           .where('blob.tempKey', 'is not', null),
       )
       .execute()
-    return cid
+    return new BlobRef(cid, mimeType, size)
   }
 
   async processWriteBlobs(did: string, commit: CID, writes: PreparedWrite[]) {
@@ -70,7 +72,7 @@ export class RepoBlobs {
 
   async verifyBlobAndMakePermanent(
     creator: string,
-    blob: BlobRef,
+    blob: PreparedBlobRef,
   ): Promise<void> {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
@@ -105,7 +107,7 @@ export class RepoBlobs {
   }
 
   async associateBlob(
-    blob: BlobRef,
+    blob: PreparedBlobRef,
     recordUri: AtUri,
     commit: CID,
     did: string,
@@ -192,7 +194,7 @@ function acceptedMime(mime: string, accepted: string[]): boolean {
   return accepted.includes(mime)
 }
 
-function verifyBlob(blob: BlobRef, found: BlobTable) {
+function verifyBlob(blob: PreparedBlobRef, found: BlobTable) {
   const throwInvalid = (msg: string, errName = 'InvalidBlob') => {
     throw new InvalidRequestError(msg, errName)
   }
@@ -218,53 +220,5 @@ function verifyBlob(blob: BlobRef, found: BlobTable) {
       `Wrong type of file. It is ${blob.mimeType} but it must match ${blob.constraints.accept}.`,
       'InvalidMimeType',
     )
-  }
-  if (blob.constraints.type === 'image') {
-    if (!blob.mimeType.startsWith('image')) {
-      throwInvalid(
-        `Wrong type of file. Expected an image, got ${blob.mimeType}`,
-        'InvalidMimeType',
-      )
-    }
-    if (
-      blob.constraints.maxHeight &&
-      found.height &&
-      found.height > blob.constraints.maxHeight
-    ) {
-      throwInvalid(
-        `This image is too tall. It is ${found.height} pixels high, but the limit is ${blob.constraints.maxHeight} pixels.`,
-        'InvalidImageDimensions',
-      )
-    }
-    if (
-      blob.constraints.maxWidth &&
-      found.width &&
-      found.width > blob.constraints.maxWidth
-    ) {
-      throwInvalid(
-        `This image is too wide. It is ${found.width} pixels wide, but the limit is ${blob.constraints.maxWidth} pixels.`,
-        'InvalidImageDimensions',
-      )
-    }
-    if (
-      blob.constraints.minHeight &&
-      found.height &&
-      found.height < blob.constraints.minHeight
-    ) {
-      throwInvalid(
-        `This image is too short. It is ${found.height} pixels high, but the limit is ${blob.constraints.minHeight} pixels.`,
-        'InvalidImageDimensions',
-      )
-    }
-    if (
-      blob.constraints.minWidth &&
-      found.width &&
-      found.width < blob.constraints.minWidth
-    ) {
-      throwInvalid(
-        `This image is too narrow. It is ${found.width} pixels wide, but the limit is ${blob.constraints.minWidth} pixels.`,
-        'InvalidImageDimensions',
-      )
-    }
   }
 }

@@ -3,6 +3,7 @@ import { BlockWriter } from '@ipld/car/writer'
 import { schema as common, def as commonDef } from '@atproto/common'
 import { CID } from 'multiformats'
 import BlockMap from './block-map'
+import { RepoRecord } from '@atproto/lexicon'
 
 // Repo nodes
 // ---------------
@@ -50,14 +51,14 @@ export type RecordCreateOp = {
   action: WriteOpAction.Create
   collection: string
   rkey: string
-  record: Record<string, unknown>
+  record: RepoRecord
 }
 
 export type RecordUpdateOp = {
   action: WriteOpAction.Update
   collection: string
   rkey: string
-  record: Record<string, unknown>
+  record: RepoRecord
 }
 
 export type RecordDeleteOp = {
@@ -98,14 +99,12 @@ export type CommitBlockData = {
 
 export type CommitData = CommitBlockData & {
   prev: CID | null
-  relatedCids?: CID[]
 }
 
 export type RepoUpdate = CommitData & {
   ops: RecordWriteOp[]
 }
 
-export type RepoRecord = Record<string, unknown>
 export type CollectionContents = Record<string, RepoRecord>
 export type RepoContents = Record<string, CollectionContents>
 

@@ -2,23 +2,24 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
-import * as ComAtprotoAdminModerationReport from './moderationReport'
+import { CID } from 'multiformats/cid'
+import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
   subject?: string
   resolved?: boolean
   limit?: number
-  before?: string
+  cursor?: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  reports: ComAtprotoAdminModerationReport.View[]
+  reports: ComAtprotoAdminDefs.ReportView[]
   [k: string]: unknown
 }
 

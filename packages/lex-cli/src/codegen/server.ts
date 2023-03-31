@@ -311,12 +311,12 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
           })
         }
       }
-      //= import {ValidationResult} from '@atproto/lexicon'
+      //= import {ValidationResult, BlobRef} from '@atproto/lexicon'
       file
         .addImportDeclaration({
           moduleSpecifier: '@atproto/lexicon',
         })
-        .addNamedImports([{ name: 'ValidationResult' }])
+        .addNamedImports([{ name: 'ValidationResult' }, { name: 'BlobRef' }])
       //= import {lexicons} from '../../lexicons.ts'
       file
         .addImportDeclaration({
@@ -335,6 +335,12 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
             .join('/')}/util`,
         })
         .addNamedImports([{ name: 'isObj' }, { name: 'hasProp' }])
+      //= import {CID} from 'multiformats/cid'
+      file
+        .addImportDeclaration({
+          moduleSpecifier: 'multiformats/cid',
+        })
+        .addNamedImports([{ name: 'CID' }])
 
       for (const defId in lexiconDoc.defs) {
         const def = lexiconDoc.defs[defId]
@@ -492,11 +498,7 @@ function genServerXrpcStreaming(
 
   file.addImportDeclaration({
     moduleSpecifier: '@atproto/xrpc-server',
-    namedImports: [
-      { name: 'HandlerAuth' },
-      { name: 'InfoFrame' },
-      { name: 'ErrorFrame' },
-    ],
+    namedImports: [{ name: 'HandlerAuth' }, { name: 'ErrorFrame' }],
   })
 
   file.addImportDeclaration({
@@ -511,20 +513,11 @@ function genServerXrpcStreaming(
     type: `ErrorFrame<${arrayToUnion(def.errors?.map((e) => e.name))}>`,
   })
 
-  // export type HandlerInfo = ...
-  file.addTypeAlias({
-    name: 'HandlerInfo',
-    isExported: true,
-    type: `InfoFrame<${arrayToUnion(def.infos?.map((e) => e.name))}>`,
-  })
-
   // export type HandlerOutput = ...
   file.addTypeAlias({
     isExported: true,
     name: 'HandlerOutput',
-    type: `HandlerInfo | HandlerError | ${
-      def.message?.schema ? 'OutputSchema' : 'void'
-    }`,
+    type: `HandlerError | ${def.message?.schema ? 'OutputSchema' : 'void'}`,
   })
 
   file.addTypeAlias({

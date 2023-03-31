@@ -8,7 +8,7 @@
         "type": "params",
         "required": ["uri"],
         "properties": {
-          "uri": {"type": "string"},
+          "uri": {"type": "string", "format": "at-uri"},
           "depth": {"type": "integer"}
         }
       },
@@ -20,7 +20,7 @@
           "properties": {
             "thread": {
               "type": "union",
-              "refs": ["#threadViewPost", "#notFoundPost"]
+              "refs": ["app.bsky.feed.defs#threadViewPost", "app.bsky.feed.defs#notFoundPost"]
             }
           }
         }
@@ -28,26 +28,6 @@
       "errors": [
         {"name": "NotFound"}
       ]
-    },
-    "threadViewPost": {
-      "type": "object",
-      "required": ["post"],
-      "properties": {
-        "post": {"type": "ref", "ref": "app.bsky.feed.post#view"},
-        "parent": {"type": "union", "refs": ["#threadViewPost", "#notFoundPost"]},
-        "replies": {
-          "type": "array",
-          "items": {"type": "union", "refs": ["#threadViewPost", "#notFoundPost"]}
-        }
-      }
-    },
-    "notFoundPost": {
-      "type": "object",
-      "required": ["uri", "notFound"],
-      "properties": {
-        "uri": {"type": "string"},
-        "notFound": {"type": "boolean", "const": true}
-      }
     }
   }
 }

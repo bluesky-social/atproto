@@ -9,10 +9,18 @@
         "type": "params",
         "required": ["did", "collection", "rkey"],
         "properties": {
-          "did": {"type": "string", "description": "The DID of the repo."},
-          "collection": {"type": "string" },
+          "did": {
+            "type": "string",
+            "format": "did",
+            "description": "The DID of the repo."
+          },
+          "collection": {"type": "string", "format": "nsid"},
           "rkey": {"type": "string" },
-          "commit": {"type": "string", "description": "An optional past commit CID."}
+          "commit": {
+            "type": "string",
+            "format": "cid",
+            "description": "An optional past commit CID."
+          }
         }
       },
       "output": {

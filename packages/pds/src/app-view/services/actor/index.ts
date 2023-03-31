@@ -13,15 +13,15 @@ export class ActorService {
 
   views = new ActorViews(this.db, this.imgUriBuilder)
 
-  async getUser(
+  async getActor(
     handleOrDid: string,
     includeSoftDeleted = false,
   ): Promise<ActorResult | null> {
-    const users = await this.getUsers([handleOrDid], includeSoftDeleted)
-    return users[0] || null
+    const actors = await this.getActors([handleOrDid], includeSoftDeleted)
+    return actors[0] || null
   }
 
-  async getUsers(
+  async getActors(
     handleOrDids: string[],
     includeSoftDeleted = false,
   ): Promise<ActorResult[]> {

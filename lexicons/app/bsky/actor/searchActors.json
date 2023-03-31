@@ -1,0 +1,32 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.actor.searchActors",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Find actors matching search criteria.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "term": {"type": "string"},
+          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
+          "cursor": {"type": "string"}
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["actors"],
+          "properties": {
+            "cursor": {"type": "string"},
+            "actors": {
+              "type": "array",
+              "items": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

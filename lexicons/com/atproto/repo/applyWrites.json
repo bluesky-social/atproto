@@ -1,0 +1,69 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.repo.applyWrites",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Apply a batch transaction of creates, updates, and deletes.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["repo", "writes"],
+          "properties": {
+            "repo": {
+              "type": "string",
+              "format": "at-identifier",
+              "description": "The handle or DID of the repo."
+            },
+            "validate": {
+              "type": "boolean",
+              "default": true,
+              "description": "Validate the records?"
+            },
+            "writes": {
+              "type": "array",
+              "items": {"type": "union", "refs": ["#create", "#update", "#delete"], "closed": true}
+            },
+            "swapCommit": {
+              "type": "string",
+              "format": "cid"
+            }
+          }
+        }
+      },
+      "errors": [
+        {"name": "InvalidSwap"}
+      ]
+    },
+    "create": {
+      "type": "object",
+      "description": "Create a new record.",
+      "required": ["action", "collection", "value"],
+      "properties": {
+        "collection": {"type": "string", "format": "nsid"},
+        "rkey": {"type": "string"},
+        "value": {"type": "unknown"}
+      }
+    },
+    "update": {
+      "type": "object",
+      "description": "Update an existing record.",
+      "required": ["action", "collection", "rkey", "value"],
+      "properties": {
+        "collection": {"type": "string", "format": "nsid"},
+        "rkey": {"type": "string"},
+        "value": {"type": "unknown"}
+      }
+    },
+    "delete": {
+      "type": "object",
+      "description": "Delete an existing record.",
+      "required": ["action", "collection", "rkey"],
+      "properties": {
+        "collection": {"type": "string", "format": "nsid"},
+        "rkey": {"type": "string"}
+      }
+    }
+  }
+}

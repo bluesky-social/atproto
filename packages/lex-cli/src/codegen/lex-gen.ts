@@ -6,11 +6,14 @@ import {
   LexObject,
   LexArray,
   LexPrimitive,
-  LexBlobVariant,
+  LexBlob,
   LexXrpcProcedure,
   LexXrpcQuery,
   LexToken,
   LexXrpcSubscription,
+  LexCidLink,
+  LexBytes,
+  LexIpldType,
 } from '@atproto/lexicon'
 import { toCamelCase, toTitleCase, toScreamingSnakeCase } from './util'
 
@@ -67,11 +70,10 @@ export function genUserType(
       break
 
     case 'blob':
-    case 'image':
-    case 'video':
-    case 'audio':
+    case 'bytes':
+    case 'cid-link':
     case 'boolean':
-    case 'number':
+    case 'float':
     case 'integer':
     case 'string':
     case 'unknown':
@@ -247,7 +249,7 @@ export function genArray(
 export function genPrimitiveOrBlob(
   file: SourceFile,
   lexUri: string,
-  def: LexPrimitive | LexBlobVariant,
+  def: LexPrimitive | LexBlob | LexIpldType,
 ) {
   genComment(
     file.addTypeAlias({
@@ -447,6 +449,13 @@ export function getHash(uri: string): string {
   return uri.split('#').pop() || ''
 }
 
+export function ipldToType(def: LexCidLink | LexBytes) {
+  if (def.type === 'bytes') {
+    return 'Uint8Array'
+  }
+  return 'CID'
+}
+
 export function refToType(
   ref: string,
   baseNsid: string,
@@ -468,14 +477,15 @@ export function refToType(
 }
 
 export function primitiveOrBlobToType(
-  def: LexBlobVariant | LexPrimitive,
+  def: LexBlob | LexPrimitive | LexIpldType,
 ): string {
   switch (def.type) {
     case 'blob':
-    case 'image':
-    case 'video':
-    case 'audio':
-      return `{cid: string; mimeType: string; [k: string]: unknown}`
+      return 'BlobRef'
+    case 'bytes':
+      return 'Uint8Array'
+    case 'cid-link':
+      return 'CID'
     default:
       return primitiveToType(def)
   }
@@ -494,7 +504,7 @@ export function primitiveToType(def: LexPrimitive): string {
         return JSON.stringify(def.const)
       }
       return 'string'
-    case 'number':
+    case 'float':
     case 'integer':
       if (def.enum) {
         return def.enum.map((v) => JSON.stringify(v)).join(' | ')
@@ -507,8 +517,6 @@ export function primitiveToType(def: LexPrimitive): string {
         return JSON.stringify(def.const)
       }
       return 'boolean'
-    case 'datetime':
-      return 'string'
     case 'unknown':
       return '{}'
     default:

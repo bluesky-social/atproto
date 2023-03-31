@@ -14,7 +14,10 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@atproto/common-web": "*",
+    "@atproto/uri": "*",
     "@atproto/xrpc": "*",
+    "tlds": "^1.234.0",
     "typed-emitter": "^2.1.0"
   },
   "devDependencies": {

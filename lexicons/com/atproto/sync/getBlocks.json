@@ -9,10 +9,14 @@
         "type": "params",
         "required": ["did", "cids"],
         "properties": {
-          "did": {"type": "string", "description": "The DID of the repo."},
+          "did": {
+            "type": "string",
+            "format": "did",
+            "description": "The DID of the repo."
+          },
           "cids": {
             "type": "array", 
-            "items": {"type": "string"}
+            "items": {"type": "string", "format": "cid"}
           }
         }
       },

@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.muteActor",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Mute an actor by did or handle.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["actor"],
+          "properties": {
+            "actor": { "type": "string", "format": "at-identifier" }
+          }
+        }
+      }
+    }
+  }
+}

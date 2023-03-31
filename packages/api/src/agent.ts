@@ -3,23 +3,24 @@ import { defaultFetchHandler } from '@atproto/xrpc'
 import {
   AtpBaseClient,
   AtpServiceClient,
-  ComAtprotoAccountCreate,
-  ComAtprotoSessionCreate,
-  ComAtprotoSessionGet,
-  ComAtprotoSessionRefresh,
+  ComAtprotoServerCreateAccount,
+  ComAtprotoServerCreateSession,
+  ComAtprotoServerGetSession,
+  ComAtprotoServerRefreshSession,
+  ComAtprotoRepoUploadBlob,
 } from './client'
 import {
   AtpSessionData,
   AtpAgentCreateAccountOpts,
   AtpAgentLoginOpts,
-  AptAgentFetchHandler,
+  AtpAgentFetchHandler,
   AtpAgentFetchHandlerResponse,
   AtpAgentGlobalOpts,
   AtpPersistSessionHandler,
   AtpAgentOpts,
 } from './types'
 
-const REFRESH_SESSION = 'com.atproto.session.refresh'
+const REFRESH_SESSION = 'com.atproto.server.refreshSession'
 
 /**
  * An ATP "Agent"
@@ -34,10 +35,14 @@ export class AtpAgent {
   private _persistSession?: AtpPersistSessionHandler
   private _refreshSessionPromise: Promise<void> | undefined
 
+  get com() {
+    return this.api.com
+  }
+
   /**
    * The `fetch` implementation; must be implemented for your platform.
    */
-  static fetch: AptAgentFetchHandler | undefined = defaultFetchHandler
+  static fetch: AtpAgentFetchHandler | undefined = defaultFetchHandler
 
   /**
    * Configures the API globally.
@@ -77,9 +82,9 @@ export class AtpAgent {
    */
   async createAccount(
     opts: AtpAgentCreateAccountOpts,
-  ): Promise<ComAtprotoAccountCreate.Response> {
+  ): Promise<ComAtprotoServerCreateAccount.Response> {
     try {
-      const res = await this.api.com.atproto.account.create({
+      const res = await this.api.com.atproto.server.createAccount({
         handle: opts.handle,
         password: opts.password,
         email: opts.email,
@@ -109,9 +114,9 @@ export class AtpAgent {
    */
   async login(
     opts: AtpAgentLoginOpts,
-  ): Promise<ComAtprotoSessionCreate.Response> {
+  ): Promise<ComAtprotoServerCreateSession.Response> {
     try {
-      const res = await this.api.com.atproto.session.create({
+      const res = await this.api.com.atproto.server.createSession({
         identifier: opts.identifier,
         password: opts.password,
       })
@@ -139,10 +144,10 @@ export class AtpAgent {
    */
   async resumeSession(
     session: AtpSessionData,
-  ): Promise<ComAtprotoSessionGet.Response> {
+  ): Promise<ComAtprotoServerGetSession.Response> {
     try {
       this.session = session
-      const res = await this.api.com.atproto.session.get()
+      const res = await this.api.com.atproto.server.getSession()
       if (!res.success || res.data.did !== this.session.did) {
         throw new Error('Invalid session')
       }
@@ -271,6 +276,34 @@ export class AtpAgent {
     // propagate in the _fetch() handler's second attempt to run
     // the request
   }
+
+  /**
+   * Upload a binary blob to the server
+   */
+  uploadBlob: typeof this.api.com.atproto.repo.uploadBlob = (data, opts) =>
+    this.api.com.atproto.repo.uploadBlob(data, opts)
+
+  /**
+   * Resolve a handle to a DID
+   */
+  resolveHandle: typeof this.api.com.atproto.identity.resolveHandle = (
+    params,
+    opts,
+  ) => this.api.com.atproto.identity.resolveHandle(params, opts)
+
+  /**
+   * Change the user's handle
+   */
+  updateHandle: typeof this.api.com.atproto.identity.updateHandle = (
+    data,
+    opts,
+  ) => this.api.com.atproto.identity.updateHandle(data, opts)
+
+  /**
+   * Create a moderation report
+   */
+  createModerationReport: typeof this.api.com.atproto.moderation.createReport =
+    (data, opts) => this.api.com.atproto.moderation.createReport(data, opts)
 }
 
 function isErrorObject(v: unknown): v is ErrorResponseBody {
@@ -295,9 +328,12 @@ function isErrorResponse(
 function isNewSessionObject(
   client: AtpBaseClient,
   v: unknown,
-): v is ComAtprotoSessionRefresh.OutputSchema {
+): v is ComAtprotoServerRefreshSession.OutputSchema {
   try {
-    client.xrpc.lex.assertValidXrpcOutput('com.atproto.session.refresh', v)
+    client.xrpc.lex.assertValidXrpcOutput(
+      'com.atproto.server.refreshSession',
+      v,
+    )
     return true
   } catch {
     return false

@@ -17,7 +17,7 @@ describe('agent', () => {
 
   beforeAll(async () => {
     server = await runTestServer({
-      dbPostgresSchema: 'session',
+      dbPostgresSchema: 'api_agent',
     })
     close = server.close
   })
@@ -48,7 +48,9 @@ describe('agent', () => {
     expect(agent.session?.handle).toEqual(res.data.handle)
     expect(agent.session?.did).toEqual(res.data.did)
 
-    const { data: sessionInfo } = await agent.api.com.atproto.session.get({})
+    const { data: sessionInfo } = await agent.api.com.atproto.server.getSession(
+      {},
+    )
     expect(sessionInfo).toEqual({
       did: res.data.did,
       handle: res.data.handle,
@@ -88,7 +90,8 @@ describe('agent', () => {
     expect(agent2.session?.handle).toEqual(res1.data.handle)
     expect(agent2.session?.did).toEqual(res1.data.did)
 
-    const { data: sessionInfo } = await agent2.api.com.atproto.session.get({})
+    const { data: sessionInfo } =
+      await agent2.api.com.atproto.server.getSession({})
     expect(sessionInfo).toEqual({
       did: res1.data.did,
       handle: res1.data.handle,
@@ -128,7 +131,8 @@ describe('agent', () => {
     expect(agent2.session?.handle).toEqual(res1.data.handle)
     expect(agent2.session?.did).toEqual(res1.data.did)
 
-    const { data: sessionInfo } = await agent2.api.com.atproto.session.get({})
+    const { data: sessionInfo } =
+      await agent2.api.com.atproto.server.getSession({})
     expect(sessionInfo).toEqual({
       did: res1.data.did,
       handle: res1.data.handle,
@@ -248,7 +252,7 @@ describe('agent', () => {
           body: { error: 'ExpiredToken' },
         }
       }
-      if (httpUri.includes('com.atproto.session.refresh')) {
+      if (httpUri.includes('com.atproto.server.refreshSession')) {
         refreshCalls++
       }
       return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody)
@@ -358,7 +362,7 @@ describe('agent', () => {
           body: { error: 'ExpiredToken' },
         }
       }
-      if (httpUri.includes('com.atproto.session.refresh')) {
+      if (httpUri.includes('com.atproto.server.refreshSession')) {
         return {
           status: 500,
           headers: {},

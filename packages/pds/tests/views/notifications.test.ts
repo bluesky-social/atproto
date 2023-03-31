@@ -1,5 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
   runTestServer,
   forSnapshot,
@@ -11,7 +11,7 @@ import {
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { Database } from '../../src'
-import { Notification } from '../../src/lexicon/types/app/bsky/notification/list'
+import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
 
 describe('pds notification views', () => {
   let server: TestServerInfo
@@ -49,19 +49,20 @@ describe('pds notification views', () => {
   }
 
   it('fetches notification count without a last-seen', async () => {
-    const notifCountAlice = await agent.api.app.bsky.notification.getCount(
-      {},
-      { headers: sc.getHeaders(alice) },
-    )
+    const notifCountAlice =
+      await agent.api.app.bsky.notification.getUnreadCount(
+        {},
+        { headers: sc.getHeaders(alice) },
+      )
 
-    expect(notifCountAlice.data.count).toBe(9)
+    expect(notifCountAlice.data.count).toBe(11)
 
-    const notifCountBob = await agent.api.app.bsky.notification.getCount(
+    const notifCountBob = await agent.api.app.bsky.notification.getUnreadCount(
       {},
       { headers: sc.getHeaders(sc.dids.bob) },
     )
 
-    expect(notifCountBob.data.count).toBe(3)
+    expect(notifCountBob.data.count).toBe(4)
   })
 
   it('generates notifications for all reply ancestors', async () => {
@@ -75,29 +76,39 @@ describe('pds notification views', () => {
     )
     await server.ctx.messageQueue.processAll()
 
-    const notifCountAlice = await agent.api.app.bsky.notification.getCount(
-      {},
-      { headers: sc.getHeaders(alice) },
-    )
+    const notifCountAlice =
+      await agent.api.app.bsky.notification.getUnreadCount(
+        {},
+        { headers: sc.getHeaders(alice) },
+      )
 
-    expect(notifCountAlice.data.count).toBe(10)
+    expect(notifCountAlice.data.count).toBe(12)
 
-    const notifCountBob = await agent.api.app.bsky.notification.getCount(
+    const notifCountBob = await agent.api.app.bsky.notification.getUnreadCount(
       {},
       { headers: sc.getHeaders(sc.dids.bob) },
     )
 
-    expect(notifCountBob.data.count).toBe(4)
+    expect(notifCountBob.data.count).toBe(5)
+  })
+
+  it('generates notifications for quotes', async () => {
+    // Dan was quoted by alice
+    const notifsDan = await agent.api.app.bsky.notification.listNotifications(
+      {},
+      { headers: sc.getHeaders(sc.dids.dan) },
+    )
+    expect(forSnapshot(notifsDan.data)).toMatchSnapshot()
   })
 
   it('fetches notifications without a last-seen', async () => {
-    const notifRes = await agent.api.app.bsky.notification.list(
+    const notifRes = await agent.api.app.bsky.notification.listNotifications(
       {},
       { headers: sc.getHeaders(alice) },
     )
 
     const notifs = sort(notifRes.data.notifications)
-    expect(notifs.length).toBe(10)
+    expect(notifs.length).toBe(12)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map(() => false))
@@ -109,53 +120,54 @@ describe('pds notification views', () => {
   })
 
   it('fetches notifications omitting mentions and replies by a muted user', async () => {
-    await agent.api.app.bsky.graph.mute(
-      { user: sc.dids.carol }, // Replier
+    await agent.api.app.bsky.graph.muteActor(
+      { actor: sc.dids.carol }, // Replier
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
-    await agent.api.app.bsky.graph.mute(
-      { user: sc.dids.dan }, // Mentioner
+    await agent.api.app.bsky.graph.muteActor(
+      { actor: sc.dids.dan }, // Mentioner
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
 
-    const notifRes = await agent.api.app.bsky.notification.list(
+    const notifRes = await agent.api.app.bsky.notification.listNotifications(
       {},
       { headers: sc.getHeaders(alice) },
     )
-    const notifCount = await agent.api.app.bsky.notification.getCount(
+    const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
       {},
       { headers: sc.getHeaders(alice) },
     )
 
     const notifs = sort(notifRes.data.notifications)
-    expect(notifs.length).toBe(7)
+    expect(notifs.length).toBe(9)
     expect(forSnapshot(notifs)).toMatchSnapshot()
-    expect(notifCount.data.count).toBe(7)
+    expect(notifCount.data.count).toBe(9)
 
     // Cleanup
-    await agent.api.app.bsky.graph.unmute(
-      { user: sc.dids.carol },
+    await agent.api.app.bsky.graph.unmuteActor(
+      { actor: sc.dids.carol },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
-    await agent.api.app.bsky.graph.unmute(
-      { user: sc.dids.dan },
+    await agent.api.app.bsky.graph.unmuteActor(
+      { actor: sc.dids.dan },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
   })
 
   it('fetches notifications omitting mentions and replies for taken-down posts', async () => {
-    const postUri1 = sc.replies[sc.dids.carol][0].ref.uri // Reply
-    const postUri2 = sc.posts[sc.dids.dan][1].ref.uri // Mention
+    const postRef1 = sc.replies[sc.dids.carol][0].ref // Reply
+    const postRef2 = sc.posts[sc.dids.dan][1].ref // Mention
     const actionResults = await Promise.all(
-      [postUri1, postUri2].map((postUri) =>
+      [postRef1, postRef2].map((postRef) =>
         agent.api.com.atproto.admin.takeModerationAction(
           {
             action: TAKEDOWN,
             subject: {
-              $type: 'com.atproto.repo.recordRef',
-              uri: postUri.toString(),
+              $type: 'com.atproto.repo.strongRef',
+              uri: postRef.uriStr,
+              cid: postRef.cidStr,
             },
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -166,19 +178,19 @@ describe('pds notification views', () => {
       ),
     )
 
-    const notifRes = await agent.api.app.bsky.notification.list(
+    const notifRes = await agent.api.app.bsky.notification.listNotifications(
       {},
       { headers: sc.getHeaders(alice) },
     )
-    const notifCount = await agent.api.app.bsky.notification.getCount(
+    const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
       {},
       { headers: sc.getHeaders(alice) },
     )
 
     const notifs = sort(notifRes.data.notifications)
-    expect(notifs.length).toBe(8)
+    expect(notifs.length).toBe(10)
     expect(forSnapshot(notifs)).toMatchSnapshot()
-    expect(notifCount.data.count).toBe(8)
+    expect(notifCount.data.count).toBe(10)
 
     // Cleanup
     await Promise.all(
@@ -186,7 +198,7 @@ describe('pds notification views', () => {
         agent.api.com.atproto.admin.reverseModerationAction(
           {
             id: result.data.id,
-            createdBy: 'X',
+            createdBy: 'did:example:admin',
             reason: 'Y',
           },
           {
@@ -202,9 +214,9 @@ describe('pds notification views', () => {
     const results = (results) =>
       sort(results.flatMap((res) => res.notifications))
     const paginator = async (cursor?: string) => {
-      const res = await agent.api.app.bsky.notification.list(
+      const res = await agent.api.app.bsky.notification.listNotifications(
         {
-          before: cursor,
+          cursor,
           limit: 6,
         },
         { headers: sc.getHeaders(alice) },
@@ -217,19 +229,19 @@ describe('pds notification views', () => {
       expect(res.notifications.length).toBeLessThanOrEqual(6),
     )
 
-    const full = await agent.api.app.bsky.notification.list(
+    const full = await agent.api.app.bsky.notification.listNotifications(
       {},
       {
         headers: sc.getHeaders(alice),
       },
     )
 
-    expect(full.data.notifications.length).toEqual(10)
+    expect(full.data.notifications.length).toEqual(12)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
   it('updates notifications last seen', async () => {
-    const full = await agent.api.app.bsky.notification.list(
+    const full = await agent.api.app.bsky.notification.listNotifications(
       {},
       {
         headers: sc.getHeaders(alice),
@@ -250,7 +262,7 @@ describe('pds notification views', () => {
   })
 
   it('fetches notification count with a last-seen', async () => {
-    const notifCount = await agent.api.app.bsky.notification.getCount(
+    const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
       {},
       { headers: sc.getHeaders(alice) },
     )
@@ -259,7 +271,7 @@ describe('pds notification views', () => {
   })
 
   it('fetches notifications with a last-seen', async () => {
-    const notifRes = await agent.api.app.bsky.notification.list(
+    const notifRes = await agent.api.app.bsky.notification.listNotifications(
       {},
       {
         headers: sc.getHeaders(alice),
@@ -267,7 +279,7 @@ describe('pds notification views', () => {
     )
 
     const notifs = sort(notifRes.data.notifications)
-    expect(notifs.length).toBe(10)
+    expect(notifs.length).toBe(12)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map((_, i) => i >= 3))
