@@ -43,39 +43,31 @@ describe('pds author feed views', () => {
   // @TODO(bsky) blocked by actor takedown via labels.
   // @TODO(bsky) blocked by record takedown via labels.
 
-  it('fetches full author feeds for self (sorted, minimal myState).', async () => {
+  it('fetches full author feeds for self (sorted, minimal viewer state).', async () => {
     const aliceForAlice = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: sc.accounts[alice].handle },
-      {
-        headers: sc.getHeaders(alice, true),
-      },
+      { actor: sc.accounts[alice].handle },
+      { headers: sc.getHeaders(alice, true) },
     )
 
     expect(forSnapshot(aliceForAlice.data.feed)).toMatchSnapshot()
 
     const bobForBob = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: sc.accounts[bob].handle },
-      {
-        headers: sc.getHeaders(bob, true),
-      },
+      { actor: sc.accounts[bob].handle },
+      { headers: sc.getHeaders(bob, true) },
     )
 
     expect(forSnapshot(bobForBob.data.feed)).toMatchSnapshot()
 
     const carolForCarol = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: sc.accounts[carol].handle },
-      {
-        headers: sc.getHeaders(carol, true),
-      },
+      { actor: sc.accounts[carol].handle },
+      { headers: sc.getHeaders(carol, true) },
     )
 
     expect(forSnapshot(carolForCarol.data.feed)).toMatchSnapshot()
 
     const danForDan = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: sc.accounts[dan].handle },
-      {
-        headers: sc.getHeaders(dan, true),
-      },
+      { actor: sc.accounts[dan].handle },
+      { headers: sc.getHeaders(dan, true) },
     )
 
     expect(forSnapshot(danForDan.data.feed)).toMatchSnapshot()
@@ -83,16 +75,13 @@ describe('pds author feed views', () => {
 
   it("reflects fetching user's state in the feed.", async () => {
     const aliceForCarol = await agent.api.app.bsky.feed.getAuthorFeed(
-      { author: sc.accounts[alice].handle },
-      {
-        headers: sc.getHeaders(carol, true),
-      },
+      { actor: sc.accounts[alice].handle },
+      { headers: sc.getHeaders(carol, true) },
     )
 
     aliceForCarol.data.feed.forEach((postView) => {
       const { viewer, uri } = postView.post
-      expect(viewer?.upvote).toEqual(sc.votes.up[carol]?.[uri]?.toString())
-      expect(viewer?.downvote).toEqual(sc.votes.down[carol]?.[uri]?.toString())
+      expect(viewer?.like).toEqual(sc.likes[carol][uri]?.toString())
       expect(viewer?.repost).toEqual(sc.reposts[carol][uri]?.toString())
     })
 
@@ -104,8 +93,8 @@ describe('pds author feed views', () => {
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getAuthorFeed(
         {
-          author: sc.accounts[alice].handle,
-          before: cursor,
+          actor: sc.accounts[alice].handle,
+          cursor,
           limit: 2,
         },
         { headers: sc.getHeaders(dan, true) },
@@ -119,9 +108,7 @@ describe('pds author feed views', () => {
     )
 
     const full = await agent.api.app.bsky.feed.getAuthorFeed(
-      {
-        author: sc.accounts[alice].handle,
-      },
+      { actor: sc.accounts[alice].handle },
       { headers: sc.getHeaders(dan, true) },
     )
 
