@@ -49,11 +49,15 @@ describe('indexing', () => {
       record: {
         $type: ids.AppBskyFeedPost,
         text: '@bob.test how are you?',
-        entities: [
+        facets: [
           {
-            index: { start: 0, end: 9 },
-            type: 'mention',
-            value: sc.dids.bob,
+            index: { byteStart: 0, byteEnd: 9 },
+            features: [
+              {
+                $type: `${ids.AppBskyRichtextFacet}#mention`,
+                did: sc.dids.bob,
+              },
+            ],
           },
         ],
         createdAt,
@@ -67,11 +71,15 @@ describe('indexing', () => {
       record: {
         $type: ids.AppBskyFeedPost,
         text: '@carol.test how are you?',
-        entities: [
+        facets: [
           {
-            index: { start: 0, end: 11 },
-            type: 'mention',
-            value: sc.dids.carol,
+            index: { byteStart: 0, byteEnd: 11 },
+            features: [
+              {
+                $type: `${ids.AppBskyRichtextFacet}#mention`,
+                did: sc.dids.carol,
+              },
+            ],
           },
         ],
         createdAt,
@@ -210,11 +218,11 @@ describe('indexing', () => {
         { headers: sc.getHeaders(sc.dids.alice, true) },
       )
       const { data: origFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
-        { author: sc.dids.alice },
+        { actor: sc.dids.alice },
         { headers: sc.getHeaders(sc.dids.alice, true) },
       )
       const { data: origFollows } = await agent.api.app.bsky.graph.getFollows(
-        { user: sc.dids.alice },
+        { actor: sc.dids.alice },
         { headers: sc.getHeaders(sc.dids.alice, true) },
       )
       // Index
@@ -228,11 +236,11 @@ describe('indexing', () => {
         { headers: sc.getHeaders(sc.dids.alice, true) },
       )
       const { data: feed } = await agent.api.app.bsky.feed.getAuthorFeed(
-        { author: sc.dids.alice },
+        { actor: sc.dids.alice },
         { headers: sc.getHeaders(sc.dids.alice, true) },
       )
       const { data: follows } = await agent.api.app.bsky.graph.getFollows(
-        { user: sc.dids.alice },
+        { actor: sc.dids.alice },
         { headers: sc.getHeaders(sc.dids.alice, true) },
       )
       expect(forSnapshot([origProfile, origFeed, origFollows])).toEqual(
@@ -243,8 +251,13 @@ describe('indexing', () => {
     it('updates indexes when records change.', async () => {
       const { db, services } = server.ctx
       // Update profile
-      await pdsAgent.api.app.bsky.actor.updateProfile(
-        { description: 'freshening things up' },
+      await pdsAgent.api.com.atproto.repo.putRecord(
+        {
+          repo: sc.dids.alice,
+          collection: ids.AppBskyActorProfile,
+          rkey: 'self',
+          record: { description: 'freshening things up' },
+        },
         { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
       )
       // Add post
@@ -252,7 +265,7 @@ describe('indexing', () => {
       // Remove a follow
       const removedFollow = sc.follows[sc.dids.alice][sc.dids.carol]
       await pdsAgent.api.app.bsky.graph.follow.delete(
-        { did: sc.dids.alice, rkey: removedFollow.uri.rkey },
+        { repo: sc.dids.alice, rkey: removedFollow.uri.rkey },
         sc.getHeaders(sc.dids.alice),
       )
       // Index
@@ -266,11 +279,11 @@ describe('indexing', () => {
         { headers: sc.getHeaders(sc.dids.alice, true) },
       )
       const { data: feed } = await agent.api.app.bsky.feed.getAuthorFeed(
-        { author: sc.dids.alice },
+        { actor: sc.dids.alice },
         { headers: sc.getHeaders(sc.dids.alice, true) },
       )
       const { data: follows } = await agent.api.app.bsky.graph.getFollows(
-        { user: sc.dids.alice },
+        { actor: sc.dids.alice },
         { headers: sc.getHeaders(sc.dids.alice, true) },
       )
       expect(profile.description).toEqual('freshening things up')

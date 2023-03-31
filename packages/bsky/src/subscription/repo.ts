@@ -1,10 +1,11 @@
 import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import { cborDecode, wait } from '@atproto/common'
+import { wait } from '@atproto/common'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
-import { WriteOpAction, readCarWithRoot } from '@atproto/repo'
-import { OutputSchema as Message } from '../lexicon/types/com/atproto/sync/subscribeAllRepos'
+import { WriteOpAction, readCarWithRoot, cborToLexRecord } from '@atproto/repo'
+import { OutputSchema as Message } from '../lexicon/types/com/atproto/sync/subscribeRepos'
+import * as message from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import { ids, lexicons } from '../lexicon/lexicons'
 import Database from '../db'
 import AppContext from '../context'
@@ -12,14 +13,14 @@ import { Leader } from '../db/leader'
 import { subLogger } from '../logger'
 import { ConsecutiveList, LatestQueue, PartitionedQueue } from './util'
 
-const METHOD = ids.ComAtprotoSyncSubscribeAllRepos
+const METHOD = ids.ComAtprotoSyncSubscribeRepos
 export const REPO_SUB_ID = 1000
 
 export class RepoSubscription {
   leader = new Leader(this.subLockId, this.ctx.db)
   repoQueue = new PartitionedQueue()
   cursorQueue = new LatestQueue()
-  consecutive = new ConsecutiveList<Message>()
+  consecutive = new ConsecutiveList<ProcessableMessage>()
   destroyed = false
 
   constructor(
@@ -34,9 +35,20 @@ export class RepoSubscription {
         const { ran } = await this.leader.run(async ({ signal }) => {
           const sub = this.getSubscription({ signal })
           for await (const msg of sub) {
-            const item = this.consecutive.push(msg)
+            const details = getMessageDetails(msg)
+            if ('info' in details) {
+              // These messages are not sequenced, we just log them and carry on
+              subLogger.warn(
+                { provider: this.service, message: loggableMessage(msg) },
+                `repo subscription ${
+                  details.info ? 'info' : 'unknown'
+                } message`,
+              )
+              continue
+            }
+            const item = this.consecutive.push(details.message)
             this.repoQueue
-              .add(msg.repo, () => this.handleMessage(msg))
+              .add(details.repo, () => this.handleMessage(details.message))
               .catch((err) => {
                 // We log messages we can't process and move on. Barring a
                 // durable queue this is the best we can do for now: otherwise
@@ -90,54 +102,72 @@ export class RepoSubscription {
     this.destroyed = false
     this.repoQueue = new PartitionedQueue()
     this.cursorQueue = new LatestQueue()
-    this.consecutive = new ConsecutiveList<Message>()
+    this.consecutive = new ConsecutiveList<ProcessableMessage>()
     await this.run()
   }
 
-  private async handleMessage(msg: Message) {
-    const { db } = this.ctx
+  private async handleMessage(msg: ProcessableMessage) {
+    if (message.isCommit(msg)) {
+      await this.handleCommit(msg)
+    } else if (message.isHandle(msg)) {
+      await this.handleUpdateHandle(msg)
+    } else if (message.isMigrate(msg)) {
+      await this.handleMigrate(msg)
+    } else if (message.isTombstone(msg)) {
+      await this.handleTombstone(msg)
+    } else {
+      const exhaustiveCheck: never = msg
+      throw new Error(`Unhandled message type: ${exhaustiveCheck['$type']}`)
+    }
+  }
+
+  // @TODO handle too-big commits and rebases
+  private async handleCommit(msg: message.Commit) {
+    const { db, services } = this.ctx
+    const processOps = async (tx: Database, ops: PreparedWrite[]) => {
+      const indexingTx = services.indexing(tx)
+      for (const op of ops) {
+        if (op.action === WriteOpAction.Delete) {
+          await indexingTx.deleteRecord(op.uri)
+        } else {
+          // @TODO skip-and-log records that don't validate
+          await indexingTx.indexRecord(
+            op.uri,
+            op.cid,
+            op.record,
+            op.action, // create or update
+            msg.time,
+          )
+        }
+      }
+    }
+    const processActor = async (tx: Database) => {
+      const indexingTx = services.indexing(tx)
+      await indexingTx.indexActor(msg.repo, msg.time)
+    }
     const ops = await getOps(msg)
     await db.transaction(async (tx) => {
-      await Promise.all([
-        this.handleOps(tx, ops, msg.time),
-        this.handleActor(tx, msg.repo, msg.time),
-      ])
+      await Promise.all([processOps(tx, ops), processActor(tx)])
     })
   }
 
-  private async handleCursor(msg: Message) {
+  private async handleUpdateHandle(_msg: message.Handle) {
+    throw new Error('Not implemented') // @TODO
+  }
+
+  private async handleMigrate(_msg: message.Migrate) {
+    throw new Error('Not implemented') // @TODO
+  }
+
+  private async handleTombstone(_msg: message.Tombstone) {
+    throw new Error('Not implemented') // @TODO
+  }
+
+  private async handleCursor(msg: ProcessableMessage) {
     const { db } = this.ctx
     await db.transaction(async (tx) => {
       await this.setState(tx, { cursor: msg.seq })
     })
-  }
-
-  private async handleOps(
-    tx: Database,
-    ops: PreparedWrite[],
-    timestamp: string,
-  ) {
-    const { services } = this.ctx
-    const indexingTx = services.indexing(tx)
-    for (const op of ops) {
-      if (op.action === WriteOpAction.Delete) {
-        await indexingTx.deleteRecord(op.uri)
-      } else {
-        await indexingTx.indexRecord(
-          op.uri,
-          op.cid,
-          op.record,
-          op.action, // create or update
-          timestamp,
-        )
-      }
-    }
-  }
-
-  private async handleActor(tx: Database, did: string, timestamp: string) {
-    const { services } = this.ctx
-    const indexingTx = services.indexing(tx)
-    await indexingTx.indexActor(did, timestamp)
   }
 
   async getState(): Promise<State> {
@@ -199,9 +229,9 @@ export class RepoSubscription {
               err,
               seq: ifNumber(value?.['seq']),
               repo: ifString(value?.['repo']),
-              commit: ifString(value?.['commit']),
+              commit: ifString(value?.['commit']?.toString()),
               time: ifString(value?.['time']),
-              service: this.service,
+              provider: this.service,
             },
             'repo subscription skipped invalid message',
           )
@@ -211,7 +241,14 @@ export class RepoSubscription {
   }
 }
 
-async function getOps(msg: Message): Promise<PreparedWrite[]> {
+// These are the message types that have a sequence number and a repo
+type ProcessableMessage =
+  | message.Commit
+  | message.Handle
+  | message.Migrate
+  | message.Tombstone
+
+async function getOps(msg: message.Commit): Promise<PreparedWrite[]> {
   const { ops } = msg
   const car = await readCarWithRoot(msg.blocks as Uint8Array)
   return ops.map((op) => {
@@ -222,17 +259,16 @@ async function getOps(msg: Message): Promise<PreparedWrite[]> {
       op.action === WriteOpAction.Update
     ) {
       assert(op.cid)
-      const cid = CID.parse(op.cid)
-      const record = car.blocks.get(cid)
+      const record = car.blocks.get(op.cid)
       assert(record)
       return {
         action:
           op.action === WriteOpAction.Create
             ? WriteOpAction.Create
             : WriteOpAction.Update,
-        cid,
-        record: cborDecode(record),
-        blobs: [], // @TODO(bsky) need to determine how the app-view provides URLs for processed blobs
+        cid: op.cid,
+        record: cborToLexRecord(record),
+        blobs: [],
         uri: AtUri.make(msg.repo, collection, rkey),
       }
     } else if (op.action === WriteOpAction.Delete) {
@@ -259,8 +295,29 @@ function ifNumber(val: unknown): number | undefined {
 }
 
 function loggableMessage(msg: Message) {
-  const { seq, event, prev, repo, commit, time } = msg
-  return { seq, event, prev, repo, commit, time }
+  if (message.isCommit(msg)) {
+    const { seq, rebase, prev, repo, commit, time, tooBig, blobs } = msg
+    return {
+      $type: msg.$type,
+      seq,
+      rebase,
+      prev: prev?.toString(),
+      repo,
+      commit: commit.toString(),
+      time,
+      tooBig,
+      hasBlobs: blobs.length > 0,
+    }
+  } else if (message.isHandle(msg)) {
+    return msg
+  } else if (message.isMigrate(msg)) {
+    return msg
+  } else if (message.isTombstone(msg)) {
+    return msg
+  } else if (message.isInfo(msg)) {
+    return msg
+  }
+  return msg
 }
 
 type State = { cursor: number }
@@ -287,3 +344,24 @@ type PreparedDelete = {
 }
 
 type PreparedWrite = PreparedCreate | PreparedUpdate | PreparedDelete
+
+function getMessageDetails(msg: Message):
+  | { info: message.Info | null }
+  | {
+      seq: number
+      repo: string
+      message: ProcessableMessage
+    } {
+  if (message.isCommit(msg)) {
+    return { seq: msg.seq, repo: msg.repo, message: msg }
+  } else if (message.isHandle(msg)) {
+    return { seq: msg.seq, repo: msg.did, message: msg }
+  } else if (message.isMigrate(msg)) {
+    return { seq: msg.seq, repo: msg.did, message: msg }
+  } else if (message.isTombstone(msg)) {
+    return { seq: msg.seq, repo: msg.did, message: msg }
+  } else if (message.isInfo(msg)) {
+    return { info: msg }
+  }
+  return { info: null }
+}

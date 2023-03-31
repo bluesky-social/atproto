@@ -23,8 +23,7 @@ const insertFn = async (
       uri: uri.toString(),
       cid: cid.toString(),
       creator: uri.host,
-      subjectDid: obj.subject.did,
-      subjectDeclarationCid: obj.subject.declarationCid,
+      subjectDid: obj.subject,
       createdAt: obj.createdAt,
       indexedAt: timestamp,
     })
@@ -42,7 +41,7 @@ const findDuplicate = async (
   const found = await db
     .selectFrom('follow')
     .where('creator', '=', uri.host)
-    .where('subjectDid', '=', obj.subject.did)
+    .where('subjectDid', '=', obj.subject)
     .selectAll()
     .executeTakeFirst()
   return found ? new AtUri(found.uri) : null

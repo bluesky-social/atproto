@@ -2,14 +2,13 @@ import { Server } from '../../../../lexicon'
 import { FeedKeyset, composeFeed } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
-import { FeedRow } from '../../../../services/feed'
 import { authVerifier } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
     auth: authVerifier,
     handler: async ({ params, auth }) => {
-      const { author, limit, before } = params
+      const { actor, limit, cursor } = params
       const requester = auth.credentials.did
       const db = ctx.db.db
       const { ref } = db.dynamic
@@ -17,16 +16,16 @@ export default function (server: Server, ctx: AppContext) {
       const feedService = ctx.services.feed(ctx.db)
 
       let did = ''
-      if (author.startsWith('did:')) {
-        did = author
+      if (actor.startsWith('did:')) {
+        did = actor
       } else {
-        const actor = await db
+        const actorRes = await db
           .selectFrom('actor')
           .select('did')
-          .where('handle', '=', author)
+          .where('handle', '=', actor)
           .executeTakeFirst()
-        if (actor) {
-          did = actor?.did
+        if (actorRes) {
+          did = actorRes?.did
         }
       }
 
@@ -43,11 +42,11 @@ export default function (server: Server, ctx: AppContext) {
         .selectAll()
       feedItemsQb = paginate(feedItemsQb, {
         limit,
-        before,
+        cursor,
         keyset,
       })
 
-      const feedItems: FeedRow[] = await feedItemsQb.execute()
+      const feedItems = await feedItemsQb.execute()
       const feed = await composeFeed(feedService, feedItems, requester)
 
       return {

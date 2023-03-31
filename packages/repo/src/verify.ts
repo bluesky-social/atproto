@@ -62,7 +62,7 @@ export const verifyCheckoutWithCids = async (
     contents[collection] ??= {}
     contents[collection][rkey] = {
       cid: add.cid,
-      value: await storage.readObj(add.cid, def.record),
+      value: await storage.readRecord(add.cid),
     }
   }
 

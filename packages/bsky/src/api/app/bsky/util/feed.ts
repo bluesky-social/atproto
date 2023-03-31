@@ -1,7 +1,8 @@
 import { AtUri } from '@atproto/uri'
 import { TimeCidKeyset } from '../../../../db/pagination'
-import { Main as FeedViewPost } from '../../../../lexicon/types/app/bsky/feed/feedViewPost'
-import { FeedRow, FeedService } from '../../../../services/feed'
+import { FeedViewPost } from '../../../../lexicon/types/app/bsky/feed/defs'
+import { FeedService } from '../../../../services/feed'
+import { FeedRow } from '../../../../services/types'
 
 // Present post and repost results into FeedViewPosts
 // Including links to embedded media

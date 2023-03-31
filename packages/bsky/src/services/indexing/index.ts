@@ -13,7 +13,7 @@ import { chunkArray } from '@atproto/common'
 import { NoHandleRecordError, resolveDns } from '@atproto/identifier'
 import Database from '../../db'
 import * as Post from './plugins/post'
-import * as Vote from './plugins/vote'
+import * as Like from './plugins/like'
 import * as Repost from './plugins/repost'
 import * as Follow from './plugins/follow'
 import * as Profile from './plugins/profile'
@@ -25,7 +25,7 @@ import { retryHttp } from '../../util/retry'
 export class IndexingService {
   records: {
     post: Post.PluginType
-    vote: Vote.PluginType
+    like: Like.PluginType
     repost: Repost.PluginType
     follow: Follow.PluginType
     profile: Profile.PluginType
@@ -34,7 +34,7 @@ export class IndexingService {
   constructor(public db: Database, public didResolver: DidResolver) {
     this.records = {
       post: Post.makePlugin(this.db.db),
-      vote: Vote.makePlugin(this.db.db),
+      like: Like.makePlugin(this.db.db),
       repost: Repost.makePlugin(this.db.db),
       follow: Follow.makePlugin(this.db.db),
       profile: Profile.makePlugin(this.db.db),
@@ -177,10 +177,6 @@ export class IndexingService {
 
     await Promise.all([
       this.db.db
-        .deleteFrom('post_entity')
-        .where('post_entity.postUri', 'in', postByUser)
-        .execute(),
-      this.db.db
         .deleteFrom('post_embed_image')
         .where('post_embed_image.postUri', 'in', postByUser)
         .execute(),
@@ -207,7 +203,7 @@ export class IndexingService {
       this.db.db.deleteFrom('post').where('creator', '=', did).execute(),
       this.db.db.deleteFrom('profile').where('creator', '=', did).execute(),
       this.db.db.deleteFrom('repost').where('creator', '=', did).execute(),
-      this.db.db.deleteFrom('vote').where('creator', '=', did).execute(),
+      this.db.db.deleteFrom('like').where('creator', '=', did).execute(),
     ])
   }
 }
@@ -229,7 +225,7 @@ const resolveExternalHandle = async (
     // @TODO we don't need non-tls for our tests, but it might be useful to support
     const { api } = new AtpAgent({ service: `https://${handle}` })
     const res = await retryHttp(() =>
-      api.com.atproto.handle.resolve({ handle }),
+      api.com.atproto.identity.resolveHandle({ handle }),
     )
     return res.data.did
   } catch (err) {

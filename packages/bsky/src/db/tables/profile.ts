@@ -4,7 +4,7 @@ export interface Profile {
   uri: string
   cid: string
   creator: string
-  displayName: string
+  displayName: string | null
   description: string | null
   avatarCid: string | null
   bannerCid: string | null

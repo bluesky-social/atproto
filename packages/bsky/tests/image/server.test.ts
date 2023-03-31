@@ -24,7 +24,7 @@ describe('image processing server', () => {
     const sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     fileDid = sc.dids.carol
-    fileCid = CID.parse(sc.posts[fileDid][0].images[0].image.cid)
+    fileCid = sc.posts[fileDid][0].images[0].image.ref
     client = axios.create({
       baseURL: `${server.url}/image`,
       validateStatus: () => true,
