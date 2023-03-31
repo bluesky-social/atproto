@@ -4,14 +4,14 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "A view of a user's feed.",
+      "description": "A view of an actor's feed.",
       "parameters": {
         "type": "params",
-        "required": ["author"],
+        "required": ["actor"],
         "properties": {
-          "author": {"type": "string"},
+          "actor": {"type": "string", "format": "at-identifier"},
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "before": {"type": "string"}
+          "cursor": {"type": "string"}
         }
       },
       "output": {
@@ -23,7 +23,7 @@
             "cursor": {"type": "string"},
             "feed": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.feed.feedViewPost"}
+              "items": {"type": "ref", "ref": "app.bsky.feed.defs#feedViewPost"}
             }
           }
         }

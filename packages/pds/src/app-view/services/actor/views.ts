@@ -1,24 +1,29 @@
 import { ArrayEl } from '@atproto/common'
-import { WithInfo as ActorWithInfo } from '../../../lexicon/types/app/bsky/actor/ref'
 import {
-  View as ProfileView,
-  ViewBasic as ProfileViewBasic,
-} from '../../../lexicon/types/app/bsky/actor/profile'
+  ProfileViewDetailed,
+  ProfileView,
+  ProfileViewBasic,
+} from '../../../lexicon/types/app/bsky/actor/defs'
 import { DidHandle } from '../../../db/tables/did-handle'
 import { countAll } from '../../../db/util'
 import Database from '../../../db'
-import { getDeclarationSimple } from '../../../api/app/bsky/util'
 import { ImageUriBuilder } from '../../../image/uri'
 
 export class ActorViews {
   constructor(private db: Database, private imgUriBuilder: ImageUriBuilder) {}
 
-  profile(result: ActorResult, viewer: string): Promise<ProfileView>
-  profile(result: ActorResult[], viewer: string): Promise<ProfileView[]>
-  async profile(
+  profileDetailed(
+    result: ActorResult,
+    viewer: string,
+  ): Promise<ProfileViewDetailed>
+  profileDetailed(
+    result: ActorResult[],
+    viewer: string,
+  ): Promise<ProfileViewDetailed[]>
+  async profileDetailed(
     result: ActorResult | ActorResult[],
     viewer: string,
-  ): Promise<ProfileView | ProfileView[]> {
+  ): Promise<ProfileViewDetailed | ProfileViewDetailed[]> {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
@@ -90,7 +95,6 @@ export class ActorViews {
         : undefined
       return {
         did: result.did,
-        declaration: getDeclarationSimple(result),
         handle: result.handle,
         displayName: profileInfo?.displayName || undefined,
         description: profileInfo?.description || undefined,
@@ -99,16 +103,11 @@ export class ActorViews {
         followsCount: profileInfo?.followsCount ?? 0,
         followersCount: profileInfo?.followersCount ?? 0,
         postsCount: profileInfo?.postsCount ?? 0,
-        creator: result.did,
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: {
           muted: !!profileInfo?.requesterMuted,
           following: profileInfo?.requesterFollowing || undefined,
           followedBy: profileInfo?.requesterFollowedBy || undefined,
-        },
-        myState: {
-          follow: profileInfo?.requesterFollowing || undefined,
-          muted: !!profileInfo?.requesterMuted,
         },
       }
     })
@@ -116,15 +115,12 @@ export class ActorViews {
     return Array.isArray(result) ? views : views[0]
   }
 
-  profileBasic(result: ActorResult, viewer: string): Promise<ProfileViewBasic>
-  profileBasic(
-    result: ActorResult[],
-    viewer: string,
-  ): Promise<ProfileViewBasic[]>
-  async profileBasic(
+  profile(result: ActorResult, viewer: string): Promise<ProfileView>
+  profile(result: ActorResult[], viewer: string): Promise<ProfileView[]>
+  async profile(
     result: ActorResult | ActorResult[],
     viewer: string,
-  ): Promise<ProfileViewBasic | ProfileViewBasic[]> {
+  ): Promise<ProfileView | ProfileView[]> {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
@@ -177,7 +173,6 @@ export class ActorViews {
         : undefined
       return {
         did: result.did,
-        declaration: getDeclarationSimple(result),
         handle: result.handle,
         displayName: profileInfo?.displayName || undefined,
         description: profileInfo?.description || undefined,
@@ -195,19 +190,21 @@ export class ActorViews {
   }
 
   // @NOTE keep in sync with feedService.getActorViews()
-  actorWithInfo(result: ActorResult, viewer: string): Promise<ActorWithInfo>
-  actorWithInfo(result: ActorResult[], viewer: string): Promise<ActorWithInfo[]>
-  async actorWithInfo(
+  profileBasic(result: ActorResult, viewer: string): Promise<ProfileViewBasic>
+  profileBasic(
+    result: ActorResult[],
+    viewer: string,
+  ): Promise<ProfileViewBasic[]>
+  async profileBasic(
     result: ActorResult | ActorResult[],
     viewer: string,
-  ): Promise<ActorWithInfo | ActorWithInfo[]> {
+  ): Promise<ProfileViewBasic | ProfileViewBasic[]> {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
-    const profiles = await this.profileBasic(results, viewer)
+    const profiles = await this.profile(results, viewer)
     const views = profiles.map((view) => ({
       did: view.did,
-      declaration: view.declaration,
       handle: view.handle,
       displayName: view.displayName,
       avatar: view.avatar,

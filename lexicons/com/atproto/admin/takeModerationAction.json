@@ -14,21 +14,21 @@
             "action": {
               "type": "string",
               "knownValues": [
-                "com.atproto.admin.moderationAction#takedown",
-                "com.atproto.admin.moderationAction#flag",
-                "com.atproto.admin.moderationAction#acknowledge"
+                "com.atproto.admin.defs#takedown",
+                "com.atproto.admin.defs#flag",
+                "com.atproto.admin.defs#acknowledge"
               ]
             },
             "subject": {
               "type": "union",
               "refs": [
-                "com.atproto.repo.repoRef",
-                "com.atproto.repo.recordRef"
+                "com.atproto.admin.defs#repoRef",
+                "com.atproto.repo.strongRef"
               ]
             },
-            "subjectBlobCids": {"type": "array", "items": {"type": "string"}},
+            "subjectBlobCids": {"type": "array", "items": {"type": "string", "format": "cid"}},
             "reason": {"type": "string"},
-            "createdBy": {"type": "string"}
+            "createdBy": {"type": "string", "format": "did"}
           }
         }
       },
@@ -36,7 +36,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "ref",
-          "ref": "com.atproto.admin.moderationAction#view"
+          "ref": "com.atproto.admin.defs#actionView"
         }
       },
       "errors": [{ "name": "SubjectHasAction" }]

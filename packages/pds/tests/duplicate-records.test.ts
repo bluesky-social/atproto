@@ -4,7 +4,6 @@ import { cidForCbor, TID, cborEncode } from '@atproto/common'
 import { CloseFn, runTestServer } from './_util'
 import { Database } from '../src'
 import * as lex from '../src/lexicon/lexicons'
-import { APP_BSKY_GRAPH } from '../src/lexicon'
 import { Services } from '../src/services'
 
 describe('duplicate record', () => {
@@ -96,67 +95,61 @@ describe('duplicate record', () => {
     expect(count).toBe(0)
   })
 
-  it('dedupes votes', async () => {
+  it('dedupes likes', async () => {
     const subject = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
     const subjectCid = await putBlock(db, did, { test: 'blah' })
-    const coll = lex.ids.AppBskyFeedVote
+    const coll = lex.ids.AppBskyFeedLike
     const uris: AtUri[] = []
     await db.transaction(async (tx) => {
       for (let i = 0; i < 5; i++) {
-        const direction = i % 2 === 0 ? 'up' : 'down'
-        const vote = {
+        const like = {
           $type: coll,
           subject: {
             uri: subject.toString(),
             cid: subjectCid.toString(),
           },
-          direction,
           createdAt: new Date().toISOString(),
         }
         const uri = AtUri.make(did, coll, TID.nextStr())
-        const cid = await putBlock(tx, did, vote)
-        await services.record(tx).indexRecord(uri, cid, vote)
+        const cid = await putBlock(tx, did, like)
+        await services.record(tx).indexRecord(uri, cid, like)
         uris.push(uri)
       }
     })
 
-    let count = await countRecords(db, 'vote')
+    let count = await countRecords(db, 'like')
     expect(count).toBe(1)
 
     await db.transaction(async (tx) => {
       await services.record(tx).deleteRecord(uris[0], false)
     })
 
-    count = await countRecords(db, 'vote')
+    count = await countRecords(db, 'like')
     expect(count).toBe(1)
-    // since the first was deleted, the vote should be flipped to down now
+
     const got = await db.db
-      .selectFrom('vote')
+      .selectFrom('like')
       .where('creator', '=', did)
       .selectAll()
       .executeTakeFirst()
-    expect(got?.direction === 'down')
+    expect(got?.uri).toEqual(uris[1].toString())
 
     await db.transaction(async (tx) => {
       await services.record(tx).deleteRecord(uris[1], true)
     })
 
-    count = await countRecords(db, 'vote')
+    count = await countRecords(db, 'like')
     expect(count).toBe(0)
   })
 
   it('dedupes follows', async () => {
-    const subjectCid = await putBlock(db, did, { test: 'blah' })
     const coll = lex.ids.AppBskyGraphFollow
     const uris: AtUri[] = []
     await db.transaction(async (tx) => {
       for (let i = 0; i < 5; i++) {
         const follow = {
           $type: coll,
-          subject: {
-            did: 'did:example:bob',
-            declarationCid: subjectCid.toString(),
-          },
+          subject: 'did:example:bob',
           createdAt: new Date().toISOString(),
         }
         const uri = AtUri.make(did, coll, TID.nextStr())
@@ -181,100 +174,6 @@ describe('duplicate record', () => {
     })
 
     count = await countRecords(db, 'follow')
-    expect(count).toBe(0)
-  })
-
-  it('dedupes assertions & confirmations', async () => {
-    const subjectCid = await putBlock(db, did, { test: 'blah' })
-    const assertUris: AtUri[] = []
-    const assertCids: CID[] = []
-    // make assertions
-    await db.transaction(async (tx) => {
-      const coll = lex.ids.AppBskyGraphAssertion
-      for (let i = 0; i < 5; i++) {
-        const assertion = {
-          $type: coll,
-          assertion: APP_BSKY_GRAPH.AssertMember,
-          subject: {
-            did: 'did:example:bob',
-            declarationCid: subjectCid.toString(),
-          },
-          createdAt: new Date().toISOString(),
-        }
-        const uri = AtUri.make(did, coll, TID.nextStr())
-        const cid = await putBlock(tx, did, assertion)
-        await services.record(tx).indexRecord(uri, cid, assertion)
-        assertUris.push(uri)
-        assertCids.push(cid)
-      }
-    })
-    const confirmUris: AtUri[] = []
-    const confirmCids: CID[] = []
-    // make confirms on first assert
-    await db.transaction(async (tx) => {
-      const coll = lex.ids.AppBskyGraphConfirmation
-      for (let i = 0; i < 5; i++) {
-        const follow = {
-          $type: coll,
-          originator: {
-            did: 'did:example:bob',
-            declarationCid: subjectCid.toString(),
-          },
-          assertion: {
-            uri: assertUris[0].toString(),
-            cid: assertCids[0].toString(),
-          },
-          createdAt: new Date().toISOString(),
-        }
-        const uri = AtUri.make(did, coll, TID.nextStr())
-        const cid = await putBlock(tx, did, follow)
-        await services.record(tx).indexRecord(uri, cid, follow)
-        confirmUris.push(uri)
-        confirmCids.push(cid)
-      }
-    })
-
-    const getAssertion = async () => {
-      return await db.db
-        .selectFrom('assertion')
-        .selectAll()
-        .where('creator', '=', did)
-        .executeTakeFirst()
-    }
-
-    let count = await countRecords(db, 'assertion')
-    expect(count).toBe(1)
-
-    await db.transaction(async (tx) => {
-      await services.record(tx).deleteRecord(confirmUris[0], false)
-    })
-
-    count = await countRecords(db, 'assertion')
-    expect(count).toBe(1)
-    let assertion = await getAssertion()
-    expect(assertion?.confirmUri).toEqual(confirmUris[1].toString())
-
-    await db.transaction(async (tx) => {
-      await services.record(tx).deleteRecord(confirmUris[1], true)
-    })
-
-    count = await countRecords(db, 'assertion')
-    expect(count).toBe(1)
-    assertion = await getAssertion()
-    expect(assertion?.confirmUri).toBeNull()
-
-    await db.transaction(async (tx) => {
-      await services.record(tx).deleteRecord(assertUris[0], false)
-    })
-
-    count = await countRecords(db, 'assertion')
-    expect(count).toBe(1)
-
-    await db.transaction(async (tx) => {
-      await services.record(tx).deleteRecord(assertUris[1], false)
-    })
-
-    count = await countRecords(db, 'assertion')
     expect(count).toBe(0)
   })
 })

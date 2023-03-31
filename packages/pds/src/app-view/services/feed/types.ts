@@ -1,9 +1,10 @@
-import { Presented as PresentedImage } from '../../../lexicon/types/app/bsky/embed/images'
-import { Presented as PresentedExternal } from '../../../lexicon/types/app/bsky/embed/external'
-import { Presented as PresentedRecord } from '../../../lexicon/types/app/bsky/embed/record'
+import { View as ViewImages } from '../../../lexicon/types/app/bsky/embed/images'
+import { View as ViewExternal } from '../../../lexicon/types/app/bsky/embed/external'
+import { View as ViewRecord } from '../../../lexicon/types/app/bsky/embed/record'
+import { View as ViewRecordWithMedia } from '../../../lexicon/types/app/bsky/embed/recordWithMedia'
 
 export type FeedEmbeds = {
-  [uri: string]: PresentedImage | PresentedExternal | PresentedRecord
+  [uri: string]: ViewImages | ViewExternal | ViewRecord | ViewRecordWithMedia
 }
 
 export type PostInfo = {
@@ -12,23 +13,17 @@ export type PostInfo = {
   creator: string
   recordBytes: Uint8Array
   indexedAt: string
-  upvoteCount: number
-  downvoteCount: number
+  likeCount: number
   repostCount: number
   replyCount: number
   requesterRepost: string | null
-  requesterUpvote: string | null
-  requesterDownvote: string | null
+  requesterLike: string | null
 }
 
 export type PostInfoMap = { [uri: string]: PostInfo }
 
 export type ActorView = {
   did: string
-  declaration: {
-    cid: string
-    actorType: string
-  }
   handle: string
   displayName?: string
   avatar?: string

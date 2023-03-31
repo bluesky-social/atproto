@@ -1,0 +1,21 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.server.getSession",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get information about the current session.",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["handle", "did"],
+          "properties": {
+            "handle": {"type": "string", "format": "handle"},
+            "did": {"type": "string", "format": "did"}
+          }
+        }
+      }
+    }
+  }
+}

@@ -10,12 +10,15 @@ export default function (server: Server, ctx: AppContext) {
       const { db, services } = ctx
       const actorService = services.appView.actor(db)
 
-      const users = await actorService.getUsers(actors)
+      const actorsRes = await actorService.getActors(actors)
 
       return {
         encoding: 'application/json',
         body: {
-          profiles: await actorService.views.profile(users, requester),
+          profiles: await actorService.views.profileDetailed(
+            actorsRes,
+            requester,
+          ),
         },
       }
     },

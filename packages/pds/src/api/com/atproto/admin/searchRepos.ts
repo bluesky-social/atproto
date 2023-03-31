@@ -10,12 +10,12 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params }) => {
       const { db, services } = ctx
       const moderationService = services.moderation(db)
-      const { term = '', limit = 50, before } = params
+      const { term = '', limit = 50, cursor } = params
 
       if (!term) {
         const results = await services
           .account(db)
-          .list({ limit, before, includeSoftDeleted: true })
+          .list({ limit, cursor, includeSoftDeleted: true })
         const keyset = new ListKeyset(sql``, sql``)
 
         return {
@@ -29,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const results = await services
         .account(db)
-        .search({ term, limit, before, includeSoftDeleted: true })
+        .search({ term, limit, cursor, includeSoftDeleted: true })
       const keyset = new SearchKeyset(sql``, sql``)
 
       return {

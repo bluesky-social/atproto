@@ -7,6 +7,8 @@
   },
   "include": ["./src"],
   "references": [
-    { "path": "../nsid/tsconfig.build.json" }
+    { "path": "../common/tsconfig.build.json" },
+    { "path": "../nsid/tsconfig.build.json" },
+    { "path": "../uri/tsconfig.build.json" }
   ]
 }

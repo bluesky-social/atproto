@@ -6,7 +6,6 @@ import { XRPCError } from '@atproto/xrpc'
 import {
   ErrorFrame,
   Frame,
-  InfoFrame,
   MessageFrame,
   XrpcStreamServer,
   byFrame,
@@ -25,8 +24,6 @@ describe('Stream', () => {
         await wait(1)
         yield new MessageFrame(2)
         await wait(1)
-        yield new InfoFrame({ info: 'SomeDiagnostic' })
-        await wait(1)
         yield new MessageFrame(3)
         return
       },
@@ -44,7 +41,6 @@ describe('Stream', () => {
     expect(frames).toEqual([
       new MessageFrame(1),
       new MessageFrame(2),
-      new InfoFrame({ info: 'SomeDiagnostic' }),
       new MessageFrame(3),
     ])
 

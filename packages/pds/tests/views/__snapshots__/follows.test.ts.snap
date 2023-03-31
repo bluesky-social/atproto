@@ -6,12 +6,11 @@ Object {
   "followers": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-eve",
       "did": "user(1)",
+      "displayName": "display-eve",
       "handle": "eve.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(1)",
         "following": "record(0)",
@@ -20,12 +19,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-bob",
       "did": "user(2)",
+      "displayName": "display-bob",
       "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -34,12 +32,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-carol",
       "did": "user(3)",
+      "displayName": "display-carol",
       "handle": "carol.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(5)",
         "following": "record(4)",
@@ -49,12 +46,11 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
+    "description": "descript-alice",
     "did": "user(0)",
+    "displayName": "display-alice",
     "handle": "alice.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
     "viewer": Object {
       "muted": false,
     },
@@ -68,12 +64,11 @@ Object {
   "follows": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-eve",
       "did": "user(1)",
+      "displayName": "display-eve",
       "handle": "eve.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(1)",
         "following": "record(0)",
@@ -82,12 +77,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-carol",
       "did": "user(2)",
+      "displayName": "display-carol",
       "handle": "carol.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -96,12 +90,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-bob",
       "did": "user(3)",
+      "displayName": "display-bob",
       "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(5)",
         "following": "record(4)",
@@ -111,12 +104,11 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
+    "description": "descript-alice",
     "did": "user(0)",
+    "displayName": "display-alice",
     "handle": "alice.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
     "viewer": Object {
       "muted": false,
     },
@@ -130,12 +122,11 @@ Object {
   "followers": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-eve",
       "did": "user(1)",
+      "displayName": "display-eve",
       "handle": "eve.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(1)",
         "following": "record(0)",
@@ -144,12 +135,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-dan",
       "did": "user(2)",
+      "displayName": "display-dan",
       "handle": "dan.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -158,12 +148,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-bob",
       "did": "user(3)",
+      "displayName": "display-bob",
       "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(5)",
         "following": "record(4)",
@@ -172,12 +161,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-carol",
       "did": "user(4)",
+      "displayName": "display-carol",
       "handle": "carol.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(7)",
         "following": "record(6)",
@@ -187,12 +175,11 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
+    "description": "descript-alice",
     "did": "user(0)",
+    "displayName": "display-alice",
     "handle": "alice.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
     "viewer": Object {
       "muted": false,
     },
@@ -206,12 +193,11 @@ Object {
   "followers": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-dan",
       "did": "user(1)",
+      "displayName": "display-dan",
       "handle": "dan.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -220,12 +206,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-alice",
       "did": "user(2)",
+      "displayName": "display-alice",
       "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "muted": false,
       },
@@ -233,12 +218,11 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
+    "description": "descript-bob",
     "did": "user(0)",
+    "displayName": "display-bob",
     "handle": "bob.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
     "viewer": Object {
       "followedBy": "record(1)",
       "following": "record(0)",
@@ -254,12 +238,11 @@ Object {
   "followers": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-eve",
       "did": "user(1)",
+      "displayName": "display-eve",
       "handle": "eve.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -268,12 +251,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-bob",
       "did": "user(2)",
+      "displayName": "display-bob",
       "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(5)",
         "following": "record(4)",
@@ -282,12 +264,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-alice",
       "did": "user(3)",
+      "displayName": "display-alice",
       "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "muted": false,
       },
@@ -295,12 +276,11 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
+    "description": "descript-carol",
     "did": "user(0)",
+    "displayName": "display-carol",
     "handle": "carol.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
     "viewer": Object {
       "followedBy": "record(1)",
       "following": "record(0)",
@@ -316,12 +296,11 @@ Object {
   "followers": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-alice",
       "did": "user(1)",
+      "displayName": "display-alice",
       "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "muted": false,
       },
@@ -329,12 +308,11 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
+    "description": "descript-dan",
     "did": "user(0)",
+    "displayName": "display-dan",
     "handle": "dan.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
     "viewer": Object {
       "followedBy": "record(1)",
       "following": "record(0)",
@@ -350,12 +328,11 @@ Object {
   "followers": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-dan",
       "did": "user(1)",
+      "displayName": "display-dan",
       "handle": "dan.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -364,12 +341,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-alice",
       "did": "user(2)",
+      "displayName": "display-alice",
       "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "muted": false,
       },
@@ -377,12 +353,11 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
+    "description": "descript-eve",
     "did": "user(0)",
+    "displayName": "display-eve",
     "handle": "eve.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
     "viewer": Object {
       "followedBy": "record(1)",
       "following": "record(0)",
@@ -398,12 +373,11 @@ Object {
   "follows": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-eve",
       "did": "user(1)",
+      "displayName": "display-eve",
       "handle": "eve.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(1)",
         "following": "record(0)",
@@ -412,12 +386,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-dan",
       "did": "user(2)",
+      "displayName": "display-dan",
       "handle": "dan.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -426,12 +399,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-carol",
       "did": "user(3)",
+      "displayName": "display-carol",
       "handle": "carol.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(5)",
         "following": "record(4)",
@@ -440,12 +412,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-bob",
       "did": "user(4)",
+      "displayName": "display-bob",
       "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(7)",
         "following": "record(6)",
@@ -455,12 +426,11 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
+    "description": "descript-alice",
     "did": "user(0)",
+    "displayName": "display-alice",
     "handle": "alice.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
     "viewer": Object {
       "muted": false,
     },
@@ -474,12 +444,11 @@ Object {
   "follows": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-carol",
       "did": "user(1)",
+      "displayName": "display-carol",
       "handle": "carol.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -488,12 +457,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-alice",
       "did": "user(2)",
+      "displayName": "display-alice",
       "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "muted": false,
       },
@@ -501,12 +469,11 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
+    "description": "descript-bob",
     "did": "user(0)",
+    "displayName": "display-bob",
     "handle": "bob.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
     "viewer": Object {
       "followedBy": "record(1)",
       "following": "record(0)",
@@ -522,12 +489,11 @@ Object {
   "follows": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-alice",
       "did": "user(1)",
+      "displayName": "display-alice",
       "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "muted": false,
       },
@@ -535,12 +501,11 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
+    "description": "descript-carol",
     "did": "user(0)",
+    "displayName": "display-carol",
     "handle": "carol.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
     "viewer": Object {
       "followedBy": "record(1)",
       "following": "record(0)",
@@ -556,12 +521,11 @@ Object {
   "follows": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-eve",
       "did": "user(1)",
+      "displayName": "display-eve",
       "handle": "eve.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -570,12 +534,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-bob",
       "did": "user(2)",
+      "displayName": "display-bob",
       "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(5)",
         "following": "record(4)",
@@ -584,12 +547,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-alice",
       "did": "user(3)",
+      "displayName": "display-alice",
       "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "muted": false,
       },
@@ -597,12 +559,11 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
+    "description": "descript-dan",
     "did": "user(0)",
+    "displayName": "display-dan",
     "handle": "dan.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
     "viewer": Object {
       "followedBy": "record(1)",
       "following": "record(0)",
@@ -618,12 +579,11 @@ Object {
   "follows": Array [
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-carol",
       "did": "user(1)",
+      "displayName": "display-carol",
       "handle": "carol.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -632,12 +592,11 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "declaration": Object {
-        "actorType": "app.bsky.system.actorUser",
-        "cid": "cids(0)",
-      },
+      "description": "descript-alice",
       "did": "user(2)",
+      "displayName": "display-alice",
       "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "viewer": Object {
         "muted": false,
       },
@@ -645,12 +604,11 @@ Object {
   ],
   "subject": Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-    "declaration": Object {
-      "actorType": "app.bsky.system.actorUser",
-      "cid": "cids(0)",
-    },
+    "description": "descript-eve",
     "did": "user(0)",
+    "displayName": "display-eve",
     "handle": "eve.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
     "viewer": Object {
       "followedBy": "record(1)",
       "following": "record(0)",

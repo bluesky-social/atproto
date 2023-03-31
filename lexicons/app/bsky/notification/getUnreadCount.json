@@ -1,0 +1,19 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.notification.getUnreadCount",
+  "defs": {
+    "main": {
+      "type": "query",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["count"],
+          "properties": {
+            "count": { "type": "integer"}
+          }
+        }
+      }
+    }
+  }
+}

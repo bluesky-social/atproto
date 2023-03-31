@@ -2,9 +2,9 @@
 
 exports[`pds admin get moderation action view gets moderation action for a record. 1`] = `
 Object {
-  "action": "com.atproto.admin.moderationAction#takedown",
+  "action": "com.atproto.admin.defs#takedown",
   "createdAt": "1970-01-01T00:00:00.000Z",
-  "createdBy": "Y",
+  "createdBy": "did:example:admin",
   "id": 2,
   "reason": "X",
   "resolvedReports": Array [
@@ -12,8 +12,8 @@ Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
       "id": 2,
       "reason": "defamation",
-      "reasonType": "com.atproto.report.reasonType#other",
-      "reportedByDid": "user(1)",
+      "reasonType": "com.atproto.moderation.defs#reasonOther",
+      "reportedBy": "user(1)",
       "resolvedByActionIds": Array [
         2,
         1,
@@ -26,13 +26,13 @@ Object {
     },
   ],
   "subject": Object {
-    "$type": "com.atproto.admin.record#view",
+    "$type": "com.atproto.admin.defs#recordView",
     "blobCids": Array [],
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {
       "currentAction": Object {
-        "action": "com.atproto.admin.moderationAction#takedown",
+        "action": "com.atproto.admin.defs#takedown",
         "id": 2,
       },
     },
@@ -46,14 +46,14 @@ Object {
       "moderation": Object {},
       "relatedRecords": Array [
         Object {
-          "$type": "app.bsky.system.declaration",
-          "actorType": "app.bsky.system.actorUser",
-        },
-        Object {
           "$type": "app.bsky.actor.profile",
           "avatar": Object {
-            "cid": "cids(1)",
+            "$type": "blob",
             "mimeType": "image/jpeg",
+            "ref": Object {
+              "$link": "cids(1)",
+            },
+            "size": 3976,
           },
           "description": "its me!",
           "displayName": "ali",
@@ -73,9 +73,9 @@ Object {
 
 exports[`pds admin get moderation action view gets moderation action for a repo. 1`] = `
 Object {
-  "action": "com.atproto.admin.moderationAction#flag",
+  "action": "com.atproto.admin.defs#flag",
   "createdAt": "1970-01-01T00:00:00.000Z",
-  "createdBy": "Y",
+  "createdBy": "did:example:admin",
   "id": 1,
   "reason": "X",
   "resolvedReports": Array [
@@ -83,8 +83,8 @@ Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
       "id": 2,
       "reason": "defamation",
-      "reasonType": "com.atproto.report.reasonType#other",
-      "reportedByDid": "user(1)",
+      "reasonType": "com.atproto.moderation.defs#reasonOther",
+      "reportedBy": "user(1)",
       "resolvedByActionIds": Array [
         2,
         1,
@@ -98,24 +98,24 @@ Object {
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
       "id": 1,
-      "reasonType": "com.atproto.report.reasonType#spam",
-      "reportedByDid": "user(2)",
+      "reasonType": "com.atproto.moderation.defs#reasonSpam",
+      "reportedBy": "user(2)",
       "resolvedByActionIds": Array [
         1,
       ],
       "subject": Object {
-        "$type": "com.atproto.repo.repoRef",
+        "$type": "com.atproto.admin.defs#repoRef",
         "did": "user(0)",
       },
     },
   ],
   "reversal": Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "createdBy": "Y",
+    "createdBy": "did:example:admin",
     "reason": "X",
   },
   "subject": Object {
-    "$type": "com.atproto.admin.repo#view",
+    "$type": "com.atproto.admin.defs#repoView",
     "account": Object {
       "email": "alice@test.com",
     },
@@ -125,14 +125,14 @@ Object {
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
-        "$type": "app.bsky.system.declaration",
-        "actorType": "app.bsky.system.actorUser",
-      },
-      Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
-          "cid": "cids(0)",
+          "$type": "blob",
           "mimeType": "image/jpeg",
+          "ref": Object {
+            "$link": "cids(0)",
+          },
+          "size": 3976,
         },
         "description": "its me!",
         "displayName": "ali",

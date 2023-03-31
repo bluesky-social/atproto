@@ -3,8 +3,11 @@ import {
   ACKNOWLEDGE,
   FLAG,
   TAKEDOWN,
-} from '../../lexicon/types/com/atproto/admin/moderationAction'
-import { OTHER, SPAM } from '../../lexicon/types/com/atproto/report/reasonType'
+} from '../../lexicon/types/com/atproto/admin/defs'
+import {
+  REASONOTHER,
+  REASONSPAM,
+} from '../../lexicon/types/com/atproto/moderation/defs'
 
 export const actionTableName = 'moderation_action'
 export const actionSubjectBlobTableName = 'moderation_action_subject_blob'
@@ -14,7 +17,7 @@ export const reportResolutionTableName = 'moderation_report_resolution'
 export interface ModerationAction {
   id: Generated<number>
   action: typeof TAKEDOWN | typeof FLAG | typeof ACKNOWLEDGE
-  subjectType: 'com.atproto.repo.repoRef' | 'com.atproto.repo.recordRef'
+  subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
@@ -34,11 +37,11 @@ export interface ModerationActionSubjectBlob {
 
 export interface ModerationReport {
   id: Generated<number>
-  subjectType: 'com.atproto.repo.repoRef' | 'com.atproto.repo.recordRef'
+  subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
-  reasonType: typeof SPAM | typeof OTHER
+  reasonType: typeof REASONSPAM | typeof REASONOTHER
   reason: string | null
   reportedByDid: string
   createdAt: string

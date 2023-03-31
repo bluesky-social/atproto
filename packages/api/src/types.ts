@@ -56,7 +56,7 @@ export interface AtpAgentFetchHandlerResponse {
   headers: Record<string, string>
   body: any
 }
-export type AptAgentFetchHandler = (
+export type AtpAgentFetchHandler = (
   httpUri: string,
   httpMethod: string,
   httpHeaders: AtpAgentFetchHeaders,
@@ -67,5 +67,5 @@ export type AptAgentFetchHandler = (
  * AtpAgent global config opts
  */
 export interface AtpAgentGlobalOpts {
-  fetch: AptAgentFetchHandler
+  fetch: AtpAgentFetchHandler
 }
