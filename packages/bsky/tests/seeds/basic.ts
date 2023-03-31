@@ -1,8 +1,8 @@
-import { MessageQueue } from '@atproto/pds/src/event-stream/types'
+import { ids } from '../../src/lexicon/lexicons'
 import { SeedClient } from './client'
 import usersSeed from './users'
 
-export default async (sc: SeedClient, mq?: MessageQueue) => {
+export default async (sc: SeedClient) => {
   await usersSeed(sc)
 
   const alice = sc.dids.alice
@@ -10,13 +10,13 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
   const carol = sc.dids.carol
   const dan = sc.dids.dan
 
-  await sc.follow(alice, sc.actorRef(bob))
-  await sc.follow(alice, sc.actorRef(carol))
-  await sc.follow(alice, sc.actorRef(dan))
-  await sc.follow(carol, sc.actorRef(alice))
-  await sc.follow(bob, sc.actorRef(alice))
-  await sc.follow(bob, sc.actorRef(carol))
-  await sc.follow(dan, sc.actorRef(bob))
+  await sc.follow(alice, bob)
+  await sc.follow(alice, carol)
+  await sc.follow(alice, dan)
+  await sc.follow(carol, alice)
+  await sc.follow(bob, alice)
+  await sc.follow(bob, carol)
+  await sc.follow(dan, bob)
   await sc.post(alice, posts.alice[0])
   await sc.post(bob, posts.bob[0])
   const img1 = await sc.uploadFile(
@@ -29,15 +29,31 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
     'tests/image/fixtures/key-alt.jpg',
     'image/jpeg',
   )
-  await sc.post(carol, posts.carol[0], undefined, [img1, img2])
+  await sc.post(
+    carol,
+    posts.carol[0],
+    undefined,
+    [img1, img2], // Contains both images and a quote
+    sc.posts[bob][0].ref,
+  )
   await sc.post(dan, posts.dan[0])
-  await sc.post(dan, posts.dan[1], [
-    {
-      index: { start: 0, end: 18 },
-      type: 'mention',
-      value: alice,
-    },
-  ])
+  await sc.post(
+    dan,
+    posts.dan[1],
+    [
+      {
+        index: { byteStart: 0, byteEnd: 18 },
+        features: [
+          {
+            $type: `${ids.AppBskyRichtextFacet}#mention`,
+            did: alice,
+          },
+        ],
+      },
+    ],
+    undefined,
+    sc.posts[carol][0].ref, // This post contains an images embed
+  )
   await sc.post(alice, posts.alice[1])
   await sc.post(bob, posts.bob[1])
   await sc.post(
@@ -45,17 +61,15 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
     posts.alice[2],
     undefined,
     undefined,
-    sc.posts[dan][1].ref,
+    sc.posts[dan][1].ref, // This post contains a record embed which contains an images embed
   )
-  await sc.vote('up', bob, sc.posts[alice][1].ref)
-  await sc.vote('down', bob, sc.posts[alice][2].ref)
-  await sc.vote('down', carol, sc.posts[alice][1].ref)
-  await sc.vote('up', carol, sc.posts[alice][2].ref)
-  await sc.vote('up', dan, sc.posts[alice][1].ref)
-  await sc.vote('up', alice, sc.posts[carol][0].ref)
-  await sc.vote('up', bob, sc.posts[carol][0].ref)
-
-  await mq?.processAll()
+  await sc.like(bob, sc.posts[alice][1].ref)
+  await sc.like(bob, sc.posts[alice][2].ref)
+  await sc.like(carol, sc.posts[alice][1].ref)
+  await sc.like(carol, sc.posts[alice][2].ref)
+  await sc.like(dan, sc.posts[alice][1].ref)
+  await sc.like(alice, sc.posts[carol][0].ref)
+  await sc.like(bob, sc.posts[carol][0].ref)
 
   const replyImg = await sc.uploadFile(
     bob,
@@ -84,8 +98,6 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
   )
   await sc.repost(carol, sc.posts[dan][1].ref)
   await sc.repost(dan, sc.posts[alice][1].ref)
-
-  await mq?.processAll()
 
   return sc
 }
