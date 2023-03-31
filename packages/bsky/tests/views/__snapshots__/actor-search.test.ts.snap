@@ -3,20 +3,12 @@
 exports[`pds user search views search gives relevant results 1`] = `
 Array [
   Object {
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(0)",
     "handle": "cara-wiegand69.test",
     "viewer": Object {},
   },
   Object {
     "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(2)/cids(0)@jpeg",
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(1)",
     "displayName": "Carol Littel",
     "handle": "eudora-dietrich4.test",
@@ -25,10 +17,6 @@ Array [
   },
   Object {
     "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(0)@jpeg",
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(3)",
     "displayName": "Sadie Carter",
     "handle": "shane-torphy52.test",
@@ -37,10 +25,6 @@ Array [
   },
   Object {
     "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(6)/cids(0)@jpeg",
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(5)",
     "displayName": "Carlton Abernathy IV",
     "handle": "aliya-hodkiewicz.test",
@@ -48,20 +32,12 @@ Array [
     "viewer": Object {},
   },
   Object {
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(7)",
     "handle": "carlos6.test",
     "viewer": Object {},
   },
   Object {
     "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(9)/cids(0)@jpeg",
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(8)",
     "displayName": "Latoya Windler",
     "handle": "carolina-mcdermott77.test",
@@ -70,10 +46,6 @@ Array [
   },
   Object {
     "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(11)/cids(0)@jpeg",
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(10)",
     "displayName": "Rachel Kshlerin",
     "handle": "cayla-marquardt39.test",
@@ -86,20 +58,12 @@ Array [
 exports[`pds user search views typeahead gives relevant results 1`] = `
 Array [
   Object {
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(0)",
     "handle": "cara-wiegand69.test",
     "viewer": Object {},
   },
   Object {
     "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(2)/cids(0)@jpeg",
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(1)",
     "displayName": "Carol Littel",
     "handle": "eudora-dietrich4.test",
@@ -107,10 +71,6 @@ Array [
   },
   Object {
     "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(0)@jpeg",
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(3)",
     "displayName": "Sadie Carter",
     "handle": "shane-torphy52.test",
@@ -118,30 +78,18 @@ Array [
   },
   Object {
     "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(6)/cids(0)@jpeg",
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(5)",
     "displayName": "Carlton Abernathy IV",
     "handle": "aliya-hodkiewicz.test",
     "viewer": Object {},
   },
   Object {
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(7)",
     "handle": "carlos6.test",
     "viewer": Object {},
   },
   Object {
     "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(9)/cids(0)@jpeg",
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(8)",
     "displayName": "Latoya Windler",
     "handle": "carolina-mcdermott77.test",
@@ -149,10 +97,6 @@ Array [
   },
   Object {
     "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(11)/cids(0)@jpeg",
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(10)",
     "displayName": "Rachel Kshlerin",
     "handle": "cayla-marquardt39.test",
