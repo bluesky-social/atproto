@@ -1,5 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { Main as FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/feedViewPost'
+import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 import {
   runTestServer,
   forSnapshot,
@@ -118,7 +118,7 @@ describe('timeline views', () => {
       const res = await agent.api.app.bsky.feed.getTimeline(
         {
           algorithm: FeedAlgorithm.ReverseChronological,
-          before: cursor,
+          cursor,
           limit: 4,
         },
         { headers: sc.getHeaders(carol, true) },
