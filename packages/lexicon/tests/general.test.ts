@@ -1,3 +1,4 @@
+import { CID } from 'multiformats/cid'
 import { Lexicons } from '../src/index'
 import LexiconDocs from './_scaffolds/lexicons'
 
@@ -40,16 +41,23 @@ describe('General validation', () => {
           object: { boolean: true },
           array: ['one', 'two'],
           boolean: true,
-          number: 123.45,
+          float: 123.45,
           integer: 123,
           string: 'string',
         },
         array: ['one', 'two'],
         boolean: true,
-        number: 123.45,
+        float: 123.45,
         integer: 123,
         string: 'string',
         datetime: new Date().toISOString(),
+        atUri: 'at://did:web:example.com/com.example.test/self',
+        did: 'did:web:example.com',
+        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        bytes: new Uint8Array([0, 1, 2, 3]),
+        cidLink: CID.parse(
+          'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        ),
       })
       expect(res.success).toBe(true)
     }
@@ -66,7 +74,7 @@ describe('General validation', () => {
         object: { boolean: true },
         array: ['one', 'two'],
         boolean: true,
-        number: 123.45,
+        float: 123.45,
         integer: 123,
         string: 'string',
       })
@@ -84,24 +92,29 @@ describe('General validation', () => {
 describe('Record validation', () => {
   const lex = new Lexicons(LexiconDocs)
 
-  it('Passes valid schemas', () => {
-    lex.assertValidRecord('com.example.kitchenSink', {
-      $type: 'com.example.kitchenSink',
-      object: {
-        object: { boolean: true },
-        array: ['one', 'two'],
-        boolean: true,
-        number: 123.45,
-        integer: 123,
-        string: 'string',
-      },
+  const passingSink = {
+    $type: 'com.example.kitchenSink',
+    object: {
+      object: { boolean: true },
       array: ['one', 'two'],
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
       string: 'string',
-      datetime: new Date().toISOString(),
-    })
+    },
+    array: ['one', 'two'],
+    boolean: true,
+    float: 123.45,
+    integer: 123,
+    string: 'string',
+    bytes: new Uint8Array([0, 1, 2, 3]),
+    cidLink: CID.parse(
+      'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+    ),
+  }
+
+  it('Passes valid schemas', () => {
+    lex.assertValidRecord('com.example.kitchenSink', passingSink)
   })
 
   it('Fails invalid input types', () => {
@@ -131,22 +144,23 @@ describe('Record validation', () => {
         $type: 'com.example.kitchenSink',
         array: ['one', 'two'],
         boolean: true,
-        number: 123.45,
+        float: 123.45,
         integer: 123,
         string: 'string',
         datetime: new Date().toISOString(),
+        atUri: 'at://did:web:example.com/com.example.test/self',
+        did: 'did:web:example.com',
+        cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        bytes: new Uint8Array([0, 1, 2, 3]),
+        cidLink: CID.parse(
+          'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        ),
       }),
     ).toThrow('Record must have the property "object"')
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
+        ...passingSink,
         object: undefined,
-        array: ['one', 'two'],
-        boolean: true,
-        number: 123.45,
-        integer: 123,
-        string: 'string',
-        datetime: new Date().toISOString(),
       }),
     ).toThrow('Record must have the property "object"')
   })
@@ -154,130 +168,55 @@ describe('Record validation', () => {
   it('Fails incorrect types', () => {
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
+        ...passingSink,
         object: {
+          ...passingSink.object,
           object: { boolean: '1234' },
-          array: ['one', 'two'],
-          boolean: true,
-          number: 123.45,
-          integer: 123,
-          string: 'string',
         },
-        array: ['one', 'two'],
-        boolean: true,
-        number: 123.45,
-        integer: 123,
-        string: 'string',
-        datetime: new Date().toISOString(),
       }),
     ).toThrow('Record/object/object/boolean must be a boolean')
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
+        ...passingSink,
         object: true,
-        array: ['one', 'two'],
-        boolean: true,
-        number: 123.45,
-        integer: 123,
-        string: 'string',
-        datetime: new Date().toISOString(),
       }),
     ).toThrow('Record/object must be an object')
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
-        object: {
-          object: { boolean: true },
-          array: ['one', 'two'],
-          boolean: true,
-          number: 123.45,
-          integer: 123,
-          string: 'string',
-        },
+        ...passingSink,
         array: 1234,
-        boolean: true,
-        number: 123.45,
-        integer: 123,
-        string: 'string',
-        datetime: new Date().toISOString(),
       }),
     ).toThrow('Record/array must be an array')
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
-        object: {
-          object: { boolean: true },
-          array: ['one', 'two'],
-          boolean: true,
-          number: 123.45,
-          integer: 123,
-          string: 'string',
-        },
-        array: ['one', 'two'],
-        boolean: true,
-        number: 'string',
-        integer: 123,
-        string: 'string',
-        datetime: new Date().toISOString(),
+        ...passingSink,
+        float: 'string',
       }),
-    ).toThrow('Record/number must be a number')
+    ).toThrow('Record/float must be a number')
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
-        object: {
-          object: { boolean: true },
-          array: ['one', 'two'],
-          boolean: true,
-          number: 123.45,
-          integer: 123,
-          string: 'string',
-        },
-        array: ['one', 'two'],
-        boolean: true,
-        number: 123.45,
+        ...passingSink,
         integer: true,
-        string: 'string',
-        datetime: new Date().toISOString(),
       }),
     ).toThrow('Record/integer must be a number')
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
-        object: {
-          object: { boolean: true },
-          array: ['one', 'two'],
-          boolean: true,
-          number: 123.45,
-          integer: 123,
-          string: 'string',
-        },
-        array: ['one', 'two'],
-        boolean: true,
-        number: 123.45,
-        integer: 123,
+        ...passingSink,
         string: {},
-        datetime: new Date().toISOString(),
       }),
     ).toThrow('Record/string must be a string')
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
-        $type: 'com.example.kitchenSink',
-        object: {
-          object: { boolean: true },
-          array: ['one', 'two'],
-          boolean: true,
-          number: 123.45,
-          integer: 123,
-          string: 'string',
-        },
-        array: ['one', 'two'],
-        boolean: true,
-        number: 123.45,
-        integer: 123,
-        string: 'string',
-        datetime: 1234,
+        ...passingSink,
+        bytes: 1234,
       }),
-    ).toThrow('Record/datetime must be a string')
+    ).toThrow('Record/bytes must be a byte array')
+    expect(() =>
+      lex.assertValidRecord('com.example.kitchenSink', {
+        ...passingSink,
+        cidLink: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+      }),
+    ).toThrow('Record/cidLink must be a CID')
   })
 
   it('Handles optional properties correctly', () => {
@@ -295,12 +234,12 @@ describe('Record validation', () => {
       $type: 'com.example.default',
       boolean: false,
       integer: 0,
-      number: 0,
+      float: 0,
       string: '',
       object: {
         boolean: true,
         integer: 1,
-        number: 1.5,
+        float: 1.5,
         string: 'x',
       },
     })
@@ -315,7 +254,7 @@ describe('Record validation', () => {
         object: { boolean: true },
         array: ['one', 'two'],
         boolean: true,
-        number: 123.45,
+        float: 123.45,
         integer: 123,
         string: 'string',
       },
@@ -418,49 +357,49 @@ describe('Record validation', () => {
     ).toThrow('Record/boolean must be false')
   })
 
-  it('Applies number range constraint', () => {
-    lex.assertValidRecord('com.example.numberRange', {
-      $type: 'com.example.numberRange',
-      number: 2.5,
+  it('Applies float range constraint', () => {
+    lex.assertValidRecord('com.example.floatRange', {
+      $type: 'com.example.floatRange',
+      float: 2.5,
     })
     expect(() =>
-      lex.assertValidRecord('com.example.numberRange', {
-        $type: 'com.example.numberRange',
-        number: 1,
+      lex.assertValidRecord('com.example.floatRange', {
+        $type: 'com.example.floatRange',
+        float: 1,
       }),
-    ).toThrow('Record/number can not be less than 2')
+    ).toThrow('Record/float can not be less than 2')
     expect(() =>
-      lex.assertValidRecord('com.example.numberRange', {
-        $type: 'com.example.numberRange',
-        number: 5,
+      lex.assertValidRecord('com.example.floatRange', {
+        $type: 'com.example.floatRange',
+        float: 5,
       }),
-    ).toThrow('Record/number can not be greater than 4')
+    ).toThrow('Record/float can not be greater than 4')
   })
 
-  it('Applies number enum constraint', () => {
-    lex.assertValidRecord('com.example.numberEnum', {
-      $type: 'com.example.numberEnum',
-      number: 1.5,
+  it('Applies float enum constraint', () => {
+    lex.assertValidRecord('com.example.floatEnum', {
+      $type: 'com.example.floatEnum',
+      float: 1.5,
     })
     expect(() =>
-      lex.assertValidRecord('com.example.numberEnum', {
-        $type: 'com.example.numberEnum',
-        number: 0,
+      lex.assertValidRecord('com.example.floatEnum', {
+        $type: 'com.example.floatEnum',
+        float: 0,
       }),
-    ).toThrow('Record/number must be one of (1|1.5|2)')
+    ).toThrow('Record/float must be one of (1|1.5|2)')
   })
 
-  it('Applies number const constraint', () => {
-    lex.assertValidRecord('com.example.numberConst', {
-      $type: 'com.example.numberConst',
-      number: 0,
+  it('Applies float const constraint', () => {
+    lex.assertValidRecord('com.example.floatConst', {
+      $type: 'com.example.floatConst',
+      float: 0,
     })
     expect(() =>
-      lex.assertValidRecord('com.example.numberConst', {
-        $type: 'com.example.numberConst',
-        number: 1,
+      lex.assertValidRecord('com.example.floatConst', {
+        $type: 'com.example.floatConst',
+        float: 1,
       }),
-    ).toThrow('Record/number must be 0')
+    ).toThrow('Record/float must be 0')
   })
 
   it('Applies integer range constraint', () => {
@@ -534,6 +473,31 @@ describe('Record validation', () => {
         string: '12345',
       }),
     ).toThrow('Record/string must not be longer than 4 characters')
+    expect(() =>
+      lex.assertValidRecord('com.example.stringLength', {
+        $type: 'com.example.stringLength',
+        string: '👨‍👩‍👧‍👧',
+      }),
+    ).toThrow('Record/string must not be longer than 4 characters')
+  })
+
+  it('Applies grapheme string length constraint', () => {
+    lex.assertValidRecord('com.example.stringLengthGrapheme', {
+      $type: 'com.example.stringLengthGrapheme',
+      string: '12👨‍👩‍👧‍👧',
+    })
+    expect(() =>
+      lex.assertValidRecord('com.example.stringLengthGrapheme', {
+        $type: 'com.example.stringLengthGrapheme',
+        string: '👨‍👩‍👧‍👧',
+      }),
+    ).toThrow('Record/string must not be shorter than 2 graphemes')
+    expect(() =>
+      lex.assertValidRecord('com.example.stringLengthGrapheme', {
+        $type: 'com.example.stringLengthGrapheme',
+        string: '12345',
+      }),
+    ).toThrow('Record/string must not be longer than 4 graphemes')
   })
 
   it('Applies string enum constraint', () => {
@@ -587,6 +551,168 @@ describe('Record validation', () => {
       }),
     ).toThrow('Record/datetime must be an iso8601 formatted datetime')
   })
+
+  it('Applies uri formatting constraint', () => {
+    for (const uri of [
+      'https://example.com',
+      'https://example.com/with/path',
+      'https://example.com/with/path?and=query',
+      'at://bsky.social',
+      'did:example:test',
+    ]) {
+      lex.assertValidRecord('com.example.uri', {
+        $type: 'com.example.uri',
+        uri,
+      })
+    }
+    expect(() =>
+      lex.assertValidRecord('com.example.uri', {
+        $type: 'com.example.uri',
+        uri: 'not a uri',
+      }),
+    ).toThrow('Record/uri must be a uri')
+  })
+
+  it('Applies at-uri formatting constraint', () => {
+    lex.assertValidRecord('com.example.atUri', {
+      $type: 'com.example.atUri',
+      atUri: 'at://did:web:example.com/com.example.test/self',
+    })
+    expect(() =>
+      lex.assertValidRecord('com.example.atUri', {
+        $type: 'com.example.atUri',
+        atUri: 'http://not-atproto.com',
+      }),
+    ).toThrow('Record/atUri must be a valid at-uri')
+  })
+
+  it('Applies did formatting constraint', () => {
+    lex.assertValidRecord('com.example.did', {
+      $type: 'com.example.did',
+      did: 'did:web:example.com',
+    })
+    lex.assertValidRecord('com.example.did', {
+      $type: 'com.example.did',
+      did: 'did:plc:12345678abcdefghijklmnop',
+    })
+
+    expect(() =>
+      lex.assertValidRecord('com.example.did', {
+        $type: 'com.example.did',
+        did: 'bad did',
+      }),
+    ).toThrow('Record/did must be a valid did')
+    expect(() =>
+      lex.assertValidRecord('com.example.did', {
+        $type: 'com.example.did',
+        did: 'did:short',
+      }),
+    ).toThrow('Record/did must be a valid did')
+  })
+
+  it('Applies handle formatting constraint', () => {
+    lex.assertValidRecord('com.example.handle', {
+      $type: 'com.example.handle',
+      handle: 'test.bsky.social',
+    })
+    lex.assertValidRecord('com.example.handle', {
+      $type: 'com.example.handle',
+      handle: 'bsky.test',
+    })
+
+    expect(() =>
+      lex.assertValidRecord('com.example.handle', {
+        $type: 'com.example.handle',
+        handle: 'bad handle',
+      }),
+    ).toThrow('Record/handle must be a valid handle')
+    expect(() =>
+      lex.assertValidRecord('com.example.handle', {
+        $type: 'com.example.handle',
+        handle: '-bad-.test',
+      }),
+    ).toThrow('Record/handle must be a valid handle')
+  })
+
+  it('Applies at-identifier formatting constraint', () => {
+    lex.assertValidRecord('com.example.atIdentifier', {
+      $type: 'com.example.atIdentifier',
+      atIdentifier: 'bsky.test',
+    })
+    lex.assertValidRecord('com.example.atIdentifier', {
+      $type: 'com.example.atIdentifier',
+      atIdentifier: 'did:plc:12345678abcdefghijklmnop',
+    })
+
+    expect(() =>
+      lex.assertValidRecord('com.example.atIdentifier', {
+        $type: 'com.example.atIdentifier',
+        atIdentifier: 'bad id',
+      }),
+    ).toThrow('Record/atIdentifier must be a valid did or a handle')
+    expect(() =>
+      lex.assertValidRecord('com.example.atIdentifier', {
+        $type: 'com.example.atIdentifier',
+        atIdentifier: '-bad-.test',
+      }),
+    ).toThrow('Record/atIdentifier must be a valid did or a handle')
+  })
+
+  it('Applies nsid formatting constraint', () => {
+    lex.assertValidRecord('com.example.nsid', {
+      $type: 'com.example.nsid',
+      nsid: 'com.atproto.test',
+    })
+    lex.assertValidRecord('com.example.nsid', {
+      $type: 'com.example.nsid',
+      nsid: 'app.bsky.nested.test',
+    })
+
+    expect(() =>
+      lex.assertValidRecord('com.example.nsid', {
+        $type: 'com.example.nsid',
+        nsid: 'bad nsid',
+      }),
+    ).toThrow('Record/nsid must be a valid nsid')
+    expect(() =>
+      lex.assertValidRecord('com.example.nsid', {
+        $type: 'com.example.nsid',
+        nsid: 'com.bad-.foo',
+      }),
+    ).toThrow('Record/nsid must be a valid nsid')
+  })
+
+  it('Applies cid formatting constraint', () => {
+    lex.assertValidRecord('com.example.cid', {
+      $type: 'com.example.cid',
+      cid: 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+    })
+    expect(() =>
+      lex.assertValidRecord('com.example.cid', {
+        $type: 'com.example.cid',
+        cid: 'abapsdofiuwrpoiasdfuaspdfoiu',
+      }),
+    ).toThrow('Record/cid must be a cid string')
+  })
+
+  it('Applies bytes length constraints', () => {
+    lex.assertValidRecord('com.example.byteLength', {
+      $type: 'com.example.byteLength',
+      bytes: new Uint8Array([1, 2, 3]),
+    })
+    expect(() =>
+      lex.assertValidRecord('com.example.byteLength', {
+        $type: 'com.example.byteLength',
+        bytes: new Uint8Array([1]),
+      }),
+    ).toThrow('Record/bytes must not be smaller than 2 bytes')
+    expect(() =>
+      lex.assertValidRecord('com.example.byteLength', {
+        $type: 'com.example.byteLength',
+        bytes: new Uint8Array([1, 2, 3, 4, 5]),
+      }),
+    ).toThrow('Record/bytes must not be larger than 4 bytes')
+  })
 })
 
 describe('XRPC parameter validation', () => {
@@ -595,14 +721,14 @@ describe('XRPC parameter validation', () => {
   it('Passes valid parameters', () => {
     const queryResult = lex.assertValidXrpcParams('com.example.query', {
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
       string: 'string',
       array: ['x', 'y'],
     })
     expect(queryResult).toEqual({
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
       string: 'string',
       array: ['x', 'y'],
@@ -610,7 +736,7 @@ describe('XRPC parameter validation', () => {
     })
     const paramResult = lex.assertValidXrpcParams('com.example.procedure', {
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
       string: 'string',
       array: ['x', 'y'],
@@ -618,7 +744,7 @@ describe('XRPC parameter validation', () => {
     })
     expect(paramResult).toEqual({
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
       string: 'string',
       array: ['x', 'y'],
@@ -629,19 +755,19 @@ describe('XRPC parameter validation', () => {
   it('Handles required correctly', () => {
     lex.assertValidXrpcParams('com.example.query', {
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
     })
     expect(() =>
       lex.assertValidXrpcParams('com.example.query', {
         boolean: true,
-        number: 123.45,
+        float: 123.45,
       }),
     ).toThrow('Params must have the property "integer"')
     expect(() =>
       lex.assertValidXrpcParams('com.example.query', {
         boolean: true,
-        number: 123.45,
+        float: 123.45,
         integer: undefined,
       }),
     ).toThrow('Params must have the property "integer"')
@@ -651,7 +777,7 @@ describe('XRPC parameter validation', () => {
     expect(() =>
       lex.assertValidXrpcParams('com.example.query', {
         boolean: 'string',
-        number: 123.45,
+        float: 123.45,
         integer: 123,
         string: 'string',
       }),
@@ -659,15 +785,15 @@ describe('XRPC parameter validation', () => {
     expect(() =>
       lex.assertValidXrpcParams('com.example.procedure', {
         boolean: true,
-        number: true,
+        float: true,
         integer: 123,
         string: 'string',
       }),
-    ).toThrow('number must be a number')
+    ).toThrow('float must be a number')
     expect(() =>
       lex.assertValidXrpcParams('com.example.query', {
         boolean: true,
-        number: 123.45,
+        float: 123.45,
         integer: 123,
         string: 'string',
         array: 'x',
@@ -684,7 +810,7 @@ describe('XRPC input validation', () => {
       object: { boolean: true },
       array: ['one', 'two'],
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
       string: 'string',
     })
@@ -697,7 +823,7 @@ describe('XRPC input validation', () => {
         object: { boolean: 'string' },
         array: ['one', 'two'],
         boolean: true,
-        number: 123.45,
+        float: 123.45,
         integer: 123,
         string: 'string',
       }),
@@ -716,7 +842,7 @@ describe('XRPC output validation', () => {
       object: { boolean: true },
       array: ['one', 'two'],
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
       string: 'string',
     })
@@ -724,7 +850,7 @@ describe('XRPC output validation', () => {
       object: { boolean: true },
       array: ['one', 'two'],
       boolean: true,
-      number: 123.45,
+      float: 123.45,
       integer: 123,
       string: 'string',
     })
@@ -737,7 +863,7 @@ describe('XRPC output validation', () => {
         object: { boolean: 'string' },
         array: ['one', 'two'],
         boolean: true,
-        number: 123.45,
+        float: 123.45,
         integer: 123,
         string: 'string',
       }),

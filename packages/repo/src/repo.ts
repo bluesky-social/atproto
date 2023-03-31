@@ -16,8 +16,6 @@ import log from './logger'
 import BlockMap from './block-map'
 import { ReadableRepo } from './readable-repo'
 import * as util from './util'
-import CidSet from './cid-set'
-import { Block } from 'multiformats/block'
 
 type Params = {
   storage: RepoStorage
@@ -38,16 +36,17 @@ export class Repo extends ReadableRepo {
     storage: RepoStorage,
     did: string,
     keypair: crypto.Keypair,
-    initialRecords: Record<string, CID>,
+    initialWrites: RecordCreateOp[] = [],
   ): Promise<CommitData> {
     const newBlocks = new BlockMap()
-    const relatedCids = new CidSet()
 
     let data = await MST.create(storage)
-    for (const [dataKey, cid] of Object.entries(initialRecords)) {
-      relatedCids.add(cid)
+    for (const record of initialWrites) {
+      const cid = await newBlocks.add(record.record)
+      const dataKey = util.formatDataKey(record.collection, record.rkey)
       data = await data.add(dataKey, cid)
     }
+
     const unstoredData = await data.getUnstoredBlocks()
     newBlocks.addMap(unstoredData.blocks)
 
@@ -66,8 +65,15 @@ export class Repo extends ReadableRepo {
       commit: commitCid,
       prev: null,
       blocks: newBlocks,
-      relatedCids: relatedCids.toList(),
     }
+  }
+
+  static async createFromCommit(
+    storage: RepoStorage,
+    commit: CommitData,
+  ): Promise<Repo> {
+    await storage.applyCommit(commit)
+    return Repo.load(storage, commit.commit)
   }
 
   static async create(
@@ -76,27 +82,13 @@ export class Repo extends ReadableRepo {
     keypair: crypto.Keypair,
     initialWrites: RecordCreateOp[] = [],
   ): Promise<Repo> {
-    const newBlocks = new BlockMap()
-    const initialRecords: Record<string, CID> = {}
-    for (const record of initialWrites) {
-      const cid = await newBlocks.add(record.record)
-      const dataKey = util.formatDataKey(record.collection, record.rkey)
-      initialRecords[dataKey] = cid
-    }
     const commit = await Repo.formatInitCommit(
       storage,
       did,
       keypair,
-      initialRecords,
+      initialWrites,
     )
-    newBlocks.addMap(commit.blocks)
-    await storage.applyCommit({
-      commit: commit.commit,
-      prev: commit.prev,
-      blocks: newBlocks,
-    })
-    log.info({ did }, `created repo`)
-    return Repo.load(storage, commit.commit)
+    return Repo.createFromCommit(storage, commit)
   }
 
   static async load(storage: RepoStorage, cid?: CID) {

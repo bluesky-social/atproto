@@ -1,0 +1,71 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.actor.defs",
+  "description": "A reference to an actor in the network.",
+  "defs": {
+    "profileViewBasic": {
+      "type": "object",
+      "required": ["did", "handle"],
+      "properties": {
+        "did": {"type": "string", "format": "did"},
+        "handle": {"type": "string", "format": "handle"},
+        "displayName": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "avatar": { "type": "string" },
+        "viewer": {"type": "ref", "ref": "#viewerState"}
+      }
+    },
+    "profileView": {
+      "type": "object",
+      "required": ["did", "handle"],
+      "properties": {
+        "did": {"type": "string", "format":"did"},
+        "handle": {"type": "string", "format":"handle"},
+        "displayName": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "avatar": { "type": "string" },
+        "indexedAt": {"type": "string", "format": "datetime"},
+        "viewer": {"type": "ref", "ref": "#viewerState"}
+      }
+    },
+    "profileViewDetailed": {
+      "type": "object",
+      "required": ["did", "handle"],
+      "properties": {
+        "did": {"type": "string", "format": "did"},
+        "handle": {"type": "string", "format": "handle"},
+        "displayName": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "avatar": { "type": "string" },
+        "banner": { "type": "string" },
+        "followersCount": {"type": "integer"},
+        "followsCount": {"type": "integer"},
+        "postsCount": {"type": "integer"},
+        "indexedAt": {"type": "string", "format": "datetime"},
+        "viewer": {"type": "ref", "ref": "#viewerState"}
+      }
+    },
+    "viewerState": {
+      "type": "object",
+      "properties": {
+        "muted": {"type": "boolean"},
+        "following": {"type": "string", "format": "at-uri"},
+        "followedBy": {"type": "string", "format": "at-uri"}
+      }
+    }
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.sync.subscribeRepos",
+  "defs": {
+    "main": {
+      "type": "subscription",
+      "description": "Subscribe to repo updates",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "cursor": {
+            "type": "integer",
+            "description": "The last known event to backfill from."
+          }
+        }
+      },
+      "message": {
+        "schema": {
+          "type": "union",
+          "refs": [
+            "#commit",
+            "#handle",
+            "#migrate",
+            "#tombstone",
+            "#info"
+          ]
+        }
+      },
+      "errors": [
+        {"name": "FutureCursor"}
+      ]
+    },
+    "commit": {
+      "type": "object",
+      "required": ["seq", "rebase", "tooBig", "repo", "commit", "prev", "blocks", "ops", "blobs", "time"],
+      "nullable": ["prev"],
+      "properties": {
+        "seq": {"type": "integer"},
+        "rebase": {"type": "boolean"},
+        "tooBig": {"type": "boolean"},
+        "repo": {"type": "string", "format": "did"},
+        "commit": {"type": "cid-link"},
+        "prev": {"type": "cid-link"},
+        "blocks": {
+          "type": "bytes",
+          "description": "CAR file containing relevant blocks",
+          "maxLength": 1000000
+        },
+        "ops": {
+          "type": "array", 
+          "items": { "type": "ref", "ref": "#repoOp"},
+          "maxLength": 200
+        },
+        "blobs": {
+          "type": "array",
+          "items": {"type": "cid-link"}
+        },
+        "time": {"type": "string", "format": "datetime"}
+      }
+    },
+    "handle": {
+      "type": "object",
+      "required": ["seq", "did", "handle", "time"],
+      "properties": {
+        "seq": {"type": "integer"},
+        "did": {"type": "string", "format": "did"},
+        "handle": {"type": "string", "format": "handle"},
+        "time": {"type": "string", "format": "datetime"}
+      }
+    },
+    "migrate": {
+      "type": "object",
+      "required": ["seq", "did", "migrateTo", "time"],
+      "nullable": ["migrateTo"],
+      "properties": {
+        "seq": {"type": "integer"},
+        "did": {"type": "string", "format": "did"},
+        "migrateTo": {"type": "string"},
+        "time": {"type": "string", "format": "datetime"}
+      }
+    },
+    "tombstone": {
+      "type": "object",
+      "required": ["seq", "did", "time"],
+      "properties": {
+        "seq": {"type": "integer"},
+        "did": {"type": "string", "format": "did"},
+        "time": {"type": "string", "format": "datetime"}
+      }
+    },
+    "info": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "knownValues": ["OutdatedCursor"]
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "repoOp": {
+      "type": "object",
+      "required": ["action", "path", "cid"],
+      "nullable": ["cid"],
+      "properties": {
+        "action": {
+          "type": "string",
+          "knownValues": [
+            "create",
+            "update",
+            "delete"
+          ]
+        },
+        "path": {"type": "string"},
+        "cid": {"type": "cid-link"}
+      }
+    }
+  }
+}

@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params }) => {
       const { db, services } = ctx
       const { did } = params
-      const result = await services.account(db).getUser(did, true)
+      const result = await services.account(db).getAccount(did, true)
       if (!result) throw new InvalidRequestError('Repo not found')
       return {
         encoding: 'application/json',

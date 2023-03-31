@@ -1,9 +1,10 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
+import { CID } from 'multiformats/cid'
 
 export interface Main {
   external: External
@@ -27,7 +28,7 @@ export interface External {
   uri: string
   title: string
   description: string
-  thumb?: { cid: string; mimeType: string; [k: string]: unknown }
+  thumb?: BlobRef
   [k: string]: unknown
 }
 
@@ -43,24 +44,24 @@ export function validateExternal(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.embed.external#external', v)
 }
 
-export interface Presented {
-  external: PresentedExternal
+export interface View {
+  external: ViewExternal
   [k: string]: unknown
 }
 
-export function isPresented(v: unknown): v is Presented {
+export function isView(v: unknown): v is View {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.embed.external#presented'
+    v.$type === 'app.bsky.embed.external#view'
   )
 }
 
-export function validatePresented(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.external#presented', v)
+export function validateView(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.external#view', v)
 }
 
-export interface PresentedExternal {
+export interface ViewExternal {
   uri: string
   title: string
   description: string
@@ -68,14 +69,14 @@ export interface PresentedExternal {
   [k: string]: unknown
 }
 
-export function isPresentedExternal(v: unknown): v is PresentedExternal {
+export function isViewExternal(v: unknown): v is ViewExternal {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.embed.external#presentedExternal'
+    v.$type === 'app.bsky.embed.external#viewExternal'
   )
 }
 
-export function validatePresentedExternal(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.embed.external#presentedExternal', v)
+export function validateViewExternal(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.external#viewExternal', v)
 }

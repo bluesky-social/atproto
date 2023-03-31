@@ -4,24 +4,27 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Write a record.",
+      "description": "Write a record, creating or updating it as needed.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["did", "collection", "rkey", "record"],
+          "required": ["repo", "collection", "rkey", "record"],
+          "nullable": ["swapRecord"],
           "properties": {
-            "did": {
+            "repo": {
               "type": "string",
-              "description": "The DID of the repo."
+              "format": "at-identifier",
+              "description": "The handle or DID of the repo."
             },
             "collection": {
               "type": "string",
-              "description": "The NSID of the record type."
+              "format": "nsid",
+              "description": "The NSID of the record collection."
             },
             "rkey": {
               "type": "string",
-              "description": "The TID of the record."
+              "description": "The key of the record."
             },
             "validate": {
               "type": "boolean",
@@ -30,7 +33,17 @@
             },
             "record": {
               "type": "unknown",
-              "description": "The record to create."
+              "description": "The record to write."
+            },
+            "swapRecord": {
+              "type": "string",
+              "format": "cid",
+              "description": "Compare and swap with the previous record by cid."
+            },
+            "swapCommit": {
+              "type": "string",
+              "format": "cid",
+              "description": "Compare and swap with the previous commit by cid."
             }
           }
         }
@@ -41,11 +54,14 @@
           "type": "object",
           "required": ["uri", "cid"],
           "properties": {
-            "uri": {"type": "string"},
-            "cid": {"type": "string"}
+            "uri": {"type": "string", "format": "at-uri"},
+            "cid": {"type": "string", "format": "cid"}
           }
         }
-      }
+      },
+      "errors": [
+        {"name": "InvalidSwap"}
+      ]
     }
   }
 }

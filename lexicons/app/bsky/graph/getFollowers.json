@@ -4,14 +4,14 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Who is following a user?",
+      "description": "Who is following an actor?",
       "parameters": {
         "type": "params",
-        "required": ["user"],
+        "required": ["actor"],
         "properties": {
-          "user": {"type": "string"},
+          "actor": {"type": "string", "format": "at-identifier"},
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "before": {"type": "string"}
+          "cursor": {"type": "string"}
         }
       },
       "output": {
@@ -20,11 +20,11 @@
           "type": "object",
           "required": ["subject", "followers"],
           "properties": {
-            "subject": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"},
+            "subject": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
             "cursor": {"type": "string"},
             "followers": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"}
+              "items": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"}
             }
           }
         }

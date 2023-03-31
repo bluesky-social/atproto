@@ -15,8 +15,7 @@ export async function* byFrame(ws: WebSocket, options?: DuplexOptions) {
 
 export async function* byMessage(ws: WebSocket, options?: DuplexOptions) {
   for await (const frame of byFrame(ws, options)) {
-    if (frame.isMessage() || frame.isInfo()) {
-      // @NOTE info frames will soon be folded into messages
+    if (frame.isMessage()) {
       yield frame
     } else if (frame.isError()) {
       throw new XRPCError(-1, frame.code, frame.message)

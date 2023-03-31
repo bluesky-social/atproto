@@ -4,15 +4,27 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Fetch a record.",
+      "description": "Get a record.",
       "parameters": {
         "type": "params",
-        "required": ["user", "collection", "rkey"],
+        "required": ["repo", "collection", "rkey"],
         "properties": {
-          "user": {"type": "string", "description": "The handle or DID of the repo."},
-          "collection": {"type": "string", "description": "The NSID of the collection."},
+          "repo": {
+            "type": "string",
+            "format": "at-identifier",
+            "description": "The handle or DID of the repo."
+          },
+          "collection": {
+            "type": "string",
+            "format": "nsid",
+            "description": "The NSID of the record collection."
+          },
           "rkey": {"type": "string", "description": "The key of the record."},
-          "cid": {"type": "string", "description": "The CID of the version of the record. If not specified, then return the most recent version."}
+          "cid": {
+            "type": "string",
+            "format": "cid",
+            "description": "The CID of the version of the record. If not specified, then return the most recent version."
+          }
         }
       },
       "output": {
@@ -21,8 +33,8 @@
           "type": "object",
           "required": ["uri", "value"],
           "properties": {
-            "uri": {"type": "string"},
-            "cid": {"type": "string"},
+            "uri": {"type": "string", "format": "at-uri"},
+            "cid": {"type": "string", "format": "cid"},
             "value": {"type": "unknown"}
           }
         }

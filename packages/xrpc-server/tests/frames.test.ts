@@ -1,17 +1,20 @@
 import * as cborx from 'cbor-x'
 import * as uint8arrays from 'uint8arrays'
-import { MessageFrame, ErrorFrame, Frame, FrameType, InfoFrame } from '../src'
+import { MessageFrame, ErrorFrame, Frame, FrameType } from '../src'
 
 describe('Frames', () => {
   it('creates and parses message frame.', async () => {
-    const messageFrame = new MessageFrame({ a: 'b', c: [1, 2, 3] }, { type: 2 })
+    const messageFrame = new MessageFrame(
+      { a: 'b', c: [1, 2, 3] },
+      { type: '#d' },
+    )
 
     expect(messageFrame.header).toEqual({
       op: FrameType.Message,
-      t: 2,
+      t: '#d',
     })
     expect(messageFrame.op).toEqual(FrameType.Message)
-    expect(messageFrame.type).toEqual(2)
+    expect(messageFrame.type).toEqual('#d')
     expect(messageFrame.body).toEqual({ a: 'b', c: [1, 2, 3] })
 
     const bytes = messageFrame.toBytes()
@@ -19,8 +22,8 @@ describe('Frames', () => {
       uint8arrays.equals(
         bytes,
         new Uint8Array([
-          /*header*/ 162, 97, 116, 2, 98, 111, 112, 1, /*body*/ 162, 97, 97, 97,
-          98, 97, 99, 131, 1, 2, 3,
+          /*header*/ 162, 97, 116, 98, 35, 100, 98, 111, 112, 1, /*body*/ 162,
+          97, 97, 97, 98, 97, 99, 131, 1, 2, 3,
         ]),
       ),
     ).toEqual(true)
@@ -34,46 +37,6 @@ describe('Frames', () => {
     expect(parsedFrame.op).toEqual(messageFrame.op)
     expect(parsedFrame.type).toEqual(messageFrame.type)
     expect(parsedFrame.body).toEqual(messageFrame.body)
-  })
-
-  it('creates and parses info frame.', async () => {
-    const infoFrame = new InfoFrame({
-      info: 'SomeOccurrence',
-      message: 'X occurred',
-    })
-
-    expect(infoFrame.header).toEqual({ op: FrameType.Info })
-    expect(infoFrame.op).toEqual(FrameType.Info)
-    expect(infoFrame.code).toEqual('SomeOccurrence')
-    expect(infoFrame.message).toEqual('X occurred')
-    expect(infoFrame.body).toEqual({
-      info: 'SomeOccurrence',
-      message: 'X occurred',
-    })
-
-    const bytes = infoFrame.toBytes()
-    expect(
-      uint8arrays.equals(
-        bytes,
-        new Uint8Array([
-          /*header*/ 161, 98, 111, 112, 2, /*body*/ 162, 100, 105, 110, 102,
-          111, 110, 83, 111, 109, 101, 79, 99, 99, 117, 114, 114, 101, 110, 99,
-          101, 103, 109, 101, 115, 115, 97, 103, 101, 106, 88, 32, 111, 99, 99,
-          117, 114, 114, 101, 100,
-        ]),
-      ),
-    ).toEqual(true)
-
-    const parsedFrame = Frame.fromBytes(bytes)
-    if (!(parsedFrame instanceof InfoFrame)) {
-      throw new Error('Did not parse as info frame')
-    }
-
-    expect(parsedFrame.header).toEqual(infoFrame.header)
-    expect(parsedFrame.op).toEqual(infoFrame.op)
-    expect(parsedFrame.code).toEqual(infoFrame.code)
-    expect(parsedFrame.message).toEqual(infoFrame.message)
-    expect(parsedFrame.body).toEqual(infoFrame.body)
   })
 
   it('creates and parses error frame.', async () => {
@@ -135,7 +98,10 @@ describe('Frames', () => {
   })
 
   it('parsing fails when frame is missing body.', async () => {
-    const messageFrame = new MessageFrame({ a: 'b', c: [1, 2, 3] }, { type: 2 })
+    const messageFrame = new MessageFrame(
+      { a: 'b', c: [1, 2, 3] },
+      { type: '#d' },
+    )
 
     const headerBytes = cborx.encode(messageFrame.header)
 
@@ -143,7 +109,10 @@ describe('Frames', () => {
   })
 
   it('parsing fails when frame has too many data items.', async () => {
-    const messageFrame = new MessageFrame({ a: 'b', c: [1, 2, 3] }, { type: 2 })
+    const messageFrame = new MessageFrame(
+      { a: 'b', c: [1, 2, 3] },
+      { type: '#d' },
+    )
 
     const bytes = uint8arrays.concat([
       messageFrame.toBytes(),
@@ -153,17 +122,6 @@ describe('Frames', () => {
     expect(() => Frame.fromBytes(bytes)).toThrow(
       'Too many CBOR data items in frame',
     )
-  })
-
-  it('parsing fails when info frame has invalid body.', async () => {
-    const infoFrame = new InfoFrame({ info: 'SomeOccurrence' })
-
-    const bytes = uint8arrays.concat([
-      cborx.encode(infoFrame.header),
-      cborx.encode({ blah: 1 }),
-    ])
-
-    expect(() => Frame.fromBytes(bytes)).toThrow('Invalid info frame body:')
   })
 
   it('parsing fails when error frame has invalid body.', async () => {

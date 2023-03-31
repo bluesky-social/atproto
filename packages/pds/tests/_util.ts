@@ -9,10 +9,11 @@ import { randomStr } from '@atproto/crypto'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import { PDS, ServerConfig, Database, MemoryBlobStore } from '../src/index'
-import { Main as FeedViewPost } from '../src/lexicon/types/app/bsky/feed/feedViewPost'
+import { FeedViewPost } from '../src/lexicon/types/app/bsky/feed/defs'
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import AppContext from '../src/context'
 import { HOUR } from '@atproto/common'
+import { lexToJson } from '@atproto/lexicon'
 
 const ADMIN_PASSWORD = 'admin-pass'
 
@@ -151,7 +152,12 @@ export const forSnapshot = (obj: unknown) => {
   const users = { [kTake]: 'user' }
   const cids = { [kTake]: 'cids' }
   const unknown = { [kTake]: 'unknown' }
-  return mapLeafValues(obj, (item) => {
+  const toWalk = lexToJson(obj as any) // remove any blobrefs/cids
+  return mapLeafValues(toWalk, (item) => {
+    const asCid = CID.asCID(item)
+    if (asCid !== null) {
+      return take(cids, asCid.toString())
+    }
     if (typeof item !== 'string') {
       return item
     }

@@ -2,10 +2,11 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { Headers, XRPCError } from '@atproto/xrpc'
-import { ValidationResult } from '@atproto/lexicon'
+import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
-import * as AppBskyActorProfile from './profile'
+import { CID } from 'multiformats/cid'
+import * as AppBskyActorDefs from './defs'
 
 export interface QueryParams {
   actors: string[]
@@ -14,7 +15,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  profiles: AppBskyActorProfile.View[]
+  profiles: AppBskyActorDefs.ProfileViewDetailed[]
   [k: string]: unknown
 }
 

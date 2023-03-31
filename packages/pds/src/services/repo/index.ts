@@ -5,10 +5,16 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
 import SqlRepoStorage from '../../sql-repo-storage'
-import { PreparedCreate, PreparedWrite } from '../../repo/types'
+import {
+  BadCommitSwapError,
+  BadRecordSwapError,
+  PreparedCreate,
+  PreparedWrite,
+} from '../../repo/types'
 import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { RecordService } from '../record'
+import { sequenceCommit } from '../../sequencer'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -39,31 +45,43 @@ export class RepoService {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
     const writeOps = writes.map(createWriteToOp)
-    const repo = await Repo.create(storage, did, this.repoSigningKey, writeOps)
+    const commit = await Repo.formatInitCommit(
+      storage,
+      did,
+      this.repoSigningKey,
+      writeOps,
+    )
+    await storage.applyCommit(commit)
     await Promise.all([
       this.indexWrites(writes, now),
-      this.afterWriteProcessing(did, repo.cid, writes),
+      this.afterWriteProcessing(did, commit, writes),
     ])
   }
 
-  async processWrites(did: string, writes: PreparedWrite[], now: string) {
+  async processWrites(
+    did: string,
+    writes: PreparedWrite[],
+    now: string,
+    swapCommit?: CID,
+  ) {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
-    const commitData = await this.formatCommit(storage, did, writes)
+    const commitData = await this.formatCommit(storage, did, writes, swapCommit)
     await Promise.all([
       // persist the commit to repo storage
       await storage.applyCommit(commitData),
       // & send to indexing
       this.indexWrites(writes, now),
       // do any other processing needed after write
-      this.afterWriteProcessing(did, commitData.commit, writes),
+      this.afterWriteProcessing(did, commitData, writes),
     ])
   }
 
-  async formatCommit(
+  private async formatCommit(
     storage: SqlRepoStorage,
     did: string,
     writes: PreparedWrite[],
+    swapCommit?: CID,
   ): Promise<CommitData> {
     const currRoot = await storage.getHead(true)
     if (!currRoot) {
@@ -71,21 +89,33 @@ export class RepoService {
         `${did} is not a registered repo on this server`,
       )
     }
+    if (swapCommit && !currRoot.equals(swapCommit)) {
+      throw new BadCommitSwapError(currRoot)
+    }
+    const recordTxn = this.services.record(this.db)
+    for (const write of writes) {
+      const { action, uri, swapCid } = write
+      if (swapCid === undefined) {
+        continue
+      }
+      const record = await recordTxn.getRecord(uri, null, true)
+      const currRecord = record && CID.parse(record.cid)
+      if (action === WriteOpAction.Create && swapCid !== null) {
+        throw new BadRecordSwapError(currRecord) // There should be no current record for a create
+      }
+      if (action === WriteOpAction.Update && swapCid === null) {
+        throw new BadRecordSwapError(currRecord) // There should be a current record for an update
+      }
+      if (action === WriteOpAction.Delete && swapCid === null) {
+        throw new BadRecordSwapError(currRecord) // There should be a current record for a delete
+      }
+      if ((currRecord || swapCid) && !currRecord?.equals(swapCid)) {
+        throw new BadRecordSwapError(currRecord)
+      }
+    }
     const writeOps = writes.map(writeToOp)
     const repo = await Repo.load(storage, currRoot)
     return repo.formatCommit(writeOps, this.repoSigningKey)
-  }
-
-  async applyCommit(
-    did: string,
-    writes: PreparedWrite[],
-    now: string,
-  ): Promise<CID> {
-    this.db.assertTransaction()
-    const storage = new SqlRepoStorage(this.db, did, now)
-    const commit = await this.formatCommit(storage, did, writes)
-    await storage.applyCommit(commit)
-    return commit.commit
   }
 
   async indexWrites(writes: PreparedWrite[], now: string) {
@@ -113,42 +143,13 @@ export class RepoService {
 
   async afterWriteProcessing(
     did: string,
-    commit: CID,
+    commitData: CommitData,
     writes: PreparedWrite[],
   ) {
     await Promise.all([
-      this.blobs.processWriteBlobs(did, commit, writes),
-      this.indexRepoOps(did, commit, writes),
-      this.sequenceWrite(did, commit),
+      this.blobs.processWriteBlobs(did, commitData.commit, writes),
+      sequenceCommit(this.db, did, commitData, writes),
     ])
-  }
-
-  async indexRepoOps(did: string, commit: CID, writes: PreparedWrite[]) {
-    const ops = writes.map((w) => {
-      const path = w.uri.collection + '/' + w.uri.rkey
-      const cid = w.action === WriteOpAction.Delete ? null : w.cid.toString()
-      return {
-        did,
-        commit: commit.toString(),
-        action: w.action,
-        path,
-        cid,
-      }
-    })
-    await this.db.db.insertInto('repo_op').values(ops).execute()
-  }
-
-  async sequenceWrite(did: string, commit: CID) {
-    await this.db.db
-      .insertInto('repo_seq')
-      .values({
-        did,
-        commit: commit.toString(),
-        eventType: 'repo_append',
-        sequencedAt: new Date().toISOString(),
-      })
-      .execute()
-    await this.db.notify('repo_seq')
   }
 
   async deleteRepo(did: string) {

@@ -8,10 +8,10 @@
         "type": "params",
         "required": ["uri"],
         "properties": {
-          "uri": {"type": "string"},
-          "cid": {"type": "string"},
+          "uri": {"type": "string", "format": "at-uri"},
+          "cid": {"type": "string", "format": "cid"},
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "before": {"type": "string"}
+          "cursor": {"type": "string"}
         }
       },
       "output": {
@@ -20,12 +20,12 @@
           "type": "object",
           "required": ["uri", "repostedBy"],
           "properties": {
-            "uri": {"type": "string"},
-            "cid": {"type": "string"},
+            "uri": {"type": "string", "format": "at-uri"},
+            "cid": {"type": "string", "format": "cid"},
             "cursor": {"type": "string"},
             "repostedBy": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.actor.ref#withInfo"}
+              "items": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"}
             }
           }
         }

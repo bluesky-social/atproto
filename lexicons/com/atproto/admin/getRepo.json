@@ -9,12 +9,12 @@
         "type": "params",
         "required": ["did"],
         "properties": {
-          "did": {"type": "string"}
+          "did": {"type": "string", "format":"did"}
         }
       },
       "output": {
         "encoding": "application/json",
-        "schema": {"type": "ref", "ref": "com.atproto.admin.repo#viewDetail"}
+        "schema": {"type": "ref", "ref": "com.atproto.admin.defs#repoViewDetail"}
       }
     }
   }

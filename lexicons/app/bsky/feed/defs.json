@@ -1,0 +1,82 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.defs",
+  "defs": {
+    "postView": {
+      "type": "object",
+      "required": ["uri", "cid", "author", "record", "indexedAt"],
+      "properties": {
+        "uri": {"type": "string", "format": "at-uri"},
+        "cid": {"type": "string", "format": "cid"},
+        "author": {"type": "ref", "ref": "app.bsky.actor.defs#profileViewBasic"},
+        "record": {"type": "unknown"},
+        "embed": {
+          "type": "union",
+          "refs": [
+            "app.bsky.embed.images#view",
+            "app.bsky.embed.external#view",
+            "app.bsky.embed.record#view",
+            "app.bsky.embed.recordWithMedia#view"
+          ]
+        },
+        "replyCount": {"type": "integer"},
+        "repostCount": {"type": "integer"},
+        "likeCount": {"type": "integer"},
+        "indexedAt": {"type": "string", "format": "datetime"},
+        "viewer": {"type": "ref", "ref": "#viewerState"}
+      }
+    },
+    "viewerState": {
+      "type": "object",
+      "properties": {
+        "repost": {"type": "string", "format": "at-uri"},
+        "like": {"type": "string", "format": "at-uri"}
+      }
+    },
+    "feedViewPost": {
+      "type": "object",
+      "required": ["post"],
+      "properties": {
+        "post": {"type": "ref", "ref": "app.bsky.feed.defs#postView"},
+        "reply": {"type": "ref", "ref": "#replyRef"},
+        "reason": {"type": "union", "refs": ["#reasonRepost"]}
+      }
+    },
+    "replyRef": {
+      "type": "object",
+      "required": ["root", "parent"],
+      "properties": {
+        "root": {"type": "ref", "ref": "app.bsky.feed.defs#postView"},
+        "parent": {"type": "ref", "ref": "app.bsky.feed.defs#postView"}
+      }
+    },
+    "reasonRepost": {
+      "type": "object",
+      "required": ["by", "indexedAt"],
+      "properties": {
+        "by": {"type": "ref", "ref": "app.bsky.actor.defs#profileViewBasic"},
+        "indexedAt": {"type": "string", "format": "datetime"}
+      }
+    },
+    "threadViewPost": {
+      "type": "object",
+      "required": ["post"],
+      "properties": {
+        "post": {"type": "ref", "ref": "#postView"},
+        "parent": {"type": "union", "refs": ["#threadViewPost", "#notFoundPost"]},
+        "replies": {
+          "type": "array",
+          "items": {"type": "union", "refs": ["#threadViewPost", "#notFoundPost"]}
+        }
+      }
+    },
+    "notFoundPost": {
+      "type": "object",
+      "required": ["uri", "notFound"],
+      "properties": {
+        "uri": {"type": "string", "format": "at-uri"},
+        "notFound": {"type": "boolean", "const": true}
+      }
+    }
+  }
+}

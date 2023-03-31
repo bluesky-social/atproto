@@ -8,12 +8,12 @@
         "type": "params",
         "required": ["actor"],
         "properties": {
-          "actor": {"type": "string"}
+          "actor": {"type": "string", "format": "at-identifier"}
         }
       },
       "output": {
         "encoding": "application/json",
-        "schema": {"type": "ref", "ref": "app.bsky.actor.profile#view"}
+        "schema": {"type": "ref", "ref": "app.bsky.actor.defs#profileViewDetailed"}
       }
     }
   }

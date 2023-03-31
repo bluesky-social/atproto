@@ -1,0 +1,44 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.server.createAccount",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Create an account.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["handle", "email", "password"],
+          "properties": {
+            "email": {"type": "string"},
+            "handle": {"type": "string", "format": "handle"},
+            "inviteCode": {"type": "string"},
+            "password": {"type": "string"},
+            "recoveryKey": {"type": "string"}
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["accessJwt", "refreshJwt", "handle", "did"],
+          "properties": {
+            "accessJwt": { "type": "string" },
+            "refreshJwt": { "type": "string" },
+            "handle": { "type": "string", "format": "handle" },
+            "did": { "type": "string", "format": "did" }
+          }
+        }
+      },
+      "errors": [
+        {"name": "InvalidHandle"},
+        {"name": "InvalidPassword"},
+        {"name": "InvalidInviteCode"},
+        {"name": "HandleNotAvailable"},
+        {"name": "UnsupportedDomain"}
+      ]
+    }
+  }
+}

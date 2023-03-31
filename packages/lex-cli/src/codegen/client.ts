@@ -80,6 +80,12 @@ const indexTs = (
     file
       .addImportDeclaration({ moduleSpecifier: './lexicons' })
       .addNamedImports([{ name: 'schemas' }])
+    //= import {CID} from 'multiformats/cid'
+    file
+      .addImportDeclaration({
+        moduleSpecifier: 'multiformats/cid',
+      })
+      .addNamedImports([{ name: 'CID' }])
 
     // generate type imports and re-exports
     for (const lexicon of lexiconDocs) {
@@ -315,13 +321,13 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
     if (userType.def.type !== 'record') {
       continue
     }
-    genRecordCls(file, userType)
+    genRecordCls(file, userType.nsid, userType.def)
   }
 }
 
-function genRecordCls(file: SourceFile, userType: DefTreeNodeUserType) {
+function genRecordCls(file: SourceFile, nsid: string, lexRecord: LexRecord) {
   //= export class {type}Record {...}
-  const name = NSID.parse(userType.nsid).name || ''
+  const name = NSID.parse(nsid).name || ''
   const cls = file.addClass({
     name: `${toTitleCase(name)}Record`,
     isExported: true,
@@ -343,7 +349,7 @@ function genRecordCls(file: SourceFile, userType: DefTreeNodeUserType) {
   cons.setBodyText(`this._service = service`)
 
   // methods
-  const typeModule = toTitleCase(userType.nsid)
+  const typeModule = toTitleCase(nsid)
   {
     //= list()
     const method = cls.addMethod({
@@ -357,7 +363,7 @@ function genRecordCls(file: SourceFile, userType: DefTreeNodeUserType) {
     })
     method.setBodyText(
       [
-        `const res = await this._service.xrpc.call('${ATP_METHODS.list}', { collection: '${userType.nsid}', ...params })`,
+        `const res = await this._service.xrpc.call('${ATP_METHODS.list}', { collection: '${nsid}', ...params })`,
         `return res.data`,
       ].join('\n'),
     )
@@ -375,7 +381,7 @@ function genRecordCls(file: SourceFile, userType: DefTreeNodeUserType) {
     })
     method.setBodyText(
       [
-        `const res = await this._service.xrpc.call('${ATP_METHODS.get}', { collection: '${userType.nsid}', ...params })`,
+        `const res = await this._service.xrpc.call('${ATP_METHODS.get}', { collection: '${nsid}', ...params })`,
         `return res.data`,
       ].join('\n'),
     )
@@ -401,10 +407,13 @@ function genRecordCls(file: SourceFile, userType: DefTreeNodeUserType) {
       name: 'headers?',
       type: `Record<string, string>`,
     })
+    const maybeRkeyPart = lexRecord.key?.startsWith('literal:')
+      ? `rkey: '${lexRecord.key.replace('literal:', '')}', `
+      : ''
     method.setBodyText(
       [
-        `record.$type = '${userType.nsid}'`,
-        `const res = await this._service.xrpc.call('${ATP_METHODS.create}', undefined, { collection: '${userType.nsid}', ...params, record }, {encoding: 'application/json', headers })`,
+        `record.$type = '${nsid}'`,
+        `const res = await this._service.xrpc.call('${ATP_METHODS.create}', undefined, { collection: '${nsid}', ${maybeRkeyPart}...params, record }, {encoding: 'application/json', headers })`,
         `return res.data`,
       ].join('\n'),
     )
@@ -456,7 +465,7 @@ function genRecordCls(file: SourceFile, userType: DefTreeNodeUserType) {
 
     method.setBodyText(
       [
-        `await this._service.xrpc.call('${ATP_METHODS.delete}', undefined, { collection: '${userType.nsid}', ...params }, { headers })`,
+        `await this._service.xrpc.call('${ATP_METHODS.delete}', undefined, { collection: '${nsid}', ...params }, { headers })`,
       ].join('\n'),
     )
   }
@@ -481,12 +490,12 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
         })
         xrpcImport.addNamedImports([{ name: 'Headers' }, { name: 'XRPCError' }])
       }
-      //= import {ValidationResult} from '@atproto/lexicon'
+      //= import {ValidationResult, BlobRef} from '@atproto/lexicon'
       file
         .addImportDeclaration({
           moduleSpecifier: '@atproto/lexicon',
         })
-        .addNamedImports([{ name: 'ValidationResult' }])
+        .addNamedImports([{ name: 'ValidationResult' }, { name: 'BlobRef' }])
       //= import {isObj, hasProp} from '../../util.ts'
       file
         .addImportDeclaration({
@@ -505,6 +514,12 @@ const lexiconTs = (project, lexicons: Lexicons, lexiconDoc: LexiconDoc) =>
             .join('/')}/lexicons`,
         })
         .addNamedImports([{ name: 'lexicons' }])
+      //= import {CID} from 'multiformats/cid'
+      file
+        .addImportDeclaration({
+          moduleSpecifier: 'multiformats/cid',
+        })
+        .addNamedImports([{ name: 'CID' }])
 
       for (const defId in lexiconDoc.defs) {
         const def = lexiconDoc.defs[defId]

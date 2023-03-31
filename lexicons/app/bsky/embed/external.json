@@ -1,7 +1,7 @@
 {
   "lexicon": 1,
   "id": "app.bsky.embed.external",
-  "description": "An representation of some externally linked content, embedded in another form of content",
+  "description": "A representation of some externally linked content, embedded in another form of content",
   "defs": {
     "main": {
       "type": "object",
@@ -17,33 +17,31 @@
       "type": "object",
       "required":  ["uri", "title", "description"],
       "properties": {
-        "uri": {"type": "string"},
+        "uri": {"type": "string", "format": "uri"},
         "title": {"type": "string"},
         "description": {"type": "string"},
         "thumb": {
-          "type": "image",
+          "type": "blob",
           "accept": ["image/*"],
-          "maxWidth": 2000,
-          "maxHeight": 2000,
           "maxSize": 1000000
         }
       }
     },
-    "presented": {
+    "view": {
       "type": "object",
       "required": ["external"],
       "properties": {
         "external": {
           "type": "ref",
-          "ref": "#presentedExternal"
+          "ref": "#viewExternal"
         }
       }
     },
-    "presentedExternal": {
+    "viewExternal": {
       "type": "object",
       "required":  ["uri", "title", "description"],
       "properties": {
-        "uri": {"type": "string"},
+        "uri": {"type": "string", "format": "uri"},
         "title": {"type": "string"},
         "description": {"type": "string"},
         "thumb": {"type": "string"}

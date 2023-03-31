@@ -1,5 +1,6 @@
 import * as http from 'http'
 import { WebSocket, createWebSocketStream } from 'ws'
+import getPort from 'get-port'
 import { wait } from '@atproto/common'
 import { byFrame, MessageFrame, ErrorFrame, Frame, Subscription } from '../src'
 import {
@@ -52,10 +53,6 @@ const LEXICONS = [
             type: 'union',
             refs: ['#even', '#odd'],
           },
-          codes: {
-            '#even': 0,
-            'io.example.stream2#odd': 1,
-          },
         },
       },
       even: {
@@ -99,12 +96,13 @@ describe('Subscriptions', () => {
     const countdown = Number(params.countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
       yield {
-        $type:
-          i % 2 === 0 ? 'io.example.stream2#even' : 'io.example.stream2#odd',
+        $type: i % 2 === 0 ? '#even' : 'io.example.stream2#odd',
         count: i,
       }
     }
-    yield { $type: 'io.example.stream2#done' }
+    yield {
+      $type: 'io.example.otherNsid#done',
+    }
   })
 
   server.streamMethod('io.example.streamAuth', {
@@ -114,8 +112,11 @@ describe('Subscriptions', () => {
     },
   })
 
+  let port: number
+
   beforeAll(async () => {
-    s = await createServer(8895, server)
+    port = await getPort()
+    s = await createServer(port, server)
   })
   afterAll(async () => {
     await closeServer(s)
@@ -123,7 +124,7 @@ describe('Subscriptions', () => {
 
   it('streams messages', async () => {
     const ws = new WebSocket(
-      'ws://localhost:8895/xrpc/io.example.stream1?countdown=5',
+      `ws://localhost:${port}/xrpc/io.example.stream1?countdown=5`,
     )
 
     const frames: Frame[] = []
@@ -143,7 +144,7 @@ describe('Subscriptions', () => {
 
   it('streams messages in a union', async () => {
     const ws = new WebSocket(
-      'ws://localhost:8895/xrpc/io.example.stream2?countdown=5',
+      `ws://localhost:${port}/xrpc/io.example.stream2?countdown=5`,
     )
 
     const frames: Frame[] = []
@@ -152,23 +153,26 @@ describe('Subscriptions', () => {
     }
 
     expect(frames).toEqual([
-      new MessageFrame({ count: 5 }, { type: 1 }),
-      new MessageFrame({ count: 4 }, { type: 0 }),
-      new MessageFrame({ count: 3 }, { type: 1 }),
-      new MessageFrame({ count: 2 }, { type: 0 }),
-      new MessageFrame({ count: 1 }, { type: 1 }),
-      new MessageFrame({ count: 0 }, { type: 0 }),
-      new MessageFrame({ $type: 'io.example.stream2#done' }),
+      new MessageFrame({ count: 5 }, { type: '#odd' }),
+      new MessageFrame({ count: 4 }, { type: '#even' }),
+      new MessageFrame({ count: 3 }, { type: '#odd' }),
+      new MessageFrame({ count: 2 }, { type: '#even' }),
+      new MessageFrame({ count: 1 }, { type: '#odd' }),
+      new MessageFrame({ count: 0 }, { type: '#even' }),
+      new MessageFrame({}, { type: 'io.example.otherNsid#done' }),
     ])
   })
 
   it('resolves auth into handler', async () => {
-    const ws = new WebSocket('ws://localhost:8895/xrpc/io.example.streamAuth', {
-      headers: basicAuthHeaders({
-        username: 'admin',
-        password: 'password',
-      }),
-    })
+    const ws = new WebSocket(
+      `ws://localhost:${port}/xrpc/io.example.streamAuth`,
+      {
+        headers: basicAuthHeaders({
+          username: 'admin',
+          password: 'password',
+        }),
+      },
+    )
 
     const frames: Frame[] = []
     for await (const frame of byFrame(ws)) {
@@ -188,7 +192,7 @@ describe('Subscriptions', () => {
   })
 
   it('errors immediately on bad parameter', async () => {
-    const ws = new WebSocket('ws://localhost:8895/xrpc/io.example.stream1')
+    const ws = new WebSocket(`ws://localhost:${port}/xrpc/io.example.stream1`)
 
     const frames: Frame[] = []
     for await (const frame of byFrame(ws)) {
@@ -204,12 +208,15 @@ describe('Subscriptions', () => {
   })
 
   it('errors immediately on bad auth', async () => {
-    const ws = new WebSocket('ws://localhost:8895/xrpc/io.example.streamAuth', {
-      headers: basicAuthHeaders({
-        username: 'bad',
-        password: 'wrong',
-      }),
-    })
+    const ws = new WebSocket(
+      `ws://localhost:${port}/xrpc/io.example.streamAuth`,
+      {
+        headers: basicAuthHeaders({
+          username: 'bad',
+          password: 'wrong',
+        }),
+      },
+    )
 
     const frames: Frame[] = []
     for await (const frame of byFrame(ws)) {
@@ -225,7 +232,7 @@ describe('Subscriptions', () => {
   })
 
   it('does not websocket upgrade at bad endpoint', async () => {
-    const ws = new WebSocket('ws://localhost:8895/xrpc/does.not.exist')
+    const ws = new WebSocket(`ws://localhost:${port}/xrpc/does.not.exist`)
     const drainStream = async () => {
       for await (const bytes of createWebSocketStream(ws)) {
         bytes // drain
@@ -237,7 +244,7 @@ describe('Subscriptions', () => {
   describe('Subscription consumer', () => {
     it('receives messages w/ skips', async () => {
       const sub = new Subscription({
-        service: 'ws://localhost:8895',
+        service: `ws://localhost:${port}`,
         method: 'io.example.stream1',
         getParams: () => ({ countdown: 5 }),
         validate: (obj) => {
@@ -268,7 +275,7 @@ describe('Subscriptions', () => {
       let countdown = 10
       let reconnects = 0
       const sub = new Subscription({
-        service: 'ws://localhost:8895',
+        service: `ws://localhost:${port}`,
         method: 'io.example.stream1',
         onReconnectError: () => reconnects++,
         getParams: () => ({ countdown }),
@@ -299,7 +306,7 @@ describe('Subscriptions', () => {
     it('aborts with signal', async () => {
       const abortController = new AbortController()
       const sub = new Subscription({
-        service: 'ws://localhost:8895',
+        service: `ws://localhost:${port}`,
         method: 'io.example.stream1',
         signal: abortController.signal,
         getParams: () => ({ countdown: 10 }),

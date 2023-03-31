@@ -1,6 +1,7 @@
 import fs from 'fs/promises'
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/moderationAction'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { ids } from '../../src/lexicon/lexicons'
 import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -67,7 +68,7 @@ describe('pds profile views', () => {
         actors: [
           alice,
           'bob.test',
-          'did:missing',
+          'did:example:missing',
           'carol.test',
           dan,
           'missing.test',
@@ -87,24 +88,11 @@ describe('pds profile views', () => {
   })
 
   it('updates profile', async () => {
-    await agent.api.app.bsky.actor.updateProfile(
-      { displayName: 'ali', description: 'new descript' },
-      { headers: sc.getHeaders(alice), encoding: 'application/json' },
-    )
-
-    const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
-      { actor: alice },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
-  })
-
-  it('handles partial updates', async () => {
-    await agent.api.app.bsky.actor.updateProfile(
-      { description: 'blah blah' },
-      { headers: sc.getHeaders(alice), encoding: 'application/json' },
-    )
+    await updateProfile(agent, alice, {
+      displayName: 'ali',
+      description: 'new descript',
+      avatar: sc.profiles[alice].avatar,
+    })
 
     const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
@@ -121,22 +109,21 @@ describe('pds profile views', () => {
     const bannerImg = await fs.readFile(
       'tests/image/fixtures/key-landscape-small.jpg',
     )
-    const avatarRes = await agent.api.com.atproto.blob.upload(avatarImg, {
+    const avatarRes = await agent.api.com.atproto.repo.uploadBlob(avatarImg, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
     })
-    const bannerRes = await agent.api.com.atproto.blob.upload(bannerImg, {
+    const bannerRes = await agent.api.com.atproto.repo.uploadBlob(bannerImg, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
     })
 
-    await agent.api.app.bsky.actor.updateProfile(
-      {
-        avatar: { cid: avatarRes.data.cid, mimeType: 'image/jpeg' },
-        banner: { cid: bannerRes.data.cid, mimeType: 'image/jpeg' },
-      },
-      { headers: sc.getHeaders(alice), encoding: 'application/json' },
-    )
+    await updateProfile(agent, alice, {
+      displayName: 'ali',
+      description: 'new descript',
+      avatar: avatarRes.data.blob,
+      banner: bannerRes.data.blob,
+    })
 
     const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
@@ -147,16 +134,14 @@ describe('pds profile views', () => {
   })
 
   it('handles unsetting profile fields', async () => {
-    await agent.api.app.bsky.actor.updateProfile(
-      { description: null, avatar: null, banner: null },
-      { headers: sc.getHeaders(alice), encoding: 'application/json' },
-    )
+    await updateProfile(agent, alice, {})
 
     const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
       { headers: sc.getHeaders(alice) },
     )
 
+    expect(aliceForAlice.data.displayName).toBeUndefined()
     expect(aliceForAlice.data.description).toBeUndefined()
     expect(aliceForAlice.data.avatar).toBeUndefined()
     expect(aliceForAlice.data.banner).toBeUndefined()
@@ -164,10 +149,7 @@ describe('pds profile views', () => {
   })
 
   it('creates new profile', async () => {
-    await agent.api.app.bsky.actor.updateProfile(
-      { displayName: 'danny boy' },
-      { headers: sc.getHeaders(dan), encoding: 'application/json' },
-    )
+    await updateProfile(agent, dan, { displayName: 'danny boy' })
 
     const danForDan = await agent.api.app.bsky.actor.getProfile(
       { actor: dan },
@@ -185,10 +167,7 @@ describe('pds profile views', () => {
     }
     await Promise.all(
       descriptions.map(async (description) => {
-        await agent.api.app.bsky.actor.updateProfile(
-          { description },
-          { headers: sc.getHeaders(alice), encoding: 'application/json' },
-        )
+        await updateProfile(agent, alice, { description })
       }),
     )
 
@@ -226,10 +205,10 @@ describe('pds profile views', () => {
         {
           action: TAKEDOWN,
           subject: {
-            $type: 'com.atproto.repo.repoRef',
+            $type: 'com.atproto.admin.defs#repoRef',
             did: alice,
           },
-          createdBy: 'X',
+          createdBy: 'did:example:admin',
           reason: 'Y',
         },
         {
@@ -248,7 +227,7 @@ describe('pds profile views', () => {
     await agent.api.com.atproto.admin.reverseModerationAction(
       {
         id: action.id,
-        createdBy: 'X',
+        createdBy: 'did:example:admin',
         reason: 'Y',
       },
       {
@@ -264,10 +243,10 @@ describe('pds profile views', () => {
       { headers: sc.getHeaders(bob) },
     )
 
-    expect(initial.myState?.muted).toEqual(false)
+    expect(initial.viewer?.muted).toEqual(false)
 
-    await agent.api.app.bsky.graph.mute(
-      { user: alice },
+    await agent.api.app.bsky.graph.muteActor(
+      { actor: alice },
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
     const { data: muted } = await agent.api.app.bsky.actor.getProfile(
@@ -275,7 +254,7 @@ describe('pds profile views', () => {
       { headers: sc.getHeaders(bob) },
     )
 
-    expect(muted.myState?.muted).toEqual(true)
+    expect(muted.viewer?.muted).toEqual(true)
 
     const { data: fromBobUnrelated } =
       await agent.api.app.bsky.actor.getProfile(
@@ -288,12 +267,28 @@ describe('pds profile views', () => {
         { headers: sc.getHeaders(dan) },
       )
 
-    expect(fromBobUnrelated.myState?.muted).toEqual(false)
-    expect(toAliceUnrelated.myState?.muted).toEqual(false)
+    expect(fromBobUnrelated.viewer?.muted).toEqual(false)
+    expect(toAliceUnrelated.viewer?.muted).toEqual(false)
 
-    await agent.api.app.bsky.graph.unmute(
-      { user: alice },
+    await agent.api.app.bsky.graph.unmuteActor(
+      { actor: alice },
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
   })
+
+  async function updateProfile(
+    agent: AtpAgent,
+    did: string,
+    record: Record<string, unknown>,
+  ) {
+    return await agent.api.com.atproto.repo.putRecord(
+      {
+        repo: did,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+        record,
+      },
+      { headers: sc.getHeaders(did), encoding: 'application/json' },
+    )
+  }
 })

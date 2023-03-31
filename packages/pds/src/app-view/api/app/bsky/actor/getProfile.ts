@@ -12,12 +12,12 @@ export default function (server: Server, ctx: AppContext) {
       const { db, services } = ctx
       const actorService = services.appView.actor(db)
 
-      const user = await actorService.getUser(actor, true)
+      const actorRes = await actorService.getActor(actor, true)
 
-      if (!user) {
+      if (!actorRes) {
         throw new InvalidRequestError('Profile not found')
       }
-      if (softDeleted(user)) {
+      if (softDeleted(actorRes)) {
         throw new InvalidRequestError(
           'Account has been taken down',
           'AccountTakedown',
@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: await actorService.views.profile(user, requester),
+        body: await actorService.views.profileDetailed(actorRes, requester),
       }
     },
   })

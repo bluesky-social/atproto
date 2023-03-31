@@ -37,12 +37,6 @@ describe('repo sync', () => {
     })
     did = sc.dids.alice
     agent.api.setHeader('authorization', `Bearer ${sc.accounts[did].accessJwt}`)
-    repoData['app.bsky.system.declaration'] = {
-      self: {
-        $type: 'app.bsky.system.declaration',
-        actorType: 'app.bsky.system.actorUser',
-      },
-    }
   })
 
   afterAll(async () => {
@@ -67,9 +61,9 @@ describe('repo sync', () => {
       did,
       ctx.repoSigningKey.did(),
     )
-    expect(synced.writeLog.length).toBe(ADD_COUNT + 1) // +1 because of declaration
+    expect(synced.writeLog.length).toBe(ADD_COUNT + 1) // +1 because of repo
     const ops = await collapseWriteLog(synced.writeLog)
-    expect(ops.length).toBe(ADD_COUNT + 1)
+    expect(ops.length).toBe(ADD_COUNT) // Does not include empty initial commit
     const loaded = await repo.Repo.load(storage, synced.root)
     const contents = await loaded.getContents()
     expect(contents).toEqual(repoData)
@@ -92,7 +86,7 @@ describe('repo sync', () => {
     for (let i = 0; i < DEL_COUNT; i++) {
       const uri = uris[i * 5]
       await agent.api.app.bsky.feed.post.delete({
-        did,
+        repo: did,
         collection: uri.collection,
         rkey: uri.rkey,
       })
@@ -308,18 +302,14 @@ describe('repo sync', () => {
     const blobsForRepo = await agent.api.com.atproto.sync.listBlobs({
       did,
     })
+    const cid1 = img1.image.ref.toString()
+    const cid2 = img2.image.ref.toString()
 
-    expect(blobsForFirst.data.cids).toEqual([img1.image.cid])
-    expect(blobsForSecond.data.cids.sort()).toEqual(
-      [img1.image.cid, img2.image.cid].sort(),
-    )
-    expect(blobsForThird.data.cids).toEqual([img2.image.cid])
-    expect(blobsForRange.data.cids.sort()).toEqual(
-      [img1.image.cid, img2.image.cid].sort(),
-    )
-    expect(blobsForRepo.data.cids.sort()).toEqual(
-      [img1.image.cid, img2.image.cid].sort(),
-    )
+    expect(blobsForFirst.data.cids).toEqual([cid1])
+    expect(blobsForSecond.data.cids.sort()).toEqual([cid1, cid2].sort())
+    expect(blobsForThird.data.cids).toEqual([cid2])
+    expect(blobsForRange.data.cids.sort()).toEqual([cid1, cid2].sort())
+    expect(blobsForRepo.data.cids.sort()).toEqual([cid1, cid2].sort())
   })
 })
 
@@ -327,7 +317,7 @@ const makePost = async (sc: SeedClient, did: string) => {
   const res = await sc.post(did, randomStr(32, 'base32'))
   const uri = res.ref.uri
   const record = await sc.agent.api.com.atproto.repo.getRecord({
-    user: did,
+    repo: did,
     collection: uri.collection,
     rkey: uri.rkey,
   })
