@@ -46,8 +46,8 @@ export const verify = async (
   return webcrypto.subtle.verify(
     { name: 'ECDSA', hash: { name: 'SHA-256' } },
     importedKey,
-    sig,
-    data,
+    new Uint8Array(sig),
+    new Uint8Array(data),
   )
 }
 
@@ -56,7 +56,7 @@ export const importEcdsaPublicKey = async (
 ): Promise<CryptoKey> => {
   return webcrypto.subtle.importKey(
     'raw',
-    keyBytes,
+    new Uint8Array(keyBytes),
     { name: 'ECDSA', namedCurve: 'P-256' },
     true,
     ['verify'],
