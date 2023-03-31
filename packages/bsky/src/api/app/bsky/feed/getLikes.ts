@@ -29,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         builder = builder.where('like.subjectCid', '=', cid)
       }
 
-      const keyset = new TimeCidKeyset(ref('vote.createdAt'), ref('vote.cid'))
+      const keyset = new TimeCidKeyset(ref('like.createdAt'), ref('like.cid'))
       builder = paginate(builder, {
         limit,
         cursor,
