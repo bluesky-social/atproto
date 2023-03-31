@@ -7,10 +7,11 @@ import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
 import { AtUri } from '@atproto/uri'
 import { AtpAgent } from '@atproto/api'
 import { DidResolver } from '@atproto/did-resolver'
+import { lexToJson } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import { BskyAppView, ServerConfig, Database } from '../src'
-import { Main as FeedViewPost } from '../src/lexicon/types/app/bsky/feed/feedViewPost'
+import { FeedViewPost } from '../src/lexicon/types/app/bsky/feed/defs'
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import MemoryBlobStore from '../src/storage/memory-blobstore'
 import AppContext from '../src/context'
@@ -206,7 +207,12 @@ export const forSnapshot = (obj: unknown) => {
   const users = { [kTake]: 'user' }
   const cids = { [kTake]: 'cids' }
   const unknown = { [kTake]: 'unknown' }
-  return mapLeafValues(obj, (item) => {
+  const toWalk = lexToJson(obj as any) // remove any blobrefs/cids
+  return mapLeafValues(toWalk, (item) => {
+    const asCid = CID.asCID(item)
+    if (asCid !== null) {
+      return take(cids, asCid.toString())
+    }
     if (typeof item !== 'string') {
       return item
     }
