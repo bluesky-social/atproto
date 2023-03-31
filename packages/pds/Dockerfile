@@ -8,6 +8,7 @@ COPY ./packages/pds ./packages/pds
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
 COPY ./packages/common ./packages/common
+COPY ./packages/common-web ./packages/common-web
 COPY ./packages/crypto ./packages/crypto
 COPY ./packages/did-resolver ./packages/did-resolver
 COPY ./packages/identifier ./packages/identifier
