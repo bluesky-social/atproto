@@ -111,7 +111,7 @@ export class IndexingService {
     const { data: car } = await retryHttp(() =>
       api.com.atproto.sync.getCheckout({ did, commit }),
     )
-    const { root, blocks } = await readCarWithRoot(new Uint8Array(car))
+    const { root, blocks } = await readCarWithRoot(car)
     const storage = new MemoryBlockstore(blocks)
     const checkout = await verifyCheckoutWithCids(
       storage,
