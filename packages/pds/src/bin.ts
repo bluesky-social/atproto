@@ -9,7 +9,7 @@ import { BlobStore } from '@atproto/repo'
 const run = async () => {
   let db: Database
 
-  const keypair = await crypto.EcdsaKeypair.create({exportable: true})
+  const keypair = await crypto.EcdsaKeypair.create({ exportable: true })
   //const keypair = await crypto.Secp256k1Keypair.create()
   const cfg = ServerConfig.readEnv({
     serverDid: keypair.did(),

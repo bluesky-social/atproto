@@ -1,7 +1,13 @@
 import { CID } from 'multiformats/cid'
 import * as crypto from '@atproto/crypto'
 import * as repo from '@atproto/repo'
-import { BlobStore, Commit, CommitData, Repo, WriteOpAction } from '@atproto/repo'
+import {
+  BlobStore,
+  Commit,
+  CommitData,
+  Repo,
+  WriteOpAction,
+} from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
@@ -151,7 +157,10 @@ export class RepoService {
   ) {
     const commitBlock = commitData.blocks.get(commitData.commit) as Uint8Array
     const commit = cborDecode(commitBlock) as Commit
-    const validSig = await repo.verifyCommitSig(commit, this.repoSigningKey.did())
+    const validSig = await repo.verifyCommitSig(
+      commit,
+      this.repoSigningKey.did(),
+    )
     const meta = {
       accountDid: did,
       repoSigningKey: this.repoSigningKey,
@@ -166,7 +175,7 @@ export class RepoService {
     console.log(`COMMIT EVENT ${JSON.stringify(meta)}`)
     if (validSig != true) {
       console.log(`====== BAD SIG! ======`)
-      process.exit(-1)
+      //process.exit(-1)
     }
     await Promise.all([
       this.blobs.processWriteBlobs(did, commitData.commit, writes),
