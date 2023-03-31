@@ -46,7 +46,9 @@ async function main(tx: Database, _ctx: AppContext) {
   // Update uris for votes in notifications to likes
   const updatedLikeUris = await tx.db
     .updateTable('user_notification')
+    .where('reason', '=', 'vote')
     .set({
+      reason: 'like',
       recordUri: sql`replace("recordUri", ${`/${VOTE_LEX_ID}/`}, ${`/${ids.AppBskyFeedLike}/`})`,
     })
     .executeTakeFirst()
