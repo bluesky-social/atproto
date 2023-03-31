@@ -9,7 +9,8 @@ import { BlobStore } from '@atproto/repo'
 const run = async () => {
   let db: Database
 
-  const keypair = await crypto.EcdsaKeypair.create()
+  const keypair = await crypto.EcdsaKeypair.create({exportable: true})
+  //const keypair = await crypto.Secp256k1Keypair.create()
   const cfg = ServerConfig.readEnv({
     serverDid: keypair.did(),
     recoveryKey: keypair.did(),
@@ -47,6 +48,9 @@ const run = async () => {
   })
   await pds.start()
   console.log(`🌞 ATP Data server is running at ${cfg.origin}`)
+  console.log('server did: ', keypair.did())
+  console.log('server keypair: ', keypair)
+  console.log('server export: ', await keypair.export())
 }
 
 run()

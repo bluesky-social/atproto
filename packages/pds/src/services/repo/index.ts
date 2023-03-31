@@ -1,6 +1,7 @@
 import { CID } from 'multiformats/cid'
 import * as crypto from '@atproto/crypto'
-import { BlobStore, CommitData, Repo, WriteOpAction } from '@atproto/repo'
+import * as repo from '@atproto/repo'
+import { BlobStore, Commit, CommitData, Repo, WriteOpAction } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
@@ -15,6 +16,8 @@ import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { RecordService } from '../record'
 import { sequenceCommit } from '../../sequencer'
+import { cborDecode, check } from '@atproto/common'
+import * as uint8arrays from 'uint8arrays'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -146,6 +149,25 @@ export class RepoService {
     commitData: CommitData,
     writes: PreparedWrite[],
   ) {
+    const commitBlock = commitData.blocks.get(commitData.commit) as Uint8Array
+    const commit = cborDecode(commitBlock) as Commit
+    const validSig = await repo.verifyCommitSig(commit, this.repoSigningKey.did())
+    const meta = {
+      accountDid: did,
+      repoSigningKey: this.repoSigningKey,
+      //repoSigningKeyExport: this.repoSigningKey.export(),
+      repoDidKey: this.repoSigningKey.did(),
+      //commitData: commitData,
+      commitCid: commitData.commit.toString(),
+      commitBlockBase64: uint8arrays.toString(commitBlock, 'base64'),
+      commit: commit,
+      validSig: validSig,
+    }
+    console.log(`COMMIT EVENT ${JSON.stringify(meta)}`)
+    if (validSig != true) {
+      console.log(`====== BAD SIG! ======`)
+      process.exit(-1)
+    }
     await Promise.all([
       this.blobs.processWriteBlobs(did, commitData.commit, writes),
       sequenceCommit(this.db, did, commitData, writes),
