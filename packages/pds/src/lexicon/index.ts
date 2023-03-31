@@ -27,10 +27,10 @@ import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createReco
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
 import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
+import * as ComAtprotoRepoImportRepo from './types/com/atproto/repo/importRepo'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
-import * as ComAtprotoRepoUploadRepo from './types/com/atproto/repo/uploadRepo'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
@@ -310,6 +310,13 @@ export class RepoNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  importRepo<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoRepoImportRepo.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.repo.importRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   listRecords<AV extends AuthVerifier>(
     cfg: ConfigOf<AV, ComAtprotoRepoListRecords.Handler<ExtractAuth<AV>>>,
   ) {
@@ -328,13 +335,6 @@ export class RepoNS {
     cfg: ConfigOf<AV, ComAtprotoRepoUploadBlob.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.repo.uploadBlob' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  uploadRepo<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, ComAtprotoRepoUploadRepo.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'com.atproto.repo.uploadRepo' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.repo.uploadRepo",
+  "id": "com.atproto.repo.importRepo",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Upload a full repo, overwriting existing",
+      "description": "Import a full repo, overwriting existing",
       "input": {
         "encoding": "application/vnd.ipld.car"
       },

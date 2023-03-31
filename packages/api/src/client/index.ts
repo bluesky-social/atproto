@@ -27,11 +27,11 @@ import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createReco
 import * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
 import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
+import * as ComAtprotoRepoImportRepo from './types/com/atproto/repo/importRepo'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
-import * as ComAtprotoRepoUploadRepo from './types/com/atproto/repo/uploadRepo'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
@@ -106,11 +106,11 @@ export * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createReco
 export * as ComAtprotoRepoDeleteRecord from './types/com/atproto/repo/deleteRecord'
 export * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRepo'
 export * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
+export * as ComAtprotoRepoImportRepo from './types/com/atproto/repo/importRepo'
 export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
-export * as ComAtprotoRepoUploadRepo from './types/com/atproto/repo/uploadRepo'
 export * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 export * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 export * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
@@ -464,6 +464,17 @@ export class RepoNS {
       })
   }
 
+  importRepo(
+    data?: ComAtprotoRepoImportRepo.InputSchema,
+    opts?: ComAtprotoRepoImportRepo.CallOptions,
+  ): Promise<ComAtprotoRepoImportRepo.Response> {
+    return this._service.xrpc
+      .call('com.atproto.repo.importRepo', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoRepoImportRepo.toKnownErr(e)
+      })
+  }
+
   listRecords(
     params?: ComAtprotoRepoListRecords.QueryParams,
     opts?: ComAtprotoRepoListRecords.CallOptions,
@@ -494,17 +505,6 @@ export class RepoNS {
       .call('com.atproto.repo.uploadBlob', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoRepoUploadBlob.toKnownErr(e)
-      })
-  }
-
-  uploadRepo(
-    data?: ComAtprotoRepoUploadRepo.InputSchema,
-    opts?: ComAtprotoRepoUploadRepo.CallOptions,
-  ): Promise<ComAtprotoRepoUploadRepo.Response> {
-    return this._service.xrpc
-      .call('com.atproto.repo.uploadRepo', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoRepoUploadRepo.toKnownErr(e)
       })
   }
 }

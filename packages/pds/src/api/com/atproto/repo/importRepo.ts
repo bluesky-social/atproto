@@ -7,7 +7,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { prepareCreate, PreparedCreate } from '../../../../repo'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.uploadRepo({
+  server.com.atproto.repo.importRepo({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did

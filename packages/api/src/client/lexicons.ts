@@ -1400,6 +1400,32 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoRepoImportRepo: {
+    lexicon: 1,
+    id: 'com.atproto.repo.importRepo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Import a full repo, overwriting existing',
+        input: {
+          encoding: 'application/vnd.ipld.car',
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['head'],
+            properties: {
+              head: {
+                type: 'string',
+                format: 'cid',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoRepoListRecords: {
     lexicon: 1,
     id: 'com.atproto.repo.listRecords',
@@ -1600,32 +1626,6 @@ export const schemaDict = {
             properties: {
               blob: {
                 type: 'blob',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoRepoUploadRepo: {
-    lexicon: 1,
-    id: 'com.atproto.repo.uploadRepo',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Upload a full repo, overwriting existing',
-        input: {
-          encoding: 'application/vnd.ipld.car',
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['head'],
-            properties: {
-              head: {
-                type: 'string',
-                format: 'cid',
               },
             },
           },
@@ -4219,11 +4219,11 @@ export const ids = {
   ComAtprotoRepoDeleteRecord: 'com.atproto.repo.deleteRecord',
   ComAtprotoRepoDescribeRepo: 'com.atproto.repo.describeRepo',
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
+  ComAtprotoRepoImportRepo: 'com.atproto.repo.importRepo',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoRepoUploadBlob: 'com.atproto.repo.uploadBlob',
-  ComAtprotoRepoUploadRepo: 'com.atproto.repo.uploadRepo',
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',
   ComAtprotoServerCreateInviteCode: 'com.atproto.server.createInviteCode',
   ComAtprotoServerCreateSession: 'com.atproto.server.createSession',
