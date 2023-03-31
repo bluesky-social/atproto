@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getRepostedBy({
     auth: authVerifier,
     handler: async ({ params, auth }) => {
-      const { uri, limit, before, cid } = params
+      const { uri, limit, cursor, cid } = params
       const requester = auth.credentials.did
       const { services, db } = ctx
       const { ref } = db.db.dynamic
@@ -31,14 +31,14 @@ export default function (server: Server, ctx: AppContext) {
       )
       builder = paginate(builder, {
         limit,
-        before,
+        cursor,
         keyset,
       })
 
       const repostedByRes = await builder.execute()
       const repostedBy = await services
         .actor(db)
-        .views.actorWithInfo(repostedByRes, requester)
+        .views.profile(repostedByRes, requester)
 
       return {
         encoding: 'application/json',

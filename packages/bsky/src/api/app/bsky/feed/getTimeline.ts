@@ -3,7 +3,6 @@ import { Server } from '../../../../lexicon'
 import { FeedAlgorithm, FeedKeyset, composeFeed } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
-import { FeedRow } from '../../../../services/feed'
 import { authVerifier } from '../util'
 
 // @TODO getTimeline() will be replaced by composeTimeline() in the app-view
@@ -11,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
     auth: authVerifier,
     handler: async ({ params, auth }) => {
-      const { algorithm, limit, before } = params
+      const { algorithm, limit, cursor } = params
       const db = ctx.db.db
       const { ref } = db.dynamic
       const requester = auth.credentials.did
@@ -50,10 +49,10 @@ export default function (server: Server, ctx: AppContext) {
         .selectAll()
       feedItemsQb = paginate(feedItemsQb, {
         limit,
-        before,
+        cursor,
         keyset,
       })
-      const feedItems: FeedRow[] = await feedItemsQb.execute()
+      const feedItems = await feedItemsQb.execute()
       const feed = await composeFeed(feedService, feedItems, requester)
 
       return {
