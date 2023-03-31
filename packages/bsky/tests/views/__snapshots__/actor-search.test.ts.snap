@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds user search views search gives relevant results 1`] = `
+exports[`pds actor search views search gives relevant results 1`] = `
 Array [
   Object {
     "did": "user(0)",
@@ -55,7 +55,7 @@ Array [
 ]
 `;
 
-exports[`pds user search views typeahead gives relevant results 1`] = `
+exports[`pds actor search views typeahead gives relevant results 1`] = `
 Array [
   Object {
     "did": "user(0)",

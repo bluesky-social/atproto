@@ -81,7 +81,7 @@ describe('pds thread views', () => {
 
   it('fails for an unknown post', async () => {
     const promise = agent.api.app.bsky.feed.getPostThread(
-      { uri: 'does.not.exist' },
+      { uri: 'at://did:example:fake/does.not.exist/self' },
       { headers: sc.getHeaders(bob, true) },
     )
 
