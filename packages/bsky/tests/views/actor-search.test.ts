@@ -10,7 +10,7 @@ import {
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
 
-describe('pds user search views', () => {
+describe('pds actor search views', () => {
   let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
@@ -18,7 +18,7 @@ describe('pds user search views', () => {
 
   beforeAll(async () => {
     const server = await runTestServer({
-      dbPostgresSchema: 'views_user_search',
+      dbPostgresSchema: 'views_actor_search',
     })
     close = server.close
     agent = new AtpAgent({ service: server.url })
