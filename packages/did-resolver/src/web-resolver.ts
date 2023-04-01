@@ -6,7 +6,7 @@ import {
   Resolvable,
   DIDDocument,
 } from 'did-resolver'
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 import * as errors from './errors'
 
 export const DOC_PATH = '/.well-known/did.json'
@@ -48,10 +48,13 @@ export const makeResolver = (opts: WebResolverOptions): DIDResolver => {
       })
       didDocument = res.data
     } catch (err) {
-      return errors.notFound()
+      if (err instanceof AxiosError && err.response) {
+        return errors.notFound() // Positively not found, versus due to e.g. network error
+      }
+      throw err
     }
 
-    // TODO: this excludes the use of query params
+    // @TODO: this excludes the use of query params
     const docIdMatchesDid = didDocument?.id === did
     if (!docIdMatchesDid) {
       return errors.invalidDid()
