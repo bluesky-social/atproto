@@ -123,7 +123,7 @@ export class IndexingService {
     // First, replace the user with just their current profile if it exists
     await this.db.transaction(async (tx) => {
       const indexingTx = new IndexingService(tx, this.didResolver)
-      await indexingTx.deleteForActor(did)
+      await indexingTx.unindexActor(did)
       const profile = checkout.contents[ids.AppBskyActorProfile]?.self
       if (profile) {
         const profileUri = AtUri.make(did, ids.AppBskyActorProfile, 'self')
@@ -186,13 +186,17 @@ export class IndexingService {
   }
 
   async tombstoneActor(did: string) {
+    this.db.assertTransaction()
     const doc = await this.didResolver.resolveDid(did)
     if (doc.didResolutionMetadata.error === 'notFound') {
-      await this.deleteForActor(did)
+      await Promise.all([
+        this.unindexActor(did),
+        this.db.db.deleteFrom('actor').where('did', '=', did).execute(),
+      ])
     }
   }
 
-  async deleteForActor(did: string) {
+  async unindexActor(did: string) {
     this.db.assertTransaction()
 
     const postByUser = (qb) =>

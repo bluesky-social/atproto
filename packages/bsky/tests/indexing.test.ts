@@ -2,6 +2,7 @@ import { CID } from 'multiformats/cid'
 import { cidForCbor, TID } from '@atproto/common'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
+import { Client } from '@did-plc/lib'
 import AtpAgent, { AppBskyActorProfile, AppBskyFeedPost } from '@atproto/api'
 import {
   CloseFn,
@@ -291,6 +292,96 @@ describe('indexing', () => {
       expect(feed.feed[0].post.cid).toEqual(newPost.ref.cidStr)
       expect(follows.follows.map(({ did }) => did)).not.toContain(sc.dids.carol)
       expect(forSnapshot([profile, feed, follows])).toMatchSnapshot()
+    })
+  })
+
+  describe('indexHandle', () => {
+    const getIndexedHandle = async (did) => {
+      const res = await agent.api.app.bsky.actor.getProfile(
+        { actor: did },
+        { headers: sc.getHeaders(sc.dids.alice, true) },
+      )
+      return res.data.handle
+    }
+
+    it('indexes handle for a fresh did', async () => {
+      const { db, services } = server.ctx
+      const now = new Date().toISOString()
+      const sessionAgent = new AtpAgent({ service: server.pdsUrl })
+      const {
+        data: { did },
+      } = await sessionAgent.createAccount({
+        email: 'did1@test.com',
+        handle: 'did1.test',
+        password: 'password',
+      })
+      await expect(getIndexedHandle(did)).rejects.toThrow('Profile not found')
+      await db.transaction((tx) => services.indexing(tx).indexHandle(did, now))
+      await expect(getIndexedHandle(did)).resolves.toEqual('did1.test')
+    })
+
+    it('reindexes handle for existing did when forced', async () => {
+      const { db, services } = server.ctx
+      const now = new Date().toISOString()
+      const sessionAgent = new AtpAgent({ service: server.pdsUrl })
+      const {
+        data: { did },
+      } = await sessionAgent.createAccount({
+        email: 'did2@test.com',
+        handle: 'did2.test',
+        password: 'password',
+      })
+      await db.transaction((tx) => services.indexing(tx).indexHandle(did, now))
+      await expect(getIndexedHandle(did)).resolves.toEqual('did2.test')
+      await sessionAgent.com.atproto.identity.updateHandle({
+        handle: 'did2-updated.test',
+      })
+      await db.transaction((tx) => services.indexing(tx).indexHandle(did, now))
+      await expect(getIndexedHandle(did)).resolves.toEqual('did2.test') // Didn't update, not forced
+      await db.transaction((tx) =>
+        services.indexing(tx).indexHandle(did, now, true),
+      )
+      await expect(getIndexedHandle(did)).resolves.toEqual('did2-updated.test')
+    })
+  })
+
+  describe('tombstoneActor', () => {
+    it('does not unindex actor when their did is not tombstoned', async () => {
+      const { db, services } = server.ctx
+      const { data: profileBefore } = await agent.api.app.bsky.actor.getProfile(
+        { actor: sc.dids.alice },
+        { headers: sc.getHeaders(sc.dids.bob, true) },
+      )
+      // Attempt indexing tombstone
+      await db.transaction((tx) =>
+        services.indexing(tx).tombstoneActor(sc.dids.alice),
+      )
+      const { data: profileAfter } = await agent.api.app.bsky.actor.getProfile(
+        { actor: sc.dids.alice },
+        { headers: sc.getHeaders(sc.dids.bob, true) },
+      )
+      expect(profileAfter).toEqual(profileBefore)
+    })
+
+    it('unindexes actor when their did is tombstoned', async () => {
+      const { db, services } = server.ctx
+      const getProfileBefore = agent.api.app.bsky.actor.getProfile(
+        { actor: sc.dids.alice },
+        { headers: sc.getHeaders(sc.dids.bob, true) },
+      )
+      await expect(getProfileBefore).resolves.toBeDefined()
+      // Tombstone alice's did
+      const plcClient = new Client(server.plcUrl)
+      await plcClient.tombstone(sc.dids.alice, server.pds.ctx.plcRotationKey)
+      // Index tombstone
+      await db.transaction((tx) =>
+        services.indexing(tx).tombstoneActor(sc.dids.alice),
+      )
+      const getProfileAfter = agent.api.app.bsky.actor.getProfile(
+        { actor: sc.dids.alice },
+        { headers: sc.getHeaders(sc.dids.bob, true) },
+      )
+      await expect(getProfileAfter).rejects.toThrow('Profile not found')
     })
   })
 })
