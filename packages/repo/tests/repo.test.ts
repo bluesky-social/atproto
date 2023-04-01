@@ -4,7 +4,7 @@ import { MemoryBlockstore } from '../src/storage'
 import * as util from './_util'
 import { TID } from '@atproto/common'
 import { RepoContents, verifyCommitSig, WriteOpAction } from '../src'
-import { Secp256k1Keypair } from '@atproto/crypto'
+import { EcdsaKeypair, Secp256k1Keypair } from '@atproto/crypto'
 
 describe('Repo', () => {
   const collName = 'com.example.posts'
@@ -16,7 +16,8 @@ describe('Repo', () => {
 
   it('creates repo', async () => {
     storage = new MemoryBlockstore()
-    keypair = await Secp256k1Keypair.create()
+    //keypair = await Secp256k1Keypair.create()
+    keypair = await EcdsaKeypair.create()
     repo = await Repo.create(storage, keypair.did(), keypair)
   })
 

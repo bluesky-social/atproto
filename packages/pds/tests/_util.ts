@@ -32,7 +32,7 @@ export const runTestServer = async (
   params: Partial<ServerConfig> = {},
   opts: TestServerOpts = {},
 ): Promise<TestServerInfo> => {
-  const repoSigningKey = await crypto.Secp256k1Keypair.create()
+  const repoSigningKey = await crypto.EcdsaKeypair.create()
   const plcRotationKey = await crypto.Secp256k1Keypair.create()
 
   const dbPostgresUrl = params.dbPostgresUrl || process.env.DB_POSTGRES_URL
