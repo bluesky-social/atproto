@@ -73,14 +73,14 @@ export class IndexingService {
     return notifs
   }
 
-  async indexHandle(did: string, timestamp: string) {
+  async indexHandle(did: string, timestamp: string, force = false) {
     const actor = await this.db.db
       .selectFrom('actor')
       .where('did', '=', did)
       .selectAll()
       .executeTakeFirst()
-    if (actor) {
-      return // @TODO deal with handle updates
+    if (actor && !force) {
+      return
     }
     const { handle } = await this.didResolver.resolveAtpData(did)
     const handleToDid = await resolveExternalHandle(handle)
@@ -123,7 +123,7 @@ export class IndexingService {
     // First, replace the user with just their current profile if it exists
     await this.db.transaction(async (tx) => {
       const indexingTx = new IndexingService(tx, this.didResolver)
-      await indexingTx.deleteForUser(did)
+      await indexingTx.deleteForActor(did)
       const profile = checkout.contents[ids.AppBskyActorProfile]?.self
       if (profile) {
         const profileUri = AtUri.make(did, ids.AppBskyActorProfile, 'self')
@@ -185,7 +185,14 @@ export class IndexingService {
     return indexers.find((indexer) => indexer.collection === collection)
   }
 
-  async deleteForUser(did: string) {
+  async tombstoneActor(did: string) {
+    const doc = await this.didResolver.resolveDid(did)
+    if (doc.didResolutionMetadata.error === 'notFound') {
+      await this.deleteForActor(did)
+    }
+  }
+
+  async deleteForActor(did: string) {
     this.db.assertTransaction()
 
     const postByUser = (qb) =>
