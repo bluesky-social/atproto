@@ -1,4 +1,4 @@
-import { sql } from 'kysely'
+import { Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { Record as PostRecord } from '../../../lexicon/types/app/bsky/feed/post'
@@ -16,8 +16,9 @@ import { Message } from '../messages'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { PostHierarchy } from '../../../db/tables/post-hierarchy'
+import { countAll } from '../../../db/util'
 
-type Post = DatabaseSchemaType['post']
+type Post = Selectable<DatabaseSchemaType['post']>
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
 type PostEmbedExternal = DatabaseSchemaType['post_embed_external']
 type PostEmbedRecord = DatabaseSchemaType['post_embed_record']
@@ -192,6 +193,8 @@ const insertFn = async (
     .returningAll()
     .execute()
 
+  await updateAggregates(db, insertedPost, true)
+
   return {
     post: insertedPost,
     facets,
@@ -314,6 +317,9 @@ const deleteFn = async (
     .where('depth', '>', 0)
     .selectAll()
     .execute()
+  if (deleted) {
+    await updateAggregates(db, deleted)
+  }
   return deleted
     ? {
         post: deleted,
@@ -384,4 +390,44 @@ async function collateDescendents(
       ancestors: ancestorsByUri[post.uri],
     }
   })
+}
+
+async function updateAggregates(
+  db: DatabaseSchema,
+  post: Post,
+  inserted = false,
+) {
+  // await Promise.all([
+  await db
+    .updateTable('actor')
+    .where('did', '=', post.creator)
+    .set({
+      postsCount: db
+        .selectFrom('post')
+        .where('creator', '=', post.creator)
+        .select(countAll.as('count')),
+    })
+    .execute()
+  // .execute(),
+  inserted &&
+    (await db
+      .updateTable('post')
+      .where('uri', '=', post.uri)
+      .set({
+        likeCount: db
+          .selectFrom('like')
+          .where('subject', '=', post.uri)
+          .select(countAll.as('count')),
+        repostCount: db
+          .selectFrom('repost')
+          .where('subject', '=', post.uri)
+          .select(countAll.as('count')),
+        replyCount: db
+          .selectFrom('post')
+          .where('replyParent', '=', post.uri)
+          .select(countAll.as('count')),
+      })
+      .execute())
+  // .execute(),
+  // ])
 }

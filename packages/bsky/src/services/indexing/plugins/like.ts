@@ -6,6 +6,7 @@ import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import * as messages from '../messages'
 import { Message } from '../messages'
 import RecordProcessor from '../processor'
+import { countAll } from '../../../db/util'
 
 const lexId = lex.ids.AppBskyFeedLike
 type IndexedLike = DatabaseSchemaType['like']
@@ -31,6 +32,9 @@ const insertFn = async (
     .onConflict((oc) => oc.doNothing())
     .returningAll()
     .executeTakeFirst()
+  if (inserted) {
+    await updateAggregates(db, inserted)
+  }
   return inserted || null
 }
 
@@ -73,6 +77,9 @@ const deleteFn = async (
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
+  if (deleted) {
+    await updateAggregates(db, deleted)
+  }
   return deleted || null
 }
 
@@ -100,3 +107,16 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
 }
 
 export default makePlugin
+
+async function updateAggregates(db: DatabaseSchema, like: IndexedLike) {
+  await db
+    .updateTable('post')
+    .where('uri', '=', like.subject)
+    .set({
+      likeCount: db
+        .selectFrom('like')
+        .where('subject', '=', like.subject)
+        .select(countAll.as('count')),
+    })
+    .execute()
+}

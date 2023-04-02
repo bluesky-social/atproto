@@ -5,6 +5,7 @@ import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import * as messages from '../messages'
 import RecordProcessor from '../processor'
+import { countAll } from '../../../db/util'
 
 const lexId = lex.ids.AppBskyGraphFollow
 type IndexedFollow = DatabaseSchemaType['follow']
@@ -29,6 +30,9 @@ const insertFn = async (
     .onConflict((oc) => oc.doNothing())
     .returningAll()
     .executeTakeFirst()
+  if (inserted) {
+    await updateAggregates(db, inserted)
+  }
   return inserted || null
 }
 
@@ -67,6 +71,9 @@ const deleteFn = async (
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
+  if (deleted) {
+    await updateAggregates(db, deleted)
+  }
   return deleted || null
 }
 
@@ -92,3 +99,28 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
 }
 
 export default makePlugin
+
+async function updateAggregates(db: DatabaseSchema, follow: IndexedFollow) {
+  // await Promise.all([
+  await db
+    .updateTable('actor')
+    .where('did', '=', follow.creator)
+    .set({
+      followsCount: db
+        .selectFrom('follow')
+        .where('creator', '=', follow.creator)
+        .select(countAll.as('count')),
+    })
+    .execute()
+  await db
+    .updateTable('actor')
+    .where('did', '=', follow.subjectDid)
+    .set({
+      followersCount: db
+        .selectFrom('follow')
+        .where('subjectDid', '=', follow.subjectDid)
+        .select(countAll.as('count')),
+    })
+    .execute()
+  // ])
+}

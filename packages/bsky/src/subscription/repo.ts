@@ -50,6 +50,7 @@ export class RepoSubscription {
             this.repoQueue
               .add(details.repo, () => this.handleMessage(details.message))
               .catch((err) => {
+                console.log(err)
                 // We log messages we can't process and move on. Barring a
                 // durable queue this is the best we can do for now: otherwise
                 // the cursor would get stuck on a poison message.
@@ -147,7 +148,9 @@ export class RepoSubscription {
     }
     const ops = await getOps(msg)
     await db.transaction(async (tx) => {
-      await Promise.all([processOps(tx, ops), processActor(tx)])
+      await processOps(tx, ops)
+      await processActor(db)
+      // await Promise.all([processOps(tx, ops), processActor(tx)])
     })
   }
 

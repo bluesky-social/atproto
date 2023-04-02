@@ -3,6 +3,7 @@ import { notSoftDeletedClause } from '../../db/util'
 import { ActorViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
 import { Actor } from '../../db/tables/actor'
+import { Selectable } from 'kysely'
 
 export class ActorService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
@@ -63,4 +64,4 @@ export class ActorService {
   }
 }
 
-type ActorResult = Actor
+type ActorResult = Selectable<Actor>

@@ -4,6 +4,7 @@ import * as Profile from '../../../lexicon/types/app/bsky/actor/profile'
 import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
+import { countAll } from '../../../db/util'
 
 const lexId = lex.ids.AppBskyActorProfile
 type IndexedProfile = DatabaseSchemaType['profile']
@@ -72,3 +73,26 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
 }
 
 export default makePlugin
+
+// Organized here for locality to other aggregate indexing logic, but used
+// whenever an actor is indexed for the first time in the indexing service.
+export async function updateAggregates(db: DatabaseSchema, did: string) {
+  await db
+    .updateTable('actor')
+    .where('did', '=', did)
+    .set({
+      postsCount: db
+        .selectFrom('post')
+        .where('creator', '=', did)
+        .select(countAll.as('count')),
+      followsCount: db
+        .selectFrom('follow')
+        .where('creator', '=', did)
+        .select(countAll.as('count')),
+      followersCount: db
+        .selectFrom('follow')
+        .where('subjectDid', '=', did)
+        .select(countAll.as('count')),
+    })
+    .execute()
+}

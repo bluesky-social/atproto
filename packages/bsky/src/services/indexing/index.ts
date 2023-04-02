@@ -84,7 +84,9 @@ export class IndexingService {
       .onConflict((oc) => oc.doNothing())
       .returning('did')
       .executeTakeFirst()
-    if (!inserted) {
+    if (inserted) {
+      await Profile.updateAggregates(this.db.db, did)
+    } else {
       await this.db.db
         .updateTable('actor')
         .set(actorInfo)

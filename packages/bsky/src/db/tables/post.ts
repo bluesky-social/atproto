@@ -1,3 +1,5 @@
+import { Generated } from 'kysely'
+
 export const tableName = 'post'
 
 export interface Post {
@@ -9,6 +11,9 @@ export interface Post {
   replyRootCid: string | null
   replyParent: string | null
   replyParentCid: string | null
+  likeCount: Generated<number>
+  replyCount: Generated<number>
+  repostCount: Generated<number>
   createdAt: string
   indexedAt: string
 }

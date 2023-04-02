@@ -2,7 +2,7 @@ import { sql } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { jsonStringToLex } from '@atproto/lexicon'
 import Database from '../../db'
-import { countAll, notSoftDeletedClause } from '../../db/util'
+import { notSoftDeletedClause } from '../../db/util'
 import { ImageUriBuilder } from '../../image/uri'
 import { isView as isViewImages } from '../../lexicon/types/app/bsky/embed/images'
 import { isView as isViewExternal } from '../../lexicon/types/app/bsky/embed/external'
@@ -136,21 +136,9 @@ export class FeedService {
         'post.creator as creator',
         'post.indexedAt as indexedAt',
         'record.json as recordJson',
-        db
-          .selectFrom('like')
-          .whereRef('subject', '=', ref('post.uri'))
-          .select(countAll.as('count'))
-          .as('likeCount'),
-        db
-          .selectFrom('repost')
-          .whereRef('subject', '=', ref('post.uri'))
-          .select(countAll.as('count'))
-          .as('repostCount'),
-        db
-          .selectFrom('post as reply')
-          .whereRef('reply.replyParent', '=', ref('post.uri'))
-          .select(countAll.as('count'))
-          .as('replyCount'),
+        'post.likeCount as likeCount',
+        'post.repostCount as repostCount',
+        'post.replyCount as replyCount',
         db
           .selectFrom('repost')
           .where('creator', '=', requester)

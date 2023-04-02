@@ -5,6 +5,7 @@ import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import * as messages from '../messages'
 import RecordProcessor from '../processor'
+import { countAll } from '../../../db/util'
 
 const lexId = lex.ids.AppBskyFeedRepost
 type IndexedRepost = DatabaseSchemaType['repost']
@@ -30,6 +31,9 @@ const insertFn = async (
     .onConflict((oc) => oc.doNothing())
     .returningAll()
     .executeTakeFirst()
+  if (inserted) {
+    await updateAggregates(db, inserted)
+  }
   return inserted || null
 }
 
@@ -69,6 +73,9 @@ const deleteFn = async (
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
+  if (deleted) {
+    await updateAggregates(db, deleted)
+  }
   return deleted || null
 }
 
@@ -94,3 +101,16 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
 }
 
 export default makePlugin
+
+async function updateAggregates(db: DatabaseSchema, repost: IndexedRepost) {
+  await db
+    .updateTable('post')
+    .where('uri', '=', repost.subject)
+    .set({
+      repostCount: db
+        .selectFrom('repost')
+        .where('subject', '=', repost.subject)
+        .select(countAll.as('count')),
+    })
+    .execute()
+}

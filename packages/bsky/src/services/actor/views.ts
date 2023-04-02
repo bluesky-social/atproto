@@ -45,21 +45,9 @@ export class ActorViews {
         'profile.avatarCid as avatarCid',
         'profile.bannerCid as bannerCid',
         'profile.indexedAt as indexedAt',
-        this.db.db
-          .selectFrom('follow')
-          .whereRef('creator', '=', ref('actor.did'))
-          .select(countAll.as('count'))
-          .as('followsCount'),
-        this.db.db
-          .selectFrom('follow')
-          .whereRef('subjectDid', '=', ref('actor.did'))
-          .select(countAll.as('count'))
-          .as('followersCount'),
-        this.db.db
-          .selectFrom('post')
-          .whereRef('creator', '=', ref('actor.did'))
-          .select(countAll.as('count'))
-          .as('postsCount'),
+        'actor.followsCount as followsCount',
+        'actor.followersCount as followersCount',
+        'actor.postsCount as postsCount',
         this.db.db
           .selectFrom('follow')
           .where('creator', '=', viewer)
