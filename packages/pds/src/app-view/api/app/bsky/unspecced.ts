@@ -58,9 +58,17 @@ export default function (server: Server, ctx: AppContext) {
         requester,
       )
 
-      const filtered = feed.filter(
-        (post) => post.post.record['embed'] === undefined,
-      )
+      const filtered = feed.filter((post) => {
+        if (post.reply) {
+          if (
+            post.reply.parent.record['embed'] !== undefined ||
+            post.reply.root.record['embed'] !== undefined
+          ) {
+            return false
+          }
+        }
+        return post.post.record['embed'] === undefined
+      })
 
       return {
         encoding: 'application/json',
