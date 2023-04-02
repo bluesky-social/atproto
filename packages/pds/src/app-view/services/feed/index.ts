@@ -109,7 +109,7 @@ export class FeedService {
         [cur.did]: {
           did: cur.did,
           handle: cur.handle,
-          displayName: cur.displayName || undefined,
+          displayName: truncateUtf8(cur.displayName, 64) || undefined,
           avatar: cur.avatarCid
             ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
             : undefined,
@@ -349,4 +349,13 @@ export class FeedService {
       },
     }
   }
+}
+
+function truncateUtf8(str: string | null | undefined, length: number) {
+  if (!str) return str
+  const encoder = new TextEncoder()
+  const decoder = new TextDecoder('utf-8', { fatal: false })
+  const utf8 = encoder.encode(str)
+  const truncated = utf8.length > length ? utf8.slice(0, length) : utf8
+  return decoder.decode(truncated)
 }
