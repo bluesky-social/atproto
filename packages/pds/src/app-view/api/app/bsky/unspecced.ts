@@ -58,22 +58,19 @@ export default function (server: Server, ctx: AppContext) {
         requester,
       )
 
-      const filtered = feed.filter((post) => {
+      const noRecordEmbeds = feed.map((post) => {
+        delete post.post.record['embed']
         if (post.reply) {
-          if (
-            post.reply.parent.record['embed'] !== undefined ||
-            post.reply.root.record['embed'] !== undefined
-          ) {
-            return false
-          }
+          delete post.reply.parent.record['embed']
+          delete post.reply.root.record['embed']
         }
-        return post.post.record['embed'] === undefined
+        return post
       })
 
       return {
         encoding: 'application/json',
         body: {
-          feed: filtered,
+          feed: noRecordEmbeds,
           cursor: keyset.packFromResult(feedItems),
         },
       }
