@@ -354,8 +354,11 @@ export class FeedService {
 function truncateUtf8(str: string | null | undefined, length: number) {
   if (!str) return str
   const encoder = new TextEncoder()
-  const decoder = new TextDecoder('utf-8', { fatal: false })
   const utf8 = encoder.encode(str)
-  const truncated = utf8.length > length ? utf8.slice(0, length) : utf8
-  return decoder.decode(truncated)
+  if (utf8.length > length) {
+    const decoder = new TextDecoder('utf-8', { fatal: false })
+    const truncated = utf8.slice(0, length)
+    return decoder.decode(truncated).replace(/\uFFFD$/, '')
+  }
+  return str
 }
