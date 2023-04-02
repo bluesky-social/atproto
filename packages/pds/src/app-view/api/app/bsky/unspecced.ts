@@ -4,6 +4,7 @@ import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow, FeedItemType } from '../../../services/feed'
 import { sql } from 'kysely'
+import { FeedViewPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
@@ -51,12 +52,20 @@ export default function (server: Server, ctx: AppContext) {
       feedQb = paginate(feedQb, { limit, cursor, keyset })
 
       const feedItems: FeedRow[] = await feedQb.execute()
-      const feed = await composeFeed(feedService, feedItems, requester)
+      const feed: FeedViewPost[] = await composeFeed(
+        feedService,
+        feedItems,
+        requester,
+      )
+
+      const filtered = feed.filter(
+        (post) => post.post.record['embed'] === undefined,
+      )
 
       return {
         encoding: 'application/json',
         body: {
-          feed,
+          feed: filtered,
           cursor: keyset.packFromResult(feedItems),
         },
       }
