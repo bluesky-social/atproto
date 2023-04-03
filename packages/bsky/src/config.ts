@@ -11,7 +11,7 @@ export interface ServerConfigValues {
   imgUriKey: string
   imgUriEndpoint?: string
   blobCacheLocation?: string
-  repoProvider: string
+  repoProvider?: string
   repoSubLockId?: number
 }
 
@@ -37,7 +37,6 @@ export class ServerConfig {
     assert(dbPostgresUrl)
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
     const repoProvider = process.env.REPO_PROVIDER // E.g. ws://abc.com:4000
-    assert(repoProvider)
     return new ServerConfig({
       version,
       port,

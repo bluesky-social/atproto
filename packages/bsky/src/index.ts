@@ -25,14 +25,14 @@ export { AppContext } from './context'
 export class BskyAppView {
   public ctx: AppContext
   public app: express.Application
-  public sub: RepoSubscription
+  public sub?: RepoSubscription
   public server?: http.Server
   private terminator?: HttpTerminator
 
   constructor(opts: {
     ctx: AppContext
     app: express.Application
-    sub: RepoSubscription
+    sub?: RepoSubscription
   }) {
     this.ctx = opts.ctx
     this.app = opts.app
@@ -90,11 +90,9 @@ export class BskyAppView {
     app.use(server.xrpc.router)
     app.use(error.handler)
 
-    const sub = new RepoSubscription(
-      ctx,
-      config.repoProvider,
-      config.repoSubLockId,
-    )
+    const sub = config.repoProvider
+      ? new RepoSubscription(ctx, config.repoProvider, config.repoSubLockId)
+      : undefined
 
     return new BskyAppView({ ctx, app, sub })
   }
@@ -106,12 +104,12 @@ export class BskyAppView {
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.cfg.assignPort(port)
-    this.sub.run() // Don't await, backgrounded
+    this.sub?.run() // Don't await, backgrounded
     return server
   }
 
   async destroy(): Promise<void> {
-    await this.sub.destroy()
+    await this.sub?.destroy()
     await this.terminator?.terminate()
     await this.ctx.db.close()
   }
