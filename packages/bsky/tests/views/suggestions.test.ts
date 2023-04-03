@@ -1,5 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { runTestServer, CloseFn, processAll } from '../_util'
+import { runTestServer, CloseFn, processAll, stripViewer } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
@@ -73,5 +73,20 @@ describe('pds user search views', () => {
     expect(result2.data.actors.length).toBe(1)
     expect(result2.data.actors[0].handle).toEqual('dan.test')
     expect(result2.data.actors[0].displayName).toBeUndefined()
+  })
+
+  it('fetches suggestions unauthed', async () => {
+    const { data: authed } = await agent.api.app.bsky.actor.getSuggestions(
+      {},
+      { headers: sc.getHeaders(sc.dids.carol, true) },
+    )
+    const { data: unauthed } = await agent.api.app.bsky.actor.getSuggestions({})
+    const omitViewerFollows = ({ did }) => {
+      return did !== sc.dids.carol && !sc.follows[sc.dids.carol][did]
+    }
+    expect(unauthed.actors.length).toBeGreaterThan(0)
+    expect(unauthed.actors.filter(omitViewerFollows)).toEqual(
+      authed.actors.map(stripViewer),
+    )
   })
 })

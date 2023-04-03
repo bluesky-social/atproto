@@ -11,7 +11,11 @@ import { lexToJson } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import { BskyAppView, ServerConfig, Database } from '../src'
-import { FeedViewPost } from '../src/lexicon/types/app/bsky/feed/defs'
+import {
+  FeedViewPost,
+  isThreadViewPost,
+} from '../src/lexicon/types/app/bsky/feed/defs'
+import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import MemoryBlobStore from '../src/storage/memory-blobstore'
 import AppContext from '../src/context'
@@ -352,4 +356,41 @@ const uniqueLockId = () => {
   } while (usedLockIds.has(lockId))
   usedLockIds.add(lockId)
   return lockId
+}
+
+// @NOTE mutates
+export const stripViewer = <T extends { viewer?: Record<string, unknown> }>(
+  val: T,
+): T => {
+  delete val.viewer
+  return val
+}
+
+// @NOTE mutates
+export const stripViewerFromPost = (
+  post: FeedViewPost['post'],
+): FeedViewPost['post'] => {
+  post.author = stripViewer(post.author)
+  if (post.embed && isViewRecord(post.embed?.record)) {
+    post.embed.record.author = stripViewer(post.embed.record.author)
+    post.embed.record.embeds?.forEach((deepEmbed) => {
+      if (deepEmbed && isViewRecord(deepEmbed?.record)) {
+        deepEmbed.record.author = stripViewer(deepEmbed.record.author)
+      }
+    })
+  }
+  return stripViewer(post)
+}
+
+// @NOTE mutates
+export const stripViewerFromThread = <T>(thread: T): T => {
+  if (!isThreadViewPost(thread)) return thread
+  thread.post = stripViewerFromPost(thread.post)
+  if (isThreadViewPost(thread.parent)) {
+    thread.parent = stripViewerFromThread(thread.parent)
+  }
+  if (thread.replies) {
+    thread.replies = thread.replies.map(stripViewerFromThread)
+  }
+  return thread
 }
