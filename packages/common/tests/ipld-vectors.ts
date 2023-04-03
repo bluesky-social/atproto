@@ -7,7 +7,6 @@ export const vectors = [
       string: 'abc',
       unicode: 'a~öñ©⽘☎𓋓😀👨‍👩‍👧‍👧',
       integer: 123,
-      float: 123.45, // encouraged not to use floats because they do not always easily translate in JS
       bool: true,
       null: null,
       array: ['abc', 'def', 'ghi'],
@@ -22,7 +21,6 @@ export const vectors = [
       string: 'abc',
       unicode: 'a~öñ©⽘☎𓋓😀👨‍👩‍👧‍👧',
       integer: 123,
-      float: 123.45,
       bool: true,
       null: null,
       array: ['abc', 'def', 'ghi'],
@@ -34,10 +32,9 @@ export const vectors = [
       },
     },
     cbor: new Uint8Array([
-      168, 100, 98, 111, 111, 108, 245, 100, 110, 117, 108, 108, 246, 101, 97,
+      167, 100, 98, 111, 111, 108, 245, 100, 110, 117, 108, 108, 246, 101, 97,
       114, 114, 97, 121, 131, 99, 97, 98, 99, 99, 100, 101, 102, 99, 103, 104,
-      105, 101, 102, 108, 111, 97, 116, 251, 64, 94, 220, 204, 204, 204, 204,
-      205, 102, 111, 98, 106, 101, 99, 116, 164, 99, 97, 114, 114, 131, 99, 97,
+      105, 102, 111, 98, 106, 101, 99, 116, 164, 99, 97, 114, 114, 131, 99, 97,
       98, 99, 99, 100, 101, 102, 99, 103, 104, 105, 100, 98, 111, 111, 108, 245,
       102, 110, 117, 109, 98, 101, 114, 24, 123, 102, 115, 116, 114, 105, 110,
       103, 99, 97, 98, 99, 102, 115, 116, 114, 105, 110, 103, 99, 97, 98, 99,
@@ -47,7 +44,7 @@ export const vectors = [
       168, 226, 128, 141, 240, 159, 145, 169, 226, 128, 141, 240, 159, 145, 167,
       226, 128, 141, 240, 159, 145, 167,
     ]),
-    cid: 'bafyreicikzanf4hjuig7lpe4k3bfopmowfdgwlotpdhtbbfmfjwx7jd5dm',
+    cid: 'bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq',
   },
   {
     name: 'ipld',
