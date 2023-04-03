@@ -11,7 +11,7 @@ require('dd-trace/init') // Only works with commonjs
 
 // Tracer code above must come before anything else
 const path = require('path')
-const { Database, ServerConfig, Bsky } = require('@atproto/bsky')
+const { Database, ServerConfig, BskyAppView } = require('@atproto/bsky')
 
 const main = async () => {
   const env = getEnv()
@@ -40,7 +40,7 @@ const main = async () => {
     imgUriEndpoint: env.imgUriEndpoint,
     blobCacheLocation: env.blobCacheLocation,
   })
-  const bsky = Bsky.create({ db, config: cfg })
+  const bsky = BskyAppView.create({ db, config: cfg })
   await bsky.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {

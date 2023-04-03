@@ -22,7 +22,7 @@ RUN yarn workspaces run build --update-main-to-dist > /dev/null
 # Remove non-prod deps
 RUN yarn install --production --ignore-scripts --prefer-offline > /dev/null
 
-WORKDIR packages/pds/service
+WORKDIR packages/bsky/service
 RUN yarn install --frozen-lockfile > /dev/null
 
 # Uses assets from build stage to reduce build size
@@ -34,7 +34,7 @@ RUN apk add --update dumb-init
 # Avoid zombie processes, handle signal forwarding
 ENTRYPOINT ["dumb-init", "--"]
 
-WORKDIR /app/packages/pds/service
+WORKDIR /app/packages/bsky/service
 COPY --from=build /app /app
 
 EXPOSE 3000

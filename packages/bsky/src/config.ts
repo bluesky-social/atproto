@@ -32,7 +32,8 @@ export class ServerConfig {
       'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8'
     const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
     const blobCacheLocation = process.env.BLOB_CACHE_LOC
-    const dbPostgresUrl = process.env.DB_POSTGRES_URL
+    const dbPostgresUrl =
+      overrides?.dbPostgresUrl || process.env.DB_POSTGRES_URL
     assert(dbPostgresUrl)
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
     const repoProvider = process.env.REPO_PROVIDER // E.g. ws://abc.com:4000
