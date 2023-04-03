@@ -17,22 +17,22 @@ const main = async () => {
   const env = getEnv()
   // Migrate using credentialed user
   const migrateDb = Database.postgres({
-    url: pgUrl(env.dbMigrateCreds),
-    schema: env.dbSchema,
+    url: env.dbMigratePostgresUrl,
+    schema: env.dbPostgresSchema,
   })
   await migrateDb.migrateToLatestOrThrow()
   await migrateDb.close()
   // Use lower-credentialed user to run the app
   const db = Database.postgres({
-    url: pgUrl(env.dbCreds),
+    url: env.dbPostgresUrl,
     schema: env.dbSchema,
   })
   const cfg = ServerConfig.readEnv({
     port: env.port,
     version: env.version,
     repoProvider: env.repoProvider,
-    dbPostgresUrl: pgUrl(env.dbCreds),
-    dbPostgresSchema: env.dbSchema,
+    dbPostgresUrl: env.dbPostgresUrl,
+    dbPostgresSchema: env.dbPostgresSchema,
     publicUrl: env.publicUrl,
     didPlcUrl: env.didPlcUrl,
     imgUriSalt: env.imgUriSalt,
@@ -48,18 +48,14 @@ const main = async () => {
   })
 }
 
-const pgUrl = ({ username, password, host, port }) => {
-  const enc = encodeURIComponent
-  return `postgresql://${username}:${enc(password)}@${host}:${port}/postgres`
-}
-
 const getEnv = () => ({
   port: parseInt(process.env.PORT),
   version: process.env.BSKY_VERSION,
   repoProvider: process.env.REPO_PROVIDER,
-  dbCreds: JSON.parse(process.env.DB_CREDS_JSON),
-  dbMigrateCreds: JSON.parse(process.env.DB_MIGRATE_CREDS_JSON),
-  dbSchema: process.env.DB_SCHEMA,
+  dbPostgresUrl: process.env.DB_POSTGRES_URL,
+  dbMigratePostgresUrl:
+    process.env.DB_MIGRATE_POSTGRES_URL || process.env.DB_POSTGRES_URL,
+  dbPostgresSchema: process.env.DB_POSTGRES_SCHEMA,
   publicUrl: process.env.PUBLIC_URL,
   didPlcUrl: process.env.DID_PLC_URL,
   imgUriSalt: process.env.IMG_URI_SALT,
