@@ -4,7 +4,6 @@ import { AddressInfo } from 'net'
 import events from 'events'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import cors from 'cors'
-import { BlobStore } from '@atproto/repo'
 import { DidResolver } from '@atproto/did-resolver'
 import API, { health, blobResolver } from './api'
 import Database from './db'
@@ -40,12 +39,8 @@ export class BskyAppView {
     this.sub = opts.sub
   }
 
-  static create(opts: {
-    db: Database
-    blobstore: BlobStore
-    config: ServerConfig
-  }): BskyAppView {
-    const { db, blobstore, config } = opts
+  static create(opts: { db: Database; config: ServerConfig }): BskyAppView {
+    const { db, config } = opts
     const app = express()
     app.use(cors())
     app.use(loggerMiddleware)
@@ -65,7 +60,6 @@ export class BskyAppView {
 
     const ctx = new AppContext({
       db,
-      blobstore,
       cfg: config,
       services,
       imgUriBuilder,

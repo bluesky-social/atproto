@@ -16,8 +16,6 @@ import {
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
-import DiskBlobStore from '../src/storage/disk-blobstore'
-import MemoryBlobStore from '../src/storage/memory-blobstore'
 import AppContext from '../src/context'
 import { defaultFetchHandler } from '@atproto/xrpc'
 
@@ -82,7 +80,7 @@ export const runTestServer = async (
     repoBackfillLimitMs: 1000 * 60 * 60, // 1hr
   })
 
-  const pdsBlobstore = new MemoryBlobStore()
+  const pdsBlobstore = new pds.MemoryBlobStore()
   const pdsDb = pds.Database.memory()
   await pdsDb.migrateToLatestOrThrow()
   const repoSigningKey = await crypto.Secp256k1Keypair.create()
@@ -127,16 +125,7 @@ export const runTestServer = async (
     await db.migrateToLatestOrThrow()
   }
 
-  const blobstore =
-    cfg.blobstoreLocation !== undefined
-      ? await DiskBlobStore.create(cfg.blobstoreLocation, cfg.blobstoreTmp)
-      : new MemoryBlobStore()
-
-  const bsky = BskyAppView.create({
-    db,
-    blobstore,
-    config: cfg,
-  })
+  const bsky = BskyAppView.create({ db, config: cfg })
   const bskyServer = await bsky.start()
   const bskyPort = (bskyServer.address() as AddressInfo).port
 

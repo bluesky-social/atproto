@@ -6,8 +6,6 @@ export interface ServerConfigValues {
   publicUrl?: string
   dbPostgresUrl: string
   dbPostgresSchema?: string
-  blobstoreLocation?: string
-  blobstoreTmp?: string
   didPlcUrl: string
   imgUriSalt: string
   imgUriKey: string
@@ -27,8 +25,6 @@ export class ServerConfig {
     const envPort = parseInt(process.env.PORT || '', 10)
     const port = isNaN(envPort) ? 2584 : envPort
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
-    const blobstoreLocation = process.env.BLOBSTORE_LOC
-    const blobstoreTmp = process.env.BLOBSTORE_TMP
     const imgUriSalt =
       process.env.IMG_URI_SALT || '9dd04221f5755bce5f55f47464c27e1e'
     const imgUriKey =
@@ -47,8 +43,6 @@ export class ServerConfig {
       publicUrl,
       dbPostgresUrl,
       dbPostgresSchema,
-      blobstoreLocation,
-      blobstoreTmp,
       didPlcUrl,
       imgUriSalt,
       imgUriKey,
@@ -90,14 +84,6 @@ export class ServerConfig {
 
   get dbPostgresSchema() {
     return this.cfg.dbPostgresSchema
-  }
-
-  get blobstoreLocation() {
-    return this.cfg.blobstoreLocation
-  }
-
-  get blobstoreTmp() {
-    return this.cfg.blobstoreTmp
   }
 
   get didPlcUrl() {

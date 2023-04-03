@@ -11,7 +11,6 @@ require('dd-trace/init') // Only works with commonjs
 
 // Tracer code above must come before anything else
 const path = require('path')
-const { S3BlobStore, CloudfrontInvalidator } = require('@atproto/aws')
 const { Database, ServerConfig, Bsky } = require('@atproto/bsky')
 
 const main = async () => {
@@ -28,24 +27,20 @@ const main = async () => {
     url: pgUrl(env.dbCreds),
     schema: env.dbSchema,
   })
-  const s3Blobstore = new S3BlobStore({ bucket: env.s3Bucket })
-  const cfInvalidator = new CloudfrontInvalidator({
-    distributionId: env.cfDistributionId,
-  })
   const cfg = ServerConfig.readEnv({
     port: env.port,
-    emailSmtpUrl: smtpUrl({
-      host: env.smtpHost,
-      username: env.smtpUsername,
-      password: env.smtpPassword,
-    }),
+    version: env.version,
+    repoProvider: env.repoProvider,
+    dbPostgresUrl: pgUrl(env.dbCreds),
+    dbPostgresSchema: env.dbSchema,
+    publicUrl: env.publicUrl,
+    didPlcUrl: env.didPlcUrl,
+    imgUriSalt: env.imgUriSalt,
+    imgUriKey: env.imgUriKey,
+    imgUriEndpoint: env.imgUriEndpoint,
+    blobCacheLocation: env.blobCacheLocation,
   })
-  const bsky = Bsky.create({
-    db,
-    blobstore: s3Blobstore,
-    config: cfg,
-    imgInvalidator: cfInvalidator,
-  })
+  const bsky = Bsky.create({ db, config: cfg })
   await bsky.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
@@ -60,11 +55,17 @@ const pgUrl = ({ username, password, host, port }) => {
 
 const getEnv = () => ({
   port: parseInt(process.env.PORT),
+  version: process.env.BSKY_VERSION,
+  repoProvider: process.env.REPO_PROVIDER,
   dbCreds: JSON.parse(process.env.DB_CREDS_JSON),
   dbMigrateCreds: JSON.parse(process.env.DB_MIGRATE_CREDS_JSON),
   dbSchema: process.env.DB_SCHEMA,
-  s3Bucket: process.env.S3_BUCKET_NAME,
-  cfDistributionId: process.env.CF_DISTRIBUTION_ID,
+  publicUrl: process.env.PUBLIC_URL,
+  didPlcUrl: process.env.DID_PLC_URL,
+  imgUriSalt: process.env.IMG_URI_SALT,
+  imgUriKey: process.env.IMG_URI_KEY,
+  imgUriEndpoint: process.env.IMG_URI_ENDPOINT,
+  blobCacheLocation: process.env.BLOB_CACHE_LOC,
 })
 
 const maintainXrpcResource = (span, req) => {

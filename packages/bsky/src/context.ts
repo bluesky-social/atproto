@@ -1,6 +1,5 @@
 import * as plc from '@did-plc/lib'
 import { DidResolver } from '@atproto/did-resolver'
-import { BlobStore } from '@atproto/repo'
 import { Database } from './db'
 import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
@@ -10,7 +9,6 @@ export class AppContext {
   constructor(
     private opts: {
       db: Database
-      blobstore: BlobStore
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       services: Services
@@ -20,10 +18,6 @@ export class AppContext {
 
   get db(): Database {
     return this.opts.db
-  }
-
-  get blobstore(): BlobStore {
-    return this.opts.blobstore
   }
 
   get imgUriBuilder(): ImageUriBuilder {
