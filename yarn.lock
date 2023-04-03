@@ -20,6 +20,17 @@
     pino "^8.6.1"
     zod "^3.14.2"
 
+"@atproto/crypto@0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@atproto/crypto/-/crypto-0.1.0.tgz#bc73a479f9dbe06fa025301c182d7f7ab01bc568"
+  integrity sha512-9xgFEPtsCiJEPt9o3HtJT30IdFTGw5cQRSJVIy5CFhqBA4vDLcdXiRDLCjkzHEVbtNCsHUW6CrlfOgbeLPcmcg==
+  dependencies:
+    "@noble/secp256k1" "^1.7.0"
+    big-integer "^1.6.51"
+    multiformats "^9.6.4"
+    one-webcrypto "^1.0.3"
+    uint8arrays "3.0.0"
+
 "@aws-crypto/crc32@2.0.0":
   version "2.0.0"
   resolved "https://registry.npmjs.org/@aws-crypto/crc32/-/crc32-2.0.0.tgz"
