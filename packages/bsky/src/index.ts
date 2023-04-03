@@ -1,14 +1,9 @@
-// catch errors that get thrown in async route handlers
-// this is a relatively non-invasive change to express
-// they get handled in the error.handler middleware
-// leave at top of file before importing Routes
-import 'express-async-errors' // @TODO(bsky) remove
-
 import express from 'express'
 import http from 'http'
 import { AddressInfo } from 'net'
 import events from 'events'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
+import cors from 'cors'
 import { BlobStore } from '@atproto/repo'
 import { DidResolver } from '@atproto/did-resolver'
 import API, { health, blobResolver } from './api'
@@ -52,6 +47,7 @@ export class BskyAppView {
   }): BskyAppView {
     const { db, blobstore, config } = opts
     const app = express()
+    app.use(cors())
     app.use(loggerMiddleware)
 
     const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
