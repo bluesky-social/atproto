@@ -1428,6 +1428,9 @@ export const schemaDict = {
               default: 50,
               description: 'The number of records to return.',
             },
+            cursor: {
+              type: 'string',
+            },
             rkeyStart: {
               type: 'string',
               description:
