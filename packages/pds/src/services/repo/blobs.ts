@@ -125,11 +125,39 @@ export class RepoBlobs {
   }
 
   async processRebaseBlobs(did: string, newRoot: CID) {
-    await this.db.db
+    const deleteUnreferenced = this.db.db
+      .deleteFrom('repo_blob')
+      .where('did', '=', did)
+      .where(
+        'recordUri',
+        'not in',
+        this.db.db.selectFrom('record').where('did', '=', did).select('uri'),
+      )
+      .returningAll()
+      .execute()
+
+    const updateReferenced = this.db.db
       .updateTable('repo_blob')
       .set({ commit: newRoot.toString() })
       .where('did', '=', did)
+      .where(
+        'recordUri',
+        'in',
+        this.db.db.selectFrom('record').where('did', '=', did).select('uri'),
+      )
       .execute()
+
+    const [deleted] = await Promise.all([deleteUnreferenced, updateReferenced])
+    const deletedCids = deleted.map((row) => row.cid)
+    if (deleted.length > 0) {
+      await Promise.all([
+        this.db.db
+          .deleteFrom('blob')
+          .where('creator', '=', did)
+          .where('cid', 'in', deletedCids),
+        deletedCids.map((cid) => this.blobstore.delete(CID.parse(cid))),
+      ])
+    }
   }
 
   async listForCommits(did: string, commits: CID[]): Promise<CID[]> {

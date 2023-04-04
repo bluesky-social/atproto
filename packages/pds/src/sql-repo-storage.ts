@@ -166,6 +166,7 @@ export class SqlRepoStorage extends RepoStorage {
     ])
     await this.db.db
       .deleteFrom('ipld_block')
+      .where('ipld_block.creator', '=', this.did)
       .where(
         'cid',
         'in',
@@ -179,8 +180,8 @@ export class SqlRepoStorage extends RepoStorage {
           .where('repo_commit_block.creator', 'is', null)
           .select('block.cid'),
       )
-      .execute(),
-      await this.updateHead(rebase.commit, null)
+      .execute()
+    await this.updateHead(rebase.commit, null)
   }
 
   async indexCommits(commits: CommitData[]): Promise<void> {
