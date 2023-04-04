@@ -1,6 +1,12 @@
 import { CID } from 'multiformats/cid'
 import * as crypto from '@atproto/crypto'
-import { BlobStore, CommitData, Repo, WriteOpAction } from '@atproto/repo'
+import {
+  BlobStore,
+  CommitData,
+  RebaseData,
+  Repo,
+  WriteOpAction,
+} from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
@@ -14,7 +20,7 @@ import {
 import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { RecordService } from '../record'
-import { sequenceCommit } from '../../sequencer'
+import { sequenceCommit, sequenceRebase } from '../../sequencer'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -69,7 +75,7 @@ export class RepoService {
     const commitData = await this.formatCommit(storage, did, writes, swapCommit)
     await Promise.all([
       // persist the commit to repo storage
-      await storage.applyCommit(commitData),
+      storage.applyCommit(commitData),
       // & send to indexing
       this.indexWrites(writes, now),
       // do any other processing needed after write
@@ -149,6 +155,33 @@ export class RepoService {
     await Promise.all([
       this.blobs.processWriteBlobs(did, commitData.commit, writes),
       sequenceCommit(this.db, did, commitData, writes),
+    ])
+  }
+
+  async rebaseRepo(did: string, now: string, swapCommit?: CID) {
+    this.db.assertTransaction()
+    const storage = new SqlRepoStorage(this.db, did, now)
+    const currRoot = await storage.getHead(true)
+    if (!currRoot) {
+      throw new InvalidRequestError(
+        `${did} is not a registered repo on this server`,
+      )
+    }
+    if (swapCommit && !currRoot.equals(swapCommit)) {
+      throw new BadCommitSwapError(currRoot)
+    }
+    const repo = await Repo.load(storage, currRoot)
+    const rebaseData = await repo.formatRebase(this.repoSigningKey)
+    await Promise.all([
+      storage.applyRebase(rebaseData),
+      this.afterRebaseProcessing(did, rebaseData),
+    ])
+  }
+
+  async afterRebaseProcessing(did: string, rebaseData: RebaseData) {
+    await Promise.all([
+      this.blobs.processRebaseBlobs(did, rebaseData.commit),
+      sequenceRebase(this.db, did, rebaseData),
     ])
   }
 

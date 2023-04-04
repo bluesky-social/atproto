@@ -56,14 +56,19 @@ describe('auth', () => {
   }
 
   it('provides valid access and refresh token on account creation.', async () => {
+    const email = 'alice@test.com'
     const account = await createAccount({
       handle: 'alice.test',
-      email: 'alice@test.com',
+      email,
       password: 'password',
     })
     // Valid access token
     const sessionInfo = await getSession(account.accessJwt)
-    expect(sessionInfo).toEqual({ did: account.did, handle: account.handle })
+    expect(sessionInfo).toEqual({
+      did: account.did,
+      handle: account.handle,
+      email,
+    })
     // Valid refresh token
     const nextSession = await refreshSession(account.refreshJwt)
     expect(nextSession).toEqual(
@@ -75,9 +80,10 @@ describe('auth', () => {
   })
 
   it('provides valid access and refresh token on session creation.', async () => {
+    const email = 'bob@test.com'
     await createAccount({
       handle: 'bob.test',
-      email: 'bob@test.com',
+      email,
       password: 'password',
     })
     const session = await createSession({
@@ -89,6 +95,7 @@ describe('auth', () => {
     expect(sessionInfo).toEqual({
       did: session.did,
       handle: session.handle,
+      email,
     })
     // Valid refresh token
     const nextSession = await refreshSession(session.refreshJwt)
@@ -127,10 +134,11 @@ describe('auth', () => {
   })
 
   it('provides valid access and refresh token on session refresh.', async () => {
+    const email = 'carol@test.com'
     const account = await createAccount({
       handle: 'carol.test',
-      email: 'carol@test.com',
       password: 'password',
+      email,
     })
     const session = await refreshSession(account.refreshJwt)
     // Valid access token
@@ -138,6 +146,7 @@ describe('auth', () => {
     expect(sessionInfo).toEqual({
       did: session.did,
       handle: session.handle,
+      email,
     })
     // Valid refresh token
     const nextSession = await refreshSession(session.refreshJwt)

@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import BlockMap from '../block-map'
-import { CommitBlockData, CommitData } from '../types'
+import { CommitBlockData, CommitData, RebaseData } from '../types'
 import ReadableBlockstore from './readable-blockstore'
 
 export abstract class RepoStorage extends ReadableBlockstore {
@@ -17,6 +17,7 @@ export abstract class RepoStorage extends ReadableBlockstore {
   abstract putMany(blocks: BlockMap): Promise<void>
   abstract updateHead(cid: CID, prev: CID | null): Promise<void>
   abstract indexCommits(commit: CommitData[]): Promise<void>
+  abstract applyRebase(rebase: RebaseData): Promise<void>
 
   async applyCommit(commit: CommitData): Promise<void> {
     await Promise.all([

@@ -1,4 +1,11 @@
-import { CommitData, RepoStorage, BlockMap, CidSet } from '@atproto/repo'
+import {
+  CommitData,
+  RepoStorage,
+  BlockMap,
+  CidSet,
+  RebaseData,
+  CommitCidData,
+} from '@atproto/repo'
 import { chunkArray } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import Database from './db'
@@ -139,18 +146,69 @@ export class SqlRepoStorage extends RepoStorage {
     )
   }
 
+  async applyRebase(rebase: RebaseData): Promise<void> {
+    this.db.assertTransaction()
+    await Promise.all([
+      this.db.db
+        .deleteFrom('repo_commit_block')
+        .where('creator', '=', this.did)
+        .execute(),
+      this.db.db
+        .deleteFrom('repo_commit_history')
+        .where('creator', '=', this.did)
+        .execute(),
+      this.putMany(rebase.blocks),
+    ])
+
+    const allCids = [...rebase.preservedCids, ...rebase.blocks.cids()]
+    await this.indexCommitCids([
+      { commit: rebase.commit, prev: null, cids: allCids },
+    ])
+    await this.db.db
+      .deleteFrom('ipld_block')
+      .where('ipld_block.creator', '=', this.did)
+      .where(
+        'cid',
+        'in',
+        this.db.db
+          .selectFrom('ipld_block as block')
+          .leftJoin('repo_commit_block', (join) =>
+            join
+              .onRef('block.creator', '=', 'repo_commit_block.creator')
+              .onRef('block.cid', '=', 'repo_commit_block.block'),
+          )
+          .where('repo_commit_block.creator', 'is', null)
+          .select('block.cid'),
+      )
+      .execute()
+    await this.updateHead(rebase.commit, null)
+  }
+
   async indexCommits(commits: CommitData[]): Promise<void> {
     this.db.assertTransaction()
     const allBlocks = new BlockMap()
-    const commitBlocks: RepoCommitBlock[] = []
-    const commitHistory: RepoCommitHistory[] = []
+    const cidData: CommitCidData[] = []
     for (const commit of commits) {
       const commitCids: CID[] = []
       for (const block of commit.blocks.entries()) {
         commitCids.push(block.cid)
         allBlocks.set(block.cid, block.bytes)
       }
-      for (const cid of commitCids) {
+      cidData.push({
+        commit: commit.commit,
+        prev: commit.prev,
+        cids: commitCids,
+      })
+    }
+    await Promise.all([this.putMany(allBlocks), this.indexCommitCids(cidData)])
+  }
+
+  async indexCommitCids(commits: CommitCidData[]): Promise<void> {
+    this.db.assertTransaction()
+    const commitBlocks: RepoCommitBlock[] = []
+    const commitHistory: RepoCommitHistory[] = []
+    for (const commit of commits) {
+      for (const cid of commit.cids) {
         commitBlocks.push({
           commit: commit.commit.toString(),
           block: cid.toString(),
@@ -181,11 +239,7 @@ export class SqlRepoStorage extends RepoStorage {
           .execute(),
       ),
     )
-    await Promise.all([
-      this.putMany(allBlocks),
-      insertCommitBlocks,
-      insertCommitHistory,
-    ])
+    await Promise.all([insertCommitBlocks, insertCommitHistory])
   }
 
   async updateHead(cid: CID, prev: CID | null): Promise<void> {
