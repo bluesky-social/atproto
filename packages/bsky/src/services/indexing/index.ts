@@ -74,14 +74,14 @@ export class IndexingService {
     return notifs
   }
 
-  async indexHandle(did: string, timestamp: string) {
+  async indexHandle(did: string, timestamp: string, force = false) {
     const actor = await this.db.db
       .selectFrom('actor')
       .where('did', '=', did)
       .selectAll()
       .executeTakeFirst()
-    if (actor) {
-      return // @TODO deal with handle updates
+    if (actor && !force) {
+      return
     }
     const { handle } = await this.didResolver.resolveAtpData(did)
     const handleToDid = await resolveExternalHandle(handle)
@@ -122,8 +122,8 @@ export class IndexingService {
       signingKey,
     )
 
-    // Wipe index for user, prep for reindexing
-    await this.deleteForUser(did)
+    // Wipe index for actor, prep for reindexing
+    await this.unindexActor(did)
 
     // Iterate over all records and index them in batches
     const contentList = [...walkContentsWithCids(checkout.contents)]
@@ -194,7 +194,18 @@ export class IndexingService {
     return indexers.find((indexer) => indexer.collection === collection)
   }
 
-  async deleteForUser(did: string) {
+  async tombstoneActor(did: string) {
+    this.db.assertTransaction()
+    const doc = await this.didResolver.resolveDid(did)
+    if (doc.didResolutionMetadata.error === 'notFound') {
+      await Promise.all([
+        this.unindexActor(did),
+        this.db.db.deleteFrom('actor').where('did', '=', did).execute(),
+      ])
+    }
+  }
+
+  async unindexActor(did: string) {
     this.db.assertTransaction()
 
     const postByUser = (qb) =>

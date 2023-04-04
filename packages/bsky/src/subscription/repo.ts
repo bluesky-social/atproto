@@ -118,17 +118,16 @@ export class RepoSubscription {
       await this.handleCommit(msg)
     } else if (message.isHandle(msg)) {
       await this.handleUpdateHandle(msg)
-    } else if (message.isMigrate(msg)) {
-      await this.handleMigrate(msg)
     } else if (message.isTombstone(msg)) {
       await this.handleTombstone(msg)
+    } else if (message.isMigrate(msg)) {
+      // Ignore migrations
     } else {
       const exhaustiveCheck: never = msg
       throw new Error(`Unhandled message type: ${exhaustiveCheck['$type']}`)
     }
   }
 
-  // @TODO handle too-big commits and rebases
   private async handleCommit(msg: message.Commit) {
     const { db, services } = this.ctx
     const { root, rootCid, ops } = await getOps(msg)
@@ -166,16 +165,20 @@ export class RepoSubscription {
     })
   }
 
-  private async handleUpdateHandle(_msg: message.Handle) {
-    throw new Error('Not implemented') // @TODO
+  private async handleUpdateHandle(msg: message.Handle) {
+    const { db, services } = this.ctx
+    await db.transaction(async (tx) => {
+      const indexingTx = services.indexing(tx)
+      await indexingTx.indexHandle(msg.did, msg.time, true)
+    })
   }
 
-  private async handleMigrate(_msg: message.Migrate) {
-    throw new Error('Not implemented') // @TODO
-  }
-
-  private async handleTombstone(_msg: message.Tombstone) {
-    throw new Error('Not implemented') // @TODO
+  private async handleTombstone(msg: message.Tombstone) {
+    const { db, services } = this.ctx
+    await db.transaction(async (tx) => {
+      const indexingTx = services.indexing(tx)
+      await indexingTx.tombstoneActor(msg.did)
+    })
   }
 
   private async handleCursor(msg: ProcessableMessage) {
