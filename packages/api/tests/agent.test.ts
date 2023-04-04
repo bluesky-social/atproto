@@ -54,6 +54,7 @@ describe('agent', () => {
     expect(sessionInfo).toEqual({
       did: res.data.did,
       handle: res.data.handle,
+      email: 'user1@test.com',
     })
 
     expect(events.length).toEqual(1)
@@ -95,6 +96,7 @@ describe('agent', () => {
     expect(sessionInfo).toEqual({
       did: res1.data.did,
       handle: res1.data.handle,
+      email: res1.data.email,
     })
 
     expect(events.length).toEqual(2)
@@ -136,6 +138,7 @@ describe('agent', () => {
     expect(sessionInfo).toEqual({
       did: res1.data.did,
       handle: res1.data.handle,
+      email: res1.data.email,
     })
 
     expect(events.length).toEqual(2)
