@@ -1,0 +1,42 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.server.getUserInviteCodes",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get all invite codes for a given user",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "includeUsed": { "type": "boolean", "default": true }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["codes"],
+          "properties": {
+            "codes": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#invite"
+              }
+            }
+          }
+        }
+      }
+    },
+    "invite": {
+      "type": "object",
+      "requred": ["code", "available", "uses", "canCreate"],
+      "properties": {
+        "code": { "type": "string" },
+        "available": { "type": "integer" },
+        "users": { "type": "integer" },
+        "canCreate": { "type": "integer" }
+      }
+    }
+  }
+}
