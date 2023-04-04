@@ -20,6 +20,10 @@ export class BlockMap {
     return this.map.get(cid.toString())
   }
 
+  delete(cid: CID) {
+    this.map.delete(cid.toString())
+  }
+
   getMany(cids: CID[]): { blocks: BlockMap; missing: CID[] } {
     const missing: CID[] = []
     const blocks = new BlockMap()
@@ -52,6 +56,10 @@ export class BlockMap {
       entries.push({ cid, bytes })
     })
     return entries
+  }
+
+  cids(): CID[] {
+    return this.entries().map((e) => e.cid)
   }
 
   addMap(toAdd: BlockMap) {

@@ -20,7 +20,6 @@ import DataDiff from './data-diff'
 import { RepoStorage } from './storage'
 import {
   Commit,
-  DataStore,
   RecordCreateDescript,
   RecordDeleteDescript,
   RecordPath,
@@ -108,7 +107,7 @@ export const getWriteLog = async (
   if (!commits) throw new Error('Could not find shared history')
   const heads = await Promise.all(commits.map((c) => Repo.load(storage, c)))
   // Turn commit path into list of diffs
-  let prev: DataStore = await MST.create(storage) // Empty
+  let prev = await MST.create(storage) // Empty
   const msts = heads.map((h) => h.data)
   const diffs: DataDiff[] = []
   for (const mst of msts) {

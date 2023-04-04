@@ -8,7 +8,12 @@ import {
 } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import * as repo from '@atproto/repo'
-import { getWriteLog, MemoryBlockstore, WriteOpAction } from '@atproto/repo'
+import {
+  getWriteLog,
+  MemoryBlockstore,
+  readCar,
+  WriteOpAction,
+} from '@atproto/repo'
 import { byFrame, ErrorFrame, Frame, MessageFrame } from '@atproto/xrpc-server'
 import { WebSocket } from 'ws'
 import {
@@ -86,20 +91,24 @@ describe('repo subscribe repos', () => {
     expect(typeof evt.seq).toBe('number')
   }
 
-  const verifyCommitEvents = async (evts: Frame[]) => {
-    const byUser = evts.reduce((acc, cur) => {
-      if (cur instanceof MessageFrame && cur.header.t === '#commit') {
-        const evt = cur.body as CommitEvt
-        acc[evt.repo] ??= []
-        acc[evt.repo].push(evt)
+  const getCommitEvents = (userDid: string, frames: Frame[]) => {
+    const evts: CommitEvt[] = []
+    for (const frame of frames) {
+      if (frame instanceof MessageFrame && frame.header.t === '#commit') {
+        const body = frame.body as CommitEvt
+        if (body.repo === userDid) {
+          evts.push(frame.body)
+        }
       }
-      return acc
-    }, {} as Record<string, CommitEvt[]>)
+    }
+    return evts
+  }
 
-    await verifyRepo(alice, byUser[alice])
-    await verifyRepo(bob, byUser[bob])
-    await verifyRepo(carol, byUser[carol])
-    await verifyRepo(dan, byUser[dan])
+  const verifyCommitEvents = async (frames: Frame[]) => {
+    await verifyRepo(alice, getCommitEvents(alice, frames))
+    await verifyRepo(bob, getCommitEvents(bob, frames))
+    await verifyRepo(carol, getCommitEvents(carol, frames))
+    await verifyRepo(dan, getCommitEvents(dan, frames))
   }
 
   const verifyRepo = async (did: string, evts: CommitEvt[]) => {
@@ -176,46 +185,6 @@ describe('repo subscribe repos', () => {
     await verifyCommitEvents(evts)
   })
 
-  it('syncs handle changes', async () => {
-    await sc.updateHandle(alice, 'alice2.test')
-    await sc.updateHandle(bob, 'bob2.test')
-
-    const ws = new WebSocket(
-      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
-    )
-
-    const gen = byFrame(ws)
-    const evts = await readTillCaughtUp(gen)
-    ws.terminate()
-
-    await verifyCommitEvents(evts)
-    const handleEvts = getHandleEvts(evts.slice(-2))
-    verifyHandleEvent(handleEvts[0], alice, 'alice2.test')
-    verifyHandleEvent(handleEvts[1], bob, 'bob2.test')
-  })
-
-  it('does not return invalidated events', async () => {
-    await sc.updateHandle(alice, 'alice3.test')
-    await sc.updateHandle(alice, 'alice4.test')
-    await sc.updateHandle(alice, 'alice5.test')
-    await sc.updateHandle(bob, 'bob3.test')
-    await sc.updateHandle(bob, 'bob4.test')
-    await sc.updateHandle(bob, 'bob5.test')
-
-    const ws = new WebSocket(
-      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
-    )
-
-    const gen = byFrame(ws)
-    const evts = await readTillCaughtUp(gen)
-    ws.terminate()
-
-    const handleEvts = getHandleEvts(evts)
-    expect(handleEvts.length).toBe(2)
-    verifyHandleEvent(handleEvts[0], alice, 'alice5.test')
-    verifyHandleEvent(handleEvts[1], bob, 'bob5.test')
-  })
-
   it('syncs new events', async () => {
     const postPromise = makePosts()
 
@@ -281,6 +250,80 @@ describe('repo subscribe repos', () => {
       expect(evt.commit.equals(seqEvt.commit)).toBeTruthy()
       expect(evt.repo).toEqual(seq.did)
     }
+  })
+
+  it('syncs handle changes', async () => {
+    await sc.updateHandle(alice, 'alice2.test')
+    await sc.updateHandle(bob, 'bob2.test')
+
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
+    )
+
+    const gen = byFrame(ws)
+    const evts = await readTillCaughtUp(gen)
+    ws.terminate()
+
+    await verifyCommitEvents(evts)
+    const handleEvts = getHandleEvts(evts.slice(-2))
+    verifyHandleEvent(handleEvts[0], alice, 'alice2.test')
+    verifyHandleEvent(handleEvts[1], bob, 'bob2.test')
+  })
+
+  it('does not return invalidated events', async () => {
+    await sc.updateHandle(alice, 'alice3.test')
+    await sc.updateHandle(alice, 'alice4.test')
+    await sc.updateHandle(alice, 'alice5.test')
+    await sc.updateHandle(bob, 'bob3.test')
+    await sc.updateHandle(bob, 'bob4.test')
+    await sc.updateHandle(bob, 'bob5.test')
+
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
+    )
+
+    const gen = byFrame(ws)
+    const evts = await readTillCaughtUp(gen)
+    ws.terminate()
+
+    const handleEvts = getHandleEvts(evts)
+    expect(handleEvts.length).toBe(2)
+    verifyHandleEvent(handleEvts[0], alice, 'alice5.test')
+    verifyHandleEvent(handleEvts[1], bob, 'bob5.test')
+  })
+
+  it('sync rebases', async () => {
+    const prevHead = await agent.api.com.atproto.sync.getHead({ did: alice })
+    await ctx.db.transaction((dbTxn) =>
+      ctx.services.repo(dbTxn).rebaseRepo(alice, new Date().toISOString()),
+    )
+    const currHead = await agent.api.com.atproto.sync.getHead({ did: alice })
+
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
+    )
+
+    const gen = byFrame(ws)
+    const frames = await readTillCaughtUp(gen)
+    ws.terminate()
+
+    const aliceEvts = getCommitEvents(alice, frames)
+    expect(aliceEvts.length).toBe(1)
+    const evt = aliceEvts[0]
+    expect(evt.rebase).toBe(true)
+    expect(evt.tooBig).toBe(false)
+    expect(evt.commit.toString()).toEqual(currHead.data.root)
+    expect(evt.prev?.toString()).toEqual(prevHead.data.root)
+    expect(evt.ops).toEqual([])
+    expect(evt.blobs).toEqual([])
+    const car = await readCar(evt.blocks)
+    expect(car.blocks.size).toBe(1)
+    expect(car.roots.length).toBe(1)
+    expect(car.roots[0].toString()).toEqual(currHead.data.root)
+
+    // did not affect other users
+    const bobEvts = getCommitEvents(bob, frames)
+    expect(bobEvts.length).toBeGreaterThan(10)
   })
 
   it('sends info frame on out of date cursor', async () => {

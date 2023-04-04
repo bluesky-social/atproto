@@ -1,7 +1,6 @@
 import { CID } from 'multiformats'
 import CidSet from './cid-set'
 import { MST, mstDiff } from './mst'
-import { DataStore } from './types'
 
 export class DataDiff {
   adds: Record<string, DataAdd> = {}
@@ -11,11 +10,8 @@ export class DataDiff {
   newCids: CidSet = new CidSet()
   removedCids: CidSet = new CidSet()
 
-  static async of(curr: DataStore, prev: DataStore | null): Promise<DataDiff> {
-    if (curr instanceof MST && (prev === null || prev instanceof MST)) {
-      return mstDiff(curr, prev)
-    }
-    throw new Error('Unsupported DataStore type for diff')
+  static async of(curr: MST, prev: MST | null): Promise<DataDiff> {
+    return mstDiff(curr, prev)
   }
 
   recordAdd(key: string, cid: CID): void {

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/dev-env",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "main": "dist/cli.js",
   "license": "MIT",
   "scripts": {

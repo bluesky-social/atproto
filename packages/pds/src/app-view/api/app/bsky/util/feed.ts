@@ -38,7 +38,7 @@ export const composeFeed = async (
     if (post && originator) {
       let reasonType: string | undefined
       if (row.type === 'repost') {
-        reasonType = 'app.bsky.feed.feedViewPost#reasonRepost'
+        reasonType = 'app.bsky.feed.defs#reasonRepost'
       }
       const replyParent = row.replyParent
         ? feedService.formatPostView(row.replyParent, actors, posts, embeds)

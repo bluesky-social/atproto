@@ -67,7 +67,7 @@ export class EcdsaKeypair implements Keypair {
     const buf = await webcrypto.subtle.sign(
       { name: 'ECDSA', hash: { name: 'SHA-256' } },
       this.keypair.privateKey,
-      msg.buffer,
+      new Uint8Array(msg),
     )
     return new Uint8Array(buf)
   }

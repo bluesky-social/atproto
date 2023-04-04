@@ -1,6 +1,6 @@
 {
   "name": "@atproto/xrpc",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "main": "src/index.ts",
   "scripts": {
     "prettier": "prettier --check src/",
