@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import AtpAgent from '@atproto/api'
 import {
@@ -12,6 +13,7 @@ import { AtUri } from '@atproto/uri'
 import { DidResolver } from '@atproto/did-resolver'
 import { chunkArray } from '@atproto/common'
 import { NoHandleRecordError, resolveDns } from '@atproto/identifier'
+import { ValidationError } from '@atproto/lexicon'
 import Database from '../../db'
 import * as Post from './plugins/post'
 import * as Like from './plugins/like'
@@ -20,7 +22,6 @@ import * as Follow from './plugins/follow'
 import * as Profile from './plugins/profile'
 import RecordProcessor from './processor'
 import { subLogger } from '../../logger'
-import { ids } from '../../lexicon/lexicons'
 import { retryHttp } from '../../util/retry'
 
 export class IndexingService {
@@ -104,6 +105,7 @@ export class IndexingService {
   }
 
   async indexRepo(did: string, commit: string) {
+    this.db.assertTransaction()
     const now = new Date().toISOString()
     const { pds, signingKey } = await this.didResolver.resolveAtpData(did)
     const { api } = new AtpAgent({ service: pds })
@@ -120,62 +122,69 @@ export class IndexingService {
       signingKey,
     )
 
-    // First, replace the user with just their current profile if it exists
-    await this.db.transaction(async (tx) => {
-      const indexingTx = new IndexingService(tx, this.didResolver)
-      await indexingTx.unindexActor(did)
-      const profile = checkout.contents[ids.AppBskyActorProfile]?.self
-      if (profile) {
-        const profileUri = AtUri.make(did, ids.AppBskyActorProfile, 'self')
-        await indexingTx.indexRecord(
-          profileUri,
-          profile.cid,
-          profile.value,
-          WriteOpAction.Create,
-          now,
-        )
-      }
-    })
+    // Wipe index for actor, prep for reindexing
+    await this.unindexActor(did)
 
-    // Then iterate over all records and index them in batches
+    // Iterate over all records and index them in batches
     const contentList = [...walkContentsWithCids(checkout.contents)]
     const chunks = chunkArray(contentList, 100)
 
     for (const chunk of chunks) {
-      await this.db.transaction(async (tx) => {
-        const indexingTx = new IndexingService(tx, this.didResolver)
-        const processChunk = chunk.map(async (item) => {
-          const { cid, collection, rkey, record } = item
-          const uri = AtUri.make(did, collection, rkey)
-          await indexingTx.indexRecord(
-            uri,
-            cid,
-            record,
-            WriteOpAction.Create,
-            now,
-          )
-        })
-        await Promise.all(processChunk)
+      const processChunk = chunk.map(async (item) => {
+        const { cid, collection, rkey, record } = item
+        const uri = AtUri.make(did, collection, rkey)
+        try {
+          await this.indexRecord(uri, cid, record, WriteOpAction.Create, now)
+        } catch (err) {
+          if (err instanceof ValidationError) {
+            subLogger.warn(
+              { did, commit, uri: uri.toString(), cid: cid.toString() },
+              'skipping indexing of invalid record',
+            )
+          } else {
+            throw err
+          }
+        }
       })
+      await Promise.all(processChunk)
     }
   }
 
-  async setCommitLastSeen(commit: Commit) {
+  async setCommitLastSeen(
+    commit: Commit,
+    details: { commit: CID; rebase: boolean; tooBig: boolean },
+  ) {
+    const { ref } = this.db.db.dynamic
     await this.db.db
-      .updateTable('actor')
-      .where('did', '=', commit.did)
-      .set({ commitDataCid: commit.data.toString() })
+      .insertInto('actor_sync')
+      .values({
+        did: commit.did,
+        commitCid: details.commit.toString(),
+        commitDataCid: commit.data.toString(),
+        rebaseCount: details.rebase ? 1 : 0,
+        tooBigCount: details.tooBig ? 1 : 0,
+      })
+      .onConflict((oc) => {
+        const sync = (col: string) => ref(`actor_sync.${col}`)
+        const excluded = (col: string) => ref(`excluded.${col}`)
+        return oc.column('did').doUpdateSet({
+          commitCid: sql`${excluded('commitCid')}`,
+          commitDataCid: sql`${excluded('commitDataCid')}`,
+          rebaseCount: sql`${sync('rebaseCount')} + ${excluded('rebaseCount')}`,
+          tooBigCount: sql`${sync('tooBigCount')} + ${excluded('tooBigCount')}`,
+        })
+      })
       .execute()
   }
 
   async checkCommitNeedsIndexing(commit: Commit) {
-    const actor = await this.db.db
-      .selectFrom('actor')
+    const sync = await this.db.db
+      .selectFrom('actor_sync')
       .select('commitDataCid')
       .where('did', '=', commit.did)
       .executeTakeFirst()
-    if (!actor) return true
-    return actor.commitDataCid !== commit.data.toString()
+    if (!sync) return true
+    return sync.commitDataCid !== commit.data.toString()
   }
 
   findIndexerForCollection(collection: string) {

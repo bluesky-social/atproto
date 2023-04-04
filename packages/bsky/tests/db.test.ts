@@ -52,7 +52,6 @@ describe('db', () => {
         did: 'x',
         handle: 'x',
         indexedAt: 'bad-date',
-        commitDataCid: null,
         takedownId: null,
       })
     })
@@ -129,7 +128,7 @@ describe('db', () => {
 
     it('only allows one leader at a time.', async () => {
       const task = async () => {
-        await wait(25)
+        await wait(75)
         return 'complete'
       }
       const results = await Promise.all([
@@ -147,7 +146,7 @@ describe('db', () => {
 
     it('leaders with different ids do not conflict.', async () => {
       const task = async () => {
-        await wait(25)
+        await wait(75)
         return 'complete'
       }
       const results = await Promise.all([

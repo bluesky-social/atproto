@@ -1,5 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { cidForCbor, TID } from '@atproto/common'
+import * as pdsRepo from '@atproto/pds/src/repo/prepare'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { Client } from '@did-plc/lib'
@@ -230,7 +231,9 @@ describe('indexing', () => {
       const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
         did: sc.dids.alice,
       })
-      await services.indexing(db).indexRepo(sc.dids.alice, head.root)
+      await db.transaction((tx) =>
+        services.indexing(tx).indexRepo(sc.dids.alice, head.root),
+      )
       // Check
       const { data: profile } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
@@ -273,7 +276,9 @@ describe('indexing', () => {
       const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
         did: sc.dids.alice,
       })
-      await services.indexing(db).indexRepo(sc.dids.alice, head.root)
+      await db.transaction((tx) =>
+        services.indexing(tx).indexRepo(sc.dids.alice, head.root),
+      )
       // Check
       const { data: profile } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
@@ -292,6 +297,49 @@ describe('indexing', () => {
       expect(feed.feed[0].post.cid).toEqual(newPost.ref.cidStr)
       expect(follows.follows.map(({ did }) => did)).not.toContain(sc.dids.carol)
       expect(forSnapshot([profile, feed, follows])).toMatchSnapshot()
+    })
+
+    it('skips invalid records.', async () => {
+      const { db, services } = server.ctx
+      const { db: pdsDb, services: pdsServices } = server.pds.ctx
+      // Create a good and a bad post record
+      const writes = await pdsDb.transaction(async (tx) => {
+        const now = new Date().toISOString()
+        const repoTxn = pdsServices.repo(tx)
+        const writes = await Promise.all([
+          pdsRepo.prepareCreate({
+            did: sc.dids.alice,
+            collection: ids.AppBskyFeedPost,
+            record: { text: 'valid', createdAt: new Date().toISOString() },
+          }),
+          pdsRepo.prepareCreate({
+            did: sc.dids.alice,
+            collection: ids.AppBskyFeedPost,
+            record: { text: 0 },
+            validate: false,
+          }),
+        ])
+        await repoTxn.processWrites(sc.dids.alice, writes, now)
+        return writes
+      })
+      // Index
+      const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
+        did: sc.dids.alice,
+      })
+      await db.transaction((tx) =>
+        services.indexing(tx).indexRepo(sc.dids.alice, head.root),
+      )
+      // Check
+      const getGoodPost = agent.api.app.bsky.feed.getPostThread(
+        { uri: writes[0].uri.toString(), depth: 0 },
+        { headers: sc.getHeaders(sc.dids.alice, true) },
+      )
+      await expect(getGoodPost).resolves.toBeDefined()
+      const getBadPost = agent.api.app.bsky.feed.getPostThread(
+        { uri: writes[1].uri.toString(), depth: 0 },
+        { headers: sc.getHeaders(sc.dids.alice, true) },
+      )
+      await expect(getBadPost).rejects.toThrow('Post not found')
     })
   })
 

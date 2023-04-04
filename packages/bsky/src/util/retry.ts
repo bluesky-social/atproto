@@ -65,5 +65,5 @@ function jitter(value: number) {
 
 function randomRange(from: number, to: number) {
   const rand = Math.random() * (to - from)
-  return rand - from
+  return rand + from
 }

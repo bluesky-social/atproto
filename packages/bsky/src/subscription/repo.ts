@@ -161,7 +161,7 @@ export class RepoSubscription {
         indexRecords(indexingTx),
         indexingTx.indexHandle(msg.repo, msg.time),
       ])
-      await indexingTx.setCommitLastSeen(root)
+      await indexingTx.setCommitLastSeen(root, msg)
     })
   }
 
