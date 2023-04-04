@@ -50,7 +50,7 @@ export const loadFullRepo = async (
   repoCar: Uint8Array,
   did: string,
   signingKey: string,
-): Promise<{ root: CID; writeLog: WriteLog }> => {
+): Promise<{ root: CID; writeLog: WriteLog; repo: Repo }> => {
   const { root, blocks } = await util.readCarWithRoot(repoCar)
   const updateStorage = new MemoryBlockstore(blocks)
   const updates = await verify.verifyFullHistory(
@@ -65,9 +65,12 @@ export const loadFullRepo = async (
     storage.updateHead(root, null),
   ])
 
+  const repo = await Repo.load(storage, root)
+
   return {
     root,
     writeLog,
+    repo,
   }
 }
 

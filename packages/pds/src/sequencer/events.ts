@@ -6,6 +6,7 @@ import {
   blocksToCar,
   CidSet,
   CommitData,
+  RebaseData,
   WriteOpAction,
 } from '@atproto/repo'
 import { PreparedWrite } from '../repo'
@@ -68,6 +69,43 @@ export const sequenceCommit = async (
   await dbTxn.notify('repo_seq')
 }
 
+export const sequenceRebase = async (
+  dbTxn: Database,
+  did: string,
+  rebaseData: RebaseData,
+) => {
+  const carSlice = await blocksToCar(rebaseData.commit, rebaseData.blocks)
+
+  const evt: CommitEvt = {
+    rebase: true,
+    tooBig: false,
+    repo: did,
+    commit: rebaseData.commit,
+    prev: rebaseData.rebased,
+    ops: [],
+    blocks: carSlice,
+    blobs: [],
+  }
+  const res = await dbTxn.db
+    .insertInto('repo_seq')
+    .values({
+      did,
+      eventType: 'rebase',
+      event: cborEncode(evt),
+      sequencedAt: new Date().toISOString(),
+    })
+    .returningAll()
+    .executeTakeFirstOrThrow()
+  await dbTxn.db
+    .updateTable('repo_seq')
+    .where('did', '=', did)
+    .where('eventType', 'in', ['append', 'rebase'])
+    .where('seq', '!=', res.seq)
+    .set({ invalidatedBy: res.seq })
+    .execute()
+  await dbTxn.notify('repo_seq')
+}
+
 export const sequenceHandleUpdate = async (
   dbTxn: Database,
   did: string,
@@ -86,10 +124,7 @@ export const sequenceHandleUpdate = async (
       sequencedAt: new Date().toISOString(),
     })
     .returningAll()
-    .executeTakeFirst()
-  if (!res) {
-    throw new Error(`could not sequence handle change: ${evt}`)
-  }
+    .executeTakeFirstOrThrow()
   await dbTxn.db
     .updateTable('repo_seq')
     .where('eventType', '=', 'handle')

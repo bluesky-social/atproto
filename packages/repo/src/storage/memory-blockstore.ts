@@ -1,10 +1,11 @@
 import { CID } from 'multiformats/cid'
-import { CommitData, def } from '../types'
+import { CommitData, def, RebaseData } from '../types'
 import BlockMap from '../block-map'
 import { MST } from '../mst'
 import DataDiff from '../data-diff'
 import { MissingCommitBlocksError } from '../error'
 import RepoStorage from './repo-storage'
+import CidSet from '../cid-set'
 
 export class MemoryBlockstore extends RepoStorage {
   blocks: BlockMap
@@ -96,6 +97,24 @@ export class MemoryBlockstore extends RepoStorage {
       prevData = data
     }
     return commitData
+  }
+
+  async applyRebase(rebase: RebaseData) {
+    this.putMany(rebase.blocks)
+    const allCids = new CidSet([
+      ...rebase.preservedCids,
+      ...rebase.blocks.cids(),
+    ])
+    const toDelete: CID[] = []
+    this.blocks.forEach((_bytes, cid) => {
+      if (!allCids.has(cid)) {
+        toDelete.push(cid)
+      }
+    })
+    for (const cid of toDelete) {
+      this.blocks.delete(cid)
+    }
+    await this.updateHead(rebase.commit, null)
   }
 
   async sizeInBytes(): Promise<number> {
