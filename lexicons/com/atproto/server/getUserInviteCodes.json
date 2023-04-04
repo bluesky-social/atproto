@@ -29,7 +29,7 @@
         }
       },
       "errors": [
-        "DuplicateCreate"
+        {"name": "DuplicateCreate"}
       ]
     },
     "invite": {

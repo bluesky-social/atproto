@@ -6,7 +6,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createInviteCode({
     auth: ctx.adminVerifier,
     handler: async ({ input, req }) => {
-      const { useCount } = input.body
+      const { useCount, forUser = 'admin' } = input.body
 
       const code = genInvCode(ctx.cfg)
 
@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
           code: code,
           availableUses: useCount,
           disabled: 0,
-          forUser: 'admin',
+          forUser,
           createdBy: 'admin',
           createdAt: new Date().toISOString(),
         })

@@ -1698,6 +1698,10 @@ export const schemaDict = {
               useCount: {
                 type: 'integer',
               },
+              forUser: {
+                type: 'string',
+                format: 'did',
+              },
             },
           },
         },
@@ -1925,6 +1929,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'DuplicateCreate',
+          },
+        ],
       },
       invite: {
         type: 'object',

@@ -30,6 +30,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'DuplicateCreate'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
