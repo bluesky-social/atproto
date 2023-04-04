@@ -7,7 +7,6 @@ import { Database } from '../src'
 import * as util from './_util'
 import { ServerMailer } from '../src/mailer'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
-import { CID } from 'multiformats/cid'
 import { RepoRoot } from '../src/db/tables/repo-root'
 import { UserAccount } from '../src/db/tables/user-account'
 import { IpldBlock } from '../src/db/tables/ipld-block'
@@ -129,7 +128,7 @@ describe('account deletion', () => {
 
   it('no longer lets the user log in', async () => {
     const attempt = agent.api.com.atproto.server.createSession({
-      handle: carol.handle,
+      identifier: carol.handle,
       password: carol.password,
     })
     await expect(attempt).rejects.toThrow('Invalid identifier or password')
