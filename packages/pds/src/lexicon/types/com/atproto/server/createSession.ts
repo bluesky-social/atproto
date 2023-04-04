@@ -12,7 +12,7 @@ export interface QueryParams {}
 
 export interface InputSchema {
   /** Handle or other identifier supported by the server for the authenticating user. */
-  identifier?: string
+  identifier: string
   password: string
   [k: string]: unknown
 }
