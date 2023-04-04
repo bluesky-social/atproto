@@ -47,6 +47,7 @@ describe('agent', () => {
     expect(agent.session?.refreshJwt).toEqual(res.data.refreshJwt)
     expect(agent.session?.handle).toEqual(res.data.handle)
     expect(agent.session?.did).toEqual(res.data.did)
+    expect(agent.session?.email).toEqual('user1@test.com')
 
     const { data: sessionInfo } = await agent.api.com.atproto.server.getSession(
       {},
@@ -91,6 +92,7 @@ describe('agent', () => {
     expect(agent2.session?.refreshJwt).toEqual(res1.data.refreshJwt)
     expect(agent2.session?.handle).toEqual(res1.data.handle)
     expect(agent2.session?.did).toEqual(res1.data.did)
+    expect(agent2.session?.email).toEqual('user2@test.com')
 
     const { data: sessionInfo } =
       await agent2.api.com.atproto.server.getSession({})

@@ -95,6 +95,7 @@ export class AtpAgent {
         refreshJwt: res.data.refreshJwt,
         handle: res.data.handle,
         did: res.data.did,
+        email: opts.email,
       }
       return res
     } catch (e) {
@@ -125,6 +126,7 @@ export class AtpAgent {
         refreshJwt: res.data.refreshJwt,
         handle: res.data.handle,
         did: res.data.did,
+        email: res.data.email,
       }
       return res
     } catch (e) {
@@ -151,6 +153,8 @@ export class AtpAgent {
       if (!res.success || res.data.did !== this.session.did) {
         throw new Error('Invalid session')
       }
+      this.session.email = res.data.email
+      this.session.handle = res.data.handle
       return res
     } catch (e) {
       this.session = undefined
