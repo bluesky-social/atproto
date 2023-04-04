@@ -330,6 +330,7 @@ describe('account', () => {
     expect(typeof jwt).toBe('string')
     expect(res.data.handle).toBe('alice.test')
     expect(res.data.did).toBe(did)
+    expect(res.data.email).toBe(email)
   })
 
   it('can perform authenticated requests', async () => {

@@ -1760,6 +1760,9 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
+              email: {
+                type: 'string',
+              },
             },
           },
         },
