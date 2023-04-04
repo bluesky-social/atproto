@@ -14,6 +14,7 @@ export type InputSchema = undefined
 export interface OutputSchema {
   handle: string
   did: string
+  email?: string
   [k: string]: unknown
 }
 
