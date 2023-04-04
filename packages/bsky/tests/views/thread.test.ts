@@ -6,6 +6,7 @@ import {
   CloseFn,
   processAll,
   TestServerInfo,
+  stripViewerFromThread,
 } from '../_util'
 import { RecordRef, SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -88,6 +89,17 @@ describe('pds thread views', () => {
     await expect(promise).rejects.toThrow(
       AppBskyFeedGetPostThread.NotFoundError,
     )
+  })
+
+  it('fetches post thread unauthed', async () => {
+    const { data: authed } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: sc.posts[alice][1].ref.uriStr },
+      { headers: sc.getHeaders(bob, true) },
+    )
+    const { data: unauthed } = await agent.api.app.bsky.feed.getPostThread({
+      uri: sc.posts[alice][1].ref.uriStr,
+    })
+    expect(unauthed.thread).toEqual(stripViewerFromThread(authed.thread))
   })
 
   it('handles deleted posts correctly', async () => {

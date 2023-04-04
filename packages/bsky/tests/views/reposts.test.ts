@@ -5,6 +5,7 @@ import {
   CloseFn,
   paginateAll,
   processAll,
+  stripViewer,
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import repostsSeed from '../seeds/reposts'
@@ -80,5 +81,17 @@ describe('pds repost views', () => {
 
     expect(full.data.repostedBy.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+  })
+
+  it('fetches reposted-by unauthed', async () => {
+    const { data: authed } = await agent.api.app.bsky.feed.getRepostedBy(
+      { uri: sc.posts[alice][2].ref.uriStr },
+      { headers: sc.getHeaders(alice, true) },
+    )
+    const { data: unauthed } = await agent.api.app.bsky.feed.getRepostedBy({
+      uri: sc.posts[alice][2].ref.uriStr,
+    })
+    expect(unauthed.repostedBy.length).toBeGreaterThan(0)
+    expect(unauthed.repostedBy).toEqual(authed.repostedBy.map(stripViewer))
   })
 })

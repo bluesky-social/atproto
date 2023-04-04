@@ -27,6 +27,8 @@ export const softDeleted = (actorOrRecord: { takedownId: number | null }) => {
 
 export const countAll = sql<number>`count(*)`
 
+export const noMatch = sql`1 = 0`
+
 export const dummyDialect = {
   createAdapter() {
     return new SqliteAdapter()

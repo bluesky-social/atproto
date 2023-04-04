@@ -5,7 +5,7 @@ import {
   ProfileViewBasic,
 } from '../../lexicon/types/app/bsky/actor/defs'
 import Database from '../../db'
-import { countAll } from '../../db/util'
+import { countAll, noMatch } from '../../db/util'
 import { Actor } from '../../db/tables/actor'
 import { ImageUriBuilder } from '../../image/uri'
 
@@ -14,15 +14,15 @@ export class ActorViews {
 
   profileDetailed(
     result: ActorResult,
-    viewer: string,
+    viewer: string | null,
   ): Promise<ProfileViewDetailed>
   profileDetailed(
     result: ActorResult[],
-    viewer: string,
+    viewer: string | null,
   ): Promise<ProfileViewDetailed[]>
   async profileDetailed(
     result: ActorResult | ActorResult[],
-    viewer: string,
+    viewer: string | null,
   ): Promise<ProfileViewDetailed | ProfileViewDetailed[]> {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
@@ -62,14 +62,16 @@ export class ActorViews {
           .as('postsCount'),
         this.db.db
           .selectFrom('follow')
-          .where('creator', '=', viewer)
+          .if(!viewer, (q) => q.where(noMatch))
+          .where('creator', '=', viewer ?? '')
           .whereRef('subjectDid', '=', ref('actor.did'))
           .select('uri')
           .as('requesterFollowing'),
         this.db.db
           .selectFrom('follow')
+          .if(!viewer, (q) => q.where(noMatch))
           .whereRef('creator', '=', ref('actor.did'))
-          .where('subjectDid', '=', viewer)
+          .where('subjectDid', '=', viewer ?? '')
           .select('uri')
           .as('requesterFollowedBy'),
       ])
@@ -106,22 +108,24 @@ export class ActorViews {
         followersCount: profileInfo?.followersCount ?? 0,
         postsCount: profileInfo?.postsCount ?? 0,
         indexedAt: profileInfo?.indexedAt || undefined,
-        viewer: {
-          following: profileInfo?.requesterFollowing || undefined,
-          followedBy: profileInfo?.requesterFollowedBy || undefined,
-          // muted field hydrated on pds
-        },
+        viewer: viewer
+          ? {
+              following: profileInfo?.requesterFollowing || undefined,
+              followedBy: profileInfo?.requesterFollowedBy || undefined,
+              // muted field hydrated on pds
+            }
+          : undefined,
       }
     })
 
     return Array.isArray(result) ? views : views[0]
   }
 
-  profile(result: ActorResult, viewer: string): Promise<ProfileView>
-  profile(result: ActorResult[], viewer: string): Promise<ProfileView[]>
+  profile(result: ActorResult, viewer: string | null): Promise<ProfileView>
+  profile(result: ActorResult[], viewer: string | null): Promise<ProfileView[]>
   async profile(
     result: ActorResult | ActorResult[],
-    viewer: string,
+    viewer: string | null,
   ): Promise<ProfileView | ProfileView[]> {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
@@ -145,14 +149,16 @@ export class ActorViews {
         'profile.indexedAt as indexedAt',
         this.db.db
           .selectFrom('follow')
-          .where('creator', '=', viewer)
+          .if(!viewer, (q) => q.where(noMatch))
+          .where('creator', '=', viewer ?? '')
           .whereRef('subjectDid', '=', ref('actor.did'))
           .select('uri')
           .as('requesterFollowing'),
         this.db.db
           .selectFrom('follow')
+          .if(!viewer, (q) => q.where(noMatch))
           .whereRef('creator', '=', ref('actor.did'))
-          .where('subjectDid', '=', viewer)
+          .where('subjectDid', '=', viewer ?? '')
           .select('uri')
           .as('requesterFollowedBy'),
       ])
@@ -178,11 +184,13 @@ export class ActorViews {
         description: profileInfo?.description || undefined,
         avatar,
         indexedAt: profileInfo?.indexedAt || undefined,
-        viewer: {
-          following: profileInfo?.requesterFollowing || undefined,
-          followedBy: profileInfo?.requesterFollowedBy || undefined,
-          // muted field hydrated on pds
-        },
+        viewer: viewer
+          ? {
+              following: profileInfo?.requesterFollowing || undefined,
+              followedBy: profileInfo?.requesterFollowedBy || undefined,
+              // muted field hydrated on pds
+            }
+          : undefined,
       }
     })
 
@@ -190,14 +198,17 @@ export class ActorViews {
   }
 
   // @NOTE keep in sync with feedService.getActorViews()
-  profileBasic(result: ActorResult, viewer: string): Promise<ProfileViewBasic>
+  profileBasic(
+    result: ActorResult,
+    viewer: string | null,
+  ): Promise<ProfileViewBasic>
   profileBasic(
     result: ActorResult[],
-    viewer: string,
+    viewer: string | null,
   ): Promise<ProfileViewBasic[]>
   async profileBasic(
     result: ActorResult | ActorResult[],
-    viewer: string,
+    viewer: string | null,
   ): Promise<ProfileViewBasic | ProfileViewBasic[]> {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []

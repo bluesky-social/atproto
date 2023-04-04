@@ -18,6 +18,7 @@ export type PostInfo = {
   replyCount: number
   requesterRepost: string | null
   requesterLike: string | null
+  viewer: string | null
 }
 
 export type PostInfoMap = { [uri: string]: PostInfo }

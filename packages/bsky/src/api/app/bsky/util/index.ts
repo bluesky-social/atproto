@@ -16,3 +16,13 @@ export const authVerifier = (ctx: {
   }
   return { credentials: { did } }
 }
+
+export const authOptionalVerifier = (ctx: {
+  req: express.Request
+  res: express.Response
+}) => {
+  if (!ctx.req.headers.authorization) {
+    return { credentials: { did: null } }
+  }
+  return authVerifier(ctx)
+}

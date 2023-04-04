@@ -6,6 +6,7 @@ import {
   CloseFn,
   processAll,
   TestServerInfo,
+  stripViewer,
 } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'
 import { SeedClient } from '../seeds/client'
@@ -150,6 +151,31 @@ describe('pds profile views', () => {
     )
 
     expect(byHandle.data).toEqual(byDid.data)
+  })
+
+  it('fetches profile unauthed', async () => {
+    const { data: authed } = await agent.api.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(bob, true) },
+    )
+    const { data: unauthed } = await agent.api.app.bsky.actor.getProfile({
+      actor: alice,
+    })
+    expect(unauthed).toEqual(stripViewer(authed))
+  })
+
+  it('fetches multiple profiles unauthed', async () => {
+    const { data: authed } = await agent.api.app.bsky.actor.getProfiles(
+      {
+        actors: [alice, 'bob.test', 'missing.test'],
+      },
+      { headers: sc.getHeaders(bob, true) },
+    )
+    const { data: unauthed } = await agent.api.app.bsky.actor.getProfiles({
+      actors: [alice, 'bob.test', 'missing.test'],
+    })
+    expect(unauthed.profiles.length).toBeGreaterThan(0)
+    expect(unauthed.profiles).toEqual(authed.profiles.map(stripViewer))
   })
 
   async function updateProfile(did: string, record: Record<string, unknown>) {

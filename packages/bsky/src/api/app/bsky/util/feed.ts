@@ -9,7 +9,7 @@ import { FeedRow } from '../../../../services/types'
 export const composeFeed = async (
   feedService: FeedService,
   rows: FeedRow[],
-  requester: string,
+  viewer: string | null,
 ): Promise<FeedViewPost[]> => {
   const actorDids = new Set<string>()
   const postUris = new Set<string>()
@@ -27,9 +27,9 @@ export const composeFeed = async (
     }
   }
   const [actors, posts, embeds] = await Promise.all([
-    feedService.getActorViews(Array.from(actorDids), requester),
-    feedService.getPostViews(Array.from(postUris), requester),
-    feedService.embedsForPosts(Array.from(postUris), requester),
+    feedService.getActorViews(Array.from(actorDids), viewer),
+    feedService.getPostViews(Array.from(postUris), viewer),
+    feedService.embedsForPosts(Array.from(postUris), viewer),
   ])
 
   const feed: FeedViewPost[] = []
