@@ -2,7 +2,7 @@ import { sql } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { jsonStringToLex } from '@atproto/lexicon'
 import Database from '../../db'
-import { countAll, notSoftDeletedClause } from '../../db/util'
+import { countAll, noMatch, notSoftDeletedClause } from '../../db/util'
 import { ImageUriBuilder } from '../../image/uri'
 import { isView as isViewImages } from '../../lexicon/types/app/bsky/embed/images'
 import { isView as isViewExternal } from '../../lexicon/types/app/bsky/embed/external'
@@ -63,7 +63,7 @@ export class FeedService {
   // @NOTE keep in sync with actorService.views.profile()
   async getActorViews(
     dids: string[],
-    requester: string,
+    viewer: string | null,
   ): Promise<ActorViewMap> {
     if (dids.length < 1) return {}
     const { ref } = this.db.db.dynamic
@@ -80,14 +80,16 @@ export class FeedService {
         'profile.indexedAt as indexedAt',
         this.db.db
           .selectFrom('follow')
-          .where('creator', '=', requester)
+          .if(!viewer, (q) => q.where(noMatch))
+          .where('creator', '=', viewer ?? '')
           .whereRef('subjectDid', '=', ref('actor.did'))
           .select('uri')
           .as('requesterFollowing'),
         this.db.db
           .selectFrom('follow')
+          .if(!viewer, (q) => q.where(noMatch))
           .whereRef('creator', '=', ref('actor.did'))
-          .where('subjectDid', '=', requester)
+          .where('subjectDid', '=', viewer ?? '')
           .select('uri')
           .as('requesterFollowedBy'),
       ])
@@ -106,11 +108,13 @@ export class FeedService {
                 cur.avatarCid,
               )
             : undefined,
-          viewer: {
-            following: cur?.requesterFollowing || undefined,
-            followedBy: cur?.requesterFollowedBy || undefined,
-            // muted field hydrated on pds
-          },
+          viewer: viewer
+            ? {
+                following: cur?.requesterFollowing || undefined,
+                followedBy: cur?.requesterFollowedBy || undefined,
+                // muted field hydrated on pds
+              }
+            : undefined,
         },
       }
     }, {} as ActorViewMap)
@@ -118,7 +122,7 @@ export class FeedService {
 
   async getPostViews(
     postUris: string[],
-    requester: string,
+    viewer: string | null,
   ): Promise<PostInfoMap> {
     if (postUris.length < 1) return {}
     const db = this.db.db
@@ -153,13 +157,15 @@ export class FeedService {
           .as('replyCount'),
         db
           .selectFrom('repost')
-          .where('creator', '=', requester)
+          .if(!viewer, (q) => q.where(noMatch))
+          .where('creator', '=', viewer ?? '')
           .whereRef('subject', '=', ref('post.uri'))
           .select('uri')
           .as('requesterRepost'),
         db
           .selectFrom('like')
-          .where('creator', '=', requester)
+          .if(!viewer, (q) => q.where(noMatch))
+          .where('creator', '=', viewer ?? '')
           .whereRef('subject', '=', ref('post.uri'))
           .select('uri')
           .as('requesterLike'),
@@ -168,7 +174,7 @@ export class FeedService {
     return posts.reduce(
       (acc, cur) => ({
         ...acc,
-        [cur.uri]: cur,
+        [cur.uri]: Object.assign(cur, { viewer }),
       }),
       {} as PostInfoMap,
     )
@@ -176,7 +182,7 @@ export class FeedService {
 
   async embedsForPosts(
     uris: string[],
-    requester: string,
+    viewer: string | null,
     _depth = 0,
   ): Promise<FeedEmbeds> {
     if (uris.length < 1 || _depth > 1) {
@@ -212,15 +218,15 @@ export class FeedService {
     const [postViews, actorViews, deepEmbedViews] = await Promise.all([
       this.getPostViews(
         records.map((p) => p.uri),
-        requester,
+        viewer,
       ),
       this.getActorViews(
         records.map((p) => p.did),
-        requester,
+        viewer,
       ),
       this.embedsForPosts(
         records.map((p) => p.uri),
-        requester,
+        viewer,
         _depth + 1,
       ),
     ])
@@ -336,10 +342,12 @@ export class FeedService {
       repostCount: post.repostCount,
       likeCount: post.likeCount,
       indexedAt: post.indexedAt,
-      viewer: {
-        repost: post.requesterRepost ?? undefined,
-        like: post.requesterLike ?? undefined,
-      },
+      viewer: post.viewer
+        ? {
+            repost: post.requesterRepost ?? undefined,
+            like: post.requesterLike ?? undefined,
+          }
+        : undefined,
     }
   }
 }

@@ -8,7 +8,7 @@ import {
   PostInfoMap,
 } from '../../../../services/types'
 import { FeedService } from '../../../../services/feed'
-import { authVerifier } from '../util'
+import { authOptionalVerifier } from '../util'
 
 export type PostThread = {
   post: FeedRow
@@ -18,7 +18,7 @@ export type PostThread = {
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
-    auth: authVerifier,
+    auth: authOptionalVerifier,
     handler: async ({ params, auth }) => {
       const { uri, depth = 6 } = params
       const requester = auth.credentials.did

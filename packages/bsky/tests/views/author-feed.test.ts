@@ -5,6 +5,7 @@ import {
   CloseFn,
   paginateAll,
   processAll,
+  stripViewerFromPost,
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -114,5 +115,31 @@ describe('pds author feed views', () => {
 
     expect(full.data.feed.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+  })
+
+  it('fetches results unauthed.', async () => {
+    const { data: authed } = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: sc.accounts[alice].handle },
+      { headers: sc.getHeaders(alice, true) },
+    )
+    const { data: unauthed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: sc.accounts[alice].handle,
+    })
+    expect(unauthed.feed.length).toBeGreaterThan(0)
+    expect(unauthed.feed).toEqual(
+      authed.feed.map((item) => {
+        const result = {
+          ...item,
+          post: stripViewerFromPost(item.post),
+        }
+        if (item.reply) {
+          result.reply = {
+            parent: stripViewerFromPost(item.reply.parent),
+            root: stripViewerFromPost(item.reply.root),
+          }
+        }
+        return result
+      }),
+    )
   })
 })

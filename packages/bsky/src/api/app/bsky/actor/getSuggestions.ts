@@ -3,11 +3,11 @@ import AppContext from '../../../../context'
 import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
 import { countAll, notSoftDeletedClause } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
-import { authVerifier } from '../util'
+import { authOptionalVerifier } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getSuggestions({
-    auth: authVerifier,
+    auth: authOptionalVerifier,
     handler: async ({ params, auth }) => {
       let { limit } = params
       const { cursor } = params
@@ -21,12 +21,12 @@ export default function (server: Server, ctx: AppContext) {
       const suggestionsQb = db
         .selectFrom('actor')
         .where(notSoftDeletedClause(ref('actor')))
-        .where('actor.did', '!=', requester)
+        .where('actor.did', '!=', requester ?? '')
         .whereNotExists((qb) =>
           qb
             .selectFrom('follow')
             .selectAll()
-            .where('creator', '=', requester)
+            .where('creator', '=', requester ?? '')
             .whereRef('subjectDid', '=', ref('actor.did')),
         )
         .selectAll()

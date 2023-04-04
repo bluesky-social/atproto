@@ -1,15 +1,9 @@
-// catch errors that get thrown in async route handlers
-// this is a relatively non-invasive change to express
-// they get handled in the error.handler middleware
-// leave at top of file before importing Routes
-import 'express-async-errors' // @TODO(bsky) remove
-
 import express from 'express'
 import http from 'http'
 import { AddressInfo } from 'net'
 import events from 'events'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
-import { BlobStore } from '@atproto/repo'
+import cors from 'cors'
 import { DidResolver } from '@atproto/did-resolver'
 import API, { health, blobResolver } from './api'
 import Database from './db'
@@ -31,27 +25,24 @@ export { AppContext } from './context'
 export class BskyAppView {
   public ctx: AppContext
   public app: express.Application
-  public sub: RepoSubscription
+  public sub?: RepoSubscription
   public server?: http.Server
   private terminator?: HttpTerminator
 
   constructor(opts: {
     ctx: AppContext
     app: express.Application
-    sub: RepoSubscription
+    sub?: RepoSubscription
   }) {
     this.ctx = opts.ctx
     this.app = opts.app
     this.sub = opts.sub
   }
 
-  static create(opts: {
-    db: Database
-    blobstore: BlobStore
-    config: ServerConfig
-  }): BskyAppView {
-    const { db, blobstore, config } = opts
+  static create(opts: { db: Database; config: ServerConfig }): BskyAppView {
+    const { db, config } = opts
     const app = express()
+    app.use(cors())
     app.use(loggerMiddleware)
 
     const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
@@ -69,7 +60,6 @@ export class BskyAppView {
 
     const ctx = new AppContext({
       db,
-      blobstore,
       cfg: config,
       services,
       imgUriBuilder,
@@ -100,11 +90,9 @@ export class BskyAppView {
     app.use(server.xrpc.router)
     app.use(error.handler)
 
-    const sub = new RepoSubscription(
-      ctx,
-      config.repoProvider,
-      config.repoSubLockId,
-    )
+    const sub = config.repoProvider
+      ? new RepoSubscription(ctx, config.repoProvider, config.repoSubLockId)
+      : undefined
 
     return new BskyAppView({ ctx, app, sub })
   }
@@ -116,12 +104,12 @@ export class BskyAppView {
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.cfg.assignPort(port)
-    this.sub.run() // Don't await, backgrounded
+    this.sub?.run() // Don't await, backgrounded
     return server
   }
 
   async destroy(): Promise<void> {
-    await this.sub.destroy()
+    await this.sub?.destroy()
     await this.terminator?.terminate()
     await this.ctx.db.close()
   }

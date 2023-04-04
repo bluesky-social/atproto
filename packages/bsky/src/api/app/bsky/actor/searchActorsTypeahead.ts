@@ -1,11 +1,11 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { cleanTerm, getUserSearchQuery } from '../../../../services/util/search'
-import { authVerifier } from '../util'
+import { authOptionalVerifier } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActorsTypeahead({
-    auth: authVerifier,
+    auth: authOptionalVerifier,
     handler: async ({ params, auth }) => {
       const { services, db } = ctx
       const { limit, term: rawTerm } = params

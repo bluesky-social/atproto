@@ -6,6 +6,7 @@ import {
   CloseFn,
   paginateAll,
   processAll,
+  stripViewer,
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
@@ -117,6 +118,20 @@ describe('pds actor search views', () => {
     expect(limited.data.actors).toEqual(full.data.actors.slice(0, 5))
   })
 
+  it('typeahead gives results unauthed', async () => {
+    const { data: authed } =
+      await agent.api.app.bsky.actor.searchActorsTypeahead(
+        { term: 'car' },
+        { headers },
+      )
+    const { data: unauthed } =
+      await agent.api.app.bsky.actor.searchActorsTypeahead({
+        term: 'car',
+      })
+    expect(unauthed.actors.length).toBeGreaterThan(0)
+    expect(unauthed.actors).toEqual(authed.actors.map(stripViewer))
+  })
+
   it('search gives relevant results', async () => {
     const result = await agent.api.app.bsky.actor.searchActors(
       { term: 'car' },
@@ -128,7 +143,7 @@ describe('pds actor search views', () => {
     const shouldContain = [
       'cara-wiegand69.test',
       'eudora-dietrich4.test', // Carol Littel
-      'shane-torphy52.test', //Sadie Carter
+      'shane-torphy52.test', // Sadie Carter
       'aliya-hodkiewicz.test', // Carlton Abernathy IV
       'carlos6.test',
       'carolina-mcdermott77.test',
@@ -195,5 +210,17 @@ describe('pds actor search views', () => {
     )
 
     expect(result.data.actors).toEqual([])
+  })
+
+  it('search gives results unauthed', async () => {
+    const { data: authed } = await agent.api.app.bsky.actor.searchActors(
+      { term: 'car' },
+      { headers },
+    )
+    const { data: unauthed } = await agent.api.app.bsky.actor.searchActors({
+      term: 'car',
+    })
+    expect(unauthed.actors.length).toBeGreaterThan(0)
+    expect(unauthed.actors).toEqual(authed.actors.map(stripViewer))
   })
 })

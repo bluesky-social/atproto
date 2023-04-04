@@ -11,9 +11,11 @@ import { lexToJson } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import { BskyAppView, ServerConfig, Database } from '../src'
-import { FeedViewPost } from '../src/lexicon/types/app/bsky/feed/defs'
-import DiskBlobStore from '../src/storage/disk-blobstore'
-import MemoryBlobStore from '../src/storage/memory-blobstore'
+import {
+  FeedViewPost,
+  isThreadViewPost,
+} from '../src/lexicon/types/app/bsky/feed/defs'
+import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
 import AppContext from '../src/context'
 import { defaultFetchHandler } from '@atproto/xrpc'
 
@@ -78,7 +80,7 @@ export const runTestServer = async (
     repoBackfillLimitMs: 1000 * 60 * 60, // 1hr
   })
 
-  const pdsBlobstore = new MemoryBlobStore()
+  const pdsBlobstore = new pds.MemoryBlobStore()
   const pdsDb = pds.Database.memory()
   await pdsDb.migrateToLatestOrThrow()
   const repoSigningKey = await crypto.Secp256k1Keypair.create()
@@ -123,16 +125,7 @@ export const runTestServer = async (
     await db.migrateToLatestOrThrow()
   }
 
-  const blobstore =
-    cfg.blobstoreLocation !== undefined
-      ? await DiskBlobStore.create(cfg.blobstoreLocation, cfg.blobstoreTmp)
-      : new MemoryBlobStore()
-
-  const bsky = BskyAppView.create({
-    db,
-    blobstore,
-    config: cfg,
-  })
+  const bsky = BskyAppView.create({ db, config: cfg })
   const bskyServer = await bsky.start()
   const bskyPort = (bskyServer.address() as AddressInfo).port
 
@@ -352,4 +345,41 @@ const uniqueLockId = () => {
   } while (usedLockIds.has(lockId))
   usedLockIds.add(lockId)
   return lockId
+}
+
+// @NOTE mutates
+export const stripViewer = <T extends { viewer?: Record<string, unknown> }>(
+  val: T,
+): T => {
+  delete val.viewer
+  return val
+}
+
+// @NOTE mutates
+export const stripViewerFromPost = (
+  post: FeedViewPost['post'],
+): FeedViewPost['post'] => {
+  post.author = stripViewer(post.author)
+  if (post.embed && isViewRecord(post.embed?.record)) {
+    post.embed.record.author = stripViewer(post.embed.record.author)
+    post.embed.record.embeds?.forEach((deepEmbed) => {
+      if (deepEmbed && isViewRecord(deepEmbed?.record)) {
+        deepEmbed.record.author = stripViewer(deepEmbed.record.author)
+      }
+    })
+  }
+  return stripViewer(post)
+}
+
+// @NOTE mutates
+export const stripViewerFromThread = <T>(thread: T): T => {
+  if (!isThreadViewPost(thread)) return thread
+  thread.post = stripViewerFromPost(thread.post)
+  if (isThreadViewPost(thread.parent)) {
+    thread.parent = stripViewerFromThread(thread.parent)
+  }
+  if (thread.replies) {
+    thread.replies = thread.replies.map(stripViewerFromThread)
+  }
+  return thread
 }

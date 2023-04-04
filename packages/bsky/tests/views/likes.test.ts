@@ -8,6 +8,7 @@ import {
   paginateAll,
   processAll,
   runTestServer,
+  stripViewer,
   TestServerInfo,
 } from '../_util'
 
@@ -98,5 +99,24 @@ describe('pds like views', () => {
 
     expect(full.data.likes.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+  })
+
+  it('fetches post likes unauthed', async () => {
+    const { data: authed } = await agent.api.app.bsky.feed.getLikes(
+      { uri: sc.posts[alice][1].ref.uriStr },
+      { headers: sc.getHeaders(alice, true) },
+    )
+    const { data: unauthed } = await agent.api.app.bsky.feed.getLikes({
+      uri: sc.posts[alice][1].ref.uriStr,
+    })
+    expect(unauthed.likes.length).toBeGreaterThan(0)
+    expect(unauthed.likes).toEqual(
+      authed.likes.map((like) => {
+        return {
+          ...like,
+          actor: stripViewer(like.actor),
+        }
+      }),
+    )
   })
 })

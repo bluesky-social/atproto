@@ -5,6 +5,7 @@ import {
   CloseFn,
   paginateAll,
   processAll,
+  stripViewer,
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import followsSeed from '../seeds/follows'
@@ -114,6 +115,18 @@ describe('pds follow views', () => {
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
+  it('fetches followers unauthed', async () => {
+    const { data: authed } = await agent.api.app.bsky.graph.getFollowers(
+      { actor: sc.dids.alice },
+      { headers: sc.getHeaders(alice, true) },
+    )
+    const { data: unauthed } = await agent.api.app.bsky.graph.getFollowers({
+      actor: sc.dids.alice,
+    })
+    expect(unauthed.followers.length).toBeGreaterThan(0)
+    expect(unauthed.followers).toEqual(authed.followers.map(stripViewer))
+  })
+
   it('fetches follows', async () => {
     const aliceFollowers = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.alice },
@@ -189,5 +202,17 @@ describe('pds follow views', () => {
 
     expect(full.data.follows.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+  })
+
+  it('fetches follows unauthed', async () => {
+    const { data: authed } = await agent.api.app.bsky.graph.getFollows(
+      { actor: sc.dids.alice },
+      { headers: sc.getHeaders(alice, true) },
+    )
+    const { data: unauthed } = await agent.api.app.bsky.graph.getFollows({
+      actor: sc.dids.alice,
+    })
+    expect(unauthed.follows.length).toBeGreaterThan(0)
+    expect(unauthed.follows).toEqual(authed.follows.map(stripViewer))
   })
 })
