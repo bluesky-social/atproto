@@ -2533,7 +2533,8 @@ export const schemaDict = {
           },
           displayName: {
             type: 'string',
-            maxLength: 64,
+            maxGraphemes: 64,
+            maxLength: 640,
           },
           avatar: {
             type: 'string',
@@ -2558,11 +2559,13 @@ export const schemaDict = {
           },
           displayName: {
             type: 'string',
-            maxLength: 64,
+            maxGraphemes: 64,
+            maxLength: 640,
           },
           description: {
             type: 'string',
-            maxLength: 256,
+            maxGraphemes: 256,
+            maxLength: 2560,
           },
           avatar: {
             type: 'string',
@@ -2591,11 +2594,13 @@ export const schemaDict = {
           },
           displayName: {
             type: 'string',
-            maxLength: 64,
+            maxGraphemes: 64,
+            maxLength: 640,
           },
           description: {
             type: 'string',
-            maxLength: 256,
+            maxGraphemes: 256,
+            maxLength: 2560,
           },
           avatar: {
             type: 'string',
@@ -2761,11 +2766,13 @@ export const schemaDict = {
           properties: {
             displayName: {
               type: 'string',
-              maxLength: 64,
+              maxGraphemes: 64,
+              maxLength: 640,
             },
             description: {
               type: 'string',
-              maxLength: 256,
+              maxGraphemes: 256,
+              maxLength: 2560,
             },
             avatar: {
               type: 'blob',

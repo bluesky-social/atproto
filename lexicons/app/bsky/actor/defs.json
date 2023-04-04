@@ -11,7 +11,8 @@
         "handle": {"type": "string", "format": "handle"},
         "displayName": {
           "type": "string",
-          "maxLength": 64
+          "maxGraphemes": 64,
+          "maxLength": 640
         },
         "avatar": { "type": "string" },
         "viewer": {"type": "ref", "ref": "#viewerState"}
@@ -25,11 +26,13 @@
         "handle": {"type": "string", "format":"handle"},
         "displayName": {
           "type": "string",
-          "maxLength": 64
+          "maxGraphemes": 64,
+          "maxLength": 640
         },
         "description": {
           "type": "string",
-          "maxLength": 256
+          "maxGraphemes": 256,
+          "maxLength": 2560
         },
         "avatar": { "type": "string" },
         "indexedAt": {"type": "string", "format": "datetime"},
@@ -44,11 +47,13 @@
         "handle": {"type": "string", "format": "handle"},
         "displayName": {
           "type": "string",
-          "maxLength": 64
+          "maxGraphemes": 64,
+          "maxLength": 640
         },
         "description": {
           "type": "string",
-          "maxLength": 256
+          "maxGraphemes": 256,
+          "maxLength": 2560
         },
         "avatar": { "type": "string" },
         "banner": { "type": "string" },
