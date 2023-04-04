@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.label.query",
+  "id": "com.atproto.label.queryLabels",
   "defs": {
     "main": {
       "type": "query",
