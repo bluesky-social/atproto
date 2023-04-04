@@ -1,0 +1,47 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.admin.getInviteCode",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Admin view of invite codes",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "sort": {
+            "type": "string",
+            "knownValues": [
+              "recent",
+              "available"
+            ],
+            "default": "recent"
+          },
+          "cursor": {"type": "string"}
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "cursor": {"type": "string"},
+          "total": { "type": "ref", "ref": "#codesDetail" },
+          "user": { "type": "ref", "ref": "#codesDetail" },
+          "admin": { "type": "ref", "ref": "#codesDetail" }
+        }
+      }
+    },
+    "codeDetail": {
+      "type": "object",
+      "required": ["code", "count", "available", "used", "disabled"],
+      "properties": {
+        "code": {"type": "string"},
+        "forAccount": {"type": "string"},
+        "usedBy": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "total": {"type": "integer"},
+        "disabled": {"type": "boolean"}
+      }
+    }
+  }
+}
