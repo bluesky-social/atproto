@@ -5,7 +5,7 @@ import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.getUserInviteCodes({
+  server.com.atproto.server.getAccountInviteCodes({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
@@ -31,6 +31,7 @@ export default function (server: Server, ctx: AppContext) {
           .select([
             'invite_code.code as code',
             'invite_code.availableUses as available',
+            'invite_code.disabled as disabled',
             'use_count.uses as uses',
           ])
           .execute(),
@@ -38,6 +39,7 @@ export default function (server: Server, ctx: AppContext) {
       const userCodes = userCodesRes.map((row) => ({
         ...row,
         uses: row.uses ?? 0,
+        disabled: row.disabled === 1,
       }))
       const unusedCodes = userCodes.filter((row) => row.available > row.uses)
 
@@ -81,7 +83,12 @@ export default function (server: Server, ctx: AppContext) {
 
       const toReturn = [
         ...(includeUsed ? userCodes : unusedCodes),
-        ...created.map((code) => ({ code: code, available: 1, uses: 0 })),
+        ...created.map((code) => ({
+          code: code,
+          available: 1,
+          uses: 0,
+          disabled: false,
+        })),
       ]
 
       return {

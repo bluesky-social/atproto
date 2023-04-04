@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.server.getUserInviteCodes",
+  "id": "com.atproto.server.getAccountInviteCodes",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get all invite codes for a given user",
+      "description": "Get all invite codes for a given account",
       "parameters": {
         "type": "params",
         "properties": {
@@ -34,11 +34,12 @@
     },
     "invite": {
       "type": "object",
-      "required": ["code", "available", "uses"],
+      "required": ["code", "available", "uses", "disabled"],
       "properties": {
         "code": { "type": "string" },
         "available": { "type": "integer" },
-        "uses": { "type": "integer" }
+        "uses": { "type": "integer" },
+        "disabled": { "type": "boolean" }
       }
     }
   }

@@ -46,6 +46,7 @@ export interface Invite {
   code: string
   available: number
   uses: number
+  disabled: boolean
   [k: string]: unknown
 }
 
@@ -53,10 +54,10 @@ export function isInvite(v: unknown): v is Invite {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.server.getUserInviteCodes#invite'
+    v.$type === 'com.atproto.server.getAccountInviteCodes#invite'
   )
 }
 
 export function validateInvite(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.server.getUserInviteCodes#invite', v)
+  return lexicons.validate('com.atproto.server.getAccountInviteCodes#invite', v)
 }

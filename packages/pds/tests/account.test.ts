@@ -469,7 +469,7 @@ describe('account', () => {
       .set({ createdAt: twoDaysAgo })
       .where('did', '=', did)
       .execute()
-    const res1 = await agent.api.com.atproto.server.getUserInviteCodes()
+    const res1 = await agent.api.com.atproto.server.getAccountInviteCodes()
     expect(res1.data.codes.length).toBe(2)
 
     // now pretend it was made 10 days ago & use both invites
@@ -490,14 +490,14 @@ describe('account', () => {
       )
       .execute()
 
-    const res2 = await agent.api.com.atproto.server.getUserInviteCodes({
+    const res2 = await agent.api.com.atproto.server.getAccountInviteCodes({
       includeUsed: false,
       createAvailable: false,
     })
     expect(res2.data.codes.length).toBe(0)
-    const res3 = await agent.api.com.atproto.server.getUserInviteCodes()
+    const res3 = await agent.api.com.atproto.server.getAccountInviteCodes()
     expect(res3.data.codes.length).toBe(7)
-    const res4 = await agent.api.com.atproto.server.getUserInviteCodes({
+    const res4 = await agent.api.com.atproto.server.getAccountInviteCodes({
       includeUsed: false,
     })
     expect(res4.data.codes.length).toBe(5)

@@ -530,6 +530,37 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminDisableInviteCodes: {
+    lexicon: 1,
+    id: 'com.atproto.admin.disableInviteCodes',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Disable some set of codes and/or all codes associated with a set of users',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              codes: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              accounts: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminGetModerationAction: {
     lexicon: 1,
     id: 'com.atproto.admin.getModerationAction',
@@ -1893,13 +1924,13 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoServerGetUserInviteCodes: {
+  ComAtprotoServerGetAccountInviteCodes: {
     lexicon: 1,
-    id: 'com.atproto.server.getUserInviteCodes',
+    id: 'com.atproto.server.getAccountInviteCodes',
     defs: {
       main: {
         type: 'query',
-        description: 'Get all invite codes for a given user',
+        description: 'Get all invite codes for a given account',
         parameters: {
           type: 'params',
           properties: {
@@ -1923,7 +1954,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:com.atproto.server.getUserInviteCodes#invite',
+                  ref: 'lex:com.atproto.server.getAccountInviteCodes#invite',
                 },
               },
             },
@@ -1937,7 +1968,7 @@ export const schemaDict = {
       },
       invite: {
         type: 'object',
-        required: ['code', 'available', 'uses'],
+        required: ['code', 'available', 'uses', 'disabled'],
         properties: {
           code: {
             type: 'string',
@@ -1947,6 +1978,9 @@ export const schemaDict = {
           },
           uses: {
             type: 'integer',
+          },
+          disabled: {
+            type: 'boolean',
           },
         },
       },
@@ -4221,6 +4255,7 @@ export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
+  ComAtprotoAdminDisableInviteCodes: 'com.atproto.admin.disableInviteCodes',
   ComAtprotoAdminGetModerationAction: 'com.atproto.admin.getModerationAction',
   ComAtprotoAdminGetModerationActions: 'com.atproto.admin.getModerationActions',
   ComAtprotoAdminGetModerationReport: 'com.atproto.admin.getModerationReport',
@@ -4253,7 +4288,8 @@ export const ids = {
   ComAtprotoServerDeleteSession: 'com.atproto.server.deleteSession',
   ComAtprotoServerDescribeServer: 'com.atproto.server.describeServer',
   ComAtprotoServerGetSession: 'com.atproto.server.getSession',
-  ComAtprotoServerGetUserInviteCodes: 'com.atproto.server.getUserInviteCodes',
+  ComAtprotoServerGetAccountInviteCodes:
+    'com.atproto.server.getAccountInviteCodes',
   ComAtprotoServerRefreshSession: 'com.atproto.server.refreshSession',
   ComAtprotoServerRequestAccountDelete:
     'com.atproto.server.requestAccountDelete',

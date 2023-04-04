@@ -9,6 +9,7 @@ import {
   StreamAuthVerifier,
 } from '@atproto/xrpc-server'
 import { schemas } from './lexicons'
+import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
 import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
 import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
@@ -37,7 +38,7 @@ import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/delet
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
-import * as ComAtprotoServerGetUserInviteCodes from './types/com/atproto/server/getUserInviteCodes'
+import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
 import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
@@ -134,6 +135,16 @@ export class AdminNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  disableInviteCodes<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminDisableInviteCodes.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.disableInviteCodes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   getModerationAction<AV extends AuthVerifier>(
@@ -391,13 +402,13 @@ export class ServerNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getUserInviteCodes<AV extends AuthVerifier>(
+  getAccountInviteCodes<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ComAtprotoServerGetUserInviteCodes.Handler<ExtractAuth<AV>>
+      ComAtprotoServerGetAccountInviteCodes.Handler<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'com.atproto.server.getUserInviteCodes' // @ts-ignore
+    const nsid = 'com.atproto.server.getAccountInviteCodes' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
