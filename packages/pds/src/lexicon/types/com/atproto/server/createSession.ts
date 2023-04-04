@@ -22,7 +22,6 @@ export interface OutputSchema {
   refreshJwt: string
   handle: string
   did: string
-  email?: string
   [k: string]: unknown
 }
 
