@@ -44,7 +44,7 @@ export class RecordProcessor<T, S> {
     }
   }
 
-  assertValidRecord(obj: unknown): void {
+  assertValidRecord(obj: unknown): asserts obj is T {
     lexicons.assertValidRecord(this.params.lexId, obj)
   }
 
@@ -54,9 +54,7 @@ export class RecordProcessor<T, S> {
     obj: unknown,
     timestamp: string,
   ): Promise<Message[]> {
-    if (!this.matchesSchema(obj)) {
-      throw new Error(`Record does not match schema: ${this.params.lexId}`)
-    }
+    this.assertValidRecord(obj)
     await this.db
       .insertInto('record')
       .values({
@@ -106,9 +104,7 @@ export class RecordProcessor<T, S> {
     obj: unknown,
     timestamp: string,
   ): Promise<Message[]> {
-    if (!this.matchesSchema(obj)) {
-      throw new Error(`Record does not match schema: ${this.params.lexId}`)
-    }
+    this.assertValidRecord(obj)
     await this.db
       .updateTable('record')
       .where('uri', '=', uri.toString())

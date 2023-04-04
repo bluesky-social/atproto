@@ -1,3 +1,4 @@
+import { Selectable } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Follow from '../../../lexicon/types/app/bsky/graph/follow'
@@ -7,7 +8,7 @@ import * as messages from '../messages'
 import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyGraphFollow
-type IndexedFollow = DatabaseSchemaType['follow']
+type IndexedFollow = Selectable<DatabaseSchemaType['follow']>
 
 const insertFn = async (
   db: DatabaseSchema,

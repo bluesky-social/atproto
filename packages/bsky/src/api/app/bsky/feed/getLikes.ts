@@ -23,13 +23,14 @@ export default function (server: Server, ctx: AppContext) {
           'like.cid as cid',
           'like.createdAt as createdAt',
           'like.indexedAt as indexedAt',
+          'like.sortAt as sortAt',
         ])
 
       if (cid) {
         builder = builder.where('like.subjectCid', '=', cid)
       }
 
-      const keyset = new TimeCidKeyset(ref('like.createdAt'), ref('like.cid'))
+      const keyset = new TimeCidKeyset(ref('like.sortAt'), ref('like.cid'))
       builder = paginate(builder, {
         limit,
         cursor,

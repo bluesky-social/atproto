@@ -18,6 +18,7 @@ import {
 import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
 import AppContext from '../src/context'
 import { defaultFetchHandler } from '@atproto/xrpc'
+import { MessageDispatcher } from '@atproto/pds/src/event-stream/message-queue'
 
 const ADMIN_PASSWORD = 'admin-pass'
 
@@ -85,6 +86,9 @@ export const runTestServer = async (
   await pdsDb.migrateToLatestOrThrow()
   const repoSigningKey = await crypto.Secp256k1Keypair.create()
   const plcRotationKey = await crypto.Secp256k1Keypair.create()
+
+  // Disable communication to app view within pds
+  MessageDispatcher.prototype.send = async () => {}
 
   const pdsServer = pds.PDS.create({
     db: pdsDb,

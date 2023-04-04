@@ -1,3 +1,5 @@
+import { GeneratedAlways } from 'kysely'
+
 export const tableName = 'repost'
 
 export interface Repost {
@@ -8,6 +10,7 @@ export interface Repost {
   subjectCid: string
   createdAt: string
   indexedAt: string
+  sortAt: GeneratedAlways<string>
 }
 
 export type PartialDB = { [tableName]: Repost }

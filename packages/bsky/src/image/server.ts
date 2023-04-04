@@ -17,6 +17,7 @@ import log from './logger'
 import { resize } from './sharp'
 import { formatsToMimes, Options } from './util'
 import AppContext from '../context'
+import { retryHttp } from '../util/retry'
 
 export class ImageProcessingServer {
   app = express()
@@ -62,18 +63,12 @@ export class ImageProcessingServer {
       const { localUrl } = this.ctx.cfg
       const did = options.did
       const cidStr = options.cid.toString()
-      const enc = encodeURIComponent
 
-      const getBlob = await axios.get(
-        `${localUrl}/blob/${enc(did)}/${enc(cidStr)}`,
-        {
-          decompress: true,
-          responseType: 'stream',
-          timeout: 2000, // 2sec of inactivity on the connection
-        },
+      const blobResult = await retryHttp(() =>
+        getBlob({ baseUrl: localUrl, did, cid: cidStr }),
       )
 
-      const imageStream: Readable = getBlob.data
+      const imageStream: Readable = blobResult.data
       const processedImage = await resize(imageStream, options)
 
       // Cache in the background
@@ -191,4 +186,14 @@ export class BlobDiskCache implements BlobCache {
   async clearAll() {
     await fs.rm(this.tempDir, { recursive: true, force: true })
   }
+}
+
+function getBlob(opts: { baseUrl: string; did: string; cid: string }) {
+  const { baseUrl, did, cid } = opts
+  const enc = encodeURIComponent
+  return axios.get(`${baseUrl}/blob/${enc(did)}/${enc(cid)}`, {
+    decompress: true,
+    responseType: 'stream',
+    timeout: 2000, // 2sec of inactivity on the connection
+  })
 }

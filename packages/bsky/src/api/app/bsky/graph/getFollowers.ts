@@ -27,12 +27,9 @@ export default function (server: Server, ctx: AppContext) {
         .innerJoin('actor as creator', 'creator.did', 'follow.creator')
         .where(notSoftDeletedClause(ref('creator')))
         .selectAll('creator')
-        .select(['follow.cid as cid', 'follow.createdAt as createdAt'])
+        .select(['follow.cid as cid', 'follow.sortAt as sortAt'])
 
-      const keyset = new TimeCidKeyset(
-        ref('follow.createdAt'),
-        ref('follow.cid'),
-      )
+      const keyset = new TimeCidKeyset(ref('follow.sortAt'), ref('follow.cid'))
       followersReq = paginate(followersReq, {
         limit,
         cursor,

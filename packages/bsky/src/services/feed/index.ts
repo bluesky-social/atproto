@@ -33,7 +33,7 @@ export class FeedService {
         'post.creator as authorDid',
         'post.replyParent as replyParent',
         'post.replyRoot as replyRoot',
-        'post.indexedAt as cursor',
+        'post.sortAt as cursor',
       ])
   }
 
@@ -56,7 +56,7 @@ export class FeedService {
         'post.creator as authorDid',
         'post.replyParent as replyParent',
         'post.replyRoot as replyRoot',
-        'repost.indexedAt as cursor',
+        'repost.sortAt as cursor',
       ])
   }
 

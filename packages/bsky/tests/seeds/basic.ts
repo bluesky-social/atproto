@@ -2,8 +2,8 @@ import { ids } from '../../src/lexicon/lexicons'
 import { SeedClient } from './client'
 import usersSeed from './users'
 
-export default async (sc: SeedClient) => {
-  await usersSeed(sc)
+export default async (sc: SeedClient, users = true) => {
+  if (users) await usersSeed(sc)
 
   const alice = sc.dids.alice
   const bob = sc.dids.bob

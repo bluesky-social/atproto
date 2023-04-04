@@ -1,3 +1,4 @@
+import { Selectable } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Like from '../../../lexicon/types/app/bsky/feed/like'
@@ -8,7 +9,7 @@ import { Message } from '../messages'
 import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyFeedLike
-type IndexedLike = DatabaseSchemaType['like']
+type IndexedLike = Selectable<DatabaseSchemaType['like']>
 
 const insertFn = async (
   db: DatabaseSchema,

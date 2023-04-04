@@ -1,9 +1,19 @@
+import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import ApiAgent from '@atproto/api'
-import { WriteOpAction } from '@atproto/repo'
+import AtpAgent from '@atproto/api'
+import {
+  MemoryBlockstore,
+  readCarWithRoot,
+  WriteOpAction,
+  verifyCheckoutWithCids,
+  RepoContentsWithCids,
+  Commit,
+} from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { DidResolver } from '@atproto/did-resolver'
+import { chunkArray } from '@atproto/common'
 import { NoHandleRecordError, resolveDns } from '@atproto/identifier'
+import { ValidationError } from '@atproto/lexicon'
 import Database from '../../db'
 import * as Post from './plugins/post'
 import * as Like from './plugins/like'
@@ -12,6 +22,7 @@ import * as Follow from './plugins/follow'
 import * as Profile from './plugins/profile'
 import RecordProcessor from './processor'
 import { subLogger } from '../../logger'
+import { retryHttp } from '../../util/retry'
 
 export class IndexingService {
   records: {
@@ -63,7 +74,7 @@ export class IndexingService {
     return notifs
   }
 
-  async indexActor(did: string, timestamp: string) {
+  async indexHandle(did: string, timestamp: string) {
     const actor = await this.db.db
       .selectFrom('actor')
       .where('did', '=', did)
@@ -91,6 +102,89 @@ export class IndexingService {
         .where('did', '=', did)
         .execute()
     }
+  }
+
+  async indexRepo(did: string, commit: string) {
+    this.db.assertTransaction()
+    const now = new Date().toISOString()
+    const { pds, signingKey } = await this.didResolver.resolveAtpData(did)
+    const { api } = new AtpAgent({ service: pds })
+
+    const { data: car } = await retryHttp(() =>
+      api.com.atproto.sync.getCheckout({ did, commit }),
+    )
+    const { root, blocks } = await readCarWithRoot(car)
+    const storage = new MemoryBlockstore(blocks)
+    const checkout = await verifyCheckoutWithCids(
+      storage,
+      root,
+      did,
+      signingKey,
+    )
+
+    // Wipe index for user, prep for reindexing
+    await this.deleteForUser(did)
+
+    // Iterate over all records and index them in batches
+    const contentList = [...walkContentsWithCids(checkout.contents)]
+    const chunks = chunkArray(contentList, 100)
+
+    for (const chunk of chunks) {
+      const processChunk = chunk.map(async (item) => {
+        const { cid, collection, rkey, record } = item
+        const uri = AtUri.make(did, collection, rkey)
+        try {
+          await this.indexRecord(uri, cid, record, WriteOpAction.Create, now)
+        } catch (err) {
+          if (err instanceof ValidationError) {
+            subLogger.warn(
+              { did, commit, uri: uri.toString(), cid: cid.toString() },
+              'skipping indexing of invalid record',
+            )
+          } else {
+            throw err
+          }
+        }
+      })
+      await Promise.all(processChunk)
+    }
+  }
+
+  async setCommitLastSeen(
+    commit: Commit,
+    details: { commit: CID; rebase: boolean; tooBig: boolean },
+  ) {
+    const { ref } = this.db.db.dynamic
+    await this.db.db
+      .insertInto('actor_sync')
+      .values({
+        did: commit.did,
+        commitCid: details.commit.toString(),
+        commitDataCid: commit.data.toString(),
+        rebaseCount: details.rebase ? 1 : 0,
+        tooBigCount: details.tooBig ? 1 : 0,
+      })
+      .onConflict((oc) => {
+        const sync = (col: string) => ref(`actor_sync.${col}`)
+        const excluded = (col: string) => ref(`excluded.${col}`)
+        return oc.column('did').doUpdateSet({
+          commitCid: sql`${excluded('commitCid')}`,
+          commitDataCid: sql`${excluded('commitDataCid')}`,
+          rebaseCount: sql`${sync('rebaseCount')} + ${excluded('rebaseCount')}`,
+          tooBigCount: sql`${sync('tooBigCount')} + ${excluded('tooBigCount')}`,
+        })
+      })
+      .execute()
+  }
+
+  async checkCommitNeedsIndexing(commit: Commit) {
+    const sync = await this.db.db
+      .selectFrom('actor_sync')
+      .select('commitDataCid')
+      .where('did', '=', commit.did)
+      .executeTakeFirst()
+    if (!sync) return true
+    return sync.commitDataCid !== commit.data.toString()
   }
 
   findIndexerForCollection(collection: string) {
@@ -156,10 +250,22 @@ const resolveExternalHandle = async (
     }
   }
   try {
-    const agent = new ApiAgent({ service: `https://${handle}` }) // @TODO we don't need non-tls for our tests, but it might be useful to support
-    const res = await agent.api.com.atproto.identity.resolveHandle({ handle })
+    // @TODO we don't need non-tls for our tests, but it might be useful to support
+    const { api } = new AtpAgent({ service: `https://${handle}` })
+    const res = await retryHttp(() =>
+      api.com.atproto.identity.resolveHandle({ handle }),
+    )
     return res.data.did
   } catch (err) {
     return undefined
+  }
+}
+
+function* walkContentsWithCids(contents: RepoContentsWithCids) {
+  for (const collection of Object.keys(contents)) {
+    for (const rkey of Object.keys(contents[collection])) {
+      const { cid, value } = contents[collection][rkey]
+      yield { collection, rkey, cid, record: value }
+    }
   }
 }

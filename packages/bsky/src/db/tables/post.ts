@@ -1,3 +1,5 @@
+import { GeneratedAlways } from 'kysely'
+
 export const tableName = 'post'
 
 export interface Post {
@@ -11,6 +13,7 @@ export interface Post {
   replyParentCid: string | null
   createdAt: string
   indexedAt: string
+  sortAt: GeneratedAlways<string>
 }
 
 export type PartialDB = {
