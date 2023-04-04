@@ -13,6 +13,7 @@ import { AtUri } from '@atproto/uri'
 import { DidResolver } from '@atproto/did-resolver'
 import { chunkArray } from '@atproto/common'
 import { NoHandleRecordError, resolveDns } from '@atproto/identifier'
+import { ValidationError } from '@atproto/lexicon'
 import Database from '../../db'
 import * as Post from './plugins/post'
 import * as Like from './plugins/like'
@@ -21,7 +22,6 @@ import * as Follow from './plugins/follow'
 import * as Profile from './plugins/profile'
 import RecordProcessor from './processor'
 import { subLogger } from '../../logger'
-import { ids } from '../../lexicon/lexicons'
 import { retryHttp } from '../../util/retry'
 
 export class IndexingService {
@@ -105,6 +105,7 @@ export class IndexingService {
   }
 
   async indexRepo(did: string, commit: string) {
+    this.db.assertTransaction()
     const now = new Date().toISOString()
     const { pds, signingKey } = await this.didResolver.resolveAtpData(did)
     const { api } = new AtpAgent({ service: pds })
@@ -121,43 +122,31 @@ export class IndexingService {
       signingKey,
     )
 
-    // First, replace the user with just their current profile if it exists
-    await this.db.transaction(async (tx) => {
-      const indexingTx = new IndexingService(tx, this.didResolver)
-      await indexingTx.deleteForUser(did)
-      const profile = checkout.contents[ids.AppBskyActorProfile]?.self
-      if (profile) {
-        const profileUri = AtUri.make(did, ids.AppBskyActorProfile, 'self')
-        await indexingTx.indexRecord(
-          profileUri,
-          profile.cid,
-          profile.value,
-          WriteOpAction.Create,
-          now,
-        )
-      }
-    })
+    // Wipe index for user, prep for reindexing
+    await this.deleteForUser(did)
 
-    // Then iterate over all records and index them in batches
+    // Iterate over all records and index them in batches
     const contentList = [...walkContentsWithCids(checkout.contents)]
     const chunks = chunkArray(contentList, 100)
 
     for (const chunk of chunks) {
-      await this.db.transaction(async (tx) => {
-        const indexingTx = new IndexingService(tx, this.didResolver)
-        const processChunk = chunk.map(async (item) => {
-          const { cid, collection, rkey, record } = item
-          const uri = AtUri.make(did, collection, rkey)
-          await indexingTx.indexRecord(
-            uri,
-            cid,
-            record,
-            WriteOpAction.Create,
-            now,
-          )
-        })
-        await Promise.all(processChunk)
+      const processChunk = chunk.map(async (item) => {
+        const { cid, collection, rkey, record } = item
+        const uri = AtUri.make(did, collection, rkey)
+        try {
+          await this.indexRecord(uri, cid, record, WriteOpAction.Create, now)
+        } catch (err) {
+          if (err instanceof ValidationError) {
+            subLogger.warn(
+              { did, commit, uri: uri.toString(), cid: cid.toString() },
+              'skipping indexing of invalid record',
+            )
+          } else {
+            throw err
+          }
+        }
       })
+      await Promise.all(processChunk)
     }
   }
 
