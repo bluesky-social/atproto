@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import { jsonStringToLex } from '@atproto/lexicon'
+import { jsonStringToLex, stringifyLex } from '@atproto/lexicon'
 import DatabaseSchema from '../../db/database-schema'
 import { lexicons } from '../../lexicon/lexicons'
 import { Message } from './messages'
@@ -63,7 +63,7 @@ export class RecordProcessor<T, S> {
         uri: uri.toString(),
         cid: cid.toString(),
         did: uri.host,
-        json: JSON.stringify(obj), // @TODO(bsky) post-lex refactor, ensure we use the lex serializer
+        json: stringifyLex(obj),
         indexedAt: timestamp,
       })
       .onConflict((oc) => oc.doNothing())
@@ -114,7 +114,7 @@ export class RecordProcessor<T, S> {
       .where('uri', '=', uri.toString())
       .set({
         cid: cid.toString(),
-        json: JSON.stringify(obj),
+        json: stringifyLex(obj),
         indexedAt: timestamp,
       })
       .execute()
