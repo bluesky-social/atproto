@@ -3,19 +3,11 @@
 exports[`pds repost views fetches reposted-by for a post 1`] = `
 Array [
   Object {
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(0)",
     "handle": "eve.test",
     "viewer": Object {},
   },
   Object {
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(1)",
     "handle": "dan.test",
     "viewer": Object {
@@ -23,10 +15,6 @@ Array [
     },
   },
   Object {
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(2)",
     "handle": "carol.test",
     "viewer": Object {
@@ -36,13 +24,11 @@ Array [
   },
   Object {
     "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(0)@jpeg",
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
+    "description": "hi im bob",
     "did": "user(3)",
     "displayName": "bobby",
     "handle": "bob.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
     "viewer": Object {
       "followedBy": "record(4)",
       "following": "record(3)",
@@ -54,19 +40,11 @@ Array [
 exports[`pds repost views fetches reposted-by for a reply 1`] = `
 Array [
   Object {
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(0)",
     "handle": "eve.test",
     "viewer": Object {},
   },
   Object {
-    "declaration": Object {
-      "actorType": "",
-      "cid": "",
-    },
     "did": "user(1)",
     "handle": "dan.test",
     "viewer": Object {

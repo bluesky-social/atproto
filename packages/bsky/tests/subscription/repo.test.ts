@@ -9,6 +9,7 @@ import {
 } from '../_util'
 import { AppContext, Database } from '../../src'
 import { DatabaseSchemaType } from '../../src/db/database-schema'
+import { ids } from '../../src/lexicon/lexicons'
 
 describe('sync', () => {
   let server: TestServerInfo
@@ -35,38 +36,28 @@ describe('sync', () => {
 
     // Generate some modifications and dupes
     const { alice, bob, carol, dan } = sc.dids
-    await sc.follow(alice, sc.actorRef(bob))
-    await sc.follow(carol, sc.actorRef(alice))
-    await sc.follow(bob, sc.actorRef(alice))
-    await sc.follow(dan, sc.actorRef(bob))
-    await sc.vote('down', bob, sc.posts[alice][1].ref) // Reversed
-    await sc.vote('up', bob, sc.posts[alice][2].ref) // Reversed
-    await sc.vote('up', carol, sc.posts[alice][1].ref) // Reversed
-    await sc.vote('down', carol, sc.posts[alice][2].ref) // Reversed
-    await sc.vote('up', dan, sc.posts[alice][1].ref) // Identical
-    await sc.vote('up', alice, sc.posts[carol][0].ref) // Identical
-    await pdsAgent.api.app.bsky.actor.updateProfile(
-      { displayName: 'ali!' },
-      { headers: sc.getHeaders(alice), encoding: 'application/json' },
-    )
-    await pdsAgent.api.app.bsky.actor.updateProfile(
-      { displayName: 'robert!' },
-      { headers: sc.getHeaders(bob), encoding: 'application/json' },
-    )
+    await sc.follow(alice, bob)
+    await sc.follow(carol, alice)
+    await sc.follow(bob, alice)
+    await sc.follow(dan, bob)
+    await sc.like(dan, sc.posts[alice][1].ref) // Identical
+    await sc.like(alice, sc.posts[carol][0].ref) // Identical
+    await updateProfile(pdsAgent, alice, { displayName: 'ali!' })
+    await updateProfile(pdsAgent, bob, { displayName: 'robert!' })
 
     await processAll(server)
 
     // Table comparator
     const getTableDump = async () => {
-      const [actor, post, profile, vote, follow, dupes] = await Promise.all([
+      const [actor, post, profile, like, follow, dupes] = await Promise.all([
         dumpTable(db, 'actor', ['did']),
         dumpTable(db, 'post', ['uri']),
         dumpTable(db, 'profile', ['uri']),
-        dumpTable(db, 'vote', ['creator', 'subject']),
+        dumpTable(db, 'like', ['creator', 'subject']),
         dumpTable(db, 'follow', ['creator', 'subjectDid']),
         dumpTable(db, 'duplicate_record', ['uri']),
       ])
-      return { actor, post, profile, vote, follow, dupes }
+      return { actor, post, profile, like, follow, dupes }
     }
 
     // Mark originals
@@ -83,6 +74,22 @@ describe('sync', () => {
       forSnapshot(originalTableDump),
     )
   })
+
+  async function updateProfile(
+    agent: AtpAgent,
+    did: string,
+    record: Record<string, unknown>,
+  ) {
+    return await agent.api.com.atproto.repo.putRecord(
+      {
+        repo: did,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+        record,
+      },
+      { headers: sc.getHeaders(did), encoding: 'application/json' },
+    )
+  }
 })
 
 async function dumpTable<T extends keyof DatabaseSchemaType>(

@@ -45,11 +45,15 @@ describe('indexing', () => {
       record: {
         $type: ids.AppBskyFeedPost,
         text: '@bob.test how are you?',
-        entities: [
+        facets: [
           {
-            index: { start: 0, end: 9 },
-            type: 'mention',
-            value: sc.dids.bob,
+            index: { byteStart: 0, byteEnd: 9 },
+            features: [
+              {
+                $type: `${ids.AppBskyRichtextFacet}#mention`,
+                did: sc.dids.bob,
+              },
+            ],
           },
         ],
         createdAt,
@@ -63,11 +67,15 @@ describe('indexing', () => {
       record: {
         $type: ids.AppBskyFeedPost,
         text: '@carol.test how are you?',
-        entities: [
+        facets: [
           {
-            index: { start: 0, end: 11 },
-            type: 'mention',
-            value: sc.dids.carol,
+            index: { byteStart: 0, byteEnd: 11 },
+            features: [
+              {
+                $type: `${ids.AppBskyRichtextFacet}#mention`,
+                did: sc.dids.carol,
+              },
+            ],
           },
         ],
         createdAt,

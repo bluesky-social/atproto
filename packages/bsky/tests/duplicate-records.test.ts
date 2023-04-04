@@ -77,69 +77,62 @@ describe('duplicate record', () => {
     expect(count).toBe(0)
   })
 
-  it('dedupes votes', async () => {
+  it('dedupes like', async () => {
     const subject = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
     const subjectCid = await cidForCbor({ test: 'blah' })
-    const coll = lex.ids.AppBskyFeedVote
+    const coll = lex.ids.AppBskyFeedLike
     const uris: AtUri[] = []
     await db.transaction(async (tx) => {
       for (let i = 0; i < 5; i++) {
-        const direction = i % 2 === 0 ? 'up' : 'down'
-        const vote = {
+        const like = {
           $type: coll,
           subject: {
             uri: subject.toString(),
             cid: subjectCid.toString(),
           },
-          direction,
           createdAt: new Date().toISOString(),
         }
         const uri = AtUri.make(did, coll, TID.nextStr())
-        const cid = await cidForCbor(vote)
+        const cid = await cidForCbor(like)
         await services
           .indexing(tx)
-          .indexRecord(uri, cid, vote, WriteOpAction.Create, vote.createdAt)
+          .indexRecord(uri, cid, like, WriteOpAction.Create, like.createdAt)
         uris.push(uri)
       }
     })
 
-    let count = await countRecords(db, 'vote')
+    let count = await countRecords(db, 'like')
     expect(count).toBe(1)
 
     await db.transaction(async (tx) => {
       await services.indexing(tx).deleteRecord(uris[0], false)
     })
 
-    count = await countRecords(db, 'vote')
+    count = await countRecords(db, 'like')
     expect(count).toBe(1)
-    // since the first was deleted, the vote should be flipped to down now
     const got = await db.db
-      .selectFrom('vote')
+      .selectFrom('like')
       .where('creator', '=', did)
       .selectAll()
       .executeTakeFirst()
-    expect(got?.direction === 'down')
+    expect(got?.uri).toEqual(uris[1].toString())
 
     await db.transaction(async (tx) => {
       await services.indexing(tx).deleteRecord(uris[1], true)
     })
 
-    count = await countRecords(db, 'vote')
+    count = await countRecords(db, 'like')
     expect(count).toBe(0)
   })
 
   it('dedupes follows', async () => {
-    const subjectCid = await cidForCbor({ test: 'blah' })
     const coll = lex.ids.AppBskyGraphFollow
     const uris: AtUri[] = []
     await db.transaction(async (tx) => {
       for (let i = 0; i < 5; i++) {
         const follow = {
           $type: coll,
-          subject: {
-            did: 'did:example:bob',
-            declarationCid: subjectCid.toString(),
-          },
+          subject: 'did:example:bob',
           createdAt: new Date().toISOString(),
         }
         const uri = AtUri.make(did, coll, TID.nextStr())

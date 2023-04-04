@@ -7,6 +7,7 @@ import {
   processAll,
   TestServerInfo,
 } from '../_util'
+import { ids } from '../../src/lexicon/lexicons'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
@@ -78,7 +79,7 @@ describe('pds profile views', () => {
         actors: [
           alice,
           'bob.test',
-          'did:missing',
+          'did:example:missing',
           'carol.test',
           dan,
           'missing.test',
@@ -104,22 +105,27 @@ describe('pds profile views', () => {
     const bannerImg = await fs.readFile(
       'tests/image/fixtures/key-landscape-small.jpg',
     )
-    const avatarRes = await pdsAgent.api.com.atproto.blob.upload(avatarImg, {
-      headers: sc.getHeaders(alice),
-      encoding: 'image/jpeg',
-    })
-    const bannerRes = await pdsAgent.api.com.atproto.blob.upload(bannerImg, {
-      headers: sc.getHeaders(alice),
-      encoding: 'image/jpeg',
-    })
-
-    await pdsAgent.api.app.bsky.actor.updateProfile(
+    const avatarRes = await pdsAgent.api.com.atproto.repo.uploadBlob(
+      avatarImg,
       {
-        avatar: { cid: avatarRes.data.cid, mimeType: 'image/jpeg' },
-        banner: { cid: bannerRes.data.cid, mimeType: 'image/jpeg' },
+        headers: sc.getHeaders(alice),
+        encoding: 'image/jpeg',
       },
-      { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
+    const bannerRes = await pdsAgent.api.com.atproto.repo.uploadBlob(
+      bannerImg,
+      {
+        headers: sc.getHeaders(alice),
+        encoding: 'image/jpeg',
+      },
+    )
+
+    await updateProfile(alice, {
+      displayName: 'ali',
+      description: 'new descript',
+      avatar: avatarRes.data.blob,
+      banner: bannerRes.data.blob,
+    })
     await processAll(server)
 
     const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
@@ -145,4 +151,16 @@ describe('pds profile views', () => {
 
     expect(byHandle.data).toEqual(byDid.data)
   })
+
+  async function updateProfile(did: string, record: Record<string, unknown>) {
+    return await pdsAgent.api.com.atproto.repo.putRecord(
+      {
+        repo: did,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+        record,
+      },
+      { headers: sc.getHeaders(did), encoding: 'application/json' },
+    )
+  }
 })
