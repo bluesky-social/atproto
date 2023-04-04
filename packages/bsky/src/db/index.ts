@@ -2,7 +2,6 @@ import assert from 'assert'
 import { Kysely, PostgresDialect, Migrator } from 'kysely'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
-import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
 

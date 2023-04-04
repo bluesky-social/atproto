@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import AtpAgent from '@atproto/api'
 import {
@@ -160,22 +161,41 @@ export class IndexingService {
     }
   }
 
-  async setCommitLastSeen(commit: Commit) {
+  async setCommitLastSeen(
+    commit: Commit,
+    details: { commit: CID; rebase: boolean; tooBig: boolean },
+  ) {
+    const { ref } = this.db.db.dynamic
     await this.db.db
-      .updateTable('actor')
-      .where('did', '=', commit.did)
-      .set({ commitDataCid: commit.data.toString() })
+      .insertInto('actor_sync')
+      .values({
+        did: commit.did,
+        commitCid: details.commit.toString(),
+        commitDataCid: commit.data.toString(),
+        rebaseCount: details.rebase ? 1 : 0,
+        tooBigCount: details.tooBig ? 1 : 0,
+      })
+      .onConflict((oc) => {
+        const sync = (col: string) => ref(`actor_sync.${col}`)
+        const excluded = (col: string) => ref(`excluded.${col}`)
+        return oc.column('did').doUpdateSet({
+          commitCid: sql`${excluded('commitCid')}`,
+          commitDataCid: sql`${excluded('commitDataCid')}`,
+          rebaseCount: sql`${sync('rebaseCount')} + ${excluded('rebaseCount')}`,
+          tooBigCount: sql`${sync('tooBigCount')} + ${excluded('tooBigCount')}`,
+        })
+      })
       .execute()
   }
 
   async checkCommitNeedsIndexing(commit: Commit) {
-    const actor = await this.db.db
-      .selectFrom('actor')
+    const sync = await this.db.db
+      .selectFrom('actor_sync')
       .select('commitDataCid')
       .where('did', '=', commit.did)
       .executeTakeFirst()
-    if (!actor) return true
-    return actor.commitDataCid !== commit.data.toString()
+    if (!sync) return true
+    return sync.commitDataCid !== commit.data.toString()
   }
 
   findIndexerForCollection(collection: string) {

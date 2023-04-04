@@ -52,7 +52,6 @@ describe('db', () => {
         did: 'x',
         handle: 'x',
         indexedAt: 'bad-date',
-        commitDataCid: null,
         takedownId: null,
       })
     })

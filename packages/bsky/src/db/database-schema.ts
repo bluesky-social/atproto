@@ -9,6 +9,7 @@ import * as follow from './tables/follow'
 import * as like from './tables/like'
 import * as subscription from './tables/subscription'
 import * as actor from './tables/actor'
+import * as actorSync from './tables/actor-sync'
 import * as record from './tables/record'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
@@ -21,6 +22,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   like.PartialDB &
   subscription.PartialDB &
   actor.PartialDB &
+  actorSync.PartialDB &
   record.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
