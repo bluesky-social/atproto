@@ -27,7 +27,10 @@
             }
           }
         }
-      }
+      },
+      "errors": [
+        "DuplicateCreate"
+      ]
     },
     "invite": {
       "type": "object",

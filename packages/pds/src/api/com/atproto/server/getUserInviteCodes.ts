@@ -2,6 +2,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { genInvCodes } from './util'
 import { sql } from 'kysely'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getUserInviteCodes({
@@ -56,7 +57,20 @@ export default function (server: Server, ctx: AppContext) {
             createdBy: requester,
             createdAt: new Date().toISOString(),
           }))
-          await ctx.db.db.insertInto('invite_code').values(rows).execute()
+          await ctx.db.transaction(async (dbTxn) => {
+            await dbTxn.db.insertInto('invite_code').values(rows).execute()
+            const forUser = await dbTxn.db
+              .selectFrom('invite_code')
+              .where('forUser', '=', requester)
+              .selectAll()
+              .execute()
+            if (forUser.length > userCodes.length + toCreate) {
+              throw new InvalidRequestError(
+                'attempted to create additional codes in another request',
+                'DuplicateCreate',
+              )
+            }
+          })
         }
       }
 
