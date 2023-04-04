@@ -9,6 +9,7 @@ import Mail from 'nodemailer/lib/mailer'
 import { AppContext, Database } from '../src'
 import * as util from './_util'
 import { ServerMailer } from '../src/mailer'
+import { DAY } from '@atproto/common'
 
 const email = 'alice@test.com'
 const handle = 'alice.test'
@@ -45,6 +46,7 @@ describe('account', () => {
   beforeAll(async () => {
     const server = await util.runTestServer({
       inviteRequired: true,
+      userInviteInterval: DAY,
       termsOfServiceUrl: 'https://example.com/tos',
       privacyPolicyUrl: '/privacy-policy',
       dbPostgresSchema: 'account',
@@ -457,5 +459,47 @@ describe('account', () => {
         password,
       }),
     ).resolves.toBeDefined()
+  })
+
+  it('allow users to get available user invites', async () => {
+    // first pretend account was made 2 days in the past
+    const twoDaysAgo = new Date(Date.now() - 2 * DAY).toISOString()
+    await ctx.db.db
+      .updateTable('user_account')
+      .set({ createdAt: twoDaysAgo })
+      .where('did', '=', did)
+      .execute()
+    const res1 = await agent.api.com.atproto.server.getUserInviteCodes()
+    expect(res1.data.codes.length).toBe(2)
+
+    // now pretend it was made 10 days ago & use both invites
+    const tenDaysAgo = new Date(Date.now() - 10 * DAY).toISOString()
+    await ctx.db.db
+      .updateTable('user_account')
+      .set({ createdAt: tenDaysAgo })
+      .where('did', '=', did)
+      .execute()
+    await ctx.db.db
+      .insertInto('invite_code_use')
+      .values(
+        res1.data.codes.map((code) => ({
+          code: code.code,
+          usedBy: 'blah',
+          usedAt: new Date().toISOString(),
+        })),
+      )
+      .execute()
+
+    const res2 = await agent.api.com.atproto.server.getUserInviteCodes({
+      includeUsed: false,
+      createAvailable: false,
+    })
+    expect(res2.data.codes.length).toBe(0)
+    const res3 = await agent.api.com.atproto.server.getUserInviteCodes()
+    expect(res3.data.codes.length).toBe(7)
+    const res4 = await agent.api.com.atproto.server.getUserInviteCodes({
+      includeUsed: false,
+    })
+    expect(res4.data.codes.length).toBe(5)
   })
 })

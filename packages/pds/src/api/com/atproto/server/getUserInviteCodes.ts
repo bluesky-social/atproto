@@ -11,29 +11,34 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const { includeUsed, createAvailable } = params
 
-      const [user, userCodes] = await Promise.all([
+      const [user, userCodesRes] = await Promise.all([
         ctx.db.db
           .selectFrom('user_account')
           .where('did', '=', requester)
           .select('createdAt')
           .executeTakeFirstOrThrow(),
         ctx.db.db
-          .selectFrom('invite_code')
-          .innerJoin(
-            'invite_code_use',
-            'invite_code_use.code',
-            'invite_code.code',
+          .with('use_count', (qb) =>
+            qb
+              .selectFrom('invite_code_use')
+              .groupBy('code')
+              .select(['code', sql<number>`count(usedBy)`.as('uses')]),
           )
+          .selectFrom('invite_code')
+          .leftJoin('use_count', 'use_count.code', 'invite_code.code')
           .where('forUser', '=', requester)
           .groupBy('invite_code.code')
           .select([
             'invite_code.code as code',
             'invite_code.availableUses as available',
-            sql<number>`count(invite_code_use.usedBy)`.as('uses'),
+            'use_count.uses as uses',
           ])
           .execute(),
       ])
-
+      const userCodes = userCodesRes.map((row) => ({
+        ...row,
+        uses: row.uses ?? 0,
+      }))
       const unusedCodes = userCodes.filter((row) => row.available > row.uses)
 
       let created: string[] = []
