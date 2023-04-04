@@ -30,12 +30,11 @@
     },
     "invite": {
       "type": "object",
-      "requred": ["code", "available", "uses", "canCreate"],
+      "requred": ["code", "available", "uses"],
       "properties": {
         "code": { "type": "string" },
         "available": { "type": "integer" },
-        "users": { "type": "integer" },
-        "canCreate": { "type": "integer" }
+        "users": { "type": "integer" }
       }
     }
   }
