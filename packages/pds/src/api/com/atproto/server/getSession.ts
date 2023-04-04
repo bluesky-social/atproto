@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
       }
       return {
         encoding: 'application/json',
-        body: { handle: user.handle, did: user.did },
+        body: { handle: user.handle, did: user.did, email: user.email },
       }
     },
   })

@@ -54,6 +54,7 @@ describe('agent', () => {
     expect(sessionInfo).toEqual({
       did: res.data.did,
       handle: res.data.handle,
+      email: 'user1@test.com',
     })
 
     expect(events.length).toEqual(1)
@@ -72,9 +73,10 @@ describe('agent', () => {
 
     const agent1 = new AtpAgent({ service: server.url, persistSession })
 
+    const email = 'user2@test.com'
     await agent1.createAccount({
       handle: 'user2.test',
-      email: 'user2@test.com',
+      email,
       password: 'password',
     })
 
@@ -95,6 +97,7 @@ describe('agent', () => {
     expect(sessionInfo).toEqual({
       did: res1.data.did,
       handle: res1.data.handle,
+      email,
     })
 
     expect(events.length).toEqual(2)
@@ -136,6 +139,7 @@ describe('agent', () => {
     expect(sessionInfo).toEqual({
       did: res1.data.did,
       handle: res1.data.handle,
+      email: res1.data.email,
     })
 
     expect(events.length).toEqual(2)
