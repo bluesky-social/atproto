@@ -126,7 +126,6 @@ export type RepoContentsWithCids = Record<string, CollectionContentsWithCids>
 
 export type DatastoreContents = Record<string, CID>
 
-
 export type RecordPath = {
   collection: string
   rkey: string
