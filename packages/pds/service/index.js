@@ -34,9 +34,6 @@ const main = async () => {
     schema: env.dbSchema,
   })
   const s3Blobstore = new S3BlobStore({ bucket: env.s3Bucket })
-  const cfInvalidator = new CloudfrontInvalidator({
-    distributionId: env.cfDistributionId,
-  })
   const repoSigningKey = await Secp256k1Keypair.import(env.repoSigningKey)
   const plcRotationKey = await KmsKeypair.load({
     keyId: env.plcRotationKeyId,
@@ -58,6 +55,10 @@ const main = async () => {
       username: env.smtpUsername,
       password: env.smtpPassword,
     }),
+  })
+  const cfInvalidator = new CloudfrontInvalidator({
+    distributionId: env.cfDistributionId,
+    pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
   })
   const pds = PDS.create({
     db,
