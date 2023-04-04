@@ -20,6 +20,16 @@
     pino "^8.6.1"
     zod "^3.14.2"
 
+"@atproto/common@0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@atproto/common/-/common-0.1.1.tgz#ec33a3b4995c91d3ad2e90fc4cdbc65284ceff84"
+  integrity sha512-GYwot5wF/z8iYGSPjrLHuratLc0CVgovmwfJss7+BUOB6y2/Vw8+1Vw0n9DDI0gb5vmx3UI8z0uJgC8aa8yuJg==
+  dependencies:
+    "@ipld/dag-cbor" "^7.0.3"
+    multiformats "^9.6.4"
+    pino "^8.6.1"
+    zod "^3.14.2"
+
 "@atproto/crypto@0.1.0":
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/@atproto/crypto/-/crypto-0.1.0.tgz#bc73a479f9dbe06fa025301c182d7f7ab01bc568"
