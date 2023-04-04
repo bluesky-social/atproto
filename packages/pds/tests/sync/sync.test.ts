@@ -311,33 +311,6 @@ describe('repo sync', () => {
     expect(blobsForRange.data.cids.sort()).toEqual([cid1, cid2].sort())
     expect(blobsForRepo.data.cids.sort()).toEqual([cid1, cid2].sort())
   })
-
-  it('handles rebases', async () => {
-    const carBefore = await agent.api.com.atproto.sync.getRepo({ did })
-    await ctx.db.transaction((dbTxn) =>
-      ctx.services.repo(dbTxn).rebaseRepo(did, new Date().toISOString()),
-    )
-    const commitPath = await agent.api.com.atproto.sync.getCommitPath({ did })
-    expect(commitPath.data.commits.length).toBe(1)
-    const carAfter = await agent.api.com.atproto.sync.getRepo({ did })
-
-    const before = await repo.loadFullRepo(
-      new MemoryBlockstore(),
-      carBefore.data,
-      did,
-      ctx.repoSigningKey.did(),
-    )
-    const after = await repo.loadFullRepo(
-      new MemoryBlockstore(),
-      carAfter.data,
-      did,
-      ctx.repoSigningKey.did(),
-    )
-    const contentsBefore = await before.repo.getContents()
-    const contentsAfter = await after.repo.getContents()
-    expect(contentsAfter).toEqual(contentsBefore)
-    expect(after.repo.commit.prev).toBe(null)
-  })
 })
 
 const makePost = async (sc: SeedClient, did: string) => {

@@ -147,16 +147,28 @@ export class RepoBlobs {
       )
       .execute()
 
+    // delete blobs that have been rebased away & only belong to the repo in question
     const [deleted] = await Promise.all([deleteUnreferenced, updateReferenced])
     const deletedCids = deleted.map((row) => row.cid)
     if (deleted.length > 0) {
-      await Promise.all([
+      const [duplicates] = await Promise.all([
+        this.db.db
+          .selectFrom('repo_blob')
+          .where('cid', 'in', deletedCids)
+          .selectAll()
+          .execute(),
         this.db.db
           .deleteFrom('blob')
           .where('creator', '=', did)
-          .where('cid', 'in', deletedCids),
-        deletedCids.map((cid) => this.blobstore.delete(CID.parse(cid))),
+          .where('cid', 'in', deletedCids)
+          .returningAll()
+          .execute(),
       ])
+      const duplicateCids = duplicates.map((row) => row.cid)
+      const toDelete = deletedCids.filter((cid) => !duplicateCids.includes(cid))
+      await Promise.all(
+        toDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
+      )
     }
   }
 
