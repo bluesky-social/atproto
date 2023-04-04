@@ -9,6 +9,8 @@ import { schemas } from './lexicons'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
+import * as ComAtprotoAdminGetInviteCodeUsage from './types/com/atproto/admin/getInviteCodeUsage'
+import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
 import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
 import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
@@ -38,8 +40,8 @@ import * as ComAtprotoServerCreateSession from './types/com/atproto/server/creat
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
-import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
+import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
 import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
@@ -89,6 +91,8 @@ import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopul
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
+export * as ComAtprotoAdminGetInviteCodeUsage from './types/com/atproto/admin/getInviteCodeUsage'
+export * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 export * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
 export * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
 export * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
@@ -118,8 +122,8 @@ export * as ComAtprotoServerCreateSession from './types/com/atproto/server/creat
 export * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 export * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 export * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
-export * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 export * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
+export * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 export * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 export * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
 export * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
@@ -252,6 +256,28 @@ export class AdminNS {
       .call('com.atproto.admin.disableInviteCodes', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminDisableInviteCodes.toKnownErr(e)
+      })
+  }
+
+  getInviteCodeUsage(
+    params?: ComAtprotoAdminGetInviteCodeUsage.QueryParams,
+    opts?: ComAtprotoAdminGetInviteCodeUsage.CallOptions,
+  ): Promise<ComAtprotoAdminGetInviteCodeUsage.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.getInviteCodeUsage', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminGetInviteCodeUsage.toKnownErr(e)
+      })
+  }
+
+  getInviteCodes(
+    params?: ComAtprotoAdminGetInviteCodes.QueryParams,
+    opts?: ComAtprotoAdminGetInviteCodes.CallOptions,
+  ): Promise<ComAtprotoAdminGetInviteCodes.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.getInviteCodes', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminGetInviteCodes.toKnownErr(e)
       })
   }
 
@@ -584,17 +610,6 @@ export class ServerNS {
       })
   }
 
-  getSession(
-    params?: ComAtprotoServerGetSession.QueryParams,
-    opts?: ComAtprotoServerGetSession.CallOptions,
-  ): Promise<ComAtprotoServerGetSession.Response> {
-    return this._service.xrpc
-      .call('com.atproto.server.getSession', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoServerGetSession.toKnownErr(e)
-      })
-  }
-
   getAccountInviteCodes(
     params?: ComAtprotoServerGetAccountInviteCodes.QueryParams,
     opts?: ComAtprotoServerGetAccountInviteCodes.CallOptions,
@@ -603,6 +618,17 @@ export class ServerNS {
       .call('com.atproto.server.getAccountInviteCodes', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoServerGetAccountInviteCodes.toKnownErr(e)
+      })
+  }
+
+  getSession(
+    params?: ComAtprotoServerGetSession.QueryParams,
+    opts?: ComAtprotoServerGetSession.CallOptions,
+  ): Promise<ComAtprotoServerGetSession.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.getSession', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoServerGetSession.toKnownErr(e)
       })
   }
 

@@ -1,12 +1,6 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
-type Total = {
-  count: number
-  open: number
-  used: number
-}
-
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.disableInviteCodes({
     auth: ctx.adminVerifier,

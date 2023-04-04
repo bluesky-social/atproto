@@ -8,9 +8,13 @@
       "output": {
         "encoding": "application/json",
         "schema": {
-          "total": { "type": "ref", "ref": "#codesDetail" },
-          "user": { "type": "ref", "ref": "#codesDetail" },
-          "admin": { "type": "ref", "ref": "#codesDetail" }
+          "type": "object",
+          "required": ["subject", "follows"],
+          "properties": {
+            "total": { "type": "ref", "ref": "#codesDetail" },
+            "user": { "type": "ref", "ref": "#codesDetail" },
+            "admin": { "type": "ref", "ref": "#codesDetail" }
+          }
         }
       }
     },

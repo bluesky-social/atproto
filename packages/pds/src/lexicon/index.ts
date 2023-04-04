@@ -10,6 +10,8 @@ import {
 } from '@atproto/xrpc-server'
 import { schemas } from './lexicons'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
+import * as ComAtprotoAdminGetInviteCodeUsage from './types/com/atproto/admin/getInviteCodeUsage'
+import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
 import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
 import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
@@ -37,8 +39,8 @@ import * as ComAtprotoServerCreateSession from './types/com/atproto/server/creat
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
-import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
+import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
 import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
@@ -144,6 +146,23 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.disableInviteCodes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getInviteCodeUsage<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminGetInviteCodeUsage.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.getInviteCodeUsage' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getInviteCodes<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoAdminGetInviteCodes.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.admin.getInviteCodes' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -395,13 +414,6 @@ export class ServerNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getSession<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, ComAtprotoServerGetSession.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'com.atproto.server.getSession' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getAccountInviteCodes<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -409,6 +421,13 @@ export class ServerNS {
     >,
   ) {
     const nsid = 'com.atproto.server.getAccountInviteCodes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSession<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoServerGetSession.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.server.getSession' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

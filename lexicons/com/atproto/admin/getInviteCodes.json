@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.admin.getInviteCode",
+  "id": "com.atproto.admin.getInviteCodes",
   "defs": {
     "main": {
       "type": "query",
@@ -12,35 +12,51 @@
             "type": "string",
             "knownValues": [
               "recent",
-              "available"
+              "usage"
             ],
             "default": "recent"
           },
+          "limit": {"type": "integer", "minimum": 1, "maximum": 500, "default": 100},
           "cursor": {"type": "string"}
         }
       },
       "output": {
         "encoding": "application/json",
         "schema": {
-          "cursor": {"type": "string"},
-          "total": { "type": "ref", "ref": "#codesDetail" },
-          "user": { "type": "ref", "ref": "#codesDetail" },
-          "admin": { "type": "ref", "ref": "#codesDetail" }
+          "type": "object",
+          "required": ["cursor", "codes"],
+          "properties": {
+            "cursor": {"type": "string"},
+            "codes": {
+              "type": "array",
+              "items": {"type": "ref", "ref": "#codeDetail"}
+            }
+          }
         }
       }
     },
     "codeDetail": {
       "type": "object",
-      "required": ["code", "count", "available", "used", "disabled"],
+      "required": ["code", "available", "disabled", "forAccount", "createdBy", "createdAt", "uses"],
       "properties": {
         "code": {"type": "string"},
+        "available": {"type": "integer"},
+        "disabled": {"type": "boolean"},
         "forAccount": {"type": "string"},
-        "usedBy": {
+        "createdBy": {"type": "string"},
+        "createdAt": {"type": "string"},
+        "uses": {
           "type": "array",
-          "items": {"type": "string"}
-        },
-        "total": {"type": "integer"},
-        "disabled": {"type": "boolean"}
+          "items": {"type": "ref", "ref": "#codeUse"}
+        }
+      }
+    },
+    "codeUse": {
+      "type": "object",
+      "required": ["usedBy", "usedAt"],
+      "properties": {
+        "usedBy": {"type": "string"},
+        "usedAt": {"type": "string"}
       }
     }
   }

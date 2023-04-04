@@ -561,6 +561,154 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminGetInviteCodeUsage: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getInviteCodeUsage',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'High level stats about invite code usage',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject', 'follows'],
+            properties: {
+              total: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.getInviteCodeUsage#codesDetail',
+              },
+              user: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.getInviteCodeUsage#codesDetail',
+              },
+              admin: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.getInviteCodeUsage#codesDetail',
+              },
+            },
+          },
+        },
+      },
+      codesDetail: {
+        type: 'object',
+        required: ['count', 'available', 'used', 'disabled'],
+        properties: {
+          count: {
+            type: 'integer',
+          },
+          available: {
+            type: 'integer',
+          },
+          used: {
+            type: 'integer',
+          },
+          disabled: {
+            type: 'integer',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminGetInviteCodes: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getInviteCodes',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Admin view of invite codes',
+        parameters: {
+          type: 'params',
+          properties: {
+            sort: {
+              type: 'string',
+              knownValues: ['recent', 'usage'],
+              default: 'recent',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 500,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['cursor', 'codes'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              codes: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.getInviteCodes#codeDetail',
+                },
+              },
+            },
+          },
+        },
+      },
+      codeDetail: {
+        type: 'object',
+        required: [
+          'code',
+          'available',
+          'disabled',
+          'forAccount',
+          'createdBy',
+          'createdAt',
+          'uses',
+        ],
+        properties: {
+          code: {
+            type: 'string',
+          },
+          available: {
+            type: 'integer',
+          },
+          disabled: {
+            type: 'boolean',
+          },
+          forAccount: {
+            type: 'string',
+          },
+          createdBy: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+          },
+          uses: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.getInviteCodes#codeUse',
+            },
+          },
+        },
+      },
+      codeUse: {
+        type: 'object',
+        required: ['usedBy', 'usedAt'],
+        properties: {
+          usedBy: {
+            type: 'string',
+          },
+          usedAt: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminGetModerationAction: {
     lexicon: 1,
     id: 'com.atproto.admin.getModerationAction',
@@ -1897,33 +2045,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoServerGetSession: {
-    lexicon: 1,
-    id: 'com.atproto.server.getSession',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get information about the current session.',
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['handle', 'did'],
-            properties: {
-              handle: {
-                type: 'string',
-                format: 'handle',
-              },
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   ComAtprotoServerGetAccountInviteCodes: {
     lexicon: 1,
     id: 'com.atproto.server.getAccountInviteCodes',
@@ -1981,6 +2102,33 @@ export const schemaDict = {
           },
           disabled: {
             type: 'boolean',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerGetSession: {
+    lexicon: 1,
+    id: 'com.atproto.server.getSession',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get information about the current session.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle', 'did'],
+            properties: {
+              handle: {
+                type: 'string',
+                format: 'handle',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+            },
           },
         },
       },
@@ -4256,6 +4404,8 @@ export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
   ComAtprotoAdminDisableInviteCodes: 'com.atproto.admin.disableInviteCodes',
+  ComAtprotoAdminGetInviteCodeUsage: 'com.atproto.admin.getInviteCodeUsage',
+  ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
   ComAtprotoAdminGetModerationAction: 'com.atproto.admin.getModerationAction',
   ComAtprotoAdminGetModerationActions: 'com.atproto.admin.getModerationActions',
   ComAtprotoAdminGetModerationReport: 'com.atproto.admin.getModerationReport',
@@ -4287,9 +4437,9 @@ export const ids = {
   ComAtprotoServerDeleteAccount: 'com.atproto.server.deleteAccount',
   ComAtprotoServerDeleteSession: 'com.atproto.server.deleteSession',
   ComAtprotoServerDescribeServer: 'com.atproto.server.describeServer',
-  ComAtprotoServerGetSession: 'com.atproto.server.getSession',
   ComAtprotoServerGetAccountInviteCodes:
     'com.atproto.server.getAccountInviteCodes',
+  ComAtprotoServerGetSession: 'com.atproto.server.getSession',
   ComAtprotoServerRefreshSession: 'com.atproto.server.refreshSession',
   ComAtprotoServerRequestAccountDelete:
     'com.atproto.server.requestAccountDelete',
