@@ -12,14 +12,17 @@
         "properties": {
           "src": {
             "type": "string",
+            "format": "did",
             "description": "DID of the actor who created this label"
           },
           "uri": {
             "type": "string",
+            "format": "uri",
             "description": "AT URI of the record, repository (account), or other resource which this label applies to"
           },
           "cid": {
             "type": "string",
+            "format": "cid",
             "description": "optionally, CID specifying the specific version of 'uri' resource this label applies to"
           },
           "val": {
@@ -28,7 +31,8 @@
             "description": "the short string name of the value or type of this label"
           },
           "cts": {
-            "type": "datetime",
+            "type": "string",
+            "format": "datetime",
             "description": "timestamp when this label was created"
           }
         }

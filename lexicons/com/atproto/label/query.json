@@ -16,7 +16,7 @@
           },
           "sources": {
               "type": "array",
-              "items": {"type": "string"},
+              "items": {"type": "string", "format": "did"},
               "description": "Optional list of label sources (DIDs) to filter on"
           },
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 20},

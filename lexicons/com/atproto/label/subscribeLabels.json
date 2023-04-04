@@ -16,24 +16,40 @@
       },
       "message": {
         "schema": {
-          "type": "object",
-          "required": ["seq", "labels"],
-          "nullable": ["prev"],
-          "properties": {
-            "seq": {"type": "integer"},
-            "labels": {
-              "type": "array",
-              "items": { "type": "ref", "ref": "com.atproto.label.label" }
-            }
-          }
+          "type": "union",
+          "refs": [
+            "#labels",
+            "#info"
+          ]
         }
       },
-      "infos": [
-        {"name": "OutdatedCursor"}
-      ],
       "errors": [
         {"name": "FutureCursor"}
       ]
+    },
+    "labels": {
+      "type": "object",
+      "required": ["seq", "labels"],
+      "properties": {
+        "seq": {"type": "integer"},
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.label" }
+        }
+      }
+    },
+    "info": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "knownValues": ["OutdatedCursor"]
+        },
+        "message": {
+          "type": "string"
+        }
+      }
     }
   }
 }
