@@ -12,8 +12,9 @@
           "repo": {"type": "string", "format": "at-identifier", "description": "The handle or DID of the repo."},
           "collection": {"type": "string", "format": "nsid", "description": "The NSID of the record type."},
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50, "description": "The number of records to return."},
-          "rkeyStart": {"type": "string", "description": "The lowest sort-ordered rkey to start from (exclusive)"},
-          "rkeyEnd": {"type": "string", "description": "The highest sort-ordered rkey to stop at (exclusive)"},
+          "cursor": {"type": "string"},
+          "rkeyStart": {"type": "string", "description": "DEPRECATED: The lowest sort-ordered rkey to start from (exclusive)"},
+          "rkeyEnd": {"type": "string", "description": "DEPRECATED: The highest sort-ordered rkey to stop at (exclusive)"},
           "reverse": {"type": "boolean", "description": "Reverse the order of the returned records?"}
         }
       },

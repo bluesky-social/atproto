@@ -330,6 +330,7 @@ describe('account', () => {
     expect(typeof jwt).toBe('string')
     expect(res.data.handle).toBe('alice.test')
     expect(res.data.did).toBe(did)
+    expect(res.data.email).toBe(email)
   })
 
   it('can perform authenticated requests', async () => {
@@ -337,6 +338,7 @@ describe('account', () => {
     const res = await agent.api.com.atproto.server.getSession({})
     expect(res.data.did).toBe(did)
     expect(res.data.handle).toBe(handle)
+    expect(res.data.email).toBe(email)
   })
 
   const getMailFrom = async (promise): Promise<Mail.Options> => {

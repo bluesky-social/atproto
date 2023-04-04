@@ -9,6 +9,7 @@ export interface BlobStore {
   unquarantine(cid: CID): Promise<void>
   getBytes(cid: CID): Promise<Uint8Array>
   getStream(cid: CID): Promise<stream.Readable>
+  hasStored(cid: CID): Promise<boolean>
   delete(cid: CID): Promise<void>
 }
 

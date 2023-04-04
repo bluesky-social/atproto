@@ -44,6 +44,7 @@ export default function (server: Server, ctx: AppContext) {
       body: {
         did: user.did,
         handle: user.handle,
+        email: user.email,
         accessJwt: access.jwt,
         refreshJwt: refresh.jwt,
       },

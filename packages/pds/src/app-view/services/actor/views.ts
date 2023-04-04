@@ -96,8 +96,8 @@ export class ActorViews {
       return {
         did: result.did,
         handle: result.handle,
-        displayName: profileInfo?.displayName || undefined,
-        description: profileInfo?.description || undefined,
+        displayName: truncateUtf8(profileInfo?.displayName, 64) || undefined,
+        description: truncateUtf8(profileInfo?.description, 256) || undefined,
         avatar,
         banner,
         followsCount: profileInfo?.followsCount ?? 0,
@@ -174,8 +174,8 @@ export class ActorViews {
       return {
         did: result.did,
         handle: result.handle,
-        displayName: profileInfo?.displayName || undefined,
-        description: profileInfo?.description || undefined,
+        displayName: truncateUtf8(profileInfo?.displayName, 64) || undefined,
+        description: truncateUtf8(profileInfo?.description, 256) || undefined,
         avatar,
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: {
@@ -206,7 +206,7 @@ export class ActorViews {
     const views = profiles.map((view) => ({
       did: view.did,
       handle: view.handle,
-      displayName: view.displayName,
+      displayName: truncateUtf8(view.displayName, 64) || undefined,
       avatar: view.avatar,
       viewer: view.viewer,
     }))
@@ -216,3 +216,15 @@ export class ActorViews {
 }
 
 type ActorResult = DidHandle
+
+function truncateUtf8(str: string | null | undefined, length: number) {
+  if (!str) return str
+  const encoder = new TextEncoder()
+  const utf8 = encoder.encode(str)
+  if (utf8.length > length) {
+    const decoder = new TextDecoder('utf-8', { fatal: false })
+    const truncated = utf8.slice(0, length)
+    return decoder.decode(truncated).replace(/\uFFFD$/, '')
+  }
+  return str
+}

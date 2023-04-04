@@ -99,9 +99,7 @@ export const sequenceRebase = async (
   await dbTxn.db
     .updateTable('repo_seq')
     .where('did', '=', did)
-    .where((qb) =>
-      qb.where('eventType', '=', 'append').orWhere('eventType', '=', 'rebase'),
-    )
+    .where('eventType', 'in', ['append', 'rebase'])
     .where('seq', '!=', res.seq)
     .set({ invalidatedBy: res.seq })
     .execute()

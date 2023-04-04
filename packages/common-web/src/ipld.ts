@@ -75,3 +75,32 @@ export const ipldToJson = (val: IpldValue): JsonValue => {
   // pass through
   return val as JsonValue
 }
+
+export const ipldEquals = (a: IpldValue, b: IpldValue): boolean => {
+  // walk arrays
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false
+    for (let i = 0; i < a.length; i++) {
+      if (!ipldEquals(a[i], b[i])) return false
+    }
+    return true
+  }
+  // objects
+  if (a && b && typeof a === 'object' && typeof b === 'object') {
+    // check bytes
+    if (a instanceof Uint8Array && b instanceof Uint8Array) {
+      return ui8.equals(a, b)
+    }
+    // check cids
+    if (CID.asCID(a) && CID.asCID(b)) {
+      return CID.asCID(a)?.equals(CID.asCID(b))
+    }
+    // walk plain objects
+    if (Object.keys(a).length !== Object.keys(b).length) return false
+    for (const key of Object.keys(a)) {
+      if (!ipldEquals(a[key], b[key])) return false
+    }
+    return true
+  }
+  return a === b
+}

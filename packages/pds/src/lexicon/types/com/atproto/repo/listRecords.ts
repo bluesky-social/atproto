@@ -15,6 +15,7 @@ export interface QueryParams {
   collection: string
   /** The number of records to return. */
   limit: number
+  cursor?: string
   /** The lowest sort-ordered rkey to start from (exclusive) */
   rkeyStart?: string
   /** The highest sort-ordered rkey to stop at (exclusive) */

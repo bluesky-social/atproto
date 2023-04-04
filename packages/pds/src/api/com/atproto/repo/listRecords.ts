@@ -5,23 +5,30 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.listRecords(async ({ params }) => {
-    const { repo, collection, limit, rkeyStart, rkeyEnd, reverse } = params
+    const {
+      repo,
+      collection,
+      limit = 50,
+      cursor,
+      rkeyStart,
+      rkeyEnd,
+      reverse = false,
+    } = params
 
     const did = await ctx.services.account(ctx.db).getDidForActor(repo)
     if (!did) {
       throw new InvalidRequestError(`Could not find repo: ${repo}`)
     }
 
-    const records = await ctx.services
-      .record(ctx.db)
-      .listRecordsForCollection(
-        did,
-        collection,
-        limit || 50,
-        reverse || false,
-        rkeyStart,
-        rkeyEnd,
-      )
+    const records = await ctx.services.record(ctx.db).listRecordsForCollection({
+      did,
+      collection,
+      limit,
+      reverse,
+      cursor,
+      rkeyStart,
+      rkeyEnd,
+    })
 
     const lastRecord = records.at(-1)
     const lastUri = lastRecord && new AtUri(lastRecord?.uri)
