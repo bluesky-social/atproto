@@ -105,15 +105,27 @@ export class RecordService {
     return collections.map((row) => row.collection)
   }
 
-  async listRecordsForCollection(
-    did: string,
-    collection: string,
-    limit: number,
-    reverse: boolean,
-    rkeyStart?: string,
-    rkeyEnd?: string,
-    includeSoftDeleted = false,
-  ): Promise<{ uri: string; cid: string; value: object }[]> {
+  async listRecordsForCollection(opts: {
+    did: string
+    collection: string
+    limit: number
+    reverse: boolean
+    cursor?: string
+    rkeyStart?: string
+    rkeyEnd?: string
+    includeSoftDeleted?: boolean
+  }): Promise<{ uri: string; cid: string; value: object }[]> {
+    const {
+      did,
+      collection,
+      limit,
+      reverse,
+      cursor,
+      rkeyStart,
+      rkeyEnd,
+      includeSoftDeleted = false,
+    } = opts
+
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('record')
@@ -131,11 +143,20 @@ export class RecordService {
       .limit(limit)
       .selectAll()
 
-    if (rkeyStart !== undefined) {
-      builder = builder.where('record.rkey', '>', rkeyStart)
-    }
-    if (rkeyEnd !== undefined) {
-      builder = builder.where('record.rkey', '<', rkeyEnd)
+    // prioritize cursor but fall back to soon-to-be-depcreated rkey start/end
+    if (cursor !== undefined) {
+      if (reverse) {
+        builder = builder.where('record.rkey', '>', cursor)
+      } else {
+        builder = builder.where('record.rkey', '<', cursor)
+      }
+    } else {
+      if (rkeyStart !== undefined) {
+        builder = builder.where('record.rkey', '>', rkeyStart)
+      }
+      if (rkeyEnd !== undefined) {
+        builder = builder.where('record.rkey', '<', rkeyEnd)
+      }
     }
     const res = await builder.execute()
     return res.map((row) => {

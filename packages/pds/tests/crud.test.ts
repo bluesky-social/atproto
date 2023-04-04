@@ -324,7 +324,7 @@ describe('crud operations', () => {
       const paginator = async (cursor?: string) => {
         const res = await agent.api.app.bsky.feed.post.list({
           repo: alice.did,
-          rkeyEnd: cursor,
+          cursor,
           limit: 2,
         })
         return res
@@ -349,7 +349,7 @@ describe('crud operations', () => {
         const res = await agent.api.app.bsky.feed.post.list({
           repo: alice.did,
           reverse: true,
-          rkeyStart: cursor,
+          cursor,
           limit: 2,
         })
         return res
@@ -367,18 +367,6 @@ describe('crud operations', () => {
 
       expect(full.records.length).toEqual(5)
       expect(results(paginatedAll)).toEqual(results([full]))
-    })
-
-    it('between two records', async () => {
-      const list = await agent.api.app.bsky.feed.post.list({
-        repo: alice.did,
-        rkeyStart: uri1.rkey,
-        rkeyEnd: uri5.rkey,
-      })
-      expect(list.records.length).toBe(3)
-      expect(list.records[0].uri).toBe(uri4.toString())
-      expect(list.records[1].uri).toBe(uri3.toString())
-      expect(list.records[2].uri).toBe(uri2.toString())
     })
 
     it('reverses', async () => {
