@@ -1889,6 +1889,60 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoServerGetUserInviteCodes: {
+    lexicon: 1,
+    id: 'com.atproto.server.getUserInviteCodes',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get all invite codes for a given user',
+        parameters: {
+          type: 'params',
+          properties: {
+            includeUsed: {
+              type: 'boolean',
+              default: true,
+            },
+            createAvailable: {
+              type: 'boolean',
+              default: true,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['codes'],
+            properties: {
+              codes: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.server.getUserInviteCodes#invite',
+                },
+              },
+            },
+          },
+        },
+      },
+      invite: {
+        type: 'object',
+        required: ['code', 'available', 'uses'],
+        properties: {
+          code: {
+            type: 'string',
+          },
+          available: {
+            type: 'integer',
+          },
+          uses: {
+            type: 'integer',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoServerRefreshSession: {
     lexicon: 1,
     id: 'com.atproto.server.refreshSession',
@@ -4190,6 +4244,7 @@ export const ids = {
   ComAtprotoServerDeleteSession: 'com.atproto.server.deleteSession',
   ComAtprotoServerDescribeServer: 'com.atproto.server.describeServer',
   ComAtprotoServerGetSession: 'com.atproto.server.getSession',
+  ComAtprotoServerGetUserInviteCodes: 'com.atproto.server.getUserInviteCodes',
   ComAtprotoServerRefreshSession: 'com.atproto.server.refreshSession',
   ComAtprotoServerRequestAccountDelete:
     'com.atproto.server.requestAccountDelete',

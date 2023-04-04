@@ -37,6 +37,7 @@ import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/delet
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
+import * as ComAtprotoServerGetUserInviteCodes from './types/com/atproto/server/getUserInviteCodes'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
 import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
@@ -387,6 +388,16 @@ export class ServerNS {
     cfg: ConfigOf<AV, ComAtprotoServerGetSession.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.server.getSession' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getUserInviteCodes<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerGetUserInviteCodes.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.getUserInviteCodes' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

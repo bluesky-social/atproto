@@ -8,7 +8,8 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "includeUsed": { "type": "boolean", "default": true }
+          "includeUsed": { "type": "boolean", "default": true },
+          "createAvailable": { "type": "boolean", "default": true }
         }
       },
       "output": {
@@ -30,11 +31,11 @@
     },
     "invite": {
       "type": "object",
-      "requred": ["code", "available", "uses"],
+      "required": ["code", "available", "uses"],
       "properties": {
         "code": { "type": "string" },
         "available": { "type": "integer" },
-        "users": { "type": "integer" }
+        "uses": { "type": "integer" }
       }
     }
   }

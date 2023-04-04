@@ -38,6 +38,7 @@ import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/delet
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
+import * as ComAtprotoServerGetUserInviteCodes from './types/com/atproto/server/getUserInviteCodes'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
 import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
@@ -116,6 +117,7 @@ export * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/delet
 export * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 export * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 export * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
+export * as ComAtprotoServerGetUserInviteCodes from './types/com/atproto/server/getUserInviteCodes'
 export * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 export * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
 export * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
@@ -577,6 +579,17 @@ export class ServerNS {
       .call('com.atproto.server.getSession', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoServerGetSession.toKnownErr(e)
+      })
+  }
+
+  getUserInviteCodes(
+    params?: ComAtprotoServerGetUserInviteCodes.QueryParams,
+    opts?: ComAtprotoServerGetUserInviteCodes.CallOptions,
+  ): Promise<ComAtprotoServerGetUserInviteCodes.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.getUserInviteCodes', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoServerGetUserInviteCodes.toKnownErr(e)
       })
   }
 
