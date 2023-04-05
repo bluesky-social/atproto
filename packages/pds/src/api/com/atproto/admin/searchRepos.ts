@@ -10,12 +10,12 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params }) => {
       const { db, services } = ctx
       const moderationService = services.moderation(db)
-      const { term = '', limit = 50, cursor } = params
+      const { term = '', limit = 50, cursor, invitedBy } = params
 
       if (!term) {
         const results = await services
           .account(db)
-          .list({ limit, cursor, includeSoftDeleted: true })
+          .list({ limit, cursor, includeSoftDeleted: true, invitedBy })
         const keyset = new ListKeyset(sql``, sql``)
 
         return {

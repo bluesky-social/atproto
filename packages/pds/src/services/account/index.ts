@@ -212,11 +212,12 @@ export class AccountService {
     limit: number
     cursor?: string
     includeSoftDeleted?: boolean
+    invitedBy?: string
   }): Promise<(RepoRoot & DidHandle)[]> {
-    const { limit, cursor, includeSoftDeleted } = opts
+    const { limit, cursor, includeSoftDeleted, invitedBy } = opts
     const { ref } = this.db.db.dynamic
 
-    const builder = this.db.db
+    let builder = this.db.db
       .selectFrom('repo_root')
       .innerJoin('did_handle', 'did_handle.did', 'repo_root.did')
       .if(!includeSoftDeleted, (qb) =>
@@ -224,6 +225,17 @@ export class AccountService {
       )
       .selectAll('did_handle')
       .selectAll('repo_root')
+
+    if (invitedBy) {
+      builder = builder
+        .innerJoin(
+          'invite_code_use as code_use',
+          'code_use.usedBy',
+          'did_handle.did',
+        )
+        .innerJoin('invite_code', 'invite_code.code', 'code_use.code')
+        .where('invite_code.forUser', '=', invitedBy)
+    }
 
     const keyset = new ListKeyset(ref('indexedAt'), ref('handle'))
 
@@ -304,11 +316,12 @@ export class AccountService {
     }))
   }
 
-  async getInviteCodesForAccounts(dids: string[]): Promise<InviteCodesByDid> {
+  async getInvitedByForAccounts(
+    dids: string[],
+  ): Promise<Record<string, CodeDetail>> {
     if (dids.length < 1) return {}
     const codeDetailsRes = await this.selectInviteCodesQb()
-      .where('forAccount', 'in', dids)
-      .orWhere('code', 'in', (qb) =>
+      .where('code', 'in', (qb) =>
         qb
           .selectFrom('invite_code_use')
           .where('usedBy', 'in', dids)
@@ -325,21 +338,13 @@ export class AccountService {
       disabled: row.disabled === 1,
     }))
     return codeDetails.reduce((acc, cur) => {
-      acc[cur.forAccount] ??= { invitedBy: undefined, invites: [] }
-      acc[cur.forAccount].invites.push(cur)
       for (const use of cur.uses) {
-        acc[use.usedBy] ??= { invitedBy: undefined, invites: [] }
-        acc[use.usedBy].invitedBy = cur
+        acc[use.usedBy] = cur
       }
       return acc
-    }, {} as InviteCodesByDid)
+    }, {} as Record<string, CodeDetail>)
   }
 }
-
-type InviteCodesByDid = Record<
-  string,
-  { invitedBy?: CodeDetail; invites: CodeDetail[] }
->
 
 type CodeDetail = {
   code: string

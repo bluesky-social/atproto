@@ -12,6 +12,7 @@ export const getUserSearchQueryPg = (
     limit: number
     cursor?: string
     includeSoftDeleted?: boolean
+    invitedBy?: string
   },
 ) => {
   const { ref } = db.db.dynamic

@@ -8,6 +8,7 @@ Object {
   "did": "user(0)",
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
+  "invites": Array [],
   "moderation": Object {
     "actions": Array [
       Object {
