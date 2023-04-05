@@ -572,7 +572,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['subject', 'follows'],
+            required: ['total', 'user', 'admin'],
             properties: {
               total: {
                 type: 'ref',
@@ -628,8 +628,8 @@ export const schemaDict = {
             limit: {
               type: 'integer',
               minimum: 1,
-              maximum: 1000,
-              default: 500,
+              maximum: 500,
+              default: 100,
             },
             cursor: {
               type: 'string',
@@ -640,7 +640,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['cursor', 'codes'],
+            required: ['codes'],
             properties: {
               cursor: {
                 type: 'string',
@@ -1877,7 +1877,7 @@ export const schemaDict = {
               useCount: {
                 type: 'integer',
               },
-              forUser: {
+              forAccount: {
                 type: 'string',
                 format: 'did',
               },

@@ -24,7 +24,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["cursor", "codes"],
+          "required": ["codes"],
           "properties": {
             "cursor": {"type": "string"},
             "codes": {

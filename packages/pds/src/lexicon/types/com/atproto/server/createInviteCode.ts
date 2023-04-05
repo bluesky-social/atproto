@@ -12,7 +12,7 @@ export interface QueryParams {}
 
 export interface InputSchema {
   useCount: number
-  forUser?: string
+  forAccount?: string
   [k: string]: unknown
 }
 

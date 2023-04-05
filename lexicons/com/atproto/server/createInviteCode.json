@@ -12,7 +12,7 @@
           "required": ["useCount"],
           "properties": {
             "useCount": {"type": "integer"},
-            "forUser": {"type": "string", "format": "did"}
+            "forAccount": {"type": "string", "format": "did"}
           }
         }
       },

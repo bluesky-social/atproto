@@ -1,26 +1,27 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { sql } from 'kysely'
+import { nullToZero } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getInviteCodeUsage({
     auth: ctx.adminVerifier,
     handler: async () => {
+      const ref = ctx.db.db.dynamic.ref
       const res = await ctx.db.db
         .with('use_count', (qb) =>
           qb
             .selectFrom('invite_code_use')
             .groupBy('code')
-            .select(['code', sql<number>`count(usedBy)`.as('uses')]),
+            .select(['code', sql<number>`count(*)`.as('uses')]),
         )
         .selectFrom('invite_code')
         .leftJoin('use_count', 'use_count.code', 'invite_code.code')
-        .groupBy('invite_code.code')
         .select([
           'invite_code.createdBy as createdBy',
           'invite_code.availableUses as available',
           'invite_code.disabled as disabled',
-          'use_count.uses as uses',
+          nullToZero(ctx.db, ref('use_count.uses')).as('uses'),
         ])
         .execute()
 
@@ -54,7 +55,7 @@ type CodesDetail = {
 type Row = {
   available: number
   disabled: 1 | 0
-  uses: number | null
+  uses: number
 }
 
 const empty = () => ({

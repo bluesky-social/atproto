@@ -78,6 +78,7 @@ export const runTestServer = async (
     recoveryKey,
     adminPassword: ADMIN_PASSWORD,
     inviteRequired: false,
+    userInviteInterval: null,
     didPlcUrl: plcUrl,
     jwtSecret: 'jwt-secret',
     availableUserDomains: ['.test'],
@@ -180,6 +181,12 @@ export const forSnapshot = (obj: unknown) => {
     }
     if (str.match(/^\d+::bafy/)) {
       return constantKeysetCursor
+    }
+    if (str.startsWith('pds-public-url-')) {
+      return 'invite-code'
+    }
+    if (str.match(/^\d+::pds-public-url-/)) {
+      return '0000000000000::invite-code'
     }
     let isCid: boolean
     try {

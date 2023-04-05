@@ -12,18 +12,20 @@ import {
   CodeDetail,
   CodeUse,
 } from '../../../../lexicon/types/com/atproto/admin/getInviteCodes'
+import { nullToZero } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getInviteCodes({
     auth: ctx.adminVerifier,
     handler: async ({ params }) => {
       const { sort, limit, cursor } = params
-      let builder = ctx.db.db
+      const ref = ctx.db.db.dynamic.ref
+      const innerBuilder = ctx.db.db
         .with('use_count', (qb) =>
           qb
             .selectFrom('invite_code_use')
             .groupBy('code')
-            .select(['code', sql<number>`count(usedBy)`.as('uses')]),
+            .select(['code', sql<number>`count(*)`.as('uses')]),
         )
         .selectFrom('invite_code')
         .leftJoin('use_count', 'invite_code.code', 'use_count.code')
@@ -34,10 +36,9 @@ export default function (server: Server, ctx: AppContext) {
           'invite_code.forUser as forAccount',
           'invite_code.createdBy as createdBy',
           'invite_code.createdAt as createdAt',
-          'use_count.uses as uses',
+          nullToZero(ctx.db, ref('use_count.uses')).as('uses'),
         ])
 
-      const ref = ctx.db.db.dynamic.ref
       let keyset
       if (sort === 'recent') {
         keyset = new TimeCodeKeyset(ref('createdAt'), ref('code'))
@@ -47,6 +48,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`unknown sort method: ${sort}`)
       }
 
+      let builder = ctx.db.db.selectFrom(innerBuilder.as('codes')).selectAll()
       builder = paginate(builder, {
         limit,
         cursor,
@@ -120,17 +122,17 @@ export class UseCodeKeyset extends GenericKeyset<UseCodeResult, LabeledResult> {
   }
   labeledResultToCursor(labeled: Cursor) {
     return {
-      primary: new Date(labeled.primary).getTime().toString(),
+      primary: labeled.primary.toString(),
       secondary: labeled.secondary,
     }
   }
   cursorToLabeledResult(cursor: Cursor) {
-    const primaryDate = new Date(parseInt(cursor.primary, 10))
-    if (isNaN(primaryDate.getTime())) {
+    const primaryCode = parseInt(cursor.primary, 10)
+    if (isNaN(primaryCode)) {
       throw new InvalidRequestError('Malformed cursor')
     }
     return {
-      primary: primaryDate.toISOString(),
+      primary: primaryCode,
       secondary: cursor.secondary,
     }
   }

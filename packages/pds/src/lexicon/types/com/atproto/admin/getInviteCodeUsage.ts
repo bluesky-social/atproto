@@ -13,9 +13,9 @@ export interface QueryParams {}
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  total?: CodesDetail
-  user?: CodesDetail
-  admin?: CodesDetail
+  total: CodesDetail
+  user: CodesDetail
+  admin: CodesDetail
   [k: string]: unknown
 }
 

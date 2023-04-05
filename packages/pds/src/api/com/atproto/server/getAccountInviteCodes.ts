@@ -3,6 +3,7 @@ import AppContext from '../../../../context'
 import { genInvCodes } from './util'
 import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { nullToZero } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getAccountInviteCodes({
@@ -11,6 +12,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const { includeUsed, createAvailable } = params
 
+      const ref = ctx.db.db.dynamic.ref
       const [user, userCodesRes] = await Promise.all([
         ctx.db.db
           .selectFrom('user_account')
@@ -22,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
             qb
               .selectFrom('invite_code_use')
               .groupBy('code')
-              .select(['code', sql<number>`count(usedBy)`.as('uses')]),
+              .select(['code', sql<number>`count(*)`.as('uses')]),
           )
           .selectFrom('invite_code')
           .leftJoin('use_count', 'use_count.code', 'invite_code.code')
@@ -32,13 +34,12 @@ export default function (server: Server, ctx: AppContext) {
             'invite_code.code as code',
             'invite_code.availableUses as available',
             'invite_code.disabled as disabled',
-            'use_count.uses as uses',
+            nullToZero(ctx.db, ref('use_count.uses')).as('uses'),
           ])
           .execute(),
       ])
       const userCodes = userCodesRes.map((row) => ({
         ...row,
-        uses: row.uses ?? 0,
         disabled: row.disabled === 1,
       }))
       const unusedCodes = userCodes.filter((row) => row.available > row.uses)

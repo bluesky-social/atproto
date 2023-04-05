@@ -7,6 +7,7 @@ import {
   SqliteIntrospector,
   SqliteQueryCompiler,
 } from 'kysely'
+import Database from '.'
 
 export const actorWhereClause = (actor: string) => {
   if (actor.startsWith('did:')) {
@@ -26,6 +27,14 @@ export const softDeleted = (repoOrRecord: { takedownId: number | null }) => {
 }
 
 export const countAll = sql<number>`count(*)`
+
+export const nullToZero = (db: Database, ref: DbRef) => {
+  if (db.dialect === 'pg') {
+    return sql<number>`coalesce(${ref}, 0)`
+  } else {
+    return sql<number>`ifnull(${ref}, 0)`
+  }
+}
 
 export const dummyDialect = {
   createAdapter() {

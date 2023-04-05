@@ -9,7 +9,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["subject", "follows"],
+          "required": ["total", "user", "admin"],
           "properties": {
             "total": { "type": "ref", "ref": "#codesDetail" },
             "user": { "type": "ref", "ref": "#codesDetail" },

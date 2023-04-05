@@ -16,7 +16,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor: string
+  cursor?: string
   codes: CodeDetail[]
   [k: string]: unknown
 }

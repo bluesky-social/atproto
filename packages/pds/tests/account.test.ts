@@ -20,9 +20,10 @@ const minsToMs = 60 * 1000
 const createInviteCode = async (
   agent: AtpAgent,
   uses: number,
+  forUser?: string,
 ): Promise<string> => {
   const res = await agent.api.com.atproto.server.createInviteCode(
-    { useCount: uses },
+    { useCount: uses, forUser },
     {
       headers: { authorization: util.adminAuth() },
       encoding: 'application/json',
@@ -501,5 +502,53 @@ describe('account', () => {
       includeUsed: false,
     })
     expect(res4.data.codes.length).toBe(5)
+  })
+
+  it('prevents use of disabled codes', async () => {
+    const first = await createInviteCode(agent, 1)
+    const accntCodes =
+      await agent.api.com.atproto.server.getAccountInviteCodes()
+    const second = accntCodes.data.codes[0].code
+
+    // disabled first by code & second by did
+    await agent.api.com.atproto.admin.disableInviteCodes(
+      {
+        codes: [first],
+        accounts: [did],
+      },
+      {
+        headers: { authorization: util.adminAuth() },
+        encoding: 'application/json',
+      },
+    )
+
+    const attempt = async (code: string) => {
+      await agent.api.com.atproto.server.createAccount({
+        email: 'disable@test.com',
+        handle: 'disable.test',
+        inviteCode: code,
+        password: 'disabled',
+      })
+    }
+
+    await expect(attempt(first)).rejects.toThrow(
+      ComAtprotoServerCreateAccount.InvalidInviteCodeError,
+    )
+    await expect(attempt(second)).rejects.toThrow(
+      ComAtprotoServerCreateAccount.InvalidInviteCodeError,
+    )
+  })
+
+  it('does not allow disabling all admin codes', async () => {
+    const attempt = agent.api.com.atproto.admin.disableInviteCodes(
+      {
+        accounts: ['admin'],
+      },
+      {
+        headers: { authorization: util.adminAuth() },
+        encoding: 'application/json',
+      },
+    )
+    await expect(attempt).rejects.toThrow('cannot disable admin invite codes')
   })
 })
