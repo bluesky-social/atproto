@@ -9,6 +9,7 @@ import Mail from 'nodemailer/lib/mailer'
 import { AppContext, Database } from '../src'
 import * as util from './_util'
 import { ServerMailer } from '../src/mailer'
+import { DAY } from '@atproto/common'
 
 const email = 'alice@test.com'
 const handle = 'alice.test'
@@ -19,9 +20,10 @@ const minsToMs = 60 * 1000
 const createInviteCode = async (
   agent: AtpAgent,
   uses: number,
+  forUser?: string,
 ): Promise<string> => {
   const res = await agent.api.com.atproto.server.createInviteCode(
-    { useCount: uses },
+    { useCount: uses, forUser },
     {
       headers: { authorization: util.adminAuth() },
       encoding: 'application/json',
@@ -45,6 +47,7 @@ describe('account', () => {
   beforeAll(async () => {
     const server = await util.runTestServer({
       inviteRequired: true,
+      userInviteInterval: DAY,
       termsOfServiceUrl: 'https://example.com/tos',
       privacyPolicyUrl: '/privacy-policy',
       dbPostgresSchema: 'account',
@@ -459,5 +462,95 @@ describe('account', () => {
         password,
       }),
     ).resolves.toBeDefined()
+  })
+
+  it('allow users to get available user invites', async () => {
+    // first pretend account was made 2 days in the past
+    const twoDaysAgo = new Date(Date.now() - 2 * DAY).toISOString()
+    await ctx.db.db
+      .updateTable('user_account')
+      .set({ createdAt: twoDaysAgo })
+      .where('did', '=', did)
+      .execute()
+    const res1 = await agent.api.com.atproto.server.getAccountInviteCodes()
+    expect(res1.data.codes.length).toBe(2)
+
+    // now pretend it was made 10 days ago & use both invites
+    const tenDaysAgo = new Date(Date.now() - 10 * DAY).toISOString()
+    await ctx.db.db
+      .updateTable('user_account')
+      .set({ createdAt: tenDaysAgo })
+      .where('did', '=', did)
+      .execute()
+    await ctx.db.db
+      .insertInto('invite_code_use')
+      .values(
+        res1.data.codes.map((code) => ({
+          code: code.code,
+          usedBy: 'did:example:test',
+          usedAt: new Date().toISOString(),
+        })),
+      )
+      .execute()
+
+    const res2 = await agent.api.com.atproto.server.getAccountInviteCodes({
+      includeUsed: false,
+      createAvailable: false,
+    })
+    expect(res2.data.codes.length).toBe(0)
+    const res3 = await agent.api.com.atproto.server.getAccountInviteCodes()
+    expect(res3.data.codes.length).toBe(7)
+    const res4 = await agent.api.com.atproto.server.getAccountInviteCodes({
+      includeUsed: false,
+    })
+    expect(res4.data.codes.length).toBe(5)
+  })
+
+  it('prevents use of disabled codes', async () => {
+    const first = await createInviteCode(agent, 1)
+    const accntCodes =
+      await agent.api.com.atproto.server.getAccountInviteCodes()
+    const second = accntCodes.data.codes[0].code
+
+    // disabled first by code & second by did
+    await agent.api.com.atproto.admin.disableInviteCodes(
+      {
+        codes: [first],
+        accounts: [did],
+      },
+      {
+        headers: { authorization: util.adminAuth() },
+        encoding: 'application/json',
+      },
+    )
+
+    const attempt = async (code: string) => {
+      await agent.api.com.atproto.server.createAccount({
+        email: 'disable@test.com',
+        handle: 'disable.test',
+        inviteCode: code,
+        password: 'disabled',
+      })
+    }
+
+    await expect(attempt(first)).rejects.toThrow(
+      ComAtprotoServerCreateAccount.InvalidInviteCodeError,
+    )
+    await expect(attempt(second)).rejects.toThrow(
+      ComAtprotoServerCreateAccount.InvalidInviteCodeError,
+    )
+  })
+
+  it('does not allow disabling all admin codes', async () => {
+    const attempt = agent.api.com.atproto.admin.disableInviteCodes(
+      {
+        accounts: ['admin'],
+      },
+      {
+        headers: { authorization: util.adminAuth() },
+        encoding: 'application/json',
+      },
+    )
+    await expect(attempt).rejects.toThrow('cannot disable admin invite codes')
   })
 })

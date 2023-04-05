@@ -27,6 +27,10 @@ export const softDeleted = (repoOrRecord: { takedownId: number | null }) => {
 
 export const countAll = sql<number>`count(*)`
 
+export const nullToZero = (ref: DbRef) => {
+  return sql<number>`coalesce(${ref}, 0)`
+}
+
 export const dummyDialect = {
   createAdapter() {
     return new SqliteAdapter()

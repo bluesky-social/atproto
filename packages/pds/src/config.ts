@@ -24,6 +24,7 @@ export interface ServerConfigValues {
   adminPassword: string
 
   inviteRequired: boolean
+  userInviteInterval: number | null
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
 
@@ -68,8 +69,7 @@ export class ServerConfig {
     } else {
       scheme = hostname === 'localhost' ? 'http' : 'https'
     }
-    const envPort = parseInt(process.env.PORT || '', 10)
-    const port = isNaN(envPort) ? 2583 : envPort
+    const port = parseIntWithFallback(process.env.PORT, 2583)
 
     const jwtSecret = process.env.JWT_SECRET || 'jwt_secret'
 
@@ -88,6 +88,10 @@ export class ServerConfig {
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
 
     const inviteRequired = process.env.INVITE_REQUIRED === 'true' ? true : false
+    const userInviteInterval = parseIntWithFallback(
+      process.env.USER_INVITE_INTERVAL,
+      null,
+    )
     const privacyPolicyUrl = process.env.PRIVACY_POLICY_URL
     const termsOfServiceUrl = process.env.TERMS_OF_SERVICE_URL
 
@@ -119,11 +123,15 @@ export class ServerConfig {
     const dbPostgresUrl = process.env.DB_POSTGRES_URL
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
 
-    const maxBuffer = parseInt(process.env.MAX_SUBSCRIPTION_BUFFER || '', 10)
-    const maxSubscriptionBuffer = isNaN(maxBuffer) ? 500 : maxBuffer
+    const maxSubscriptionBuffer = parseIntWithFallback(
+      process.env.MAX_SUBSCRIPTION_BUFFER,
+      500,
+    )
 
-    const backfillLimit = parseInt(process.env.REPO_BACKFILL_LIMIT_MS || '', 10)
-    const repoBackfillLimitMs = isNaN(backfillLimit) ? DAY : backfillLimit
+    const repoBackfillLimitMs = parseIntWithFallback(
+      process.env.REPO_BACKFILL_LIMIT_MS,
+      DAY,
+    )
 
     // E.g. ws://abc.com:4000
     const appViewRepoProvider = process.env.APP_VIEW_REPO_PROVIDER || undefined
@@ -145,6 +153,7 @@ export class ServerConfig {
       serverDid,
       adminPassword,
       inviteRequired,
+      userInviteInterval,
       privacyPolicyUrl,
       termsOfServiceUrl,
       databaseLocation,
@@ -241,6 +250,10 @@ export class ServerConfig {
     return this.cfg.inviteRequired
   }
 
+  get userInviteInterval() {
+    return this.cfg.userInviteInterval
+  }
+
   get privacyPolicyUrl() {
     if (
       this.cfg.privacyPolicyUrl &&
@@ -312,4 +325,12 @@ export class ServerConfig {
   get appViewRepoProvider() {
     return this.cfg.appViewRepoProvider
   }
+}
+
+const parseIntWithFallback = <T>(
+  value: string | undefined,
+  fallback: T,
+): number | T => {
+  const parsed = parseInt(value || '', 10)
+  return isNaN(parsed) ? fallback : parsed
 }

@@ -10,13 +10,8 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {}
 
 export interface InputSchema {
-  useCount: number
-  forAccount?: string
-  [k: string]: unknown
-}
-
-export interface OutputSchema {
-  code: string
+  codes?: string[]
+  accounts?: string[]
   [k: string]: unknown
 }
 
@@ -29,7 +24,6 @@ export interface CallOptions {
 export interface Response {
   success: boolean
   headers: Headers
-  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {

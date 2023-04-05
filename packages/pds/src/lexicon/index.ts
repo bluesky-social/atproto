@@ -9,6 +9,8 @@ import {
   StreamAuthVerifier,
 } from '@atproto/xrpc-server'
 import { schemas } from './lexicons'
+import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
+import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
 import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
 import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
@@ -36,6 +38,7 @@ import * as ComAtprotoServerCreateSession from './types/com/atproto/server/creat
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
+import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
@@ -133,6 +136,23 @@ export class AdminNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  disableInviteCodes<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminDisableInviteCodes.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.disableInviteCodes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getInviteCodes<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoAdminGetInviteCodes.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.admin.getInviteCodes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   getModerationAction<AV extends AuthVerifier>(
@@ -380,6 +400,16 @@ export class ServerNS {
     cfg: ConfigOf<AV, ComAtprotoServerDescribeServer.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.server.describeServer' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getAccountInviteCodes<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerGetAccountInviteCodes.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.getAccountInviteCodes' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

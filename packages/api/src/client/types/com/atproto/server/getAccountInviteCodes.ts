@@ -6,24 +6,22 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import * as ComAtprotoServerDefs from './defs'
 
-export interface QueryParams {}
-
-export interface InputSchema {
-  useCount: number
-  forAccount?: string
-  [k: string]: unknown
+export interface QueryParams {
+  includeUsed?: boolean
+  createAvailable?: boolean
 }
 
+export type InputSchema = undefined
+
 export interface OutputSchema {
-  code: string
+  codes: ComAtprotoServerDefs.InviteCode[]
   [k: string]: unknown
 }
 
 export interface CallOptions {
   headers?: Headers
-  qp?: QueryParams
-  encoding: 'application/json'
 }
 
 export interface Response {
@@ -32,8 +30,15 @@ export interface Response {
   data: OutputSchema
 }
 
+export class DuplicateCreateError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
+    if (e.error === 'DuplicateCreate') return new DuplicateCreateError(e)
   }
   return e
 }

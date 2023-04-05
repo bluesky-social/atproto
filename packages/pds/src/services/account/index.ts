@@ -5,7 +5,7 @@ import * as scrypt from '../../db/scrypt'
 import { UserAccount } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
-import { notSoftDeletedClause } from '../../db/util'
+import { countAll, notSoftDeletedClause, nullToZero } from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import { sequenceHandleUpdate } from '../../sequencer'
@@ -248,6 +248,112 @@ export class AccountService {
         .execute(),
     ])
   }
+
+  selectInviteCodesQb() {
+    const ref = this.db.db.dynamic.ref
+    const builder = this.db.db
+      .with('use_count', (qb) =>
+        qb
+          .selectFrom('invite_code_use')
+          .groupBy('code')
+          .select(['code', countAll.as('uses')]),
+      )
+      .selectFrom('invite_code')
+      .leftJoin('use_count', 'invite_code.code', 'use_count.code')
+      .select([
+        'invite_code.code as code',
+        'invite_code.availableUses as available',
+        'invite_code.disabled as disabled',
+        'invite_code.forUser as forAccount',
+        'invite_code.createdBy as createdBy',
+        'invite_code.createdAt as createdAt',
+        nullToZero(ref('use_count.uses')).as('uses'),
+      ])
+    return this.db.db.selectFrom(builder.as('codes')).selectAll()
+  }
+
+  async getInviteCodesUses(
+    codes: string[],
+  ): Promise<Record<string, CodeUse[]>> {
+    const uses: Record<string, CodeUse[]> = {}
+    if (codes.length > 0) {
+      const usesRes = await this.db.db
+        .selectFrom('invite_code_use')
+        .where('code', 'in', codes)
+        .selectAll()
+        .execute()
+      for (const use of usesRes) {
+        const { code, usedBy, usedAt } = use
+        uses[code] ??= []
+        uses[code].push({ usedBy, usedAt })
+      }
+    }
+    return uses
+  }
+
+  async getAccountInviteCodes(did: string) {
+    const res = await this.selectInviteCodesQb()
+      .where('forAccount', '=', did)
+      .execute()
+    const codes = res.map((row) => row.code)
+    const uses = await this.getInviteCodesUses(codes)
+    return res.map((row) => ({
+      ...row,
+      uses: uses[row.code] ?? [],
+      disabled: row.disabled === 1,
+    }))
+  }
+
+  async getInviteCodesForAccounts(dids: string[]): Promise<InviteCodesByDid> {
+    if (dids.length < 1) return {}
+    const codeDetailsRes = await this.selectInviteCodesQb()
+      .where('forAccount', 'in', dids)
+      .orWhere('code', 'in', (qb) =>
+        qb
+          .selectFrom('invite_code_use')
+          .where('usedBy', 'in', dids)
+          .select('code')
+          .distinct(),
+      )
+      .execute()
+    const uses = await this.getInviteCodesUses(
+      codeDetailsRes.map((row) => row.code),
+    )
+    const codeDetails = codeDetailsRes.map((row) => ({
+      ...row,
+      uses: uses[row.code] ?? [],
+      disabled: row.disabled === 1,
+    }))
+    return codeDetails.reduce((acc, cur) => {
+      acc[cur.forAccount] ??= { invitedBy: undefined, invites: [] }
+      acc[cur.forAccount].invites.push(cur)
+      for (const use of cur.uses) {
+        acc[use.usedBy] ??= { invitedBy: undefined, invites: [] }
+        acc[use.usedBy].invitedBy = cur
+      }
+      return acc
+    }, {} as InviteCodesByDid)
+  }
+}
+
+type InviteCodesByDid = Record<
+  string,
+  { invitedBy?: CodeDetail; invites: CodeDetail[] }
+>
+
+type CodeDetail = {
+  code: string
+  available: number
+  disabled: boolean
+  forAccount: string
+  createdBy: string
+  createdAt: string
+  uses: CodeUse[]
+}
+
+type CodeUse = {
+  usedBy: string
+  usedAt: string
 }
 
 export class UserAlreadyExistsError extends Error {}

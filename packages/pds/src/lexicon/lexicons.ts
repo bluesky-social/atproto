@@ -299,6 +299,17 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#moderation',
           },
+          invitedBy: {
+            type: 'ref',
+            ref: 'lex:com.atproto.server.defs#inviteCode',
+          },
+          invites: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.server.defs#inviteCode',
+            },
+          },
         },
       },
       repoViewDetail: {
@@ -335,6 +346,17 @@ export const schemaDict = {
           moderation: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#moderationDetail',
+          },
+          invitedBy: {
+            type: 'ref',
+            ref: 'lex:com.atproto.server.defs#inviteCode',
+          },
+          invites: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.server.defs#inviteCode',
+            },
           },
         },
       },
@@ -525,6 +547,85 @@ export const schemaDict = {
           },
           length: {
             type: 'integer',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminDisableInviteCodes: {
+    lexicon: 1,
+    id: 'com.atproto.admin.disableInviteCodes',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Disable some set of codes and/or all codes associated with a set of users',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              codes: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              accounts: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminGetInviteCodes: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getInviteCodes',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Admin view of invite codes',
+        parameters: {
+          type: 'params',
+          properties: {
+            sort: {
+              type: 'string',
+              knownValues: ['recent', 'usage'],
+              default: 'recent',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 500,
+              default: 100,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['codes'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              codes: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.server.defs#inviteCode',
+                },
+              },
+            },
           },
         },
       },
@@ -821,6 +922,9 @@ export const schemaDict = {
           type: 'params',
           properties: {
             term: {
+              type: 'string',
+            },
+            invitedBy: {
               type: 'string',
             },
             limit: {
@@ -1701,6 +1805,10 @@ export const schemaDict = {
               useCount: {
                 type: 'integer',
               },
+              forAccount: {
+                type: 'string',
+                format: 'did',
+              },
             },
           },
         },
@@ -1774,6 +1882,66 @@ export const schemaDict = {
             name: 'AccountTakedown',
           },
         ],
+      },
+    },
+  },
+  ComAtprotoServerDefs: {
+    lexicon: 1,
+    id: 'com.atproto.server.defs',
+    defs: {
+      inviteCode: {
+        type: 'object',
+        required: [
+          'code',
+          'available',
+          'disabled',
+          'forAccount',
+          'createdBy',
+          'createdAt',
+          'uses',
+        ],
+        properties: {
+          code: {
+            type: 'string',
+          },
+          available: {
+            type: 'integer',
+          },
+          disabled: {
+            type: 'boolean',
+          },
+          forAccount: {
+            type: 'string',
+          },
+          createdBy: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          uses: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.server.defs#inviteCodeUse',
+            },
+          },
+        },
+      },
+      inviteCodeUse: {
+        type: 'object',
+        required: ['usedBy', 'usedAt'],
+        properties: {
+          usedBy: {
+            type: 'string',
+            format: 'did',
+          },
+          usedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
       },
     },
   },
@@ -1865,6 +2033,50 @@ export const schemaDict = {
             type: 'string',
           },
         },
+      },
+    },
+  },
+  ComAtprotoServerGetAccountInviteCodes: {
+    lexicon: 1,
+    id: 'com.atproto.server.getAccountInviteCodes',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get all invite codes for a given account',
+        parameters: {
+          type: 'params',
+          properties: {
+            includeUsed: {
+              type: 'boolean',
+              default: true,
+            },
+            createAvailable: {
+              type: 'boolean',
+              default: true,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['codes'],
+            properties: {
+              codes: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.server.defs#inviteCode',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'DuplicateCreate',
+          },
+        ],
       },
     },
   },
@@ -4174,6 +4386,8 @@ export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
+  ComAtprotoAdminDisableInviteCodes: 'com.atproto.admin.disableInviteCodes',
+  ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
   ComAtprotoAdminGetModerationAction: 'com.atproto.admin.getModerationAction',
   ComAtprotoAdminGetModerationActions: 'com.atproto.admin.getModerationActions',
   ComAtprotoAdminGetModerationReport: 'com.atproto.admin.getModerationReport',
@@ -4202,9 +4416,12 @@ export const ids = {
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',
   ComAtprotoServerCreateInviteCode: 'com.atproto.server.createInviteCode',
   ComAtprotoServerCreateSession: 'com.atproto.server.createSession',
+  ComAtprotoServerDefs: 'com.atproto.server.defs',
   ComAtprotoServerDeleteAccount: 'com.atproto.server.deleteAccount',
   ComAtprotoServerDeleteSession: 'com.atproto.server.deleteSession',
   ComAtprotoServerDescribeServer: 'com.atproto.server.describeServer',
+  ComAtprotoServerGetAccountInviteCodes:
+    'com.atproto.server.getAccountInviteCodes',
   ComAtprotoServerGetSession: 'com.atproto.server.getSession',
   ComAtprotoServerRefreshSession: 'com.atproto.server.refreshSession',
   ComAtprotoServerRequestAccountDelete:

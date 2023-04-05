@@ -7,11 +7,10 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as ComAtprotoAdminDefs from './defs'
+import * as ComAtprotoServerDefs from '../server/defs'
 
 export interface QueryParams {
-  term?: string
-  invitedBy?: string
+  sort: 'recent' | 'usage' | (string & {})
   limit: number
   cursor?: string
 }
@@ -20,7 +19,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  repos: ComAtprotoAdminDefs.RepoView[]
+  codes: ComAtprotoServerDefs.InviteCode[]
   [k: string]: unknown
 }
 

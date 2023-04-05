@@ -37,7 +37,7 @@ export class ModerationViews {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
-    const [info, actionResults] = await Promise.all([
+    const [info, actionResults, inviteCodes] = await Promise.all([
       await this.db.db
         .selectFrom('did_handle')
         .leftJoin('user_account', 'user_account.did', 'did_handle.did')
@@ -69,6 +69,9 @@ export class ModerationViews {
         )
         .select(['id', 'action', 'subjectDid'])
         .execute(),
+      this.services
+        .account(this.db)
+        .getInviteCodesForAccounts(results.map((r) => r.did)),
     ])
 
     const infoByDid = info.reduce(
@@ -98,6 +101,8 @@ export class ModerationViews {
             ? { id: action.id, action: action.action }
             : undefined,
         },
+        invitedBy: inviteCodes[r.did]?.invitedBy,
+        invites: inviteCodes[r.did]?.invites,
       }
     })
 

@@ -11,7 +11,8 @@
           "type": "object",
           "required": ["useCount"],
           "properties": {
-            "useCount": {"type": "integer"}
+            "useCount": {"type": "integer"},
+            "forAccount": {"type": "string", "format": "did"}
           }
         }
       },
