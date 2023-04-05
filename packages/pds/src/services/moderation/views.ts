@@ -37,7 +37,7 @@ export class ModerationViews {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
-    const [info, actionResults, inviteCodes] = await Promise.all([
+    const [info, actionResults, invitedBy] = await Promise.all([
       await this.db.db
         .selectFrom('did_handle')
         .leftJoin('user_account', 'user_account.did', 'did_handle.did')
@@ -71,7 +71,7 @@ export class ModerationViews {
         .execute(),
       this.services
         .account(this.db)
-        .getInviteCodesForAccounts(results.map((r) => r.did)),
+        .getInvitedByForAccounts(results.map((r) => r.did)),
     ])
 
     const infoByDid = info.reduce(
@@ -101,8 +101,7 @@ export class ModerationViews {
             ? { id: action.id, action: action.action }
             : undefined,
         },
-        invitedBy: inviteCodes[r.did]?.invitedBy,
-        invites: inviteCodes[r.did]?.invites,
+        invitedBy: invitedBy[r.did],
       }
     })
 
@@ -111,7 +110,7 @@ export class ModerationViews {
 
   async repoDetail(result: RepoResult): Promise<RepoViewDetail> {
     const repo = await this.repo(result)
-    const [reportResults, actionResults] = await Promise.all([
+    const [reportResults, actionResults, inviteCodes] = await Promise.all([
       this.db.db
         .selectFrom('moderation_report')
         .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
@@ -126,6 +125,7 @@ export class ModerationViews {
         .orderBy('id', 'desc')
         .selectAll()
         .execute(),
+      this.services.account(this.db).getAccountInviteCodes(repo.did),
     ])
     const [reports, actions] = await Promise.all([
       this.report(reportResults),
@@ -138,6 +138,7 @@ export class ModerationViews {
         reports,
         actions,
       },
+      invites: inviteCodes,
     }
   }
 
