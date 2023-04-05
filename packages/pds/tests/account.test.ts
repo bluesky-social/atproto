@@ -485,7 +485,7 @@ describe('account', () => {
       .values(
         res1.data.codes.map((code) => ({
           code: code.code,
-          usedBy: 'blah',
+          usedBy: 'did:example:test',
           usedAt: new Date().toISOString(),
         })),
       )

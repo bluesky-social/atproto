@@ -5,7 +5,7 @@ import * as scrypt from '../../db/scrypt'
 import { UserAccount } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
-import { notSoftDeletedClause } from '../../db/util'
+import { countAll, notSoftDeletedClause, nullToZero } from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import { sequenceHandleUpdate } from '../../sequencer'
@@ -248,6 +248,51 @@ export class AccountService {
         .execute(),
     ])
   }
+
+  selectInviteCodesQb() {
+    const ref = this.db.db.dynamic.ref
+    const builder = this.db.db
+      .with('use_count', (qb) =>
+        qb
+          .selectFrom('invite_code_use')
+          .groupBy('code')
+          .select(['code', countAll.as('uses')]),
+      )
+      .selectFrom('invite_code')
+      .leftJoin('use_count', 'invite_code.code', 'use_count.code')
+      .select([
+        'invite_code.code as code',
+        'invite_code.availableUses as available',
+        'invite_code.disabled as disabled',
+        'invite_code.forUser as forAccount',
+        'invite_code.createdBy as createdBy',
+        'invite_code.createdAt as createdAt',
+        nullToZero(ref('use_count.uses')).as('uses'),
+      ])
+    return this.db.db.selectFrom(builder.as('codes')).selectAll()
+  }
+
+  async getCodeUses(codes: string[]): Promise<Record<string, CodeUse[]>> {
+    const uses: Record<string, CodeUse[]> = {}
+    if (codes.length > 0) {
+      const usesRes = await this.db.db
+        .selectFrom('invite_code_use')
+        .where('code', 'in', codes)
+        .selectAll()
+        .execute()
+      for (const use of usesRes) {
+        const { code, usedBy, usedAt } = use
+        uses[code] ??= []
+        uses[code].push({ usedBy, usedAt })
+      }
+    }
+    return uses
+  }
+}
+
+type CodeUse = {
+  usedBy: string
+  usedAt: string
 }
 
 export class UserAlreadyExistsError extends Error {}

@@ -10,7 +10,6 @@ import {
 } from '@atproto/xrpc-server'
 import { schemas } from './lexicons'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
-import * as ComAtprotoAdminGetInviteCodeUsage from './types/com/atproto/admin/getInviteCodeUsage'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
 import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
@@ -146,16 +145,6 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.disableInviteCodes' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getInviteCodeUsage<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminGetInviteCodeUsage.Handler<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.getInviteCodeUsage' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

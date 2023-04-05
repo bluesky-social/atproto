@@ -43,7 +43,7 @@
         "available": {"type": "integer"},
         "disabled": {"type": "boolean"},
         "forAccount": {"type": "string"},
-        "createdBy": {"type": "string", "format": "datetime"},
+        "createdBy": {"type": "string"},
         "createdAt": {"type": "string", "format": "datetime"},
         "uses": {
           "type": "array",

@@ -11,7 +11,6 @@ import getModerationActions from './getModerationActions'
 import getModerationReport from './getModerationReport'
 import getModerationReports from './getModerationReports'
 import disableInviteCodes from './disableInviteCodes'
-import getInviteCodeUsage from './getInviteCodeUsage'
 import getInviteCodes from './getInviteCodes'
 
 export default function (server: Server, ctx: AppContext) {
@@ -26,6 +25,5 @@ export default function (server: Server, ctx: AppContext) {
   getModerationReport(server, ctx)
   getModerationReports(server, ctx)
   disableInviteCodes(server, ctx)
-  getInviteCodeUsage(server, ctx)
   getInviteCodes(server, ctx)
 }

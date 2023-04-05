@@ -9,7 +9,6 @@ import { schemas } from './lexicons'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
-import * as ComAtprotoAdminGetInviteCodeUsage from './types/com/atproto/admin/getInviteCodeUsage'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
 import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
@@ -91,7 +90,6 @@ import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopul
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
-export * as ComAtprotoAdminGetInviteCodeUsage from './types/com/atproto/admin/getInviteCodeUsage'
 export * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 export * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
 export * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
@@ -256,17 +254,6 @@ export class AdminNS {
       .call('com.atproto.admin.disableInviteCodes', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminDisableInviteCodes.toKnownErr(e)
-      })
-  }
-
-  getInviteCodeUsage(
-    params?: ComAtprotoAdminGetInviteCodeUsage.QueryParams,
-    opts?: ComAtprotoAdminGetInviteCodeUsage.CallOptions,
-  ): Promise<ComAtprotoAdminGetInviteCodeUsage.Response> {
-    return this._service.xrpc
-      .call('com.atproto.admin.getInviteCodeUsage', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoAdminGetInviteCodeUsage.toKnownErr(e)
       })
   }
 

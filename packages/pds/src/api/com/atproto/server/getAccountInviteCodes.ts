@@ -2,7 +2,6 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { genInvCodes } from './util'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { countAll, nullToZero } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getAccountInviteCodes({
@@ -11,36 +10,26 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const { includeUsed, createAvailable } = params
 
-      const ref = ctx.db.db.dynamic.ref
+      const accntSrvc = ctx.services.account(ctx.db)
+
       const [user, userCodesRes] = await Promise.all([
         ctx.db.db
           .selectFrom('user_account')
           .where('did', '=', requester)
           .select('createdAt')
           .executeTakeFirstOrThrow(),
-        ctx.db.db
-          .with('use_count', (qb) =>
-            qb
-              .selectFrom('invite_code_use')
-              .groupBy('code')
-              .select(['code', countAll.as('uses')]),
-          )
-          .selectFrom('invite_code')
-          .leftJoin('use_count', 'use_count.code', 'invite_code.code')
-          .where('forUser', '=', requester)
-          .groupBy('invite_code.code')
-          .select([
-            'invite_code.code as code',
-            'invite_code.availableUses as available',
-            'invite_code.disabled as disabled',
-            nullToZero(ref('use_count.uses')).as('uses'),
-          ])
+        accntSrvc
+          .selectInviteCodesQb()
+          .where('forAccount', '=', requester)
           .execute(),
       ])
       const userCodes = userCodesRes.map((row) => ({
         ...row,
         disabled: row.disabled === 1,
       }))
+      const codeUses = await accntSrvc.getCodeUses(
+        userCodes.map((row) => row.code),
+      )
       const unusedCodes = userCodes.filter((row) => row.available > row.uses)
 
       let created: string[] = []
@@ -48,6 +37,7 @@ export default function (server: Server, ctx: AppContext) {
       // if the user wishes to create available codes & the server allows that,
       // we determine the number to create by dividing their account lifetime by the interval at which they can create codes
       // we allow a max of 5 open codes at a given time
+      const now = new Date().toISOString()
       if (createAvailable && ctx.cfg.userInviteInterval !== null) {
         const accountLifespan = Date.now() - new Date(user.createdAt).getTime()
         const couldCreate = Math.floor(
@@ -62,7 +52,7 @@ export default function (server: Server, ctx: AppContext) {
             disabled: 0 as const,
             forUser: requester,
             createdBy: requester,
-            createdAt: new Date().toISOString(),
+            createdAt: now,
           }))
           await ctx.db.transaction(async (dbTxn) => {
             await dbTxn.db.insertInto('invite_code').values(rows).execute()
@@ -81,13 +71,21 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
+      const preexisting = includeUsed ? userCodes : unusedCodes
+
       const toReturn = [
-        ...(includeUsed ? userCodes : unusedCodes),
+        ...preexisting.map((row) => ({
+          ...row,
+          uses: codeUses[row.code] ?? [],
+        })),
         ...created.map((code) => ({
           code: code,
           available: 1,
-          uses: 0,
           disabled: false,
+          forAccount: requester,
+          createdBy: requester,
+          createdAt: now,
+          uses: [],
         })),
       ]
 

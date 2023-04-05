@@ -16,7 +16,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  codes: Invite[]
+  codes: CodeDetail[]
   [k: string]: unknown
 }
 
@@ -42,22 +42,49 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
   res: express.Response
 }) => Promise<HandlerOutput> | HandlerOutput
 
-export interface Invite {
+export interface CodeDetail {
   code: string
   available: number
-  uses: number
   disabled: boolean
+  forAccount: string
+  createdBy: string
+  createdAt: string
+  uses: CodeUse[]
   [k: string]: unknown
 }
 
-export function isInvite(v: unknown): v is Invite {
+export function isCodeDetail(v: unknown): v is CodeDetail {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.server.getAccountInviteCodes#invite'
+    v.$type === 'com.atproto.server.getAccountInviteCodes#codeDetail'
   )
 }
 
-export function validateInvite(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.server.getAccountInviteCodes#invite', v)
+export function validateCodeDetail(v: unknown): ValidationResult {
+  return lexicons.validate(
+    'com.atproto.server.getAccountInviteCodes#codeDetail',
+    v,
+  )
+}
+
+export interface CodeUse {
+  usedBy: string
+  usedAt: string
+  [k: string]: unknown
+}
+
+export function isCodeUse(v: unknown): v is CodeUse {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.server.getAccountInviteCodes#codeUse'
+  )
+}
+
+export function validateCodeUse(v: unknown): ValidationResult {
+  return lexicons.validate(
+    'com.atproto.server.getAccountInviteCodes#codeUse',
+    v,
+  )
 }

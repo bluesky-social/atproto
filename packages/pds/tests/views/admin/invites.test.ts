@@ -1,9 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../../_util'
-import { SeedClient } from '../../seeds/client'
-import basicSeed from '../../seeds/basic'
+import { runTestServer, CloseFn, adminAuth } from '../../_util'
 import { randomStr } from '@atproto/crypto'
-import { wait } from '@atproto/common'
 
 describe('pds admin invite views', () => {
   let agent: AtpAgent
@@ -154,30 +151,5 @@ describe('pds admin invite views', () => {
     )
     const combined = [...first.data.codes, ...second.data.codes]
     expect(combined).toEqual(full.data.codes)
-  })
-
-  it('gets high level invite code info', async () => {
-    const res = await agent.api.com.atproto.admin.getInviteCodeUsage(
-      {},
-      { headers: { authorization: adminAuth() } },
-    )
-    expect(res.data.admin).toEqual({
-      count: 2,
-      available: 15,
-      used: 2,
-      disabled: 1,
-    })
-    expect(res.data.user).toEqual({
-      count: 10,
-      available: 10,
-      used: 2,
-      disabled: 5,
-    })
-    expect(res.data.total).toEqual({
-      count: 12,
-      available: 25,
-      used: 4,
-      disabled: 6,
-    })
   })
 })

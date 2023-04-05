@@ -561,55 +561,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminGetInviteCodeUsage: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getInviteCodeUsage',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'High level stats about invite code usage',
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['total', 'user', 'admin'],
-            properties: {
-              total: {
-                type: 'ref',
-                ref: 'lex:com.atproto.admin.getInviteCodeUsage#codesDetail',
-              },
-              user: {
-                type: 'ref',
-                ref: 'lex:com.atproto.admin.getInviteCodeUsage#codesDetail',
-              },
-              admin: {
-                type: 'ref',
-                ref: 'lex:com.atproto.admin.getInviteCodeUsage#codesDetail',
-              },
-            },
-          },
-        },
-      },
-      codesDetail: {
-        type: 'object',
-        required: ['count', 'available', 'used', 'disabled'],
-        properties: {
-          count: {
-            type: 'integer',
-          },
-          available: {
-            type: 'integer',
-          },
-          used: {
-            type: 'integer',
-          },
-          disabled: {
-            type: 'integer',
-          },
-        },
-      },
-    },
-  },
   ComAtprotoAdminGetInviteCodes: {
     lexicon: 1,
     id: 'com.atproto.admin.getInviteCodes',
@@ -685,6 +636,7 @@ export const schemaDict = {
           },
           createdAt: {
             type: 'string',
+            format: 'datetime',
           },
           uses: {
             type: 'array',
@@ -701,9 +653,11 @@ export const schemaDict = {
         properties: {
           usedBy: {
             type: 'string',
+            format: 'did',
           },
           usedAt: {
             type: 'string',
+            format: 'datetime',
           },
         },
       },
@@ -2075,7 +2029,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:com.atproto.server.getAccountInviteCodes#invite',
+                  ref: 'lex:com.atproto.server.getAccountInviteCodes#codeDetail',
                 },
               },
             },
@@ -2087,9 +2041,17 @@ export const schemaDict = {
           },
         ],
       },
-      invite: {
+      codeDetail: {
         type: 'object',
-        required: ['code', 'available', 'uses', 'disabled'],
+        required: [
+          'code',
+          'available',
+          'disabled',
+          'forAccount',
+          'createdBy',
+          'createdAt',
+          'uses',
+        ],
         properties: {
           code: {
             type: 'string',
@@ -2097,11 +2059,39 @@ export const schemaDict = {
           available: {
             type: 'integer',
           },
-          uses: {
-            type: 'integer',
-          },
           disabled: {
             type: 'boolean',
+          },
+          forAccount: {
+            type: 'string',
+          },
+          createdBy: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          uses: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.server.getAccountInviteCodes#codeUse',
+            },
+          },
+        },
+      },
+      codeUse: {
+        type: 'object',
+        required: ['usedBy', 'usedAt'],
+        properties: {
+          usedBy: {
+            type: 'string',
+            format: 'did',
+          },
+          usedAt: {
+            type: 'string',
+            format: 'datetime',
           },
         },
       },
@@ -4404,7 +4394,6 @@ export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
   ComAtprotoAdminDisableInviteCodes: 'com.atproto.admin.disableInviteCodes',
-  ComAtprotoAdminGetInviteCodeUsage: 'com.atproto.admin.getInviteCodeUsage',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
   ComAtprotoAdminGetModerationAction: 'com.atproto.admin.getModerationAction',
   ComAtprotoAdminGetModerationActions: 'com.atproto.admin.getModerationActions',
