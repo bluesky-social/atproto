@@ -1428,6 +1428,9 @@ export const schemaDict = {
               default: 50,
               description: 'The number of records to return.',
             },
+            cursor: {
+              type: 'string',
+            },
             rkeyStart: {
               type: 'string',
               description:
@@ -1760,6 +1763,9 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
+              email: {
+                type: 'string',
+              },
             },
           },
         },
@@ -1882,6 +1888,9 @@ export const schemaDict = {
               did: {
                 type: 'string',
                 format: 'did',
+              },
+              email: {
+                type: 'string',
               },
             },
           },
@@ -2530,7 +2539,8 @@ export const schemaDict = {
           },
           displayName: {
             type: 'string',
-            maxLength: 64,
+            maxGraphemes: 64,
+            maxLength: 640,
           },
           avatar: {
             type: 'string',
@@ -2555,11 +2565,13 @@ export const schemaDict = {
           },
           displayName: {
             type: 'string',
-            maxLength: 64,
+            maxGraphemes: 64,
+            maxLength: 640,
           },
           description: {
             type: 'string',
-            maxLength: 256,
+            maxGraphemes: 256,
+            maxLength: 2560,
           },
           avatar: {
             type: 'string',
@@ -2588,11 +2600,13 @@ export const schemaDict = {
           },
           displayName: {
             type: 'string',
-            maxLength: 64,
+            maxGraphemes: 64,
+            maxLength: 640,
           },
           description: {
             type: 'string',
-            maxLength: 256,
+            maxGraphemes: 256,
+            maxLength: 2560,
           },
           avatar: {
             type: 'string',
@@ -2758,11 +2772,13 @@ export const schemaDict = {
           properties: {
             displayName: {
               type: 'string',
-              maxLength: 64,
+              maxGraphemes: 64,
+              maxLength: 640,
             },
             description: {
               type: 'string',
-              maxLength: 256,
+              maxGraphemes: 256,
+              maxLength: 2560,
             },
             avatar: {
               type: 'blob',

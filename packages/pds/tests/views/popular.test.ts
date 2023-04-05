@@ -54,24 +54,36 @@ describe('popular views', () => {
   })
 
   it('returns well liked posts', async () => {
-    const one = await sc.post(alice, 'like this')
+    const img = await sc.uploadFile(
+      alice,
+      'tests/image/fixtures/key-landscape-small.jpg',
+      'image/jpeg',
+    )
+    const one = await sc.post(alice, 'first post', undefined, [img])
     await sc.like(bob, one.ref)
     await sc.like(carol, one.ref)
     await sc.like(dan, one.ref)
     await sc.like(eve, one.ref)
     await sc.like(frank, one.ref)
-    const two = await sc.post(bob, 'like this')
+    const two = await sc.post(bob, 'bobby boi')
     await sc.like(alice, two.ref)
     await sc.like(carol, two.ref)
     await sc.like(dan, two.ref)
     await sc.like(eve, two.ref)
     await sc.like(frank, two.ref)
+    const three = await sc.reply(bob, one.ref, one.ref, 'reply')
+    await sc.like(alice, three.ref)
+    await sc.like(carol, three.ref)
+    await sc.like(dan, three.ref)
+    await sc.like(eve, three.ref)
+    await sc.like(frank, three.ref)
+
     const res = await agent.api.app.bsky.unspecced.getPopular(
       {},
       { headers: sc.getHeaders(alice) },
     )
     const feedUris = res.data.feed.map((i) => i.post.uri).sort()
-    const expected = [one.ref.uriStr, two.ref.uriStr].sort()
+    const expected = [one.ref.uriStr, two.ref.uriStr, three.ref.uriStr].sort()
     expect(feedUris).toEqual(expected)
   })
 })

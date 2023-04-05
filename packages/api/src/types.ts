@@ -11,6 +11,7 @@ export interface AtpSessionData {
   accessJwt: string
   handle: string
   did: string
+  email?: string
 }
 
 /**

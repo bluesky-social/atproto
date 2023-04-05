@@ -12,7 +12,8 @@
           "required": ["handle", "did"],
           "properties": {
             "handle": {"type": "string", "format": "handle"},
-            "did": {"type": "string", "format": "did"}
+            "did": {"type": "string", "format": "did"},
+            "email": {"type": "string"}
           }
         }
       }
