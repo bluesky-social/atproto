@@ -49,7 +49,7 @@ export class ServerConfig {
       imgUriEndpoint,
       blobCacheLocation,
       repoProvider,
-      ...overrides,
+      ...stripUndefineds(overrides ?? {}),
     })
   }
 
@@ -113,4 +113,16 @@ export class ServerConfig {
   get repoSubLockId() {
     return this.cfg.repoSubLockId
   }
+}
+
+function stripUndefineds(
+  obj: Record<string, unknown>,
+): Record<string, unknown> {
+  const result = {}
+  Object.entries(obj).forEach(([key, val]) => {
+    if (val !== undefined) {
+      result[key] = val
+    }
+  })
+  return result
 }
