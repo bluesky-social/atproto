@@ -101,8 +101,8 @@ export class ModerationViews {
             ? { id: action.id, action: action.action }
             : undefined,
         },
-        invitedBy: inviteCodes[r.did].invitedBy,
-        invites: inviteCodes[r.did].invites,
+        invitedBy: inviteCodes[r.did]?.invitedBy,
+        invites: inviteCodes[r.did]?.invites,
       }
     })
 
