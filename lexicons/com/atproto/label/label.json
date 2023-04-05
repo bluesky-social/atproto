@@ -30,6 +30,10 @@
             "maxLength": 128,
             "description": "the short string name of the value or type of this label"
           },
+          "neg": {
+            "type": "boolean",
+            "description": "if true, this is a negation label, overwriting a previous label"
+          },
           "cts": {
             "type": "string",
             "format": "datetime",
