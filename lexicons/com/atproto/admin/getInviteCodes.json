@@ -43,8 +43,8 @@
         "available": {"type": "integer"},
         "disabled": {"type": "boolean"},
         "forAccount": {"type": "string"},
-        "createdBy": {"type": "string"},
-        "createdAt": {"type": "string"},
+        "createdBy": {"type": "string", "format": "datetime"},
+        "createdAt": {"type": "string", "format": "datetime"},
         "uses": {
           "type": "array",
           "items": {"type": "ref", "ref": "#codeUse"}
@@ -55,8 +55,8 @@
       "type": "object",
       "required": ["usedBy", "usedAt"],
       "properties": {
-        "usedBy": {"type": "string"},
-        "usedAt": {"type": "string"}
+        "usedBy": {"type": "string", "format": "did"},
+        "usedAt": {"type": "string", "format": "datetime"}
       }
     }
   }

@@ -1,6 +1,5 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import {
   LabeledResult,
@@ -12,7 +11,7 @@ import {
   CodeDetail,
   CodeUse,
 } from '../../../../lexicon/types/com/atproto/admin/getInviteCodes'
-import { nullToZero } from '../../../../db/util'
+import { countAll, nullToZero } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getInviteCodes({
@@ -25,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
           qb
             .selectFrom('invite_code_use')
             .groupBy('code')
-            .select(['code', sql<number>`count(*)`.as('uses')]),
+            .select(['code', countAll.as('uses')]),
         )
         .selectFrom('invite_code')
         .leftJoin('use_count', 'invite_code.code', 'use_count.code')
@@ -36,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
           'invite_code.forUser as forAccount',
           'invite_code.createdBy as createdBy',
           'invite_code.createdAt as createdAt',
-          nullToZero(ctx.db, ref('use_count.uses')).as('uses'),
+          nullToZero(ref('use_count.uses')).as('uses'),
         ])
 
       let keyset

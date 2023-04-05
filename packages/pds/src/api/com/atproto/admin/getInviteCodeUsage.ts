@@ -1,7 +1,6 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { sql } from 'kysely'
-import { nullToZero } from '../../../../db/util'
+import { countAll, nullToZero } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getInviteCodeUsage({
@@ -13,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
           qb
             .selectFrom('invite_code_use')
             .groupBy('code')
-            .select(['code', sql<number>`count(*)`.as('uses')]),
+            .select(['code', countAll.as('uses')]),
         )
         .selectFrom('invite_code')
         .leftJoin('use_count', 'use_count.code', 'invite_code.code')
@@ -21,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
           'invite_code.createdBy as createdBy',
           'invite_code.availableUses as available',
           'invite_code.disabled as disabled',
-          nullToZero(ctx.db, ref('use_count.uses')).as('uses'),
+          nullToZero(ref('use_count.uses')).as('uses'),
         ])
         .execute()
 
@@ -69,6 +68,6 @@ const reducer = (acc: CodesDetail, cur: Row) => {
   acc.count += 1
   acc.available += cur.available
   acc.disabled += cur.disabled
-  acc.used += cur.uses ?? 0
+  acc.used += cur.uses
   return acc
 }
