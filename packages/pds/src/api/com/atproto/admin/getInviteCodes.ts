@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
       const res = await builder.execute()
 
       const codes = res.map((row) => row.code)
-      const uses = await accntSrvc.getCodeUses(codes)
+      const uses = await accntSrvc.getInviteCodesUses(codes)
 
       const resultCursor = keyset.packFromResult(res)
       const codeDetails = res.map((row) => ({

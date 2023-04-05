@@ -7,6 +7,7 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
 import * as ComAtprotoModerationDefs from '../moderation/defs'
+import * as ComAtprotoServerDefs from '../server/defs'
 
 export interface ActionView {
   id: number
@@ -167,6 +168,8 @@ export interface RepoView {
   relatedRecords: {}[]
   indexedAt: string
   moderation: Moderation
+  invitedBy?: ComAtprotoServerDefs.InviteCode
+  invites?: ComAtprotoServerDefs.InviteCode[]
   [k: string]: unknown
 }
 
@@ -189,6 +192,8 @@ export interface RepoViewDetail {
   relatedRecords: {}[]
   indexedAt: string
   moderation: ModerationDetail
+  invitedBy?: ComAtprotoServerDefs.InviteCode
+  invites?: ComAtprotoServerDefs.InviteCode[]
   [k: string]: unknown
 }
 

@@ -128,7 +128,12 @@
         "email": {"type": "string"},
         "relatedRecords": {"type": "array", "items": {"type": "unknown"}},
         "indexedAt": {"type": "string", "format": "datetime"},
-        "moderation": {"type": "ref", "ref": "#moderation"}
+        "moderation": {"type": "ref", "ref": "#moderation"},
+        "invitedBy": {"type": "ref", "ref": "com.atproto.server.defs#inviteCode"},
+        "invites": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "com.atproto.server.defs#inviteCode"}
+        }
       }
     },
     "repoViewDetail": {
@@ -140,7 +145,12 @@
         "email": {"type": "string"},
         "relatedRecords": {"type": "array", "items": {"type": "unknown"}},
         "indexedAt": {"type": "string", "format": "datetime"},
-        "moderation": {"type": "ref", "ref": "#moderationDetail"}
+        "moderation": {"type": "ref", "ref": "#moderationDetail"},
+        "invitedBy": {"type": "ref", "ref": "com.atproto.server.defs#inviteCode"},
+        "invites": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "com.atproto.server.defs#inviteCode"}
+        }
       }
     },
     "repoRef": {

@@ -272,7 +272,9 @@ export class AccountService {
     return this.db.db.selectFrom(builder.as('codes')).selectAll()
   }
 
-  async getCodeUses(codes: string[]): Promise<Record<string, CodeUse[]>> {
+  async getInviteCodesUses(
+    codes: string[],
+  ): Promise<Record<string, CodeUse[]>> {
     const uses: Record<string, CodeUse[]> = {}
     if (codes.length > 0) {
       const usesRes = await this.db.db
@@ -288,6 +290,65 @@ export class AccountService {
     }
     return uses
   }
+
+  async getAccountInviteCodes(did: string) {
+    const res = await this.selectInviteCodesQb()
+      .where('forAccount', '=', did)
+      .execute()
+    const codes = res.map((row) => row.code)
+    const uses = await this.getInviteCodesUses(codes)
+    return res.map((row) => ({
+      ...row,
+      uses: uses[row.code] ?? [],
+      disabled: row.disabled === 1,
+    }))
+  }
+
+  async getInviteCodesForAccounts(dids: string[]): Promise<InviteCodesByDid> {
+    if (dids.length < 1) return {}
+    const codeDetailsRes = await this.selectInviteCodesQb()
+      .where('forAccount', 'in', dids)
+      .orWhere('code', 'in', (qb) =>
+        qb
+          .selectFrom('invite_code_use')
+          .where('usedBy', 'in', dids)
+          .select('code')
+          .distinct(),
+      )
+      .execute()
+    const uses = await this.getInviteCodesUses(
+      codeDetailsRes.map((row) => row.code),
+    )
+    const codeDetails = codeDetailsRes.map((row) => ({
+      ...row,
+      uses: uses[row.code] ?? [],
+      disabled: row.disabled === 1,
+    }))
+    return codeDetails.reduce((acc, cur) => {
+      acc[cur.forAccount] ??= { invitedBy: undefined, invites: [] }
+      acc[cur.forAccount].invites.push(cur)
+      for (const use of cur.uses) {
+        acc[use.usedBy] ??= { invitedBy: undefined, invites: [] }
+        acc[use.usedBy].invitedBy = cur
+      }
+      return acc
+    }, {} as InviteCodesByDid)
+  }
+}
+
+type InviteCodesByDid = Record<
+  string,
+  { invitedBy?: CodeDetail; invites: CodeDetail[] }
+>
+
+type CodeDetail = {
+  code: string
+  available: number
+  disabled: boolean
+  forAccount: string
+  createdBy: string
+  createdAt: string
+  uses: CodeUse[]
 }
 
 type CodeUse = {

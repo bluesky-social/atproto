@@ -299,6 +299,17 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#moderation',
           },
+          invitedBy: {
+            type: 'ref',
+            ref: 'lex:com.atproto.server.defs#inviteCode',
+          },
+          invites: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.server.defs#inviteCode',
+            },
+          },
         },
       },
       repoViewDetail: {
@@ -335,6 +346,17 @@ export const schemaDict = {
           moderation: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#moderationDetail',
+          },
+          invitedBy: {
+            type: 'ref',
+            ref: 'lex:com.atproto.server.defs#inviteCode',
+          },
+          invites: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.server.defs#inviteCode',
+            },
           },
         },
       },
@@ -600,64 +622,10 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:com.atproto.admin.getInviteCodes#codeDetail',
+                  ref: 'lex:com.atproto.server.defs#inviteCode',
                 },
               },
             },
-          },
-        },
-      },
-      codeDetail: {
-        type: 'object',
-        required: [
-          'code',
-          'available',
-          'disabled',
-          'forAccount',
-          'createdBy',
-          'createdAt',
-          'uses',
-        ],
-        properties: {
-          code: {
-            type: 'string',
-          },
-          available: {
-            type: 'integer',
-          },
-          disabled: {
-            type: 'boolean',
-          },
-          forAccount: {
-            type: 'string',
-          },
-          createdBy: {
-            type: 'string',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          uses: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.getInviteCodes#codeUse',
-            },
-          },
-        },
-      },
-      codeUse: {
-        type: 'object',
-        required: ['usedBy', 'usedAt'],
-        properties: {
-          usedBy: {
-            type: 'string',
-            format: 'did',
-          },
-          usedAt: {
-            type: 'string',
-            format: 'datetime',
           },
         },
       },
@@ -954,6 +922,9 @@ export const schemaDict = {
           type: 'params',
           properties: {
             term: {
+              type: 'string',
+            },
+            invitedBy: {
               type: 'string',
             },
             limit: {
@@ -1908,6 +1879,66 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoServerDefs: {
+    lexicon: 1,
+    id: 'com.atproto.server.defs',
+    defs: {
+      inviteCode: {
+        type: 'object',
+        required: [
+          'code',
+          'available',
+          'disabled',
+          'forAccount',
+          'createdBy',
+          'createdAt',
+          'uses',
+        ],
+        properties: {
+          code: {
+            type: 'string',
+          },
+          available: {
+            type: 'integer',
+          },
+          disabled: {
+            type: 'boolean',
+          },
+          forAccount: {
+            type: 'string',
+          },
+          createdBy: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          uses: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.server.defs#inviteCodeUse',
+            },
+          },
+        },
+      },
+      inviteCodeUse: {
+        type: 'object',
+        required: ['usedBy', 'usedAt'],
+        properties: {
+          usedBy: {
+            type: 'string',
+            format: 'did',
+          },
+          usedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoServerDeleteAccount: {
     lexicon: 1,
     id: 'com.atproto.server.deleteAccount',
@@ -2029,7 +2060,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:com.atproto.server.getAccountInviteCodes#codeDetail',
+                  ref: 'lex:com.atproto.server.defs#inviteCode',
                 },
               },
             },
@@ -2040,60 +2071,6 @@ export const schemaDict = {
             name: 'DuplicateCreate',
           },
         ],
-      },
-      codeDetail: {
-        type: 'object',
-        required: [
-          'code',
-          'available',
-          'disabled',
-          'forAccount',
-          'createdBy',
-          'createdAt',
-          'uses',
-        ],
-        properties: {
-          code: {
-            type: 'string',
-          },
-          available: {
-            type: 'integer',
-          },
-          disabled: {
-            type: 'boolean',
-          },
-          forAccount: {
-            type: 'string',
-          },
-          createdBy: {
-            type: 'string',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          uses: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.server.getAccountInviteCodes#codeUse',
-            },
-          },
-        },
-      },
-      codeUse: {
-        type: 'object',
-        required: ['usedBy', 'usedAt'],
-        properties: {
-          usedBy: {
-            type: 'string',
-            format: 'did',
-          },
-          usedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-        },
       },
     },
   },
@@ -4423,6 +4400,7 @@ export const ids = {
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',
   ComAtprotoServerCreateInviteCode: 'com.atproto.server.createInviteCode',
   ComAtprotoServerCreateSession: 'com.atproto.server.createSession',
+  ComAtprotoServerDefs: 'com.atproto.server.defs',
   ComAtprotoServerDeleteAccount: 'com.atproto.server.deleteAccount',
   ComAtprotoServerDeleteSession: 'com.atproto.server.deleteSession',
   ComAtprotoServerDescribeServer: 'com.atproto.server.describeServer',

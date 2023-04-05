@@ -9,6 +9,7 @@
         "type": "params",
         "properties": {
           "term": {"type": "string"},
+          "invitedBy": {"type": "string"},
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
           "cursor": {"type": "string"}
         }

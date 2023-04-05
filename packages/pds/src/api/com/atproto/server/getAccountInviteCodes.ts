@@ -12,25 +12,17 @@ export default function (server: Server, ctx: AppContext) {
 
       const accntSrvc = ctx.services.account(ctx.db)
 
-      const [user, userCodesRes] = await Promise.all([
+      const [user, userCodes] = await Promise.all([
         ctx.db.db
           .selectFrom('user_account')
           .where('did', '=', requester)
           .select('createdAt')
           .executeTakeFirstOrThrow(),
-        accntSrvc
-          .selectInviteCodesQb()
-          .where('forAccount', '=', requester)
-          .execute(),
+        accntSrvc.getAccountInviteCodes(requester),
       ])
-      const userCodes = userCodesRes.map((row) => ({
-        ...row,
-        disabled: row.disabled === 1,
-      }))
-      const codeUses = await accntSrvc.getCodeUses(
-        userCodes.map((row) => row.code),
+      const unusedCodes = userCodes.filter(
+        (row) => row.available > row.uses.length,
       )
-      const unusedCodes = userCodes.filter((row) => row.available > row.uses)
 
       let created: string[] = []
 
@@ -74,10 +66,7 @@ export default function (server: Server, ctx: AppContext) {
       const preexisting = includeUsed ? userCodes : unusedCodes
 
       const toReturn = [
-        ...preexisting.map((row) => ({
-          ...row,
-          uses: codeUses[row.code] ?? [],
-        })),
+        ...preexisting,
         ...created.map((code) => ({
           code: code,
           available: 1,

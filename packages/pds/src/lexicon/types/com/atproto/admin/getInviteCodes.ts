@@ -7,6 +7,7 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
+import * as ComAtprotoServerDefs from '../server/defs'
 
 export interface QueryParams {
   sort: 'recent' | 'usage' | (string & {})
@@ -18,7 +19,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  codes: CodeDetail[]
+  codes: ComAtprotoServerDefs.InviteCode[]
   [k: string]: unknown
 }
 
@@ -42,44 +43,3 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
   req: express.Request
   res: express.Response
 }) => Promise<HandlerOutput> | HandlerOutput
-
-export interface CodeDetail {
-  code: string
-  available: number
-  disabled: boolean
-  forAccount: string
-  createdBy: string
-  createdAt: string
-  uses: CodeUse[]
-  [k: string]: unknown
-}
-
-export function isCodeDetail(v: unknown): v is CodeDetail {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.getInviteCodes#codeDetail'
-  )
-}
-
-export function validateCodeDetail(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.getInviteCodes#codeDetail', v)
-}
-
-export interface CodeUse {
-  usedBy: string
-  usedAt: string
-  [k: string]: unknown
-}
-
-export function isCodeUse(v: unknown): v is CodeUse {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.getInviteCodes#codeUse'
-  )
-}
-
-export function validateCodeUse(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.getInviteCodes#codeUse', v)
-}
