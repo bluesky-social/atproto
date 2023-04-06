@@ -132,6 +132,7 @@ describe('sync', () => {
     'post_embed_external',
     'post_embed_record',
     'repost',
+    'feed_item',
     'like',
     /* Not these:
      * 'ipld_block',

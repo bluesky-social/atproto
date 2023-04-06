@@ -31,9 +31,17 @@ export default function (server: Server, ctx: AppContext) {
       let feedItemsQb = feedService
         .selectFeedItemQb()
         .where('originatorDid', '=', actorDidQb)
-        .where('postAuthorDid', 'not in', mutedDidsQb) // Hide reposts of muted content
+        .where((qb) => {
+          // Hide reposts of muted content
+          return qb
+            .where('type', '!=', 'repost')
+            .orWhere('postAuthorDid', 'not in', mutedDidsQb)
+        })
 
-      const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))
+      const keyset = new FeedKeyset(
+        ref('feed_item.sortAt'),
+        ref('feed_item.cid'),
+      )
 
       feedItemsQb = paginate(feedItemsQb, {
         limit,

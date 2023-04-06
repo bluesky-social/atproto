@@ -43,7 +43,10 @@ export default function (server: Server, ctx: AppContext) {
             .orWhereRef('did', '=', ref('originatorDid')),
         )
 
-      const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))
+      const keyset = new FeedKeyset(
+        ref('feed_item.sortAt'),
+        ref('feed_item.cid'),
+      )
 
       feedItemsQb = paginate(feedItemsQb, {
         limit,
