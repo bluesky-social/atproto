@@ -70,6 +70,7 @@ export const runTestServer = async (
     recoveryKey: recoveryKey.did(),
     adminPassword: ADMIN_PASSWORD,
     inviteRequired: false,
+    userInviteInterval: null,
     didPlcUrl: plcUrl,
     jwtSecret: 'jwt-secret',
     availableUserDomains: ['.test'],

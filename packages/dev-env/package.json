@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@atproto/api": "*",
+    "@atproto/bsky": "*",
     "@atproto/crypto": "*",
     "@atproto/did-resolver": "*",
     "@atproto/pds": "*",
