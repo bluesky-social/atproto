@@ -25,38 +25,26 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('follow')
         .select('follow.subjectDid')
         .where('follow.creator', '=', requester)
-
       const mutedQb = db
         .selectFrom('mute')
-        .select('did')
+        .selectAll()
         .where('mutedByDid', '=', requester)
 
-      const postsQb = feedService
-        .selectPostQb()
+      let feedItemsQb = feedService
+        .selectFeedItemQb()
         .where((qb) =>
           qb
-            .where('creator', '=', requester)
-            .orWhere('creator', 'in', followingIdsSubquery),
-        )
-        .whereNotExists(mutedQb.whereRef('did', '=', ref('post.creator'))) // Hide posts of muted actors
-
-      const repostsQb = feedService
-        .selectRepostQb()
-        .where((qb) =>
-          qb
-            .where('repost.creator', '=', requester)
-            .orWhere('repost.creator', 'in', followingIdsSubquery),
+            .where('originatorDid', '=', requester)
+            .orWhere('originatorDid', 'in', followingIdsSubquery),
         )
         .whereNotExists(
           mutedQb
-            .whereRef('did', '=', ref('post.creator')) // Hide reposts of or by muted actors
-            .orWhereRef('did', '=', ref('repost.creator')),
+            .whereRef('did', '=', ref('postAuthorDid')) // Hide reposts of or by muted actors
+            .orWhereRef('did', '=', ref('originatorDid')),
         )
 
-      const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
-      let feedItemsQb = db
-        .selectFrom(postsQb.unionAll(repostsQb).as('feed_items'))
-        .selectAll()
+      const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))
+
       feedItemsQb = paginate(feedItemsQb, {
         limit,
         cursor,

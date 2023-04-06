@@ -18,32 +18,23 @@ export default function (server: Server, ctx: AppContext) {
       const userLookupCol = actor.startsWith('did:')
         ? 'did_handle.did'
         : 'did_handle.handle'
-      const userQb = db
+      const actorDidQb = db
         .selectFrom('did_handle')
-        .selectAll()
+        .select('did')
         .where(userLookupCol, '=', actor)
-      const mutedQb = db
+        .limit(1)
+      const mutedDidsQb = db
         .selectFrom('mute')
         .select('did')
         .where('mutedByDid', '=', requester)
 
-      const postsQb = feedService
-        .selectPostQb()
-        .whereExists(
-          userQb.whereRef('did_handle.did', '=', ref('post.creator')),
-        )
+      let feedItemsQb = feedService
+        .selectFeedItemQb()
+        .where('originatorDid', '=', actorDidQb)
+        .where('postAuthorDid', 'not in', mutedDidsQb) // Hide reposts of muted content
 
-      const repostsQb = feedService
-        .selectRepostQb()
-        .whereExists(
-          userQb.whereRef('did_handle.did', '=', ref('repost.creator')),
-        )
-        .whereNotExists(mutedQb.whereRef('did', '=', ref('post.creator'))) // Hide reposts of muted content
+      const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))
 
-      const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
-      let feedItemsQb = db
-        .selectFrom(postsQb.unionAll(repostsQb).as('feed_items'))
-        .selectAll()
       feedItemsQb = paginate(feedItemsQb, {
         limit,
         cursor,
