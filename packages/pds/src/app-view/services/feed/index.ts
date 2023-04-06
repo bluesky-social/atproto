@@ -44,11 +44,7 @@ export class FeedService {
     return this.db.db
       .selectFrom('feed_item')
       .innerJoin('post', 'post.uri', 'feed_item.postUri')
-      .innerJoin(
-        'repo_root as author_repo',
-        'author_repo.did',
-        'feed_item.postAuthorDid',
-      )
+      .innerJoin('repo_root as author_repo', 'author_repo.did', 'post.creator')
       .innerJoin(
         'repo_root as originator_repo',
         'originator_repo.did',
@@ -63,7 +59,11 @@ export class FeedService {
       .where(notSoftDeletedClause(ref('originator_repo')))
       .where(notSoftDeletedClause(ref('post_record')))
       .selectAll('feed_item')
-      .select(['post.replyRoot', 'post.replyParent'])
+      .select([
+        'post.replyRoot',
+        'post.replyParent',
+        'post.creator as postAuthorDid',
+      ])
   }
 
   // @NOTE keep in sync with actorService.views.profile()

@@ -28,7 +28,6 @@ const insertFn = async (
     createdAt: obj.createdAt,
     indexedAt: timestamp,
   }
-  const subjectUri = new AtUri(repost.subject)
   const [inserted] = await Promise.all([
     db
       .insertInto('repost')
@@ -43,7 +42,6 @@ const insertFn = async (
         uri: repost.uri,
         cid: repost.cid,
         postUri: repost.subject,
-        postAuthorDid: subjectUri.host,
         originatorDid: repost.creator,
         sortAt:
           repost.indexedAt < repost.createdAt

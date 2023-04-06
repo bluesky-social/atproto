@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
           // Hide reposts of muted content
           return qb
             .where('type', '!=', 'repost')
-            .orWhere('postAuthorDid', 'not in', mutedDidsQb)
+            .orWhere('post.creator', 'not in', mutedDidsQb)
         })
 
       const keyset = new FeedKeyset(

@@ -1,62 +1,16 @@
 import { DynamicModule, Kysely, sql } from 'kysely'
 import { Dialect } from '..'
 
-export async function up(db: Kysely<Schema>, dialect: Dialect): Promise<void> {
-  const { ref } = db.dynamic
+export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('feed_item')
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('type', 'varchar', (col) => col.notNull())
     .addColumn('postUri', 'varchar', (col) => col.notNull())
-    .addColumn('postAuthorDid', 'varchar', (col) => col.notNull())
     .addColumn('originatorDid', 'varchar', (col) => col.notNull())
     .addColumn('sortAt', 'varchar', (col) => col.notNull())
     .execute()
-  // Fill table. This query should be safe to be run any time to update the index.
-  await db
-    .insertInto('feed_item')
-    .columns([
-      'type',
-      'uri',
-      'cid',
-      'postUri',
-      'postAuthorDid',
-      'originatorDid',
-      'sortAt',
-    ])
-    .expression((qb) => {
-      return qb
-        .selectFrom('post')
-        .select([
-          sql`'post'`.as('type'),
-          'uri',
-          'cid',
-          'uri as postUri',
-          'creator as postAuthorDid',
-          'creator as originatorDid',
-          min(dialect, ref('indexedAt'), ref('createdAt')).as('sortAt'),
-        ])
-        .unionAll(
-          qb
-            .selectFrom('repost')
-            .innerJoin('post', 'post.uri', 'repost.subject')
-            .select([
-              sql`'repost'`.as('type'),
-              'repost.uri as uri',
-              'repost.cid as cid',
-              'post.uri as postUri',
-              'post.creator as postAuthorDid',
-              'repost.creator as originatorDid',
-              min(dialect, ref('repost.indexedAt'), ref('repost.createdAt')).as(
-                'sortAt',
-              ),
-            ]),
-        )
-    })
-    .onConflict((oc) => oc.doNothing())
-    .execute()
-  // Add indexes once filled
   await db.schema
     .createIndex('feed_item_originator_idx')
     .on('feed_item')
@@ -71,6 +25,45 @@ export async function up(db: Kysely<Schema>, dialect: Dialect): Promise<void> {
 
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('feed_item').execute()
+}
+
+// This is intentionally not called here, but exists for documentation purposes.
+// This query should be safe to be run any time to update the feed_item index.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function getFeedItemMigrationSql(db: Kysely<Schema>, dialect: Dialect) {
+  const { ref } = db.dynamic
+  const migrationQb = db
+    .insertInto('feed_item')
+    .columns(['type', 'uri', 'cid', 'postUri', 'originatorDid', 'sortAt'])
+    .expression((qb) => {
+      return qb
+        .selectFrom('post')
+        .select([
+          sql`'post'`.as('type'),
+          'uri',
+          'cid',
+          'uri as postUri',
+          'creator as originatorDid',
+          min(dialect, ref('indexedAt'), ref('createdAt')).as('sortAt'),
+        ])
+        .unionAll(
+          qb
+            .selectFrom('repost')
+            .innerJoin('post', 'post.uri', 'repost.subject')
+            .select([
+              sql`'repost'`.as('type'),
+              'repost.uri as uri',
+              'repost.cid as cid',
+              'post.uri as postUri',
+              'repost.creator as originatorDid',
+              min(dialect, ref('repost.indexedAt'), ref('repost.createdAt')).as(
+                'sortAt',
+              ),
+            ]),
+        )
+    })
+    .onConflict((oc) => oc.doNothing())
+  return migrationQb.compile().sql
 }
 
 type Schema = {

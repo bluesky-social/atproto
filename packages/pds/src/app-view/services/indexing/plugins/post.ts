@@ -59,14 +59,13 @@ const insertFn = async (
       .onConflict((oc) => oc.doNothing())
       .returningAll()
       .executeTakeFirst(),
-    await db
+    db
       .insertInto('feed_item')
       .values({
         type: 'post',
         uri: post.uri,
         cid: post.cid,
         postUri: post.uri,
-        postAuthorDid: post.creator,
         originatorDid: post.creator,
         sortAt:
           post.indexedAt < post.createdAt ? post.indexedAt : post.createdAt,

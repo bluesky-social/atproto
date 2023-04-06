@@ -5,7 +5,6 @@ export interface FeedItem {
   cid: string
   type: 'post' | 'repost'
   postUri: string
-  postAuthorDid: string
   originatorDid: string
   sortAt: string
 }
