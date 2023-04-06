@@ -45,6 +45,7 @@ export interface ServerConfigValues {
   repoBackfillLimitMs: number
 
   appViewRepoProvider?: string
+  bskyAppViewEndpoint?: string
 }
 
 export class ServerConfig {
@@ -135,6 +136,7 @@ export class ServerConfig {
 
     // E.g. ws://abc.com:4000
     const appViewRepoProvider = process.env.APP_VIEW_REPO_PROVIDER || undefined
+    const bskyAppViewEndpoint = process.env.BSKY_APP_VIEW_ENDPOINT || undefined
 
     return new ServerConfig({
       debugMode,
@@ -168,6 +170,7 @@ export class ServerConfig {
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
       appViewRepoProvider,
+      bskyAppViewEndpoint,
       ...overrides,
     })
   }
@@ -324,6 +327,10 @@ export class ServerConfig {
 
   get appViewRepoProvider() {
     return this.cfg.appViewRepoProvider
+  }
+
+  get bskyAppViewEndpoint() {
+    return this.cfg.bskyAppViewEndpoint
   }
 }
 

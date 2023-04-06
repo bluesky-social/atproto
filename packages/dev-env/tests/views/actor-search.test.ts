@@ -13,6 +13,7 @@ import usersBulkSeed from '../seeds/users-bulk'
 
 describe('pds actor search views', () => {
   let agent: AtpAgent
+  let bskyAgent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
   let headers: { [s: string]: string }
@@ -22,9 +23,9 @@ describe('pds actor search views', () => {
       dbPostgresSchema: 'views_actor_search',
     })
     close = server.close
-    agent = new AtpAgent({ service: server.url })
-    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
-    sc = new SeedClient(pdsAgent)
+    agent = new AtpAgent({ service: server.pdsUrl })
+    bskyAgent = new AtpAgent({ service: server.bskyUrl })
+    sc = new SeedClient(agent)
 
     await wait(50) // allow pending sub to be established
     await server.bsky.sub?.destroy()
@@ -48,7 +49,7 @@ describe('pds actor search views', () => {
     // Process remaining profiles
     server.bsky.sub?.resume()
     await processAll(server, 20000)
-    headers = sc.getHeaders(Object.values(sc.dids)[0], true)
+    headers = sc.getHeaders(Object.values(sc.dids)[0])
   })
 
   afterAll(async () => {
@@ -125,7 +126,7 @@ describe('pds actor search views', () => {
         { headers },
       )
     const { data: unauthed } =
-      await agent.api.app.bsky.actor.searchActorsTypeahead({
+      await bskyAgent.api.app.bsky.actor.searchActorsTypeahead({
         term: 'car',
       })
     expect(unauthed.actors.length).toBeGreaterThan(0)
@@ -217,7 +218,7 @@ describe('pds actor search views', () => {
       { term: 'car' },
       { headers },
     )
-    const { data: unauthed } = await agent.api.app.bsky.actor.searchActors({
+    const { data: unauthed } = await bskyAgent.api.app.bsky.actor.searchActors({
       term: 'car',
     })
     expect(unauthed.actors.length).toBeGreaterThan(0)
