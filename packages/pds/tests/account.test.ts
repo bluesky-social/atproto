@@ -475,13 +475,7 @@ describe('account', () => {
     const res1 = await agent.api.com.atproto.server.getAccountInviteCodes()
     expect(res1.data.codes.length).toBe(2)
 
-    // now pretend it was made 10 days ago & use both invites
-    const tenDaysAgo = new Date(Date.now() - 10 * DAY).toISOString()
-    await ctx.db.db
-      .updateTable('user_account')
-      .set({ createdAt: tenDaysAgo })
-      .where('did', '=', did)
-      .execute()
+    // use both invites and confirm we can't get any more
     await ctx.db.db
       .insertInto('invite_code_use')
       .values(
@@ -492,18 +486,28 @@ describe('account', () => {
         })),
       )
       .execute()
+    const res2 = await agent.api.com.atproto.server.getAccountInviteCodes()
+    expect(res2.data.codes.length).toBe(2)
 
-    const res2 = await agent.api.com.atproto.server.getAccountInviteCodes({
+    // now pretend it was made 10 days ago
+    const tenDaysAgo = new Date(Date.now() - 10 * DAY).toISOString()
+    await ctx.db.db
+      .updateTable('user_account')
+      .set({ createdAt: tenDaysAgo })
+      .where('did', '=', did)
+      .execute()
+
+    const res3 = await agent.api.com.atproto.server.getAccountInviteCodes({
       includeUsed: false,
       createAvailable: false,
     })
-    expect(res2.data.codes.length).toBe(0)
-    const res3 = await agent.api.com.atproto.server.getAccountInviteCodes()
-    expect(res3.data.codes.length).toBe(7)
-    const res4 = await agent.api.com.atproto.server.getAccountInviteCodes({
+    expect(res3.data.codes.length).toBe(0)
+    const res4 = await agent.api.com.atproto.server.getAccountInviteCodes()
+    expect(res4.data.codes.length).toBe(7)
+    const res5 = await agent.api.com.atproto.server.getAccountInviteCodes({
       includeUsed: false,
     })
-    expect(res4.data.codes.length).toBe(5)
+    expect(res5.data.codes.length).toBe(5)
   })
 
   it('prevents use of disabled codes', async () => {
