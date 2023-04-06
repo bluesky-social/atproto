@@ -1,5 +1,4 @@
 import AtpAgent from '@atproto/api'
-import { AtUri } from '@atproto/uri'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
   runTestServer,

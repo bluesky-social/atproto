@@ -1,0 +1,115 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`pds profile views fetches multiple profiles 1`] = `
+Array [
+  Object {
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "description": "its me!",
+    "did": "user(0)",
+    "displayName": "ali",
+    "followersCount": 2,
+    "followsCount": 3,
+    "handle": "alice.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "postsCount": 4,
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+    },
+  },
+  Object {
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+    "description": "hi im bob",
+    "did": "user(2)",
+    "displayName": "bobby",
+    "followersCount": 2,
+    "followsCount": 2,
+    "handle": "bob.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "postsCount": 3,
+    "viewer": Object {},
+  },
+  Object {
+    "did": "user(4)",
+    "followersCount": 2,
+    "followsCount": 1,
+    "handle": "carol.test",
+    "postsCount": 2,
+    "viewer": Object {
+      "following": "record(2)",
+    },
+  },
+  Object {
+    "did": "user(5)",
+    "followersCount": 1,
+    "followsCount": 1,
+    "handle": "dan.test",
+    "postsCount": 2,
+    "viewer": Object {
+      "followedBy": "record(3)",
+    },
+  },
+]
+`;
+
+exports[`pds profile views fetches other's profile, with a follow 1`] = `
+Object {
+  "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+  "description": "its me!",
+  "did": "user(0)",
+  "displayName": "ali",
+  "followersCount": 2,
+  "followsCount": 3,
+  "handle": "alice.test",
+  "indexedAt": "1970-01-01T00:00:00.000Z",
+  "postsCount": 4,
+  "viewer": Object {
+    "followedBy": "record(1)",
+    "following": "record(0)",
+  },
+}
+`;
+
+exports[`pds profile views fetches other's profile, without a follow 1`] = `
+Object {
+  "did": "user(0)",
+  "followersCount": 1,
+  "followsCount": 1,
+  "handle": "dan.test",
+  "postsCount": 2,
+  "viewer": Object {
+    "followedBy": "record(0)",
+  },
+}
+`;
+
+exports[`pds profile views fetches own profile 1`] = `
+Object {
+  "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+  "description": "its me!",
+  "did": "user(0)",
+  "displayName": "ali",
+  "followersCount": 2,
+  "followsCount": 3,
+  "handle": "alice.test",
+  "indexedAt": "1970-01-01T00:00:00.000Z",
+  "postsCount": 4,
+  "viewer": Object {},
+}
+`;
+
+exports[`pds profile views presents avatars & banners 1`] = `
+Object {
+  "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+  "banner": "https://bsky.public.url/image/sig()/rs:fill:3000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+  "description": "new descript",
+  "did": "user(0)",
+  "displayName": "ali",
+  "followersCount": 2,
+  "followsCount": 3,
+  "handle": "alice.test",
+  "indexedAt": "1970-01-01T00:00:00.000Z",
+  "postsCount": 4,
+  "viewer": Object {},
+}
+`;

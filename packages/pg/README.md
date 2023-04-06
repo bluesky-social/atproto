@@ -32,23 +32,23 @@ Going to remove pg-db_test-1
 
 ### `docker-compose.yaml`
 
-The Docker compose file can be used to run containerized versions of postgres either for single use (as is used by `with-test-db.sh`), or for longer-term use. These are setup as separate services named `test_db` and `db` respectively. In both cases the database is available on the host machine's `localhost` and credentials are:
+The Docker compose file can be used to run containerized versions of postgres either for single use (as is used by `with-test-db.sh`), or for longer-term use. These are setup as separate services named `db_test` and `db` respectively. In both cases the database is available on the host machine's `localhost` and credentials are:
 
 - Username: pg
 - Password: password
 
 However, each service uses a different port, documented below, to avoid conflicts.
 
-#### `test_db` service for single use
+#### `db_test` service for single use
 
-The single-use `test_db` service does not have any persistent storage. When the container is removed, data in the database disappears with it.
+The single-use `db_test` service does not have any persistent storage. When the container is removed, data in the database disappears with it.
 
 This service runs on port `5433`.
 
 ```
-$ docker compose up test_db   # start container
-$ docker compose stop test_db # stop container
-$ docker compose rm test_db   # remove container
+$ docker compose up db_test   # start container
+$ docker compose stop db_test # stop container
+$ docker compose rm db_test   # remove container
 ```
 
 #### `db` service for persistent use

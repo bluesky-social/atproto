@@ -1,4 +1,4 @@
-import { Commit, def, RecordPath } from '../types'
+import { def, RecordPath } from '../types'
 import { BlockWriter } from '@ipld/car/writer'
 import { CID } from 'multiformats/cid'
 import CidSet from '../cid-set'

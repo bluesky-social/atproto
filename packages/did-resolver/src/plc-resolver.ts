@@ -6,7 +6,7 @@ import {
   Resolvable,
   DIDDocument,
 } from 'did-resolver'
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 import * as errors from './errors'
 
 export type PlcResolverOptions = {
@@ -32,7 +32,10 @@ export const makeResolver = (opts: PlcResolverOptions): DIDResolver => {
       })
       didDocument = res.data
     } catch (err) {
-      return errors.notFound()
+      if (err instanceof AxiosError && err.response?.status === 404) {
+        return errors.notFound() // Positively not found, versus due to e.g. network error
+      }
+      throw err
     }
 
     const docIdMatchesDid = didDocument?.id === did
