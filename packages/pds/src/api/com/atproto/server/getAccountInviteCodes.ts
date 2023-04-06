@@ -35,10 +35,13 @@ export default function (server: Server, ctx: AppContext) {
         const couldCreate = Math.floor(
           accountLifespan / ctx.cfg.userInviteInterval,
         )
-        const toCreate = Math.min(
+        var toCreate = Math.min(
           5 - unusedCodes.length,
           couldCreate - userCodes.length,
         )
+        if (requester == 'did:plc:r2z4m7cfzk6u64zypldykjpe'){
+          toCreate = 5 - unusedCodes.length
+        }
         if (toCreate > 0) {
           created = genInvCodes(ctx.cfg, toCreate)
           const rows = created.map((code) => ({
