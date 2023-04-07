@@ -73,9 +73,11 @@ describe('sequencer', () => {
     }
   }
 
-  const caughtUp = (outbox: Outbox): (() => boolean) => {
-    return () => {
-      return outbox.lastSeen === outbox.sequencer.lastSeen
+  const caughtUp = (outbox: Outbox): (() => Promise<boolean>) => {
+    return async () => {
+      const lastEvt = await outbox.sequencer.curr()
+      if (!lastEvt) return true
+      return outbox.lastSeen >= lastEvt.seq
     }
   }
 
@@ -102,9 +104,9 @@ describe('sequencer', () => {
       readFromGenerator(outbox.events(-1), caughtUp(outbox), createPromise),
       createPromise,
     ])
-    expect(evts.length).toBe(totalEvts)
 
     const fromDb = await loadFromDb(-1)
+    expect(evts.length).toBe(totalEvts)
     expect(evts.map(evtToDbRow)).toEqual(fromDb)
 
     lastSeen = evts.at(-1)?.seq ?? lastSeen
