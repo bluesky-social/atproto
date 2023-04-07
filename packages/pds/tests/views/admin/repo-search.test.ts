@@ -170,8 +170,12 @@ Array [
       Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
-          "cid": "cids(0)",
+          "$type": "blob",
           "mimeType": "image/jpeg",
+          "ref": Object{
+            "$link": "cids(0)",
+          },
+          "size": 3976,
         },
         "description": "",
         "displayName": "Carol Littel",
@@ -190,8 +194,12 @@ Array [
       Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
-          "cid": "cids(0)",
+          "$type": "blob",
           "mimeType": "image/jpeg",
+          "ref": Object{
+            "$link": "cids(0)",
+          },
+          "size": 3976,
         },
         "description": "",
         "displayName": "Sadie Carter",
@@ -210,8 +218,12 @@ Array [
       Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
-          "cid": "cids(0)",
+          "$type": "blob",
           "mimeType": "image/jpeg",
+          "ref": Object{
+            "$link": "cids(0)",
+          },
+          "size": 3976,
         },
         "description": "",
         "displayName": "Carlton Abernathy IV",
@@ -240,8 +252,12 @@ Array [
       Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
-          "cid": "cids(0)",
+          "$type": "blob",
           "mimeType": "image/jpeg",
+          "ref": Object{
+            "$link": "cids(0)",
+          },
+          "size": 3976,
         },
         "description": "",
         "displayName": "Latoya Windler",
@@ -260,8 +276,12 @@ Array [
       Object {
         "$type": "app.bsky.actor.profile",
         "avatar": Object {
-          "cid": "cids(0)",
+          "$type": "blob",
           "mimeType": "image/jpeg",
+          "ref": Object{
+            "$link": "cids(0)",
+          },
+          "size": 3976,
         },
         "description": "",
         "displayName": "Rachel Kshlerin",

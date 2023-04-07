@@ -39,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
         )
         .whereNotExists(
           mutedQb
-            .whereRef('did', '=', ref('postAuthorDid')) // Hide reposts of or by muted actors
+            .whereRef('did', '=', ref('post.creator')) // Hide reposts of or by muted actors
             .orWhereRef('did', '=', ref('originatorDid')),
         )
 
