@@ -30,16 +30,15 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // @NOTE mutes applied on pds
-      const postsQb = feedService.selectPostQb().where('post.creator', '=', did)
+      let feedItemsQb = feedService
+        .selectFeedItemQb()
+        .where('originatorDid', '=', did)
 
-      const repostsQb = feedService
-        .selectRepostQb()
-        .where('repost.creator', '=', did)
+      const keyset = new FeedKeyset(
+        ref('feed_item.sortAt'),
+        ref('feed_item.cid'),
+      )
 
-      const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
-      let feedItemsQb = db
-        .selectFrom(postsQb.unionAll(repostsQb).as('feed_items'))
-        .selectAll()
       feedItemsQb = paginate(feedItemsQb, {
         limit,
         cursor,

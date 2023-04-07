@@ -116,7 +116,7 @@ const getRelevantIds = (
       fromChild.uris.forEach((uri) => uris.add(uri))
     }
   }
-  dids.add(thread.post.authorDid)
+  dids.add(thread.post.postAuthorDid)
   uris.add(thread.post.postUri)
   return { dids, uris }
 }
