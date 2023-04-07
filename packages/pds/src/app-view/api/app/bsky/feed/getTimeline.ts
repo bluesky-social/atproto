@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
 import { FeedAlgorithm, FeedKeyset, composeFeed } from '../util/feed'
@@ -38,9 +39,12 @@ export default function (server: Server, ctx: AppContext) {
             .orWhere('originatorDid', 'in', followingIdsSubquery),
         )
         .whereNotExists(
-          mutedQb
-            .whereRef('did', '=', ref('post.creator')) // Hide reposts of or by muted actors
-            .orWhereRef('did', '=', ref('originatorDid')),
+          // Hide posts and reposts of or by muted actors
+          mutedQb.whereRef(
+            'did',
+            'in',
+            sql`(${ref('post.creator')}, ${ref('originatorDid')})`,
+          ),
         )
 
       const keyset = new FeedKeyset(
