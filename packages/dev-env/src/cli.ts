@@ -107,13 +107,13 @@ const envApi = {
 // =
 
 console.log(`
-██████╗ 
+██████╗
 ██╔═══██╗
 ██║██╗██║
 ██║██║██║
 ╚█║████╔╝
  ╚╝╚═══╝  protocol
-         
+
 [  v${pkg.version}  | created by Bluesky ]
 
 Initializing...`)

@@ -26,7 +26,6 @@ import {
 import {
   lexiconsToDefTree,
   DefTreeNode,
-  DefTreeNodeUserType,
   schemasToNsidTokens,
   toCamelCase,
   toTitleCase,

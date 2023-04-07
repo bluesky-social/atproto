@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "emitDeclarationOnly": true
+  },
+  "module": "nodenext",
+  "include": ["./src", "__tests__/**/**.ts"],
+  "references": [
+    { "path": "../api/tsconfig.build.json" },
+    { "path": "../common/tsconfig.build.json" },
+    { "path": "../crypto/tsconfig.build.json" },
+    { "path": "../identifier/tsconfig.build.json" },
+    { "path": "../lexicon/tsconfig.build.json" },
+    { "path": "../lex-cli/tsconfig.build.json" },
+    { "path": "../repo/tsconfig.build.json" },
+    { "path": "../uri/tsconfig.build.json" },
+    { "path": "../xrpc-server/tsconfig.build.json" }
+  ]
+}

@@ -6,7 +6,7 @@ import ReadableRepo from './readable-repo'
 import Repo from './repo'
 import CidSet from './cid-set'
 import * as util from './util'
-import { RecordClaim, RepoContents } from './types'
+import { RecordClaim, RepoContents, RepoContentsWithCids } from './types'
 import { def } from './types'
 import { MST } from './mst'
 import { cidForCbor } from '@atproto/common'
@@ -16,22 +16,18 @@ export type VerifiedCheckout = {
   newCids: CidSet
 }
 
+export type VerifiedCheckoutWithCids = {
+  commit: CID
+  contents: RepoContentsWithCids
+}
+
 export const verifyCheckout = async (
   storage: ReadableBlockstore,
   head: CID,
   did: string,
   signingKey: string,
 ): Promise<VerifiedCheckout> => {
-  const repo = await ReadableRepo.load(storage, head)
-  if (repo.did !== did) {
-    throw new RepoVerificationError(`Invalid repo did: ${repo.did}`)
-  }
-  const validSig = await util.verifyCommitSig(repo.commit, signingKey)
-  if (!validSig) {
-    throw new RepoVerificationError(
-      `Invalid signature on commit: ${repo.cid.toString()}`,
-    )
-  }
+  const repo = await verifyRepoRoot(storage, head, did, signingKey)
   const diff = await DataDiff.of(repo.data, null)
   const newCids = new CidSet([repo.cid]).addSet(diff.newCids)
 
@@ -49,6 +45,51 @@ export const verifyCheckout = async (
     contents,
     newCids,
   }
+}
+
+export const verifyCheckoutWithCids = async (
+  storage: ReadableBlockstore,
+  head: CID,
+  did: string,
+  signingKey: string,
+): Promise<VerifiedCheckoutWithCids> => {
+  const repo = await verifyRepoRoot(storage, head, did, signingKey)
+  const diff = await DataDiff.of(repo.data, null)
+
+  const contents: RepoContentsWithCids = {}
+  for (const add of diff.addList()) {
+    const { collection, rkey } = util.parseDataKey(add.key)
+    contents[collection] ??= {}
+    contents[collection][rkey] = {
+      cid: add.cid,
+      value: await storage.readRecord(add.cid),
+    }
+  }
+
+  return {
+    commit: repo.cid,
+    contents,
+  }
+}
+
+// @NOTE only verifies the root, not the repo contents
+const verifyRepoRoot = async (
+  storage: ReadableBlockstore,
+  head: CID,
+  did: string,
+  signingKey: string,
+): Promise<ReadableRepo> => {
+  const repo = await ReadableRepo.load(storage, head)
+  if (repo.did !== did) {
+    throw new RepoVerificationError(`Invalid repo did: ${repo.did}`)
+  }
+  const validSig = await util.verifyCommitSig(repo.commit, signingKey)
+  if (!validSig) {
+    throw new RepoVerificationError(
+      `Invalid signature on commit: ${repo.cid.toString()}`,
+    )
+  }
+  return repo
 }
 
 export type VerifiedUpdate = {

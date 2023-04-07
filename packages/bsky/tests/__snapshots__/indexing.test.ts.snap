@@ -1,0 +1,524 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`indexing indexRepo updates indexes when records change. 1`] = `
+Array [
+  Object {
+    "description": "freshening things up",
+    "did": "user(0)",
+    "followersCount": 2,
+    "followsCount": 2,
+    "handle": "alice.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "postsCount": 5,
+    "viewer": Object {},
+  },
+  Object {
+    "cursor": "0000000000000::bafycid",
+    "feed": Array [
+      Object {
+        "post": Object {
+          "author": Object {
+            "did": "user(0)",
+            "handle": "alice.test",
+            "viewer": Object {},
+          },
+          "cid": "cids(0)",
+          "indexedAt": "1970-01-01T00:00:00.000Z",
+          "likeCount": 0,
+          "record": Object {
+            "$type": "app.bsky.feed.post",
+            "createdAt": "1970-01-01T00:00:00.000Z",
+            "text": "fresh post!",
+          },
+          "replyCount": 0,
+          "repostCount": 0,
+          "uri": "record(0)",
+          "viewer": Object {},
+        },
+      },
+      Object {
+        "post": Object {
+          "author": Object {
+            "did": "user(0)",
+            "handle": "alice.test",
+            "viewer": Object {},
+          },
+          "cid": "cids(1)",
+          "indexedAt": "1970-01-01T00:00:00.000Z",
+          "likeCount": 0,
+          "record": Object {
+            "$type": "app.bsky.feed.post",
+            "createdAt": "1970-01-01T00:00:00.000Z",
+            "reply": Object {
+              "parent": Object {
+                "cid": "cids(3)",
+                "uri": "record(3)",
+              },
+              "root": Object {
+                "cid": "cids(2)",
+                "uri": "record(2)",
+              },
+            },
+            "text": "thanks bob",
+          },
+          "replyCount": 0,
+          "repostCount": 0,
+          "uri": "record(1)",
+          "viewer": Object {},
+        },
+        "reply": Object {
+          "parent": Object {
+            "author": Object {
+              "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(2)/cids(4)@jpeg",
+              "did": "user(1)",
+              "displayName": "bobby",
+              "handle": "bob.test",
+              "viewer": Object {
+                "followedBy": "record(5)",
+                "following": "record(4)",
+              },
+            },
+            "cid": "cids(3)",
+            "embed": Object {
+              "$type": "app.bsky.embed.images#view",
+              "images": Array [
+                Object {
+                  "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                  "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(2)/cids(5)@jpeg",
+                  "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(2)/cids(5)@jpeg",
+                },
+              ],
+            },
+            "indexedAt": "1970-01-01T00:00:00.000Z",
+            "likeCount": 0,
+            "record": Object {
+              "$type": "app.bsky.feed.post",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "embed": Object {
+                "$type": "app.bsky.embed.images",
+                "images": Array [
+                  Object {
+                    "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                    "image": Object {
+                      "$type": "blob",
+                      "mimeType": "image/jpeg",
+                      "ref": Object {
+                        "$link": "cids(5)",
+                      },
+                      "size": 4114,
+                    },
+                  },
+                ],
+              },
+              "reply": Object {
+                "parent": Object {
+                  "cid": "cids(2)",
+                  "uri": "record(2)",
+                },
+                "root": Object {
+                  "cid": "cids(2)",
+                  "uri": "record(2)",
+                },
+              },
+              "text": "hear that",
+            },
+            "replyCount": 1,
+            "repostCount": 0,
+            "uri": "record(3)",
+            "viewer": Object {},
+          },
+          "root": Object {
+            "author": Object {
+              "did": "user(0)",
+              "handle": "alice.test",
+              "viewer": Object {},
+            },
+            "cid": "cids(2)",
+            "indexedAt": "1970-01-01T00:00:00.000Z",
+            "likeCount": 3,
+            "record": Object {
+              "$type": "app.bsky.feed.post",
+              "createdAt": "1970-01-01T00:00:00.000Z",
+              "text": "again",
+            },
+            "replyCount": 2,
+            "repostCount": 1,
+            "uri": "record(2)",
+            "viewer": Object {},
+          },
+        },
+      },
+      Object {
+        "post": Object {
+          "author": Object {
+            "did": "user(0)",
+            "handle": "alice.test",
+            "viewer": Object {},
+          },
+          "cid": "cids(6)",
+          "embed": Object {
+            "$type": "app.bsky.embed.record#view",
+            "record": Object {
+              "$type": "app.bsky.embed.record#viewRecord",
+              "author": Object {
+                "did": "user(3)",
+                "handle": "dan.test",
+                "viewer": Object {
+                  "following": "record(8)",
+                },
+              },
+              "cid": "cids(7)",
+              "embeds": Array [
+                Object {
+                  "$type": "app.bsky.embed.record#view",
+                  "record": Object {
+                    "$type": "app.bsky.embed.record#viewRecord",
+                    "author": Object {
+                      "did": "user(4)",
+                      "handle": "carol.test",
+                      "viewer": Object {
+                        "followedBy": "record(10)",
+                      },
+                    },
+                    "cid": "cids(8)",
+                    "indexedAt": "1970-01-01T00:00:00.000Z",
+                    "uri": "record(9)",
+                    "value": Object {
+                      "$type": "app.bsky.feed.post",
+                      "createdAt": "1970-01-01T00:00:00.000Z",
+                      "embed": Object {
+                        "$type": "app.bsky.embed.recordWithMedia",
+                        "media": Object {
+                          "$type": "app.bsky.embed.images",
+                          "images": Array [
+                            Object {
+                              "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                              "image": Object {
+                                "$type": "blob",
+                                "mimeType": "image/jpeg",
+                                "ref": Object {
+                                  "$link": "cids(5)",
+                                },
+                                "size": 4114,
+                              },
+                            },
+                            Object {
+                              "alt": "tests/image/fixtures/key-alt.jpg",
+                              "image": Object {
+                                "$type": "blob",
+                                "mimeType": "image/jpeg",
+                                "ref": Object {
+                                  "$link": "cids(9)",
+                                },
+                                "size": 12736,
+                              },
+                            },
+                          ],
+                        },
+                        "record": Object {
+                          "record": Object {
+                            "cid": "cids(10)",
+                            "uri": "record(11)",
+                          },
+                        },
+                      },
+                      "text": "hi im carol",
+                    },
+                  },
+                },
+              ],
+              "indexedAt": "1970-01-01T00:00:00.000Z",
+              "uri": "record(7)",
+              "value": Object {
+                "$type": "app.bsky.feed.post",
+                "createdAt": "1970-01-01T00:00:00.000Z",
+                "embed": Object {
+                  "$type": "app.bsky.embed.record",
+                  "record": Object {
+                    "cid": "cids(8)",
+                    "uri": "record(9)",
+                  },
+                },
+                "facets": Array [
+                  Object {
+                    "features": Array [
+                      Object {
+                        "$type": "app.bsky.richtext.facet#mention",
+                        "did": "user(0)",
+                      },
+                    ],
+                    "index": Object {
+                      "byteEnd": 18,
+                      "byteStart": 0,
+                    },
+                  },
+                ],
+                "text": "@alice.bluesky.xyz is the best",
+              },
+            },
+          },
+          "indexedAt": "1970-01-01T00:00:00.000Z",
+          "likeCount": 2,
+          "record": Object {
+            "$type": "app.bsky.feed.post",
+            "createdAt": "1970-01-01T00:00:00.000Z",
+            "embed": Object {
+              "$type": "app.bsky.embed.record",
+              "record": Object {
+                "cid": "cids(7)",
+                "uri": "record(7)",
+              },
+            },
+            "text": "yoohoo",
+          },
+          "replyCount": 0,
+          "repostCount": 0,
+          "uri": "record(6)",
+          "viewer": Object {},
+        },
+      },
+      Object {
+        "post": Object {
+          "author": Object {
+            "did": "user(0)",
+            "handle": "alice.test",
+            "viewer": Object {},
+          },
+          "cid": "cids(2)",
+          "indexedAt": "1970-01-01T00:00:00.000Z",
+          "likeCount": 3,
+          "record": Object {
+            "$type": "app.bsky.feed.post",
+            "createdAt": "1970-01-01T00:00:00.000Z",
+            "text": "again",
+          },
+          "replyCount": 2,
+          "repostCount": 1,
+          "uri": "record(2)",
+          "viewer": Object {},
+        },
+      },
+      Object {
+        "post": Object {
+          "author": Object {
+            "did": "user(0)",
+            "handle": "alice.test",
+            "viewer": Object {},
+          },
+          "cid": "cids(11)",
+          "indexedAt": "1970-01-01T00:00:00.000Z",
+          "likeCount": 0,
+          "record": Object {
+            "$type": "app.bsky.feed.post",
+            "createdAt": "1970-01-01T00:00:00.000Z",
+            "text": "hey there",
+          },
+          "replyCount": 0,
+          "repostCount": 0,
+          "uri": "record(12)",
+          "viewer": Object {},
+        },
+      },
+    ],
+  },
+  Object {
+    "cursor": "0000000000000::bafycid",
+    "follows": Array [
+      Object {
+        "did": "user(3)",
+        "handle": "dan.test",
+        "viewer": Object {
+          "following": "record(8)",
+        },
+      },
+      Object {
+        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(2)/cids(4)@jpeg",
+        "description": "hi im bob",
+        "did": "user(1)",
+        "displayName": "bobby",
+        "handle": "bob.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "viewer": Object {
+          "followedBy": "record(5)",
+          "following": "record(4)",
+        },
+      },
+    ],
+    "subject": Object {
+      "description": "freshening things up",
+      "did": "user(0)",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {},
+    },
+  },
+]
+`;
+
+exports[`indexing indexes posts. 1`] = `
+Object {
+  "thread": Object {
+    "$type": "app.bsky.feed.defs#threadViewPost",
+    "post": Object {
+      "author": Object {
+        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "viewer": Object {},
+      },
+      "cid": "cids(0)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "likeCount": 0,
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "facets": Array [
+          Object {
+            "features": Array [
+              Object {
+                "$type": "app.bsky.richtext.facet#mention",
+                "did": "user(2)",
+              },
+            ],
+            "index": Object {
+              "byteEnd": 9,
+              "byteStart": 0,
+            },
+          },
+        ],
+        "text": "@bob.test how are you?",
+      },
+      "replyCount": 0,
+      "repostCount": 0,
+      "uri": "record(0)",
+      "viewer": Object {},
+    },
+    "replies": Array [],
+  },
+}
+`;
+
+exports[`indexing indexes posts. 2`] = `
+Object {
+  "thread": Object {
+    "$type": "app.bsky.feed.defs#threadViewPost",
+    "post": Object {
+      "author": Object {
+        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "viewer": Object {},
+      },
+      "cid": "cids(0)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "likeCount": 0,
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "facets": Array [
+          Object {
+            "features": Array [
+              Object {
+                "$type": "app.bsky.richtext.facet#mention",
+                "did": "user(2)",
+              },
+            ],
+            "index": Object {
+              "byteEnd": 11,
+              "byteStart": 0,
+            },
+          },
+        ],
+        "text": "@carol.test how are you?",
+      },
+      "replyCount": 0,
+      "repostCount": 0,
+      "uri": "record(0)",
+      "viewer": Object {},
+    },
+    "replies": Array [],
+  },
+}
+`;
+
+exports[`indexing indexes posts. 3`] = `
+Object {
+  "createMessages": Array [
+    Object {
+      "author": "user(1)",
+      "reason": "mention",
+      "recordCid": "cids(0)",
+      "recordUri": "record(0)",
+      "type": "create_notification",
+      "userDid": "user(0)",
+    },
+  ],
+  "deletedMessages": Array [
+    Object {
+      "recordUri": "record(0)",
+      "type": "delete_notifications",
+    },
+  ],
+  "updateMessages": Array [
+    Object {
+      "recordUri": "record(0)",
+      "type": "delete_notifications",
+    },
+    Object {
+      "author": "user(1)",
+      "reason": "mention",
+      "recordCid": "cids(1)",
+      "recordUri": "record(0)",
+      "type": "create_notification",
+      "userDid": "user(2)",
+    },
+  ],
+}
+`;
+
+exports[`indexing indexes profiles. 1`] = `
+Object {
+  "did": "user(0)",
+  "displayName": "dan",
+  "followersCount": 0,
+  "followsCount": 0,
+  "handle": "dan.test",
+  "indexedAt": "1970-01-01T00:00:00.000Z",
+  "postsCount": 0,
+  "viewer": Object {},
+}
+`;
+
+exports[`indexing indexes profiles. 2`] = `
+Object {
+  "did": "user(0)",
+  "displayName": "danny",
+  "followersCount": 0,
+  "followsCount": 0,
+  "handle": "dan.test",
+  "indexedAt": "1970-01-01T00:00:00.000Z",
+  "postsCount": 0,
+  "viewer": Object {},
+}
+`;
+
+exports[`indexing indexes profiles. 3`] = `
+Object {
+  "did": "user(0)",
+  "followersCount": 0,
+  "followsCount": 0,
+  "handle": "dan.test",
+  "postsCount": 0,
+  "viewer": Object {},
+}
+`;
+
+exports[`indexing indexes profiles. 4`] = `
+Object {
+  "createMessages": Array [],
+  "deletedMessages": Array [],
+  "updateMessages": Array [],
+}
+`;

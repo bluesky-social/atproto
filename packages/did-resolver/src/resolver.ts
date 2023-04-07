@@ -47,7 +47,7 @@ export class DidResolver {
     if (result.didResolutionMetadata.error || result.didDocument === null) {
       const err = result.didResolutionMetadata.error || 'notFound'
       log.info({ err, did }, 'could not resolve did')
-      throw new Error(`Could not resolve DID (${did}): ${err}`)
+      throw new NoResolveDidError(`Could not resolve DID (${did}): ${err}`)
     }
     return result.didDocument
   }
@@ -77,3 +77,5 @@ export class DidResolver {
 }
 
 export const resolver = new DidResolver()
+
+export class NoResolveDidError extends Error {}
