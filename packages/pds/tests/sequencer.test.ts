@@ -104,9 +104,9 @@ describe('sequencer', () => {
       readFromGenerator(outbox.events(-1), caughtUp(outbox), createPromise),
       createPromise,
     ])
+    expect(evts.length).toBe(totalEvts)
 
     const fromDb = await loadFromDb(-1)
-    expect(evts.length).toBe(totalEvts)
     expect(evts.map(evtToDbRow)).toEqual(fromDb)
 
     lastSeen = evts.at(-1)?.seq ?? lastSeen
