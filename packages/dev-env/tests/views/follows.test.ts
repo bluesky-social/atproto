@@ -12,6 +12,7 @@ import followsSeed from '../seeds/follows'
 
 describe('pds follow views', () => {
   let agent: AtpAgent
+  let bskyAgent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
 
@@ -23,9 +24,9 @@ describe('pds follow views', () => {
       dbPostgresSchema: 'views_follows',
     })
     close = server.close
-    agent = new AtpAgent({ service: server.url })
-    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
-    sc = new SeedClient(pdsAgent)
+    agent = new AtpAgent({ service: server.pdsUrl })
+    bskyAgent = new AtpAgent({ service: server.bskyUrl })
+    sc = new SeedClient(agent)
     await followsSeed(sc)
     await processAll(server)
     alice = sc.dids.alice
@@ -41,35 +42,35 @@ describe('pds follow views', () => {
   it('fetches followers', async () => {
     const aliceFollowers = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
 
     expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
 
     const bobFollowers = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.bob },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
 
     expect(forSnapshot(bobFollowers.data)).toMatchSnapshot()
 
     const carolFollowers = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.carol },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
 
     expect(forSnapshot(carolFollowers.data)).toMatchSnapshot()
 
     const danFollowers = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.dan },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
 
     expect(forSnapshot(danFollowers.data)).toMatchSnapshot()
 
     const eveFollowers = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.eve },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
 
     expect(forSnapshot(eveFollowers.data)).toMatchSnapshot()
@@ -78,11 +79,11 @@ describe('pds follow views', () => {
   it('fetches followers by handle', async () => {
     const byDid = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
     const byHandle = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.accounts[alice].handle },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
     expect(byHandle.data).toEqual(byDid.data)
   })
@@ -96,7 +97,7 @@ describe('pds follow views', () => {
           cursor,
           limit: 2,
         },
-        { headers: sc.getHeaders(alice, true) },
+        { headers: sc.getHeaders(alice) },
       )
       return res.data
     }
@@ -108,7 +109,7 @@ describe('pds follow views', () => {
 
     const full = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
 
     expect(full.data.followers.length).toEqual(4)
@@ -118,9 +119,9 @@ describe('pds follow views', () => {
   it('fetches followers unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
-    const { data: unauthed } = await agent.api.app.bsky.graph.getFollowers({
+    const { data: unauthed } = await bskyAgent.api.app.bsky.graph.getFollowers({
       actor: sc.dids.alice,
     })
     expect(unauthed.followers.length).toBeGreaterThan(0)
@@ -130,35 +131,35 @@ describe('pds follow views', () => {
   it('fetches follows', async () => {
     const aliceFollowers = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
 
     expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
 
     const bobFollowers = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.bob },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
 
     expect(forSnapshot(bobFollowers.data)).toMatchSnapshot()
 
     const carolFollowers = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.carol },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
 
     expect(forSnapshot(carolFollowers.data)).toMatchSnapshot()
 
     const danFollowers = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.dan },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
 
     expect(forSnapshot(danFollowers.data)).toMatchSnapshot()
 
     const eveFollowers = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.eve },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
 
     expect(forSnapshot(eveFollowers.data)).toMatchSnapshot()
@@ -167,11 +168,11 @@ describe('pds follow views', () => {
   it('fetches follows by handle', async () => {
     const byDid = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
     const byHandle = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.accounts[alice].handle },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
     expect(byHandle.data).toEqual(byDid.data)
   })
@@ -185,7 +186,7 @@ describe('pds follow views', () => {
           cursor,
           limit: 2,
         },
-        { headers: sc.getHeaders(alice, true) },
+        { headers: sc.getHeaders(alice) },
       )
       return res.data
     }
@@ -197,7 +198,7 @@ describe('pds follow views', () => {
 
     const full = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
 
     expect(full.data.follows.length).toEqual(4)
@@ -207,9 +208,9 @@ describe('pds follow views', () => {
   it('fetches follows unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
-    const { data: unauthed } = await agent.api.app.bsky.graph.getFollows({
+    const { data: unauthed } = await bskyAgent.api.app.bsky.graph.getFollows({
       actor: sc.dids.alice,
     })
     expect(unauthed.follows.length).toBeGreaterThan(0)

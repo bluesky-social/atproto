@@ -1,5 +1,5 @@
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
-import { Database } from '../../src'
+import { Database as BskyDb } from '@atproto/bsky/src'
 import {
   runTestServer,
   forSnapshot,
@@ -15,7 +15,8 @@ import threadSeed, { walk, item, Item } from '../seeds/thread'
 describe('pds thread views', () => {
   let server: TestServerInfo
   let agent: AtpAgent
-  let db: Database
+  let bskyAgent: AtpAgent
+  let db: BskyDb
   let close: CloseFn
   let sc: SeedClient
 
@@ -29,9 +30,9 @@ describe('pds thread views', () => {
     })
     db = server.ctx.db
     close = server.close
-    agent = new AtpAgent({ service: server.url })
-    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
-    sc = new SeedClient(pdsAgent)
+    agent = new AtpAgent({ service: server.pdsUrl })
+    bskyAgent = new AtpAgent({ service: server.bskyUrl })
+    sc = new SeedClient(agent)
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -56,7 +57,7 @@ describe('pds thread views', () => {
   it('fetches deep post thread', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: sc.getHeaders(bob) },
     )
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -65,7 +66,7 @@ describe('pds thread views', () => {
   it('fetches shallow post thread', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: sc.getHeaders(bob) },
     )
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -74,7 +75,7 @@ describe('pds thread views', () => {
   it('fetches ancestors', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: sc.getHeaders(bob) },
     )
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -83,7 +84,7 @@ describe('pds thread views', () => {
   it('fails for an unknown post', async () => {
     const promise = agent.api.app.bsky.feed.getPostThread(
       { uri: 'at://did:example:fake/does.not.exist/self' },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: sc.getHeaders(bob) },
     )
 
     await expect(promise).rejects.toThrow(
@@ -94,9 +95,9 @@ describe('pds thread views', () => {
   it('fetches post thread unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: sc.getHeaders(bob) },
     )
-    const { data: unauthed } = await agent.api.app.bsky.feed.getPostThread({
+    const { data: unauthed } = await bskyAgent.api.app.bsky.feed.getPostThread({
       uri: sc.posts[alice][1].ref.uriStr,
     })
     expect(unauthed.thread).toEqual(stripViewerFromThread(authed.thread))
@@ -133,7 +134,7 @@ describe('pds thread views', () => {
 
     const thread1 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: sc.getHeaders(bob) },
     )
     expect(forSnapshot(thread1.data.thread)).toMatchSnapshot()
 
@@ -142,13 +143,13 @@ describe('pds thread views', () => {
 
     const thread2 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: sc.getHeaders(bob) },
     )
     expect(forSnapshot(thread2.data.thread)).toMatchSnapshot()
 
     const thread3 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.replies[alice][indexes.aliceReplyReply].ref.uriStr },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: sc.getHeaders(bob) },
     )
     expect(forSnapshot(thread3.data.thread)).toMatchSnapshot()
   })

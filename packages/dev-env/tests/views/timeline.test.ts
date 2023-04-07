@@ -1,5 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
+import { FeedViewPost } from '@atproto/bsky/src/lexicon/types/app/bsky/feed/defs'
 import {
   runTestServer,
   forSnapshot,
@@ -10,7 +10,7 @@ import {
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import { FeedAlgorithm } from '../../src/api/app/bsky/util/feed'
+import { FeedAlgorithm } from '@atproto/bsky/src/api/app/bsky/util/feed'
 
 describe('timeline views', () => {
   let agent: AtpAgent
@@ -28,9 +28,8 @@ describe('timeline views', () => {
       dbPostgresSchema: 'views_home_feed',
     })
     close = server.close
-    agent = new AtpAgent({ service: server.url })
-    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
-    sc = new SeedClient(pdsAgent)
+    agent = new AtpAgent({ service: server.pdsUrl })
+    sc = new SeedClient(agent)
     await basicSeed(sc)
     await processAll(server)
     alice = sc.dids.alice
@@ -58,7 +57,7 @@ describe('timeline views', () => {
     const aliceTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
-        headers: sc.getHeaders(alice, true),
+        headers: sc.getHeaders(alice),
       },
     )
 
@@ -68,7 +67,7 @@ describe('timeline views', () => {
     const bobTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
-        headers: sc.getHeaders(bob, true),
+        headers: sc.getHeaders(bob),
       },
     )
 
@@ -78,7 +77,7 @@ describe('timeline views', () => {
     const carolTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
-        headers: sc.getHeaders(carol, true),
+        headers: sc.getHeaders(carol),
       },
     )
 
@@ -88,7 +87,7 @@ describe('timeline views', () => {
     const danTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
-        headers: sc.getHeaders(dan, true),
+        headers: sc.getHeaders(dan),
       },
     )
 
@@ -100,13 +99,13 @@ describe('timeline views', () => {
     const defaultTL = await agent.api.app.bsky.feed.getTimeline(
       {},
       {
-        headers: sc.getHeaders(alice, true),
+        headers: sc.getHeaders(alice),
       },
     )
     const reverseChronologicalTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
-        headers: sc.getHeaders(alice, true),
+        headers: sc.getHeaders(alice),
       },
     )
     expect(defaultTL.data.feed).toEqual(reverseChronologicalTL.data.feed)
@@ -121,7 +120,7 @@ describe('timeline views', () => {
           cursor,
           limit: 4,
         },
-        { headers: sc.getHeaders(carol, true) },
+        { headers: sc.getHeaders(carol) },
       )
       return res.data
     }
@@ -135,7 +134,7 @@ describe('timeline views', () => {
       {
         algorithm: FeedAlgorithm.ReverseChronological,
       },
-      { headers: sc.getHeaders(carol, true) },
+      { headers: sc.getHeaders(carol) },
     )
 
     expect(full.data.feed.length).toEqual(7)

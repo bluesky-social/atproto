@@ -12,6 +12,7 @@ import basicSeed from '../seeds/basic'
 
 describe('pds author feed views', () => {
   let agent: AtpAgent
+  let bskyAgent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
 
@@ -26,9 +27,9 @@ describe('pds author feed views', () => {
       dbPostgresSchema: 'views_author_feed',
     })
     close = server.close
-    agent = new AtpAgent({ service: server.url })
-    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
-    sc = new SeedClient(pdsAgent)
+    agent = new AtpAgent({ service: server.pdsUrl })
+    bskyAgent = new AtpAgent({ service: server.bskyUrl })
+    sc = new SeedClient(agent)
     await basicSeed(sc)
     await processAll(server)
     alice = sc.dids.alice
@@ -47,28 +48,28 @@ describe('pds author feed views', () => {
   it('fetches full author feeds for self (sorted, minimal viewer state).', async () => {
     const aliceForAlice = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
 
     expect(forSnapshot(aliceForAlice.data.feed)).toMatchSnapshot()
 
     const bobForBob = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[bob].handle },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: sc.getHeaders(bob) },
     )
 
     expect(forSnapshot(bobForBob.data.feed)).toMatchSnapshot()
 
     const carolForCarol = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[carol].handle },
-      { headers: sc.getHeaders(carol, true) },
+      { headers: sc.getHeaders(carol) },
     )
 
     expect(forSnapshot(carolForCarol.data.feed)).toMatchSnapshot()
 
     const danForDan = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[dan].handle },
-      { headers: sc.getHeaders(dan, true) },
+      { headers: sc.getHeaders(dan) },
     )
 
     expect(forSnapshot(danForDan.data.feed)).toMatchSnapshot()
@@ -77,7 +78,7 @@ describe('pds author feed views', () => {
   it("reflects fetching user's state in the feed.", async () => {
     const aliceForCarol = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
-      { headers: sc.getHeaders(carol, true) },
+      { headers: sc.getHeaders(carol) },
     )
 
     aliceForCarol.data.feed.forEach((postView) => {
@@ -98,7 +99,7 @@ describe('pds author feed views', () => {
           cursor,
           limit: 2,
         },
-        { headers: sc.getHeaders(dan, true) },
+        { headers: sc.getHeaders(dan) },
       )
       return res.data
     }
@@ -110,7 +111,7 @@ describe('pds author feed views', () => {
 
     const full = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
-      { headers: sc.getHeaders(dan, true) },
+      { headers: sc.getHeaders(dan) },
     )
 
     expect(full.data.feed.length).toEqual(4)
@@ -120,9 +121,9 @@ describe('pds author feed views', () => {
   it('fetches results unauthed.', async () => {
     const { data: authed } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: sc.getHeaders(alice) },
     )
-    const { data: unauthed } = await agent.api.app.bsky.feed.getAuthorFeed({
+    const { data: unauthed } = await bskyAgent.api.app.bsky.feed.getAuthorFeed({
       actor: sc.accounts[alice].handle,
     })
     expect(unauthed.feed.length).toBeGreaterThan(0)

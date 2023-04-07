@@ -52,6 +52,7 @@
   },
   "devDependencies": {
     "@atproto/api": "*",
+    "@atproto/bsky": "*",
     "@atproto/lex-cli": "*",
     "@atproto/pds": "*",
     "@atproto/xrpc": "*",

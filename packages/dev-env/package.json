@@ -7,6 +7,9 @@
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
     "start": "node dist/cli.js",
+    "test": "../pg/with-test-db.sh jest",
+    "test:log": "tail -50 test.log | pino-pretty",
+    "test:updateSnapshot": "jest --updateSnapshot",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",
@@ -16,6 +19,7 @@
   },
   "dependencies": {
     "@atproto/api": "*",
+    "@atproto/bsky": "*",
     "@atproto/crypto": "*",
     "@atproto/did-resolver": "*",
     "@atproto/pds": "*",

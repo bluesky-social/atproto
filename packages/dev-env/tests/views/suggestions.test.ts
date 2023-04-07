@@ -5,6 +5,7 @@ import basicSeed from '../seeds/basic'
 
 describe('pds user search views', () => {
   let agent: AtpAgent
+  let bskyAgent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
 
@@ -13,9 +14,9 @@ describe('pds user search views', () => {
       dbPostgresSchema: 'views_suggestions',
     })
     close = server.close
-    agent = new AtpAgent({ service: server.url })
-    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
-    sc = new SeedClient(pdsAgent)
+    agent = new AtpAgent({ service: server.pdsUrl })
+    bskyAgent = new AtpAgent({ service: server.bskyUrl })
+    sc = new SeedClient(agent)
     await basicSeed(sc)
     await processAll(server)
   })
@@ -27,7 +28,7 @@ describe('pds user search views', () => {
   it('actor suggestion gives users', async () => {
     const result = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 3 },
-      { headers: sc.getHeaders(sc.dids.carol, true) },
+      { headers: sc.getHeaders(sc.dids.carol) },
     )
 
     const handles = result.data.actors.map((u) => u.handle)
@@ -49,7 +50,7 @@ describe('pds user search views', () => {
   it('does not suggest followed users', async () => {
     const result = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 3 },
-      { headers: sc.getHeaders(sc.dids.alice, true) },
+      { headers: sc.getHeaders(sc.dids.alice) },
     )
 
     // alice follows everyone
@@ -59,11 +60,11 @@ describe('pds user search views', () => {
   it('paginates', async () => {
     const result1 = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 1 },
-      { headers: sc.getHeaders(sc.dids.carol, true) },
+      { headers: sc.getHeaders(sc.dids.carol) },
     )
     const result2 = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 1, cursor: result1.data.cursor },
-      { headers: sc.getHeaders(sc.dids.carol, true) },
+      { headers: sc.getHeaders(sc.dids.carol) },
     )
 
     expect(result1.data.actors.length).toBe(1)
@@ -78,9 +79,10 @@ describe('pds user search views', () => {
   it('fetches suggestions unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.actor.getSuggestions(
       {},
-      { headers: sc.getHeaders(sc.dids.carol, true) },
+      { headers: sc.getHeaders(sc.dids.carol) },
     )
-    const { data: unauthed } = await agent.api.app.bsky.actor.getSuggestions({})
+    const { data: unauthed } =
+      await bskyAgent.api.app.bsky.actor.getSuggestions({})
     const omitViewerFollows = ({ did }) => {
       return did !== sc.dids.carol && !sc.follows[sc.dids.carol][did]
     }

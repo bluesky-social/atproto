@@ -11,13 +11,12 @@ import { DidResolver } from '@atproto/did-resolver'
 import { lexToJson } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
-import { BskyAppView, ServerConfig, Database } from '../src'
+import { BskyAppView, ServerConfig, Database, AppContext } from '@atproto/bsky'
 import {
   FeedViewPost,
   isThreadViewPost,
-} from '../src/lexicon/types/app/bsky/feed/defs'
-import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
-import AppContext from '../src/context'
+} from '@atproto/bsky/src/lexicon/types/app/bsky/feed/defs'
+import { isViewRecord } from '@atproto/bsky/src/lexicon/types/app/bsky/embed/record'
 import { defaultFetchHandler } from '@atproto/xrpc'
 import { MessageDispatcher } from '@atproto/pds/src/event-stream/message-queue'
 
@@ -27,7 +26,7 @@ export type CloseFn = () => Promise<void>
 export type TestServerInfo = {
   ctx: AppContext
   bsky: BskyAppView
-  url: string
+  bskyUrl: string
   pds: pds.PDS
   pdsUrl: string
   plc: PlcServer
@@ -177,7 +176,7 @@ export const runTestServer = async (
   return {
     ctx: bsky.ctx,
     bsky,
-    url: `http://localhost:${bskyPort}`,
+    bskyUrl: `http://localhost:${bskyPort}`,
     pds: pdsServer,
     pdsUrl: `http://localhost:${pdsPort}`,
     plc: plcServer,
