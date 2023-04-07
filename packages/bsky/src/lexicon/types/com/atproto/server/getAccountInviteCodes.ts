@@ -7,15 +7,17 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
+import * as ComAtprotoServerDefs from './defs'
 
 export interface QueryParams {
-  seenAt?: string
+  includeUsed: boolean
+  createAvailable: boolean
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  count: number
+  codes: ComAtprotoServerDefs.InviteCode[]
   [k: string]: unknown
 }
 
@@ -29,6 +31,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'DuplicateCreate'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

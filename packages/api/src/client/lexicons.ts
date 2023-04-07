@@ -303,13 +303,6 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.server.defs#inviteCode',
           },
-          invites: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.server.defs#inviteCode',
-            },
-          },
         },
       },
       repoViewDetail: {
@@ -1538,12 +1531,12 @@ export const schemaDict = {
             rkeyStart: {
               type: 'string',
               description:
-                'The lowest sort-ordered rkey to start from (exclusive)',
+                'DEPRECATED: The lowest sort-ordered rkey to start from (exclusive)',
             },
             rkeyEnd: {
               type: 'string',
               description:
-                'The highest sort-ordered rkey to stop at (exclusive)',
+                'DEPRECATED: The highest sort-ordered rkey to stop at (exclusive)',
             },
             reverse: {
               type: 'boolean',
@@ -4141,6 +4134,15 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
+        parameters: {
+          type: 'params',
+          properties: {
+            seenAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
         output: {
           encoding: 'application/json',
           schema: {
@@ -4173,6 +4175,10 @@ export const schemaDict = {
             },
             cursor: {
               type: 'string',
+            },
+            seenAt: {
+              type: 'string',
+              format: 'datetime',
             },
           },
         },

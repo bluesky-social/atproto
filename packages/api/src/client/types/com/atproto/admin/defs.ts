@@ -169,7 +169,6 @@ export interface RepoView {
   indexedAt: string
   moderation: Moderation
   invitedBy?: ComAtprotoServerDefs.InviteCode
-  invites?: ComAtprotoServerDefs.InviteCode[]
   [k: string]: unknown
 }
 
