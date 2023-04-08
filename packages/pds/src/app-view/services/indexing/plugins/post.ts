@@ -18,6 +18,7 @@ import {
 import RecordProcessor from '../processor'
 import { PostHierarchy } from '../../../db/tables/post-hierarchy'
 import { UserNotification } from '../../../../db/tables/user-notification'
+import * as messages from '../../../../event-stream/messages'
 
 type Post = DatabaseSchemaType['post']
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
@@ -271,6 +272,10 @@ const notifsForDelete = (
   }
 }
 
+const eventsForInsert = (inserted: IndexedPost) => {
+  return [messages.labelPost(inserted.post.uri)]
+}
+
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>
 
 export const makePlugin = (db: DatabaseSchema): PluginType => {
@@ -281,6 +286,7 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
     deleteFn,
     notifsForInsert,
     notifsForDelete,
+    eventsForInsert,
   })
 }
 

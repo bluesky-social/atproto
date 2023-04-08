@@ -28,6 +28,7 @@ type RecordProcessorParams<T, S> = {
     prev: S,
     replacedBy: S | null,
   ) => { notifs: UserNotification[]; toDelete: string[] }
+  eventsForInsert: (obj: S) => Message[]
 }
 
 export class RecordProcessor<T, S> {
@@ -71,7 +72,7 @@ export class RecordProcessor<T, S> {
     // if this was a new record, return events
     if (inserted) {
       await this.handleNotifs({ inserted })
-      return []
+      return this.params.eventsForInsert(inserted)
     }
     // if duplicate, insert into duplicates table with no events
     const found = await this.params.findDuplicate(this.db, uri, obj)
@@ -141,23 +142,23 @@ export class RecordProcessor<T, S> {
       )
     }
     await this.handleNotifs({ inserted, deleted })
-    return []
+    return this.params.eventsForInsert(inserted)
   }
 
-  async deleteRecord(uri: AtUri, cascading = false): Promise<Message[]> {
+  async deleteRecord(uri: AtUri, cascading = false) {
     await this.db
       .deleteFrom('duplicate_record')
       .where('uri', '=', uri.toString())
       .execute()
     const deleted = await this.params.deleteFn(this.db, uri)
-    if (!deleted) return []
+    if (!deleted) return
     if (cascading) {
       await this.db
         .deleteFrom('duplicate_record')
         .where('duplicateOf', '=', uri.toString())
         .execute()
       await this.handleNotifs({ deleted })
-      return []
+      return
     } else {
       const found = await this.db
         .selectFrom('duplicate_record')
@@ -175,12 +176,12 @@ export class RecordProcessor<T, S> {
 
       if (!found) {
         await this.handleNotifs({ deleted })
-        return []
+        return
       }
       const record = cborToLexRecord(found.content)
       if (!this.matchesSchema(record)) {
         await this.handleNotifs({ deleted })
-        return []
+        return
       }
       const inserted = await this.params.insertFn(
         this.db,
@@ -190,7 +191,6 @@ export class RecordProcessor<T, S> {
         found.indexedAt,
       )
       await this.handleNotifs({ deleted, inserted: inserted ?? undefined })
-      return []
     }
   }
 

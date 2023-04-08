@@ -84,6 +84,8 @@ const notifsForDelete = (
   return { notifs: [], toDelete }
 }
 
+const eventsForInsert = () => []
+
 export type PluginType = RecordProcessor<Repost.Record, IndexedRepost>
 
 export const makePlugin = (db: DatabaseSchema): PluginType => {
@@ -94,6 +96,7 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
     deleteFn,
     notifsForInsert,
     notifsForDelete,
+    eventsForInsert,
   })
 }
 

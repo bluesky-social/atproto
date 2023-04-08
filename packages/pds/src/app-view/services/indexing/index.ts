@@ -56,8 +56,7 @@ export class IndexingService {
   async deleteRecord(uri: AtUri, cascading = false) {
     this.db.assertTransaction()
     const indexer = this.findIndexerForCollection(uri.collection)
-    const events = await indexer.deleteRecord(uri, cascading)
-    await this.messageQueue.send(this.db, events)
+    await indexer.deleteRecord(uri, cascading)
   }
 
   findIndexerForCollection(collection: string) {

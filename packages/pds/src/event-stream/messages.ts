@@ -50,7 +50,14 @@ export const deleteRepo = (did: string): DeleteRepo => ({
   did,
 })
 
-// @TODO will be used for other stuff
-export type Message = {
-  type: 'dummy'
+export type Message = LabelPost
+
+export type LabelPost = {
+  type: 'label_post'
+  uri: string
 }
+
+export const labelPost = (uri: string): LabelPost => ({
+  type: 'label_post',
+  uri,
+})
