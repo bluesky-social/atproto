@@ -38,11 +38,12 @@ describe('notification views', () => {
   })
 
   const sort = (notifs: Notification[]) => {
+    // Need to sort because notification ordering is not well-defined
     return notifs.sort((a, b) => {
-      if (a.indexedAt === b.indexedAt) {
-        return a.uri > b.uri ? -1 : 1
+      if (a.author.handle === b.author.handle) {
+        return a.indexedAt > b.indexedAt ? -1 : 1
       }
-      return a.indexedAt > b.indexedAt ? -1 : 1
+      return a.author.handle > b.author.handle ? -1 : 1
     })
   }
 
@@ -96,7 +97,7 @@ describe('notification views', () => {
       {},
       { headers: sc.getHeaders(sc.dids.dan, true) },
     )
-    expect(forSnapshot(notifsDan.data)).toMatchSnapshot()
+    expect(forSnapshot(sort(notifsDan.data.notifications))).toMatchSnapshot()
   })
 
   it('fetches notifications without a last-seen', async () => {
@@ -105,16 +106,13 @@ describe('notification views', () => {
       { headers: sc.getHeaders(alice, true) },
     )
 
-    const notifs = sort(notifRes.data.notifications)
+    const notifs = notifRes.data.notifications
     expect(notifs.length).toBe(12)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map(() => false))
 
-    // @TODO while the exact order of these is not critically important,
-    // it's odd to see carol's follow after bob's. In the seed they occur in
-    // the opposite ordering.
-    expect(forSnapshot(notifs)).toMatchSnapshot()
+    expect(forSnapshot(sort(notifs))).toMatchSnapshot()
   })
 
   it('paginates', async () => {
@@ -122,10 +120,7 @@ describe('notification views', () => {
       sort(results.flatMap((res) => res.notifications))
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.notification.listNotifications(
-        {
-          cursor,
-          limit: 6,
-        },
+        { cursor, limit: 6 },
         { headers: sc.getHeaders(alice, true) },
       )
       return res.data
@@ -168,12 +163,12 @@ describe('notification views', () => {
       { headers: sc.getHeaders(alice, true) },
     )
 
-    const notifs = sort(notifRes.data.notifications)
+    const notifs = notifRes.data.notifications
     expect(notifs.length).toBe(12)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map((_, i) => i >= 3))
 
-    expect(forSnapshot(notifs)).toMatchSnapshot()
+    expect(forSnapshot(sort(notifs))).toMatchSnapshot()
   })
 })
