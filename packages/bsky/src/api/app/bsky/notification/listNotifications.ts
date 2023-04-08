@@ -1,56 +1,45 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as common from '@atproto/common'
+import { jsonStringToLex } from '@atproto/lexicon'
 import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { notSoftDeletedClause } from '../../../../db/util'
+import { authVerifier } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.listNotifications({
-    auth: ctx.accessVerifier,
+    auth: authVerifier,
     handler: async ({ params, auth }) => {
       const { limit, cursor } = params
       const requester = auth.credentials.did
-      const { ref } = ctx.db.db.dynamic
+      const { seenAt } = params
+      if (!seenAt) {
+        throw new InvalidRequestError('Missing "seenAt" param')
+      }
 
+      const { ref } = ctx.db.db.dynamic
       let notifBuilder = ctx.db.db
-        .selectFrom('user_notification as notif')
-        .innerJoin('ipld_block', (join) =>
-          join
-            .onRef('ipld_block.cid', '=', 'notif.recordCid')
-            .onRef('ipld_block.creator', '=', 'notif.author'),
-        )
-        .innerJoin('did_handle as author', 'author.did', 'notif.author')
-        .innerJoin(
-          'repo_root as author_repo',
-          'author_repo.did',
-          'notif.author',
-        )
+        .selectFrom('notification as notif')
         .innerJoin('record', 'record.uri', 'notif.recordUri')
-        .where(notSoftDeletedClause(ref('author_repo')))
+        .innerJoin('actor as author', 'author.did', 'notif.author')
         .where(notSoftDeletedClause(ref('record')))
-        .where('notif.userDid', '=', requester)
-        .whereNotExists(
-          ctx.db.db // Omit mentions and replies by muted actors
-            .selectFrom('mute')
-            .selectAll()
-            .where(ref('notif.reason'), 'in', ['mention', 'reply'])
-            .whereRef('did', '=', ref('notif.author'))
-            .where('mutedByDid', '=', requester),
-        )
+        .where(notSoftDeletedClause(ref('author')))
+        .where('notif.did', '=', requester)
         .select([
           'notif.recordUri as uri',
           'notif.recordCid as cid',
           'author.did as authorDid',
           'author.handle as authorHandle',
+          'author.indexedAt as authorIndexedAt',
+          'author.takedownId as authorTakedownId',
           'notif.reason as reason',
           'notif.reasonSubject as reasonSubject',
-          'notif.indexedAt as indexedAt',
-          'ipld_block.content as recordBytes',
+          'notif.sortAt as indexedAt',
+          'record.json as recordJson',
         ])
 
       const keyset = new NotifsKeyset(
-        ref('notif.indexedAt'),
+        ref('notif.sortAt'),
         ref('notif.recordCid'),
       )
       notifBuilder = paginate(notifBuilder, {
@@ -59,27 +48,16 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
 
-      const userStateQuery = ctx.db.db
-        .selectFrom('user_state')
-        .selectAll()
-        .where('did', '=', requester)
-        .executeTakeFirst()
-
-      const [userState, notifs] = await Promise.all([
-        userStateQuery,
-        notifBuilder.execute(),
-      ])
-
-      if (!userState) {
-        throw new InvalidRequestError(`Could not find user: ${requester}`)
-      }
+      const notifs = await notifBuilder.execute()
 
       // @NOTE calling into app-view, will eventually be replaced
-      const actorService = ctx.services.appView.actor(ctx.db)
+      const actorService = ctx.services.actor(ctx.db)
       const authors = await actorService.views.profile(
         notifs.map((notif) => ({
           did: notif.authorDid,
           handle: notif.authorHandle,
+          indexedAt: notif.authorIndexedAt,
+          takedownId: notif.authorTakedownId,
         })),
         requester,
       )
@@ -90,8 +68,8 @@ export default function (server: Server, ctx: AppContext) {
         author: authors[i],
         reason: notif.reason,
         reasonSubject: notif.reasonSubject || undefined,
-        record: common.cborBytesToRecord(notif.recordBytes),
-        isRead: notif.indexedAt <= userState.lastSeenNotifs,
+        record: jsonStringToLex(notif.recordJson) as Record<string, unknown>,
+        isRead: notif.indexedAt <= seenAt,
         indexedAt: notif.indexedAt,
       }))
 
