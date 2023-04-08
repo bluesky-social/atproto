@@ -303,13 +303,6 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.server.defs#inviteCode',
           },
-          invites: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.server.defs#inviteCode',
-            },
-          },
         },
       },
       repoViewDetail: {
@@ -1538,12 +1531,12 @@ export const schemaDict = {
             rkeyStart: {
               type: 'string',
               description:
-                'The lowest sort-ordered rkey to start from (exclusive)',
+                'DEPRECATED: The lowest sort-ordered rkey to start from (exclusive)',
             },
             rkeyEnd: {
               type: 'string',
               description:
-                'The highest sort-ordered rkey to stop at (exclusive)',
+                'DEPRECATED: The highest sort-ordered rkey to stop at (exclusive)',
             },
             reverse: {
               type: 'boolean',
@@ -2499,6 +2492,63 @@ export const schemaDict = {
                 },
               },
             },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoSyncListHostedRepos: {
+    lexicon: 1,
+    id: 'com.atproto.sync.listHostedRepos',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List dids and root cids of hosted repos',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 500,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repos'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              repos: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.sync.listHostedRepos#repo',
+                },
+              },
+            },
+          },
+        },
+      },
+      repo: {
+        type: 'object',
+        required: ['did', 'head'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          head: {
+            type: 'string',
+            format: 'cid',
           },
         },
       },
@@ -4437,6 +4487,7 @@ export const ids = {
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
   ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
+  ComAtprotoSyncListHostedRepos: 'com.atproto.sync.listHostedRepos',
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
