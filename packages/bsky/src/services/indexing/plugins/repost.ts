@@ -4,8 +4,11 @@ import { AtUri } from '@atproto/uri'
 import * as Repost from '../../../lexicon/types/app/bsky/feed/repost'
 import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
-import * as messages from '../messages'
 import RecordProcessor from '../processor'
+import {
+  createNotification,
+  deleteNotifications,
+} from '../../notification/types'
 
 const lexId = lex.ids.AppBskyFeedRepost
 type IndexedRepost = Selectable<DatabaseSchemaType['repost']>
@@ -50,8 +53,8 @@ const findDuplicate = async (
 
 const eventsForInsert = (obj: IndexedRepost) => {
   const subjectUri = new AtUri(obj.subject)
-  const notif = messages.createNotification({
-    userDid: subjectUri.host,
+  const notif = createNotification({
+    did: subjectUri.host,
     author: obj.creator,
     recordUri: obj.uri,
     recordCid: obj.cid,
@@ -78,7 +81,7 @@ const eventsForDelete = (
   replacedBy: IndexedRepost | null,
 ) => {
   if (replacedBy) return []
-  return [messages.deleteNotifications(deleted.uri)]
+  return [deleteNotifications(deleted.uri)]
 }
 
 export type PluginType = RecordProcessor<Repost.Record, IndexedRepost>

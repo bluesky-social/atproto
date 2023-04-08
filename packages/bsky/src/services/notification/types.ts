@@ -1,11 +1,9 @@
-// @TODO(bsky) direct notifications to the right channels
-
 export type CreateNotification = NotificationInfo & {
   type: 'create_notification'
 }
 
 export type NotificationInfo = {
-  userDid: string
+  did: string
   author: string
   recordUri: string
   recordCid: string
@@ -26,7 +24,7 @@ export type DeleteNotifications = {
   recordUri: string
 }
 
-export type Message = CreateNotification | DeleteNotifications
+export type NotificationEvt = CreateNotification | DeleteNotifications
 
 export const createNotification = (
   notif: NotificationInfo,

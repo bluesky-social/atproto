@@ -23,6 +23,7 @@ import * as Profile from './plugins/profile'
 import RecordProcessor from './processor'
 import { subLogger } from '../../logger'
 import { retryHttp } from '../../util/retry'
+import { NotificationService } from '../notification'
 
 export class IndexingService {
   records: {
@@ -47,6 +48,10 @@ export class IndexingService {
     return (db: Database) => new IndexingService(db, didResolver)
   }
 
+  services = {
+    notification: NotificationService.creator(),
+  }
+
   async indexRecord(
     uri: AtUri,
     cid: CID,
@@ -57,21 +62,19 @@ export class IndexingService {
     this.db.assertTransaction()
     const indexer = this.findIndexerForCollection(uri.collection)
     if (!indexer) return
-    // @TODO(bsky) direct notifs
     const notifs =
       action === WriteOpAction.Create
         ? await indexer.insertRecord(uri, cid, obj, timestamp)
         : await indexer.updateRecord(uri, cid, obj, timestamp)
-    return notifs
+    await this.services.notification(this.db).process(notifs)
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {
     this.db.assertTransaction()
     const indexer = this.findIndexerForCollection(uri.collection)
     if (!indexer) return
-    // @TODO(bsky) direct notifs
     const notifs = await indexer.deleteRecord(uri, cascading)
-    return notifs
+    await this.services.notification(this.db).process(notifs)
   }
 
   async indexHandle(did: string, timestamp: string, force = false) {

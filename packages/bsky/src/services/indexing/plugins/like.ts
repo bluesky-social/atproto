@@ -4,9 +4,12 @@ import { CID } from 'multiformats/cid'
 import * as Like from '../../../lexicon/types/app/bsky/feed/like'
 import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
-import * as messages from '../messages'
-import { Message } from '../messages'
 import RecordProcessor from '../processor'
+import {
+  createNotification,
+  deleteNotifications,
+  NotificationEvt,
+} from '../../notification/types'
 
 const lexId = lex.ids.AppBskyFeedLike
 type IndexedLike = Selectable<DatabaseSchemaType['like']>
@@ -51,8 +54,8 @@ const findDuplicate = async (
 
 const createNotif = (obj: IndexedLike) => {
   const subjectUri = new AtUri(obj.subject)
-  return messages.createNotification({
-    userDid: subjectUri.host,
+  return createNotification({
+    did: subjectUri.host,
     author: obj.creator,
     recordUri: obj.uri,
     recordCid: obj.cid,
@@ -80,9 +83,9 @@ const deleteFn = async (
 const eventsForDelete = (
   deleted: IndexedLike,
   replacedBy: IndexedLike | null,
-): Message[] => {
+): NotificationEvt[] => {
   if (!replacedBy) {
-    return [messages.deleteNotifications(deleted.uri)]
+    return [deleteNotifications(deleted.uri)]
   }
   return []
 }

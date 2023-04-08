@@ -4,8 +4,11 @@ import { CID } from 'multiformats/cid'
 import * as Follow from '../../../lexicon/types/app/bsky/graph/follow'
 import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
-import * as messages from '../messages'
 import RecordProcessor from '../processor'
+import {
+  createNotification,
+  deleteNotifications,
+} from '../../notification/types'
 
 const lexId = lex.ids.AppBskyGraphFollow
 type IndexedFollow = Selectable<DatabaseSchemaType['follow']>
@@ -49,8 +52,8 @@ const findDuplicate = async (
 
 const eventsForInsert = (obj: IndexedFollow) => {
   return [
-    messages.createNotification({
-      userDid: obj.subjectDid,
+    createNotification({
+      did: obj.subjectDid,
       author: obj.creator,
       recordUri: obj.uri,
       recordCid: obj.cid,
@@ -76,7 +79,7 @@ const eventsForDelete = (
   replacedBy: IndexedFollow | null,
 ) => {
   if (replacedBy) return []
-  return [messages.deleteNotifications(deleted.uri)]
+  return [deleteNotifications(deleted.uri)]
 }
 
 export type PluginType = RecordProcessor<Follow.Record, IndexedFollow>

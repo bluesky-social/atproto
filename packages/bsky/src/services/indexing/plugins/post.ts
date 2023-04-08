@@ -11,11 +11,15 @@ import {
   isLink,
 } from '../../../lexicon/types/app/bsky/richtext/facet'
 import * as lex from '../../../lexicon/lexicons'
-import * as messages from '../messages'
-import { Message } from '../messages'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { PostHierarchy } from '../../../db/tables/post-hierarchy'
+import {
+  createNotification,
+  deleteNotifications,
+  NotificationEvt,
+  NotificationInfo,
+} from '../../notification/types'
 
 type Post = Selectable<DatabaseSchemaType['post']>
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
@@ -207,18 +211,18 @@ const findDuplicate = async (): Promise<AtUri | null> => {
 }
 
 const eventsForInsert = (obj: IndexedPost) => {
-  const notifs: Message[] = []
+  const notifs: NotificationEvt[] = []
   const notified = new Set([obj.post.creator])
-  const maybeNotify = (notif: messages.NotificationInfo) => {
-    if (!notified.has(notif.userDid)) {
-      notified.add(notif.userDid)
-      notifs.push(messages.createNotification(notif))
+  const maybeNotify = (notif: NotificationInfo) => {
+    if (!notified.has(notif.did)) {
+      notified.add(notif.did)
+      notifs.push(createNotification(notif))
     }
   }
   for (const facet of obj.facets ?? []) {
     if (facet.type === 'mention') {
       maybeNotify({
-        userDid: facet.value,
+        did: facet.value,
         reason: 'mention',
         author: obj.post.creator,
         recordUri: obj.post.uri,
@@ -231,7 +235,7 @@ const eventsForInsert = (obj: IndexedPost) => {
       const embedUri = new AtUri(embed.embedUri)
       if (embedUri.collection === lex.ids.AppBskyFeedPost) {
         maybeNotify({
-          userDid: embedUri.host,
+          did: embedUri.host,
           reason: 'quote',
           reasonSubject: embedUri.toString(),
           author: obj.post.creator,
@@ -248,7 +252,7 @@ const eventsForInsert = (obj: IndexedPost) => {
   for (const relation of ancestors) {
     const ancestorUri = new AtUri(relation.ancestorUri)
     maybeNotify({
-      userDid: ancestorUri.host,
+      did: ancestorUri.host,
       reason: 'reply',
       reasonSubject: ancestorUri.toString(),
       author: obj.post.creator,
@@ -327,12 +331,9 @@ const deleteFn = async (
 const eventsForDelete = (
   deleted: IndexedPost,
   replacedBy: IndexedPost | null,
-): Message[] => {
+): NotificationEvt[] => {
   const replacedNotifications = replacedBy ? eventsForInsert(replacedBy) : []
-  return [
-    messages.deleteNotifications(deleted.post.uri),
-    ...replacedNotifications,
-  ]
+  return [deleteNotifications(deleted.post.uri), ...replacedNotifications]
 }
 
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>

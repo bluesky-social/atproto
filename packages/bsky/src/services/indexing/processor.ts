@@ -3,7 +3,7 @@ import { AtUri } from '@atproto/uri'
 import { jsonStringToLex, stringifyLex } from '@atproto/lexicon'
 import DatabaseSchema from '../../db/database-schema'
 import { lexicons } from '../../lexicon/lexicons'
-import { Message } from './messages'
+import { NotificationEvt } from '../notification/types'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
 // (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).
@@ -22,8 +22,8 @@ type RecordProcessorParams<T, S> = {
     obj: T,
   ) => Promise<AtUri | null>
   deleteFn: (db: DatabaseSchema, uri: AtUri) => Promise<S | null>
-  eventsForInsert: (obj: S) => Message[]
-  eventsForDelete: (prev: S, replacedBy: S | null) => Message[]
+  eventsForInsert: (obj: S) => NotificationEvt[]
+  eventsForDelete: (prev: S, replacedBy: S | null) => NotificationEvt[]
 }
 
 export class RecordProcessor<T, S> {
@@ -53,7 +53,7 @@ export class RecordProcessor<T, S> {
     cid: CID,
     obj: unknown,
     timestamp: string,
-  ): Promise<Message[]> {
+  ): Promise<NotificationEvt[]> {
     this.assertValidRecord(obj)
     await this.db
       .insertInto('record')
@@ -103,7 +103,7 @@ export class RecordProcessor<T, S> {
     cid: CID,
     obj: unknown,
     timestamp: string,
-  ): Promise<Message[]> {
+  ): Promise<NotificationEvt[]> {
     this.assertValidRecord(obj)
     await this.db
       .updateTable('record')
@@ -153,7 +153,10 @@ export class RecordProcessor<T, S> {
     return this.params.eventsForDelete(deleted, inserted)
   }
 
-  async deleteRecord(uri: AtUri, cascading = false): Promise<Message[]> {
+  async deleteRecord(
+    uri: AtUri,
+    cascading = false,
+  ): Promise<NotificationEvt[]> {
     await this.db
       .deleteFrom('record')
       .where('uri', '=', uri.toString())
