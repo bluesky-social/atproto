@@ -1,19 +1,13 @@
 import fs from 'fs/promises'
 import AtpAgent from '@atproto/api'
-import {
-  runTestServer,
-  forSnapshot,
-  CloseFn,
-  processAll,
-  TestServerInfo,
-  stripViewer,
-} from '../_util'
+import { CloseFn, runTestEnv, TestEnvInfo } from '@atproto/dev-env'
+import { forSnapshot, processAll, stripViewer } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds profile views', () => {
-  let server: TestServerInfo
+  let testEnv: TestEnvInfo
   let agent: AtpAgent
   let pdsAgent: AtpAgent
   let close: CloseFn
@@ -25,15 +19,15 @@ describe('pds profile views', () => {
   let dan: string
 
   beforeAll(async () => {
-    server = await runTestServer({
+    testEnv = await runTestEnv({
       dbPostgresSchema: 'views_profile',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    close = testEnv.close
+    agent = new AtpAgent({ service: testEnv.bsky.url })
+    pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
-    await processAll(server)
+    await processAll(testEnv)
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
@@ -127,7 +121,7 @@ describe('pds profile views', () => {
       avatar: avatarRes.data.blob,
       banner: bannerRes.data.blob,
     })
-    await processAll(server)
+    await processAll(testEnv)
 
     const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },

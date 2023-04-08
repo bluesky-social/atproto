@@ -1,5 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { runTestServer, CloseFn, processAll, stripViewer } from '../_util'
+import { CloseFn, runTestEnv } from '@atproto/dev-env'
+import { processAll, stripViewer } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
@@ -9,15 +10,15 @@ describe('pds user search views', () => {
   let sc: SeedClient
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    const testEnv = await runTestEnv({
       dbPostgresSchema: 'views_suggestions',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    close = testEnv.close
+    agent = new AtpAgent({ service: testEnv.bsky.url })
+    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
-    await processAll(server)
+    await processAll(testEnv)
   })
 
   afterAll(async () => {

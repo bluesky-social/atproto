@@ -1,7 +1,7 @@
 import { AtUri } from '@atproto/uri'
 import { cidForCbor, TID } from '@atproto/common'
 import { WriteOpAction } from '@atproto/repo'
-import { CloseFn, runTestServer } from './_util'
+import { CloseFn, runTestEnv } from '@atproto/dev-env'
 import { Database } from '../src'
 import * as lex from '../src/lexicon/lexicons'
 import { Services } from '../src/services'
@@ -13,11 +13,11 @@ describe('duplicate record', () => {
   let services: Services
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    const server = await runTestEnv({
       dbPostgresSchema: 'duplicates',
     })
-    db = server.ctx.db
-    services = server.ctx.services
+    db = server.bsky.ctx.db
+    services = server.bsky.ctx.services
     close = server.close
     did = 'did:example:alice'
   })
