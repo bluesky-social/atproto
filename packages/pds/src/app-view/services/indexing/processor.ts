@@ -195,33 +195,25 @@ export class RecordProcessor<T, S> {
   }
 
   async handleNotifs(op: { deleted?: S; inserted?: S }) {
-    let notifs: UserNotification[]
-    let toDelete: string[]
+    let notifs: UserNotification[] = []
     if (op.deleted) {
       const forDelete = this.params.notifsForDelete(
         op.deleted,
         op.inserted ?? null,
       )
+      if (forDelete.toDelete) {
+        await this.db
+          .deleteFrom('user_notification')
+          .where('recordUri', 'in', forDelete.toDelete)
+          .execute()
+      }
       notifs = forDelete.notifs
-      toDelete = forDelete.toDelete
     } else if (op.inserted) {
       notifs = this.params.notifsForInsert(op.inserted)
-      toDelete = []
-    } else {
-      return
     }
-    const insert =
-      notifs.length > 0
-        ? this.db.insertInto('user_notification').values(notifs).execute()
-        : Promise.resolve()
-    const del =
-      toDelete.length > 0
-        ? this.db
-            .deleteFrom('user_notification')
-            .where('recordUri', 'in', toDelete)
-            .execute()
-        : Promise.resolve()
-    await Promise.all([insert, del])
+    if (notifs.length > 0) {
+      await this.db.insertInto('user_notification').values(notifs).execute()
+    }
   }
 }
 

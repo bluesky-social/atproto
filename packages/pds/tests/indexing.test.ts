@@ -28,7 +28,7 @@ describe('indexing', () => {
   })
 
   it('indexes posts.', async () => {
-    const { db, services, messageQueue } = server.ctx
+    const { db, services } = server.ctx
     const createdAt = new Date().toISOString()
     const createRecord = await prepareCreate({
       did: sc.dids.alice,
@@ -90,7 +90,6 @@ describe('indexing', () => {
       { headers: sc.getHeaders(sc.dids.alice) },
     )
     expect(forSnapshot(getAfterCreate.data)).toMatchSnapshot()
-    await messageQueue.processAll()
     const createNotifications = await getNotifications(db, uri)
 
     // Update
@@ -105,7 +104,6 @@ describe('indexing', () => {
       { headers: sc.getHeaders(sc.dids.alice) },
     )
     expect(forSnapshot(getAfterUpdate.data)).toMatchSnapshot()
-    await messageQueue.processAll()
     const updateNotifications = await getNotifications(db, uri)
 
     // Delete
@@ -120,7 +118,6 @@ describe('indexing', () => {
       { headers: sc.getHeaders(sc.dids.alice) },
     )
     await expect(getAfterDelete).rejects.toThrow(/Post not found:/)
-    await messageQueue.processAll()
     const deleteNotifications = await getNotifications(db, uri)
 
     expect(
@@ -133,7 +130,7 @@ describe('indexing', () => {
   })
 
   it('indexes profiles.', async () => {
-    const { db, services, messageQueue } = server.ctx
+    const { db, services } = server.ctx
     const createRecord = await prepareCreate({
       did: sc.dids.dan,
       collection: ids.AppBskyActorProfile,
@@ -171,7 +168,6 @@ describe('indexing', () => {
       { headers: sc.getHeaders(sc.dids.alice) },
     )
     expect(forSnapshot(getAfterCreate.data)).toMatchSnapshot()
-    await messageQueue.processAll()
     const createNotifications = await getNotifications(db, uri)
 
     // Update
@@ -186,7 +182,6 @@ describe('indexing', () => {
       { headers: sc.getHeaders(sc.dids.alice) },
     )
     expect(forSnapshot(getAfterUpdate.data)).toMatchSnapshot()
-    await messageQueue.processAll()
     const updateNotifications = await getNotifications(db, uri)
 
     // Delete
@@ -201,7 +196,6 @@ describe('indexing', () => {
       { headers: sc.getHeaders(sc.dids.alice) },
     )
     expect(forSnapshot(getAfterDelete.data)).toMatchSnapshot()
-    await messageQueue.processAll()
     const deleteNotifications = await getNotifications(db, uri)
 
     expect(
