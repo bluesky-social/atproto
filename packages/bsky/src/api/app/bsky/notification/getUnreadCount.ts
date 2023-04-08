@@ -2,7 +2,6 @@ import { Server } from '../../../../lexicon'
 import { countAll, notSoftDeletedClause } from '../../../../db/util'
 import AppContext from '../../../../context'
 import { authVerifier } from '../util'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.getUnreadCount({
@@ -10,9 +9,6 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
       const { seenAt } = params
-      if (!seenAt) {
-        throw new InvalidRequestError('Missing "seenAt" param')
-      }
 
       const { ref } = ctx.db.db.dynamic
       const result = await ctx.db.db
@@ -23,7 +19,9 @@ export default function (server: Server, ctx: AppContext) {
         .where(notSoftDeletedClause(ref('actor')))
         .where(notSoftDeletedClause(ref('record')))
         .where('notification.did', '=', requester)
-        .where('notification.sortAt', '>', seenAt)
+        .if(!!seenAt, (qb) =>
+          qb.where('notification.sortAt', '>', String(seenAt)),
+        )
         .executeTakeFirst()
 
       const count = result?.count ?? 0

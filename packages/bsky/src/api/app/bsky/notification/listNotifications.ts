@@ -1,4 +1,3 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { jsonStringToLex } from '@atproto/lexicon'
 import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
@@ -13,9 +12,6 @@ export default function (server: Server, ctx: AppContext) {
       const { limit, cursor } = params
       const requester = auth.credentials.did
       const { seenAt } = params
-      if (!seenAt) {
-        throw new InvalidRequestError('Missing "seenAt" param')
-      }
 
       const { ref } = ctx.db.db.dynamic
       let notifBuilder = ctx.db.db
@@ -69,7 +65,7 @@ export default function (server: Server, ctx: AppContext) {
         reason: notif.reason,
         reasonSubject: notif.reasonSubject || undefined,
         record: jsonStringToLex(notif.recordJson) as Record<string, unknown>,
-        isRead: notif.indexedAt <= seenAt,
+        isRead: seenAt ? notif.indexedAt <= seenAt : false,
         indexedAt: notif.indexedAt,
       }))
 
