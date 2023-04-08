@@ -145,6 +145,7 @@ export class PDS {
     const appView = new AppView(ctx)
 
     let server = createServer({
+      validateResponse: config.debugMode,
       payload: {
         jsonLimit: 100 * 1024, // 100kb
         textLimit: 100 * 1024, // 100kb
