@@ -35,3 +35,4 @@ export * as _20230328T214311002Z from './20230328T214311002Z-remove-post-entitie
 export * as _20230328T214311003Z from './20230328T214311003Z-backlinks'
 export * as _20230328T214311004Z from './20230328T214311004Z-profile-display-name-empty'
 export * as _20230328T214311005Z from './20230328T214311005Z-rework-seq'
+export * as _20230406T185855842Z from './20230406T185855842Z-feed-item-init'
