@@ -34,7 +34,7 @@
         "seq": {"type": "integer"},
         "labels": {
           "type": "array",
-          "items": { "type": "ref", "ref": "com.atproto.label.label" }
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         }
       }
     },

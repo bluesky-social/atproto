@@ -1,9 +1,9 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.label.label",
+  "id": "com.atproto.label.defs",
   "defs": {
-    "main": {
-      "type": "record",
+    "label": {
+      "type": "object",
       "description": "Metadata tag on an atproto resource (eg, repo or record)",
       "key": "tid",
       "record": {
