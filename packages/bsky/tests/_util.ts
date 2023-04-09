@@ -333,6 +333,7 @@ export const processAll = async (server: TestServerInfo, timeout = 5000) => {
   const start = Date.now()
   while (Date.now() - start < timeout) {
     await wait(50)
+    if (!sub) return
     const state = await sub.getState()
     const { lastSeq } = await db
       .selectFrom('repo_seq')
