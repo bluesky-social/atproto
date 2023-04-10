@@ -6,7 +6,6 @@ import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.listHostedRepos(async ({ params }) => {
     const { limit, cursor } = params
-    console.log('LIMIT: ', limit)
     const ref = ctx.db.db.dynamic.ref
     const innerBuilder = ctx.db.db
       .selectFrom('repo_root')
@@ -27,8 +26,6 @@ export default function (server: Server, ctx: AppContext) {
     })
     const res = await builder.execute()
     const repos = res.map((row) => ({ did: row.did, head: row.head }))
-    const CURS = keyset.packFromResult(res)
-    console.log('CURS: ', CURS)
     return {
       encoding: 'application/json',
       body: {
