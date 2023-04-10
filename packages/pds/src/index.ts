@@ -34,6 +34,7 @@ import {
   ImageInvalidator,
   ImageProcessingServerInvalidator,
 } from './image/invalidator'
+import { Labeler, HiveLabeler, NoopLabeler } from './labeler'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -117,6 +118,18 @@ export class PDS {
       config.imgUriKey,
     )
 
+    let labeler: Labeler
+    if (config.hiveApiKey) {
+      labeler = new HiveLabeler({
+        db,
+        blobstore,
+        hiveApiKey: config.hiveApiKey,
+        keywords: config.labelerKeywords,
+      })
+    } else {
+      labeler = new NoopLabeler()
+    }
+
     const services = createServices({
       repoSigningKey,
       messageQueue,
@@ -136,6 +149,7 @@ export class PDS {
       messageQueue,
       messageDispatcher,
       sequencer,
+      labeler,
       services,
       mailer,
       imgUriBuilder,
