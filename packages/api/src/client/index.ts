@@ -35,6 +35,7 @@ import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
+import * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
 import * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
@@ -117,6 +118,7 @@ export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 export * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 export * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
+export * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 export * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
 export * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 export * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
@@ -552,6 +554,17 @@ export class ServerNS {
       .call('com.atproto.server.createInviteCode', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoServerCreateInviteCode.toKnownErr(e)
+      })
+  }
+
+  createInviteCodes(
+    data?: ComAtprotoServerCreateInviteCodes.InputSchema,
+    opts?: ComAtprotoServerCreateInviteCodes.CallOptions,
+  ): Promise<ComAtprotoServerCreateInviteCodes.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.createInviteCodes', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerCreateInviteCodes.toKnownErr(e)
       })
   }
 
