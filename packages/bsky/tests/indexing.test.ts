@@ -35,7 +35,7 @@ describe('indexing', () => {
     await usersSeed(sc)
     // Data in tests is not processed from subscription
     await processAll(server)
-    await server.bsky.sub.destroy()
+    await server.bsky.sub?.destroy()
   })
 
   afterAll(async () => {
@@ -206,10 +206,10 @@ describe('indexing', () => {
 
   describe('indexRepo', () => {
     beforeAll(async () => {
-      server.bsky.sub.resume()
+      server.bsky.sub?.resume()
       await basicSeed(sc, false)
       await processAll(server)
-      await server.bsky.sub.destroy()
+      await server.bsky.sub?.destroy()
     })
 
     it('preserves indexes when no record changes.', async () => {

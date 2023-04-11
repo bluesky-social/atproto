@@ -39,16 +39,17 @@ export default function (server: Server, ctx: AppContext) {
         .orWhere('repost.creator', 'is not', null)
         .select([
           sql<FeedItemType>`${'post'}`.as('type'),
+          'post.uri as uri',
+          'post.cid as cid',
           'post.uri as postUri',
-          'post.cid as postCid',
+          'post.creator as postAuthorDid',
           'post.creator as originatorDid',
-          'post.creator as authorDid',
           'post.replyParent as replyParent',
           'post.replyRoot as replyRoot',
-          'post.indexedAt as cursor',
+          'post.indexedAt as sortAt',
         ])
 
-      const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
+      const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))
 
       let feedQb = ctx.db.db.selectFrom(postsQb.as('feed_items')).selectAll()
       feedQb = paginate(feedQb, { limit, cursor, keyset })

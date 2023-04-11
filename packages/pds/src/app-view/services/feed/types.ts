@@ -35,11 +35,12 @@ export type FeedItemType = 'post' | 'repost'
 
 export type FeedRow = {
   type: FeedItemType
+  uri: string
+  cid: string
   postUri: string
-  postCid: string
+  postAuthorDid: string
   originatorDid: string
-  authorDid: string
   replyParent: string | null
   replyRoot: string | null
-  cursor: string
+  sortAt: string
 }

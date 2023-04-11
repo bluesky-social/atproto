@@ -67,6 +67,7 @@ export const runTestServer = async (
     recoveryKey: recoveryKey.did(),
     adminPassword: ADMIN_PASSWORD,
     inviteRequired: false,
+    userInviteInterval: null,
     didPlcUrl: plcUrl,
     jwtSecret: 'jwt-secret',
     availableUserDomains: ['.test'],
@@ -327,10 +328,12 @@ export const paginateAll = async <T extends { cursor?: string }>(
 export const processAll = async (server: TestServerInfo, timeout = 5000) => {
   const { bsky, pds } = server
   const sub = bsky.sub
+  if (!sub) return
   const { db } = pds.ctx.db
   const start = Date.now()
   while (Date.now() - start < timeout) {
     await wait(50)
+    if (!sub) return
     const state = await sub.getState()
     const { lastSeq } = await db
       .selectFrom('repo_seq')

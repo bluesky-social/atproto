@@ -23,6 +23,8 @@ import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRep
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
+import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
+import * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels'
 import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
 import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
@@ -115,6 +117,7 @@ export class AtprotoNS {
   _server: Server
   admin: AdminNS
   identity: IdentityNS
+  label: LabelNS
   moderation: ModerationNS
   repo: RepoNS
   server: ServerNS
@@ -124,6 +127,7 @@ export class AtprotoNS {
     this._server = server
     this.admin = new AdminNS(server)
     this.identity = new IdentityNS(server)
+    this.label = new LabelNS(server)
     this.moderation = new ModerationNS(server)
     this.repo = new RepoNS(server)
     this.server = new ServerNS(server)
@@ -266,6 +270,28 @@ export class IdentityNS {
   ) {
     const nsid = 'com.atproto.identity.updateHandle' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class LabelNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  queryLabels<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoLabelQueryLabels.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.label.queryLabels' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  subscribeLabels<AV extends StreamAuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoLabelSubscribeLabels.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.label.subscribeLabels' // @ts-ignore
+    return this._server.xrpc.streamMethod(nsid, cfg)
   }
 }
 

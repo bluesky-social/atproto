@@ -27,6 +27,8 @@
               ]
             },
             "subjectBlobCids": {"type": "array", "items": {"type": "string", "format": "cid"}},
+            "createLabelVals": {"type": "array", "items": {"type": "string"}},
+            "negateLabelVals": {"type": "array", "items": {"type": "string"}},
             "reason": {"type": "string"},
             "createdBy": {"type": "string", "format": "did"}
           }

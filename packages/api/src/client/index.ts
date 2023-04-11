@@ -22,6 +22,9 @@ import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRep
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
+import * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
+import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
+import * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels'
 import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
 import * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs'
 import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
@@ -104,6 +107,9 @@ export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRep
 export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
+export * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
+export * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
+export * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels'
 export * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
 export * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs'
 export * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
@@ -225,6 +231,7 @@ export class AtprotoNS {
   _service: AtpServiceClient
   admin: AdminNS
   identity: IdentityNS
+  label: LabelNS
   moderation: ModerationNS
   repo: RepoNS
   server: ServerNS
@@ -234,6 +241,7 @@ export class AtprotoNS {
     this._service = service
     this.admin = new AdminNS(service)
     this.identity = new IdentityNS(service)
+    this.label = new LabelNS(service)
     this.moderation = new ModerationNS(service)
     this.repo = new RepoNS(service)
     this.server = new ServerNS(service)
@@ -407,6 +415,25 @@ export class IdentityNS {
       .call('com.atproto.identity.updateHandle', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoIdentityUpdateHandle.toKnownErr(e)
+      })
+  }
+}
+
+export class LabelNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  queryLabels(
+    params?: ComAtprotoLabelQueryLabels.QueryParams,
+    opts?: ComAtprotoLabelQueryLabels.CallOptions,
+  ): Promise<ComAtprotoLabelQueryLabels.Response> {
+    return this._service.xrpc
+      .call('com.atproto.label.queryLabels', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoLabelQueryLabels.toKnownErr(e)
       })
   }
 }

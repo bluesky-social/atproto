@@ -144,6 +144,7 @@ export class PDS {
     const appView = new AppView(ctx)
 
     let server = createServer({
+      validateResponse: config.debugMode,
       payload: {
         jsonLimit: 100 * 1024, // 100kb
         textLimit: 100 * 1024, // 100kb
@@ -172,6 +173,7 @@ export class PDS {
     await this.ctx.db.startListeningToChannels()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
+    this.server.keepAliveTimeout = 90000
     this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
     return server

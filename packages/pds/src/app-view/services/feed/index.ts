@@ -28,40 +28,41 @@ export class FeedService {
       .where(notSoftDeletedClause(ref('record')))
       .select([
         sql<FeedItemType>`${'post'}`.as('type'),
+        'post.uri as uri',
+        'post.cid as cid',
         'post.uri as postUri',
-        'post.cid as postCid',
         'post.creator as originatorDid',
-        'post.creator as authorDid',
+        'post.creator as postAuthorDid',
         'post.replyParent as replyParent',
         'post.replyRoot as replyRoot',
-        'post.indexedAt as cursor',
+        'post.indexedAt as sortAt',
       ])
   }
 
-  selectRepostQb() {
+  selectFeedItemQb() {
     const { ref } = this.db.db.dynamic
     return this.db.db
-      .selectFrom('repost')
-      .innerJoin('post', 'post.uri', 'repost.subject')
+      .selectFrom('feed_item')
+      .innerJoin('post', 'post.uri', 'feed_item.postUri')
       .innerJoin('repo_root as author_repo', 'author_repo.did', 'post.creator')
       .innerJoin(
         'repo_root as originator_repo',
         'originator_repo.did',
-        'repost.creator',
+        'feed_item.originatorDid',
       )
-      .innerJoin('record as post_record', 'post_record.uri', 'post.uri')
+      .innerJoin(
+        'record as post_record',
+        'post_record.uri',
+        'feed_item.postUri',
+      )
       .where(notSoftDeletedClause(ref('author_repo')))
       .where(notSoftDeletedClause(ref('originator_repo')))
       .where(notSoftDeletedClause(ref('post_record')))
+      .selectAll('feed_item')
       .select([
-        sql<FeedItemType>`${'repost'}`.as('type'),
-        'post.uri as postUri',
-        'post.cid as postCid',
-        'repost.creator as originatorDid',
-        'post.creator as authorDid',
-        'post.replyParent as replyParent',
-        'post.replyRoot as replyRoot',
-        'repost.indexedAt as cursor',
+        'post.replyRoot',
+        'post.replyParent',
+        'post.creator as postAuthorDid',
       ])
   }
 
