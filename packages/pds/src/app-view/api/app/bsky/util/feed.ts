@@ -14,7 +14,7 @@ export const composeFeed = async (
   const postUris = new Set<string>()
   for (const row of rows) {
     actorDids.add(row.originatorDid)
-    actorDids.add(row.authorDid)
+    actorDids.add(row.postAuthorDid)
     postUris.add(row.postUri)
     if (row.replyParent) {
       postUris.add(row.replyParent)
@@ -53,7 +53,7 @@ export const composeFeed = async (
           ? {
               $type: reasonType,
               by: actors[row.originatorDid],
-              indexedAt: row.cursor,
+              indexedAt: row.sortAt,
             }
           : undefined,
         reply:
@@ -75,6 +75,6 @@ export enum FeedAlgorithm {
 
 export class FeedKeyset extends TimeCidKeyset<FeedRow> {
   labelResult(result: FeedRow) {
-    return { primary: result.cursor, secondary: result.postCid }
+    return { primary: result.sortAt, secondary: result.cid }
   }
 }

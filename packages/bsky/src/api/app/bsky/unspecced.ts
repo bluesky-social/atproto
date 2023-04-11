@@ -5,6 +5,7 @@ import { paginate } from '../../../db/pagination'
 import AppContext from '../../../context'
 import { FeedRow, FeedItemType } from '../../../services/types'
 import { authOptionalVerifier } from './util'
+import { countAll } from '../../../db/util'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
@@ -19,34 +20,36 @@ export default function (server: Server, ctx: AppContext) {
       const feedService = ctx.services.feed(ctx.db)
 
       const postsQb = ctx.db.db
-        .with('like_counts', (qb) =>
-          qb
-            .selectFrom('like')
-            .groupBy('like.subject')
-            .select([sql`count(*)`.as('count'), 'like.subject']),
-        )
         .selectFrom('post')
-        .innerJoin('like_counts', 'like_counts.subject', 'post.uri')
         .leftJoin('repost', (join) =>
           // this works well for one curating user. reassess if adding more
           join
             .on('repost.creator', '=', 'did:plc:ea2eqamjmtuo6f4rvhl3g6ne')
             .onRef('repost.subject', '=', 'post.uri'),
         )
-        .where('like_counts.count', '>=', 5)
+        .where(
+          (qb) =>
+            qb
+              .selectFrom('like')
+              .whereRef('like.subject', '=', 'post.uri')
+              .select(countAll.as('count')),
+          '>=',
+          5,
+        )
         .orWhere('repost.creator', 'is not', null)
         .select([
           sql<FeedItemType>`${'post'}`.as('type'),
+          'post.uri as uri',
+          'post.cid as cid',
           'post.uri as postUri',
-          'post.cid as postCid',
+          'post.creator as postAuthorDid',
           'post.creator as originatorDid',
-          'post.creator as authorDid',
           'post.replyParent as replyParent',
           'post.replyRoot as replyRoot',
-          'post.indexedAt as cursor',
+          'post.indexedAt as sortAt',
         ])
 
-      const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
+      const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))
 
       let feedQb = ctx.db.db.selectFrom(postsQb.as('feed_items')).selectAll()
       feedQb = paginate(feedQb, { limit, cursor, keyset })

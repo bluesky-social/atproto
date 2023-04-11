@@ -22,6 +22,8 @@ export interface InputSchema {
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
   subjectBlobCids?: string[]
+  createLabelVals?: string[]
+  negateLabelVals?: string[]
   reason: string
   createdBy: string
   [k: string]: unknown

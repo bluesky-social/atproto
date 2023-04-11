@@ -8,7 +8,6 @@ import { ServerMailer } from './mailer'
 import { BlobStore } from '@atproto/repo'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
-import { MessageQueue } from './event-stream/types'
 import { MessageDispatcher } from './event-stream/message-queue'
 import Sequencer from './sequencer'
 import { Labeler } from './labeler'
@@ -25,7 +24,6 @@ export class AppContext {
       cfg: ServerConfig
       mailer: ServerMailer
       services: Services
-      messageQueue: MessageQueue
       messageDispatcher: MessageDispatcher
       sequencer: Sequencer
       labeler: Labeler
@@ -82,10 +80,6 @@ export class AppContext {
 
   get services(): Services {
     return this.opts.services
-  }
-
-  get messageQueue(): MessageQueue {
-    return this.opts.messageQueue
   }
 
   get messageDispatcher(): MessageDispatcher {

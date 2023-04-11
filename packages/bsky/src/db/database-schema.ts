@@ -5,6 +5,7 @@ import * as post from './tables/post'
 import * as postEmbed from './tables/post-embed'
 import * as postHierarchy from './tables/post-hierarchy'
 import * as repost from './tables/repost'
+import * as feedItem from './tables/feed-item'
 import * as follow from './tables/follow'
 import * as like from './tables/like'
 import * as subscription from './tables/subscription'
@@ -18,6 +19,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   postEmbed.PartialDB &
   postHierarchy.PartialDB &
   repost.PartialDB &
+  feedItem.PartialDB &
   follow.PartialDB &
   like.PartialDB &
   subscription.PartialDB &

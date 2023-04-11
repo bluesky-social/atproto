@@ -18,20 +18,39 @@ const insertFn = async (
   obj: Repost.Record,
   timestamp: string,
 ): Promise<IndexedRepost | null> => {
-  const inserted = await db
-    .insertInto('repost')
-    .values({
-      uri: uri.toString(),
-      cid: cid.toString(),
-      creator: uri.host,
-      subject: obj.subject.uri,
-      subjectCid: obj.subject.cid,
-      createdAt: obj.createdAt,
-      indexedAt: timestamp,
-    })
-    .onConflict((oc) => oc.doNothing())
-    .returningAll()
-    .executeTakeFirst()
+  const repost = {
+    uri: uri.toString(),
+    cid: cid.toString(),
+    creator: uri.host,
+    subject: obj.subject.uri,
+    subjectCid: obj.subject.cid,
+    createdAt: obj.createdAt,
+    indexedAt: timestamp,
+  }
+  const [inserted] = await Promise.all([
+    db
+      .insertInto('repost')
+      .values(repost)
+      .onConflict((oc) => oc.doNothing())
+      .returningAll()
+      .executeTakeFirst(),
+    db
+      .insertInto('feed_item')
+      .values({
+        type: 'repost',
+        uri: repost.uri,
+        cid: repost.cid,
+        postUri: repost.subject,
+        originatorDid: repost.creator,
+        sortAt:
+          repost.indexedAt < repost.createdAt
+            ? repost.indexedAt
+            : repost.createdAt,
+      })
+      .onConflict((oc) => oc.doNothing())
+      .executeTakeFirst(),
+  ])
+
   return inserted || null
 }
 
@@ -68,11 +87,15 @@ const deleteFn = async (
   db: DatabaseSchema,
   uri: AtUri,
 ): Promise<IndexedRepost | null> => {
-  const deleted = await db
-    .deleteFrom('repost')
-    .where('uri', '=', uri.toString())
-    .returningAll()
-    .executeTakeFirst()
+  const uriStr = uri.toString()
+  const [deleted] = await Promise.all([
+    db
+      .deleteFrom('repost')
+      .where('uri', '=', uriStr)
+      .returningAll()
+      .executeTakeFirst(),
+    db.deleteFrom('feed_item').where('uri', '=', uriStr).executeTakeFirst(),
+  ])
   return deleted || null
 }
 
@@ -84,8 +107,6 @@ const notifsForDelete = (
   return { notifs: [], toDelete }
 }
 
-const eventsForInsert = () => []
-
 export type PluginType = RecordProcessor<Repost.Record, IndexedRepost>
 
 export const makePlugin = (db: DatabaseSchema): PluginType => {
@@ -96,7 +117,6 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
     deleteFn,
     notifsForInsert,
     notifsForDelete,
-    eventsForInsert,
   })
 }
 

@@ -53,7 +53,7 @@ describe('account deletion', () => {
     blobstore = server.ctx.blobstore
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
-    await basicSeed(sc, server.ctx.messageQueue)
+    await basicSeed(sc)
     carol = sc.accounts[sc.dids.carol]
 
     // Catch emails for use in tests

@@ -18,7 +18,6 @@ import {
 import RecordProcessor from '../processor'
 import { PostHierarchy } from '../../../db/tables/post-hierarchy'
 import { UserNotification } from '../../../../db/tables/user-notification'
-import * as messages from '../../../../event-stream/messages'
 
 type Post = DatabaseSchemaType['post']
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
@@ -52,15 +51,31 @@ const insertFn = async (
     replyParentCid: obj.reply?.parent?.cid || null,
     indexedAt: timestamp,
   }
-  const insertedPost = await db
-    .insertInto('post')
-    .values(post)
-    .onConflict((oc) => oc.doNothing())
-    .returningAll()
-    .executeTakeFirst()
+  const [insertedPost] = await Promise.all([
+    db
+      .insertInto('post')
+      .values(post)
+      .onConflict((oc) => oc.doNothing())
+      .returningAll()
+      .executeTakeFirst(),
+    db
+      .insertInto('feed_item')
+      .values({
+        type: 'post',
+        uri: post.uri,
+        cid: post.cid,
+        postUri: post.uri,
+        originatorDid: post.creator,
+        sortAt:
+          post.indexedAt < post.createdAt ? post.indexedAt : post.createdAt,
+      })
+      .onConflict((oc) => oc.doNothing())
+      .executeTakeFirst(),
+  ])
   if (!insertedPost) {
     return null // Post already indexed
   }
+
   const facets = (obj.facets || [])
     .flatMap((facet) => facet.features)
     .flatMap((feature) => {
@@ -208,11 +223,15 @@ const deleteFn = async (
   db: DatabaseSchema,
   uri: AtUri,
 ): Promise<IndexedPost | null> => {
-  const deleted = await db
-    .deleteFrom('post')
-    .where('uri', '=', uri.toString())
-    .returningAll()
-    .executeTakeFirst()
+  const uriStr = uri.toString()
+  const [deleted] = await Promise.all([
+    db
+      .deleteFrom('post')
+      .where('uri', '=', uriStr)
+      .returningAll()
+      .executeTakeFirst(),
+    db.deleteFrom('feed_item').where('postUri', '=', uriStr).executeTakeFirst(),
+  ])
   const deletedEmbeds: (
     | PostEmbedImage[]
     | PostEmbedExternal
@@ -221,17 +240,17 @@ const deleteFn = async (
   const [deletedImgs, deletedExternals, deletedPosts] = await Promise.all([
     db
       .deleteFrom('post_embed_image')
-      .where('postUri', '=', uri.toString())
+      .where('postUri', '=', uriStr)
       .returningAll()
       .execute(),
     db
       .deleteFrom('post_embed_external')
-      .where('postUri', '=', uri.toString())
+      .where('postUri', '=', uriStr)
       .returningAll()
       .executeTakeFirst(),
     db
       .deleteFrom('post_embed_record')
-      .where('postUri', '=', uri.toString())
+      .where('postUri', '=', uriStr)
       .returningAll()
       .executeTakeFirst(),
   ])
@@ -247,7 +266,7 @@ const deleteFn = async (
   // Do not delete, maintain thread hierarchy even if post no longer exists
   const ancestors = await db
     .selectFrom('post_hierarchy')
-    .where('uri', '=', uri.toString())
+    .where('uri', '=', uriStr)
     .where('depth', '>', 0)
     .selectAll()
     .execute()
@@ -272,10 +291,6 @@ const notifsForDelete = (
   }
 }
 
-const eventsForInsert = (inserted: IndexedPost) => {
-  return [messages.labelPost(inserted.post.uri)]
-}
-
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>
 
 export const makePlugin = (db: DatabaseSchema): PluginType => {
@@ -286,7 +301,6 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
     deleteFn,
     notifsForInsert,
     notifsForDelete,
-    eventsForInsert,
   })
 }
 

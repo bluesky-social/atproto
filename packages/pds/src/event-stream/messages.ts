@@ -49,15 +49,3 @@ export const deleteRepo = (did: string): DeleteRepo => ({
   type: 'delete_repo',
   did,
 })
-
-export type Message = LabelPost
-
-export type LabelPost = {
-  type: 'label_post'
-  uri: string
-}
-
-export const labelPost = (uri: string): LabelPost => ({
-  type: 'label_post',
-  uri,
-})
