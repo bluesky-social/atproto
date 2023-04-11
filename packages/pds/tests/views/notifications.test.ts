@@ -31,7 +31,7 @@ describe('pds notification views', () => {
     db = server.ctx.db
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
-    await basicSeed(sc, server.ctx.messageQueue)
+    await basicSeed(sc)
     alice = sc.dids.alice
   })
 
@@ -74,7 +74,6 @@ describe('pds notification views', () => {
       sc.replies[alice][0].ref,
       'indeed',
     )
-    await server.ctx.messageQueue.processAll()
 
     const notifCountAlice =
       await agent.api.app.bsky.notification.getUnreadCount(

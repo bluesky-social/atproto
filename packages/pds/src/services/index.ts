@@ -1,7 +1,6 @@
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import Database from '../db'
-import { MessageQueue } from '../event-stream/types'
 import { MessageDispatcher } from '../event-stream/message-queue'
 import { ImageUriBuilder } from '../image/uri'
 import { ImageInvalidator } from '../image/invalidator'
@@ -16,7 +15,6 @@ import { IndexingService } from '../app-view/services/indexing'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
-  messageQueue: MessageQueue
   messageDispatcher: MessageDispatcher
   blobstore: BlobStore
   imgUriBuilder: ImageUriBuilder
@@ -24,7 +22,6 @@ export function createServices(resources: {
 }): Services {
   const {
     repoSigningKey,
-    messageQueue,
     messageDispatcher,
     blobstore,
     imgUriBuilder,
@@ -44,7 +41,7 @@ export function createServices(resources: {
     appView: {
       actor: ActorService.creator(imgUriBuilder),
       feed: FeedService.creator(imgUriBuilder),
-      indexing: IndexingService.creator(messageQueue, messageDispatcher),
+      indexing: IndexingService.creator(messageDispatcher),
     },
   }
 }

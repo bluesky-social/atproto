@@ -21,9 +21,7 @@ import { loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
 import { createServer } from './lexicon'
-import SqlMessageQueue, {
-  MessageDispatcher,
-} from './event-stream/message-queue'
+import { MessageDispatcher } from './event-stream/message-queue'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
@@ -73,7 +71,6 @@ export class PDS {
       adminPass: config.adminPassword,
     })
 
-    const messageQueue = new SqlMessageQueue('pds', db)
     const messageDispatcher = new MessageDispatcher()
     const sequencer = new Sequencer(db)
 
@@ -119,7 +116,6 @@ export class PDS {
 
     const services = createServices({
       repoSigningKey,
-      messageQueue,
       messageDispatcher,
       blobstore,
       imgUriBuilder,
@@ -133,7 +129,6 @@ export class PDS {
       plcRotationKey,
       cfg: config,
       auth,
-      messageQueue,
       messageDispatcher,
       sequencer,
       services,
@@ -181,7 +176,6 @@ export class PDS {
 
   async destroy(): Promise<void> {
     this.appView.destroy()
-    await this.ctx.messageQueue.destroy()
     await this.terminator?.terminate()
     await this.ctx.db.close()
   }

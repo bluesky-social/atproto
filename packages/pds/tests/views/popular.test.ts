@@ -28,7 +28,7 @@ describe('popular views', () => {
     close = server.close
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
-    await basicSeed(sc, server.ctx.messageQueue)
+    await basicSeed(sc)
     await sc.createAccount('eve', {
       ...account,
       email: 'eve@test.com',

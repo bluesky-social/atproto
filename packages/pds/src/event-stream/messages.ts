@@ -49,8 +49,3 @@ export const deleteRepo = (did: string): DeleteRepo => ({
   type: 'delete_repo',
   did,
 })
-
-// @TODO will be used for other stuff
-export type Message = {
-  type: 'dummy'
-}

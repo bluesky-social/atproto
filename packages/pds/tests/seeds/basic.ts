@@ -1,9 +1,8 @@
-import { MessageQueue } from '../../src/event-stream/types'
 import { ids } from '../../src/lexicon/lexicons'
 import { SeedClient } from './client'
 import usersSeed from './users'
 
-export default async (sc: SeedClient, mq?: MessageQueue) => {
+export default async (sc: SeedClient) => {
   await usersSeed(sc)
 
   const alice = sc.dids.alice
@@ -72,8 +71,6 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
   await sc.like(alice, sc.posts[carol][0].ref)
   await sc.like(bob, sc.posts[carol][0].ref)
 
-  await mq?.processAll()
-
   const replyImg = await sc.uploadFile(
     bob,
     'tests/image/fixtures/key-landscape-small.jpg',
@@ -101,8 +98,6 @@ export default async (sc: SeedClient, mq?: MessageQueue) => {
   )
   await sc.repost(carol, sc.posts[dan][1].ref)
   await sc.repost(dan, sc.posts[alice][1].ref)
-
-  await mq?.processAll()
 
   return sc
 }
