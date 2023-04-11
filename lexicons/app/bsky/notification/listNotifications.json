@@ -41,7 +41,11 @@
         "reasonSubject": {"type": "string", "format": "at-uri"},
         "record": {"type": "unknown"},
         "isRead": {"type": "boolean"},
-        "indexedAt": {"type": "string", "format": "datetime"}
+        "indexedAt": {"type": "string", "format": "datetime"},
+        "labels": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "com.atproto.label.defs#label"}
+        }
       }
     }
   }
