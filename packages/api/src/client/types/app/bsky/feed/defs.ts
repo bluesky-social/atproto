@@ -10,6 +10,7 @@ import * as AppBskyEmbedImages from '../embed/images'
 import * as AppBskyEmbedExternal from '../embed/external'
 import * as AppBskyEmbedRecord from '../embed/record'
 import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia'
+import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 export interface PostView {
   uri: string
@@ -27,6 +28,7 @@ export interface PostView {
   likeCount?: number
   indexedAt: string
   viewer?: ViewerState
+  labels?: ComAtprotoLabelDefs.Label[]
   [k: string]: unknown
 }
 

@@ -16,6 +16,8 @@ export interface ActionView {
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
   subjectBlobCids: string[]
+  createLabelVals?: string[]
+  negateLabelVals?: string[]
   reason: string
   createdBy: string
   createdAt: string
@@ -41,6 +43,8 @@ export interface ActionViewDetail {
   action: ActionType
   subject: RepoView | RecordView | { $type: string; [k: string]: unknown }
   subjectBlobs: BlobView[]
+  createLabelVals?: string[]
+  negateLabelVals?: string[]
   reason: string
   createdBy: string
   createdAt: string
