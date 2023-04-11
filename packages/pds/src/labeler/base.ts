@@ -1,29 +1,36 @@
 import stream from 'stream'
+import PQueue from 'p-queue'
 import Database from '../db'
-import { BlobStore } from '@atproto/repo'
-import { dedupe, getFieldsFromRecord, getRecordFromDb } from './util'
+import { BlobStore, cidForRecord } from '@atproto/repo'
+import { dedupe, getFieldsFromRecord } from './util'
 
-export interface Labeler {
-  labelRecord(uri: string): Promise<string[]>
-  labelText(text: string): Promise<string[]>
-  labelImg(img: stream.Readable): Promise<string[]>
-}
+export abstract class Labeler {
+  public processingQueue: PQueue | null // null during teardown
+  constructor(public db: Database, public blobstore: BlobStore) {
+    this.processingQueue = new PQueue()
+  }
 
-export abstract class BaseLabeler implements Labeler {
-  constructor(public db: Database, public blobstore: BlobStore) {}
-  async labelRecord(uri: string): Promise<string[]> {
-    // only label posts & profile
-    if (
-      !uri.includes('app.bsky.feed.post') &&
-      !uri.includes('app.bsky.actor.profile')
-    ) {
-      return []
-    }
+  processRecord(uri: string, obj: unknown) {
+    this.processingQueue?.add(() => this.createAndStoreLabels(uri, obj))
+  }
 
-    const record = await getRecordFromDb(this.db, uri)
-    if (!record) return []
+  async createAndStoreLabels(uri: string, obj: unknown): Promise<void> {
+    const labels = await this.labelRecord(obj)
+    if (labels.length < 1) return
+    const cid = await cidForRecord(obj)
+    const rows = labels.map((value) => ({
+      sourceDid: 'did:example:blah',
+      subjectUri: uri,
+      subjectCid: cid.toString(),
+      value,
+      createdAt: new Date().toISOString(),
+    }))
 
-    const { text, imgs } = getFieldsFromRecord(record)
+    await this.db.db.insertInto('label').values(rows).execute()
+  }
+
+  async labelRecord(obj: unknown): Promise<string[]> {
+    const { text, imgs } = getFieldsFromRecord(obj)
     const txtLabels = await this.labelText(text.join(' '))
     const imgLabels = await Promise.all(
       imgs.map(async (cid) => {
@@ -36,4 +43,12 @@ export abstract class BaseLabeler implements Labeler {
 
   abstract labelText(text: string): Promise<string[]>
   abstract labelImg(img: stream.Readable): Promise<string[]>
+
+  async destroy() {
+    const pQueue = this.processingQueue
+    this.processingQueue = null
+    pQueue?.pause()
+    pQueue?.clear()
+    await pQueue?.onIdle()
+  }
 }

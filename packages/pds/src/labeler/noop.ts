@@ -1,6 +1,6 @@
 import { Labeler } from './base'
 
-export class NoopLabeler implements Labeler {
+export class NoopLabeler extends Labeler {
   async labelRecord(): Promise<string[]> {
     return []
   }

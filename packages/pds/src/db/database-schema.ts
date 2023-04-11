@@ -18,6 +18,7 @@ import * as messageQueue from './tables/message-queue'
 import * as messageQueueCursor from './tables/message-queue-cursor'
 import * as moderation from './tables/moderation'
 import * as mute from './tables/mute'
+import * as label from './tables/label'
 import * as repoSeq from './tables/repo-seq'
 import * as appMigration from './tables/app-migration'
 import * as appView from '../app-view/db'
@@ -45,6 +46,7 @@ export type DatabaseSchemaType = appView.DatabaseSchemaType &
   messageQueueCursor.PartialDB &
   moderation.PartialDB &
   mute.PartialDB &
+  label.PartialDB &
   repoSeq.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>

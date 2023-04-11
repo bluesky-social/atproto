@@ -4,35 +4,14 @@ import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile
 import { isMain as isEmbedImage } from '../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
-import Database from '../db'
-import { cborToLexRecord } from '@atproto/repo'
 import { CID } from 'multiformats/cid'
-import { RepoRecord } from '@atproto/lexicon'
-
-export const getRecordFromDb = async (
-  db: Database,
-  uri: string,
-): Promise<RepoRecord | null> => {
-  const found = await db.db
-    .selectFrom('record')
-    .innerJoin('ipld_block', (join) =>
-      join
-        .onRef('ipld_block.creator', '=', 'record.did')
-        .onRef('ipld_block.cid', '=', 'record.cid'),
-    )
-    .select('content')
-    .where('record.uri', '=', uri)
-    .executeTakeFirst()
-  if (!found) return null
-  return cborToLexRecord(found.content)
-}
 
 type RecordFields = {
   text: string[]
   imgs: CID[]
 }
 
-export const getFieldsFromRecord = (record: RepoRecord): RecordFields => {
+export const getFieldsFromRecord = (record: unknown): RecordFields => {
   if (isPost(record)) {
     return getFieldsFromPost(record)
   } else if (isProfile(record)) {

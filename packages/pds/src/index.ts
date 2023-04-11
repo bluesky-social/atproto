@@ -127,7 +127,7 @@ export class PDS {
         keywords: config.labelerKeywords,
       })
     } else {
-      labeler = new NoopLabeler()
+      labeler = new NoopLabeler(db, blobstore)
     }
 
     const services = createServices({
@@ -193,7 +193,10 @@ export class PDS {
 
   async destroy(): Promise<void> {
     this.appView.destroy()
-    await this.ctx.messageQueue.destroy()
+    await Promise.all([
+      this.ctx.labeler.destroy(),
+      this.ctx.messageQueue.destroy(),
+    ])
     await this.terminator?.terminate()
     await this.ctx.db.close()
   }

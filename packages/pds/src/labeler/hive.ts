@@ -1,13 +1,13 @@
 import stream from 'stream'
 import axios from 'axios'
 import FormData from 'form-data'
-import { BaseLabeler } from './base'
+import { Labeler } from './base'
 import Database from '../db'
 import { BlobStore } from '@atproto/repo'
 
 const HIVE_ENDPOINT = 'https://api.thehive.ai/api/v2/task/sync'
 
-export class HiveLabeler extends BaseLabeler {
+export class HiveLabeler extends Labeler {
   hiveEndpoint: string
   hiveApiKey: string
   keywords: Record<string, string>
