@@ -5,6 +5,7 @@ import PDSServer, {
   Database as PDSDatabase,
   MemoryBlobStore,
   ServerConfig as PDSServerConfig,
+  AppContext as PDSContext,
 } from '@atproto/pds'
 import * as plc from '@did-plc/lib'
 import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
@@ -43,6 +44,12 @@ export class DevEnvServer {
 
   get url() {
     return `http://localhost:${this.port}`
+  }
+
+  get ctx(): PDSContext | undefined {
+    if (this.inst instanceof PDSServer) {
+      return this.inst.ctx
+    }
   }
 
   async start() {
@@ -107,6 +114,8 @@ export class DevEnvServer {
               'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
             privacyPolicyUrl: 'https://example.com/privacy',
             termsOfServiceUrl: 'https://example.com/tos',
+            labelerDid: 'did:example:labeler',
+            labelerKeywords: {},
             maxSubscriptionBuffer: 200,
             repoBackfillLimitMs: HOUR,
             appViewRepoProvider: process.env.APP_VIEW_REPO_PROVIDER,
