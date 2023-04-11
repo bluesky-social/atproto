@@ -17,7 +17,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
   await db.schema
     .createIndex('label_source_did_index')
-    .on('labels')
+    .on('label')
     .column('sourceDid')
     .execute()
 }
