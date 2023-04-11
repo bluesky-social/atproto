@@ -18,6 +18,7 @@ export default function (server: Server, ctx: AppContext) {
       const { ref } = db.dynamic
 
       const feedService = ctx.services.appView.feed(ctx.db)
+      const labelService = ctx.services.appView.label(ctx.db)
 
       const postsQb = ctx.db.db
         .selectFrom('post')
@@ -57,6 +58,7 @@ export default function (server: Server, ctx: AppContext) {
       const feedItems: FeedRow[] = await feedQb.execute()
       const feed: FeedViewPost[] = await composeFeed(
         feedService,
+        labelService,
         feedItems,
         requester,
       )

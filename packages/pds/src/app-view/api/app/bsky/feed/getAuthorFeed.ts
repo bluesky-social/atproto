@@ -14,6 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       const { ref } = db.dynamic
 
       const feedService = ctx.services.appView.feed(ctx.db)
+      const labelService = ctx.services.appView.label(ctx.db)
 
       const userLookupCol = actor.startsWith('did:')
         ? 'did_handle.did'
@@ -50,7 +51,12 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const feedItems: FeedRow[] = await feedItemsQb.execute()
-      const feed = await composeFeed(feedService, feedItems, requester)
+      const feed = await composeFeed(
+        feedService,
+        labelService,
+        feedItems,
+        requester,
+      )
 
       return {
         encoding: 'application/json',

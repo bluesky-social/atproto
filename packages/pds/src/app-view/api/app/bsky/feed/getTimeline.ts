@@ -21,6 +21,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const feedService = ctx.services.appView.feed(ctx.db)
+      const labelService = ctx.services.appView.label(ctx.db)
 
       const followingIdsSubquery = db
         .selectFrom('follow')
@@ -58,7 +59,12 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
       const feedItems: FeedRow[] = await feedItemsQb.execute()
-      const feed = await composeFeed(feedService, feedItems, requester)
+      const feed = await composeFeed(
+        feedService,
+        labelService,
+        feedItems,
+        requester,
+      )
 
       return {
         encoding: 'application/json',

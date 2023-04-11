@@ -327,13 +327,6 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.server.defs#inviteCode',
           },
-          invites: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.server.defs#inviteCode',
-            },
-          },
         },
       },
       repoViewDetail: {
