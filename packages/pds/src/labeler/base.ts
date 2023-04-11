@@ -3,24 +3,43 @@ import PQueue from 'p-queue'
 import Database from '../db'
 import { BlobStore, cidForRecord } from '@atproto/repo'
 import { dedupe, getFieldsFromRecord } from './util'
+import { AtUri } from '@atproto/uri'
+import { labelerLogger as log } from '../logger'
 
 export abstract class Labeler {
+  public db: Database
+  public blobstore: BlobStore
+  public labelerDid: string
   public processingQueue: PQueue | null // null during teardown
-  constructor(public db: Database, public blobstore: BlobStore) {
+  constructor(opts: {
+    db: Database
+    blobstore: BlobStore
+    labelerDid: string
+  }) {
+    this.db = opts.db
+    this.blobstore = opts.blobstore
+    this.labelerDid = opts.labelerDid
     this.processingQueue = new PQueue()
   }
 
-  processRecord(uri: string, obj: unknown) {
-    this.processingQueue?.add(() => this.createAndStoreLabels(uri, obj))
+  processRecord(uri: AtUri, obj: unknown) {
+    this.processingQueue?.add(() =>
+      this.createAndStoreLabels(uri, obj).catch((err) => {
+        log.error(
+          { err, uri: uri.toString(), record: obj },
+          'failed to label record',
+        )
+      }),
+    )
   }
 
-  async createAndStoreLabels(uri: string, obj: unknown): Promise<void> {
+  async createAndStoreLabels(uri: AtUri, obj: unknown): Promise<void> {
     const labels = await this.labelRecord(obj)
     if (labels.length < 1) return
     const cid = await cidForRecord(obj)
     const rows = labels.map((value) => ({
       sourceDid: 'did:example:blah',
-      subjectUri: uri,
+      subjectUri: uri.toString(),
       subjectCid: cid.toString(),
       value,
       negated: 0 as const,
@@ -33,6 +52,8 @@ export abstract class Labeler {
   async labelRecord(obj: unknown): Promise<string[]> {
     const { text, imgs } = getFieldsFromRecord(obj)
     const txtLabels = await this.labelText(text.join(' '))
+    console.log(text)
+    console.log(imgs)
     const imgLabels = await Promise.all(
       imgs.map(async (cid) => {
         const stream = await this.blobstore.getStream(cid)

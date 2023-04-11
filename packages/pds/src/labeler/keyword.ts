@@ -9,10 +9,12 @@ export class KeywordLabeler extends Labeler {
   constructor(opts: {
     db: Database
     blobstore: BlobStore
+    labelerDid: string
     keywords: Record<string, string>
   }) {
-    super(opts.db, opts.blobstore)
-    this.keywords = opts.keywords
+    const { db, blobstore, labelerDid, keywords } = opts
+    super({ db, blobstore, labelerDid })
+    this.keywords = keywords
   }
 
   async labelText(text: string): Promise<string[]> {

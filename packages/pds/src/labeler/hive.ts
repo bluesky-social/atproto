@@ -15,12 +15,14 @@ export class HiveLabeler extends Labeler {
   constructor(opts: {
     db: Database
     blobstore: BlobStore
+    labelerDid: string
     hiveApiKey: string
     keywords: Record<string, string>
   }) {
-    super(opts.db, opts.blobstore)
-    this.hiveApiKey = opts.hiveApiKey
-    this.keywords = opts.keywords
+    const { db, blobstore, labelerDid, hiveApiKey, keywords } = opts
+    super({ db, blobstore, labelerDid })
+    this.hiveApiKey = hiveApiKey
+    this.keywords = keywords
   }
 
   async labelText(text: string): Promise<string[]> {

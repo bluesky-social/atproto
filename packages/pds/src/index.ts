@@ -119,6 +119,7 @@ export class PDS {
       labeler = new HiveLabeler({
         db,
         blobstore,
+        labelerDid: config.labelerDid,
         hiveApiKey: config.hiveApiKey,
         keywords: config.labelerKeywords,
       })
@@ -126,6 +127,7 @@ export class PDS {
       labeler = new KeywordLabeler({
         db,
         blobstore,
+        labelerDid: config.labelerDid,
         keywords: config.labelerKeywords,
       })
     }
@@ -136,6 +138,7 @@ export class PDS {
       blobstore,
       imgUriBuilder,
       imgInvalidator,
+      labeler,
     })
 
     const ctx = new AppContext({

@@ -42,6 +42,7 @@ export interface ServerConfigValues {
   emailNoReplyAddress: string
 
   hiveApiKey?: string
+  labelerDid: string
   labelerKeywords: Record<string, string>
 
   maxSubscriptionBuffer: number
@@ -124,6 +125,7 @@ export class ServerConfig {
       process.env.EMAIL_NO_REPLY_ADDRESS || 'noreply@blueskyweb.xyz'
 
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
+    const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const labelerKeywords = {}
 
     const dbPostgresUrl = process.env.DB_POSTGRES_URL
@@ -172,6 +174,7 @@ export class ServerConfig {
       emailSmtpUrl,
       emailNoReplyAddress,
       hiveApiKey,
+      labelerDid,
       labelerKeywords,
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
@@ -324,6 +327,10 @@ export class ServerConfig {
 
   get hiveApiKey() {
     return this.cfg.hiveApiKey
+  }
+
+  get labelerDid() {
+    return this.cfg.labelerDid
   }
 
   get labelerKeywords() {
