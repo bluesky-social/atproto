@@ -31,7 +31,7 @@ import {
   ImageInvalidator,
   ImageProcessingServerInvalidator,
 } from './image/invalidator'
-import { Labeler, HiveLabeler, NoopLabeler } from './labeler'
+import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -123,7 +123,11 @@ export class PDS {
         keywords: config.labelerKeywords,
       })
     } else {
-      labeler = new NoopLabeler(db, blobstore)
+      labeler = new KeywordLabeler({
+        db,
+        blobstore,
+        keywords: config.labelerKeywords,
+      })
     }
 
     const services = createServices({

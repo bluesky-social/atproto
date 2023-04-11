@@ -83,7 +83,20 @@ export const isRecordType = (obj: unknown, lexId: string): boolean => {
   }
 }
 
-function separateEmbeds(embed: PostRecord['embed']) {
+export const keywordLabeling = (
+  keywords: Record<string, string>,
+  text: string,
+): string[] => {
+  const labels: string[] = []
+  for (const word of Object.keys(keywords)) {
+    if (text.includes(word)) {
+      labels.push(keywords[word])
+    }
+  }
+  return labels
+}
+
+const separateEmbeds = (embed: PostRecord['embed']) => {
   if (!embed) {
     return []
   }

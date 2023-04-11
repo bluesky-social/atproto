@@ -5,6 +5,7 @@ export interface Label {
   subjectUri: string
   subjectCid: string
   value: string
+  negated: 0 | 1 // @TODO convert to boolean in app-view
   createdAt: string
 }
 

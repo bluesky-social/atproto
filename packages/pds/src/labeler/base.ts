@@ -23,6 +23,7 @@ export abstract class Labeler {
       subjectUri: uri,
       subjectCid: cid.toString(),
       value,
+      negated: 0 as const,
       createdAt: new Date().toISOString(),
     }))
 
@@ -43,6 +44,10 @@ export abstract class Labeler {
 
   abstract labelText(text: string): Promise<string[]>
   abstract labelImg(img: stream.Readable): Promise<string[]>
+
+  async processAll() {
+    await this.processingQueue?.onIdle()
+  }
 
   async destroy() {
     const pQueue = this.processingQueue

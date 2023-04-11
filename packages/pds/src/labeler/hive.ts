@@ -4,11 +4,11 @@ import FormData from 'form-data'
 import { Labeler } from './base'
 import Database from '../db'
 import { BlobStore } from '@atproto/repo'
+import { keywordLabeling } from './util'
 
 const HIVE_ENDPOINT = 'https://api.thehive.ai/api/v2/task/sync'
 
 export class HiveLabeler extends Labeler {
-  hiveEndpoint: string
   hiveApiKey: string
   keywords: Record<string, string>
 
@@ -24,13 +24,7 @@ export class HiveLabeler extends Labeler {
   }
 
   async labelText(text: string): Promise<string[]> {
-    const labels: string[] = []
-    for (const word of Object.keys(this.keywords)) {
-      if (text.includes(word)) {
-        labels.push(this.keywords[word])
-      }
-    }
-    return labels
+    return keywordLabeling(this.keywords, text)
   }
 
   async labelImg(img: stream.Readable): Promise<string[]> {
