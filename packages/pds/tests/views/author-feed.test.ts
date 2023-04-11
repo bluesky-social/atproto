@@ -33,6 +33,7 @@ describe('pds author feed views', () => {
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
+    await server.ctx.labeler.processAll()
   })
 
   afterAll(async () => {

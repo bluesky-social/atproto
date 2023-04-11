@@ -38,7 +38,7 @@ export abstract class Labeler {
     if (labels.length < 1) return
     const cid = await cidForRecord(obj)
     const rows = labels.map((value) => ({
-      sourceDid: 'did:example:blah',
+      sourceDid: this.labelerDid,
       subjectUri: uri.toString(),
       subjectCid: cid.toString(),
       value,

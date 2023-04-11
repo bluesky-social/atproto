@@ -26,7 +26,7 @@ export class LabelService {
         cid: cur.subjectCid,
         val: cur.value,
         neg: cur.negated === 1, // @TODO update in appview
-        ctx: cur.createdAt,
+        cts: cur.createdAt,
       })
       return acc
     }, {} as Labels)

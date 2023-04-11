@@ -29,6 +29,7 @@ describe('pds thread views', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
+    await server.ctx.labeler.processAll()
   })
 
   beforeAll(async () => {
