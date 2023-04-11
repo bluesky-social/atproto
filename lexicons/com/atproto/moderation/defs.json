@@ -6,12 +6,32 @@
         "type": "string",
         "knownValues": [
           "com.atproto.moderation.defs#reasonSpam",
+          "com.atproto.moderation.defs#reasonViolation",
+          "com.atproto.moderation.defs#reasonMisleading",
+          "com.atproto.moderation.defs#reasonSexual",
+          "com.atproto.moderation.defs#reasonRude",
           "com.atproto.moderation.defs#reasonOther"
         ]
       },
       "reasonSpam": {
         "type": "token",
         "description": "Moderation report reason: Spam."
+      },
+      "reasonViolation": {
+        "type": "token",
+        "description": "Moderation report reason: Violation."
+      },
+      "reasonMisleading": {
+        "type": "token",
+        "description": "Moderation report reason: Misleading."
+      },
+      "reasonSexual": {
+        "type": "token",
+        "description": "Moderation report reason: Sexual."
+      },
+      "reasonRude": {
+        "type": "token",
+        "description": "Moderation report reason: Rude."
       },
       "reasonOther": {
         "type": "token",
