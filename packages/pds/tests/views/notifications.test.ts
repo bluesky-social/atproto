@@ -118,7 +118,7 @@ describe('pds notification views', () => {
     expect(forSnapshot(notifs)).toMatchSnapshot()
   })
 
-  it('fetches notifications omitting mentions and replies by a muted user', async () => {
+  it('fetches notifications omitting records by a muted user', async () => {
     await agent.api.app.bsky.graph.muteActor(
       { actor: sc.dids.carol }, // Replier
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
@@ -138,9 +138,9 @@ describe('pds notification views', () => {
     )
 
     const notifs = sort(notifRes.data.notifications)
-    expect(notifs.length).toBe(9)
+    expect(notifs.length).toBe(4)
     expect(forSnapshot(notifs)).toMatchSnapshot()
-    expect(notifCount.data.count).toBe(9)
+    expect(notifCount.data.count).toBe(4)
 
     // Cleanup
     await agent.api.app.bsky.graph.unmuteActor(
