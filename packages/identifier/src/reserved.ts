@@ -937,6 +937,7 @@ const famousAccounts = [
   'nfl',
   'niallofficial',
   'nickiminaj',
+  'npr',
   'nytimes',
   'onedirection',
   'oprah',
