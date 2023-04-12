@@ -86,4 +86,19 @@ describe('popular views', () => {
     const expected = [one.ref.uriStr, two.ref.uriStr, three.ref.uriStr].sort()
     expect(feedUris).toEqual(expected)
   })
+
+  it('does not return muted posts', async () => {
+    await agent.api.app.bsky.graph.muteActor(
+      { actor: bob },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+
+    const res = await agent.api.app.bsky.unspecced.getPopular(
+      {},
+      { headers: sc.getHeaders(alice) },
+    )
+    expect(res.data.feed.length).toBe(1)
+    const dids = res.data.feed.map((post) => post.post.author.did)
+    expect(dids.includes(bob)).toBe(false)
+  })
 })

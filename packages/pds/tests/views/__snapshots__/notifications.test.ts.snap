@@ -1,291 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds notification views fetches notifications omitting mentions and replies by a muted user 1`] = `
-Array [
-  Object {
-    "author": Object {
-      "did": "user(0)",
-      "handle": "dan.test",
-      "labels": Array [],
-      "viewer": Object {
-        "following": "record(1)",
-        "muted": true,
-      },
-    },
-    "cid": "cids(0)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "repost",
-    "reasonSubject": "record(2)",
-    "record": Object {
-      "$type": "app.bsky.feed.repost",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": Object {
-        "cid": "cids(1)",
-        "uri": "record(2)",
-      },
-    },
-    "uri": "record(0)",
-  },
-  Object {
-    "author": Object {
-      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "description": "hi im bob",
-      "did": "user(1)",
-      "displayName": "bobby",
-      "handle": "bob.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
-        "followedBy": "record(5)",
-        "following": "record(4)",
-        "muted": false,
-      },
-    },
-    "cid": "cids(2)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "labels": Array [
-      Object {
-        "cid": "cids(2)",
-        "cts": "1970-01-01T00:00:00.000Z",
-        "neg": false,
-        "src": "did:example:labeler",
-        "uri": "record(3)",
-        "val": "test-label",
-      },
-      Object {
-        "cid": "cids(2)",
-        "cts": "1970-01-01T00:00:00.000Z",
-        "neg": false,
-        "src": "did:example:labeler",
-        "uri": "record(3)",
-        "val": "test-label-2",
-      },
-    ],
-    "reason": "reply",
-    "reasonSubject": "record(2)",
-    "record": Object {
-      "$type": "app.bsky.feed.post",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "embed": Object {
-        "$type": "app.bsky.embed.images",
-        "images": Array [
-          Object {
-            "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "image": Object {
-              "$type": "blob",
-              "mimeType": "image/jpeg",
-              "ref": Object {
-                "$link": "cids(3)",
-              },
-              "size": 4114,
-            },
-          },
-        ],
-      },
-      "reply": Object {
-        "parent": Object {
-          "cid": "cids(1)",
-          "uri": "record(2)",
-        },
-        "root": Object {
-          "cid": "cids(1)",
-          "uri": "record(2)",
-        },
-      },
-      "text": "hear that LABEL LABEL2",
-    },
-    "uri": "record(3)",
-  },
-  Object {
-    "author": Object {
-      "did": "user(0)",
-      "handle": "dan.test",
-      "labels": Array [],
-      "viewer": Object {
-        "following": "record(1)",
-        "muted": true,
-      },
-    },
-    "cid": "cids(4)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "like",
-    "reasonSubject": "record(2)",
-    "record": Object {
-      "$type": "app.bsky.feed.like",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": Object {
-        "cid": "cids(1)",
-        "uri": "record(2)",
-      },
-    },
-    "uri": "record(6)",
-  },
-  Object {
-    "author": Object {
-      "did": "user(2)",
-      "handle": "carol.test",
-      "labels": Array [],
-      "viewer": Object {
-        "followedBy": "record(9)",
-        "following": "record(8)",
-        "muted": true,
-      },
-    },
-    "cid": "cids(5)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "like",
-    "reasonSubject": "record(10)",
-    "record": Object {
-      "$type": "app.bsky.feed.like",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": Object {
-        "cid": "cids(6)",
-        "uri": "record(10)",
-      },
-    },
-    "uri": "record(7)",
-  },
-  Object {
-    "author": Object {
-      "did": "user(2)",
-      "handle": "carol.test",
-      "labels": Array [],
-      "viewer": Object {
-        "followedBy": "record(9)",
-        "following": "record(8)",
-        "muted": true,
-      },
-    },
-    "cid": "cids(7)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "like",
-    "reasonSubject": "record(2)",
-    "record": Object {
-      "$type": "app.bsky.feed.like",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": Object {
-        "cid": "cids(1)",
-        "uri": "record(2)",
-      },
-    },
-    "uri": "record(11)",
-  },
-  Object {
-    "author": Object {
-      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "description": "hi im bob",
-      "did": "user(1)",
-      "displayName": "bobby",
-      "handle": "bob.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
-        "followedBy": "record(5)",
-        "following": "record(4)",
-        "muted": false,
-      },
-    },
-    "cid": "cids(8)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "like",
-    "reasonSubject": "record(10)",
-    "record": Object {
-      "$type": "app.bsky.feed.like",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": Object {
-        "cid": "cids(6)",
-        "uri": "record(10)",
-      },
-    },
-    "uri": "record(12)",
-  },
-  Object {
-    "author": Object {
-      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "description": "hi im bob",
-      "did": "user(1)",
-      "displayName": "bobby",
-      "handle": "bob.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
-        "followedBy": "record(5)",
-        "following": "record(4)",
-        "muted": false,
-      },
-    },
-    "cid": "cids(9)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "like",
-    "reasonSubject": "record(2)",
-    "record": Object {
-      "$type": "app.bsky.feed.like",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": Object {
-        "cid": "cids(1)",
-        "uri": "record(2)",
-      },
-    },
-    "uri": "record(13)",
-  },
-  Object {
-    "author": Object {
-      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-      "description": "hi im bob",
-      "did": "user(1)",
-      "displayName": "bobby",
-      "handle": "bob.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
-        "followedBy": "record(5)",
-        "following": "record(4)",
-        "muted": false,
-      },
-    },
-    "cid": "cids(10)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "follow",
-    "record": Object {
-      "$type": "app.bsky.graph.follow",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": "user(3)",
-    },
-    "uri": "record(5)",
-  },
-  Object {
-    "author": Object {
-      "did": "user(2)",
-      "handle": "carol.test",
-      "labels": Array [],
-      "viewer": Object {
-        "followedBy": "record(9)",
-        "following": "record(8)",
-        "muted": true,
-      },
-    },
-    "cid": "cids(11)",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "isRead": false,
-    "reason": "follow",
-    "record": Object {
-      "$type": "app.bsky.graph.follow",
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "subject": "user(3)",
-    },
-    "uri": "record(9)",
-  },
-]
-`;
-
 exports[`pds notification views fetches notifications omitting mentions and replies for taken-down posts 1`] = `
 Array [
   Object {
@@ -302,6 +16,7 @@ Array [
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "reply",
     "reasonSubject": "record(3)",
     "record": Object {
@@ -334,6 +49,7 @@ Array [
     "cid": "cids(3)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "repost",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -430,6 +146,7 @@ Array [
     "cid": "cids(6)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -456,6 +173,7 @@ Array [
     "cid": "cids(7)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(12)",
     "record": Object {
@@ -482,6 +200,7 @@ Array [
     "cid": "cids(9)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -512,6 +231,7 @@ Array [
     "cid": "cids(10)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(12)",
     "record": Object {
@@ -542,6 +262,7 @@ Array [
     "cid": "cids(11)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -572,6 +293,7 @@ Array [
     "cid": "cids(12)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
@@ -594,11 +316,177 @@ Array [
     "cid": "cids(13)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "subject": "user(3)",
+    },
+    "uri": "record(2)",
+  },
+]
+`;
+
+exports[`pds notification views fetches notifications omitting records by a muted user 1`] = `
+Array [
+  Object {
+    "author": Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "hi im bob",
+      "did": "user(0)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(0)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "labels": Array [
+      Object {
+        "cid": "cids(0)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(0)",
+        "val": "test-label",
+      },
+      Object {
+        "cid": "cids(0)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(0)",
+        "val": "test-label-2",
+      },
+    ],
+    "reason": "reply",
+    "reasonSubject": "record(3)",
+    "record": Object {
+      "$type": "app.bsky.feed.post",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "embed": Object {
+        "$type": "app.bsky.embed.images",
+        "images": Array [
+          Object {
+            "alt": "tests/image/fixtures/key-landscape-small.jpg",
+            "image": Object {
+              "$type": "blob",
+              "mimeType": "image/jpeg",
+              "ref": Object {
+                "$link": "cids(1)",
+              },
+              "size": 4114,
+            },
+          },
+        ],
+      },
+      "reply": Object {
+        "parent": Object {
+          "cid": "cids(2)",
+          "uri": "record(3)",
+        },
+        "root": Object {
+          "cid": "cids(2)",
+          "uri": "record(3)",
+        },
+      },
+      "text": "hear that LABEL LABEL2",
+    },
+    "uri": "record(0)",
+  },
+  Object {
+    "author": Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "hi im bob",
+      "did": "user(0)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(3)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "labels": Array [],
+    "reason": "like",
+    "reasonSubject": "record(5)",
+    "record": Object {
+      "$type": "app.bsky.feed.like",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": Object {
+        "cid": "cids(4)",
+        "uri": "record(5)",
+      },
+    },
+    "uri": "record(4)",
+  },
+  Object {
+    "author": Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "hi im bob",
+      "did": "user(0)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(5)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "labels": Array [],
+    "reason": "like",
+    "reasonSubject": "record(3)",
+    "record": Object {
+      "$type": "app.bsky.feed.like",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": Object {
+        "cid": "cids(2)",
+        "uri": "record(3)",
+      },
+    },
+    "uri": "record(6)",
+  },
+  Object {
+    "author": Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "hi im bob",
+      "did": "user(0)",
+      "displayName": "bobby",
+      "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "viewer": Object {
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
+    },
+    "cid": "cids(6)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "isRead": false,
+    "labels": Array [],
+    "reason": "follow",
+    "record": Object {
+      "$type": "app.bsky.graph.follow",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "subject": "user(1)",
     },
     "uri": "record(2)",
   },
@@ -621,6 +509,7 @@ Array [
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "reply",
     "reasonSubject": "record(3)",
     "record": Object {
@@ -653,6 +542,7 @@ Array [
     "cid": "cids(3)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "repost",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -679,6 +569,7 @@ Array [
     "cid": "cids(4)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "reply",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -782,6 +673,7 @@ Array [
     "cid": "cids(7)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -808,6 +700,7 @@ Array [
     "cid": "cids(8)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(13)",
     "record": Object {
@@ -834,6 +727,7 @@ Array [
     "cid": "cids(10)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -864,6 +758,7 @@ Array [
     "cid": "cids(11)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(13)",
     "record": Object {
@@ -894,6 +789,7 @@ Array [
     "cid": "cids(12)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -919,6 +815,7 @@ Array [
     "cid": "cids(13)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
+    "labels": Array [],
     "reason": "mention",
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -966,6 +863,7 @@ Array [
     "cid": "cids(15)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
@@ -988,6 +886,7 @@ Array [
     "cid": "cids(16)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
@@ -1015,6 +914,7 @@ Array [
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "reply",
     "reasonSubject": "record(3)",
     "record": Object {
@@ -1047,6 +947,7 @@ Array [
     "cid": "cids(3)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "repost",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -1073,6 +974,7 @@ Array [
     "cid": "cids(4)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "reply",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -1176,6 +1078,7 @@ Array [
     "cid": "cids(7)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -1202,6 +1105,7 @@ Array [
     "cid": "cids(8)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(13)",
     "record": Object {
@@ -1228,6 +1132,7 @@ Array [
     "cid": "cids(10)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -1258,6 +1163,7 @@ Array [
     "cid": "cids(11)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(13)",
     "record": Object {
@@ -1288,6 +1194,7 @@ Array [
     "cid": "cids(12)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -1313,6 +1220,7 @@ Array [
     "cid": "cids(13)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "mention",
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -1360,6 +1268,7 @@ Array [
     "cid": "cids(15)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
@@ -1382,6 +1291,7 @@ Array [
     "cid": "cids(16)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
@@ -1409,6 +1319,7 @@ Object {
       "cid": "cids(0)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "isRead": false,
+      "labels": Array [],
       "reason": "repost",
       "reasonSubject": "record(1)",
       "record": Object {
@@ -1481,6 +1392,7 @@ Object {
       "cid": "cids(3)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "isRead": false,
+      "labels": Array [],
       "reason": "follow",
       "record": Object {
         "$type": "app.bsky.graph.follow",
