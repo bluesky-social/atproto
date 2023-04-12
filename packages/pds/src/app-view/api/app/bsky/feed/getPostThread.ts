@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
         feedService.getActorViews(Array.from(relevant.dids), requester),
         feedService.getPostViews(Array.from(relevant.uris), requester),
         feedService.embedsForPosts(Array.from(relevant.uris), requester),
-        labelService.getLabels(Array.from(relevant.uris)),
+        labelService.getLabelsForSubjects(Array.from(relevant.uris)),
       ])
 
       const thread = composeThread(
