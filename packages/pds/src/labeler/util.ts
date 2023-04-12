@@ -1,10 +1,10 @@
+import { CID } from 'multiformats/cid'
 import * as lex from '../lexicon/lexicons'
 import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { isMain as isEmbedImage } from '../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
-import { CID } from 'multiformats/cid'
 
 type RecordFields = {
   text: string[]
