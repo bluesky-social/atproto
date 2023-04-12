@@ -235,6 +235,13 @@ describe('At Uris', () => {
         'foo=bar',
         '#hash',
       ],
+      [
+        'at://4513echo.bsky.social/app.bsky.feed.post/3jsrpdyf6ss23',
+        '4513echo.bsky.social',
+        '/app.bsky.feed.post/3jsrpdyf6ss23',
+        '',
+        '',
+      ],
     ]
     for (const [uri, hostname, pathname, search, hash] of TESTS) {
       const urip = new AtUri(uri)

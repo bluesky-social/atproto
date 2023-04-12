@@ -162,6 +162,27 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .columns(['sortAt', 'cid'])
     .execute()
 
+  // feedItem
+  await db.schema
+    .createTable('feed_item')
+    .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('cid', 'varchar', (col) => col.notNull())
+    .addColumn('type', 'varchar', (col) => col.notNull())
+    .addColumn('postUri', 'varchar', (col) => col.notNull())
+    .addColumn('originatorDid', 'varchar', (col) => col.notNull())
+    .addColumn('sortAt', 'varchar', (col) => col.notNull())
+    .execute()
+  await db.schema
+    .createIndex('feed_item_originator_idx')
+    .on('feed_item')
+    .column('originatorDid')
+    .execute()
+  await db.schema
+    .createIndex('feed_item_cursor_idx')
+    .on('feed_item')
+    .columns(['sortAt', 'cid'])
+    .execute()
+
   // follow
   await db.schema
     .createTable('follow')
@@ -263,6 +284,8 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('like').execute()
   // follow
   await db.schema.dropTable('follow').execute()
+  // feedItem
+  await db.schema.dropTable('feed_item').execute()
   // repost
   await db.schema.dropTable('repost').execute()
   // postHierarchy

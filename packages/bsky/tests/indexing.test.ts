@@ -29,8 +29,13 @@ describe('indexing', () => {
     sc = new SeedClient(pdsAgent)
     await usersSeed(sc)
     // Data in tests is not processed from subscription
+<<<<<<< HEAD
     await processAll(testEnv)
     await testEnv.bsky.sub?.destroy()
+=======
+    await processAll(server)
+    await server.bsky.sub?.destroy()
+>>>>>>> main
   })
 
   afterAll(async () => {
@@ -201,10 +206,17 @@ describe('indexing', () => {
 
   describe('indexRepo', () => {
     beforeAll(async () => {
+<<<<<<< HEAD
       testEnv.bsky.sub.resume()
       await basicSeed(sc, false)
       await processAll(testEnv)
       await testEnv.bsky.sub.destroy()
+=======
+      server.bsky.sub?.resume()
+      await basicSeed(sc, false)
+      await processAll(server)
+      await server.bsky.sub?.destroy()
+>>>>>>> main
     })
 
     it('preserves indexes when no record changes.', async () => {

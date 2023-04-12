@@ -2,6 +2,7 @@ import assert from 'assert'
 
 export interface ServerConfigValues {
   version: string
+  debugMode?: boolean
   port?: number
   publicUrl?: string
   dbPostgresUrl: string
@@ -21,6 +22,7 @@ export class ServerConfig {
 
   static readEnv(overrides?: Partial<ServerConfigValues>) {
     const version = process.env.BSKY_VERSION || '0.0.0'
+    const debugMode = process.env.NODE_ENV !== 'production'
     const publicUrl = process.env.PUBLIC_URL || undefined
     const envPort = parseInt(process.env.PORT || '', 10)
     const port = isNaN(envPort) ? 2584 : envPort
@@ -39,6 +41,7 @@ export class ServerConfig {
     const repoProvider = process.env.REPO_PROVIDER // E.g. ws://abc.com:4000
     return new ServerConfig({
       version,
+      debugMode,
       port,
       publicUrl,
       dbPostgresUrl,
@@ -63,6 +66,10 @@ export class ServerConfig {
 
   get version() {
     return this.cfg.version
+  }
+
+  get debugMode() {
+    return !!this.cfg.debugMode
   }
 
   get port() {

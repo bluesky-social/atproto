@@ -5,7 +5,6 @@ import * as formats from './formats'
 import {
   LexUserType,
   LexBoolean,
-  LexFloat,
   LexInteger,
   LexString,
   ValidationResult,
@@ -22,8 +21,6 @@ export function validate(
   switch (def.type) {
     case 'boolean':
       return boolean(lexicons, path, def, value)
-    case 'float':
-      return float(lexicons, path, def, value)
     case 'integer':
       return integer(lexicons, path, def, value)
     case 'string':
@@ -80,13 +77,13 @@ export function boolean(
   return { success: true, value }
 }
 
-export function float(
+export function integer(
   lexicons: Lexicons,
   path: string,
   def: LexUserType,
   value: unknown,
 ): ValidationResult {
-  def = def as LexFloat
+  def = def as LexInteger
 
   // type
   const type = typeof value
@@ -96,12 +93,12 @@ export function float(
     }
     return {
       success: false,
-      error: new ValidationError(`${path} must be a number`),
+      error: new ValidationError(`${path} must be an integer`),
     }
-  } else if (type !== 'number') {
+  } else if (!Number.isInteger(value)) {
     return {
       success: false,
-      error: new ValidationError(`${path} must be a number`),
+      error: new ValidationError(`${path} must be an integer`),
     }
   }
 
@@ -148,33 +145,6 @@ export function float(
           `${path} can not be less than ${def.minimum}`,
         ),
       }
-    }
-  }
-
-  return { success: true, value }
-}
-
-export function integer(
-  lexicons: Lexicons,
-  path: string,
-  def: LexUserType,
-  value: unknown,
-): ValidationResult {
-  def = def as LexInteger
-
-  // run number validation
-  const numRes = float(lexicons, path, def, value)
-  if (!numRes.success) {
-    return numRes
-  } else {
-    value = numRes.value
-  }
-
-  // whole numbers only
-  if (!Number.isInteger(value)) {
-    return {
-      success: false,
-      error: new ValidationError(`${path} must be an integer`),
     }
   }
 

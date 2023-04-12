@@ -1,16 +1,18 @@
 import * as aws from '@aws-sdk/client-cloudfront'
 
-export type CloudfrontConfig = { distributionId: string } & Omit<
-  aws.CloudFrontClientConfig,
-  'apiVersion'
->
+export type CloudfrontConfig = {
+  distributionId: string
+  pathPrefix?: string
+} & Omit<aws.CloudFrontClientConfig, 'apiVersion'>
 
 export class CloudfrontInvalidator implements ImageInvalidator {
   distributionId: string
+  pathPrefix: string
   client: aws.CloudFront
   constructor(cfg: CloudfrontConfig) {
-    const { distributionId, ...rest } = cfg
+    const { distributionId, pathPrefix, ...rest } = cfg
     this.distributionId = distributionId
+    this.pathPrefix = pathPrefix ?? ''
     this.client = new aws.CloudFront({
       ...rest,
       apiVersion: '2020-05-31',
@@ -23,7 +25,7 @@ export class CloudfrontInvalidator implements ImageInvalidator {
         CallerReference: `cf-invalidator-${subject}-${Date.now()}`,
         Paths: {
           Quantity: paths.length,
-          Items: paths,
+          Items: paths.map((path) => this.pathPrefix + path),
         },
       },
     })

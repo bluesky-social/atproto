@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
 import { FeedAlgorithm, FeedKeyset, composeFeed } from '../util/feed'
@@ -25,38 +26,32 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('follow')
         .select('follow.subjectDid')
         .where('follow.creator', '=', requester)
-
       const mutedQb = db
         .selectFrom('mute')
-        .select('did')
+        .selectAll()
         .where('mutedByDid', '=', requester)
 
-      const postsQb = feedService
-        .selectPostQb()
+      let feedItemsQb = feedService
+        .selectFeedItemQb()
         .where((qb) =>
           qb
-            .where('creator', '=', requester)
-            .orWhere('creator', 'in', followingIdsSubquery),
-        )
-        .whereNotExists(mutedQb.whereRef('did', '=', ref('post.creator'))) // Hide posts of muted actors
-
-      const repostsQb = feedService
-        .selectRepostQb()
-        .where((qb) =>
-          qb
-            .where('repost.creator', '=', requester)
-            .orWhere('repost.creator', 'in', followingIdsSubquery),
+            .where('originatorDid', '=', requester)
+            .orWhere('originatorDid', 'in', followingIdsSubquery),
         )
         .whereNotExists(
-          mutedQb
-            .whereRef('did', '=', ref('post.creator')) // Hide reposts of or by muted actors
-            .orWhereRef('did', '=', ref('repost.creator')),
+          // Hide posts and reposts of or by muted actors
+          mutedQb.whereRef(
+            'did',
+            'in',
+            sql`(${ref('post.creator')}, ${ref('originatorDid')})`,
+          ),
         )
 
-      const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
-      let feedItemsQb = db
-        .selectFrom(postsQb.unionAll(repostsQb).as('feed_items'))
-        .selectAll()
+      const keyset = new FeedKeyset(
+        ref('feed_item.sortAt'),
+        ref('feed_item.cid'),
+      )
+
       feedItemsQb = paginate(feedItemsQb, {
         limit,
         cursor,

@@ -18,11 +18,7 @@ export class IndexingService {
     profile: Profile.PluginType
   }
 
-  constructor(
-    public db: Database,
-    public messageQueue: MessageQueue,
-    public messageDispatcher: MessageQueue,
-  ) {
+  constructor(public db: Database, public messageDispatcher: MessageQueue) {
     this.records = {
       post: Post.makePlugin(this.db.db),
       like: Like.makePlugin(this.db.db),
@@ -32,9 +28,8 @@ export class IndexingService {
     }
   }
 
-  static creator(messageQueue: MessageQueue, messageDispatcher: MessageQueue) {
-    return (db: Database) =>
-      new IndexingService(db, messageQueue, messageDispatcher)
+  static creator(messageDispatcher: MessageQueue) {
+    return (db: Database) => new IndexingService(db, messageDispatcher)
   }
 
   async indexRecord(
@@ -46,18 +41,17 @@ export class IndexingService {
   ) {
     this.db.assertTransaction()
     const indexer = this.findIndexerForCollection(uri.collection)
-    const events =
-      action === WriteOpAction.Create
-        ? await indexer.insertRecord(uri, cid, obj, timestamp)
-        : await indexer.updateRecord(uri, cid, obj, timestamp)
-    await this.messageQueue.send(this.db, events)
+    if (action === WriteOpAction.Create) {
+      await indexer.insertRecord(uri, cid, obj, timestamp)
+    } else {
+      await indexer.updateRecord(uri, cid, obj, timestamp)
+    }
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {
     this.db.assertTransaction()
     const indexer = this.findIndexerForCollection(uri.collection)
-    const events = await indexer.deleteRecord(uri, cascading)
-    await this.messageQueue.send(this.db, events)
+    await indexer.deleteRecord(uri, cascading)
   }
 
   findIndexerForCollection(collection: string) {

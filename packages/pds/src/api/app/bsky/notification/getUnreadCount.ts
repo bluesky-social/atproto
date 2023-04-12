@@ -27,7 +27,6 @@ export default function (server: Server, ctx: AppContext) {
           ctx.db.db // Omit mentions and replies by muted actors
             .selectFrom('mute')
             .selectAll()
-            .where(ref('notif.reason'), 'in', ['mention', 'reply'])
             .whereRef('did', '=', ref('notif.author'))
             .where('mutedByDid', '=', requester),
         )

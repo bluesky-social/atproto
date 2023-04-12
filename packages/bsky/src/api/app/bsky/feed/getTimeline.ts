@@ -27,26 +27,19 @@ export default function (server: Server, ctx: AppContext) {
         .where('follow.creator', '=', requester)
 
       // @NOTE mutes applied on pds
-      const postsQb = feedService
-        .selectPostQb()
+      let feedItemsQb = feedService
+        .selectFeedItemQb()
         .where((qb) =>
           qb
-            .where('creator', '=', requester)
-            .orWhere('creator', 'in', followingIdsSubquery),
+            .where('originatorDid', '=', requester)
+            .orWhere('originatorDid', 'in', followingIdsSubquery),
         )
 
-      const repostsQb = feedService
-        .selectRepostQb()
-        .where((qb) =>
-          qb
-            .where('repost.creator', '=', requester)
-            .orWhere('repost.creator', 'in', followingIdsSubquery),
-        )
+      const keyset = new FeedKeyset(
+        ref('feed_item.sortAt'),
+        ref('feed_item.cid'),
+      )
 
-      const keyset = new FeedKeyset(ref('cursor'), ref('postCid'))
-      let feedItemsQb = db
-        .selectFrom(postsQb.unionAll(repostsQb).as('feed_items'))
-        .selectAll()
       feedItemsQb = paginate(feedItemsQb, {
         limit,
         cursor,
