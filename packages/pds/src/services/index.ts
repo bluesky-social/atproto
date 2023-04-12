@@ -12,6 +12,8 @@ import { ModerationService } from './moderation'
 import { ActorService } from '../app-view/services/actor'
 import { FeedService } from '../app-view/services/feed'
 import { IndexingService } from '../app-view/services/indexing'
+import { Labeler } from '../labeler'
+import { LabelService } from '../app-view/services/label'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
@@ -19,6 +21,7 @@ export function createServices(resources: {
   blobstore: BlobStore
   imgUriBuilder: ImageUriBuilder
   imgInvalidator: ImageInvalidator
+  labeler: Labeler
 }): Services {
   const {
     repoSigningKey,
@@ -26,6 +29,7 @@ export function createServices(resources: {
     blobstore,
     imgUriBuilder,
     imgInvalidator,
+    labeler,
   } = resources
   return {
     account: AccountService.creator(),
@@ -41,7 +45,8 @@ export function createServices(resources: {
     appView: {
       actor: ActorService.creator(imgUriBuilder),
       feed: FeedService.creator(imgUriBuilder),
-      indexing: IndexingService.creator(messageDispatcher),
+      indexing: IndexingService.creator(labeler, messageDispatcher),
+      label: LabelService.creator(),
     },
   }
 }
@@ -56,6 +61,7 @@ export type Services = {
     feed: FromDb<FeedService>
     indexing: FromDb<IndexingService>
     actor: FromDb<ActorService>
+    label: FromDb<LabelService>
   }
 }
 

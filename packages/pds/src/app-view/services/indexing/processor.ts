@@ -144,7 +144,7 @@ export class RecordProcessor<T, S> {
         .where('duplicateOf', '=', uri.toString())
         .execute()
       await this.handleNotifs({ deleted })
-      return []
+      return
     } else {
       const found = await this.db
         .selectFrom('duplicate_record')

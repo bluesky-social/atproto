@@ -230,6 +230,7 @@ const snapTypeaheadPg = [
     did: 'user(0)',
     handle: 'cara-wiegand69.test',
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(1)',
@@ -237,6 +238,7 @@ const snapTypeaheadPg = [
     handle: 'eudora-dietrich4.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(2)',
@@ -244,6 +246,7 @@ const snapTypeaheadPg = [
     handle: 'shane-torphy52.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(3)',
@@ -251,11 +254,13 @@ const snapTypeaheadPg = [
     handle: 'aliya-hodkiewicz.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(4)',
     handle: 'carlos6.test',
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(5)',
@@ -263,6 +268,7 @@ const snapTypeaheadPg = [
     handle: 'carolina-mcdermott77.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(6)',
@@ -270,6 +276,7 @@ const snapTypeaheadPg = [
     handle: 'cayla-marquardt39.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
 ]
 
@@ -280,16 +287,19 @@ const snapTypeaheadSqlite = [
     handle: 'aliya-hodkiewicz.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(1)',
     handle: 'cara-wiegand69.test',
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(2)',
     handle: 'carlos6.test',
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(3)',
@@ -297,6 +307,7 @@ const snapTypeaheadSqlite = [
     handle: 'carolina-mcdermott77.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(4)',
@@ -304,6 +315,7 @@ const snapTypeaheadSqlite = [
     handle: 'eudora-dietrich4.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(5)',
@@ -311,6 +323,7 @@ const snapTypeaheadSqlite = [
     handle: 'shane-torphy52.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
 ]
 
@@ -319,6 +332,7 @@ const snapSearchPg = [
     did: 'user(0)',
     handle: 'cara-wiegand69.test',
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(1)',
@@ -327,6 +341,7 @@ const snapSearchPg = [
     handle: 'eudora-dietrich4.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(2)',
@@ -335,6 +350,7 @@ const snapSearchPg = [
     handle: 'shane-torphy52.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(3)',
@@ -343,11 +359,13 @@ const snapSearchPg = [
     handle: 'aliya-hodkiewicz.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(4)',
     handle: 'carlos6.test',
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(5)',
@@ -356,6 +374,7 @@ const snapSearchPg = [
     handle: 'carolina-mcdermott77.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(6)',
@@ -364,6 +383,7 @@ const snapSearchPg = [
     handle: 'cayla-marquardt39.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
 ]
 
@@ -375,16 +395,19 @@ const snapSearchSqlite = [
     handle: 'aliya-hodkiewicz.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(1)',
     handle: 'cara-wiegand69.test',
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(2)',
     handle: 'carlos6.test',
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(3)',
@@ -393,6 +416,7 @@ const snapSearchSqlite = [
     handle: 'carolina-mcdermott77.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(4)',
@@ -401,6 +425,7 @@ const snapSearchSqlite = [
     handle: 'eudora-dietrich4.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
   {
     did: 'user(5)',
@@ -409,5 +434,6 @@ const snapSearchSqlite = [
     handle: 'shane-torphy52.test',
     avatar,
     viewer: { muted: false },
+    labels: [],
   },
 ]

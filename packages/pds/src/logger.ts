@@ -7,6 +7,7 @@ import { parseBasicAuth } from './auth'
 export const dbLogger = subsystemLogger('pds:db')
 export const seqLogger = subsystemLogger('pds:sequencer')
 export const mailerLogger = subsystemLogger('pds:mailer')
+export const labelerLogger = subsystemLogger('pds:labler')
 export const httpLogger = subsystemLogger('pds')
 
 export const loggerMiddleware = pinoHttp({

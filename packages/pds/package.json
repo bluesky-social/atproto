@@ -43,6 +43,7 @@
     "express": "^4.17.2",
     "express-async-errors": "^3.1.1",
     "file-type": "^16.5.4",
+    "form-data": "^4.0.0",
     "handlebars": "^4.7.7",
     "http-errors": "^2.0.0",
     "http-terminator": "^3.2.0",

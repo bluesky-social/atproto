@@ -8,11 +8,16 @@ import { isView as isViewExternal } from '../../../lexicon/types/app/bsky/embed/
 import { View as ViewRecord } from '../../../lexicon/types/app/bsky/embed/record'
 import { PostView } from '../../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
+import { Labels, LabelService } from '../label'
 
 export * from './types'
 
 export class FeedService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
+
+  services = {
+    label: LabelService.creator(),
+  }
 
   static creator(imgUriBuilder: ImageUriBuilder) {
     return (db: Database) => new FeedService(db, imgUriBuilder)
@@ -222,21 +227,17 @@ export class FeedService {
       extPromise,
       recordPromise,
     ])
-    const [postViews, actorViews, deepEmbedViews] = await Promise.all([
-      this.getPostViews(
-        records.map((p) => p.uri),
-        requester,
-      ),
-      this.getActorViews(
-        records.map((p) => p.did),
-        requester,
-      ),
-      this.embedsForPosts(
-        records.map((p) => p.uri),
-        requester,
-        _depth + 1,
-      ),
-    ])
+    const nestedUris = records.map((p) => p.uri)
+    const [postViews, actorViews, deepEmbedViews, labelViews] =
+      await Promise.all([
+        this.getPostViews(nestedUris, requester),
+        this.getActorViews(
+          records.map((p) => p.did),
+          requester,
+        ),
+        this.embedsForPosts(nestedUris, requester, _depth + 1),
+        this.services.label(this.db).getLabels(nestedUris),
+      ])
     let embeds = images.reduce((acc, cur) => {
       const embed = (acc[cur.postUri] ??= {
         $type: 'app.bsky.embed.images#view',
@@ -281,6 +282,7 @@ export class FeedService {
         actorViews,
         postViews,
         deepEmbedViews,
+        labelViews,
       )
       let deepEmbeds: ViewRecord['embeds'] | undefined
       if (_depth < 1) {
@@ -330,6 +332,7 @@ export class FeedService {
     actors: ActorViewMap,
     posts: PostInfoMap,
     embeds: FeedEmbeds,
+    labels: Labels,
   ): PostView | undefined {
     const post = posts[uri]
     const author = actors[post?.creator]
@@ -348,6 +351,7 @@ export class FeedService {
         repost: post.requesterRepost ?? undefined,
         like: post.requesterLike ?? undefined,
       },
+      labels: labels[uri] ?? [],
     }
   }
 }

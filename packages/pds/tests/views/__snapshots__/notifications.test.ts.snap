@@ -6,6 +6,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -15,6 +16,7 @@ Array [
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "reply",
     "reasonSubject": "record(3)",
     "record": Object {
@@ -38,6 +40,7 @@ Array [
     "author": Object {
       "did": "user(1)",
       "handle": "dan.test",
+      "labels": Array [],
       "viewer": Object {
         "following": "record(6)",
         "muted": false,
@@ -46,6 +49,7 @@ Array [
     "cid": "cids(3)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "repost",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -66,6 +70,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(9)",
         "following": "record(8)",
@@ -75,6 +80,24 @@ Array [
     "cid": "cids(4)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [
+      Object {
+        "cid": "cids(4)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(7)",
+        "val": "test-label",
+      },
+      Object {
+        "cid": "cids(4)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(7)",
+        "val": "test-label-2",
+      },
+    ],
     "reason": "reply",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -106,7 +129,7 @@ Array [
           "uri": "record(4)",
         },
       },
-      "text": "hear that",
+      "text": "hear that label_me label_me_2",
     },
     "uri": "record(7)",
   },
@@ -114,6 +137,7 @@ Array [
     "author": Object {
       "did": "user(1)",
       "handle": "dan.test",
+      "labels": Array [],
       "viewer": Object {
         "following": "record(6)",
         "muted": false,
@@ -122,6 +146,7 @@ Array [
     "cid": "cids(6)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -138,6 +163,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -147,6 +173,7 @@ Array [
     "cid": "cids(7)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(12)",
     "record": Object {
@@ -163,6 +190,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -172,6 +200,7 @@ Array [
     "cid": "cids(9)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -192,6 +221,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(9)",
         "following": "record(8)",
@@ -201,6 +231,7 @@ Array [
     "cid": "cids(10)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(12)",
     "record": Object {
@@ -221,6 +252,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(9)",
         "following": "record(8)",
@@ -230,6 +262,7 @@ Array [
     "cid": "cids(11)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -250,6 +283,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(9)",
         "following": "record(8)",
@@ -259,6 +293,7 @@ Array [
     "cid": "cids(12)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
@@ -271,6 +306,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -280,6 +316,7 @@ Array [
     "cid": "cids(13)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
@@ -301,6 +338,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -310,6 +348,24 @@ Array [
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [
+      Object {
+        "cid": "cids(0)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(0)",
+        "val": "test-label",
+      },
+      Object {
+        "cid": "cids(0)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(0)",
+        "val": "test-label-2",
+      },
+    ],
     "reason": "reply",
     "reasonSubject": "record(3)",
     "record": Object {
@@ -341,7 +397,7 @@ Array [
           "uri": "record(3)",
         },
       },
-      "text": "hear that",
+      "text": "hear that label_me label_me_2",
     },
     "uri": "record(0)",
   },
@@ -353,6 +409,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -362,6 +419,7 @@ Array [
     "cid": "cids(3)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(5)",
     "record": Object {
@@ -382,6 +440,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -391,6 +450,7 @@ Array [
     "cid": "cids(5)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(3)",
     "record": Object {
@@ -411,6 +471,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -420,6 +481,7 @@ Array [
     "cid": "cids(6)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
@@ -437,6 +499,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -446,6 +509,7 @@ Array [
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "reply",
     "reasonSubject": "record(3)",
     "record": Object {
@@ -469,6 +533,7 @@ Array [
     "author": Object {
       "did": "user(1)",
       "handle": "dan.test",
+      "labels": Array [],
       "viewer": Object {
         "following": "record(6)",
         "muted": false,
@@ -477,6 +542,7 @@ Array [
     "cid": "cids(3)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "repost",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -493,6 +559,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -502,6 +569,7 @@ Array [
     "cid": "cids(4)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "reply",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -529,6 +597,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(10)",
         "following": "record(9)",
@@ -538,6 +607,24 @@ Array [
     "cid": "cids(5)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
+    "labels": Array [
+      Object {
+        "cid": "cids(5)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(8)",
+        "val": "test-label",
+      },
+      Object {
+        "cid": "cids(5)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(8)",
+        "val": "test-label-2",
+      },
+    ],
     "reason": "reply",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -569,7 +656,7 @@ Array [
           "uri": "record(4)",
         },
       },
-      "text": "hear that",
+      "text": "hear that label_me label_me_2",
     },
     "uri": "record(8)",
   },
@@ -577,6 +664,7 @@ Array [
     "author": Object {
       "did": "user(1)",
       "handle": "dan.test",
+      "labels": Array [],
       "viewer": Object {
         "following": "record(6)",
         "muted": false,
@@ -585,6 +673,7 @@ Array [
     "cid": "cids(7)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -601,6 +690,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -610,6 +700,7 @@ Array [
     "cid": "cids(8)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(13)",
     "record": Object {
@@ -626,6 +717,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -635,6 +727,7 @@ Array [
     "cid": "cids(10)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -655,6 +748,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(10)",
         "following": "record(9)",
@@ -664,6 +758,7 @@ Array [
     "cid": "cids(11)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(13)",
     "record": Object {
@@ -684,6 +779,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(10)",
         "following": "record(9)",
@@ -693,6 +789,7 @@ Array [
     "cid": "cids(12)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -709,6 +806,7 @@ Array [
     "author": Object {
       "did": "user(1)",
       "handle": "dan.test",
+      "labels": Array [],
       "viewer": Object {
         "following": "record(6)",
         "muted": false,
@@ -717,6 +815,7 @@ Array [
     "cid": "cids(13)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
+    "labels": Array [],
     "reason": "mention",
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -754,6 +853,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(10)",
         "following": "record(9)",
@@ -763,6 +863,7 @@ Array [
     "cid": "cids(15)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
@@ -775,6 +876,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -784,6 +886,7 @@ Array [
     "cid": "cids(16)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": true,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
@@ -801,6 +904,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -810,6 +914,7 @@ Array [
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "reply",
     "reasonSubject": "record(3)",
     "record": Object {
@@ -833,6 +938,7 @@ Array [
     "author": Object {
       "did": "user(1)",
       "handle": "dan.test",
+      "labels": Array [],
       "viewer": Object {
         "following": "record(6)",
         "muted": false,
@@ -841,6 +947,7 @@ Array [
     "cid": "cids(3)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "repost",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -857,6 +964,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -866,6 +974,7 @@ Array [
     "cid": "cids(4)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "reply",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -893,6 +1002,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(10)",
         "following": "record(9)",
@@ -902,6 +1012,24 @@ Array [
     "cid": "cids(5)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [
+      Object {
+        "cid": "cids(5)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(8)",
+        "val": "test-label",
+      },
+      Object {
+        "cid": "cids(5)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(8)",
+        "val": "test-label-2",
+      },
+    ],
     "reason": "reply",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -933,7 +1061,7 @@ Array [
           "uri": "record(4)",
         },
       },
-      "text": "hear that",
+      "text": "hear that label_me label_me_2",
     },
     "uri": "record(8)",
   },
@@ -941,6 +1069,7 @@ Array [
     "author": Object {
       "did": "user(1)",
       "handle": "dan.test",
+      "labels": Array [],
       "viewer": Object {
         "following": "record(6)",
         "muted": false,
@@ -949,6 +1078,7 @@ Array [
     "cid": "cids(7)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -965,6 +1095,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -974,6 +1105,7 @@ Array [
     "cid": "cids(8)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(13)",
     "record": Object {
@@ -990,6 +1122,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -999,6 +1132,7 @@ Array [
     "cid": "cids(10)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -1019,6 +1153,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(10)",
         "following": "record(9)",
@@ -1028,6 +1163,7 @@ Array [
     "cid": "cids(11)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(13)",
     "record": Object {
@@ -1048,6 +1184,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(10)",
         "following": "record(9)",
@@ -1057,6 +1194,7 @@ Array [
     "cid": "cids(12)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -1073,6 +1211,7 @@ Array [
     "author": Object {
       "did": "user(1)",
       "handle": "dan.test",
+      "labels": Array [],
       "viewer": Object {
         "following": "record(6)",
         "muted": false,
@@ -1081,6 +1220,7 @@ Array [
     "cid": "cids(13)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "mention",
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -1118,6 +1258,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(10)",
         "following": "record(9)",
@@ -1127,6 +1268,7 @@ Array [
     "cid": "cids(15)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
@@ -1139,6 +1281,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -1148,6 +1291,7 @@ Array [
     "cid": "cids(16)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
@@ -1167,6 +1311,7 @@ Object {
       "author": Object {
         "did": "user(0)",
         "handle": "carol.test",
+        "labels": Array [],
         "viewer": Object {
           "muted": false,
         },
@@ -1174,6 +1319,7 @@ Object {
       "cid": "cids(0)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "isRead": false,
+      "labels": Array [],
       "reason": "repost",
       "reasonSubject": "record(1)",
       "record": Object {
@@ -1194,6 +1340,7 @@ Object {
         "displayName": "ali",
         "handle": "alice.test",
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
         "viewer": Object {
           "followedBy": "record(3)",
           "muted": false,
@@ -1202,6 +1349,16 @@ Object {
       "cid": "cids(2)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "isRead": false,
+      "labels": Array [
+        Object {
+          "cid": "cids(2)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "neg": false,
+          "src": "did:example:labeler",
+          "uri": "record(2)",
+          "val": "test-label",
+        },
+      ],
       "reason": "quote",
       "reasonSubject": "record(1)",
       "record": Object {
@@ -1214,7 +1371,7 @@ Object {
             "uri": "record(1)",
           },
         },
-        "text": "yoohoo",
+        "text": "yoohoo label_me",
       },
       "uri": "record(2)",
     },
@@ -1226,6 +1383,7 @@ Object {
         "displayName": "ali",
         "handle": "alice.test",
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
         "viewer": Object {
           "followedBy": "record(3)",
           "muted": false,
@@ -1234,6 +1392,7 @@ Object {
       "cid": "cids(3)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "isRead": false,
+      "labels": Array [],
       "reason": "follow",
       "record": Object {
         "$type": "app.bsky.graph.follow",

@@ -2,11 +2,13 @@ import { AtUri } from '@atproto/uri'
 import { TimeCidKeyset } from '../../../../../db/pagination'
 import { FeedViewPost } from '../../../../../lexicon/types/app/bsky/feed/defs'
 import { FeedRow, FeedService } from '../../../../services/feed'
+import { LabelService } from '../../../../services/label'
 
 // Present post and repost results into FeedViewPosts
 // Including links to embedded media
 export const composeFeed = async (
   feedService: FeedService,
+  labelService: LabelService,
   rows: FeedRow[],
   requester: string,
 ): Promise<FeedViewPost[]> => {
@@ -25,15 +27,22 @@ export const composeFeed = async (
       actorDids.add(new AtUri(row.replyRoot).host)
     }
   }
-  const [actors, posts, embeds] = await Promise.all([
+  const [actors, posts, embeds, labels] = await Promise.all([
     feedService.getActorViews(Array.from(actorDids), requester),
     feedService.getPostViews(Array.from(postUris), requester),
     feedService.embedsForPosts(Array.from(postUris), requester),
+    labelService.getLabels(Array.from(postUris)),
   ])
 
   const feed: FeedViewPost[] = []
   for (const row of rows) {
-    const post = feedService.formatPostView(row.postUri, actors, posts, embeds)
+    const post = feedService.formatPostView(
+      row.postUri,
+      actors,
+      posts,
+      embeds,
+      labels,
+    )
     const originator = actors[row.originatorDid]
     if (post && originator) {
       let reasonType: string | undefined
@@ -41,10 +50,22 @@ export const composeFeed = async (
         reasonType = 'app.bsky.feed.defs#reasonRepost'
       }
       const replyParent = row.replyParent
-        ? feedService.formatPostView(row.replyParent, actors, posts, embeds)
+        ? feedService.formatPostView(
+            row.replyParent,
+            actors,
+            posts,
+            embeds,
+            labels,
+          )
         : undefined
       const replyRoot = row.replyRoot
-        ? feedService.formatPostView(row.replyRoot, actors, posts, embeds)
+        ? feedService.formatPostView(
+            row.replyRoot,
+            actors,
+            posts,
+            embeds,
+            labels,
+          )
         : undefined
 
       feed.push({

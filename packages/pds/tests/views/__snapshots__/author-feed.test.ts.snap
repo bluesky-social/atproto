@@ -15,6 +15,7 @@ Array [
       },
       "cid": "cids(0)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -61,6 +62,24 @@ Array [
           ],
         },
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "did:example:labeler",
+            "uri": "record(2)",
+            "val": "test-label",
+          },
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "did:example:labeler",
+            "uri": "record(2)",
+            "val": "test-label-2",
+          },
+        ],
         "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -91,7 +110,7 @@ Array [
               "uri": "record(1)",
             },
           },
-          "text": "hear that",
+          "text": "hear that label_me label_me_2",
         },
         "replyCount": 1,
         "repostCount": 0,
@@ -110,6 +129,7 @@ Array [
         },
         "cid": "cids(1)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -240,6 +260,16 @@ Array [
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [
+        Object {
+          "cid": "cids(4)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "neg": false,
+          "src": "did:example:labeler",
+          "uri": "record(5)",
+          "val": "test-label",
+        },
+      ],
       "likeCount": 2,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -251,7 +281,7 @@ Array [
             "uri": "record(6)",
           },
         },
-        "text": "yoohoo",
+        "text": "yoohoo label_me",
       },
       "replyCount": 0,
       "repostCount": 0,
@@ -272,6 +302,7 @@ Array [
       },
       "cid": "cids(1)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 3,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -297,6 +328,7 @@ Array [
       },
       "cid": "cids(9)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -337,6 +369,24 @@ Array [
         ],
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [
+        Object {
+          "cid": "cids(0)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "neg": false,
+          "src": "did:example:labeler",
+          "uri": "record(0)",
+          "val": "test-label",
+        },
+        Object {
+          "cid": "cids(0)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "neg": false,
+          "src": "did:example:labeler",
+          "uri": "record(0)",
+          "val": "test-label-2",
+        },
+      ],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -367,7 +417,7 @@ Array [
             "uri": "record(1)",
           },
         },
-        "text": "hear that",
+        "text": "hear that label_me label_me_2",
       },
       "replyCount": 1,
       "repostCount": 0,
@@ -389,6 +439,7 @@ Array [
         },
         "cid": "cids(2)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -416,6 +467,7 @@ Array [
         },
         "cid": "cids(2)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -444,6 +496,7 @@ Array [
       },
       "cid": "cids(3)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -469,6 +522,7 @@ Array [
       },
       "cid": "cids(4)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -597,6 +651,7 @@ Array [
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -654,6 +709,7 @@ Array [
       },
       "cid": "cids(5)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -690,6 +746,7 @@ Array [
         },
         "cid": "cids(6)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -717,6 +774,7 @@ Array [
         },
         "cid": "cids(6)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -785,6 +843,7 @@ Array [
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 2,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -852,6 +911,7 @@ Array [
       },
       "cid": "cids(0)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 3,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -989,6 +1049,7 @@ Array [
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -1033,6 +1094,7 @@ Array [
       },
       "cid": "cids(6)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -1162,6 +1224,7 @@ Array [
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -1207,6 +1270,7 @@ Array [
       },
       "cid": "cids(5)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -1239,6 +1303,7 @@ Array [
       },
       "cid": "cids(0)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -1284,6 +1349,24 @@ Array [
           ],
         },
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "did:example:labeler",
+            "uri": "record(4)",
+            "val": "test-label",
+          },
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "did:example:labeler",
+            "uri": "record(4)",
+            "val": "test-label-2",
+          },
+        ],
         "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -1314,7 +1397,7 @@ Array [
               "uri": "record(3)",
             },
           },
-          "text": "hear that",
+          "text": "hear that label_me label_me_2",
         },
         "replyCount": 1,
         "repostCount": 0,
@@ -1335,6 +1418,7 @@ Array [
         },
         "cid": "cids(1)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -1466,6 +1550,16 @@ Array [
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [
+        Object {
+          "cid": "cids(4)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "neg": false,
+          "src": "did:example:labeler",
+          "uri": "record(7)",
+          "val": "test-label",
+        },
+      ],
       "likeCount": 2,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -1477,7 +1571,7 @@ Array [
             "uri": "record(8)",
           },
         },
-        "text": "yoohoo",
+        "text": "yoohoo label_me",
       },
       "replyCount": 0,
       "repostCount": 0,
@@ -1502,6 +1596,7 @@ Array [
       },
       "cid": "cids(1)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 3,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -1531,6 +1626,7 @@ Array [
       },
       "cid": "cids(9)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",

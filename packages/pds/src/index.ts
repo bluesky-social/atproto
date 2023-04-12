@@ -31,6 +31,7 @@ import {
   ImageInvalidator,
   ImageProcessingServerInvalidator,
 } from './image/invalidator'
+import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -113,12 +114,31 @@ export class PDS {
       config.imgUriKey,
     )
 
+    let labeler: Labeler
+    if (config.hiveApiKey) {
+      labeler = new HiveLabeler({
+        db,
+        blobstore,
+        labelerDid: config.labelerDid,
+        hiveApiKey: config.hiveApiKey,
+        keywords: config.labelerKeywords,
+      })
+    } else {
+      labeler = new KeywordLabeler({
+        db,
+        blobstore,
+        labelerDid: config.labelerDid,
+        keywords: config.labelerKeywords,
+      })
+    }
+
     const services = createServices({
       repoSigningKey,
       messageDispatcher,
       blobstore,
       imgUriBuilder,
       imgInvalidator,
+      labeler,
     })
 
     const ctx = new AppContext({
@@ -130,6 +150,7 @@ export class PDS {
       auth,
       messageDispatcher,
       sequencer,
+      labeler,
       services,
       mailer,
       imgUriBuilder,
@@ -174,6 +195,7 @@ export class PDS {
 
   async destroy(): Promise<void> {
     this.appView.destroy()
+    await this.ctx.labeler.destroy()
     await this.terminator?.terminate()
     await this.ctx.db.close()
   }

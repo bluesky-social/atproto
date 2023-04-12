@@ -10,6 +10,7 @@ import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import { MessageDispatcher } from './event-stream/message-queue'
 import Sequencer from './sequencer'
+import { Labeler } from './labeler'
 
 export class AppContext {
   constructor(
@@ -25,6 +26,7 @@ export class AppContext {
       services: Services
       messageDispatcher: MessageDispatcher
       sequencer: Sequencer
+      labeler: Labeler
     },
   ) {}
 
@@ -86,6 +88,10 @@ export class AppContext {
 
   get sequencer(): Sequencer {
     return this.opts.sequencer
+  }
+
+  get labeler(): Labeler {
+    return this.opts.labeler
   }
 
   get plcClient(): plc.Client {

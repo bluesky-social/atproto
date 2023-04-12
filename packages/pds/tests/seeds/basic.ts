@@ -103,7 +103,7 @@ export default async (sc: SeedClient) => {
 }
 
 export const posts = {
-  alice: ['hey there', 'again', 'yoohoo'],
+  alice: ['hey there', 'again', 'yoohoo label_me'],
   bob: ['bob back at it again!', 'bobby boy here', 'yoohoo'],
   carol: ['hi im carol'],
   dan: ['dan here!', '@alice.bluesky.xyz is the best'],
@@ -111,6 +111,6 @@ export const posts = {
 
 export const replies = {
   alice: ['thanks bob'],
-  bob: ['hear that'],
+  bob: ['hear that label_me label_me_2'],
   carol: ['of course'],
 }

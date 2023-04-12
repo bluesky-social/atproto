@@ -75,13 +75,18 @@ export default function (server: Server, ctx: AppContext) {
 
       // @NOTE calling into app-view, will eventually be replaced
       const actorService = ctx.services.appView.actor(ctx.db)
-      const authors = await actorService.views.profile(
-        notifs.map((notif) => ({
-          did: notif.authorDid,
-          handle: notif.authorHandle,
-        })),
-        requester,
-      )
+      const labelService = ctx.services.appView.label(ctx.db)
+      const recordUris = notifs.map((notif) => notif.uri)
+      const [authors, labels] = await Promise.all([
+        actorService.views.profile(
+          notifs.map((notif) => ({
+            did: notif.authorDid,
+            handle: notif.authorHandle,
+          })),
+          requester,
+        ),
+        labelService.getLabels(recordUris),
+      ])
 
       const notifications = notifs.map((notif, i) => ({
         uri: notif.uri,
@@ -92,6 +97,7 @@ export default function (server: Server, ctx: AppContext) {
         record: common.cborBytesToRecord(notif.recordBytes),
         isRead: notif.indexedAt <= userState.lastSeenNotifs,
         indexedAt: notif.indexedAt,
+        labels: labels[notif.uri] ?? [],
       }))
 
       return {
