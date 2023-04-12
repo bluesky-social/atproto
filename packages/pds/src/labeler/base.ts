@@ -46,7 +46,11 @@ export abstract class Labeler {
       createdAt: new Date().toISOString(),
     }))
 
-    await this.db.db.insertInto('label').values(rows).execute()
+    await this.db.db
+      .insertInto('label')
+      .values(rows)
+      .onConflict((oc) => oc.doNothing())
+      .execute()
   }
 
   async labelRecord(obj: unknown): Promise<string[]> {

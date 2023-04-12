@@ -10,6 +10,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('negated', 'int2', (col) => col.notNull()) // @TODO convert to boolean in appview
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint('label_pkey', [
+      'sourceDid',
       'subjectUri',
       'subjectCid',
       'value',
@@ -17,9 +18,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
-    .createIndex('label_source_did_index')
+    .createIndex('label_subject_uri_index')
     .on('label')
-    .column('sourceDid')
+    .column('subjectUri')
     .execute()
 }
 

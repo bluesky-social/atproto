@@ -87,9 +87,10 @@ export const keywordLabeling = (
   keywords: Record<string, string>,
   text: string,
 ): string[] => {
+  const lowerText = text.toLowerCase()
   const labels: string[] = []
   for (const word of Object.keys(keywords)) {
-    if (text.includes(word)) {
+    if (lowerText.includes(word)) {
       labels.push(keywords[word])
     }
   }
