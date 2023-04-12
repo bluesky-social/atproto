@@ -115,14 +115,6 @@ describe('auth', () => {
     expect(session.handle).toEqual('bob.test')
   })
 
-  it('allows session creation using handle input (deprecated).', async () => {
-    const session = await createSession({
-      handle: 'bob.test', // Deprecated in favor of identifier, see #493
-      password: 'password',
-    })
-    expect(session.handle).toEqual('bob.test')
-  })
-
   it('fails on session creation with a bad password.', async () => {
     const sessionPromise = createSession({
       identifier: 'bob.test',

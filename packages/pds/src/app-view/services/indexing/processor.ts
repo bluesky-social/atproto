@@ -185,7 +185,7 @@ export class RecordProcessor<T, S> {
         op.deleted,
         op.inserted ?? null,
       )
-      if (forDelete.toDelete) {
+      if (forDelete.toDelete.length > 0) {
         await this.db
           .deleteFrom('user_notification')
           .where('recordUri', 'in', forDelete.toDelete)

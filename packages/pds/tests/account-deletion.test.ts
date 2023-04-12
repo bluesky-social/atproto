@@ -128,7 +128,7 @@ describe('account deletion', () => {
 
   it('no longer lets the user log in', async () => {
     const attempt = agent.api.com.atproto.server.createSession({
-      handle: carol.handle,
+      identifier: carol.handle,
       password: carol.password,
     })
     await expect(attempt).rejects.toThrow('Invalid identifier or password')

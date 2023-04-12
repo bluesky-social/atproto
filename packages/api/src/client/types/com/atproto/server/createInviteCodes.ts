@@ -10,18 +10,14 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** Handle or other identifier supported by the server for the authenticating user. */
-  identifier: string
-  password: string
+  codeCount: number
+  useCount: number
+  forAccount?: string
   [k: string]: unknown
 }
 
 export interface OutputSchema {
-  accessJwt: string
-  refreshJwt: string
-  handle: string
-  did: string
-  email?: string
+  codes: string[]
   [k: string]: unknown
 }
 
@@ -37,15 +33,8 @@ export interface Response {
   data: OutputSchema
 }
 
-export class AccountTakedownError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message)
-  }
-}
-
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'AccountTakedown') return new AccountTakedownError(e)
   }
   return e
 }
