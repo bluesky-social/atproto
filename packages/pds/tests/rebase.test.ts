@@ -5,7 +5,7 @@ import { AppContext } from '../src'
 import { CloseFn, runTestServer } from './_util'
 import { SeedClient } from './seeds/client'
 
-describe('repo sync', () => {
+describe('repo rebases', () => {
   let agent: AtpAgent
   let sc: SeedClient
   let alice: string
@@ -17,7 +17,7 @@ describe('repo sync', () => {
 
   beforeAll(async () => {
     const server = await runTestServer({
-      dbPostgresSchema: 'repo_sync',
+      dbPostgresSchema: 'repo_rebase',
     })
     ctx = server.ctx
     close = server.close
