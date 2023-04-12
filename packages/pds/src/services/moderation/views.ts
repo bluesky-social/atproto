@@ -554,7 +554,7 @@ export class ModerationViews {
     return res.map((l) => ({
       src: l.sourceDid,
       uri: l.subjectUri,
-      cid: l.subjectCid,
+      cid: l.subjectCid ?? undefined,
       val: l.value,
       neg: l.negated === 1,
       cts: l.createdAt,

@@ -11,11 +11,20 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input }) => {
       const { db, services } = ctx
       const moderationService = services.moderation(db)
-      const { action, subject, reason, createdBy, subjectBlobCids } = input.body
+      const {
+        action,
+        subject,
+        reason,
+        createdBy,
+        createLabelVals,
+        negateLabelVals,
+        subjectBlobCids,
+      } = input.body
 
       const moderationAction = await db.transaction(async (dbTxn) => {
         const authTxn = services.auth(dbTxn)
         const moderationTxn = services.moderation(dbTxn)
+        const labelTxn = services.appView.label(dbTxn)
 
         const result = await moderationTxn.logAction({
           action: getAction(action),
@@ -48,6 +57,16 @@ export default function (server: Server, ctx: AppContext) {
             blobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
           })
         }
+
+        const subjectUri = result.subjectUri
+          ? result.subjectUri
+          : result.subjectDid
+        await labelTxn.formatAndCreate(
+          ctx.cfg.labelerDid,
+          subjectUri,
+          result.subjectCid,
+          { create: createLabelVals, negate: negateLabelVals },
+        )
 
         return result
       })

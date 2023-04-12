@@ -2,6 +2,7 @@ import { AtUri } from '@atproto/uri'
 import Database from '../../../db'
 import { Label } from '../../../lexicon/types/com/atproto/label/defs'
 import { ids } from '../../../lexicon/lexicons'
+import { sql } from 'kysely'
 
 export type Labels = Record<string, Label[]>
 
@@ -10,6 +11,58 @@ export class LabelService {
 
   static creator() {
     return (db: Database) => new LabelService(db)
+  }
+
+  async formatAndCreate(
+    src: string,
+    uri: string,
+    cid: string | null,
+    labels: { create?: string[]; negate?: string[] },
+  ) {
+    const { create = [], negate = [] } = labels
+    const toCreate = create.map((val) => ({
+      src,
+      uri,
+      cid: cid ?? undefined,
+      val,
+      neg: false,
+      cts: new Date().toISOString(),
+    }))
+    const toNegate = negate.map((val) => ({
+      src,
+      uri,
+      cid: cid ?? undefined,
+      val,
+      neg: true,
+      cts: new Date().toISOString(),
+    }))
+    await this.createLabels([...toCreate, ...toNegate])
+  }
+
+  async createLabels(labels: Label[]) {
+    if (labels.length < 1) return
+    const dbVals = labels.map((l) => ({
+      sourceDid: l.src,
+      subjectUri: l.uri,
+      subjectCid: l.cid,
+      value: l.val,
+      negated: (l.neg ? 1 : 0) as 1 | 0,
+      createdAt: l.cts,
+    }))
+    const { ref } = this.db.db.dynamic
+    const excluded = (col: string) => ref(`excluded.${col}`)
+    await this.db.db
+      .insertInto('label')
+      .values(dbVals)
+      .onConflict((oc) =>
+        oc
+          .columns(['sourceDid', 'subjectUri', 'subjectCid', 'value'])
+          .doUpdateSet({
+            negated: sql`${excluded('negated')}`,
+            createdAt: sql`${excluded('createdAt')}`,
+          }),
+      )
+      .execute()
   }
 
   async getLabelsForSubjects(subjects: string[]): Promise<Labels> {
