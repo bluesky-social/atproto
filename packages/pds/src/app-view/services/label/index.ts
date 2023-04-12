@@ -1,6 +1,7 @@
 import { AtUri } from '@atproto/uri'
 import Database from '../../../db'
 import { Label } from '../../../lexicon/types/com/atproto/label/defs'
+import { ids } from '../../../lexicon/lexicons'
 
 export type Labels = Record<string, Label[]>
 
@@ -35,7 +36,7 @@ export class LabelService {
   async getLabelsForProfiles(dids: string[]): Promise<Labels> {
     if (dids.length < 1) return {}
     const profileUris = dids.map((did) =>
-      AtUri.make(did, 'app.bsky.actor.profile', 'self').toString(),
+      AtUri.make(did, ids.AppBskyActorProfile, 'self').toString(),
     )
     const subjects = [...dids, ...profileUris]
     const labels = await this.getLabelsForSubjects(subjects)
