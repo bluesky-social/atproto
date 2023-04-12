@@ -3,7 +3,6 @@ import { FeedKeyset, composeFeed } from './util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow } from '../../../services/feed'
-import { sql } from 'kysely'
 import { FeedViewPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { countAll } from '../../../../db/util'
 
@@ -45,11 +44,7 @@ export default function (server: Server, ctx: AppContext) {
             .selectFrom('mute')
             .selectAll()
             .where('mutedByDid', '=', requester)
-            .whereRef(
-              'did',
-              'in',
-              sql`(${ref('post.creator')}, ${ref('originatorDid')})`,
-            ),
+            .whereRef('did', '=', ref('post.creator')),
         )
 
       const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))
