@@ -212,7 +212,7 @@ export async function generateMockSetup(env: DevEnv) {
           sourceDid: ctx.cfg.labelerDid,
           subjectUri: filteredPost.uri,
           subjectCid: filteredPost.cid,
-          value: 'csam',
+          value: 'dmca-violation',
           negated: 0,
           createdAt: new Date().toISOString(),
         },
