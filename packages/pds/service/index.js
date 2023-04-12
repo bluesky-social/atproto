@@ -32,7 +32,7 @@ const main = async () => {
   const db = Database.postgres({
     url: pgUrl(env.dbCreds),
     schema: env.dbSchema,
-    poolSize: env.dbPoolSize
+    poolSize: env.dbPoolSize,
   })
   const s3Blobstore = new S3BlobStore({ bucket: env.s3Bucket })
   const repoSigningKey = await Secp256k1Keypair.import(env.repoSigningKey)
