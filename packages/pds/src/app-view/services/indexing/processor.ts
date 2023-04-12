@@ -2,8 +2,8 @@ import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { cborToLexRecord } from '@atproto/repo'
 import DatabaseSchema from '../../../db/database-schema'
-import { Message } from '../../../event-stream/messages'
 import { lexicons } from '../../../lexicon/lexicons'
+import { UserNotification } from '../../../db/tables/user-notification'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
 // (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).
@@ -22,8 +22,11 @@ type RecordProcessorParams<T, S> = {
     obj: T,
   ) => Promise<AtUri | null>
   deleteFn: (db: DatabaseSchema, uri: AtUri) => Promise<S | null>
-  eventsForInsert: (obj: S) => Message[]
-  eventsForDelete: (prev: S, replacedBy: S | null) => Message[]
+  notifsForInsert: (obj: S) => UserNotification[]
+  notifsForDelete: (
+    prev: S,
+    replacedBy: S | null,
+  ) => { notifs: UserNotification[]; toDelete: string[] }
 }
 
 export class RecordProcessor<T, S> {
@@ -48,12 +51,7 @@ export class RecordProcessor<T, S> {
     lexicons.assertValidRecord(this.params.lexId, obj)
   }
 
-  async insertRecord(
-    uri: AtUri,
-    cid: CID,
-    obj: unknown,
-    timestamp: string,
-  ): Promise<Message[]> {
+  async insertRecord(uri: AtUri, cid: CID, obj: unknown, timestamp: string) {
     if (!this.matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${this.params.lexId}`)
     }
@@ -66,7 +64,8 @@ export class RecordProcessor<T, S> {
     )
     // if this was a new record, return events
     if (inserted) {
-      return this.params.eventsForInsert(inserted)
+      await this.handleNotifs({ inserted })
+      return
     }
     // if duplicate, insert into duplicates table with no events
     const found = await this.params.findDuplicate(this.db, uri, obj)
@@ -82,19 +81,13 @@ export class RecordProcessor<T, S> {
         .onConflict((oc) => oc.doNothing())
         .execute()
     }
-    return []
   }
 
   // Currently using a very simple strategy for updates: purge the existing index
   // for the uri then replace it. The main upside is that this allows the indexer
   // for each collection to avoid bespoke logic for in-place updates, which isn't
   // straightforward in the general case. We still get nice control over notifications.
-  async updateRecord(
-    uri: AtUri,
-    cid: CID,
-    obj: unknown,
-    timestamp: string,
-  ): Promise<Message[]> {
+  async updateRecord(uri: AtUri, cid: CID, obj: unknown, timestamp: string) {
     if (!this.matchesSchema(obj)) {
       throw new Error(`Record does not match schema: ${this.params.lexId}`)
     }
@@ -135,22 +128,23 @@ export class RecordProcessor<T, S> {
         'Record update failed: removed from index but could not be replaced',
       )
     }
-    return this.params.eventsForDelete(deleted, inserted)
+    await this.handleNotifs({ inserted, deleted })
   }
 
-  async deleteRecord(uri: AtUri, cascading = false): Promise<Message[]> {
+  async deleteRecord(uri: AtUri, cascading = false) {
     await this.db
       .deleteFrom('duplicate_record')
       .where('uri', '=', uri.toString())
       .execute()
     const deleted = await this.params.deleteFn(this.db, uri)
-    if (!deleted) return []
+    if (!deleted) return
     if (cascading) {
       await this.db
         .deleteFrom('duplicate_record')
         .where('duplicateOf', '=', uri.toString())
         .execute()
-      return this.params.eventsForDelete(deleted, null)
+      await this.handleNotifs({ deleted })
+      return []
     } else {
       const found = await this.db
         .selectFrom('duplicate_record')
@@ -167,11 +161,11 @@ export class RecordProcessor<T, S> {
         .executeTakeFirst()
 
       if (!found) {
-        return this.params.eventsForDelete(deleted, null)
+        return this.handleNotifs({ deleted })
       }
       const record = cborToLexRecord(found.content)
       if (!this.matchesSchema(record)) {
-        return this.params.eventsForDelete(deleted, null)
+        return this.handleNotifs({ deleted })
       }
       const inserted = await this.params.insertFn(
         this.db,
@@ -180,7 +174,29 @@ export class RecordProcessor<T, S> {
         record,
         found.indexedAt,
       )
-      return this.params.eventsForDelete(deleted, inserted)
+      await this.handleNotifs({ deleted, inserted: inserted ?? undefined })
+    }
+  }
+
+  async handleNotifs(op: { deleted?: S; inserted?: S }) {
+    let notifs: UserNotification[] = []
+    if (op.deleted) {
+      const forDelete = this.params.notifsForDelete(
+        op.deleted,
+        op.inserted ?? null,
+      )
+      if (forDelete.toDelete.length > 0) {
+        await this.db
+          .deleteFrom('user_notification')
+          .where('recordUri', 'in', forDelete.toDelete)
+          .execute()
+      }
+      notifs = forDelete.notifs
+    } else if (op.inserted) {
+      notifs = this.params.notifsForInsert(op.inserted)
+    }
+    if (notifs.length > 0) {
+      await this.db.insertInto('user_notification').values(notifs).execute()
     }
   }
 }

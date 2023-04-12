@@ -26,7 +26,7 @@ describe('sync', () => {
     ctx = server.ctx
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
-    await basicSeed(sc, ctx.messageQueue)
+    await basicSeed(sc)
   })
 
   afterAll(async () => {
@@ -34,7 +34,7 @@ describe('sync', () => {
   })
 
   it('rebuilds timeline indexes from repo state.', async () => {
-    const { db, services, messageQueue } = ctx
+    const { db, services } = ctx
     const { ref } = db.db.dynamic
     // Destroy indexes
     await Promise.all(
@@ -68,7 +68,6 @@ describe('sync', () => {
         services.repo(dbTxn).indexWrites(writes, now),
       )
     }
-    await messageQueue.processAll()
     // Check indexed timeline
     const aliceTL = await agent.api.app.bsky.feed.getTimeline(
       {},

@@ -22,7 +22,7 @@ describe('sync', () => {
     ctx = server.ctx
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
-    await basicSeed(sc, ctx.messageQueue)
+    await basicSeed(sc)
   })
 
   afterAll(async () => {

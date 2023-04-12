@@ -11,14 +11,13 @@ import {
   isLink,
 } from '../../../../lexicon/types/app/bsky/richtext/facet'
 import * as lex from '../../../../lexicon/lexicons'
-import * as messages from '../../../../event-stream/messages'
-import { Message } from '../../../../event-stream/messages'
 import {
   DatabaseSchema,
   DatabaseSchemaType,
 } from '../../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { PostHierarchy } from '../../../db/tables/post-hierarchy'
+import { UserNotification } from '../../../../db/tables/user-notification'
 
 type Post = DatabaseSchemaType['post']
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
@@ -166,13 +165,13 @@ const findDuplicate = async (): Promise<AtUri | null> => {
   return null
 }
 
-const eventsForInsert = (obj: IndexedPost) => {
-  const notifs: Message[] = []
+const notifsForInsert = (obj: IndexedPost) => {
+  const notifs: UserNotification[] = []
   const notified = new Set([obj.post.creator])
-  const maybeNotify = (notif: messages.NotificationInfo) => {
+  const maybeNotify = (notif: UserNotification) => {
     if (!notified.has(notif.userDid)) {
       notified.add(notif.userDid)
-      notifs.push(messages.createNotification(notif))
+      notifs.push(notif)
     }
   }
   for (const facet of obj.facets) {
@@ -180,9 +179,11 @@ const eventsForInsert = (obj: IndexedPost) => {
       maybeNotify({
         userDid: facet.value,
         reason: 'mention',
+        reasonSubject: null,
         author: obj.post.creator,
         recordUri: obj.post.uri,
         recordCid: obj.post.cid,
+        indexedAt: obj.post.indexedAt,
       })
     }
   }
@@ -197,6 +198,7 @@ const eventsForInsert = (obj: IndexedPost) => {
           author: obj.post.creator,
           recordUri: obj.post.uri,
           recordCid: obj.post.cid,
+          indexedAt: obj.post.indexedAt,
         })
       }
     }
@@ -211,6 +213,7 @@ const eventsForInsert = (obj: IndexedPost) => {
       author: obj.post.creator,
       recordUri: obj.post.uri,
       recordCid: obj.post.cid,
+      indexedAt: obj.post.indexedAt,
     })
   }
   return notifs
@@ -277,15 +280,15 @@ const deleteFn = async (
     : null
 }
 
-const eventsForDelete = (
+const notifsForDelete = (
   deleted: IndexedPost,
   replacedBy: IndexedPost | null,
-): Message[] => {
-  const replacedNotifications = replacedBy ? eventsForInsert(replacedBy) : []
-  return [
-    messages.deleteNotifications(deleted.post.uri),
-    ...replacedNotifications,
-  ]
+) => {
+  const notifs = replacedBy ? notifsForInsert(replacedBy) : []
+  return {
+    notifs,
+    toDelete: [deleted.post.uri],
+  }
 }
 
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>
@@ -296,8 +299,8 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
     insertFn,
     findDuplicate,
     deleteFn,
-    eventsForInsert,
-    eventsForDelete,
+    notifsForInsert,
+    notifsForDelete,
   })
 }
 
