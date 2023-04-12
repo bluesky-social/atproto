@@ -165,7 +165,7 @@ export async function generateMockSetup(env: DevEnv) {
     }
   }
 
-  // make some naught posts & label them
+  // make some naughty posts & label them
   const file = Buffer.from(labeledImgB64, 'base64')
   const uploadedImg = await bob.agent.api.com.atproto.repo.uploadBlob(file, {
     encoding: 'image/png',
