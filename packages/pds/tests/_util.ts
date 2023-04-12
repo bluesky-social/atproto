@@ -92,7 +92,7 @@ export const runTestServer = async (
     blobstoreLocation: `${blobstoreLoc}/blobs`,
     blobstoreTmp: `${blobstoreLoc}/tmp`,
     labelerDid: 'did:example:labeler',
-    labelerKeywords: { LABEL: 'test-label', LABEL2: 'test-label-2' },
+    labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
     maxSubscriptionBuffer: 200,
     repoBackfillLimitMs: HOUR,
     ...params,

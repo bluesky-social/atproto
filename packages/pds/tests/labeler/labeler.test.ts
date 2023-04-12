@@ -30,7 +30,7 @@ describe('labeler', () => {
       db,
       blobstore,
       labelerDid,
-      keywords: { LABEL: 'test-label', ANOTHER: 'another-label' },
+      keywords: { label_me: 'test-label', another_label: 'another-label' },
     })
     const bytes1 = new Uint8Array([1, 2, 3, 4])
     const bytes2 = new Uint8Array([5, 6, 7, 8])
@@ -61,7 +61,7 @@ describe('labeler', () => {
   it('labels text in posts', async () => {
     const post = {
       $type: 'app.bsky.feed.post',
-      text: 'blah blah LABEL',
+      text: 'blah blah label_me',
       createdAt: new Date().toISOString(),
     }
     const cid = await cidForRecord(post)
@@ -92,7 +92,7 @@ describe('labeler', () => {
           },
           {
             image: badBlob2,
-            alt: 'ANOTHER',
+            alt: 'another_label',
           },
           {
             image: goodBlob,
@@ -115,8 +115,8 @@ describe('labeler', () => {
   it('labels text & imgs in profiles', async () => {
     const profile = {
       $type: 'app.bsky.actor.profile',
-      displayName: 'LABEL',
-      description: 'ANOTHER',
+      displayName: 'label_me',
+      description: 'another_label',
       avatar: badBlob1,
       banner: badBlob2,
       createdAt: new Date().toISOString(),
