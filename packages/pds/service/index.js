@@ -32,11 +32,9 @@ const main = async () => {
   const db = Database.postgres({
     url: pgUrl(env.dbCreds),
     schema: env.dbSchema,
+    poolSize: env.dbPoolSize,
   })
   const s3Blobstore = new S3BlobStore({ bucket: env.s3Bucket })
-  const cfInvalidator = new CloudfrontInvalidator({
-    distributionId: env.cfDistributionId,
-  })
   const repoSigningKey = await Secp256k1Keypair.import(env.repoSigningKey)
   const plcRotationKey = await KmsKeypair.load({
     keyId: env.plcRotationKeyId,
@@ -58,6 +56,10 @@ const main = async () => {
       username: env.smtpUsername,
       password: env.smtpPassword,
     }),
+  })
+  const cfInvalidator = new CloudfrontInvalidator({
+    distributionId: env.cfDistributionId,
+    pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
   })
   const pds = PDS.create({
     db,
@@ -84,6 +86,11 @@ const smtpUrl = ({ username, password, host }) => {
   return `smtps://${username}:${enc(password)}@${host}`
 }
 
+const maybeParseInt = (str) => {
+  const parsed = parseInt(str)
+  return isNaN(parsed) ? undefined : parsed
+}
+
 const getEnv = () => ({
   port: parseInt(process.env.PORT),
   plcRotationKeyId: process.env.PLC_ROTATION_KEY_ID,
@@ -92,6 +99,7 @@ const getEnv = () => ({
   dbCreds: JSON.parse(process.env.DB_CREDS_JSON),
   dbMigrateCreds: JSON.parse(process.env.DB_MIGRATE_CREDS_JSON),
   dbSchema: process.env.DB_SCHEMA,
+  dbPoolSize: maybeParseInt(process.env.DB_POOL_SIZE),
   smtpHost: process.env.SMTP_HOST,
   smtpUsername: process.env.SMTP_USERNAME,
   smtpPassword: process.env.SMTP_PASSWORD,

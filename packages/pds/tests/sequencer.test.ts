@@ -73,9 +73,11 @@ describe('sequencer', () => {
     }
   }
 
-  const caughtUp = (outbox: Outbox): (() => boolean) => {
-    return () => {
-      return outbox.lastSeen === outbox.sequencer.lastSeen
+  const caughtUp = (outbox: Outbox): (() => Promise<boolean>) => {
+    return async () => {
+      const lastEvt = await outbox.sequencer.curr()
+      if (!lastEvt) return true
+      return outbox.lastSeen >= lastEvt.seq
     }
   }
 

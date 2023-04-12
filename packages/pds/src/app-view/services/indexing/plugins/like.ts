@@ -2,8 +2,6 @@ import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Like from '../../../../lexicon/types/app/bsky/feed/like'
 import * as lex from '../../../../lexicon/lexicons'
-import * as messages from '../../../../event-stream/messages'
-import { Message } from '../../../../event-stream/messages'
 import {
   DatabaseSchema,
   DatabaseSchemaType,
@@ -51,20 +49,19 @@ const findDuplicate = async (
   return found ? new AtUri(found.uri) : null
 }
 
-const createNotif = (obj: IndexedLike) => {
+const notifsForInsert = (obj: IndexedLike) => {
   const subjectUri = new AtUri(obj.subject)
-  return messages.createNotification({
-    userDid: subjectUri.host,
-    author: obj.creator,
-    recordUri: obj.uri,
-    recordCid: obj.cid,
-    reason: 'like',
-    reasonSubject: subjectUri.toString(),
-  })
-}
-
-const eventsForInsert = (obj: IndexedLike) => {
-  return [createNotif(obj)]
+  return [
+    {
+      userDid: subjectUri.host,
+      author: obj.creator,
+      recordUri: obj.uri,
+      recordCid: obj.cid,
+      reason: 'like' as const,
+      reasonSubject: subjectUri.toString(),
+      indexedAt: obj.indexedAt,
+    },
+  ]
 }
 
 const deleteFn = async (
@@ -79,14 +76,12 @@ const deleteFn = async (
   return deleted || null
 }
 
-const eventsForDelete = (
+const notifsForDelete = (
   deleted: IndexedLike,
   replacedBy: IndexedLike | null,
-): Message[] => {
-  if (!replacedBy) {
-    return [messages.deleteNotifications(deleted.uri)]
-  }
-  return []
+) => {
+  const toDelete = replacedBy ? [] : [deleted.uri]
+  return { notifs: [], toDelete }
 }
 
 export type PluginType = RecordProcessor<Like.Record, IndexedLike>
@@ -97,8 +92,8 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
     insertFn,
     findDuplicate,
     deleteFn,
-    eventsForInsert,
-    eventsForDelete,
+    notifsForInsert,
+    notifsForDelete,
   })
 }
 

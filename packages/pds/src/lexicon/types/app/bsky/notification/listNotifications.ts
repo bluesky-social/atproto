@@ -8,6 +8,7 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyActorDefs from '../actor/defs'
+import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 export interface QueryParams {
   limit: number
@@ -60,6 +61,7 @@ export interface Notification {
   record: {}
   isRead: boolean
   indexedAt: string
+  labels?: ComAtprotoLabelDefs.Label[]
   [k: string]: unknown
 }
 

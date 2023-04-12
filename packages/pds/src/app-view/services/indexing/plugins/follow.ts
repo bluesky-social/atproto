@@ -2,7 +2,6 @@ import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Follow from '../../../../lexicon/types/app/bsky/graph/follow'
 import * as lex from '../../../../lexicon/lexicons'
-import * as messages from '../../../../event-stream/messages'
 import {
   DatabaseSchema,
   DatabaseSchemaType,
@@ -49,15 +48,17 @@ const findDuplicate = async (
   return found ? new AtUri(found.uri) : null
 }
 
-const eventsForInsert = (obj: IndexedFollow) => {
+const notifsForInsert = (obj: IndexedFollow) => {
   return [
-    messages.createNotification({
+    {
       userDid: obj.subjectDid,
       author: obj.creator,
       recordUri: obj.uri,
       recordCid: obj.cid,
-      reason: 'follow',
-    }),
+      reason: 'follow' as const,
+      reasonSubject: null,
+      indexedAt: obj.indexedAt,
+    },
   ]
 }
 
@@ -73,12 +74,12 @@ const deleteFn = async (
   return deleted || null
 }
 
-const eventsForDelete = (
+const notifsForDelete = (
   deleted: IndexedFollow,
   replacedBy: IndexedFollow | null,
 ) => {
-  if (replacedBy) return []
-  return [messages.deleteNotifications(deleted.uri)]
+  const toDelete = replacedBy ? [] : [deleted.uri]
+  return { notifs: [], toDelete }
 }
 
 export type PluginType = RecordProcessor<Follow.Record, IndexedFollow>
@@ -89,8 +90,8 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
     insertFn,
     findDuplicate,
     deleteFn,
-    eventsForInsert,
-    eventsForDelete,
+    notifsForInsert,
+    notifsForDelete,
   })
 }
 

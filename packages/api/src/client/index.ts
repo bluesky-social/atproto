@@ -22,6 +22,9 @@ import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRep
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
+import * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
+import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
+import * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels'
 import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
 import * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs'
 import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
@@ -35,6 +38,7 @@ import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
+import * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
 import * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
@@ -54,6 +58,7 @@ import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
+import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
@@ -104,6 +109,9 @@ export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRep
 export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
+export * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
+export * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
+export * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels'
 export * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
 export * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs'
 export * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
@@ -117,6 +125,7 @@ export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 export * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 export * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
+export * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 export * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
 export * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 export * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
@@ -136,6 +145,7 @@ export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 export * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
+export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
@@ -225,6 +235,7 @@ export class AtprotoNS {
   _service: AtpServiceClient
   admin: AdminNS
   identity: IdentityNS
+  label: LabelNS
   moderation: ModerationNS
   repo: RepoNS
   server: ServerNS
@@ -234,6 +245,7 @@ export class AtprotoNS {
     this._service = service
     this.admin = new AdminNS(service)
     this.identity = new IdentityNS(service)
+    this.label = new LabelNS(service)
     this.moderation = new ModerationNS(service)
     this.repo = new RepoNS(service)
     this.server = new ServerNS(service)
@@ -411,6 +423,25 @@ export class IdentityNS {
   }
 }
 
+export class LabelNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  queryLabels(
+    params?: ComAtprotoLabelQueryLabels.QueryParams,
+    opts?: ComAtprotoLabelQueryLabels.CallOptions,
+  ): Promise<ComAtprotoLabelQueryLabels.Response> {
+    return this._service.xrpc
+      .call('com.atproto.label.queryLabels', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoLabelQueryLabels.toKnownErr(e)
+      })
+  }
+}
+
 export class ModerationNS {
   _service: AtpServiceClient
 
@@ -552,6 +583,17 @@ export class ServerNS {
       .call('com.atproto.server.createInviteCode', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoServerCreateInviteCode.toKnownErr(e)
+      })
+  }
+
+  createInviteCodes(
+    data?: ComAtprotoServerCreateInviteCodes.InputSchema,
+    opts?: ComAtprotoServerCreateInviteCodes.CallOptions,
+  ): Promise<ComAtprotoServerCreateInviteCodes.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.createInviteCodes', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerCreateInviteCodes.toKnownErr(e)
       })
   }
 
@@ -758,6 +800,17 @@ export class SyncNS {
       .call('com.atproto.sync.listBlobs', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoSyncListBlobs.toKnownErr(e)
+      })
+  }
+
+  listRepos(
+    params?: ComAtprotoSyncListRepos.QueryParams,
+    opts?: ComAtprotoSyncListRepos.CallOptions,
+  ): Promise<ComAtprotoSyncListRepos.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.listRepos', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncListRepos.toKnownErr(e)
       })
   }
 

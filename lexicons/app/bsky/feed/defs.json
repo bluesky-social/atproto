@@ -23,7 +23,11 @@
         "repostCount": {"type": "integer"},
         "likeCount": {"type": "integer"},
         "indexedAt": {"type": "string", "format": "datetime"},
-        "viewer": {"type": "ref", "ref": "#viewerState"}
+        "viewer": {"type": "ref", "ref": "#viewerState"},
+        "labels": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "com.atproto.label.defs#label"}
+        }
       }
     },
     "viewerState": {

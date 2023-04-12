@@ -17,15 +17,12 @@ import proxiedAppView from './app-view/proxied'
 import API, { health } from './api'
 import Database from './db'
 import { ServerAuth } from './auth'
-import * as streamConsumers from './event-stream/consumers'
 import * as error from './error'
 import { loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
 import { createServer } from './lexicon'
-import SqlMessageQueue, {
-  MessageDispatcher,
-} from './event-stream/message-queue'
+import { MessageDispatcher } from './event-stream/message-queue'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
@@ -37,7 +34,6 @@ import {
   ImageProcessingServerInvalidator,
 } from './image/invalidator'
 
-export * as appMigrations from './app-migrations'
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './db'
@@ -76,7 +72,6 @@ export class PDS {
       adminPass: config.adminPassword,
     })
 
-    const messageQueue = new SqlMessageQueue('pds', db)
     const messageDispatcher = new MessageDispatcher()
     const sequencer = new Sequencer(db)
 
@@ -122,7 +117,6 @@ export class PDS {
 
     const services = createServices({
       repoSigningKey,
-      messageQueue,
       messageDispatcher,
       blobstore,
       imgUriBuilder,
@@ -136,7 +130,6 @@ export class PDS {
       plcRotationKey,
       cfg: config,
       auth,
-      messageQueue,
       messageDispatcher,
       sequencer,
       services,
@@ -147,6 +140,7 @@ export class PDS {
     const appViewIndexer = new AppViewIndexer(ctx)
 
     let server = createServer({
+      validateResponse: config.debugMode,
       payload: {
         jsonLimit: 100 * 1024, // 100kb
         textLimit: 100 * 1024, // 100kb
@@ -174,11 +168,11 @@ export class PDS {
 
   async start(): Promise<http.Server> {
     this.appViewIndexer.start()
-    streamConsumers.listen(this.ctx)
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
+    this.server.keepAliveTimeout = 90000
     this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
     return server
@@ -186,8 +180,6 @@ export class PDS {
 
   async destroy(): Promise<void> {
     this.appViewIndexer.destroy()
-    await this.ctx.messageQueue.destroy()
-    await this.terminator?.terminate()
     await this.ctx.db.close()
   }
 }

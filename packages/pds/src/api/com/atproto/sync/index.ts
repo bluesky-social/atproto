@@ -9,6 +9,7 @@ import getRecord from './getRecord'
 import getRepo from './getRepo'
 import subscribeRepos from './subscribeRepos'
 import listBlobs from './listBlobs'
+import listRepos from './listRepos'
 
 export default function (server: Server, ctx: AppContext) {
   getBlob(server, ctx)
@@ -20,4 +21,5 @@ export default function (server: Server, ctx: AppContext) {
   getRepo(server, ctx)
   subscribeRepos(server, ctx)
   listBlobs(server, ctx)
+  listRepos(server, ctx)
 }

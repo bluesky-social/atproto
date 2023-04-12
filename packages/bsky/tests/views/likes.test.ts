@@ -1,19 +1,16 @@
 import AtpAgent from '@atproto/api'
+import { CloseFn, runTestEnv } from '@atproto/dev-env'
 import { SeedClient } from '../seeds/client'
 import likesSeed from '../seeds/likes'
 import {
-  CloseFn,
   constantDate,
   forSnapshot,
   paginateAll,
   processAll,
-  runTestServer,
   stripViewer,
-  TestServerInfo,
 } from '../_util'
 
 describe('pds like views', () => {
-  let server: TestServerInfo
   let agent: AtpAgent
   let pdsAgent: AtpAgent
   let close: CloseFn
@@ -24,15 +21,15 @@ describe('pds like views', () => {
   let bob: string
 
   beforeAll(async () => {
-    server = await runTestServer({
+    const testEnv = await runTestEnv({
       dbPostgresSchema: 'views_likes',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    close = testEnv.close
+    agent = new AtpAgent({ service: testEnv.bsky.url })
+    pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
     await likesSeed(sc)
-    await processAll(server)
+    await processAll(testEnv)
     alice = sc.dids.alice
     bob = sc.dids.bob
   })

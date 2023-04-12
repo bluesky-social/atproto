@@ -22,7 +22,7 @@ describe('sync', () => {
     ctx = server.ctx
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
-    await basicSeed(sc, ctx.messageQueue)
+    await basicSeed(sc)
   })
 
   afterAll(async () => {
@@ -167,6 +167,7 @@ describe('sync', () => {
     'post_embed_external',
     'post_embed_record',
     'repost',
+    'feed_item',
     'like',
     /* Not these:
      * 'record', // Shared, but governed by pds

@@ -13,7 +13,6 @@ export default [
             'object',
             'array',
             'boolean',
-            'float',
             'integer',
             'string',
             'bytes',
@@ -23,7 +22,6 @@ export default [
             object: { type: 'ref', ref: '#object' },
             array: { type: 'array', items: { type: 'string' } },
             boolean: { type: 'boolean' },
-            float: { type: 'float' },
             integer: { type: 'integer' },
             string: { type: 'string' },
             bytes: { type: 'bytes' },
@@ -33,12 +31,11 @@ export default [
       },
       object: {
         type: 'object',
-        required: ['object', 'array', 'boolean', 'float', 'integer', 'string'],
+        required: ['object', 'array', 'boolean', 'integer', 'string'],
         properties: {
           object: { type: 'ref', ref: '#subobject' },
           array: { type: 'array', items: { type: 'string' } },
           boolean: { type: 'boolean' },
-          float: { type: 'float' },
           integer: { type: 'integer' },
           string: { type: 'string' },
         },
@@ -61,10 +58,9 @@ export default [
         description: 'A query',
         parameters: {
           type: 'params',
-          required: ['boolean', 'float', 'integer'],
+          required: ['boolean', 'integer'],
           properties: {
             boolean: { type: 'boolean' },
-            float: { type: 'float' },
             integer: { type: 'integer' },
             string: { type: 'string' },
             array: { type: 'array', items: { type: 'string' } },
@@ -87,10 +83,9 @@ export default [
         description: 'A procedure',
         parameters: {
           type: 'params',
-          required: ['boolean', 'float', 'integer'],
+          required: ['boolean', 'integer'],
           properties: {
             boolean: { type: 'boolean' },
-            float: { type: 'float' },
             integer: { type: 'integer' },
             string: { type: 'string' },
             array: { type: 'array', items: { type: 'string' } },
@@ -119,7 +114,6 @@ export default [
             object: { type: 'ref', ref: 'com.example.kitchenSink#object' },
             array: { type: 'array', items: { type: 'string' } },
             boolean: { type: 'boolean' },
-            float: { type: 'float' },
             integer: { type: 'integer' },
             string: { type: 'string' },
           },
@@ -138,7 +132,6 @@ export default [
           required: ['boolean'],
           properties: {
             boolean: { type: 'boolean', default: false },
-            float: { type: 'float', default: 0 },
             integer: { type: 'integer', default: 0 },
             string: { type: 'string', default: '' },
             object: { type: 'ref', ref: '#object' },
@@ -149,7 +142,6 @@ export default [
         type: 'object',
         properties: {
           boolean: { type: 'boolean', default: true },
-          float: { type: 'float', default: 1.5 },
           integer: { type: 'integer', default: 1 },
           string: { type: 'string', default: 'x' },
         },
@@ -220,7 +212,7 @@ export default [
               type: 'array',
               minLength: 2,
               maxLength: 4,
-              items: { type: 'float' },
+              items: { type: 'integer' },
             },
           },
         },
@@ -239,61 +231,6 @@ export default [
             boolean: {
               type: 'boolean',
               const: false,
-            },
-          },
-        },
-      },
-    },
-  },
-  {
-    lexicon: 1,
-    id: 'com.example.floatRange',
-    defs: {
-      main: {
-        type: 'record',
-        record: {
-          type: 'object',
-          properties: {
-            float: {
-              type: 'float',
-              minimum: 2,
-              maximum: 4,
-            },
-          },
-        },
-      },
-    },
-  },
-  {
-    lexicon: 1,
-    id: 'com.example.floatEnum',
-    defs: {
-      main: {
-        type: 'record',
-        record: {
-          type: 'object',
-          properties: {
-            float: {
-              type: 'float',
-              enum: [1, 1.5, 2],
-            },
-          },
-        },
-      },
-    },
-  },
-  {
-    lexicon: 1,
-    id: 'com.example.floatConst',
-    defs: {
-      main: {
-        type: 'record',
-        record: {
-          type: 'object',
-          properties: {
-            float: {
-              type: 'float',
-              const: 0,
             },
           },
         },

@@ -176,7 +176,7 @@ export class ServerConfig {
   }
 
   get debugMode() {
-    return this.cfg.debugMode
+    return !!this.cfg.debugMode
   }
 
   get version() {
