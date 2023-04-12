@@ -20,6 +20,7 @@ import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/ad
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
+import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 import * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
@@ -107,6 +108,7 @@ export * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/ad
 export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
+export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 export * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
@@ -389,6 +391,17 @@ export class AdminNS {
       .call('com.atproto.admin.takeModerationAction', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminTakeModerationAction.toKnownErr(e)
+      })
+  }
+
+  updateAccountHandle(
+    data?: ComAtprotoAdminUpdateAccountHandle.InputSchema,
+    opts?: ComAtprotoAdminUpdateAccountHandle.CallOptions,
+  ): Promise<ComAtprotoAdminUpdateAccountHandle.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.updateAccountHandle', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminUpdateAccountHandle.toKnownErr(e)
       })
   }
 }

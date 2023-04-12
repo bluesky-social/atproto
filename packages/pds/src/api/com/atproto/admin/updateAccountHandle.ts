@@ -21,8 +21,8 @@ export default function (server: Server, ctx: AppContext) {
           throw new InvalidRequestError(err.message, 'InvalidHandle')
         } else if (err instanceof ident.UnsupportedDomainError) {
           throw new InvalidRequestError(
-            'Unsupported account did',
-            'InvalidHandle',
+            'Unsupported domain',
+            'UnsupportedDomain',
           )
         } else if (err instanceof ident.ReservedHandleError) {
           throw new InvalidRequestError(err.message, 'HandleNotAvailable')
@@ -39,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
       )
       if (!isServiceDomain) {
         throw new InvalidRequestError(
-          `Account not on a domain we control: ${existingAccnt.handle}`,
+          `Account not on an available service domain: ${existingAccnt.handle}`,
         )
       }
 
