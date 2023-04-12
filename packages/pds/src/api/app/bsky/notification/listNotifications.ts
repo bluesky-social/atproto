@@ -98,7 +98,7 @@ export default function (server: Server, ctx: AppContext) {
         record: common.cborBytesToRecord(notif.recordBytes),
         isRead: notif.indexedAt <= userState.lastSeenNotifs,
         indexedAt: notif.indexedAt,
-        labels: labels[notif.uri],
+        labels: labels[notif.uri] ?? [],
       }))
 
       return {
