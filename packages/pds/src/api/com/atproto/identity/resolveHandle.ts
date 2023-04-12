@@ -6,9 +6,7 @@ import { resolveExternalHandle } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.resolveHandle(async ({ req, params }) => {
-    const handle = ident.normalizeAndEnsureValidHandle(
-      params.handle || req.hostname,
-    )
+    const handle = ident.normalizeHandle(params.handle || req.hostname)
 
     let did: string | undefined
     const user = await ctx.services.account(ctx.db).getAccount(handle, true)
