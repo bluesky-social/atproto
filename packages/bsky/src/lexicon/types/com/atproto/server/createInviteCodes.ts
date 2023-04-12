@@ -11,18 +11,14 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** Handle or other identifier supported by the server for the authenticating user. */
-  identifier: string
-  password: string
+  codeCount: number
+  useCount: number
+  forAccount?: string
   [k: string]: unknown
 }
 
 export interface OutputSchema {
-  accessJwt: string
-  refreshJwt: string
-  handle: string
-  did: string
-  email?: string
+  codes: string[]
   [k: string]: unknown
 }
 
@@ -39,7 +35,6 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'AccountTakedown'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

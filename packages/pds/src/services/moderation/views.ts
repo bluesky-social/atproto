@@ -17,6 +17,7 @@ import {
   BlobView,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
+import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { AccountService } from '../account'
 import { RecordService } from '../record'
@@ -127,9 +128,10 @@ export class ModerationViews {
         .execute(),
       this.services.account(this.db).getAccountInviteCodes(repo.did),
     ])
-    const [reports, actions] = await Promise.all([
+    const [reports, actions, labels] = await Promise.all([
       this.report(reportResults),
       this.action(actionResults),
+      this.labels(repo.did),
     ])
     return {
       ...repo,
@@ -139,6 +141,7 @@ export class ModerationViews {
         actions,
       },
       invites: inviteCodes,
+      labels,
     }
   }
 
@@ -239,10 +242,11 @@ export class ModerationViews {
         .selectAll()
         .execute(),
     ])
-    const [reports, actions, blobs] = await Promise.all([
+    const [reports, actions, blobs, labels] = await Promise.all([
       this.report(reportResults),
       this.action(actionResults),
       this.blob(record.blobCids),
+      this.labels(record.uri),
     ])
     return {
       ...record,
@@ -252,6 +256,7 @@ export class ModerationViews {
         reports,
         actions,
       },
+      labels,
     }
   }
 
@@ -537,6 +542,23 @@ export class ModerationViews {
         },
       }
     })
+  }
+
+  // @TODO: call into label service instead on AppView
+  async labels(subject: string): Promise<Label[]> {
+    const res = await this.db.db
+      .selectFrom('label')
+      .where('label.subjectUri', '=', subject)
+      .selectAll()
+      .execute()
+    return res.map((l) => ({
+      src: l.sourceDid,
+      uri: l.subjectUri,
+      cid: l.subjectCid,
+      val: l.value,
+      neg: l.negated === 1,
+      cts: l.createdAt,
+    }))
   }
 }
 

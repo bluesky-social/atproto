@@ -7,29 +7,23 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
+import * as ComAtprotoServerDefs from '../server/defs'
 
-export interface QueryParams {}
-
-export interface InputSchema {
-  /** Handle or other identifier supported by the server for the authenticating user. */
-  identifier: string
-  password: string
-  [k: string]: unknown
+export interface QueryParams {
+  sort: 'recent' | 'usage' | (string & {})
+  limit: number
+  cursor?: string
 }
+
+export type InputSchema = undefined
 
 export interface OutputSchema {
-  accessJwt: string
-  refreshJwt: string
-  handle: string
-  did: string
-  email?: string
+  cursor?: string
+  codes: ComAtprotoServerDefs.InviteCode[]
   [k: string]: unknown
 }
 
-export interface HandlerInput {
-  encoding: 'application/json'
-  body: InputSchema
-}
+export type HandlerInput = undefined
 
 export interface HandlerSuccess {
   encoding: 'application/json'
@@ -39,7 +33,6 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'AccountTakedown'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

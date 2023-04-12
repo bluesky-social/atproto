@@ -7,6 +7,8 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
 import * as ComAtprotoModerationDefs from '../moderation/defs'
+import * as ComAtprotoServerDefs from '../server/defs'
+import * as ComAtprotoLabelDefs from '../label/defs'
 
 export interface ActionView {
   id: number
@@ -16,6 +18,8 @@ export interface ActionView {
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
   subjectBlobCids: string[]
+  createLabelVals?: string[]
+  negateLabelVals?: string[]
   reason: string
   createdBy: string
   createdAt: string
@@ -41,6 +45,8 @@ export interface ActionViewDetail {
   action: ActionType
   subject: RepoView | RecordView | { $type: string; [k: string]: unknown }
   subjectBlobs: BlobView[]
+  createLabelVals?: string[]
+  negateLabelVals?: string[]
   reason: string
   createdBy: string
   createdAt: string
@@ -167,6 +173,7 @@ export interface RepoView {
   relatedRecords: {}[]
   indexedAt: string
   moderation: Moderation
+  invitedBy?: ComAtprotoServerDefs.InviteCode
   [k: string]: unknown
 }
 
@@ -189,6 +196,9 @@ export interface RepoViewDetail {
   relatedRecords: {}[]
   indexedAt: string
   moderation: ModerationDetail
+  labels?: ComAtprotoLabelDefs.Label[]
+  invitedBy?: ComAtprotoServerDefs.InviteCode
+  invites?: ComAtprotoServerDefs.InviteCode[]
   [k: string]: unknown
 }
 
@@ -249,6 +259,7 @@ export interface RecordViewDetail {
   cid: string
   value: {}
   blobs: BlobView[]
+  labels?: ComAtprotoLabelDefs.Label[]
   indexedAt: string
   moderation: ModerationDetail
   repo: RepoView
