@@ -201,17 +201,10 @@ describe('indexing', () => {
 
   describe('indexRepo', () => {
     beforeAll(async () => {
-<<<<<<< HEAD
       testEnv.bsky.sub.resume()
       await basicSeed(sc, false)
       await processAll(testEnv)
       await testEnv.bsky.sub.destroy()
-=======
-      server.bsky.sub?.resume()
-      await basicSeed(sc, false)
-      await processAll(server)
-      await server.bsky.sub?.destroy()
->>>>>>> main
     })
 
     it('preserves indexes when no record changes.', async () => {

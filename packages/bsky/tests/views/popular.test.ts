@@ -1,10 +1,11 @@
 import AtpAgent from '@atproto/api'
-import { runTestServer, CloseFn, processAll, TestServerInfo } from '../_util'
+import { CloseFn, runTestEnv, TestEnvInfo } from '@atproto/dev-env'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
+import { processAll } from '../_util'
 
 describe('popular views', () => {
-  let server: TestServerInfo
+  let testEnv: TestEnvInfo
   let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
@@ -23,12 +24,12 @@ describe('popular views', () => {
   }
 
   beforeAll(async () => {
-    server = await runTestServer({
+    testEnv = await runTestEnv({
       dbPostgresSchema: 'views_popular',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    close = testEnv.close
+    agent = new AtpAgent({ service: testEnv.bsky.url })
+    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     await sc.createAccount('eve', {
@@ -43,7 +44,7 @@ describe('popular views', () => {
       handle: 'frank.test',
       password: 'frank-pass',
     })
-    await processAll(server)
+    await processAll(testEnv)
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
@@ -80,7 +81,7 @@ describe('popular views', () => {
     await sc.like(dan, three.ref)
     await sc.like(eve, three.ref)
     await sc.like(frank, three.ref)
-    await processAll(server)
+    await processAll(testEnv)
 
     const res = await agent.api.app.bsky.unspecced.getPopular(
       {},
