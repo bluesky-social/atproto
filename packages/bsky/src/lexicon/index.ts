@@ -9,6 +9,8 @@ import {
   StreamAuthVerifier,
 } from '@atproto/xrpc-server'
 import { schemas } from './lexicons'
+import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
+import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
 import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
 import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
@@ -21,6 +23,8 @@ import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRep
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
+import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
+import * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels'
 import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport'
 import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord'
@@ -36,6 +40,7 @@ import * as ComAtprotoServerCreateSession from './types/com/atproto/server/creat
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
+import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
@@ -79,6 +84,10 @@ export const COM_ATPROTO_ADMIN = {
 }
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
+  DefsReasonViolation: 'com.atproto.moderation.defs#reasonViolation',
+  DefsReasonMisleading: 'com.atproto.moderation.defs#reasonMisleading',
+  DefsReasonSexual: 'com.atproto.moderation.defs#reasonSexual',
+  DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
 }
 
@@ -112,6 +121,7 @@ export class AtprotoNS {
   _server: Server
   admin: AdminNS
   identity: IdentityNS
+  label: LabelNS
   moderation: ModerationNS
   repo: RepoNS
   server: ServerNS
@@ -121,6 +131,7 @@ export class AtprotoNS {
     this._server = server
     this.admin = new AdminNS(server)
     this.identity = new IdentityNS(server)
+    this.label = new LabelNS(server)
     this.moderation = new ModerationNS(server)
     this.repo = new RepoNS(server)
     this.server = new ServerNS(server)
@@ -133,6 +144,23 @@ export class AdminNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  disableInviteCodes<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminDisableInviteCodes.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.disableInviteCodes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getInviteCodes<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoAdminGetInviteCodes.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.admin.getInviteCodes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   getModerationAction<AV extends AuthVerifier>(
@@ -246,6 +274,28 @@ export class IdentityNS {
   ) {
     const nsid = 'com.atproto.identity.updateHandle' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class LabelNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  queryLabels<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoLabelQueryLabels.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.label.queryLabels' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  subscribeLabels<AV extends StreamAuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoLabelSubscribeLabels.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.label.subscribeLabels' // @ts-ignore
+    return this._server.xrpc.streamMethod(nsid, cfg)
   }
 }
 
@@ -380,6 +430,16 @@ export class ServerNS {
     cfg: ConfigOf<AV, ComAtprotoServerDescribeServer.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.server.describeServer' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getAccountInviteCodes<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerGetAccountInviteCodes.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.getAccountInviteCodes' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

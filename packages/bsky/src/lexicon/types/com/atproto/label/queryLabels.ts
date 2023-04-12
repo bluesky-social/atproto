@@ -7,10 +7,13 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyActorDefs from '../actor/defs'
-import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+import * as ComAtprotoLabelDefs from './defs'
 
 export interface QueryParams {
+  /** List of AT URI patterns to match (boolean 'OR'). Each may be a prefix (ending with '*'; will match inclusive of the string leading to '*'), or a full URI */
+  uriPatterns: string[]
+  /** Optional list of label sources (DIDs) to filter on */
+  sources?: string[]
   limit: number
   cursor?: string
 }
@@ -19,7 +22,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  notifications: Notification[]
+  labels: ComAtprotoLabelDefs.Label[]
   [k: string]: unknown
 }
 
@@ -43,39 +46,3 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
   req: express.Request
   res: express.Response
 }) => Promise<HandlerOutput> | HandlerOutput
-
-export interface Notification {
-  uri: string
-  cid: string
-  author: AppBskyActorDefs.ProfileView
-  /** Expected values are 'like', 'repost', 'follow', 'mention', 'reply', and 'quote'. */
-  reason:
-    | 'like'
-    | 'repost'
-    | 'follow'
-    | 'mention'
-    | 'reply'
-    | 'quote'
-    | (string & {})
-  reasonSubject?: string
-  record: {}
-  isRead: boolean
-  indexedAt: string
-  labels?: ComAtprotoLabelDefs.Label[]
-  [k: string]: unknown
-}
-
-export function isNotification(v: unknown): v is Notification {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.notification.listNotifications#notification'
-  )
-}
-
-export function validateNotification(v: unknown): ValidationResult {
-  return lexicons.validate(
-    'app.bsky.notification.listNotifications#notification',
-    v,
-  )
-}
