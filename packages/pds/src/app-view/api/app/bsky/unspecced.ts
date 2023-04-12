@@ -2,7 +2,7 @@ import { Server } from '../../../../lexicon'
 import { FeedKeyset, composeFeed } from './util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
-import { FeedRow, FeedItemType } from '../../../services/feed'
+import { FeedRow } from '../../../services/feed'
 import { sql } from 'kysely'
 import { FeedViewPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { countAll } from '../../../../db/util'
@@ -19,35 +19,38 @@ export default function (server: Server, ctx: AppContext) {
 
       const feedService = ctx.services.appView.feed(ctx.db)
 
-      const postsQb = ctx.db.db
-        .selectFrom('post')
+      const postsQb = feedService
+        .selectPostQb()
         .leftJoin('repost', (join) =>
           // this works well for one curating user. reassess if adding more
           join
             .on('repost.creator', '=', 'did:plc:ea2eqamjmtuo6f4rvhl3g6ne')
             .onRef('repost.subject', '=', 'post.uri'),
         )
-        .where(
-          (qb) =>
-            qb
-              .selectFrom('like')
-              .whereRef('like.subject', '=', 'post.uri')
-              .select(countAll.as('count')),
-          '>=',
-          5,
+        .where((clause) =>
+          clause
+            .where('repost.creator', 'is not', null)
+            .orWhere(
+              (qb) =>
+                qb
+                  .selectFrom('like')
+                  .whereRef('like.subject', '=', 'post.uri')
+                  .select(countAll.as('count')),
+              '>=',
+              5,
+            ),
         )
-        .orWhere('repost.creator', 'is not', null)
-        .select([
-          sql<FeedItemType>`${'post'}`.as('type'),
-          'post.uri as uri',
-          'post.cid as cid',
-          'post.uri as postUri',
-          'post.creator as postAuthorDid',
-          'post.creator as originatorDid',
-          'post.replyParent as replyParent',
-          'post.replyRoot as replyRoot',
-          'post.indexedAt as sortAt',
-        ])
+        .whereNotExists(
+          db
+            .selectFrom('mute')
+            .selectAll()
+            .where('mutedByDid', '=', requester)
+            .whereRef(
+              'did',
+              'in',
+              sql`(${ref('post.creator')}, ${ref('originatorDid')})`,
+            ),
+        )
 
       const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))
 
