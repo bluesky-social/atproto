@@ -44,7 +44,8 @@ export class Database {
 
   static postgres(opts: PgOptions): Database {
     const { schema, url } = opts
-    const pool = opts.pool ?? new PgPool({ connectionString: url })
+    const pool =
+      opts.pool ?? new PgPool({ connectionString: url, max: opts.poolSize })
 
     // Select count(*) and other pg bigints as js integer
     pgTypes.setTypeParser(pgTypes.builtins.INT8, (n) => parseInt(n, 10))
@@ -237,6 +238,7 @@ type PgOptions = {
   url: string
   pool?: PgPool
   schema?: string
+  poolSize?: number
 }
 
 type ChannelEvents = {

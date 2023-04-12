@@ -32,6 +32,7 @@ const main = async () => {
   const db = Database.postgres({
     url: pgUrl(env.dbCreds),
     schema: env.dbSchema,
+    poolSize: env.dbPoolSize
   })
   const s3Blobstore = new S3BlobStore({ bucket: env.s3Bucket })
   const repoSigningKey = await Secp256k1Keypair.import(env.repoSigningKey)
@@ -93,6 +94,7 @@ const getEnv = () => ({
   dbCreds: JSON.parse(process.env.DB_CREDS_JSON),
   dbMigrateCreds: JSON.parse(process.env.DB_MIGRATE_CREDS_JSON),
   dbSchema: process.env.DB_SCHEMA,
+  dbPoolSize: process.env.DB_POOL_SIZE,
   smtpHost: process.env.SMTP_HOST,
   smtpUsername: process.env.SMTP_USERNAME,
   smtpPassword: process.env.SMTP_PASSWORD,
