@@ -6,6 +6,7 @@ import { runTestEnv, TestEnvInfo } from '@atproto/dev-env'
 import { getInfo } from '../../src/image/sharp'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
+import { processAll } from '../_util'
 
 describe('image processing server', () => {
   let testEnv: TestEnvInfo
@@ -25,6 +26,7 @@ describe('image processing server', () => {
     const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     const sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
+    await processAll(testEnv)
     fileDid = sc.dids.carol
     fileCid = sc.posts[fileDid][0].images[0].image.ref
     client = axios.create({
