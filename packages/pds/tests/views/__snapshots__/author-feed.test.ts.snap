@@ -9,6 +9,7 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "labels": Array [],
         "viewer": Object {
           "muted": false,
         },
@@ -133,6 +134,7 @@ Array [
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
+          "labels": Array [],
           "viewer": Object {
             "muted": false,
           },
@@ -160,6 +162,7 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "labels": Array [],
         "viewer": Object {
           "muted": false,
         },
@@ -172,6 +175,7 @@ Array [
           "author": Object {
             "did": "user(2)",
             "handle": "dan.test",
+            "labels": Array [],
             "viewer": Object {
               "following": "record(8)",
               "muted": false,
@@ -186,6 +190,7 @@ Array [
                 "author": Object {
                   "did": "user(3)",
                   "handle": "carol.test",
+                  "labels": Array [],
                   "viewer": Object {
                     "followedBy": "record(11)",
                     "following": "record(10)",
@@ -306,6 +311,7 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "labels": Array [],
         "viewer": Object {
           "muted": false,
         },
@@ -332,6 +338,7 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "labels": Array [],
         "viewer": Object {
           "muted": false,
         },
@@ -451,6 +458,7 @@ Array [
           "did": "user(1)",
           "displayName": "ali",
           "handle": "alice.test",
+          "labels": Array [],
           "viewer": Object {
             "followedBy": "record(4)",
             "following": "record(3)",
@@ -479,6 +487,7 @@ Array [
           "did": "user(1)",
           "displayName": "ali",
           "handle": "alice.test",
+          "labels": Array [],
           "viewer": Object {
             "followedBy": "record(4)",
             "following": "record(3)",
@@ -585,6 +594,7 @@ Array [
       "author": Object {
         "did": "user(0)",
         "handle": "dan.test",
+        "labels": Array [],
         "viewer": Object {
           "muted": false,
         },
@@ -597,6 +607,7 @@ Array [
           "author": Object {
             "did": "user(2)",
             "handle": "carol.test",
+            "labels": Array [],
             "viewer": Object {
               "muted": false,
             },
@@ -741,6 +752,7 @@ Array [
       "by": Object {
         "did": "user(2)",
         "handle": "carol.test",
+        "labels": Array [],
         "viewer": Object {
           "muted": false,
         },
@@ -753,6 +765,7 @@ Array [
       "author": Object {
         "did": "user(2)",
         "handle": "carol.test",
+        "labels": Array [],
         "viewer": Object {
           "muted": false,
         },
@@ -788,6 +801,7 @@ Array [
           "did": "user(1)",
           "displayName": "ali",
           "handle": "alice.test",
+          "labels": Array [],
           "viewer": Object {
             "followedBy": "record(9)",
             "following": "record(8)",
@@ -816,6 +830,7 @@ Array [
           "did": "user(1)",
           "displayName": "ali",
           "handle": "alice.test",
+          "labels": Array [],
           "viewer": Object {
             "followedBy": "record(9)",
             "following": "record(8)",
@@ -845,6 +860,7 @@ Array [
       "author": Object {
         "did": "user(2)",
         "handle": "carol.test",
+        "labels": Array [],
         "viewer": Object {
           "muted": false,
         },
@@ -964,6 +980,7 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "labels": Array [],
         "viewer": Object {
           "followedBy": "record(1)",
           "muted": false,
@@ -991,6 +1008,7 @@ Array [
       "by": Object {
         "did": "user(1)",
         "handle": "dan.test",
+        "labels": Array [],
         "viewer": Object {
           "muted": false,
         },
@@ -1003,6 +1021,7 @@ Array [
       "author": Object {
         "did": "user(1)",
         "handle": "dan.test",
+        "labels": Array [],
         "viewer": Object {
           "muted": false,
         },
@@ -1015,6 +1034,7 @@ Array [
           "author": Object {
             "did": "user(2)",
             "handle": "carol.test",
+            "labels": Array [],
             "viewer": Object {
               "muted": false,
             },
@@ -1158,6 +1178,7 @@ Array [
       "author": Object {
         "did": "user(1)",
         "handle": "dan.test",
+        "labels": Array [],
         "viewer": Object {
           "muted": false,
         },
@@ -1187,6 +1208,7 @@ Array [
       "author": Object {
         "did": "user(0)",
         "handle": "dan.test",
+        "labels": Array [],
         "viewer": Object {
           "followedBy": "record(1)",
           "muted": true,
@@ -1200,6 +1222,7 @@ Array [
           "author": Object {
             "did": "user(2)",
             "handle": "carol.test",
+            "labels": Array [],
             "viewer": Object {
               "following": "record(3)",
               "muted": false,
@@ -1343,6 +1366,7 @@ Array [
       "author": Object {
         "did": "user(0)",
         "handle": "dan.test",
+        "labels": Array [],
         "viewer": Object {
           "followedBy": "record(1)",
           "muted": true,
@@ -1375,6 +1399,7 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "labels": Array [],
         "viewer": Object {
           "followedBy": "record(2)",
           "following": "record(1)",
@@ -1500,6 +1525,7 @@ Array [
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
+          "labels": Array [],
           "viewer": Object {
             "followedBy": "record(2)",
             "following": "record(1)",
@@ -1531,6 +1557,7 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "labels": Array [],
         "viewer": Object {
           "followedBy": "record(2)",
           "following": "record(1)",
@@ -1545,6 +1572,7 @@ Array [
           "author": Object {
             "did": "user(2)",
             "handle": "dan.test",
+            "labels": Array [],
             "viewer": Object {
               "muted": false,
             },
@@ -1558,6 +1586,7 @@ Array [
                 "author": Object {
                   "did": "user(3)",
                   "handle": "carol.test",
+                  "labels": Array [],
                   "viewer": Object {
                     "muted": false,
                   },
@@ -1678,6 +1707,7 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "labels": Array [],
         "viewer": Object {
           "followedBy": "record(2)",
           "following": "record(1)",
@@ -1708,6 +1738,7 @@ Array [
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "labels": Array [],
         "viewer": Object {
           "followedBy": "record(2)",
           "following": "record(1)",

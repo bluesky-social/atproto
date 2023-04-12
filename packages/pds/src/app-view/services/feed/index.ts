@@ -127,7 +127,7 @@ export class FeedService {
             following: cur?.requesterFollowing || undefined,
             followedBy: cur?.requesterFollowedBy || undefined,
           },
-          labels: labels[cur.did],
+          labels: labels[cur.did] ?? [],
         },
       }
     }, {} as ActorViewMap)
