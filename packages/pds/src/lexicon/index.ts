@@ -55,6 +55,7 @@ import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
+import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
@@ -552,6 +553,13 @@ export class SyncNS {
     cfg: ConfigOf<AV, ComAtprotoSyncListBlobs.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.sync.listBlobs' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listRepos<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncListRepos.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.listRepos' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

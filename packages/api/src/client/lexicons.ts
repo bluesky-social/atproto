@@ -2750,6 +2750,63 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncListRepos: {
+    lexicon: 1,
+    id: 'com.atproto.sync.listRepos',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List dids and root cids of hosted repos',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 500,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repos'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              repos: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.sync.listRepos#repo',
+                },
+              },
+            },
+          },
+        },
+      },
+      repo: {
+        type: 'object',
+        required: ['did', 'head'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          head: {
+            type: 'string',
+            format: 'cid',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoSyncNotifyOfUpdate: {
     lexicon: 1,
     id: 'com.atproto.sync.notifyOfUpdate',
@@ -4722,6 +4779,7 @@ export const ids = {
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
   ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
+  ComAtprotoSyncListRepos: 'com.atproto.sync.listRepos',
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
