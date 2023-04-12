@@ -38,6 +38,7 @@ import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
+import * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
 import * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
@@ -57,6 +58,7 @@ import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
+import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
@@ -123,6 +125,7 @@ export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 export * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 export * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
+export * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 export * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
 export * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 export * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
@@ -142,6 +145,7 @@ export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 export * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
+export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
@@ -582,6 +586,17 @@ export class ServerNS {
       })
   }
 
+  createInviteCodes(
+    data?: ComAtprotoServerCreateInviteCodes.InputSchema,
+    opts?: ComAtprotoServerCreateInviteCodes.CallOptions,
+  ): Promise<ComAtprotoServerCreateInviteCodes.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.createInviteCodes', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerCreateInviteCodes.toKnownErr(e)
+      })
+  }
+
   createSession(
     data?: ComAtprotoServerCreateSession.InputSchema,
     opts?: ComAtprotoServerCreateSession.CallOptions,
@@ -785,6 +800,17 @@ export class SyncNS {
       .call('com.atproto.sync.listBlobs', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoSyncListBlobs.toKnownErr(e)
+      })
+  }
+
+  listRepos(
+    params?: ComAtprotoSyncListRepos.QueryParams,
+    opts?: ComAtprotoSyncListRepos.CallOptions,
+  ): Promise<ComAtprotoSyncListRepos.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.listRepos', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncListRepos.toKnownErr(e)
       })
   }
 

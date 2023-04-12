@@ -12,17 +12,6 @@ export const lexBoolean = z.object({
 })
 export type LexBoolean = z.infer<typeof lexBoolean>
 
-export const lexFloat = z.object({
-  type: z.literal('float'),
-  description: z.string().optional(),
-  default: z.number().optional(),
-  minimum: z.number().optional(),
-  maximum: z.number().optional(),
-  enum: z.number().array().optional(),
-  const: z.number().optional(),
-})
-export type LexFloat = z.infer<typeof lexFloat>
-
 export const lexInteger = z.object({
   type: z.literal('integer'),
   description: z.string().optional(),
@@ -69,7 +58,6 @@ export type LexUnknown = z.infer<typeof lexUnknown>
 
 export const lexPrimitive = z.union([
   lexBoolean,
-  lexFloat,
   lexInteger,
   lexString,
   lexUnknown,
@@ -255,7 +243,6 @@ export const lexUserType = z.union([
   lexObject,
 
   lexBoolean,
-  lexFloat,
   lexInteger,
   lexString,
   lexBytes,
