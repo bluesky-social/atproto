@@ -70,31 +70,28 @@ export const respToClasses = (res: HiveResp): HiveRespClass[] => {
   return classes
 }
 
-const pornCategories = ['yes_sexual_activity', 'animal_genitalia_and_human']
-const nudeCategories = ['yes_male_nudity', 'yes_female_nudity']
+// sexual: https://docs.thehive.ai/docs/sexual-content
+// gore and violence: https://docs.thehive.ai/docs/class-descriptions-violence-gore
+// iconography: https://docs.thehive.ai/docs/class-descriptions-hate-bullying
+const labelForClass = {
+  yes_sexual_activity: 'porn',
+  animal_genitalia_and_human: 'porn', // for some reason not included in 'yes_sexual_activity'
+  yes_male_nudity: 'nude',
+  yes_female_nudity: 'nude',
+  general_suggestive: 'sexual',
+  very_bloody: 'gore',
+  human_corpse: 'corpse',
+  yes_self_harm: 'self-harm',
+  yes_nazi: 'icon-nazi',
+  yes_kkk: 'icon-kkk',
+  yes_confederate: 'icon-confederate',
+}
 
 export const summarizeLabels = (classes: HiveRespClass[]): string[] => {
   const labels: string[] = []
   for (const cls of classes) {
-    // TODO(bnewbold): lots more upstream tags could be included here.
-    // for example, "sexy" for not nude but still explicit/suggestive,
-    // or lolicon (animated, not nude, "sugggestive"
-    // sexual: https://docs.thehive.ai/docs/sexual-content
-    // note: won't apply "nude" if "porn" already applied
-    if (pornCategories.includes(cls.class) && cls.score >= 0.9) {
-      labels.push('porn')
-    } else if (nudeCategories.includes(cls.class) && cls.score >= 0.9) {
-      labels.push('nude')
-    }
-    // gore and violence: https://docs.thehive.ai/docs/class-descriptions-violence-gore
-    if (cls.class === 'very_bloody' && cls.score >= 0.9) {
-      labels.push('gore')
-    }
-    if (cls.class === 'human_corpse' && cls.score >= 0.9) {
-      labels.push('corpse')
-    }
-    if (cls.class === 'yes_self_harm' && cls.score >= 0.9) {
-      labels.push('self-harm')
+    if (labelForClass[cls.class] && cls.score >= 0.9) {
+      labels.push(labelForClass[cls.class])
     }
   }
   return labels
