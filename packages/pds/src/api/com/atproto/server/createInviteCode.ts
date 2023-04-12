@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
         })
         .execute()
 
-      req.log.info({ useCount, code }, 'created invite code')
+      req.log.info({ useCount, code, forAccount }, 'created invite code')
 
       return {
         encoding: 'application/json',

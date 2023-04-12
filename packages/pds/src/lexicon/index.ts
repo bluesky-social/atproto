@@ -36,6 +36,7 @@ import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
+import * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
@@ -398,6 +399,16 @@ export class ServerNS {
     >,
   ) {
     const nsid = 'com.atproto.server.createInviteCode' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  createInviteCodes<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerCreateInviteCodes.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.createInviteCodes' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

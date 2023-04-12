@@ -327,13 +327,6 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.server.defs#inviteCode',
           },
-          invites: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.server.defs#inviteCode',
-            },
-          },
         },
       },
       repoViewDetail: {
@@ -2028,6 +2021,51 @@ export const schemaDict = {
             properties: {
               code: {
                 type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerCreateInviteCodes: {
+    lexicon: 1,
+    id: 'com.atproto.server.createInviteCodes',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Create an invite code.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['codeCount', 'useCount'],
+            properties: {
+              codeCount: {
+                type: 'integer',
+                default: 1,
+              },
+              useCount: {
+                type: 'integer',
+              },
+              forAccount: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['codes'],
+            properties: {
+              codes: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
               },
             },
           },
@@ -4661,6 +4699,7 @@ export const ids = {
   ComAtprotoRepoUploadBlob: 'com.atproto.repo.uploadBlob',
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',
   ComAtprotoServerCreateInviteCode: 'com.atproto.server.createInviteCode',
+  ComAtprotoServerCreateInviteCodes: 'com.atproto.server.createInviteCodes',
   ComAtprotoServerCreateSession: 'com.atproto.server.createSession',
   ComAtprotoServerDefs: 'com.atproto.server.defs',
   ComAtprotoServerDeleteAccount: 'com.atproto.server.deleteAccount',
