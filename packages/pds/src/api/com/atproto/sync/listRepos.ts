@@ -4,7 +4,7 @@ import AppContext from '../../../../context'
 import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.sync.listHostedRepos(async ({ params }) => {
+  server.com.atproto.sync.listRepos(async ({ params }) => {
     const { limit, cursor } = params
     const ref = ctx.db.db.dynamic.ref
     const innerBuilder = ctx.db.db

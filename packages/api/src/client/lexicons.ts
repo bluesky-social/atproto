@@ -2497,9 +2497,9 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoSyncListHostedRepos: {
+  ComAtprotoSyncListRepos: {
     lexicon: 1,
-    id: 'com.atproto.sync.listHostedRepos',
+    id: 'com.atproto.sync.listRepos',
     defs: {
       main: {
         type: 'query',
@@ -2531,7 +2531,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:com.atproto.sync.listHostedRepos#repo',
+                  ref: 'lex:com.atproto.sync.listRepos#repo',
                 },
               },
             },
@@ -4487,7 +4487,7 @@ export const ids = {
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
   ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
-  ComAtprotoSyncListHostedRepos: 'com.atproto.sync.listHostedRepos',
+  ComAtprotoSyncListRepos: 'com.atproto.sync.listRepos',
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',

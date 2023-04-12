@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.sync.listHostedRepos",
+  "id": "com.atproto.sync.listRepos",
   "defs": {
     "main": {
       "type": "query",

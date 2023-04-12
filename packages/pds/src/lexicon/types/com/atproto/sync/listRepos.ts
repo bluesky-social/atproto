@@ -52,10 +52,10 @@ export function isRepo(v: unknown): v is Repo {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.listHostedRepos#repo'
+    v.$type === 'com.atproto.sync.listRepos#repo'
   )
 }
 
 export function validateRepo(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.sync.listHostedRepos#repo', v)
+  return lexicons.validate('com.atproto.sync.listRepos#repo', v)
 }

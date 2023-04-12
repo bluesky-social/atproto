@@ -23,7 +23,7 @@ describe('sync listing', () => {
   })
 
   it('lists hosted repos in order of creation', async () => {
-    const res = await agent.api.com.atproto.sync.listHostedRepos()
+    const res = await agent.api.com.atproto.sync.listRepos()
     const dids = res.data.repos.map((repo) => repo.did)
     expect(dids).toEqual([
       sc.dids.alice,
@@ -34,9 +34,9 @@ describe('sync listing', () => {
   })
 
   it('paginates listed hosted repos', async () => {
-    const full = await agent.api.com.atproto.sync.listHostedRepos()
-    const pt1 = await agent.api.com.atproto.sync.listHostedRepos({ limit: 2 })
-    const pt2 = await agent.api.com.atproto.sync.listHostedRepos({
+    const full = await agent.api.com.atproto.sync.listRepos()
+    const pt1 = await agent.api.com.atproto.sync.listRepos({ limit: 2 })
+    const pt2 = await agent.api.com.atproto.sync.listRepos({
       cursor: pt1.data.cursor,
     })
     expect([...pt1.data.repos, ...pt2.data.repos]).toEqual(full.data.repos)

@@ -54,7 +54,7 @@ import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
-import * as ComAtprotoSyncListHostedRepos from './types/com/atproto/sync/listHostedRepos'
+import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
@@ -137,7 +137,7 @@ export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 export * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
-export * as ComAtprotoSyncListHostedRepos from './types/com/atproto/sync/listHostedRepos'
+export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
@@ -763,14 +763,14 @@ export class SyncNS {
       })
   }
 
-  listHostedRepos(
-    params?: ComAtprotoSyncListHostedRepos.QueryParams,
-    opts?: ComAtprotoSyncListHostedRepos.CallOptions,
-  ): Promise<ComAtprotoSyncListHostedRepos.Response> {
+  listRepos(
+    params?: ComAtprotoSyncListRepos.QueryParams,
+    opts?: ComAtprotoSyncListRepos.CallOptions,
+  ): Promise<ComAtprotoSyncListRepos.Response> {
     return this._service.xrpc
-      .call('com.atproto.sync.listHostedRepos', params, undefined, opts)
+      .call('com.atproto.sync.listRepos', params, undefined, opts)
       .catch((e) => {
-        throw ComAtprotoSyncListHostedRepos.toKnownErr(e)
+        throw ComAtprotoSyncListRepos.toKnownErr(e)
       })
   }
 
