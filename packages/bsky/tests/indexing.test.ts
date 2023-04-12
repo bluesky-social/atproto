@@ -29,13 +29,8 @@ describe('indexing', () => {
     sc = new SeedClient(pdsAgent)
     await usersSeed(sc)
     // Data in tests is not processed from subscription
-<<<<<<< HEAD
     await processAll(testEnv)
-    await testEnv.bsky.sub?.destroy()
-=======
-    await processAll(server)
-    await server.bsky.sub?.destroy()
->>>>>>> main
+    await testEnv.bsky.sub.destroy()
   })
 
   afterAll(async () => {
