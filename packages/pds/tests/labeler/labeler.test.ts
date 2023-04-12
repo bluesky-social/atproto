@@ -2,17 +2,18 @@ import { AtUri, BlobRef } from '@atproto/api'
 import stream from 'stream'
 import { runTestServer, CloseFn } from '../_util'
 import { Labeler } from '../../src/labeler'
-import { Database } from '../../src'
+import { AppContext, Database } from '../../src'
 import { BlobStore, cidForRecord } from '@atproto/repo'
 import { keywordLabeling } from '../../src/labeler/util'
 import { cidForCbor, streamToBytes, TID } from '@atproto/common'
 import * as ui8 from 'uint8arrays'
+import { LabelService } from '../../src/app-view/services/label'
 
 describe('labeler', () => {
   let close: CloseFn
   let labeler: Labeler
-  let blobstore: BlobStore
-  let db: Database
+  let labelSrvc: LabelService
+  let ctx: AppContext
   let labelerDid: string
   let badBlob1: BlobRef
   let badBlob2: BlobRef
@@ -23,24 +24,24 @@ describe('labeler', () => {
       dbPostgresSchema: 'views_author_feed',
     })
     close = server.close
-    blobstore = server.ctx.blobstore
-    db = server.ctx.db
-    labelerDid = server.ctx.cfg.labelerDid
+    ctx = server.ctx
+    labelerDid = ctx.cfg.labelerDid
     labeler = new TestLabeler({
-      db,
-      blobstore,
+      db: ctx.db,
+      blobstore: ctx.blobstore,
       labelerDid,
       keywords: { label_me: 'test-label', another_label: 'another-label' },
     })
+    labelSrvc = ctx.services.appView.label(ctx.db)
     const bytes1 = new Uint8Array([1, 2, 3, 4])
     const bytes2 = new Uint8Array([5, 6, 7, 8])
     const bytes3 = new Uint8Array([4, 3, 2, 1])
     const cid1 = await cidForCbor(bytes1)
     const cid2 = await cidForCbor(bytes2)
     const cid3 = await cidForCbor(bytes3)
-    blobstore.putPermanent(cid1, bytes1)
-    blobstore.putPermanent(cid2, bytes2)
-    blobstore.putPermanent(cid3, bytes3)
+    ctx.blobstore.putPermanent(cid1, bytes1)
+    ctx.blobstore.putPermanent(cid2, bytes2)
+    ctx.blobstore.putPermanent(cid3, bytes3)
     badBlob1 = new BlobRef(cid1, 'image/jpeg', 4)
     badBlob2 = new BlobRef(cid2, 'image/jpeg', 4)
     goodBlob = new BlobRef(cid3, 'image/jpeg', 4)
@@ -49,14 +50,6 @@ describe('labeler', () => {
   afterAll(async () => {
     await close()
   })
-
-  const getLabels = async (uri: AtUri) => {
-    return await db.db
-      .selectFrom('label')
-      .where('subjectUri', '=', uri.toString())
-      .selectAll()
-      .execute()
-  }
 
   it('labels text in posts', async () => {
     const post = {
@@ -68,14 +61,14 @@ describe('labeler', () => {
     const uri = postUri()
     labeler.processRecord(uri, post)
     await labeler.processAll()
-    const labels = await getLabels(uri)
+    const labels = await labelSrvc.getLabels(uri.toString())
     expect(labels.length).toBe(1)
     expect(labels[0]).toMatchObject({
-      sourceDid: labelerDid,
-      subjectUri: uri.toString(),
-      subjectCid: cid.toString(),
-      value: 'test-label',
-      negated: 0,
+      src: labelerDid,
+      uri: uri.toString(),
+      cid: cid.toString(),
+      val: 'test-label',
+      neg: false,
     })
   })
 
@@ -105,8 +98,8 @@ describe('labeler', () => {
     const uri = postUri()
     labeler.processRecord(uri, post)
     await labeler.processAll()
-    const dbLabels = await getLabels(uri)
-    const labels = dbLabels.map((row) => row.value).sort()
+    const dbLabels = await labelSrvc.getLabels(uri.toString())
+    const labels = dbLabels.map((row) => row.val).sort()
     expect(labels).toEqual(
       ['another-label', 'img-label', 'other-img-label'].sort(),
     )
@@ -124,19 +117,44 @@ describe('labeler', () => {
     const uri = profileUri()
     labeler.processRecord(uri, profile)
     await labeler.processAll()
-    const dbLabels = await getLabels(uri)
-    const labels = dbLabels.map((row) => row.value).sort()
+    const dbLabels = await labelSrvc.getLabels(uri.toString())
+    const labels = dbLabels.map((row) => row.val).sort()
     expect(labels).toEqual(
       ['test-label', 'another-label', 'img-label', 'other-img-label'].sort(),
     )
   })
+
+  it('retrieves both profile & repo labels on profile views', async () => {
+    await ctx.db.db
+      .insertInto('label')
+      .values({
+        sourceDid: labelerDid,
+        subjectUri: aliceDid,
+        value: 'repo-label',
+        negated: 0,
+        createdAt: new Date().toISOString(),
+      })
+      .execute()
+
+    const labels = await labelSrvc.getLabelsForProfile('did:example:alice')
+    // 4 from earlier & then just added one
+    expect(labels.length).toBe(5)
+
+    const repoLabel = labels.find((l) => l.uri.startsWith('did:'))
+    expect(repoLabel).toMatchObject({
+      src: labelerDid,
+      uri: aliceDid,
+      val: 'repo-label',
+      neg: false,
+    })
+  })
 })
 
-const postUri = () =>
-  AtUri.make('did:example:alice', 'app.bsky.feed.post', TID.nextStr())
+const aliceDid = 'did:example:alice'
 
-const profileUri = () =>
-  AtUri.make('did:example:alice', 'app.bsky.actor.profile', TID.nextStr())
+const postUri = () => AtUri.make(aliceDid, 'app.bsky.feed.post', TID.nextStr())
+
+const profileUri = () => AtUri.make(aliceDid, 'app.bsky.actor.profile', 'self')
 
 class TestLabeler extends Labeler {
   hiveApiKey: string

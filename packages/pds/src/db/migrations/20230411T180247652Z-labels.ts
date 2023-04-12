@@ -5,7 +5,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createTable('label')
     .addColumn('sourceDid', 'varchar', (col) => col.notNull())
     .addColumn('subjectUri', 'varchar', (col) => col.notNull())
-    .addColumn('subjectCid', 'varchar', (col) => col.notNull())
+    .addColumn('subjectCid', 'varchar')
     .addColumn('value', 'varchar', (col) => col.notNull())
     .addColumn('negated', 'int2', (col) => col.notNull()) // @TODO convert to boolean in appview
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
