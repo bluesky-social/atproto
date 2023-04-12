@@ -86,6 +86,11 @@ const smtpUrl = ({ username, password, host }) => {
   return `smtps://${username}:${enc(password)}@${host}`
 }
 
+const maybeParseInt = (str) => {
+  const parsed = parseInt(str)
+  return isNaN(parsed) ? undefined : parsed
+}
+
 const getEnv = () => ({
   port: parseInt(process.env.PORT),
   plcRotationKeyId: process.env.PLC_ROTATION_KEY_ID,
@@ -94,7 +99,7 @@ const getEnv = () => ({
   dbCreds: JSON.parse(process.env.DB_CREDS_JSON),
   dbMigrateCreds: JSON.parse(process.env.DB_MIGRATE_CREDS_JSON),
   dbSchema: process.env.DB_SCHEMA,
-  dbPoolSize: process.env.DB_POOL_SIZE,
+  dbPoolSize: maybeParseInt(process.env.DB_POOL_SIZE),
   smtpHost: process.env.SMTP_HOST,
   smtpUsername: process.env.SMTP_USERNAME,
   smtpPassword: process.env.SMTP_PASSWORD,
