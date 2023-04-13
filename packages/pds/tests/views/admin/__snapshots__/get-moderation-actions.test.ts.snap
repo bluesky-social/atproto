@@ -6,7 +6,7 @@ Array [
     "action": "com.atproto.admin.defs#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "did:example:admin",
-    "id": 1,
+    "id": 2,
     "reason": "X",
     "resolvedReportIds": Array [
       1,
@@ -32,7 +32,7 @@ Array [
     "action": "com.atproto.admin.defs#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "did:example:admin",
-    "id": 5,
+    "id": 6,
     "reason": "X",
     "resolvedReportIds": Array [
       3,
@@ -47,7 +47,7 @@ Array [
     "action": "com.atproto.admin.defs#acknowledge",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "did:example:admin",
-    "id": 2,
+    "id": 3,
     "reason": "X",
     "resolvedReportIds": Array [],
     "subject": Object {
@@ -61,7 +61,7 @@ Array [
     "action": "com.atproto.admin.defs#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "did:example:admin",
-    "id": 1,
+    "id": 2,
     "reason": "X",
     "resolvedReportIds": Array [
       1,
@@ -87,7 +87,7 @@ Array [
     "action": "com.atproto.admin.defs#acknowledge",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "did:example:admin",
-    "id": 6,
+    "id": 7,
     "reason": "X",
     "resolvedReportIds": Array [],
     "subject": Object {
@@ -100,7 +100,7 @@ Array [
     "action": "com.atproto.admin.defs#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "did:example:admin",
-    "id": 5,
+    "id": 6,
     "reason": "X",
     "resolvedReportIds": Array [
       3,
@@ -115,7 +115,7 @@ Array [
     "action": "com.atproto.admin.defs#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "did:example:admin",
-    "id": 4,
+    "id": 5,
     "reason": "X",
     "resolvedReportIds": Array [],
     "subject": Object {
@@ -129,7 +129,7 @@ Array [
     "action": "com.atproto.admin.defs#takedown",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "did:example:admin",
-    "id": 3,
+    "id": 4,
     "reason": "X",
     "resolvedReportIds": Array [],
     "subject": Object {
@@ -143,7 +143,7 @@ Array [
     "action": "com.atproto.admin.defs#acknowledge",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "did:example:admin",
-    "id": 2,
+    "id": 3,
     "reason": "X",
     "resolvedReportIds": Array [],
     "subject": Object {
@@ -157,7 +157,7 @@ Array [
     "action": "com.atproto.admin.defs#flag",
     "createdAt": "1970-01-01T00:00:00.000Z",
     "createdBy": "did:example:admin",
-    "id": 1,
+    "id": 2,
     "reason": "X",
     "resolvedReportIds": Array [
       1,
@@ -171,6 +171,22 @@ Array [
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(3)",
       "uri": "record(3)",
+    },
+    "subjectBlobCids": Array [],
+  },
+  Object {
+    "action": "com.atproto.admin.defs#flag",
+    "createLabelVals": Array [
+      "repo-action-label",
+    ],
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "did:example:admin",
+    "id": 1,
+    "reason": "test",
+    "resolvedReportIds": Array [],
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(2)",
     },
     "subjectBlobCids": Array [],
   },

@@ -76,16 +76,18 @@ describe('pds admin get moderation action view', () => {
   })
 
   it('gets moderation action for a repo.', async () => {
+    // id 2 because id 1 is in seed client
     const result = await agent.api.com.atproto.admin.getModerationAction(
-      { id: 1 },
+      { id: 2 },
       { headers: { authorization: adminAuth() } },
     )
     expect(forSnapshot(result.data)).toMatchSnapshot()
   })
 
   it('gets moderation action for a record.', async () => {
+    // id 3 because id 1 is in seed client
     const result = await agent.api.com.atproto.admin.getModerationAction(
-      { id: 2 },
+      { id: 3 },
       { headers: { authorization: adminAuth() } },
     )
     expect(forSnapshot(result.data)).toMatchSnapshot()

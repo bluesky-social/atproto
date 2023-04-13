@@ -8,7 +8,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(0)",
     "resolvedByActionIds": Array [
-      1,
+      2,
     ],
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -27,7 +27,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(0)",
     "resolvedByActionIds": Array [
-      5,
+      6,
     ],
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
@@ -52,7 +52,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(0)",
     "resolvedByActionIds": Array [
-      1,
+      2,
     ],
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -82,7 +82,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(1)",
     "resolvedByActionIds": Array [
-      5,
+      6,
     ],
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
@@ -107,7 +107,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(1)",
     "resolvedByActionIds": Array [
-      3,
+      4,
     ],
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -133,7 +133,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(1)",
     "resolvedByActionIds": Array [
-      1,
+      2,
     ],
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -152,7 +152,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(0)",
     "resolvedByActionIds": Array [
-      5,
+      6,
     ],
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
@@ -165,7 +165,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(0)",
     "resolvedByActionIds": Array [
-      3,
+      4,
     ],
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -179,7 +179,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(0)",
     "resolvedByActionIds": Array [
-      1,
+      2,
     ],
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",

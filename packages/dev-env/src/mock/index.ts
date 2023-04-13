@@ -201,20 +201,20 @@ export async function generateMockSetup(env: DevEnv) {
       .insertInto('label')
       .values([
         {
-          sourceDid: ctx.cfg.labelerDid,
-          subjectUri: labeledPost.uri,
-          subjectCid: labeledPost.cid,
-          value: 'nudity',
-          negated: 0,
-          createdAt: new Date().toISOString(),
+          src: ctx.cfg.labelerDid,
+          uri: labeledPost.uri,
+          cid: labeledPost.cid,
+          val: 'nudity',
+          neg: 0,
+          cts: new Date().toISOString(),
         },
         {
-          sourceDid: ctx.cfg.labelerDid,
-          subjectUri: filteredPost.uri,
-          subjectCid: filteredPost.cid,
-          value: 'dmca-violation',
-          negated: 0,
-          createdAt: new Date().toISOString(),
+          src: ctx.cfg.labelerDid,
+          uri: filteredPost.uri,
+          cid: filteredPost.cid,
+          val: 'dmca-violation',
+          neg: 0,
+          cts: new Date().toISOString(),
         },
       ])
       .execute()

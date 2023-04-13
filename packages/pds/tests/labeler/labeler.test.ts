@@ -128,11 +128,12 @@ describe('labeler', () => {
     await ctx.db.db
       .insertInto('label')
       .values({
-        sourceDid: labelerDid,
-        subjectUri: aliceDid,
-        value: 'repo-label',
-        negated: 0,
-        createdAt: new Date().toISOString(),
+        src: labelerDid,
+        uri: aliceDid,
+        cid: '',
+        val: 'repo-label',
+        neg: 0,
+        cts: new Date().toISOString(),
       })
       .execute()
 

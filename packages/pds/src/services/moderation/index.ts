@@ -178,6 +178,8 @@ export class ModerationService {
     subject: { did: string } | { uri: AtUri; cid: CID }
     subjectBlobCids?: CID[]
     reason: string
+    createLabelVals?: string[]
+    negateLabelVals?: string[]
     createdBy: string
     createdAt?: Date
   }): Promise<ModerationActionRow> {
@@ -190,6 +192,8 @@ export class ModerationService {
       subjectBlobCids,
       createdAt = new Date(),
     } = info
+    const createLabelVals = info.createLabelVals?.join()
+    const negateLabelVals = info.negateLabelVals?.join()
 
     // Resolve subject info
     let subjectInfo: SubjectInfo
@@ -248,6 +252,8 @@ export class ModerationService {
         reason,
         createdAt: createdAt.toISOString(),
         createdBy,
+        createLabelVals,
+        negateLabelVals,
         ...subjectInfo,
       })
       .returningAll()

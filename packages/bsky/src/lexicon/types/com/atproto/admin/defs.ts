@@ -8,6 +8,7 @@ import { CID } from 'multiformats/cid'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
 import * as ComAtprotoModerationDefs from '../moderation/defs'
 import * as ComAtprotoServerDefs from '../server/defs'
+import * as ComAtprotoLabelDefs from '../label/defs'
 
 export interface ActionView {
   id: number
@@ -195,6 +196,7 @@ export interface RepoViewDetail {
   relatedRecords: {}[]
   indexedAt: string
   moderation: ModerationDetail
+  labels?: ComAtprotoLabelDefs.Label[]
   invitedBy?: ComAtprotoServerDefs.InviteCode
   invites?: ComAtprotoServerDefs.InviteCode[]
   [k: string]: unknown
@@ -257,6 +259,7 @@ export interface RecordViewDetail {
   cid: string
   value: {}
   blobs: BlobView[]
+  labels?: ComAtprotoLabelDefs.Label[]
   indexedAt: string
   moderation: ModerationDetail
   repo: RepoView

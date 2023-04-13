@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
 import { AtUri } from '@atproto/uri'
 import {
   adminAuth,
@@ -696,6 +696,172 @@ describe('moderation', () => {
         },
       )
     })
+
+    it('negates an existing label and reverses.', async () => {
+      const { ctx } = server
+      const post = sc.posts[sc.dids.bob][0].ref
+      const labelingService = ctx.services.appView.label(ctx.db)
+      await labelingService.formatAndCreate(
+        ctx.cfg.labelerDid,
+        post.uriStr,
+        post.cidStr,
+        { create: ['kittens'] },
+      )
+      const action = await actionWithLabels({
+        negateLabelVals: ['kittens'],
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.uriStr,
+          cid: post.cidStr,
+        },
+      })
+      await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
+      await reverse(action.id)
+      await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['kittens'])
+      // Cleanup
+      await labelingService.formatAndCreate(
+        ctx.cfg.labelerDid,
+        post.uriStr,
+        post.cidStr,
+        { negate: ['kittens'] },
+      )
+    })
+
+    it('no-ops when negating an already-negated label and reverses.', async () => {
+      const { ctx } = server
+      const post = sc.posts[sc.dids.bob][0].ref
+      const labelingService = ctx.services.appView.label(ctx.db)
+      const action = await actionWithLabels({
+        negateLabelVals: ['bears'],
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.uriStr,
+          cid: post.cidStr,
+        },
+      })
+      await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
+      await reverse(action.id)
+      await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['bears'])
+      // Cleanup
+      await labelingService.formatAndCreate(
+        ctx.cfg.labelerDid,
+        post.uriStr,
+        post.cidStr,
+        { negate: ['bears'] },
+      )
+    })
+
+    it('creates a non-existing label and reverses.', async () => {
+      const post = sc.posts[sc.dids.bob][0].ref
+      const action = await actionWithLabels({
+        createLabelVals: ['puppies'],
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.uriStr,
+          cid: post.cidStr,
+        },
+      })
+      await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['puppies'])
+      await reverse(action.id)
+      await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
+    })
+
+    it('no-ops when creating an existing label and reverses.', async () => {
+      const { ctx } = server
+      const post = sc.posts[sc.dids.bob][0].ref
+      const labelingService = ctx.services.appView.label(ctx.db)
+      await labelingService.formatAndCreate(
+        ctx.cfg.labelerDid,
+        post.uriStr,
+        post.cidStr,
+        { create: ['birds'] },
+      )
+      const action = await actionWithLabels({
+        createLabelVals: ['birds'],
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.uriStr,
+          cid: post.cidStr,
+        },
+      })
+      await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['birds'])
+      await reverse(action.id)
+      await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
+    })
+
+    it('creates and negates labels on a repo.', async () => {
+      const { ctx } = server
+      const labelingService = ctx.services.appView.label(ctx.db)
+      await labelingService.formatAndCreate(
+        ctx.cfg.labelerDid,
+        sc.dids.bob,
+        null,
+        { create: ['kittens'] },
+      )
+      const action = await actionWithLabels({
+        createLabelVals: ['puppies'],
+        negateLabelVals: ['kittens'],
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.bob,
+        },
+      })
+      await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual(['puppies'])
+      await reverse(action.id)
+      await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual(['kittens'])
+    })
+
+    async function actionWithLabels(
+      opts: Partial<ComAtprotoAdminTakeModerationAction.InputSchema> & {
+        subject: ComAtprotoAdminTakeModerationAction.InputSchema['subject']
+      },
+    ) {
+      const result = await agent.api.com.atproto.admin.takeModerationAction(
+        {
+          action: FLAG,
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+          ...opts,
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+      return result.data
+    }
+
+    async function reverse(actionId: number) {
+      await agent.api.com.atproto.admin.reverseModerationAction(
+        {
+          id: actionId,
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+    }
+
+    async function getRecordLabels(uri: string) {
+      const result = await agent.api.com.atproto.admin.getRecord(
+        { uri },
+        { headers: { authorization: adminAuth() } },
+      )
+      const labels = result.data.labels ?? []
+      return labels.map((l) => l.val)
+    }
+
+    async function getRepoLabels(did: string) {
+      const result = await agent.api.com.atproto.admin.getRepo(
+        { did },
+        { headers: { authorization: adminAuth() } },
+      )
+      const labels = result.data.labels ?? []
+      return labels.map((l) => l.val)
+    }
   })
 
   describe('blob takedown', () => {
