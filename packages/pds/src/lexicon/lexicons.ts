@@ -1069,7 +1069,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Administrative action to update an accounts handle',
+        description: "Administrative action to update an account's handle",
         input: {
           encoding: 'application/json',
           schema: {

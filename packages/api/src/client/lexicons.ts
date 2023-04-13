@@ -364,6 +364,13 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#moderationDetail',
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
           invitedBy: {
             type: 'ref',
             ref: 'lex:com.atproto.server.defs#inviteCode',
@@ -459,6 +466,13 @@ export const schemaDict = {
             items: {
               type: 'ref',
               ref: 'lex:com.atproto.admin.defs#blobView',
+            },
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
             },
           },
           indexedAt: {
@@ -1055,7 +1069,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Administrative action to update an accounts handle',
+        description: "Administrative action to update an account's handle",
         input: {
           encoding: 'application/json',
           schema: {
