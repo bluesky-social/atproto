@@ -160,6 +160,7 @@ export class RepoService {
       sequenceCommit(this.db, did, commitData, writes),
     ])
 
+    // @TODO move to appview
     writes.map((write) => {
       if (
         write.action === WriteOpAction.Create ||
