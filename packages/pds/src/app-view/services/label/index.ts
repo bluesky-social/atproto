@@ -60,11 +60,15 @@ export class LabelService {
       .execute()
   }
 
-  async getLabelsForSubjects(subjects: string[]): Promise<Labels> {
+  async getLabelsForSubjects(
+    subjects: string[],
+    includeNeg?: boolean,
+  ): Promise<Labels> {
     if (subjects.length < 1) return {}
     const res = await this.db.db
       .selectFrom('label')
       .where('label.uri', 'in', subjects)
+      .if(!includeNeg, (qb) => qb.where('neg', '=', 0))
       .selectAll()
       .execute()
     return res.reduce((acc, cur) => {
@@ -78,13 +82,17 @@ export class LabelService {
     }, {} as Labels)
   }
 
-  async getLabelsForProfiles(dids: string[]): Promise<Labels> {
+  // gets labels for both did & profile record
+  async getLabelsForProfiles(
+    dids: string[],
+    includeNeg?: boolean,
+  ): Promise<Labels> {
     if (dids.length < 1) return {}
     const profileUris = dids.map((did) =>
       AtUri.make(did, ids.AppBskyActorProfile, 'self').toString(),
     )
     const subjects = [...dids, ...profileUris]
-    const labels = await this.getLabelsForSubjects(subjects)
+    const labels = await this.getLabelsForSubjects(subjects, includeNeg)
     // combine labels for profile + did
     return Object.keys(labels).reduce((acc, cur) => {
       const did = cur.startsWith('at://') ? new AtUri(cur).hostname : cur
@@ -94,13 +102,16 @@ export class LabelService {
     }, {} as Labels)
   }
 
-  async getLabels(subject: string): Promise<Label[]> {
-    const labels = await this.getLabelsForSubjects([subject])
+  async getLabels(subject: string, includeNeg?: boolean): Promise<Label[]> {
+    const labels = await this.getLabelsForSubjects([subject], includeNeg)
     return labels[subject] ?? []
   }
 
-  async getLabelsForProfile(did: string): Promise<Label[]> {
-    const labels = await this.getLabelsForProfiles([did])
+  async getLabelsForProfile(
+    did: string,
+    includeNeg?: boolean,
+  ): Promise<Label[]> {
+    const labels = await this.getLabelsForProfiles([did], includeNeg)
     return labels[did] ?? []
   }
 }
