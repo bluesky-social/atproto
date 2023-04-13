@@ -552,16 +552,13 @@ export class ModerationViews {
   async labels(subject: string): Promise<Label[]> {
     const res = await this.db.db
       .selectFrom('label')
-      .where('label.subjectUri', '=', subject)
+      .where('label.uri', '=', subject)
       .selectAll()
       .execute()
     return res.map((l) => ({
-      src: l.sourceDid,
-      uri: l.subjectUri,
-      cid: l.subjectCid ?? undefined,
-      val: l.value,
-      neg: l.negated === 1,
-      cts: l.createdAt,
+      ...l,
+      cid: l.cid ?? undefined,
+      neg: l.neg === 1,
     }))
   }
 }

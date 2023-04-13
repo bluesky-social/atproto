@@ -37,13 +37,13 @@ export abstract class Labeler {
     const labels = await this.labelRecord(obj)
     if (labels.length < 1) return
     const cid = await cidForRecord(obj)
-    const rows = labels.map((value) => ({
-      sourceDid: this.labelerDid,
-      subjectUri: uri.toString(),
-      subjectCid: cid.toString(),
-      value,
-      negated: 0 as const,
-      createdAt: new Date().toISOString(),
+    const rows = labels.map((val) => ({
+      src: this.labelerDid,
+      uri: uri.toString(),
+      cid: cid.toString(),
+      val,
+      neg: 0 as const,
+      cts: new Date().toISOString(),
     }))
 
     await this.db.db

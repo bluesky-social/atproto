@@ -42,12 +42,9 @@ export class LabelService {
   async createLabels(labels: Label[]) {
     if (labels.length < 1) return
     const dbVals = labels.map((l) => ({
-      sourceDid: l.src,
-      subjectUri: l.uri,
-      subjectCid: l.cid,
-      value: l.val,
-      negated: (l.neg ? 1 : 0) as 1 | 0,
-      createdAt: l.cts,
+      ...l,
+      cid: l.cid ?? '',
+      neg: (l.neg ? 1 : 0) as 1 | 0,
     }))
     const { ref } = this.db.db.dynamic
     const excluded = (col: string) => ref(`excluded.${col}`)
@@ -55,12 +52,10 @@ export class LabelService {
       .insertInto('label')
       .values(dbVals)
       .onConflict((oc) =>
-        oc
-          .columns(['sourceDid', 'subjectUri', 'subjectCid', 'value'])
-          .doUpdateSet({
-            negated: sql`${excluded('negated')}`,
-            createdAt: sql`${excluded('createdAt')}`,
-          }),
+        oc.columns(['src', 'uri', 'cid', 'val']).doUpdateSet({
+          neg: sql`${excluded('neg')}`,
+          cts: sql`${excluded('cts')}`,
+        }),
       )
       .execute()
   }
@@ -69,18 +64,15 @@ export class LabelService {
     if (subjects.length < 1) return {}
     const res = await this.db.db
       .selectFrom('label')
-      .where('label.subjectUri', 'in', subjects)
+      .where('label.uri', 'in', subjects)
       .selectAll()
       .execute()
     return res.reduce((acc, cur) => {
-      acc[cur.subjectUri] ??= []
-      acc[cur.subjectUri].push({
-        src: cur.sourceDid,
-        uri: cur.subjectUri,
-        cid: cur.subjectCid ?? undefined,
-        val: cur.value,
-        neg: cur.negated === 1, // @TODO update in appview
-        cts: cur.createdAt,
+      acc[cur.uri] ??= []
+      acc[cur.uri].push({
+        ...cur,
+        cid: cur.cid === '' ? undefined : cur.cid,
+        neg: cur.neg === 1, // @TODO update in appview
       })
       return acc
     }, {} as Labels)
