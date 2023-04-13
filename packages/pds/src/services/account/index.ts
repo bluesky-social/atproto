@@ -146,14 +146,11 @@ export class AccountService {
   }
 
   async updateEmail(did: string, email: string) {
-    const res = await this.db.db
+    await this.db.db
       .updateTable('user_account')
-      .set({ email })
+      .set({ email: email.toLowerCase() })
       .where('did', '=', did)
       .executeTakeFirst()
-    if (res.numUpdatedRows < 1) {
-      throw new UserAlreadyExistsError()
-    }
   }
 
   async updateUserPassword(did: string, password: string) {

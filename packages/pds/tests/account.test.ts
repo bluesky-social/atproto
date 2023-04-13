@@ -172,7 +172,7 @@ describe('account', () => {
     await agent.api.com.atproto.admin.updateAccountEmail(
       {
         account: handle,
-        email: 'alice-new@test.com',
+        email: 'alIce-NEw@teST.com',
       },
       {
         encoding: 'application/json',
