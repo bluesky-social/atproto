@@ -168,6 +168,36 @@ describe('account', () => {
     ])
   })
 
+  it('allows administrative email updates', async () => {
+    await agent.api.com.atproto.admin.updateAccountEmail(
+      {
+        account: handle,
+        email: 'alIce-NEw@teST.com',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: util.adminAuth() },
+      },
+    )
+
+    const accnt = await ctx.services.account(ctx.db).getAccount(handle)
+    expect(accnt?.email).toBe('alice-new@test.com')
+
+    await agent.api.com.atproto.admin.updateAccountEmail(
+      {
+        account: did,
+        email,
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: util.adminAuth() },
+      },
+    )
+
+    const accnt2 = await ctx.services.account(ctx.db).getAccount(handle)
+    expect(accnt2?.email).toBe(email)
+  })
+
   it('disallows duplicate email addresses and handles', async () => {
     const inviteCode = await createInviteCode(agent, 2)
     const email = 'bob@test.com'

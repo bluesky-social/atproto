@@ -20,6 +20,7 @@ import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/ad
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
+import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
@@ -108,6 +109,7 @@ export * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/ad
 export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
+export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
@@ -395,6 +397,17 @@ export class AdminNS {
       .call('com.atproto.admin.takeModerationAction', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminTakeModerationAction.toKnownErr(e)
+      })
+  }
+
+  updateAccountEmail(
+    data?: ComAtprotoAdminUpdateAccountEmail.InputSchema,
+    opts?: ComAtprotoAdminUpdateAccountEmail.CallOptions,
+  ): Promise<ComAtprotoAdminUpdateAccountEmail.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.updateAccountEmail', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminUpdateAccountEmail.toKnownErr(e)
       })
   }
 
