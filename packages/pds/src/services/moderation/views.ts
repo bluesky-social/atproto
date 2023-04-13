@@ -319,8 +319,14 @@ export class ModerationViews {
       reason: res.reason,
       createdAt: res.createdAt,
       createdBy: res.createdBy,
-      createLabelVals: res.createLabelVals?.split(' '),
-      negateLabelVals: res.negateLabelVals?.split(' '),
+      createLabelVals:
+        res.createLabelVals && res.createLabelVals.length > 0
+          ? res.createLabelVals.split(' ')
+          : undefined,
+      negateLabelVals:
+        res.negateLabelVals && res.negateLabelVals.length > 0
+          ? res.negateLabelVals.split(' ')
+          : undefined,
       reversal:
         res.reversedAt !== null &&
         res.reversedBy !== null &&

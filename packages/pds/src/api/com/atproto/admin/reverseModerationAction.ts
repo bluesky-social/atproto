@@ -55,8 +55,15 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         // invert creates & negates
-        const negate = result.createLabelVals?.split(' ')
-        const create = result.negateLabelVals?.split(' ')
+        const { createLabelVals, negateLabelVals } = result
+        const negate =
+          createLabelVals && createLabelVals.length > 0
+            ? createLabelVals.split(' ')
+            : undefined
+        const create =
+          negateLabelVals && negateLabelVals.length > 0
+            ? negateLabelVals.split(' ')
+            : undefined
         await labelTxn.formatAndCreate(
           ctx.cfg.labelerDid,
           result.subjectUri ?? result.subjectDid,
