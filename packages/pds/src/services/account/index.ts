@@ -145,6 +145,17 @@ export class AccountService {
     await sequenceHandleUpdate(this.db, did, handle)
   }
 
+  async updateEmail(did: string, email: string) {
+    const res = await this.db.db
+      .updateTable('user_account')
+      .set({ email })
+      .where('did', '=', did)
+      .executeTakeFirst()
+    if (res.numUpdatedRows < 1) {
+      throw new UserAlreadyExistsError()
+    }
+  }
+
   async updateUserPassword(did: string, password: string) {
     const passwordScrypt = await scrypt.hash(password)
     await this.db.db

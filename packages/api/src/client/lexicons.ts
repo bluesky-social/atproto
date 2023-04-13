@@ -1063,6 +1063,33 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminUpdateAccountEmail: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateAccountEmail',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Administrative action to update an account's email",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['account', 'email'],
+            properties: {
+              account: {
+                type: 'string',
+                format: 'at-identifier',
+                description: 'The handle or DID of the repo.',
+              },
+              email: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminUpdateAccountHandle: {
     lexicon: 1,
     id: 'com.atproto.admin.updateAccountHandle',
@@ -4796,6 +4823,7 @@ export const ids = {
     'com.atproto.admin.reverseModerationAction',
   ComAtprotoAdminSearchRepos: 'com.atproto.admin.searchRepos',
   ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
+  ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
   ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
   ComAtprotoIdentityResolveHandle: 'com.atproto.identity.resolveHandle',
   ComAtprotoIdentityUpdateHandle: 'com.atproto.identity.updateHandle',

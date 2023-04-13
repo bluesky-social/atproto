@@ -13,6 +13,7 @@ import getModerationReports from './getModerationReports'
 import disableInviteCodes from './disableInviteCodes'
 import getInviteCodes from './getInviteCodes'
 import updateAccountHandle from './updateAccountHandle'
+import updateAccountEmail from './updateAccountEmail'
 
 export default function (server: Server, ctx: AppContext) {
   resolveModerationReports(server, ctx)
@@ -28,4 +29,5 @@ export default function (server: Server, ctx: AppContext) {
   disableInviteCodes(server, ctx)
   getInviteCodes(server, ctx)
   updateAccountHandle(server, ctx)
+  updateAccountEmail(server, ctx)
 }
