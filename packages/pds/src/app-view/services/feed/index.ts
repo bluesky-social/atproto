@@ -78,37 +78,40 @@ export class FeedService {
   ): Promise<ActorViewMap> {
     if (dids.length < 1) return {}
     const { ref } = this.db.db.dynamic
-    const actors = await this.db.db
-      .selectFrom('did_handle')
-      .where('did_handle.did', 'in', dids)
-      .leftJoin('profile', 'profile.creator', 'did_handle.did')
-      .selectAll('did_handle')
-      .select([
-        'profile.uri as profileUri',
-        'profile.displayName as displayName',
-        'profile.description as description',
-        'profile.avatarCid as avatarCid',
-        'profile.indexedAt as indexedAt',
-        this.db.db
-          .selectFrom('follow')
-          .where('creator', '=', requester)
-          .whereRef('subjectDid', '=', ref('did_handle.did'))
-          .select('uri')
-          .as('requesterFollowing'),
-        this.db.db
-          .selectFrom('follow')
-          .whereRef('creator', '=', ref('did_handle.did'))
-          .where('subjectDid', '=', requester)
-          .select('uri')
-          .as('requesterFollowedBy'),
-        this.db.db
-          .selectFrom('mute')
-          .whereRef('did', '=', ref('did_handle.did'))
-          .where('mutedByDid', '=', requester)
-          .select('did')
-          .as('requesterMuted'),
-      ])
-      .execute()
+    const [actors, labels] = await Promise.all([
+      this.db.db
+        .selectFrom('did_handle')
+        .where('did_handle.did', 'in', dids)
+        .leftJoin('profile', 'profile.creator', 'did_handle.did')
+        .selectAll('did_handle')
+        .select([
+          'profile.uri as profileUri',
+          'profile.displayName as displayName',
+          'profile.description as description',
+          'profile.avatarCid as avatarCid',
+          'profile.indexedAt as indexedAt',
+          this.db.db
+            .selectFrom('follow')
+            .where('creator', '=', requester)
+            .whereRef('subjectDid', '=', ref('did_handle.did'))
+            .select('uri')
+            .as('requesterFollowing'),
+          this.db.db
+            .selectFrom('follow')
+            .whereRef('creator', '=', ref('did_handle.did'))
+            .where('subjectDid', '=', requester)
+            .select('uri')
+            .as('requesterFollowedBy'),
+          this.db.db
+            .selectFrom('mute')
+            .whereRef('did', '=', ref('did_handle.did'))
+            .where('mutedByDid', '=', requester)
+            .select('did')
+            .as('requesterMuted'),
+        ])
+        .execute(),
+      this.services.label(this.db).getLabelsForProfiles(dids),
+    ])
     return actors.reduce((acc, cur) => {
       return {
         ...acc,
@@ -124,6 +127,7 @@ export class FeedService {
             following: cur?.requesterFollowing || undefined,
             followedBy: cur?.requesterFollowedBy || undefined,
           },
+          labels: labels[cur.did] ?? [],
         },
       }
     }, {} as ActorViewMap)

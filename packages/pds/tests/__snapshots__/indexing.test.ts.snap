@@ -10,6 +10,7 @@ Object {
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "labels": Array [],
         "viewer": Object {
           "muted": false,
         },
@@ -57,6 +58,7 @@ Object {
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
+        "labels": Array [],
         "viewer": Object {
           "muted": false,
         },

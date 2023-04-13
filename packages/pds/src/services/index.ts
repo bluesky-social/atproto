@@ -35,7 +35,12 @@ export function createServices(resources: {
     account: AccountService.creator(),
     auth: AuthService.creator(),
     record: RecordService.creator(messageDispatcher),
-    repo: RepoService.creator(repoSigningKey, messageDispatcher, blobstore),
+    repo: RepoService.creator(
+      repoSigningKey,
+      messageDispatcher,
+      blobstore,
+      labeler,
+    ),
     moderation: ModerationService.creator(
       messageDispatcher,
       blobstore,
@@ -45,7 +50,7 @@ export function createServices(resources: {
     appView: {
       actor: ActorService.creator(imgUriBuilder),
       feed: FeedService.creator(imgUriBuilder),
-      indexing: IndexingService.creator(labeler, messageDispatcher),
+      indexing: IndexingService.creator(messageDispatcher),
       label: LabelService.creator(),
     },
   }

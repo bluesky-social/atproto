@@ -8,7 +8,6 @@ import * as Repost from './plugins/repost'
 import * as Follow from './plugins/follow'
 import * as Profile from './plugins/profile'
 import { MessageQueue } from '../../../event-stream/types'
-import { Labeler } from '../../../labeler'
 
 export class IndexingService {
   records: {
@@ -19,11 +18,7 @@ export class IndexingService {
     profile: Profile.PluginType
   }
 
-  constructor(
-    public db: Database,
-    public labeler: Labeler,
-    public messageDispatcher: MessageQueue,
-  ) {
+  constructor(public db: Database, public messageDispatcher: MessageQueue) {
     this.records = {
       post: Post.makePlugin(this.db.db),
       like: Like.makePlugin(this.db.db),
@@ -33,8 +28,8 @@ export class IndexingService {
     }
   }
 
-  static creator(labeler: Labeler, messageDispatcher: MessageQueue) {
-    return (db: Database) => new IndexingService(db, labeler, messageDispatcher)
+  static creator(messageDispatcher: MessageQueue) {
+    return (db: Database) => new IndexingService(db, messageDispatcher)
   }
 
   async indexRecord(
@@ -51,7 +46,6 @@ export class IndexingService {
     } else {
       await indexer.updateRecord(uri, cid, obj, timestamp)
     }
-    this.labeler.processRecord(uri, obj)
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {
