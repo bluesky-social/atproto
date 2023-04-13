@@ -12,7 +12,7 @@ Object {
       "action": "com.atproto.admin.defs#takedown",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "createdBy": "did:example:admin",
-      "id": 2,
+      "id": 3,
       "reason": "X",
       "resolvedReportIds": Array [
         2,
@@ -28,7 +28,7 @@ Object {
       "action": "com.atproto.admin.defs#flag",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "createdBy": "did:example:admin",
-      "id": 1,
+      "id": 2,
       "reason": "X",
       "resolvedReportIds": Array [
         2,
@@ -54,7 +54,7 @@ Object {
     "moderation": Object {
       "currentAction": Object {
         "action": "com.atproto.admin.defs#takedown",
-        "id": 2,
+        "id": 3,
       },
     },
     "repo": Object {
@@ -102,7 +102,7 @@ Object {
       "action": "com.atproto.admin.defs#flag",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "createdBy": "did:example:admin",
-      "id": 1,
+      "id": 2,
       "reason": "X",
       "resolvedReportIds": Array [
         2,

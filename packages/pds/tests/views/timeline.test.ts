@@ -169,7 +169,7 @@ describe('timeline views', () => {
 
   it('blocks posts, reposts, replies by actor takedown', async () => {
     const actionResults = await Promise.all(
-      [bob, dan].map((did) =>
+      [bob, carol].map((did) =>
         agent.api.com.atproto.admin.takeModerationAction(
           {
             action: TAKEDOWN,

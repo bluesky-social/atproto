@@ -8,7 +8,15 @@ Object {
   "followsCount": 1,
   "handle": "dan.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
-  "labels": Array [],
+  "labels": Array [
+    Object {
+      "cts": "1970-01-01T00:00:00.000Z",
+      "neg": false,
+      "src": "did:example:labeler",
+      "uri": "user(0)",
+      "val": "repo-action-label",
+    },
+  ],
   "postsCount": 2,
   "viewer": Object {
     "muted": false,
@@ -76,7 +84,15 @@ Array [
     "followersCount": 1,
     "followsCount": 1,
     "handle": "dan.test",
-    "labels": Array [],
+    "labels": Array [
+      Object {
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "user(3)",
+        "val": "repo-action-label",
+      },
+    ],
     "postsCount": 2,
     "viewer": Object {
       "followedBy": "record(4)",
@@ -112,7 +128,15 @@ Object {
   "followersCount": 1,
   "followsCount": 1,
   "handle": "dan.test",
-  "labels": Array [],
+  "labels": Array [
+    Object {
+      "cts": "1970-01-01T00:00:00.000Z",
+      "neg": false,
+      "src": "did:example:labeler",
+      "uri": "user(0)",
+      "val": "repo-action-label",
+    },
+  ],
   "postsCount": 2,
   "viewer": Object {
     "followedBy": "record(0)",
