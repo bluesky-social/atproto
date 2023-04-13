@@ -192,8 +192,8 @@ export class ModerationService {
       subjectBlobCids,
       createdAt = new Date(),
     } = info
-    // const createLabelVals = info.createLabelVals
-    // negateLabelVals,
+    const createLabelVals = info.createLabelVals?.join()
+    const negateLabelVals = info.negateLabelVals?.join()
 
     // Resolve subject info
     let subjectInfo: SubjectInfo
@@ -252,7 +252,8 @@ export class ModerationService {
         reason,
         createdAt: createdAt.toISOString(),
         createdBy,
-        // createLabelVals: createLabelVals ?
+        createLabelVals,
+        negateLabelVals,
         ...subjectInfo,
       })
       .returningAll()

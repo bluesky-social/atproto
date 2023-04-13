@@ -63,12 +63,9 @@ export default function (server: Server, ctx: AppContext) {
           })
         }
 
-        const subjectUri = result.subjectUri
-          ? result.subjectUri
-          : result.subjectDid
         await labelTxn.formatAndCreate(
           ctx.cfg.labelerDid,
-          subjectUri,
+          result.subjectUri ?? result.subjectDid,
           result.subjectCid,
           { create: createLabelVals, negate: negateLabelVals },
         )

@@ -319,6 +319,8 @@ export class ModerationViews {
       reason: res.reason,
       createdAt: res.createdAt,
       createdBy: res.createdBy,
+      createLabelVals: res.createLabelVals?.split(' '),
+      negateLabelVals: res.negateLabelVals?.split(' '),
       reversal:
         res.reversedAt !== null &&
         res.reversedBy !== null &&
@@ -355,6 +357,8 @@ export class ModerationViews {
       action: action.action,
       subject,
       subjectBlobs,
+      createLabelVals: action.createLabelVals,
+      negateLabelVals: action.negateLabelVals,
       reason: action.reason,
       createdAt: action.createdAt,
       createdBy: action.createdBy,
