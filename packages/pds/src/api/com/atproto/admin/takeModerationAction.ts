@@ -4,6 +4,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { TAKEDOWN } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { getSubject, getAction } from '../moderation/util'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
@@ -21,6 +22,8 @@ export default function (server: Server, ctx: AppContext) {
         subjectBlobCids,
       } = input.body
 
+      validateLabels([...(createLabelVals ?? []), ...(negateLabelVals ?? [])])
+
       const moderationAction = await db.transaction(async (dbTxn) => {
         const authTxn = services.auth(dbTxn)
         const moderationTxn = services.moderation(dbTxn)
@@ -30,6 +33,8 @@ export default function (server: Server, ctx: AppContext) {
           action: getAction(action),
           subject: getSubject(subject),
           subjectBlobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
+          createLabelVals,
+          negateLabelVals,
           createdBy,
           reason,
         })
@@ -78,3 +83,15 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 }
+
+const validateLabels = (labels: string[]) => {
+  for (const label of labels) {
+    for (const char of badChars) {
+      if (label.includes(char)) {
+        throw new InvalidRequestError(`Invalid label: ${label}`)
+      }
+    }
+  }
+}
+
+const badChars = [' ', ',', ';', `'`, `"`]
