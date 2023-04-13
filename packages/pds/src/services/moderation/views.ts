@@ -557,7 +557,7 @@ export class ModerationViews {
       .execute()
     return res.map((l) => ({
       ...l,
-      cid: l.cid ?? undefined,
+      cid: l.cid === '' ? undefined : l.cid,
       neg: l.neg === 1,
     }))
   }
