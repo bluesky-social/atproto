@@ -194,11 +194,11 @@ export class ModerationService {
     } = info
     const createLabelVals =
       info.createLabelVals && info.createLabelVals.length > 0
-        ? info.createLabelVals.join()
+        ? info.createLabelVals.join(' ')
         : undefined
     const negateLabelVals =
       info.negateLabelVals && info.negateLabelVals.length > 0
-        ? info.negateLabelVals.join()
+        ? info.negateLabelVals.join(' ')
         : undefined
 
     // Resolve subject info
