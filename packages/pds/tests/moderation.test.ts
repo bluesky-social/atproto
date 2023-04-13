@@ -755,6 +755,7 @@ describe('moderation', () => {
       const post = sc.posts[sc.dids.bob][0].ref
       const action = await actionWithLabels({
         createLabelVals: ['puppies'],
+        negateLabelVals: [],
         subject: {
           $type: 'com.atproto.repo.strongRef',
           uri: post.uriStr,
