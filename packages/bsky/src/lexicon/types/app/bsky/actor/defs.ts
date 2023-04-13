@@ -5,6 +5,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 export interface ProfileViewBasic {
   did: string
@@ -12,6 +13,7 @@ export interface ProfileViewBasic {
   displayName?: string
   avatar?: string
   viewer?: ViewerState
+  labels?: ComAtprotoLabelDefs.Label[]
   [k: string]: unknown
 }
 
@@ -35,6 +37,7 @@ export interface ProfileView {
   avatar?: string
   indexedAt?: string
   viewer?: ViewerState
+  labels?: ComAtprotoLabelDefs.Label[]
   [k: string]: unknown
 }
 
@@ -62,6 +65,7 @@ export interface ProfileViewDetailed {
   postsCount?: number
   indexedAt?: string
   viewer?: ViewerState
+  labels?: ComAtprotoLabelDefs.Label[]
   [k: string]: unknown
 }
 

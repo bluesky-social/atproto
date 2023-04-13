@@ -11,6 +11,7 @@ import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
   term?: string
+  invitedBy?: string
   limit: number
   cursor?: string
 }

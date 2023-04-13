@@ -87,6 +87,10 @@ export const COM_ATPROTO_ADMIN = {
 }
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
+  DefsReasonViolation: 'com.atproto.moderation.defs#reasonViolation',
+  DefsReasonMisleading: 'com.atproto.moderation.defs#reasonMisleading',
+  DefsReasonSexual: 'com.atproto.moderation.defs#reasonSexual',
+  DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
 }
 
