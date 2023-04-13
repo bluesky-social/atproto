@@ -76,8 +76,8 @@ export const respToClasses = (res: HiveResp): HiveRespClass[] => {
 const labelForClass = {
   yes_sexual_activity: 'porn',
   animal_genitalia_and_human: 'porn', // for some reason not included in 'yes_sexual_activity'
-  yes_male_nudity: 'nude',
-  yes_female_nudity: 'nude',
+  yes_male_nudity: 'nudity',
+  yes_female_nudity: 'nudity',
   general_suggestive: 'sexual',
   very_bloody: 'gore',
   human_corpse: 'corpse',
