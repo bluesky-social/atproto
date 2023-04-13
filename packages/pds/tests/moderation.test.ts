@@ -718,12 +718,21 @@ describe('moderation', () => {
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
       await reverse(action.id)
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['kittens'])
+      // Cleanup
+      await labelingService.formatAndCreate(
+        ctx.cfg.labelerDid,
+        post.uriStr,
+        post.cidStr,
+        { negate: ['kittens'] },
+      )
     })
 
-    it('no-ops when negating a non-existing label and reverses.', async () => {
+    it('no-ops when negating an already-negated label and reverses.', async () => {
+      const { ctx } = server
       const post = sc.posts[sc.dids.bob][0].ref
+      const labelingService = ctx.services.appView.label(ctx.db)
       const action = await actionWithLabels({
-        negateLabelVals: ['does-not-exist'],
+        negateLabelVals: ['bears'],
         subject: {
           $type: 'com.atproto.repo.strongRef',
           uri: post.uriStr,
@@ -732,7 +741,14 @@ describe('moderation', () => {
       })
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
       await reverse(action.id)
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
+      await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['bears'])
+      // Cleanup
+      await labelingService.formatAndCreate(
+        ctx.cfg.labelerDid,
+        post.uriStr,
+        post.cidStr,
+        { negate: ['bears'] },
+      )
     })
 
     it('creates a non-existing label and reverses.', async () => {
@@ -834,11 +850,8 @@ describe('moderation', () => {
         { uri },
         { headers: { authorization: adminAuth() } },
       )
-      console.log(result.data.labels)
-      result.data.labels?.forEach((label) => {
-        expect(label.neg).toBeFalsy()
-      })
-      return result.data.labels?.map((l) => l.val) ?? []
+      const labels = result.data.labels ?? []
+      return labels.map((l) => l.val)
     }
 
     async function getRepoLabels(did: string) {
@@ -846,10 +859,8 @@ describe('moderation', () => {
         { did },
         { headers: { authorization: adminAuth() } },
       )
-      result.data.labels?.forEach((label) => {
-        expect(label.neg).toBeFalsy()
-      })
-      return result.data.labels ?? []
+      const labels = result.data.labels ?? []
+      return labels.map((l) => l.val)
     }
   })
 
