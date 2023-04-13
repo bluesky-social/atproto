@@ -751,10 +751,10 @@ describe('moderation', () => {
       )
     })
 
-    it('creates a non-existing label and reverses.', async () => {
+    it('creates non-existing labels and reverses.', async () => {
       const post = sc.posts[sc.dids.bob][0].ref
       const action = await actionWithLabels({
-        createLabelVals: ['puppies'],
+        createLabelVals: ['puppies', 'doggies'],
         negateLabelVals: [],
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -762,7 +762,10 @@ describe('moderation', () => {
           cid: post.cidStr,
         },
       })
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['puppies'])
+      await expect(getRecordLabels(post.uriStr)).resolves.toEqual([
+        'puppies',
+        'doggies',
+      ])
       await reverse(action.id)
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
     })
