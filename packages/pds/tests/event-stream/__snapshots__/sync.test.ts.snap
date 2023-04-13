@@ -33,7 +33,15 @@ Array [
       "by": Object {
         "did": "user(1)",
         "handle": "dan.test",
-        "labels": Array [],
+        "labels": Array [
+          Object {
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "did:example:labeler",
+            "uri": "user(1)",
+            "val": "repo-action-label",
+          },
+        ],
         "viewer": Object {
           "following": "record(1)",
           "muted": false,
@@ -47,7 +55,15 @@ Array [
       "author": Object {
         "did": "user(1)",
         "handle": "dan.test",
-        "labels": Array [],
+        "labels": Array [
+          Object {
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "did:example:labeler",
+            "uri": "user(1)",
+            "val": "repo-action-label",
+          },
+        ],
         "viewer": Object {
           "following": "record(1)",
           "muted": false,
@@ -622,7 +638,15 @@ Array [
           "author": Object {
             "did": "user(1)",
             "handle": "dan.test",
-            "labels": Array [],
+            "labels": Array [
+              Object {
+                "cts": "1970-01-01T00:00:00.000Z",
+                "neg": false,
+                "src": "did:example:labeler",
+                "uri": "user(1)",
+                "val": "repo-action-label",
+              },
+            ],
             "viewer": Object {
               "following": "record(1)",
               "muted": false,
@@ -821,7 +845,15 @@ Array [
       "author": Object {
         "did": "user(1)",
         "handle": "dan.test",
-        "labels": Array [],
+        "labels": Array [
+          Object {
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "did:example:labeler",
+            "uri": "user(1)",
+            "val": "repo-action-label",
+          },
+        ],
         "viewer": Object {
           "following": "record(1)",
           "muted": false,
@@ -982,7 +1014,15 @@ Array [
       "author": Object {
         "did": "user(1)",
         "handle": "dan.test",
-        "labels": Array [],
+        "labels": Array [
+          Object {
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "did:example:labeler",
+            "uri": "user(1)",
+            "val": "repo-action-label",
+          },
+        ],
         "viewer": Object {
           "following": "record(1)",
           "muted": false,

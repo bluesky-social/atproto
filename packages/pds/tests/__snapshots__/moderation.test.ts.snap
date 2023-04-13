@@ -5,7 +5,7 @@ Object {
   "action": "com.atproto.admin.defs#takedown",
   "createdAt": "1970-01-01T00:00:00.000Z",
   "createdBy": "did:example:admin",
-  "id": 1,
+  "id": 2,
   "reason": "Y",
   "resolvedReportIds": Array [
     6,
