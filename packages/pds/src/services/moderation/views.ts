@@ -549,10 +549,11 @@ export class ModerationViews {
   }
 
   // @TODO: call into label service instead on AppView
-  async labels(subject: string): Promise<Label[]> {
+  async labels(subject: string, includeNeg?: boolean): Promise<Label[]> {
     const res = await this.db.db
       .selectFrom('label')
       .where('label.uri', '=', subject)
+      .if(!includeNeg, (qb) => qb.where('neg', '=', 0))
       .selectAll()
       .execute()
     return res.map((l) => ({
