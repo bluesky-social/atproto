@@ -790,7 +790,24 @@ describe('moderation', () => {
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
     })
 
-    it('creates and negates labels on a repo.', async () => {
+    it('creates labels on a repo and reverses.', async () => {
+      const action = await actionWithLabels({
+        createLabelVals: ['puppies', 'doggies'],
+        negateLabelVals: [],
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.bob,
+        },
+      })
+      await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual([
+        'puppies',
+        'doggies',
+      ])
+      await reverse(action.id)
+      await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual([])
+    })
+
+    it('creates and negates labels on a repo and reverses.', async () => {
       const { ctx } = server
       const labelingService = ctx.services.appView.label(ctx.db)
       await labelingService.formatAndCreate(
