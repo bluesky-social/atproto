@@ -13,6 +13,12 @@ import { AppPassword } from '../../lexicon/types/com/atproto/server/defs'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
+export enum PasswordRes {
+  NotVerified = 0,
+  AccountPassword = 1,
+  AppPassword = 2,
+}
+
 export class AccountService {
   constructor(public db: Database) {}
 
@@ -97,7 +103,7 @@ export class AccountService {
       .values({
         email: email.toLowerCase(),
         did,
-        passwordScrypt: await scrypt.hash(password),
+        passwordScrypt: await scrypt.genSaltAndHash(password),
         createdAt: new Date().toISOString(),
       })
       .onConflict((oc) => oc.doNothing())
@@ -157,7 +163,7 @@ export class AccountService {
   }
 
   async updateUserPassword(did: string, password: string) {
-    const passwordScrypt = await scrypt.hash(password)
+    const passwordScrypt = await scrypt.genSaltAndHash(password)
     await this.db.db
       .updateTable('user_account')
       .set({ passwordScrypt })
@@ -176,7 +182,7 @@ export class AccountService {
       str.slice(12, 16),
     ]
     const password = chunks.join('-')
-    const passwordScrypt = await scrypt.hash(password)
+    const passwordScrypt = await scrypt.hashAppPassword(did, password)
     const got = await this.db.db
       .insertInto('app_password')
       .values({ accountDid: did, name, passwordScrypt })
@@ -192,14 +198,19 @@ export class AccountService {
     }
   }
 
-  async verifyUserPassword(did: string, password: string): Promise<boolean> {
+  async verifyUserPassword(
+    did: string,
+    password: string,
+  ): Promise<PasswordRes> {
     const found = await this.db.db
       .selectFrom('user_account')
       .selectAll()
       .where('did', '=', did)
       .executeTakeFirst()
-    if (!found) return false
-    return scrypt.verify(password, found.passwordScrypt)
+    if (!found) return PasswordRes.NotVerified
+    const verified = scrypt.verify(password, found.passwordScrypt)
+    if (!verified) return PasswordRes.NotVerified
+    return PasswordRes.AccountPassword
   }
 
   async mute(info: { did: string; mutedByDid: string; createdAt?: Date }) {
