@@ -15,13 +15,14 @@ export type ServerAuthOpts = {
 }
 
 // @TODO sync-up with current method names, consider backwards compat.
-export enum AuthScopes {
+export enum AuthScope {
   Access = 'com.atproto.access',
   Refresh = 'com.atproto.refresh',
+  AppPass = 'com.atproto.appPass',
 }
 
 export type AuthToken = {
-  scope: AuthScopes
+  scope: AuthScope
   sub: string
   exp: number
 }
@@ -39,7 +40,7 @@ export class ServerAuth {
 
   createAccessToken(did: string, expiresIn?: string | number) {
     const payload = {
-      scope: AuthScopes.Access,
+      scope: AuthScope.Access,
       sub: did,
     }
     return {
@@ -53,7 +54,7 @@ export class ServerAuth {
 
   createRefreshToken(did: string, jti?: string, expiresIn?: string | number) {
     const payload = {
-      scope: AuthScopes.Refresh,
+      scope: AuthScope.Refresh,
       sub: did,
       jti: jti ?? getRefreshTokenId(),
     }
@@ -66,28 +67,34 @@ export class ServerAuth {
     }
   }
 
-  getUserDid(req: express.Request, scope = AuthScopes.Access): string | null {
+  getCredentials(
+    req: express.Request,
+    scopes = [AuthScope.Access],
+  ): { did: string; scope: AuthScope } | null {
     const token = this.getToken(req)
     if (!token) return null
-    const payload = this.verifyToken(token, scope)
+    const payload = this.verifyToken(token, scopes)
     const sub = payload.sub
     if (typeof sub !== 'string' || !sub.startsWith('did:')) {
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
-    return sub
+    return { did: sub, scope: payload.scope }
   }
 
-  getUserDidOrThrow(req: express.Request, scope?: AuthScopes): string {
-    const did = this.getUserDid(req, scope)
-    if (did === null) {
+  getCredentialsOrThrow(
+    req: express.Request,
+    scopes: AuthScope[],
+  ): { did: string; scope: AuthScope } {
+    const creds = this.getCredentials(req, scopes)
+    if (creds === null) {
       throw new AuthRequiredError()
     }
-    return did
+    return creds
   }
 
-  verifyUser(req: express.Request, did: string, scope?: AuthScopes): boolean {
-    const authorized = this.getUserDid(req, scope)
-    return authorized === did
+  verifyUser(req: express.Request, did: string, scopes: AuthScope[]): boolean {
+    const authorized = this.getCredentials(req, scopes)
+    return authorized !== null && authorized.did === did
   }
 
   verifyAdmin(req: express.Request): boolean {
@@ -105,13 +112,17 @@ export class ServerAuth {
     return header.slice(BEARER.length)
   }
 
-  verifyToken(token: string, scope?: AuthScopes, options?: jwt.VerifyOptions) {
+  verifyToken(
+    token: string,
+    scopes: AuthScope[],
+    options?: jwt.VerifyOptions,
+  ): jwt.JwtPayload {
     try {
       const payload = jwt.verify(token, this._secret, options)
       if (typeof payload === 'string' || 'signature' in payload) {
         throw new InvalidRequestError('Malformed token', 'InvalidToken')
       }
-      if (scope && payload.scope !== scope) {
+      if (scopes.length > 0 && !scopes.includes(payload.scope)) {
         throw new InvalidRequestError('Bad token scope', 'InvalidToken')
       }
       return payload
@@ -152,11 +163,22 @@ export const parseBasicAuth = (
 export const accessVerifier =
   (auth: ServerAuth) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
+    const creds = auth.getCredentialsOrThrow(ctx.req, [
+      AuthScope.Access,
+      AuthScope.AppPass,
+    ])
     return {
-      credentials: {
-        did: auth.getUserDidOrThrow(ctx.req, AuthScopes.Access),
-        scope: AuthScopes.Access,
-      },
+      credentials: creds,
+      artifacts: auth.getToken(ctx.req),
+    }
+  }
+
+export const accessVerifierNotAppPassword =
+  (auth: ServerAuth) =>
+  async (ctx: { req: express.Request; res: express.Response }) => {
+    const creds = auth.getCredentialsOrThrow(ctx.req, [AuthScope.Access])
+    return {
+      credentials: creds,
       artifacts: auth.getToken(ctx.req),
     }
   }
@@ -164,8 +186,8 @@ export const accessVerifier =
 export const accessVerifierCheckTakedown =
   (auth: ServerAuth, { db, services }: AppContext) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
-    const did = auth.getUserDidOrThrow(ctx.req, AuthScopes.Access)
-    const actor = await services.account(db).getAccount(did, true)
+    const creds = auth.getCredentialsOrThrow(ctx.req, [AuthScope.Access])
+    const actor = await services.account(db).getAccount(creds.did, true)
     if (!actor || softDeleted(actor)) {
       throw new AuthRequiredError(
         'Account has been taken down',
@@ -173,10 +195,7 @@ export const accessVerifierCheckTakedown =
       )
     }
     return {
-      credentials: {
-        did,
-        scope: AuthScopes.Access,
-      },
+      credentials: creds,
       artifacts: auth.getToken(ctx.req),
     }
   }
@@ -184,11 +203,9 @@ export const accessVerifierCheckTakedown =
 export const refreshVerifier =
   (auth: ServerAuth) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
+    const creds = auth.getCredentialsOrThrow(ctx.req, [AuthScope.Refresh])
     return {
-      credentials: {
-        did: auth.getUserDidOrThrow(ctx.req, AuthScopes.Refresh),
-        scope: AuthScopes.Refresh,
-      },
+      credentials: creds,
       artifacts: auth.getToken(ctx.req),
     }
   }

@@ -46,3 +46,22 @@ export function isInviteCodeUse(v: unknown): v is InviteCodeUse {
 export function validateInviteCodeUse(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.server.defs#inviteCodeUse', v)
 }
+
+export interface AppPassword {
+  name: string
+  password: string
+  createdAt: string
+  [k: string]: unknown
+}
+
+export function isAppPassword(v: unknown): v is AppPassword {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.server.defs#appPassword'
+  )
+}
+
+export function validateAppPassword(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.server.defs#appPassword', v)
+}

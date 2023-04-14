@@ -2,6 +2,7 @@ export interface RefreshToken {
   id: string
   did: string
   expiresAt: string
+  appPasswordName: string | null
   nextId: string | null
 }
 

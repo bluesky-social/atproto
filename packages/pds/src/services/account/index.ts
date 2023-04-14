@@ -9,6 +9,9 @@ import { countAll, notSoftDeletedClause, nullToZero } from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import { sequenceHandleUpdate } from '../../sequencer'
+import { AppPassword } from '../../lexicon/types/com/atproto/server/defs'
+import { randomStr } from '@atproto/crypto'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export class AccountService {
   constructor(public db: Database) {}
@@ -160,6 +163,33 @@ export class AccountService {
       .set({ passwordScrypt })
       .where('did', '=', did)
       .execute()
+  }
+
+  async createAppPassword(did: string, name: string): Promise<AppPassword> {
+    // create an app password with format:
+    // 1234-abcd-5678-efgh
+    const str = randomStr(16, 'base32').slice(0, 16)
+    const chunks = [
+      str.slice(0, 4),
+      str.slice(4, 8),
+      str.slice(8, 12),
+      str.slice(12, 16),
+    ]
+    const password = chunks.join('-')
+    const passwordScrypt = await scrypt.hash(password)
+    const got = await this.db.db
+      .insertInto('app_password')
+      .values({ accountDid: did, name, passwordScrypt })
+      .returningAll()
+      .executeTakeFirst()
+    if (!got) {
+      throw new InvalidRequestError('could not create app-specific password')
+    }
+    return {
+      name,
+      password,
+      createdAt: got.createdAt,
+    }
   }
 
   async verifyUserPassword(did: string, password: string): Promise<boolean> {

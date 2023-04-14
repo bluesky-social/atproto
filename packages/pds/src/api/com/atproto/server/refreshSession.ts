@@ -23,6 +23,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const lastRefreshId = ctx.auth.verifyToken(
         ctx.auth.getToken(req) ?? '',
+        [],
       ).jti
       if (!lastRefreshId) {
         throw new Error('Unexpected missing refresh token id')
