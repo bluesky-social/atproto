@@ -2133,9 +2133,12 @@ export const schemaDict = {
               useCount: {
                 type: 'integer',
               },
-              forAccount: {
-                type: 'string',
-                format: 'did',
+              forAccounts: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
               },
             },
           },
@@ -2149,9 +2152,25 @@ export const schemaDict = {
               codes: {
                 type: 'array',
                 items: {
-                  type: 'string',
+                  type: 'ref',
+                  ref: 'lex:com.atproto.server.createInviteCodes#accountCodes',
                 },
               },
+            },
+          },
+        },
+      },
+      accountCodes: {
+        type: 'object',
+        required: ['account', 'codes'],
+        properties: {
+          account: {
+            type: 'string',
+          },
+          codes: {
+            type: 'array',
+            items: {
+              type: 'string',
             },
           },
         },
