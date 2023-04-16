@@ -40,7 +40,7 @@ export default function (server: Server, ctx: AppContext) {
 
     const access = ctx.auth.createAccessToken({
       did: user.did,
-      scope: AuthScope.AppPass,
+      scope: appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
     })
     const refresh = ctx.auth.createRefreshToken({ did: user.did })
     await authService.grantRefreshToken(refresh.payload, appPasswordName)

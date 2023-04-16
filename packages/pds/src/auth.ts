@@ -196,7 +196,10 @@ export const accessVerifierNotAppPassword =
 export const accessVerifierCheckTakedown =
   (auth: ServerAuth, { db, services }: AppContext) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
-    const creds = auth.getCredentialsOrThrow(ctx.req, [AuthScope.Access])
+    const creds = auth.getCredentialsOrThrow(ctx.req, [
+      AuthScope.Access,
+      AuthScope.AppPass,
+    ])
     const actor = await services.account(db).getAccount(creds.did, true)
     if (!actor || softDeleted(actor)) {
       throw new AuthRequiredError(

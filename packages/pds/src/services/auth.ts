@@ -87,4 +87,13 @@ export class AuthService {
       .executeTakeFirst()
     return numDeletedRows > 0
   }
+
+  async revokeAppPasswordRefreshToken(did: string, appPassName: string) {
+    const { numDeletedRows } = await this.db.db
+      .deleteFrom('refresh_token')
+      .where('did', '=', did)
+      .where('appPasswordName', '=', appPassName)
+      .executeTakeFirst()
+    return numDeletedRows > 0
+  }
 }

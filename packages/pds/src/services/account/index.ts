@@ -197,6 +197,14 @@ export class AccountService {
     }
   }
 
+  async deleteAppPassword(did: string, name: string) {
+    await this.db.db
+      .deleteFrom('app_password')
+      .where('accountDid', '=', did)
+      .where('name', '=', name)
+      .execute()
+  }
+
   async verifyAccountPassword(did: string, password: string): Promise<boolean> {
     const found = await this.db.db
       .selectFrom('user_account')
