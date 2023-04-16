@@ -13,12 +13,6 @@ import { AppPassword } from '../../lexicon/types/com/atproto/server/defs'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
-export enum PasswordRes {
-  NotVerified = 0,
-  AccountPassword = 1,
-  AppPassword = 2,
-}
-
 export class AccountService {
   constructor(public db: Database) {}
 
@@ -198,19 +192,27 @@ export class AccountService {
     }
   }
 
-  async verifyUserPassword(
-    did: string,
-    password: string,
-  ): Promise<PasswordRes> {
+  async verifyAccountPassword(did: string, password: string): Promise<boolean> {
     const found = await this.db.db
       .selectFrom('user_account')
       .selectAll()
       .where('did', '=', did)
       .executeTakeFirst()
-    if (!found) return PasswordRes.NotVerified
-    const verified = scrypt.verify(password, found.passwordScrypt)
-    if (!verified) return PasswordRes.NotVerified
-    return PasswordRes.AccountPassword
+    return found ? await scrypt.verify(password, found.passwordScrypt) : false
+  }
+
+  async verifyAppPassword(
+    did: string,
+    password: string,
+  ): Promise<string | null> {
+    const passwordScrypt = await scrypt.hashAppPassword(did, password)
+    const found = await this.db.db
+      .selectFrom('app_password')
+      .selectAll()
+      .where('accountDid', '=', did)
+      .where('passwordScrypt', '=', passwordScrypt)
+      .executeTakeFirst()
+    return found?.name ?? null
   }
 
   async mute(info: { did: string; mutedByDid: string; createdAt?: Date }) {

@@ -38,30 +38,40 @@ export class ServerAuth {
     this._adminPass = opts.adminPass
   }
 
-  createAccessToken(did: string, expiresIn?: string | number) {
+  createAccessToken(opts: {
+    did: string
+    scope?: AuthScope
+    expiresIn?: string | number
+  }) {
+    const { did, scope = AuthScope.Access, expiresIn = '120mins' } = opts
     const payload = {
-      scope: AuthScope.Access,
+      scope,
       sub: did,
     }
     return {
       payload: payload as AuthToken, // exp set by sign()
       jwt: jwt.sign(payload, this._secret, {
-        expiresIn: expiresIn ?? '120mins',
+        expiresIn: expiresIn,
         mutatePayload: true,
       }),
     }
   }
 
-  createRefreshToken(did: string, jti?: string, expiresIn?: string | number) {
+  createRefreshToken(opts: {
+    did: string
+    jti?: string
+    expiresIn?: string | number
+  }) {
+    const { did, jti = getRefreshTokenId(), expiresIn = '90days' } = opts
     const payload = {
       scope: AuthScope.Refresh,
       sub: did,
-      jti: jti ?? getRefreshTokenId(),
+      jti,
     }
     return {
       payload: payload as RefreshToken, // exp set by sign()
       jwt: jwt.sign(payload, this._secret, {
-        expiresIn: expiresIn ?? '90days',
+        expiresIn: expiresIn,
         mutatePayload: true,
       }),
     }
