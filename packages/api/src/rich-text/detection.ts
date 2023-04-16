@@ -46,7 +46,7 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
       }
       const start = text.utf16.indexOf(match[2], match.index)
       const index = { start, end: start + match[2].length }
-      // strip ending puncuation
+      // strip ending punctuation
       if (/[.,;!?]$/.test(uri)) {
         uri = uri.slice(0, -1)
         index.end--
@@ -56,6 +56,7 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
         index.end--
       }
       facets.push({
+        $type: 'app.bsky.richtext.facet',
         index: {
           byteStart: text.utf16IndexToUtf8Index(index.start),
           byteEnd: text.utf16IndexToUtf8Index(index.end),
