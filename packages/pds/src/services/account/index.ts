@@ -179,7 +179,12 @@ export class AccountService {
     const passwordScrypt = await scrypt.hashAppPassword(did, password)
     const got = await this.db.db
       .insertInto('app_password')
-      .values({ accountDid: did, name, passwordScrypt })
+      .values({
+        accountDid: did,
+        name,
+        passwordScrypt,
+        createdAt: new Date().toISOString(),
+      })
       .returningAll()
       .executeTakeFirst()
     if (!got) {
