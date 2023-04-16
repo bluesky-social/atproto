@@ -2091,9 +2091,6 @@ export const schemaDict = {
               name: {
                 type: 'string',
               },
-              password: {
-                type: 'string',
-              },
             },
           },
         },
@@ -2101,7 +2098,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:com.atproto.server.defs#appPassword',
+            ref: 'lex:com.atproto.server.createAppPassword#appPassword',
           },
         },
         errors: [
@@ -2109,6 +2106,22 @@ export const schemaDict = {
             name: 'AccountTakedown',
           },
         ],
+      },
+      appPassword: {
+        type: 'object',
+        required: ['name', 'password', 'createdAt'],
+        properties: {
+          name: {
+            type: 'string',
+          },
+          password: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
       },
     },
   },
@@ -2311,22 +2324,6 @@ export const schemaDict = {
           },
         },
       },
-      appPassword: {
-        type: 'object',
-        required: ['name', 'password', 'createdAt'],
-        properties: {
-          name: {
-            type: 'string',
-          },
-          password: {
-            type: 'string',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-        },
-      },
     },
   },
   ComAtprotoServerDeleteAccount: {
@@ -2511,7 +2508,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:com.atproto.server.defs#appPassword',
+                  ref: 'lex:com.atproto.server.listAppPasswords#appPassword',
                 },
               },
             },
@@ -2522,6 +2519,19 @@ export const schemaDict = {
             name: 'AccountTakedown',
           },
         ],
+      },
+      appPassword: {
+        type: 'object',
+        required: ['name', 'createdAt'],
+        properties: {
+          name: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
       },
     },
   },

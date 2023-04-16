@@ -9,7 +9,7 @@ import { countAll, notSoftDeletedClause, nullToZero } from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import { sequenceHandleUpdate } from '../../sequencer'
-import { AppPassword } from '../../lexicon/types/com/atproto/server/defs'
+import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
@@ -226,6 +226,16 @@ export class AccountService {
       .where('passwordScrypt', '=', passwordScrypt)
       .executeTakeFirst()
     return found?.name ?? null
+  }
+
+  async listAppPasswords(
+    did: string,
+  ): Promise<{ name: string; createdAt: string }[]> {
+    return this.db.db
+      .selectFrom('app_password')
+      .select(['name', 'createdAt'])
+      .where('accountDid', '=', did)
+      .execute()
   }
 
   async mute(info: { did: string; mutedByDid: string; createdAt?: Date }) {

@@ -25,15 +25,6 @@
         "usedBy": {"type": "string", "format": "did"},
         "usedAt": {"type": "string", "format": "datetime"}
       }
-    },
-    "appPassword": {
-      "type": "object",
-      "required": ["name", "password", "createdAt"],
-      "properties": {
-        "name": {"type": "string"},
-        "password": {"type": "string"},
-        "createdAt": {"type": "string", "format": "datetime"}
-      }
     }
   }
 }
