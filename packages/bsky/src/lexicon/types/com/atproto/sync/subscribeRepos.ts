@@ -26,6 +26,7 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
   auth: HA
   params: QueryParams
   req: IncomingMessage
+  signal: AbortSignal
 }) => AsyncIterable<HandlerOutput>
 
 export interface Commit {

@@ -21,6 +21,7 @@ import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/ad
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
+import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
@@ -254,6 +255,16 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.takeModerationAction' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateAccountEmail<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminUpdateAccountEmail.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.updateAccountEmail' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
