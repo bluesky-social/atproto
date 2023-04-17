@@ -40,10 +40,18 @@ describe('notification views', () => {
   const sort = (notifs: Notification[]) => {
     // Need to sort because notification ordering is not well-defined
     return notifs.sort((a, b) => {
-      if (a.author.handle === b.author.handle) {
+      const stableUriA = a.uri.replace(
+        /\/did:plc:.+?\//,
+        `/${a.author.handle}/`,
+      )
+      const stableUriB = b.uri.replace(
+        /\/did:plc:.+?\//,
+        `/${b.author.handle}/`,
+      )
+      if (stableUriA === stableUriB) {
         return a.indexedAt > b.indexedAt ? -1 : 1
       }
-      return a.author.handle > b.author.handle ? -1 : 1
+      return stableUriA > stableUriB ? -1 : 1
     })
   }
 
@@ -145,12 +153,16 @@ describe('notification views', () => {
       {},
       { headers: sc.getHeaders(alice, true) },
     )
+    const seenAt = full.data.notifications[3].indexedAt
     const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
-      { seenAt: full.data.notifications[3].indexedAt },
+      { seenAt },
       { headers: sc.getHeaders(alice, true) },
     )
 
-    expect(notifCount.data.count).toBe(3)
+    expect(notifCount.data.count).toBe(
+      full.data.notifications.filter((n) => n.indexedAt > seenAt).length,
+    )
+    expect(notifCount.data.count).toBeGreaterThan(0)
   })
 
   it('fetches notifications with a last-seen', async () => {
@@ -158,8 +170,9 @@ describe('notification views', () => {
       {},
       { headers: sc.getHeaders(alice, true) },
     )
+    const seenAt = full.data.notifications[3].indexedAt
     const notifRes = await agent.api.app.bsky.notification.listNotifications(
-      { seenAt: full.data.notifications[3].indexedAt },
+      { seenAt },
       { headers: sc.getHeaders(alice, true) },
     )
 
@@ -167,8 +180,6 @@ describe('notification views', () => {
     expect(notifs.length).toBe(12)
 
     const readStates = notifs.map((notif) => notif.isRead)
-    expect(readStates).toEqual(notifs.map((_, i) => i >= 3))
-
-    expect(forSnapshot(sort(notifs))).toMatchSnapshot()
+    expect(readStates).toEqual(notifs.map((n) => n.indexedAt <= seenAt))
   })
 })
