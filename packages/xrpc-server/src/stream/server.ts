@@ -12,8 +12,12 @@ export class XrpcStreamServer {
     this.wss.on('connection', async (socket, req) => {
       socket.on('error', (err) => logger.error(err, 'websocket error'))
       try {
-        const iterator = unwrapIterator(handler(req, socket, this))
-        socket.once('close', () => iterator.return?.())
+        const ac = new AbortController()
+        const iterator = unwrapIterator(handler(req, ac.signal, socket, this))
+        socket.once('close', () => {
+          iterator.return?.()
+          ac.abort()
+        })
         const safeFrames = wrapIterator(iterator)
         for await (const frame of safeFrames) {
           if (frame instanceof ErrorFrame) {
@@ -43,6 +47,7 @@ export class XrpcStreamServer {
 
 export type Handler = (
   req: IncomingMessage,
+  signal: AbortSignal,
   socket: WebSocket,
   server: XrpcStreamServer,
 ) => AsyncIterable<Frame>
