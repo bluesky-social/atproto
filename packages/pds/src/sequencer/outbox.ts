@@ -30,6 +30,7 @@ export class Outbox {
   async *events(
     backfillCursor?: number,
     backFillTime?: string,
+    signal?: AbortSignal,
   ): AsyncGenerator<SeqEvt> {
     // catch up as much as we can
     if (backfillCursor !== undefined) {
@@ -43,13 +44,21 @@ export class Outbox {
     }
 
     // streams updates from sequencer, but buffers them for cutover as it makes a last request
-    this.sequencer.on('events', (evts) => {
+
+    const addToBuffer = (evts) => {
       if (this.caughtUp) {
         this.outBuffer.pushMany(evts)
       } else {
         this.cutoverBuffer = [...this.cutoverBuffer, ...evts]
       }
-    })
+    }
+
+    if (!signal?.aborted) {
+      this.sequencer.on('events', addToBuffer)
+    }
+    signal?.addEventListener('abort', () =>
+      this.sequencer.off('events', addToBuffer),
+    )
 
     const cutover = async () => {
       // only need to perform cutover if we've been backfilling
