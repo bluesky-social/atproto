@@ -587,4 +587,37 @@ describe('account', () => {
     )
     await expect(attempt).rejects.toThrow('cannot disable admin invite codes')
   })
+
+  it('creates many invite codes', async () => {
+    const accounts = ['did:example:one', 'did:example:two', 'did:example:three']
+    const res = await agent.api.com.atproto.server.createInviteCodes(
+      {
+        useCount: 2,
+        codeCount: 2,
+        forAccounts: accounts,
+      },
+      {
+        headers: { authorization: util.adminAuth() },
+        encoding: 'application/json',
+      },
+    )
+    expect(res.data.codes.length).toBe(3)
+    const fromDb = await ctx.db.db
+      .selectFrom('invite_code')
+      .selectAll()
+      .where('forUser', 'in', accounts)
+      .execute()
+    expect(fromDb.length).toBe(6)
+    const dbCodesByUser = {}
+    for (const row of fromDb) {
+      expect(row.disabled).toBe(0)
+      expect(row.availableUses).toBe(2)
+      dbCodesByUser[row.forUser] ??= []
+      dbCodesByUser[row.forUser].push(row.code)
+    }
+    for (const { account, codes } of res.data.codes) {
+      expect(codes.length).toBe(2)
+      expect(codes.sort()).toEqual(dbCodesByUser[account].sort())
+    }
+  })
 })
