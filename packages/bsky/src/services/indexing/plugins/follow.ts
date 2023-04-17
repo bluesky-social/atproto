@@ -5,10 +5,6 @@ import * as Follow from '../../../lexicon/types/app/bsky/graph/follow'
 import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
-import {
-  createNotification,
-  deleteNotifications,
-} from '../../notification/types'
 
 const lexId = lex.ids.AppBskyGraphFollow
 type IndexedFollow = Selectable<DatabaseSchemaType['follow']>
@@ -50,15 +46,17 @@ const findDuplicate = async (
   return found ? new AtUri(found.uri) : null
 }
 
-const eventsForInsert = (obj: IndexedFollow) => {
+const notifsForInsert = (obj: IndexedFollow) => {
   return [
-    createNotification({
+    {
       did: obj.subjectDid,
       author: obj.creator,
       recordUri: obj.uri,
       recordCid: obj.cid,
-      reason: 'follow',
-    }),
+      reason: 'follow' as const,
+      reasonSubject: null,
+      sortAt: obj.indexedAt,
+    },
   ]
 }
 
@@ -74,12 +72,12 @@ const deleteFn = async (
   return deleted || null
 }
 
-const eventsForDelete = (
+const notifsForDelete = (
   deleted: IndexedFollow,
   replacedBy: IndexedFollow | null,
 ) => {
-  if (replacedBy) return []
-  return [deleteNotifications(deleted.uri)]
+  const toDelete = replacedBy ? [] : [deleted.uri]
+  return { notifs: [], toDelete }
 }
 
 export type PluginType = RecordProcessor<Follow.Record, IndexedFollow>
@@ -90,8 +88,8 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
     insertFn,
     findDuplicate,
     deleteFn,
-    eventsForInsert,
-    eventsForDelete,
+    notifsForInsert,
+    notifsForDelete,
   })
 }
 
