@@ -170,14 +170,31 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollowers({
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {
+      console.log('GET FOLLOWERS')
       const requester = auth.credentials.did
       const res = await agent.api.app.bsky.graph.getFollowers(
         params,
         headers(requester),
       )
+      const dids = res.data.followers.map((follower) => follower.did)
+      const mutes = await ctx.services.account(ctx.db).getMutes(requester, dids)
+      const hydrated = res.data.followers.map((follower) => ({
+        ...follower,
+        viewer: {
+          ...(follower.viewer || {}),
+          muted: mutes[follower.did] ?? false,
+        },
+      }))
+
+      const viewers = hydrated.map((h) => h.viewer)
+      console.log(viewers)
+
       return {
         encoding: 'application/json',
-        body: res.data,
+        body: {
+          ...res.data,
+          followers: hydrated,
+        },
       }
     },
   })
@@ -185,6 +202,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollows({
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {
+      console.log('GET FOLLOWS')
       const requester = auth.credentials.did
       const res = await agent.api.app.bsky.graph.getFollows(
         params,

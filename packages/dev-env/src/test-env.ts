@@ -9,6 +9,8 @@ import { DidResolver } from '@atproto/did-resolver'
 import { defaultFetchHandler } from '@atproto/xrpc'
 import { MessageDispatcher } from '@atproto/pds/src/event-stream/message-queue'
 import { RepoSubscription } from '@atproto/bsky/src/subscription/repo'
+import getPort from 'get-port'
+import { wait } from '@atproto/common-web'
 
 export type CloseFn = () => Promise<void>
 
@@ -70,12 +72,15 @@ export const runTestEnv = async (
     params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
 
   const plc = await runPlc({})
+  const bskyPort = await getPort()
   const pds = await runPds({
     dbPostgresUrl,
     dbPostgresSchema,
     plcUrl: plc.url,
+    bskyAppViewEndpoint: `http://localhost:${bskyPort}`,
   })
   const bsky = await runBsky({
+    port: bskyPort,
     plcUrl: plc.url,
     repoProvider: `ws://localhost:${pds.port}`,
     dbPostgresSchema,
@@ -136,6 +141,7 @@ export const runPds = async (cfg: PdsConfig): Promise<PdsServerInfo> => {
     dbPostgresUrl: cfg.dbPostgresUrl,
     maxSubscriptionBuffer: 200,
     repoBackfillLimitMs: 1000 * 60 * 60, // 1hr
+    ...cfg,
   })
 
   const blobstore = new pds.MemoryBlobStore()
@@ -257,4 +263,23 @@ export const mockNetworkUtilities = (pds: PdsServerInfo) => {
       return defaultFetchHandler(httpUri, ...args)
     },
   })
+}
+
+export const processAll = async (server: TestEnvInfo, timeout = 5000) => {
+  const { bsky, pds } = server
+  const sub = bsky.sub
+  if (!sub) return
+  const { db } = pds.ctx.db
+  const start = Date.now()
+  while (Date.now() - start < timeout) {
+    await wait(50)
+    if (!sub) return
+    const state = await sub.getState()
+    const { lastSeq } = await db
+      .selectFrom('repo_seq')
+      .select(db.fn.max('repo_seq.seq').as('lastSeq'))
+      .executeTakeFirstOrThrow()
+    if (state.cursor === lastSeq) return
+  }
+  throw new Error(`Sequence was not processed within ${timeout}ms`)
 }

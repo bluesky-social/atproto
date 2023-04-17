@@ -186,6 +186,22 @@ export class AccountService {
       .execute()
   }
 
+  async getMutes(
+    mutedBy: string,
+    dids: string[],
+  ): Promise<Record<string, boolean>> {
+    const res = await this.db.db
+      .selectFrom('mute')
+      .where('mutedByDid', '=', mutedBy)
+      .where('did', 'in', dids)
+      .selectAll()
+      .execute()
+    return res.reduce((acc, cur) => {
+      acc[cur.did] = true
+      return acc
+    }, {} as Record<string, boolean>)
+  }
+
   async search(opts: {
     term: string
     limit: number
