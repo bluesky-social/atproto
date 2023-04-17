@@ -3,3 +3,4 @@
 // this with kysely's FileMigrationProvider, but it doesn't play nicely with the build process.
 
 export * as _20230309T045948368Z from './20230309T045948368Z-init'
+export * as _20230417T210628672Z from './20230417T210628672Z-moderation-init'
