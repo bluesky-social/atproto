@@ -61,6 +61,7 @@ export type XRPCStreamHandler = (ctx: {
   auth: HandlerAuth | undefined
   params: Params
   req: IncomingMessage
+  signal: AbortSignal
 }) => AsyncIterable<unknown>
 
 export type AuthOutput = HandlerAuth | HandlerError

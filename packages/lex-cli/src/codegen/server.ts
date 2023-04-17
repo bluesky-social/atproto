@@ -530,6 +530,7 @@ function genServerXrpcStreaming(
         auth: HA
         params: QueryParams
         req: IncomingMessage
+        signal: AbortSignal
       }) => AsyncIterable<HandlerOutput>`,
   })
 }
