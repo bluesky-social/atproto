@@ -20,8 +20,6 @@ export function validate(
   switch (def.type) {
     case 'boolean':
       return Primitives.boolean(lexicons, path, def, value)
-    case 'float':
-      return Primitives.float(lexicons, path, def, value)
     case 'integer':
       return Primitives.integer(lexicons, path, def, value)
     case 'string':

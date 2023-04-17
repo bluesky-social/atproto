@@ -57,6 +57,13 @@ describe('handles', () => {
     expect(res.data.did).toBe(alice)
   })
 
+  it('resolves non-normalize handles', async () => {
+    const res = await agent.api.com.atproto.identity.resolveHandle({
+      handle: 'aLicE.tEst',
+    })
+    expect(res.data.did).toBe(alice)
+  })
+
   it('does not resolve a "handle" for the service', async () => {
     const promise = agent.api.com.atproto.identity.resolveHandle()
     await expect(promise).rejects.toThrow('Unable to resolve handle')
@@ -221,5 +228,73 @@ describe('handles', () => {
       { headers: sc.getHeaders(bob) },
     )
     expect(profile.data.handle).toBe('alice.external')
+  })
+
+  it('allows admin overrules of service domains', async () => {
+    await agent.api.com.atproto.admin.updateAccountHandle(
+      {
+        did: bob,
+        handle: 'bob-alt.test',
+      },
+      {
+        headers: { authorization: util.adminAuth() },
+        encoding: 'application/json',
+      },
+    )
+
+    const profile = await agent.api.app.bsky.actor.getProfile(
+      { actor: bob },
+      { headers: sc.getHeaders(bob) },
+    )
+    expect(profile.data.handle).toBe('bob-alt.test')
+  })
+
+  it('disallows admin overrules of off-service domains', async () => {
+    const attempt = agent.api.com.atproto.admin.updateAccountHandle(
+      {
+        did: alice,
+        handle: 'alice-alt.test',
+      },
+      {
+        headers: { authorization: util.adminAuth() },
+        encoding: 'application/json',
+      },
+    )
+    await expect(attempt).rejects.toThrow(
+      'Account not on an available service domain: alice.external',
+    )
+  })
+
+  it('disallows setting handle to an off-service domain', async () => {
+    const attempt = agent.api.com.atproto.admin.updateAccountHandle(
+      {
+        did: bob,
+        handle: 'bob.external',
+      },
+      {
+        headers: { authorization: util.adminAuth() },
+        encoding: 'application/json',
+      },
+    )
+    await expect(attempt).rejects.toThrow('Unsupported domain')
+  })
+
+  it('requires admin auth', async () => {
+    const attempt = agent.api.com.atproto.admin.updateAccountHandle(
+      {
+        did: bob,
+        handle: 'bob-alt.test',
+      },
+      {
+        headers: sc.getHeaders(bob),
+        encoding: 'application/json',
+      },
+    )
+    await expect(attempt).rejects.toThrow('Authentication Required')
+    const attempt2 = agent.api.com.atproto.admin.updateAccountHandle({
+      did: bob,
+      handle: 'bob-alt.test',
+    })
+    await expect(attempt2).rejects.toThrow('Authentication Required')
   })
 })

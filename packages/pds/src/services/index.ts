@@ -1,7 +1,6 @@
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import Database from '../db'
-import { MessageQueue } from '../event-stream/types'
 import { MessageDispatcher } from '../event-stream/message-queue'
 import { ImageUriBuilder } from '../image/uri'
 import { ImageInvalidator } from '../image/invalidator'
@@ -13,28 +12,35 @@ import { ModerationService } from './moderation'
 import { ActorService } from '../app-view/services/actor'
 import { FeedService } from '../app-view/services/feed'
 import { IndexingService } from '../app-view/services/indexing'
+import { Labeler } from '../labeler'
+import { LabelService } from '../app-view/services/label'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
-  messageQueue: MessageQueue
   messageDispatcher: MessageDispatcher
   blobstore: BlobStore
   imgUriBuilder: ImageUriBuilder
   imgInvalidator: ImageInvalidator
+  labeler: Labeler
 }): Services {
   const {
     repoSigningKey,
-    messageQueue,
     messageDispatcher,
     blobstore,
     imgUriBuilder,
     imgInvalidator,
+    labeler,
   } = resources
   return {
     account: AccountService.creator(),
     auth: AuthService.creator(),
     record: RecordService.creator(messageDispatcher),
-    repo: RepoService.creator(repoSigningKey, messageDispatcher, blobstore),
+    repo: RepoService.creator(
+      repoSigningKey,
+      messageDispatcher,
+      blobstore,
+      labeler,
+    ),
     moderation: ModerationService.creator(
       messageDispatcher,
       blobstore,
@@ -44,7 +50,8 @@ export function createServices(resources: {
     appView: {
       actor: ActorService.creator(imgUriBuilder),
       feed: FeedService.creator(imgUriBuilder),
-      indexing: IndexingService.creator(messageQueue, messageDispatcher),
+      indexing: IndexingService.creator(messageDispatcher),
+      label: LabelService.creator(),
     },
   }
 }
@@ -59,6 +66,7 @@ export type Services = {
     feed: FromDb<FeedService>
     indexing: FromDb<IndexingService>
     actor: FromDb<ActorService>
+    label: FromDb<LabelService>
   }
 }
 

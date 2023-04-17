@@ -15,15 +15,12 @@ import { AppView } from './app-view'
 import API, { health } from './api'
 import Database from './db'
 import { ServerAuth } from './auth'
-import * as streamConsumers from './event-stream/consumers'
 import * as error from './error'
 import { loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
 import { createServer } from './lexicon'
-import SqlMessageQueue, {
-  MessageDispatcher,
-} from './event-stream/message-queue'
+import { MessageDispatcher } from './event-stream/message-queue'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
@@ -34,8 +31,8 @@ import {
   ImageInvalidator,
   ImageProcessingServerInvalidator,
 } from './image/invalidator'
+import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
 
-export * as appMigrations from './app-migrations'
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './db'
@@ -74,7 +71,6 @@ export class PDS {
       adminPass: config.adminPassword,
     })
 
-    const messageQueue = new SqlMessageQueue('pds', db)
     const messageDispatcher = new MessageDispatcher()
     const sequencer = new Sequencer(db)
 
@@ -118,13 +114,31 @@ export class PDS {
       config.imgUriKey,
     )
 
+    let labeler: Labeler
+    if (config.hiveApiKey) {
+      labeler = new HiveLabeler({
+        db,
+        blobstore,
+        labelerDid: config.labelerDid,
+        hiveApiKey: config.hiveApiKey,
+        keywords: config.labelerKeywords,
+      })
+    } else {
+      labeler = new KeywordLabeler({
+        db,
+        blobstore,
+        labelerDid: config.labelerDid,
+        keywords: config.labelerKeywords,
+      })
+    }
+
     const services = createServices({
       repoSigningKey,
-      messageQueue,
       messageDispatcher,
       blobstore,
       imgUriBuilder,
       imgInvalidator,
+      labeler,
     })
 
     const ctx = new AppContext({
@@ -134,9 +148,9 @@ export class PDS {
       plcRotationKey,
       cfg: config,
       auth,
-      messageQueue,
       messageDispatcher,
       sequencer,
+      labeler,
       services,
       mailer,
       imgUriBuilder,
@@ -145,6 +159,7 @@ export class PDS {
     const appView = new AppView(ctx)
 
     let server = createServer({
+      validateResponse: config.debugMode,
       payload: {
         jsonLimit: 100 * 1024, // 100kb
         textLimit: 100 * 1024, // 100kb
@@ -168,11 +183,11 @@ export class PDS {
 
   async start(): Promise<http.Server> {
     this.appView.start()
-    streamConsumers.listen(this.ctx)
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
+    this.server.keepAliveTimeout = 90000
     this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
     return server
@@ -180,7 +195,7 @@ export class PDS {
 
   async destroy(): Promise<void> {
     this.appView.destroy()
-    await this.ctx.messageQueue.destroy()
+    await this.ctx.labeler.destroy()
     await this.terminator?.terminate()
     await this.ctx.db.close()
   }

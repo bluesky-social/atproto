@@ -31,11 +31,12 @@ describe('timeline views', () => {
     close = server.close
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
-    await basicSeed(sc, server.ctx.messageQueue)
+    await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
+    await server.ctx.labeler.processAll()
   })
 
   afterAll(async () => {
@@ -168,7 +169,7 @@ describe('timeline views', () => {
 
   it('blocks posts, reposts, replies by actor takedown', async () => {
     const actionResults = await Promise.all(
-      [bob, dan].map((did) =>
+      [bob, carol].map((did) =>
         agent.api.com.atproto.admin.takeModerationAction(
           {
             action: TAKEDOWN,

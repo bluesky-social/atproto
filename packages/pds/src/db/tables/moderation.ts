@@ -21,6 +21,8 @@ export interface ModerationAction {
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
+  createLabelVals: string | null
+  negateLabelVals: string | null
   reason: string
   createdAt: string
   createdBy: string

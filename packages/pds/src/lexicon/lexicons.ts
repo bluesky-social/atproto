@@ -41,6 +41,18 @@ export const schemaDict = {
               type: 'string',
             },
           },
+          createLabelVals: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+          negateLabelVals: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
           reason: {
             type: 'string',
           },
@@ -96,6 +108,18 @@ export const schemaDict = {
             items: {
               type: 'ref',
               ref: 'lex:com.atproto.admin.defs#blobView',
+            },
+          },
+          createLabelVals: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+          negateLabelVals: {
+            type: 'array',
+            items: {
+              type: 'string',
             },
           },
           reason: {
@@ -340,6 +364,13 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#moderationDetail',
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
           invitedBy: {
             type: 'ref',
             ref: 'lex:com.atproto.server.defs#inviteCode',
@@ -435,6 +466,13 @@ export const schemaDict = {
             items: {
               type: 'ref',
               ref: 'lex:com.atproto.admin.defs#blobView',
+            },
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
             },
           },
           indexedAt: {
@@ -988,6 +1026,18 @@ export const schemaDict = {
                   format: 'cid',
                 },
               },
+              createLabelVals: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              negateLabelVals: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
               reason: {
                 type: 'string',
               },
@@ -1010,6 +1060,60 @@ export const schemaDict = {
             name: 'SubjectHasAction',
           },
         ],
+      },
+    },
+  },
+  ComAtprotoAdminUpdateAccountEmail: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateAccountEmail',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Administrative action to update an account's email",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['account', 'email'],
+            properties: {
+              account: {
+                type: 'string',
+                format: 'at-identifier',
+                description: 'The handle or DID of the repo.',
+              },
+              email: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminUpdateAccountHandle: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateAccountHandle',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Administrative action to update an account's handle",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'handle'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              handle: {
+                type: 'string',
+                format: 'handle',
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -1065,6 +1169,174 @@ export const schemaDict = {
                 format: 'handle',
               },
             },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoLabelDefs: {
+    lexicon: 1,
+    id: 'com.atproto.label.defs',
+    defs: {
+      label: {
+        type: 'object',
+        description: 'Metadata tag on an atproto resource (eg, repo or record)',
+        required: ['src', 'uri', 'val', 'cts'],
+        properties: {
+          src: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the actor who created this label',
+          },
+          uri: {
+            type: 'string',
+            format: 'uri',
+            description:
+              'AT URI of the record, repository (account), or other resource which this label applies to',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+            description:
+              "optionally, CID specifying the specific version of 'uri' resource this label applies to",
+          },
+          val: {
+            type: 'string',
+            maxLength: 128,
+            description:
+              'the short string name of the value or type of this label',
+          },
+          neg: {
+            type: 'boolean',
+            description:
+              'if true, this is a negation label, overwriting a previous label',
+          },
+          cts: {
+            type: 'string',
+            format: 'datetime',
+            description: 'timestamp when this label was created',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoLabelQueryLabels: {
+    lexicon: 1,
+    id: 'com.atproto.label.queryLabels',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Find labels relevant to the provided URI patterns.',
+        parameters: {
+          type: 'params',
+          required: ['uriPatterns'],
+          properties: {
+            uriPatterns: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                "List of AT URI patterns to match (boolean 'OR'). Each may be a prefix (ending with '*'; will match inclusive of the string leading to '*'), or a full URI",
+            },
+            sources: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+              description: 'Optional list of label sources (DIDs) to filter on',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 250,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['labels'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              labels: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.label.defs#label',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoLabelSubscribeLabels: {
+    lexicon: 1,
+    id: 'com.atproto.label.subscribeLabels',
+    defs: {
+      main: {
+        type: 'subscription',
+        description: 'Subscribe to label updates',
+        parameters: {
+          type: 'params',
+          properties: {
+            cursor: {
+              type: 'integer',
+              description: 'The last known event to backfill from.',
+            },
+          },
+        },
+        message: {
+          schema: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.label.subscribeLabels#labels',
+              'lex:com.atproto.label.subscribeLabels#info',
+            ],
+          },
+        },
+        errors: [
+          {
+            name: 'FutureCursor',
+          },
+        ],
+      },
+      labels: {
+        type: 'object',
+        required: ['seq', 'labels'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+        },
+      },
+      info: {
+        type: 'object',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            knownValues: ['OutdatedCursor'],
+          },
+          message: {
+            type: 'string',
           },
         },
       },
@@ -1151,16 +1423,37 @@ export const schemaDict = {
         type: 'string',
         knownValues: [
           'com.atproto.moderation.defs#reasonSpam',
+          'com.atproto.moderation.defs#reasonViolation',
+          'com.atproto.moderation.defs#reasonMisleading',
+          'com.atproto.moderation.defs#reasonSexual',
+          'com.atproto.moderation.defs#reasonRude',
           'com.atproto.moderation.defs#reasonOther',
         ],
       },
       reasonSpam: {
         type: 'token',
-        description: 'Moderation report reason: Spam.',
+        description: 'Spam: frequent unwanted promotion, replies, mentions',
+      },
+      reasonViolation: {
+        type: 'token',
+        description: 'Direct violation of server rules, laws, terms of service',
+      },
+      reasonMisleading: {
+        type: 'token',
+        description: 'Misleading identity, affiliation, or content',
+      },
+      reasonSexual: {
+        type: 'token',
+        description: 'Unwanted or mis-labeled sexual content',
+      },
+      reasonRude: {
+        type: 'token',
+        description:
+          'Rude, harassing, explicit, or otherwise unwelcoming behavior',
       },
       reasonOther: {
         type: 'token',
-        description: 'Moderation report reason: Other.',
+        description: 'Other: reports not falling under another report category',
       },
     },
   },
@@ -1820,6 +2113,51 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoServerCreateInviteCodes: {
+    lexicon: 1,
+    id: 'com.atproto.server.createInviteCodes',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Create an invite code.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['codeCount', 'useCount'],
+            properties: {
+              codeCount: {
+                type: 'integer',
+                default: 1,
+              },
+              useCount: {
+                type: 'integer',
+              },
+              forAccount: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['codes'],
+            properties: {
+              codes: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoServerCreateSession: {
     lexicon: 1,
     id: 'com.atproto.server.createSession',
@@ -1831,7 +2169,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['password'],
+            required: ['identifier', 'password'],
             properties: {
               identifier: {
                 type: 'string',
@@ -2497,6 +2835,63 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncListRepos: {
+    lexicon: 1,
+    id: 'com.atproto.sync.listRepos',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List dids and root cids of hosted repos',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 500,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repos'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              repos: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.sync.listRepos#repo',
+                },
+              },
+            },
+          },
+        },
+      },
+      repo: {
+        type: 'object',
+        required: ['did', 'head'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          head: {
+            type: 'string',
+            format: 'cid',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoSyncNotifyOfUpdate: {
     lexicon: 1,
     id: 'com.atproto.sync.notifyOfUpdate',
@@ -2754,6 +3149,13 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#viewerState',
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
         },
       },
       profileView: {
@@ -2788,6 +3190,13 @@ export const schemaDict = {
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#viewerState',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
           },
         },
       },
@@ -2835,6 +3244,13 @@ export const schemaDict = {
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#viewerState',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
           },
         },
       },
@@ -3383,6 +3799,13 @@ export const schemaDict = {
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#viewerState',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
           },
         },
       },
@@ -4253,6 +4676,13 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
         },
       },
     },
@@ -4406,8 +4836,13 @@ export const ids = {
     'com.atproto.admin.reverseModerationAction',
   ComAtprotoAdminSearchRepos: 'com.atproto.admin.searchRepos',
   ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
+  ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
+  ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
   ComAtprotoIdentityResolveHandle: 'com.atproto.identity.resolveHandle',
   ComAtprotoIdentityUpdateHandle: 'com.atproto.identity.updateHandle',
+  ComAtprotoLabelDefs: 'com.atproto.label.defs',
+  ComAtprotoLabelQueryLabels: 'com.atproto.label.queryLabels',
+  ComAtprotoLabelSubscribeLabels: 'com.atproto.label.subscribeLabels',
   ComAtprotoModerationCreateReport: 'com.atproto.moderation.createReport',
   ComAtprotoModerationDefs: 'com.atproto.moderation.defs',
   ComAtprotoRepoApplyWrites: 'com.atproto.repo.applyWrites',
@@ -4421,6 +4856,7 @@ export const ids = {
   ComAtprotoRepoUploadBlob: 'com.atproto.repo.uploadBlob',
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',
   ComAtprotoServerCreateInviteCode: 'com.atproto.server.createInviteCode',
+  ComAtprotoServerCreateInviteCodes: 'com.atproto.server.createInviteCodes',
   ComAtprotoServerCreateSession: 'com.atproto.server.createSession',
   ComAtprotoServerDefs: 'com.atproto.server.defs',
   ComAtprotoServerDeleteAccount: 'com.atproto.server.deleteAccount',
@@ -4443,6 +4879,7 @@ export const ids = {
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
   ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
+  ComAtprotoSyncListRepos: 'com.atproto.sync.listRepos',
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',

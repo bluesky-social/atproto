@@ -14,6 +14,7 @@ import searchActorsTypeahead from './app/bsky/actor/searchActorsTypeahead'
 import getSuggestions from './app/bsky/actor/getSuggestions'
 import getUnreadCount from './app/bsky/notification/getUnreadCount'
 import listNotifications from './app/bsky/notification/listNotifications'
+import unspecced from './app/bsky/unspecced'
 
 export * as health from './health'
 
@@ -34,5 +35,6 @@ export default function (server: Server, ctx: AppContext) {
   getSuggestions(server, ctx)
   getUnreadCount(server, ctx)
   listNotifications(server, ctx)
+  unspecced(server, ctx)
   return server
 }

@@ -30,6 +30,14 @@ export const streamSize = async (stream: Readable): Promise<number> => {
   return size
 }
 
+export const streamToBytes = async (stream: Readable): Promise<Uint8Array> => {
+  const bufs: Buffer[] = []
+  for await (const bytes of stream) {
+    bufs.push(bytes)
+  }
+  return new Uint8Array(Buffer.concat(bufs))
+}
+
 export const bytesToStream = (bytes: Uint8Array): Readable => {
   const stream = new Readable()
   stream.push(bytes)

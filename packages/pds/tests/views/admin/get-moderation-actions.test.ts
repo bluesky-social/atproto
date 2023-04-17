@@ -165,7 +165,7 @@ describe('pds admin get moderation actions view', () => {
       { headers: { authorization: adminAuth() } },
     )
 
-    expect(full.data.actions.length).toEqual(6)
+    expect(full.data.actions.length).toEqual(7) // extra one because of seed client
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 })

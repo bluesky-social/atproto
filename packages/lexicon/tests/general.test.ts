@@ -41,13 +41,11 @@ describe('General validation', () => {
           object: { boolean: true },
           array: ['one', 'two'],
           boolean: true,
-          float: 123.45,
           integer: 123,
           string: 'string',
         },
         array: ['one', 'two'],
         boolean: true,
-        float: 123.45,
         integer: 123,
         string: 'string',
         datetime: new Date().toISOString(),
@@ -74,7 +72,6 @@ describe('General validation', () => {
         object: { boolean: true },
         array: ['one', 'two'],
         boolean: true,
-        float: 123.45,
         integer: 123,
         string: 'string',
       })
@@ -98,13 +95,11 @@ describe('Record validation', () => {
       object: { boolean: true },
       array: ['one', 'two'],
       boolean: true,
-      float: 123.45,
       integer: 123,
       string: 'string',
     },
     array: ['one', 'two'],
     boolean: true,
-    float: 123.45,
     integer: 123,
     string: 'string',
     bytes: new Uint8Array([0, 1, 2, 3]),
@@ -144,7 +139,6 @@ describe('Record validation', () => {
         $type: 'com.example.kitchenSink',
         array: ['one', 'two'],
         boolean: true,
-        float: 123.45,
         integer: 123,
         string: 'string',
         datetime: new Date().toISOString(),
@@ -190,15 +184,9 @@ describe('Record validation', () => {
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
         ...passingSink,
-        float: 'string',
-      }),
-    ).toThrow('Record/float must be a number')
-    expect(() =>
-      lex.assertValidRecord('com.example.kitchenSink', {
-        ...passingSink,
         integer: true,
       }),
-    ).toThrow('Record/integer must be a number')
+    ).toThrow('Record/integer must be an integer')
     expect(() =>
       lex.assertValidRecord('com.example.kitchenSink', {
         ...passingSink,
@@ -234,12 +222,10 @@ describe('Record validation', () => {
       $type: 'com.example.default',
       boolean: false,
       integer: 0,
-      float: 0,
       string: '',
       object: {
         boolean: true,
         integer: 1,
-        float: 1.5,
         string: 'x',
       },
     })
@@ -254,7 +240,6 @@ describe('Record validation', () => {
         object: { boolean: true },
         array: ['one', 'two'],
         boolean: true,
-        float: 123.45,
         integer: 123,
         string: 'string',
       },
@@ -335,13 +320,13 @@ describe('Record validation', () => {
         $type: 'com.example.arrayLength',
         array: [1, '2', 3],
       }),
-    ).toThrow('Record/array/1 must be a number')
+    ).toThrow('Record/array/1 must be an integer')
     expect(() =>
       lex.assertValidRecord('com.example.arrayLength', {
         $type: 'com.example.arrayLength',
         array: [1, undefined, 3],
       }),
-    ).toThrow('Record/array/1 must be a number')
+    ).toThrow('Record/array/1 must be an integer')
   })
 
   it('Applies boolean const constraint', () => {
@@ -355,51 +340,6 @@ describe('Record validation', () => {
         boolean: true,
       }),
     ).toThrow('Record/boolean must be false')
-  })
-
-  it('Applies float range constraint', () => {
-    lex.assertValidRecord('com.example.floatRange', {
-      $type: 'com.example.floatRange',
-      float: 2.5,
-    })
-    expect(() =>
-      lex.assertValidRecord('com.example.floatRange', {
-        $type: 'com.example.floatRange',
-        float: 1,
-      }),
-    ).toThrow('Record/float can not be less than 2')
-    expect(() =>
-      lex.assertValidRecord('com.example.floatRange', {
-        $type: 'com.example.floatRange',
-        float: 5,
-      }),
-    ).toThrow('Record/float can not be greater than 4')
-  })
-
-  it('Applies float enum constraint', () => {
-    lex.assertValidRecord('com.example.floatEnum', {
-      $type: 'com.example.floatEnum',
-      float: 1.5,
-    })
-    expect(() =>
-      lex.assertValidRecord('com.example.floatEnum', {
-        $type: 'com.example.floatEnum',
-        float: 0,
-      }),
-    ).toThrow('Record/float must be one of (1|1.5|2)')
-  })
-
-  it('Applies float const constraint', () => {
-    lex.assertValidRecord('com.example.floatConst', {
-      $type: 'com.example.floatConst',
-      float: 0,
-    })
-    expect(() =>
-      lex.assertValidRecord('com.example.floatConst', {
-        $type: 'com.example.floatConst',
-        float: 1,
-      }),
-    ).toThrow('Record/float must be 0')
   })
 
   it('Applies integer range constraint', () => {
@@ -721,14 +661,12 @@ describe('XRPC parameter validation', () => {
   it('Passes valid parameters', () => {
     const queryResult = lex.assertValidXrpcParams('com.example.query', {
       boolean: true,
-      float: 123.45,
       integer: 123,
       string: 'string',
       array: ['x', 'y'],
     })
     expect(queryResult).toEqual({
       boolean: true,
-      float: 123.45,
       integer: 123,
       string: 'string',
       array: ['x', 'y'],
@@ -736,7 +674,6 @@ describe('XRPC parameter validation', () => {
     })
     const paramResult = lex.assertValidXrpcParams('com.example.procedure', {
       boolean: true,
-      float: 123.45,
       integer: 123,
       string: 'string',
       array: ['x', 'y'],
@@ -744,7 +681,6 @@ describe('XRPC parameter validation', () => {
     })
     expect(paramResult).toEqual({
       boolean: true,
-      float: 123.45,
       integer: 123,
       string: 'string',
       array: ['x', 'y'],
@@ -755,19 +691,16 @@ describe('XRPC parameter validation', () => {
   it('Handles required correctly', () => {
     lex.assertValidXrpcParams('com.example.query', {
       boolean: true,
-      float: 123.45,
       integer: 123,
     })
     expect(() =>
       lex.assertValidXrpcParams('com.example.query', {
         boolean: true,
-        float: 123.45,
       }),
     ).toThrow('Params must have the property "integer"')
     expect(() =>
       lex.assertValidXrpcParams('com.example.query', {
         boolean: true,
-        float: 123.45,
         integer: undefined,
       }),
     ).toThrow('Params must have the property "integer"')
@@ -777,19 +710,10 @@ describe('XRPC parameter validation', () => {
     expect(() =>
       lex.assertValidXrpcParams('com.example.query', {
         boolean: 'string',
-        float: 123.45,
         integer: 123,
         string: 'string',
       }),
     ).toThrow('boolean must be a boolean')
-    expect(() =>
-      lex.assertValidXrpcParams('com.example.procedure', {
-        boolean: true,
-        float: true,
-        integer: 123,
-        string: 'string',
-      }),
-    ).toThrow('float must be a number')
     expect(() =>
       lex.assertValidXrpcParams('com.example.query', {
         boolean: true,

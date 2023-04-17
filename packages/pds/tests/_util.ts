@@ -91,6 +91,8 @@ export const runTestServer = async (
     dbPostgresUrl: process.env.DB_POSTGRES_URL,
     blobstoreLocation: `${blobstoreLoc}/blobs`,
     blobstoreTmp: `${blobstoreLoc}/tmp`,
+    labelerDid: 'did:example:labeler',
+    labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
     maxSubscriptionBuffer: 200,
     repoBackfillLimitMs: HOUR,
     ...params,

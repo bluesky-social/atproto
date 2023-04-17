@@ -8,11 +8,16 @@ import { isView as isViewExternal } from '../../../lexicon/types/app/bsky/embed/
 import { View as ViewRecord } from '../../../lexicon/types/app/bsky/embed/record'
 import { PostView } from '../../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
+import { Labels, LabelService } from '../label'
 
 export * from './types'
 
 export class FeedService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
+
+  services = {
+    label: LabelService.creator(),
+  }
 
   static creator(imgUriBuilder: ImageUriBuilder) {
     return (db: Database) => new FeedService(db, imgUriBuilder)
@@ -28,40 +33,41 @@ export class FeedService {
       .where(notSoftDeletedClause(ref('record')))
       .select([
         sql<FeedItemType>`${'post'}`.as('type'),
+        'post.uri as uri',
+        'post.cid as cid',
         'post.uri as postUri',
-        'post.cid as postCid',
         'post.creator as originatorDid',
-        'post.creator as authorDid',
+        'post.creator as postAuthorDid',
         'post.replyParent as replyParent',
         'post.replyRoot as replyRoot',
-        'post.indexedAt as cursor',
+        'post.indexedAt as sortAt',
       ])
   }
 
-  selectRepostQb() {
+  selectFeedItemQb() {
     const { ref } = this.db.db.dynamic
     return this.db.db
-      .selectFrom('repost')
-      .innerJoin('post', 'post.uri', 'repost.subject')
+      .selectFrom('feed_item')
+      .innerJoin('post', 'post.uri', 'feed_item.postUri')
       .innerJoin('repo_root as author_repo', 'author_repo.did', 'post.creator')
       .innerJoin(
         'repo_root as originator_repo',
         'originator_repo.did',
-        'repost.creator',
+        'feed_item.originatorDid',
       )
-      .innerJoin('record as post_record', 'post_record.uri', 'post.uri')
+      .innerJoin(
+        'record as post_record',
+        'post_record.uri',
+        'feed_item.postUri',
+      )
       .where(notSoftDeletedClause(ref('author_repo')))
       .where(notSoftDeletedClause(ref('originator_repo')))
       .where(notSoftDeletedClause(ref('post_record')))
+      .selectAll('feed_item')
       .select([
-        sql<FeedItemType>`${'repost'}`.as('type'),
-        'post.uri as postUri',
-        'post.cid as postCid',
-        'repost.creator as originatorDid',
-        'post.creator as authorDid',
-        'post.replyParent as replyParent',
-        'post.replyRoot as replyRoot',
-        'repost.indexedAt as cursor',
+        'post.replyRoot',
+        'post.replyParent',
+        'post.creator as postAuthorDid',
       ])
   }
 
@@ -72,37 +78,40 @@ export class FeedService {
   ): Promise<ActorViewMap> {
     if (dids.length < 1) return {}
     const { ref } = this.db.db.dynamic
-    const actors = await this.db.db
-      .selectFrom('did_handle')
-      .where('did_handle.did', 'in', dids)
-      .leftJoin('profile', 'profile.creator', 'did_handle.did')
-      .selectAll('did_handle')
-      .select([
-        'profile.uri as profileUri',
-        'profile.displayName as displayName',
-        'profile.description as description',
-        'profile.avatarCid as avatarCid',
-        'profile.indexedAt as indexedAt',
-        this.db.db
-          .selectFrom('follow')
-          .where('creator', '=', requester)
-          .whereRef('subjectDid', '=', ref('did_handle.did'))
-          .select('uri')
-          .as('requesterFollowing'),
-        this.db.db
-          .selectFrom('follow')
-          .whereRef('creator', '=', ref('did_handle.did'))
-          .where('subjectDid', '=', requester)
-          .select('uri')
-          .as('requesterFollowedBy'),
-        this.db.db
-          .selectFrom('mute')
-          .whereRef('did', '=', ref('did_handle.did'))
-          .where('mutedByDid', '=', requester)
-          .select('did')
-          .as('requesterMuted'),
-      ])
-      .execute()
+    const [actors, labels] = await Promise.all([
+      this.db.db
+        .selectFrom('did_handle')
+        .where('did_handle.did', 'in', dids)
+        .leftJoin('profile', 'profile.creator', 'did_handle.did')
+        .selectAll('did_handle')
+        .select([
+          'profile.uri as profileUri',
+          'profile.displayName as displayName',
+          'profile.description as description',
+          'profile.avatarCid as avatarCid',
+          'profile.indexedAt as indexedAt',
+          this.db.db
+            .selectFrom('follow')
+            .where('creator', '=', requester)
+            .whereRef('subjectDid', '=', ref('did_handle.did'))
+            .select('uri')
+            .as('requesterFollowing'),
+          this.db.db
+            .selectFrom('follow')
+            .whereRef('creator', '=', ref('did_handle.did'))
+            .where('subjectDid', '=', requester)
+            .select('uri')
+            .as('requesterFollowedBy'),
+          this.db.db
+            .selectFrom('mute')
+            .whereRef('did', '=', ref('did_handle.did'))
+            .where('mutedByDid', '=', requester)
+            .select('did')
+            .as('requesterMuted'),
+        ])
+        .execute(),
+      this.services.label(this.db).getLabelsForProfiles(dids),
+    ])
     return actors.reduce((acc, cur) => {
       return {
         ...acc,
@@ -118,6 +127,7 @@ export class FeedService {
             following: cur?.requesterFollowing || undefined,
             followedBy: cur?.requesterFollowedBy || undefined,
           },
+          labels: labels[cur.did] ?? [],
         },
       }
     }, {} as ActorViewMap)
@@ -221,21 +231,17 @@ export class FeedService {
       extPromise,
       recordPromise,
     ])
-    const [postViews, actorViews, deepEmbedViews] = await Promise.all([
-      this.getPostViews(
-        records.map((p) => p.uri),
-        requester,
-      ),
-      this.getActorViews(
-        records.map((p) => p.did),
-        requester,
-      ),
-      this.embedsForPosts(
-        records.map((p) => p.uri),
-        requester,
-        _depth + 1,
-      ),
-    ])
+    const nestedUris = records.map((p) => p.uri)
+    const [postViews, actorViews, deepEmbedViews, labelViews] =
+      await Promise.all([
+        this.getPostViews(nestedUris, requester),
+        this.getActorViews(
+          records.map((p) => p.did),
+          requester,
+        ),
+        this.embedsForPosts(nestedUris, requester, _depth + 1),
+        this.services.label(this.db).getLabelsForSubjects(nestedUris),
+      ])
     let embeds = images.reduce((acc, cur) => {
       const embed = (acc[cur.postUri] ??= {
         $type: 'app.bsky.embed.images#view',
@@ -280,6 +286,7 @@ export class FeedService {
         actorViews,
         postViews,
         deepEmbedViews,
+        labelViews,
       )
       let deepEmbeds: ViewRecord['embeds'] | undefined
       if (_depth < 1) {
@@ -329,6 +336,7 @@ export class FeedService {
     actors: ActorViewMap,
     posts: PostInfoMap,
     embeds: FeedEmbeds,
+    labels: Labels,
   ): PostView | undefined {
     const post = posts[uri]
     const author = actors[post?.creator]
@@ -347,6 +355,7 @@ export class FeedService {
         repost: post.requesterRepost ?? undefined,
         like: post.requesterLike ?? undefined,
       },
+      labels: labels[uri] ?? [],
     }
   }
 }

@@ -31,6 +31,11 @@ export const nullToZero = (ref: DbRef) => {
   return sql<number>`coalesce(${ref}, 0)`
 }
 
+// Can be useful for large where-in clauses, to get the db to use a hash lookup on the list
+export const valuesList = (vals: unknown[]) => {
+  return sql`(values (${sql.join(vals, sql`), (`)}))`
+}
+
 export const dummyDialect = {
   createAdapter() {
     return new SqliteAdapter()

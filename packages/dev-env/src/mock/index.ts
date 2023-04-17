@@ -8,6 +8,7 @@ import { DevEnv } from '../index'
 import { ServerType } from '../types'
 import { genServerCfg } from '../util'
 import { postTexts, replyTexts } from './data'
+import labeledImgB64 from './labeled-img-b64'
 
 // NOTE
 // deterministic date generator
@@ -162,6 +163,61 @@ export async function generateMockSetup(env: DevEnv) {
         },
       })
     }
+  }
+
+  // make some naughty posts & label them
+  const file = Buffer.from(labeledImgB64, 'base64')
+  const uploadedImg = await bob.agent.api.com.atproto.repo.uploadBlob(file, {
+    encoding: 'image/png',
+  })
+  const labeledPost = await bob.agent.api.app.bsky.feed.post.create(
+    { repo: bob.did },
+    {
+      text: 'naughty post',
+      embed: {
+        $type: 'app.bsky.embed.images',
+        images: [
+          {
+            image: uploadedImg.data.blob,
+            alt: 'naughty naughty',
+          },
+        ],
+      },
+      createdAt: date.next().value,
+    },
+  )
+
+  const filteredPost = await bob.agent.api.app.bsky.feed.post.create(
+    { repo: bob.did },
+    {
+      text: 'reallly bad post should be deleted',
+      createdAt: date.next().value,
+    },
+  )
+
+  const ctx = env.listOfType(ServerType.PersonalDataServer)[0].ctx
+  if (ctx) {
+    await ctx.db.db
+      .insertInto('label')
+      .values([
+        {
+          src: ctx.cfg.labelerDid,
+          uri: labeledPost.uri,
+          cid: labeledPost.cid,
+          val: 'nudity',
+          neg: 0,
+          cts: new Date().toISOString(),
+        },
+        {
+          src: ctx.cfg.labelerDid,
+          uri: filteredPost.uri,
+          cid: filteredPost.cid,
+          val: 'dmca-violation',
+          neg: 0,
+          cts: new Date().toISOString(),
+        },
+      ])
+      .execute()
   }
 
   // a set of replies

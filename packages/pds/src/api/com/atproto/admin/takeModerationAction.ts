@@ -4,6 +4,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { TAKEDOWN } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { getSubject, getAction } from '../moderation/util'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
@@ -11,16 +12,29 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input }) => {
       const { db, services } = ctx
       const moderationService = services.moderation(db)
-      const { action, subject, reason, createdBy, subjectBlobCids } = input.body
+      const {
+        action,
+        subject,
+        reason,
+        createdBy,
+        createLabelVals,
+        negateLabelVals,
+        subjectBlobCids,
+      } = input.body
+
+      validateLabels([...(createLabelVals ?? []), ...(negateLabelVals ?? [])])
 
       const moderationAction = await db.transaction(async (dbTxn) => {
         const authTxn = services.auth(dbTxn)
         const moderationTxn = services.moderation(dbTxn)
+        const labelTxn = services.appView.label(dbTxn)
 
         const result = await moderationTxn.logAction({
           action: getAction(action),
           subject: getSubject(subject),
           subjectBlobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
+          createLabelVals,
+          negateLabelVals,
           createdBy,
           reason,
         })
@@ -49,6 +63,13 @@ export default function (server: Server, ctx: AppContext) {
           })
         }
 
+        await labelTxn.formatAndCreate(
+          ctx.cfg.labelerDid,
+          result.subjectUri ?? result.subjectDid,
+          result.subjectCid,
+          { create: createLabelVals, negate: negateLabelVals },
+        )
+
         return result
       })
 
@@ -59,3 +80,15 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 }
+
+const validateLabels = (labels: string[]) => {
+  for (const label of labels) {
+    for (const char of badChars) {
+      if (label.includes(char)) {
+        throw new InvalidRequestError(`Invalid label: ${label}`)
+      }
+    }
+  }
+}
+
+const badChars = [' ', ',', ';', `'`, `"`]
