@@ -46,7 +46,6 @@ export default function (server: Server, ctx: AppContext) {
 
       const notifs = await notifBuilder.execute()
 
-      // @NOTE calling into app-view, will eventually be replaced
       const actorService = ctx.services.actor(ctx.db)
       const authors = await actorService.views.profile(
         notifs.map((notif) => ({
