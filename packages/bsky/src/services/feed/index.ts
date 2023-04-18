@@ -343,10 +343,12 @@ export class FeedService {
       repostCount: post.repostCount,
       likeCount: post.likeCount,
       indexedAt: post.indexedAt,
-      viewer: {
-        repost: post.requesterRepost ?? undefined,
-        like: post.requesterLike ?? undefined,
-      },
+      viewer: post.viewer
+        ? {
+            repost: post.requesterRepost ?? undefined,
+            like: post.requesterLike ?? undefined,
+          }
+        : undefined,
     }
   }
 }

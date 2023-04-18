@@ -24,12 +24,12 @@ describe('pds thread views', () => {
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
-    await processAll(testEnv)
   })
 
   beforeAll(async () => {
     // Add a repost of a reply so that we can confirm viewer state in the thread
     await sc.repost(bob, sc.replies[alice][0].ref)
+    await processAll(testEnv)
   })
 
   afterAll(async () => {
@@ -74,7 +74,7 @@ describe('pds thread views', () => {
     )
   })
 
-  it.only('includes the muted status of post authors.', async () => {
+  it('includes the muted status of post authors.', async () => {
     await agent.api.app.bsky.graph.muteActor(
       { actor: alice },
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
