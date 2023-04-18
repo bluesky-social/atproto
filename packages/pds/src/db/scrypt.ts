@@ -34,7 +34,7 @@ export const getDerivedHash = (
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     crypto.scrypt(password, salt, 64, (err, derivedHash) => {
-      if (err) reject(err)
+      if (err) return reject(err)
       resolve(derivedHash.toString('hex'))
     })
   })
