@@ -147,7 +147,6 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
-  // @TODO MUTES?
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {
@@ -359,7 +358,6 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
-  // @TODO mutes
   server.app.bsky.unspecced.getPopular({
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {

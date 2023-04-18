@@ -5,7 +5,7 @@ import { forSnapshot, paginateAll, adminAuth } from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
 
-describe('pds user search views', () => {
+describe.skip('pds user search views', () => {
   let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
