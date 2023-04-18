@@ -1,0 +1,69 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`mute views fetches mutes for the logged-in user. 1`] = `
+Array [
+  Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "did": "user(0)",
+    "displayName": "Dr. Lowell DuBuque",
+    "handle": "elta48.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "viewer": Object {
+      "muted": true,
+    },
+  },
+  Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "did": "user(1)",
+    "displayName": "Sally Funk",
+    "handle": "magnus53.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "viewer": Object {
+      "muted": true,
+    },
+  },
+  Object {
+    "did": "user(2)",
+    "handle": "nicolas-krajcik10.test",
+    "labels": Array [],
+    "viewer": Object {
+      "muted": true,
+    },
+  },
+  Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "did": "user(3)",
+    "displayName": "Patrick Sawayn",
+    "handle": "jeffrey-sawayn87.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "viewer": Object {
+      "muted": true,
+    },
+  },
+  Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "did": "user(4)",
+    "displayName": "Kim Streich",
+    "handle": "adrienne49.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "viewer": Object {
+      "muted": true,
+    },
+  },
+  Object {
+    "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "did": "user(5)",
+    "displayName": "Carlton Abernathy IV",
+    "handle": "aliya-hodkiewicz.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "viewer": Object {
+      "muted": true,
+    },
+  },
+]
+`;

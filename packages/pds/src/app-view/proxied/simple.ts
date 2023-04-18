@@ -170,30 +170,37 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollowers({
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {
-      console.log('GET FOLLOWERS')
       const requester = auth.credentials.did
       const res = await agent.api.app.bsky.graph.getFollowers(
         params,
         headers(requester),
       )
-      const dids = res.data.followers.map((follower) => follower.did)
+      const dids = [
+        res.data.subject.did,
+        ...res.data.followers.map((follower) => follower.did),
+      ]
       const mutes = await ctx.services.account(ctx.db).getMutes(requester, dids)
-      const hydrated = res.data.followers.map((follower) => ({
+      const hydratedFollowers = res.data.followers.map((follower) => ({
         ...follower,
         viewer: {
           ...(follower.viewer || {}),
           muted: mutes[follower.did] ?? false,
         },
       }))
-
-      const viewers = hydrated.map((h) => h.viewer)
-      console.log(viewers)
+      const hydratedSubject = {
+        ...res.data.subject,
+        viewer: {
+          ...(res.data.subject.viewer || {}),
+          muted: mutes[res.data.subject.did] ?? false,
+        },
+      }
 
       return {
         encoding: 'application/json',
         body: {
           ...res.data,
-          followers: hydrated,
+          subject: hydratedSubject,
+          followers: hydratedFollowers,
         },
       }
     },
@@ -202,15 +209,38 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollows({
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {
-      console.log('GET FOLLOWS')
       const requester = auth.credentials.did
       const res = await agent.api.app.bsky.graph.getFollows(
         params,
         headers(requester),
       )
+      const dids = [
+        res.data.subject.did,
+        ...res.data.follows.map((follow) => follow.did),
+      ]
+      const mutes = await ctx.services.account(ctx.db).getMutes(requester, dids)
+      const hydratedFollows = res.data.follows.map((follow) => ({
+        ...follow,
+        viewer: {
+          ...(follow.viewer || {}),
+          muted: mutes[follow.did] ?? false,
+        },
+      }))
+      const hydratedSubject = {
+        ...res.data.subject,
+        viewer: {
+          ...(res.data.subject.viewer || {}),
+          muted: mutes[res.data.subject.did] ?? false,
+        },
+      }
+
       return {
         encoding: 'application/json',
-        body: res.data,
+        body: {
+          ...res.data,
+          subject: hydratedSubject,
+          follows: hydratedFollows,
+        },
       }
     },
   })

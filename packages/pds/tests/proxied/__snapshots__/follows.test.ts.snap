@@ -1,0 +1,503 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`pds follow views fetches followers 1`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "followers": Array [
+    Object {
+      "avatar": "https://bsky.public.url/image/R-jwupbEmDp-PT8MBXej7PtWKpPV6sqDedkrhf_sgww/rs:fill:1000:1000:1:0/plain/did:plc:dchyys73r6grjschogytise7/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-eve",
+      "did": "user(1)",
+      "displayName": "display-eve",
+      "handle": "eve.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(1)",
+        "following": "record(0)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/_Im2-uTymxwsjeS8ERjuz3puiAlgCgw6mGwLJNwfyU4/rs:fill:1000:1000:1:0/plain/did:plc:65wxi73t575qokmrdnzcmqnz/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-dan",
+      "did": "user(2)",
+      "displayName": "display-dan",
+      "handle": "dan.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/PgRjjwMAmlXvzdoDBhM8FEAROhEKmkKndxGjOfpqHyM/rs:fill:1000:1000:1:0/plain/did:plc:ckehdwd3s4uucznorwc2e5kc/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-bob",
+      "did": "user(3)",
+      "displayName": "display-bob",
+      "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/Cn7HJo8Gi3QXXgjs5CHtX2k42Ma1kzOSVOymKkg0QoI/rs:fill:1000:1000:1:0/plain/did:plc:pkxihl62vlv3nzzolbd5rndn/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-carol",
+      "did": "user(4)",
+      "displayName": "display-carol",
+      "handle": "carol.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(7)",
+        "following": "record(6)",
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "description": "descript-alice",
+    "did": "user(0)",
+    "displayName": "display-alice",
+    "handle": "alice.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "viewer": Object {
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches followers 2`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "followers": Array [
+    Object {
+      "avatar": "https://bsky.public.url/image/_Im2-uTymxwsjeS8ERjuz3puiAlgCgw6mGwLJNwfyU4/rs:fill:1000:1000:1:0/plain/did:plc:65wxi73t575qokmrdnzcmqnz/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-dan",
+      "did": "user(1)",
+      "displayName": "display-dan",
+      "handle": "dan.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-alice",
+      "did": "user(2)",
+      "displayName": "display-alice",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://bsky.public.url/image/PgRjjwMAmlXvzdoDBhM8FEAROhEKmkKndxGjOfpqHyM/rs:fill:1000:1000:1:0/plain/did:plc:ckehdwd3s4uucznorwc2e5kc/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "description": "descript-bob",
+    "did": "user(0)",
+    "displayName": "display-bob",
+    "handle": "bob.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches followers 3`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "followers": Array [
+    Object {
+      "avatar": "https://bsky.public.url/image/R-jwupbEmDp-PT8MBXej7PtWKpPV6sqDedkrhf_sgww/rs:fill:1000:1000:1:0/plain/did:plc:dchyys73r6grjschogytise7/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-eve",
+      "did": "user(1)",
+      "displayName": "display-eve",
+      "handle": "eve.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/PgRjjwMAmlXvzdoDBhM8FEAROhEKmkKndxGjOfpqHyM/rs:fill:1000:1000:1:0/plain/did:plc:ckehdwd3s4uucznorwc2e5kc/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-bob",
+      "did": "user(2)",
+      "displayName": "display-bob",
+      "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-alice",
+      "did": "user(3)",
+      "displayName": "display-alice",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://bsky.public.url/image/Cn7HJo8Gi3QXXgjs5CHtX2k42Ma1kzOSVOymKkg0QoI/rs:fill:1000:1000:1:0/plain/did:plc:pkxihl62vlv3nzzolbd5rndn/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "description": "descript-carol",
+    "did": "user(0)",
+    "displayName": "display-carol",
+    "handle": "carol.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches followers 4`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "followers": Array [
+    Object {
+      "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-alice",
+      "did": "user(1)",
+      "displayName": "display-alice",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://bsky.public.url/image/_Im2-uTymxwsjeS8ERjuz3puiAlgCgw6mGwLJNwfyU4/rs:fill:1000:1000:1:0/plain/did:plc:65wxi73t575qokmrdnzcmqnz/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "description": "descript-dan",
+    "did": "user(0)",
+    "displayName": "display-dan",
+    "handle": "dan.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches followers 5`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "followers": Array [
+    Object {
+      "avatar": "https://bsky.public.url/image/_Im2-uTymxwsjeS8ERjuz3puiAlgCgw6mGwLJNwfyU4/rs:fill:1000:1000:1:0/plain/did:plc:65wxi73t575qokmrdnzcmqnz/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-dan",
+      "did": "user(1)",
+      "displayName": "display-dan",
+      "handle": "dan.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-alice",
+      "did": "user(2)",
+      "displayName": "display-alice",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://bsky.public.url/image/R-jwupbEmDp-PT8MBXej7PtWKpPV6sqDedkrhf_sgww/rs:fill:1000:1000:1:0/plain/did:plc:dchyys73r6grjschogytise7/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "description": "descript-eve",
+    "did": "user(0)",
+    "displayName": "display-eve",
+    "handle": "eve.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches follows 1`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "follows": Array [
+    Object {
+      "avatar": "https://bsky.public.url/image/R-jwupbEmDp-PT8MBXej7PtWKpPV6sqDedkrhf_sgww/rs:fill:1000:1000:1:0/plain/did:plc:dchyys73r6grjschogytise7/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-eve",
+      "did": "user(1)",
+      "displayName": "display-eve",
+      "handle": "eve.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(1)",
+        "following": "record(0)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/_Im2-uTymxwsjeS8ERjuz3puiAlgCgw6mGwLJNwfyU4/rs:fill:1000:1000:1:0/plain/did:plc:65wxi73t575qokmrdnzcmqnz/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-dan",
+      "did": "user(2)",
+      "displayName": "display-dan",
+      "handle": "dan.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/Cn7HJo8Gi3QXXgjs5CHtX2k42Ma1kzOSVOymKkg0QoI/rs:fill:1000:1000:1:0/plain/did:plc:pkxihl62vlv3nzzolbd5rndn/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-carol",
+      "did": "user(3)",
+      "displayName": "display-carol",
+      "handle": "carol.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/PgRjjwMAmlXvzdoDBhM8FEAROhEKmkKndxGjOfpqHyM/rs:fill:1000:1000:1:0/plain/did:plc:ckehdwd3s4uucznorwc2e5kc/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-bob",
+      "did": "user(4)",
+      "displayName": "display-bob",
+      "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(7)",
+        "following": "record(6)",
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "description": "descript-alice",
+    "did": "user(0)",
+    "displayName": "display-alice",
+    "handle": "alice.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "viewer": Object {
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches follows 2`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "follows": Array [
+    Object {
+      "avatar": "https://bsky.public.url/image/Cn7HJo8Gi3QXXgjs5CHtX2k42Ma1kzOSVOymKkg0QoI/rs:fill:1000:1000:1:0/plain/did:plc:pkxihl62vlv3nzzolbd5rndn/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-carol",
+      "did": "user(1)",
+      "displayName": "display-carol",
+      "handle": "carol.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-alice",
+      "did": "user(2)",
+      "displayName": "display-alice",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://bsky.public.url/image/PgRjjwMAmlXvzdoDBhM8FEAROhEKmkKndxGjOfpqHyM/rs:fill:1000:1000:1:0/plain/did:plc:ckehdwd3s4uucznorwc2e5kc/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "description": "descript-bob",
+    "did": "user(0)",
+    "displayName": "display-bob",
+    "handle": "bob.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches follows 3`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "follows": Array [
+    Object {
+      "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-alice",
+      "did": "user(1)",
+      "displayName": "display-alice",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://bsky.public.url/image/Cn7HJo8Gi3QXXgjs5CHtX2k42Ma1kzOSVOymKkg0QoI/rs:fill:1000:1000:1:0/plain/did:plc:pkxihl62vlv3nzzolbd5rndn/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "description": "descript-carol",
+    "did": "user(0)",
+    "displayName": "display-carol",
+    "handle": "carol.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches follows 4`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "follows": Array [
+    Object {
+      "avatar": "https://bsky.public.url/image/R-jwupbEmDp-PT8MBXej7PtWKpPV6sqDedkrhf_sgww/rs:fill:1000:1000:1:0/plain/did:plc:dchyys73r6grjschogytise7/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-eve",
+      "did": "user(1)",
+      "displayName": "display-eve",
+      "handle": "eve.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/PgRjjwMAmlXvzdoDBhM8FEAROhEKmkKndxGjOfpqHyM/rs:fill:1000:1000:1:0/plain/did:plc:ckehdwd3s4uucznorwc2e5kc/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-bob",
+      "did": "user(2)",
+      "displayName": "display-bob",
+      "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(5)",
+        "following": "record(4)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-alice",
+      "did": "user(3)",
+      "displayName": "display-alice",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://bsky.public.url/image/_Im2-uTymxwsjeS8ERjuz3puiAlgCgw6mGwLJNwfyU4/rs:fill:1000:1000:1:0/plain/did:plc:65wxi73t575qokmrdnzcmqnz/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "description": "descript-dan",
+    "did": "user(0)",
+    "displayName": "display-dan",
+    "handle": "dan.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`pds follow views fetches follows 5`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "follows": Array [
+    Object {
+      "avatar": "https://bsky.public.url/image/Cn7HJo8Gi3QXXgjs5CHtX2k42Ma1kzOSVOymKkg0QoI/rs:fill:1000:1000:1:0/plain/did:plc:pkxihl62vlv3nzzolbd5rndn/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-carol",
+      "did": "user(1)",
+      "displayName": "display-carol",
+      "handle": "carol.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "description": "descript-alice",
+      "did": "user(2)",
+      "displayName": "display-alice",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "viewer": Object {
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://bsky.public.url/image/R-jwupbEmDp-PT8MBXej7PtWKpPV6sqDedkrhf_sgww/rs:fill:1000:1000:1:0/plain/did:plc:dchyys73r6grjschogytise7/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "description": "descript-eve",
+    "did": "user(0)",
+    "displayName": "display-eve",
+    "handle": "eve.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "viewer": Object {
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
+}
+`;

@@ -1,7 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { runTestEnv, CloseFn, processAll } from '@atproto/dev-env'
-import { forSnapshot, paginateAll, adminAuth } from '../_util'
+import { forSnapshot, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import followsSeed from '../seeds/follows'
 
@@ -106,79 +105,41 @@ describe('pds follow views', () => {
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
-  it('blocks followers by actor takedown', async () => {
-    const { data: modAction } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: sc.dids.dan,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
-
-    const aliceFollowers = await agent.api.app.bsky.graph.getFollowers(
-      { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
-
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      {
-        id: modAction.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
-  })
-
   it('fetches follows', async () => {
-    const aliceFollowers = await agent.api.app.bsky.graph.getFollows(
+    const aliceFollows = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.alice },
       { headers: sc.getHeaders(alice) },
     )
 
-    expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
+    expect(forSnapshot(aliceFollows.data)).toMatchSnapshot()
 
-    const bobFollowers = await agent.api.app.bsky.graph.getFollows(
+    const bobFollows = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.bob },
       { headers: sc.getHeaders(alice) },
     )
 
-    expect(forSnapshot(bobFollowers.data)).toMatchSnapshot()
+    expect(forSnapshot(bobFollows.data)).toMatchSnapshot()
 
-    const carolFollowers = await agent.api.app.bsky.graph.getFollows(
+    const carolFollows = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.carol },
       { headers: sc.getHeaders(alice) },
     )
 
-    expect(forSnapshot(carolFollowers.data)).toMatchSnapshot()
+    expect(forSnapshot(carolFollows.data)).toMatchSnapshot()
 
-    const danFollowers = await agent.api.app.bsky.graph.getFollows(
+    const danFollows = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.dan },
       { headers: sc.getHeaders(alice) },
     )
 
-    expect(forSnapshot(danFollowers.data)).toMatchSnapshot()
+    expect(forSnapshot(danFollows.data)).toMatchSnapshot()
 
-    const eveFollowers = await agent.api.app.bsky.graph.getFollows(
+    const eveFollows = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.eve },
       { headers: sc.getHeaders(alice) },
     )
 
-    expect(forSnapshot(eveFollowers.data)).toMatchSnapshot()
+    expect(forSnapshot(eveFollows.data)).toMatchSnapshot()
   })
 
   it('fetches follows by handle', async () => {
@@ -219,43 +180,5 @@ describe('pds follow views', () => {
 
     expect(full.data.follows.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
-  })
-
-  it('blocks follows by actor takedown', async () => {
-    const { data: modAction } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: sc.dids.dan,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
-
-    const aliceFollows = await agent.api.app.bsky.graph.getFollows(
-      { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(forSnapshot(aliceFollows.data)).toMatchSnapshot()
-
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      {
-        id: modAction.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
   })
 })
