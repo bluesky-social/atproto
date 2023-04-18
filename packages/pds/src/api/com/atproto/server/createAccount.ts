@@ -115,9 +115,9 @@ export default function (server: Server, ctx: AppContext) {
       // Setup repo root
       await repoTxn.createRepo(did, [], now)
 
-      const access = ctx.auth.createAccessToken(did)
-      const refresh = ctx.auth.createRefreshToken(did)
-      await ctx.services.auth(dbTxn).grantRefreshToken(refresh.payload)
+      const access = ctx.auth.createAccessToken({ did })
+      const refresh = ctx.auth.createRefreshToken({ did })
+      await ctx.services.auth(dbTxn).grantRefreshToken(refresh.payload, null)
 
       return {
         did,
