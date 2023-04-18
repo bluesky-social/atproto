@@ -3,7 +3,10 @@ import AppContext from '../../context'
 import { AtpAgent } from '@atproto/api'
 import {
   FeedViewPost,
+  NotFoundPost,
+  ThreadViewPost,
   isReasonRepost,
+  isThreadViewPost,
 } from '../../lexicon/types/app/bsky/feed/defs'
 import { dedupeStrs } from '@atproto/common'
 
@@ -205,7 +208,6 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
-  // @TODO MUTES?
   server.app.bsky.feed.getPostThread({
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {
@@ -214,9 +216,23 @@ export default function (server: Server, ctx: AppContext) {
         params,
         headers(requester),
       )
+      const { thread } = res.data
+      if (!isThreadViewPost(thread)) {
+        return {
+          encoding: 'application/json',
+          body: { thread },
+        }
+      }
+
+      const dids = isThreadViewPost(thread) ? didsForThread(thread) : []
+      const mutes = await ctx.services.account(ctx.db).getMutes(requester, dids)
+      const hydrated = processThreadViewMutes(thread, mutes)
+
       return {
         encoding: 'application/json',
-        body: res.data,
+        body: {
+          thread: hydrated,
+        },
       }
     },
   })
@@ -411,4 +427,41 @@ const processFeedViewPostMutes = (
     hydrated.push(item)
   }
   return hydrated
+}
+
+const didsForThread = (thread: ThreadViewPost): string[] => {
+  return dedupeStrs(didsForThreadRecurse(thread))
+}
+
+const didsForThreadRecurse = (thread: ThreadViewPost): string[] => {
+  let forParent: string[] = []
+  let forReplies: string[] = []
+  if (isThreadViewPost(thread.parent)) {
+    forParent = didsForThread(thread.parent)
+  }
+  if (thread.replies) {
+    forReplies = thread.replies
+      .map((reply) => (isThreadViewPost(reply) ? didsForThread(reply) : []))
+      .flat()
+  }
+  return [thread.post.author.did, ...forParent, ...forReplies]
+}
+
+const processThreadViewMutes = (
+  thread: ThreadViewPost,
+  mutes: Record<string, boolean>,
+): ThreadViewPost => {
+  thread.post.author.viewer ??= {}
+  thread.post.author.viewer.muted = mutes[thread.post.author.did] ?? false
+  if (isThreadViewPost(thread.parent)) {
+    processThreadViewMutes(thread.parent, mutes)
+  }
+  if (thread.replies) {
+    for (const reply of thread.replies) {
+      if (isThreadViewPost(reply)) {
+        processThreadViewMutes(reply, mutes)
+      }
+    }
+  }
+  return thread
 }
