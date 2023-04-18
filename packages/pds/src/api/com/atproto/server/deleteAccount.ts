@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     const { did, password, token } = input.body
     const validPass = await ctx.services
       .account(ctx.db)
-      .verifyUserPassword(did, password)
+      .verifyAccountPassword(did, password)
     if (!validPass) {
       throw new AuthRequiredError('Invalid did or password')
     }

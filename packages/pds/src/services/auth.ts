@@ -11,19 +11,25 @@ export class AuthService {
     return (db: Database) => new AuthService(db)
   }
 
-  async grantRefreshToken(payload: RefreshToken) {
+  async grantRefreshToken(
+    payload: RefreshToken,
+    appPasswordName: string | null,
+  ) {
     return this.db.db
       .insertInto('refresh_token')
       .values({
         id: payload.jti,
         did: payload.sub,
+        appPasswordName,
         expiresAt: new Date(payload.exp * 1000).toISOString(),
       })
       .onConflict((oc) => oc.doNothing()) // E.g. when re-granting during a refresh grace period
       .executeTakeFirst()
   }
 
-  async rotateRefreshToken(id: string) {
+  async rotateRefreshToken(
+    id: string,
+  ): Promise<{ nextId: string; appPassName: string | null } | null> {
     this.db.assertTransaction()
     const token = await this.db.db
       .selectFrom('refresh_token')
@@ -63,7 +69,7 @@ export class AuthService {
       .returningAll()
       .executeTakeFirst()
 
-    return expired ? null : nextId
+    return expired ? null : { nextId, appPassName: token.appPasswordName }
   }
 
   async revokeRefreshToken(id: string) {
@@ -78,6 +84,15 @@ export class AuthService {
     const { numDeletedRows } = await this.db.db
       .deleteFrom('refresh_token')
       .where('did', '=', did)
+      .executeTakeFirst()
+    return numDeletedRows > 0
+  }
+
+  async revokeAppPasswordRefreshToken(did: string, appPassName: string) {
+    const { numDeletedRows } = await this.db.db
+      .deleteFrom('refresh_token')
+      .where('did', '=', did)
+      .where('appPasswordName', '=', appPassName)
       .executeTakeFirst()
     return numDeletedRows > 0
   }

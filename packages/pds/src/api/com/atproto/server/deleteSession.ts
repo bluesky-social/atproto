@@ -1,5 +1,5 @@
 import { AuthRequiredError } from '@atproto/xrpc-server'
-import { AuthScopes } from '../../../../auth'
+import { AuthScope } from '../../../../auth'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 
@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     if (!token) {
       throw new AuthRequiredError()
     }
-    const refreshToken = ctx.auth.verifyToken(token, AuthScopes.Refresh, {
+    const refreshToken = ctx.auth.verifyToken(token, [AuthScope.Refresh], {
       ignoreExpiration: true,
     })
     if (!refreshToken.jti) {

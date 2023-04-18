@@ -2,6 +2,7 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
+import { AuthScope } from '../../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.refreshSession({
@@ -23,25 +24,31 @@ export default function (server: Server, ctx: AppContext) {
 
       const lastRefreshId = ctx.auth.verifyToken(
         ctx.auth.getToken(req) ?? '',
+        [],
       ).jti
       if (!lastRefreshId) {
         throw new Error('Unexpected missing refresh token id')
       }
 
-      const access = ctx.auth.createAccessToken(user.did)
-
-      const refresh = await ctx.db.transaction(async (dbTxn) => {
+      const res = await ctx.db.transaction(async (dbTxn) => {
         const authTxn = ctx.services.auth(dbTxn)
-        const nextId = await authTxn.rotateRefreshToken(lastRefreshId)
-        if (!nextId) return null
-        const refresh = ctx.auth.createRefreshToken(user.did, nextId)
-        await authTxn.grantRefreshToken(refresh.payload)
-        return refresh
+        const rotateRes = await authTxn.rotateRefreshToken(lastRefreshId)
+        if (!rotateRes) return null
+        const refresh = ctx.auth.createRefreshToken({
+          did: user.did,
+          jti: rotateRes.nextId,
+        })
+        await authTxn.grantRefreshToken(refresh.payload, rotateRes.appPassName)
+        return { refresh, appPassName: rotateRes.appPassName }
       })
-
-      if (refresh === null) {
+      if (res === null) {
         throw new InvalidRequestError('Token has been revoked', 'ExpiredToken')
       }
+
+      const access = ctx.auth.createAccessToken({
+        did: user.did,
+        scope: res.appPassName === null ? AuthScope.Access : AuthScope.AppPass,
+      })
 
       return {
         encoding: 'application/json',
@@ -49,7 +56,7 @@ export default function (server: Server, ctx: AppContext) {
           did: user.did,
           handle: user.handle,
           accessJwt: access.jwt,
-          refreshJwt: refresh.jwt,
+          refreshJwt: res.refresh.jwt,
         },
       }
     },
