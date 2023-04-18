@@ -5,22 +5,14 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { ModerationViews } from './views'
-import { ImageInvalidator } from '../../image/invalidator'
 import { ImageUriBuilder } from '../../image/uri'
 
 export class ModerationService {
-  constructor(
-    public db: Database,
-    public imgUriBuilder: ImageUriBuilder,
-    public imgInvalidator: ImageInvalidator,
-  ) {}
+  // @TODO public imgInvalidator: ImageInvalidator,
+  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
 
-  static creator(
-    imgUriBuilder: ImageUriBuilder,
-    imgInvalidator: ImageInvalidator,
-  ) {
-    return (db: Database) =>
-      new ModerationService(db, imgUriBuilder, imgInvalidator)
+  static creator(imgUriBuilder: ImageUriBuilder) {
+    return (db: Database) => new ModerationService(db, imgUriBuilder)
   }
 
   views = new ModerationViews(this.db)

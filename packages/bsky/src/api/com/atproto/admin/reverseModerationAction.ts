@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const moderationAction = await db.transaction(async (dbTxn) => {
         const moderationTxn = services.moderation(dbTxn)
-        const labelTxn = services.appView.label(dbTxn)
+        const labelTxn = services.label(dbTxn)
         const now = new Date()
 
         const existing = await moderationTxn.getAction(id)

@@ -1,9 +1,9 @@
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { SearchKeyset } from '../../../../services/util/search'
-import { sql } from 'kysely'
-import { ListKeyset } from '../../../../services/account'
 import { adminVerifier } from '../../../auth'
+import { paginate } from '../../../../db/pagination'
+import { ListKeyset } from '../../../../services/actor'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
@@ -11,27 +11,17 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params }) => {
       const { db, services } = ctx
       const moderationService = services.moderation(db)
-      const { term = '', limit = 50, cursor, invitedBy } = params
-
-      if (!term) {
-        const results = await services
-          .account(db)
-          .list({ limit, cursor, includeSoftDeleted: true, invitedBy })
-        const keyset = new ListKeyset(sql``, sql``)
-
-        return {
-          encoding: 'application/json',
-          body: {
-            cursor: keyset.packFromResult(results),
-            repos: await moderationService.views.repo(results),
-          },
-        }
+      const { term = '', limit, cursor, invitedBy } = params
+      if (invitedBy) {
+        throw new InvalidRequestError('The invitedBy parameter is unsupported')
       }
 
-      const results = await services
-        .account(db)
-        .search({ term, limit, cursor, includeSoftDeleted: true })
-      const keyset = new SearchKeyset(sql``, sql``)
+      const { ref } = db.db.dynamic
+      const keyset = new ListKeyset(ref('indexedAt'), ref('handle'))
+      let resultQb = services.actor(db).searchQb(term).selectAll()
+      resultQb = paginate(resultQb, { keyset, cursor, limit })
+
+      const results = await resultQb.execute()
 
       return {
         encoding: 'application/json',

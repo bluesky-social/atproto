@@ -44,7 +44,7 @@ export default function (server: Server, ctx: AppContext) {
           result.subjectType === 'com.atproto.admin.defs#repoRef' &&
           result.subjectDid
         ) {
-          await authTxn.revokeRefreshTokensByDid(result.subjectDid)
+          // No credentials to revoke on appview
           await moderationTxn.takedownRepo({
             takedownId: result.id,
             did: result.subjectDid,
