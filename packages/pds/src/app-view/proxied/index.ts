@@ -381,6 +381,8 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+
+  return server
 }
 
 const didsForFeedViewPosts = (feed: FeedViewPost[]): string[] => {
