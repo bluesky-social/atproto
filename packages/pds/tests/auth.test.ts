@@ -231,7 +231,7 @@ describe('auth', () => {
       email: 'holga@test.com',
       password: 'password',
     })
-    const refresh = auth.createRefreshToken(account.did, undefined, -1)
+    const refresh = auth.createRefreshToken({ did: account.did, expiresIn: -1 })
     const refreshExpired = refreshSession(refresh.jwt)
     await expect(refreshExpired).rejects.toThrow('Token has expired')
     await deleteSession(refresh.jwt) // No problem revoking an expired token

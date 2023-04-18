@@ -8,22 +8,16 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
-export interface QueryParams {
-  seenAt?: string
-}
+export interface QueryParams {}
 
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  count: number
+export interface InputSchema {
+  name: string
   [k: string]: unknown
 }
 
-export type HandlerInput = undefined
-
-export interface HandlerSuccess {
+export interface HandlerInput {
   encoding: 'application/json'
-  body: OutputSchema
+  body: InputSchema
 }
 
 export interface HandlerError {
@@ -31,7 +25,7 @@ export interface HandlerError {
   message?: string
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
+export type HandlerOutput = HandlerError | void
 export type Handler<HA extends HandlerAuth = never> = (ctx: {
   auth: HA
   params: QueryParams

@@ -15,13 +15,14 @@ export type ServerAuthOpts = {
 }
 
 // @TODO sync-up with current method names, consider backwards compat.
-export enum AuthScopes {
+export enum AuthScope {
   Access = 'com.atproto.access',
   Refresh = 'com.atproto.refresh',
+  AppPass = 'com.atproto.appPass',
 }
 
 export type AuthToken = {
-  scope: AuthScopes
+  scope: AuthScope
   sub: string
   exp: number
 }
@@ -37,57 +38,73 @@ export class ServerAuth {
     this._adminPass = opts.adminPass
   }
 
-  createAccessToken(did: string, expiresIn?: string | number) {
+  createAccessToken(opts: {
+    did: string
+    scope?: AuthScope
+    expiresIn?: string | number
+  }) {
+    const { did, scope = AuthScope.Access, expiresIn = '120mins' } = opts
     const payload = {
-      scope: AuthScopes.Access,
+      scope,
       sub: did,
     }
     return {
       payload: payload as AuthToken, // exp set by sign()
       jwt: jwt.sign(payload, this._secret, {
-        expiresIn: expiresIn ?? '120mins',
+        expiresIn: expiresIn,
         mutatePayload: true,
       }),
     }
   }
 
-  createRefreshToken(did: string, jti?: string, expiresIn?: string | number) {
+  createRefreshToken(opts: {
+    did: string
+    jti?: string
+    expiresIn?: string | number
+  }) {
+    const { did, jti = getRefreshTokenId(), expiresIn = '90days' } = opts
     const payload = {
-      scope: AuthScopes.Refresh,
+      scope: AuthScope.Refresh,
       sub: did,
-      jti: jti ?? getRefreshTokenId(),
+      jti,
     }
     return {
       payload: payload as RefreshToken, // exp set by sign()
       jwt: jwt.sign(payload, this._secret, {
-        expiresIn: expiresIn ?? '90days',
+        expiresIn: expiresIn,
         mutatePayload: true,
       }),
     }
   }
 
-  getUserDid(req: express.Request, scope = AuthScopes.Access): string | null {
+  getCredentials(
+    req: express.Request,
+    scopes = [AuthScope.Access],
+  ): { did: string; scope: AuthScope } | null {
     const token = this.getToken(req)
     if (!token) return null
-    const payload = this.verifyToken(token, scope)
+    const payload = this.verifyToken(token, scopes)
     const sub = payload.sub
     if (typeof sub !== 'string' || !sub.startsWith('did:')) {
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
-    return sub
+    return { did: sub, scope: payload.scope }
   }
 
-  getUserDidOrThrow(req: express.Request, scope?: AuthScopes): string {
-    const did = this.getUserDid(req, scope)
-    if (did === null) {
+  getCredentialsOrThrow(
+    req: express.Request,
+    scopes: AuthScope[],
+  ): { did: string; scope: AuthScope } {
+    const creds = this.getCredentials(req, scopes)
+    if (creds === null) {
       throw new AuthRequiredError()
     }
-    return did
+    return creds
   }
 
-  verifyUser(req: express.Request, did: string, scope?: AuthScopes): boolean {
-    const authorized = this.getUserDid(req, scope)
-    return authorized === did
+  verifyUser(req: express.Request, did: string, scopes: AuthScope[]): boolean {
+    const authorized = this.getCredentials(req, scopes)
+    return authorized !== null && authorized.did === did
   }
 
   verifyAdmin(req: express.Request): boolean {
@@ -105,13 +122,17 @@ export class ServerAuth {
     return header.slice(BEARER.length)
   }
 
-  verifyToken(token: string, scope?: AuthScopes, options?: jwt.VerifyOptions) {
+  verifyToken(
+    token: string,
+    scopes: AuthScope[],
+    options?: jwt.VerifyOptions,
+  ): jwt.JwtPayload {
     try {
       const payload = jwt.verify(token, this._secret, options)
       if (typeof payload === 'string' || 'signature' in payload) {
         throw new InvalidRequestError('Malformed token', 'InvalidToken')
       }
-      if (scope && payload.scope !== scope) {
+      if (scopes.length > 0 && !scopes.includes(payload.scope)) {
         throw new InvalidRequestError('Bad token scope', 'InvalidToken')
       }
       return payload
@@ -152,11 +173,22 @@ export const parseBasicAuth = (
 export const accessVerifier =
   (auth: ServerAuth) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
+    const creds = auth.getCredentialsOrThrow(ctx.req, [
+      AuthScope.Access,
+      AuthScope.AppPass,
+    ])
     return {
-      credentials: {
-        did: auth.getUserDidOrThrow(ctx.req, AuthScopes.Access),
-        scope: AuthScopes.Access,
-      },
+      credentials: creds,
+      artifacts: auth.getToken(ctx.req),
+    }
+  }
+
+export const accessVerifierNotAppPassword =
+  (auth: ServerAuth) =>
+  async (ctx: { req: express.Request; res: express.Response }) => {
+    const creds = auth.getCredentialsOrThrow(ctx.req, [AuthScope.Access])
+    return {
+      credentials: creds,
       artifacts: auth.getToken(ctx.req),
     }
   }
@@ -164,8 +196,11 @@ export const accessVerifier =
 export const accessVerifierCheckTakedown =
   (auth: ServerAuth, { db, services }: AppContext) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
-    const did = auth.getUserDidOrThrow(ctx.req, AuthScopes.Access)
-    const actor = await services.account(db).getAccount(did, true)
+    const creds = auth.getCredentialsOrThrow(ctx.req, [
+      AuthScope.Access,
+      AuthScope.AppPass,
+    ])
+    const actor = await services.account(db).getAccount(creds.did, true)
     if (!actor || softDeleted(actor)) {
       throw new AuthRequiredError(
         'Account has been taken down',
@@ -173,10 +208,7 @@ export const accessVerifierCheckTakedown =
       )
     }
     return {
-      credentials: {
-        did,
-        scope: AuthScopes.Access,
-      },
+      credentials: creds,
       artifacts: auth.getToken(ctx.req),
     }
   }
@@ -184,11 +216,9 @@ export const accessVerifierCheckTakedown =
 export const refreshVerifier =
   (auth: ServerAuth) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
+    const creds = auth.getCredentialsOrThrow(ctx.req, [AuthScope.Refresh])
     return {
-      credentials: {
-        did: auth.getUserDidOrThrow(ctx.req, AuthScopes.Refresh),
-        scope: AuthScopes.Refresh,
-      },
+      credentials: creds,
       artifacts: auth.getToken(ctx.req),
     }
   }

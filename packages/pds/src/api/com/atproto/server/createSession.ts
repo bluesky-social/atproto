@@ -2,6 +2,7 @@ import { AuthRequiredError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
+import { AuthScope } from '../../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createSession(async ({ input }) => {
@@ -18,10 +19,16 @@ export default function (server: Server, ctx: AppContext) {
       throw new AuthRequiredError('Invalid identifier or password')
     }
 
-    const validPass = await actorService.verifyUserPassword(user.did, password)
-
-    if (!validPass) {
-      throw new AuthRequiredError('Invalid identifier or password')
+    let appPasswordName: string | null = null
+    const validAccountPass = await actorService.verifyAccountPassword(
+      user.did,
+      password,
+    )
+    if (!validAccountPass) {
+      appPasswordName = await actorService.verifyAppPassword(user.did, password)
+      if (appPasswordName === null) {
+        throw new AuthRequiredError('Invalid identifier or password')
+      }
     }
 
     if (softDeleted(user)) {
@@ -31,9 +38,12 @@ export default function (server: Server, ctx: AppContext) {
       )
     }
 
-    const access = ctx.auth.createAccessToken(user.did)
-    const refresh = ctx.auth.createRefreshToken(user.did)
-    await authService.grantRefreshToken(refresh.payload)
+    const access = ctx.auth.createAccessToken({
+      did: user.did,
+      scope: appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
+    })
+    const refresh = ctx.auth.createRefreshToken({ did: user.did })
+    await authService.grantRefreshToken(refresh.payload, appPasswordName)
 
     return {
       encoding: 'application/json',

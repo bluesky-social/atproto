@@ -4,6 +4,7 @@ import * as userState from './tables/user-state'
 import * as didHandle from './tables/did-handle'
 import * as repoRoot from './tables/repo-root'
 import * as refreshToken from './tables/refresh-token'
+import * as appPassword from './tables/app-password'
 import * as record from './tables/record'
 import * as backlink from './tables/backlink'
 import * as repoCommitBlock from './tables/repo-commit-block'
@@ -27,6 +28,7 @@ export type DatabaseSchemaType = appView.DatabaseSchemaType &
   userState.PartialDB &
   didHandle.PartialDB &
   refreshToken.PartialDB &
+  appPassword.PartialDB &
   repoRoot.PartialDB &
   record.PartialDB &
   backlink.PartialDB &

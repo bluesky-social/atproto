@@ -8,14 +8,12 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
-export interface QueryParams {
-  seenAt?: string
-}
+export interface QueryParams {}
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  count: number
+  passwords: AppPassword[]
   [k: string]: unknown
 }
 
@@ -29,6 +27,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'AccountTakedown'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
@@ -39,3 +38,21 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
   req: express.Request
   res: express.Response
 }) => Promise<HandlerOutput> | HandlerOutput
+
+export interface AppPassword {
+  name: string
+  createdAt: string
+  [k: string]: unknown
+}
+
+export function isAppPassword(v: unknown): v is AppPassword {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.server.listAppPasswords#appPassword'
+  )
+}
+
+export function validateAppPassword(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.server.listAppPasswords#appPassword', v)
+}

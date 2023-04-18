@@ -37,6 +37,7 @@ import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
+import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 import * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
@@ -45,10 +46,12 @@ import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/delet
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
+import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
 import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
+import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
@@ -419,6 +422,16 @@ export class ServerNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  createAppPassword<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerCreateAppPassword.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.createAppPassword' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   createInviteCode<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -484,6 +497,16 @@ export class ServerNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  listAppPasswords<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerListAppPasswords.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.listAppPasswords' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   refreshSession<AV extends AuthVerifier>(
     cfg: ConfigOf<AV, ComAtprotoServerRefreshSession.Handler<ExtractAuth<AV>>>,
   ) {
@@ -515,6 +538,16 @@ export class ServerNS {
     cfg: ConfigOf<AV, ComAtprotoServerResetPassword.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.server.resetPassword' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  revokeAppPassword<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerRevokeAppPassword.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.revokeAppPassword' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
