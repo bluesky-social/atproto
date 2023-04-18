@@ -71,6 +71,41 @@ describe('app_passwords', () => {
     await expect(attempt).rejects.toThrow('Token could not be verified')
   })
 
+  it('persists scope across refreshes', async () => {
+    const session = await appAgent.api.com.atproto.server.refreshSession(
+      undefined,
+      {
+        headers: {
+          authorization: `Bearer ${appAgent.session?.refreshJwt}`,
+        },
+      },
+    )
+
+    await appAgent.api.app.bsky.feed.post.create(
+      {
+        repo: appAgent.session?.did,
+      },
+      {
+        text: 'Testing testing',
+        createdAt: new Date().toISOString(),
+      },
+      {
+        authorization: `Bearer ${session.data.accessJwt}`,
+      },
+    )
+
+    const attempt = appAgent.api.com.atproto.server.createAppPassword(
+      {
+        name: 'another-one',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: `Bearer ${session.data.accessJwt}` },
+      },
+    )
+    await expect(attempt).rejects.toThrow('Token could not be verified')
+  })
+
   it('lists available app-specific passwords', async () => {
     const res = await appAgent.api.com.atproto.server.listAppPasswords()
     expect(res.data.passwords.length).toBe(1)

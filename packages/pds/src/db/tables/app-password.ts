@@ -1,5 +1,5 @@
 export interface AppPassword {
-  accountDid: string
+  did: string
   name: string
   passwordScrypt: string
   createdAt: string

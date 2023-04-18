@@ -180,7 +180,7 @@ export class AccountService {
     const got = await this.db.db
       .insertInto('app_password')
       .values({
-        accountDid: did,
+        did,
         name,
         passwordScrypt,
         createdAt: new Date().toISOString(),
@@ -200,7 +200,7 @@ export class AccountService {
   async deleteAppPassword(did: string, name: string) {
     await this.db.db
       .deleteFrom('app_password')
-      .where('accountDid', '=', did)
+      .where('did', '=', did)
       .where('name', '=', name)
       .execute()
   }
@@ -222,7 +222,7 @@ export class AccountService {
     const found = await this.db.db
       .selectFrom('app_password')
       .selectAll()
-      .where('accountDid', '=', did)
+      .where('did', '=', did)
       .where('passwordScrypt', '=', passwordScrypt)
       .executeTakeFirst()
     return found?.name ?? null
@@ -234,7 +234,7 @@ export class AccountService {
     return this.db.db
       .selectFrom('app_password')
       .select(['name', 'createdAt'])
-      .where('accountDid', '=', did)
+      .where('did', '=', did)
       .execute()
   }
 

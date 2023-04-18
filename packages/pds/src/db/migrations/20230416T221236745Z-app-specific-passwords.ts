@@ -8,11 +8,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
   await db.schema
     .createTable('app_password')
-    .addColumn('accountDid', 'varchar', (col) => col.notNull())
+    .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('name', 'varchar', (col) => col.notNull())
     .addColumn('passwordScrypt', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint('app_password_pkey', ['accountDid', 'name'])
+    .addPrimaryKeyConstraint('app_password_pkey', ['did', 'name'])
     .execute()
 }
 
