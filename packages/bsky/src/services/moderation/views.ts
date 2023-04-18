@@ -1,10 +1,11 @@
 import { Selectable } from 'kysely'
-import { ArrayEl, cborBytesToRecord } from '@atproto/common'
+import { ArrayEl } from '@atproto/common'
 import { AtUri } from '@atproto/uri'
+import { jsonStringToLex } from '@atproto/lexicon'
 import Database from '../../db'
-import { MessageQueue } from '../../event-stream/types'
-import { DidHandle } from '../../db/tables/did-handle'
-import { RepoRoot } from '../../db/tables/repo-root'
+import { Actor } from '../../db/tables/actor'
+import { Record as RecordRow } from '../../db/tables/record'
+import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import {
   RepoView,
   RepoViewDetail,
@@ -18,17 +19,9 @@ import {
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
-import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
-import { AccountService } from '../account'
-import { RecordService } from '../record'
 
 export class ModerationViews {
-  constructor(private db: Database, private messageDispatcher: MessageQueue) {}
-
-  services = {
-    account: AccountService.creator(),
-    record: RecordService.creator(this.messageDispatcher),
-  }
+  constructor(private db: Database) {}
 
   repo(result: RepoResult): Promise<RepoView>
   repo(result: RepoResult[]): Promise<RepoView[]>
@@ -38,26 +31,21 @@ export class ModerationViews {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
-    const [info, actionResults, invitedBy] = await Promise.all([
+    const [info, actionResults] = await Promise.all([
       await this.db.db
-        .selectFrom('did_handle')
-        .leftJoin('user_account', 'user_account.did', 'did_handle.did')
-        .leftJoin('profile', 'profile.creator', 'did_handle.did')
-        .leftJoin('ipld_block as profile_block', (join) =>
-          join
-            .onRef('profile_block.cid', '=', 'profile.cid')
-            .onRef('profile_block.creator', '=', 'did_handle.did'),
+        .selectFrom('actor')
+        .leftJoin('profile', 'profile.creator', 'actor.did')
+        .leftJoin(
+          'record as profile_record',
+          'profile_record.uri',
+          'profile.uri',
         )
         .where(
-          'did_handle.did',
+          'actor.did',
           'in',
           results.map((r) => r.did),
         )
-        .select([
-          'did_handle.did as did',
-          'user_account.email as email',
-          'profile_block.content as profileBytes',
-        ])
+        .select(['actor.did as did', 'profile_record.json as profileJson'])
         .execute(),
       this.db.db
         .selectFrom('moderation_action')
@@ -70,9 +58,6 @@ export class ModerationViews {
         )
         .select(['id', 'action', 'subjectDid'])
         .execute(),
-      this.services
-        .account(this.db)
-        .getInvitedByForAccounts(results.map((r) => r.did)),
     ])
 
     const infoByDid = info.reduce(
@@ -85,16 +70,18 @@ export class ModerationViews {
     )
 
     const views = results.map((r) => {
-      const { email, profileBytes } = infoByDid[r.did] ?? {}
+      const { profileJson } = infoByDid[r.did] ?? {}
       const action = actionByDid[r.did]
       const relatedRecords: object[] = []
-      if (profileBytes) {
-        relatedRecords.push(cborBytesToRecord(profileBytes))
+      if (profileJson) {
+        relatedRecords.push(
+          jsonStringToLex(profileJson) as Record<string, unknown>,
+        )
       }
       return {
+        // No email or invite info on appview
         did: r.did,
         handle: r.handle,
-        account: email ? { email } : undefined,
         relatedRecords,
         indexedAt: r.indexedAt,
         moderation: {
@@ -102,7 +89,6 @@ export class ModerationViews {
             ? { id: action.id, action: action.action }
             : undefined,
         },
-        invitedBy: invitedBy[r.did],
       }
     })
 
@@ -111,7 +97,7 @@ export class ModerationViews {
 
   async repoDetail(result: RepoResult): Promise<RepoViewDetail> {
     const repo = await this.repo(result)
-    const [reportResults, actionResults, inviteCodes] = await Promise.all([
+    const [reportResults, actionResults] = await Promise.all([
       this.db.db
         .selectFrom('moderation_report')
         .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
@@ -126,7 +112,6 @@ export class ModerationViews {
         .orderBy('id', 'desc')
         .selectAll()
         .execute(),
-      this.services.account(this.db).getAccountInviteCodes(repo.did),
     ])
     const [reports, actions, labels] = await Promise.all([
       this.report(reportResults),
@@ -140,7 +125,6 @@ export class ModerationViews {
         reports,
         actions,
       },
-      invites: inviteCodes,
       labels,
     }
   }
@@ -155,25 +139,26 @@ export class ModerationViews {
 
     const [repoResults, blobResults, actionResults] = await Promise.all([
       this.db.db
-        .selectFrom('repo_root')
-        .innerJoin('did_handle', 'did_handle.did', 'repo_root.did')
+        .selectFrom('actor')
         .where(
-          'repo_root.did',
+          'actor.did',
           'in',
           results.map((r) => didFromUri(r.uri)),
         )
-        .selectAll('repo_root')
-        .selectAll('did_handle')
+        .selectAll()
         .execute(),
-      this.db.db
-        .selectFrom('repo_blob')
-        .where(
-          'recordUri',
-          'in',
-          results.map((r) => r.uri),
-        )
-        .select(['cid', 'recordUri'])
-        .execute(),
+      /** @TODO blobs
+       * this.db.db
+       * .selectFrom('repo_blob')
+       * .where(
+       *   'recordUri',
+       *   'in',
+       *   results.map((r) => r.uri),
+       * )
+       * .select(['cid', 'recordUri'])
+       * .execute(),
+       */
+      [] as { cid: string; recordUri: string }[],
       this.db.db
         .selectFrom('moderation_action')
         .where('reversedAt', 'is', null)
@@ -209,7 +194,7 @@ export class ModerationViews {
       return {
         uri: res.uri,
         cid: res.cid,
-        value: res.value,
+        value: jsonStringToLex(res.json) as Record<string, unknown>,
         blobCids: blobCidsByUri[res.uri] ?? [],
         indexedAt: res.indexedAt,
         repo,
@@ -472,9 +457,11 @@ export class ModerationViews {
   async subject(result: SubjectResult): Promise<SubjectView> {
     let subject: SubjectView
     if (result.subjectType === 'com.atproto.admin.defs#repoRef') {
-      const repoResult = await this.services
-        .account(this.db)
-        .getAccount(result.subjectDid, true)
+      const repoResult = await this.db.db
+        .selectFrom('actor')
+        .selectAll()
+        .where('did', '=', result.subjectDid)
+        .executeTakeFirst()
       if (!repoResult) {
         throw new Error(
           `Subject is missing: (${result.id}) ${result.subjectDid}`,
@@ -486,9 +473,11 @@ export class ModerationViews {
       result.subjectType === 'com.atproto.repo.strongRef' &&
       result.subjectUri !== null
     ) {
-      const recordResult = await this.services
-        .record(this.db)
-        .getRecord(new AtUri(result.subjectUri), null, true)
+      const recordResult = await this.db.db
+        .selectFrom('record')
+        .selectAll()
+        .where('uri', '=', result.subjectUri)
+        .executeTakeFirst()
       if (!recordResult) {
         throw new Error(
           `Subject is missing: (${result.id}) ${result.subjectUri}`,
@@ -506,52 +495,45 @@ export class ModerationViews {
 
   async blob(cids: string[]): Promise<BlobView[]> {
     if (!cids.length) return []
-    const [blobResults, actionResults] = await Promise.all([
-      this.db.db
-        .selectFrom('blob')
-        .where('cid', 'in', cids)
-        .selectAll()
-        .execute(),
-      this.db.db
-        .selectFrom('moderation_action')
-        .where('reversedAt', 'is', null)
-        .innerJoin(
-          'moderation_action_subject_blob as subject_blob',
-          'subject_blob.actionId',
-          'moderation_action.id',
-        )
-        .select(['id', 'action', 'cid'])
-        .execute(),
-    ])
-    const actionByCid = actionResults.reduce(
-      (acc, cur) => Object.assign(acc, { [cur.cid]: cur }),
-      {} as Record<string, ArrayEl<typeof actionResults>>,
-    )
-    return blobResults.map((result) => {
-      const action = actionByCid[result.cid]
-      return {
-        cid: result.cid,
-        mimeType: result.mimeType,
-        size: result.size,
-        createdAt: result.createdAt,
-        // @TODO support #videoDetails here when we start tracking video length
-        details:
-          result.mimeType.startsWith('image/') &&
-          result.height !== null &&
-          result.width !== null
-            ? {
-                $type: 'com.atproto.admin.blob#imageDetails',
-                height: result.height,
-                width: result.width,
-              }
-            : undefined,
-        moderation: {
-          currentAction: action
-            ? { id: action.id, action: action.action }
-            : undefined,
-        },
-      }
-    })
+    /** @TODO handle blobs
+     * const [blobResults, actionResults] = await Promise.all([
+     *   this.db.db
+     *     .selectFrom('blob')
+     *     .where('cid', 'in', cids)
+     *     .selectAll()
+     *     .execute(),
+     *   this.db.db
+     *     .selectFrom('moderation_action')
+     *     .where('reversedAt', 'is', null)
+     *     .innerJoin(
+     *       'moderation_action_subject_blob as subject_blob',
+     *       'subject_blob.actionId',
+     *       'moderation_action.id',
+     *     )
+     *     .select(['id', 'action', 'cid'])
+     *     .execute(),
+     * ])
+     * const actionByCid = actionResults.reduce(
+     *   (acc, cur) => Object.assign(acc, { [cur.cid]: cur }),
+     *   {} as Record<string, ArrayEl<typeof actionResults>>,
+     * )
+     * return blobResults.map((result) => {
+     *   const action = actionByCid[result.cid]
+     *   // Intentionally missing details, since we don't have any on appview
+     *   return {
+     *     cid: result.cid,
+     *     mimeType: result.mimeType,
+     *     size: result.size,
+     *     createdAt: result.createdAt,
+     *     moderation: {
+     *       currentAction: action
+     *         ? { id: action.id, action: action.action }
+     *         : undefined,
+     *     },
+     *   }
+     * })
+     */
+    return []
   }
 
   // @TODO: call into label service instead on AppView
@@ -570,19 +552,13 @@ export class ModerationViews {
   }
 }
 
-type RepoResult = DidHandle & RepoRoot
+type RepoResult = Actor
 
 type ActionResult = Selectable<ModerationAction>
 
 type ReportResult = Selectable<ModerationReport>
 
-type RecordResult = {
-  uri: string
-  cid: string
-  value: object
-  indexedAt: string
-  takedownId: number | null
-}
+type RecordResult = RecordRow
 
 type SubjectResult = Pick<
   ActionResult & ReportResult,

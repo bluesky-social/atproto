@@ -1,47 +1,29 @@
 import { Selectable } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { BlobStore } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
-import { MessageQueue } from '../../event-stream/types'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
-import { RecordService } from '../record'
 import { ModerationViews } from './views'
-import SqlRepoStorage from '../../sql-repo-storage'
 import { ImageInvalidator } from '../../image/invalidator'
 import { ImageUriBuilder } from '../../image/uri'
 
 export class ModerationService {
   constructor(
     public db: Database,
-    public messageDispatcher: MessageQueue,
-    public blobstore: BlobStore,
     public imgUriBuilder: ImageUriBuilder,
     public imgInvalidator: ImageInvalidator,
   ) {}
 
   static creator(
-    messageDispatcher: MessageQueue,
-    blobstore: BlobStore,
     imgUriBuilder: ImageUriBuilder,
     imgInvalidator: ImageInvalidator,
   ) {
     return (db: Database) =>
-      new ModerationService(
-        db,
-        messageDispatcher,
-        blobstore,
-        imgUriBuilder,
-        imgInvalidator,
-      )
+      new ModerationService(db, imgUriBuilder, imgInvalidator)
   }
 
-  views = new ModerationViews(this.db, this.messageDispatcher)
-
-  services = {
-    record: RecordService.creator(this.messageDispatcher),
-  }
+  views = new ModerationViews(this.db)
 
   async getAction(id: number): Promise<ModerationActionRow | undefined> {
     return await this.db.db
@@ -204,8 +186,7 @@ export class ModerationService {
     // Resolve subject info
     let subjectInfo: SubjectInfo
     if ('did' in subject) {
-      const repo = await new SqlRepoStorage(this.db, subject.did).getHead()
-      if (!repo) throw new InvalidRequestError('Repo not found')
+      // Allowing dids that may not exist: may have been deleted but needs to remain actionable.
       subjectInfo = {
         subjectType: 'com.atproto.admin.defs#repoRef',
         subjectDid: subject.did,
@@ -216,30 +197,12 @@ export class ModerationService {
         throw new InvalidRequestError('Blobs do not apply to repo subjects')
       }
     } else {
-      const record = await this.services
-        .record(this.db)
-        .getRecord(subject.uri, subject.cid.toString() ?? null, true)
-      if (!record) throw new InvalidRequestError('Record not found')
+      // Allowing records/blobs that may not exist: may have been deleted but needs to remain actionable.
       subjectInfo = {
         subjectType: 'com.atproto.repo.strongRef',
         subjectDid: subject.uri.host,
         subjectUri: subject.uri.toString(),
-        subjectCid: record.cid,
-      }
-      if (subjectBlobCids?.length) {
-        const cidsFromSubject = await this.db.db
-          .selectFrom('repo_blob')
-          .where('recordUri', '=', subject.uri.toString())
-          .where(
-            'cid',
-            'in',
-            subjectBlobCids.map((c) => c.toString()),
-          )
-          .select('cid')
-          .execute()
-        if (cidsFromSubject.length !== subjectBlobCids.length) {
-          throw new InvalidRequestError('Blobs do not match record subject')
-        }
+        subjectCid: subject.cid.toString(),
       }
     }
 
@@ -319,7 +282,7 @@ export class ModerationService {
 
   async takedownRepo(info: { takedownId: number; did: string }) {
     await this.db.db
-      .updateTable('repo_root')
+      .updateTable('actor')
       .set({ takedownId: info.takedownId })
       .where('did', '=', info.did)
       .where('takedownId', 'is', null)
@@ -328,7 +291,7 @@ export class ModerationService {
 
   async reverseTakedownRepo(info: { did: string }) {
     await this.db.db
-      .updateTable('repo_root')
+      .updateTable('actor')
       .set({ takedownId: null })
       .where('did', '=', info.did)
       .execute()
@@ -346,29 +309,31 @@ export class ModerationService {
       .where('uri', '=', info.uri.toString())
       .where('takedownId', 'is', null)
       .executeTakeFirst()
-    if (info.blobCids?.length) {
-      await this.db.db
-        .updateTable('repo_blob')
-        .set({ takedownId: info.takedownId })
-        .where('recordUri', '=', info.uri.toString())
-        .where(
-          'cid',
-          'in',
-          info.blobCids.map((c) => c.toString()),
-        )
-        .where('takedownId', 'is', null)
-        .executeTakeFirst()
-      await Promise.all(
-        info.blobCids.map(async (cid) => {
-          await this.blobstore.quarantine(cid)
-          const paths = ImageUriBuilder.commonSignedUris.map((id) => {
-            const uri = this.imgUriBuilder.getCommonSignedUri(id, cid)
-            return uri.replace(this.imgUriBuilder.endpoint, '')
-          })
-          await this.imgInvalidator.invalidate(cid.toString(), paths)
-        }),
-      )
-    }
+    /** @TODO track blob takedowns, stop resolving them
+     * if (info.blobCids?.length) {
+     *   await this.db.db
+     *     .updateTable('repo_blob')
+     *     .set({ takedownId: info.takedownId })
+     *     .where('recordUri', '=', info.uri.toString())
+     *     .where(
+     *       'cid',
+     *       'in',
+     *       info.blobCids.map((c) => c.toString()),
+     *     )
+     *     .where('takedownId', 'is', null)
+     *     .executeTakeFirst()
+     *   await Promise.all(
+     *     info.blobCids.map(async (cid) => {
+     *       await this.blobstore.quarantine(cid)
+     *       const paths = ImageUriBuilder.commonSignedUris.map((id) => {
+     *         const uri = this.imgUriBuilder.getCommonSignedUri(id, cid)
+     *         return uri.replace(this.imgUriBuilder.endpoint, '')
+     *       })
+     *       await this.imgInvalidator.invalidate(cid.toString(), paths)
+     *     }),
+     *   )
+     * }
+     */
   }
 
   async reverseTakedownRecord(info: { uri: AtUri }) {
@@ -378,19 +343,21 @@ export class ModerationService {
       .set({ takedownId: null })
       .where('uri', '=', info.uri.toString())
       .execute()
-    const blobs = await this.db.db
-      .updateTable('repo_blob')
-      .set({ takedownId: null })
-      .where('takedownId', 'is not', null)
-      .where('recordUri', '=', info.uri.toString())
-      .returning('cid')
-      .execute()
-    await Promise.all(
-      blobs.map(async (blob) => {
-        const cid = CID.parse(blob.cid)
-        await this.blobstore.unquarantine(cid)
-      }),
-    )
+    /**
+     * const blobs = await this.db.db
+     *   .updateTable('repo_blob')
+     *   .set({ takedownId: null })
+     *   .where('takedownId', 'is not', null)
+     *   .where('recordUri', '=', info.uri.toString())
+     *   .returning('cid')
+     *   .execute()
+     * await Promise.all(
+     *   blobs.map(async (blob) => {
+     *     const cid = CID.parse(blob.cid)
+     *     await this.blobstore.unquarantine(cid)
+     *   }),
+     * )
+     */
   }
 
   async resolveReports(info: {
@@ -447,7 +414,7 @@ export class ModerationService {
   async report(info: {
     reasonType: ModerationReportRow['reasonType']
     reason?: string
-    subject: { did: string } | { uri: AtUri; cid?: CID }
+    subject: { did: string } | { uri: AtUri; cid: CID }
     reportedBy: string
     createdAt?: Date
   }): Promise<ModerationReportRow> {
@@ -462,8 +429,7 @@ export class ModerationService {
     // Resolve subject info
     let subjectInfo: SubjectInfo
     if ('did' in subject) {
-      const repo = await new SqlRepoStorage(this.db, subject.did).getHead()
-      if (!repo) throw new InvalidRequestError('Repo not found')
+      // Allowing dids that may not exist: may not be known yet to appview but needs to remain reportable.
       subjectInfo = {
         subjectType: 'com.atproto.admin.defs#repoRef',
         subjectDid: subject.did,
@@ -471,15 +437,12 @@ export class ModerationService {
         subjectCid: null,
       }
     } else {
-      const record = await this.services
-        .record(this.db)
-        .getRecord(subject.uri, subject.cid?.toString() ?? null, true)
-      if (!record) throw new InvalidRequestError('Record not found')
+      // Allowing records/blobs that may not exist: may not be known yet to appview but needs to remain reportable.
       subjectInfo = {
         subjectType: 'com.atproto.repo.strongRef',
         subjectDid: subject.uri.host,
         subjectUri: subject.uri.toString(),
-        subjectCid: record.cid,
+        subjectCid: subject.cid.toString(),
       }
     }
 
