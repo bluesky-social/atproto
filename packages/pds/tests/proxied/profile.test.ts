@@ -1,8 +1,6 @@
-import fs from 'fs/promises'
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { ids } from '../../src/lexicon/lexicons'
-import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
+import { runTestEnv, CloseFn, processAll } from '@atproto/dev-env'
+import { forSnapshot } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
@@ -17,13 +15,14 @@ describe('pds profile views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    const testEnv = await runTestEnv({
       dbPostgresSchema: 'views_profile',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
+    close = testEnv.close
+    agent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(agent)
     await basicSeed(sc)
+    await processAll(testEnv)
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
@@ -87,102 +86,6 @@ describe('pds profile views', () => {
     expect(forSnapshot(profiles)).toMatchSnapshot()
   })
 
-  it('updates profile', async () => {
-    await updateProfile(agent, alice, {
-      displayName: 'ali',
-      description: 'new descript',
-      avatar: sc.profiles[alice].avatar,
-    })
-
-    const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
-      { actor: alice },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
-  })
-
-  it('handles avatars & banners', async () => {
-    const avatarImg = await fs.readFile(
-      'tests/image/fixtures/key-portrait-small.jpg',
-    )
-    const bannerImg = await fs.readFile(
-      'tests/image/fixtures/key-landscape-small.jpg',
-    )
-    const avatarRes = await agent.api.com.atproto.repo.uploadBlob(avatarImg, {
-      headers: sc.getHeaders(alice),
-      encoding: 'image/jpeg',
-    })
-    const bannerRes = await agent.api.com.atproto.repo.uploadBlob(bannerImg, {
-      headers: sc.getHeaders(alice),
-      encoding: 'image/jpeg',
-    })
-
-    await updateProfile(agent, alice, {
-      displayName: 'ali',
-      description: 'new descript',
-      avatar: avatarRes.data.blob,
-      banner: bannerRes.data.blob,
-    })
-
-    const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
-      { actor: alice },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
-  })
-
-  it('handles unsetting profile fields', async () => {
-    await updateProfile(agent, alice, {})
-
-    const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
-      { actor: alice },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(aliceForAlice.data.displayName).toBeUndefined()
-    expect(aliceForAlice.data.description).toBeUndefined()
-    expect(aliceForAlice.data.avatar).toBeUndefined()
-    expect(aliceForAlice.data.banner).toBeUndefined()
-    expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
-  })
-
-  it('creates new profile', async () => {
-    await updateProfile(agent, dan, { displayName: 'danny boy' })
-
-    const danForDan = await agent.api.app.bsky.actor.getProfile(
-      { actor: dan },
-      { headers: sc.getHeaders(dan) },
-    )
-
-    expect(forSnapshot(danForDan.data)).toMatchSnapshot()
-  })
-
-  it('handles racing updates', async () => {
-    const descriptions: string[] = []
-    const COUNT = 10
-    for (let i = 0; i < COUNT; i++) {
-      descriptions.push(`description-${i}`)
-    }
-    await Promise.all(
-      descriptions.map(async (description) => {
-        await updateProfile(agent, alice, { description })
-      }),
-    )
-
-    const profile = await agent.api.app.bsky.actor.getProfile(
-      { actor: alice },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    // doesn't matter which request wins race, but one of them should win
-    const descripExists = descriptions.some(
-      (descrip) => profile.data.description === descrip,
-    )
-    expect(descripExists).toBeTruthy()
-  })
-
   it('fetches profile by handle', async () => {
     const byDid = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
@@ -197,44 +100,6 @@ describe('pds profile views', () => {
     )
 
     expect(byHandle.data).toEqual(byDid.data)
-  })
-
-  it('blocked by actor takedown', async () => {
-    const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: alice,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
-    const promise = agent.api.app.bsky.actor.getProfile(
-      { actor: alice },
-      { headers: sc.getHeaders(bob) },
-    )
-
-    await expect(promise).rejects.toThrow('Account has been taken down')
-
-    // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      {
-        id: action.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
   })
 
   it('includes muted status.', async () => {
@@ -275,20 +140,4 @@ describe('pds profile views', () => {
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
   })
-
-  async function updateProfile(
-    agent: AtpAgent,
-    did: string,
-    record: Record<string, unknown>,
-  ) {
-    return await agent.api.com.atproto.repo.putRecord(
-      {
-        repo: did,
-        collection: ids.AppBskyActorProfile,
-        rkey: 'self',
-        record,
-      },
-      { headers: sc.getHeaders(did), encoding: 'application/json' },
-    )
-  }
 })

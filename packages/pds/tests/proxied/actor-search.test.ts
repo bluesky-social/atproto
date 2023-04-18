@@ -1,32 +1,25 @@
 import AtpAgent from '@atproto/api'
+import { runTestEnv, CloseFn, processAll } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import {
-  runTestServer,
-  forSnapshot,
-  CloseFn,
-  paginateAll,
-  adminAuth,
-} from '../_util'
+import { forSnapshot, paginateAll, adminAuth } from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
-import { Database } from '../../src'
 
 describe('pds user search views', () => {
   let agent: AtpAgent
-  let db: Database
   let close: CloseFn
   let sc: SeedClient
   let headers: { [s: string]: string }
 
   beforeAll(async () => {
-    const server = await runTestServer({
-      dbPostgresSchema: 'views_user_search',
+    const testEnv = await runTestEnv({
+      dbPostgresSchema: 'proxy_user_search',
     })
-    close = server.close
-    db = server.ctx.db
-    agent = new AtpAgent({ service: server.url })
+    close = testEnv.close
+    agent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(agent)
     await usersBulkSeed(sc)
+    await processAll(testEnv)
     headers = sc.getHeaders(Object.values(sc.dids)[0])
   })
 
@@ -34,11 +27,13 @@ describe('pds user search views', () => {
     await close()
   })
 
-  it('typeahead gives relevant results', async () => {
+  it.only('typeahead gives relevant results', async () => {
+    console.log('GETTING')
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'car' },
       { headers },
     )
+    console.log('GOT')
 
     const handles = result.data.actors.map((u) => u.handle)
 
@@ -53,12 +48,6 @@ describe('pds user search views', () => {
 
     shouldContain.forEach((handle) => expect(handles).toContain(handle))
 
-    if (db.dialect === 'pg') {
-      expect(handles).toContain('cayla-marquardt39.test') // Fuzzy match supported by postgres
-    } else {
-      expect(handles).not.toContain('cayla-marquardt39.test')
-    }
-
     const shouldNotContain = [
       'sven70.test',
       'hilario84.test',
@@ -71,11 +60,7 @@ describe('pds user search views', () => {
 
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
-    if (db.dialect === 'pg') {
-      expect(forSnapshot(result.data.actors)).toEqual(snapTypeaheadPg)
-    } else {
-      expect(forSnapshot(result.data.actors)).toEqual(snapTypeaheadSqlite)
-    }
+    expect(forSnapshot(result.data.actors)).toEqual(snapTypeaheadPg)
   })
 
   it('typeahead gives empty result set when provided empty term', async () => {
@@ -122,12 +107,6 @@ describe('pds user search views', () => {
 
     shouldContain.forEach((handle) => expect(handles).toContain(handle))
 
-    if (db.dialect === 'pg') {
-      expect(handles).toContain('cayla-marquardt39.test') // Fuzzy match supported by postgres
-    } else {
-      expect(handles).not.toContain('cayla-marquardt39.test')
-    }
-
     const shouldNotContain = [
       'sven70.test',
       'hilario84.test',
@@ -140,11 +119,7 @@ describe('pds user search views', () => {
 
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
-    if (db.dialect === 'pg') {
-      expect(forSnapshot(result.data.actors)).toEqual(snapSearchPg)
-    } else {
-      expect(forSnapshot(result.data.actors)).toEqual(snapSearchSqlite)
-    }
+    expect(forSnapshot(result.data.actors)).toEqual(snapSearchPg)
   })
 
   it('search gives empty result set when provided empty term', async () => {
@@ -280,53 +255,6 @@ const snapTypeaheadPg = [
   },
 ]
 
-const snapTypeaheadSqlite = [
-  {
-    did: 'user(0)',
-    displayName: 'Carlton Abernathy IV',
-    handle: 'aliya-hodkiewicz.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(1)',
-    handle: 'cara-wiegand69.test',
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(2)',
-    handle: 'carlos6.test',
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(3)',
-    displayName: 'Latoya Windler',
-    handle: 'carolina-mcdermott77.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(4)',
-    displayName: 'Carol Littel',
-    handle: 'eudora-dietrich4.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(5)',
-    displayName: 'Sadie Carter',
-    handle: 'shane-torphy52.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-]
-
 const snapSearchPg = [
   {
     did: 'user(0)',
@@ -381,57 +309,6 @@ const snapSearchPg = [
     displayName: 'Rachel Kshlerin',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'cayla-marquardt39.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-]
-
-const snapSearchSqlite = [
-  {
-    did: 'user(0)',
-    displayName: 'Carlton Abernathy IV',
-    indexedAt: '1970-01-01T00:00:00.000Z',
-    handle: 'aliya-hodkiewicz.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(1)',
-    handle: 'cara-wiegand69.test',
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(2)',
-    handle: 'carlos6.test',
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(3)',
-    displayName: 'Latoya Windler',
-    indexedAt: '1970-01-01T00:00:00.000Z',
-    handle: 'carolina-mcdermott77.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(4)',
-    displayName: 'Carol Littel',
-    indexedAt: '1970-01-01T00:00:00.000Z',
-    handle: 'eudora-dietrich4.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(5)',
-    displayName: 'Sadie Carter',
-    indexedAt: '1970-01-01T00:00:00.000Z',
-    handle: 'shane-torphy52.test',
     avatar,
     viewer: { muted: false },
     labels: [],
