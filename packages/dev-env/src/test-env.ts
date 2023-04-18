@@ -136,6 +136,8 @@ export const runPds = async (cfg: PdsConfig): Promise<PdsServerInfo> => {
     dbPostgresUrl: cfg.dbPostgresUrl,
     maxSubscriptionBuffer: 200,
     repoBackfillLimitMs: 1000 * 60 * 60, // 1hr
+    labelerDid: 'did:example:labeler',
+    labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
   })
 
   const blobstore = new pds.MemoryBlobStore()
