@@ -113,9 +113,24 @@ export default function (server: Server, ctx: AppContext) {
         params,
         headers(requester),
       )
+
+      const { cursor, uri, cid, likes } = res.data
+      const dids = likes.map((like) => like.actor.did)
+      const mutes = await ctx.services.account(ctx.db).getMutes(requester, dids)
+
+      for (const like of likes) {
+        like.actor.viewer ??= {}
+        like.actor.viewer.muted = mutes[like.actor.did] ?? false
+      }
+
       return {
         encoding: 'application/json',
-        body: res.data,
+        body: {
+          cursor,
+          uri,
+          cid,
+          likes,
+        },
       }
     },
   })
@@ -175,32 +190,24 @@ export default function (server: Server, ctx: AppContext) {
         params,
         headers(requester),
       )
-      const dids = [
-        res.data.subject.did,
-        ...res.data.followers.map((follower) => follower.did),
-      ]
+
+      const { cursor, subject, followers } = res.data
+      const dids = [subject.did, ...followers.map((follower) => follower.did)]
       const mutes = await ctx.services.account(ctx.db).getMutes(requester, dids)
-      const hydratedFollowers = res.data.followers.map((follower) => ({
-        ...follower,
-        viewer: {
-          ...(follower.viewer || {}),
-          muted: mutes[follower.did] ?? false,
-        },
-      }))
-      const hydratedSubject = {
-        ...res.data.subject,
-        viewer: {
-          ...(res.data.subject.viewer || {}),
-          muted: mutes[res.data.subject.did] ?? false,
-        },
+
+      for (const follower of followers) {
+        follower.viewer ??= {}
+        follower.viewer.muted = mutes[follower.did] ?? false
       }
+      subject.viewer ??= {}
+      subject.viewer.muted = mutes[subject.did] ?? false
 
       return {
         encoding: 'application/json',
         body: {
-          ...res.data,
-          subject: hydratedSubject,
-          followers: hydratedFollowers,
+          cursor,
+          subject,
+          followers,
         },
       }
     },
@@ -214,32 +221,23 @@ export default function (server: Server, ctx: AppContext) {
         params,
         headers(requester),
       )
-      const dids = [
-        res.data.subject.did,
-        ...res.data.follows.map((follow) => follow.did),
-      ]
+      const { cursor, subject, follows } = res.data
+      const dids = [subject.did, ...follows.map((follow) => follow.did)]
       const mutes = await ctx.services.account(ctx.db).getMutes(requester, dids)
-      const hydratedFollows = res.data.follows.map((follow) => ({
-        ...follow,
-        viewer: {
-          ...(follow.viewer || {}),
-          muted: mutes[follow.did] ?? false,
-        },
-      }))
-      const hydratedSubject = {
-        ...res.data.subject,
-        viewer: {
-          ...(res.data.subject.viewer || {}),
-          muted: mutes[res.data.subject.did] ?? false,
-        },
+
+      for (const follow of follows) {
+        follow.viewer ??= {}
+        follow.viewer.muted = mutes[follow.did] ?? false
       }
+      subject.viewer ??= {}
+      subject.viewer.muted = mutes[subject.did] ?? false
 
       return {
         encoding: 'application/json',
         body: {
-          ...res.data,
-          subject: hydratedSubject,
-          follows: hydratedFollows,
+          cursor,
+          subject,
+          follows,
         },
       }
     },

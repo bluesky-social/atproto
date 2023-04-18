@@ -5,9 +5,9 @@ Object {
   "cursor": "0000000000000::bafycid",
   "followers": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/R-jwupbEmDp-PT8MBXej7PtWKpPV6sqDedkrhf_sgww/rs:fill:1000:1000:1:0/plain/did:plc:dchyys73r6grjschogytise7/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
       "description": "descript-eve",
-      "did": "user(1)",
+      "did": "user(2)",
       "displayName": "display-eve",
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -18,9 +18,9 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/_Im2-uTymxwsjeS8ERjuz3puiAlgCgw6mGwLJNwfyU4/rs:fill:1000:1000:1:0/plain/did:plc:65wxi73t575qokmrdnzcmqnz/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(0)@jpeg",
       "description": "descript-dan",
-      "did": "user(2)",
+      "did": "user(4)",
       "displayName": "display-dan",
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -31,9 +31,9 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/PgRjjwMAmlXvzdoDBhM8FEAROhEKmkKndxGjOfpqHyM/rs:fill:1000:1000:1:0/plain/did:plc:ckehdwd3s4uucznorwc2e5kc/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(7)/cids(0)@jpeg",
       "description": "descript-bob",
-      "did": "user(3)",
+      "did": "user(6)",
       "displayName": "display-bob",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -44,9 +44,9 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/Cn7HJo8Gi3QXXgjs5CHtX2k42Ma1kzOSVOymKkg0QoI/rs:fill:1000:1000:1:0/plain/did:plc:pkxihl62vlv3nzzolbd5rndn/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(9)/cids(0)@jpeg",
       "description": "descript-carol",
-      "did": "user(4)",
+      "did": "user(8)",
       "displayName": "display-carol",
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -58,7 +58,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
     "description": "descript-alice",
     "did": "user(0)",
     "displayName": "display-alice",
@@ -76,9 +76,9 @@ Object {
   "cursor": "0000000000000::bafycid",
   "followers": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/_Im2-uTymxwsjeS8ERjuz3puiAlgCgw6mGwLJNwfyU4/rs:fill:1000:1000:1:0/plain/did:plc:65wxi73t575qokmrdnzcmqnz/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
       "description": "descript-dan",
-      "did": "user(1)",
+      "did": "user(2)",
       "displayName": "display-dan",
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -89,9 +89,9 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(0)@jpeg",
       "description": "descript-alice",
-      "did": "user(2)",
+      "did": "user(4)",
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -101,7 +101,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/PgRjjwMAmlXvzdoDBhM8FEAROhEKmkKndxGjOfpqHyM/rs:fill:1000:1000:1:0/plain/did:plc:ckehdwd3s4uucznorwc2e5kc/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
     "description": "descript-bob",
     "did": "user(0)",
     "displayName": "display-bob",
@@ -121,9 +121,9 @@ Object {
   "cursor": "0000000000000::bafycid",
   "followers": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/R-jwupbEmDp-PT8MBXej7PtWKpPV6sqDedkrhf_sgww/rs:fill:1000:1000:1:0/plain/did:plc:dchyys73r6grjschogytise7/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
       "description": "descript-eve",
-      "did": "user(1)",
+      "did": "user(2)",
       "displayName": "display-eve",
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -134,9 +134,9 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/PgRjjwMAmlXvzdoDBhM8FEAROhEKmkKndxGjOfpqHyM/rs:fill:1000:1000:1:0/plain/did:plc:ckehdwd3s4uucznorwc2e5kc/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(0)@jpeg",
       "description": "descript-bob",
-      "did": "user(2)",
+      "did": "user(4)",
       "displayName": "display-bob",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -147,9 +147,9 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(7)/cids(0)@jpeg",
       "description": "descript-alice",
-      "did": "user(3)",
+      "did": "user(6)",
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -159,7 +159,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/Cn7HJo8Gi3QXXgjs5CHtX2k42Ma1kzOSVOymKkg0QoI/rs:fill:1000:1000:1:0/plain/did:plc:pkxihl62vlv3nzzolbd5rndn/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
     "description": "descript-carol",
     "did": "user(0)",
     "displayName": "display-carol",
@@ -179,9 +179,9 @@ Object {
   "cursor": "0000000000000::bafycid",
   "followers": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
       "description": "descript-alice",
-      "did": "user(1)",
+      "did": "user(2)",
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -191,7 +191,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/_Im2-uTymxwsjeS8ERjuz3puiAlgCgw6mGwLJNwfyU4/rs:fill:1000:1000:1:0/plain/did:plc:65wxi73t575qokmrdnzcmqnz/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
     "description": "descript-dan",
     "did": "user(0)",
     "displayName": "display-dan",
@@ -211,9 +211,9 @@ Object {
   "cursor": "0000000000000::bafycid",
   "followers": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/_Im2-uTymxwsjeS8ERjuz3puiAlgCgw6mGwLJNwfyU4/rs:fill:1000:1000:1:0/plain/did:plc:65wxi73t575qokmrdnzcmqnz/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
       "description": "descript-dan",
-      "did": "user(1)",
+      "did": "user(2)",
       "displayName": "display-dan",
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -224,9 +224,9 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(0)@jpeg",
       "description": "descript-alice",
-      "did": "user(2)",
+      "did": "user(4)",
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -236,7 +236,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/R-jwupbEmDp-PT8MBXej7PtWKpPV6sqDedkrhf_sgww/rs:fill:1000:1000:1:0/plain/did:plc:dchyys73r6grjschogytise7/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
     "description": "descript-eve",
     "did": "user(0)",
     "displayName": "display-eve",
@@ -256,9 +256,9 @@ Object {
   "cursor": "0000000000000::bafycid",
   "follows": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/R-jwupbEmDp-PT8MBXej7PtWKpPV6sqDedkrhf_sgww/rs:fill:1000:1000:1:0/plain/did:plc:dchyys73r6grjschogytise7/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
       "description": "descript-eve",
-      "did": "user(1)",
+      "did": "user(2)",
       "displayName": "display-eve",
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -269,9 +269,9 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/_Im2-uTymxwsjeS8ERjuz3puiAlgCgw6mGwLJNwfyU4/rs:fill:1000:1000:1:0/plain/did:plc:65wxi73t575qokmrdnzcmqnz/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(0)@jpeg",
       "description": "descript-dan",
-      "did": "user(2)",
+      "did": "user(4)",
       "displayName": "display-dan",
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -282,9 +282,9 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/Cn7HJo8Gi3QXXgjs5CHtX2k42Ma1kzOSVOymKkg0QoI/rs:fill:1000:1000:1:0/plain/did:plc:pkxihl62vlv3nzzolbd5rndn/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(7)/cids(0)@jpeg",
       "description": "descript-carol",
-      "did": "user(3)",
+      "did": "user(6)",
       "displayName": "display-carol",
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -295,9 +295,9 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/PgRjjwMAmlXvzdoDBhM8FEAROhEKmkKndxGjOfpqHyM/rs:fill:1000:1000:1:0/plain/did:plc:ckehdwd3s4uucznorwc2e5kc/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(9)/cids(0)@jpeg",
       "description": "descript-bob",
-      "did": "user(4)",
+      "did": "user(8)",
       "displayName": "display-bob",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -309,7 +309,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
     "description": "descript-alice",
     "did": "user(0)",
     "displayName": "display-alice",
@@ -327,9 +327,9 @@ Object {
   "cursor": "0000000000000::bafycid",
   "follows": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/Cn7HJo8Gi3QXXgjs5CHtX2k42Ma1kzOSVOymKkg0QoI/rs:fill:1000:1000:1:0/plain/did:plc:pkxihl62vlv3nzzolbd5rndn/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
       "description": "descript-carol",
-      "did": "user(1)",
+      "did": "user(2)",
       "displayName": "display-carol",
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -340,9 +340,9 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(0)@jpeg",
       "description": "descript-alice",
-      "did": "user(2)",
+      "did": "user(4)",
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -352,7 +352,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/PgRjjwMAmlXvzdoDBhM8FEAROhEKmkKndxGjOfpqHyM/rs:fill:1000:1000:1:0/plain/did:plc:ckehdwd3s4uucznorwc2e5kc/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
     "description": "descript-bob",
     "did": "user(0)",
     "displayName": "display-bob",
@@ -372,9 +372,9 @@ Object {
   "cursor": "0000000000000::bafycid",
   "follows": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
       "description": "descript-alice",
-      "did": "user(1)",
+      "did": "user(2)",
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -384,7 +384,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/Cn7HJo8Gi3QXXgjs5CHtX2k42Ma1kzOSVOymKkg0QoI/rs:fill:1000:1000:1:0/plain/did:plc:pkxihl62vlv3nzzolbd5rndn/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
     "description": "descript-carol",
     "did": "user(0)",
     "displayName": "display-carol",
@@ -404,9 +404,9 @@ Object {
   "cursor": "0000000000000::bafycid",
   "follows": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/R-jwupbEmDp-PT8MBXej7PtWKpPV6sqDedkrhf_sgww/rs:fill:1000:1000:1:0/plain/did:plc:dchyys73r6grjschogytise7/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
       "description": "descript-eve",
-      "did": "user(1)",
+      "did": "user(2)",
       "displayName": "display-eve",
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -417,9 +417,9 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/PgRjjwMAmlXvzdoDBhM8FEAROhEKmkKndxGjOfpqHyM/rs:fill:1000:1000:1:0/plain/did:plc:ckehdwd3s4uucznorwc2e5kc/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(0)@jpeg",
       "description": "descript-bob",
-      "did": "user(2)",
+      "did": "user(4)",
       "displayName": "display-bob",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -430,9 +430,9 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(7)/cids(0)@jpeg",
       "description": "descript-alice",
-      "did": "user(3)",
+      "did": "user(6)",
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -442,7 +442,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/_Im2-uTymxwsjeS8ERjuz3puiAlgCgw6mGwLJNwfyU4/rs:fill:1000:1000:1:0/plain/did:plc:65wxi73t575qokmrdnzcmqnz/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
     "description": "descript-dan",
     "did": "user(0)",
     "displayName": "display-dan",
@@ -462,9 +462,9 @@ Object {
   "cursor": "0000000000000::bafycid",
   "follows": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/Cn7HJo8Gi3QXXgjs5CHtX2k42Ma1kzOSVOymKkg0QoI/rs:fill:1000:1000:1:0/plain/did:plc:pkxihl62vlv3nzzolbd5rndn/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
       "description": "descript-carol",
-      "did": "user(1)",
+      "did": "user(2)",
       "displayName": "display-carol",
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -475,9 +475,9 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/n2wqEcgjlMpuSsXLuLD3rtYvstJwf-j8Yey4_WsvVJE/rs:fill:1000:1000:1:0/plain/did:plc:p3cglndmurwvoimg2qud4btt/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(0)@jpeg",
       "description": "descript-alice",
-      "did": "user(2)",
+      "did": "user(4)",
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -487,7 +487,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/R-jwupbEmDp-PT8MBXej7PtWKpPV6sqDedkrhf_sgww/rs:fill:1000:1000:1:0/plain/did:plc:dchyys73r6grjschogytise7/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
     "description": "descript-eve",
     "did": "user(0)",
     "displayName": "display-eve",
