@@ -23,7 +23,7 @@ describe('indexing', () => {
 
   beforeAll(async () => {
     testEnv = await runTestEnv({
-      dbPostgresSchema: 'indexing',
+      dbPostgresSchema: 'bsky_indexing',
     })
     close = testEnv.close
     agent = new AtpAgent({ service: testEnv.bsky.url })

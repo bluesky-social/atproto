@@ -19,7 +19,7 @@ describe('timeline views', () => {
 
   beforeAll(async () => {
     const testEnv = await runTestEnv({
-      dbPostgresSchema: 'views_home_feed',
+      dbPostgresSchema: 'bsky_views_home_feed',
     })
     close = testEnv.close
     agent = new AtpAgent({ service: testEnv.bsky.url })

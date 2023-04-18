@@ -22,7 +22,7 @@ describe('pds author feed views', () => {
 
   beforeAll(async () => {
     const testEnv = await runTestEnv({
-      dbPostgresSchema: 'views_author_feed',
+      dbPostgresSchema: 'bsky_views_author_feed',
     })
     close = testEnv.close
     agent = new AtpAgent({ service: testEnv.bsky.url })

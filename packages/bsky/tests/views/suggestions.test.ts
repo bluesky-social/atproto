@@ -11,7 +11,7 @@ describe('pds user search views', () => {
 
   beforeAll(async () => {
     const testEnv = await runTestEnv({
-      dbPostgresSchema: 'views_suggestions',
+      dbPostgresSchema: 'bsky_views_suggestions',
     })
     close = testEnv.close
     agent = new AtpAgent({ service: testEnv.bsky.url })

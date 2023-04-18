@@ -19,7 +19,7 @@ describe('pds thread views', () => {
 
   beforeAll(async () => {
     testEnv = await runTestEnv({
-      dbPostgresSchema: 'views_thread',
+      dbPostgresSchema: 'bsky_views_thread',
     })
     db = testEnv.bsky.ctx.db
     close = testEnv.close

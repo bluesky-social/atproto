@@ -13,7 +13,7 @@ describe('pds actor search views', () => {
 
   beforeAll(async () => {
     const testEnv = await runTestEnv({
-      dbPostgresSchema: 'views_actor_search',
+      dbPostgresSchema: 'bsky_views_actor_search',
     })
     close = testEnv.close
     agent = new AtpAgent({ service: testEnv.bsky.url })

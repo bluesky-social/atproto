@@ -25,7 +25,7 @@ describe('popular views', () => {
 
   beforeAll(async () => {
     testEnv = await runTestEnv({
-      dbPostgresSchema: 'views_popular',
+      dbPostgresSchema: 'bsky_views_popular',
     })
     close = testEnv.close
     agent = new AtpAgent({ service: testEnv.bsky.url })

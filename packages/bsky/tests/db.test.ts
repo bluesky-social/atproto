@@ -10,7 +10,7 @@ describe('db', () => {
 
   beforeAll(async () => {
     const testEnv = await runTestEnv({
-      dbPostgresSchema: 'db',
+      dbPostgresSchema: 'bsky_db',
     })
     close = testEnv.close
     db = testEnv.bsky.ctx.db

@@ -14,7 +14,7 @@ describe('duplicate record', () => {
 
   beforeAll(async () => {
     const server = await runTestEnv({
-      dbPostgresSchema: 'duplicates',
+      dbPostgresSchema: 'bsky_duplicates',
     })
     db = server.bsky.ctx.db
     services = server.bsky.ctx.services

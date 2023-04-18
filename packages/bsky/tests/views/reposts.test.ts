@@ -15,7 +15,7 @@ describe('pds repost views', () => {
 
   beforeAll(async () => {
     const testEnv = await runTestEnv({
-      dbPostgresSchema: 'views_reposts',
+      dbPostgresSchema: 'bsky_views_reposts',
     })
     close = testEnv.close
     agent = new AtpAgent({ service: testEnv.bsky.url })

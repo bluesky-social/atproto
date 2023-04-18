@@ -15,7 +15,7 @@ describe('notification views', () => {
 
   beforeAll(async () => {
     testEnv = await runTestEnv({
-      dbPostgresSchema: 'views_notifications',
+      dbPostgresSchema: 'bsky_views_notifications',
     })
     agent = new AtpAgent({ service: testEnv.bsky.url })
     const pdsAgent = new AtpAgent({ service: testEnv.pds.url })

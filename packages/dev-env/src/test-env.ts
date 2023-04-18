@@ -83,7 +83,7 @@ export const runTestEnv = async (
     port: bskyPort,
     plcUrl: plc.url,
     repoProvider: `ws://localhost:${pds.port}`,
-    dbPostgresSchema: `bsky_${dbPostgresSchema}`,
+    dbPostgresSchema: `appview_${dbPostgresSchema}`,
     dbPostgresUrl,
   })
   mockNetworkUtilities(pds)
