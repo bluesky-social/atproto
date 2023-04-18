@@ -1,12 +1,6 @@
 import AtpAgent from '@atproto/api'
-import {
-  runTestServer,
-  forSnapshot,
-  CloseFn,
-  paginateAll,
-  processAll,
-  stripViewer,
-} from '../_util'
+import { CloseFn, runTestEnv } from '@atproto/dev-env'
+import { forSnapshot, paginateAll, processAll, stripViewer } from '../_util'
 import { SeedClient } from '../seeds/client'
 import repostsSeed from '../seeds/reposts'
 
@@ -20,15 +14,15 @@ describe('pds repost views', () => {
   let bob: string
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    const testEnv = await runTestEnv({
       dbPostgresSchema: 'views_reposts',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    close = testEnv.close
+    agent = new AtpAgent({ service: testEnv.bsky.url })
+    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
     await repostsSeed(sc)
-    await processAll(server)
+    await processAll(testEnv)
     alice = sc.dids.alice
     bob = sc.dids.bob
   })

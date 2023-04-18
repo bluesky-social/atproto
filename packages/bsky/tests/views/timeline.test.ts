@@ -1,16 +1,10 @@
 import AtpAgent from '@atproto/api'
-import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
-import {
-  runTestServer,
-  forSnapshot,
-  CloseFn,
-  getOriginator,
-  paginateAll,
-  processAll,
-} from '../_util'
+import { CloseFn, runTestEnv } from '@atproto/dev-env'
+import { forSnapshot, getOriginator, paginateAll, processAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { FeedAlgorithm } from '../../src/api/app/bsky/util/feed'
+import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 
 describe('timeline views', () => {
   let agent: AtpAgent
@@ -24,15 +18,15 @@ describe('timeline views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    const testEnv = await runTestEnv({
       dbPostgresSchema: 'views_home_feed',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    close = testEnv.close
+    agent = new AtpAgent({ service: testEnv.bsky.url })
+    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
-    await processAll(server)
+    await processAll(testEnv)
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol

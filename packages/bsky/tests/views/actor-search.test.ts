@@ -1,13 +1,7 @@
 import AtpAgent from '@atproto/api'
 import { wait } from '@atproto/common'
-import {
-  runTestServer,
-  forSnapshot,
-  CloseFn,
-  paginateAll,
-  processAll,
-  stripViewer,
-} from '../_util'
+import { CloseFn, runTestEnv } from '@atproto/dev-env'
+import { forSnapshot, paginateAll, processAll, stripViewer } from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
 
@@ -18,20 +12,20 @@ describe('pds actor search views', () => {
   let headers: { [s: string]: string }
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    const testEnv = await runTestEnv({
       dbPostgresSchema: 'views_actor_search',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    close = testEnv.close
+    agent = new AtpAgent({ service: testEnv.bsky.url })
+    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
 
     await wait(50) // allow pending sub to be established
-    await server.bsky.sub?.destroy()
+    await testEnv.bsky.sub.destroy()
     await usersBulkSeed(sc)
 
     // Skip did/handle resolution for expediency
-    const { db } = server.ctx
+    const { db } = testEnv.bsky.ctx
     const now = new Date().toISOString()
     await db.db
       .insertInto('actor')
@@ -46,8 +40,8 @@ describe('pds actor search views', () => {
       .execute()
 
     // Process remaining profiles
-    server.bsky.sub?.resume()
-    await processAll(server, 20000)
+    testEnv.bsky.sub.resume()
+    await processAll(testEnv, 20000)
     headers = sc.getHeaders(Object.values(sc.dids)[0], true)
   })
 
