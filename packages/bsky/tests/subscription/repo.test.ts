@@ -1,34 +1,30 @@
 import AtpAgent from '@atproto/api'
 import basicSeed from '../seeds/basic'
 import { SeedClient } from '../seeds/client'
-import {
-  forSnapshot,
-  processAll,
-  runTestServer,
-  TestServerInfo,
-} from '../_util'
+import { runTestEnv, TestEnvInfo } from '@atproto/dev-env'
+import { forSnapshot, processAll } from '../_util'
 import { AppContext, Database } from '../../src'
 import { DatabaseSchemaType } from '../../src/db/database-schema'
 import { ids } from '../../src/lexicon/lexicons'
 
 describe('sync', () => {
-  let server: TestServerInfo
+  let testEnv: TestEnvInfo
   let ctx: AppContext
   let pdsAgent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
-    server = await runTestServer({
+    testEnv = await runTestEnv({
       dbPostgresSchema: 'subscription_repo',
     })
-    ctx = server.ctx
-    pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    ctx = testEnv.bsky.ctx
+    pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
   })
 
   afterAll(async () => {
-    await server.close()
+    await testEnv.close()
   })
 
   it('indexes permit history being replayed.', async () => {
@@ -45,7 +41,7 @@ describe('sync', () => {
     await updateProfile(pdsAgent, alice, { displayName: 'ali!' })
     await updateProfile(pdsAgent, bob, { displayName: 'robert!' })
 
-    await processAll(server)
+    await processAll(testEnv)
 
     // Table comparator
     const getTableDump = async () => {
@@ -64,10 +60,10 @@ describe('sync', () => {
     const originalTableDump = await getTableDump()
 
     // Reprocess repos via sync subscription, on top of existing indices
-    await server.bsky.sub?.destroy()
-    await server.bsky.sub?.resetState()
-    server.bsky.sub?.resume()
-    await processAll(server)
+    await testEnv.bsky.sub?.destroy()
+    await testEnv.bsky.sub?.resetState()
+    testEnv.bsky.sub?.resume()
+    await processAll(testEnv)
 
     // Permissive of indexedAt times changing
     expect(forSnapshot(await getTableDump())).toEqual(

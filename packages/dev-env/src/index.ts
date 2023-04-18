@@ -14,6 +14,8 @@ import AtpAgent from '@atproto/api'
 import { ServerType, ServerConfig, StartParams } from './types.js'
 import { HOUR } from '@atproto/common'
 
+export * from './test-env'
+
 interface Startable {
   start(): Promise<http.Server>
 }

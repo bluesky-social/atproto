@@ -5,37 +5,32 @@ import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { Client } from '@did-plc/lib'
 import AtpAgent, { AppBskyActorProfile, AppBskyFeedPost } from '@atproto/api'
-import {
-  CloseFn,
-  forSnapshot,
-  processAll,
-  runTestServer,
-  TestServerInfo,
-} from './_util'
+import { CloseFn, runTestEnv, TestEnvInfo } from '@atproto/dev-env'
+import { forSnapshot, processAll } from './_util'
 import { SeedClient } from './seeds/client'
 import usersSeed from './seeds/users'
 import basicSeed from './seeds/basic'
 import { ids } from '../src/lexicon/lexicons'
 
 describe('indexing', () => {
-  let server: TestServerInfo
+  let testEnv: TestEnvInfo
   let close: CloseFn
   let agent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
-    server = await runTestServer({
+    testEnv = await runTestEnv({
       dbPostgresSchema: 'indexing',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    close = testEnv.close
+    agent = new AtpAgent({ service: testEnv.bsky.url })
+    pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
     await usersSeed(sc)
     // Data in tests is not processed from subscription
-    await processAll(server)
-    await server.bsky.sub?.destroy()
+    await processAll(testEnv)
+    await testEnv.bsky.sub.destroy()
   })
 
   afterAll(async () => {
@@ -43,7 +38,7 @@ describe('indexing', () => {
   })
 
   it('indexes posts.', async () => {
-    const { db, services } = server.ctx
+    const { db, services } = testEnv.bsky.ctx
     const createdAt = new Date().toISOString()
     const createRecord = await prepareCreate({
       did: sc.dids.alice,
@@ -136,7 +131,7 @@ describe('indexing', () => {
   })
 
   it('indexes profiles.', async () => {
-    const { db, services } = server.ctx
+    const { db, services } = testEnv.bsky.ctx
     const createRecord = await prepareCreate({
       did: sc.dids.dan,
       collection: ids.AppBskyActorProfile,
@@ -206,14 +201,14 @@ describe('indexing', () => {
 
   describe('indexRepo', () => {
     beforeAll(async () => {
-      server.bsky.sub?.resume()
+      testEnv.bsky.sub.resume()
       await basicSeed(sc, false)
-      await processAll(server)
-      await server.bsky.sub?.destroy()
+      await processAll(testEnv)
+      await testEnv.bsky.sub.destroy()
     })
 
     it('preserves indexes when no record changes.', async () => {
-      const { db, services } = server.ctx
+      const { db, services } = testEnv.bsky.ctx
       // Mark originals
       const { data: origProfile } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
@@ -253,7 +248,7 @@ describe('indexing', () => {
     })
 
     it('updates indexes when records change.', async () => {
-      const { db, services } = server.ctx
+      const { db, services } = testEnv.bsky.ctx
       // Update profile
       await pdsAgent.api.com.atproto.repo.putRecord(
         {
@@ -300,8 +295,8 @@ describe('indexing', () => {
     })
 
     it('skips invalid records.', async () => {
-      const { db, services } = server.ctx
-      const { db: pdsDb, services: pdsServices } = server.pds.ctx
+      const { db, services } = testEnv.bsky.ctx
+      const { db: pdsDb, services: pdsServices } = testEnv.pds.ctx
       // Create a good and a bad post record
       const writes = await pdsDb.transaction(async (tx) => {
         const now = new Date().toISOString()
@@ -353,9 +348,9 @@ describe('indexing', () => {
     }
 
     it('indexes handle for a fresh did', async () => {
-      const { db, services } = server.ctx
+      const { db, services } = testEnv.bsky.ctx
       const now = new Date().toISOString()
-      const sessionAgent = new AtpAgent({ service: server.pdsUrl })
+      const sessionAgent = new AtpAgent({ service: testEnv.pds.url })
       const {
         data: { did },
       } = await sessionAgent.createAccount({
@@ -369,9 +364,9 @@ describe('indexing', () => {
     })
 
     it('reindexes handle for existing did when forced', async () => {
-      const { db, services } = server.ctx
+      const { db, services } = testEnv.bsky.ctx
       const now = new Date().toISOString()
-      const sessionAgent = new AtpAgent({ service: server.pdsUrl })
+      const sessionAgent = new AtpAgent({ service: testEnv.pds.url })
       const {
         data: { did },
       } = await sessionAgent.createAccount({
@@ -395,7 +390,7 @@ describe('indexing', () => {
 
   describe('tombstoneActor', () => {
     it('does not unindex actor when their did is not tombstoned', async () => {
-      const { db, services } = server.ctx
+      const { db, services } = testEnv.bsky.ctx
       const { data: profileBefore } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
         { headers: sc.getHeaders(sc.dids.bob, true) },
@@ -412,15 +407,15 @@ describe('indexing', () => {
     })
 
     it('unindexes actor when their did is tombstoned', async () => {
-      const { db, services } = server.ctx
+      const { db, services } = testEnv.bsky.ctx
       const getProfileBefore = agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
         { headers: sc.getHeaders(sc.dids.bob, true) },
       )
       await expect(getProfileBefore).resolves.toBeDefined()
       // Tombstone alice's did
-      const plcClient = new Client(server.plcUrl)
-      await plcClient.tombstone(sc.dids.alice, server.pds.ctx.plcRotationKey)
+      const plcClient = new Client(testEnv.plc.url)
+      await plcClient.tombstone(sc.dids.alice, testEnv.pds.ctx.plcRotationKey)
       // Index tombstone
       await db.transaction((tx) =>
         services.indexing(tx).tombstoneActor(sc.dids.alice),

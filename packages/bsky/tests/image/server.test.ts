@@ -2,42 +2,46 @@ import axios, { AxiosInstance } from 'axios'
 import { CID } from 'multiformats/cid'
 import { AtpAgent } from '@atproto/api'
 import { cidForCbor } from '@atproto/common'
+import { runTestEnv, TestEnvInfo } from '@atproto/dev-env'
 import { getInfo } from '../../src/image/sharp'
-import { runTestServer, TestServerInfo } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
+import { processAll } from '../_util'
 
 describe('image processing server', () => {
-  let server: TestServerInfo
+  let testEnv: TestEnvInfo
   let client: AxiosInstance
   let fileDid: string
   let fileCid: CID
 
   beforeAll(async () => {
-    server = await runTestServer({
+    testEnv = await runTestEnv({
       dbPostgresSchema: 'image_processing_server',
-      imgUriKey:
-        'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
-      imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
+      bsky: {
+        imgUriKey:
+          'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
+        imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
+      },
     })
-    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     const sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
+    await processAll(testEnv)
     fileDid = sc.dids.carol
     fileCid = sc.posts[fileDid][0].images[0].image.ref
     client = axios.create({
-      baseURL: `${server.url}/image`,
+      baseURL: `${testEnv.bsky.url}/image`,
       validateStatus: () => true,
     })
   })
 
   afterAll(async () => {
-    if (server) server.close()
+    await testEnv.close()
   })
 
   it('processes image from blob resolver.', async () => {
     const res = await client.get(
-      server.ctx.imgUriBuilder.getSignedPath({
+      testEnv.bsky.ctx.imgUriBuilder.getSignedPath({
         did: fileDid,
         cid: fileCid,
         format: 'jpeg',
@@ -67,7 +71,7 @@ describe('image processing server', () => {
   })
 
   it('caches results.', async () => {
-    const path = server.ctx.imgUriBuilder.getSignedPath({
+    const path = testEnv.bsky.ctx.imgUriBuilder.getSignedPath({
       did: fileDid,
       cid: fileCid,
       format: 'jpeg',
@@ -85,7 +89,7 @@ describe('image processing server', () => {
   })
 
   it('errors on bad signature.', async () => {
-    const path = server.ctx.imgUriBuilder.getSignedPath({
+    const path = testEnv.bsky.ctx.imgUriBuilder.getSignedPath({
       did: fileDid,
       cid: fileCid,
       format: 'jpeg',
@@ -102,7 +106,7 @@ describe('image processing server', () => {
   it('errors on missing file.', async () => {
     const missingCid = await cidForCbor('missing-file')
     const res = await client.get(
-      server.ctx.imgUriBuilder.getSignedPath({
+      testEnv.bsky.ctx.imgUriBuilder.getSignedPath({
         did: fileDid,
         cid: missingCid,
         format: 'jpeg',

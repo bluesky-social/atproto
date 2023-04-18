@@ -19,6 +19,10 @@ import deleteSession from './deleteSession'
 import getSession from './getSession'
 import refreshSession from './refreshSession'
 
+import createAppPassword from './createAppPassword'
+import listAppPasswords from './listAppPasswords'
+import revokeAppPassword from './revokeAppPassword'
+
 export default function (server: Server, ctx: AppContext) {
   describeServer(server, ctx)
   createAccount(server, ctx)
@@ -33,4 +37,7 @@ export default function (server: Server, ctx: AppContext) {
   deleteSession(server, ctx)
   getSession(server, ctx)
   refreshSession(server, ctx)
+  createAppPassword(server, ctx)
+  listAppPasswords(server, ctx)
+  revokeAppPassword(server, ctx)
 }

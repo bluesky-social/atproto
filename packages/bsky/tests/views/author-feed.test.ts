@@ -1,8 +1,7 @@
 import AtpAgent from '@atproto/api'
+import { CloseFn, runTestEnv } from '@atproto/dev-env'
 import {
-  runTestServer,
   forSnapshot,
-  CloseFn,
   paginateAll,
   processAll,
   stripViewerFromPost,
@@ -22,15 +21,15 @@ describe('pds author feed views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    const testEnv = await runTestEnv({
       dbPostgresSchema: 'views_author_feed',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    close = testEnv.close
+    agent = new AtpAgent({ service: testEnv.bsky.url })
+    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
-    await processAll(server)
+    await processAll(testEnv)
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol

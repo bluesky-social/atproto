@@ -39,6 +39,7 @@ import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
+import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 import * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 import * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
@@ -48,10 +49,12 @@ import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/delet
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
+import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
 import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
+import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
@@ -128,6 +131,7 @@ export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 export * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
+export * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 export * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
 export * as ComAtprotoServerCreateInviteCodes from './types/com/atproto/server/createInviteCodes'
 export * as ComAtprotoServerCreateSession from './types/com/atproto/server/createSession'
@@ -137,10 +141,12 @@ export * as ComAtprotoServerDeleteSession from './types/com/atproto/server/delet
 export * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 export * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 export * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
+export * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 export * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 export * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
 export * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
 export * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
+export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
@@ -605,6 +611,17 @@ export class ServerNS {
       })
   }
 
+  createAppPassword(
+    data?: ComAtprotoServerCreateAppPassword.InputSchema,
+    opts?: ComAtprotoServerCreateAppPassword.CallOptions,
+  ): Promise<ComAtprotoServerCreateAppPassword.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.createAppPassword', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerCreateAppPassword.toKnownErr(e)
+      })
+  }
+
   createInviteCode(
     data?: ComAtprotoServerCreateInviteCode.InputSchema,
     opts?: ComAtprotoServerCreateInviteCode.CallOptions,
@@ -693,6 +710,17 @@ export class ServerNS {
       })
   }
 
+  listAppPasswords(
+    params?: ComAtprotoServerListAppPasswords.QueryParams,
+    opts?: ComAtprotoServerListAppPasswords.CallOptions,
+  ): Promise<ComAtprotoServerListAppPasswords.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.listAppPasswords', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoServerListAppPasswords.toKnownErr(e)
+      })
+  }
+
   refreshSession(
     data?: ComAtprotoServerRefreshSession.InputSchema,
     opts?: ComAtprotoServerRefreshSession.CallOptions,
@@ -734,6 +762,17 @@ export class ServerNS {
       .call('com.atproto.server.resetPassword', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoServerResetPassword.toKnownErr(e)
+      })
+  }
+
+  revokeAppPassword(
+    data?: ComAtprotoServerRevokeAppPassword.InputSchema,
+    opts?: ComAtprotoServerRevokeAppPassword.CallOptions,
+  ): Promise<ComAtprotoServerRevokeAppPassword.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.revokeAppPassword', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerRevokeAppPassword.toKnownErr(e)
       })
   }
 }

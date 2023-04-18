@@ -1,7 +1,8 @@
 {
   "name": "@atproto/dev-env",
   "version": "0.1.0",
-  "main": "dist/cli.js",
+  "main": "src/test-env.ts",
+  "bin": "dist/cli.js",
   "license": "MIT",
   "scripts": {
     "build": "node ./build.js",

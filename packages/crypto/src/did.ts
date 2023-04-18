@@ -2,9 +2,7 @@ import * as uint8arrays from 'uint8arrays'
 import * as p256 from './p256/encoding'
 import * as secp from './secp256k1/encoding'
 import plugins from './plugins'
-import { P256_JWT_ALG, SECP256K1_JWT_ALG } from './const'
-
-export const DID_KEY_BASE58_PREFIX = 'did:key:z'
+import { P256_JWT_ALG, SECP256K1_JWT_ALG, BASE58_DID_PREFIX } from './const'
 
 export type ParsedDidKey = {
   jwtAlg: string
@@ -12,11 +10,11 @@ export type ParsedDidKey = {
 }
 
 export const parseDidKey = (did: string): ParsedDidKey => {
-  if (!did.startsWith(DID_KEY_BASE58_PREFIX)) {
+  if (!did.startsWith(BASE58_DID_PREFIX)) {
     throw new Error(`Incorrect prefix for did:key: ${did}`)
   }
   const prefixedBytes = uint8arrays.fromString(
-    did.slice(DID_KEY_BASE58_PREFIX.length),
+    did.slice(BASE58_DID_PREFIX.length),
     'base58btc',
   )
   const plugin = plugins.find((p) => hasPrefix(prefixedBytes, p.prefix))
@@ -46,9 +44,7 @@ export const formatDidKey = (jwtAlg: string, keyBytes: Uint8Array): string => {
     keyBytes = secp.compressPubkey(keyBytes)
   }
   const prefixedBytes = uint8arrays.concat([plugin.prefix, keyBytes])
-  return (
-    DID_KEY_BASE58_PREFIX + uint8arrays.toString(prefixedBytes, 'base58btc')
-  )
+  return BASE58_DID_PREFIX + uint8arrays.toString(prefixedBytes, 'base58btc')
 }
 
 const hasPrefix = (bytes: Uint8Array, prefix: Uint8Array): boolean => {
