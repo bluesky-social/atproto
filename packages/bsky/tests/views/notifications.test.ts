@@ -1,40 +1,32 @@
 import AtpAgent from '@atproto/api'
-import {
-  runTestServer,
-  forSnapshot,
-  CloseFn,
-  paginateAll,
-  TestServerInfo,
-  processAll,
-} from '../_util'
+import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
+import { forSnapshot, paginateAll, processAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
 
 describe('notification views', () => {
-  let server: TestServerInfo
+  let testEnv: TestEnvInfo
   let agent: AtpAgent
-  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
   let alice: string
 
   beforeAll(async () => {
-    server = await runTestServer({
+    testEnv = await runTestEnv({
       dbPostgresSchema: 'views_notifications',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    agent = new AtpAgent({ service: testEnv.bsky.url })
+    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
-    await processAll(server)
+    await processAll(testEnv)
     alice = sc.dids.alice
   })
 
   afterAll(async () => {
-    await close()
+    await testEnv.close()
   })
 
   const sort = (notifs: Notification[]) => {
@@ -81,7 +73,7 @@ describe('notification views', () => {
       sc.replies[alice][0].ref,
       'indeed',
     )
-    await processAll(server)
+    await processAll(testEnv)
 
     const notifCountAlice =
       await agent.api.app.bsky.notification.getUnreadCount(
