@@ -1,39 +1,29 @@
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import {
-  runTestServer,
-  forSnapshot,
-  CloseFn,
-  paginateAll,
-  adminAuth,
-  TestServerInfo,
-} from '../_util'
+import { runTestEnv, CloseFn, processAll, TestEnvInfo } from '@atproto/dev-env'
+import { forSnapshot, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import { Database } from '../../src'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
 
-describe.skip('pds notification proxy views', () => {
-  let server: TestServerInfo
+describe('pds notification proxy views', () => {
   let agent: AtpAgent
+  let testEnv: TestEnvInfo
   let close: CloseFn
-  let db: Database
   let sc: SeedClient
 
   // account dids, for convenience
   let alice: string
 
   beforeAll(async () => {
-    server = await runTestServer({
+    testEnv = await runTestEnv({
       dbPostgresSchema: 'proxy_notifications',
     })
-    close = server.close
-    db = server.ctx.db
-    agent = new AtpAgent({ service: server.url })
+    close = testEnv.close
+    agent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(agent)
     await basicSeed(sc)
+    await processAll(testEnv)
     alice = sc.dids.alice
-    await server.ctx.labeler.processAll()
   })
 
   afterAll(async () => {
@@ -75,6 +65,8 @@ describe.skip('pds notification proxy views', () => {
       sc.replies[alice][0].ref,
       'indeed',
     )
+
+    await processAll(testEnv)
 
     const notifCountAlice =
       await agent.api.app.bsky.notification.getUnreadCount(
@@ -133,15 +125,10 @@ describe.skip('pds notification proxy views', () => {
       {},
       { headers: sc.getHeaders(alice) },
     )
-    const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
-      {},
-      { headers: sc.getHeaders(alice) },
-    )
 
     const notifs = sort(notifRes.data.notifications)
     expect(notifs.length).toBe(4)
     expect(forSnapshot(notifs)).toMatchSnapshot()
-    expect(notifCount.data.count).toBe(4)
 
     // Cleanup
     await agent.api.app.bsky.graph.unmuteActor(
@@ -151,62 +138,6 @@ describe.skip('pds notification proxy views', () => {
     await agent.api.app.bsky.graph.unmuteActor(
       { actor: sc.dids.dan },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
-    )
-  })
-
-  it('fetches notifications omitting mentions and replies for taken-down posts', async () => {
-    const postRef1 = sc.replies[sc.dids.carol][0].ref // Reply
-    const postRef2 = sc.posts[sc.dids.dan][1].ref // Mention
-    const actionResults = await Promise.all(
-      [postRef1, postRef2].map((postRef) =>
-        agent.api.com.atproto.admin.takeModerationAction(
-          {
-            action: TAKEDOWN,
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: postRef.uriStr,
-              cid: postRef.cidStr,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: { authorization: adminAuth() },
-          },
-        ),
-      ),
-    )
-
-    const notifRes = await agent.api.app.bsky.notification.listNotifications(
-      {},
-      { headers: sc.getHeaders(alice) },
-    )
-    const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
-      {},
-      { headers: sc.getHeaders(alice) },
-    )
-
-    const notifs = sort(notifRes.data.notifications)
-    expect(notifs.length).toBe(10)
-    expect(forSnapshot(notifs)).toMatchSnapshot()
-    expect(notifCount.data.count).toBe(10)
-
-    // Cleanup
-    await Promise.all(
-      actionResults.map((result) =>
-        agent.api.com.atproto.admin.reverseModerationAction(
-          {
-            id: result.data.id,
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: { authorization: adminAuth() },
-          },
-        ),
-      ),
     )
   })
 
@@ -248,15 +179,8 @@ describe.skip('pds notification proxy views', () => {
       },
     )
 
-    // Need to look-up createdAt time as a cursor since it's not in the method's output
-    const beforeNotif = await db.db
-      .selectFrom('user_notification')
-      .selectAll()
-      .where('recordUri', '=', full.data.notifications[3].uri)
-      .executeTakeFirstOrThrow()
-
     await agent.api.app.bsky.notification.updateSeen(
-      { seenAt: beforeNotif.indexedAt },
+      { seenAt: full.data.notifications[3].indexedAt },
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
   })

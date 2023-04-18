@@ -382,6 +382,59 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
+  server.app.bsky.notification.getUnreadCount({
+    auth: ctx.accessVerifier,
+    handler: async ({ auth }) => {
+      const requester = auth.credentials.did
+      const seenAt = await ctx.services
+        .account(ctx.db)
+        .getLastSeenNotifs(requester)
+      const res = await agent.api.app.bsky.notification.getUnreadCount(
+        { seenAt },
+        headers(requester),
+      )
+      const { count } = res.data
+      return {
+        encoding: 'application/json',
+        body: {
+          count,
+        },
+      }
+    },
+  })
+
+  server.app.bsky.notification.listNotifications({
+    auth: ctx.accessVerifier,
+    handler: async ({ auth, params }) => {
+      const requester = auth.credentials.did
+      const seenAt = await ctx.services
+        .account(ctx.db)
+        .getLastSeenNotifs(requester)
+      const res = await agent.api.app.bsky.notification.listNotifications(
+        { ...params, seenAt },
+        headers(requester),
+      )
+      const { cursor, notifications } = res.data
+      const dids = notifications.map((notif) => notif.author.did)
+      const mutes = await ctx.services.account(ctx.db).getMutes(requester, dids)
+      const filtered = notifications.filter(
+        (notif) => mutes[notif.author.did] !== true,
+      )
+      for (const notif of filtered) {
+        notif.isRead = seenAt !== undefined && seenAt >= notif.indexedAt
+        notif.author.viewer ??= {}
+        notif.author.viewer.muted = mutes[notif.author.did] ?? false
+      }
+      return {
+        encoding: 'application/json',
+        body: {
+          cursor,
+          notifications: filtered,
+        },
+      }
+    },
+  })
+
   return server
 }
 

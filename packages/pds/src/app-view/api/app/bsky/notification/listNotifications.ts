@@ -1,9 +1,9 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as common from '@atproto/common'
-import { Server } from '../../../../lexicon'
-import { paginate, TimeCidKeyset } from '../../../../db/pagination'
-import AppContext from '../../../../context'
-import { notSoftDeletedClause } from '../../../../db/util'
+import { Server } from '../../../../../lexicon'
+import { paginate, TimeCidKeyset } from '../../../../../db/pagination'
+import AppContext from '../../../../../context'
+import { notSoftDeletedClause } from '../../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.listNotifications({

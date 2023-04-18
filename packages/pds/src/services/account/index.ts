@@ -439,6 +439,15 @@ export class AccountService {
       return acc
     }, {} as Record<string, CodeDetail>)
   }
+
+  async getLastSeenNotifs(did: string): Promise<string | undefined> {
+    const res = await this.db.db
+      .selectFrom('user_state')
+      .where('did', '=', did)
+      .selectAll()
+      .executeTakeFirst()
+    return res?.lastSeenNotifs
+  }
 }
 
 type CodeDetail = {
