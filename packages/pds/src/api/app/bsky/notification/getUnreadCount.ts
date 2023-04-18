@@ -1,3 +1,4 @@
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { countAll, notSoftDeletedClause } from '../../../../db/util'
 import AppContext from '../../../../context'
@@ -5,9 +6,13 @@ import AppContext from '../../../../context'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.getUnreadCount({
     auth: ctx.accessVerifier,
-    handler: async ({ auth }) => {
+    handler: async ({ auth, params }) => {
+      const { seenAt } = params
       const requester = auth.credentials.did
       const { ref } = ctx.db.db.dynamic
+      if (seenAt) {
+        throw new InvalidRequestError('The seenAt parameter is unsupported')
+      }
 
       const result = await ctx.db.db
         .selectFrom('user_notification as notif')

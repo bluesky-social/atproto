@@ -445,34 +445,29 @@ Object {
 
 exports[`indexing indexes posts. 3`] = `
 Object {
-  "createMessages": Array [
+  "createNotifications": Array [
     Object {
       "author": "user(1)",
+      "did": "user(0)",
+      "id": 0,
       "reason": "mention",
+      "reasonSubject": null,
       "recordCid": "cids(0)",
       "recordUri": "record(0)",
-      "type": "create_notification",
-      "userDid": "user(0)",
+      "sortAt": "1970-01-01T00:00:00.000Z",
     },
   ],
-  "deletedMessages": Array [
-    Object {
-      "recordUri": "record(0)",
-      "type": "delete_notifications",
-    },
-  ],
-  "updateMessages": Array [
-    Object {
-      "recordUri": "record(0)",
-      "type": "delete_notifications",
-    },
+  "deleteNotifications": Array [],
+  "updateNotifications": Array [
     Object {
       "author": "user(1)",
+      "did": "user(2)",
+      "id": 0,
       "reason": "mention",
+      "reasonSubject": null,
       "recordCid": "cids(1)",
       "recordUri": "record(0)",
-      "type": "create_notification",
-      "userDid": "user(2)",
+      "sortAt": "1970-01-01T00:00:00.000Z",
     },
   ],
 }
@@ -512,13 +507,5 @@ Object {
   "handle": "dan.test",
   "postsCount": 0,
   "viewer": Object {},
-}
-`;
-
-exports[`indexing indexes profiles. 4`] = `
-Object {
-  "createMessages": Array [],
-  "deletedMessages": Array [],
-  "updateMessages": Array [],
 }
 `;
