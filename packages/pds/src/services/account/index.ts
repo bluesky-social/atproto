@@ -9,6 +9,9 @@ import { countAll, notSoftDeletedClause, nullToZero } from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import { sequenceHandleUpdate } from '../../sequencer'
+import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
+import { randomStr } from '@atproto/crypto'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export class AccountService {
   constructor(public db: Database) {}
@@ -94,7 +97,7 @@ export class AccountService {
       .values({
         email: email.toLowerCase(),
         did,
-        passwordScrypt: await scrypt.hash(password),
+        passwordScrypt: await scrypt.genSaltAndHash(password),
         createdAt: new Date().toISOString(),
       })
       .onConflict((oc) => oc.doNothing())
@@ -154,7 +157,7 @@ export class AccountService {
   }
 
   async updateUserPassword(did: string, password: string) {
-    const passwordScrypt = await scrypt.hash(password)
+    const passwordScrypt = await scrypt.genSaltAndHash(password)
     await this.db.db
       .updateTable('user_account')
       .set({ passwordScrypt })
@@ -162,14 +165,77 @@ export class AccountService {
       .execute()
   }
 
-  async verifyUserPassword(did: string, password: string): Promise<boolean> {
+  async createAppPassword(did: string, name: string): Promise<AppPassword> {
+    // create an app password with format:
+    // 1234-abcd-5678-efgh
+    const str = randomStr(16, 'base32').slice(0, 16)
+    const chunks = [
+      str.slice(0, 4),
+      str.slice(4, 8),
+      str.slice(8, 12),
+      str.slice(12, 16),
+    ]
+    const password = chunks.join('-')
+    const passwordScrypt = await scrypt.hashAppPassword(did, password)
+    const got = await this.db.db
+      .insertInto('app_password')
+      .values({
+        did,
+        name,
+        passwordScrypt,
+        createdAt: new Date().toISOString(),
+      })
+      .returningAll()
+      .executeTakeFirst()
+    if (!got) {
+      throw new InvalidRequestError('could not create app-specific password')
+    }
+    return {
+      name,
+      password,
+      createdAt: got.createdAt,
+    }
+  }
+
+  async deleteAppPassword(did: string, name: string) {
+    await this.db.db
+      .deleteFrom('app_password')
+      .where('did', '=', did)
+      .where('name', '=', name)
+      .execute()
+  }
+
+  async verifyAccountPassword(did: string, password: string): Promise<boolean> {
     const found = await this.db.db
       .selectFrom('user_account')
       .selectAll()
       .where('did', '=', did)
       .executeTakeFirst()
-    if (!found) return false
-    return scrypt.verify(password, found.passwordScrypt)
+    return found ? await scrypt.verify(password, found.passwordScrypt) : false
+  }
+
+  async verifyAppPassword(
+    did: string,
+    password: string,
+  ): Promise<string | null> {
+    const passwordScrypt = await scrypt.hashAppPassword(did, password)
+    const found = await this.db.db
+      .selectFrom('app_password')
+      .selectAll()
+      .where('did', '=', did)
+      .where('passwordScrypt', '=', passwordScrypt)
+      .executeTakeFirst()
+    return found?.name ?? null
+  }
+
+  async listAppPasswords(
+    did: string,
+  ): Promise<{ name: string; createdAt: string }[]> {
+    return this.db.db
+      .selectFrom('app_password')
+      .select(['name', 'createdAt'])
+      .where('did', '=', did)
+      .execute()
   }
 
   async mute(info: { did: string; mutedByDid: string; createdAt?: Date }) {

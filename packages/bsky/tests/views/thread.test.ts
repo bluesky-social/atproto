@@ -1,19 +1,13 @@
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
+import { CloseFn, runTestEnv, TestEnvInfo } from '@atproto/dev-env'
 import { Database } from '../../src'
-import {
-  runTestServer,
-  forSnapshot,
-  CloseFn,
-  processAll,
-  TestServerInfo,
-  stripViewerFromThread,
-} from '../_util'
+import { forSnapshot, processAll, stripViewerFromThread } from '../_util'
 import { RecordRef, SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import threadSeed, { walk, item, Item } from '../seeds/thread'
 
 describe('pds thread views', () => {
-  let server: TestServerInfo
+  let testEnv: TestEnvInfo
   let agent: AtpAgent
   let db: Database
   let close: CloseFn
@@ -24,13 +18,13 @@ describe('pds thread views', () => {
   let bob: string
 
   beforeAll(async () => {
-    server = await runTestServer({
+    testEnv = await runTestEnv({
       dbPostgresSchema: 'views_thread',
     })
-    db = server.ctx.db
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    const pdsAgent = new AtpAgent({ service: server.pdsUrl })
+    db = testEnv.bsky.ctx.db
+    close = testEnv.close
+    agent = new AtpAgent({ service: testEnv.bsky.url })
+    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     alice = sc.dids.alice
@@ -40,7 +34,7 @@ describe('pds thread views', () => {
   beforeAll(async () => {
     // Add a repost of a reply so that we can confirm myState in the thread
     await sc.repost(bob, sc.replies[alice][0].ref)
-    await processAll(server)
+    await processAll(testEnv)
   })
 
   afterAll(async () => {
@@ -129,7 +123,7 @@ describe('pds thread views', () => {
       'Reply reply',
     )
     indexes.aliceReplyReply = sc.replies[alice].length - 1
-    await processAll(server)
+    await processAll(testEnv)
 
     const thread1 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
@@ -138,7 +132,7 @@ describe('pds thread views', () => {
     expect(forSnapshot(thread1.data.thread)).toMatchSnapshot()
 
     await sc.deletePost(bob, sc.replies[bob][indexes.bobReply].ref.uri)
-    await processAll(server)
+    await processAll(testEnv)
 
     const thread2 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
@@ -161,7 +155,7 @@ describe('pds thread views', () => {
     ]
 
     await threadSeed(sc, sc.dids.alice, threads)
-    await processAll(server)
+    await processAll(testEnv)
 
     let closureSize = 0
     const itemByUri: Record<string, Item> = {}

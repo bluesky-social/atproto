@@ -11,14 +11,7 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
-  codeCount: number
-  useCount: number
-  forAccounts?: string[]
-  [k: string]: unknown
-}
-
-export interface OutputSchema {
-  codes: AccountCodes[]
+  name: string
   [k: string]: unknown
 }
 
@@ -27,17 +20,12 @@ export interface HandlerInput {
   body: InputSchema
 }
 
-export interface HandlerSuccess {
-  encoding: 'application/json'
-  body: OutputSchema
-}
-
 export interface HandlerError {
   status: number
   message?: string
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
+export type HandlerOutput = HandlerError | void
 export type Handler<HA extends HandlerAuth = never> = (ctx: {
   auth: HA
   params: QueryParams
@@ -45,24 +33,3 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
   req: express.Request
   res: express.Response
 }) => Promise<HandlerOutput> | HandlerOutput
-
-export interface AccountCodes {
-  account: string
-  codes: string[]
-  [k: string]: unknown
-}
-
-export function isAccountCodes(v: unknown): v is AccountCodes {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.server.createInviteCodes#accountCodes'
-  )
-}
-
-export function validateAccountCodes(v: unknown): ValidationResult {
-  return lexicons.validate(
-    'com.atproto.server.createInviteCodes#accountCodes',
-    v,
-  )
-}

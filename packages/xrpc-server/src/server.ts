@@ -260,7 +260,7 @@ export class Server {
       nsid,
       new XrpcStreamServer({
         noServer: true,
-        handler: async function* (req) {
+        handler: async function* (req, signal) {
           try {
             // authenticate request
             const auth = await config.auth?.({ req })
@@ -275,7 +275,7 @@ export class Server {
               throw new InvalidRequestError(String(e))
             }
             // stream
-            const items = config.handler({ req, params, auth })
+            const items = config.handler({ req, params, auth, signal })
             for await (const item of items) {
               if (item instanceof Frame) {
                 yield item

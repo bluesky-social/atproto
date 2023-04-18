@@ -20,7 +20,11 @@ export default function (server: Server, ctx: AppContext) {
     }
     return {
       encoding: 'application/json',
-      body: record,
+      body: {
+        uri: record.uri,
+        cid: record.cid,
+        value: record.value,
+      },
     }
   })
 }

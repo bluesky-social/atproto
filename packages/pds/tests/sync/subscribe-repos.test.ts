@@ -224,6 +224,9 @@ describe('repo subscribe repos', () => {
     ws.terminate()
 
     expect(evts.length).toBe(40)
+
+    await wait(100) // Let cleanup occur on server
+    expect(ctx.sequencer.listeners('events').length).toEqual(0)
   })
 
   it('backfills only from provided cursor', async () => {
