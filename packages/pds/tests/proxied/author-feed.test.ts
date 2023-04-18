@@ -1,12 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import {
-  runTestServer,
-  forSnapshot,
-  CloseFn,
-  paginateAll,
-  adminAuth,
-} from '../_util'
+import { runTestEnv, CloseFn, processAll } from '@atproto/dev-env'
+import { forSnapshot, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
@@ -22,18 +16,19 @@ describe('pds author feed views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const server = await runTestServer({
-      dbPostgresSchema: 'views_author_feed',
+    const testEnv = await runTestEnv({
+      dbPostgresSchema: 'proxy_author_feed',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
+    close = testEnv.close
+    agent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(agent)
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
-    await server.ctx.labeler.processAll()
+    await testEnv.pds.ctx.labeler.processAll()
+    await processAll(testEnv)
   })
 
   afterAll(async () => {
@@ -149,101 +144,5 @@ describe('pds author feed views', () => {
 
     expect(full.data.feed.length).toEqual(4)
     expect(results(paginatedAll)).toEqual(results([full.data]))
-  })
-
-  it('blocked by actor takedown.', async () => {
-    const { data: preBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { actor: alice },
-      { headers: sc.getHeaders(carol) },
-    )
-
-    expect(preBlock.feed.length).toBeGreaterThan(0)
-
-    const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: alice,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
-
-    const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { actor: alice },
-      { headers: sc.getHeaders(carol) },
-    )
-
-    expect(postBlock.feed.length).toEqual(0)
-
-    // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      {
-        id: action.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
-  })
-
-  it('blocked by record takedown.', async () => {
-    const { data: preBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { actor: alice },
-      { headers: sc.getHeaders(carol) },
-    )
-
-    expect(preBlock.feed.length).toBeGreaterThan(0)
-
-    const post = preBlock.feed[0].post
-
-    const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: post.uri,
-            cid: post.cid,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
-
-    const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { actor: alice },
-      { headers: sc.getHeaders(carol) },
-    )
-
-    expect(postBlock.feed.length).toEqual(preBlock.feed.length - 1)
-    expect(postBlock.feed.map((item) => item.post.uri)).not.toContain(post.uri)
-
-    // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      {
-        id: action.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
   })
 })

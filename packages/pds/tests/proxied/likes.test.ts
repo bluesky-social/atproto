@@ -15,7 +15,7 @@ describe('pds like views', () => {
 
   beforeAll(async () => {
     const testEnv = await runTestEnv({
-      dbPostgresSchema: 'views_likes',
+      dbPostgresSchema: 'proxy_likes',
     })
     close = testEnv.close
     agent = new AtpAgent({ service: testEnv.pds.url })

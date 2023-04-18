@@ -194,6 +194,11 @@ export class AccountService {
       .execute()
   }
 
+  async getMute(mutedBy: string, did: string): Promise<boolean> {
+    const mutes = await this.getMutes(mutedBy, [did])
+    return mutes[did] ?? false
+  }
+
   async getMutes(
     mutedBy: string,
     dids: string[],
