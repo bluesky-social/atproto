@@ -4,7 +4,7 @@ import { forSnapshot, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import followsSeed from '../seeds/follows'
 
-describe('pds follow views', () => {
+describe('pds follow proxy views', () => {
   let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient

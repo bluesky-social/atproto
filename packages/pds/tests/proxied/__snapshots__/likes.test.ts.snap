@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds like views fetches post likes 1`] = `
+exports[`pds like proxy views fetches post likes 1`] = `
 Object {
   "cursor": "0000000000000::bafycid",
   "likes": Array [
@@ -62,7 +62,7 @@ Object {
 }
 `;
 
-exports[`pds like views fetches reply likes 1`] = `
+exports[`pds like proxy views fetches reply likes 1`] = `
 Object {
   "cursor": "0000000000000::bafycid",
   "likes": Array [

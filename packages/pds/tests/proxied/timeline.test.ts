@@ -6,7 +6,7 @@ import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { FeedAlgorithm } from '../../src/app-view/api/app/bsky/util/feed'
 
-describe('timeline views', () => {
+describe('timeline proxy views', () => {
   let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient

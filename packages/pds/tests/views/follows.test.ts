@@ -1,7 +1,12 @@
 import AtpAgent from '@atproto/api'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { runTestEnv, CloseFn, processAll } from '@atproto/dev-env'
-import { forSnapshot, paginateAll, adminAuth } from '../_util'
+import {
+  forSnapshot,
+  paginateAll,
+  adminAuth,
+  runTestServer,
+  CloseFn,
+} from '../_util'
 import { SeedClient } from '../seeds/client'
 import followsSeed from '../seeds/follows'
 
@@ -14,14 +19,13 @@ describe('pds follow views', () => {
   let alice: string
 
   beforeAll(async () => {
-    const testEnv = await runTestEnv({
+    const server = await runTestServer({
       dbPostgresSchema: 'views_follows',
     })
-    close = testEnv.close
-    agent = new AtpAgent({ service: testEnv.pds.url })
+    close = server.close
+    agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
     await followsSeed(sc)
-    await processAll(testEnv)
     alice = sc.dids.alice
   })
 

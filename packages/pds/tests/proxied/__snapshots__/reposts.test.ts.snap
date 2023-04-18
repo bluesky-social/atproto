@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds repost views fetches reposted-by for a post 1`] = `
+exports[`pds repost proxy views fetches reposted-by for a post 1`] = `
 Array [
   Object {
     "did": "user(0)",
@@ -42,7 +42,7 @@ Array [
 ]
 `;
 
-exports[`pds repost views fetches reposted-by for a reply 1`] = `
+exports[`pds repost proxy views fetches reposted-by for a reply 1`] = `
 Array [
   Object {
     "did": "user(0)",

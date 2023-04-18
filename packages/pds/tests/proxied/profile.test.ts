@@ -4,7 +4,7 @@ import { forSnapshot } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
-describe('pds profile views', () => {
+describe('pds profile proxy views', () => {
   let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
@@ -16,7 +16,7 @@ describe('pds profile views', () => {
 
   beforeAll(async () => {
     const testEnv = await runTestEnv({
-      dbPostgresSchema: 'views_profile',
+      dbPostgresSchema: 'proxy_profile',
     })
     close = testEnv.close
     agent = new AtpAgent({ service: testEnv.pds.url })

@@ -171,10 +171,8 @@ export class PDS {
 
     server = API(server, ctx)
     if (ctx.cfg.bskyAppViewEndpoint) {
-      console.log('PROXIED APP VIEW')
       server = proxiedAppView(server, ctx)
     } else {
-      console.log('PROCESS APP VIEW')
       server = inProcessAppView(server, ctx)
     }
 

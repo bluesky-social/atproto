@@ -3,7 +3,6 @@ import AppContext from '../../context'
 import { AtpAgent } from '@atproto/api'
 import {
   FeedViewPost,
-  NotFoundPost,
   ThreadViewPost,
   isReasonRepost,
   isThreadViewPost,

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds thread views fetches ancestors 1`] = `
+exports[`pds thread proxy views fetches ancestors 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": Object {
@@ -138,7 +138,7 @@ Object {
 }
 `;
 
-exports[`pds thread views fetches deep post thread 1`] = `
+exports[`pds thread proxy views fetches deep post thread 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
@@ -314,7 +314,7 @@ Object {
 }
 `;
 
-exports[`pds thread views fetches shallow post thread 1`] = `
+exports[`pds thread proxy views fetches shallow post thread 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
@@ -446,7 +446,7 @@ Object {
 }
 `;
 
-exports[`pds thread views handles deleted posts correctly 1`] = `
+exports[`pds thread proxy views handles deleted posts correctly 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
@@ -556,7 +556,7 @@ Object {
 }
 `;
 
-exports[`pds thread views handles deleted posts correctly 2`] = `
+exports[`pds thread proxy views handles deleted posts correctly 2`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
@@ -588,7 +588,7 @@ Object {
 }
 `;
 
-exports[`pds thread views handles deleted posts correctly 3`] = `
+exports[`pds thread proxy views handles deleted posts correctly 3`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "parent": Object {
@@ -635,7 +635,7 @@ Object {
 }
 `;
 
-exports[`pds thread views includes the muted status of post authors. 1`] = `
+exports[`pds thread proxy views includes the muted status of post authors. 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {

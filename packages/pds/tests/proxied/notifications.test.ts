@@ -13,7 +13,7 @@ import basicSeed from '../seeds/basic'
 import { Database } from '../../src'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
 
-describe.skip('pds notification views', () => {
+describe.skip('pds notification proxy views', () => {
   let server: TestServerInfo
   let agent: AtpAgent
   let close: CloseFn
@@ -25,7 +25,7 @@ describe.skip('pds notification views', () => {
 
   beforeAll(async () => {
     server = await runTestServer({
-      dbPostgresSchema: 'views_notifications',
+      dbPostgresSchema: 'proxy_notifications',
     })
     close = server.close
     db = server.ctx.db

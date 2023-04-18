@@ -4,7 +4,7 @@ import { forSnapshot } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
-describe('pds thread views', () => {
+describe('pds thread proxy views', () => {
   let agent: AtpAgent
   let testEnv: TestEnvInfo
   let close: CloseFn

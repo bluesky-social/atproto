@@ -4,7 +4,7 @@ import { SeedClient } from '../seeds/client'
 import likesSeed from '../seeds/likes'
 import { constantDate, forSnapshot, paginateAll } from '../_util'
 
-describe('pds like views', () => {
+describe('pds like proxy views', () => {
   let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient

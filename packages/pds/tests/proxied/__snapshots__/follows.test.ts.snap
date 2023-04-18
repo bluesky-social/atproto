@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds follow views fetches followers 1`] = `
+exports[`pds follow proxy views fetches followers 1`] = `
 Object {
   "cursor": "0000000000000::bafycid",
   "followers": Array [
@@ -71,7 +71,7 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches followers 2`] = `
+exports[`pds follow proxy views fetches followers 2`] = `
 Object {
   "cursor": "0000000000000::bafycid",
   "followers": Array [
@@ -116,7 +116,7 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches followers 3`] = `
+exports[`pds follow proxy views fetches followers 3`] = `
 Object {
   "cursor": "0000000000000::bafycid",
   "followers": Array [
@@ -174,7 +174,7 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches followers 4`] = `
+exports[`pds follow proxy views fetches followers 4`] = `
 Object {
   "cursor": "0000000000000::bafycid",
   "followers": Array [
@@ -206,7 +206,7 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches followers 5`] = `
+exports[`pds follow proxy views fetches followers 5`] = `
 Object {
   "cursor": "0000000000000::bafycid",
   "followers": Array [
@@ -251,7 +251,7 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches follows 1`] = `
+exports[`pds follow proxy views fetches follows 1`] = `
 Object {
   "cursor": "0000000000000::bafycid",
   "follows": Array [
@@ -322,7 +322,7 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches follows 2`] = `
+exports[`pds follow proxy views fetches follows 2`] = `
 Object {
   "cursor": "0000000000000::bafycid",
   "follows": Array [
@@ -367,7 +367,7 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches follows 3`] = `
+exports[`pds follow proxy views fetches follows 3`] = `
 Object {
   "cursor": "0000000000000::bafycid",
   "follows": Array [
@@ -399,7 +399,7 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches follows 4`] = `
+exports[`pds follow proxy views fetches follows 4`] = `
 Object {
   "cursor": "0000000000000::bafycid",
   "follows": Array [
@@ -457,7 +457,7 @@ Object {
 }
 `;
 
-exports[`pds follow views fetches follows 5`] = `
+exports[`pds follow proxy views fetches follows 5`] = `
 Object {
   "cursor": "0000000000000::bafycid",
   "follows": Array [

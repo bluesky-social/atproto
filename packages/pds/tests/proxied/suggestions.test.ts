@@ -3,7 +3,7 @@ import { runTestEnv, CloseFn, processAll } from '@atproto/dev-env'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
-describe('pds user search views', () => {
+describe('pds user search proxy views', () => {
   let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds profile views fetches multiple profiles 1`] = `
+exports[`pds profile proxy views fetches multiple profiles 1`] = `
 Array [
   Object {
     "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
@@ -57,7 +57,7 @@ Array [
 ]
 `;
 
-exports[`pds profile views fetches other's profile, with a follow 1`] = `
+exports[`pds profile proxy views fetches other's profile, with a follow 1`] = `
 Object {
   "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
   "description": "its me!",
@@ -76,7 +76,7 @@ Object {
 }
 `;
 
-exports[`pds profile views fetches other's profile, without a follow 1`] = `
+exports[`pds profile proxy views fetches other's profile, without a follow 1`] = `
 Object {
   "did": "user(0)",
   "followersCount": 1,
@@ -90,7 +90,7 @@ Object {
 }
 `;
 
-exports[`pds profile views fetches own profile 1`] = `
+exports[`pds profile proxy views fetches own profile 1`] = `
 Object {
   "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
   "description": "its me!",

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds author feed views fetches full author feeds for self (sorted, minimal viewer state). 1`] = `
+exports[`pds author feed proxy views fetches full author feeds for self (sorted, minimal viewer state). 1`] = `
 Array [
   Object {
     "post": Object {
@@ -310,7 +310,7 @@ Array [
 ]
 `;
 
-exports[`pds author feed views fetches full author feeds for self (sorted, minimal viewer state). 2`] = `
+exports[`pds author feed proxy views fetches full author feeds for self (sorted, minimal viewer state). 2`] = `
 Array [
   Object {
     "post": Object {
@@ -482,7 +482,7 @@ Array [
 ]
 `;
 
-exports[`pds author feed views fetches full author feeds for self (sorted, minimal viewer state). 3`] = `
+exports[`pds author feed proxy views fetches full author feeds for self (sorted, minimal viewer state). 3`] = `
 Array [
   Object {
     "post": Object {
@@ -830,7 +830,7 @@ Array [
 ]
 `;
 
-exports[`pds author feed views fetches full author feeds for self (sorted, minimal viewer state). 4`] = `
+exports[`pds author feed proxy views fetches full author feeds for self (sorted, minimal viewer state). 4`] = `
 Array [
   Object {
     "post": Object {
@@ -1039,7 +1039,7 @@ Array [
 ]
 `;
 
-exports[`pds author feed views omits reposts from muted users. 1`] = `
+exports[`pds author feed proxy views omits reposts from muted users. 1`] = `
 Array [
   Object {
     "post": Object {
@@ -1210,7 +1210,7 @@ Array [
 ]
 `;
 
-exports[`pds author feed views reflects fetching user's state in the feed. 1`] = `
+exports[`pds author feed proxy views reflects fetching user's state in the feed. 1`] = `
 Array [
   Object {
     "post": Object {

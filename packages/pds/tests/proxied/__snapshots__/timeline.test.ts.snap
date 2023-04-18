@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`timeline views fetches authenticated user's home feed w/ reverse-chronological algorithm 1`] = `
+exports[`timeline proxy views fetches authenticated user's home feed w/ reverse-chronological algorithm 1`] = `
 Array [
   Object {
     "post": Object {
@@ -1029,7 +1029,7 @@ Array [
 ]
 `;
 
-exports[`timeline views fetches authenticated user's home feed w/ reverse-chronological algorithm 2`] = `
+exports[`timeline proxy views fetches authenticated user's home feed w/ reverse-chronological algorithm 2`] = `
 Array [
   Object {
     "post": Object {
@@ -1864,7 +1864,7 @@ Array [
 ]
 `;
 
-exports[`timeline views fetches authenticated user's home feed w/ reverse-chronological algorithm 3`] = `
+exports[`timeline proxy views fetches authenticated user's home feed w/ reverse-chronological algorithm 3`] = `
 Array [
   Object {
     "post": Object {
@@ -2527,7 +2527,7 @@ Array [
 ]
 `;
 
-exports[`timeline views fetches authenticated user's home feed w/ reverse-chronological algorithm 4`] = `
+exports[`timeline proxy views fetches authenticated user's home feed w/ reverse-chronological algorithm 4`] = `
 Array [
   Object {
     "post": Object {
@@ -2906,7 +2906,7 @@ Array [
 ]
 `;
 
-exports[`timeline views omits posts and reposts of muted authors. 1`] = `
+exports[`timeline proxy views omits posts and reposts of muted authors. 1`] = `
 Array [
   Object {
     "post": Object {
