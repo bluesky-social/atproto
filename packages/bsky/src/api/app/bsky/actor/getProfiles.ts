@@ -1,7 +1,6 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authOptionalVerifier } from '../util'
-
+import { authOptionalVerifier } from '../../../auth'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfiles({
     auth: authOptionalVerifier,
