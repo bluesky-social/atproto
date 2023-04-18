@@ -12,12 +12,12 @@ export interface QueryParams {}
 export interface InputSchema {
   codeCount: number
   useCount: number
-  forAccount?: string
+  forAccounts?: string[]
   [k: string]: unknown
 }
 
 export interface OutputSchema {
-  codes: string[]
+  codes: AccountCodes[]
   [k: string]: unknown
 }
 
@@ -37,4 +37,25 @@ export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
   }
   return e
+}
+
+export interface AccountCodes {
+  account: string
+  codes: string[]
+  [k: string]: unknown
+}
+
+export function isAccountCodes(v: unknown): v is AccountCodes {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.server.createInviteCodes#accountCodes'
+  )
+}
+
+export function validateAccountCodes(v: unknown): ValidationResult {
+  return lexicons.validate(
+    'com.atproto.server.createInviteCodes#accountCodes',
+    v,
+  )
 }

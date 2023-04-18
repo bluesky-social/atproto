@@ -14,6 +14,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const moderationAction = await db.transaction(async (dbTxn) => {
         const moderationTxn = services.moderation(dbTxn)
+        const labelTxn = services.appView.label(dbTxn)
         const now = new Date()
 
         const existing = await moderationTxn.getAction(id)
@@ -52,6 +53,23 @@ export default function (server: Server, ctx: AppContext) {
             uri: new AtUri(result.subjectUri),
           })
         }
+
+        // invert creates & negates
+        const { createLabelVals, negateLabelVals } = result
+        const negate =
+          createLabelVals && createLabelVals.length > 0
+            ? createLabelVals.split(' ')
+            : undefined
+        const create =
+          negateLabelVals && negateLabelVals.length > 0
+            ? negateLabelVals.split(' ')
+            : undefined
+        await labelTxn.formatAndCreate(
+          ctx.cfg.labelerDid,
+          result.subjectUri ?? result.subjectDid,
+          result.subjectCid,
+          { create, negate },
+        )
 
         return result
       })

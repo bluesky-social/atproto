@@ -7,7 +7,21 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 
 /** Metadata tag on an atproto resource (eg, repo or record) */
-export interface Label {}
+export interface Label {
+  /** DID of the actor who created this label */
+  src: string
+  /** AT URI of the record, repository (account), or other resource which this label applies to */
+  uri: string
+  /** optionally, CID specifying the specific version of 'uri' resource this label applies to */
+  cid?: string
+  /** the short string name of the value or type of this label */
+  val: string
+  /** if true, this is a negation label, overwriting a previous label */
+  neg?: boolean
+  /** timestamp when this label was created */
+  cts: string
+  [k: string]: unknown
+}
 
 export function isLabel(v: unknown): v is Label {
   return (

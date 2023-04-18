@@ -1,4 +1,6 @@
 import { ids } from '../../src/lexicon/lexicons'
+import { FLAG } from '../../src/lexicon/types/com/atproto/admin/defs'
+import { adminAuth } from '../_util'
 import { SeedClient } from './client'
 import usersSeed from './users'
 
@@ -99,11 +101,28 @@ export default async (sc: SeedClient) => {
   await sc.repost(carol, sc.posts[dan][1].ref)
   await sc.repost(dan, sc.posts[alice][1].ref)
 
+  await sc.agent.com.atproto.admin.takeModerationAction(
+    {
+      action: FLAG,
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: dan,
+      },
+      createdBy: 'did:example:admin',
+      reason: 'test',
+      createLabelVals: ['repo-action-label'],
+    },
+    {
+      encoding: 'application/json',
+      headers: { authorization: adminAuth() },
+    },
+  )
+
   return sc
 }
 
 export const posts = {
-  alice: ['hey there', 'again', 'yoohoo'],
+  alice: ['hey there', 'again', 'yoohoo label_me'],
   bob: ['bob back at it again!', 'bobby boy here', 'yoohoo'],
   carol: ['hi im carol'],
   dan: ['dan here!', '@alice.bluesky.xyz is the best'],
@@ -111,6 +130,6 @@ export const posts = {
 
 export const replies = {
   alice: ['thanks bob'],
-  bob: ['hear that'],
+  bob: ['hear that label_me label_me_2'],
   carol: ['of course'],
 }

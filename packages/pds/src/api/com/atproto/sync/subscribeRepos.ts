@@ -4,7 +4,7 @@ import Outbox from '../../../../sequencer/outbox'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.sync.subscribeRepos(async function* ({ params }) {
+  server.com.atproto.sync.subscribeRepos(async function* ({ params, signal }) {
     const { cursor } = params
     const outbox = new Outbox(ctx.sequencer, {
       maxBufferSize: ctx.cfg.maxSubscriptionBuffer,
@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
       }
     }
 
-    for await (const evt of outbox.events(cursor, backfillTime)) {
+    for await (const evt of outbox.events(cursor, backfillTime, signal)) {
       if (evt.type === 'commit') {
         yield {
           $type: '#commit',

@@ -33,6 +33,7 @@ describe('pds notification views', () => {
     sc = new SeedClient(agent)
     await basicSeed(sc)
     alice = sc.dids.alice
+    await server.ctx.labeler.processAll()
   })
 
   afterAll(async () => {

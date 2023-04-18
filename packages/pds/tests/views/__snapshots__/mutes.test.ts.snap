@@ -8,6 +8,7 @@ Array [
     "displayName": "Dr. Lowell DuBuque",
     "handle": "elta48.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {
       "muted": true,
     },
@@ -18,6 +19,7 @@ Array [
     "displayName": "Sally Funk",
     "handle": "magnus53.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {
       "muted": true,
     },
@@ -25,6 +27,7 @@ Array [
   Object {
     "did": "user(2)",
     "handle": "nicolas-krajcik10.test",
+    "labels": Array [],
     "viewer": Object {
       "muted": true,
     },
@@ -35,6 +38,7 @@ Array [
     "displayName": "Patrick Sawayn",
     "handle": "jeffrey-sawayn87.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {
       "muted": true,
     },
@@ -45,6 +49,7 @@ Array [
     "displayName": "Kim Streich",
     "handle": "adrienne49.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {
       "muted": true,
     },
@@ -55,6 +60,7 @@ Array [
     "displayName": "Carlton Abernathy IV",
     "handle": "aliya-hodkiewicz.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {
       "muted": true,
     },

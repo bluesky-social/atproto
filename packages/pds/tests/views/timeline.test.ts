@@ -36,6 +36,7 @@ describe('timeline views', () => {
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
+    await server.ctx.labeler.processAll()
   })
 
   afterAll(async () => {
@@ -168,7 +169,7 @@ describe('timeline views', () => {
 
   it('blocks posts, reposts, replies by actor takedown', async () => {
     const actionResults = await Promise.all(
-      [bob, dan].map((did) =>
+      [bob, carol].map((did) =>
         agent.api.com.atproto.admin.takeModerationAction(
           {
             action: TAKEDOWN,

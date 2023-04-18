@@ -13,7 +13,10 @@
           "properties": {
             "codeCount": {"type": "integer", "default": 1},
             "useCount": {"type": "integer"},
-            "forAccount": {"type": "string", "format": "did"}
+            "forAccounts": {
+              "type": "array",
+              "items": {"type": "string", "format": "did"}
+            }
           }
         }
       },
@@ -25,9 +28,20 @@
           "properties": {
             "codes": { 
               "type": "array",
-              "items": {"type": "string"}
+              "items": {"type": "ref", "ref": "#accountCodes"}
             }
           }
+        }
+      }
+    },
+    "accountCodes": {
+      "type": "object",
+      "required": ["account", "codes"],
+      "properties": {
+        "account": {"type": "string"},
+        "codes": { 
+          "type": "array",
+          "items": {"type": "string"}
         }
       }
     }

@@ -8,6 +8,15 @@ Object {
   "followsCount": 1,
   "handle": "dan.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
+  "labels": Array [
+    Object {
+      "cts": "1970-01-01T00:00:00.000Z",
+      "neg": false,
+      "src": "did:example:labeler",
+      "uri": "user(0)",
+      "val": "repo-action-label",
+    },
+  ],
   "postsCount": 2,
   "viewer": Object {
     "muted": false,
@@ -26,6 +35,7 @@ Array [
     "followsCount": 3,
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "postsCount": 4,
     "viewer": Object {
       "followedBy": "record(1)",
@@ -35,13 +45,23 @@ Array [
   },
   Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-    "description": "hi im bob",
+    "description": "hi im bob label_me",
     "did": "user(1)",
     "displayName": "bobby",
     "followersCount": 2,
     "followsCount": 2,
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [
+      Object {
+        "cid": "cids(0)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(2)",
+        "val": "test-label",
+      },
+    ],
     "postsCount": 3,
     "viewer": Object {
       "muted": false,
@@ -52,9 +72,10 @@ Array [
     "followersCount": 2,
     "followsCount": 1,
     "handle": "carol.test",
+    "labels": Array [],
     "postsCount": 2,
     "viewer": Object {
-      "following": "record(2)",
+      "following": "record(3)",
       "muted": false,
     },
   },
@@ -63,9 +84,18 @@ Array [
     "followersCount": 1,
     "followsCount": 1,
     "handle": "dan.test",
+    "labels": Array [
+      Object {
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "user(3)",
+        "val": "repo-action-label",
+      },
+    ],
     "postsCount": 2,
     "viewer": Object {
-      "followedBy": "record(3)",
+      "followedBy": "record(4)",
       "muted": false,
     },
   },
@@ -82,6 +112,7 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
+  "labels": Array [],
   "postsCount": 4,
   "viewer": Object {
     "followedBy": "record(1)",
@@ -97,6 +128,15 @@ Object {
   "followersCount": 1,
   "followsCount": 1,
   "handle": "dan.test",
+  "labels": Array [
+    Object {
+      "cts": "1970-01-01T00:00:00.000Z",
+      "neg": false,
+      "src": "did:example:labeler",
+      "uri": "user(0)",
+      "val": "repo-action-label",
+    },
+  ],
   "postsCount": 2,
   "viewer": Object {
     "followedBy": "record(0)",
@@ -115,6 +155,7 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
+  "labels": Array [],
   "postsCount": 4,
   "viewer": Object {
     "muted": false,
@@ -133,6 +174,7 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
+  "labels": Array [],
   "postsCount": 4,
   "viewer": Object {
     "muted": false,
@@ -147,6 +189,7 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
+  "labels": Array [],
   "postsCount": 4,
   "viewer": Object {
     "muted": false,
@@ -164,6 +207,7 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
+  "labels": Array [],
   "postsCount": 4,
   "viewer": Object {
     "muted": false,

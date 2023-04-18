@@ -21,6 +21,7 @@ import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { RecordService } from '../record'
 import { sequenceCommit, sequenceRebase } from '../../sequencer'
+import { Labeler } from '../../labeler'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -30,6 +31,7 @@ export class RepoService {
     public repoSigningKey: crypto.Keypair,
     public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
+    public labeler: Labeler,
   ) {
     this.blobs = new RepoBlobs(db, blobstore)
   }
@@ -38,9 +40,10 @@ export class RepoService {
     keypair: crypto.Keypair,
     messageDispatcher: MessageQueue,
     blobstore: BlobStore,
+    labeler: Labeler,
   ) {
     return (db: Database) =>
-      new RepoService(db, keypair, messageDispatcher, blobstore)
+      new RepoService(db, keypair, messageDispatcher, blobstore, labeler)
   }
 
   services = {
@@ -156,6 +159,16 @@ export class RepoService {
       this.blobs.processWriteBlobs(did, commitData.commit, writes),
       sequenceCommit(this.db, did, commitData, writes),
     ])
+
+    // @TODO move to appview
+    writes.map((write) => {
+      if (
+        write.action === WriteOpAction.Create ||
+        write.action === WriteOpAction.Update
+      ) {
+        this.labeler.processRecord(write.uri, write.record)
+      }
+    })
   }
 
   async rebaseRepo(did: string, now: string, swapCommit?: CID) {

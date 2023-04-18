@@ -178,13 +178,13 @@ const res1 = await agent.com.atproto.repo.createRecord(
     }
   }
 )
-const res2 = await agent.com.atproto.repo.listRecords({user: alice.did, collection: 'app.bsky.feed.post'})
+const res2 = await agent.com.atproto.repo.listRecords({repo: alice.did, collection: 'app.bsky.feed.post'})
 
-const res3 = await agent.app.bsky.feed.post.create({did: alice.did}, {
+const res3 = await agent.app.bsky.feed.post.create({repo: alice.did}, {
   text: 'Hello, world!',
   createdAt: (new Date()).toISOString()
 })
-const res4 = await agent.app.bsky.feed.post.list({did: alice.did})
+const res4 = await agent.app.bsky.feed.post.list({repo: alice.did})
 ```
 
 ### Generic agent

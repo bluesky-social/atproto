@@ -364,6 +364,13 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#moderationDetail',
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
           invitedBy: {
             type: 'ref',
             ref: 'lex:com.atproto.server.defs#inviteCode',
@@ -459,6 +466,13 @@ export const schemaDict = {
             items: {
               type: 'ref',
               ref: 'lex:com.atproto.admin.defs#blobView',
+            },
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
             },
           },
           indexedAt: {
@@ -1049,6 +1063,60 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminUpdateAccountEmail: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateAccountEmail',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Administrative action to update an account's email",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['account', 'email'],
+            properties: {
+              account: {
+                type: 'string',
+                format: 'at-identifier',
+                description: 'The handle or DID of the repo.',
+              },
+              email: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminUpdateAccountHandle: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateAccountHandle',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Administrative action to update an account's handle",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'handle'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              handle: {
+                type: 'string',
+                format: 'handle',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoIdentityResolveHandle: {
     lexicon: 1,
     id: 'com.atproto.identity.resolveHandle',
@@ -1113,44 +1181,40 @@ export const schemaDict = {
       label: {
         type: 'object',
         description: 'Metadata tag on an atproto resource (eg, repo or record)',
-        key: 'tid',
-        record: {
-          type: 'object',
-          required: ['src', 'uri', 'val', 'cts'],
-          properties: {
-            src: {
-              type: 'string',
-              format: 'did',
-              description: 'DID of the actor who created this label',
-            },
-            uri: {
-              type: 'string',
-              format: 'uri',
-              description:
-                'AT URI of the record, repository (account), or other resource which this label applies to',
-            },
-            cid: {
-              type: 'string',
-              format: 'cid',
-              description:
-                "optionally, CID specifying the specific version of 'uri' resource this label applies to",
-            },
-            val: {
-              type: 'string',
-              maxLength: 128,
-              description:
-                'the short string name of the value or type of this label',
-            },
-            neg: {
-              type: 'boolean',
-              description:
-                'if true, this is a negation label, overwriting a previous label',
-            },
-            cts: {
-              type: 'string',
-              format: 'datetime',
-              description: 'timestamp when this label was created',
-            },
+        required: ['src', 'uri', 'val', 'cts'],
+        properties: {
+          src: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the actor who created this label',
+          },
+          uri: {
+            type: 'string',
+            format: 'uri',
+            description:
+              'AT URI of the record, repository (account), or other resource which this label applies to',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+            description:
+              "optionally, CID specifying the specific version of 'uri' resource this label applies to",
+          },
+          val: {
+            type: 'string',
+            maxLength: 128,
+            description:
+              'the short string name of the value or type of this label',
+          },
+          neg: {
+            type: 'boolean',
+            description:
+              'if true, this is a negation label, overwriting a previous label',
+          },
+          cts: {
+            type: 'string',
+            format: 'datetime',
+            description: 'timestamp when this label was created',
           },
         },
       },
@@ -1359,16 +1423,37 @@ export const schemaDict = {
         type: 'string',
         knownValues: [
           'com.atproto.moderation.defs#reasonSpam',
+          'com.atproto.moderation.defs#reasonViolation',
+          'com.atproto.moderation.defs#reasonMisleading',
+          'com.atproto.moderation.defs#reasonSexual',
+          'com.atproto.moderation.defs#reasonRude',
           'com.atproto.moderation.defs#reasonOther',
         ],
       },
       reasonSpam: {
         type: 'token',
-        description: 'Moderation report reason: Spam.',
+        description: 'Spam: frequent unwanted promotion, replies, mentions',
+      },
+      reasonViolation: {
+        type: 'token',
+        description: 'Direct violation of server rules, laws, terms of service',
+      },
+      reasonMisleading: {
+        type: 'token',
+        description: 'Misleading identity, affiliation, or content',
+      },
+      reasonSexual: {
+        type: 'token',
+        description: 'Unwanted or mis-labeled sexual content',
+      },
+      reasonRude: {
+        type: 'token',
+        description:
+          'Rude, harassing, explicit, or otherwise unwelcoming behavior',
       },
       reasonOther: {
         type: 'token',
-        description: 'Moderation report reason: Other.',
+        description: 'Other: reports not falling under another report category',
       },
     },
   },
@@ -2048,9 +2133,12 @@ export const schemaDict = {
               useCount: {
                 type: 'integer',
               },
-              forAccount: {
-                type: 'string',
-                format: 'did',
+              forAccounts: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
               },
             },
           },
@@ -2064,9 +2152,25 @@ export const schemaDict = {
               codes: {
                 type: 'array',
                 items: {
-                  type: 'string',
+                  type: 'ref',
+                  ref: 'lex:com.atproto.server.createInviteCodes#accountCodes',
                 },
               },
+            },
+          },
+        },
+      },
+      accountCodes: {
+        type: 'object',
+        required: ['account', 'codes'],
+        properties: {
+          account: {
+            type: 'string',
+          },
+          codes: {
+            type: 'array',
+            items: {
+              type: 'string',
             },
           },
         },
@@ -4738,6 +4842,8 @@ export const ids = {
     'com.atproto.admin.reverseModerationAction',
   ComAtprotoAdminSearchRepos: 'com.atproto.admin.searchRepos',
   ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
+  ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
+  ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
   ComAtprotoIdentityResolveHandle: 'com.atproto.identity.resolveHandle',
   ComAtprotoIdentityUpdateHandle: 'com.atproto.identity.updateHandle',
   ComAtprotoLabelDefs: 'com.atproto.label.defs',

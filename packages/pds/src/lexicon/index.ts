@@ -21,6 +21,8 @@ import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/ad
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
+import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
+import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
@@ -86,6 +88,10 @@ export const COM_ATPROTO_ADMIN = {
 }
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
+  DefsReasonViolation: 'com.atproto.moderation.defs#reasonViolation',
+  DefsReasonMisleading: 'com.atproto.moderation.defs#reasonMisleading',
+  DefsReasonSexual: 'com.atproto.moderation.defs#reasonSexual',
+  DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
 }
 
@@ -249,6 +255,26 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.takeModerationAction' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateAccountEmail<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminUpdateAccountEmail.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.updateAccountEmail' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateAccountHandle<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminUpdateAccountHandle.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.updateAccountHandle' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

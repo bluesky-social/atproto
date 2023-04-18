@@ -145,6 +145,14 @@ export class AccountService {
     await sequenceHandleUpdate(this.db, did, handle)
   }
 
+  async updateEmail(did: string, email: string) {
+    await this.db.db
+      .updateTable('user_account')
+      .set({ email: email.toLowerCase() })
+      .where('did', '=', did)
+      .executeTakeFirst()
+  }
+
   async updateUserPassword(did: string, password: string) {
     const passwordScrypt = await scrypt.hash(password)
     await this.db.db

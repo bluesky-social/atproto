@@ -9,6 +9,7 @@ import {
 import { chunkArray } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import Database from './db'
+import { valuesList } from './db/util'
 import { IpldBlock } from './db/tables/ipld-block'
 import { RepoCommitBlock } from './db/tables/repo-commit-block'
 import { RepoCommitHistory } from './db/tables/repo-commit-history'
@@ -314,7 +315,7 @@ export class SqlRepoStorage extends RepoStorage {
     const res = await this.db.db
       .selectFrom('repo_commit_block')
       .where('repo_commit_block.creator', '=', this.did)
-      .where('repo_commit_block.commit', 'in', commitStrs)
+      .whereRef('repo_commit_block.commit', 'in', valuesList(commitStrs))
       .innerJoin('ipld_block', (join) =>
         join
           .onRef('ipld_block.cid', '=', 'repo_commit_block.block')

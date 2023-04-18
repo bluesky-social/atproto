@@ -5,6 +5,7 @@ Array [
   Object {
     "did": "user(0)",
     "handle": "eve.test",
+    "labels": Array [],
     "viewer": Object {
       "muted": false,
     },
@@ -12,6 +13,15 @@ Array [
   Object {
     "did": "user(1)",
     "handle": "dan.test",
+    "labels": Array [
+      Object {
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "user(1)",
+        "val": "repo-action-label",
+      },
+    ],
     "viewer": Object {
       "following": "record(0)",
       "muted": false,
@@ -20,6 +30,7 @@ Array [
   Object {
     "did": "user(2)",
     "handle": "carol.test",
+    "labels": Array [],
     "viewer": Object {
       "followedBy": "record(2)",
       "following": "record(1)",
@@ -28,11 +39,21 @@ Array [
   },
   Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-    "description": "hi im bob",
+    "description": "hi im bob label_me",
     "did": "user(3)",
     "displayName": "bobby",
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [
+      Object {
+        "cid": "cids(0)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(5)",
+        "val": "test-label",
+      },
+    ],
     "viewer": Object {
       "followedBy": "record(4)",
       "following": "record(3)",
@@ -47,6 +68,7 @@ Array [
   Object {
     "did": "user(0)",
     "handle": "eve.test",
+    "labels": Array [],
     "viewer": Object {
       "muted": false,
     },
@@ -54,6 +76,15 @@ Array [
   Object {
     "did": "user(1)",
     "handle": "dan.test",
+    "labels": Array [
+      Object {
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "user(1)",
+        "val": "repo-action-label",
+      },
+    ],
     "viewer": Object {
       "following": "record(0)",
       "muted": false,

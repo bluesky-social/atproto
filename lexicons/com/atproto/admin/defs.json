@@ -146,6 +146,10 @@
         "relatedRecords": {"type": "array", "items": {"type": "unknown"}},
         "indexedAt": {"type": "string", "format": "datetime"},
         "moderation": {"type": "ref", "ref": "#moderationDetail"},
+        "labels": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "com.atproto.label.defs#label"}
+        },
         "invitedBy": {"type": "ref", "ref": "com.atproto.server.defs#inviteCode"},
         "invites": {
           "type": "array",
@@ -181,6 +185,10 @@
         "cid": {"type": "string", "format": "cid"},
         "value": {"type": "unknown"},
         "blobs": {"type": "array", "items": {"type": "ref", "ref": "#blobView"}},
+        "labels": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "com.atproto.label.defs#label"}
+        },
         "indexedAt": {"type": "string", "format": "datetime"},
         "moderation": {"type": "ref", "ref": "#moderationDetail"},
         "repo": {"type": "ref", "ref": "#repoView"}

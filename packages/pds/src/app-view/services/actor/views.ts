@@ -8,9 +8,14 @@ import { DidHandle } from '../../../db/tables/did-handle'
 import { countAll } from '../../../db/util'
 import Database from '../../../db'
 import { ImageUriBuilder } from '../../../image/uri'
+import { LabelService } from '../label'
 
 export class ActorViews {
   constructor(private db: Database, private imgUriBuilder: ImageUriBuilder) {}
+
+  services = {
+    label: LabelService.creator(),
+  }
 
   profileDetailed(
     result: ActorResult,
@@ -29,13 +34,11 @@ export class ActorViews {
 
     const { ref } = this.db.db.dynamic
 
-    const profileInfos = await this.db.db
+    const dids = results.map((r) => r.did)
+
+    const profileInfosQb = this.db.db
       .selectFrom('did_handle')
-      .where(
-        'did_handle.did',
-        'in',
-        results.map((r) => r.did),
-      )
+      .where('did_handle.did', 'in', dids)
       .leftJoin('profile', 'profile.creator', 'did_handle.did')
       .select([
         'did_handle.did as did',
@@ -81,6 +84,11 @@ export class ActorViews {
       ])
       .execute()
 
+    const [profileInfos, labels] = await Promise.all([
+      profileInfosQb,
+      this.services.label(this.db).getLabelsForProfiles(dids),
+    ])
+
     const profileInfoByDid = profileInfos.reduce((acc, info) => {
       return Object.assign(acc, { [info.did]: info })
     }, {} as Record<string, ArrayEl<typeof profileInfos>>)
@@ -109,6 +117,7 @@ export class ActorViews {
           following: profileInfo?.requesterFollowing || undefined,
           followedBy: profileInfo?.requesterFollowedBy || undefined,
         },
+        labels: labels[result.did] ?? [],
       }
     })
 
@@ -125,14 +134,11 @@ export class ActorViews {
     if (results.length === 0) return []
 
     const { ref } = this.db.db.dynamic
+    const dids = results.map((r) => r.did)
 
-    const profileInfos = await this.db.db
+    const profileInfosQb = this.db.db
       .selectFrom('did_handle')
-      .where(
-        'did_handle.did',
-        'in',
-        results.map((r) => r.did),
-      )
+      .where('did_handle.did', 'in', dids)
       .leftJoin('profile', 'profile.creator', 'did_handle.did')
       .select([
         'did_handle.did as did',
@@ -162,6 +168,11 @@ export class ActorViews {
       ])
       .execute()
 
+    const [profileInfos, labels] = await Promise.all([
+      profileInfosQb,
+      this.services.label(this.db).getLabelsForProfiles(dids),
+    ])
+
     const profileInfoByDid = profileInfos.reduce((acc, info) => {
       return Object.assign(acc, { [info.did]: info })
     }, {} as Record<string, ArrayEl<typeof profileInfos>>)
@@ -183,6 +194,7 @@ export class ActorViews {
           following: profileInfo?.requesterFollowing || undefined,
           followedBy: profileInfo?.requesterFollowedBy || undefined,
         },
+        labels: labels[result.did] ?? [],
       }
     })
 
@@ -209,6 +221,7 @@ export class ActorViews {
       displayName: truncateUtf8(view.displayName, 64) || undefined,
       avatar: view.avatar,
       viewer: view.viewer,
+      labels: view.labels,
     }))
 
     return Array.isArray(result) ? views : views[0]

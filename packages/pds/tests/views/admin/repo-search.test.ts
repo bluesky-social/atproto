@@ -172,7 +172,7 @@ Array [
         "avatar": Object {
           "$type": "blob",
           "mimeType": "image/jpeg",
-          "ref": Object{
+          "ref": Object {
             "$link": "cids(0)",
           },
           "size": 3976,
@@ -196,7 +196,7 @@ Array [
         "avatar": Object {
           "$type": "blob",
           "mimeType": "image/jpeg",
-          "ref": Object{
+          "ref": Object {
             "$link": "cids(0)",
           },
           "size": 3976,
@@ -220,7 +220,7 @@ Array [
         "avatar": Object {
           "$type": "blob",
           "mimeType": "image/jpeg",
-          "ref": Object{
+          "ref": Object {
             "$link": "cids(0)",
           },
           "size": 3976,
@@ -254,7 +254,7 @@ Array [
         "avatar": Object {
           "$type": "blob",
           "mimeType": "image/jpeg",
-          "ref": Object{
+          "ref": Object {
             "$link": "cids(0)",
           },
           "size": 3976,
@@ -278,7 +278,7 @@ Array [
         "avatar": Object {
           "$type": "blob",
           "mimeType": "image/jpeg",
-          "ref": Object{
+          "ref": Object {
             "$link": "cids(0)",
           },
           "size": 3976,
