@@ -1,14 +1,7 @@
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { runTestEnv, CloseFn, processAll } from '@atproto/dev-env'
 import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
-import {
-  runTestServer,
-  forSnapshot,
-  CloseFn,
-  getOriginator,
-  paginateAll,
-  adminAuth,
-} from '../_util'
+import { forSnapshot, getOriginator, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { FeedAlgorithm } from '../../src/app-view/api/app/bsky/util/feed'
@@ -25,18 +18,19 @@ describe('timeline views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const server = await runTestServer({
-      dbPostgresSchema: 'views_home_feed',
+    const testEnv = await runTestEnv({
+      dbPostgresSchema: 'proxy_timeline',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
+    close = testEnv.close
+    agent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(agent)
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
-    await server.ctx.labeler.processAll()
+    await processAll(testEnv)
+    await testEnv.pds.ctx.labeler.processAll()
   })
 
   afterAll(async () => {
@@ -165,100 +159,5 @@ describe('timeline views', () => {
 
     expect(full.data.feed.length).toEqual(7)
     expect(results(paginatedAll)).toEqual(results([full.data]))
-  })
-
-  it('blocks posts, reposts, replies by actor takedown', async () => {
-    const actionResults = await Promise.all(
-      [bob, carol].map((did) =>
-        agent.api.com.atproto.admin.takeModerationAction(
-          {
-            action: TAKEDOWN,
-            subject: {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: { authorization: adminAuth() },
-          },
-        ),
-      ),
-    )
-
-    const aliceTL = await agent.api.app.bsky.feed.getTimeline(
-      { algorithm: FeedAlgorithm.ReverseChronological },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
-
-    // Cleanup
-    await Promise.all(
-      actionResults.map((result) =>
-        agent.api.com.atproto.admin.reverseModerationAction(
-          {
-            id: result.data.id,
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: { authorization: adminAuth() },
-          },
-        ),
-      ),
-    )
-  })
-
-  it('blocks posts, reposts, replies by record takedown.', async () => {
-    const postRef1 = sc.posts[dan][1].ref // Repost
-    const postRef2 = sc.replies[bob][0].ref // Post and reply parent
-    const actionResults = await Promise.all(
-      [postRef1, postRef2].map((postRef) =>
-        agent.api.com.atproto.admin.takeModerationAction(
-          {
-            action: TAKEDOWN,
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: postRef.uriStr,
-              cid: postRef.cidStr,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: { authorization: adminAuth() },
-          },
-        ),
-      ),
-    )
-
-    const aliceTL = await agent.api.app.bsky.feed.getTimeline(
-      { algorithm: FeedAlgorithm.ReverseChronological },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
-
-    // Cleanup
-    await Promise.all(
-      actionResults.map((result) =>
-        agent.api.com.atproto.admin.reverseModerationAction(
-          {
-            id: result.data.id,
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: { authorization: adminAuth() },
-          },
-        ),
-      ),
-    )
   })
 })

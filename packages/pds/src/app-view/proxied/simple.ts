@@ -154,41 +154,16 @@ export default function (server: Server, ctx: AppContext) {
         headers(requester),
       )
       const { cursor, feed } = res.data
-      let dids: string[] = []
-      for (const item of feed) {
-        dids.push(item.post.author.did)
-        if (item.reply) {
-          dids.push(item.reply.parent.author.did)
-          dids.push(item.reply.root.author.did)
-        }
-        if (item.reason && isReasonRepost(item.reason)) {
-          dids.push(item.reason.by.did)
-        }
-      }
-      dids = dedupeStrs(dids)
+      const dids = didsForFeedViewPosts(feed)
       const mutes = await ctx.services.account(ctx.db).getMutes(requester, dids)
-      const hydrated: FeedViewPost[] = []
-      for (const item of feed) {
-        if (item.reason && isReasonRepost(item.reason)) {
-          // remove reposts of a muted account in another author's feed
-          if (mutes[item.post.author.did]) continue
-          item.reason.by.viewer ??= {}
-          item.reason.by.viewer.muted = mutes[item.reason.by.did] ?? false
-        }
-
-        item.post.author.viewer ??= {}
-        item.post.author.viewer.muted = false
-        if (item.reply) {
-          item.reply.parent.author.viewer ??= {}
-          item.reply.parent.author.viewer.muted =
-            mutes[item.reply.parent.author.did] ?? false
-
-          item.reply.root.author.viewer ??= {}
-          item.reply.root.author.viewer.muted =
-            mutes[item.reply.root.author.did] ?? false
-        }
-        hydrated.push(item)
-      }
+      const hydrated = processFeedViewPostMutes(feed, mutes, (post) => {
+        // eliminate posts by a muted account that have been reposted by account of feed
+        return (
+          post.reason !== undefined &&
+          isReasonRepost(post.reason) &&
+          mutes[post.post.author.did] === true
+        )
+      })
 
       return {
         encoding: 'application/json',
@@ -276,7 +251,6 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
-  // @TODO Mutes
   server.app.bsky.feed.getTimeline({
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {
@@ -285,9 +259,25 @@ export default function (server: Server, ctx: AppContext) {
         params,
         headers(requester),
       )
+      const { cursor, feed } = res.data
+      const dids = didsForFeedViewPosts(feed)
+      const mutes = await ctx.services.account(ctx.db).getMutes(requester, dids)
+      const hydrated = processFeedViewPostMutes(feed, mutes, (post) => {
+        // remove posts & reposts from muted accounts
+        return (
+          mutes[post.post.author.did] === true ||
+          (post.reason !== undefined &&
+            isReasonRepost(post.reason) &&
+            mutes[post.reason.by.did]) === true
+        )
+      })
+
       return {
         encoding: 'application/json',
-        body: res.data,
+        body: {
+          cursor,
+          feed: hydrated,
+        },
       }
     },
   })
@@ -362,10 +352,63 @@ export default function (server: Server, ctx: AppContext) {
         params,
         headers(requester),
       )
+      const { cursor, feed } = res.data
+      const dids = didsForFeedViewPosts(feed)
+      const mutes = await ctx.services.account(ctx.db).getMutes(requester, dids)
+      const hydrated = processFeedViewPostMutes(feed, mutes, (post) => {
+        return mutes[post.post.author.did] === true
+      })
+
       return {
         encoding: 'application/json',
-        body: res.data,
+        body: {
+          cursor,
+          feed: hydrated,
+        },
       }
     },
   })
+}
+
+const didsForFeedViewPosts = (feed: FeedViewPost[]): string[] => {
+  const dids: string[] = []
+  for (const item of feed) {
+    dids.push(item.post.author.did)
+    if (item.reply) {
+      dids.push(item.reply.parent.author.did)
+      dids.push(item.reply.root.author.did)
+    }
+    if (item.reason && isReasonRepost(item.reason)) {
+      dids.push(item.reason.by.did)
+    }
+  }
+  return dedupeStrs(dids)
+}
+
+const processFeedViewPostMutes = (
+  feed: FeedViewPost[],
+  mutes: Record<string, boolean>,
+  shouldRemove: (post: FeedViewPost) => boolean,
+): FeedViewPost[] => {
+  const hydrated: FeedViewPost[] = []
+  for (const item of feed) {
+    if (shouldRemove(item)) continue
+    item.post.author.viewer ??= {}
+    item.post.author.viewer.muted = false
+    if (item.reply) {
+      item.reply.parent.author.viewer ??= {}
+      item.reply.parent.author.viewer.muted =
+        mutes[item.reply.parent.author.did] ?? false
+
+      item.reply.root.author.viewer ??= {}
+      item.reply.root.author.viewer.muted =
+        mutes[item.reply.root.author.did] ?? false
+    }
+    if (item.reason && isReasonRepost(item.reason)) {
+      item.reason.by.viewer ??= {}
+      item.reason.by.viewer.muted = mutes[item.reason.by.did] ?? false
+    }
+    hydrated.push(item)
+  }
+  return hydrated
 }
