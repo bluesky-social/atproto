@@ -6,11 +6,10 @@ import {
   getUserSearchQuery,
   SearchKeyset,
 } from '../../../../services/util/search'
-import { authOptionalVerifier } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActors({
-    auth: authOptionalVerifier,
+    auth: ctx.authOptionalVerifier,
     handler: async ({ auth, params }) => {
       const { services, db } = ctx
       const { cursor, limit, term: rawTerm } = params

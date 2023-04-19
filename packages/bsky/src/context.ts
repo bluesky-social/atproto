@@ -4,6 +4,7 @@ import { Database } from './db'
 import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
+import * as auth from './auth'
 
 export class AppContext {
   constructor(
@@ -38,6 +39,14 @@ export class AppContext {
 
   get didResolver(): DidResolver {
     return this.opts.didResolver
+  }
+
+  get authVerifier() {
+    return auth.authVerifier(this.didResolver)
+  }
+
+  get authOptionalVerifier() {
+    return auth.authOptionalVerifier(this.didResolver)
   }
 }
 
