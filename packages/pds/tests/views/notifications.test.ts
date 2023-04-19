@@ -92,6 +92,26 @@ describe('pds notification views', () => {
     expect(notifCountBob.data.count).toBe(5)
   })
 
+  it('does not give notifs for a deleted subject', async () => {
+    const root = await sc.post(sc.dids.alice, 'root')
+    const first = await sc.reply(sc.dids.bob, root.ref, root.ref, 'first')
+    await sc.deletePost(sc.dids.alice, root.ref.uri)
+    const second = await sc.reply(sc.dids.carol, root.ref, first.ref, 'second')
+
+    const notifsAlice = await agent.api.app.bsky.notification.listNotifications(
+      {},
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+    const hasNotif = notifsAlice.data.notifications.some(
+      (notif) => notif.uri === second.ref.uriStr,
+    )
+    expect(hasNotif).toBe(false)
+
+    // cleanup
+    await sc.deletePost(sc.dids.bob, first.ref.uri)
+    await sc.deletePost(sc.dids.carol, second.ref.uri)
+  })
+
   it('generates notifications for quotes', async () => {
     // Dan was quoted by alice
     const notifsDan = await agent.api.app.bsky.notification.listNotifications(

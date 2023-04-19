@@ -13,6 +13,7 @@ import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 export interface QueryParams {
   limit: number
   cursor?: string
+  seenAt?: string
 }
 
 export type InputSchema = undefined

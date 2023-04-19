@@ -4557,6 +4557,15 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
+        parameters: {
+          type: 'params',
+          properties: {
+            seenAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
         output: {
           encoding: 'application/json',
           schema: {
@@ -4589,6 +4598,10 @@ export const schemaDict = {
             },
             cursor: {
               type: 'string',
+            },
+            seenAt: {
+              type: 'string',
+              format: 'datetime',
             },
           },
         },

@@ -38,7 +38,7 @@ const findDuplicate = async (): Promise<AtUri | null> => {
   return null
 }
 
-const eventsForInsert = () => {
+const notifsForInsert = () => {
   return []
 }
 
@@ -54,8 +54,8 @@ const deleteFn = async (
   return deleted || null
 }
 
-const eventsForDelete = () => {
-  return []
+const notifsForDelete = () => {
+  return { notifs: [], toDelete: [] }
 }
 
 export type PluginType = RecordProcessor<Profile.Record, IndexedProfile>
@@ -66,8 +66,8 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
     insertFn,
     findDuplicate,
     deleteFn,
-    eventsForInsert,
-    eventsForDelete,
+    notifsForInsert,
+    notifsForDelete,
   })
 }
 

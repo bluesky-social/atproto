@@ -4,7 +4,6 @@ import { AtUri } from '@atproto/uri'
 import * as Repost from '../../../lexicon/types/app/bsky/feed/repost'
 import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
-import * as messages from '../messages'
 import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyFeedRepost
@@ -67,17 +66,19 @@ const findDuplicate = async (
   return found ? new AtUri(found.uri) : null
 }
 
-const eventsForInsert = (obj: IndexedRepost) => {
+const notifsForInsert = (obj: IndexedRepost) => {
   const subjectUri = new AtUri(obj.subject)
-  const notif = messages.createNotification({
-    userDid: subjectUri.host,
-    author: obj.creator,
-    recordUri: obj.uri,
-    recordCid: obj.cid,
-    reason: 'repost',
-    reasonSubject: subjectUri.toString(),
-  })
-  return [notif]
+  return [
+    {
+      did: subjectUri.host,
+      author: obj.creator,
+      recordUri: obj.uri,
+      recordCid: obj.cid,
+      reason: 'repost' as const,
+      reasonSubject: subjectUri.toString(),
+      sortAt: obj.indexedAt,
+    },
+  ]
 }
 
 const deleteFn = async (
@@ -96,12 +97,12 @@ const deleteFn = async (
   return deleted || null
 }
 
-const eventsForDelete = (
+const notifsForDelete = (
   deleted: IndexedRepost,
   replacedBy: IndexedRepost | null,
 ) => {
-  if (replacedBy) return []
-  return [messages.deleteNotifications(deleted.uri)]
+  const toDelete = replacedBy ? [] : [deleted.uri]
+  return { notifs: [], toDelete }
 }
 
 export type PluginType = RecordProcessor<Repost.Record, IndexedRepost>
@@ -112,8 +113,8 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
     insertFn,
     findDuplicate,
     deleteFn,
-    eventsForInsert,
-    eventsForDelete,
+    notifsForInsert,
+    notifsForDelete,
   })
 }
 

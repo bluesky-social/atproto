@@ -9,9 +9,12 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.listNotifications({
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
-      const { limit, cursor } = params
+      const { limit, cursor, seenAt } = params
       const requester = auth.credentials.did
       const { ref } = ctx.db.db.dynamic
+      if (seenAt) {
+        throw new InvalidRequestError('The seenAt parameter is unsupported')
+      }
 
       let notifBuilder = ctx.db.db
         .selectFrom('user_notification as notif')
@@ -36,6 +39,16 @@ export default function (server: Server, ctx: AppContext) {
             .selectAll()
             .whereRef('did', '=', ref('notif.author'))
             .where('mutedByDid', '=', requester),
+        )
+        .where((clause) =>
+          clause
+            .where('reasonSubject', 'is', null)
+            .orWhereExists(
+              ctx.db.db
+                .selectFrom('record as subject')
+                .selectAll()
+                .whereRef('subject.uri', '=', ref('notif.reasonSubject')),
+            ),
         )
         .select([
           'notif.recordUri as uri',

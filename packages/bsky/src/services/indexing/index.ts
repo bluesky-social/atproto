@@ -57,21 +57,18 @@ export class IndexingService {
     this.db.assertTransaction()
     const indexer = this.findIndexerForCollection(uri.collection)
     if (!indexer) return
-    // @TODO(bsky) direct notifs
-    const notifs =
-      action === WriteOpAction.Create
-        ? await indexer.insertRecord(uri, cid, obj, timestamp)
-        : await indexer.updateRecord(uri, cid, obj, timestamp)
-    return notifs
+    if (action === WriteOpAction.Create) {
+      await indexer.insertRecord(uri, cid, obj, timestamp)
+    } else {
+      await indexer.updateRecord(uri, cid, obj, timestamp)
+    }
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {
     this.db.assertTransaction()
     const indexer = this.findIndexerForCollection(uri.collection)
     if (!indexer) return
-    // @TODO(bsky) direct notifs
-    const notifs = await indexer.deleteRecord(uri, cascading)
-    return notifs
+    await indexer.deleteRecord(uri, cascading)
   }
 
   async indexHandle(did: string, timestamp: string, force = false) {

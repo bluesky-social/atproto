@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { cidForCbor, TID } from '@atproto/common'
 import * as pdsRepo from '@atproto/pds/src/repo/prepare'
@@ -11,6 +12,7 @@ import { SeedClient } from './seeds/client'
 import usersSeed from './seeds/users'
 import basicSeed from './seeds/basic'
 import { ids } from '../src/lexicon/lexicons'
+import { Database } from '../src/db'
 
 describe('indexing', () => {
   let testEnv: TestEnvInfo
@@ -89,7 +91,7 @@ describe('indexing', () => {
     })
 
     // Create
-    const createMessages = await db.transaction(async (tx) => {
+    await db.transaction(async (tx) => {
       return await services.indexing(tx).indexRecord(...createRecord)
     })
 
@@ -98,9 +100,10 @@ describe('indexing', () => {
       { headers: sc.getHeaders(sc.dids.alice, true) },
     )
     expect(forSnapshot(getAfterCreate.data)).toMatchSnapshot()
+    const createNotifications = await getNotifications(db, uri)
 
     // Update
-    const updateMessages = await db.transaction(async (tx) => {
+    await db.transaction(async (tx) => {
       return await services.indexing(tx).indexRecord(...updateRecord)
     })
 
@@ -109,9 +112,10 @@ describe('indexing', () => {
       { headers: sc.getHeaders(sc.dids.alice, true) },
     )
     expect(forSnapshot(getAfterUpdate.data)).toMatchSnapshot()
+    const updateNotifications = await getNotifications(db, uri)
 
     // Delete
-    const deletedMessages = await db.transaction(async (tx) => {
+    await db.transaction(async (tx) => {
       return await services.indexing(tx).deleteRecord(...deleteRecord)
     })
 
@@ -120,12 +124,13 @@ describe('indexing', () => {
       { headers: sc.getHeaders(sc.dids.alice, true) },
     )
     await expect(getAfterDelete).rejects.toThrow(/Post not found:/)
+    const deleteNotifications = await getNotifications(db, uri)
 
     expect(
       forSnapshot({
-        createMessages,
-        updateMessages,
-        deletedMessages,
+        createNotifications,
+        updateNotifications,
+        deleteNotifications,
       }),
     ).toMatchSnapshot()
   })
@@ -158,7 +163,7 @@ describe('indexing', () => {
     })
 
     // Create
-    const createMessages = await db.transaction(async (tx) => {
+    await db.transaction(async (tx) => {
       return await services.indexing(tx).indexRecord(...createRecord)
     })
 
@@ -169,7 +174,7 @@ describe('indexing', () => {
     expect(forSnapshot(getAfterCreate.data)).toMatchSnapshot()
 
     // Update
-    const updateMessages = await db.transaction(async (tx) => {
+    await db.transaction(async (tx) => {
       return await services.indexing(tx).indexRecord(...updateRecord)
     })
 
@@ -180,7 +185,7 @@ describe('indexing', () => {
     expect(forSnapshot(getAfterUpdate.data)).toMatchSnapshot()
 
     // Delete
-    const deletedMessages = await db.transaction(async (tx) => {
+    await db.transaction(async (tx) => {
       return await services.indexing(tx).deleteRecord(...deleteRecord)
     })
 
@@ -189,14 +194,6 @@ describe('indexing', () => {
       { headers: sc.getHeaders(sc.dids.alice, true) },
     )
     expect(forSnapshot(getAfterDelete.data)).toMatchSnapshot()
-
-    expect(
-      forSnapshot({
-        createMessages,
-        updateMessages,
-        deletedMessages,
-      }),
-    ).toMatchSnapshot()
   })
 
   describe('indexRepo', () => {
@@ -427,6 +424,16 @@ describe('indexing', () => {
       await expect(getProfileAfter).rejects.toThrow('Profile not found')
     })
   })
+
+  async function getNotifications(db: Database, uri: AtUri) {
+    return await db.db
+      .selectFrom('notification')
+      .selectAll()
+      .select(sql`0`.as('id')) // Ignore notification ids in comparisons
+      .where('recordUri', '=', uri.toString())
+      .orderBy('sortAt')
+      .execute()
+  }
 })
 
 async function prepareCreate(opts: {
