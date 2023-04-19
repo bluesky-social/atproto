@@ -85,8 +85,10 @@ import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedLike from './types/app/bsky/feed/like'
+import * as AppBskyFeedMutePostThread from './types/app/bsky/feed/mutePostThread'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
+import * as AppBskyFeedUnmutePostThread from './types/app/bsky/feed/unmutePostThread'
 import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
@@ -177,8 +179,10 @@ export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 export * as AppBskyFeedLike from './types/app/bsky/feed/like'
+export * as AppBskyFeedMutePostThread from './types/app/bsky/feed/mutePostThread'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
+export * as AppBskyFeedUnmutePostThread from './types/app/bsky/feed/unmutePostThread'
 export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
@@ -1137,6 +1141,28 @@ export class FeedNS {
       .call('app.bsky.feed.getTimeline', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetTimeline.toKnownErr(e)
+      })
+  }
+
+  mutePostThread(
+    data?: AppBskyFeedMutePostThread.InputSchema,
+    opts?: AppBskyFeedMutePostThread.CallOptions,
+  ): Promise<AppBskyFeedMutePostThread.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.mutePostThread', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyFeedMutePostThread.toKnownErr(e)
+      })
+  }
+
+  unmutePostThread(
+    data?: AppBskyFeedUnmutePostThread.InputSchema,
+    opts?: AppBskyFeedUnmutePostThread.CallOptions,
+  ): Promise<AppBskyFeedUnmutePostThread.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.unmutePostThread', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyFeedUnmutePostThread.toKnownErr(e)
       })
   }
 }

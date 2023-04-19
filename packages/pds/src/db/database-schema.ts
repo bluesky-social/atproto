@@ -17,6 +17,7 @@ import * as repoBlob from './tables/repo-blob'
 import * as deleteAccountToken from './tables/delete-account-token'
 import * as moderation from './tables/moderation'
 import * as mute from './tables/mute'
+import * as threadMute from './tables/thread-mute'
 import * as label from './tables/label'
 import * as repoSeq from './tables/repo-seq'
 import * as appMigration from './tables/app-migration'
@@ -44,6 +45,7 @@ export type DatabaseSchemaType = appView.DatabaseSchemaType &
   deleteAccountToken.PartialDB &
   moderation.PartialDB &
   mute.PartialDB &
+  threadMute.PartialDB &
   label.PartialDB &
   repoSeq.PartialDB
 

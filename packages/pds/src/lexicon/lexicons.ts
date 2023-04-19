@@ -4343,6 +4343,29 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedMutePostThread: {
+    lexicon: 1,
+    id: 'app.bsky.feed.mutePostThread',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Mute a post thread by the uri of the root post',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['threadRoot'],
+            properties: {
+              threadRoot: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedPost: {
     lexicon: 1,
     id: 'app.bsky.feed.post',
@@ -4462,6 +4485,29 @@ export const schemaDict = {
             createdAt: {
               type: 'string',
               format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedUnmutePostThread: {
+    lexicon: 1,
+    id: 'app.bsky.feed.unmutePostThread',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Unmute a post thread by the uri of the root post',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['threadRoot'],
+            properties: {
+              threadRoot: {
+                type: 'string',
+                format: 'at-uri',
+              },
             },
           },
         },
@@ -5039,8 +5085,10 @@ export const ids = {
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetTimeline: 'app.bsky.feed.getTimeline',
   AppBskyFeedLike: 'app.bsky.feed.like',
+  AppBskyFeedMutePostThread: 'app.bsky.feed.mutePostThread',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
+  AppBskyFeedUnmutePostThread: 'app.bsky.feed.unmutePostThread',
   AppBskyGraphFollow: 'app.bsky.graph.follow',
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',

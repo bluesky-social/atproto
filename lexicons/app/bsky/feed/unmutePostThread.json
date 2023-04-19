@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.unmutePostThread",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Unmute a post thread by the uri of the root post",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["threadRoot"],
+          "properties": {
+            "threadRoot": { "type": "string", "format": "at-uri" }
+          }
+        }
+      }
+    }
+  }
+}

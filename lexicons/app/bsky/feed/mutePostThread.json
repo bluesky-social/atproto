@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.mutePostThread",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Mute a post thread by the uri of the root post",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["threadRoot"],
+          "properties": {
+            "threadRoot": { "type": "string", "format": "at-uri" }
+          }
+        }
+      }
+    }
+  }
+}

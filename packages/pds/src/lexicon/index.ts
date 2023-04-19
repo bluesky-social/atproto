@@ -74,6 +74,8 @@ import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
+import * as AppBskyFeedMutePostThread from './types/app/bsky/feed/mutePostThread'
+import * as AppBskyFeedUnmutePostThread from './types/app/bsky/feed/unmutePostThread'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
@@ -769,6 +771,20 @@ export class FeedNS {
     cfg: ConfigOf<AV, AppBskyFeedGetTimeline.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.feed.getTimeline' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  mutePostThread<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedMutePostThread.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.mutePostThread' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unmutePostThread<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedUnmutePostThread.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.unmutePostThread' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
