@@ -35,12 +35,12 @@ export const createRouter = (ctx: AppContext): express.Router => {
         ctx.didResolver.resolveAtpData(did), // @TODO cache did info
         ctx.db.db
           .selectFrom('moderation_action_subject_blob')
-          .where('cid', '=', cidStr)
           .innerJoin(
             'moderation_action',
             'moderation_action.id',
             'moderation_action_subject_blob.actionId',
           )
+          .where('cid', '=', cidStr)
           .where('action', '=', TAKEDOWN)
           .where('reversedAt', 'is', null)
           .executeTakeFirst(),
