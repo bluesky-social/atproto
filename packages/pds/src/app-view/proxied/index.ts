@@ -1,13 +1,14 @@
+import { AtpAgent } from '@atproto/api'
+import { dedupeStrs } from '@atproto/common'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
-import { AtpAgent } from '@atproto/api'
 import {
   FeedViewPost,
   ThreadViewPost,
   isReasonRepost,
   isThreadViewPost,
 } from '../../lexicon/types/app/bsky/feed/defs'
-import { dedupeStrs } from '@atproto/common'
+import { createServiceJwt } from '../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   if (!ctx.cfg.bskyAppViewEndpoint) {
@@ -15,9 +16,14 @@ export default function (server: Server, ctx: AppContext) {
   }
   const agent = new AtpAgent({ service: ctx.cfg.bskyAppViewEndpoint })
 
-  const headers = (did: string) => {
+  const headers = async (did: string) => {
+    const jwt = await createServiceJwt(
+      did,
+      ctx.cfg.bskyAppViewDid ?? '',
+      ctx.repoSigningKey,
+    )
     return {
-      headers: { authorization: `Bearer ${did}` },
+      headers: { authorization: `Bearer ${jwt}` },
     }
   }
 
@@ -27,7 +33,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const res = await agent.api.app.bsky.actor.getProfile(
         params,
-        headers(requester),
+        await headers(requester),
       )
       const profile = res.data
       const muted = await ctx.services
@@ -48,7 +54,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const res = await agent.api.app.bsky.actor.getProfiles(
         params,
-        headers(requester),
+        await headers(requester),
       )
       const profiles = res.data.profiles
 
@@ -75,7 +81,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const res = await agent.api.app.bsky.actor.getSuggestions(
         params,
-        headers(requester),
+        await headers(requester),
       )
       const { cursor, actors } = res.data
       const dids = actors.map((actor) => actor.did)
@@ -101,7 +107,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const res = await agent.api.app.bsky.actor.searchActors(
         params,
-        headers(requester),
+        await headers(requester),
       )
 
       const { cursor, actors } = res.data
@@ -128,7 +134,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const res = await agent.api.app.bsky.actor.searchActorsTypeahead(
         params,
-        headers(requester),
+        await headers(requester),
       )
 
       const { actors } = res.data
@@ -152,7 +158,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const res = await agent.api.app.bsky.feed.getAuthorFeed(
         params,
-        headers(requester),
+        await headers(requester),
       )
       const { cursor, feed } = res.data
       const dids = didsForFeedViewPosts(feed)
@@ -182,7 +188,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const res = await agent.api.app.bsky.feed.getLikes(
         params,
-        headers(requester),
+        await headers(requester),
       )
 
       const { cursor, uri, cid, likes } = res.data
@@ -212,7 +218,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const res = await agent.api.app.bsky.feed.getPostThread(
         params,
-        headers(requester),
+        await headers(requester),
       )
       const { thread } = res.data
       if (!isThreadViewPost(thread)) {
@@ -241,7 +247,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const res = await agent.api.app.bsky.feed.getRepostedBy(
         params,
-        headers(requester),
+        await headers(requester),
       )
 
       const { cursor, uri, cid, repostedBy } = res.data
@@ -271,7 +277,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const res = await agent.api.app.bsky.feed.getTimeline(
         params,
-        headers(requester),
+        await headers(requester),
       )
       const { cursor, feed } = res.data
       const dids = didsForFeedViewPosts(feed)
@@ -302,7 +308,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const res = await agent.api.app.bsky.graph.getFollowers(
         params,
-        headers(requester),
+        await headers(requester),
       )
 
       const { cursor, subject, followers } = res.data
@@ -333,7 +339,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const res = await agent.api.app.bsky.graph.getFollows(
         params,
-        headers(requester),
+        await headers(requester),
       )
       const { cursor, subject, follows } = res.data
       const dids = [subject.did, ...follows.map((follow) => follow.did)]
@@ -363,7 +369,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const res = await agent.api.app.bsky.unspecced.getPopular(
         params,
-        headers(requester),
+        await headers(requester),
       )
       const { cursor, feed } = res.data
       const dids = didsForFeedViewPosts(feed)
@@ -391,7 +397,7 @@ export default function (server: Server, ctx: AppContext) {
         .getLastSeenNotifs(requester)
       const res = await agent.api.app.bsky.notification.getUnreadCount(
         { seenAt },
-        headers(requester),
+        await headers(requester),
       )
       const { count } = res.data
       return {
@@ -412,7 +418,7 @@ export default function (server: Server, ctx: AppContext) {
         .getLastSeenNotifs(requester)
       const res = await agent.api.app.bsky.notification.listNotifications(
         { ...params, seenAt },
-        headers(requester),
+        await headers(requester),
       )
       const { cursor, notifications } = res.data
       const dids = notifications.map((notif) => notif.author.did)
