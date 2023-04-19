@@ -1,7 +1,7 @@
 import { Selectable } from 'kysely'
 import { ArrayEl } from '@atproto/common'
 import { AtUri } from '@atproto/uri'
-import { jsonStringToLex } from '@atproto/lexicon'
+import { BlobRef, jsonStringToLex } from '@atproto/lexicon'
 import Database from '../../db'
 import { Actor } from '../../db/tables/actor'
 import { Record as RecordRow } from '../../db/tables/record'
@@ -137,7 +137,7 @@ export class ModerationViews {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
-    const [repoResults, blobResults, actionResults] = await Promise.all([
+    const [repoResults, actionResults] = await Promise.all([
       this.db.db
         .selectFrom('actor')
         .where(
@@ -147,18 +147,6 @@ export class ModerationViews {
         )
         .selectAll()
         .execute(),
-      /** @TODO blobs
-       * this.db.db
-       * .selectFrom('repo_blob')
-       * .where(
-       *   'recordUri',
-       *   'in',
-       *   results.map((r) => r.uri),
-       * )
-       * .select(['cid', 'recordUri'])
-       * .execute(),
-       */
-      [] as { cid: string; recordUri: string }[],
       this.db.db
         .selectFrom('moderation_action')
         .where('reversedAt', 'is', null)
@@ -177,11 +165,6 @@ export class ModerationViews {
       (acc, cur) => Object.assign(acc, { [cur.did]: cur }),
       {} as Record<string, ArrayEl<typeof repos>>,
     )
-    const blobCidsByUri = blobResults.reduce((acc, cur) => {
-      acc[cur.recordUri] ??= []
-      acc[cur.recordUri].push(cur.cid)
-      return acc
-    }, {} as Record<string, string[]>)
     const actionByUri = actionResults.reduce(
       (acc, cur) => Object.assign(acc, { [cur.subjectUri ?? '']: cur }),
       {} as Record<string, ArrayEl<typeof actionResults>>,
@@ -191,11 +174,12 @@ export class ModerationViews {
       const repo = reposByDid[didFromUri(res.uri)]
       const action = actionByUri[res.uri]
       if (!repo) throw new Error(`Record repo is missing: ${res.uri}`)
+      const value = jsonStringToLex(res.json) as Record<string, unknown>
       return {
         uri: res.uri,
         cid: res.cid,
-        value: jsonStringToLex(res.json) as Record<string, unknown>,
-        blobCids: blobCidsByUri[res.uri] ?? [],
+        value,
+        blobCids: findBlobRefs(value).map((blob) => blob.ref.toString()),
         indexedAt: res.indexedAt,
         repo,
         moderation: {
@@ -230,7 +214,7 @@ export class ModerationViews {
     const [reports, actions, blobs, labels] = await Promise.all([
       this.report(reportResults),
       this.action(actionResults),
-      this.blob(record.blobCids),
+      this.blob(findBlobRefs(record.value)),
       this.labels(record.uri),
     ])
     return {
@@ -338,11 +322,16 @@ export class ModerationViews {
           .selectAll()
           .execute()
       : []
-    const [subject, resolvedReports, subjectBlobs] = await Promise.all([
+    const [subject, resolvedReports] = await Promise.all([
       this.subject(result),
       this.report(reportResults),
-      this.blob(action.subjectBlobCids),
     ])
+    const allBlobs = findBlobRefs(subject.value)
+    const subjectBlobs = await this.blob(
+      allBlobs.filter((blob) =>
+        action.subjectBlobCids.includes(blob.ref.toString()),
+      ),
+    )
     return {
       id: action.id,
       action: action.action,
@@ -493,50 +482,47 @@ export class ModerationViews {
 
   // Partial view for blobs
 
-  async blob(cids: string[]): Promise<BlobView[]> {
-    if (!cids.length) return []
-    /** @TODO handle blobs
-     * const [blobResults, actionResults] = await Promise.all([
-     *   this.db.db
-     *     .selectFrom('blob')
-     *     .where('cid', 'in', cids)
-     *     .selectAll()
-     *     .execute(),
-     *   this.db.db
-     *     .selectFrom('moderation_action')
-     *     .where('reversedAt', 'is', null)
-     *     .innerJoin(
-     *       'moderation_action_subject_blob as subject_blob',
-     *       'subject_blob.actionId',
-     *       'moderation_action.id',
-     *     )
-     *     .select(['id', 'action', 'cid'])
-     *     .execute(),
-     * ])
-     * const actionByCid = actionResults.reduce(
-     *   (acc, cur) => Object.assign(acc, { [cur.cid]: cur }),
-     *   {} as Record<string, ArrayEl<typeof actionResults>>,
-     * )
-     * return blobResults.map((result) => {
-     *   const action = actionByCid[result.cid]
-     *   // Intentionally missing details, since we don't have any on appview
-     *   return {
-     *     cid: result.cid,
-     *     mimeType: result.mimeType,
-     *     size: result.size,
-     *     createdAt: result.createdAt,
-     *     moderation: {
-     *       currentAction: action
-     *         ? { id: action.id, action: action.action }
-     *         : undefined,
-     *     },
-     *   }
-     * })
-     */
-    return []
+  async blob(blobs: BlobRef[]): Promise<BlobView[]> {
+    if (!blobs.length) return []
+    const actionResults = await this.db.db
+      .selectFrom('moderation_action')
+      .where('reversedAt', 'is', null)
+      .innerJoin(
+        'moderation_action_subject_blob as subject_blob',
+        'subject_blob.actionId',
+        'moderation_action.id',
+      )
+      .where(
+        'subject_blob.cid',
+        'in',
+        blobs.map((blob) => blob.ref.toString()),
+      )
+      .select(['id', 'action', 'cid'])
+      .execute()
+    const actionByCid = actionResults.reduce(
+      (acc, cur) => Object.assign(acc, { [cur.cid]: cur }),
+      {} as Record<string, ArrayEl<typeof actionResults>>,
+    )
+    // Intentionally missing details field, since we don't have any on appview.
+    // We also don't know when the blob was created, so we use a canned creation time.
+    const unknownTime = new Date(0).toISOString()
+    return blobs.map((blob) => {
+      const cid = blob.ref.toString()
+      const action = actionByCid[cid]
+      return {
+        cid,
+        mimeType: blob.mimeType,
+        size: blob.size,
+        createdAt: unknownTime,
+        moderation: {
+          currentAction: action
+            ? { id: action.id, action: action.action }
+            : undefined,
+        },
+      }
+    })
   }
 
-  // @TODO: call into label service instead on AppView
   async labels(subject: string, includeNeg?: boolean): Promise<Label[]> {
     const res = await this.db.db
       .selectFrom('label')
@@ -569,4 +555,15 @@ type SubjectView = ActionViewDetail['subject'] & ReportViewDetail['subject']
 
 function didFromUri(uri: string) {
   return new AtUri(uri).host
+}
+
+function findBlobRefs(value: unknown, refs: BlobRef[] = []) {
+  if (value instanceof BlobRef) {
+    refs.push(value)
+  } else if (Array.isArray(value)) {
+    value.forEach((val) => findBlobRefs(val, refs))
+  } else if (value && typeof value === 'object') {
+    Object.values(value).forEach((val) => findBlobRefs(val, refs))
+  }
+  return refs
 }
