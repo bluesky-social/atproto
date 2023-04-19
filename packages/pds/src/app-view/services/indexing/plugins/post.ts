@@ -23,11 +23,16 @@ type Post = DatabaseSchemaType['post']
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
 type PostEmbedExternal = DatabaseSchemaType['post_embed_external']
 type PostEmbedRecord = DatabaseSchemaType['post_embed_record']
+
+type Ancestor = PostHierarchy & {
+  doesNotExist?: boolean
+}
+
 type IndexedPost = {
   post: Post
   facets: { type: 'mention' | 'link'; value: string }[]
   embeds?: (PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord)[]
-  ancestors: PostHierarchy[]
+  ancestors: Ancestor[]
 }
 
 const lexId = lex.ids.AppBskyFeedPost
@@ -139,9 +144,9 @@ const insertFn = async (
     })
     .onConflict((oc) => oc.doNothing()) // Supports post updates
     .execute()
-  let ancestors: PostHierarchy[] = []
+  let ancestors: Ancestor[] = []
   if (post.replyParent) {
-    ancestors = await db
+    const hierarchy = await db
       .insertInto('post_hierarchy')
       .columns(['uri', 'ancestorUri', 'depth'])
       .expression(
@@ -157,6 +162,7 @@ const insertFn = async (
       .onConflict((oc) => oc.doNothing()) // Supports post updates
       .returningAll()
       .execute()
+    ancestors = await getHierachyExistence(db, hierarchy)
   }
   return { post: insertedPost, facets, embeds, ancestors }
 }
@@ -205,6 +211,8 @@ const notifsForInsert = (obj: IndexedPost) => {
   }
   const ancestors = [...obj.ancestors].sort((a, b) => a.depth - b.depth)
   for (const relation of ancestors) {
+    // no notifs for deleted posts
+    if (relation.doesNotExist) continue
     const ancestorUri = new AtUri(relation.ancestorUri)
     maybeNotify({
       userDid: ancestorUri.host,
@@ -289,6 +297,31 @@ const notifsForDelete = (
     notifs,
     toDelete: [deleted.post.uri],
   }
+}
+
+const getHierachyExistence = async (
+  db: DatabaseSchema,
+  hierarchy: PostHierarchy[],
+): Promise<Ancestor[]> => {
+  if (hierarchy.length === 0) return []
+  // determine if each post in the hierarchy still exists
+  const ancestorUris = hierarchy.map((row) => row.ancestorUri)
+  const foundAncestorRows = await db
+    .selectFrom('post')
+    .where('uri', 'in', ancestorUris)
+    .select('uri')
+    .execute()
+  const foundAncestors = foundAncestorRows.reduce(
+    (acc, cur) => ({
+      ...acc,
+      [cur.uri]: true,
+    }),
+    {} as Record<string, boolean>,
+  )
+  return hierarchy.map((row) => ({
+    ...row,
+    doesNotExist: foundAncestors[row.ancestorUri] !== true,
+  }))
 }
 
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>

@@ -21,11 +21,16 @@ type Post = Selectable<DatabaseSchemaType['post']>
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
 type PostEmbedExternal = DatabaseSchemaType['post_embed_external']
 type PostEmbedRecord = DatabaseSchemaType['post_embed_record']
+
+type Ancestor = PostHierarchy & {
+  doesNotExst?: boolean
+}
+
 type IndexedPost = {
   post: Post
   facets?: { type: 'mention' | 'link'; value: string }[]
   embeds?: (PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord)[]
-  ancestors?: PostHierarchy[]
+  ancestors?: Ancestor[]
   descendents?: IndexedPost[]
 }
 
@@ -155,7 +160,7 @@ const insertFn = async (
       depth: 1,
     })
   }
-  const ancestors = await db
+  const hierarchy = await db
     .insertInto('post_hierarchy')
     .values(minimalPostHierarchy)
     .onConflict((oc) => oc.doNothing())
@@ -165,7 +170,7 @@ const insertFn = async (
   // Copy all the parent's relations down to the post.
   // It's possible that the parent hasn't been indexed yet and this will no-op.
   if (post.replyParent) {
-    const deepAncestors = await db
+    const deepHierarchy = await db
       .insertInto('post_hierarchy')
       .columns(['uri', 'ancestorUri', 'depth'])
       .expression(
@@ -181,8 +186,9 @@ const insertFn = async (
       .onConflict((oc) => oc.doNothing())
       .returningAll()
       .execute()
-    ancestors.push(...deepAncestors)
+    hierarchy.push(...deepHierarchy)
   }
+  const ancestors = await getHierachyExistence(db, hierarchy)
 
   // Copy all post's relations down to its descendents. This ensures
   // that out-of-order indexing (i.e. descendent before parent) is resolved.
@@ -264,6 +270,7 @@ const notifsForInsert = (obj: IndexedPost) => {
     .filter((a) => a.depth > 0) // no need to notify self
     .sort((a, b) => a.depth - b.depth)
   for (const relation of ancestors) {
+    if (relation.doesNotExst) continue
     const ancestorUri = new AtUri(relation.ancestorUri)
     maybeNotify({
       did: ancestorUri.host,
@@ -356,6 +363,31 @@ const notifsForDelete = (
     notifs,
     toDelete: [deleted.post.uri],
   }
+}
+
+const getHierachyExistence = async (
+  db: DatabaseSchema,
+  hierarchy: PostHierarchy[],
+): Promise<Ancestor[]> => {
+  if (hierarchy.length === 0) return []
+  // determine if each post in the hierarchy still exists
+  const ancestorUris = hierarchy.map((row) => row.ancestorUri)
+  const foundAncestorRows = await db
+    .selectFrom('post')
+    .where('uri', 'in', ancestorUris)
+    .select('uri')
+    .execute()
+  const foundAncestors = foundAncestorRows.reduce(
+    (acc, cur) => ({
+      ...acc,
+      [cur.uri]: true,
+    }),
+    {} as Record<string, boolean>,
+  )
+  return hierarchy.map((row) => ({
+    ...row,
+    doesNotExist: foundAncestors[row.ancestorUri] !== true,
+  }))
 }
 
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>
