@@ -365,12 +365,8 @@ export class SeedClient {
     return result.data
   }
 
-  getHeaders(did: string, simple?: boolean) {
-    if (simple) {
-      return SeedClient.getHeaders(did) // @TODO(bsky) temporary auth
-    } else {
-      return SeedClient.getHeaders(this.accounts[did].accessJwt)
-    }
+  getHeaders(did: string) {
+    return SeedClient.getHeaders(this.accounts[did].accessJwt)
   }
 
   static getHeaders(jwt: string) {

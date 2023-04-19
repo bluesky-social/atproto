@@ -4,6 +4,7 @@ import { CloseFn, runTestEnv } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, processAll, stripViewer } from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
+import { appViewHeaders } from '../_util'
 
 describe('pds actor search views', () => {
   let agent: AtpAgent
@@ -42,7 +43,7 @@ describe('pds actor search views', () => {
     // Process remaining profiles
     testEnv.bsky.sub.resume()
     await processAll(testEnv, 20000)
-    headers = sc.getHeaders(Object.values(sc.dids)[0], true)
+    headers = await appViewHeaders(Object.values(sc.dids)[0], testEnv)
   })
 
   afterAll(async () => {

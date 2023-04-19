@@ -1,7 +1,7 @@
 import fs from 'fs/promises'
 import AtpAgent from '@atproto/api'
-import { CloseFn, runTestEnv, TestEnvInfo } from '@atproto/dev-env'
-import { forSnapshot, processAll, stripViewer } from '../_util'
+import { runTestEnv, TestEnvInfo } from '@atproto/dev-env'
+import { appViewHeaders, forSnapshot, processAll, stripViewer } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -10,7 +10,6 @@ describe('pds profile views', () => {
   let testEnv: TestEnvInfo
   let agent: AtpAgent
   let pdsAgent: AtpAgent
-  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
@@ -22,7 +21,6 @@ describe('pds profile views', () => {
     testEnv = await runTestEnv({
       dbPostgresSchema: 'bsky_views_profile',
     })
-    close = testEnv.close
     agent = new AtpAgent({ service: testEnv.bsky.url })
     pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
@@ -34,7 +32,7 @@ describe('pds profile views', () => {
   })
 
   afterAll(async () => {
-    await close()
+    await testEnv.close()
   })
 
   // @TODO(bsky) blocked by actor takedown via labels.
@@ -42,7 +40,7 @@ describe('pds profile views', () => {
   it('fetches own profile', async () => {
     const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
@@ -51,7 +49,7 @@ describe('pds profile views', () => {
   it("fetches other's profile, with a follow", async () => {
     const aliceForBob = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: await appViewHeaders(bob, testEnv) },
     )
 
     expect(forSnapshot(aliceForBob.data)).toMatchSnapshot()
@@ -60,7 +58,7 @@ describe('pds profile views', () => {
   it("fetches other's profile, without a follow", async () => {
     const danForBob = await agent.api.app.bsky.actor.getProfile(
       { actor: dan },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: await appViewHeaders(bob, testEnv) },
     )
 
     expect(forSnapshot(danForBob.data)).toMatchSnapshot()
@@ -80,7 +78,7 @@ describe('pds profile views', () => {
           'missing.test',
         ],
       },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: await appViewHeaders(bob, testEnv) },
     )
 
     expect(profiles.map((p) => p.handle)).toEqual([
@@ -125,7 +123,7 @@ describe('pds profile views', () => {
 
     const aliceForAlice = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
@@ -135,13 +133,13 @@ describe('pds profile views', () => {
     const byDid = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
       {
-        headers: sc.getHeaders(bob, true),
+        headers: await appViewHeaders(bob, testEnv),
       },
     )
 
     const byHandle = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.accounts[alice].handle },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: await appViewHeaders(bob, testEnv) },
     )
 
     expect(byHandle.data).toEqual(byDid.data)
@@ -150,7 +148,7 @@ describe('pds profile views', () => {
   it('fetches profile unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: await appViewHeaders(bob, testEnv) },
     )
     const { data: unauthed } = await agent.api.app.bsky.actor.getProfile({
       actor: alice,
@@ -163,7 +161,7 @@ describe('pds profile views', () => {
       {
         actors: [alice, 'bob.test', 'missing.test'],
       },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: await appViewHeaders(bob, testEnv) },
     )
     const { data: unauthed } = await agent.api.app.bsky.actor.getProfiles({
       actors: [alice, 'bob.test', 'missing.test'],

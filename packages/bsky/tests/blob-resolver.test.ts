@@ -31,7 +31,7 @@ describe('blob resolver', () => {
   })
 
   afterAll(async () => {
-    await testEnv?.close()
+    await testEnv.close()
   })
 
   it('resolves blob with good signature check.', async () => {

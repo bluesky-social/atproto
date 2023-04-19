@@ -238,7 +238,6 @@ export const getRefreshTokenId = () => {
 
 export const createServiceJwt = async (
   accountDid: string,
-  serviceDid: string,
   keypair: crypto.Keypair,
   exp?: number,
 ): Promise<string> => {
@@ -248,7 +247,6 @@ export const createServiceJwt = async (
   }
   const payload = {
     iss: accountDid,
-    aud: serviceDid,
     exp: exp ?? Date.now() + MINUTE,
   }
   const toSignStr = `${jsonToB64Url(header)}.${jsonToB64Url(payload)}`
