@@ -25,12 +25,15 @@ export async function up(db: Kysely<unknown>): Promise<void> {
       col.notNull().references('moderation_action.id'),
     )
     .addColumn('cid', 'varchar', (col) => col.notNull())
-    .addColumn('recordUri', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint('moderation_action_subject_blob_pkey', [
       'actionId',
       'cid',
-      'recordUri',
     ])
+    .execute()
+  await db.schema
+    .createIndex('moderation_action_subject_blob_cid_idx')
+    .on('moderation_action_subject_blob')
+    .column('cid')
     .execute()
 
   // moderation reports

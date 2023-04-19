@@ -34,7 +34,6 @@ export interface ModerationAction {
 export interface ModerationActionSubjectBlob {
   actionId: number
   cid: string
-  recordUri: string
 }
 
 export interface ModerationReport {

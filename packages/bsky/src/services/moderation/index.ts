@@ -237,7 +237,6 @@ export class ModerationService {
           subjectBlobCids.map((cid) => ({
             actionId: actionResult.id,
             cid: cid.toString(),
-            recordUri: subject.uri.toString(),
           })),
         )
         .execute()

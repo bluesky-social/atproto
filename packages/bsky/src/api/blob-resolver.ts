@@ -6,6 +6,7 @@ import { CID } from 'multiformats/cid'
 import { ensureValidDid } from '@atproto/identifier'
 import { VerifyCidTransform } from '@atproto/common'
 import { NoResolveDidError } from '@atproto/did-resolver'
+import { TAKEDOWN } from '../lexicon/types/com/atproto/admin/defs'
 import AppContext from '../context'
 import { httpLogger as log } from '../logger'
 import { retryHttp } from '../util/retry'
@@ -30,7 +31,24 @@ export const createRouter = (ctx: AppContext): express.Router => {
         return next(createError(400, 'Invalid cid'))
       }
 
-      const { pds } = await ctx.didResolver.resolveAtpData(did) // @TODO cache did info
+      const [{ pds }, takedown] = await Promise.all([
+        ctx.didResolver.resolveAtpData(did), // @TODO cache did info
+        ctx.db.db
+          .selectFrom('moderation_action_subject_blob')
+          .where('cid', '=', cidStr)
+          .innerJoin(
+            'moderation_action',
+            'moderation_action.id',
+            'moderation_action_subject_blob.actionId',
+          )
+          .where('action', '=', TAKEDOWN)
+          .where('reversedAt', 'is', null)
+          .executeTakeFirst(),
+      ])
+      if (takedown) {
+        return next(createError(404, 'Blob not found'))
+      }
+
       const blobResult = await retryHttp(() =>
         getBlob({ pds, did, cid: cidStr }),
       )
