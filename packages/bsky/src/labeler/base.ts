@@ -1,24 +1,15 @@
 import stream from 'stream'
 import PQueue from 'p-queue'
-import Database from '../db'
-import { BlobStore, cidForRecord } from '@atproto/repo'
-import { dedupe, getFieldsFromRecord } from './util'
 import { AtUri } from '@atproto/uri'
+import { cidForRecord } from '@atproto/repo'
+import { dedupe, getFieldsFromRecord } from './util'
 import { labelerLogger as log } from '../logger'
+import AppContext from '../context'
+import { resolveBlob } from '../api/blob-resolver'
 
 export abstract class Labeler {
-  public db: Database
-  public blobstore: BlobStore
-  public labelerDid: string
   public processingQueue: PQueue | null // null during teardown
-  constructor(opts: {
-    db: Database
-    blobstore: BlobStore
-    labelerDid: string
-  }) {
-    this.db = opts.db
-    this.blobstore = opts.blobstore
-    this.labelerDid = opts.labelerDid
+  constructor(private ctx: AppContext) {
     this.processingQueue = new PQueue()
   }
 
@@ -34,11 +25,11 @@ export abstract class Labeler {
   }
 
   async createAndStoreLabels(uri: AtUri, obj: unknown): Promise<void> {
-    const labels = await this.labelRecord(obj)
+    const labels = await this.labelRecord(uri, obj)
     if (labels.length < 1) return
     const cid = await cidForRecord(obj)
     const rows = labels.map((val) => ({
-      src: this.labelerDid,
+      src: this.ctx.cfg.labelerDid,
       uri: uri.toString(),
       cid: cid.toString(),
       val,
@@ -46,19 +37,19 @@ export abstract class Labeler {
       cts: new Date().toISOString(),
     }))
 
-    await this.db.db
+    await this.ctx.db.db
       .insertInto('label')
       .values(rows)
       .onConflict((oc) => oc.doNothing())
       .execute()
   }
 
-  async labelRecord(obj: unknown): Promise<string[]> {
+  async labelRecord(uri: AtUri, obj: unknown): Promise<string[]> {
     const { text, imgs } = getFieldsFromRecord(obj)
     const txtLabels = await this.labelText(text.join(' '))
     const imgLabels = await Promise.all(
       imgs.map(async (cid) => {
-        const stream = await this.blobstore.getStream(cid)
+        const { stream } = await resolveBlob(this.ctx, uri.host, cid)
         return this.labelImg(stream)
       }),
     )

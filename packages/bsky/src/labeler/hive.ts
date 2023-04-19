@@ -2,9 +2,8 @@ import stream from 'stream'
 import axios from 'axios'
 import FormData from 'form-data'
 import { Labeler } from './base'
-import Database from '../db'
-import { BlobStore } from '@atproto/repo'
 import { keywordLabeling } from './util'
+import AppContext from '../context'
 
 const HIVE_ENDPOINT = 'https://api.thehive.ai/api/v2/task/sync'
 
@@ -12,17 +11,16 @@ export class HiveLabeler extends Labeler {
   hiveApiKey: string
   keywords: Record<string, string>
 
-  constructor(opts: {
-    db: Database
-    blobstore: BlobStore
-    labelerDid: string
-    hiveApiKey: string
-    keywords: Record<string, string>
-  }) {
-    const { db, blobstore, labelerDid, hiveApiKey, keywords } = opts
-    super({ db, blobstore, labelerDid })
-    this.hiveApiKey = hiveApiKey
-    this.keywords = keywords
+  constructor(
+    protected ctx: AppContext,
+    opts: {
+      hiveApiKey: string
+      keywords: Record<string, string>
+    },
+  ) {
+    super(ctx)
+    this.hiveApiKey = opts.hiveApiKey
+    this.keywords = opts.keywords
   }
 
   async labelText(text: string): Promise<string[]> {
