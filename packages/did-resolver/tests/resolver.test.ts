@@ -76,7 +76,7 @@ describe('resolver', () => {
   })
 
   it('resolve valid atpData from did:web', async () => {
-    const atpData = await resolver.resolveAtpData(webDid)
+    const atpData = await resolver.resolveAtprotoData(webDid)
     expect(atpData.did).toEqual(webDid)
     expect(atpData.handle).toEqual(handle)
     expect(atpData.pds).toEqual(pds)
@@ -96,7 +96,7 @@ describe('resolver', () => {
   })
 
   it('resolve valid atpData from did:plc', async () => {
-    const atpData = await resolver.resolveAtpData(plcDid)
+    const atpData = await resolver.resolveAtprotoData(plcDid)
     expect(atpData.did).toEqual(plcDid)
     expect(atpData.handle).toEqual(handle)
     expect(atpData.pds).toEqual(pds)
