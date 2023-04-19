@@ -81,6 +81,5 @@ const parseB64UrlToJson = (b64: string) => {
 
 type JwtPayload = {
   iss: string
-  aud?: string
   exp: number
 }
