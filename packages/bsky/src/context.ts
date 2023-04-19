@@ -4,6 +4,7 @@ import { Database } from './db'
 import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
+import { Labeler } from './labeler'
 
 export class AppContext {
   constructor(
@@ -13,6 +14,7 @@ export class AppContext {
       cfg: ServerConfig
       services: Services
       didResolver: DidResolver
+      labeler: Labeler
     },
   ) {}
 
@@ -38,6 +40,10 @@ export class AppContext {
 
   get didResolver(): DidResolver {
     return this.opts.didResolver
+  }
+
+  get labeler(): Labeler {
+    return this.opts.labeler
   }
 }
 

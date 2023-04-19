@@ -4,12 +4,20 @@ import { AtUri } from '@atproto/uri'
 import { cidForRecord } from '@atproto/repo'
 import { dedupe, getFieldsFromRecord } from './util'
 import { labelerLogger as log } from '../logger'
-import AppContext from '../context'
 import { resolveBlob } from '../api/blob-resolver'
+import Database from '../db'
+import { DidResolver } from '@atproto/did-resolver'
+import { ServerConfig } from '../config'
 
 export abstract class Labeler {
   public processingQueue: PQueue | null // null during teardown
-  constructor(private ctx: AppContext) {
+  constructor(
+    protected ctx: {
+      db: Database
+      didResolver: DidResolver
+      cfg: ServerConfig
+    },
+  ) {
     this.processingQueue = new PQueue()
   }
 
@@ -49,7 +57,7 @@ export abstract class Labeler {
     const txtLabels = await this.labelText(text.join(' '))
     const imgLabels = await Promise.all(
       imgs.map(async (cid) => {
-        const { stream } = await resolveBlob(this.ctx, uri.host, cid)
+        const { stream } = await resolveBlob(uri.host, cid, this.ctx)
         return this.labelImg(stream)
       }),
     )

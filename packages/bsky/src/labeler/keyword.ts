@@ -1,20 +1,21 @@
-import { BlobStore } from '@atproto/repo'
 import Database from '../db'
 import { Labeler } from './base'
 import { keywordLabeling } from './util'
-import AppContext from '../context'
+import { DidResolver } from '@atproto/did-resolver'
+import { ServerConfig } from '../config'
 
 export class KeywordLabeler extends Labeler {
   keywords: Record<string, string>
 
   constructor(
-    protected ctx: AppContext,
-    opts: {
-      keywords: Record<string, string>
+    protected ctx: {
+      db: Database
+      didResolver: DidResolver
+      cfg: ServerConfig
     },
   ) {
     super(ctx)
-    this.keywords = opts.keywords
+    this.keywords = ctx.cfg.labelerKeywords
   }
 
   async labelText(text: string): Promise<string[]> {

@@ -7,17 +7,19 @@ import { IndexingService } from './indexing'
 import { ModerationService } from './moderation'
 import { LabelService } from './label'
 import { ImageInvalidator } from '../image/invalidator'
+import { Labeler } from '../labeler'
 
 export function createServices(resources: {
   imgUriBuilder: ImageUriBuilder
   imgInvalidator: ImageInvalidator
   didResolver: DidResolver
+  labeler: Labeler
 }): Services {
-  const { imgUriBuilder, imgInvalidator, didResolver } = resources
+  const { imgUriBuilder, imgInvalidator, didResolver, labeler } = resources
   return {
     actor: ActorService.creator(imgUriBuilder),
     feed: FeedService.creator(imgUriBuilder),
-    indexing: IndexingService.creator(didResolver),
+    indexing: IndexingService.creator(didResolver, labeler),
     moderation: ModerationService.creator(imgUriBuilder, imgInvalidator),
     label: LabelService.creator(),
   }

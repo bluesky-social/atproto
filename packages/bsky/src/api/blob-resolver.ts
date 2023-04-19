@@ -5,11 +5,12 @@ import axios, { AxiosError } from 'axios'
 import { CID } from 'multiformats/cid'
 import { ensureValidDid } from '@atproto/identifier'
 import { forwardStreamErrors, VerifyCidTransform } from '@atproto/common'
-import { NoResolveDidError } from '@atproto/did-resolver'
+import { DidResolver, NoResolveDidError } from '@atproto/did-resolver'
 import { TAKEDOWN } from '../lexicon/types/com/atproto/admin/defs'
 import AppContext from '../context'
 import { httpLogger as log } from '../logger'
 import { retryHttp } from '../util/retry'
+import Database from '../db'
 
 // Resolve and verify blob from its origin host
 
@@ -31,7 +32,7 @@ export const createRouter = (ctx: AppContext): express.Router => {
         return next(createError(400, 'Invalid cid'))
       }
 
-      const verifiedImage = await resolveBlob(ctx, did, cid)
+      const verifiedImage = await resolveBlob(did, cid, ctx)
 
       pipeline(verifiedImage.stream, res, (err) => {
         if (err) {
@@ -69,7 +70,14 @@ export const createRouter = (ctx: AppContext): express.Router => {
   return router
 }
 
-export async function resolveBlob(ctx: AppContext, did: string, cid: CID) {
+export async function resolveBlob(
+  did: string,
+  cid: CID,
+  ctx: {
+    db: Database
+    didResolver: DidResolver
+  },
+) {
   const cidStr = cid.toString()
   const [{ pds }, takedown] = await Promise.all([
     ctx.didResolver.resolveAtpData(did), // @TODO cache did info
