@@ -1,4 +1,4 @@
-import { Selectable, sql } from 'kysely'
+import { Insertable, Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { Record as PostRecord } from '../../../lexicon/types/app/bsky/feed/post'
@@ -11,12 +11,12 @@ import {
   isLink,
 } from '../../../lexicon/types/app/bsky/richtext/facet'
 import * as lex from '../../../lexicon/lexicons'
-import * as messages from '../messages'
-import { Message } from '../messages'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { PostHierarchy } from '../../../db/tables/post-hierarchy'
+import { Notification } from '../../../db/tables/notification'
 
+type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
 type PostEmbedExternal = DatabaseSchemaType['post_embed_external']
@@ -222,23 +222,24 @@ const findDuplicate = async (): Promise<AtUri | null> => {
   return null
 }
 
-const eventsForInsert = (obj: IndexedPost) => {
-  const notifs: Message[] = []
+const notifsForInsert = (obj: IndexedPost) => {
+  const notifs: Notif[] = []
   const notified = new Set([obj.post.creator])
-  const maybeNotify = (notif: messages.NotificationInfo) => {
-    if (!notified.has(notif.userDid)) {
-      notified.add(notif.userDid)
-      notifs.push(messages.createNotification(notif))
+  const maybeNotify = (notif: Notif) => {
+    if (!notified.has(notif.did)) {
+      notified.add(notif.did)
+      notifs.push(notif)
     }
   }
   for (const facet of obj.facets ?? []) {
     if (facet.type === 'mention') {
       maybeNotify({
-        userDid: facet.value,
+        did: facet.value,
         reason: 'mention',
         author: obj.post.creator,
         recordUri: obj.post.uri,
         recordCid: obj.post.cid,
+        sortAt: obj.post.indexedAt,
       })
     }
   }
@@ -247,12 +248,13 @@ const eventsForInsert = (obj: IndexedPost) => {
       const embedUri = new AtUri(embed.embedUri)
       if (embedUri.collection === lex.ids.AppBskyFeedPost) {
         maybeNotify({
-          userDid: embedUri.host,
+          did: embedUri.host,
           reason: 'quote',
           reasonSubject: embedUri.toString(),
           author: obj.post.creator,
           recordUri: obj.post.uri,
           recordCid: obj.post.cid,
+          sortAt: obj.post.indexedAt,
         })
       }
     }
@@ -264,19 +266,20 @@ const eventsForInsert = (obj: IndexedPost) => {
   for (const relation of ancestors) {
     const ancestorUri = new AtUri(relation.ancestorUri)
     maybeNotify({
-      userDid: ancestorUri.host,
+      did: ancestorUri.host,
       reason: 'reply',
       reasonSubject: ancestorUri.toString(),
       author: obj.post.creator,
       recordUri: obj.post.uri,
       recordCid: obj.post.cid,
+      sortAt: obj.post.indexedAt,
     })
   }
 
   if (obj.descendents) {
     // May generate notifications for out-of-order indexing of replies
     for (const descendent of obj.descendents) {
-      notifs.push(...eventsForInsert(descendent))
+      notifs.push(...notifsForInsert(descendent))
     }
   }
 
@@ -344,15 +347,15 @@ const deleteFn = async (
     : null
 }
 
-const eventsForDelete = (
+const notifsForDelete = (
   deleted: IndexedPost,
   replacedBy: IndexedPost | null,
-): Message[] => {
-  const replacedNotifications = replacedBy ? eventsForInsert(replacedBy) : []
-  return [
-    messages.deleteNotifications(deleted.post.uri),
-    ...replacedNotifications,
-  ]
+) => {
+  const notifs = replacedBy ? notifsForInsert(replacedBy) : []
+  return {
+    notifs,
+    toDelete: [deleted.post.uri],
+  }
 }
 
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>
@@ -363,8 +366,8 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
     insertFn,
     findDuplicate,
     deleteFn,
-    eventsForInsert,
-    eventsForDelete,
+    notifsForInsert,
+    notifsForDelete,
   })
 }
 

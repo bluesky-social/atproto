@@ -12,6 +12,7 @@ import * as subscription from './tables/subscription'
 import * as actor from './tables/actor'
 import * as actorSync from './tables/actor-sync'
 import * as record from './tables/record'
+import * as notification from './tables/notification'
 import * as moderation from './tables/moderation'
 import * as label from './tables/label'
 
@@ -28,6 +29,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   actor.PartialDB &
   actorSync.PartialDB &
   record.PartialDB &
+  notification.PartialDB &
   moderation.PartialDB &
   label.PartialDB
 
