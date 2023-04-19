@@ -66,8 +66,9 @@ export class ActorService {
 
   searchQb(term?: string) {
     const { ref } = this.db.db.dynamic
-    return this.db.db.selectFrom('actor').where((qb) => {
-      if (term) {
+    let builder = this.db.db.selectFrom('actor')
+    if (term) {
+      builder = builder.where((qb) => {
         // Performing matching by word using "strict word similarity" operator.
         // The more characters the user gives us, the more we can ratchet down
         // the distance threshold for matching.
@@ -80,9 +81,9 @@ export class ActorService {
               .whereRef('profile.creator', '=', 'actor.did')
               .where(distance(term, ref('displayName')), '<', threshold),
           )
-      }
-      return qb
-    })
+      })
+    }
+    return builder
   }
 }
 

@@ -151,7 +151,7 @@ export class DevEnvServer {
           imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
           imgUriKey:
             'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
-          adminPassword: 'admin',
+          adminPassword: 'password',
           labelerDid: 'did:example:labeler',
           dbPostgresUrl: process.env.DB_POSTGRES_URL || '',
           dbPostgresSchema: process.env.DB_POSTGRES_SCHEMA,
