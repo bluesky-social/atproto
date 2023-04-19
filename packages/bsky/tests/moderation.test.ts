@@ -1,6 +1,7 @@
+import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
 import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
 import { AtUri } from '@atproto/uri'
-import { adminAuth, forSnapshot } from './_util'
+import { adminAuth, forSnapshot, processAll } from './_util'
 import { ImageRef, RecordRef, SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import {
@@ -12,8 +13,6 @@ import {
   REASONOTHER,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
-import { BlobNotFoundError } from '@atproto/repo'
-import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
 
 describe('moderation', () => {
   let testEnv: TestEnvInfo
@@ -25,8 +24,10 @@ describe('moderation', () => {
       dbPostgresSchema: 'moderation',
     })
     agent = new AtpAgent({ service: testEnv.bsky.url })
-    sc = new SeedClient(agent)
+    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
+    sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
+    await processAll(testEnv)
   })
 
   afterAll(async () => {
@@ -45,7 +46,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: sc.getHeaders(sc.dids.alice),
+            headers: sc.getHeaders(sc.dids.alice, true),
             encoding: 'application/json',
           },
         )
@@ -60,14 +61,14 @@ describe('moderation', () => {
             },
           },
           {
-            headers: sc.getHeaders(sc.dids.carol),
+            headers: sc.getHeaders(sc.dids.carol, true),
             encoding: 'application/json',
           },
         )
       expect(forSnapshot([reportA, reportB])).toMatchSnapshot()
     })
 
-    it("fails reporting a repo that doesn't exist.", async () => {
+    it("allows reporting a repo that doesn't exist.", async () => {
       const promise = agent.api.com.atproto.moderation.createReport(
         {
           reasonType: REASONSPAM,
@@ -76,9 +77,12 @@ describe('moderation', () => {
             did: 'did:plc:unknown',
           },
         },
-        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
+        {
+          headers: sc.getHeaders(sc.dids.alice, true),
+          encoding: 'application/json',
+        },
       )
-      await expect(promise).rejects.toThrow('Repo not found')
+      await expect(promise).resolves.toBeDefined()
     })
 
     it('creates reports of a record.', async () => {
@@ -95,7 +99,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: sc.getHeaders(sc.dids.alice),
+            headers: sc.getHeaders(sc.dids.alice, true),
             encoding: 'application/json',
           },
         )
@@ -111,14 +115,14 @@ describe('moderation', () => {
             },
           },
           {
-            headers: sc.getHeaders(sc.dids.carol),
+            headers: sc.getHeaders(sc.dids.carol, true),
             encoding: 'application/json',
           },
         )
       expect(forSnapshot([reportA, reportB])).toMatchSnapshot()
     })
 
-    it("fails reporting a record that doesn't exist.", async () => {
+    it("allows reporting a record that doesn't exist.", async () => {
       const postA = sc.posts[sc.dids.bob][0].ref
       const postB = sc.posts[sc.dids.bob][1].ref
       const postUriBad = new AtUri(postA.uriStr)
@@ -133,9 +137,12 @@ describe('moderation', () => {
             cid: postA.cidStr,
           },
         },
-        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
+        {
+          headers: sc.getHeaders(sc.dids.alice, true),
+          encoding: 'application/json',
+        },
       )
-      await expect(promiseA).rejects.toThrow('Record not found')
+      await expect(promiseA).resolves.toBeDefined()
 
       const promiseB = agent.api.com.atproto.moderation.createReport(
         {
@@ -147,9 +154,12 @@ describe('moderation', () => {
             cid: postA.cidStr, // bad cid
           },
         },
-        { headers: sc.getHeaders(sc.dids.carol), encoding: 'application/json' },
+        {
+          headers: sc.getHeaders(sc.dids.carol, true),
+          encoding: 'application/json',
+        },
       )
-      await expect(promiseB).rejects.toThrow('Record not found')
+      await expect(promiseB).resolves.toBeDefined()
     })
   })
 
@@ -165,7 +175,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: sc.getHeaders(sc.dids.alice),
+            headers: sc.getHeaders(sc.dids.alice, true),
             encoding: 'application/json',
           },
         )
@@ -182,7 +192,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: sc.getHeaders(sc.dids.carol),
+            headers: sc.getHeaders(sc.dids.carol, true),
             encoding: 'application/json',
           },
         )
@@ -242,7 +252,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: sc.getHeaders(sc.dids.alice),
+            headers: sc.getHeaders(sc.dids.alice, true),
             encoding: 'application/json',
           },
         )
@@ -276,7 +286,7 @@ describe('moderation', () => {
       )
 
       await expect(promise).rejects.toThrow(
-        'Report 7 cannot be resolved by action',
+        `Report ${report.id} cannot be resolved by action`,
       )
 
       // Cleanup
@@ -307,7 +317,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: sc.getHeaders(sc.dids.alice),
+            headers: sc.getHeaders(sc.dids.alice, true),
             encoding: 'application/json',
           },
         )
@@ -342,7 +352,7 @@ describe('moderation', () => {
       )
 
       await expect(promise).rejects.toThrow(
-        'Report 8 cannot be resolved by action',
+        `Report ${report.id} cannot be resolved by action`,
       )
 
       // Cleanup
@@ -884,11 +894,16 @@ describe('moderation', () => {
     let imageUri: string
     let actionId: number
     beforeAll(async () => {
+      const { ctx } = testEnv.bsky
       post = sc.posts[sc.dids.carol][0]
       blob = post.images[1]
-      imageUri = server.ctx.imgUriBuilder
-        .getCommonSignedUri('feed_thumbnail', blob.image.ref.toString())
-        .replace(server.ctx.cfg.publicUrl, server.url)
+      imageUri = ctx.imgUriBuilder
+        .getCommonSignedUri(
+          'feed_thumbnail',
+          sc.dids.carol,
+          blob.image.ref.toString(),
+        )
+        .replace(ctx.cfg.publicUrl || '', testEnv.bsky.url)
       // Warm image server cache
       await fetch(imageUri)
       const cached = await fetch(imageUri)
@@ -913,20 +928,14 @@ describe('moderation', () => {
       actionId = takeAction.data.id
     })
 
-    it('removes blob from the store', async () => {
-      const tryGetBytes = testEnv.bsky.ctx.blobstore.getBytes(blob.image.ref)
-      await expect(tryGetBytes).rejects.toThrow(BlobNotFoundError)
-    })
-
-    it('prevents blob from being referenced again.', async () => {
-      const uploaded = await sc.uploadFile(
-        sc.dids.alice,
-        'tests/image/fixtures/key-alt.jpg',
-        'image/jpeg',
-      )
-      expect(uploaded.image.ref.equals(blob.image.ref)).toBeTruthy()
-      const referenceBlob = sc.post(sc.dids.alice, 'pic', [], [blob])
-      await expect(referenceBlob).rejects.toThrow('Could not find blob:')
+    it('prevents resolution of blob', async () => {
+      const blobPath = `/blob/${sc.dids.carol}/${blob.image.ref.toString()}`
+      const resolveBlob = await fetch(`${testEnv.bsky.url}${blobPath}`)
+      expect(resolveBlob.status).toEqual(404)
+      expect(await resolveBlob.json()).toEqual({
+        error: 'NotFoundError',
+        message: 'Blob not found',
+      })
     })
 
     it('prevents image blob from being served, even when cached.', async () => {
@@ -948,9 +957,10 @@ describe('moderation', () => {
         },
       )
 
-      // Can post and reference blob
-      const post = await sc.post(sc.dids.alice, 'pic', [], [blob])
-      expect(post.images[0].image.ref.equals(blob.image.ref)).toBeTruthy()
+      // Can resolve blob
+      const blobPath = `/blob/${sc.dids.carol}/${blob.image.ref.toString()}`
+      const resolveBlob = await fetch(`${testEnv.bsky.url}${blobPath}`)
+      expect(resolveBlob.status).toEqual(200)
 
       // Can fetch through image server
       const fetchImage = await fetch(imageUri)

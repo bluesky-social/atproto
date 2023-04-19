@@ -6,13 +6,21 @@ import Database from '../../db'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { ModerationViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
+import { ImageInvalidator } from '../../image/invalidator'
 
 export class ModerationService {
-  // @TODO public imgInvalidator: ImageInvalidator,
-  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    public db: Database,
+    public imgUriBuilder: ImageUriBuilder,
+    public imgInvalidator: ImageInvalidator,
+  ) {}
 
-  static creator(imgUriBuilder: ImageUriBuilder) {
-    return (db: Database) => new ModerationService(db, imgUriBuilder)
+  static creator(
+    imgUriBuilder: ImageUriBuilder,
+    imgInvalidator: ImageInvalidator,
+  ) {
+    return (db: Database) =>
+      new ModerationService(db, imgUriBuilder, imgInvalidator)
   }
 
   views = new ModerationViews(this.db)
@@ -300,31 +308,21 @@ export class ModerationService {
       .where('uri', '=', info.uri.toString())
       .where('takedownId', 'is', null)
       .executeTakeFirst()
-    /** @TODO track blob takedowns, stop resolving them
-     * if (info.blobCids?.length) {
-     *   await this.db.db
-     *     .updateTable('repo_blob')
-     *     .set({ takedownId: info.takedownId })
-     *     .where('recordUri', '=', info.uri.toString())
-     *     .where(
-     *       'cid',
-     *       'in',
-     *       info.blobCids.map((c) => c.toString()),
-     *     )
-     *     .where('takedownId', 'is', null)
-     *     .executeTakeFirst()
-     *   await Promise.all(
-     *     info.blobCids.map(async (cid) => {
-     *       await this.blobstore.quarantine(cid)
-     *       const paths = ImageUriBuilder.commonSignedUris.map((id) => {
-     *         const uri = this.imgUriBuilder.getCommonSignedUri(id, cid)
-     *         return uri.replace(this.imgUriBuilder.endpoint, '')
-     *       })
-     *       await this.imgInvalidator.invalidate(cid.toString(), paths)
-     *     }),
-     *   )
-     * }
-     */
+    if (info.blobCids) {
+      await Promise.all(
+        info.blobCids.map(async (cid) => {
+          const paths = ImageUriBuilder.commonSignedUris.map((id) => {
+            const uri = this.imgUriBuilder.getCommonSignedUri(
+              id,
+              info.uri.host,
+              cid,
+            )
+            return uri.replace(this.imgUriBuilder.endpoint, '')
+          })
+          await this.imgInvalidator.invalidate(cid.toString(), paths)
+        }),
+      )
+    }
   }
 
   async reverseTakedownRecord(info: { uri: AtUri }) {
@@ -334,21 +332,6 @@ export class ModerationService {
       .set({ takedownId: null })
       .where('uri', '=', info.uri.toString())
       .execute()
-    /**
-     * const blobs = await this.db.db
-     *   .updateTable('repo_blob')
-     *   .set({ takedownId: null })
-     *   .where('takedownId', 'is not', null)
-     *   .where('recordUri', '=', info.uri.toString())
-     *   .returning('cid')
-     *   .execute()
-     * await Promise.all(
-     *   blobs.map(async (blob) => {
-     *     const cid = CID.parse(blob.cid)
-     *     await this.blobstore.unquarantine(cid)
-     *   }),
-     * )
-     */
   }
 
   async resolveReports(info: {
