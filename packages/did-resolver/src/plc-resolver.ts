@@ -2,7 +2,7 @@ import axios, { AxiosError } from 'axios'
 import BaseResolver from './base-resolver'
 import { PlcResolverOpts } from './types'
 
-export class PlcResolver extends BaseResolver {
+export class DidPlcResolver extends BaseResolver {
   constructor(public opts: PlcResolverOpts) {
     super()
   }

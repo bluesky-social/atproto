@@ -5,7 +5,7 @@ import { PoorlyFormattedDidError } from './errors'
 
 export const DOC_PATH = '/.well-known/did.json'
 
-export class WebResolver extends BaseResolver {
+export class DidWebResolver extends BaseResolver {
   constructor(public opts: WebResolverOpts) {
     super()
   }

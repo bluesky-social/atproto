@@ -1,11 +1,10 @@
 import getPort from 'get-port'
-import { DidResolver } from '../src'
-import { DidWebServer } from './web/server'
-import DidWebDb from './web/db'
+import { Secp256k1Keypair } from '@atproto/crypto'
 import * as plc from '@did-plc/lib'
 import { Database as DidPlcDb, PlcServer } from '@did-plc/server'
-import { DIDDocument } from 'did-resolver'
-import { Secp256k1Keypair } from '@atproto/crypto'
+import { DidResolver, DidDocument } from '../src'
+import { DidWebServer } from './web/server'
+import DidWebDb from './web/db'
 
 describe('resolver', () => {
   let close: () => Promise<void>
@@ -45,8 +44,8 @@ describe('resolver', () => {
   let rotationKey: Secp256k1Keypair
   let webDid: string
   let plcDid: string
-  let didWebDoc: DIDDocument
-  let didPlcDoc: DIDDocument
+  let didWebDoc: DidDocument
+  let didPlcDoc: DidDocument
 
   it('creates the did on did:web & did:plc', async () => {
     signingKey = await Secp256k1Keypair.create()
