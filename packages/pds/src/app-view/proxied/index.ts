@@ -17,11 +17,7 @@ export default function (server: Server, ctx: AppContext) {
   const agent = new AtpAgent({ service: ctx.cfg.bskyAppViewEndpoint })
 
   const headers = async (did: string) => {
-    const jwt = await createServiceJwt(
-      did,
-      ctx.cfg.bskyAppViewDid ?? '',
-      ctx.repoSigningKey,
-    )
+    const jwt = await createServiceJwt(did, ctx.repoSigningKey)
     return {
       headers: { authorization: `Bearer ${jwt}` },
     }
