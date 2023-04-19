@@ -13,6 +13,7 @@ Object {
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
+          "labels": Array [],
           "viewer": Object {
             "followedBy": "record(2)",
             "following": "record(1)",
@@ -20,6 +21,7 @@ Object {
         },
         "cid": "cids(2)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -41,6 +43,7 @@ Object {
         "did": "user(2)",
         "displayName": "bobby",
         "handle": "bob.test",
+        "labels": Array [],
         "viewer": Object {},
       },
       "cid": "cids(3)",
@@ -55,6 +58,7 @@ Object {
         ],
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -100,6 +104,7 @@ Object {
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -107,6 +112,7 @@ Object {
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "likeCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -143,6 +149,7 @@ Object {
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -150,6 +157,7 @@ Object {
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "likeCount": 3,
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -170,12 +178,14 @@ Object {
         "author": Object {
           "did": "user(2)",
           "handle": "carol.test",
+          "labels": Array [],
           "viewer": Object {
             "following": "record(5)",
           },
         },
         "cid": "cids(2)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
         "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -207,6 +217,7 @@ Object {
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
+          "labels": Array [],
           "viewer": Object {},
         },
         "cid": "cids(3)",
@@ -221,6 +232,7 @@ Object {
           ],
         },
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
         "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -267,6 +279,7 @@ Object {
               "did": "user(0)",
               "displayName": "ali",
               "handle": "alice.test",
+              "labels": Array [],
               "viewer": Object {
                 "followedBy": "record(2)",
                 "following": "record(1)",
@@ -274,6 +287,7 @@ Object {
             },
             "cid": "cids(5)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
+            "labels": Array [],
             "likeCount": 0,
             "record": Object {
               "$type": "app.bsky.feed.post",
@@ -314,6 +328,7 @@ Object {
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -321,6 +336,7 @@ Object {
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "likeCount": 3,
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -341,12 +357,14 @@ Object {
         "author": Object {
           "did": "user(2)",
           "handle": "carol.test",
+          "labels": Array [],
           "viewer": Object {
             "following": "record(5)",
           },
         },
         "cid": "cids(2)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
         "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -377,6 +395,7 @@ Object {
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
+          "labels": Array [],
           "viewer": Object {},
         },
         "cid": "cids(3)",
@@ -391,6 +410,7 @@ Object {
           ],
         },
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
         "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -442,6 +462,7 @@ Object {
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -449,6 +470,7 @@ Object {
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "likeCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -469,10 +491,12 @@ Object {
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
+          "labels": Array [],
           "viewer": Object {},
         },
         "cid": "cids(2)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
         "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -503,6 +527,7 @@ Object {
               "did": "user(0)",
               "displayName": "ali",
               "handle": "alice.test",
+              "labels": Array [],
               "viewer": Object {
                 "followedBy": "record(2)",
                 "following": "record(1)",
@@ -510,6 +535,7 @@ Object {
             },
             "cid": "cids(3)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
+            "labels": Array [],
             "likeCount": 0,
             "record": Object {
               "$type": "app.bsky.feed.post",
@@ -548,6 +574,7 @@ Object {
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -555,6 +582,7 @@ Object {
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "likeCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -584,6 +612,7 @@ Object {
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -591,6 +620,7 @@ Object {
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "likeCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -630,6 +660,7 @@ Object {
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -637,6 +668,7 @@ Object {
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "likeCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -678,6 +710,7 @@ Object {
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -685,6 +718,7 @@ Object {
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "likeCount": 0,
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -721,6 +755,7 @@ Object {
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -728,6 +763,7 @@ Object {
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "likeCount": 3,
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -750,6 +786,7 @@ Object {
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
+          "labels": Array [],
           "viewer": Object {},
         },
         "cid": "cids(2)",
@@ -764,6 +801,7 @@ Object {
           ],
         },
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
         "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",
@@ -810,6 +848,7 @@ Object {
               "did": "user(0)",
               "displayName": "ali",
               "handle": "alice.test",
+              "labels": Array [],
               "viewer": Object {
                 "followedBy": "record(2)",
                 "following": "record(1)",
@@ -817,6 +856,7 @@ Object {
             },
             "cid": "cids(4)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
+            "labels": Array [],
             "likeCount": 0,
             "record": Object {
               "$type": "app.bsky.feed.post",
@@ -857,6 +897,7 @@ Object {
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
@@ -864,6 +905,7 @@ Object {
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "likeCount": 3,
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -886,6 +928,7 @@ Object {
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
+          "labels": Array [],
           "viewer": Object {},
         },
         "cid": "cids(2)",
@@ -900,6 +943,7 @@ Object {
           ],
         },
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
         "likeCount": 0,
         "record": Object {
           "$type": "app.bsky.feed.post",

@@ -6,6 +6,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "dan.test",
+      "labels": Array [],
       "viewer": Object {
         "following": "record(1)",
       },
@@ -29,6 +30,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "dan.test",
+      "labels": Array [],
       "viewer": Object {
         "following": "record(1)",
       },
@@ -52,6 +54,7 @@ Array [
     "author": Object {
       "did": "user(1)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(4)",
         "following": "record(5)",
@@ -72,6 +75,7 @@ Array [
     "author": Object {
       "did": "user(1)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(4)",
         "following": "record(5)",
@@ -103,6 +107,7 @@ Array [
     "author": Object {
       "did": "user(1)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(4)",
         "following": "record(5)",
@@ -127,6 +132,7 @@ Array [
     "author": Object {
       "did": "user(1)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(4)",
         "following": "record(5)",
@@ -155,6 +161,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(11)",
         "following": "record(12)",
@@ -179,6 +186,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(11)",
         "following": "record(12)",
@@ -230,6 +238,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(11)",
         "following": "record(12)",
@@ -258,6 +267,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(11)",
         "following": "record(12)",
@@ -287,6 +297,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "dan.test",
+      "labels": Array [],
       "viewer": Object {
         "following": "record(1)",
       },
@@ -310,6 +321,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "dan.test",
+      "labels": Array [],
       "viewer": Object {
         "following": "record(1)",
       },
@@ -350,6 +362,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "dan.test",
+      "labels": Array [],
       "viewer": Object {
         "following": "record(1)",
       },
@@ -373,6 +386,7 @@ Array [
     "author": Object {
       "did": "user(2)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(6)",
         "following": "record(7)",
@@ -393,6 +407,7 @@ Array [
     "author": Object {
       "did": "user(2)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(6)",
         "following": "record(7)",
@@ -424,6 +439,7 @@ Array [
     "author": Object {
       "did": "user(2)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(6)",
         "following": "record(7)",
@@ -455,6 +471,7 @@ Array [
     "author": Object {
       "did": "user(2)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(6)",
         "following": "record(7)",
@@ -479,6 +496,7 @@ Array [
     "author": Object {
       "did": "user(2)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(6)",
         "following": "record(7)",
@@ -507,6 +525,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(14)",
         "following": "record(15)",
@@ -531,6 +550,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(14)",
         "following": "record(15)",
@@ -582,6 +602,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(14)",
         "following": "record(15)",
@@ -610,6 +631,7 @@ Array [
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(14)",
         "following": "record(15)",
@@ -639,6 +661,7 @@ Array [
     "author": Object {
       "did": "user(0)",
       "handle": "carol.test",
+      "labels": Array [],
       "viewer": Object {},
     },
     "cid": "cids(0)",
@@ -664,6 +687,7 @@ Array [
       "displayName": "ali",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
       },
@@ -687,6 +711,7 @@ Array [
       "displayName": "ali",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(2)",
       },
