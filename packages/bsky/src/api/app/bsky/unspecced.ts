@@ -4,7 +4,7 @@ import { FeedKeyset, composeFeed } from './util/feed'
 import { paginate } from '../../../db/pagination'
 import AppContext from '../../../context'
 import { FeedRow, FeedItemType } from '../../../services/types'
-import { authOptionalVerifier } from './util'
+import { authOptionalVerifier } from '../../auth'
 import { countAll } from '../../../db/util'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE

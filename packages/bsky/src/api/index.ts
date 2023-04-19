@@ -24,6 +24,7 @@ import getModerationAction from './com/atproto/admin/getModerationAction'
 import getModerationActions from './com/atproto/admin/getModerationActions'
 import getModerationReport from './com/atproto/admin/getModerationReport'
 import getModerationReports from './com/atproto/admin/getModerationReports'
+import resolveHandle from './com/atproto/identity/resolveHandle'
 
 export * as health from './health'
 
@@ -56,5 +57,6 @@ export default function (server: Server, ctx: AppContext) {
   getModerationActions(server, ctx)
   getModerationReport(server, ctx)
   getModerationReports(server, ctx)
+  resolveHandle(server, ctx)
   return server
 }
