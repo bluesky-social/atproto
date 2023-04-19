@@ -50,7 +50,6 @@ export interface ServerConfigValues {
 
   appViewRepoProvider?: string
 
-  bskyAppViewDid?: string
   bskyAppViewEndpoint?: string
 }
 
