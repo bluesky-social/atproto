@@ -1,8 +1,15 @@
 import AtpAgent from '@atproto/api'
 import { CloseFn, runTestEnv } from '@atproto/dev-env'
-import { forSnapshot, paginateAll, processAll, stripViewer } from '../_util'
+import {
+  adminAuth,
+  forSnapshot,
+  paginateAll,
+  processAll,
+  stripViewer,
+} from '../_util'
 import { SeedClient } from '../seeds/client'
 import followsSeed from '../seeds/follows'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 
 describe('pds follow views', () => {
   let agent: AtpAgent
@@ -121,6 +128,46 @@ describe('pds follow views', () => {
     expect(unauthed.followers).toEqual(authed.followers.map(stripViewer))
   })
 
+  it('blocks followers by actor takedown', async () => {
+    const { data: modAction } =
+      await agent.api.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.dan,
+          },
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+
+    const aliceFollowers = await agent.api.app.bsky.graph.getFollowers(
+      { actor: sc.dids.alice },
+      { headers: sc.getHeaders(alice, true) },
+    )
+
+    expect(aliceFollowers.data.followers.map((f) => f.did)).not.toContain(
+      sc.dids.dan,
+    )
+
+    await agent.api.com.atproto.admin.reverseModerationAction(
+      {
+        id: modAction.id,
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+  })
+
   it('fetches follows', async () => {
     const aliceFollowers = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.alice },
@@ -208,5 +255,45 @@ describe('pds follow views', () => {
     })
     expect(unauthed.follows.length).toBeGreaterThan(0)
     expect(unauthed.follows).toEqual(authed.follows.map(stripViewer))
+  })
+
+  it('blocks follows by actor takedown', async () => {
+    const { data: modAction } =
+      await agent.api.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.dan,
+          },
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+
+    const aliceFollows = await agent.api.app.bsky.graph.getFollows(
+      { actor: sc.dids.alice },
+      { headers: sc.getHeaders(alice, true) },
+    )
+
+    expect(aliceFollows.data.follows.map((f) => f.did)).not.toContain(
+      sc.dids.dan,
+    )
+
+    await agent.api.com.atproto.admin.reverseModerationAction(
+      {
+        id: modAction.id,
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
   })
 })
