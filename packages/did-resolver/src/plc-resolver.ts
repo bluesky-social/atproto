@@ -1,10 +1,11 @@
 import axios, { AxiosError } from 'axios'
 import BaseResolver from './base-resolver'
 import { PlcResolverOpts } from './types'
+import { DidCache } from './did-cache'
 
 export class DidPlcResolver extends BaseResolver {
-  constructor(public opts: PlcResolverOpts) {
-    super()
+  constructor(public opts: PlcResolverOpts, public cache?: DidCache) {
+    super(cache)
   }
 
   async resolveDidNoCheck(did: string): Promise<unknown> {

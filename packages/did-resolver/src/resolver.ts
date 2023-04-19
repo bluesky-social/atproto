@@ -3,13 +3,15 @@ import { DidPlcResolver } from './plc-resolver'
 import { DidResolverOpts } from './types'
 import BaseResolver from './base-resolver'
 import { PoorlyFormattedDidError, UnsupportedDidMethodError } from './errors'
+import { DidCache } from './did-cache'
 
 export class DidResolver extends BaseResolver {
   methods: Record<string, BaseResolver>
 
-  constructor(opts: Partial<DidResolverOpts> = {}) {
-    super()
+  constructor(opts: Partial<DidResolverOpts> = {}, cache?: DidCache) {
+    super(cache)
     const { timeout = 3000, plcUrl = 'https://plc.directory' } = opts
+    // do not pass cache to sub-methods or we will be double caching
     this.methods = {
       plc: new DidPlcResolver({ timeout, plcUrl }),
       web: new DidWebResolver({ timeout }),

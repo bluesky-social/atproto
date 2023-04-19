@@ -2,12 +2,13 @@ import axios, { AxiosError } from 'axios'
 import BaseResolver from './base-resolver'
 import { WebResolverOpts } from './types'
 import { PoorlyFormattedDidError } from './errors'
+import { DidCache } from './did-cache'
 
 export const DOC_PATH = '/.well-known/did.json'
 
 export class DidWebResolver extends BaseResolver {
-  constructor(public opts: WebResolverOpts) {
-    super()
+  constructor(public opts: WebResolverOpts, public cache?: DidCache) {
+    super(cache)
   }
 
   async resolveDidNoCheck(did: string): Promise<unknown> {

@@ -140,7 +140,7 @@ describe('account', () => {
   })
 
   it('generates a properly formatted PLC DID', async () => {
-    const didData = await didResolver.resolveAtpData(did)
+    const didData = await didResolver.resolveAtprotoData(did)
 
     expect(didData.did).toBe(did)
     expect(didData.handle).toBe(handle)

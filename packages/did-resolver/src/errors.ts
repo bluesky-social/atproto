@@ -15,3 +15,9 @@ export class UnsupportedDidMethodError extends Error {
     super(`Unsupported DID method: ${did}`)
   }
 }
+
+export class PoorlyFormattedDidDocumentError extends Error {
+  constructor(public did: string, public doc: unknown) {
+    super(`Poorly formatted DID Document: ${doc}`)
+  }
+}

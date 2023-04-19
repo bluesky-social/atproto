@@ -21,6 +21,13 @@ export type AtprotoData = {
   pds: string
 }
 
+export type CacheResult = {
+  did: string
+  doc: DidDocument
+  updatedAt: number
+  expired: boolean
+}
+
 export const verificationMethod = z.object({
   id: z.string(),
   type: z.string(),
