@@ -11,6 +11,7 @@ import { CtxMigrationProvider } from './migrations/provider'
 import { dbLogger as log } from '../logger'
 
 export class Database {
+  txEvt = new EventEmitter() as TxnEmitter
   txChannelMsgs: ChannelMsg[] = []
   channels: Channels
   migrator: Migrator
@@ -154,9 +155,8 @@ export class Database {
       txMsgs = dbTxn.txChannelMsgs
       return txRes
     })
-    txMsgs.forEach((msg) => {
-      this.sendChannelMsg(msg)
-    })
+    this.txEvt.emit('commit')
+    txMsgs.forEach((msg) => this.sendChannelMsg(msg))
     return res
   }
 
@@ -246,6 +246,12 @@ type ChannelEvents = {
 }
 
 type ChannelEmitter = TypedEmitter<ChannelEvents>
+
+type TxnEvents = {
+  commit: () => void
+}
+
+type TxnEmitter = TypedEmitter<TxnEvents>
 
 type ChannelMsg = 'repo_seq'
 
