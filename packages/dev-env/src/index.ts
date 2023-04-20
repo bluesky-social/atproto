@@ -157,6 +157,7 @@ export class DevEnvServer {
           dbPostgresSchema: process.env.DB_POSTGRES_SCHEMA,
           repoProvider: this.env.pdsUrl.replace('http://', 'ws://'),
           port: this.port,
+          labelerKeywords: {},
         })
 
         const db = bsky.Database.postgres({
