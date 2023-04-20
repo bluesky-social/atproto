@@ -67,7 +67,7 @@ function getAggMigrationSql(db: Kysely<Schema>) {
       exp
         .selectFrom('repost')
         .groupBy('repost.subject')
-        .select(['repost.subject', countAll.as('repostCount')]),
+        .select(['repost.subject as uri', countAll.as('repostCount')]),
     )
     .onConflict((oc) =>
       oc
