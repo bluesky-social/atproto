@@ -1,7 +1,10 @@
+import PQueue from 'p-queue'
 import { CacheResult, DidCache, DidDocument } from '@atproto/did-resolver'
 import Database from './db'
 
 export class DidSqlCache extends DidCache {
+  public pQueue: PQueue | null //null during teardown
+
   constructor(public db: Database, public ttl: number) {
     super()
   }
@@ -25,7 +28,8 @@ export class DidSqlCache extends DidCache {
     if (!res) return null
     const now = Date.now()
     const updatedAt = new Date(res.updatedAt).getTime()
-    const expired = updatedAt > now + this.ttl
+
+    const expired = now > updatedAt + this.ttl
     return {
       doc: res.doc,
       updatedAt,

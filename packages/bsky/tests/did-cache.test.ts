@@ -4,6 +4,8 @@ import { processAll } from './_util'
 import { SeedClient } from './seeds/client'
 import userSeed from './seeds/users'
 import { DidResolver } from '@atproto/did-resolver'
+import DidSqlCache from '../src/did-cache'
+import { wait } from '@atproto/common'
 
 describe('did cache', () => {
   let testEnv: TestEnvInfo
@@ -42,9 +44,51 @@ describe('did cache', () => {
       didResolver.cache?.checkCache(dan),
     ])
     expect(docs.length).toBe(4)
-    expect(docs[0]?.did).toEqual(alice)
-    expect(docs[1]?.did).toEqual(bob)
-    expect(docs[2]?.did).toEqual(carol)
-    expect(docs[3]?.did).toEqual(dan)
+    expect(docs[0]?.doc.id).toEqual(alice)
+    expect(docs[1]?.doc.id).toEqual(bob)
+    expect(docs[2]?.doc.id).toEqual(carol)
+    expect(docs[3]?.doc.id).toEqual(dan)
+  })
+
+  it('clears cache and repopulates', async () => {
+    await didResolver.cache?.clear()
+    const docsCleared = await Promise.all([
+      didResolver.cache?.checkCache(alice),
+      didResolver.cache?.checkCache(bob),
+      didResolver.cache?.checkCache(carol),
+      didResolver.cache?.checkCache(dan),
+    ])
+    expect(docsCleared).toEqual([null, null, null, null])
+
+    await Promise.all([
+      didResolver.resolveDid(alice),
+      didResolver.resolveDid(bob),
+      didResolver.resolveDid(carol),
+      didResolver.resolveDid(dan),
+    ])
+
+    const docs = await Promise.all([
+      didResolver.cache?.checkCache(alice),
+      didResolver.cache?.checkCache(bob),
+      didResolver.cache?.checkCache(carol),
+      didResolver.cache?.checkCache(dan),
+    ])
+    expect(docs.length).toBe(4)
+    expect(docs[0]?.doc.id).toEqual(alice)
+    expect(docs[1]?.doc.id).toEqual(bob)
+    expect(docs[2]?.doc.id).toEqual(carol)
+    expect(docs[3]?.doc.id).toEqual(dan)
+  })
+
+  it('accurately reports expired dids', async () => {
+    const didCache = new DidSqlCache(testEnv.bsky.ctx.db, 1)
+    const shortCacheResolver = new DidResolver(
+      { plcUrl: testEnv.bsky.ctx.cfg.didPlcUrl },
+      didCache,
+    )
+    await shortCacheResolver.resolveDid(alice)
+    await wait(5)
+    const cached = await shortCacheResolver.cache?.checkCache(alice)
+    expect(cached?.expired).toBe(true)
   })
 })
