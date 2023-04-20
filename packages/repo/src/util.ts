@@ -4,7 +4,7 @@ import { CarReader } from '@ipld/car/reader'
 import { BlockWriter, CarWriter } from '@ipld/car/writer'
 import { Block as CarBlock } from '@ipld/car/api'
 import {
-  streamToArray,
+  streamToBuffer,
   verifyCidForBytes,
   cborDecode,
   check,
@@ -43,30 +43,35 @@ export async function* verifyIncomingCarBlocks(
   }
 }
 
-export const writeCar = async (
+export const writeCar = (
   root: CID | null,
   fn: (car: BlockWriter) => Promise<void>,
-): Promise<Uint8Array> => {
+): AsyncIterable<Uint8Array> => {
   const { writer, out } =
     root !== null ? CarWriter.create(root) : CarWriter.create()
-  const bytes = streamToArray(out)
-  try {
-    await fn(writer)
-  } finally {
-    writer.close()
-  }
-  return bytes
+
+  fn(writer).finally(() => writer.close())
+
+  return out
 }
 
-export const blocksToCar = async (
+export const blocksToCarStream = (
   root: CID | null,
   blocks: BlockMap,
-): Promise<Uint8Array> => {
+): AsyncIterable<Uint8Array> => {
   return writeCar(root, async (writer) => {
     for (const entry of blocks.entries()) {
       await writer.put(entry)
     }
   })
+}
+
+export const blocksToCarFile = (
+  root: CID | null,
+  blocks: BlockMap,
+): Promise<Uint8Array> => {
+  const carStream = blocksToCarStream(root, blocks)
+  return streamToBuffer(carStream)
 }
 
 export const readCar = async (
