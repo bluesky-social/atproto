@@ -20,38 +20,34 @@ export abstract class BaseResolver {
     return val
   }
 
-  async refreshCache(did: string): Promise<DidDocument | null> {
-    if (!this.cache) return this.resolveDid(did)
+  async resolveDidNoCache(did: string): Promise<DidDocument | null> {
     const got = await this.resolveDidNoCheck(did)
     if (got === null) return null
-    const doc = this.validateDidDoc(did, got)
-    await this.cache.cacheDid(did, doc)
-    return doc
+    return this.validateDidDoc(did, got)
+  }
+
+  async refreshCache(did: string): Promise<void> {
+    await this.cache?.refreshCache(did, () => this.resolveDidNoCache(did))
   }
 
   async resolveDid(
     did: string,
     forceRefresh = false,
   ): Promise<DidDocument | null> {
-    if (forceRefresh) {
-      return this.refreshCache(did)
-    }
-
-    if (this.cache) {
+    if (this.cache && !forceRefresh) {
       const fromCache = await this.cache.checkCache(did)
       if (fromCache?.expired) {
-        this.refreshCache(did) // done in background
+        this.refreshCache(did)
       }
       if (fromCache) {
         return fromCache.doc
       }
     }
 
-    const got = await this.resolveDidNoCheck(did)
+    const got = await this.resolveDidNoCache(did)
     if (got === null) return null
-    const doc = this.validateDidDoc(did, got)
-    this.cache?.cacheDid(did, doc) // done in background
-    return doc
+    await this.cache?.cacheDid(did, got)
+    return got
   }
 
   async ensureResolveDid(
