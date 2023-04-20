@@ -36,7 +36,7 @@ const verifyJwt = async (
   const sig = parts[2]
 
   // @TODO add aud check?
-  if (Date.now() > payload.exp) {
+  if (Date.now() / 1000 > payload.exp) {
     throw new AuthRequiredError('jwt expired', 'JwtExpired')
   }
 
