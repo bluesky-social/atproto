@@ -7,6 +7,7 @@ import {
   DatabaseSchemaType,
 } from '../../../../db/database-schema'
 import RecordProcessor from '../processor'
+import { countAll, excluded } from '../../../../db/util'
 
 const lexId = lex.ids.AppBskyGraphFollow
 type IndexedFollow = DatabaseSchemaType['follow']
@@ -96,3 +97,37 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
 }
 
 export default makePlugin
+
+export function updateAggregates(db: DatabaseSchema, follow: IndexedFollow) {
+  const followersCountQb = db
+    .insertInto('profile_agg')
+    .columns(['did', 'followersCount'])
+    .expression((exp) =>
+      exp
+        .selectFrom('follow')
+        .where('follow.subjectDid', '=', follow.subjectDid)
+        .groupBy('follow.subjectDid')
+        .select(['follow.subjectDid as did', countAll.as('followersCount')]),
+    )
+    .onConflict((oc) =>
+      oc.column('did').doUpdateSet({
+        followersCount: excluded(db, 'followersCount'),
+      }),
+    )
+  const followsCountQb = db
+    .insertInto('profile_agg')
+    .columns(['did', 'followsCount'])
+    .expression((exp) =>
+      exp
+        .selectFrom('follow')
+        .where('follow.creator', '=', follow.creator)
+        .groupBy('follow.creator')
+        .select(['follow.creator as did', countAll.as('followsCount')]),
+    )
+    .onConflict((oc) =>
+      oc.column('did').doUpdateSet({
+        followsCount: excluded(db, 'followsCount'),
+      }),
+    )
+  return Promise.all([followersCountQb.execute(), followsCountQb.execute()])
+}

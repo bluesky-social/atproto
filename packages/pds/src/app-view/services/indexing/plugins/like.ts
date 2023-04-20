@@ -7,6 +7,7 @@ import {
   DatabaseSchemaType,
 } from '../../../../db/database-schema'
 import RecordProcessor from '../processor'
+import { countAll, excluded } from '../../../../db/util'
 
 const lexId = lex.ids.AppBskyFeedLike
 type IndexedLike = DatabaseSchemaType['like']
@@ -98,3 +99,20 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
 }
 
 export default makePlugin
+
+export function updateAggregates(db: DatabaseSchema, like: IndexedLike) {
+  const likeCountQb = db
+    .insertInto('post_agg')
+    .columns(['uri', 'likeCount'])
+    .expression((exp) =>
+      exp
+        .selectFrom('like')
+        .where('like.subject', '=', like.subject)
+        .groupBy('like.subject')
+        .select(['like.subject as uri', countAll.as('likeCount')]),
+    )
+    .onConflict((oc) =>
+      oc.column('uri').doUpdateSet({ likeCount: excluded(db, 'likeCount') }),
+    )
+  return likeCountQb.execute()
+}

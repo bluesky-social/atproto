@@ -18,6 +18,7 @@ import {
 import RecordProcessor from '../processor'
 import { PostHierarchy } from '../../../db/tables/post-hierarchy'
 import { UserNotification } from '../../../../db/tables/user-notification'
+import { countAll, excluded } from '../../../../db/util'
 
 type Post = DatabaseSchemaType['post']
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
@@ -314,4 +315,35 @@ function separateEmbeds(embed: PostRecord['embed']) {
     return [{ $type: lex.ids.AppBskyEmbedRecord, ...embed.record }, embed.media]
   }
   return [embed]
+}
+
+export function updateAggregates(db: DatabaseSchema, postIdx: IndexedPost) {
+  const replyCountQb = db
+    .insertInto('post_agg')
+    .columns(['uri', 'replyCount'])
+    .expression((exp) =>
+      exp
+        .selectFrom('post')
+        .where('post.replyParent', '=', postIdx.post.replyParent)
+        .where('post.replyParent', 'is not', null)
+        .groupBy('post.replyParent')
+        .select(['post.replyParent as uri', countAll.as('replyCount')]),
+    )
+    .onConflict((oc) =>
+      oc.column('uri').doUpdateSet({ replyCount: excluded(db, 'replyCount') }),
+    )
+  const postsCountQb = db
+    .insertInto('profile_agg')
+    .columns(['did', 'postsCount'])
+    .expression((exp) =>
+      exp
+        .selectFrom('post')
+        .where('post.creator', '=', postIdx.post.creator)
+        .groupBy('post.creator')
+        .select(['post.creator as did', countAll.as('postsCount')]),
+    )
+    .onConflict((oc) =>
+      oc.column('did').doUpdateSet({ postsCount: excluded(db, 'postsCount') }),
+    )
+  return Promise.all([replyCountQb.execute(), postsCountQb.execute()])
 }

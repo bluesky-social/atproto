@@ -7,6 +7,7 @@ import {
   DatabaseSchemaType,
 } from '../../../../db/database-schema'
 import RecordProcessor from '../processor'
+import { countAll, excluded } from '../../../../db/util'
 
 const lexId = lex.ids.AppBskyFeedRepost
 type IndexedRepost = DatabaseSchemaType['repost']
@@ -121,3 +122,22 @@ export const makePlugin = (db: DatabaseSchema): PluginType => {
 }
 
 export default makePlugin
+
+async function updateAggregates(db: DatabaseSchema, repost: IndexedRepost) {
+  const repostCountQb = db
+    .insertInto('post_agg')
+    .columns(['uri', 'repostCount'])
+    .expression((exp) =>
+      exp
+        .selectFrom('repost')
+        .where('repost.subject', '=', repost.subject)
+        .groupBy('repost.subject')
+        .select(['repost.subject as uri', countAll.as('repostCount')]),
+    )
+    .onConflict((oc) =>
+      oc
+        .column('uri')
+        .doUpdateSet({ repostCount: excluded(db, 'repostCount') }),
+    )
+  return repostCountQb.execute()
+}
