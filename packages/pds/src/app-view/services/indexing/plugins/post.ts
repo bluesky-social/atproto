@@ -11,10 +11,12 @@ import {
   isLink,
 } from '../../../../lexicon/types/app/bsky/richtext/facet'
 import * as lex from '../../../../lexicon/lexicons'
+import Database from '../../../../db'
 import {
   DatabaseSchema,
   DatabaseSchemaType,
 } from '../../../../db/database-schema'
+import { BackgroundQueue } from '../../../../event-stream/background-queue'
 import RecordProcessor from '../processor'
 import { PostHierarchy } from '../../../db/tables/post-hierarchy'
 import { UserNotification } from '../../../../db/tables/user-notification'
@@ -292,32 +294,7 @@ const notifsForDelete = (
   }
 }
 
-export type PluginType = RecordProcessor<PostRecord, IndexedPost>
-
-export const makePlugin = (db: DatabaseSchema): PluginType => {
-  return new RecordProcessor(db, {
-    lexId,
-    insertFn,
-    findDuplicate,
-    deleteFn,
-    notifsForInsert,
-    notifsForDelete,
-  })
-}
-
-export default makePlugin
-
-function separateEmbeds(embed: PostRecord['embed']) {
-  if (!embed) {
-    return []
-  }
-  if (isEmbedRecordWithMedia(embed)) {
-    return [{ $type: lex.ids.AppBskyEmbedRecord, ...embed.record }, embed.media]
-  }
-  return [embed]
-}
-
-export function updateAggregates(db: DatabaseSchema, postIdx: IndexedPost) {
+const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
   const replyCountQb = db
     .insertInto('post_agg')
     .columns(['uri', 'replyCount'])
@@ -345,5 +322,34 @@ export function updateAggregates(db: DatabaseSchema, postIdx: IndexedPost) {
     .onConflict((oc) =>
       oc.column('did').doUpdateSet({ postsCount: excluded(db, 'postsCount') }),
     )
-  return Promise.all([replyCountQb.execute(), postsCountQb.execute()])
+  await Promise.all([replyCountQb.execute(), postsCountQb.execute()])
+}
+
+export type PluginType = RecordProcessor<PostRecord, IndexedPost>
+
+export const makePlugin = (
+  db: Database,
+  backgroundQueue: BackgroundQueue,
+): PluginType => {
+  return new RecordProcessor(db, backgroundQueue, {
+    lexId,
+    insertFn,
+    findDuplicate,
+    deleteFn,
+    notifsForInsert,
+    notifsForDelete,
+    updateAggregates,
+  })
+}
+
+export default makePlugin
+
+function separateEmbeds(embed: PostRecord['embed']) {
+  if (!embed) {
+    return []
+  }
+  if (isEmbedRecordWithMedia(embed)) {
+    return [{ $type: lex.ids.AppBskyEmbedRecord, ...embed.record }, embed.media]
+  }
+  return [embed]
 }

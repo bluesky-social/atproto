@@ -114,6 +114,11 @@ export class Database {
     }
   }
 
+  onCommit(fn: () => void) {
+    this.assertTransaction()
+    this.txEvt.once('commit', fn)
+  }
+
   private getSchemaChannel(channel: string) {
     if (this.cfg.dialect === 'pg' && this.cfg.schema) {
       return this.cfg.schema + '_' + channel

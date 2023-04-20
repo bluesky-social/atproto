@@ -1,3 +1,4 @@
+import PQueue from 'p-queue'
 import { CID } from 'multiformats/cid'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
@@ -8,6 +9,7 @@ import * as Repost from './plugins/repost'
 import * as Follow from './plugins/follow'
 import * as Profile from './plugins/profile'
 import { MessageQueue } from '../../../event-stream/types'
+import { BackgroundQueue } from '../../../event-stream/background-queue'
 
 export class IndexingService {
   records: {
@@ -18,18 +20,26 @@ export class IndexingService {
     profile: Profile.PluginType
   }
 
-  constructor(public db: Database, public messageDispatcher: MessageQueue) {
+  constructor(
+    public db: Database,
+    public messageDispatcher: MessageQueue,
+    public backgroundQueue: BackgroundQueue,
+  ) {
     this.records = {
-      post: Post.makePlugin(this.db.db),
-      like: Like.makePlugin(this.db.db),
-      repost: Repost.makePlugin(this.db.db),
-      follow: Follow.makePlugin(this.db.db),
-      profile: Profile.makePlugin(this.db.db),
+      post: Post.makePlugin(this.db, backgroundQueue),
+      like: Like.makePlugin(this.db, backgroundQueue),
+      repost: Repost.makePlugin(this.db, backgroundQueue),
+      follow: Follow.makePlugin(this.db, backgroundQueue),
+      profile: Profile.makePlugin(this.db, backgroundQueue),
     }
   }
 
-  static creator(messageDispatcher: MessageQueue) {
-    return (db: Database) => new IndexingService(db, messageDispatcher)
+  static creator(
+    messageDispatcher: MessageQueue,
+    backgroundQueue: BackgroundQueue,
+  ) {
+    return (db: Database) =>
+      new IndexingService(db, messageDispatcher, backgroundQueue)
   }
 
   async indexRecord(
