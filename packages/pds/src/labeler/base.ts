@@ -1,29 +1,30 @@
 import stream from 'stream'
-import PQueue from 'p-queue'
 import Database from '../db'
 import { BlobStore, cidForRecord } from '@atproto/repo'
 import { dedupe, getFieldsFromRecord } from './util'
 import { AtUri } from '@atproto/uri'
 import { labelerLogger as log } from '../logger'
+import { BackgroundQueue } from '../event-stream/background-queue'
 
 export abstract class Labeler {
   public db: Database
   public blobstore: BlobStore
   public labelerDid: string
-  public processingQueue: PQueue | null // null during teardown
+  public backgroundQueue: BackgroundQueue
   constructor(opts: {
     db: Database
     blobstore: BlobStore
     labelerDid: string
+    backgroundQueue: BackgroundQueue
   }) {
     this.db = opts.db
     this.blobstore = opts.blobstore
     this.labelerDid = opts.labelerDid
-    this.processingQueue = new PQueue()
+    this.backgroundQueue = opts.backgroundQueue
   }
 
   processRecord(uri: AtUri, obj: unknown) {
-    this.processingQueue?.add(() =>
+    this.backgroundQueue.add(() =>
       this.createAndStoreLabels(uri, obj).catch((err) => {
         log.error(
           { err, uri: uri.toString(), record: obj },
@@ -69,14 +70,6 @@ export abstract class Labeler {
   abstract labelImg(img: stream.Readable): Promise<string[]>
 
   async processAll() {
-    await this.processingQueue?.onIdle()
-  }
-
-  async destroy() {
-    const pQueue = this.processingQueue
-    this.processingQueue = null
-    pQueue?.pause()
-    pQueue?.clear()
-    await pQueue?.onIdle()
+    await this.backgroundQueue.processAll()
   }
 }

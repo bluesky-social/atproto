@@ -115,11 +115,14 @@ export class PDS {
       config.imgUriKey,
     )
 
+    const backgroundQueue = new BackgroundQueue(db)
+
     let labeler: Labeler
     if (config.hiveApiKey) {
       labeler = new HiveLabeler({
         db,
         blobstore,
+        backgroundQueue,
         labelerDid: config.labelerDid,
         hiveApiKey: config.hiveApiKey,
         keywords: config.labelerKeywords,
@@ -128,12 +131,11 @@ export class PDS {
       labeler = new KeywordLabeler({
         db,
         blobstore,
+        backgroundQueue,
         labelerDid: config.labelerDid,
         keywords: config.labelerKeywords,
       })
     }
-
-    const backgroundQueue = new BackgroundQueue(db)
 
     const services = createServices({
       repoSigningKey,
@@ -201,7 +203,6 @@ export class PDS {
   async destroy(): Promise<void> {
     this.appView.destroy()
     await this.terminator?.terminate()
-    await this.ctx.labeler.destroy()
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()
   }

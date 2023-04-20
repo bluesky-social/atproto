@@ -1,4 +1,3 @@
-import PQueue from 'p-queue'
 import { CID } from 'multiformats/cid'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'

@@ -36,7 +36,7 @@ describe('timeline views', () => {
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
-    await server.ctx.labeler.processAll()
+    await server.ctx.backgroundQueue.processAll()
   })
 
   afterAll(async () => {

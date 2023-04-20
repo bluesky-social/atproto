@@ -1,4 +1,3 @@
-import PQueue from 'p-queue'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import Database from '../db'

@@ -29,7 +29,7 @@ describe('pds thread views', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
-    await server.ctx.labeler.processAll()
+    await server.ctx.backgroundQueue.processAll()
   })
 
   beforeAll(async () => {
