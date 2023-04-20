@@ -38,6 +38,12 @@ export const streamToBytes = async (stream: Readable): Promise<Uint8Array> => {
   return new Uint8Array(Buffer.concat(bufs))
 }
 
+export const byteIterableToStream = (
+  iter: AsyncIterable<Uint8Array>,
+): Readable => {
+  return Readable.from(iter, { objectMode: false })
+}
+
 export const bytesToStream = (bytes: Uint8Array): Readable => {
   const stream = new Readable()
   stream.push(bytes)
