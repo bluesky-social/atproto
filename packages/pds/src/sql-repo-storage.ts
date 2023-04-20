@@ -167,6 +167,7 @@ export class SqlRepoStorage extends RepoStorage {
         size: bytes.length,
         content: bytes,
       })
+      this.cache.addMap(toPut)
     })
     await Promise.all(
       chunkArray(blocks, 500).map((batch) =>

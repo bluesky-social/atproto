@@ -4,6 +4,7 @@ import { MemoryBlockstore } from '../../src/storage'
 import * as sync from '../../src/sync'
 
 import * as util from '../_util'
+import { streamToBuffer } from '@atproto/common'
 
 describe('Checkout Sync', () => {
   let storage: MemoryBlockstore
@@ -25,7 +26,9 @@ describe('Checkout Sync', () => {
   })
 
   it('sync a non-historical repo checkout', async () => {
-    const checkoutCar = await sync.getCheckout(storage, repo.cid)
+    const checkoutCar = await streamToBuffer(
+      sync.getCheckout(storage, repo.cid),
+    )
     const checkout = await sync.loadCheckout(
       syncStorage,
       checkoutCar,
@@ -49,7 +52,9 @@ describe('Checkout Sync', () => {
 
   it('throws on a bad signature', async () => {
     const badRepo = await util.addBadCommit(repo, keypair)
-    const checkoutCar = await sync.getCheckout(storage, badRepo.cid)
+    const checkoutCar = await streamToBuffer(
+      sync.getCheckout(storage, badRepo.cid),
+    )
     await expect(
       sync.loadCheckout(syncStorage, checkoutCar, repoDid, keypair.did()),
     ).rejects.toThrow(RepoVerificationError)
