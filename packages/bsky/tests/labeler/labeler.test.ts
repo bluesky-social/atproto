@@ -1,16 +1,20 @@
-import { AtUri, BlobRef } from '@atproto/api'
-import stream from 'stream'
-import { runTestServer, CloseFn } from '../_util'
+import { AtUri, AtpAgent, BlobRef } from '@atproto/api'
+import stream, { Readable } from 'stream'
 import { Labeler } from '../../src/labeler'
-import { AppContext, Database } from '../../src'
-import { BlobStore, cidForRecord } from '@atproto/repo'
+import { AppContext, Database, ServerConfig } from '../../src'
+import { cidForRecord } from '@atproto/repo'
 import { keywordLabeling } from '../../src/labeler/util'
 import { cidForCbor, streamToBytes, TID } from '@atproto/common'
 import * as ui8 from 'uint8arrays'
-import { LabelService } from '../../src/app-view/services/label'
+import { LabelService } from '../../src/services/label'
+import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
+import { DidResolver } from '@atproto/did-resolver'
+import { SeedClient } from '../seeds/client'
+import usersSeed from '../seeds/users'
+import { processAll } from '../_util'
 
 describe('labeler', () => {
-  let close: CloseFn
+  let testEnv: TestEnvInfo
   let labeler: Labeler
   let labelSrvc: LabelService
   let ctx: AppContext
@@ -18,37 +22,55 @@ describe('labeler', () => {
   let badBlob1: BlobRef
   let badBlob2: BlobRef
   let goodBlob: BlobRef
+  let alice: string
+  const postUri = () => AtUri.make(alice, 'app.bsky.feed.post', TID.nextStr())
+  const profileUri = () => AtUri.make(alice, 'app.bsky.actor.profile', 'self')
 
   beforeAll(async () => {
-    const server = await runTestServer({
-      dbPostgresSchema: 'views_author_feed',
+    testEnv = await runTestEnv({
+      dbPostgresSchema: 'labeler',
     })
-    close = server.close
-    ctx = server.ctx
+    ctx = testEnv.bsky.ctx
+    const pdsCtx = testEnv.pds.ctx
     labelerDid = ctx.cfg.labelerDid
-    labeler = new TestLabeler({
-      db: ctx.db,
-      blobstore: ctx.blobstore,
-      labelerDid,
-      keywords: { label_me: 'test-label', another_label: 'another-label' },
-    })
-    labelSrvc = ctx.services.appView.label(ctx.db)
+    labeler = new TestLabeler(ctx)
+    labelSrvc = ctx.services.label(ctx.db)
+    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
+    const sc = new SeedClient(pdsAgent)
+    await usersSeed(sc)
+    await processAll(testEnv)
+    alice = sc.dids.alice
+    const repoSvc = pdsCtx.services.repo(pdsCtx.db)
+    const storeBlob = async (bytes: Uint8Array) => {
+      const blobRef = await repoSvc.blobs.addUntetheredBlob(
+        alice,
+        'image/jpeg',
+        Readable.from([bytes], { objectMode: false }),
+      )
+      const preparedBlobRef = {
+        cid: blobRef.ref,
+        mimeType: 'image/jpeg',
+        constraints: {},
+      }
+      await repoSvc.blobs.verifyBlobAndMakePermanent(alice, preparedBlobRef)
+      await repoSvc.blobs.associateBlob(
+        preparedBlobRef,
+        postUri(),
+        await cidForCbor(1),
+        alice,
+      )
+      return blobRef
+    }
     const bytes1 = new Uint8Array([1, 2, 3, 4])
     const bytes2 = new Uint8Array([5, 6, 7, 8])
     const bytes3 = new Uint8Array([4, 3, 2, 1])
-    const cid1 = await cidForCbor(bytes1)
-    const cid2 = await cidForCbor(bytes2)
-    const cid3 = await cidForCbor(bytes3)
-    ctx.blobstore.putPermanent(cid1, bytes1)
-    ctx.blobstore.putPermanent(cid2, bytes2)
-    ctx.blobstore.putPermanent(cid3, bytes3)
-    badBlob1 = new BlobRef(cid1, 'image/jpeg', 4)
-    badBlob2 = new BlobRef(cid2, 'image/jpeg', 4)
-    goodBlob = new BlobRef(cid3, 'image/jpeg', 4)
+    badBlob1 = await storeBlob(bytes1)
+    badBlob2 = await storeBlob(bytes2)
+    goodBlob = await storeBlob(bytes3)
   })
 
   afterAll(async () => {
-    await close()
+    await testEnv.close()
   })
 
   it('labels text in posts', async () => {
@@ -85,7 +107,7 @@ describe('labeler', () => {
           },
           {
             image: badBlob2,
-            alt: 'another_label',
+            alt: 'label_me_2',
           },
           {
             image: goodBlob,
@@ -101,7 +123,7 @@ describe('labeler', () => {
     const dbLabels = await labelSrvc.getLabels(uri.toString())
     const labels = dbLabels.map((row) => row.val).sort()
     expect(labels).toEqual(
-      ['another-label', 'img-label', 'other-img-label'].sort(),
+      ['test-label', 'test-label-2', 'img-label', 'other-img-label'].sort(),
     )
   })
 
@@ -109,7 +131,7 @@ describe('labeler', () => {
     const profile = {
       $type: 'app.bsky.actor.profile',
       displayName: 'label_me',
-      description: 'another_label',
+      description: 'label_me_2',
       avatar: badBlob1,
       banner: badBlob2,
       createdAt: new Date().toISOString(),
@@ -120,7 +142,7 @@ describe('labeler', () => {
     const dbLabels = await labelSrvc.getLabels(uri.toString())
     const labels = dbLabels.map((row) => row.val).sort()
     expect(labels).toEqual(
-      ['test-label', 'another-label', 'img-label', 'other-img-label'].sort(),
+      ['test-label', 'test-label-2', 'img-label', 'other-img-label'].sort(),
     )
   })
 
@@ -129,7 +151,7 @@ describe('labeler', () => {
       .insertInto('label')
       .values({
         src: labelerDid,
-        uri: aliceDid,
+        uri: alice,
         cid: '',
         val: 'repo-label',
         neg: 0,
@@ -137,25 +159,19 @@ describe('labeler', () => {
       })
       .execute()
 
-    const labels = await labelSrvc.getLabelsForProfile('did:example:alice')
+    const labels = await labelSrvc.getLabelsForProfile(alice)
     // 4 from earlier & then just added one
     expect(labels.length).toBe(5)
 
     const repoLabel = labels.find((l) => l.uri.startsWith('did:'))
     expect(repoLabel).toMatchObject({
       src: labelerDid,
-      uri: aliceDid,
+      uri: alice,
       val: 'repo-label',
       neg: false,
     })
   })
 })
-
-const aliceDid = 'did:example:alice'
-
-const postUri = () => AtUri.make(aliceDid, 'app.bsky.feed.post', TID.nextStr())
-
-const profileUri = () => AtUri.make(aliceDid, 'app.bsky.actor.profile', 'self')
 
 class TestLabeler extends Labeler {
   hiveApiKey: string
@@ -163,13 +179,12 @@ class TestLabeler extends Labeler {
 
   constructor(opts: {
     db: Database
-    blobstore: BlobStore
-    labelerDid: string
-    keywords: Record<string, string>
+    didResolver: DidResolver
+    cfg: ServerConfig
   }) {
-    const { db, blobstore, labelerDid, keywords } = opts
-    super({ db, blobstore, labelerDid })
-    this.keywords = keywords
+    const { db, cfg, didResolver } = opts
+    super({ db, cfg, didResolver })
+    this.keywords = cfg.labelerKeywords
   }
 
   async labelText(text: string): Promise<string[]> {

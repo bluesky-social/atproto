@@ -67,6 +67,7 @@ export class IndexingService {
     } else {
       await indexer.updateRecord(uri, cid, obj, timestamp)
     }
+    this.labeler.processRecord(uri, obj)
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {
