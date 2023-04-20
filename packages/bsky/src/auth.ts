@@ -43,7 +43,7 @@ const verifyJwt = async (
   const msgBytes = ui8.fromString(parts.slice(0, 2).join('.'), 'utf8')
   const sigBytes = ui8.fromString(sig, 'base64url')
 
-  const atpData = await didResolver.resolveAtpData(payload.iss)
+  const atpData = await didResolver.resolveAtprotoData(payload.iss)
   let validSig: boolean
   try {
     validSig = await crypto.verifySignature(

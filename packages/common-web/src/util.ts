@@ -110,3 +110,11 @@ export const range = (num: number): number[] => {
 export const dedupeStrs = (strs: string[]): string[] => {
   return [...new Set(strs)]
 }
+
+export const parseIntWithFallback = <T>(
+  value: string | undefined,
+  fallback: T,
+): number | T => {
+  const parsed = parseInt(value || '', 10)
+  return isNaN(parsed) ? fallback : parsed
+}

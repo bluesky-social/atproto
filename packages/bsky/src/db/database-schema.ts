@@ -13,6 +13,7 @@ import * as actor from './tables/actor'
 import * as actorSync from './tables/actor-sync'
 import * as record from './tables/record'
 import * as notification from './tables/notification'
+import * as didCache from './tables/did-cache'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
@@ -27,7 +28,8 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   actor.PartialDB &
   actorSync.PartialDB &
   record.PartialDB &
-  notification.PartialDB
+  notification.PartialDB &
+  didCache.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 
