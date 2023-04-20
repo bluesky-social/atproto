@@ -1,4 +1,4 @@
-import { range, dataToCborBlock } from '@atproto/common'
+import { range, dataToCborBlock, cidForCbor, wait } from '@atproto/common'
 import { def } from '@atproto/repo'
 import BlockMap from '@atproto/repo/src/block-map'
 import { Database } from '../src'
@@ -111,5 +111,39 @@ describe('sql repo storage', () => {
     expect(commitData[0].blocks.equals(blocks0)).toBeTruthy()
     expect(commitData[1].commit.equals(commits[1].cid)).toBeTruthy()
     expect(commitData[1].blocks.equals(blocks1)).toBeTruthy()
+  })
+
+  const acquireLockAndWait = async (did: string, waitFor: number) => {
+    await db.transaction(async (dbTxn) => {
+      const storage = new SqlRepoStorage(dbTxn, did)
+      await storage.getHead(true)
+      await wait(waitFor)
+    })
+  }
+
+  it('throws when encountering a locked repo head', async () => {
+    if (db.dialect === 'sqlite') return
+    const did = 'did:example:alice'
+    const storage = new SqlRepoStorage(db, did)
+    const cid = await cidForCbor({ test: 123 })
+    await storage.updateHead(cid, null)
+
+    const promise1 = acquireLockAndWait(did, 1000)
+    const promise2 = acquireLockAndWait(did, 50)
+    await expect(promise2).rejects.toThrow(
+      'too many attempted concurrent updates',
+    )
+    await promise1
+  })
+
+  it('retries to get locked repo head before throwing', async () => {
+    const did = 'did:example:bob'
+    const storage = new SqlRepoStorage(db, did)
+    const cid = await cidForCbor({ test: 123 })
+    await storage.updateHead(cid, null)
+
+    const promise1 = acquireLockAndWait(did, 50)
+    const promise2 = acquireLockAndWait(did, 50)
+    await Promise.all([promise1, promise2])
   })
 })
