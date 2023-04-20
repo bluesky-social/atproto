@@ -20,11 +20,21 @@ export class MemoryCache extends DidCache {
     this.cache[did] = { doc, updatedAt: Date.now() }
   }
 
+  async refreshCache(
+    did: string,
+    getDoc: () => Promise<DidDocument | null>,
+  ): Promise<void> {
+    const doc = await getDoc()
+    if (doc) {
+      await this.cacheDid(did, doc)
+    }
+  }
+
   async checkCache(did: string): Promise<CacheResult | null> {
     const val = this.cache[did]
     if (!val) return null
     const now = Date.now()
-    const expired = val.updatedAt + this.ttl > now
+    const expired = now > val.updatedAt + this.ttl
     return {
       ...val,
       did,
