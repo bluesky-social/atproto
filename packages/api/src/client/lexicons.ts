@@ -2912,8 +2912,7 @@ export const schemaDict = {
             latest: {
               type: 'string',
               format: 'cid',
-              description:
-                'The latest commit you in the commit range (inclusive',
+              description: 'The latest commit in the commit range (inclusive)',
             },
           },
         },
@@ -3816,6 +3815,13 @@ export const schemaDict = {
           },
           value: {
             type: 'unknown',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
           },
           embeds: {
             type: 'array',
