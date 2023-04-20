@@ -9,7 +9,10 @@ export class DidSqlCache extends DidCache {
   async cacheDid(did: string, doc: DidDocument): Promise<void> {
     await this.db.db
       .insertInto('did_cache')
-      .values({ did, doc })
+      .values({ did, doc, updatedAt: Date.now() })
+      .onConflict((oc) =>
+        oc.column('did').doUpdateSet({ doc, updatedAt: Date.now() }),
+      )
       .executeTakeFirst()
   }
 
@@ -29,7 +32,6 @@ export class DidSqlCache extends DidCache {
       did,
       expired,
     }
-    return null
   }
 
   async clear(): Promise<void> {

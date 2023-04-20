@@ -1,10 +1,9 @@
 import { DidDocument } from '@atproto/did-resolver'
-import { GeneratedAlways } from 'kysely'
 
 export interface DidCache {
   did: string
   doc: DidDocument
-  updatedAt: GeneratedAlways<Date>
+  updatedAt: number
 }
 
 export const tableName = 'did_cache'
