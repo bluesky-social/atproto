@@ -32,6 +32,7 @@ import {
   ImageProcessingServerInvalidator,
 } from './image/invalidator'
 import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
+import { BackgroundQueue } from './event-stream/background-queue'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -132,6 +133,8 @@ export class PDS {
       })
     }
 
+    const backgroundQueue = new BackgroundQueue(db)
+
     const services = createServices({
       repoSigningKey,
       messageDispatcher,
@@ -139,6 +142,7 @@ export class PDS {
       imgUriBuilder,
       imgInvalidator,
       labeler,
+      backgroundQueue,
     })
 
     const ctx = new AppContext({
@@ -154,6 +158,7 @@ export class PDS {
       services,
       mailer,
       imgUriBuilder,
+      backgroundQueue,
     })
 
     const appView = new AppView(ctx)
@@ -195,8 +200,9 @@ export class PDS {
 
   async destroy(): Promise<void> {
     this.appView.destroy()
-    await this.ctx.labeler.destroy()
     await this.terminator?.terminate()
+    await this.ctx.labeler.destroy()
+    await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()
   }
 }
