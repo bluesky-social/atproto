@@ -22,6 +22,7 @@ import { createWriteToOp, writeToOp } from '../../repo'
 import { RecordService } from '../record'
 import { sequenceCommit, sequenceRebase } from '../../sequencer'
 import { Labeler } from '../../labeler'
+import { wait } from '@atproto/common'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -50,6 +51,22 @@ export class RepoService {
     record: RecordService.creator(this.messageDispatcher),
   }
 
+  private async serviceTx<T>(
+    fn: (srvc: RepoService) => Promise<T>,
+  ): Promise<T> {
+    this.db.assertNotTransaction()
+    return this.db.transaction((dbTxn) => {
+      const srvc = new RepoService(
+        dbTxn,
+        this.repoSigningKey,
+        this.messageDispatcher,
+        this.blobstore,
+        this.labeler,
+      )
+      return fn(srvc)
+    })
+  }
+
   async createRepo(did: string, writes: PreparedCreate[], now: string) {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
@@ -70,12 +87,15 @@ export class RepoService {
   async processWrites(
     did: string,
     writes: PreparedWrite[],
+    commitData: CommitData,
     now: string,
-    swapCommit?: CID,
   ) {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
-    const commitData = await this.formatCommit(storage, did, writes, swapCommit)
+    const locked = await storage.lockHead()
+    if (!locked || !locked.equals(commitData.prev)) {
+      throw new ConcurrentWriteError(did)
+    }
     await Promise.all([
       // persist the commit to repo storage
       storage.applyCommit(commitData),
@@ -86,13 +106,43 @@ export class RepoService {
     ])
   }
 
-  private async formatCommit(
-    storage: SqlRepoStorage,
+  async attemptWrites(
+    toWrite: { did: string; writes: PreparedWrite[]; swapCommitCid?: CID },
+    times: number,
+    timeout = 100,
+  ) {
+    this.db.assertNotTransaction()
+    const { did, writes, swapCommitCid } = toWrite
+    const commit = await this.formatCommit(did, writes, swapCommitCid)
+    try {
+      await this.serviceTx(async (srvcTx) => {
+        await srvcTx.processWrites(
+          did,
+          writes,
+          commit,
+          new Date().toISOString(),
+        )
+      })
+    } catch (err) {
+      if (err instanceof ConcurrentWriteError) {
+        if (times <= 1) {
+          throw err
+        }
+        await wait(timeout)
+        await this.attemptWrites(toWrite, times - 1, timeout)
+      } else {
+        throw err
+      }
+    }
+  }
+
+  async formatCommit(
     did: string,
     writes: PreparedWrite[],
     swapCommit?: CID,
   ): Promise<CommitData> {
-    const currRoot = await storage.getHead(true)
+    const storage = new SqlRepoStorage(this.db, did)
+    const currRoot = await storage.getHead()
     if (!currRoot) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
@@ -215,5 +265,11 @@ export class RepoService {
       this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute(),
       this.blobs.deleteForUser(did),
     ])
+  }
+}
+
+export class ConcurrentWriteError extends Error {
+  constructor(public did: string) {
+    super(`concurrent write on repo ${did}`)
   }
 }

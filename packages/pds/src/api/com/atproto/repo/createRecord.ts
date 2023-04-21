@@ -33,7 +33,6 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const now = new Date().toISOString()
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
 
       let write: PreparedCreate
@@ -52,26 +51,22 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
-      await ctx.db.transaction(async (dbTxn) => {
-        const repoTxn = ctx.services.repo(dbTxn)
-        const backlinkDeletions = validate
-          ? await getBacklinkDeletions(dbTxn, ctx, write)
-          : []
-        try {
-          await repoTxn.processWrites(
-            did,
-            [...backlinkDeletions, write],
-            now,
-            swapCommitCid,
-          )
-        } catch (err) {
-          if (err instanceof BadCommitSwapError) {
-            throw new InvalidRequestError(err.message, 'InvalidSwap')
-          } else {
-            throw err
-          }
+      const backlinkDeletions = validate
+        ? await getBacklinkDeletions(ctx.db, ctx, write)
+        : []
+
+      const writes = [...backlinkDeletions, write]
+
+      try {
+        await ctx.services
+          .repo(ctx.db)
+          .attemptWrites({ did, writes, swapCommitCid }, 5, 100)
+      } catch (err) {
+        if (err instanceof BadCommitSwapError) {
+          throw new InvalidRequestError(err.message, 'InvalidSwap')
         }
-      })
+        throw err
+      }
 
       return {
         encoding: 'application/json',
@@ -89,7 +84,6 @@ async function getBacklinkDeletions(
   ctx: AppContext,
   write: PreparedCreate,
 ) {
-  tx.assertTransaction()
   const recordTxn = ctx.services.record(tx)
   const {
     record,

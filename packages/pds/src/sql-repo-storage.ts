@@ -30,6 +30,18 @@ export class SqlRepoStorage extends RepoStorage {
   // instead of waiting for row locks, we attempt to grab the root skipping over locked rows
   // if we get no result, we wait for 200ms so the previous write has the chance to go through & then try again
   // if the lock is still held, we check (without a row lock) to see the row exists at all
+  async lockHead(): Promise<CID | null> {
+    let builder = this.db.db
+      .selectFrom('repo_root')
+      .selectAll()
+      .where('did', '=', this.did)
+    if (this.db.dialect !== 'sqlite') {
+      builder = builder.forUpdate().skipLocked()
+    }
+    const res = await builder.executeTakeFirst()
+    if (!res) return null
+    return CID.parse(res.root)
+  }
   private async getAndLockHeadPg(): Promise<RepoRoot | null> {
     const selectAndSkipLock = async () => {
       return await this.db.db
