@@ -176,14 +176,17 @@ describe('pds admin invite views', () => {
   })
 
   it('does not allow non-admin moderators to disable invites.', async () => {
-    const attemptCreateInvite = agent.api.com.atproto.admin.disableInviteCodes(
-      { codes: ['x'], accounts: [alice] },
-      {
-        encoding: 'application/json',
-        headers: { authorization: moderatorAuth() },
-      },
+    const attemptDisableInvites =
+      agent.api.com.atproto.admin.disableInviteCodes(
+        { codes: ['x'], accounts: [alice] },
+        {
+          encoding: 'application/json',
+          headers: { authorization: moderatorAuth() },
+        },
+      )
+    await expect(attemptDisableInvites).rejects.toThrow(
+      'Authentication Required',
     )
-    await expect(attemptCreateInvite).rejects.toThrow('Authentication Required')
   })
 
   it('does not allow non-admin moderators to create invites.', async () => {
