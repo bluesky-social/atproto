@@ -13,7 +13,6 @@ import { valuesList } from './db/util'
 import { IpldBlock } from './db/tables/ipld-block'
 import { RepoCommitBlock } from './db/tables/repo-commit-block'
 import { RepoCommitHistory } from './db/tables/repo-commit-history'
-import { RepoRoot } from './db/tables/repo-root'
 
 export class SqlRepoStorage extends RepoStorage {
   cache: BlockMap = new BlockMap()
@@ -26,9 +25,7 @@ export class SqlRepoStorage extends RepoStorage {
     super()
   }
 
-  // instead of waiting for row locks, we attempt to grab the root skipping over locked rows
-  // if we get no result, we wait for 200ms so the previous write has the chance to go through & then try again
-  // if the lock is still held, we check (without a row lock) to see the row exists at all
+  // note this method will return null if the repo has a lock on it currently
   async lockHead(): Promise<CID | null> {
     let builder = this.db.db
       .selectFrom('repo_root')
@@ -40,15 +37,6 @@ export class SqlRepoStorage extends RepoStorage {
     const res = await builder.executeTakeFirst()
     if (!res) return null
     return CID.parse(res.root)
-  }
-
-  private async getHeadNoLock(): Promise<RepoRoot | null> {
-    const res = await this.db.db
-      .selectFrom('repo_root')
-      .selectAll()
-      .where('did', '=', this.did)
-      .executeTakeFirst()
-    return res ?? null
   }
 
   async getHead(): Promise<CID | null> {

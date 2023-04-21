@@ -227,9 +227,7 @@ export class RepoService {
     const storage = new SqlRepoStorage(this.db, did, now)
     const currRoot = await storage.lockHead()
     if (!currRoot) {
-      throw new InvalidRequestError(
-        `${did} is not a registered repo on this server`,
-      )
+      throw new ConcurrentWriteError()
     }
     if (swapCommit && !currRoot.equals(swapCommit)) {
       throw new BadCommitSwapError(currRoot)
