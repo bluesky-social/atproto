@@ -1,12 +1,19 @@
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { Database } from '../../src'
-import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
+import {
+  runTestServer,
+  forSnapshot,
+  CloseFn,
+  adminAuth,
+  TestServerInfo,
+} from '../_util'
 import { RecordRef, SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import threadSeed, { walk, item, Item } from '../seeds/thread'
 
 describe('pds thread views', () => {
+  let server: TestServerInfo
   let agent: AtpAgent
   let db: Database
   let close: CloseFn
@@ -18,7 +25,7 @@ describe('pds thread views', () => {
   let carol: string
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    server = await runTestServer({
       dbPostgresSchema: 'views_thread',
     })
     db = server.ctx.db
@@ -29,12 +36,12 @@ describe('pds thread views', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
-    await server.ctx.labeler.processAll()
   })
 
   beforeAll(async () => {
     // Add a repost of a reply so that we can confirm viewer state in the thread
     await sc.repost(bob, sc.replies[alice][0].ref)
+    await server.ctx.backgroundQueue.processAll()
   })
 
   afterAll(async () => {
@@ -124,6 +131,7 @@ describe('pds thread views', () => {
       'Reply reply',
     )
     indexes.aliceReplyReply = sc.replies[alice].length - 1
+    await server.ctx.backgroundQueue.processAll()
 
     const thread1 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
@@ -132,6 +140,7 @@ describe('pds thread views', () => {
     expect(forSnapshot(thread1.data.thread)).toMatchSnapshot()
 
     await sc.deletePost(bob, sc.replies[bob][indexes.bobReply].ref.uri)
+    await server.ctx.backgroundQueue.processAll()
 
     const thread2 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
