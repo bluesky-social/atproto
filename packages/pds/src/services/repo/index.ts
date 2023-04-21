@@ -113,7 +113,8 @@ export class RepoService {
   ) {
     this.db.assertNotTransaction()
     const { did, writes, swapCommitCid } = toWrite
-    const commit = await this.formatCommit(did, writes, swapCommitCid)
+    const storage = new SqlRepoStorage(this.db, did)
+    const commit = await this.formatCommit(storage, did, writes, swapCommitCid)
     try {
       await this.serviceTx(async (srvcTx) => {
         await srvcTx.processCommit(
@@ -137,11 +138,11 @@ export class RepoService {
   }
 
   async formatCommit(
+    storage: SqlRepoStorage,
     did: string,
     writes: PreparedWrite[],
     swapCommit?: CID,
   ): Promise<CommitData> {
-    const storage = new SqlRepoStorage(this.db, did)
     const currRoot = await storage.getHead()
     if (!currRoot) {
       throw new InvalidRequestError(
