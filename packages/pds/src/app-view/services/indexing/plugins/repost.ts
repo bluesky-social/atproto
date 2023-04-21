@@ -113,14 +113,13 @@ const notifsForDelete = (
 const updateAggregates = async (db: DatabaseSchema, repost: IndexedRepost) => {
   const repostCountQb = db
     .insertInto('post_agg')
-    .columns(['uri', 'repostCount'])
-    .expression((exp) =>
-      exp
+    .values({
+      uri: repost.subject,
+      repostCount: db
         .selectFrom('repost')
         .where('repost.subject', '=', repost.subject)
-        .groupBy('repost.subject')
-        .select(['repost.subject as uri', countAll.as('repostCount')]),
-    )
+        .select(countAll.as('count')),
+    })
     .onConflict((oc) =>
       oc
         .column('uri')

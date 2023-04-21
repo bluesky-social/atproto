@@ -88,14 +88,13 @@ const notifsForDelete = (
 const updateAggregates = async (db: DatabaseSchema, follow: IndexedFollow) => {
   const followersCountQb = db
     .insertInto('profile_agg')
-    .columns(['did', 'followersCount'])
-    .expression((exp) =>
-      exp
+    .values({
+      did: follow.subjectDid,
+      followersCount: db
         .selectFrom('follow')
         .where('follow.subjectDid', '=', follow.subjectDid)
-        .groupBy('follow.subjectDid')
-        .select(['follow.subjectDid as did', countAll.as('followersCount')]),
-    )
+        .select(countAll.as('count')),
+    })
     .onConflict((oc) =>
       oc.column('did').doUpdateSet({
         followersCount: excluded(db, 'followersCount'),
@@ -103,14 +102,13 @@ const updateAggregates = async (db: DatabaseSchema, follow: IndexedFollow) => {
     )
   const followsCountQb = db
     .insertInto('profile_agg')
-    .columns(['did', 'followsCount'])
-    .expression((exp) =>
-      exp
+    .values({
+      did: follow.creator,
+      followsCount: db
         .selectFrom('follow')
         .where('follow.creator', '=', follow.creator)
-        .groupBy('follow.creator')
-        .select(['follow.creator as did', countAll.as('followsCount')]),
-    )
+        .select(countAll.as('count')),
+    })
     .onConflict((oc) =>
       oc.column('did').doUpdateSet({
         followsCount: excluded(db, 'followsCount'),

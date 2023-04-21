@@ -154,13 +154,13 @@ export class Database {
 
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
     let txMsgs: ChannelMsg[] = []
-    const res = await this.db.transaction().execute(async (txn) => {
+    const [dbTxn, res] = await this.db.transaction().execute(async (txn) => {
       const dbTxn = new Database(txn, this.cfg, this.channels)
       const txRes = await fn(dbTxn)
       txMsgs = dbTxn.txChannelMsgs
-      return txRes
+      return [dbTxn, txRes]
     })
-    this.txEvt.emit('commit')
+    dbTxn.txEvt.emit('commit')
     txMsgs.forEach((msg) => this.sendChannelMsg(msg))
     return res
   }

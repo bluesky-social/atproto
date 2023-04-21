@@ -7,7 +7,6 @@ import * as Like from './plugins/like'
 import * as Repost from './plugins/repost'
 import * as Follow from './plugins/follow'
 import * as Profile from './plugins/profile'
-import { MessageQueue } from '../../../event-stream/types'
 import { BackgroundQueue } from '../../../event-stream/background-queue'
 
 export class IndexingService {
@@ -19,11 +18,7 @@ export class IndexingService {
     profile: Profile.PluginType
   }
 
-  constructor(
-    public db: Database,
-    public messageDispatcher: MessageQueue,
-    public backgroundQueue: BackgroundQueue,
-  ) {
+  constructor(public db: Database, public backgroundQueue: BackgroundQueue) {
     this.records = {
       post: Post.makePlugin(this.db, backgroundQueue),
       like: Like.makePlugin(this.db, backgroundQueue),
@@ -33,12 +28,8 @@ export class IndexingService {
     }
   }
 
-  static creator(
-    messageDispatcher: MessageQueue,
-    backgroundQueue: BackgroundQueue,
-  ) {
-    return (db: Database) =>
-      new IndexingService(db, messageDispatcher, backgroundQueue)
+  static creator(backgroundQueue: BackgroundQueue) {
+    return (db: Database) => new IndexingService(db, backgroundQueue)
   }
 
   async indexRecord(

@@ -295,34 +295,35 @@ const notifsForDelete = (
 }
 
 const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
-  const replyCountQb = db
-    .insertInto('post_agg')
-    .columns(['uri', 'replyCount'])
-    .expression((exp) =>
-      exp
-        .selectFrom('post')
-        .where('post.replyParent', '=', postIdx.post.replyParent)
-        .where('post.replyParent', 'is not', null)
-        .groupBy('post.replyParent')
-        .select(['post.replyParent as uri', countAll.as('replyCount')]),
-    )
-    .onConflict((oc) =>
-      oc.column('uri').doUpdateSet({ replyCount: excluded(db, 'replyCount') }),
-    )
+  const replyCountQb = postIdx.post.replyParent
+    ? db
+        .insertInto('post_agg')
+        .values({
+          uri: postIdx.post.replyParent,
+          replyCount: db
+            .selectFrom('post')
+            .where('post.replyParent', '=', postIdx.post.replyParent)
+            .select(countAll.as('count')),
+        })
+        .onConflict((oc) =>
+          oc
+            .column('uri')
+            .doUpdateSet({ replyCount: excluded(db, 'replyCount') }),
+        )
+    : null
   const postsCountQb = db
     .insertInto('profile_agg')
-    .columns(['did', 'postsCount'])
-    .expression((exp) =>
-      exp
+    .values({
+      did: postIdx.post.creator,
+      postsCount: db
         .selectFrom('post')
         .where('post.creator', '=', postIdx.post.creator)
-        .groupBy('post.creator')
-        .select(['post.creator as did', countAll.as('postsCount')]),
-    )
+        .select(countAll.as('count')),
+    })
     .onConflict((oc) =>
       oc.column('did').doUpdateSet({ postsCount: excluded(db, 'postsCount') }),
     )
-  await Promise.all([replyCountQb.execute(), postsCountQb.execute()])
+  await Promise.all([replyCountQb?.execute(), postsCountQb.execute()])
 }
 
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>

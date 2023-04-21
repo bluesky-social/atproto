@@ -53,7 +53,7 @@ export function createServices(resources: {
     appView: {
       actor: ActorService.creator(imgUriBuilder),
       feed: FeedService.creator(imgUriBuilder),
-      indexing: IndexingService.creator(messageDispatcher, backgroundQueue),
+      indexing: IndexingService.creator(backgroundQueue),
       label: LabelService.creator(),
     },
   }

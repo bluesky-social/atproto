@@ -90,14 +90,13 @@ const notifsForDelete = (
 const updateAggregates = async (db: DatabaseSchema, like: IndexedLike) => {
   const likeCountQb = db
     .insertInto('post_agg')
-    .columns(['uri', 'likeCount'])
-    .expression((exp) =>
-      exp
+    .values({
+      uri: like.subject,
+      likeCount: db
         .selectFrom('like')
         .where('like.subject', '=', like.subject)
-        .groupBy('like.subject')
-        .select(['like.subject as uri', countAll.as('likeCount')]),
-    )
+        .select(countAll.as('count')),
+    })
     .onConflict((oc) =>
       oc.column('uri').doUpdateSet({ likeCount: excluded(db, 'likeCount') }),
     )
