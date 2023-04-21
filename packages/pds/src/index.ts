@@ -70,6 +70,7 @@ export class PDS {
     const auth = new ServerAuth({
       jwtSecret: config.jwtSecret,
       adminPass: config.adminPassword,
+      moderatorPass: config.moderatorPassword,
     })
 
     const messageDispatcher = new MessageDispatcher()
