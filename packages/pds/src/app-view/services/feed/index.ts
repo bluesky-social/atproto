@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { cborToLexRecord } from '@atproto/repo'
 import Database from '../../../db'
-import { countAll, notSoftDeletedClause } from '../../../db/util'
+import { notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
 import { isView as isViewImages } from '../../../lexicon/types/app/bsky/embed/images'
 import { isView as isViewExternal } from '../../../lexicon/types/app/bsky/embed/external'
@@ -143,6 +143,7 @@ export class FeedService {
     const posts = await db
       .selectFrom('post')
       .where('post.uri', 'in', postUris)
+      .leftJoin('post_agg', 'post_agg.uri', 'post.uri')
       .innerJoin('ipld_block', (join) =>
         join
           .onRef('ipld_block.cid', '=', 'post.cid')
@@ -158,21 +159,9 @@ export class FeedService {
         'post.creator as creator',
         'post.indexedAt as indexedAt',
         'ipld_block.content as recordBytes',
-        db
-          .selectFrom('like')
-          .whereRef('subject', '=', ref('post.uri'))
-          .select(countAll.as('count'))
-          .as('likeCount'),
-        db
-          .selectFrom('repost')
-          .whereRef('subject', '=', ref('post.uri'))
-          .select(countAll.as('count'))
-          .as('repostCount'),
-        db
-          .selectFrom('post as reply')
-          .whereRef('reply.replyParent', '=', ref('post.uri'))
-          .select(countAll.as('count'))
-          .as('replyCount'),
+        'post_agg.likeCount as likeCount',
+        'post_agg.repostCount as repostCount',
+        'post_agg.replyCount as replyCount',
         db
           .selectFrom('repost')
           .where('creator', '=', requester)
@@ -347,9 +336,9 @@ export class FeedService {
       author: author,
       record: cborToLexRecord(post.recordBytes),
       embed: embeds[uri],
-      replyCount: post.replyCount,
-      repostCount: post.repostCount,
-      likeCount: post.likeCount,
+      replyCount: post.replyCount ?? 0,
+      repostCount: post.repostCount ?? 0,
+      likeCount: post.likeCount ?? 0,
       indexedAt: post.indexedAt,
       viewer: {
         repost: post.requesterRepost ?? undefined,
