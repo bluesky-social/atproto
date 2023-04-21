@@ -84,7 +84,7 @@ export class RepoService {
     ])
   }
 
-  async processWrites(
+  async processCommit(
     did: string,
     writes: PreparedWrite[],
     commitData: CommitData,
@@ -106,7 +106,7 @@ export class RepoService {
     ])
   }
 
-  async attemptWrites(
+  async processWrites(
     toWrite: { did: string; writes: PreparedWrite[]; swapCommitCid?: CID },
     times: number,
     timeout = 100,
@@ -116,7 +116,7 @@ export class RepoService {
     const commit = await this.formatCommit(did, writes, swapCommitCid)
     try {
       await this.serviceTx(async (srvcTx) => {
-        await srvcTx.processWrites(
+        await srvcTx.processCommit(
           did,
           writes,
           commit,
@@ -129,7 +129,7 @@ export class RepoService {
           throw err
         }
         await wait(timeout)
-        await this.attemptWrites(toWrite, times - 1, timeout)
+        await this.processWrites(toWrite, times - 1, timeout)
       } else {
         throw err
       }

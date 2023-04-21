@@ -40,7 +40,7 @@ export default function (server: Server, ctx: AppContext) {
       try {
         await ctx.services
           .repo(ctx.db)
-          .attemptWrites({ did, writes, swapCommitCid }, 5, 100)
+          .processWrites({ did, writes, swapCommitCid }, 5, 100)
       } catch (err) {
         if (
           err instanceof BadCommitSwapError ||
