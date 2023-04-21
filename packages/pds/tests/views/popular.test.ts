@@ -47,6 +47,7 @@ describe('popular views', () => {
     dan = sc.dids.dan
     eve = sc.dids.eve
     frank = sc.dids.frank
+    await server.ctx.backgroundQueue.processAll()
   })
 
   afterAll(async () => {

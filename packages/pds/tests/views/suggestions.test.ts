@@ -16,6 +16,7 @@ describe('pds user search views', () => {
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
     await basicSeed(sc)
+    await server.ctx.backgroundQueue.processAll()
   })
 
   afterAll(async () => {
