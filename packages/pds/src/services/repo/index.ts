@@ -225,7 +225,7 @@ export class RepoService {
   async rebaseRepo(did: string, now: string, swapCommit?: CID) {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
-    const currRoot = await storage.getHead(true)
+    const currRoot = await storage.lockHead()
     if (!currRoot) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,

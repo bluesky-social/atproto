@@ -295,7 +295,6 @@ describe('indexing', () => {
       const { db, services } = testEnv.bsky.ctx
       const { db: pdsDb, services: pdsServices } = testEnv.pds.ctx
       // Create a good and a bad post record
-      const repoTxn = pdsServices.repo(pdsDb)
       const writes = await Promise.all([
         pdsRepo.prepareCreate({
           did: sc.dids.alice,
@@ -309,7 +308,9 @@ describe('indexing', () => {
           validate: false,
         }),
       ])
-      await repoTxn.processWrites({ did: sc.dids.alice, writes }, 1)
+      await pdsServices
+        .repo(pdsDb)
+        .processWrites({ did: sc.dids.alice, writes }, 1)
       // Index
       const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
         did: sc.dids.alice,
