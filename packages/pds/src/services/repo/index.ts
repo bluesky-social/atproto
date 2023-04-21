@@ -94,7 +94,7 @@ export class RepoService {
     const storage = new SqlRepoStorage(this.db, did, now)
     const locked = await storage.lockHead()
     if (!locked || !locked.equals(commitData.prev)) {
-      throw new ConcurrentWriteError(did)
+      throw new ConcurrentWriteError()
     }
     await Promise.all([
       // persist the commit to repo storage
@@ -270,7 +270,7 @@ export class RepoService {
 }
 
 export class ConcurrentWriteError extends Error {
-  constructor(public did: string) {
-    super(`concurrent write on repo ${did}`)
+  constructor() {
+    super('too many concurrent writes')
   }
 }
