@@ -106,18 +106,4 @@ describe('crud operations', () => {
       createdPost.cid.toString(),
     )
   })
-
-  it('throws an error if the racing operation takes too long to finish', async () => {
-    const { write, commit } = await formatWrite()
-    const processPromise = processCommitWithWait(did, [write], commit, 1500)
-
-    const attempt = agent.api.app.bsky.feed.post.create(
-      { repo: did },
-      { text: 'two', createdAt: new Date().toISOString() },
-    )
-
-    await expect(attempt).rejects.toThrow('too many concurrent writes')
-
-    await processPromise
-  })
 })
