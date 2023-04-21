@@ -37,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
                   .whereRef('like.subject', '=', 'post.uri')
                   .select(countAll.as('count')),
               '>=',
-              5,
+              8,
             ),
         )
         .whereNotExists(
