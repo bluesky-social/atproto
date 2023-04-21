@@ -7,6 +7,7 @@ export class DidSqlCache extends DidCache {
 
   constructor(public db: Database, public ttl: number) {
     super()
+    this.pQueue = new PQueue()
   }
 
   async cacheDid(did: string, doc: DidDocument): Promise<void> {
@@ -17,6 +18,18 @@ export class DidSqlCache extends DidCache {
         oc.column('did').doUpdateSet({ doc, updatedAt: Date.now() }),
       )
       .executeTakeFirst()
+  }
+
+  async refreshCache(
+    did: string,
+    getDoc: () => Promise<DidDocument | null>,
+  ): Promise<void> {
+    this.pQueue?.add(async () => {
+      const doc = await getDoc()
+      if (doc) {
+        await this.cacheDid(did, doc)
+      }
+    })
   }
 
   async checkCache(did: string): Promise<CacheResult | null> {
@@ -40,6 +53,18 @@ export class DidSqlCache extends DidCache {
 
   async clear(): Promise<void> {
     await this.db.db.deleteFrom('did_cache').execute()
+  }
+
+  async processAll() {
+    await this.pQueue?.onIdle()
+  }
+
+  async destroy() {
+    const pQueue = this.pQueue
+    this.pQueue = null
+    pQueue?.pause()
+    pQueue?.clear()
+    await pQueue?.onIdle()
   }
 }
 

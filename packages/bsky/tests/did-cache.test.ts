@@ -11,6 +11,7 @@ describe('did cache', () => {
   let testEnv: TestEnvInfo
   let sc: SeedClient
   let didResolver: DidResolver
+  let didCache: DidSqlCache
 
   let alice: string
   let bob: string
@@ -22,6 +23,7 @@ describe('did cache', () => {
       dbPostgresSchema: 'bsky_did_cache',
     })
     didResolver = testEnv.bsky.ctx.didResolver
+    didCache = testEnv.bsky.ctx.didCache
     const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
     await userSeed(sc)
@@ -37,6 +39,7 @@ describe('did cache', () => {
   })
 
   it('caches dids on lookup', async () => {
+    await didCache.processAll()
     const docs = await Promise.all([
       didResolver.cache?.checkCache(alice),
       didResolver.cache?.checkCache(bob),
@@ -66,6 +69,7 @@ describe('did cache', () => {
       didResolver.resolveDid(carol),
       didResolver.resolveDid(dan),
     ])
+    await didCache.processAll()
 
     const docs = await Promise.all([
       didResolver.cache?.checkCache(alice),
@@ -80,15 +84,32 @@ describe('did cache', () => {
     expect(docs[3]?.doc.id).toEqual(dan)
   })
 
-  it('accurately reports expired dids', async () => {
+  it('accurately reports expired dids & refreshes the cache', async () => {
     const didCache = new DidSqlCache(testEnv.bsky.ctx.db, 1)
     const shortCacheResolver = new DidResolver(
       { plcUrl: testEnv.bsky.ctx.cfg.didPlcUrl },
       didCache,
     )
-    await shortCacheResolver.resolveDid(alice)
+    const doc = await shortCacheResolver.resolveDid(alice)
+    await didCache.processAll()
+    // let's mess with alice's doc so we know what we're getting
+    await didCache.cacheDid(alice, { ...doc, id: 'did:example:alice' })
     await wait(5)
+
+    // first check the cache & see that we have the stale value
     const cached = await shortCacheResolver.cache?.checkCache(alice)
     expect(cached?.expired).toBe(true)
+    expect(cached?.doc.id).toEqual('did:example:alice')
+    // see that the resolver gives us the stale value while it revalidates
+    const staleGet = await shortCacheResolver.resolveDid(alice)
+    expect(staleGet?.id).toEqual('did:example:alice')
+    await didCache.processAll()
+
+    // since it revalidated, ensure we have the new value
+    const updatedCache = await shortCacheResolver.cache?.checkCache(alice)
+    expect(updatedCache?.doc.id).toEqual(alice)
+    const updatedGet = await shortCacheResolver.resolveDid(alice)
+    expect(updatedGet?.id).toEqual(alice)
+    await didCache.destroy()
   })
 })

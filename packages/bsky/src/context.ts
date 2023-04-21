@@ -5,6 +5,7 @@ import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import * as auth from './auth'
+import DidSqlCache from './did-cache'
 
 export class AppContext {
   constructor(
@@ -14,6 +15,7 @@ export class AppContext {
       cfg: ServerConfig
       services: Services
       didResolver: DidResolver
+      didCache: DidSqlCache
     },
   ) {}
 
@@ -39,6 +41,10 @@ export class AppContext {
 
   get didResolver(): DidResolver {
     return this.opts.didResolver
+  }
+
+  get didCache(): DidSqlCache {
+    return this.opts.didCache
   }
 
   get authVerifier() {

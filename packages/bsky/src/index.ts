@@ -66,6 +66,7 @@ export class BskyAppView {
       services,
       imgUriBuilder,
       didResolver,
+      didCache,
     })
 
     let imgProcessingServer: ImageProcessingServer | undefined
@@ -112,6 +113,7 @@ export class BskyAppView {
   }
 
   async destroy(): Promise<void> {
+    await this.ctx.didCache.destroy()
     await this.sub?.destroy()
     await this.terminator?.terminate()
     await this.ctx.db.close()
