@@ -4,6 +4,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { BadCommitSwapError, BadRecordSwapError } from '../../../../repo'
 import { CID } from 'multiformats/cid'
+import { ConcurrentWriteError } from '../../../../services/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.deleteRecord({
@@ -40,13 +41,15 @@ export default function (server: Server, ctx: AppContext) {
       try {
         await ctx.services
           .repo(ctx.db)
-          .processWrites({ did, writes, swapCommitCid }, 5, 100)
+          .processWrites({ did, writes, swapCommitCid }, 10)
       } catch (err) {
         if (
           err instanceof BadCommitSwapError ||
           err instanceof BadRecordSwapError
         ) {
           throw new InvalidRequestError(err.message, 'InvalidSwap')
+        } else if (err instanceof ConcurrentWriteError) {
+          throw new InvalidRequestError(err.message, 'ConcurrentWrites')
         } else {
           throw err
         }

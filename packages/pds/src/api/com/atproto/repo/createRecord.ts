@@ -12,6 +12,7 @@ import {
 import AppContext from '../../../../context'
 import { ids } from '../../../../lexicon/lexicons'
 import Database from '../../../../db'
+import { ConcurrentWriteError } from '../../../../services/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.createRecord({
@@ -60,10 +61,12 @@ export default function (server: Server, ctx: AppContext) {
       try {
         await ctx.services
           .repo(ctx.db)
-          .processWrites({ did, writes, swapCommitCid }, 5, 100)
+          .processWrites({ did, writes, swapCommitCid }, 10)
       } catch (err) {
         if (err instanceof BadCommitSwapError) {
           throw new InvalidRequestError(err.message, 'InvalidSwap')
+        } else if (err instanceof ConcurrentWriteError) {
+          throw new InvalidRequestError(err.message, 'ConcurrentWrites')
         }
         throw err
       }
