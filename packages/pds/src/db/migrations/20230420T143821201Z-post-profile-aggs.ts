@@ -24,6 +24,10 @@ export async function down(db: Kysely<unknown>): Promise<void> {
 
 // This is intentionally not called here, but exists for documentation purposes.
 // This query should be safe to be run any time to update the feed_item index.
+
+// @NOTE these can only update records that do not have a "zero" count, so it's suitable for an initial
+// run, but it's not suitable for a general refresh (which may need to update a count down to zero).
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getAggMigrationSql(db: Kysely<Schema>) {
   const { ref } = db.dynamic
