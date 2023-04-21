@@ -8,6 +8,7 @@ import { keywordLabeling } from '../../src/labeler/util'
 import { cidForCbor, streamToBytes, TID } from '@atproto/common'
 import * as ui8 from 'uint8arrays'
 import { LabelService } from '../../src/app-view/services/label'
+import { BackgroundQueue } from '../../src/event-stream/background-queue'
 
 describe('labeler', () => {
   let close: CloseFn
@@ -29,6 +30,7 @@ describe('labeler', () => {
     labeler = new TestLabeler({
       db: ctx.db,
       blobstore: ctx.blobstore,
+      backgroundQueue: ctx.backgroundQueue,
       labelerDid,
       keywords: { label_me: 'test-label', another_label: 'another-label' },
     })
@@ -164,11 +166,12 @@ class TestLabeler extends Labeler {
   constructor(opts: {
     db: Database
     blobstore: BlobStore
+    backgroundQueue: BackgroundQueue
     labelerDid: string
     keywords: Record<string, string>
   }) {
-    const { db, blobstore, labelerDid, keywords } = opts
-    super({ db, blobstore, labelerDid })
+    const { db, blobstore, backgroundQueue, labelerDid, keywords } = opts
+    super({ db, blobstore, backgroundQueue, labelerDid })
     this.keywords = keywords
   }
 

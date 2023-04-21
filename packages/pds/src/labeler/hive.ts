@@ -5,6 +5,7 @@ import { Labeler } from './base'
 import Database from '../db'
 import { BlobStore } from '@atproto/repo'
 import { keywordLabeling } from './util'
+import { BackgroundQueue } from '../event-stream/background-queue'
 
 const HIVE_ENDPOINT = 'https://api.thehive.ai/api/v2/task/sync'
 
@@ -15,12 +16,14 @@ export class HiveLabeler extends Labeler {
   constructor(opts: {
     db: Database
     blobstore: BlobStore
+    backgroundQueue: BackgroundQueue
     labelerDid: string
     hiveApiKey: string
     keywords: Record<string, string>
   }) {
-    const { db, blobstore, labelerDid, hiveApiKey, keywords } = opts
-    super({ db, blobstore, labelerDid })
+    const { db, blobstore, backgroundQueue, labelerDid, hiveApiKey, keywords } =
+      opts
+    super({ db, blobstore, backgroundQueue, labelerDid })
     this.hiveApiKey = hiveApiKey
     this.keywords = keywords
   }

@@ -27,6 +27,7 @@ describe('pds profile views', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
+    await server.ctx.backgroundQueue.processAll()
   })
 
   afterAll(async () => {

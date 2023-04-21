@@ -11,6 +11,7 @@ import { CtxMigrationProvider } from './migrations/provider'
 import { dbLogger as log } from '../logger'
 
 export class Database {
+  txEvt = new EventEmitter() as TxnEmitter
   txChannelMsgs: ChannelMsg[] = []
   channels: Channels
   migrator: Migrator
@@ -113,6 +114,11 @@ export class Database {
     }
   }
 
+  onCommit(fn: () => void) {
+    this.assertTransaction()
+    this.txEvt.once('commit', fn)
+  }
+
   private getSchemaChannel(channel: string) {
     if (this.cfg.dialect === 'pg' && this.cfg.schema) {
       return this.cfg.schema + '_' + channel
@@ -148,15 +154,14 @@ export class Database {
 
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
     let txMsgs: ChannelMsg[] = []
-    const res = await this.db.transaction().execute(async (txn) => {
+    const [dbTxn, res] = await this.db.transaction().execute(async (txn) => {
       const dbTxn = new Database(txn, this.cfg, this.channels)
       const txRes = await fn(dbTxn)
       txMsgs = dbTxn.txChannelMsgs
-      return txRes
+      return [dbTxn, txRes]
     })
-    txMsgs.forEach((msg) => {
-      this.sendChannelMsg(msg)
-    })
+    dbTxn.txEvt.emit('commit')
+    txMsgs.forEach((msg) => this.sendChannelMsg(msg))
     return res
   }
 
@@ -246,6 +251,12 @@ type ChannelEvents = {
 }
 
 type ChannelEmitter = TypedEmitter<ChannelEvents>
+
+type TxnEvents = {
+  commit: () => void
+}
+
+type TxnEmitter = TypedEmitter<TxnEvents>
 
 type ChannelMsg = 'repo_seq'
 

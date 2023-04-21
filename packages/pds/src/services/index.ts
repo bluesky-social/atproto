@@ -14,6 +14,7 @@ import { FeedService } from '../app-view/services/feed'
 import { IndexingService } from '../app-view/services/indexing'
 import { Labeler } from '../labeler'
 import { LabelService } from '../app-view/services/label'
+import { BackgroundQueue } from '../event-stream/background-queue'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
@@ -22,6 +23,7 @@ export function createServices(resources: {
   imgUriBuilder: ImageUriBuilder
   imgInvalidator: ImageInvalidator
   labeler: Labeler
+  backgroundQueue: BackgroundQueue
 }): Services {
   const {
     repoSigningKey,
@@ -30,6 +32,7 @@ export function createServices(resources: {
     imgUriBuilder,
     imgInvalidator,
     labeler,
+    backgroundQueue,
   } = resources
   return {
     account: AccountService.creator(),
@@ -50,7 +53,7 @@ export function createServices(resources: {
     appView: {
       actor: ActorService.creator(imgUriBuilder),
       feed: FeedService.creator(imgUriBuilder),
-      indexing: IndexingService.creator(messageDispatcher),
+      indexing: IndexingService.creator(backgroundQueue),
       label: LabelService.creator(),
     },
   }
