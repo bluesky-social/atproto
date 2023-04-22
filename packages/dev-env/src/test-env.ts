@@ -232,8 +232,8 @@ const uniqueLockId = () => {
 
 export const mockNetworkUtilities = (pds: PdsServerInfo) => {
   // Map pds public url to its local url when resolving from plc
-  const origResolveDid = DidResolver.prototype.resolveDid
-  DidResolver.prototype.resolveDid = async function (did) {
+  const origResolveDid = DidResolver.prototype.resolveDidNoCache
+  DidResolver.prototype.resolveDidNoCache = async function (did) {
     const result = await (origResolveDid.call(this, did) as ReturnType<
       typeof origResolveDid
     >)
