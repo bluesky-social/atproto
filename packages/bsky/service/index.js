@@ -55,7 +55,7 @@ const getEnv = () => ({
   dbPostgresUrl: process.env.DB_POSTGRES_URL,
   dbMigratePostgresUrl:
     process.env.DB_MIGRATE_POSTGRES_URL || process.env.DB_POSTGRES_URL,
-  dbPostgresSchema: process.env.DB_POSTGRES_SCHEMA,
+  dbPostgresSchema: process.env.DB_POSTGRES_SCHEMA || undefined,
   publicUrl: process.env.PUBLIC_URL,
   didPlcUrl: process.env.DID_PLC_URL,
   imgUriSalt: process.env.IMG_URI_SALT,
