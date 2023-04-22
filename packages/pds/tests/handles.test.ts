@@ -4,6 +4,7 @@ import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import * as util from './_util'
 import { AppContext } from '../src'
+import { moderatorAuth } from './_util'
 
 // outside of suite so they can be used in mock
 let alice: string
@@ -296,5 +297,16 @@ describe('handles', () => {
       handle: 'bob-alt.test',
     })
     await expect(attempt2).rejects.toThrow('Authentication Required')
+    const attempt3 = agent.api.com.atproto.admin.updateAccountHandle(
+      {
+        did: bob,
+        handle: 'bob-alt.test',
+      },
+      {
+        headers: { authorization: moderatorAuth() },
+        encoding: 'application/json',
+      },
+    )
+    await expect(attempt3).rejects.toThrow('Authentication Required')
   })
 })

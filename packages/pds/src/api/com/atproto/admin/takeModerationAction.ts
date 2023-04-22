@@ -4,12 +4,12 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { TAKEDOWN } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { getSubject, getAction } from '../moderation/util'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
-    auth: ctx.adminVerifier,
-    handler: async ({ input }) => {
+    auth: ctx.moderatorVerifier,
+    handler: async ({ input, auth }) => {
       const { db, services } = ctx
       const moderationService = services.moderation(db)
       const {
@@ -21,6 +21,17 @@ export default function (server: Server, ctx: AppContext) {
         negateLabelVals,
         subjectBlobCids,
       } = input.body
+
+      if (
+        !auth.credentials.admin &&
+        (createLabelVals?.length ||
+          negateLabelVals?.length ||
+          action === TAKEDOWN)
+      ) {
+        throw new AuthRequiredError(
+          'Must be an admin to takedown or label content',
+        )
+      }
 
       validateLabels([...(createLabelVals ?? []), ...(negateLabelVals ?? [])])
 
