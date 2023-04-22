@@ -35,7 +35,6 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     // check that the invite code still has uses
-    let availableUses = 0
     if (ctx.cfg.inviteRequired && inviteCode) {
       const invite = await ctx.db.db
         .selectFrom('invite_code')
@@ -56,7 +55,6 @@ export default function (server: Server, ctx: AppContext) {
           'InvalidInviteCode',
         )
       }
-      availableUses = invite.availableUses
     }
 
     const now = new Date().toISOString()
@@ -80,6 +78,36 @@ export default function (server: Server, ctx: AppContext) {
     const result = await ctx.db.transaction(async (dbTxn) => {
       const actorTxn = ctx.services.account(dbTxn)
       const repoTxn = ctx.services.repo(dbTxn)
+
+      // it's a bit goofy that we run this logic twice,
+      // but we run it once for a sanity check before doing scrypt & plc ops
+      // & a second time for locking + integrity check
+      if (ctx.cfg.inviteRequired && inviteCode && ctx.db.dialect !== 'sqlite') {
+        const invite = await ctx.db.db
+          .selectFrom('invite_code')
+          .selectAll()
+          .forUpdate()
+          .skipLocked()
+          .where('code', '=', inviteCode)
+          .executeTakeFirst()
+        if (!invite) {
+          throw new InvalidRequestError(
+            'Too many concurrent uses of invite code',
+          )
+        }
+
+        const uses = await dbTxn.db
+          .selectFrom('invite_code_use')
+          .select(countAll.as('count'))
+          .where('code', '=', inviteCode)
+          .executeTakeFirstOrThrow()
+        if (invite.availableUses <= uses.count) {
+          throw new InvalidRequestError(
+            'Provided invite code not available',
+            'InvalidInviteCode',
+          )
+        }
+      }
 
       // Register user before going out to PLC to get a real did
       try {
@@ -117,19 +145,6 @@ export default function (server: Server, ctx: AppContext) {
             usedAt: now,
           })
           .execute()
-
-        const uses = await dbTxn.db
-          .selectFrom('invite_code_use')
-          .select(countAll.as('count'))
-          .where('code', '=', inviteCode)
-          .executeTakeFirstOrThrow()
-
-        if (uses.count > availableUses) {
-          throw new InvalidRequestError(
-            'Provided invite code not available',
-            'InvalidInviteCode',
-          )
-        }
       }
 
       // Setup repo root
