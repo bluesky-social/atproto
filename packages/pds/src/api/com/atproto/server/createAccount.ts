@@ -1,6 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as ident from '@atproto/identifier'
 import * as plc from '@did-plc/lib'
+import * as scrypt from '../../../../db/scrypt'
 import { Server } from '../../../../lexicon'
 import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
@@ -10,6 +11,14 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount(async ({ input, req }) => {
     const { email, password, inviteCode, recoveryKey } = input.body
 
+    if (ctx.cfg.inviteRequired && !inviteCode) {
+      throw new InvalidRequestError(
+        'No invite code provided',
+        'InvalidInviteCode',
+      )
+    }
+
+    // validate handle
     let handle: string
     try {
       handle = ident.normalizeAndEnsureValidHandle(input.body.handle)
@@ -25,59 +34,56 @@ export default function (server: Server, ctx: AppContext) {
       throw err
     }
 
+    // check that the invite code still has uses
+    let availableUses = 0
+    if (ctx.cfg.inviteRequired && inviteCode) {
+      const invite = await ctx.db.db
+        .selectFrom('invite_code')
+        .selectAll()
+        .where('code', '=', inviteCode)
+        .executeTakeFirst()
+
+      const uses = await ctx.db.db
+        .selectFrom('invite_code_use')
+        .select(countAll.as('count'))
+        .where('code', '=', inviteCode)
+        .executeTakeFirstOrThrow()
+
+      if (!invite || invite.disabled || invite.availableUses <= uses.count) {
+        req.log.info({ handle, email, inviteCode }, 'invalid invite code')
+        throw new InvalidRequestError(
+          'Provided invite code not available',
+          'InvalidInviteCode',
+        )
+      }
+      availableUses = invite.availableUses
+    }
+
     const now = new Date().toISOString()
+
+    const rotationKeys = [ctx.cfg.recoveryKey, ctx.plcRotationKey.did()]
+    if (recoveryKey) {
+      rotationKeys.unshift(recoveryKey)
+    }
+    // format create op, but don't send until we ensure the username & email are available
+    const plcCreate = await plc.createOp({
+      signingKey: ctx.repoSigningKey.did(),
+      rotationKeys,
+      handle,
+      pds: ctx.cfg.publicUrl,
+      signer: ctx.plcRotationKey,
+    })
+    const did = plcCreate.did
+
+    const passwordScrypt = await scrypt.genSaltAndHash(password)
 
     const result = await ctx.db.transaction(async (dbTxn) => {
       const actorTxn = ctx.services.account(dbTxn)
       const repoTxn = ctx.services.repo(dbTxn)
-      if (ctx.cfg.inviteRequired) {
-        if (!inviteCode) {
-          throw new InvalidRequestError(
-            'No invite code provided',
-            'InvalidInviteCode',
-          )
-        }
-
-        const invite = await dbTxn.db
-          .selectFrom('invite_code')
-          .selectAll()
-          .where('code', '=', inviteCode)
-          // Lock invite code to avoid duplicate use
-          .if(dbTxn.dialect === 'pg', (qb) => qb.forUpdate())
-          .executeTakeFirst()
-
-        const { useCount } = await dbTxn.db
-          .selectFrom('invite_code_use')
-          .select(countAll.as('useCount'))
-          .where('code', '=', inviteCode)
-          .executeTakeFirstOrThrow()
-
-        if (!invite || invite.disabled || invite.availableUses <= useCount) {
-          req.log.info({ handle, email, inviteCode }, 'invalid invite code')
-          throw new InvalidRequestError(
-            'Provided invite code not available',
-            'InvalidInviteCode',
-          )
-        }
-      }
-
-      const rotationKeys = [ctx.cfg.recoveryKey, ctx.plcRotationKey.did()]
-      if (recoveryKey) {
-        rotationKeys.unshift(recoveryKey)
-      }
-      // format create op, but don't send until we ensure the username & email are available
-      const plcCreate = await plc.createOp({
-        signingKey: ctx.repoSigningKey.did(),
-        rotationKeys,
-        handle,
-        pds: ctx.cfg.publicUrl,
-        signer: ctx.plcRotationKey,
-      })
-      const did = plcCreate.did
 
       // Register user before going out to PLC to get a real did
       try {
-        await actorTxn.registerUser(email, handle, did, password)
+        await actorTxn.registerUser({ email, handle, did, passwordScrypt })
       } catch (err) {
         if (err instanceof UserAlreadyExistsError) {
           const got = await actorTxn.getAccount(handle, true)
@@ -101,6 +107,7 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
+      // insert invite code use & do an integrity check to make sure we didn't over-use it
       if (ctx.cfg.inviteRequired && inviteCode) {
         await dbTxn.db
           .insertInto('invite_code_use')
@@ -110,6 +117,19 @@ export default function (server: Server, ctx: AppContext) {
             usedAt: now,
           })
           .execute()
+
+        const uses = await dbTxn.db
+          .selectFrom('invite_code_use')
+          .select(countAll.as('count'))
+          .where('code', '=', inviteCode)
+          .executeTakeFirstOrThrow()
+
+        if (uses.count > availableUses) {
+          throw new InvalidRequestError(
+            'Provided invite code not available',
+            'InvalidInviteCode',
+          )
+        }
       }
 
       // Setup repo root
