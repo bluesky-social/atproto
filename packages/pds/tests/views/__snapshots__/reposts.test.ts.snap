@@ -44,16 +44,7 @@ Array [
     "displayName": "bobby",
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [
-      Object {
-        "cid": "cids(0)",
-        "cts": "1970-01-01T00:00:00.000Z",
-        "neg": false,
-        "src": "did:example:labeler",
-        "uri": "record(5)",
-        "val": "test-label",
-      },
-    ],
+    "labels": Array [],
     "viewer": Object {
       "followedBy": "record(4)",
       "following": "record(3)",

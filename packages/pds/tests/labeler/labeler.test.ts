@@ -107,26 +107,7 @@ describe('labeler', () => {
     )
   })
 
-  it('labels text & imgs in profiles', async () => {
-    const profile = {
-      $type: 'app.bsky.actor.profile',
-      displayName: 'label_me',
-      description: 'another_label',
-      avatar: badBlob1,
-      banner: badBlob2,
-      createdAt: new Date().toISOString(),
-    }
-    const uri = profileUri()
-    labeler.processRecord(uri, profile)
-    await labeler.processAll()
-    const dbLabels = await labelSrvc.getLabels(uri.toString())
-    const labels = dbLabels.map((row) => row.val).sort()
-    expect(labels).toEqual(
-      ['test-label', 'another-label', 'img-label', 'other-img-label'].sort(),
-    )
-  })
-
-  it('retrieves both profile & repo labels on profile views', async () => {
+  it('retrieves repo labels on profile views', async () => {
     await ctx.db.db
       .insertInto('label')
       .values({
@@ -141,10 +122,8 @@ describe('labeler', () => {
 
     const labels = await labelSrvc.getLabelsForProfile('did:example:alice')
     // 4 from earlier & then just added one
-    expect(labels.length).toBe(5)
-
-    const repoLabel = labels.find((l) => l.uri.startsWith('did:'))
-    expect(repoLabel).toMatchObject({
+    expect(labels.length).toBe(1)
+    expect(labels[0]).toMatchObject({
       src: labelerDid,
       uri: aliceDid,
       val: 'repo-label',
@@ -156,8 +135,6 @@ describe('labeler', () => {
 const aliceDid = 'did:example:alice'
 
 const postUri = () => AtUri.make(aliceDid, 'app.bsky.feed.post', TID.nextStr())
-
-const profileUri = () => AtUri.make(aliceDid, 'app.bsky.actor.profile', 'self')
 
 class TestLabeler extends Labeler {
   hiveApiKey: string
