@@ -1,5 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { runTestServer, CloseFn, adminAuth } from '../../_util'
+import { runTestServer, CloseFn, adminAuth, moderatorAuth } from '../../_util'
 import { randomStr } from '@atproto/crypto'
 
 describe('pds admin invite views', () => {
@@ -173,5 +173,30 @@ describe('pds admin invite views', () => {
     expect(aliceView.data.invitedBy?.available).toBe(10)
     expect(aliceView.data.invitedBy?.uses.length).toBe(2)
     expect(aliceView.data.invites?.length).toBe(6)
+  })
+
+  it('does not allow non-admin moderators to disable invites.', async () => {
+    const attemptDisableInvites =
+      agent.api.com.atproto.admin.disableInviteCodes(
+        { codes: ['x'], accounts: [alice] },
+        {
+          encoding: 'application/json',
+          headers: { authorization: moderatorAuth() },
+        },
+      )
+    await expect(attemptDisableInvites).rejects.toThrow(
+      'Authentication Required',
+    )
+  })
+
+  it('does not allow non-admin moderators to create invites.', async () => {
+    const attemptCreateInvite = agent.api.com.atproto.server.createInviteCode(
+      { useCount: 5, forAccount: alice },
+      {
+        encoding: 'application/json',
+        headers: { authorization: moderatorAuth() },
+      },
+    )
+    await expect(attemptCreateInvite).rejects.toThrow('Authentication Required')
   })
 })

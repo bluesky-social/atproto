@@ -12,6 +12,7 @@ const BASIC = 'Basic '
 export type ServerAuthOpts = {
   jwtSecret: string
   adminPass: string
+  moderatorPass?: string
 }
 
 // @TODO sync-up with current method names, consider backwards compat.
@@ -32,10 +33,12 @@ export type RefreshToken = AuthToken & { jti: string }
 export class ServerAuth {
   private _secret: string
   private _adminPass: string
+  private _moderatorPass?: string
 
   constructor(opts: ServerAuthOpts) {
     this._secret = opts.jwtSecret
     this._adminPass = opts.adminPass
+    this._moderatorPass = opts.moderatorPass
   }
 
   createAccessToken(opts: {
@@ -107,13 +110,18 @@ export class ServerAuth {
     return authorized !== null && authorized.did === did
   }
 
-  verifyAdmin(req: express.Request): boolean {
+  verifyAdmin(req: express.Request) {
     const parsed = parseBasicAuth(req.headers.authorization || '')
-    if (!parsed) return false
+    if (!parsed) {
+      return { admin: false, moderator: false }
+    }
     const { username, password } = parsed
-    if (username !== 'admin') return false
-    if (password !== this._adminPass) return false
-    return true
+    if (username !== 'admin') {
+      return { admin: false, moderator: false }
+    }
+    const admin = password === this._adminPass
+    const moderator = admin || password === this._moderatorPass
+    return { admin, moderator }
   }
 
   getToken(req: express.Request) {
@@ -226,11 +234,21 @@ export const refreshVerifier =
 export const adminVerifier =
   (auth: ServerAuth) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
-    const admin = auth.verifyAdmin(ctx.req)
-    if (!admin) {
+    const credentials = auth.verifyAdmin(ctx.req)
+    if (!credentials.admin) {
       throw new AuthRequiredError()
     }
-    return { credentials: { admin } }
+    return { credentials }
+  }
+
+export const moderatorVerifier =
+  (auth: ServerAuth) =>
+  async (ctx: { req: express.Request; res: express.Response }) => {
+    const credentials = auth.verifyAdmin(ctx.req)
+    if (!credentials.moderator) {
+      throw new AuthRequiredError()
+    }
+    return { credentials }
   }
 
 export const getRefreshTokenId = () => {
