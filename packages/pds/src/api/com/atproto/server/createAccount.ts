@@ -6,6 +6,7 @@ import { Server } from '../../../../lexicon'
 import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
+import Database from '../../../../db'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount(async ({ input, req }) => {
@@ -36,25 +37,7 @@ export default function (server: Server, ctx: AppContext) {
 
     // check that the invite code still has uses
     if (ctx.cfg.inviteRequired && inviteCode) {
-      const invite = await ctx.db.db
-        .selectFrom('invite_code')
-        .selectAll()
-        .where('code', '=', inviteCode)
-        .executeTakeFirst()
-
-      const uses = await ctx.db.db
-        .selectFrom('invite_code_use')
-        .select(countAll.as('count'))
-        .where('code', '=', inviteCode)
-        .executeTakeFirstOrThrow()
-
-      if (!invite || invite.disabled || invite.availableUses <= uses.count) {
-        req.log.info({ handle, email, inviteCode }, 'invalid invite code')
-        throw new InvalidRequestError(
-          'Provided invite code not available',
-          'InvalidInviteCode',
-        )
-      }
+      await ensureCodeIsAvailable(ctx.db, inviteCode)
     }
 
     const now = new Date().toISOString()
@@ -82,31 +65,8 @@ export default function (server: Server, ctx: AppContext) {
       // it's a bit goofy that we run this logic twice,
       // but we run it once for a sanity check before doing scrypt & plc ops
       // & a second time for locking + integrity check
-      if (ctx.cfg.inviteRequired && inviteCode && ctx.db.dialect !== 'sqlite') {
-        const invite = await ctx.db.db
-          .selectFrom('invite_code')
-          .selectAll()
-          .forUpdate()
-          .skipLocked()
-          .where('code', '=', inviteCode)
-          .executeTakeFirst()
-        if (!invite) {
-          throw new InvalidRequestError(
-            'Too many concurrent uses of invite code',
-          )
-        }
-
-        const uses = await dbTxn.db
-          .selectFrom('invite_code_use')
-          .select(countAll.as('count'))
-          .where('code', '=', inviteCode)
-          .executeTakeFirstOrThrow()
-        if (invite.availableUses <= uses.count) {
-          throw new InvalidRequestError(
-            'Provided invite code not available',
-            'InvalidInviteCode',
-          )
-        }
+      if (ctx.cfg.inviteRequired && inviteCode) {
+        await ensureCodeIsAvailable(dbTxn, inviteCode, true)
       }
 
       // Register user before going out to PLC to get a real did
@@ -171,4 +131,30 @@ export default function (server: Server, ctx: AppContext) {
       },
     }
   })
+}
+
+export const ensureCodeIsAvailable = async (
+  db: Database,
+  inviteCode: string,
+  withLock = false,
+): Promise<void> => {
+  const invite = await db.db
+    .selectFrom('invite_code')
+    .selectAll()
+    .where('code', '=', inviteCode)
+    .if(withLock && db.dialect === 'pg', (qb) => qb.forUpdate().skipLocked())
+    .executeTakeFirst()
+
+  const uses = await db.db
+    .selectFrom('invite_code_use')
+    .select(countAll.as('count'))
+    .where('code', '=', inviteCode)
+    .executeTakeFirstOrThrow()
+
+  if (!invite || invite.disabled || invite.availableUses <= uses.count) {
+    throw new InvalidRequestError(
+      'Provided invite code not available',
+      'InvalidInviteCode',
+    )
+  }
 }
