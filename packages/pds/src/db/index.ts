@@ -46,13 +46,19 @@ export class Database {
   static postgres(opts: PgOptions): Database {
     const { schema, url } = opts
     const pool =
-      opts.pool ?? new PgPool({ connectionString: url, max: opts.poolSize })
+      opts.pool ??
+      new PgPool({
+        connectionString: url,
+        max: opts.poolSize,
+        maxUses: opts.poolMaxUses,
+        idleTimeoutMillis: opts.poolIdleTimeoutMs,
+      })
 
     // Select count(*) and other pg bigints as js integer
     pgTypes.setTypeParser(pgTypes.builtins.INT8, (n) => parseInt(n, 10))
 
     // Setup schema usage, primarily for test parallelism (each test suite runs in its own pg schema)
-    if (schema !== undefined) {
+    if (schema) {
       if (!/^[a-z_]+$/i.test(schema)) {
         throw new Error(
           `Postgres schema must only contain [A-Za-z_]: ${schema}`,
@@ -195,7 +201,7 @@ export class Database {
   }
 
   async migrateToOrThrow(migration: string) {
-    if (this.schema !== undefined) {
+    if (this.schema) {
       await this.db.schema.createSchema(this.schema).ifNotExists().execute()
     }
     const { error, results } = await this.migrator.migrateTo(migration)
@@ -209,7 +215,7 @@ export class Database {
   }
 
   async migrateToLatestOrThrow() {
-    if (this.schema !== undefined) {
+    if (this.schema) {
       await this.db.schema.createSchema(this.schema).ifNotExists().execute()
     }
     const { error, results } = await this.migrator.migrateToLatest()
@@ -248,6 +254,8 @@ type PgOptions = {
   pool?: PgPool
   schema?: string
   poolSize?: number
+  poolMaxUses?: number
+  poolIdleTimeoutMs?: number
 }
 
 type ChannelEvents = {
