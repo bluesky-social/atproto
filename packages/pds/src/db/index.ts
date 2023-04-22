@@ -46,7 +46,13 @@ export class Database {
   static postgres(opts: PgOptions): Database {
     const { schema, url } = opts
     const pool =
-      opts.pool ?? new PgPool({ connectionString: url, max: opts.poolSize })
+      opts.pool ??
+      new PgPool({
+        connectionString: url,
+        max: opts.poolSize,
+        maxUses: opts.poolMaxUses,
+        idleTimeoutMillis: opts.poolIdleTimeoutMs,
+      })
 
     // Select count(*) and other pg bigints as js integer
     pgTypes.setTypeParser(pgTypes.builtins.INT8, (n) => parseInt(n, 10))
@@ -248,6 +254,8 @@ type PgOptions = {
   pool?: PgPool
   schema?: string
   poolSize?: number
+  poolMaxUses?: number
+  poolIdleTimeoutMs?: number
 }
 
 type ChannelEvents = {
