@@ -84,20 +84,21 @@ export class AccountService {
     return found ? found.did : null
   }
 
-  async registerUser(
-    email: string,
-    handle: string,
-    did: string,
-    password: string,
-  ) {
+  async registerUser(opts: {
+    email: string
+    handle: string
+    did: string
+    passwordScrypt: string
+  }) {
     this.db.assertTransaction()
+    const { email, handle, did, passwordScrypt } = opts
     log.debug({ handle, email }, 'registering user')
     const registerUserAccnt = this.db.db
       .insertInto('user_account')
       .values({
         email: email.toLowerCase(),
         did,
-        passwordScrypt: await scrypt.genSaltAndHash(password),
+        passwordScrypt,
         createdAt: new Date().toISOString(),
       })
       .onConflict((oc) => oc.doNothing())

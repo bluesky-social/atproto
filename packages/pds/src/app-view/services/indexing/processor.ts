@@ -1,7 +1,9 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { cborToLexRecord } from '@atproto/repo'
+import Database from '../../../db'
 import DatabaseSchema from '../../../db/database-schema'
+import { BackgroundQueue } from '../../../event-stream/background-queue'
 import { lexicons } from '../../../lexicon/lexicons'
 import { UserNotification } from '../../../db/tables/user-notification'
 
@@ -27,14 +29,18 @@ type RecordProcessorParams<T, S> = {
     prev: S,
     replacedBy: S | null,
   ) => { notifs: UserNotification[]; toDelete: string[] }
+  updateAggregates?: (db: DatabaseSchema, obj: S) => Promise<void>
 }
 
 export class RecordProcessor<T, S> {
   collection: string
+  db: DatabaseSchema
   constructor(
-    private db: DatabaseSchema,
+    private appDb: Database,
+    private backgroundQueue: BackgroundQueue,
     private params: RecordProcessorParams<T, S>,
   ) {
+    this.db = appDb.db
     this.collection = this.params.lexId
   }
 
@@ -64,6 +70,7 @@ export class RecordProcessor<T, S> {
     )
     // if this was a new record, return events
     if (inserted) {
+      this.aggregateOnCommit(inserted)
       await this.handleNotifs({ inserted })
       return
     }
@@ -116,6 +123,7 @@ export class RecordProcessor<T, S> {
       // If a record was updated but hadn't been indexed yet, treat it like a plain insert.
       return this.insertRecord(uri, cid, obj, timestamp)
     }
+    this.aggregateOnCommit(deleted)
     const inserted = await this.params.insertFn(
       this.db,
       uri,
@@ -128,6 +136,7 @@ export class RecordProcessor<T, S> {
         'Record update failed: removed from index but could not be replaced',
       )
     }
+    this.aggregateOnCommit(inserted)
     await this.handleNotifs({ inserted, deleted })
   }
 
@@ -138,6 +147,7 @@ export class RecordProcessor<T, S> {
       .execute()
     const deleted = await this.params.deleteFn(this.db, uri)
     if (!deleted) return
+    this.aggregateOnCommit(deleted)
     if (cascading) {
       await this.db
         .deleteFrom('duplicate_record')
@@ -174,6 +184,9 @@ export class RecordProcessor<T, S> {
         record,
         found.indexedAt,
       )
+      if (inserted) {
+        this.aggregateOnCommit(inserted)
+      }
       await this.handleNotifs({ deleted, inserted: inserted ?? undefined })
     }
   }
@@ -198,6 +211,14 @@ export class RecordProcessor<T, S> {
     if (notifs.length > 0) {
       await this.db.insertInto('user_notification').values(notifs).execute()
     }
+  }
+
+  aggregateOnCommit(indexed: S) {
+    const { updateAggregates } = this.params
+    if (!updateAggregates) return
+    this.appDb.onCommit(() => {
+      this.backgroundQueue.add((db) => updateAggregates(db.db, indexed))
+    })
   }
 }
 

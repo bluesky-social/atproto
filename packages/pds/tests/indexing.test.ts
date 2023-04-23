@@ -79,11 +79,9 @@ describe('indexing', () => {
     })
 
     // Create
-    await db.transaction(async (tx) => {
-      await services
-        .repo(tx)
-        .processWrites(sc.dids.alice, [createRecord], new Date().toISOString())
-    })
+    await services
+      .repo(db)
+      .processWrites({ did: sc.dids.alice, writes: [createRecord] }, 1)
 
     const getAfterCreate = await agent.api.app.bsky.feed.getPostThread(
       { uri: uri.toString() },
@@ -93,11 +91,9 @@ describe('indexing', () => {
     const createNotifications = await getNotifications(db, uri)
 
     // Update
-    await db.transaction(async (tx) => {
-      await services
-        .repo(tx)
-        .processWrites(sc.dids.alice, [updateRecord], new Date().toISOString())
-    })
+    await services
+      .repo(db)
+      .processWrites({ did: sc.dids.alice, writes: [updateRecord] }, 1)
 
     const getAfterUpdate = await agent.api.app.bsky.feed.getPostThread(
       { uri: uri.toString() },
@@ -107,11 +103,9 @@ describe('indexing', () => {
     const updateNotifications = await getNotifications(db, uri)
 
     // Delete
-    await db.transaction(async (tx) => {
-      await services
-        .repo(tx)
-        .processWrites(sc.dids.alice, [deleteRecord], new Date().toISOString())
-    })
+    await services
+      .repo(db)
+      .processWrites({ did: sc.dids.alice, writes: [deleteRecord] }, 1)
 
     const getAfterDelete = agent.api.app.bsky.feed.getPostThread(
       { uri: uri.toString() },
@@ -157,11 +151,9 @@ describe('indexing', () => {
     })
 
     // Create
-    await db.transaction(async (tx) => {
-      await services
-        .repo(tx)
-        .processWrites(sc.dids.dan, [createRecord], new Date().toISOString())
-    })
+    await services
+      .repo(db)
+      .processWrites({ did: sc.dids.dan, writes: [createRecord] }, 1)
 
     const getAfterCreate = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.dan },
@@ -171,11 +163,9 @@ describe('indexing', () => {
     const createNotifications = await getNotifications(db, uri)
 
     // Update
-    await db.transaction(async (tx) => {
-      await services
-        .repo(tx)
-        .processWrites(sc.dids.dan, [updateRecord], new Date().toISOString())
-    })
+    await services
+      .repo(db)
+      .processWrites({ did: sc.dids.dan, writes: [updateRecord] }, 1)
 
     const getAfterUpdate = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.dan },
@@ -185,11 +175,9 @@ describe('indexing', () => {
     const updateNotifications = await getNotifications(db, uri)
 
     // Delete
-    await db.transaction(async (tx) => {
-      await services
-        .repo(tx)
-        .processWrites(sc.dids.dan, [deleteRecord], new Date().toISOString())
-    })
+    await services
+      .repo(db)
+      .processWrites({ did: sc.dids.dan, writes: [deleteRecord] }, 1)
 
     const getAfterDelete = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.dan },

@@ -1,14 +1,7 @@
-import { DIDDocument } from 'did-resolver'
 import * as crypto from '@atproto/crypto'
+import { DidDocument, AtprotoData } from './types'
 
-export type AtprotoData = {
-  did: string
-  signingKey: string
-  handle: string
-  pds: string
-}
-
-export const getDid = (doc: DIDDocument): string => {
+export const getDid = (doc: DidDocument): string => {
   const id = doc.id
   if (typeof id !== 'string') {
     throw new Error('No `id` on document')
@@ -16,7 +9,7 @@ export const getDid = (doc: DIDDocument): string => {
   return id
 }
 
-export const getKey = (doc: DIDDocument): string | undefined => {
+export const getKey = (doc: DidDocument): string | undefined => {
   let keys = doc.verificationMethod
   if (!keys) return undefined
   if (typeof keys !== 'object') return undefined
@@ -39,7 +32,7 @@ export const getKey = (doc: DIDDocument): string | undefined => {
   return didKey
 }
 
-export const getHandle = (doc: DIDDocument): string | undefined => {
+export const getHandle = (doc: DidDocument): string | undefined => {
   const aka = doc.alsoKnownAs
   if (!aka) return undefined
   const found = aka.find((name) => name.startsWith('at://'))
@@ -48,7 +41,7 @@ export const getHandle = (doc: DIDDocument): string | undefined => {
   return found.slice(5)
 }
 
-export const getPds = (doc: DIDDocument): string | undefined => {
+export const getPds = (doc: DidDocument): string | undefined => {
   let services = doc.service
   if (!services) return undefined
   if (typeof services !== 'object') return undefined
@@ -67,7 +60,7 @@ export const getPds = (doc: DIDDocument): string | undefined => {
 }
 
 export const parseToAtprotoDocument = (
-  doc: DIDDocument,
+  doc: DidDocument,
 ): Partial<AtprotoData> => {
   const did = getDid(doc)
   return {
@@ -78,7 +71,7 @@ export const parseToAtprotoDocument = (
   }
 }
 
-export const ensureAtpDocument = (doc: DIDDocument): AtprotoData => {
+export const ensureAtpDocument = (doc: DidDocument): AtprotoData => {
   const { did, signingKey, handle, pds } = parseToAtprotoDocument(doc)
   if (!did) {
     throw new Error(`Could not parse id from doc: ${doc}`)

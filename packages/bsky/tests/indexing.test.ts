@@ -295,25 +295,22 @@ describe('indexing', () => {
       const { db, services } = testEnv.bsky.ctx
       const { db: pdsDb, services: pdsServices } = testEnv.pds.ctx
       // Create a good and a bad post record
-      const writes = await pdsDb.transaction(async (tx) => {
-        const now = new Date().toISOString()
-        const repoTxn = pdsServices.repo(tx)
-        const writes = await Promise.all([
-          pdsRepo.prepareCreate({
-            did: sc.dids.alice,
-            collection: ids.AppBskyFeedPost,
-            record: { text: 'valid', createdAt: new Date().toISOString() },
-          }),
-          pdsRepo.prepareCreate({
-            did: sc.dids.alice,
-            collection: ids.AppBskyFeedPost,
-            record: { text: 0 },
-            validate: false,
-          }),
-        ])
-        await repoTxn.processWrites(sc.dids.alice, writes, now)
-        return writes
-      })
+      const writes = await Promise.all([
+        pdsRepo.prepareCreate({
+          did: sc.dids.alice,
+          collection: ids.AppBskyFeedPost,
+          record: { text: 'valid', createdAt: new Date().toISOString() },
+        }),
+        pdsRepo.prepareCreate({
+          did: sc.dids.alice,
+          collection: ids.AppBskyFeedPost,
+          record: { text: 0 },
+          validate: false,
+        }),
+      ])
+      await pdsServices
+        .repo(pdsDb)
+        .processWrites({ did: sc.dids.alice, writes }, 1)
       // Index
       const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
         did: sc.dids.alice,
