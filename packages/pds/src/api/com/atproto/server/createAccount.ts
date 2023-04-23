@@ -95,7 +95,7 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
-      // insert invite code use & do an integrity check to make sure we didn't over-use it
+      // insert invite code use
       if (ctx.cfg.inviteRequired && inviteCode) {
         await dbTxn.db
           .insertInto('invite_code_use')
