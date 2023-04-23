@@ -14,10 +14,10 @@ export class MemoryCache extends DidCache {
     this.ttl = ttl ?? DAY
   }
 
-  public cache: Record<string, CacheVal> = {}
+  public cache: Map<string, CacheVal> = new Map()
 
   async cacheDid(did: string, doc: DidDocument): Promise<void> {
-    this.cache[did] = { doc, updatedAt: Date.now() }
+    this.cache.set(did, { doc, updatedAt: Date.now() })
   }
 
   async refreshCache(
@@ -31,7 +31,7 @@ export class MemoryCache extends DidCache {
   }
 
   async checkCache(did: string): Promise<CacheResult | null> {
-    const val = this.cache[did]
+    const val = this.cache.get(did)
     if (!val) return null
     const now = Date.now()
     const expired = now > val.updatedAt + this.ttl
@@ -43,6 +43,6 @@ export class MemoryCache extends DidCache {
   }
 
   async clear(): Promise<void> {
-    this.cache = {}
+    this.cache.clear()
   }
 }
