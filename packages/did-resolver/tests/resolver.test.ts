@@ -1,11 +1,10 @@
 import getPort from 'get-port'
-import { DidResolver } from '../src'
-import { DidWebServer } from './web/server'
-import DidWebDb from './web/db'
+import { Secp256k1Keypair } from '@atproto/crypto'
 import * as plc from '@did-plc/lib'
 import { Database as DidPlcDb, PlcServer } from '@did-plc/server'
-import { DIDDocument } from 'did-resolver'
-import { Secp256k1Keypair } from '@atproto/crypto'
+import { DidResolver, DidDocument } from '../src'
+import { DidWebServer } from './web/server'
+import DidWebDb from './web/db'
 
 describe('resolver', () => {
   let close: () => Promise<void>
@@ -45,8 +44,8 @@ describe('resolver', () => {
   let rotationKey: Secp256k1Keypair
   let webDid: string
   let plcDid: string
-  let didWebDoc: DIDDocument
-  let didPlcDoc: DIDDocument
+  let didWebDoc: DidDocument
+  let didPlcDoc: DidDocument
 
   it('creates the did on did:web & did:plc', async () => {
     signingKey = await Secp256k1Keypair.create()
@@ -76,7 +75,7 @@ describe('resolver', () => {
   })
 
   it('resolve valid atpData from did:web', async () => {
-    const atpData = await resolver.resolveAtpData(webDid)
+    const atpData = await resolver.resolveAtprotoData(webDid)
     expect(atpData.did).toEqual(webDid)
     expect(atpData.handle).toEqual(handle)
     expect(atpData.pds).toEqual(pds)
@@ -96,7 +95,7 @@ describe('resolver', () => {
   })
 
   it('resolve valid atpData from did:plc', async () => {
-    const atpData = await resolver.resolveAtpData(plcDid)
+    const atpData = await resolver.resolveAtprotoData(plcDid)
     expect(atpData.did).toEqual(plcDid)
     expect(atpData.handle).toEqual(handle)
     expect(atpData.pds).toEqual(pds)

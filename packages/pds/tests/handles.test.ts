@@ -86,7 +86,7 @@ describe('handles', () => {
   })
 
   it('updates their did document', async () => {
-    const data = await didResolver.resolveAtpData(alice)
+    const data = await didResolver.resolveAtprotoData(alice)
     expect(data.handle).toBe(newHandle)
   })
 
@@ -137,7 +137,7 @@ describe('handles', () => {
   })
 
   it('if handle update fails, it does not update their did document', async () => {
-    const data = await didResolver.resolveAtpData(alice)
+    const data = await didResolver.resolveAtprotoData(alice)
     expect(data.handle).toBe(newHandle)
   })
 
@@ -199,7 +199,7 @@ describe('handles', () => {
     )
     expect(profile.data.handle).toBe('alice.external')
 
-    const data = await didResolver.resolveAtpData(alice)
+    const data = await didResolver.resolveAtprotoData(alice)
     expect(data.handle).toBe('alice.external')
   })
 
