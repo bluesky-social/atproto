@@ -75,7 +75,6 @@ export const respToClasses = (res: HiveResp): HiveRespClass[] => {
 
 // sexual: https://docs.thehive.ai/docs/sexual-content
 // gore and violence: https://docs.thehive.ai/docs/class-descriptions-violence-gore
-// iconography: https://docs.thehive.ai/docs/class-descriptions-hate-bullying
 const labelForClass = {
   yes_sexual_activity: 'porn',
   animal_genitalia_and_human: 'porn', // for some reason not included in 'yes_sexual_activity'
@@ -85,9 +84,6 @@ const labelForClass = {
   very_bloody: 'gore',
   human_corpse: 'corpse',
   yes_self_harm: 'self-harm',
-  yes_nazi: 'icon-nazi',
-  yes_kkk: 'icon-kkk',
-  yes_confederate: 'icon-confederate',
 }
 
 export const summarizeLabels = (classes: HiveRespClass[]): string[] => {
