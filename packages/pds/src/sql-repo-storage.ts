@@ -292,10 +292,9 @@ export class SqlRepoStorage extends RepoStorage {
       .execute()
     return res.map((row) => CID.parse(row.commit)).reverse()
   }
-  async getBlocksForCommits(
-    commits: CID[],
-  ): Promise<{ [commit: string]: BlockMap }> {
-    if (commits.length === 0) return {}
+
+  async getAllBlocksForCommits(commits: CID[]): Promise<BlockForCommit[]> {
+    if (commits.length === 0) return []
     const commitStrs = commits.map((commit) => commit.toString())
     const res = await this.db.db
       .selectFrom('repo_commit_block')
@@ -312,11 +311,21 @@ export class SqlRepoStorage extends RepoStorage {
         'ipld_block.content',
       ])
       .execute()
-    return res.reduce((acc, cur) => {
+    return res.map((row) => ({
+      cid: CID.parse(row.cid),
+      bytes: row.content,
+      commit: row.commit,
+    }))
+  }
+
+  async getBlocksForCommits(
+    commits: CID[],
+  ): Promise<{ [commit: string]: BlockMap }> {
+    const allBlocks = await this.getAllBlocksForCommits(commits)
+    return allBlocks.reduce((acc, cur) => {
       acc[cur.commit] ??= new BlockMap()
-      const cid = CID.parse(cur.cid)
-      acc[cur.commit].set(cid, cur.content)
-      this.cache.set(cid, cur.content)
+      acc[cur.commit].set(cur.cid, cur.bytes)
+      this.cache.set(cur.cid, cur.bytes)
       return acc
     }, {})
   }
@@ -324,6 +333,12 @@ export class SqlRepoStorage extends RepoStorage {
   async destroy(): Promise<void> {
     throw new Error('Destruction of SQL repo storage not allowed at runtime')
   }
+}
+
+type BlockForCommit = {
+  cid: CID
+  bytes: Uint8Array
+  commit: string
 }
 
 export default SqlRepoStorage
