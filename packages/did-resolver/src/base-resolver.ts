@@ -37,7 +37,7 @@ export abstract class BaseResolver {
     if (this.cache && !forceRefresh) {
       const fromCache = await this.cache.checkCache(did)
       if (fromCache?.stale) {
-        this.refreshCache(did)
+        await this.refreshCache(did)
       }
       if (fromCache) {
         return fromCache.doc
