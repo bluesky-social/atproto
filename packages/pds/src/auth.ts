@@ -1,4 +1,5 @@
 import * as crypto from '@atproto/crypto'
+import * as common from '@atproto/common'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import * as ui8 from 'uint8arrays'
 import express from 'express'
@@ -256,5 +257,5 @@ export const createServiceJwt = async (
 }
 
 const jsonToB64Url = (json: Record<string, unknown>): string => {
-  return ui8.toString(ui8.fromString(JSON.stringify(json), 'utf8'))
+  return common.utf8ToB64Url(JSON.stringify(json))
 }

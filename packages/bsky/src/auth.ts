@@ -1,6 +1,7 @@
 import express from 'express'
 import * as ui8 from 'uint8arrays'
 import * as crypto from '@atproto/crypto'
+import * as common from '@atproto/common'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { DidResolver } from '@atproto/did-resolver'
 
@@ -32,10 +33,9 @@ const verifyJwt = async (
   if (parts.length !== 3) {
     throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
   }
-  const payload = parseB64UrlToJson(parts[1]) as JwtPayload
+  const payload = parsePayload(parts[1])
   const sig = parts[2]
 
-  // @TODO add aud check?
   if (Date.now() / 1000 > payload.exp) {
     throw new AuthRequiredError('jwt expired', 'JwtExpired')
   }
@@ -43,7 +43,7 @@ const verifyJwt = async (
   const msgBytes = ui8.fromString(parts.slice(0, 2).join('.'), 'utf8')
   const sigBytes = ui8.fromString(sig, 'base64url')
 
-  const atpData = await didResolver.resolveAtpData(payload.iss)
+  const atpData = await didResolver.resolveAtprotoData(payload.iss)
   let validSig: boolean
   try {
     validSig = await crypto.verifySignature(
@@ -60,7 +60,7 @@ const verifyJwt = async (
   if (!validSig) {
     throw new AuthRequiredError(
       'jwt signature does not match jwt issuer',
-      'BadJwtSig',
+      'BadJwtSignature',
     )
   }
 
@@ -76,7 +76,19 @@ export const getJwtStrFromReq = (req: express.Request): string | null => {
 }
 
 const parseB64UrlToJson = (b64: string) => {
-  return JSON.parse(ui8.toString(ui8.fromString(b64, 'utf8')))
+  return JSON.parse(common.b64UrlToUtf8(b64))
+}
+
+const parsePayload = (b64: string): JwtPayload => {
+  const payload = parseB64UrlToJson(b64)
+  if (typeof payload !== 'object') {
+    throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
+  } else if (typeof payload.exp !== 'number') {
+    throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
+  } else if (typeof payload.iss !== 'string') {
+    throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
+  }
+  return payload
 }
 
 type JwtPayload = {
