@@ -50,6 +50,10 @@ export class MemoryCache extends DidCache {
     }
   }
 
+  async clearEntry(did: string): Promise<void> {
+    this.cache.delete(did)
+  }
+
   async clear(): Promise<void> {
     this.cache.clear()
   }

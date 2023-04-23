@@ -7,5 +7,6 @@ export abstract class DidCache {
     did: string,
     getDoc: () => Promise<DidDocument | null>,
   ): Promise<void>
+  abstract clearEntry(did: string): Promise<void>
   abstract clear(): Promise<void>
 }
