@@ -25,7 +25,7 @@ export type CacheResult = {
   did: string
   doc: DidDocument
   updatedAt: number
-  expired: boolean
+  stale: boolean
 }
 
 export const verificationMethod = z.object({

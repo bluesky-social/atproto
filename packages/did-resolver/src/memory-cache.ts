@@ -1,4 +1,4 @@
-import { DAY } from '@atproto/common-web'
+import { DAY, HOUR } from '@atproto/common-web'
 import { DidCache } from './did-cache'
 import { CacheResult, DidDocument } from './types'
 
@@ -8,31 +8,50 @@ type CacheVal = {
 }
 
 export class MemoryCache extends DidCache {
-  public ttl: number
-  constructor(ttl?: number) {
+  public staleTTL
+  public maxTTL: number
+  constructor(staleTTL?: number, maxTTL?: number) {
     super()
-    this.ttl = ttl ?? DAY
+    this.staleTTL = staleTTL ?? HOUR
+    this.maxTTL = maxTTL ?? DAY
   }
 
-  public cache: Record<string, CacheVal> = {}
+  public cache: Map<string, CacheVal> = new Map()
 
   async cacheDid(did: string, doc: DidDocument): Promise<void> {
-    this.cache[did] = { doc, updatedAt: Date.now() }
+    this.cache.set(did, { doc, updatedAt: Date.now() })
   }
 
-  async checkCache(did: string): Promise<CacheResult | null> {
-    const val = this.cache[did]
-    if (!val) return null
-    const now = Date.now()
-    const expired = val.updatedAt > now + this.ttl
-    return {
-      ...val,
-      did,
-      expired,
+  async refreshCache(
+    did: string,
+    getDoc: () => Promise<DidDocument | null>,
+  ): Promise<void> {
+    const doc = await getDoc()
+    if (doc) {
+      await this.cacheDid(did, doc)
     }
   }
 
+  async checkCache(did: string): Promise<CacheResult | null> {
+    const val = this.cache.get(did)
+    if (!val) return null
+    const now = Date.now()
+    const expired = now > val.updatedAt + this.maxTTL
+    if (expired) return null
+
+    const stale = now > val.updatedAt + this.staleTTL
+    return {
+      ...val,
+      did,
+      stale,
+    }
+  }
+
+  async clearEntry(did: string): Promise<void> {
+    this.cache.delete(did)
+  }
+
   async clear(): Promise<void> {
-    this.cache = {}
+    this.cache.clear()
   }
 }

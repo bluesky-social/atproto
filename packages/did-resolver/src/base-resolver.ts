@@ -10,55 +10,73 @@ export abstract class BaseResolver {
 
   abstract resolveDidNoCheck(did: string): Promise<unknown | null>
 
-  async refreshCache(did: string): Promise<void> {
-    if (!this.cache) return
-    const got = await this.resolveDidNoCheck(did)
-    if (check.is(got, didDocument)) {
-      await this.cache.cacheDid(did, got)
+  validateDidDoc(did: string, val: unknown): DidDocument {
+    if (!check.is(val, didDocument)) {
+      throw new PoorlyFormattedDidDocumentError(did, val)
     }
+    if (val.id !== did) {
+      throw new PoorlyFormattedDidDocumentError(did, val)
+    }
+    return val
   }
 
-  async resolveDid(did: string): Promise<DidDocument | null> {
-    if (this.cache) {
+  async resolveDidNoCache(did: string): Promise<DidDocument | null> {
+    const got = await this.resolveDidNoCheck(did)
+    if (got === null) return null
+    return this.validateDidDoc(did, got)
+  }
+
+  async refreshCache(did: string): Promise<void> {
+    await this.cache?.refreshCache(did, () => this.resolveDidNoCache(did))
+  }
+
+  async resolveDid(
+    did: string,
+    forceRefresh = false,
+  ): Promise<DidDocument | null> {
+    if (this.cache && !forceRefresh) {
       const fromCache = await this.cache.checkCache(did)
-      if (fromCache?.expired) {
-        this.refreshCache(did) // done in background
+      if (fromCache?.stale) {
+        await this.refreshCache(did)
       }
       if (fromCache) {
         return fromCache.doc
       }
     }
 
-    const got = await this.resolveDidNoCheck(did)
-    if (got === null) return null
-    if (!check.is(got, didDocument)) {
-      throw new PoorlyFormattedDidDocumentError(did, got)
+    const got = await this.resolveDidNoCache(did)
+    if (got === null) {
+      await this.cache?.clearEntry(did)
+      return null
     }
-    if (got.id !== did) {
-      throw new PoorlyFormattedDidDocumentError(did, got)
-    }
-    this.cache?.cacheDid(did, got) // done in background
+    await this.cache?.cacheDid(did, got)
     return got
   }
 
-  async ensureResolveDid(did: string): Promise<DidDocument> {
-    const result = await this.resolveDid(did)
+  async ensureResolveDid(
+    did: string,
+    forceRefresh = false,
+  ): Promise<DidDocument> {
+    const result = await this.resolveDid(did, forceRefresh)
     if (result === null) {
       throw new DidNotFoundError(did)
     }
     return result
   }
 
-  async resolveAtprotoData(did: string): Promise<AtprotoData> {
-    const didDocument = await this.ensureResolveDid(did)
+  async resolveAtprotoData(
+    did: string,
+    forceRefresh = false,
+  ): Promise<AtprotoData> {
+    const didDocument = await this.ensureResolveDid(did, forceRefresh)
     return atprotoData.ensureAtpDocument(didDocument)
   }
 
-  async resolveAtprotoKey(did: string): Promise<string> {
+  async resolveAtprotoKey(did: string, forceRefresh = false): Promise<string> {
     if (did.startsWith('did:key:')) {
       return did
     } else {
-      const data = await this.resolveAtprotoData(did)
+      const data = await this.resolveAtprotoData(did, forceRefresh)
       return data.signingKey
     }
   }
@@ -67,8 +85,9 @@ export abstract class BaseResolver {
     did: string,
     data: Uint8Array,
     sig: Uint8Array,
+    forceRefresh = false,
   ): Promise<boolean> {
-    const signingKey = await this.resolveAtprotoKey(did)
+    const signingKey = await this.resolveAtprotoKey(did, forceRefresh)
     return crypto.verifySignature(signingKey, data, sig)
   }
 }
