@@ -6,6 +6,7 @@ import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import {
   FeedViewPost,
+  PostView,
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
@@ -177,9 +178,7 @@ export const stripViewer = <T extends { viewer?: Record<string, unknown> }>(
 }
 
 // @NOTE mutates
-export const stripViewerFromPost = (
-  post: FeedViewPost['post'],
-): FeedViewPost['post'] => {
+export const stripViewerFromPost = (post: PostView): PostView => {
   post.author = stripViewer(post.author)
   if (post.embed && isViewRecord(post.embed?.record)) {
     post.embed.record.author = stripViewer(post.embed.record.author)
