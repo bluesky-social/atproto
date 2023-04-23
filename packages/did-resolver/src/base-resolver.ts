@@ -36,8 +36,8 @@ export abstract class BaseResolver {
   ): Promise<DidDocument | null> {
     if (this.cache && !forceRefresh) {
       const fromCache = await this.cache.checkCache(did)
-      if (fromCache?.expired) {
-        this.refreshCache(did)
+      if (fromCache?.stale) {
+        await this.refreshCache(did)
       }
       if (fromCache) {
         return fromCache.doc
