@@ -46,7 +46,11 @@ export class BskyAppView {
     app.use(cors())
     app.use(loggerMiddleware)
 
-    const didCache = new DidSqlCache(db, config.didCacheTTL)
+    const didCache = new DidSqlCache(
+      db,
+      config.didCacheStaleTTL,
+      config.didCacheMaxTTL,
+    )
     const didResolver = new DidResolver({ plcUrl: config.didPlcUrl }, didCache)
 
     const imgUriBuilder = new ImageUriBuilder(

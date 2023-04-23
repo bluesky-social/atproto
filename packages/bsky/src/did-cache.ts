@@ -5,7 +5,11 @@ import Database from './db'
 export class DidSqlCache extends DidCache {
   public pQueue: PQueue | null //null during teardown
 
-  constructor(public db: Database, public ttl: number) {
+  constructor(
+    public db: Database,
+    public staleTTL: number,
+    public maxTTL: number,
+  ) {
     super()
     this.pQueue = new PQueue()
   }
@@ -28,6 +32,8 @@ export class DidSqlCache extends DidCache {
       const doc = await getDoc()
       if (doc) {
         await this.cacheDid(did, doc)
+      } else {
+        await this.clearEntry(did)
       }
     })
   }
@@ -42,13 +48,25 @@ export class DidSqlCache extends DidCache {
     const now = Date.now()
     const updatedAt = new Date(res.updatedAt).getTime()
 
-    const expired = now > updatedAt + this.ttl
+    const expired = now > updatedAt + this.maxTTL
+    if (expired) {
+      return null
+    }
+
+    const stale = now > updatedAt + this.staleTTL
     return {
       doc: res.doc,
       updatedAt,
       did,
-      expired,
+      stale,
     }
+  }
+
+  async clearEntry(did: string): Promise<void> {
+    await this.db.db
+      .deleteFrom('did_cache')
+      .where('did', '=', did)
+      .executeTakeFirst()
   }
 
   async clear(): Promise<void> {
