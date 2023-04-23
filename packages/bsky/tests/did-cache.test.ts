@@ -85,7 +85,7 @@ describe('did cache', () => {
   })
 
   it('accurately reports expired dids & refreshes the cache', async () => {
-    const didCache = new DidSqlCache(testEnv.bsky.ctx.db, 1)
+    const didCache = new DidSqlCache(testEnv.bsky.ctx.db, 1, 60000)
     const shortCacheResolver = new DidResolver(
       { plcUrl: testEnv.bsky.ctx.cfg.didPlcUrl },
       didCache,
@@ -98,7 +98,7 @@ describe('did cache', () => {
 
     // first check the cache & see that we have the stale value
     const cached = await shortCacheResolver.cache?.checkCache(alice)
-    expect(cached?.expired).toBe(true)
+    expect(cached?.stale).toBe(true)
     expect(cached?.doc.id).toEqual('did:example:alice')
     // see that the resolver gives us the stale value while it revalidates
     const staleGet = await shortCacheResolver.resolveDid(alice)
@@ -111,5 +111,23 @@ describe('did cache', () => {
     const updatedGet = await shortCacheResolver.resolveDid(alice)
     expect(updatedGet?.id).toEqual(alice)
     await didCache.destroy()
+  })
+
+  it('does not return expired dids & refreshes the cache', async () => {
+    const didCache = new DidSqlCache(testEnv.bsky.ctx.db, 0, 1)
+    const shortExpireResolver = new DidResolver(
+      { plcUrl: testEnv.bsky.ctx.cfg.didPlcUrl },
+      didCache,
+    )
+    const doc = await shortExpireResolver.resolveDid(alice)
+    await didCache.processAll()
+
+    // again, we mess with the cached doc so we get something different
+    await didCache.cacheDid(alice, { ...doc, id: 'did:example:alice' })
+    await wait(5)
+
+    // see that the resolver does not return expired value & instead force refreshes
+    const staleGet = await shortExpireResolver.resolveDid(alice)
+    expect(staleGet?.id).toEqual(alice)
   })
 })
