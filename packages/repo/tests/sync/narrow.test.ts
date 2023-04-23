@@ -1,4 +1,4 @@
-import { TID } from '@atproto/common'
+import { TID, streamToBuffer } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { RecordClaim, Repo, RepoContents } from '../../src'
 import { MemoryBlockstore } from '../../src/storage'
@@ -25,7 +25,7 @@ describe('Narrow Sync', () => {
   })
 
   const getProofs = async (claims: RecordClaim[]) => {
-    return sync.getRecords(storage, repo.cid, claims)
+    return streamToBuffer(sync.getRecords(storage, repo.cid, claims))
   }
 
   const doVerify = (proofs: Uint8Array, claims: RecordClaim[]) => {
@@ -130,7 +130,9 @@ describe('Narrow Sync', () => {
   it('verifyRecords throws on a bad signature', async () => {
     const badRepo = await util.addBadCommit(repo, keypair)
     const claims = util.contentsToClaims(repoData)
-    const proofs = await sync.getRecords(storage, badRepo.cid, claims)
+    const proofs = await streamToBuffer(
+      sync.getRecords(storage, badRepo.cid, claims),
+    )
     const fn = verify.verifyRecords(proofs, repoDid, keypair.did())
     await expect(fn).rejects.toThrow(verify.RepoVerificationError)
   })
@@ -138,7 +140,9 @@ describe('Narrow Sync', () => {
   it('verifyProofs throws on a bad signature', async () => {
     const badRepo = await util.addBadCommit(repo, keypair)
     const claims = util.contentsToClaims(repoData)
-    const proofs = await sync.getRecords(storage, badRepo.cid, claims)
+    const proofs = await streamToBuffer(
+      sync.getRecords(storage, badRepo.cid, claims),
+    )
     const fn = verify.verifyProofs(proofs, claims, repoDid, keypair.did())
     await expect(fn).rejects.toThrow(verify.RepoVerificationError)
   })

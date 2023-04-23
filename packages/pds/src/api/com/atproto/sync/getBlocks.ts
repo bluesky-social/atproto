@@ -3,7 +3,8 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import SqlRepoStorage from '../../../../sql-repo-storage'
 import AppContext from '../../../../context'
-import { blocksToCar } from '@atproto/repo'
+import { blocksToCarStream } from '@atproto/repo'
+import { byteIterableToStream } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getBlocks(async ({ params }) => {
@@ -15,11 +16,11 @@ export default function (server: Server, ctx: AppContext) {
       const missingStr = got.missing.map((c) => c.toString())
       throw new InvalidRequestError(`Could not find cids: ${missingStr}`)
     }
-    const car = await blocksToCar(null, got.blocks)
+    const car = blocksToCarStream(null, got.blocks)
 
     return {
       encoding: 'application/vnd.ipld.car',
-      body: Buffer.from(car),
+      body: byteIterableToStream(car),
     }
   })
 }

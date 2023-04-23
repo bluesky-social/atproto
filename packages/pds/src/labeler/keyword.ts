@@ -2,6 +2,7 @@ import { BlobStore } from '@atproto/repo'
 import Database from '../db'
 import { Labeler } from './base'
 import { keywordLabeling } from './util'
+import { BackgroundQueue } from '../event-stream/background-queue'
 
 export class KeywordLabeler extends Labeler {
   keywords: Record<string, string>
@@ -9,11 +10,12 @@ export class KeywordLabeler extends Labeler {
   constructor(opts: {
     db: Database
     blobstore: BlobStore
+    backgroundQueue: BackgroundQueue
     labelerDid: string
     keywords: Record<string, string>
   }) {
-    const { db, blobstore, labelerDid, keywords } = opts
-    super({ db, blobstore, labelerDid })
+    const { db, blobstore, backgroundQueue, labelerDid, keywords } = opts
+    super({ db, blobstore, backgroundQueue, labelerDid })
     this.keywords = keywords
   }
 

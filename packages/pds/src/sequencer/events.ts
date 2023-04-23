@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { cborEncode, schema } from '@atproto/common'
 import {
   BlockMap,
-  blocksToCar,
+  blocksToCarFile,
   CidSet,
   CommitData,
   RebaseData,
@@ -28,7 +28,7 @@ export const sequenceCommit = async (
     tooBig = true
     const justRoot = new BlockMap()
     justRoot.add(commitData.blocks.get(commitData.commit))
-    carSlice = await blocksToCar(commitData.commit, justRoot)
+    carSlice = await blocksToCarFile(commitData.commit, justRoot)
   } else {
     tooBig = false
     for (const w of writes) {
@@ -44,7 +44,7 @@ export const sequenceCommit = async (
       }
       ops.push({ action: w.action, path, cid })
     }
-    carSlice = await blocksToCar(commitData.commit, commitData.blocks)
+    carSlice = await blocksToCarFile(commitData.commit, commitData.blocks)
   }
 
   const evt: CommitEvt = {
@@ -74,7 +74,7 @@ export const sequenceRebase = async (
   did: string,
   rebaseData: RebaseData,
 ) => {
-  const carSlice = await blocksToCar(rebaseData.commit, rebaseData.blocks)
+  const carSlice = await blocksToCarFile(rebaseData.commit, rebaseData.blocks)
 
   const evt: CommitEvt = {
     rebase: true,

@@ -8,7 +8,7 @@ type CacheVal = {
 }
 
 export class MemoryCache extends DidCache {
-  public staleTTL
+  public staleTTL: number
   public maxTTL: number
   constructor(staleTTL?: number, maxTTL?: number) {
     super()

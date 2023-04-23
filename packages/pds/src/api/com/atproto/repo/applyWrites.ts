@@ -13,6 +13,7 @@ import {
   PreparedWrite,
 } from '../../../../repo'
 import AppContext from '../../../../context'
+import { ConcurrentWriteError } from '../../../../services/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.applyWrites({
@@ -74,21 +75,21 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
-      const now = new Date().toISOString()
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
 
-      await ctx.db.transaction(async (dbTxn) => {
-        const repoTxn = ctx.services.repo(dbTxn)
-        try {
-          await repoTxn.processWrites(did, writes, now, swapCommitCid)
-        } catch (err) {
-          if (err instanceof BadCommitSwapError) {
-            throw new InvalidRequestError(err.message, 'InvalidSwap')
-          } else {
-            throw err
-          }
+      try {
+        await ctx.services
+          .repo(ctx.db)
+          .processWrites({ did, writes, swapCommitCid }, 10)
+      } catch (err) {
+        if (err instanceof BadCommitSwapError) {
+          throw new InvalidRequestError(err.message, 'InvalidSwap')
+        } else if (err instanceof ConcurrentWriteError) {
+          throw new InvalidRequestError(err.message, 'ConcurrentWrites')
+        } else {
+          throw err
         }
-      })
+      }
     },
   })
 }

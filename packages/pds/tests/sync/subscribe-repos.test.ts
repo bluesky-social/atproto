@@ -142,16 +142,16 @@ describe('repo subscribe repos', () => {
     }
   }
 
-  const randomPost = async (by: string) => sc.post(by, randomStr(8, 'base32'))
+  const randomPost = (by: string) => sc.post(by, randomStr(8, 'base32'))
   const makePosts = async () => {
-    const promises: Promise<unknown>[] = []
-    for (let i = 0; i < 10; i++) {
-      promises.push(randomPost(alice))
-      promises.push(randomPost(bob))
-      promises.push(randomPost(carol))
-      promises.push(randomPost(dan))
+    for (let i = 0; i < 3; i++) {
+      await Promise.all([
+        randomPost(alice),
+        randomPost(bob),
+        randomPost(carol),
+        randomPost(dan),
+      ])
     }
-    await Promise.all(promises)
   }
 
   const readTillCaughtUp = async <T>(
@@ -223,7 +223,7 @@ describe('repo subscribe repos', () => {
 
     ws.terminate()
 
-    expect(evts.length).toBe(40)
+    expect(evts.length).toBe(12)
 
     await wait(100) // Let cleanup occur on server
     expect(ctx.sequencer.listeners('events').length).toEqual(0)
@@ -352,7 +352,7 @@ describe('repo subscribe repos', () => {
     expect(info.header.t).toBe('#info')
     const body = info.body as Record<string, unknown>
     expect(body.name).toEqual('OutdatedCursor')
-    expect(evts.length).toBe(40)
+    expect(evts.length).toBe(12)
   })
 
   it('errors on future cursor', async () => {

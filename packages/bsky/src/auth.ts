@@ -81,7 +81,7 @@ const parseB64UrlToJson = (b64: string) => {
 
 const parsePayload = (b64: string): JwtPayload => {
   const payload = parseB64UrlToJson(b64)
-  if (typeof payload !== 'object') {
+  if (!payload || typeof payload !== 'object') {
     throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
   } else if (typeof payload.exp !== 'number') {
     throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')

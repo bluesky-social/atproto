@@ -198,6 +198,20 @@ describe('account', () => {
     expect(accnt2?.email).toBe(email)
   })
 
+  it('disallows non-admin moderators to perform email updates', async () => {
+    const attemptUpdate = agent.api.com.atproto.admin.updateAccountEmail(
+      {
+        account: handle,
+        email: 'new@email.com',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: util.moderatorAuth() },
+      },
+    )
+    await expect(attemptUpdate).rejects.toThrow('Authentication Required')
+  })
+
   it('disallows duplicate email addresses and handles', async () => {
     const inviteCode = await createInviteCode(agent, 2)
     const email = 'bob@test.com'
