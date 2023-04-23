@@ -1,4 +1,4 @@
-import { DAY } from '@atproto/common-web'
+import { DAY, HOUR } from '@atproto/common-web'
 import { DidCache } from './did-cache'
 import { CacheResult, DidDocument } from './types'
 
@@ -8,10 +8,12 @@ type CacheVal = {
 }
 
 export class MemoryCache extends DidCache {
-  public ttl: number
-  constructor(ttl?: number) {
+  public staleTTL
+  public maxTTL: number
+  constructor(staleTTL?: number, maxTTL?: number) {
     super()
-    this.ttl = ttl ?? DAY
+    this.staleTTL = staleTTL ?? HOUR
+    this.maxTTL = maxTTL ?? DAY
   }
 
   public cache: Map<string, CacheVal> = new Map()
@@ -34,11 +36,13 @@ export class MemoryCache extends DidCache {
     const val = this.cache.get(did)
     if (!val) return null
     const now = Date.now()
-    const expired = now > val.updatedAt + this.ttl
+    const stale = now > val.updatedAt + this.staleTTL
+    const expired = now > val.updatedAt + this.maxTTL
+    if (expired) return null
     return {
       ...val,
       did,
-      expired,
+      stale,
     }
   }
 
