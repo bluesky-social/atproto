@@ -82,6 +82,7 @@ import * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
+import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedLike from './types/app/bsky/feed/like'
@@ -174,6 +175,7 @@ export * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
 export * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
+export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 export * as AppBskyFeedLike from './types/app/bsky/feed/like'
@@ -1115,6 +1117,17 @@ export class FeedNS {
       .call('app.bsky.feed.getPostThread', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetPostThread.toKnownErr(e)
+      })
+  }
+
+  getPosts(
+    params?: AppBskyFeedGetPosts.QueryParams,
+    opts?: AppBskyFeedGetPosts.CallOptions,
+  ): Promise<AppBskyFeedGetPosts.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getPosts', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetPosts.toKnownErr(e)
       })
   }
 
