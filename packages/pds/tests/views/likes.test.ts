@@ -28,6 +28,7 @@ describe('pds like views', () => {
     await likesSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
+    await server.ctx.backgroundQueue.processAll()
   })
 
   afterAll(async () => {

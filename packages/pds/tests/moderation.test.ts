@@ -4,6 +4,7 @@ import {
   adminAuth,
   CloseFn,
   forSnapshot,
+  moderatorAuth,
   runTestServer,
   TestServerInfo,
 } from './_util'
@@ -383,7 +384,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: { authorization: moderatorAuth() }, // As moderator
           },
         )
       expect(action1).toEqual(
@@ -830,6 +831,50 @@ describe('moderation', () => {
       await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual(['puppies'])
       await reverse(action.id)
       await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual(['kittens'])
+    })
+
+    it('does not allow non-admin moderators to label.', async () => {
+      const attemptLabel = agent.api.com.atproto.admin.takeModerationAction(
+        {
+          action: ACKNOWLEDGE,
+          createdBy: 'did:example:moderator',
+          reason: 'Y',
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.bob,
+          },
+          negateLabelVals: ['a'],
+          createLabelVals: ['b', 'c'],
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: moderatorAuth() },
+        },
+      )
+      await expect(attemptLabel).rejects.toThrow(
+        'Must be an admin to takedown or label content',
+      )
+    })
+
+    it('does not allow non-admin moderators to takedown.', async () => {
+      const attemptTakedown = agent.api.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          createdBy: 'did:example:moderator',
+          reason: 'Y',
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.bob,
+          },
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: moderatorAuth() },
+        },
+      )
+      await expect(attemptTakedown).rejects.toThrow(
+        'Must be an admin to takedown or label content',
+      )
     })
 
     async function actionWithLabels(

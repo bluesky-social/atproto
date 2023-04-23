@@ -25,7 +25,7 @@ export class Database {
     pgTypes.setTypeParser(pgTypes.builtins.INT8, (n) => parseInt(n, 10))
 
     // Setup schema usage, primarily for test parallelism (each test suite runs in its own pg schema)
-    if (schema !== undefined) {
+    if (schema) {
       if (!/^[a-z_]+$/i.test(schema)) {
         throw new Error(
           `Postgres schema must only contain [A-Za-z_]: ${schema}`,
@@ -72,7 +72,7 @@ export class Database {
   }
 
   async migrateToOrThrow(migration: string) {
-    if (this.schema !== undefined) {
+    if (this.schema) {
       await this.db.schema.createSchema(this.schema).ifNotExists().execute()
     }
     const { error, results } = await this.migrator.migrateTo(migration)
@@ -86,7 +86,7 @@ export class Database {
   }
 
   async migrateToLatestOrThrow() {
-    if (this.schema !== undefined) {
+    if (this.schema) {
       await this.db.schema.createSchema(this.schema).ifNotExists().execute()
     }
     const { error, results } = await this.migrator.migrateToLatest()

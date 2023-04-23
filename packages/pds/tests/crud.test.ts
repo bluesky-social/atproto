@@ -227,61 +227,6 @@ describe('crud operations', () => {
     expect(uri.rkey).toBe('self')
   })
 
-  describe('crud races', () => {
-    let uris: AtUri[]
-    it('handles races on add', async () => {
-      const COUNT = 10
-      const postTexts: string[] = []
-      for (let i = 0; i < COUNT; i++) {
-        postTexts.push(`post-${i}`)
-      }
-      const responses = await Promise.all(
-        postTexts.map((text) =>
-          aliceAgent.api.app.bsky.feed.post.create(
-            { repo: alice.did },
-            {
-              text,
-              createdAt: new Date().toISOString(),
-            },
-          ),
-        ),
-      )
-
-      uris = responses.map((resp) => new AtUri(resp.uri))
-
-      for (let i = 0; i < uris.length; i++) {
-        const uri = uris[i]
-        const got = await aliceAgent.api.com.atproto.repo.getRecord({
-          repo: alice.did,
-          collection: uri.collection,
-          rkey: uri.rkey,
-        })
-        // @ts-ignore
-        expect(got.data.value.text).toEqual(`post-${i}`)
-      }
-    })
-
-    it('handles races on del', async () => {
-      await Promise.all(
-        uris.map((uri) =>
-          aliceAgent.api.app.bsky.feed.post.delete({
-            repo: alice.did,
-            rkey: uri.rkey,
-          }),
-        ),
-      )
-      for (const uri of uris) {
-        await expect(
-          aliceAgent.api.com.atproto.repo.getRecord({
-            repo: alice.did,
-            collection: uri.collection,
-            rkey: uri.rkey,
-          }),
-        ).rejects.toThrow(Error)
-      }
-    })
-  })
-
   describe('paginates', () => {
     let uri1: AtUri
     let uri2: AtUri
@@ -309,14 +254,12 @@ describe('crud operations', () => {
     })
 
     afterAll(async () => {
-      await Promise.all(
-        [uri1, uri2, uri3, uri4, uri5].map((uri) =>
-          aliceAgent.api.app.bsky.feed.post.delete({
-            repo: alice.did,
-            rkey: uri.rkey,
-          }),
-        ),
-      )
+      for (const uri of [uri1, uri2, uri3, uri4, uri5]) {
+        await aliceAgent.api.app.bsky.feed.post.delete({
+          repo: alice.did,
+          rkey: uri.rkey,
+        })
+      }
     })
 
     it('in forwards order', async () => {

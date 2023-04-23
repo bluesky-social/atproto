@@ -14,8 +14,9 @@ type RecordFields = {
 export const getFieldsFromRecord = (record: unknown): RecordFields => {
   if (isPost(record)) {
     return getFieldsFromPost(record)
-  } else if (isProfile(record)) {
-    return getFieldsFromProfile(record)
+    // @TODO add back in profile labeling
+    // } else if (isProfile(record)) {
+    // return getFieldsFromProfile(record)
   } else {
     return { text: [], imgs: [] }
   }

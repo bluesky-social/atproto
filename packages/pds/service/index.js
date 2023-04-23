@@ -33,6 +33,8 @@ const main = async () => {
     url: pgUrl(env.dbCreds),
     schema: env.dbSchema,
     poolSize: env.dbPoolSize,
+    poolMaxUses: env.dbPoolMaxUses,
+    poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
   })
   const s3Blobstore = new S3BlobStore({ bucket: env.s3Bucket })
   const repoSigningKey = await Secp256k1Keypair.import(env.repoSigningKey)
@@ -98,8 +100,10 @@ const getEnv = () => ({
   recoveryKeyId: process.env.RECOVERY_KEY_ID,
   dbCreds: JSON.parse(process.env.DB_CREDS_JSON),
   dbMigrateCreds: JSON.parse(process.env.DB_MIGRATE_CREDS_JSON),
-  dbSchema: process.env.DB_SCHEMA,
+  dbSchema: process.env.DB_SCHEMA || undefined,
   dbPoolSize: maybeParseInt(process.env.DB_POOL_SIZE),
+  dbPoolMaxUses: maybeParseInt(process.env.DB_POOL_MAX_USES),
+  dbPoolIdleTimeoutMs: maybeParseInt(process.env.DB_POOL_IDLE_TIMEOUT_MS),
   smtpHost: process.env.SMTP_HOST,
   smtpUsername: process.env.SMTP_USERNAME,
   smtpPassword: process.env.SMTP_PASSWORD,

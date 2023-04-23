@@ -16,6 +16,7 @@ import { HOUR } from '@atproto/common'
 import { lexToJson } from '@atproto/lexicon'
 
 const ADMIN_PASSWORD = 'admin-pass'
+const MODERATOR_PASSWORD = 'moderator-pass'
 
 export type CloseFn = () => Promise<void>
 export type TestServerInfo = {
@@ -77,6 +78,7 @@ export const runTestServer = async (
     serverDid,
     recoveryKey,
     adminPassword: ADMIN_PASSWORD,
+    moderatorPassword: MODERATOR_PASSWORD,
     inviteRequired: false,
     userInviteInterval: null,
     didPlcUrl: plcUrl,
@@ -138,10 +140,18 @@ export const runTestServer = async (
 }
 
 export const adminAuth = () => {
+  return basicAuth('admin', ADMIN_PASSWORD)
+}
+
+export const moderatorAuth = () => {
+  return basicAuth('admin', MODERATOR_PASSWORD)
+}
+
+const basicAuth = (username: string, password: string) => {
   return (
     'Basic ' +
     uint8arrays.toString(
-      uint8arrays.fromString('admin:' + ADMIN_PASSWORD, 'utf8'),
+      uint8arrays.fromString(`${username}:${password}`, 'utf8'),
       'base64pad',
     )
   )

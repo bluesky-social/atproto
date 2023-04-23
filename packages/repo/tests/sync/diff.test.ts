@@ -4,6 +4,7 @@ import { MemoryBlockstore } from '../../src/storage'
 import * as sync from '../../src/sync'
 
 import * as util from '../_util'
+import { streamToBuffer } from '@atproto/common'
 
 describe('Diff Sync', () => {
   let storage: MemoryBlockstore
@@ -24,7 +25,7 @@ describe('Diff Sync', () => {
   let syncRepo: Repo
 
   it('syncs an empty repo', async () => {
-    const car = await sync.getFullRepo(storage, repo.cid)
+    const car = await streamToBuffer(sync.getFullRepo(storage, repo.cid))
     const loaded = await sync.loadFullRepo(
       syncStorage,
       car,
@@ -41,7 +42,7 @@ describe('Diff Sync', () => {
     repo = filled.repo
     repoData = filled.data
 
-    const car = await sync.getFullRepo(storage, repo.cid)
+    const car = await streamToBuffer(sync.getFullRepo(storage, repo.cid))
     const loaded = await sync.loadFullRepo(
       syncStorage,
       car,
@@ -64,7 +65,9 @@ describe('Diff Sync', () => {
     })
     repo = edited.repo
     repoData = edited.data
-    const diffCar = await sync.getDiff(storage, repo.cid, syncRepo.cid)
+    const diffCar = await streamToBuffer(
+      sync.getCommits(storage, repo.cid, syncRepo.cid),
+    )
     const loaded = await sync.loadDiff(
       syncRepo,
       diffCar,
@@ -79,7 +82,9 @@ describe('Diff Sync', () => {
 
   it('throws on a bad signature', async () => {
     const badRepo = await util.addBadCommit(repo, keypair)
-    const diffCar = await sync.getDiff(storage, badRepo.cid, syncRepo.cid)
+    const diffCar = await streamToBuffer(
+      sync.getCommits(storage, badRepo.cid, syncRepo.cid),
+    )
     await expect(
       sync.loadDiff(syncRepo, diffCar, repoDid, keypair.did()),
     ).rejects.toThrow('Invalid signature on commit')

@@ -40,7 +40,7 @@ export const flattenUint8Arrays = (arrs: Uint8Array[]): Uint8Array => {
   return flattened
 }
 
-export const streamToArray = async (
+export const streamToBuffer = async (
   stream: AsyncIterable<Uint8Array>,
 ): Promise<Uint8Array> => {
   const arrays: Uint8Array[] = []

@@ -3,7 +3,7 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.resolveModerationReports({
-    auth: ctx.adminVerifier,
+    auth: ctx.moderatorVerifier,
     handler: async ({ input }) => {
       const { db, services } = ctx
       const moderationService = services.moderation(db)

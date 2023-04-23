@@ -8,7 +8,7 @@ type CacheVal = {
 }
 
 export class MemoryCache extends DidCache {
-  public staleTTL
+  public staleTTL: number
   public maxTTL: number
   constructor(staleTTL?: number, maxTTL?: number) {
     super()
@@ -37,10 +37,7 @@ export class MemoryCache extends DidCache {
     if (!val) return null
     const now = Date.now()
     const expired = now > val.updatedAt + this.maxTTL
-    if (expired) {
-      this.cache.delete(did)
-      return null
-    }
+    if (expired) return null
 
     const stale = now > val.updatedAt + this.staleTTL
     return {
@@ -48,6 +45,10 @@ export class MemoryCache extends DidCache {
       did,
       stale,
     }
+  }
+
+  async clearEntry(did: string): Promise<void> {
+    this.cache.delete(did)
   }
 
   async clear(): Promise<void> {

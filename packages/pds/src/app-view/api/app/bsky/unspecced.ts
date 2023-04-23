@@ -4,7 +4,6 @@ import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow } from '../../../services/feed'
 import { FeedViewPost } from '../../../../lexicon/types/app/bsky/feed/defs'
-import { countAll } from '../../../../db/util'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
@@ -21,25 +20,8 @@ export default function (server: Server, ctx: AppContext) {
 
       const postsQb = feedService
         .selectPostQb()
-        .leftJoin('repost', (join) =>
-          // this works well for one curating user. reassess if adding more
-          join
-            .on('repost.creator', '=', 'did:plc:ea2eqamjmtuo6f4rvhl3g6ne')
-            .onRef('repost.subject', '=', 'post.uri'),
-        )
-        .where((clause) =>
-          clause
-            .where('repost.creator', 'is not', null)
-            .orWhere(
-              (qb) =>
-                qb
-                  .selectFrom('like')
-                  .whereRef('like.subject', '=', 'post.uri')
-                  .select(countAll.as('count')),
-              '>=',
-              5,
-            ),
-        )
+        .leftJoin('post_agg', 'post_agg.uri', 'post.uri')
+        .where('post_agg.likeCount', '>=', 8)
         .whereNotExists(
           db
             .selectFrom('mute')

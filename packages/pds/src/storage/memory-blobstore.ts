@@ -2,7 +2,7 @@ import stream from 'stream'
 import { CID } from 'multiformats/cid'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { randomStr } from '@atproto/crypto'
-import { bytesToStream, streamToArray } from '@atproto/common'
+import { bytesToStream, streamToBuffer } from '@atproto/common'
 
 export class MemoryBlobStore implements BlobStore {
   temp: Map<string, Uint8Array> = new Map()
@@ -29,7 +29,7 @@ export class MemoryBlobStore implements BlobStore {
     if (ArrayBuffer.isView(bytes)) {
       byteArray = bytes
     } else {
-      byteArray = await streamToArray(bytes)
+      byteArray = await streamToBuffer(bytes)
     }
     this.temp.set(key, byteArray)
     return key
@@ -52,7 +52,7 @@ export class MemoryBlobStore implements BlobStore {
     if (ArrayBuffer.isView(bytes)) {
       byteArray = bytes
     } else {
-      byteArray = await streamToArray(bytes)
+      byteArray = await streamToBuffer(bytes)
     }
     this.blocks.set(cid.toString(), byteArray)
   }

@@ -45,7 +45,10 @@ export abstract class BaseResolver {
     }
 
     const got = await this.resolveDidNoCache(did)
-    if (got === null) return null
+    if (got === null) {
+      await this.cache?.clearEntry(did)
+      return null
+    }
     await this.cache?.cacheDid(did, got)
     return got
   }

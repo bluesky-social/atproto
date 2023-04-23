@@ -1,6 +1,9 @@
+import assert from 'assert'
 import { once, EventEmitter } from 'events'
+import { Selectable } from 'kysely'
 import Mail from 'nodemailer/lib/mailer'
 import AtpAgent from '@atproto/api'
+import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import { Database } from '../src'
@@ -25,7 +28,6 @@ import { RepoCommitHistory } from '../src/db/tables/repo-commit-history'
 import { RepoCommitBlock } from '../src/db/tables/repo-commit-block'
 import { Record } from '../src/db/tables/record'
 import { RepoSeq } from '../src/db/tables/repo-seq'
-import { Selectable } from 'kysely'
 
 describe('account deletion', () => {
   let agent: AtpAgent
@@ -118,12 +120,69 @@ describe('account deletion', () => {
     await expect(attempt).rejects.toThrow('Invalid did or password')
   })
 
-  it('deletes account with a valid token & password', async () => {
+  it('deletes account with a valid token & password, updating aggregations', async () => {
+    const postAUri = sc.posts[sc.dids.alice][1].ref.uriStr
+    const postBUri = sc.posts[sc.dids.dan][1].ref.uriStr
+    const { data: profileBefore } = await agent.api.app.bsky.actor.getProfile(
+      { actor: sc.dids.alice },
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+    const { data: threadBeforeA } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: postAUri, depth: 0 },
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+    const { data: threadBeforeB } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: postBUri, depth: 0 },
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+
+    // Perform account deletion
     await agent.api.com.atproto.server.deleteAccount({
       token,
       did: carol.did,
       password: carol.password,
     })
+
+    // Check aggregations: some will be decremented now that the account is deleted.
+    const { data: profileAfter } = await agent.api.app.bsky.actor.getProfile(
+      { actor: sc.dids.alice },
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+    const { data: threadAfterA } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: postAUri, depth: 0 },
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+    const { data: threadAfterB } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: postBUri, depth: 0 },
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+    assert(isThreadViewPost(threadBeforeA.thread))
+    assert(isThreadViewPost(threadBeforeB.thread))
+    assert(isThreadViewPost(threadAfterA.thread))
+    assert(isThreadViewPost(threadAfterB.thread))
+    expect(profileAfter.followsCount).toEqual(profileBefore.followsCount)
+    expect(profileAfter.followersCount).toEqual(
+      (profileBefore.followersCount ?? 0) - 1,
+    )
+    expect(profileAfter.postsCount).toEqual(profileBefore.postsCount)
+    expect(threadAfterA.thread.post.likeCount).toEqual(
+      (threadBeforeA.thread.post.likeCount ?? 0) - 1,
+    )
+    expect(threadAfterA.thread.post.replyCount).toEqual(
+      (threadBeforeA.thread.post.replyCount ?? 0) - 1,
+    )
+    expect(threadAfterA.thread.post.repostCount).toEqual(
+      threadBeforeA.thread.post.repostCount,
+    )
+    expect(threadAfterB.thread.post.likeCount).toEqual(
+      threadBeforeB.thread.post.likeCount,
+    )
+    expect(threadAfterB.thread.post.replyCount).toEqual(
+      threadBeforeB.thread.post.replyCount,
+    )
+    expect(threadAfterB.thread.post.repostCount).toEqual(
+      (threadBeforeB.thread.post.repostCount ?? 0) - 1,
+    )
   })
 
   it('no longer lets the user log in', async () => {
