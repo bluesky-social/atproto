@@ -39,6 +39,26 @@ describe('timeline views', () => {
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
+    // Label posts as "kind" to check labels on embed views
+    const labelPostA = sc.posts[bob][0].ref
+    const labelPostB = sc.posts[carol][0].ref
+    await testEnv.bsky.ctx.services
+      .label(testEnv.bsky.ctx.db)
+      .formatAndCreate(
+        testEnv.bsky.ctx.cfg.labelerDid,
+        labelPostA.uriStr,
+        labelPostA.cidStr,
+        { create: ['kind'] },
+      )
+    await testEnv.bsky.ctx.services
+      .label(testEnv.bsky.ctx.db)
+      .formatAndCreate(
+        testEnv.bsky.ctx.cfg.labelerDid,
+        labelPostB.uriStr,
+        labelPostB.cidStr,
+        { create: ['kind'] },
+      )
+    await testEnv.bsky.ctx.labeler.processAll()
   })
 
   afterAll(async () => {
