@@ -4,6 +4,7 @@ import getTimeline from './feed/getTimeline'
 import getAuthorFeed from './feed/getAuthorFeed'
 import getLikes from './feed/getLikes'
 import getPostThread from './feed/getPostThread'
+import getPosts from './feed/getPosts'
 import getProfile from './actor/getProfile'
 import getProfiles from './actor/getProfiles'
 import getRepostedBy from './feed/getRepostedBy'
@@ -19,6 +20,7 @@ export default function (server: Server, ctx: AppContext) {
   getAuthorFeed(server, ctx)
   getLikes(server, ctx)
   getPostThread(server, ctx)
+  getPosts(server, ctx)
   getProfile(server, ctx)
   getProfiles(server, ctx)
   getRepostedBy(server, ctx)

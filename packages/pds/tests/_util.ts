@@ -109,7 +109,7 @@ export const runTestServer = async (
       : Database.memory()
 
   // Separate migration db on postgres in case migration changes some
-  // connection state that we need in the tests, e.g. "alter table ... set ..."
+  // connection state that we need in the tests, e.g. "alter database ... set ..."
   const migrationDb =
     cfg.dbPostgresUrl !== undefined
       ? Database.postgres({

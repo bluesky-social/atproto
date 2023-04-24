@@ -4,6 +4,7 @@ import getTimeline from './app/bsky/feed/getTimeline'
 import getAuthorFeed from './app/bsky/feed/getAuthorFeed'
 import getLikes from './app/bsky/feed/getLikes'
 import getPostThread from './app/bsky/feed/getPostThread'
+import getPosts from './app/bsky/feed/getPosts'
 import getProfile from './app/bsky/actor/getProfile'
 import getProfiles from './app/bsky/actor/getProfiles'
 import getRepostedBy from './app/bsky/feed/getRepostedBy'
@@ -38,6 +39,7 @@ export default function (server: Server, ctx: AppContext) {
   getAuthorFeed(server, ctx)
   getLikes(server, ctx)
   getPostThread(server, ctx)
+  getPosts(server, ctx)
   getProfile(server, ctx)
   getProfiles(server, ctx)
   getRepostedBy(server, ctx)

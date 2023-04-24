@@ -106,3 +106,7 @@ export const range = (num: number): number[] => {
   }
   return nums
 }
+
+export const dedupeStrs = (strs: string[]): string[] => {
+  return [...new Set(strs)]
+}
