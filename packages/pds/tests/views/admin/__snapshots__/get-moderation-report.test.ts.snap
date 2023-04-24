@@ -58,9 +58,7 @@ Object {
       },
     },
     "repo": Object {
-      "account": Object {
-        "email": "alice@test.com",
-      },
+      "account": "alice@test.com",
       "did": "user(1)",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -122,9 +120,7 @@ Object {
   ],
   "subject": Object {
     "$type": "com.atproto.admin.defs#repoView",
-    "account": Object {
-      "email": "alice@test.com",
-    },
+    "account": "alice@test.com",
     "did": "user(1)",
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",

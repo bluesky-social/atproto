@@ -293,9 +293,7 @@ Array [
 const snapSqlite = `
 Array [
   Object {
-    "account": Object {
-      "email": "aliya-hodkiewicz.test@bsky.app",
-    },
+    "account": "aliya-hodkiewicz.test@bsky.app",
     "did": "user(0)",
     "handle": "aliya-hodkiewicz.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -317,9 +315,7 @@ Array [
     ],
   },
   Object {
-    "account": Object {
-      "email": "cara-wiegand69.test@bsky.app",
-    },
+    "account": "cara-wiegand69.test@bsky.app",
     "did": "user(1)",
     "handle": "cara-wiegand69.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -332,9 +328,7 @@ Array [
     "relatedRecords": Array [],
   },
   Object {
-    "account": Object {
-      "email": "carlos6.test@bsky.app",
-    },
+    "account": "carlos6.test@bsky.app",
     "did": "user(2)",
     "handle": "carlos6.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -342,9 +336,7 @@ Array [
     "relatedRecords": Array [],
   },
   Object {
-    "account": Object {
-      "email": "carolina-mcdermott77.test@bsky.app",
-    },
+    "account": "carolina-mcdermott77.test@bsky.app",
     "did": "user(3)",
     "handle": "carolina-mcdermott77.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -366,9 +358,7 @@ Array [
     ],
   },
   Object {
-    "account": Object {
-      "email": "eudora-dietrich4.test@bsky.app",
-    },
+    "account": "eudora-dietrich4.test@bsky.app",
     "did": "user(4)",
     "handle": "eudora-dietrich4.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -390,9 +380,7 @@ Array [
     ],
   },
   Object {
-    "account": Object {
-      "email": "shane-torphy52.test@bsky.app",
-    },
+    "account": "shane-torphy52.test@bsky.app",
     "did": "user(5)",
     "handle": "shane-torphy52.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",

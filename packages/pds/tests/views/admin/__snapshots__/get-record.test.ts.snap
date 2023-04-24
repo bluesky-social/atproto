@@ -76,9 +76,7 @@ Object {
     ],
   },
   "repo": Object {
-    "account": Object {
-      "email": "alice@test.com",
-    },
+    "account": "alice@test.com",
     "did": "user(0)",
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -184,9 +182,7 @@ Object {
     ],
   },
   "repo": Object {
-    "account": Object {
-      "email": "alice@test.com",
-    },
+    "account": "alice@test.com",
     "did": "user(0)",
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -309,9 +305,7 @@ Object {
     ],
   },
   "repo": Object {
-    "account": Object {
-      "email": "alice@test.com",
-    },
+    "account": "alice@test.com",
     "did": "user(0)",
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",

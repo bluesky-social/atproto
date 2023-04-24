@@ -94,7 +94,7 @@ export class ModerationViews {
       return {
         did: r.did,
         handle: r.handle,
-        account: email ? { email } : undefined,
+        account: email ?? undefined,
         relatedRecords,
         indexedAt: r.indexedAt,
         moderation: {
