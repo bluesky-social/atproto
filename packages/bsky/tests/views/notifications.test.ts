@@ -100,7 +100,7 @@ describe('notification views', () => {
 
     const notifsAlice = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: sc.getHeaders(sc.dids.alice, true) },
+      { headers: await appViewHeaders(sc.dids.alice, testEnv) },
     )
     const hasNotif = notifsAlice.data.notifications.some(
       (notif) => notif.uri === second.ref.uriStr,
