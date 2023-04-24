@@ -180,11 +180,22 @@ export const stripViewer = <T extends { viewer?: Record<string, unknown> }>(
 // @NOTE mutates
 export const stripViewerFromPost = (post: PostView): PostView => {
   post.author = stripViewer(post.author)
-  if (post.embed && isViewRecord(post.embed?.record)) {
-    post.embed.record.author = stripViewer(post.embed.record.author)
-    post.embed.record.embeds?.forEach((deepEmbed) => {
-      if (deepEmbed && isViewRecord(deepEmbed?.record)) {
-        deepEmbed.record.author = stripViewer(deepEmbed.record.author)
+  const recordEmbed =
+    post.embed && isViewRecord(post.embed.record)
+      ? post.embed.record // Record from record embed
+      : post.embed?.['record'] && isViewRecord(post.embed['record']['record'])
+      ? post.embed['record']['record'] // Record from record-with-media embed
+      : undefined
+  if (recordEmbed) {
+    recordEmbed.author = stripViewer(recordEmbed.author)
+    recordEmbed.embeds?.forEach((deepEmbed) => {
+      const deepRecordEmbed = isViewRecord(deepEmbed.record)
+        ? deepEmbed.record // Record from record embed
+        : deepEmbed['record'] && isViewRecord(deepEmbed['record']['record'])
+        ? deepEmbed['record']['record'] // Record from record-with-media embed
+        : undefined
+      if (deepRecordEmbed) {
+        deepRecordEmbed.author = stripViewer(deepRecordEmbed.author)
       }
     })
   }

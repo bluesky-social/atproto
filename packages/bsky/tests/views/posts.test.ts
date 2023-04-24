@@ -60,8 +60,7 @@ describe('pds posts views', () => {
       uris,
     })
     const stripped = authed.data.posts.map((p) => stripViewerFromPost(p))
-    // @TODO uncomment
-    // expect(unauthed.data.posts).toEqual(stripped)
+    expect(unauthed.data.posts).toEqual(stripped)
   })
 
   it('handles repeat uris', async () => {
