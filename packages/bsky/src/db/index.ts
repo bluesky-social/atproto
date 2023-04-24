@@ -25,17 +25,18 @@ export class Database {
     pgTypes.setTypeParser(pgTypes.builtins.INT8, (n) => parseInt(n, 10))
 
     // Setup schema usage, primarily for test parallelism (each test suite runs in its own pg schema)
-    if (schema) {
-      if (!/^[a-z_]+$/i.test(schema)) {
-        throw new Error(
-          `Postgres schema must only contain [A-Za-z_]: ${schema}`,
-        )
-      }
-      pool.on('connect', (client) => {
-        // Shared objects such as extensions will go in the public schema
-        client.query(`SET search_path TO "${schema}",public`)
-      })
+    if (schema && !/^[a-z_]+$/i.test(schema)) {
+      throw new Error(`Postgres schema must only contain [A-Za-z_]: ${schema}`)
     }
+
+    pool.on('connect', (client) => {
+      // Used for trigram indexes, e.g. on actor search
+      client.query('SET pg_trgm.strict_word_similarity_threshold TO .1;')
+      if (schema) {
+        // Shared objects such as extensions will go in the public schema
+        client.query(`SET search_path TO "${schema}",public;`)
+      }
+    })
 
     const db = new Kysely<DatabaseSchemaType>({
       dialect: new PostgresDialect({ pool }),
