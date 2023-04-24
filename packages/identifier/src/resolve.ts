@@ -15,9 +15,11 @@ export const resolveDns = async (handle: string): Promise<string> => {
     throw err
   }
   const results = chunkedResults.map((chunks) => chunks.join(''))
-  const found = results.find((i) => i.startsWith(PREFIX))
-  if (!found) throw new NoHandleRecordError()
-  return found.slice(PREFIX.length)
+  const found = results.filter((i) => i.startsWith(PREFIX))
+  if (found.length !== 1) {
+    throw new NoHandleRecordError()
+  }
+  return found[0].slice(PREFIX.length)
 }
 
 export class NoHandleRecordError extends Error {}
