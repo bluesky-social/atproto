@@ -41,6 +41,9 @@ export class BskyAgent extends AtpAgent {
   getProfiles: typeof this.api.app.bsky.actor.getProfiles = (params, opts) =>
     this.api.app.bsky.actor.getProfiles(params, opts)
 
+  getSuggestions: typeof this.api.app.bsky.actor.getSuggestions = (params, opts) =>
+    this.api.app.bsky.actor.getSuggestions(params, opts)
+
   searchActors: typeof this.api.app.bsky.actor.searchActors = (params, opts) =>
     this.api.app.bsky.actor.searchActors(params, opts)
 
