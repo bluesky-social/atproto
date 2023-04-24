@@ -191,11 +191,17 @@ export const runBsky = async (cfg: BskyConfig): Promise<BskyServerInfo> => {
     schema: cfg.dbPostgresSchema,
   })
 
+  // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
+  const migrationDb = bsky.Database.postgres({
+    url: cfg.dbPostgresUrl,
+    schema: cfg.dbPostgresSchema,
+  })
   if (cfg.migration) {
-    await db.migrateToOrThrow(cfg.migration)
+    await migrationDb.migrateToOrThrow(cfg.migration)
   } else {
-    await db.migrateToLatestOrThrow()
+    await migrationDb.migrateToLatestOrThrow()
   }
+  await migrationDb.close()
 
   const server = bsky.BskyAppView.create({ db, config })
   const listener = await server.start()
