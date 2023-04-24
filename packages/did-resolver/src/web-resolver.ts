@@ -1,34 +1,22 @@
-import {
-  ParsedDID,
-  DIDResolutionOptions,
-  DIDResolutionResult,
-  DIDResolver,
-  Resolvable,
-  DIDDocument,
-} from 'did-resolver'
 import axios, { AxiosError } from 'axios'
-import * as errors from './errors'
+import BaseResolver from './base-resolver'
+import { WebResolverOpts } from './types'
+import { PoorlyFormattedDidError } from './errors'
+import { DidCache } from './did-cache'
 
 export const DOC_PATH = '/.well-known/did.json'
 
-export type WebResolverOptions = {
-  timeout: number
-}
+export class DidWebResolver extends BaseResolver {
+  constructor(public opts: WebResolverOpts, public cache?: DidCache) {
+    super(cache)
+  }
 
-export const makeResolver = (opts: WebResolverOptions): DIDResolver => {
-  return async (
-    did: string,
-    parsed: ParsedDID,
-    _didResolver: Resolvable,
-    _options: DIDResolutionOptions,
-  ): Promise<DIDResolutionResult> => {
-    if (parsed.method !== 'web') {
-      return errors.unsupported()
-    }
-    const parts = parsed.id.split(':').map(decodeURIComponent)
+  async resolveDidNoCheck(did: string): Promise<unknown> {
+    const parsedId = did.split(':').slice(2).join(':')
+    const parts = parsedId.split(':').map(decodeURIComponent)
     let path: string
     if (parts.length < 1) {
-      return errors.invalidDid()
+      throw new PoorlyFormattedDidError(did)
     } else if (parts.length === 1) {
       path = parts[0] + DOC_PATH
     } else {
@@ -40,30 +28,17 @@ export const makeResolver = (opts: WebResolverOptions): DIDResolver => {
       url.protocol = 'http'
     }
 
-    let didDocument: DIDDocument
     try {
       const res = await axios.get(url.toString(), {
         responseType: 'json',
-        timeout: opts.timeout,
+        timeout: this.opts.timeout,
       })
-      didDocument = res.data
+      return res.data
     } catch (err) {
       if (err instanceof AxiosError && err.response) {
-        return errors.notFound() // Positively not found, versus due to e.g. network error
+        return null // Positively not found, versus due to e.g. network error
       }
       throw err
-    }
-
-    // @TODO: this excludes the use of query params
-    const docIdMatchesDid = didDocument?.id === did
-    if (!docIdMatchesDid) {
-      return errors.invalidDid()
-    }
-
-    return {
-      didResolutionMetadata: { contentType: 'application/did+ld+json' },
-      didDocument,
-      didDocumentMetadata: {},
     }
   }
 }

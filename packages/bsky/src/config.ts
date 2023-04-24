@@ -14,6 +14,10 @@ export interface ServerConfigValues {
   blobCacheLocation?: string
   repoProvider?: string
   repoSubLockId?: number
+  labelerDid: string
+  hiveApiKey?: string
+  adminPassword: string
+  labelerKeywords: Record<string, string>
 }
 
 export class ServerConfig {
@@ -39,6 +43,10 @@ export class ServerConfig {
     assert(dbPostgresUrl)
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
     const repoProvider = process.env.REPO_PROVIDER // E.g. ws://abc.com:4000
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
+    const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
+    const hiveApiKey = process.env.HIVE_API_KEY || undefined
+    const labelerKeywords = {}
     return new ServerConfig({
       version,
       debugMode,
@@ -52,6 +60,10 @@ export class ServerConfig {
       imgUriEndpoint,
       blobCacheLocation,
       repoProvider,
+      labelerDid,
+      hiveApiKey,
+      adminPassword,
+      labelerKeywords,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -119,6 +131,22 @@ export class ServerConfig {
 
   get repoSubLockId() {
     return this.cfg.repoSubLockId
+  }
+
+  get labelerDid() {
+    return this.cfg.labelerDid
+  }
+
+  get hiveApiKey() {
+    return this.cfg.hiveApiKey
+  }
+
+  get labelerKeywords() {
+    return this.cfg.labelerKeywords
+  }
+
+  get adminPassword() {
+    return this.cfg.adminPassword
   }
 }
 

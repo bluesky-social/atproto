@@ -6,15 +6,13 @@ import {
   RebaseData,
   CommitCidData,
 } from '@atproto/repo'
-import { chunkArray, wait } from '@atproto/common'
+import { chunkArray } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import Database from './db'
 import { valuesList } from './db/util'
 import { IpldBlock } from './db/tables/ipld-block'
 import { RepoCommitBlock } from './db/tables/repo-commit-block'
 import { RepoCommitHistory } from './db/tables/repo-commit-history'
-import { RepoRoot } from './db/tables/repo-root'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export class SqlRepoStorage extends RepoStorage {
   cache: BlockMap = new BlockMap()
@@ -27,74 +25,28 @@ export class SqlRepoStorage extends RepoStorage {
     super()
   }
 
-  // instead of waiting for row locks, we attempt to grab the root skipping over locked rows
-  // if we get no result, we wait for 200ms so the previous write has the chance to go through & then try again
-  // if the lock is still held, we check (without a row lock) to see the row exists at all
-  private async getAndLockHeadPg(): Promise<RepoRoot | null> {
-    const selectAndSkipLock = async () => {
-      return await this.db.db
-        .selectFrom('repo_root')
-        .selectAll()
-        .forUpdate()
-        .skipLocked()
-        .where('did', '=', this.did)
-        .executeTakeFirst()
+  // note this method will return null if the repo has a lock on it currently
+  async lockHead(): Promise<CID | null> {
+    let builder = this.db.db
+      .selectFrom('repo_root')
+      .selectAll()
+      .where('did', '=', this.did)
+    if (this.db.dialect !== 'sqlite') {
+      builder = builder.forUpdate().skipLocked()
     }
-
-    const firstTry = await selectAndSkipLock()
-    if (firstTry) return firstTry
-    await wait(200)
-    const secondTry = await selectAndSkipLock()
-    if (secondTry) return secondTry
-    const withNoLock = await this.getHeadNoLock()
-    if (withNoLock === null) return null
-    throw new InvalidRequestError('too many attempted concurrent updates')
+    const res = await builder.executeTakeFirst()
+    if (!res) return null
+    return CID.parse(res.root)
   }
 
-  private async getHeadNoLock(): Promise<RepoRoot | null> {
+  async getHead(): Promise<CID | null> {
     const res = await this.db.db
       .selectFrom('repo_root')
       .selectAll()
       .where('did', '=', this.did)
       .executeTakeFirst()
-    return res ?? null
-  }
-
-  async getHead(forUpdate?: boolean): Promise<CID | null> {
-    let found: RepoRoot | null
-    if (forUpdate && this.db.dialect !== 'sqlite') {
-      // SELECT FOR UPDATE is not supported by sqlite, but sqlite txs are SERIALIZABLE so we don't actually need it
-      found = await this.getAndLockHeadPg()
-    } else {
-      found = await this.getHeadNoLock()
-    }
-    if (!found) return null
-
-    // if for update, we cache the blocks from last commit
-    // this must be split out into a separate query because of how pg handles SELECT FOR UPDATE with outer joins
-    if (forUpdate) {
-      const res = await this.db.db
-        .selectFrom('repo_commit_block')
-        .where('repo_commit_block.commit', '=', found.root)
-        .where('repo_commit_block.creator', '=', this.did)
-        .leftJoin('ipld_block', (join) =>
-          join
-            .onRef('ipld_block.cid', '=', 'repo_commit_block.commit')
-            .on('ipld_block.creator', '=', this.did),
-        )
-        .select([
-          'ipld_block.cid as blockCid',
-          'ipld_block.content as blockBytes',
-        ])
-        .execute()
-      res.forEach((row) => {
-        if (row.blockCid && row.blockBytes) {
-          this.cache.set(CID.parse(row.blockCid), row.blockBytes)
-        }
-      })
-    }
-
-    return CID.parse(found.root)
+    if (!res) return null
+    return CID.parse(res.root)
   }
 
   async getBytes(cid: CID): Promise<Uint8Array | null> {

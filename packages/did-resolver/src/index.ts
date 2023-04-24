@@ -1,4 +1,6 @@
-export * as web from './web-resolver'
-export * as plc from './plc-resolver'
+export * from './web-resolver'
+export * from './plc-resolver'
 export * from './resolver'
 export * from './atproto-data'
+export * from './types'
+export * from './errors'

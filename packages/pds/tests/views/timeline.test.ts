@@ -36,7 +36,6 @@ describe('timeline views', () => {
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
-    await server.ctx.labeler.processAll()
     // Label posts as "kind" to check labels on embed views
     const labelPostA = sc.posts[bob][0].ref
     const labelPostB = sc.posts[carol][0].ref
@@ -56,6 +55,7 @@ describe('timeline views', () => {
         labelPostB.cidStr,
         { create: ['kind'] },
       )
+    await server.ctx.backgroundQueue.processAll()
   })
 
   afterAll(async () => {

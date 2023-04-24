@@ -8,9 +8,14 @@ import Database from '../../db'
 import { countAll, noMatch } from '../../db/util'
 import { Actor } from '../../db/tables/actor'
 import { ImageUriBuilder } from '../../image/uri'
+import { LabelService } from '../label'
 
 export class ActorViews {
   constructor(private db: Database, private imgUriBuilder: ImageUriBuilder) {}
+
+  services = {
+    label: LabelService.creator(),
+  }
 
   profileDetailed(
     result: ActorResult,
@@ -28,14 +33,11 @@ export class ActorViews {
     if (results.length === 0) return []
 
     const { ref } = this.db.db.dynamic
+    const dids = results.map((r) => r.did)
 
-    const profileInfos = await this.db.db
+    const profileInfosQb = this.db.db
       .selectFrom('actor')
-      .where(
-        'actor.did',
-        'in',
-        results.map((r) => r.did),
-      )
+      .where('actor.did', 'in', dids)
       .leftJoin('profile', 'profile.creator', 'actor.did')
       .select([
         'actor.did as did',
@@ -75,7 +77,11 @@ export class ActorViews {
           .select('uri')
           .as('requesterFollowedBy'),
       ])
-      .execute()
+
+    const [profileInfos, labels] = await Promise.all([
+      profileInfosQb.execute(),
+      this.services.label(this.db).getLabelsForProfiles(dids),
+    ])
 
     const profileInfoByDid = profileInfos.reduce((acc, info) => {
       return Object.assign(acc, { [info.did]: info })
@@ -115,6 +121,7 @@ export class ActorViews {
               // muted field hydrated on pds
             }
           : undefined,
+        labels: labels[result.did] ?? [],
       }
     })
 
@@ -131,14 +138,11 @@ export class ActorViews {
     if (results.length === 0) return []
 
     const { ref } = this.db.db.dynamic
+    const dids = results.map((r) => r.did)
 
-    const profileInfos = await this.db.db
+    const profileInfosQb = this.db.db
       .selectFrom('actor')
-      .where(
-        'actor.did',
-        'in',
-        results.map((r) => r.did),
-      )
+      .where('actor.did', 'in', dids)
       .leftJoin('profile', 'profile.creator', 'actor.did')
       .select([
         'actor.did as did',
@@ -162,7 +166,11 @@ export class ActorViews {
           .select('uri')
           .as('requesterFollowedBy'),
       ])
-      .execute()
+
+    const [profileInfos, labels] = await Promise.all([
+      profileInfosQb.execute(),
+      this.services.label(this.db).getLabelsForProfiles(dids),
+    ])
 
     const profileInfoByDid = profileInfos.reduce((acc, info) => {
       return Object.assign(acc, { [info.did]: info })
@@ -191,6 +199,7 @@ export class ActorViews {
               // muted field hydrated on pds
             }
           : undefined,
+        labels: labels[result.did] ?? [],
       }
     })
 

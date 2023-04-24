@@ -12,7 +12,6 @@ import {
 import { AtUri } from '@atproto/uri'
 import { DidResolver } from '@atproto/did-resolver'
 import { chunkArray } from '@atproto/common'
-import { NoHandleRecordError, resolveDns } from '@atproto/identifier'
 import { ValidationError } from '@atproto/lexicon'
 import Database from '../../db'
 import * as Post from './plugins/post'
@@ -23,6 +22,8 @@ import * as Profile from './plugins/profile'
 import RecordProcessor from './processor'
 import { subLogger } from '../../logger'
 import { retryHttp } from '../../util/retry'
+import { resolveExternalHandle } from '../../util/identity'
+import { Labeler } from '../../labeler'
 
 export class IndexingService {
   records: {
@@ -33,7 +34,11 @@ export class IndexingService {
     profile: Profile.PluginType
   }
 
-  constructor(public db: Database, public didResolver: DidResolver) {
+  constructor(
+    public db: Database,
+    public didResolver: DidResolver,
+    public labeler: Labeler,
+  ) {
     this.records = {
       post: Post.makePlugin(this.db.db),
       like: Like.makePlugin(this.db.db),
@@ -43,8 +48,8 @@ export class IndexingService {
     }
   }
 
-  static creator(didResolver: DidResolver) {
-    return (db: Database) => new IndexingService(db, didResolver)
+  static creator(didResolver: DidResolver, labeler: Labeler) {
+    return (db: Database) => new IndexingService(db, didResolver, labeler)
   }
 
   async indexRecord(
@@ -62,6 +67,7 @@ export class IndexingService {
     } else {
       await indexer.updateRecord(uri, cid, obj, timestamp)
     }
+    this.labeler.processRecord(uri, obj)
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {
@@ -80,7 +86,7 @@ export class IndexingService {
     if (actor && !force) {
       return
     }
-    const { handle } = await this.didResolver.resolveAtpData(did)
+    const { handle } = await this.didResolver.resolveAtprotoData(did)
     const handleToDid = await resolveExternalHandle(handle)
     if (did !== handleToDid) {
       return // No bidirectional link between did and handle
@@ -104,7 +110,7 @@ export class IndexingService {
   async indexRepo(did: string, commit: string) {
     this.db.assertTransaction()
     const now = new Date().toISOString()
-    const { pds, signingKey } = await this.didResolver.resolveAtpData(did)
+    const { pds, signingKey } = await this.didResolver.resolveAtprotoData(did)
     const { api } = new AtpAgent({ service: pds })
 
     const { data: car } = await retryHttp(() =>
@@ -194,7 +200,7 @@ export class IndexingService {
   async tombstoneActor(did: string) {
     this.db.assertTransaction()
     const doc = await this.didResolver.resolveDid(did)
-    if (doc.didResolutionMetadata.error === 'notFound') {
+    if (doc === null) {
       await Promise.all([
         this.unindexActor(did),
         this.db.db.deleteFrom('actor').where('did', '=', did).execute(),
@@ -241,31 +247,6 @@ export class IndexingService {
       this.db.db.deleteFrom('repost').where('creator', '=', did).execute(),
       this.db.db.deleteFrom('like').where('creator', '=', did).execute(),
     ])
-  }
-}
-
-const resolveExternalHandle = async (
-  handle: string,
-): Promise<string | undefined> => {
-  try {
-    const did = await resolveDns(handle)
-    return did
-  } catch (err) {
-    if (err instanceof NoHandleRecordError) {
-      // no worries it's just not found
-    } else {
-      subLogger.error({ err, handle }, 'could not resolve dns handle')
-    }
-  }
-  try {
-    // @TODO we don't need non-tls for our tests, but it might be useful to support
-    const { api } = new AtpAgent({ service: `https://${handle}` })
-    const res = await retryHttp(() =>
-      api.com.atproto.identity.resolveHandle({ handle }),
-    )
-    return res.data.did
-  } catch (err) {
-    return undefined
   }
 }
 

@@ -6,7 +6,7 @@ import {
   getUserSearchQuery,
   SearchKeyset,
 } from '../../../../services/util/search'
-import { authOptionalVerifier } from '../util'
+import { authOptionalVerifier } from '../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActors({

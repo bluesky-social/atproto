@@ -181,6 +181,9 @@ export const runBsky = async (cfg: BskyConfig): Promise<BskyServerInfo> => {
     ...cfg,
     // Each test suite gets its own lock id for the repo subscription
     repoSubLockId: uniqueLockId(),
+    adminPassword: 'admin-pass',
+    labelerDid: 'did:example:labeler',
+    labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
   })
 
   const db = bsky.Database.postgres({
@@ -226,13 +229,11 @@ const uniqueLockId = () => {
 export const mockNetworkUtilities = (pds: PdsServerInfo) => {
   // Map pds public url to its local url when resolving from plc
   const origResolveDid = DidResolver.prototype.resolveDid
-  DidResolver.prototype.resolveDid = async function (did, options) {
-    const result = await (origResolveDid.call(this, did, options) as ReturnType<
+  DidResolver.prototype.resolveDid = async function (did) {
+    const result = await (origResolveDid.call(this, did) as ReturnType<
       typeof origResolveDid
     >)
-    const service = result.didDocument?.service?.find(
-      (svc) => svc.id === '#atproto_pds',
-    )
+    const service = result?.service?.find((svc) => svc.id === '#atproto_pds')
     if (typeof service?.serviceEndpoint === 'string') {
       service.serviceEndpoint = service.serviceEndpoint.replace(
         pds.ctx.cfg.publicUrl,

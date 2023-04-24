@@ -2,7 +2,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { softDeleted } from '../../../../db/util'
 import AppContext from '../../../../context'
-import { authOptionalVerifier } from '../util'
+import { authOptionalVerifier } from '../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({

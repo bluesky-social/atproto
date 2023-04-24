@@ -2,10 +2,12 @@ import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
 import * as lex from '../../../../lexicon/lexicons'
+import Database from '../../../../db'
 import {
   DatabaseSchema,
   DatabaseSchemaType,
 } from '../../../../db/database-schema'
+import { BackgroundQueue } from '../../../../event-stream/background-queue'
 import RecordProcessor from '../processor'
 
 const lexId = lex.ids.AppBskyActorProfile
@@ -63,8 +65,11 @@ const notifsForDelete = () => {
 
 export type PluginType = RecordProcessor<Profile.Record, IndexedProfile>
 
-export const makePlugin = (db: DatabaseSchema): PluginType => {
-  return new RecordProcessor(db, {
+export const makePlugin = (
+  db: Database,
+  backgroundQueue: BackgroundQueue,
+): PluginType => {
+  return new RecordProcessor(db, backgroundQueue, {
     lexId,
     insertFn,
     findDuplicate,

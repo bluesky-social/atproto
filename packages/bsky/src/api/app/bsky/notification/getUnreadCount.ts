@@ -1,7 +1,7 @@
 import { Server } from '../../../../lexicon'
 import { countAll, notSoftDeletedClause } from '../../../../db/util'
 import AppContext from '../../../../context'
-import { authVerifier } from '../util'
+import { authVerifier } from '../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.getUnreadCount({

@@ -5,7 +5,7 @@ import { AtUri } from '@atproto/uri'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRecord({
-    auth: ctx.adminVerifier,
+    auth: ctx.moderatorVerifier,
     handler: async ({ params }) => {
       const { db, services } = ctx
       const { uri, cid } = params
