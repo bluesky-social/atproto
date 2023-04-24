@@ -35,6 +35,7 @@ export const createRouter = (ctx: AppContext): express.Router => {
         ctx.didResolver.resolveAtpData(did), // @TODO cache did info
         ctx.db.db
           .selectFrom('moderation_action_subject_blob')
+          .select('actionId')
           .innerJoin(
             'moderation_action',
             'moderation_action.id',

@@ -527,13 +527,13 @@ export class ModerationViews {
     const res = await this.db.db
       .selectFrom('label')
       .where('label.uri', '=', subject)
-      .if(!includeNeg, (qb) => qb.where('neg', '=', 0))
+      .if(!includeNeg, (qb) => qb.where('neg', '=', false))
       .selectAll()
       .execute()
     return res.map((l) => ({
       ...l,
       cid: l.cid === '' ? undefined : l.cid,
-      neg: l.neg === 1,
+      neg: l.neg,
     }))
   }
 }
