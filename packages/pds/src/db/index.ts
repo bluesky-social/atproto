@@ -66,8 +66,7 @@ export class Database {
       }
       pool.on('connect', (client) => {
         // Shared objects such as extensions will go in the public schema
-        client.query(`SET pg_trgm.strict_word_similarity_threshold TO .1;`)
-        client.query(`SET search_path TO "${schema}",public;`)
+        client.query(`SET search_path TO "${schema}",public`)
       })
     }
 

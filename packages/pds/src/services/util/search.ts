@@ -18,6 +18,11 @@ export const getUserSearchQueryPg = (
   const { ref } = db.db.dynamic
   const { term, limit, cursor, includeSoftDeleted } = opts
 
+  // Performing matching by word using "strict word similarity" operator.
+  // The more characters the user gives us, the more we can ratchet down
+  // the distance threshold for matching.
+  const threshold = term.length < 3 ? 0.9 : 0.8
+
   // Matching user accounts based on handle
   const distanceAccount = distance(term, ref('handle'))
   let accountsQb = db.db
@@ -26,7 +31,8 @@ export const getUserSearchQueryPg = (
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('repo_root'))),
     )
-    .where(similar(term, ref('handle')))
+    .where(similar(term, ref('handle'))) // Coarse filter engaging trigram index
+    .where(distanceAccount, '<', threshold) // Refines results from trigram index
     .select(['did_handle.did as did', distanceAccount.as('distance')])
   accountsQb = paginate(accountsQb, {
     limit,
@@ -44,7 +50,8 @@ export const getUserSearchQueryPg = (
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('repo_root'))),
     )
-    .where(similar(term, ref('displayName')))
+    .where(similar(term, ref('displayName'))) // Coarse filter engaging trigram index
+    .where(distanceProfile, '<', threshold) // Refines results from trigram index
     .select(['did_handle.did as did', distanceProfile.as('distance')])
   profilesQb = paginate(profilesQb, {
     limit,
@@ -145,6 +152,7 @@ export const cleanTerm = (term: string) => term.trim().replace(/^@/g, '')
 const distance = (term: string, ref: DbRef) =>
   sql<number>`(${term} <<<-> ${ref})`
 
+// Can utilize trigram index to match on strict word similarity
 const similar = (term: string, ref: DbRef) => sql<boolean>`(${term} <<% ${ref})`
 
 type Result = { distance: number; handle: string }

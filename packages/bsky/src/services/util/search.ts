@@ -28,7 +28,8 @@ export const getUserSearchQuery = (
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('actor'))),
     )
-    .where(distanceAccount, '<', threshold)
+    .where(similar(term, ref('handle'))) // Coarse filter engaging trigram index
+    .where(distanceAccount, '<', threshold) // Refines results from trigram index
     .select(['actor.did as did', distanceAccount.as('distance')])
   accountsQb = paginate(accountsQb, {
     limit,
@@ -45,7 +46,8 @@ export const getUserSearchQuery = (
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('actor'))),
     )
-    .where(distanceProfile, '<', threshold)
+    .where(similar(term, ref('displayName'))) // Coarse filter engaging trigram index
+    .where(distanceProfile, '<', threshold) // Refines results from trigram index
     .select(['actor.did as did', distanceProfile.as('distance')])
   profilesQb = paginate(profilesQb, {
     limit,
@@ -83,67 +85,15 @@ export const getUserSearchQuery = (
   })
 }
 
-export const getUserSearchQuerySqlite = (
-  db: Database,
-  opts: {
-    term: string
-    limit: number
-    cursor?: string
-    includeSoftDeleted?: boolean
-  },
-) => {
-  const { ref } = db.db.dynamic
-  const { term, limit, cursor, includeSoftDeleted } = opts
-
-  // Take the first three words in the search term. We're going to build a dynamic query
-  // based on the number of words, so to keep things predictable just ignore words 4 and
-  // beyond. We also remove the special wildcard characters supported by the LIKE operator,
-  // since that's where these values are heading.
-  const safeWords = term
-    .replace(/[%_]/g, '')
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 3)
-
-  if (!safeWords.length) {
-    // Return no results. This could happen with weird input like ' % _ '.
-    return db.db.selectFrom('actor').where(sql`1 = 0`)
-  }
-
-  // We'll ensure there's a space before each word in both textForMatch and in safeWords,
-  // so that we can reliably match word prefixes using LIKE operator.
-  const textForMatch = sql`lower(' ' || ${ref(
-    'actor.handle',
-  )} || ' ' || coalesce(${ref('profile.displayName')}, ''))`
-
-  const keyset = new SearchKeyset(sql``, sql``)
-  const unpackedCursor = keyset.unpackCursor(cursor)
-
-  return db.db
-    .selectFrom('actor')
-    .if(!includeSoftDeleted, (qb) =>
-      qb.where(notSoftDeletedClause(ref('actor'))),
-    )
-    .where((q) => {
-      safeWords.forEach((word) => {
-        // Match word prefixes against contents of handle and displayName
-        q = q.where(textForMatch, 'like', `% ${word.toLowerCase()}%`)
-      })
-      return q
-    })
-    .if(!!unpackedCursor, (qb) =>
-      unpackedCursor ? qb.where('handle', '>', unpackedCursor.secondary) : qb,
-    )
-    .orderBy('handle')
-    .limit(limit)
-}
-
 // Remove leading @ in case a handle is input that way
 export const cleanTerm = (term: string) => term.trim().replace(/^@/g, '')
 
 // Uses pg_trgm strict word similarity to check similarity between a search term and a stored value
 const distance = (term: string, ref: DbRef) =>
   sql<number>`(${term} <<<-> ${ref})`
+
+// Can utilize trigram index to match on strict word similarity
+const similar = (term: string, ref: DbRef) => sql<boolean>`(${term} <<% ${ref})`
 
 type Result = { distance: number; handle: string }
 type LabeledResult = { primary: number; secondary: string }

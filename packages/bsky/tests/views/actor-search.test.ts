@@ -56,8 +56,6 @@ describe('pds actor search views', () => {
     await close()
   })
 
-  // @TODO(bsky) search blocks by actor takedown via labels.
-
   it('typeahead gives relevant results', async () => {
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'car' },
