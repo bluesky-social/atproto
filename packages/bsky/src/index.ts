@@ -16,6 +16,10 @@ import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
 import AppContext from './context'
 import { RepoSubscription } from './subscription/repo'
+import {
+  ImageInvalidator,
+  ImageProcessingServerInvalidator,
+} from './image/invalidator'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -39,8 +43,13 @@ export class BskyAppView {
     this.sub = opts.sub
   }
 
-  static create(opts: { db: Database; config: ServerConfig }): BskyAppView {
+  static create(opts: {
+    db: Database
+    config: ServerConfig
+    imgInvalidator?: ImageInvalidator
+  }): BskyAppView {
     const { db, config } = opts
+    let maybeImgInvalidator = opts.imgInvalidator
     const app = express()
     app.use(cors())
     app.use(loggerMiddleware)
@@ -53,8 +62,28 @@ export class BskyAppView {
       config.imgUriKey,
     )
 
+    let imgProcessingServer: ImageProcessingServer | undefined
+    if (!config.imgUriEndpoint) {
+      const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
+      imgProcessingServer = new ImageProcessingServer(
+        config,
+        imgProcessingCache,
+      )
+      maybeImgInvalidator ??= new ImageProcessingServerInvalidator(
+        imgProcessingCache,
+      )
+    }
+
+    let imgInvalidator: ImageInvalidator
+    if (maybeImgInvalidator) {
+      imgInvalidator = maybeImgInvalidator
+    } else {
+      throw new Error('Missing appview image invalidator')
+    }
+
     const services = createServices({
       imgUriBuilder,
+      imgInvalidator,
       didResolver,
     })
 
@@ -65,12 +94,6 @@ export class BskyAppView {
       imgUriBuilder,
       didResolver,
     })
-
-    let imgProcessingServer: ImageProcessingServer | undefined
-    if (!config.imgUriEndpoint) {
-      const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
-      imgProcessingServer = new ImageProcessingServer(ctx, imgProcessingCache)
-    }
 
     let server = createServer({
       validateResponse: config.debugMode,

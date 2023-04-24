@@ -3,7 +3,7 @@ import { Server } from '../../../../lexicon'
 import { FeedAlgorithm, FeedKeyset, composeFeed } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
-import { authVerifier } from '../util'
+import { authVerifier } from '../../../auth'
 
 // @TODO getTimeline() will be replaced by composeTimeline() in the app-view
 export default function (server: Server, ctx: AppContext) {

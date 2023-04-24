@@ -1,7 +1,8 @@
 import fs from 'fs/promises'
 import AtpAgent from '@atproto/api'
 import { CloseFn, runTestEnv, TestEnvInfo } from '@atproto/dev-env'
-import { forSnapshot, processAll, stripViewer } from '../_util'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { adminAuth, forSnapshot, processAll, stripViewer } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -170,6 +171,44 @@ describe('pds profile views', () => {
     })
     expect(unauthed.profiles.length).toBeGreaterThan(0)
     expect(unauthed.profiles).toEqual(authed.profiles.map(stripViewer))
+  })
+
+  it('blocked by actor takedown', async () => {
+    const { data: action } =
+      await agent.api.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: alice,
+          },
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+    const promise = agent.api.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: sc.getHeaders(bob, true) },
+    )
+
+    await expect(promise).rejects.toThrow('Account has been taken down')
+
+    // Cleanup
+    await agent.api.com.atproto.admin.reverseModerationAction(
+      {
+        id: action.id,
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
   })
 
   async function updateProfile(did: string, record: Record<string, unknown>) {

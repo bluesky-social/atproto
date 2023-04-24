@@ -12,7 +12,6 @@ import {
 import { AtUri } from '@atproto/uri'
 import { DidResolver } from '@atproto/did-resolver'
 import { chunkArray } from '@atproto/common'
-import { NoHandleRecordError, resolveDns } from '@atproto/identifier'
 import { ValidationError } from '@atproto/lexicon'
 import Database from '../../db'
 import * as Post from './plugins/post'
@@ -23,6 +22,7 @@ import * as Profile from './plugins/profile'
 import RecordProcessor from './processor'
 import { subLogger } from '../../logger'
 import { retryHttp } from '../../util/retry'
+import { resolveExternalHandle } from '../../util/identity'
 
 export class IndexingService {
   records: {
@@ -241,31 +241,6 @@ export class IndexingService {
       this.db.db.deleteFrom('repost').where('creator', '=', did).execute(),
       this.db.db.deleteFrom('like').where('creator', '=', did).execute(),
     ])
-  }
-}
-
-const resolveExternalHandle = async (
-  handle: string,
-): Promise<string | undefined> => {
-  try {
-    const did = await resolveDns(handle)
-    return did
-  } catch (err) {
-    if (err instanceof NoHandleRecordError) {
-      // no worries it's just not found
-    } else {
-      subLogger.error({ err, handle }, 'could not resolve dns handle')
-    }
-  }
-  try {
-    // @TODO we don't need non-tls for our tests, but it might be useful to support
-    const { api } = new AtpAgent({ service: `https://${handle}` })
-    const res = await retryHttp(() =>
-      api.com.atproto.identity.resolveHandle({ handle }),
-    )
-    return res.data.did
-  } catch (err) {
-    return undefined
   }
 }
 

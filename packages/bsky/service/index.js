@@ -11,6 +11,7 @@ require('dd-trace/init') // Only works with commonjs
 
 // Tracer code above must come before anything else
 const path = require('path')
+const { CloudfrontInvalidator } = require('@atproto/aws')
 const { Database, ServerConfig, BskyAppView } = require('@atproto/bsky')
 
 const main = async () => {
@@ -40,7 +41,17 @@ const main = async () => {
     imgUriEndpoint: env.imgUriEndpoint,
     blobCacheLocation: env.blobCacheLocation,
   })
-  const bsky = BskyAppView.create({ db, config: cfg })
+  const cfInvalidator = env.cfDistributionId
+    ? new CloudfrontInvalidator({
+        distributionId: env.cfDistributionId,
+        pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
+      })
+    : undefined
+  const bsky = BskyAppView.create({
+    db,
+    config: cfg,
+    imgInvalidator: cfInvalidator,
+  })
   await bsky.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
@@ -62,6 +73,7 @@ const getEnv = () => ({
   imgUriKey: process.env.IMG_URI_KEY,
   imgUriEndpoint: process.env.IMG_URI_ENDPOINT,
   blobCacheLocation: process.env.BLOB_CACHE_LOC,
+  cfDistributionId: process.env.CF_DISTRIBUTION_ID,
 })
 
 const maintainXrpcResource = (span, req) => {

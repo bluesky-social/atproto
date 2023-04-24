@@ -8,7 +8,7 @@ import {
   PostInfoMap,
 } from '../../../../services/types'
 import { FeedService } from '../../../../services/feed'
-import { authOptionalVerifier } from '../util'
+import { authOptionalVerifier } from '../../../auth'
 
 export type PostThread = {
   post: FeedRow

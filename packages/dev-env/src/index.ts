@@ -7,12 +7,14 @@ import PDSServer, {
   ServerConfig as PDSServerConfig,
   AppContext as PDSContext,
 } from '@atproto/pds'
+import * as bsky from '@atproto/bsky'
 import * as plc from '@did-plc/lib'
 import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
 import * as crypto from '@atproto/crypto'
 import AtpAgent from '@atproto/api'
-import { ServerType, ServerConfig, StartParams } from './types.js'
+import { ServerType, ServerConfig, StartParams, PORTS } from './types.js'
 import { HOUR } from '@atproto/common'
+import { mockNetworkUtilities } from './test-env'
 
 export * from './test-env'
 
@@ -37,6 +39,7 @@ export class DevEnvServer {
     return {
       [ServerType.PersonalDataServer]: '🌞 Personal Data server',
       [ServerType.DidPlaceholder]: '👤 DID Placeholder server',
+      [ServerType.BskyAppView]: '🌀 Bsky App View server',
     }[this.type]
   }
 
@@ -134,6 +137,40 @@ export class DevEnvServer {
         this.inst = plcServer
         break
       }
+      case ServerType.BskyAppView: {
+        if (!this.env.pdsUrl || !this.env.plcUrl) {
+          throw new Error(
+            'Must be running a PDS and PLC servers to start AppView',
+          )
+        }
+
+        const config = new bsky.ServerConfig({
+          version: '0.0.0',
+          didPlcUrl: this.env.plcUrl,
+          publicUrl: 'https://bsky.public.url',
+          imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
+          imgUriKey:
+            'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
+          adminPassword: 'password',
+          labelerDid: 'did:example:labeler',
+          dbPostgresUrl: process.env.DB_POSTGRES_URL || '',
+          dbPostgresSchema: process.env.DB_POSTGRES_SCHEMA,
+          repoProvider: this.env.pdsUrl.replace('http://', 'ws://'),
+          port: this.port,
+        })
+
+        const db = bsky.Database.postgres({
+          url: config.dbPostgresUrl,
+          schema: config.dbPostgresSchema,
+        })
+
+        await db.migrateToLatestOrThrow()
+
+        const server = bsky.BskyAppView.create({ db, config })
+        await startServer(server)
+        this.inst = server
+        break
+      }
       default:
         throw new Error(`Unsupported server type: ${this.type}`)
     }
@@ -153,6 +190,7 @@ export class DevEnvServer {
 
 export class DevEnv {
   plcUrl: string | undefined
+  pdsUrl: string | undefined
   servers: Map<number, DevEnvServer> = new Map()
 
   static async create(params: StartParams): Promise<DevEnv> {
@@ -174,6 +212,20 @@ export class DevEnv {
     this.servers.set(cfg.port, server)
     if (cfg.type === ServerType.DidPlaceholder) {
       this.plcUrl = `http://localhost:${cfg.port}`
+    }
+    if (cfg.type === ServerType.PersonalDataServer) {
+      this.pdsUrl = `http://localhost:${cfg.port}`
+    }
+    if (cfg.type === ServerType.BskyAppView) {
+      const pds = this.servers.get(PORTS[ServerType.PersonalDataServer])
+      if (pds) {
+        await mockNetworkUtilities({
+          port: pds.port,
+          url: pds.url,
+          close: pds.close,
+          ctx: pds.ctx!,
+        })
+      }
     }
   }
 

@@ -242,7 +242,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('did', 'varchar', (col) => col.primaryKey())
     .addColumn('handle', 'varchar', (col) => col.unique())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .addColumn('takedownId', 'integer') // @TODO(bsky) add fkey when creating moderation_report table
+    .addColumn('takedownId', 'integer') // foreign key created in moderation-init migration
     .execute()
   await db.schema // Supports user search
     .createIndex(`actor_handle_tgrm_idx`)
@@ -269,7 +269,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('json', 'text', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .addColumn('takedownId', 'integer') // @TODO(bsky) add fkey when creating moderation_report table
+    .addColumn('takedownId', 'integer') // foreign key created in moderation-init migration
     .execute()
 }
 

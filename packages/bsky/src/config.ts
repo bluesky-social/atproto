@@ -14,6 +14,8 @@ export interface ServerConfigValues {
   blobCacheLocation?: string
   repoProvider?: string
   repoSubLockId?: number
+  labelerDid: string
+  adminPassword: string
 }
 
 export class ServerConfig {
@@ -39,6 +41,8 @@ export class ServerConfig {
     assert(dbPostgresUrl)
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
     const repoProvider = process.env.REPO_PROVIDER // E.g. ws://abc.com:4000
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
+    const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     return new ServerConfig({
       version,
       debugMode,
@@ -52,6 +56,8 @@ export class ServerConfig {
       imgUriEndpoint,
       blobCacheLocation,
       repoProvider,
+      labelerDid,
+      adminPassword,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -119,6 +125,14 @@ export class ServerConfig {
 
   get repoSubLockId() {
     return this.cfg.repoSubLockId
+  }
+
+  get labelerDid() {
+    return this.cfg.labelerDid
+  }
+
+  get adminPassword() {
+    return this.cfg.adminPassword
   }
 }
 

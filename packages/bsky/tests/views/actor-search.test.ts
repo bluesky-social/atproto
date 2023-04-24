@@ -1,7 +1,14 @@
 import AtpAgent from '@atproto/api'
 import { wait } from '@atproto/common'
 import { CloseFn, runTestEnv } from '@atproto/dev-env'
-import { forSnapshot, paginateAll, processAll, stripViewer } from '../_util'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import {
+  adminAuth,
+  forSnapshot,
+  paginateAll,
+  processAll,
+  stripViewer,
+} from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
 
@@ -216,5 +223,31 @@ describe('pds actor search views', () => {
     })
     expect(unauthed.actors.length).toBeGreaterThan(0)
     expect(unauthed.actors).toEqual(authed.actors.map(stripViewer))
+  })
+
+  it('search blocks by actor takedown', async () => {
+    await agent.api.com.atproto.admin.takeModerationAction(
+      {
+        action: TAKEDOWN,
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids['cara-wiegand69.test'],
+        },
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+    const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
+      { term: 'car' },
+      { headers },
+    )
+    const handles = result.data.actors.map((u) => u.handle)
+    expect(handles).toContain('carlos6.test')
+    expect(handles).toContain('carolina-mcdermott77.test')
+    expect(handles).not.toContain('cara-wiegand69.test')
   })
 })

@@ -1,6 +1,7 @@
 import AtpAgent from '@atproto/api'
 import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
-import { forSnapshot, paginateAll, processAll } from '../_util'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { adminAuth, forSnapshot, paginateAll, processAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
@@ -195,5 +196,61 @@ describe('notification views', () => {
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map((n) => n.indexedAt <= seenAt))
+  })
+
+  it('fetches notifications omitting mentions and replies for taken-down posts', async () => {
+    const postRef1 = sc.replies[sc.dids.carol][0].ref // Reply
+    const postRef2 = sc.posts[sc.dids.dan][1].ref // Mention
+    const actionResults = await Promise.all(
+      [postRef1, postRef2].map((postRef) =>
+        agent.api.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            subject: {
+              $type: 'com.atproto.repo.strongRef',
+              uri: postRef.uriStr,
+              cid: postRef.cidStr,
+            },
+            createdBy: 'did:example:admin',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        ),
+      ),
+    )
+
+    const notifRes = await agent.api.app.bsky.notification.listNotifications(
+      {},
+      { headers: sc.getHeaders(alice, true) },
+    )
+    const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
+      {},
+      { headers: sc.getHeaders(alice, true) },
+    )
+
+    const notifs = sort(notifRes.data.notifications)
+    expect(notifs.length).toBe(10)
+    expect(forSnapshot(notifs)).toMatchSnapshot()
+    expect(notifCount.data.count).toBe(10)
+
+    // Cleanup
+    await Promise.all(
+      actionResults.map((result) =>
+        agent.api.com.atproto.admin.reverseModerationAction(
+          {
+            id: result.data.id,
+            createdBy: 'did:example:admin',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        ),
+      ),
+    )
   })
 })
