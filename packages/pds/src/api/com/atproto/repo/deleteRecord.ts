@@ -4,6 +4,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { BadCommitSwapError, BadRecordSwapError } from '../../../../repo'
 import { CID } from 'multiformats/cid'
+import { ConcurrentWriteError } from '../../../../services/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.deleteRecord({
@@ -19,7 +20,6 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError()
       }
 
-      const now = new Date().toISOString()
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
       const swapRecordCid = swapRecord ? CID.parse(swapRecord) : undefined
 
@@ -29,27 +29,31 @@ export default function (server: Server, ctx: AppContext) {
         rkey,
         swapCid: swapRecordCid,
       })
+      const record = await ctx.services
+        .record(ctx.db)
+        .getRecord(write.uri, null, true)
+      if (!record) {
+        return // No-op if record already doesn't exist
+      }
 
-      await ctx.db.transaction(async (dbTxn) => {
-        const repoTxn = ctx.services.repo(dbTxn)
-        const recordTxn = ctx.services.record(dbTxn)
-        const record = await recordTxn.getRecord(write.uri, null, true)
-        if (!record) {
-          return // No-op if record already doesn't exist
+      const writes = [write]
+
+      try {
+        await ctx.services
+          .repo(ctx.db)
+          .processWrites({ did, writes, swapCommitCid }, 10)
+      } catch (err) {
+        if (
+          err instanceof BadCommitSwapError ||
+          err instanceof BadRecordSwapError
+        ) {
+          throw new InvalidRequestError(err.message, 'InvalidSwap')
+        } else if (err instanceof ConcurrentWriteError) {
+          throw new InvalidRequestError(err.message, 'ConcurrentWrites')
+        } else {
+          throw err
         }
-        try {
-          await repoTxn.processWrites(did, [write], now, swapCommitCid)
-        } catch (err) {
-          if (
-            err instanceof BadCommitSwapError ||
-            err instanceof BadRecordSwapError
-          ) {
-            throw new InvalidRequestError(err.message, 'InvalidSwap')
-          } else {
-            throw err
-          }
-        }
-      })
+      }
     },
   })
 }

@@ -5,7 +5,7 @@ export interface Label {
   uri: string
   cid: string
   val: string
-  neg: 0 | 1 // @TODO convert to boolean in app-view
+  neg: boolean
   cts: string
 }
 

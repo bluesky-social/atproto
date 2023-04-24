@@ -44,7 +44,7 @@ export class LabelService {
     const dbVals = labels.map((l) => ({
       ...l,
       cid: l.cid ?? '',
-      neg: (l.neg ? 1 : 0) as 1 | 0,
+      neg: !!l.neg,
     }))
     const { ref } = this.db.db.dynamic
     const excluded = (col: string) => ref(`excluded.${col}`)
@@ -68,7 +68,7 @@ export class LabelService {
     const res = await this.db.db
       .selectFrom('label')
       .where('label.uri', 'in', subjects)
-      .if(!includeNeg, (qb) => qb.where('neg', '=', 0))
+      .if(!includeNeg, (qb) => qb.where('neg', '=', false))
       .selectAll()
       .execute()
     return res.reduce((acc, cur) => {
@@ -76,7 +76,7 @@ export class LabelService {
       acc[cur.uri].push({
         ...cur,
         cid: cur.cid === '' ? undefined : cur.cid,
-        neg: cur.neg === 1, // @TODO update in appview
+        neg: cur.neg,
       })
       return acc
     }, {} as Labels)

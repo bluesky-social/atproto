@@ -1,21 +1,23 @@
-import { DIDResolutionResult } from 'did-resolver'
-
-export const error = (errorType: string): DIDResolutionResult => {
-  return {
-    didResolutionMetadata: { error: errorType },
-    didDocument: null,
-    didDocumentMetadata: {},
+export class DidNotFoundError extends Error {
+  constructor(public did: string) {
+    super(`Could not resolve DID: ${did}`)
   }
 }
 
-export const notFound = (): DIDResolutionResult => {
-  return error('notFound')
+export class PoorlyFormattedDidError extends Error {
+  constructor(public did: string) {
+    super(`Poorly formatted DID: ${did}`)
+  }
 }
 
-export const invalidDid = (): DIDResolutionResult => {
-  return error('invalidDid')
+export class UnsupportedDidMethodError extends Error {
+  constructor(public did: string) {
+    super(`Unsupported DID method: ${did}`)
+  }
 }
 
-export const unsupported = (): DIDResolutionResult => {
-  return error('unsupportedDidMethod')
+export class PoorlyFormattedDidDocumentError extends Error {
+  constructor(public did: string, public doc: unknown) {
+    super(`Poorly formatted DID Document: ${doc}`)
+  }
 }

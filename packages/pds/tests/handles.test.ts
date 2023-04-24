@@ -4,6 +4,7 @@ import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import * as util from './_util'
 import { AppContext } from '../src'
+import { moderatorAuth } from './_util'
 
 // outside of suite so they can be used in mock
 let alice: string
@@ -85,7 +86,7 @@ describe('handles', () => {
   })
 
   it('updates their did document', async () => {
-    const data = await didResolver.resolveAtpData(alice)
+    const data = await didResolver.resolveAtprotoData(alice)
     expect(data.handle).toBe(newHandle)
   })
 
@@ -136,7 +137,7 @@ describe('handles', () => {
   })
 
   it('if handle update fails, it does not update their did document', async () => {
-    const data = await didResolver.resolveAtpData(alice)
+    const data = await didResolver.resolveAtprotoData(alice)
     expect(data.handle).toBe(newHandle)
   })
 
@@ -198,7 +199,7 @@ describe('handles', () => {
     )
     expect(profile.data.handle).toBe('alice.external')
 
-    const data = await didResolver.resolveAtpData(alice)
+    const data = await didResolver.resolveAtprotoData(alice)
     expect(data.handle).toBe('alice.external')
   })
 
@@ -296,5 +297,16 @@ describe('handles', () => {
       handle: 'bob-alt.test',
     })
     await expect(attempt2).rejects.toThrow('Authentication Required')
+    const attempt3 = agent.api.com.atproto.admin.updateAccountHandle(
+      {
+        did: bob,
+        handle: 'bob-alt.test',
+      },
+      {
+        headers: { authorization: moderatorAuth() },
+        encoding: 'application/json',
+      },
+    )
+    await expect(attempt3).rejects.toThrow('Authentication Required')
   })
 })

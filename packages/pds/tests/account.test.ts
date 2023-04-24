@@ -140,7 +140,7 @@ describe('account', () => {
   })
 
   it('generates a properly formatted PLC DID', async () => {
-    const didData = await didResolver.resolveAtpData(did)
+    const didData = await didResolver.resolveAtprotoData(did)
 
     expect(didData.did).toBe(did)
     expect(didData.handle).toBe(handle)
@@ -196,6 +196,20 @@ describe('account', () => {
 
     const accnt2 = await ctx.services.account(ctx.db).getAccount(handle)
     expect(accnt2?.email).toBe(email)
+  })
+
+  it('disallows non-admin moderators to perform email updates', async () => {
+    const attemptUpdate = agent.api.com.atproto.admin.updateAccountEmail(
+      {
+        account: handle,
+        email: 'new@email.com',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: util.moderatorAuth() },
+      },
+    )
+    await expect(attemptUpdate).rejects.toThrow('Authentication Required')
   })
 
   it('disallows duplicate email addresses and handles', async () => {

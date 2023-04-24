@@ -10,10 +10,10 @@ import { MST } from '../mst'
 // Checkouts
 // -------------
 
-export const getCheckout = async (
+export const getCheckout = (
   storage: RepoStorage,
   commitCid: CID,
-): Promise<Uint8Array> => {
+): AsyncIterable<Uint8Array> => {
   return util.writeCar(commitCid, async (car: BlockWriter) => {
     const commit = await storage.readObjAndBytes(commitCid, def.commit)
     await car.put({ cid: commitCid, bytes: commit.bytes })
@@ -22,24 +22,24 @@ export const getCheckout = async (
   })
 }
 
-// Diffs
+// Commits
 // -------------
 
-export const getDiff = async (
+export const getCommits = (
   storage: RepoStorage,
   latest: CID,
   earliest: CID | null,
-): Promise<Uint8Array> => {
+): AsyncIterable<Uint8Array> => {
   return util.writeCar(latest, (car: BlockWriter) => {
     return writeCommitsToCarStream(storage, car, latest, earliest)
   })
 }
 
-export const getFullRepo = async (
+export const getFullRepo = (
   storage: RepoStorage,
   cid: CID,
-): Promise<Uint8Array> => {
-  return getDiff(storage, cid, null)
+): AsyncIterable<Uint8Array> => {
+  return getCommits(storage, cid, null)
 }
 
 export const writeCommitsToCarStream = async (
@@ -63,11 +63,11 @@ export const writeCommitsToCarStream = async (
 // Narrow slices
 // -------------
 
-export const getRecords = async (
+export const getRecords = (
   storage: RepoStorage,
   commitCid: CID,
   paths: RecordPath[],
-): Promise<Uint8Array> => {
+): AsyncIterable<Uint8Array> => {
   return util.writeCar(commitCid, async (car: BlockWriter) => {
     const commit = await storage.readObjAndBytes(commitCid, def.commit)
     await car.put({ cid: commitCid, bytes: commit.bytes })

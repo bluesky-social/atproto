@@ -22,6 +22,7 @@ export interface ServerConfigValues {
   serverDid: string
   recoveryKey: string
   adminPassword: string
+  moderatorPassword?: string
 
   inviteRequired: boolean
   userInviteInterval: number | null
@@ -90,6 +91,7 @@ export class ServerConfig {
     }
 
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
+    const moderatorPassword = process.env.MODERATOR_PASSWORD || undefined
 
     const inviteRequired = process.env.INVITE_REQUIRED === 'true' ? true : false
     const userInviteInterval = parseIntWithFallback(
@@ -160,6 +162,7 @@ export class ServerConfig {
       didPlcUrl,
       serverDid,
       adminPassword,
+      moderatorPassword,
       inviteRequired,
       userInviteInterval,
       privacyPolicyUrl,
@@ -255,6 +258,10 @@ export class ServerConfig {
 
   get adminPassword() {
     return this.cfg.adminPassword
+  }
+
+  get moderatorPassword() {
+    return this.cfg.moderatorPassword
   }
 
   get inviteRequired() {
