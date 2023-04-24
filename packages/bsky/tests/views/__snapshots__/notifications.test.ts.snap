@@ -14,6 +14,7 @@ Array [
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "repost",
     "reasonSubject": "record(2)",
     "record": Object {
@@ -38,6 +39,7 @@ Array [
     "cid": "cids(2)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(2)",
     "record": Object {
@@ -63,6 +65,7 @@ Array [
     "cid": "cids(3)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
@@ -84,6 +87,7 @@ Array [
     "cid": "cids(4)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "reply",
     "reasonSubject": "record(7)",
     "record": Object {
@@ -116,6 +120,7 @@ Array [
     "cid": "cids(6)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(9)",
     "record": Object {
@@ -141,6 +146,7 @@ Array [
     "cid": "cids(8)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(2)",
     "record": Object {
@@ -170,6 +176,7 @@ Array [
     "cid": "cids(9)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
@@ -195,6 +202,24 @@ Array [
     "cid": "cids(11)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [
+      Object {
+        "cid": "cids(11)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(13)",
+        "val": "test-label",
+      },
+      Object {
+        "cid": "cids(11)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(13)",
+        "val": "test-label-2",
+      },
+    ],
     "reason": "reply",
     "reasonSubject": "record(2)",
     "record": Object {
@@ -247,6 +272,7 @@ Array [
     "cid": "cids(13)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(9)",
     "record": Object {
@@ -276,6 +302,7 @@ Array [
     "cid": "cids(14)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(2)",
     "record": Object {
@@ -305,6 +332,7 @@ Array [
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "repost",
     "reasonSubject": "record(2)",
     "record": Object {
@@ -329,6 +357,7 @@ Array [
     "cid": "cids(2)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "mention",
     "record": Object {
       "$type": "app.bsky.feed.post",
@@ -370,6 +399,7 @@ Array [
     "cid": "cids(4)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(2)",
     "record": Object {
@@ -395,6 +425,7 @@ Array [
     "cid": "cids(5)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
@@ -416,6 +447,7 @@ Array [
     "cid": "cids(6)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "reply",
     "reasonSubject": "record(9)",
     "record": Object {
@@ -448,6 +480,7 @@ Array [
     "cid": "cids(8)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "reply",
     "reasonSubject": "record(2)",
     "record": Object {
@@ -480,6 +513,7 @@ Array [
     "cid": "cids(9)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(12)",
     "record": Object {
@@ -505,6 +539,7 @@ Array [
     "cid": "cids(11)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(2)",
     "record": Object {
@@ -534,6 +569,7 @@ Array [
     "cid": "cids(12)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
@@ -559,6 +595,24 @@ Array [
     "cid": "cids(14)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [
+      Object {
+        "cid": "cids(14)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(16)",
+        "val": "test-label",
+      },
+      Object {
+        "cid": "cids(14)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(16)",
+        "val": "test-label-2",
+      },
+    ],
     "reason": "reply",
     "reasonSubject": "record(2)",
     "record": Object {
@@ -611,6 +665,7 @@ Array [
     "cid": "cids(16)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(12)",
     "record": Object {
@@ -640,6 +695,7 @@ Array [
     "cid": "cids(17)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "like",
     "reasonSubject": "record(2)",
     "record": Object {
@@ -667,6 +723,7 @@ Array [
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "repost",
     "reasonSubject": "record(1)",
     "record": Object {
@@ -695,6 +752,7 @@ Array [
     "cid": "cids(2)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [],
     "reason": "follow",
     "record": Object {
       "$type": "app.bsky.graph.follow",
@@ -719,6 +777,16 @@ Array [
     "cid": "cids(4)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
+    "labels": Array [
+      Object {
+        "cid": "cids(4)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(3)",
+        "val": "test-label",
+      },
+    ],
     "reason": "quote",
     "reasonSubject": "record(1)",
     "record": Object {

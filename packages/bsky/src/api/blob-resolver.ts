@@ -35,6 +35,10 @@ export const createRouter = (ctx: AppContext): express.Router => {
 
       const verifiedImage = await resolveBlob(did, cid, ctx)
 
+      // Send chunked response, destroying stream early (before
+      // closing chunk) if the bytes don't match the expected cid.
+      res.statusCode = 200
+      res.setHeader('content-type', verifiedImage.contentType)
       pipeline(verifiedImage.stream, res, (err) => {
         if (err) {
           log.warn(
@@ -106,6 +110,8 @@ export async function resolveBlob(
   forwardStreamErrors(imageStream, verifyCid)
   return {
     pds,
+    contentType:
+      blobResult.headers['content-type'] || 'application/octet-stream',
     stream: imageStream.pipe(verifyCid),
   }
 }

@@ -42,7 +42,7 @@ export abstract class Labeler {
       uri: uri.toString(),
       cid: cid.toString(),
       val,
-      neg: 0 as const,
+      neg: false,
       cts: new Date().toISOString(),
     }))
 

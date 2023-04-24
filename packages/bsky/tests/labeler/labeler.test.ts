@@ -154,7 +154,7 @@ describe('labeler', () => {
         uri: alice,
         cid: '',
         val: 'repo-label',
-        neg: 0,
+        neg: false,
         cts: new Date().toISOString(),
       })
       .execute()
