@@ -18,11 +18,6 @@ export const getUserSearchQueryPg = (
   const { ref } = db.db.dynamic
   const { term, limit, cursor, includeSoftDeleted } = opts
 
-  // Performing matching by word using "strict word similarity" operator.
-  // The more characters the user gives us, the more we can ratchet down
-  // the distance threshold for matching.
-  const threshold = term.length < 3 ? 0.9 : 0.8
-
   // Matching user accounts based on handle
   const distanceAccount = distance(term, ref('handle'))
   let accountsQb = db.db
@@ -31,7 +26,7 @@ export const getUserSearchQueryPg = (
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('repo_root'))),
     )
-    .where(distanceAccount, '<', threshold)
+    .where(similar(term, ref('handle')))
     .select(['did_handle.did as did', distanceAccount.as('distance')])
   accountsQb = paginate(accountsQb, {
     limit,
@@ -49,7 +44,7 @@ export const getUserSearchQueryPg = (
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('repo_root'))),
     )
-    .where(distanceProfile, '<', threshold)
+    .where(similar(term, ref('displayName')))
     .select(['did_handle.did as did', distanceProfile.as('distance')])
   profilesQb = paginate(profilesQb, {
     limit,
@@ -149,6 +144,8 @@ export const cleanTerm = (term: string) => term.trim().replace(/^@/g, '')
 // Uses pg_trgm strict word similarity to check similarity between a search term and a stored value
 const distance = (term: string, ref: DbRef) =>
   sql<number>`(${term} <<<-> ${ref})`
+
+const similar = (term: string, ref: DbRef) => sql<boolean>`(${term} <<% ${ref})`
 
 type Result = { distance: number; handle: string }
 type LabeledResult = { primary: number; secondary: string }
