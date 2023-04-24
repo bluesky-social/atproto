@@ -2075,6 +2075,56 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoServerCreateAppPassword: {
+    lexicon: 1,
+    id: 'com.atproto.server.createAppPassword',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Create an app-specific password.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['name'],
+            properties: {
+              name: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.server.createAppPassword#appPassword',
+          },
+        },
+        errors: [
+          {
+            name: 'AccountTakedown',
+          },
+        ],
+      },
+      appPassword: {
+        type: 'object',
+        required: ['name', 'password', 'createdAt'],
+        properties: {
+          name: {
+            type: 'string',
+          },
+          password: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoServerCreateInviteCode: {
     lexicon: 1,
     id: 'com.atproto.server.createInviteCode',
@@ -2133,9 +2183,12 @@ export const schemaDict = {
               useCount: {
                 type: 'integer',
               },
-              forAccount: {
-                type: 'string',
-                format: 'did',
+              forAccounts: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
               },
             },
           },
@@ -2149,9 +2202,25 @@ export const schemaDict = {
               codes: {
                 type: 'array',
                 items: {
-                  type: 'string',
+                  type: 'ref',
+                  ref: 'lex:com.atproto.server.createInviteCodes#accountCodes',
                 },
               },
+            },
+          },
+        },
+      },
+      accountCodes: {
+        type: 'object',
+        required: ['account', 'codes'],
+        properties: {
+          account: {
+            type: 'string',
+          },
+          codes: {
+            type: 'array',
+            items: {
+              type: 'string',
             },
           },
         },
@@ -2441,6 +2510,50 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoServerListAppPasswords: {
+    lexicon: 1,
+    id: 'com.atproto.server.listAppPasswords',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List all app-specific passwords.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['passwords'],
+            properties: {
+              passwords: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.server.listAppPasswords#appPassword',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'AccountTakedown',
+          },
+        ],
+      },
+      appPassword: {
+        type: 'object',
+        required: ['name', 'createdAt'],
+        properties: {
+          name: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoServerRefreshSession: {
     lexicon: 1,
     id: 'com.atproto.server.refreshSession',
@@ -2541,6 +2654,28 @@ export const schemaDict = {
             name: 'InvalidToken',
           },
         ],
+      },
+    },
+  },
+  ComAtprotoServerRevokeAppPassword: {
+    lexicon: 1,
+    id: 'com.atproto.server.revokeAppPassword',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Revoke an app-specific password by name.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['name'],
+            properties: {
+              name: {
+                type: 'string',
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -2777,8 +2912,7 @@ export const schemaDict = {
             latest: {
               type: 'string',
               format: 'cid',
-              description:
-                'The latest commit you in the commit range (inclusive',
+              description: 'The latest commit in the commit range (inclusive)',
             },
           },
         },
@@ -4079,6 +4213,46 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetPosts: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description: "A view of an actor's feed.",
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedGetRepostedBy: {
     lexicon: 1,
     id: 'app.bsky.feed.getRepostedBy',
@@ -4855,6 +5029,7 @@ export const ids = {
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoRepoUploadBlob: 'com.atproto.repo.uploadBlob',
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',
+  ComAtprotoServerCreateAppPassword: 'com.atproto.server.createAppPassword',
   ComAtprotoServerCreateInviteCode: 'com.atproto.server.createInviteCode',
   ComAtprotoServerCreateInviteCodes: 'com.atproto.server.createInviteCodes',
   ComAtprotoServerCreateSession: 'com.atproto.server.createSession',
@@ -4865,12 +5040,14 @@ export const ids = {
   ComAtprotoServerGetAccountInviteCodes:
     'com.atproto.server.getAccountInviteCodes',
   ComAtprotoServerGetSession: 'com.atproto.server.getSession',
+  ComAtprotoServerListAppPasswords: 'com.atproto.server.listAppPasswords',
   ComAtprotoServerRefreshSession: 'com.atproto.server.refreshSession',
   ComAtprotoServerRequestAccountDelete:
     'com.atproto.server.requestAccountDelete',
   ComAtprotoServerRequestPasswordReset:
     'com.atproto.server.requestPasswordReset',
   ComAtprotoServerResetPassword: 'com.atproto.server.resetPassword',
+  ComAtprotoServerRevokeAppPassword: 'com.atproto.server.revokeAppPassword',
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
   ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
@@ -4898,6 +5075,7 @@ export const ids = {
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
+  AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
   AppBskyFeedGetTimeline: 'app.bsky.feed.getTimeline',
   AppBskyFeedLike: 'app.bsky.feed.like',
