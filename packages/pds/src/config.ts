@@ -144,7 +144,9 @@ export class ServerConfig {
     )
 
     // E.g. ws://abc.com:4000
-    const appViewRepoProvider = process.env.APP_VIEW_REPO_PROVIDER || undefined
+    const appViewRepoProvider = nonemptyString(
+      process.env.APP_VIEW_REPO_PROVIDER,
+    )
 
     return new ServerConfig({
       debugMode,
@@ -355,6 +357,11 @@ export class ServerConfig {
   get appViewRepoProvider() {
     return this.cfg.appViewRepoProvider
   }
+}
+
+const nonemptyString = (str: string | undefined): string | undefined => {
+  if (str === undefined || str.length === 0) return undefined
+  return str
 }
 
 const parseIntWithFallback = <T>(
