@@ -23,6 +23,7 @@ describe('notification views', () => {
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     await processAll(testEnv)
+    await testEnv.bsky.ctx.labeler.processAll()
     alice = sc.dids.alice
   })
 

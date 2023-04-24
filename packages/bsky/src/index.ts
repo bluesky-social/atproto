@@ -20,6 +20,7 @@ import {
   ImageInvalidator,
   ImageProcessingServerInvalidator,
 } from './image/invalidator'
+import { HiveLabeler, KeywordLabeler, Labeler } from './labeler'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -81,10 +82,26 @@ export class BskyAppView {
       throw new Error('Missing appview image invalidator')
     }
 
+    let labeler: Labeler
+    if (config.hiveApiKey) {
+      labeler = new HiveLabeler(config.hiveApiKey, {
+        db,
+        cfg: config,
+        didResolver,
+      })
+    } else {
+      labeler = new KeywordLabeler({
+        db,
+        cfg: config,
+        didResolver,
+      })
+    }
+
     const services = createServices({
       imgUriBuilder,
       imgInvalidator,
       didResolver,
+      labeler,
     })
 
     const ctx = new AppContext({
@@ -93,6 +110,7 @@ export class BskyAppView {
       services,
       imgUriBuilder,
       didResolver,
+      labeler,
     })
 
     let server = createServer({
@@ -134,6 +152,7 @@ export class BskyAppView {
 
   async destroy(): Promise<void> {
     await this.sub?.destroy()
+    await this.ctx.labeler.destroy()
     await this.terminator?.terminate()
     await this.ctx.db.close()
   }

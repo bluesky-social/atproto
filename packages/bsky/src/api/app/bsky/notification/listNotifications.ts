@@ -57,15 +57,20 @@ export default function (server: Server, ctx: AppContext) {
       const notifs = await notifBuilder.execute()
 
       const actorService = ctx.services.actor(ctx.db)
-      const authors = await actorService.views.profile(
-        notifs.map((notif) => ({
-          did: notif.authorDid,
-          handle: notif.authorHandle,
-          indexedAt: notif.authorIndexedAt,
-          takedownId: notif.authorTakedownId,
-        })),
-        requester,
-      )
+      const labelService = ctx.services.label(ctx.db)
+      const recordUris = notifs.map((notif) => notif.uri)
+      const [authors, labels] = await Promise.all([
+        actorService.views.profile(
+          notifs.map((notif) => ({
+            did: notif.authorDid,
+            handle: notif.authorHandle,
+            indexedAt: notif.authorIndexedAt,
+            takedownId: notif.authorTakedownId,
+          })),
+          requester,
+        ),
+        labelService.getLabelsForSubjects(recordUris),
+      ])
 
       const notifications = notifs.map((notif, i) => ({
         uri: notif.uri,
@@ -76,6 +81,7 @@ export default function (server: Server, ctx: AppContext) {
         record: jsonStringToLex(notif.recordJson) as Record<string, unknown>,
         isRead: seenAt ? notif.indexedAt <= seenAt : false,
         indexedAt: notif.indexedAt,
+        labels: labels[notif.uri] ?? [],
       }))
 
       return {

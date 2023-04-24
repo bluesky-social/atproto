@@ -183,6 +183,7 @@ export const runBsky = async (cfg: BskyConfig): Promise<BskyServerInfo> => {
     repoSubLockId: uniqueLockId(),
     adminPassword: 'admin-pass',
     labelerDid: 'did:example:labeler',
+    labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
   })
 
   const db = bsky.Database.postgres({

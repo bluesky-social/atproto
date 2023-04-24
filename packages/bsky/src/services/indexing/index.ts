@@ -23,6 +23,7 @@ import RecordProcessor from './processor'
 import { subLogger } from '../../logger'
 import { retryHttp } from '../../util/retry'
 import { resolveExternalHandle } from '../../util/identity'
+import { Labeler } from '../../labeler'
 
 export class IndexingService {
   records: {
@@ -33,7 +34,11 @@ export class IndexingService {
     profile: Profile.PluginType
   }
 
-  constructor(public db: Database, public didResolver: DidResolver) {
+  constructor(
+    public db: Database,
+    public didResolver: DidResolver,
+    public labeler: Labeler,
+  ) {
     this.records = {
       post: Post.makePlugin(this.db.db),
       like: Like.makePlugin(this.db.db),
@@ -43,8 +48,8 @@ export class IndexingService {
     }
   }
 
-  static creator(didResolver: DidResolver) {
-    return (db: Database) => new IndexingService(db, didResolver)
+  static creator(didResolver: DidResolver, labeler: Labeler) {
+    return (db: Database) => new IndexingService(db, didResolver, labeler)
   }
 
   async indexRecord(
@@ -62,6 +67,7 @@ export class IndexingService {
     } else {
       await indexer.updateRecord(uri, cid, obj, timestamp)
     }
+    this.labeler.processRecord(uri, obj)
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {

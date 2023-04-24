@@ -9,6 +9,7 @@ import {
 } from '../../../../services/types'
 import { FeedService } from '../../../../services/feed'
 import { authOptionalVerifier } from '../../../auth'
+import { Labels } from '../../../../services/label'
 
 export type PostThread = {
   post: FeedRow
@@ -24,16 +25,18 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
 
       const feedService = ctx.services.feed(ctx.db)
+      const labelService = ctx.services.label(ctx.db)
 
       const threadData = await getThreadData(feedService, uri, depth)
       if (!threadData) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
       const relevant = getRelevantIds(threadData)
-      const [actors, posts, embeds] = await Promise.all([
+      const [actors, posts, embeds, labels] = await Promise.all([
         feedService.getActorViews(Array.from(relevant.dids), requester),
         feedService.getPostViews(Array.from(relevant.uris), requester),
         feedService.embedsForPosts(Array.from(relevant.uris), requester),
+        labelService.getLabelsForSubjects(Array.from(relevant.uris)),
       ])
 
       const thread = composeThread(
@@ -42,6 +45,7 @@ export default function (server: Server, ctx: AppContext) {
         posts,
         actors,
         embeds,
+        labels,
       )
       return {
         encoding: 'application/json',
@@ -57,12 +61,14 @@ const composeThread = (
   posts: PostInfoMap,
   actors: ActorViewMap,
   embeds: FeedEmbeds,
+  labels: Labels,
 ) => {
   const post = feedService.formatPostView(
     threadData.post.postUri,
     actors,
     posts,
     embeds,
+    labels,
   )
 
   let parent
@@ -80,6 +86,7 @@ const composeThread = (
         posts,
         actors,
         embeds,
+        labels,
       )
     }
   }
@@ -87,7 +94,7 @@ const composeThread = (
   let replies
   if (threadData.replies) {
     replies = threadData.replies.map((reply) =>
-      composeThread(reply, feedService, posts, actors, embeds),
+      composeThread(reply, feedService, posts, actors, embeds, labels),
     )
   }
 

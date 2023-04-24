@@ -11,6 +11,7 @@ Object {
       "displayName": "display-eve",
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(1)",
         "following": "record(0)",
@@ -23,6 +24,7 @@ Object {
       "displayName": "display-dan",
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -35,6 +37,7 @@ Object {
       "displayName": "display-bob",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(5)",
         "following": "record(4)",
@@ -47,6 +50,7 @@ Object {
       "displayName": "display-carol",
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(7)",
         "following": "record(6)",
@@ -60,6 +64,7 @@ Object {
     "displayName": "display-alice",
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {},
   },
 }
@@ -76,6 +81,7 @@ Object {
       "displayName": "display-dan",
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -88,6 +94,7 @@ Object {
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {},
     },
   ],
@@ -98,6 +105,7 @@ Object {
     "displayName": "display-bob",
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {
       "followedBy": "record(1)",
       "following": "record(0)",
@@ -117,6 +125,7 @@ Object {
       "displayName": "display-eve",
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -129,6 +138,7 @@ Object {
       "displayName": "display-bob",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(5)",
         "following": "record(4)",
@@ -141,6 +151,7 @@ Object {
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {},
     },
   ],
@@ -151,6 +162,7 @@ Object {
     "displayName": "display-carol",
     "handle": "carol.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {
       "followedBy": "record(1)",
       "following": "record(0)",
@@ -170,6 +182,7 @@ Object {
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {},
     },
   ],
@@ -180,6 +193,7 @@ Object {
     "displayName": "display-dan",
     "handle": "dan.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {
       "followedBy": "record(1)",
       "following": "record(0)",
@@ -199,6 +213,7 @@ Object {
       "displayName": "display-dan",
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -211,6 +226,7 @@ Object {
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {},
     },
   ],
@@ -221,6 +237,7 @@ Object {
     "displayName": "display-eve",
     "handle": "eve.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {
       "followedBy": "record(1)",
       "following": "record(0)",
@@ -240,6 +257,7 @@ Object {
       "displayName": "display-eve",
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(1)",
         "following": "record(0)",
@@ -252,6 +270,7 @@ Object {
       "displayName": "display-dan",
       "handle": "dan.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -264,6 +283,7 @@ Object {
       "displayName": "display-carol",
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(5)",
         "following": "record(4)",
@@ -276,6 +296,7 @@ Object {
       "displayName": "display-bob",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(7)",
         "following": "record(6)",
@@ -289,6 +310,7 @@ Object {
     "displayName": "display-alice",
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {},
   },
 }
@@ -305,6 +327,7 @@ Object {
       "displayName": "display-carol",
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -317,6 +340,7 @@ Object {
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {},
     },
   ],
@@ -327,6 +351,7 @@ Object {
     "displayName": "display-bob",
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {
       "followedBy": "record(1)",
       "following": "record(0)",
@@ -346,6 +371,7 @@ Object {
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {},
     },
   ],
@@ -356,6 +382,7 @@ Object {
     "displayName": "display-carol",
     "handle": "carol.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {
       "followedBy": "record(1)",
       "following": "record(0)",
@@ -375,6 +402,7 @@ Object {
       "displayName": "display-eve",
       "handle": "eve.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -387,6 +415,7 @@ Object {
       "displayName": "display-bob",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(5)",
         "following": "record(4)",
@@ -399,6 +428,7 @@ Object {
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {},
     },
   ],
@@ -409,6 +439,7 @@ Object {
     "displayName": "display-dan",
     "handle": "dan.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {
       "followedBy": "record(1)",
       "following": "record(0)",
@@ -428,6 +459,7 @@ Object {
       "displayName": "display-carol",
       "handle": "carol.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {
         "followedBy": "record(3)",
         "following": "record(2)",
@@ -440,6 +472,7 @@ Object {
       "displayName": "display-alice",
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "viewer": Object {},
     },
   ],
@@ -450,6 +483,7 @@ Object {
     "displayName": "display-eve",
     "handle": "eve.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {
       "followedBy": "record(1)",
       "following": "record(0)",

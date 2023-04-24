@@ -5,6 +5,7 @@ Array [
   Object {
     "did": "user(0)",
     "handle": "cara-wiegand69.test",
+    "labels": Array [],
     "viewer": Object {},
   },
   Object {
@@ -13,6 +14,7 @@ Array [
     "displayName": "Carol Littel",
     "handle": "eudora-dietrich4.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {},
   },
   Object {
@@ -21,6 +23,7 @@ Array [
     "displayName": "Sadie Carter",
     "handle": "shane-torphy52.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {},
   },
   Object {
@@ -29,11 +32,13 @@ Array [
     "displayName": "Carlton Abernathy IV",
     "handle": "aliya-hodkiewicz.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {},
   },
   Object {
     "did": "user(7)",
     "handle": "carlos6.test",
+    "labels": Array [],
     "viewer": Object {},
   },
   Object {
@@ -42,6 +47,7 @@ Array [
     "displayName": "Latoya Windler",
     "handle": "carolina-mcdermott77.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {},
   },
   Object {
@@ -50,6 +56,7 @@ Array [
     "displayName": "Rachel Kshlerin",
     "handle": "cayla-marquardt39.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {},
   },
 ]
