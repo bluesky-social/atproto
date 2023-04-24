@@ -4,6 +4,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import SqlRepoStorage from '../../../../sql-repo-storage'
 import AppContext from '../../../../context'
+import { byteIterableToStream } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRecord(async ({ params }) => {
@@ -15,10 +16,10 @@ export default function (server: Server, ctx: AppContext) {
     if (!commit) {
       throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
     }
-    const proof = await repo.getRecords(storage, commit, [{ collection, rkey }])
+    const proof = repo.getRecords(storage, commit, [{ collection, rkey }])
     return {
       encoding: 'application/vnd.ipld.car',
-      body: Buffer.from(proof),
+      body: byteIterableToStream(proof),
     }
   })
 }

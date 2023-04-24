@@ -33,7 +33,7 @@ Log into a server or create accounts using these APIs. You'll need an active ses
 import { BskyAgent, AtpSessionEvent, AtpSessionData } from '@atproto/api'
 const agent = new BskyAgent({
   service: 'https://example.com',
-  persistSession: (evt: AtpSessionEvent, sess?: AtpSessionData) {
+  persistSession: (evt: AtpSessionEvent, sess?: AtpSessionData) => {
     // store the session-data for reuse 
   }
 })

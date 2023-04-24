@@ -12,6 +12,7 @@ import {
 import AppContext from '../../../../context'
 import { ids } from '../../../../lexicon/lexicons'
 import Database from '../../../../db'
+import { ConcurrentWriteError } from '../../../../services/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.createRecord({
@@ -33,7 +34,6 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const now = new Date().toISOString()
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
 
       let write: PreparedCreate
@@ -52,26 +52,24 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
-      await ctx.db.transaction(async (dbTxn) => {
-        const repoTxn = ctx.services.repo(dbTxn)
-        const backlinkDeletions = validate
-          ? await getBacklinkDeletions(dbTxn, ctx, write)
-          : []
-        try {
-          await repoTxn.processWrites(
-            did,
-            [...backlinkDeletions, write],
-            now,
-            swapCommitCid,
-          )
-        } catch (err) {
-          if (err instanceof BadCommitSwapError) {
-            throw new InvalidRequestError(err.message, 'InvalidSwap')
-          } else {
-            throw err
-          }
+      const backlinkDeletions = validate
+        ? await getBacklinkDeletions(ctx.db, ctx, write)
+        : []
+
+      const writes = [...backlinkDeletions, write]
+
+      try {
+        await ctx.services
+          .repo(ctx.db)
+          .processWrites({ did, writes, swapCommitCid }, 10)
+      } catch (err) {
+        if (err instanceof BadCommitSwapError) {
+          throw new InvalidRequestError(err.message, 'InvalidSwap')
+        } else if (err instanceof ConcurrentWriteError) {
+          throw new InvalidRequestError(err.message, 'ConcurrentWrites')
         }
-      })
+        throw err
+      }
 
       return {
         encoding: 'application/json',
@@ -89,7 +87,6 @@ async function getBacklinkDeletions(
   ctx: AppContext,
   write: PreparedCreate,
 ) {
-  tx.assertTransaction()
   const recordTxn = ctx.services.record(tx)
   const {
     record,

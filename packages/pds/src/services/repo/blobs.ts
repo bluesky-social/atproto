@@ -1,10 +1,10 @@
 import stream from 'stream'
+import crypto from 'crypto'
 import { CID } from 'multiformats/cid'
 import bytes from 'bytes'
 import { fromStream as fileTypeFromStream } from 'file-type'
 import { BlobStore, CidSet, WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
-import { sha256Stream } from '@atproto/crypto'
 import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { PreparedBlobRef, PreparedWrite } from '../../repo/types'
@@ -220,6 +220,20 @@ export class CidNotFound extends Error {
     super(`cid not found: ${cid.toString()}`)
     this.cid = cid
   }
+}
+
+async function sha256Stream(toHash: stream.Readable): Promise<Uint8Array> {
+  const hash = crypto.createHash('sha256')
+  try {
+    for await (const chunk of toHash) {
+      hash.write(chunk)
+    }
+  } catch (err) {
+    hash.end()
+    throw err
+  }
+  hash.end()
+  return hash.read()
 }
 
 async function mimeTypeFromStream(

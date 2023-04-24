@@ -5,8 +5,8 @@ import axios, { AxiosError } from 'axios'
 import { CID } from 'multiformats/cid'
 import { ensureValidDid } from '@atproto/identifier'
 import { VerifyCidTransform } from '@atproto/common'
-import { NoResolveDidError } from '@atproto/did-resolver'
 import { TAKEDOWN } from '../lexicon/types/com/atproto/admin/defs'
+import { DidNotFoundError } from '@atproto/did-resolver'
 import AppContext from '../context'
 import { httpLogger as log } from '../logger'
 import { retryHttp } from '../util/retry'
@@ -32,7 +32,7 @@ export const createRouter = (ctx: AppContext): express.Router => {
       }
 
       const [{ pds }, takedown] = await Promise.all([
-        ctx.didResolver.resolveAtpData(did), // @TODO cache did info
+        ctx.didResolver.resolveAtprotoData(did), // @TODO cache did info
         ctx.db.db
           .selectFrom('moderation_action_subject_blob')
           .select('actionId')
@@ -90,7 +90,7 @@ export const createRouter = (ctx: AppContext): express.Router => {
         }
         return next(createError(404, 'Blob not found'))
       }
-      if (err instanceof NoResolveDidError) {
+      if (err instanceof DidNotFoundError) {
         return next(createError(404, 'Blob not found'))
       }
       return next(err)

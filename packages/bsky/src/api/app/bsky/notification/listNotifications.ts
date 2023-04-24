@@ -21,6 +21,16 @@ export default function (server: Server, ctx: AppContext) {
         .where(notSoftDeletedClause(ref('record')))
         .where(notSoftDeletedClause(ref('author')))
         .where('notif.did', '=', requester)
+        .where((clause) =>
+          clause
+            .where('reasonSubject', 'is', null)
+            .orWhereExists(
+              ctx.db.db
+                .selectFrom('record as subject')
+                .selectAll()
+                .whereRef('subject.uri', '=', ref('notif.reasonSubject')),
+            ),
+        )
         .select([
           'notif.recordUri as uri',
           'notif.recordCid as cid',

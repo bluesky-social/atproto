@@ -11,6 +11,7 @@ import { Services } from './services'
 import { MessageDispatcher } from './event-stream/message-queue'
 import Sequencer from './sequencer'
 import { Labeler } from './labeler'
+import { BackgroundQueue } from './event-stream/background-queue'
 
 export class AppContext {
   constructor(
@@ -27,6 +28,7 @@ export class AppContext {
       messageDispatcher: MessageDispatcher
       sequencer: Sequencer
       labeler: Labeler
+      backgroundQueue: BackgroundQueue
     },
   ) {}
 
@@ -70,6 +72,10 @@ export class AppContext {
     return auth.adminVerifier(this.auth)
   }
 
+  get moderatorVerifier() {
+    return auth.moderatorVerifier(this.auth)
+  }
+
   get imgUriBuilder(): ImageUriBuilder {
     return this.opts.imgUriBuilder
   }
@@ -96,6 +102,10 @@ export class AppContext {
 
   get labeler(): Labeler {
     return this.opts.labeler
+  }
+
+  get backgroundQueue(): BackgroundQueue {
+    return this.opts.backgroundQueue
   }
 
   get plcClient(): plc.Client {

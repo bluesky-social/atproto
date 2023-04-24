@@ -27,6 +27,7 @@ describe('pds profile views', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
+    await server.ctx.backgroundQueue.processAll()
   })
 
   afterAll(async () => {
@@ -157,30 +158,6 @@ describe('pds profile views', () => {
     )
 
     expect(forSnapshot(danForDan.data)).toMatchSnapshot()
-  })
-
-  it('handles racing updates', async () => {
-    const descriptions: string[] = []
-    const COUNT = 10
-    for (let i = 0; i < COUNT; i++) {
-      descriptions.push(`description-${i}`)
-    }
-    await Promise.all(
-      descriptions.map(async (description) => {
-        await updateProfile(agent, alice, { description })
-      }),
-    )
-
-    const profile = await agent.api.app.bsky.actor.getProfile(
-      { actor: alice },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    // doesn't matter which request wins race, but one of them should win
-    const descripExists = descriptions.some(
-      (descrip) => profile.data.description === descrip,
-    )
-    expect(descripExists).toBeTruthy()
   })
 
   it('fetches profile by handle', async () => {

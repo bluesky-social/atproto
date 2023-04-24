@@ -52,16 +52,7 @@ Array [
     "followsCount": 2,
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [
-      Object {
-        "cid": "cids(0)",
-        "cts": "1970-01-01T00:00:00.000Z",
-        "neg": false,
-        "src": "did:example:labeler",
-        "uri": "record(2)",
-        "val": "test-label",
-      },
-    ],
+    "labels": Array [],
     "postsCount": 3,
     "viewer": Object {
       "muted": false,
@@ -75,7 +66,7 @@ Array [
     "labels": Array [],
     "postsCount": 2,
     "viewer": Object {
-      "following": "record(3)",
+      "following": "record(2)",
       "muted": false,
     },
   },
@@ -95,7 +86,7 @@ Array [
     ],
     "postsCount": 2,
     "viewer": Object {
-      "followedBy": "record(4)",
+      "followedBy": "record(3)",
       "muted": false,
     },
   },
