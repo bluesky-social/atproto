@@ -237,6 +237,32 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
+  server.app.bsky.feed.getPosts({
+    auth: ctx.accessVerifier,
+    handler: async ({ auth, params }) => {
+      const requester = auth.credentials.did
+      const res = await agent.api.app.bsky.feed.getPosts(
+        params,
+        await headers(requester),
+      )
+      const { posts } = res.data
+
+      const dids = posts.map((p) => p.author.did)
+      const mutes = await ctx.services.account(ctx.db).getMutes(requester, dids)
+      for (const post of posts) {
+        post.author.viewer ??= {}
+        post.author.viewer.muted = mutes[post.author.did] ?? false
+      }
+
+      return {
+        encoding: 'application/json',
+        body: {
+          posts,
+        },
+      }
+    },
+  })
+
   server.app.bsky.feed.getRepostedBy({
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {

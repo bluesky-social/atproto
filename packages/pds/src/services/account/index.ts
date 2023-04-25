@@ -270,6 +270,7 @@ export class AccountService {
     mutedBy: string,
     dids: string[],
   ): Promise<Record<string, boolean>> {
+    if (mutedBy.length === 0) return {}
     const res = await this.db.db
       .selectFrom('mute')
       .where('mutedByDid', '=', mutedBy)

@@ -1,25 +1,26 @@
 import AtpAgent from '@atproto/api'
-import { runTestServer, forSnapshot, TestServerInfo } from '../_util'
+import { TestEnvInfo, processAll, runTestEnv } from '@atproto/dev-env'
+import { forSnapshot } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds posts views', () => {
-  let server: TestServerInfo
+  let testEnv: TestEnvInfo
   let agent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
-    server = await runTestServer({
+    testEnv = await runTestEnv({
       dbPostgresSchema: 'views_posts',
     })
-    agent = new AtpAgent({ service: server.url })
+    agent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(agent)
     await basicSeed(sc)
-    await server.ctx.labeler.processAll()
+    await processAll(testEnv)
   })
 
   afterAll(async () => {
-    await server.close()
+    await testEnv.close()
   })
 
   it('fetches posts', async () => {
