@@ -130,7 +130,7 @@ export class RepoService {
           throw err
         }
         await wait(timeout)
-        await this.processWrites(toWrite, times - 1, timeout)
+        return this.processWrites(toWrite, times - 1, timeout)
       } else {
         throw err
       }
