@@ -311,7 +311,7 @@ class LeakyTxPlugin implements KyselyPlugin {
 
   transformQuery(args: PluginTransformQueryArgs): RootOperationNode {
     if (this.txOver) {
-      throw new Error('tx is over')
+      throw new Error('tx already failed')
     }
     return args.node
   }

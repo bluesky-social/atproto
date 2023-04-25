@@ -111,15 +111,15 @@ describe('db', () => {
           .insertInto('repo_root')
           .values({ root: 'a', did: 'a', indexedAt: 'bad-date' })
           .execute()
-        throw new Error('tx failed')
+        throw new Error('test tx failed')
       })
-      await expect(tx).rejects.toThrow('tx failed')
+      await expect(tx).rejects.toThrow('test tx failed')
 
       const attempt = leakedTx?.db
         .insertInto('repo_root')
         .values({ root: 'b', did: 'b', indexedAt: 'bad-date' })
         .execute()
-      await expect(attempt).rejects.toThrow()
+      await expect(attempt).rejects.toThrow('tx already failed')
 
       const res = await db.db
         .selectFrom('repo_root')
