@@ -13,7 +13,7 @@ import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
 import * as crypto from '@atproto/crypto'
 import AtpAgent from '@atproto/api'
 import { ServerType, ServerConfig, StartParams, PORTS } from './types.js'
-import { HOUR } from '@atproto/common'
+import { DAY, HOUR } from '@atproto/common'
 import { mockNetworkUtilities } from './test-env'
 
 export * from './test-env'
@@ -158,6 +158,8 @@ export class DevEnvServer {
           repoProvider: this.env.pdsUrl.replace('http://', 'ws://'),
           port: this.port,
           labelerKeywords: {},
+          didCacheMaxTTL: DAY,
+          didCacheStaleTTL: HOUR,
         })
 
         const db = bsky.Database.postgres({

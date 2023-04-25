@@ -10,6 +10,7 @@ import {
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
+import { createServiceJwt } from '@atproto/pds/src/auth'
 
 // for pds
 export const adminAuth = () => {
@@ -20,6 +21,11 @@ export const adminAuth = () => {
       'base64pad',
     )
   )
+}
+
+export const appViewHeaders = async (did: string, env: TestEnvInfo) => {
+  const jwt = await createServiceJwt(did, env.pds.ctx.repoSigningKey)
+  return { authorization: `Bearer ${jwt}` }
 }
 
 // Swap out identifiers and dates with stable

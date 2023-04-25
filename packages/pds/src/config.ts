@@ -1,4 +1,4 @@
-import { DAY } from '@atproto/common'
+import { parseIntWithFallback, DAY } from '@atproto/common'
 
 export interface ServerConfigValues {
   debugMode?: boolean
@@ -50,6 +50,7 @@ export interface ServerConfigValues {
   repoBackfillLimitMs: number
 
   appViewRepoProvider?: string
+
   bskyAppViewEndpoint?: string
 }
 
@@ -371,12 +372,4 @@ export class ServerConfig {
 const nonemptyString = (str: string | undefined): string | undefined => {
   if (str === undefined || str.length === 0) return undefined
   return str
-}
-
-const parseIntWithFallback = <T>(
-  value: string | undefined,
-  fallback: T,
-): number | T => {
-  const parsed = parseInt(value || '', 10)
-  return isNaN(parsed) ? fallback : parsed
 }

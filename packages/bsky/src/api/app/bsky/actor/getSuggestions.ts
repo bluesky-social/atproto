@@ -3,11 +3,10 @@ import AppContext from '../../../../context'
 import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
 import { countAll, notSoftDeletedClause } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
-import { authOptionalVerifier } from '../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getSuggestions({
-    auth: authOptionalVerifier,
+    auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {
       let { limit } = params
       const { cursor } = params

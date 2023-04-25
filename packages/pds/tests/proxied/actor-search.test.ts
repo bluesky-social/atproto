@@ -39,7 +39,7 @@ describe('pds user search proxy views', () => {
 
     // Process remaining profiles
     testEnv.bsky.sub.resume()
-    await processAll(testEnv, 20000)
+    await processAll(testEnv, 30000)
     headers = sc.getHeaders(Object.values(sc.dids)[0])
   })
 

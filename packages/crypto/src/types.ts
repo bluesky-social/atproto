@@ -1,4 +1,5 @@
 export interface Signer {
+  jwtAlg: string
   sign(msg: Uint8Array): Promise<Uint8Array>
 }
 
