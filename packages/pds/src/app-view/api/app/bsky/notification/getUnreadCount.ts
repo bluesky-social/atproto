@@ -1,7 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import { countAll, notSoftDeletedClause } from '../../../../db/util'
-import AppContext from '../../../../context'
+import { Server } from '../../../../../lexicon'
+import { countAll, notSoftDeletedClause } from '../../../../../db/util'
+import AppContext from '../../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.getUnreadCount({

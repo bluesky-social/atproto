@@ -677,7 +677,7 @@ Array [
       },
     },
     "reason": Object {
-      "$type": "app.bsky.feed.feedViewPost#reasonRepost",
+      "$type": "app.bsky.feed.defs#reasonRepost",
       "by": Object {
         "did": "user(2)",
         "handle": "carol.test",
@@ -914,7 +914,7 @@ Array [
       },
     },
     "reason": Object {
-      "$type": "app.bsky.feed.feedViewPost#reasonRepost",
+      "$type": "app.bsky.feed.defs#reasonRepost",
       "by": Object {
         "did": "user(2)",
         "handle": "dan.test",

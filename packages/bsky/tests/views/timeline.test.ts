@@ -1,8 +1,9 @@
 import AtpAgent from '@atproto/api'
-import { CloseFn, runTestEnv } from '@atproto/dev-env'
+import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
   adminAuth,
+  appViewHeaders,
   forSnapshot,
   getOriginator,
   paginateAll,
@@ -15,7 +16,7 @@ import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 
 describe('timeline views', () => {
   let agent: AtpAgent
-  let close: CloseFn
+  let testEnv: TestEnvInfo
   let sc: SeedClient
 
   // account dids, for convenience
@@ -25,10 +26,9 @@ describe('timeline views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const testEnv = await runTestEnv({
-      dbPostgresSchema: 'views_home_feed',
+    testEnv = await runTestEnv({
+      dbPostgresSchema: 'bsky_views_home_feed',
     })
-    close = testEnv.close
     agent = new AtpAgent({ service: testEnv.bsky.url })
     const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
@@ -42,7 +42,7 @@ describe('timeline views', () => {
   })
 
   afterAll(async () => {
-    await close()
+    await testEnv.close()
   })
 
   // @TODO(bsky) blocks posts, reposts, replies by actor takedown via labels
@@ -60,7 +60,7 @@ describe('timeline views', () => {
     const aliceTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
-        headers: sc.getHeaders(alice, true),
+        headers: await appViewHeaders(alice, testEnv),
       },
     )
 
@@ -70,7 +70,7 @@ describe('timeline views', () => {
     const bobTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
-        headers: sc.getHeaders(bob, true),
+        headers: await appViewHeaders(bob, testEnv),
       },
     )
 
@@ -80,7 +80,7 @@ describe('timeline views', () => {
     const carolTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
-        headers: sc.getHeaders(carol, true),
+        headers: await appViewHeaders(carol, testEnv),
       },
     )
 
@@ -90,7 +90,7 @@ describe('timeline views', () => {
     const danTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
-        headers: sc.getHeaders(dan, true),
+        headers: await appViewHeaders(dan, testEnv),
       },
     )
 
@@ -102,13 +102,13 @@ describe('timeline views', () => {
     const defaultTL = await agent.api.app.bsky.feed.getTimeline(
       {},
       {
-        headers: sc.getHeaders(alice, true),
+        headers: await appViewHeaders(alice, testEnv),
       },
     )
     const reverseChronologicalTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
-        headers: sc.getHeaders(alice, true),
+        headers: await appViewHeaders(alice, testEnv),
       },
     )
     expect(defaultTL.data.feed).toEqual(reverseChronologicalTL.data.feed)
@@ -123,7 +123,7 @@ describe('timeline views', () => {
           cursor,
           limit: 4,
         },
-        { headers: sc.getHeaders(carol, true) },
+        { headers: await appViewHeaders(carol, testEnv) },
       )
       return res.data
     }
@@ -137,7 +137,7 @@ describe('timeline views', () => {
       {
         algorithm: FeedAlgorithm.ReverseChronological,
       },
-      { headers: sc.getHeaders(carol, true) },
+      { headers: await appViewHeaders(carol, testEnv) },
     )
 
     expect(full.data.feed.length).toEqual(7)
@@ -167,7 +167,7 @@ describe('timeline views', () => {
 
     const aliceTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
@@ -216,7 +216,7 @@ describe('timeline views', () => {
 
     const aliceTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()

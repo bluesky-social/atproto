@@ -3,12 +3,11 @@ import { Server } from '../../../../lexicon'
 import { FeedAlgorithm, FeedKeyset, composeFeed } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
-import { authVerifier } from '../../../auth'
 
 // @TODO getTimeline() will be replaced by composeTimeline() in the app-view
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
-    auth: authVerifier,
+    auth: ctx.authVerifier,
     handler: async ({ params, auth }) => {
       const { algorithm, limit, cursor } = params
       const db = ctx.db.db

@@ -2,12 +2,11 @@ import { AuthRequiredError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { getReasonType, getSubject } from './util'
-import { authVerifier } from '../../../auth'
 import { softDeleted } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
-    auth: authVerifier,
+    auth: ctx.authVerifier,
     handler: async ({ input, auth }) => {
       const { db, services } = ctx
       const { reasonType, reason, subject } = input.body

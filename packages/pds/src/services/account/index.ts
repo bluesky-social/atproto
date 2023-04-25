@@ -261,6 +261,27 @@ export class AccountService {
       .execute()
   }
 
+  async getMute(mutedBy: string, did: string): Promise<boolean> {
+    const mutes = await this.getMutes(mutedBy, [did])
+    return mutes[did] ?? false
+  }
+
+  async getMutes(
+    mutedBy: string,
+    dids: string[],
+  ): Promise<Record<string, boolean>> {
+    const res = await this.db.db
+      .selectFrom('mute')
+      .where('mutedByDid', '=', mutedBy)
+      .where('did', 'in', dids)
+      .selectAll()
+      .execute()
+    return res.reduce((acc, cur) => {
+      acc[cur.did] = true
+      return acc
+    }, {} as Record<string, boolean>)
+  }
+
   async search(opts: {
     term: string
     limit: number
@@ -418,6 +439,15 @@ export class AccountService {
       }
       return acc
     }, {} as Record<string, CodeDetail>)
+  }
+
+  async getLastSeenNotifs(did: string): Promise<string | undefined> {
+    const res = await this.db.db
+      .selectFrom('user_state')
+      .where('did', '=', did)
+      .selectAll()
+      .executeTakeFirst()
+    return res?.lastSeenNotifs
   }
 }
 

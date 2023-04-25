@@ -1,7 +1,7 @@
 import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
 import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
 import { AtUri } from '@atproto/uri'
-import { adminAuth, forSnapshot, processAll } from './_util'
+import { adminAuth, appViewHeaders, forSnapshot, processAll } from './_util'
 import { ImageRef, RecordRef, SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import {
@@ -46,7 +46,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: sc.getHeaders(sc.dids.alice, true),
+            headers: await appViewHeaders(sc.dids.alice, testEnv),
             encoding: 'application/json',
           },
         )
@@ -61,7 +61,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: sc.getHeaders(sc.dids.carol, true),
+            headers: await appViewHeaders(sc.dids.carol, testEnv),
             encoding: 'application/json',
           },
         )
@@ -78,7 +78,7 @@ describe('moderation', () => {
           },
         },
         {
-          headers: sc.getHeaders(sc.dids.alice, true),
+          headers: await appViewHeaders(sc.dids.alice, testEnv),
           encoding: 'application/json',
         },
       )
@@ -99,7 +99,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: sc.getHeaders(sc.dids.alice, true),
+            headers: await appViewHeaders(sc.dids.alice, testEnv),
             encoding: 'application/json',
           },
         )
@@ -115,7 +115,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: sc.getHeaders(sc.dids.carol, true),
+            headers: await appViewHeaders(sc.dids.carol, testEnv),
             encoding: 'application/json',
           },
         )
@@ -138,7 +138,7 @@ describe('moderation', () => {
           },
         },
         {
-          headers: sc.getHeaders(sc.dids.alice, true),
+          headers: await appViewHeaders(sc.dids.alice, testEnv),
           encoding: 'application/json',
         },
       )
@@ -155,7 +155,7 @@ describe('moderation', () => {
           },
         },
         {
-          headers: sc.getHeaders(sc.dids.carol, true),
+          headers: await appViewHeaders(sc.dids.carol, testEnv),
           encoding: 'application/json',
         },
       )
@@ -175,7 +175,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: sc.getHeaders(sc.dids.alice, true),
+            headers: await appViewHeaders(sc.dids.alice, testEnv),
             encoding: 'application/json',
           },
         )
@@ -192,7 +192,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: sc.getHeaders(sc.dids.carol, true),
+            headers: await appViewHeaders(sc.dids.carol, testEnv),
             encoding: 'application/json',
           },
         )
@@ -252,7 +252,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: sc.getHeaders(sc.dids.alice, true),
+            headers: await appViewHeaders(sc.dids.alice, testEnv),
             encoding: 'application/json',
           },
         )
@@ -317,7 +317,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: sc.getHeaders(sc.dids.alice, true),
+            headers: await appViewHeaders(sc.dids.alice, testEnv),
             encoding: 'application/json',
           },
         )

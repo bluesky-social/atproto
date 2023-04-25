@@ -16,6 +16,7 @@ import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
 import AppContext from './context'
 import { RepoSubscription } from './subscription/repo'
+import DidSqlCache from './did-cache'
 import {
   ImageInvalidator,
   ImageProcessingServerInvalidator,
@@ -55,7 +56,12 @@ export class BskyAppView {
     app.use(cors())
     app.use(loggerMiddleware)
 
-    const didResolver = new DidResolver({ plcUrl: config.didPlcUrl })
+    const didCache = new DidSqlCache(
+      db,
+      config.didCacheStaleTTL,
+      config.didCacheMaxTTL,
+    )
+    const didResolver = new DidResolver({ plcUrl: config.didPlcUrl }, didCache)
 
     const imgUriBuilder = new ImageUriBuilder(
       config.imgUriEndpoint || `${config.publicUrl}/image`,
@@ -110,6 +116,7 @@ export class BskyAppView {
       services,
       imgUriBuilder,
       didResolver,
+      didCache,
       labeler,
     })
 
@@ -151,6 +158,7 @@ export class BskyAppView {
   }
 
   async destroy(): Promise<void> {
+    await this.ctx.didCache.destroy()
     await this.sub?.destroy()
     await this.ctx.labeler.destroy()
     await this.terminator?.terminate()

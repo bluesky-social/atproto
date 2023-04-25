@@ -1,25 +1,22 @@
 import { once } from 'events'
 import { wait } from '@atproto/common'
-import { CloseFn, runTestEnv } from '@atproto/dev-env'
+import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
 import { Database } from '../src'
 import { Leader } from '../src/db/leader'
 
 describe('db', () => {
-  let close: CloseFn
+  let testEnv: TestEnvInfo
   let db: Database
 
   beforeAll(async () => {
-    const testEnv = await runTestEnv({
-      dbPostgresSchema: 'db',
+    testEnv = await runTestEnv({
+      dbPostgresSchema: 'bsky_db',
     })
-    close = testEnv.close
     db = testEnv.bsky.ctx.db
   })
 
   afterAll(async () => {
-    if (close) {
-      await close()
-    }
+    await testEnv.close()
   })
 
   describe('transaction()', () => {
