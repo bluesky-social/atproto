@@ -5,11 +5,13 @@ Array [
   Object {
     "did": "user(0)",
     "handle": "eve.test",
+    "labels": Array [],
     "viewer": Object {},
   },
   Object {
     "did": "user(1)",
     "handle": "dan.test",
+    "labels": Array [],
     "viewer": Object {
       "following": "record(0)",
     },
@@ -17,6 +19,7 @@ Array [
   Object {
     "did": "user(2)",
     "handle": "carol.test",
+    "labels": Array [],
     "viewer": Object {
       "followedBy": "record(2)",
       "following": "record(1)",
@@ -29,6 +32,7 @@ Array [
     "displayName": "bobby",
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
     "viewer": Object {
       "followedBy": "record(4)",
       "following": "record(3)",
@@ -42,11 +46,13 @@ Array [
   Object {
     "did": "user(0)",
     "handle": "eve.test",
+    "labels": Array [],
     "viewer": Object {},
   },
   Object {
     "did": "user(1)",
     "handle": "dan.test",
+    "labels": Array [],
     "viewer": Object {
       "following": "record(0)",
     },

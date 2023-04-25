@@ -16,19 +16,15 @@ import { BadPathError, ImageUriBuilder } from './uri'
 import log from './logger'
 import { resize } from './sharp'
 import { formatsToMimes, Options } from './util'
-import AppContext from '../context'
 import { retryHttp } from '../util/retry'
+import { ServerConfig } from '../config'
 
 export class ImageProcessingServer {
   app = express()
   uriBuilder: ImageUriBuilder
 
-  constructor(public ctx: AppContext, public cache: BlobCache) {
-    this.uriBuilder = new ImageUriBuilder(
-      '',
-      ctx.cfg.imgUriSalt,
-      ctx.cfg.imgUriKey,
-    )
+  constructor(public cfg: ServerConfig, public cache: BlobCache) {
+    this.uriBuilder = new ImageUriBuilder('', cfg.imgUriSalt, cfg.imgUriKey)
     this.app.get('*', this.handler.bind(this))
     this.app.use(errorMiddleware)
   }
@@ -60,7 +56,7 @@ export class ImageProcessingServer {
 
       // Non-cached flow
 
-      const { localUrl } = this.ctx.cfg
+      const { localUrl } = this.cfg
       const did = options.did
       const cidStr = options.cid.toString()
 

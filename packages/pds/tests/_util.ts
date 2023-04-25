@@ -108,10 +108,22 @@ export const runTestServer = async (
         })
       : Database.memory()
 
+  // Separate migration db on postgres in case migration changes some
+  // connection state that we need in the tests, e.g. "alter database ... set ..."
+  const migrationDb =
+    cfg.dbPostgresUrl !== undefined
+      ? Database.postgres({
+          url: cfg.dbPostgresUrl,
+          schema: cfg.dbPostgresSchema,
+        })
+      : db
   if (opts.migration) {
-    await db.migrateToOrThrow(opts.migration)
+    await migrationDb.migrateToOrThrow(opts.migration)
   } else {
-    await db.migrateToLatestOrThrow()
+    await migrationDb.migrateToLatestOrThrow()
+  }
+  if (migrationDb !== db) {
+    await migrationDb.close()
   }
 
   const blobstore =

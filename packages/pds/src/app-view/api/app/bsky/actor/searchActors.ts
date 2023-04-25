@@ -54,7 +54,6 @@ export default function (server: Server, ctx: AppContext) {
 
 const getResultsPg: GetResultsFn = async (db, { term, limit, cursor }) => {
   return await getUserSearchQueryPg(db, { term: term || '', limit, cursor })
-    .leftJoin('profile', 'profile.creator', 'did_handle.did')
     .select('distance')
     .selectAll('did_handle')
     .execute()

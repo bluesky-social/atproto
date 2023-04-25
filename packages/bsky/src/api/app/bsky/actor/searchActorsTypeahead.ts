@@ -1,7 +1,7 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { cleanTerm, getUserSearchQuery } from '../../../../services/util/search'
-import { authOptionalVerifier } from '../util'
+import { authOptionalVerifier } from '../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActorsTypeahead({

@@ -31,7 +31,8 @@ export const getUserSearchQueryPg = (
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('repo_root'))),
     )
-    .where(distanceAccount, '<', threshold)
+    .where(similar(term, ref('handle'))) // Coarse filter engaging trigram index
+    .where(distanceAccount, '<', threshold) // Refines results from trigram index
     .select(['did_handle.did as did', distanceAccount.as('distance')])
   accountsQb = paginate(accountsQb, {
     limit,
@@ -49,7 +50,8 @@ export const getUserSearchQueryPg = (
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('repo_root'))),
     )
-    .where(distanceProfile, '<', threshold)
+    .where(similar(term, ref('displayName'))) // Coarse filter engaging trigram index
+    .where(distanceProfile, '<', threshold) // Refines results from trigram index
     .select(['did_handle.did as did', distanceProfile.as('distance')])
   profilesQb = paginate(profilesQb, {
     limit,
@@ -149,6 +151,9 @@ export const cleanTerm = (term: string) => term.trim().replace(/^@/g, '')
 // Uses pg_trgm strict word similarity to check similarity between a search term and a stored value
 const distance = (term: string, ref: DbRef) =>
   sql<number>`(${term} <<<-> ${ref})`
+
+// Can utilize trigram index to match on strict word similarity
+const similar = (term: string, ref: DbRef) => sql<boolean>`(${term} <<% ${ref})`
 
 type Result = { distance: number; handle: string }
 type LabeledResult = { primary: number; secondary: string }

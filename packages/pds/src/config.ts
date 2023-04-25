@@ -145,8 +145,12 @@ export class ServerConfig {
     )
 
     // E.g. ws://abc.com:4000
-    const appViewRepoProvider = process.env.APP_VIEW_REPO_PROVIDER || undefined
-    const bskyAppViewEndpoint = process.env.BSKY_APP_VIEW_ENDPOINT || undefined
+    const appViewRepoProvider = nonemptyString(
+      process.env.APP_VIEW_REPO_PROVIDER,
+    )
+    const bskyAppViewEndpoint = nonemptyString(
+      process.env.BSKY_APP_VIEW_ENDPOINT,
+    )
 
     return new ServerConfig({
       debugMode,
@@ -362,6 +366,11 @@ export class ServerConfig {
   get bskyAppViewEndpoint() {
     return this.cfg.bskyAppViewEndpoint
   }
+}
+
+const nonemptyString = (str: string | undefined): string | undefined => {
+  if (str === undefined || str.length === 0) return undefined
+  return str
 }
 
 const parseIntWithFallback = <T>(
