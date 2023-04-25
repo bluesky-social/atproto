@@ -6,6 +6,7 @@ COPY ./*.* ./
 # NOTE bsky's transitive dependencies go here: if that changes, this needs to be updated.
 COPY ./packages/bsky ./packages/bsky
 COPY ./packages/api ./packages/api
+COPY ./packages/aws ./packages/aws
 COPY ./packages/common ./packages/common
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/crypto ./packages/crypto
