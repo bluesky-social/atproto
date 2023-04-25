@@ -143,6 +143,7 @@ Array [
           "cid": "cids(3)",
           "embeds": Array [],
           "indexedAt": "1970-01-01T00:00:00.000Z",
+          "labels": Array [],
           "uri": "record(2)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -271,6 +272,7 @@ Array [
                 },
                 "cid": "cids(3)",
                 "indexedAt": "1970-01-01T00:00:00.000Z",
+                "labels": Array [],
                 "uri": "record(2)",
                 "value": Object {
                   "$type": "app.bsky.feed.post",
@@ -282,6 +284,7 @@ Array [
           },
         ],
         "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
         "uri": "record(6)",
         "value": Object {
           "$type": "app.bsky.feed.post",
