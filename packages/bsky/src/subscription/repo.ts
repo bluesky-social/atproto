@@ -239,7 +239,6 @@ export class RepoSubscription {
           )
         }
         reposSeen.add(repo.did)
-        console.log(repo.did)
         queue
           .add(() => indexingService.indexRepo(repo.did, repo.head))
           .catch((err) => {
