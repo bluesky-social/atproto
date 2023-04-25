@@ -108,6 +108,7 @@ Array [
             },
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
+          "labels": Array [],
           "uri": "record(5)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -628,6 +629,16 @@ Array [
             "cid": "cids(12)",
             "embeds": Array [],
             "indexedAt": "1970-01-01T00:00:00.000Z",
+            "labels": Array [
+              Object {
+                "cid": "cids(12)",
+                "cts": "1970-01-01T00:00:00.000Z",
+                "neg": false,
+                "src": "did:example:labeler",
+                "uri": "record(14)",
+                "val": "kind",
+              },
+            ],
             "uri": "record(14)",
             "value": Object {
               "$type": "app.bsky.feed.post",
@@ -638,7 +649,16 @@ Array [
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": Array [
+        Object {
+          "cid": "cids(9)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "neg": false,
+          "src": "did:example:labeler",
+          "uri": "record(13)",
+          "val": "kind",
+        },
+      ],
       "likeCount": 2,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -704,7 +724,16 @@ Array [
       },
       "cid": "cids(12)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": Array [
+        Object {
+          "cid": "cids(12)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "neg": false,
+          "src": "did:example:labeler",
+          "uri": "record(14)",
+          "val": "kind",
+        },
+      ],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -843,6 +872,16 @@ Array [
                   },
                   "cid": "cids(6)",
                   "indexedAt": "1970-01-01T00:00:00.000Z",
+                  "labels": Array [
+                    Object {
+                      "cid": "cids(6)",
+                      "cts": "1970-01-01T00:00:00.000Z",
+                      "neg": false,
+                      "src": "did:example:labeler",
+                      "uri": "record(6)",
+                      "val": "kind",
+                    },
+                  ],
                   "uri": "record(6)",
                   "value": Object {
                     "$type": "app.bsky.feed.post",
@@ -854,6 +893,16 @@ Array [
             },
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
+          "labels": Array [
+            Object {
+              "cid": "cids(3)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "neg": false,
+              "src": "did:example:labeler",
+              "uri": "record(3)",
+              "val": "kind",
+            },
+          ],
           "uri": "record(3)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -1338,6 +1387,16 @@ Array [
                 },
                 "cid": "cids(3)",
                 "indexedAt": "1970-01-01T00:00:00.000Z",
+                "labels": Array [
+                  Object {
+                    "cid": "cids(3)",
+                    "cts": "1970-01-01T00:00:00.000Z",
+                    "neg": false,
+                    "src": "did:example:labeler",
+                    "uri": "record(3)",
+                    "val": "kind",
+                  },
+                ],
                 "uri": "record(3)",
                 "value": Object {
                   "$type": "app.bsky.feed.post",
@@ -1384,6 +1443,7 @@ Array [
             },
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
+          "labels": Array [],
           "uri": "record(2)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -1555,6 +1615,16 @@ Array [
                   },
                   "cid": "cids(6)",
                   "indexedAt": "1970-01-01T00:00:00.000Z",
+                  "labels": Array [
+                    Object {
+                      "cid": "cids(6)",
+                      "cts": "1970-01-01T00:00:00.000Z",
+                      "neg": false,
+                      "src": "did:example:labeler",
+                      "uri": "record(6)",
+                      "val": "kind",
+                    },
+                  ],
                   "uri": "record(6)",
                   "value": Object {
                     "$type": "app.bsky.feed.post",
@@ -1566,6 +1636,16 @@ Array [
             },
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
+          "labels": Array [
+            Object {
+              "cid": "cids(3)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "neg": false,
+              "src": "did:example:labeler",
+              "uri": "record(3)",
+              "val": "kind",
+            },
+          ],
           "uri": "record(3)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -1716,6 +1796,16 @@ Array [
             "cid": "cids(6)",
             "embeds": Array [],
             "indexedAt": "1970-01-01T00:00:00.000Z",
+            "labels": Array [
+              Object {
+                "cid": "cids(6)",
+                "cts": "1970-01-01T00:00:00.000Z",
+                "neg": false,
+                "src": "did:example:labeler",
+                "uri": "record(6)",
+                "val": "kind",
+              },
+            ],
             "uri": "record(6)",
             "value": Object {
               "$type": "app.bsky.feed.post",
@@ -1726,7 +1816,16 @@ Array [
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": Array [
+        Object {
+          "cid": "cids(3)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "neg": false,
+          "src": "did:example:labeler",
+          "uri": "record(3)",
+          "val": "kind",
+        },
+      ],
       "likeCount": 2,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -1792,7 +1891,16 @@ Array [
       },
       "cid": "cids(6)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": Array [
+        Object {
+          "cid": "cids(6)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "neg": false,
+          "src": "did:example:labeler",
+          "uri": "record(6)",
+          "val": "kind",
+        },
+      ],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -1890,6 +1998,16 @@ Array [
                   },
                   "cid": "cids(4)",
                   "indexedAt": "1970-01-01T00:00:00.000Z",
+                  "labels": Array [
+                    Object {
+                      "cid": "cids(4)",
+                      "cts": "1970-01-01T00:00:00.000Z",
+                      "neg": false,
+                      "src": "did:example:labeler",
+                      "uri": "record(4)",
+                      "val": "kind",
+                    },
+                  ],
                   "uri": "record(4)",
                   "value": Object {
                     "$type": "app.bsky.feed.post",
@@ -1901,6 +2019,16 @@ Array [
             },
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
+          "labels": Array [
+            Object {
+              "cid": "cids(1)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "neg": false,
+              "src": "did:example:labeler",
+              "uri": "record(2)",
+              "val": "kind",
+            },
+          ],
           "uri": "record(2)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -2407,6 +2535,16 @@ Array [
                 },
                 "cid": "cids(1)",
                 "indexedAt": "1970-01-01T00:00:00.000Z",
+                "labels": Array [
+                  Object {
+                    "cid": "cids(1)",
+                    "cts": "1970-01-01T00:00:00.000Z",
+                    "neg": false,
+                    "src": "did:example:labeler",
+                    "uri": "record(2)",
+                    "val": "kind",
+                  },
+                ],
                 "uri": "record(2)",
                 "value": Object {
                   "$type": "app.bsky.feed.post",
@@ -2453,6 +2591,7 @@ Array [
             },
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
+          "labels": Array [],
           "uri": "record(0)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -2611,6 +2750,16 @@ Array [
             "cid": "cids(4)",
             "embeds": Array [],
             "indexedAt": "1970-01-01T00:00:00.000Z",
+            "labels": Array [
+              Object {
+                "cid": "cids(4)",
+                "cts": "1970-01-01T00:00:00.000Z",
+                "neg": false,
+                "src": "did:example:labeler",
+                "uri": "record(4)",
+                "val": "kind",
+              },
+            ],
             "uri": "record(4)",
             "value": Object {
               "$type": "app.bsky.feed.post",
@@ -2621,7 +2770,16 @@ Array [
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": Array [
+        Object {
+          "cid": "cids(1)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "neg": false,
+          "src": "did:example:labeler",
+          "uri": "record(2)",
+          "val": "kind",
+        },
+      ],
       "likeCount": 2,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -2684,7 +2842,16 @@ Array [
       },
       "cid": "cids(4)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": Array [
+        Object {
+          "cid": "cids(4)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "neg": false,
+          "src": "did:example:labeler",
+          "uri": "record(4)",
+          "val": "kind",
+        },
+      ],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -2783,6 +2950,16 @@ Array [
                   },
                   "cid": "cids(4)",
                   "indexedAt": "1970-01-01T00:00:00.000Z",
+                  "labels": Array [
+                    Object {
+                      "cid": "cids(4)",
+                      "cts": "1970-01-01T00:00:00.000Z",
+                      "neg": false,
+                      "src": "did:example:labeler",
+                      "uri": "record(2)",
+                      "val": "kind",
+                    },
+                  ],
                   "uri": "record(2)",
                   "value": Object {
                     "$type": "app.bsky.feed.post",
@@ -2794,6 +2971,16 @@ Array [
             },
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
+          "labels": Array [
+            Object {
+              "cid": "cids(1)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "neg": false,
+              "src": "did:example:labeler",
+              "uri": "record(1)",
+              "val": "kind",
+            },
+          ],
           "uri": "record(1)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -3160,6 +3347,16 @@ Array [
                 },
                 "cid": "cids(1)",
                 "indexedAt": "1970-01-01T00:00:00.000Z",
+                "labels": Array [
+                  Object {
+                    "cid": "cids(1)",
+                    "cts": "1970-01-01T00:00:00.000Z",
+                    "neg": false,
+                    "src": "did:example:labeler",
+                    "uri": "record(1)",
+                    "val": "kind",
+                  },
+                ],
                 "uri": "record(1)",
                 "value": Object {
                   "$type": "app.bsky.feed.post",
@@ -3206,6 +3403,7 @@ Array [
             },
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
+          "labels": Array [],
           "uri": "record(0)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -3339,6 +3537,16 @@ Array [
             "cid": "cids(4)",
             "embeds": Array [],
             "indexedAt": "1970-01-01T00:00:00.000Z",
+            "labels": Array [
+              Object {
+                "cid": "cids(4)",
+                "cts": "1970-01-01T00:00:00.000Z",
+                "neg": false,
+                "src": "did:example:labeler",
+                "uri": "record(2)",
+                "val": "kind",
+              },
+            ],
             "uri": "record(2)",
             "value": Object {
               "$type": "app.bsky.feed.post",
@@ -3349,7 +3557,16 @@ Array [
         },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": Array [
+        Object {
+          "cid": "cids(1)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "neg": false,
+          "src": "did:example:labeler",
+          "uri": "record(1)",
+          "val": "kind",
+        },
+      ],
       "likeCount": 2,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -3689,6 +3906,16 @@ Array [
                   },
                   "cid": "cids(8)",
                   "indexedAt": "1970-01-01T00:00:00.000Z",
+                  "labels": Array [
+                    Object {
+                      "cid": "cids(8)",
+                      "cts": "1970-01-01T00:00:00.000Z",
+                      "neg": false,
+                      "src": "did:example:labeler",
+                      "uri": "record(9)",
+                      "val": "kind",
+                    },
+                  ],
                   "uri": "record(9)",
                   "value": Object {
                     "$type": "app.bsky.feed.post",
@@ -3700,6 +3927,16 @@ Array [
             },
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
+          "labels": Array [
+            Object {
+              "cid": "cids(6)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "neg": false,
+              "src": "did:example:labeler",
+              "uri": "record(8)",
+              "val": "kind",
+            },
+          ],
           "uri": "record(8)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -3816,7 +4053,16 @@ Array [
       },
       "cid": "cids(8)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
+      "labels": Array [
+        Object {
+          "cid": "cids(8)",
+          "cts": "1970-01-01T00:00:00.000Z",
+          "neg": false,
+          "src": "did:example:labeler",
+          "uri": "record(9)",
+          "val": "kind",
+        },
+      ],
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
