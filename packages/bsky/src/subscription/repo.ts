@@ -1,6 +1,8 @@
 import assert from 'node:assert'
+import PQueue from 'p-queue'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
+import { AtpAgent } from '@atproto/api'
 import { cborDecode, wait } from '@atproto/common'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
 import {
@@ -18,10 +20,8 @@ import AppContext from '../context'
 import { Leader } from '../db/leader'
 import { subLogger } from '../logger'
 import { ConsecutiveList, LatestQueue, PartitionedQueue } from './util'
-import { IndexingService } from '../services/indexing'
-import PQueue from 'p-queue'
-import { AtpAgent } from '@atproto/api'
 import { retryHttp } from '../util/retry'
+import { IndexingService } from '../services/indexing'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
 export const REPO_SUB_ID = 1000
@@ -39,10 +39,6 @@ export class RepoSubscription {
     public subLockId = REPO_SUB_ID,
     public backfillConcurrency?: number,
   ) {}
-
-  get supportsBackfill() {
-    return !!this.backfillConcurrency
-  }
 
   async run() {
     while (!this.destroyed) {
@@ -63,7 +59,7 @@ export class RepoSubscription {
               )
               if (
                 details.info?.name === 'OutdatedCursor' &&
-                this.supportsBackfill
+                this.backfillConcurrency // Supports backfill
               ) {
                 // On next message with a seq number, we'll note that seq and stop processing messages while backfill completes.
                 needsBackfill = true
@@ -221,9 +217,12 @@ export class RepoSubscription {
 
     const { services, db } = this.ctx
     const indexingService = services.indexing(db)
-    const agent = new AtpAgent({ service: this.service.replace('ws', 'http') })
-    const queue = new PQueue({ concurrency: this.backfillConcurrency })
+    const agent = new AtpAgent({ service: wsToHttp(this.service) })
+    const queue = new PQueue({ concurrency })
+    const reposSeen = new Set()
 
+    // Paginate through all repos and queue them for processing.
+    // Fetch next page once all items on the queue are in progress.
     let cursor: string | undefined
     do {
       const { data: page } = await retryHttp(() =>
@@ -233,15 +232,23 @@ export class RepoSubscription {
         }),
       )
       page.repos.forEach((repo) => {
+        if (reposSeen.has(repo.did)) {
+          // If a host has a bug that appears to cause a loop or duplicate work, we can bail.
+          throw new Error(
+            `Backfill from ${this.service} failed because repo for ${repo.did} was seen twice`,
+          )
+        }
+        reposSeen.add(repo.did)
         queue.add(() => indexingService.indexRepo(repo.did, repo.head))
       })
       cursor = page.cursor
       await queue.onEmpty() // Remaining items are in progress
     } while (cursor)
 
-    await queue.onIdle() // All items have been processed
+    // Wait until final batch finishes processing then update cursor.
+    await queue.onIdle()
     await db.transaction(async (tx) => {
-      await this.setState(tx, { cursor: seq })
+      await this.setState(tx, { cursor: seq - 1 })
     })
   }
 
@@ -446,4 +453,11 @@ function getMessageDetails(msg: Message):
     return { info: msg }
   }
   return { info: null }
+}
+
+function wsToHttp(url: string) {
+  if (!url.startsWith('ws://') && !url.startsWith('wss://')) {
+    return url
+  }
+  return url.replace('ws', 'http')
 }
