@@ -133,7 +133,12 @@ export class BskyAppView {
     app.use(error.handler)
 
     const sub = config.repoProvider
-      ? new RepoSubscription(ctx, config.repoProvider, config.repoSubLockId)
+      ? new RepoSubscription(
+          ctx,
+          config.repoProvider,
+          config.repoSubBackfillConcurrency,
+          config.repoSubLockId,
+        )
       : undefined
 
     return new BskyAppView({ ctx, app, sub })

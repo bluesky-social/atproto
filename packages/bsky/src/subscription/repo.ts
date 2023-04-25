@@ -36,14 +36,14 @@ export class RepoSubscription {
   constructor(
     public ctx: AppContext,
     public service: string,
-    public subLockId = REPO_SUB_ID,
     public backfillConcurrency?: number,
+    public subLockId = REPO_SUB_ID,
   ) {}
 
   async run() {
     while (!this.destroyed) {
+      let needsBackfill: boolean | number = false
       try {
-        let needsBackfill: boolean | number = false
         const { ran } = await this.leader.run(async ({ signal }) => {
           needsBackfill = false
           const sub = this.getSubscription({ signal })
@@ -113,7 +113,7 @@ export class RepoSubscription {
           'repo subscription error',
         )
       }
-      if (!this.destroyed) {
+      if (!this.destroyed && !needsBackfill) {
         await wait(5000 + jitter(1000)) // wait then try to become leader
       }
     }
@@ -239,7 +239,15 @@ export class RepoSubscription {
           )
         }
         reposSeen.add(repo.did)
-        queue.add(() => indexingService.indexRepo(repo.did, repo.head))
+        console.log(repo.did)
+        queue
+          .add(() => indexingService.indexRepo(repo.did, repo.head))
+          .catch((err) => {
+            subLogger.error(
+              { err, provider: this.service, repo },
+              'repo subscription backfill failed on a repository',
+            )
+          })
       })
       cursor = page.cursor
       await queue.onEmpty() // Remaining items are in progress

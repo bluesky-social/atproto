@@ -32,6 +32,7 @@ const main = async () => {
     port: env.port,
     version: env.version,
     repoProvider: env.repoProvider,
+    repoSubBackfillConcurrency: env.repoSubBackfillConcurrency,
     dbPostgresUrl: env.dbPostgresUrl,
     dbPostgresSchema: env.dbPostgresSchema,
     publicUrl: env.publicUrl,
@@ -63,6 +64,8 @@ const getEnv = () => ({
   port: parseInt(process.env.PORT),
   version: process.env.BSKY_VERSION,
   repoProvider: process.env.REPO_PROVIDER,
+  repoSubBackfillConcurrency:
+    maybeParseInt(process.env.REPO_SUB_BACKFILL_CONCURRENCY) || undefined,
   dbPostgresUrl: process.env.DB_POSTGRES_URL,
   dbMigratePostgresUrl:
     process.env.DB_MIGRATE_POSTGRES_URL || process.env.DB_POSTGRES_URL,
@@ -75,6 +78,11 @@ const getEnv = () => ({
   blobCacheLocation: process.env.BLOB_CACHE_LOC,
   cfDistributionId: process.env.CF_DISTRIBUTION_ID,
 })
+
+const maybeParseInt = (str) => {
+  const parsed = parseInt(str)
+  return isNaN(parsed) ? undefined : parsed
+}
 
 const maintainXrpcResource = (span, req) => {
   // Show actual xrpc method as resource rather than the route pattern
