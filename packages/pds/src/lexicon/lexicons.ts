@@ -3816,6 +3816,13 @@ export const schemaDict = {
           value: {
             type: 'unknown',
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
           embeds: {
             type: 'array',
             items: {
