@@ -48,6 +48,11 @@ const envApi = {
     await devEnv.add(await genServerCfg(ServerType.PersonalDataServer, port))
   },
 
+  async startBsky(port?: number) {
+    assert(devEnv)
+    await devEnv.add(await genServerCfg(ServerType.BskyAppView, port))
+  },
+
   async stop(port: number) {
     assert(devEnv)
     const inst = devEnv.servers.get(port)

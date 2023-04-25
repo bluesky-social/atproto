@@ -14,6 +14,8 @@ import * as actorSync from './tables/actor-sync'
 import * as record from './tables/record'
 import * as notification from './tables/notification'
 import * as didCache from './tables/did-cache'
+import * as moderation from './tables/moderation'
+import * as label from './tables/label'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
@@ -29,7 +31,9 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   actorSync.PartialDB &
   record.PartialDB &
   notification.PartialDB &
-  didCache.PartialDB
+  didCache.PartialDB &
+  moderation.PartialDB &
+  label.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

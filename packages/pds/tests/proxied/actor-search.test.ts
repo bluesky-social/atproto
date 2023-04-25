@@ -1,11 +1,11 @@
 import AtpAgent from '@atproto/api'
 import { runTestEnv, CloseFn, processAll } from '@atproto/dev-env'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { forSnapshot, paginateAll, adminAuth } from '../_util'
+import { forSnapshot, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
+import { wait } from '@atproto/common'
 
-describe.skip('pds user search proxy views', () => {
+describe('pds user search proxy views', () => {
   let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
@@ -18,8 +18,28 @@ describe.skip('pds user search proxy views', () => {
     close = testEnv.close
     agent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(agent)
+    await wait(50) // allow pending sub to be established
+    await testEnv.bsky.sub.destroy()
     await usersBulkSeed(sc)
-    await processAll(testEnv)
+
+    // Skip did/handle resolution for expediency
+    const { db } = testEnv.bsky.ctx
+    const now = new Date().toISOString()
+    await db.db
+      .insertInto('actor')
+      .values(
+        Object.entries(sc.dids).map(([handle, did]) => ({
+          did,
+          handle,
+          indexedAt: now,
+        })),
+      )
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+
+    // Process remaining profiles
+    testEnv.bsky.sub.resume()
+    await processAll(testEnv, 20000)
     headers = sc.getHeaders(Object.values(sc.dids)[0])
   })
 
@@ -27,13 +47,11 @@ describe.skip('pds user search proxy views', () => {
     await close()
   })
 
-  it.only('typeahead gives relevant results', async () => {
-    console.log('GETTING')
+  it('typeahead gives relevant results', async () => {
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'car' },
       { headers },
     )
-    console.log('GOT')
 
     const handles = result.data.actors.map((u) => u.handle)
 
@@ -60,7 +78,7 @@ describe.skip('pds user search proxy views', () => {
 
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
-    expect(forSnapshot(result.data.actors)).toEqual(snapTypeaheadPg)
+    expect(forSnapshot(result.data.actors)).toMatchSnapshot()
   })
 
   it('typeahead gives empty result set when provided empty term', async () => {
@@ -119,7 +137,7 @@ describe.skip('pds user search proxy views', () => {
 
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
-    expect(forSnapshot(result.data.actors)).toEqual(snapSearchPg)
+    expect(forSnapshot(result.data.actors)).toMatchSnapshot()
   })
 
   it('search gives empty result set when provided empty term', async () => {
@@ -165,152 +183,4 @@ describe.skip('pds user search proxy views', () => {
 
     expect(result.data.actors).toEqual([])
   })
-
-  it('search blocks by actor takedown', async () => {
-    await agent.api.com.atproto.admin.takeModerationAction(
-      {
-        action: TAKEDOWN,
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids['cara-wiegand69.test'],
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
-    const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
-      { term: 'car' },
-      { headers },
-    )
-    const handles = result.data.actors.map((u) => u.handle)
-    expect(handles).toContain('carlos6.test')
-    expect(handles).toContain('carolina-mcdermott77.test')
-    expect(handles).not.toContain('cara-wiegand69.test')
-  })
 })
-
-// Not using jest snapshots because it doesn't handle the conditional pg/sqlite very well:
-// you can achieve it using named snapshots, but when you run the tests for pg the test suite fails
-// since the sqlite snapshots appear obsolete to jest (and vice-versa when you run the sqlite suite).
-
-const avatar =
-  'https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg'
-
-const snapTypeaheadPg = [
-  {
-    did: 'user(0)',
-    handle: 'cara-wiegand69.test',
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(1)',
-    displayName: 'Carol Littel',
-    handle: 'eudora-dietrich4.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(2)',
-    displayName: 'Sadie Carter',
-    handle: 'shane-torphy52.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(3)',
-    displayName: 'Carlton Abernathy IV',
-    handle: 'aliya-hodkiewicz.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(4)',
-    handle: 'carlos6.test',
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(5)',
-    displayName: 'Latoya Windler',
-    handle: 'carolina-mcdermott77.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(6)',
-    displayName: 'Rachel Kshlerin',
-    handle: 'cayla-marquardt39.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-]
-
-const snapSearchPg = [
-  {
-    did: 'user(0)',
-    handle: 'cara-wiegand69.test',
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(1)',
-    displayName: 'Carol Littel',
-    indexedAt: '1970-01-01T00:00:00.000Z',
-    handle: 'eudora-dietrich4.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(2)',
-    displayName: 'Sadie Carter',
-    indexedAt: '1970-01-01T00:00:00.000Z',
-    handle: 'shane-torphy52.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(3)',
-    displayName: 'Carlton Abernathy IV',
-    indexedAt: '1970-01-01T00:00:00.000Z',
-    handle: 'aliya-hodkiewicz.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(4)',
-    handle: 'carlos6.test',
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(5)',
-    displayName: 'Latoya Windler',
-    indexedAt: '1970-01-01T00:00:00.000Z',
-    handle: 'carolina-mcdermott77.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(6)',
-    displayName: 'Rachel Kshlerin',
-    indexedAt: '1970-01-01T00:00:00.000Z',
-    handle: 'cayla-marquardt39.test',
-    avatar,
-    viewer: { muted: false },
-    labels: [],
-  },
-]

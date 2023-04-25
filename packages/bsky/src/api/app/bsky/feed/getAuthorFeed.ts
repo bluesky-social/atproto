@@ -13,6 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       const { ref } = db.dynamic
 
       const feedService = ctx.services.feed(ctx.db)
+      const labelService = ctx.services.label(ctx.db)
 
       let did = ''
       if (actor.startsWith('did:')) {
@@ -45,7 +46,12 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const feedItems = await feedItemsQb.execute()
-      const feed = await composeFeed(feedService, feedItems, requester)
+      const feed = await composeFeed(
+        feedService,
+        labelService,
+        feedItems,
+        requester,
+      )
 
       return {
         encoding: 'application/json',

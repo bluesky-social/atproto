@@ -1,0 +1,74 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`moderation actioning resolves reports on repos and records. 1`] = `
+Object {
+  "action": "com.atproto.admin.defs#takedown",
+  "createdAt": "1970-01-01T00:00:00.000Z",
+  "createdBy": "did:example:admin",
+  "id": 1,
+  "reason": "Y",
+  "resolvedReportIds": Array [
+    9,
+    8,
+  ],
+  "subject": Object {
+    "$type": "com.atproto.admin.defs#repoRef",
+    "did": "user(0)",
+  },
+  "subjectBlobCids": Array [],
+}
+`;
+
+exports[`moderation reporting creates reports of a record. 1`] = `
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "id": 4,
+    "reasonType": "com.atproto.moderation.defs#reasonSpam",
+    "reportedBy": "user(0)",
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(0)",
+      "uri": "record(0)",
+    },
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "id": 5,
+    "reason": "defamation",
+    "reasonType": "com.atproto.moderation.defs#reasonOther",
+    "reportedBy": "user(1)",
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(1)",
+      "uri": "record(1)",
+    },
+  },
+]
+`;
+
+exports[`moderation reporting creates reports of a repo. 1`] = `
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "id": 1,
+    "reasonType": "com.atproto.moderation.defs#reasonSpam",
+    "reportedBy": "user(0)",
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(1)",
+    },
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "id": 2,
+    "reason": "impersonation",
+    "reasonType": "com.atproto.moderation.defs#reasonOther",
+    "reportedBy": "user(2)",
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(1)",
+    },
+  },
+]
+`;

@@ -1,6 +1,7 @@
 export enum ServerType {
   PersonalDataServer = 'pds',
   DidPlaceholder = 'plc',
+  BskyAppView = 'bsky',
 }
 
 export interface ServerConfig {
@@ -13,6 +14,7 @@ export interface StartParams {
 }
 
 export const PORTS = {
+  [ServerType.BskyAppView]: 2584,
   [ServerType.PersonalDataServer]: 2583,
   [ServerType.DidPlaceholder]: 2582,
 }

@@ -1,8 +1,10 @@
+import { sql } from 'kysely'
 import Database from '../../db'
-import { notSoftDeletedClause } from '../../db/util'
+import { DbRef, notSoftDeletedClause } from '../../db/util'
 import { ActorViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
 import { Actor } from '../../db/tables/actor'
+import { TimeCidKeyset } from '../../db/pagination'
 
 export class ActorService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
@@ -61,6 +63,41 @@ export class ActorService {
       return orderA - orderB
     })
   }
+
+  searchQb(term?: string) {
+    const { ref } = this.db.db.dynamic
+    let builder = this.db.db.selectFrom('actor')
+    if (term) {
+      builder = builder.where((qb) => {
+        // Performing matching by word using "strict word similarity" operator.
+        // The more characters the user gives us, the more we can ratchet down
+        // the distance threshold for matching.
+        const threshold = term.length < 3 ? 0.9 : 0.8
+        return qb
+          .where(distance(term, ref('handle')), '<', threshold)
+          .orWhereExists((q) =>
+            q
+              .selectFrom('profile')
+              .whereRef('profile.creator', '=', 'actor.did')
+              .where(distance(term, ref('displayName')), '<', threshold),
+          )
+      })
+    }
+    return builder
+  }
 }
 
 type ActorResult = Actor
+
+// Uses pg_trgm strict word similarity to check similarity between a search term and a stored value
+const distance = (term: string, ref: DbRef) =>
+  sql<number>`(${term} <<<-> ${ref})`
+
+export class ListKeyset extends TimeCidKeyset<{
+  indexedAt: string
+  handle: string // handles are treated identically to cids in TimeCidKeyset
+}> {
+  labelResult(result: { indexedAt: string; handle: string }) {
+    return { primary: result.indexedAt, secondary: result.handle }
+  }
+}

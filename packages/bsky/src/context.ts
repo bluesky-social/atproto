@@ -6,6 +6,7 @@ import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import * as auth from './auth'
 import DidSqlCache from './did-cache'
+import { Labeler } from './labeler'
 
 export class AppContext {
   constructor(
@@ -16,6 +17,7 @@ export class AppContext {
       services: Services
       didResolver: DidResolver
       didCache: DidSqlCache
+      labeler: Labeler
     },
   ) {}
 
@@ -53,6 +55,10 @@ export class AppContext {
 
   get authOptionalVerifier() {
     return auth.authOptionalVerifier(this.didResolver)
+  }
+
+  get labeler(): Labeler {
+    return this.opts.labeler
   }
 }
 

@@ -10,7 +10,8 @@ test.sqlite
 .DS_Store
 *.log
 tsconfig.build.tsbuildinfo
-.dev.env
+.*.env
+.env
 \#*\#
 *~
 *.swp

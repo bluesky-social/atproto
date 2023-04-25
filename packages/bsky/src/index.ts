@@ -17,6 +17,11 @@ import { createServices } from './services'
 import AppContext from './context'
 import { RepoSubscription } from './subscription/repo'
 import DidSqlCache from './did-cache'
+import {
+  ImageInvalidator,
+  ImageProcessingServerInvalidator,
+} from './image/invalidator'
+import { HiveLabeler, KeywordLabeler, Labeler } from './labeler'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -40,8 +45,13 @@ export class BskyAppView {
     this.sub = opts.sub
   }
 
-  static create(opts: { db: Database; config: ServerConfig }): BskyAppView {
+  static create(opts: {
+    db: Database
+    config: ServerConfig
+    imgInvalidator?: ImageInvalidator
+  }): BskyAppView {
     const { db, config } = opts
+    let maybeImgInvalidator = opts.imgInvalidator
     const app = express()
     app.use(cors())
     app.use(loggerMiddleware)
@@ -59,9 +69,45 @@ export class BskyAppView {
       config.imgUriKey,
     )
 
+    let imgProcessingServer: ImageProcessingServer | undefined
+    if (!config.imgUriEndpoint) {
+      const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
+      imgProcessingServer = new ImageProcessingServer(
+        config,
+        imgProcessingCache,
+      )
+      maybeImgInvalidator ??= new ImageProcessingServerInvalidator(
+        imgProcessingCache,
+      )
+    }
+
+    let imgInvalidator: ImageInvalidator
+    if (maybeImgInvalidator) {
+      imgInvalidator = maybeImgInvalidator
+    } else {
+      throw new Error('Missing appview image invalidator')
+    }
+
+    let labeler: Labeler
+    if (config.hiveApiKey) {
+      labeler = new HiveLabeler(config.hiveApiKey, {
+        db,
+        cfg: config,
+        didResolver,
+      })
+    } else {
+      labeler = new KeywordLabeler({
+        db,
+        cfg: config,
+        didResolver,
+      })
+    }
+
     const services = createServices({
       imgUriBuilder,
+      imgInvalidator,
       didResolver,
+      labeler,
     })
 
     const ctx = new AppContext({
@@ -71,13 +117,8 @@ export class BskyAppView {
       imgUriBuilder,
       didResolver,
       didCache,
+      labeler,
     })
-
-    let imgProcessingServer: ImageProcessingServer | undefined
-    if (!config.imgUriEndpoint) {
-      const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
-      imgProcessingServer = new ImageProcessingServer(ctx, imgProcessingCache)
-    }
 
     let server = createServer({
       validateResponse: config.debugMode,
@@ -119,6 +160,7 @@ export class BskyAppView {
   async destroy(): Promise<void> {
     await this.ctx.didCache.destroy()
     await this.sub?.destroy()
+    await this.ctx.labeler.destroy()
     await this.terminator?.terminate()
     await this.ctx.db.close()
   }

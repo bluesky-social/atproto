@@ -189,6 +189,9 @@ export const runBsky = async (cfg: BskyConfig): Promise<BskyServerInfo> => {
     ...cfg,
     // Each test suite gets its own lock id for the repo subscription
     repoSubLockId: uniqueLockId(),
+    adminPassword: 'admin-pass',
+    labelerDid: 'did:example:labeler',
+    labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
   })
 
   const db = bsky.Database.postgres({
@@ -196,11 +199,17 @@ export const runBsky = async (cfg: BskyConfig): Promise<BskyServerInfo> => {
     schema: cfg.dbPostgresSchema,
   })
 
+  // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
+  const migrationDb = bsky.Database.postgres({
+    url: cfg.dbPostgresUrl,
+    schema: cfg.dbPostgresSchema,
+  })
   if (cfg.migration) {
-    await db.migrateToOrThrow(cfg.migration)
+    await migrationDb.migrateToOrThrow(cfg.migration)
   } else {
-    await db.migrateToLatestOrThrow()
+    await migrationDb.migrateToLatestOrThrow()
   }
+  await migrationDb.close()
 
   const server = bsky.BskyAppView.create({ db, config })
   const listener = await server.start()
