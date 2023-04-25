@@ -203,13 +203,18 @@ export class Server {
         const locals: RequestLocals = req[kRequestLocals]
 
         // run the handler
-        const outputUnvalidated = await handler({
-          params,
-          input,
-          auth: locals.auth,
-          req,
-          res,
-        })
+        let outputUnvalidated: HandlerOutput | undefined
+        try {
+          outputUnvalidated = await handler({
+            params,
+            input,
+            auth: locals.auth,
+            req,
+            res,
+          })
+        } catch (err) {
+          throw XRPCError.fromError(err)
+        }
 
         if (isHandlerError(outputUnvalidated)) {
           throw XRPCError.fromError(outputUnvalidated)
