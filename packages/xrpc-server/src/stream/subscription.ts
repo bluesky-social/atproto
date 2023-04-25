@@ -1,4 +1,4 @@
-import { wait } from '@atproto/common'
+import { forwardSignal, wait } from '@atproto/common'
 import { WebSocket, ClientOptions } from 'ws'
 import { byMessage } from './stream'
 import { CloseCode, DisconnectError } from './types'
@@ -162,14 +162,4 @@ function encodeQueryParam(value: unknown): string | string[] {
     }
   }
   throw new Error(`Cannot encode ${typeof value}s into query params`)
-}
-
-function forwardSignal(signal: AbortSignal, ac: AbortController) {
-  if (signal.aborted) {
-    return ac.abort(signal.reason)
-  } else {
-    signal.addEventListener('abort', () => ac.abort(signal.reason), {
-      signal: ac.signal,
-    })
-  }
 }

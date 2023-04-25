@@ -64,3 +64,13 @@ export class MaxSizeChecker extends Transform {
     return cb(null, chunk)
   }
 }
+
+export function forwardSignal(signal: AbortSignal, ac: AbortController) {
+  if (signal.aborted) {
+    return ac.abort(signal.reason)
+  } else {
+    signal.addEventListener('abort', () => ac.abort(signal.reason), {
+      signal: ac.signal,
+    })
+  }
+}
