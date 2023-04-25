@@ -29,6 +29,7 @@ import {
   XRPCStreamHandlerConfig,
   XRPCStreamHandler,
   Params,
+  InternalServerError,
 } from './types'
 import {
   decodeQueryParams,
@@ -203,18 +204,13 @@ export class Server {
         const locals: RequestLocals = req[kRequestLocals]
 
         // run the handler
-        let outputUnvalidated: HandlerOutput | undefined
-        try {
-          outputUnvalidated = await handler({
-            params,
-            input,
-            auth: locals.auth,
-            req,
-            res,
-          })
-        } catch (err) {
-          throw XRPCError.fromError(err)
-        }
+        const outputUnvalidated = await handler({
+          params,
+          input,
+          auth: locals.auth,
+          req,
+          res,
+        })
 
         if (isHandlerError(outputUnvalidated)) {
           throw XRPCError.fromError(outputUnvalidated)
@@ -249,7 +245,14 @@ export class Server {
           }
         }
       } catch (err: unknown) {
-        next(err)
+        // Express will not call the next middleware (errorMiddleware in this case)
+        // if the value passed to next is falsy (e.g. null, undefined, 0).
+        // Hence we replace it with an InternalServerError.
+        if (!err) {
+          next(new InternalServerError())
+        } else {
+          next(err)
+        }
       }
     }
   }
