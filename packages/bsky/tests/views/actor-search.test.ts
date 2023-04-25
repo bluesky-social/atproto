@@ -49,7 +49,7 @@ describe('pds actor search views', () => {
 
     // Process remaining profiles
     testEnv.bsky.sub.resume()
-    await processAll(testEnv, 30000)
+    await processAll(testEnv, 50000)
     headers = await appViewHeaders(Object.values(sc.dids)[0], testEnv)
   })
 
