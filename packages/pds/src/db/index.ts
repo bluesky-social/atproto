@@ -173,25 +173,16 @@ export class Database {
 
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
     let txMsgs: ChannelMsg[] = []
-    let dbTxn: Database
-    let txRes: Awaited<T>
     const leakyTxPlugin = new LeakyTxPlugin()
-    try {
-      const res = await this.db
-        .withPlugin(leakyTxPlugin)
-        .transaction()
-        .execute(async (txn) => {
-          const dbTxn = new Database(txn, this.cfg, this.channels)
-          const txRes = await fn(dbTxn)
-          txMsgs = dbTxn.txChannelMsgs
-          return { txRes, dbTxn }
-        })
-      dbTxn = res.dbTxn
-      txRes = res.txRes
-    } catch (err) {
-      leakyTxPlugin.endTx()
-      throw err
-    }
+    const { dbTxn, txRes } = await this.db
+      .withPlugin(leakyTxPlugin)
+      .transaction()
+      .execute(async (txn) => {
+        const dbTxn = new Database(txn, this.cfg, this.channels)
+        const txRes = await fn(dbTxn).finally(() => leakyTxPlugin.endTx())
+        txMsgs = dbTxn.txChannelMsgs
+        return { txRes, dbTxn }
+      })
     dbTxn?.txEvt.emit('commit')
     txMsgs.forEach((msg) => this.sendChannelMsg(msg))
     return txRes

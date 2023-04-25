@@ -56,21 +56,15 @@ export class Database {
   }
 
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
-    let res: Awaited<T>
     const leakyTxPlugin = new LeakyTxPlugin()
-    try {
-      res = await this.db
-        .withPlugin(leakyTxPlugin)
-        .transaction()
-        .execute(async (txn) => {
-          const dbTxn = new Database(txn, this.cfg)
-          const txRes = await fn(dbTxn)
-          return txRes
-        })
-    } catch (err) {
-      leakyTxPlugin.endTx()
-      throw err
-    }
+    const res = await this.db
+      .withPlugin(leakyTxPlugin)
+      .transaction()
+      .execute(async (txn) => {
+        const dbTxn = new Database(txn, this.cfg)
+        const txRes = await fn(dbTxn).finally(() => leakyTxPlugin.endTx())
+        return txRes
+      })
     return res
   }
 
