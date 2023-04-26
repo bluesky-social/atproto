@@ -18,7 +18,7 @@ import API, { health } from './api'
 import Database from './db'
 import { ServerAuth } from './auth'
 import * as error from './error'
-import { loggerMiddleware } from './logger'
+import { dbLogger, loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
 import { createServer } from './lexicon'
@@ -48,6 +48,7 @@ export class PDS {
   public app: express.Application
   public server?: http.Server
   private terminator?: HttpTerminator
+  private dbStatsInterval?: NodeJS.Timer
 
   constructor(opts: {
     ctx: AppContext
@@ -196,6 +197,20 @@ export class PDS {
   }
 
   async start(): Promise<http.Server> {
+    const { db } = this.ctx
+    if (db.cfg.dialect === 'pg') {
+      const { pool } = db.cfg
+      this.dbStatsInterval = setInterval(() => {
+        dbLogger.info(
+          {
+            idleCount: pool.idleCount,
+            totalCount: pool.totalCount,
+            waitingCount: pool.waitingCount,
+          },
+          'db pool stats',
+        )
+      }, 10000)
+    }
     this.appViewIndexer.start()
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()
@@ -212,6 +227,7 @@ export class PDS {
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()
+    clearInterval(this.dbStatsInterval)
   }
 }
 
