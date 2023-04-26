@@ -3,7 +3,7 @@ import { SeedClient } from '../seeds/client'
 import { runTestEnv, TestEnvInfo } from '@atproto/dev-env'
 import { forSnapshot, processAll } from '../_util'
 import usersBulk from '../seeds/users-bulk'
-import { chunkArray, wait } from '@atproto/common'
+import { chunkArray, DAY, wait } from '@atproto/common'
 import { ids } from '@atproto/api/src/client/lexicons'
 
 describe('sync', () => {
@@ -11,12 +11,12 @@ describe('sync', () => {
   let agent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
+  let dids: string[]
 
   beforeAll(async () => {
     testEnv = await runTestEnv({
       dbPostgresSchema: 'subscription_backfill',
       bsky: { repoSubBackfillConcurrency: 30 },
-      pds: { repoBackfillLimitMs: 1 },
     })
     agent = new AtpAgent({ service: testEnv.bsky.url })
     pdsAgent = new AtpAgent({ service: testEnv.pds.url })
@@ -24,6 +24,21 @@ describe('sync', () => {
     await wait(50) // allow pending sub to be established
     await testEnv.bsky.sub.destroy()
     await usersBulk(sc, 100)
+
+    // For consistent ordering
+    dids = Object.keys(sc.dids)
+      .sort()
+      .map((handle) => sc.dids[handle])
+
+    // Place all events out of the backfill period...
+    await testEnv.pds.ctx.db.db
+      .updateTable('repo_seq')
+      .set({
+        sequencedAt: new Date(Date.now() - 2 * DAY).toISOString(),
+      })
+      .execute()
+    // ...except one, which we should pick-up from.
+    await updateProfile(pdsAgent, dids[0], { displayName: 'ping' })
   })
 
   afterAll(async () => {
@@ -35,17 +50,13 @@ describe('sync', () => {
     // backfill, and go well beyond the pds backfill limit.
     await wait(200)
 
-    const dids = Object.keys(sc.dids)
-      .sort() // For consistent ordering
-      .map((handle) => sc.dids[handle])
-
     // Ensure no profiles have been indexed
     const profilesBefore = await getAllProfiles(agent, dids)
     expect(profilesBefore).toEqual([])
 
     // Process backfill
     testEnv.bsky.sub.resume()
-    await processAll(testEnv, 30000)
+    await processAll(testEnv, 60000)
 
     // Check all backfilled profiles
     const profilesAfter = await getAllProfiles(agent, dids)
@@ -56,11 +67,10 @@ describe('sync', () => {
   })
 
   it('continues processing after backfill.', async () => {
-    const did = Object.values(sc.dids)[0]
-    await updateProfile(pdsAgent, did, { displayName: 'updated' })
+    await updateProfile(pdsAgent, dids[0], { displayName: 'updated' })
     await processAll(testEnv)
     const { data: profile } = await agent.api.app.bsky.actor.getProfile({
-      actor: did,
+      actor: dids[0],
     })
     expect(profile.displayName).toEqual('updated')
   })

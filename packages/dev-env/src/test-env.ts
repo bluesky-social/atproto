@@ -74,12 +74,14 @@ export const runTestEnv = async (
     dbPostgresUrl,
     dbPostgresSchema,
     plcUrl: plc.url,
+    ...params.pds,
   })
   const bsky = await runBsky({
     plcUrl: plc.url,
     repoProvider: `ws://localhost:${pds.port}`,
     dbPostgresSchema,
     dbPostgresUrl,
+    ...params.bsky,
   })
   mockNetworkUtilities(pds)
 
@@ -138,6 +140,7 @@ export const runPds = async (cfg: PdsConfig): Promise<PdsServerInfo> => {
     repoBackfillLimitMs: 1000 * 60 * 60, // 1hr
     labelerDid: 'did:example:labeler',
     labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
+    ...cfg,
   })
 
   const blobstore = new pds.MemoryBlobStore()

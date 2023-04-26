@@ -216,7 +216,6 @@ export class RepoSubscription {
     }
 
     const { services, db } = this.ctx
-    const indexingService = services.indexing(db)
     const agent = new AtpAgent({ service: wsToHttp(this.service) })
     const queue = new PQueue({ concurrency })
     const reposSeen = new Set()
@@ -240,7 +239,15 @@ export class RepoSubscription {
         }
         reposSeen.add(repo.did)
         queue
-          .add(() => indexingService.indexRepo(repo.did, repo.head))
+          .add(async () => {
+            const now = new Date().toISOString()
+            await Promise.all([
+              services.indexing(db).indexHandle(repo.did, now),
+              db.transaction((tx) => {
+                return services.indexing(tx).indexRepo(repo.did, repo.head)
+              }),
+            ])
+          })
           .catch((err) => {
             subLogger.error(
               { err, provider: this.service, repo },
