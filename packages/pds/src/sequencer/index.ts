@@ -104,13 +104,16 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     return seqEvts
   }
 
+  private async pollAndEmit() {
+    const evts = await this.requestSeqRange({ earliestSeq: this.lastSeen })
+    if (evts.length < 1) return
+    this.lastSeen = evts[evts.length - 1].seq
+    this.emit('events', evts)
+  }
+
   async pollDb() {
     try {
-      const evts = await this.requestSeqRange({ earliestSeq: this.lastSeen })
-      if (evts.length > 0) {
-        this.lastSeen = evts[evts.length - 1].seq
-        this.emit('events', evts)
-      }
+      await this.pollAndEmit()
     } catch (err) {
       log.error({ err, lastSeen: this.lastSeen }, 'sequencer failed to poll db')
     } finally {

@@ -11,13 +11,42 @@ import {
 } from '@atproto/repo'
 import { PreparedWrite } from '../repo'
 import { CID } from 'multiformats/cid'
+import { RepoSeqInsert } from '../db/tables/repo-seq'
 
-export const sequenceCommit = async (
-  dbTxn: Database,
+export const sequenceEvt = async (dbTxn: Database, evt: RepoSeqInsert) => {
+  const res = await dbTxn.db
+    .insertInto('repo_seq')
+    .values(evt)
+    .returning('seq')
+    .executeTakeFirst()
+  if (!res) {
+    throw new Error(`Failed to sequence evt: ${evt}`)
+  }
+  // if (evt.eventType === 'rebase' || evt.eventType === 'handle') {
+  // }
+  await dbTxn.notify('repo_seq')
+
+  // await dbTxn.db
+  //   .updateTable('repo_seq')
+  //   .where('did', '=', did)
+  //   .where('eventType', 'in', ['append', 'rebase'])
+  //   .where('seq', '!=', res.seq)
+  //   .set({ invalidatedBy: res.seq })
+  //   .execute()
+  // await dbTxn.db
+  //   .updateTable('repo_seq')
+  //   .where('eventType', '=', 'handle')
+  //   .where('did', '=', did)
+  //   .where('seq', '!=', res.seq)
+  //   .set({ invalidatedBy: res.seq })
+  //   .execute()
+}
+
+export const formatSeqCommit = async (
   did: string,
   commitData: CommitData,
   writes: PreparedWrite[],
-) => {
+): Promise<RepoSeqInsert> => {
   let tooBig: boolean
   const ops: CommitEvtOp[] = []
   const blobs = new CidSet()
@@ -57,23 +86,20 @@ export const sequenceCommit = async (
     blocks: carSlice,
     blobs: blobs.toList(),
   }
-  await dbTxn.db
-    .insertInto('repo_seq')
-    .values({
-      did,
-      eventType: 'append',
-      event: cborEncode(evt),
-      sequencedAt: new Date().toISOString(),
-    })
-    .execute()
-  await dbTxn.notify('repo_seq')
+  return {
+    did,
+    eventType: 'append' as const,
+    event: cborEncode(evt),
+    sequencedAt: new Date().toISOString(),
+    invalidatedBy: null,
+  }
 }
 
-export const sequenceRebase = async (
+export const formatSeqRebase = async (
   dbTxn: Database,
   did: string,
   rebaseData: RebaseData,
-) => {
+): Promise<RepoSeqInsert> => {
   const carSlice = await blocksToCarFile(rebaseData.commit, rebaseData.blocks)
 
   const evt: CommitEvt = {
@@ -86,53 +112,28 @@ export const sequenceRebase = async (
     blocks: carSlice,
     blobs: [],
   }
-  const res = await dbTxn.db
-    .insertInto('repo_seq')
-    .values({
-      did,
-      eventType: 'rebase',
-      event: cborEncode(evt),
-      sequencedAt: new Date().toISOString(),
-    })
-    .returningAll()
-    .executeTakeFirstOrThrow()
-  await dbTxn.db
-    .updateTable('repo_seq')
-    .where('did', '=', did)
-    .where('eventType', 'in', ['append', 'rebase'])
-    .where('seq', '!=', res.seq)
-    .set({ invalidatedBy: res.seq })
-    .execute()
-  await dbTxn.notify('repo_seq')
+  return {
+    did,
+    eventType: 'rebase',
+    event: cborEncode(evt),
+    sequencedAt: new Date().toISOString(),
+  }
 }
 
-export const sequenceHandleUpdate = async (
-  dbTxn: Database,
+export const formatSeqHandleUpdate = async (
   did: string,
   handle: string,
-) => {
+): Promise<RepoSeqInsert> => {
   const evt: HandleEvt = {
     did,
     handle,
   }
-  const res = await dbTxn.db
-    .insertInto('repo_seq')
-    .values({
-      did,
-      eventType: 'handle',
-      event: cborEncode(evt),
-      sequencedAt: new Date().toISOString(),
-    })
-    .returningAll()
-    .executeTakeFirstOrThrow()
-  await dbTxn.db
-    .updateTable('repo_seq')
-    .where('eventType', '=', 'handle')
-    .where('did', '=', did)
-    .where('seq', '!=', res.seq)
-    .set({ invalidatedBy: res.seq })
-    .execute()
-  await dbTxn.notify('repo_seq')
+  return {
+    did,
+    eventType: 'handle',
+    event: cborEncode(evt),
+    sequencedAt: new Date().toISOString(),
+  }
 }
 
 export const commitEvtOp = z.object({
