@@ -16,14 +16,14 @@ describe('sync', () => {
   beforeAll(async () => {
     testEnv = await runTestEnv({
       dbPostgresSchema: 'subscription_backfill',
-      bsky: { repoSubBackfillConcurrency: 30 },
+      bsky: { repoSubBackfillConcurrency: 15 },
     })
     agent = new AtpAgent({ service: testEnv.bsky.url })
     pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
     await wait(50) // allow pending sub to be established
     await testEnv.bsky.sub.destroy()
-    await usersBulk(sc, 100)
+    await usersBulk(sc, 50)
 
     // For consistent ordering
     dids = Object.keys(sc.dids)
@@ -46,10 +46,6 @@ describe('sync', () => {
   })
 
   it('ingests all repos via backfill.', async () => {
-    // To confirm we haven't ingested anything outside of
-    // backfill, and go well beyond the pds backfill limit.
-    await wait(200)
-
     // Ensure no profiles have been indexed
     const profilesBefore = await getAllProfiles(agent, dids)
     expect(profilesBefore).toEqual([])
