@@ -394,7 +394,10 @@ describe('account', () => {
   }
 
   const getTokenFromMail = (mail: Mail.Options) =>
-    mail.html?.toString().match(/>(\d{6})</)?.[1]
+    mail.html
+      ?.toString()
+      .match(/(>[a-z0-9]{5}-[a-z0-9]{5}<)/)?.[1]
+      .slice(1, -1)
 
   it('can reset account password', async () => {
     const mail = await getMailFrom(

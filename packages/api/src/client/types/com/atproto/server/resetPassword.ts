@@ -10,6 +10,7 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {}
 
 export interface InputSchema {
+  email?: string
   token: string
   password: string
   [k: string]: unknown

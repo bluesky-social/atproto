@@ -2637,6 +2637,9 @@ export const schemaDict = {
             type: 'object',
             required: ['token', 'password'],
             properties: {
+              email: {
+                type: 'string',
+              },
               token: {
                 type: 'string',
               },

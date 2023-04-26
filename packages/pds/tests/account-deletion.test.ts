@@ -82,7 +82,10 @@ describe('account deletion', () => {
   }
 
   const getTokenFromMail = (mail: Mail.Options) =>
-    mail.html?.toString().match(/>(\d{6})</)?.[1]
+    mail.html
+      ?.toString()
+      .match(/(>[a-z0-9]{5}-[a-z0-9]{5}<)/)?.[1]
+      .slice(1, -1)
 
   let token
 
@@ -104,7 +107,7 @@ describe('account deletion', () => {
 
   it('fails account deletion with a bad token', async () => {
     const attempt = agent.api.com.atproto.server.deleteAccount({
-      token: '123456',
+      token: '12345-abcde',
       did: carol.did,
       password: carol.password,
     })
