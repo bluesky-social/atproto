@@ -3,11 +3,10 @@ import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { notSoftDeletedClause } from '../../../../db/util'
-import { authVerifier } from '../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.listNotifications({
-    auth: authVerifier,
+    auth: ctx.authVerifier,
     handler: async ({ params, auth }) => {
       const { limit, cursor } = params
       const requester = auth.credentials.did

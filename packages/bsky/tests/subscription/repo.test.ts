@@ -15,7 +15,7 @@ describe('sync', () => {
 
   beforeAll(async () => {
     testEnv = await runTestEnv({
-      dbPostgresSchema: 'subscription_repo',
+      dbPostgresSchema: 'bsky_subscription_repo',
     })
     ctx = testEnv.bsky.ctx
     pdsAgent = new AtpAgent({ service: testEnv.pds.url })

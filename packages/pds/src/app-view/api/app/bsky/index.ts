@@ -13,6 +13,8 @@ import getFollows from './graph/getFollows'
 import getUsersSearch from './actor/searchActors'
 import getUsersTypeahead from './actor/searchActorsTypeahead'
 import getSuggestions from './actor/getSuggestions'
+import listNotifications from './notification/listNotifications'
+import getUnreadCount from './notification/getUnreadCount'
 import unspecced from './unspecced'
 
 export default function (server: Server, ctx: AppContext) {
@@ -29,5 +31,7 @@ export default function (server: Server, ctx: AppContext) {
   getUsersSearch(server, ctx)
   getUsersTypeahead(server, ctx)
   getSuggestions(server, ctx)
+  listNotifications(server, ctx)
+  getUnreadCount(server, ctx)
   unspecced(server, ctx)
 }

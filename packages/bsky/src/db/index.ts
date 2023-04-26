@@ -1,5 +1,15 @@
 import assert from 'assert'
-import { Kysely, PostgresDialect, Migrator } from 'kysely'
+import {
+  Kysely,
+  PostgresDialect,
+  Migrator,
+  KyselyPlugin,
+  PluginTransformQueryArgs,
+  PluginTransformResultArgs,
+  RootOperationNode,
+  QueryResult,
+  UnknownRow,
+} from 'kysely'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
 import * as migrations from './migrations'
@@ -46,11 +56,15 @@ export class Database {
   }
 
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
-    const res = await this.db.transaction().execute(async (txn) => {
-      const dbTxn = new Database(txn, this.cfg)
-      const txRes = await fn(dbTxn)
-      return txRes
-    })
+    const leakyTxPlugin = new LeakyTxPlugin()
+    const res = await this.db
+      .withPlugin(leakyTxPlugin)
+      .transaction()
+      .execute(async (txn) => {
+        const dbTxn = new Database(txn, this.cfg)
+        const txRes = await fn(dbTxn).finally(() => leakyTxPlugin.endTx())
+        return txRes
+      })
     return res
   }
 
@@ -114,4 +128,25 @@ type PgOptions = {
   url: string
   pool?: PgPool
   schema?: string
+}
+
+class LeakyTxPlugin implements KyselyPlugin {
+  private txOver: boolean
+
+  endTx() {
+    this.txOver = true
+  }
+
+  transformQuery(args: PluginTransformQueryArgs): RootOperationNode {
+    if (this.txOver) {
+      throw new Error('tx already failed')
+    }
+    return args.node
+  }
+
+  async transformResult(
+    args: PluginTransformResultArgs,
+  ): Promise<QueryResult<UnknownRow>> {
+    return args.result
+  }
 }
