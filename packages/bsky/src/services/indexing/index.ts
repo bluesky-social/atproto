@@ -86,7 +86,7 @@ export class IndexingService {
     if (actor && !force) {
       return
     }
-    const { handle } = await this.didResolver.resolveAtprotoData(did)
+    const { handle } = await this.didResolver.resolveAtprotoData(did, true)
     const handleToDid = await resolveExternalHandle(handle)
     if (did !== handleToDid) {
       return // No bidirectional link between did and handle
@@ -110,7 +110,10 @@ export class IndexingService {
   async indexRepo(did: string, commit: string) {
     this.db.assertTransaction()
     const now = new Date().toISOString()
-    const { pds, signingKey } = await this.didResolver.resolveAtprotoData(did)
+    const { pds, signingKey } = await this.didResolver.resolveAtprotoData(
+      did,
+      true,
+    )
     const { api } = new AtpAgent({ service: pds })
 
     const { data: car } = await retryHttp(() =>
@@ -199,7 +202,7 @@ export class IndexingService {
 
   async tombstoneActor(did: string) {
     this.db.assertTransaction()
-    const doc = await this.didResolver.resolveDid(did)
+    const doc = await this.didResolver.resolveDid(did, true)
     if (doc === null) {
       await Promise.all([
         this.unindexActor(did),

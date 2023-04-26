@@ -2,11 +2,10 @@ import { Server } from '../../../../lexicon'
 import { FeedKeyset, composeFeed } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
-import { authOptionalVerifier } from '../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
-    auth: authOptionalVerifier,
+    auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {
       const { actor, limit, cursor } = params
       const requester = auth.credentials.did

@@ -1,4 +1,4 @@
-import { DAY } from '@atproto/common'
+import { parseIntWithFallback, DAY } from '@atproto/common'
 
 export interface ServerConfigValues {
   debugMode?: boolean
@@ -50,6 +50,8 @@ export interface ServerConfigValues {
   repoBackfillLimitMs: number
 
   appViewRepoProvider?: string
+
+  bskyAppViewEndpoint?: string
 }
 
 export class ServerConfig {
@@ -147,6 +149,9 @@ export class ServerConfig {
     const appViewRepoProvider = nonemptyString(
       process.env.APP_VIEW_REPO_PROVIDER,
     )
+    const bskyAppViewEndpoint = nonemptyString(
+      process.env.BSKY_APP_VIEW_ENDPOINT,
+    )
 
     return new ServerConfig({
       debugMode,
@@ -184,6 +189,7 @@ export class ServerConfig {
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
       appViewRepoProvider,
+      bskyAppViewEndpoint,
       ...overrides,
     })
   }
@@ -357,17 +363,13 @@ export class ServerConfig {
   get appViewRepoProvider() {
     return this.cfg.appViewRepoProvider
   }
+
+  get bskyAppViewEndpoint() {
+    return this.cfg.bskyAppViewEndpoint
+  }
 }
 
 const nonemptyString = (str: string | undefined): string | undefined => {
   if (str === undefined || str.length === 0) return undefined
   return str
-}
-
-const parseIntWithFallback = <T>(
-  value: string | undefined,
-  fallback: T,
-): number | T => {
-  const parsed = parseInt(value || '', 10)
-  return isNaN(parsed) ? fallback : parsed
 }

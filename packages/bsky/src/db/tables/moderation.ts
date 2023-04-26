@@ -7,6 +7,10 @@ import {
 import {
   REASONOTHER,
   REASONSPAM,
+  REASONMISLEADING,
+  REASONRUDE,
+  REASONSEXUAL,
+  REASONVIOLATION,
 } from '../../lexicon/types/com/atproto/moderation/defs'
 
 export const actionTableName = 'moderation_action'
@@ -42,7 +46,13 @@ export interface ModerationReport {
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
-  reasonType: typeof REASONSPAM | typeof REASONOTHER
+  reasonType:
+    | typeof REASONSPAM
+    | typeof REASONOTHER
+    | typeof REASONMISLEADING
+    | typeof REASONRUDE
+    | typeof REASONSEXUAL
+    | typeof REASONVIOLATION
   reason: string | null
   reportedByDid: string
   createdAt: string

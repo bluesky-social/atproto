@@ -3,11 +3,10 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { AtUri } from '@atproto/uri'
 import { PostView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
-import { authOptionalVerifier } from '../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPosts({
-    auth: authOptionalVerifier,
+    auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
 
