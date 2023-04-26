@@ -167,7 +167,7 @@ export class SqlRepoStorage extends RepoStorage {
           .select('block.cid'),
       )
       .execute()
-    await this.updateHead(rebase.commit, null)
+    await this.updateHead(rebase.commit, rebase.rebased)
   }
 
   async indexCommits(commits: CommitData[]): Promise<void> {
@@ -237,9 +237,6 @@ export class SqlRepoStorage extends RepoStorage {
           root: cid.toString(),
           indexedAt: this.getTimestamp(),
         })
-        .onConflict((oc) =>
-          oc.column('did').doUpdateSet({ root: cid.toString() }),
-        )
         .execute()
     } else {
       const res = await this.db.db

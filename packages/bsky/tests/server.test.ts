@@ -11,7 +11,7 @@ describe('server', () => {
 
   beforeAll(async () => {
     testEnv = await runTestEnv({
-      dbPostgresSchema: 'server',
+      dbPostgresSchema: 'bsky_server',
     })
     db = testEnv.bsky.ctx.db
   })

@@ -1,29 +1,28 @@
 import { AtUri } from '@atproto/uri'
 import { cidForCbor, TID } from '@atproto/common'
 import { WriteOpAction } from '@atproto/repo'
-import { CloseFn, runTestEnv } from '@atproto/dev-env'
+import { runTestEnv, TestEnvInfo } from '@atproto/dev-env'
 import { Database } from '../src'
 import * as lex from '../src/lexicon/lexicons'
 import { Services } from '../src/services'
 
 describe('duplicate record', () => {
-  let close: CloseFn
+  let testEnv: TestEnvInfo
   let did: string
   let db: Database
   let services: Services
 
   beforeAll(async () => {
-    const server = await runTestEnv({
-      dbPostgresSchema: 'duplicates',
+    testEnv = await runTestEnv({
+      dbPostgresSchema: 'bsky_duplicates',
     })
-    db = server.bsky.ctx.db
-    services = server.bsky.ctx.services
-    close = server.close
+    db = testEnv.bsky.ctx.db
+    services = testEnv.bsky.ctx.services
     did = 'did:example:alice'
   })
 
   afterAll(async () => {
-    await close()
+    await testEnv.close()
   })
 
   const countRecords = async (db: Database, table: string) => {

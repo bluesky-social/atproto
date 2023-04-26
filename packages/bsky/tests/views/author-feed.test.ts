@@ -1,6 +1,7 @@
 import AtpAgent from '@atproto/api'
-import { CloseFn, runTestEnv } from '@atproto/dev-env'
+import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
 import {
+  appViewHeaders,
   adminAuth,
   forSnapshot,
   paginateAll,
@@ -13,7 +14,7 @@ import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 
 describe('pds author feed views', () => {
   let agent: AtpAgent
-  let close: CloseFn
+  let testEnv: TestEnvInfo
   let sc: SeedClient
 
   // account dids, for convenience
@@ -23,10 +24,9 @@ describe('pds author feed views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const testEnv = await runTestEnv({
-      dbPostgresSchema: 'views_author_feed',
+    testEnv = await runTestEnv({
+      dbPostgresSchema: 'bsky_views_author_feed',
     })
-    close = testEnv.close
     agent = new AtpAgent({ service: testEnv.bsky.url })
     const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
@@ -40,7 +40,7 @@ describe('pds author feed views', () => {
   })
 
   afterAll(async () => {
-    await close()
+    await testEnv.close()
   })
 
   // @TODO(bsky) blocked by actor takedown via labels.
@@ -49,28 +49,28 @@ describe('pds author feed views', () => {
   it('fetches full author feeds for self (sorted, minimal viewer state).', async () => {
     const aliceForAlice = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(forSnapshot(aliceForAlice.data.feed)).toMatchSnapshot()
 
     const bobForBob = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[bob].handle },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: await appViewHeaders(bob, testEnv) },
     )
 
     expect(forSnapshot(bobForBob.data.feed)).toMatchSnapshot()
 
     const carolForCarol = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[carol].handle },
-      { headers: sc.getHeaders(carol, true) },
+      { headers: await appViewHeaders(carol, testEnv) },
     )
 
     expect(forSnapshot(carolForCarol.data.feed)).toMatchSnapshot()
 
     const danForDan = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[dan].handle },
-      { headers: sc.getHeaders(dan, true) },
+      { headers: await appViewHeaders(dan, testEnv) },
     )
 
     expect(forSnapshot(danForDan.data.feed)).toMatchSnapshot()
@@ -79,7 +79,7 @@ describe('pds author feed views', () => {
   it("reflects fetching user's state in the feed.", async () => {
     const aliceForCarol = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
-      { headers: sc.getHeaders(carol, true) },
+      { headers: await appViewHeaders(carol, testEnv) },
     )
 
     aliceForCarol.data.feed.forEach((postView) => {
@@ -100,7 +100,7 @@ describe('pds author feed views', () => {
           cursor,
           limit: 2,
         },
-        { headers: sc.getHeaders(dan, true) },
+        { headers: await appViewHeaders(dan, testEnv) },
       )
       return res.data
     }
@@ -112,7 +112,7 @@ describe('pds author feed views', () => {
 
     const full = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
-      { headers: sc.getHeaders(dan, true) },
+      { headers: await appViewHeaders(dan, testEnv) },
     )
 
     expect(full.data.feed.length).toEqual(4)
@@ -122,7 +122,7 @@ describe('pds author feed views', () => {
   it('fetches results unauthed.', async () => {
     const { data: authed } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: sc.accounts[alice].handle },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
     const { data: unauthed } = await agent.api.app.bsky.feed.getAuthorFeed({
       actor: sc.accounts[alice].handle,
@@ -148,7 +148,7 @@ describe('pds author feed views', () => {
   it('blocked by actor takedown.', async () => {
     const { data: preBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
-      { headers: sc.getHeaders(carol, true) },
+      { headers: await appViewHeaders(carol, testEnv) },
     )
 
     expect(preBlock.feed.length).toBeGreaterThan(0)
@@ -172,7 +172,7 @@ describe('pds author feed views', () => {
 
     const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
-      { headers: sc.getHeaders(carol, true) },
+      { headers: await appViewHeaders(carol, testEnv) },
     )
 
     expect(postBlock.feed.length).toEqual(0)
@@ -194,7 +194,7 @@ describe('pds author feed views', () => {
   it('blocked by record takedown.', async () => {
     const { data: preBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
-      { headers: sc.getHeaders(carol, true) },
+      { headers: await appViewHeaders(carol, testEnv) },
     )
 
     expect(preBlock.feed.length).toBeGreaterThan(0)
@@ -221,7 +221,7 @@ describe('pds author feed views', () => {
 
     const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
-      { headers: sc.getHeaders(carol, true) },
+      { headers: await appViewHeaders(carol, testEnv) },
     )
 
     expect(postBlock.feed.length).toEqual(preBlock.feed.length - 1)

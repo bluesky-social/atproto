@@ -9,6 +9,8 @@ import { DidResolver } from '@atproto/did-resolver'
 import { defaultFetchHandler } from '@atproto/xrpc'
 import { MessageDispatcher } from '@atproto/pds/src/event-stream/message-queue'
 import { RepoSubscription } from '@atproto/bsky/src/subscription/repo'
+import getPort from 'get-port'
+import { DAY, HOUR, wait } from '@atproto/common-web'
 
 export type CloseFn = () => Promise<void>
 
@@ -70,15 +72,18 @@ export const runTestEnv = async (
     params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
 
   const plc = await runPlc({})
+  const bskyPort = await getPort()
   const pds = await runPds({
     dbPostgresUrl,
     dbPostgresSchema,
     plcUrl: plc.url,
+    bskyAppViewEndpoint: `http://localhost:${bskyPort}`,
   })
   const bsky = await runBsky({
+    port: bskyPort,
     plcUrl: plc.url,
     repoProvider: `ws://localhost:${pds.port}`,
-    dbPostgresSchema,
+    dbPostgresSchema: `appview_${dbPostgresSchema}`,
     dbPostgresUrl,
   })
   mockNetworkUtilities(pds)
@@ -138,6 +143,7 @@ export const runPds = async (cfg: PdsConfig): Promise<PdsServerInfo> => {
     repoBackfillLimitMs: 1000 * 60 * 60, // 1hr
     labelerDid: 'did:example:labeler',
     labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
+    ...cfg,
   })
 
   const blobstore = new pds.MemoryBlobStore()
@@ -178,6 +184,8 @@ export const runBsky = async (cfg: BskyConfig): Promise<BskyServerInfo> => {
     imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
     imgUriKey:
       'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
+    didCacheStaleTTL: HOUR,
+    didCacheMaxTTL: DAY,
     ...cfg,
     // Each test suite gets its own lock id for the repo subscription
     repoSubLockId: uniqueLockId(),
@@ -234,8 +242,8 @@ const uniqueLockId = () => {
 
 export const mockNetworkUtilities = (pds: PdsServerInfo) => {
   // Map pds public url to its local url when resolving from plc
-  const origResolveDid = DidResolver.prototype.resolveDid
-  DidResolver.prototype.resolveDid = async function (did) {
+  const origResolveDid = DidResolver.prototype.resolveDidNoCache
+  DidResolver.prototype.resolveDidNoCache = async function (did) {
     const result = await (origResolveDid.call(this, did) as ReturnType<
       typeof origResolveDid
     >)
@@ -266,4 +274,23 @@ export const mockNetworkUtilities = (pds: PdsServerInfo) => {
       return defaultFetchHandler(httpUri, ...args)
     },
   })
+}
+
+export const processAll = async (server: TestEnvInfo, timeout = 5000) => {
+  const { bsky, pds } = server
+  const sub = bsky.sub
+  if (!sub) return
+  const { db } = pds.ctx.db
+  const start = Date.now()
+  while (Date.now() - start < timeout) {
+    await wait(50)
+    if (!sub) return
+    const state = await sub.getState()
+    const { lastSeq } = await db
+      .selectFrom('repo_seq')
+      .select(db.fn.max('repo_seq.seq').as('lastSeq'))
+      .executeTakeFirstOrThrow()
+    if (state.cursor === lastSeq) return
+  }
+  throw new Error(`Sequence was not processed within ${timeout}ms`)
 }

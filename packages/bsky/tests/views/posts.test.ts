@@ -1,6 +1,11 @@
 import AtpAgent from '@atproto/api'
 import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
-import { forSnapshot, processAll, stripViewerFromPost } from '../_util'
+import {
+  appViewHeaders,
+  forSnapshot,
+  processAll,
+  stripViewerFromPost,
+} from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
@@ -35,7 +40,7 @@ describe('pds posts views', () => {
     ]
     const posts = await agent.api.app.bsky.feed.getPosts(
       { uris },
-      { headers: sc.getHeaders(sc.dids.alice, true) },
+      { headers: await appViewHeaders(sc.dids.alice, testEnv) },
     )
 
     expect(posts.data.posts.length).toBe(uris.length)
@@ -54,7 +59,7 @@ describe('pds posts views', () => {
 
     const authed = await agent.api.app.bsky.feed.getPosts(
       { uris },
-      { headers: sc.getHeaders(sc.dids.alice, true) },
+      { headers: await appViewHeaders(sc.dids.alice, testEnv) },
     )
     const unauthed = await agent.api.app.bsky.feed.getPosts({
       uris,

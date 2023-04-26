@@ -1,13 +1,12 @@
 import AtpAgent from '@atproto/api'
-import { CloseFn, runTestEnv, TestEnvInfo } from '@atproto/dev-env'
+import { runTestEnv, TestEnvInfo } from '@atproto/dev-env'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import { processAll } from '../_util'
+import { appViewHeaders, processAll } from '../_util'
 
 describe('popular views', () => {
   let testEnv: TestEnvInfo
   let agent: AtpAgent
-  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
@@ -25,9 +24,8 @@ describe('popular views', () => {
 
   beforeAll(async () => {
     testEnv = await runTestEnv({
-      dbPostgresSchema: 'views_popular',
+      dbPostgresSchema: 'bsky_views_popular',
     })
-    close = testEnv.close
     agent = new AtpAgent({ service: testEnv.bsky.url })
     const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
@@ -54,7 +52,7 @@ describe('popular views', () => {
   })
 
   afterAll(async () => {
-    await close()
+    await testEnv.close()
   })
 
   it('returns well liked posts', async () => {
@@ -85,7 +83,7 @@ describe('popular views', () => {
 
     const res = await agent.api.app.bsky.unspecced.getPopular(
       {},
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
     const feedUris = res.data.feed.map((i) => i.post.uri).sort()
     const expected = [one.ref.uriStr, two.ref.uriStr, three.ref.uriStr].sort()

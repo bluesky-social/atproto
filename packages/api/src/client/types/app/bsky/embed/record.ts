@@ -7,6 +7,7 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 import * as AppBskyActorDefs from '../actor/defs'
+import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as AppBskyEmbedImages from './images'
 import * as AppBskyEmbedExternal from './external'
 import * as AppBskyEmbedRecordWithMedia from './recordWithMedia'
@@ -49,6 +50,7 @@ export interface ViewRecord {
   cid: string
   author: AppBskyActorDefs.ProfileViewBasic
   value: {}
+  labels?: ComAtprotoLabelDefs.Label[]
   embeds?: (
     | AppBskyEmbedImages.View
     | AppBskyEmbedExternal.View

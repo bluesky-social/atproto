@@ -1,25 +1,22 @@
 import { once } from 'events'
 import { wait } from '@atproto/common'
-import { CloseFn, runTestEnv } from '@atproto/dev-env'
+import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
 import { Database } from '../src'
 import { Leader } from '../src/db/leader'
 
 describe('db', () => {
-  let close: CloseFn
+  let testEnv: TestEnvInfo
   let db: Database
 
   beforeAll(async () => {
-    const testEnv = await runTestEnv({
-      dbPostgresSchema: 'db',
+    testEnv = await runTestEnv({
+      dbPostgresSchema: 'bsky_db',
     })
-    close = testEnv.close
     db = testEnv.bsky.ctx.db
   })
 
   afterAll(async () => {
-    if (close) {
-      await close()
-    }
+    await testEnv.close()
   })
 
   describe('transaction()', () => {
@@ -99,6 +96,34 @@ describe('db', () => {
       await db.transaction(async (dbTxn) => {
         expect(() => dbTxn.assertTransaction()).not.toThrow()
       })
+    })
+
+    it('does not allow leaky transactions', async () => {
+      let leakedTx: Database | undefined
+
+      const tx = db.transaction(async (dbTxn) => {
+        leakedTx = dbTxn
+        await dbTxn.db
+          .insertInto('actor')
+          .values({ handle: 'a', did: 'a', indexedAt: 'bad-date' })
+          .execute()
+        throw new Error('test tx failed')
+      })
+      await expect(tx).rejects.toThrow('test tx failed')
+
+      const attempt = leakedTx?.db
+        .insertInto('actor')
+        .values({ handle: 'b', did: 'b', indexedAt: 'bad-date' })
+        .execute()
+      await expect(attempt).rejects.toThrow('tx already failed')
+
+      const res = await db.db
+        .selectFrom('actor')
+        .selectAll()
+        .where('did', 'in', ['a', 'b'])
+        .execute()
+
+      expect(res.length).toBe(0)
     })
   })
 

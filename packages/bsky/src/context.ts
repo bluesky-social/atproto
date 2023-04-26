@@ -4,6 +4,8 @@ import { Database } from './db'
 import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
+import * as auth from './auth'
+import DidSqlCache from './did-cache'
 import { Labeler } from './labeler'
 
 export class AppContext {
@@ -14,6 +16,7 @@ export class AppContext {
       cfg: ServerConfig
       services: Services
       didResolver: DidResolver
+      didCache: DidSqlCache
       labeler: Labeler
     },
   ) {}
@@ -40,6 +43,18 @@ export class AppContext {
 
   get didResolver(): DidResolver {
     return this.opts.didResolver
+  }
+
+  get didCache(): DidSqlCache {
+    return this.opts.didCache
+  }
+
+  get authVerifier() {
+    return auth.authVerifier(this.didResolver)
+  }
+
+  get authOptionalVerifier() {
+    return auth.authOptionalVerifier(this.didResolver)
   }
 
   get labeler(): Labeler {

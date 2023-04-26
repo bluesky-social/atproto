@@ -16,7 +16,7 @@ describe('blob resolver', () => {
 
   beforeAll(async () => {
     testEnv = await runTestEnv({
-      dbPostgresSchema: 'blob_resolver',
+      dbPostgresSchema: 'bsky_blob_resolver',
     })
     const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     const sc = new SeedClient(pdsAgent)
@@ -31,7 +31,7 @@ describe('blob resolver', () => {
   })
 
   afterAll(async () => {
-    await testEnv?.close()
+    await testEnv.close()
   })
 
   it('resolves blob with good signature check.', async () => {
