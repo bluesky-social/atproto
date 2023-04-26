@@ -197,7 +197,7 @@ export class PDS {
   }
 
   async start(): Promise<http.Server> {
-    const { db } = this.ctx
+    const { db, backgroundQueue } = this.ctx
     if (db.cfg.dialect === 'pg') {
       const { pool } = db.cfg
       this.dbStatsInterval = setInterval(() => {
@@ -208,6 +208,13 @@ export class PDS {
             waitingCount: pool.waitingCount,
           },
           'db pool stats',
+        )
+        dbLogger.info(
+          {
+            runningCount: backgroundQueue.queue.pending,
+            waitingCount: backgroundQueue.queue.size,
+          },
+          'background queue stats',
         )
       }, 10000)
     }
