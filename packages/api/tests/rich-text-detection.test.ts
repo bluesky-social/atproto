@@ -31,6 +31,8 @@ describe('detectFacets', () => {
     'start middle https://end.com/foo/bar?baz=bux#hash',
     'https://newline1.com\nhttps://newline2.com',
     '👨‍👩‍👧‍👧 https://middle.com 👨‍👩‍👧‍👧',
+    'Check this out.https://afterdot.com',
+    'Check this out!https://afterdot.com',
 
     'start middle.com end',
     'start middle.com/foo/bar end',
@@ -119,6 +121,8 @@ describe('detectFacets', () => {
       ['https://newline2.com', 'https://newline2.com'],
     ],
     [['👨‍👩‍👧‍👧 '], ['https://middle.com', 'https://middle.com'], [' 👨‍👩‍👧‍👧']],
+    [['Check this out.'], ['https://afterdot.com', 'https://afterdot.com']],
+    [['Check this out!'], ['https://afterdot.com', 'https://afterdot.com']],
 
     [['start '], ['middle.com', 'https://middle.com'], [' end']],
     [
