@@ -1,9 +1,10 @@
+import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as common from '@atproto/common'
 import { Server } from '../../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
-import { notSoftDeletedClause } from '../../../../../db/util'
+import { notSoftDeletedClause, valuesList } from '../../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.listNotifications({
@@ -18,11 +19,6 @@ export default function (server: Server, ctx: AppContext) {
 
       let notifBuilder = ctx.db.db
         .selectFrom('user_notification as notif')
-        .innerJoin('ipld_block', (join) =>
-          join
-            .onRef('ipld_block.cid', '=', 'notif.recordCid')
-            .onRef('ipld_block.creator', '=', 'notif.author'),
-        )
         .innerJoin('did_handle as author', 'author.did', 'notif.author')
         .innerJoin(
           'repo_root as author_repo',
@@ -58,7 +54,6 @@ export default function (server: Server, ctx: AppContext) {
           'notif.reason as reason',
           'notif.reasonSubject as reasonSubject',
           'notif.indexedAt as indexedAt',
-          'ipld_block.content as recordBytes',
         ])
 
       const keyset = new NotifsKeyset(
@@ -86,11 +81,24 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Could not find user: ${requester}`)
       }
 
+      const recordTuples = notifs.map((notif) => {
+        return sql`${notif.authorDid}, ${notif.cid}`
+      })
+
+      const emptyBlocksResult: { cid: string; bytes: Uint8Array }[] = []
+      const blocksQb = recordTuples.length
+        ? ctx.db.db
+            .selectFrom('ipld_block')
+            .whereRef(sql`(creator, cid)`, 'in', valuesList(recordTuples))
+            .select(['cid', 'content as bytes'])
+        : null
+
       // @NOTE calling into app-view, will eventually be replaced
       const actorService = ctx.services.appView.actor(ctx.db)
       const labelService = ctx.services.appView.label(ctx.db)
       const recordUris = notifs.map((notif) => notif.uri)
-      const [authors, labels] = await Promise.all([
+      const [blocks, authors, labels] = await Promise.all([
+        blocksQb ? blocksQb.execute() : emptyBlocksResult,
         actorService.views.profile(
           notifs.map((notif) => ({
             did: notif.authorDid,
@@ -101,17 +109,26 @@ export default function (server: Server, ctx: AppContext) {
         labelService.getLabelsForSubjects(recordUris),
       ])
 
-      const notifications = notifs.map((notif, i) => ({
-        uri: notif.uri,
-        cid: notif.cid,
-        author: authors[i],
-        reason: notif.reason,
-        reasonSubject: notif.reasonSubject || undefined,
-        record: common.cborBytesToRecord(notif.recordBytes),
-        isRead: notif.indexedAt <= userState.lastSeenNotifs,
-        indexedAt: notif.indexedAt,
-        labels: labels[notif.uri] ?? [],
-      }))
+      const bytesByCid = blocks.reduce((acc, block) => {
+        acc[block.cid] = block.bytes
+        return acc
+      }, {} as Record<string, Uint8Array>)
+
+      const notifications = notifs.flatMap((notif, i) => {
+        const bytes = bytesByCid[notif.cid]
+        if (!bytes) return [] // Filter out
+        return {
+          uri: notif.uri,
+          cid: notif.cid,
+          author: authors[i],
+          reason: notif.reason,
+          reasonSubject: notif.reasonSubject || undefined,
+          record: common.cborBytesToRecord(bytes),
+          isRead: notif.indexedAt <= userState.lastSeenNotifs,
+          indexedAt: notif.indexedAt,
+          labels: labels[notif.uri] ?? [],
+        }
+      })
 
       return {
         encoding: 'application/json',
