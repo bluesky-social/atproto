@@ -117,7 +117,7 @@ describe('Errors', () => {
     }
   })
   server.method('io.example.throwFalsyValue', () => {
-    throw undefined
+    throw ''
   })
   server.method('io.example.query', () => {
     return undefined
