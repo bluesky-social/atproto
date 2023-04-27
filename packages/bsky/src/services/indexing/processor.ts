@@ -194,6 +194,7 @@ export class RecordProcessor<T, S> {
     }
   }
 
+  // @TODO background notification creation and deletion
   async handleNotifs(op: { deleted?: S; inserted?: S }) {
     let notifs: Notif[] = []
     if (op.deleted) {
