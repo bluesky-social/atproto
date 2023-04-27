@@ -12,6 +12,10 @@ import {
 import {
   REASONOTHER,
   REASONSPAM,
+  REASONMISLEADING,
+  REASONRUDE,
+  REASONSEXUAL,
+  REASONVIOLATION,
 } from '../../../../lexicon/types/com/atproto/moderation/defs'
 import { parseCidParam } from '../../../../util/params'
 
@@ -38,7 +42,7 @@ export const getSubject = (subject: SubjectInput) => {
 }
 
 export const getReasonType = (reasonType: ReportInput['reasonType']) => {
-  if (reasonType === REASONSPAM || reasonType === REASONOTHER) {
+  if (reasonTypes.has(reasonType)) {
     return reasonType as ModerationReport['reasonType']
   }
   throw new InvalidRequestError('Invalid reason type')
@@ -50,3 +54,12 @@ export const getAction = (action: ActionInput['action']) => {
   }
   throw new InvalidRequestError('Invalid action')
 }
+
+const reasonTypes = new Set([
+  REASONOTHER,
+  REASONSPAM,
+  REASONMISLEADING,
+  REASONRUDE,
+  REASONSEXUAL,
+  REASONVIOLATION,
+])

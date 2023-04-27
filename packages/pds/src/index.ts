@@ -11,12 +11,14 @@ import events from 'events'
 import { createTransport } from 'nodemailer'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
-import { AppView } from './app-view'
+import { AppViewIndexer } from './app-view/indexer'
+import inProcessAppView from './app-view/api'
+import proxiedAppView from './app-view/proxied'
 import API, { health } from './api'
 import Database from './db'
 import { ServerAuth } from './auth'
 import * as error from './error'
-import { loggerMiddleware } from './logger'
+import { dbLogger, loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
 import { createServer } from './lexicon'
@@ -42,19 +44,20 @@ export { AppContext } from './context'
 
 export class PDS {
   public ctx: AppContext
-  public appView: AppView
+  public appViewIndexer: AppViewIndexer
   public app: express.Application
   public server?: http.Server
   private terminator?: HttpTerminator
+  private dbStatsInterval?: NodeJS.Timer
 
   constructor(opts: {
     ctx: AppContext
     app: express.Application
-    appView: AppView
+    appViewIndexer: AppViewIndexer
   }) {
     this.ctx = opts.ctx
     this.app = opts.app
-    this.appView = opts.appView
+    this.appViewIndexer = opts.appViewIndexer
   }
 
   static create(opts: {
@@ -164,7 +167,7 @@ export class PDS {
       backgroundQueue,
     })
 
-    const appView = new AppView(ctx)
+    const appViewIndexer = new AppViewIndexer(ctx)
 
     let server = createServer({
       validateResponse: config.debugMode,
@@ -176,7 +179,11 @@ export class PDS {
     })
 
     server = API(server, ctx)
-    server = appView.api(server)
+    if (ctx.cfg.bskyAppViewEndpoint) {
+      server = proxiedAppView(server, ctx)
+    } else {
+      server = inProcessAppView(server, ctx)
+    }
 
     app.use(health.createRouter(ctx))
     app.use(server.xrpc.router)
@@ -185,12 +192,33 @@ export class PDS {
     return new PDS({
       ctx,
       app,
-      appView,
+      appViewIndexer,
     })
   }
 
   async start(): Promise<http.Server> {
-    this.appView.start()
+    const { db, backgroundQueue } = this.ctx
+    if (db.cfg.dialect === 'pg') {
+      const { pool } = db.cfg
+      this.dbStatsInterval = setInterval(() => {
+        dbLogger.info(
+          {
+            idleCount: pool.idleCount,
+            totalCount: pool.totalCount,
+            waitingCount: pool.waitingCount,
+          },
+          'db pool stats',
+        )
+        dbLogger.info(
+          {
+            runningCount: backgroundQueue.queue.pending,
+            waitingCount: backgroundQueue.queue.size,
+          },
+          'background queue stats',
+        )
+      }, 10000)
+    }
+    this.appViewIndexer.start()
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()
     const server = this.app.listen(this.ctx.cfg.port)
@@ -202,10 +230,11 @@ export class PDS {
   }
 
   async destroy(): Promise<void> {
-    this.appView.destroy()
+    this.appViewIndexer.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()
+    clearInterval(this.dbStatsInterval)
   }
 }
 

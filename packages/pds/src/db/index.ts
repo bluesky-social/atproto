@@ -1,5 +1,17 @@
 import assert from 'assert'
-import { Kysely, SqliteDialect, PostgresDialect, Migrator, sql } from 'kysely'
+import {
+  Kysely,
+  SqliteDialect,
+  PostgresDialect,
+  Migrator,
+  sql,
+  KyselyPlugin,
+  PluginTransformQueryArgs,
+  PluginTransformResultArgs,
+  RootOperationNode,
+  QueryResult,
+  UnknownRow,
+} from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, Client as PgClient, types as pgTypes } from 'pg'
 import EventEmitter from 'events'
@@ -161,15 +173,19 @@ export class Database {
 
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
     let txMsgs: ChannelMsg[] = []
-    const [dbTxn, res] = await this.db.transaction().execute(async (txn) => {
-      const dbTxn = new Database(txn, this.cfg, this.channels)
-      const txRes = await fn(dbTxn)
-      txMsgs = dbTxn.txChannelMsgs
-      return [dbTxn, txRes]
-    })
-    dbTxn.txEvt.emit('commit')
+    const leakyTxPlugin = new LeakyTxPlugin()
+    const { dbTxn, txRes } = await this.db
+      .withPlugin(leakyTxPlugin)
+      .transaction()
+      .execute(async (txn) => {
+        const dbTxn = new Database(txn, this.cfg, this.channels)
+        const txRes = await fn(dbTxn).finally(() => leakyTxPlugin.endTx())
+        txMsgs = dbTxn.txChannelMsgs
+        return { txRes, dbTxn }
+      })
+    dbTxn?.txEvt.emit('commit')
     txMsgs.forEach((msg) => this.sendChannelMsg(msg))
-    return res
+    return txRes
   }
 
   get schema(): string | undefined {
@@ -275,4 +291,25 @@ type ChannelMsg = 'repo_seq'
 
 type Channels = {
   repo_seq: ChannelEmitter
+}
+
+class LeakyTxPlugin implements KyselyPlugin {
+  private txOver: boolean
+
+  endTx() {
+    this.txOver = true
+  }
+
+  transformQuery(args: PluginTransformQueryArgs): RootOperationNode {
+    if (this.txOver) {
+      throw new Error('tx already failed')
+    }
+    return args.node
+  }
+
+  async transformResult(
+    args: PluginTransformResultArgs,
+  ): Promise<QueryResult<UnknownRow>> {
+    return args.result
+  }
 }

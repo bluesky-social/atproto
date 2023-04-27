@@ -1,4 +1,5 @@
 import assert from 'assert'
+import { DAY, HOUR, parseIntWithFallback } from '@atproto/common'
 
 export interface ServerConfigValues {
   version: string
@@ -8,6 +9,8 @@ export interface ServerConfigValues {
   dbPostgresUrl: string
   dbPostgresSchema?: string
   didPlcUrl: string
+  didCacheStaleTTL: number
+  didCacheMaxTTL: number
   imgUriSalt: string
   imgUriKey: string
   imgUriEndpoint?: string
@@ -31,6 +34,14 @@ export class ServerConfig {
     const envPort = parseInt(process.env.PORT || '', 10)
     const port = isNaN(envPort) ? 2584 : envPort
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
+    const didCacheStaleTTL = parseIntWithFallback(
+      process.env.DID_CACHE_STALE_TTL,
+      HOUR,
+    )
+    const didCacheMaxTTL = parseIntWithFallback(
+      process.env.DID_CACHE_MAX_TTL,
+      DAY,
+    )
     const imgUriSalt =
       process.env.IMG_URI_SALT || '9dd04221f5755bce5f55f47464c27e1e'
     const imgUriKey =
@@ -55,6 +66,8 @@ export class ServerConfig {
       dbPostgresUrl,
       dbPostgresSchema,
       didPlcUrl,
+      didCacheStaleTTL,
+      didCacheMaxTTL,
       imgUriSalt,
       imgUriKey,
       imgUriEndpoint,
@@ -103,6 +116,14 @@ export class ServerConfig {
 
   get dbPostgresSchema() {
     return this.cfg.dbPostgresSchema
+  }
+
+  get didCacheStaleTTL() {
+    return this.cfg.didCacheStaleTTL
+  }
+
+  get didCacheMaxTTL() {
+    return this.cfg.didCacheStaleTTL
   }
 
   get didPlcUrl() {

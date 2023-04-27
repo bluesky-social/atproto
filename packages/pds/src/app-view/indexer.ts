@@ -1,12 +1,9 @@
-import api from './api'
 import AppContext from '../context'
-import { Server } from '../lexicon'
 import { RepoSubscription } from './subscription/repo'
 import * as dispatcherConsumers from './event-stream/consumers'
 import { appViewLogger } from './logger'
 
-export class AppView {
-  api = (server: Server) => api(server, this.ctx)
+export class AppViewIndexer {
   services = this.ctx.services.appView
   repoSubscription?: RepoSubscription
 

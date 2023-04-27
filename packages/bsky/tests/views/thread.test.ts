@@ -1,9 +1,10 @@
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
-import { CloseFn, runTestEnv, TestEnvInfo } from '@atproto/dev-env'
+import { runTestEnv, TestEnvInfo } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { Database } from '../../src'
 import {
   adminAuth,
+  appViewHeaders,
   forSnapshot,
   processAll,
   stripViewerFromThread,
@@ -16,7 +17,6 @@ describe('pds thread views', () => {
   let testEnv: TestEnvInfo
   let agent: AtpAgent
   let db: Database
-  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
@@ -26,10 +26,9 @@ describe('pds thread views', () => {
 
   beforeAll(async () => {
     testEnv = await runTestEnv({
-      dbPostgresSchema: 'views_thread',
+      dbPostgresSchema: 'bsky_views_thread',
     })
     db = testEnv.bsky.ctx.db
-    close = testEnv.close
     agent = new AtpAgent({ service: testEnv.bsky.url })
     const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
@@ -47,13 +46,13 @@ describe('pds thread views', () => {
   })
 
   afterAll(async () => {
-    await close()
+    await testEnv.close()
   })
 
   it('fetches deep post thread', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: await appViewHeaders(bob, testEnv) },
     )
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -62,7 +61,7 @@ describe('pds thread views', () => {
   it('fetches shallow post thread', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: await appViewHeaders(bob, testEnv) },
     )
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -71,7 +70,7 @@ describe('pds thread views', () => {
   it('fetches ancestors', async () => {
     const thread = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: await appViewHeaders(bob, testEnv) },
     )
 
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -80,7 +79,7 @@ describe('pds thread views', () => {
   it('fails for an unknown post', async () => {
     const promise = agent.api.app.bsky.feed.getPostThread(
       { uri: 'at://did:example:fake/does.not.exist/self' },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: await appViewHeaders(bob, testEnv) },
     )
 
     await expect(promise).rejects.toThrow(
@@ -91,7 +90,7 @@ describe('pds thread views', () => {
   it('fetches post thread unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: await appViewHeaders(bob, testEnv) },
     )
     const { data: unauthed } = await agent.api.app.bsky.feed.getPostThread({
       uri: sc.posts[alice][1].ref.uriStr,
@@ -130,7 +129,7 @@ describe('pds thread views', () => {
 
     const thread1 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: await appViewHeaders(bob, testEnv) },
     )
     expect(forSnapshot(thread1.data.thread)).toMatchSnapshot()
 
@@ -139,13 +138,13 @@ describe('pds thread views', () => {
 
     const thread2 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: await appViewHeaders(bob, testEnv) },
     )
     expect(forSnapshot(thread2.data.thread)).toMatchSnapshot()
 
     const thread3 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.replies[alice][indexes.aliceReplyReply].ref.uriStr },
-      { headers: sc.getHeaders(bob, true) },
+      { headers: await appViewHeaders(bob, testEnv) },
     )
     expect(forSnapshot(thread3.data.thread)).toMatchSnapshot()
   })
@@ -230,7 +229,7 @@ describe('pds thread views', () => {
       // Same as shallow post thread test, minus alice
       const promise = agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
-        { headers: sc.getHeaders(bob, true) },
+        { headers: await appViewHeaders(bob, testEnv) },
       )
 
       await expect(promise).rejects.toThrow(
@@ -272,7 +271,7 @@ describe('pds thread views', () => {
       // Same as deep post thread test, minus carol
       const thread = await agent.api.app.bsky.feed.getPostThread(
         { uri: sc.posts[alice][1].ref.uriStr },
-        { headers: sc.getHeaders(bob, true) },
+        { headers: await appViewHeaders(bob, testEnv) },
       )
 
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -312,7 +311,7 @@ describe('pds thread views', () => {
       // Same as ancestor post thread test, minus bob
       const thread = await agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
-        { headers: sc.getHeaders(bob, true) },
+        { headers: await appViewHeaders(bob, testEnv) },
       )
 
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -353,7 +352,7 @@ describe('pds thread views', () => {
 
       const promise = agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: postRef.uriStr },
-        { headers: sc.getHeaders(bob, true) },
+        { headers: await appViewHeaders(bob, testEnv) },
       )
 
       await expect(promise).rejects.toThrow(
@@ -377,7 +376,7 @@ describe('pds thread views', () => {
     it('blocks ancestors by record', async () => {
       const threadPreTakedown = await agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
-        { headers: sc.getHeaders(bob, true) },
+        { headers: await appViewHeaders(bob, testEnv) },
       )
 
       const parent = threadPreTakedown.data.thread.parent?.['post']
@@ -403,7 +402,7 @@ describe('pds thread views', () => {
       // Same as ancestor post thread test, minus parent post
       const thread = await agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: sc.replies[alice][0].ref.uriStr },
-        { headers: sc.getHeaders(bob, true) },
+        { headers: await appViewHeaders(bob, testEnv) },
       )
 
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
@@ -425,7 +424,7 @@ describe('pds thread views', () => {
     it('blocks replies by record', async () => {
       const threadPreTakedown = await agent.api.app.bsky.feed.getPostThread(
         { uri: sc.posts[alice][1].ref.uriStr },
-        { headers: sc.getHeaders(bob, true) },
+        { headers: await appViewHeaders(bob, testEnv) },
       )
       const post1 = threadPreTakedown.data.thread.replies?.[0].post
       const post2 = threadPreTakedown.data.thread.replies?.[1].replies[0].post
@@ -454,7 +453,7 @@ describe('pds thread views', () => {
       // Same as deep post thread test, minus some replies
       const thread = await agent.api.app.bsky.feed.getPostThread(
         { uri: sc.posts[alice][1].ref.uriStr },
-        { headers: sc.getHeaders(bob, true) },
+        { headers: await appViewHeaders(bob, testEnv) },
       )
 
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()

@@ -292,6 +292,7 @@ export class FeedService {
               cid: formatted.cid,
               author: formatted.author,
               value: formatted.record,
+              labels: formatted.labels,
               embeds: deepEmbeds,
               indexedAt: formatted.indexedAt,
             }

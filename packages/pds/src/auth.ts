@@ -1,10 +1,12 @@
 import * as crypto from '@atproto/crypto'
+import * as common from '@atproto/common'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import * as uint8arrays from 'uint8arrays'
+import * as ui8 from 'uint8arrays'
 import express from 'express'
 import * as jwt from 'jsonwebtoken'
 import AppContext from './context'
 import { softDeleted } from './db/util'
+import { MINUTE } from '@atproto/common'
 
 const BEARER = 'Bearer '
 const BASIC = 'Basic '
@@ -167,9 +169,7 @@ export const parseBasicAuth = (
   const b64 = token.slice(BASIC.length)
   let parsed: string[]
   try {
-    parsed = uint8arrays
-      .toString(uint8arrays.fromString(b64, 'base64pad'), 'utf8')
-      .split(':')
+    parsed = ui8.toString(ui8.fromString(b64, 'base64pad'), 'utf8').split(':')
   } catch (err) {
     return null
   }
@@ -252,5 +252,28 @@ export const moderatorVerifier =
   }
 
 export const getRefreshTokenId = () => {
-  return uint8arrays.toString(crypto.randomBytes(32), 'base64')
+  return ui8.toString(crypto.randomBytes(32), 'base64')
+}
+
+export const createServiceJwt = async (
+  accountDid: string,
+  keypair: crypto.Keypair,
+): Promise<string> => {
+  const header = {
+    typ: 'JWT',
+    alg: keypair.jwtAlg,
+  }
+  const exp = Math.floor((Date.now() + MINUTE) / 1000)
+  const payload = {
+    iss: accountDid,
+    exp,
+  }
+  const toSignStr = `${jsonToB64Url(header)}.${jsonToB64Url(payload)}`
+  const toSign = ui8.fromString(toSignStr, 'utf8')
+  const sig = await keypair.sign(toSign)
+  return `${toSignStr}.${ui8.toString(sig, 'base64url')}`
+}
+
+const jsonToB64Url = (json: Record<string, unknown>): string => {
+  return common.utf8ToB64Url(JSON.stringify(json))
 }

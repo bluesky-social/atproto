@@ -15,6 +15,7 @@ describe('pds posts views', () => {
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
     await basicSeed(sc)
+    await server.ctx.labeler.processAll()
   })
 
   afterAll(async () => {

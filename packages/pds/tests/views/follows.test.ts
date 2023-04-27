@@ -1,11 +1,11 @@
 import AtpAgent from '@atproto/api'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
-  runTestServer,
   forSnapshot,
-  CloseFn,
   paginateAll,
   adminAuth,
+  runTestServer,
+  CloseFn,
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import followsSeed from '../seeds/follows'
