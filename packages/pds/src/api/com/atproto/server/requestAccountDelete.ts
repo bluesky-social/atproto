@@ -1,14 +1,14 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { randomStr } from '@atproto/crypto'
+import { getRandomToken } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.requestAccountDelete({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth }) => {
       const did = auth.credentials.did
-      const token = getToken()
+      const token = getRandomToken().toUpperCase()
       const requestedAt = new Date().toISOString()
       const user = await ctx.services.account(ctx.db).getAccount(did)
       if (!user) {
@@ -24,10 +24,4 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.mailer.sendAccountDelete({ token }, { to: user.email })
     },
   })
-}
-
-// Formatted XXXXX-XXXXX where digits are in base32
-const getToken = () => {
-  const token = randomStr(8, 'base32').slice(0, 10).toUpperCase()
-  return token.slice(0, 5) + '-' + token.slice(5, 10)
 }
