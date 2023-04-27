@@ -39,7 +39,16 @@ export default function (server: Server, ctx: AppContext) {
 
     await ctx.db.transaction(async (dbTxn) => {
       await removeDeleteToken(dbTxn, did)
-      await ctx.services.moderation(dbTxn).takedownRepo({ did, takedownId: -1 })
+      const res = await ctx.services.moderation(dbTxn).logAction({
+        action: 'com.atproto.admin.defs#takedown',
+        subject: { did },
+        reason: 'ACCOUNT DELETION',
+        createdBy: did,
+        createdAt: new Date(),
+      })
+      await ctx.services
+        .moderation(dbTxn)
+        .takedownRepo({ did, takedownId: res.id })
       // @re-enable
       // await ctx.services.record(dbTxn).deleteForActor(did)
       // await ctx.services.repo(dbTxn).deleteRepo(did)
