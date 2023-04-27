@@ -82,7 +82,7 @@ describe('account deletion', () => {
   }
 
   const getTokenFromMail = (mail: Mail.Options) =>
-    mail.html?.toString().match(/>(\d{6})</)?.[1]
+    mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1]
 
   let token
 

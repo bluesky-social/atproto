@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
       .selectFrom('did_handle')
       .innerJoin('delete_account_token as token', 'token.did', 'did_handle.did')
       .where('did_handle.did', '=', did)
-      .where('token.token', '=', token)
+      .where('token.token', '=', token.toUpperCase())
       .select([
         'token.token as token',
         'token.requestedAt as requestedAt',

@@ -394,7 +394,7 @@ describe('account', () => {
   }
 
   const getTokenFromMail = (mail: Mail.Options) =>
-    mail.html?.toString().match(/>(\d{9})</)?.[1]
+    mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1]
 
   it('can reset account password', async () => {
     const mail = await getMailFrom(
@@ -488,7 +488,7 @@ describe('account', () => {
     })
 
     await agent.api.com.atproto.server.resetPassword({
-      token,
+      token: token.toLowerCase(), // Reset should work case-insensitively
       password,
     })
 

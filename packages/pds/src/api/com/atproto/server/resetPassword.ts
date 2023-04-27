@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     const tokenInfo = await ctx.db.db
       .selectFrom('user_account')
       .select(['did', 'passwordResetGrantedAt'])
-      .where('passwordResetToken', '=', token)
+      .where('passwordResetToken', '=', token.toUpperCase())
       .executeTakeFirst()
 
     if (!tokenInfo?.passwordResetGrantedAt) {
