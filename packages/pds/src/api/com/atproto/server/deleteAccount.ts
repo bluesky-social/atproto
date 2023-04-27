@@ -39,9 +39,11 @@ export default function (server: Server, ctx: AppContext) {
 
     await ctx.db.transaction(async (dbTxn) => {
       await removeDeleteToken(dbTxn, did)
-      await ctx.services.record(dbTxn).deleteForActor(did)
-      await ctx.services.repo(dbTxn).deleteRepo(did)
-      await ctx.services.account(dbTxn).deleteAccount(did)
+      await ctx.services.moderation(dbTxn).takedownRepo({ did, takedownId: -1 })
+      // @re-enable
+      // await ctx.services.record(dbTxn).deleteForActor(did)
+      // await ctx.services.repo(dbTxn).deleteRepo(did)
+      // await ctx.services.account(dbTxn).deleteAccount(did)
     })
   })
 }
