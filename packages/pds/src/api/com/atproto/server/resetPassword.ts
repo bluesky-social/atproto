@@ -30,6 +30,9 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.services
         .account(dbTxn)
         .updateUserPassword(tokenInfo.did, password)
+      await await ctx.services
+        .auth(dbTxn)
+        .revokeRefreshTokensByDid(tokenInfo.did)
     })
   })
 }
