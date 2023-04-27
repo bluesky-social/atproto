@@ -215,11 +215,7 @@ export class RecordProcessor<T, S> {
       notifs = this.params.notifsForInsert(op.inserted)
     }
     if (notifs.length > 0) {
-      this.appDb.onCommit(() => {
-        this.backgroundQueue.add(async (db) => {
-          await db.db.insertInto('user_notification').values(notifs).execute()
-        })
-      })
+      await this.db.insertInto('user_notification').values(notifs).execute()
     }
   }
 
