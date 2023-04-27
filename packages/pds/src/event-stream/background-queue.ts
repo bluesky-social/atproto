@@ -6,10 +6,11 @@ import { dbLogger } from '../logger'
 
 export class BackgroundQueue {
   queue = new PQueue({ concurrency: 10 })
+  destroyed = false
   constructor(public db: Database) {}
 
   add(task: Task) {
-    if (this.queue.isPaused) {
+    if (this.destroyed) {
       return
     }
     this.queue
@@ -23,9 +24,10 @@ export class BackgroundQueue {
     await this.queue.onIdle()
   }
 
+  // On destroy we stop accepting new tasks, but complete all pending/in-progress tasks.
+  // The application calls this only once http connections have drained (tasks no longer being added).
   async destroy() {
-    this.queue.pause()
-    this.queue.clear()
+    this.destroyed = true
     await this.queue.onIdle()
   }
 }
