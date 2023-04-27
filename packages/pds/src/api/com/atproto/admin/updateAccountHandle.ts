@@ -15,7 +15,9 @@ export default function (server: Server, ctx: AppContext) {
       } catch (err) {
         if (err instanceof ident.InvalidHandleError) {
           throw new InvalidRequestError(err.message, 'InvalidHandle')
-        } else throw err
+        } else {
+          throw err
+        }
       }
       try {
         ident.ensureHandleServiceConstraints(
