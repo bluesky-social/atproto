@@ -1,4 +1,4 @@
-import { defaultFetchHandler } from '@atproto/xrpc'
+import { defaultFetchHandler, XRPCError } from '@atproto/xrpc'
 import {
   CloseFn,
   runTestServer,
