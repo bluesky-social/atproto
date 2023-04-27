@@ -5,10 +5,13 @@ import { dbLogger } from '../logger'
 // A simple queue for in-process, out-of-band/backgrounded work
 
 export class BackgroundQueue {
-  queue = new PQueue()
+  queue = new PQueue({ concurrency: 10 })
   constructor(public db: Database) {}
 
   add(task: Task) {
+    if (this.queue.isPaused) {
+      return
+    }
     this.queue
       .add(() => task(this.db))
       .catch((err) => {
