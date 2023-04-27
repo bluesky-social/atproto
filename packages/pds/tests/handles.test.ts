@@ -250,6 +250,25 @@ describe('handles', () => {
     expect(profile.data.handle).toBe('bob-alt.test')
   })
 
+  it('allows admin override of reserved domains', async () => {
+    await agent.api.com.atproto.admin.updateAccountHandle(
+      {
+        did: bob,
+        handle: 'dril.test',
+      },
+      {
+        headers: { authorization: util.adminAuth() },
+        encoding: 'application/json',
+      },
+    )
+
+    const profile = await agent.api.app.bsky.actor.getProfile(
+      { actor: bob },
+      { headers: sc.getHeaders(bob) },
+    )
+    expect(profile.data.handle).toBe('dril.test')
+  })
+
   it('disallows admin overrules of off-service domains', async () => {
     const attempt = agent.api.com.atproto.admin.updateAccountHandle(
       {
