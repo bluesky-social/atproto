@@ -1,14 +1,14 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { randomStr } from '@atproto/crypto'
+import { getRandomToken } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.requestAccountDelete({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth }) => {
       const did = auth.credentials.did
-      const token = getSixDigitToken()
+      const token = getRandomToken().toUpperCase()
       const requestedAt = new Date().toISOString()
       const user = await ctx.services.account(ctx.db).getAccount(did)
       if (!user) {
@@ -25,5 +25,3 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 }
-
-const getSixDigitToken = () => randomStr(4, 'base10').slice(0, 6)
