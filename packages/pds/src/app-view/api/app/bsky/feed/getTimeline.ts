@@ -21,6 +21,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const feedService = ctx.services.appView.feed(ctx.db)
+      const actorService = ctx.services.appView.actor(ctx.db)
       const labelService = ctx.services.appView.label(ctx.db)
 
       const followingIdsSubquery = db
@@ -48,27 +49,10 @@ export default function (server: Server, ctx: AppContext) {
           ),
         )
         .whereNotExists(
-          db
-            .selectFrom('actor_block')
-            .selectAll()
-            .where((qb) =>
-              qb
-                .where('actor_block.creator', '=', requester)
-                .whereRef(
-                  'actor_block.subjectDid',
-                  'in',
-                  sql`(${ref('post.creator')}, ${ref('originatorDid')})`,
-                ),
-            )
-            .orWhere((qb) =>
-              qb
-                .where('actor_block.subjectDid', '=', requester)
-                .whereRef(
-                  'actor_block.creator',
-                  'in',
-                  sql`(${ref('post.creator')}, ${ref('originatorDid')})`,
-                ),
-            ),
+          actorService.blockQb(requester, [
+            ref('post.creator'),
+            ref('originatorDid'),
+          ]),
         )
 
       const keyset = new FeedKeyset(

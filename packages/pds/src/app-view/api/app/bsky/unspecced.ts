@@ -16,6 +16,7 @@ export default function (server: Server, ctx: AppContext) {
       const { ref } = db.dynamic
 
       const feedService = ctx.services.appView.feed(ctx.db)
+      const actorService = ctx.services.appView.actor(ctx.db)
       const labelService = ctx.services.appView.label(ctx.db)
 
       const postsQb = feedService
@@ -29,21 +30,7 @@ export default function (server: Server, ctx: AppContext) {
             .where('mutedByDid', '=', requester)
             .whereRef('did', '=', ref('post.creator')),
         )
-        .whereNotExists(
-          db
-            .selectFrom('actor_block')
-            .selectAll()
-            .where((qb) =>
-              qb
-                .where('actor_block.creator', '=', requester)
-                .whereRef('actor_block.subjectDid', '=', ref('post.creator')),
-            )
-            .orWhere((qb) =>
-              qb
-                .where('actor_block.subjectDid', '=', requester)
-                .whereRef('actor_block.creator', '=', ref('post.creator')),
-            ),
-        )
+        .whereNotExists(actorService.blockQb(requester, [ref('post.creator')]))
 
       const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))
 
