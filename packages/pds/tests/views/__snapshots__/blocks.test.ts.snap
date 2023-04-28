@@ -13,7 +13,6 @@ Object {
         "labels": Array [],
         "viewer": Object {
           "blockedBy": false,
-          "blocking": false,
           "followedBy": "record(1)",
           "muted": false,
         },
@@ -37,7 +36,6 @@ Object {
             ],
             "viewer": Object {
               "blockedBy": false,
-              "blocking": false,
               "muted": false,
             },
           },
@@ -133,7 +131,6 @@ Object {
         "labels": Array [],
         "viewer": Object {
           "blockedBy": false,
-          "blocking": false,
           "followedBy": "record(2)",
           "following": "record(1)",
           "muted": false,
@@ -181,7 +178,6 @@ Object {
         "labels": Array [],
         "viewer": Object {
           "blockedBy": false,
-          "blocking": false,
           "followedBy": "record(1)",
           "muted": false,
         },
@@ -220,7 +216,6 @@ Object {
             "labels": Array [],
             "viewer": Object {
               "blockedBy": false,
-              "blocking": false,
               "following": "record(6)",
               "muted": false,
             },

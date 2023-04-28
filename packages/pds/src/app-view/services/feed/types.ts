@@ -29,8 +29,8 @@ export type ActorView = {
   avatar?: string
   viewer?: {
     muted?: boolean
-    blocking?: boolean
     blockedBy?: boolean
+    blocking?: string
     following?: string
     followedBy?: string
   }

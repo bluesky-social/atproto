@@ -14,7 +14,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
@@ -30,7 +29,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
@@ -46,7 +44,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(5)",
         "following": "record(4)",
         "muted": false,
@@ -63,7 +60,6 @@ Object {
     "labels": Array [],
     "viewer": Object {
       "blockedBy": false,
-      "blocking": false,
       "muted": false,
     },
   },
@@ -84,7 +80,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
@@ -100,7 +95,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
@@ -116,7 +110,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(5)",
         "following": "record(4)",
         "muted": false,
@@ -133,7 +126,6 @@ Object {
     "labels": Array [],
     "viewer": Object {
       "blockedBy": false,
-      "blocking": false,
       "muted": false,
     },
   },
@@ -154,7 +146,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
@@ -170,7 +161,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
@@ -186,7 +176,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(5)",
         "following": "record(4)",
         "muted": false,
@@ -202,7 +191,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(7)",
         "following": "record(6)",
         "muted": false,
@@ -219,7 +207,6 @@ Object {
     "labels": Array [],
     "viewer": Object {
       "blockedBy": false,
-      "blocking": false,
       "muted": false,
     },
   },
@@ -240,7 +227,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
@@ -256,7 +242,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "muted": false,
       },
     },
@@ -271,7 +256,6 @@ Object {
     "labels": Array [],
     "viewer": Object {
       "blockedBy": false,
-      "blocking": false,
       "followedBy": "record(1)",
       "following": "record(0)",
       "muted": false,
@@ -294,7 +278,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
@@ -310,7 +293,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(5)",
         "following": "record(4)",
         "muted": false,
@@ -326,7 +308,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "muted": false,
       },
     },
@@ -341,7 +322,6 @@ Object {
     "labels": Array [],
     "viewer": Object {
       "blockedBy": false,
-      "blocking": false,
       "followedBy": "record(1)",
       "following": "record(0)",
       "muted": false,
@@ -364,7 +344,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "muted": false,
       },
     },
@@ -379,7 +358,6 @@ Object {
     "labels": Array [],
     "viewer": Object {
       "blockedBy": false,
-      "blocking": false,
       "followedBy": "record(1)",
       "following": "record(0)",
       "muted": false,
@@ -402,7 +380,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
@@ -418,7 +395,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "muted": false,
       },
     },
@@ -433,7 +409,6 @@ Object {
     "labels": Array [],
     "viewer": Object {
       "blockedBy": false,
-      "blocking": false,
       "followedBy": "record(1)",
       "following": "record(0)",
       "muted": false,
@@ -456,7 +431,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(1)",
         "following": "record(0)",
         "muted": false,
@@ -472,7 +446,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
@@ -488,7 +461,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(5)",
         "following": "record(4)",
         "muted": false,
@@ -504,7 +476,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(7)",
         "following": "record(6)",
         "muted": false,
@@ -521,7 +492,6 @@ Object {
     "labels": Array [],
     "viewer": Object {
       "blockedBy": false,
-      "blocking": false,
       "muted": false,
     },
   },
@@ -542,7 +512,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
@@ -558,7 +527,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "muted": false,
       },
     },
@@ -573,7 +541,6 @@ Object {
     "labels": Array [],
     "viewer": Object {
       "blockedBy": false,
-      "blocking": false,
       "followedBy": "record(1)",
       "following": "record(0)",
       "muted": false,
@@ -596,7 +563,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "muted": false,
       },
     },
@@ -611,7 +577,6 @@ Object {
     "labels": Array [],
     "viewer": Object {
       "blockedBy": false,
-      "blocking": false,
       "followedBy": "record(1)",
       "following": "record(0)",
       "muted": false,
@@ -634,7 +599,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
@@ -650,7 +614,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(5)",
         "following": "record(4)",
         "muted": false,
@@ -666,7 +629,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "muted": false,
       },
     },
@@ -681,7 +643,6 @@ Object {
     "labels": Array [],
     "viewer": Object {
       "blockedBy": false,
-      "blocking": false,
       "followedBy": "record(1)",
       "following": "record(0)",
       "muted": false,
@@ -704,7 +665,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(3)",
         "following": "record(2)",
         "muted": false,
@@ -720,7 +680,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "muted": false,
       },
     },
@@ -735,7 +694,6 @@ Object {
     "labels": Array [],
     "viewer": Object {
       "blockedBy": false,
-      "blocking": false,
       "followedBy": "record(1)",
       "following": "record(0)",
       "muted": false,

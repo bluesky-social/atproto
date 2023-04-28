@@ -140,8 +140,8 @@ export class FeedService {
             : undefined,
           viewer: {
             muted: !!cur?.requesterMuted,
-            blocking: !!cur?.requesterBlocking,
             blockedBy: !!cur?.requesterBlockedBy,
+            blocking: cur?.requesterBlocking || undefined,
             following: cur?.requesterFollowing || undefined,
             followedBy: cur?.requesterFollowedBy || undefined,
           },

@@ -17,7 +17,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -70,7 +69,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -118,7 +116,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -152,7 +149,6 @@ Object {
           "labels": Array [],
           "viewer": Object {
             "blockedBy": false,
-            "blocking": false,
             "muted": false,
           },
         },
@@ -235,7 +231,6 @@ Object {
               "labels": Array [],
               "viewer": Object {
                 "blockedBy": false,
-                "blocking": false,
                 "followedBy": "record(2)",
                 "following": "record(1)",
                 "muted": false,
@@ -287,7 +282,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -321,7 +315,6 @@ Object {
           "labels": Array [],
           "viewer": Object {
             "blockedBy": false,
-            "blocking": false,
             "muted": false,
           },
         },
@@ -414,7 +407,6 @@ Object {
           "labels": Array [],
           "viewer": Object {
             "blockedBy": false,
-            "blocking": false,
             "followedBy": "record(2)",
             "following": "record(1)",
             "muted": false,
@@ -447,7 +439,6 @@ Object {
         "labels": Array [],
         "viewer": Object {
           "blockedBy": false,
-          "blocking": false,
           "muted": false,
         },
       },
@@ -529,7 +520,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -577,7 +567,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -609,7 +598,6 @@ Object {
           "labels": Array [],
           "viewer": Object {
             "blockedBy": false,
-            "blocking": false,
             "following": "record(5)",
             "muted": false,
           },
@@ -651,7 +639,6 @@ Object {
           "labels": Array [],
           "viewer": Object {
             "blockedBy": false,
-            "blocking": false,
             "muted": false,
           },
         },
@@ -734,7 +721,6 @@ Object {
               "labels": Array [],
               "viewer": Object {
                 "blockedBy": false,
-                "blocking": false,
                 "followedBy": "record(2)",
                 "following": "record(1)",
                 "muted": false,
@@ -786,7 +772,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -818,7 +803,6 @@ Object {
           "labels": Array [],
           "viewer": Object {
             "blockedBy": false,
-            "blocking": false,
             "following": "record(5)",
             "muted": false,
           },
@@ -859,7 +843,6 @@ Object {
           "labels": Array [],
           "viewer": Object {
             "blockedBy": false,
-            "blocking": false,
             "muted": false,
           },
         },
@@ -947,7 +930,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -979,7 +961,6 @@ Object {
           "labels": Array [],
           "viewer": Object {
             "blockedBy": false,
-            "blocking": false,
             "muted": false,
           },
         },
@@ -1019,7 +1000,6 @@ Object {
               "labels": Array [],
               "viewer": Object {
                 "blockedBy": false,
-                "blocking": false,
                 "followedBy": "record(2)",
                 "following": "record(1)",
                 "muted": false,
@@ -1069,7 +1049,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -1110,7 +1089,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -1156,7 +1134,6 @@ Object {
       "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
-        "blocking": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": true,
@@ -1188,7 +1165,6 @@ Object {
           "labels": Array [],
           "viewer": Object {
             "blockedBy": false,
-            "blocking": false,
             "following": "record(5)",
             "muted": false,
           },
@@ -1230,7 +1206,6 @@ Object {
           "labels": Array [],
           "viewer": Object {
             "blockedBy": false,
-            "blocking": false,
             "muted": false,
           },
         },
@@ -1313,7 +1288,6 @@ Object {
               "labels": Array [],
               "viewer": Object {
                 "blockedBy": false,
-                "blocking": false,
                 "followedBy": "record(2)",
                 "following": "record(1)",
                 "muted": true,

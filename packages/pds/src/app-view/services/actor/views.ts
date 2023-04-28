@@ -114,8 +114,8 @@ export class ActorViews {
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: {
           muted: !!profileInfo?.requesterMuted,
-          blocking: !!profileInfo.requesterBlocking,
           blockedBy: !!profileInfo.requesterBlockedBy,
+          blocking: profileInfo.requesterBlocking || undefined,
           following: profileInfo?.requesterFollowing || undefined,
           followedBy: profileInfo?.requesterFollowedBy || undefined,
         },
@@ -205,8 +205,8 @@ export class ActorViews {
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: {
           muted: !!profileInfo?.requesterMuted,
-          blocking: !!profileInfo.requesterBlocking,
           blockedBy: !!profileInfo.requesterBlockedBy,
+          blocking: profileInfo.requesterBlocking || undefined,
           following: profileInfo?.requesterFollowing || undefined,
           followedBy: profileInfo?.requesterFollowedBy || undefined,
         },
