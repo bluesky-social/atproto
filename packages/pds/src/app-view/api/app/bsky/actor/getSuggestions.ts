@@ -17,10 +17,11 @@ export default function (server: Server, ctx: AppContext) {
       const { services } = ctx
       const { ref } = db.dynamic
 
-      const suggestionsQb = db
+      let suggestionsQb = db
         .selectFrom('user_account')
         .innerJoin('did_handle', 'user_account.did', 'did_handle.did')
         .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+        .innerJoin('profile_agg', 'profile_agg.did', 'did_handle.did')
         .where(notSoftDeletedClause(ref('repo_root')))
         .where('did_handle.did', '!=', requester)
         .whereNotExists((qb) =>
@@ -31,28 +32,20 @@ export default function (server: Server, ctx: AppContext) {
             .whereRef('subjectDid', '=', ref('did_handle.did')),
         )
         .selectAll('did_handle')
-        .select(
-          db
-            .selectFrom('post')
-            .whereRef('creator', '=', ref('did_handle.did'))
-            .select(countAll.as('count'))
-            .as('postCount'),
-        )
+        .select('profile_agg.postsCount as postsCount')
 
-      // PG doesn't let you do WHEREs on aliases, so we wrap it in a subquery
-      let suggestionsReq = db
-        .selectFrom(suggestionsQb.as('suggestions'))
-        .selectAll()
-
-      const keyset = new PostCountDidKeyset(ref('postCount'), ref('did'))
-      suggestionsReq = paginate(suggestionsReq, {
+      const keyset = new PostCountDidKeyset(
+        ref('profile_agg.postsCount'),
+        ref('did_handle.did'),
+      )
+      suggestionsQb = paginate(suggestionsQb, {
         limit,
         cursor,
         keyset,
         direction: 'desc',
       })
 
-      const suggestionsRes = await suggestionsReq.execute()
+      const suggestionsRes = await suggestionsQb.execute()
 
       return {
         encoding: 'application/json',
@@ -67,7 +60,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-type PostCountDidResult = { postCount: number; did: string }
+type PostCountDidResult = { postsCount: number; did: string }
 type PostCountDidLabeledResult = { primary: number; secondary: string }
 
 export class PostCountDidKeyset extends GenericKeyset<
@@ -75,7 +68,7 @@ export class PostCountDidKeyset extends GenericKeyset<
   PostCountDidLabeledResult
 > {
   labelResult(result: PostCountDidResult): PostCountDidLabeledResult {
-    return { primary: result.postCount, secondary: result.did }
+    return { primary: result.postsCount, secondary: result.did }
   }
   labeledResultToCursor(labeled: PostCountDidLabeledResult) {
     return {
