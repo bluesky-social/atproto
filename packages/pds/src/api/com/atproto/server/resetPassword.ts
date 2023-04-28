@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     const tokenInfo = await ctx.db.db
       .selectFrom('user_account')
       .select(['did', 'passwordResetGrantedAt'])
-      .where('passwordResetToken', '=', token)
+      .where('passwordResetToken', '=', token.toUpperCase())
       .executeTakeFirst()
 
     if (!tokenInfo?.passwordResetGrantedAt) {
@@ -30,6 +30,9 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.services
         .account(dbTxn)
         .updateUserPassword(tokenInfo.did, password)
+      await await ctx.services
+        .auth(dbTxn)
+        .revokeRefreshTokensByDid(tokenInfo.did)
     })
   })
 }
