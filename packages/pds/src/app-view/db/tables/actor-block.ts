@@ -1,4 +1,4 @@
-export const tableName = 'actor-block'
+export const tableName = 'actor_block'
 export interface ActorBlock {
   uri: string
   cid: string
