@@ -83,4 +83,14 @@ describe('pds views with blocking', () => {
     )
     expect(forSnapshot(thread)).toMatchSnapshot()
   })
+
+  it('blocks record embeds', async () => {
+    const { alice, dan } = sc.dids
+    // Contains a deep embed of carol's post, blocked by dan
+    const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
+      { depth: 0, uri: sc.posts[alice][2].ref.uriStr },
+      { headers: sc.getHeaders(dan) },
+    )
+    expect(forSnapshot(thread)).toMatchSnapshot()
+  })
 })
