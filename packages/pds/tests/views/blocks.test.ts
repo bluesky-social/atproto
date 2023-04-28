@@ -234,4 +234,62 @@ describe('pds views with blocking', () => {
       resDan.data.notifications.some((notif) => notif.author.did === carol),
     ).toBeFalsy()
   })
+
+  it('does not return blocked accounts in actor search', async () => {
+    const resCarol = await agent.api.app.bsky.actor.searchActors(
+      {
+        term: 'dan.test',
+      },
+      { headers: sc.getHeaders(carol) },
+    )
+    expect(resCarol.data.actors.some((actor) => actor.did === dan)).toBeFalsy()
+
+    const resDan = await agent.api.app.bsky.actor.searchActors(
+      {
+        term: 'carol.test',
+      },
+      { headers: sc.getHeaders(dan) },
+    )
+    expect(resDan.data.actors.some((actor) => actor.did === carol)).toBeFalsy()
+  })
+
+  it('does not return blocked accounts in actor search typeahead', async () => {
+    const resCarol = await agent.api.app.bsky.actor.searchActorsTypeahead(
+      {
+        term: 'dan.test',
+      },
+      { headers: sc.getHeaders(carol) },
+    )
+    expect(resCarol.data.actors.some((actor) => actor.did === dan)).toBeFalsy()
+
+    const resDan = await agent.api.app.bsky.actor.searchActorsTypeahead(
+      {
+        term: 'carol.test',
+      },
+      { headers: sc.getHeaders(dan) },
+    )
+    expect(resDan.data.actors.some((actor) => actor.did === carol)).toBeFalsy()
+  })
+
+  it('does not return blocked accounts in get suggestions', async () => {
+    // unfollow so they _would_ show up in suggestions if not for block
+    await sc.unfollow(carol, dan)
+    await sc.unfollow(dan, carol)
+
+    const resCarol = await agent.api.app.bsky.actor.getSuggestions(
+      {
+        limit: 100,
+      },
+      { headers: sc.getHeaders(carol) },
+    )
+    expect(resCarol.data.actors.some((actor) => actor.did === dan)).toBeFalsy()
+
+    const resDan = await agent.api.app.bsky.actor.getSuggestions(
+      {
+        limit: 100,
+      },
+      { headers: sc.getHeaders(dan) },
+    )
+    expect(resDan.data.actors.some((actor) => actor.did === carol)).toBeFalsy()
+  })
 })
