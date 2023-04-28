@@ -39,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
         .views.profileBasic(results, requester)
 
       const filtered = actors.filter(
-        (actor) => !actor.viewer?.blocking && actor.viewer?.blockedBy,
+        (actor) => !actor.viewer?.blocking && !actor.viewer?.blockedBy,
       )
 
       return {

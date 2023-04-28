@@ -44,7 +44,7 @@ export default function (server: Server, ctx: AppContext) {
         .views.profile(results, requester)
 
       const filtered = actors.filter(
-        (actor) => !actor.viewer?.blocking && actor.viewer?.blockedBy,
+        (actor) => !actor.viewer?.blocking && !actor.viewer?.blockedBy,
       )
 
       return {
