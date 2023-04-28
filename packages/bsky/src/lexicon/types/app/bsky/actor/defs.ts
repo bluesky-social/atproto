@@ -84,7 +84,7 @@ export function validateProfileViewDetailed(v: unknown): ValidationResult {
 export interface ViewerState {
   muted?: boolean
   blockedBy?: boolean
-  blocking?: boolean
+  blocking?: string
   following?: string
   followedBy?: string
   [k: string]: unknown
