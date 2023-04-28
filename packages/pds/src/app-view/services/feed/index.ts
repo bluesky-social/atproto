@@ -103,6 +103,18 @@ export class FeedService {
             .select('uri')
             .as('requesterFollowedBy'),
           this.db.db
+            .selectFrom('actor_block')
+            .where('creator', '=', requester)
+            .whereRef('subjectDid', '=', ref('did_handle.did'))
+            .select('uri')
+            .as('requesterBlocking'),
+          this.db.db
+            .selectFrom('actor_block')
+            .whereRef('creator', '=', ref('did_handle.did'))
+            .where('subjectDid', '=', requester)
+            .select('uri')
+            .as('requesterBlockedBy'),
+          this.db.db
             .selectFrom('mute')
             .whereRef('did', '=', ref('did_handle.did'))
             .where('mutedByDid', '=', requester)
@@ -124,6 +136,8 @@ export class FeedService {
             : undefined,
           viewer: {
             muted: !!cur?.requesterMuted,
+            blocking: !!cur?.requesterBlocking,
+            blockedBy: !!cur?.requesterBlockedBy,
             following: cur?.requesterFollowing || undefined,
             followedBy: cur?.requesterFollowedBy || undefined,
           },
