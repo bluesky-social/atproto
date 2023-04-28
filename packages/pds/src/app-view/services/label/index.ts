@@ -68,6 +68,7 @@ export class LabelService {
     const res = await this.db.db
       .selectFrom('label')
       .where('label.uri', 'in', subjects)
+      .where('label.val', '!=', '!no-promote')
       .if(!includeNeg, (qb) => qb.where('neg', '=', 0))
       .selectAll()
       .execute()
