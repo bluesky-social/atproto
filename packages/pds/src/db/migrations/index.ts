@@ -42,3 +42,4 @@ export * as _20230412T231807162Z from './20230412T231807162Z-moderation-action-l
 export * as _20230416T221236745Z from './20230416T221236745Z-app-specific-passwords'
 export * as _20230420T143821201Z from './20230420T143821201Z-post-profile-aggs'
 export * as _20230427T194652255Z from './20230427T194652255Z-notif-record-index'
+export * as _20230428T195614638Z from './20230428T195614638Z-actor-block-init'
