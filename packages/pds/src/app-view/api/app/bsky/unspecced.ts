@@ -27,7 +27,11 @@ export default function (server: Server, ctx: AppContext) {
             .selectFrom('label')
             .selectAll()
             .where('val', '=', '!no-promote')
-            .whereRef('label.uri', '=', ref('post.creator')),
+            .where((clause) =>
+              clause
+                .whereRef('label.uri', '=', ref('post.creator'))
+                .orWhereRef('label.uri', '=', ref('post.uri')),
+            ),
         )
         .whereNotExists(
           db
