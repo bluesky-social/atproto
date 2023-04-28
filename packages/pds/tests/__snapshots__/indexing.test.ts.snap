@@ -12,6 +12,8 @@ Object {
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
+          "blocking": false,
           "muted": false,
         },
       },
@@ -60,6 +62,8 @@ Object {
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
+          "blocking": false,
           "muted": false,
         },
       },
@@ -135,6 +139,8 @@ Object {
   "labels": Array [],
   "postsCount": 0,
   "viewer": Object {
+    "blockedBy": false,
+    "blocking": false,
     "muted": false,
   },
 }
@@ -151,6 +157,8 @@ Object {
   "labels": Array [],
   "postsCount": 0,
   "viewer": Object {
+    "blockedBy": false,
+    "blocking": false,
     "muted": false,
   },
 }
@@ -165,6 +173,8 @@ Object {
   "labels": Array [],
   "postsCount": 0,
   "viewer": Object {
+    "blockedBy": false,
+    "blocking": false,
     "muted": false,
   },
 }
