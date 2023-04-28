@@ -47,6 +47,29 @@ export default function (server: Server, ctx: AppContext) {
             sql`(${ref('post.creator')}, ${ref('originatorDid')})`,
           ),
         )
+        .whereNotExists(
+          db
+            .selectFrom('actor_block')
+            .selectAll()
+            .where((qb) =>
+              qb
+                .where('actor_block.creator', '=', requester)
+                .whereRef(
+                  'actor_block.subjectDid',
+                  'in',
+                  sql`(${ref('post.creator')}, ${ref('originatorDid')})`,
+                ),
+            )
+            .orWhere((qb) =>
+              qb
+                .where('actor_block.subjectDid', '=', requester)
+                .whereRef(
+                  'actor_block.creator',
+                  'in',
+                  sql`(${ref('post.creator')}, ${ref('originatorDid')})`,
+                ),
+            ),
+        )
 
       const keyset = new FeedKeyset(
         ref('feed_item.sortAt'),
