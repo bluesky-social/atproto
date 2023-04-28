@@ -4240,6 +4240,7 @@ export const schemaDict = {
                 refs: [
                   'lex:app.bsky.feed.defs#threadViewPost',
                   'lex:app.bsky.feed.defs#notFoundPost',
+                  'lex:app.bsky.feed.defs#blockedPost',
                 ],
               },
             },
