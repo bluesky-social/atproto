@@ -21,7 +21,14 @@ export default function (server: Server, ctx: AppContext) {
       const postsQb = feedService
         .selectPostQb()
         .leftJoin('post_agg', 'post_agg.uri', 'post.uri')
-        .where('post_agg.likeCount', '>=', 8)
+        .where('post_agg.likeCount', '>=', 50)
+        .where('post.replyRoot', 'is', null)
+        .whereNotExists((qb) =>
+          qb
+            .selectFrom('post_embed_external')
+            .selectAll()
+            .whereRef('post_embed_external.postUri', '=', ref('post.uri')),
+        )
         .whereNotExists(
           db
             .selectFrom('mute')
