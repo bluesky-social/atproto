@@ -25,22 +25,24 @@ describe('pds views with blocking', () => {
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
     await basicSeed(sc)
-    // add follows just for kicks
-    // dan blocks carol
-    await agent.api.app.bsky.graph.block.create(
-      { repo: sc.dids.dan },
-      { createdAt: new Date().toISOString(), subject: sc.dids.carol },
-      sc.getHeaders(sc.dids.dan),
-    )
-    aliceReplyToDan = await sc.reply(
-      sc.dids.alice,
-      sc.posts[sc.dids.dan][0].ref,
-      sc.posts[sc.dids.dan][0].ref,
-      'alice replies to dan',
-    )
     alice = sc.dids.alice
     carol = sc.dids.carol
     dan = sc.dids.dan
+    // add follows to ensure blocks work even w follows
+    await sc.follow(carol, dan)
+    await sc.follow(dan, carol)
+    // dan blocks carol
+    await agent.api.app.bsky.graph.block.create(
+      { repo: dan },
+      { createdAt: new Date().toISOString(), subject: carol },
+      sc.getHeaders(dan),
+    )
+    aliceReplyToDan = await sc.reply(
+      alice,
+      sc.posts[dan][0].ref,
+      sc.posts[dan][0].ref,
+      'alice replies to dan',
+    )
     await server.ctx.backgroundQueue.processAll()
   })
 
@@ -115,14 +117,121 @@ describe('pds views with blocking', () => {
     await expect(attempt2).rejects.toThrow(BlockedByActorError)
   })
 
-  // it('strips blocked posts out of getPopular', async () => {
-  //   for (let i = 0; i < 15; i++) {
-  //     const accnt = await agent.api.com.atproto.server.createAccount({
-  //       handle: `user${i}.test`,
-  //       email: `user${i}@test.com`,
-  //       password: 'password',
-  //     })
-  //     await
-  //   }
-  // })
+  it('strips blocked users out of getTimeline', async () => {
+    const resCarol = await agent.api.app.bsky.unspecced.getPopular(
+      { limit: 100 },
+      { headers: sc.getHeaders(carol) },
+    )
+    expect(
+      resCarol.data.feed.some((post) => post.post.author.did === dan),
+    ).toBeFalsy()
+
+    const resDan = await agent.api.app.bsky.unspecced.getPopular(
+      { limit: 100 },
+      { headers: sc.getHeaders(carol) },
+    )
+    expect(
+      resDan.data.feed.some((post) => post.post.author.did === carol),
+    ).toBeFalsy()
+  })
+
+  it('strips blocked users out of getPopular', async () => {
+    for (let i = 0; i < 15; i++) {
+      const name = `user${i}`
+      await sc.createAccount(name, {
+        handle: `user${i}.test`,
+        email: `user${i}@test.com`,
+        password: 'password',
+      })
+      await sc.like(sc.dids[name], sc.posts[alice][0].ref)
+      await sc.like(sc.dids[name], sc.posts[carol][0].ref)
+      await sc.like(sc.dids[name], sc.posts[dan][0].ref)
+    }
+
+    const resCarol = await agent.api.app.bsky.unspecced.getPopular(
+      {},
+      { headers: sc.getHeaders(carol) },
+    )
+    expect(
+      resCarol.data.feed.some((post) => post.post.author.did === alice),
+    ).toBeTruthy()
+    expect(
+      resCarol.data.feed.some((post) => post.post.author.did === carol),
+    ).toBeTruthy()
+    expect(
+      resCarol.data.feed.some((post) => post.post.author.did === dan),
+    ).toBeFalsy()
+
+    const resDan = await agent.api.app.bsky.unspecced.getPopular(
+      {},
+      { headers: sc.getHeaders(dan) },
+    )
+    expect(
+      resDan.data.feed.some((post) => post.post.author.did === alice),
+    ).toBeTruthy()
+    expect(
+      resDan.data.feed.some((post) => post.post.author.did === carol),
+    ).toBeFalsy()
+    expect(
+      resDan.data.feed.some((post) => post.post.author.did === dan),
+    ).toBeTruthy()
+  })
+
+  it('returns block status on getProfile', async () => {
+    const resCarol = await agent.api.app.bsky.actor.getProfile(
+      { actor: dan },
+      { headers: sc.getHeaders(carol) },
+    )
+    expect(resCarol.data.viewer?.blocking).toBe(false)
+    expect(resCarol.data.viewer?.blockedBy).toBe(true)
+
+    const resDan = await agent.api.app.bsky.actor.getProfile(
+      { actor: carol },
+      { headers: sc.getHeaders(dan) },
+    )
+    expect(resDan.data.viewer?.blocking).toBe(true)
+    expect(resDan.data.viewer?.blockedBy).toBe(false)
+  })
+
+  it('returns block status on getProfiles', async () => {
+    const resCarol = await agent.api.app.bsky.actor.getProfiles(
+      { actors: [alice, dan] },
+      { headers: sc.getHeaders(carol) },
+    )
+    expect(resCarol.data.profiles[0].viewer?.blocking).toBe(false)
+    expect(resCarol.data.profiles[0].viewer?.blockedBy).toBe(false)
+    expect(resCarol.data.profiles[1].viewer?.blocking).toBe(false)
+    expect(resCarol.data.profiles[1].viewer?.blockedBy).toBe(true)
+
+    const resDan = await agent.api.app.bsky.actor.getProfiles(
+      { actors: [alice, carol] },
+      { headers: sc.getHeaders(dan) },
+    )
+    expect(resDan.data.profiles[0].viewer?.blocking).toBe(false)
+    expect(resDan.data.profiles[0].viewer?.blockedBy).toBe(false)
+    expect(resDan.data.profiles[1].viewer?.blocking).toBe(true)
+    expect(resDan.data.profiles[1].viewer?.blockedBy).toBe(false)
+  })
+
+  it('does not return notifs for blocked accounts', async () => {
+    const resCarol = await agent.api.app.bsky.notification.listNotifications(
+      {
+        limit: 100,
+      },
+      { headers: sc.getHeaders(carol) },
+    )
+    expect(
+      resCarol.data.notifications.some((notif) => notif.author.did === dan),
+    ).toBeFalsy()
+
+    const resDan = await agent.api.app.bsky.notification.listNotifications(
+      {
+        limit: 100,
+      },
+      { headers: sc.getHeaders(carol) },
+    )
+    expect(
+      resDan.data.notifications.some((notif) => notif.author.did === carol),
+    ).toBeFalsy()
+  })
 })
