@@ -5,6 +5,7 @@ import { Server } from '../../../../lexicon'
 import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
+import { analytics, identifyNewUser } from '../../../../util/analytics'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount(async ({ input, req }) => {
@@ -124,6 +125,23 @@ export default function (server: Server, ctx: AppContext) {
         accessJwt: access.jwt,
         refreshJwt: refresh.jwt,
       }
+    })
+
+    identifyNewUser({
+      did: result.did,
+      handle: handle,
+      email: email,
+      createdAt: now,
+      inviteCode,
+    })
+    analytics.track({
+      userId: result.did,
+      event: 'Account Created',
+      properties: {
+        handle,
+        email,
+        inviteCode,
+      },
     })
 
     return {
