@@ -21,13 +21,13 @@ export default function (server: Server, ctx: AppContext) {
       const postsQb = feedService
         .selectPostQb()
         .leftJoin('post_agg', 'post_agg.uri', 'post.uri')
-        .where('post_agg.likeCount', '>=', 50)
-        .where('post.replyRoot', 'is', null)
+        .where('post_agg.likeCount', '>=', 12)
         .whereNotExists((qb) =>
           qb
-            .selectFrom('post_embed_record')
+            .selectFrom('label')
             .selectAll()
-            .whereRef('post_embed_record.postUri', '=', ref('post.uri')),
+            .where('val', '=', '!no-promote')
+            .whereRef('label.uri', '=', ref('post.creator')),
         )
         .whereNotExists(
           db
