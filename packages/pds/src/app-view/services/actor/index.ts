@@ -1,8 +1,10 @@
 import Database from '../../../db'
 import { DidHandle } from '../../../db/tables/did-handle'
-import { notSoftDeletedClause } from '../../../db/util'
+import { DbRef, notSoftDeletedClause } from '../../../db/util'
 import { ActorViews } from './views'
 import { ImageUriBuilder } from '../../../image/uri'
+import { NotEmptyArray } from '@atproto/common'
+import { sql } from 'kysely'
 
 export class ActorService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
@@ -62,6 +64,23 @@ export class ActorService {
       const orderB = order[b.did] ?? order[b.handle.toLowerCase()]
       return orderA - orderB
     })
+  }
+
+  blockQb(requester: string, refs: NotEmptyArray<DbRef>) {
+    const subjectRefs = sql.join(refs)
+    return this.db.db
+      .selectFrom('actor_block')
+      .selectAll()
+      .where((qb) =>
+        qb
+          .where('actor_block.creator', '=', requester)
+          .whereRef('actor_block.subjectDid', 'in', sql`(${subjectRefs})`),
+      )
+      .orWhere((qb) =>
+        qb
+          .where('actor_block.subjectDid', '=', requester)
+          .whereRef('actor_block.creator', 'in', sql`(${subjectRefs})`),
+      )
   }
 
   async getBlocks(

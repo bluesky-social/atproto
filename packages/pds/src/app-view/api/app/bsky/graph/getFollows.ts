@@ -30,6 +30,9 @@ export default function (server: Server, ctx: AppContext) {
           'follow.subjectDid',
         )
         .where(notSoftDeletedClause(ref('subject_repo')))
+        .whereNotExists(
+          actorService.blockQb(requester, [ref('follow.creator')]),
+        )
         .selectAll('subject')
         .select(['follow.cid as cid', 'follow.createdAt as createdAt'])
 
