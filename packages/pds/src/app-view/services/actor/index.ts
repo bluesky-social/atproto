@@ -63,6 +63,45 @@ export class ActorService {
       return orderA - orderB
     })
   }
+
+  async getBlocks(
+    requester: string,
+    subjectHandleOrDid: string,
+  ): Promise<{ blocking: boolean; blockedBy: boolean }> {
+    let subjectDid
+    if (subjectHandleOrDid.startsWith('did:')) {
+      subjectDid = subjectHandleOrDid
+    } else {
+      const res = await this.db.db
+        .selectFrom('did_handle')
+        .where('handle', '=', subjectHandleOrDid)
+        .select('did')
+        .executeTakeFirst()
+      if (!res) {
+        return { blocking: false, blockedBy: false }
+      }
+      subjectDid = res.did
+    }
+
+    const accnts = [requester, subjectDid]
+    const res = await this.db.db
+      .selectFrom('actor_block')
+      .where('creator', 'in', accnts)
+      .where('subjectDid', 'in', accnts)
+      .selectAll()
+      .execute()
+
+    const blocking = res.some(
+      (row) => row.creator === requester && row.subjectDid === subjectDid,
+    )
+    const blockedBy = res.some(
+      (row) => row.creator === subjectDid && row.subjectDid === requester,
+    )
+    return {
+      blocking,
+      blockedBy,
+    }
+  }
 }
 
 type ActorResult = DidHandle & { takedownId: number | null }

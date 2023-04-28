@@ -4130,6 +4130,14 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'BlockedActor',
+          },
+          {
+            name: 'BlockedByActor',
+          },
+        ],
       },
     },
   },
