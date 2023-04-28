@@ -3,6 +3,8 @@ import { runTestServer, CloseFn, TestServerInfo, forSnapshot } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { RecordRef } from '@atproto/bsky/tests/seeds/client'
+import { BlockedActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
+import { BlockedByActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
 
 describe('pds views with blocking', () => {
   let server: TestServerInfo
@@ -10,6 +12,10 @@ describe('pds views with blocking', () => {
   let close: CloseFn
   let sc: SeedClient
   let aliceReplyToDan: { ref: RecordRef }
+
+  let alice: string
+  let carol: string
+  let dan: string
 
   beforeAll(async () => {
     server = await runTestServer({
@@ -19,6 +25,7 @@ describe('pds views with blocking', () => {
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
     await basicSeed(sc)
+    // add follows just for kicks
     // dan blocks carol
     await agent.api.app.bsky.graph.block.create(
       { repo: sc.dids.dan },
@@ -31,6 +38,9 @@ describe('pds views with blocking', () => {
       sc.posts[sc.dids.dan][0].ref,
       'alice replies to dan',
     )
+    alice = sc.dids.alice
+    carol = sc.dids.carol
+    dan = sc.dids.dan
     await server.ctx.backgroundQueue.processAll()
   })
 
@@ -65,7 +75,6 @@ describe('pds views with blocking', () => {
   })
 
   it('blocks thread reply', async () => {
-    const { alice, dan } = sc.dids
     // Contains reply by carol
     const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
@@ -75,7 +84,6 @@ describe('pds views with blocking', () => {
   })
 
   it('blocks thread parent', async () => {
-    const { carol } = sc.dids
     // Parent is a post by dan
     const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: aliceReplyToDan.ref.uriStr },
@@ -85,7 +93,6 @@ describe('pds views with blocking', () => {
   })
 
   it('blocks record embeds', async () => {
-    const { alice, dan } = sc.dids
     // Contains a deep embed of carol's post, blocked by dan
     const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
       { depth: 0, uri: sc.posts[alice][2].ref.uriStr },
@@ -93,4 +100,29 @@ describe('pds views with blocking', () => {
     )
     expect(forSnapshot(thread)).toMatchSnapshot()
   })
+
+  it('errors on getting author feed', async () => {
+    const attempt1 = agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: carol },
+      { headers: sc.getHeaders(dan) },
+    )
+    await expect(attempt1).rejects.toThrow(BlockedActorError)
+
+    const attempt2 = agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: dan },
+      { headers: sc.getHeaders(carol) },
+    )
+    await expect(attempt2).rejects.toThrow(BlockedByActorError)
+  })
+
+  // it('strips blocked posts out of getPopular', async () => {
+  //   for (let i = 0; i < 15; i++) {
+  //     const accnt = await agent.api.com.atproto.server.createAccount({
+  //       handle: `user${i}.test`,
+  //       email: `user${i}@test.com`,
+  //       password: 'password',
+  //     })
+  //     await
+  //   }
+  // })
 })
