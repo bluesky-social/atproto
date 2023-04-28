@@ -25,9 +25,9 @@ export default function (server: Server, ctx: AppContext) {
         .where('post.replyRoot', 'is', null)
         .whereNotExists((qb) =>
           qb
-            .selectFrom('post_embed_external')
+            .selectFrom('post_embed_record')
             .selectAll()
-            .whereRef('post_embed_external.postUri', '=', ref('post.uri')),
+            .whereRef('post_embed_record.postUri', '=', ref('post.uri')),
         )
         .whereNotExists(
           db
