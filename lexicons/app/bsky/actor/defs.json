@@ -80,8 +80,8 @@
       "type": "object",
       "properties": {
         "muted": {"type": "boolean"},
-        "blockedBy": {"type": "boolean"},
         "blocking": {"type": "boolean"},
+        "blockedBy": {"type": "boolean"},
         "following": {"type": "string", "format": "at-uri"},
         "followedBy": {"type": "string", "format": "at-uri"}
       }
