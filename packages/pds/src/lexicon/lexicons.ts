@@ -3398,7 +3398,8 @@ export const schemaDict = {
             type: 'boolean',
           },
           blocking: {
-            type: 'boolean',
+            type: 'string',
+            format: 'at-uri',
           },
           following: {
             type: 'string',
