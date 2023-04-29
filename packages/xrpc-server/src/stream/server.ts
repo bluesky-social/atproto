@@ -20,16 +20,16 @@ export class XrpcStreamServer {
         })
         const safeFrames = wrapIterator(iterator)
         for await (const frame of safeFrames) {
-          if (frame instanceof ErrorFrame) {
-            await new Promise((res, rej) => {
-              socket.send(frame.toBytes(), { binary: true }, (err) => {
-                if (err) return rej(err)
-                res(undefined)
-              })
+          await new Promise((res, rej) => {
+            socket.send(frame.toBytes(), { binary: true }, (err) => {
+              // @TODO this callback may give more aggressive on backpressure than
+              // we ultimately want, but trying it out for the time being.
+              if (err) return rej(err)
+              res(undefined)
             })
+          })
+          if (frame instanceof ErrorFrame) {
             throw new DisconnectError(CloseCode.Policy, frame.body.error)
-          } else {
-            socket.send(frame.toBytes(), { binary: true })
           }
         }
       } catch (err) {
