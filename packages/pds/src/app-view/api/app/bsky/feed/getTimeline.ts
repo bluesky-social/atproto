@@ -21,6 +21,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const feedService = ctx.services.appView.feed(ctx.db)
+      const actorService = ctx.services.appView.actor(ctx.db)
       const labelService = ctx.services.appView.label(ctx.db)
 
       const followingIdsSubquery = db
@@ -46,6 +47,12 @@ export default function (server: Server, ctx: AppContext) {
             'in',
             sql`(${ref('post.creator')}, ${ref('originatorDid')})`,
           ),
+        )
+        .whereNotExists(
+          actorService.blockQb(requester, [
+            ref('post.creator'),
+            ref('originatorDid'),
+          ]),
         )
 
       const keyset = new FeedKeyset(

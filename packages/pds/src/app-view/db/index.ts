@@ -8,6 +8,7 @@ import * as postHierarchy from './tables/post-hierarchy'
 import * as repost from './tables/repost'
 import * as feedItem from './tables/feed-item'
 import * as follow from './tables/follow'
+import * as actorBlock from './tables/actor-block'
 import * as like from './tables/like'
 import * as subscription from './tables/subscription'
 
@@ -22,5 +23,6 @@ export type DatabaseSchemaType = duplicateRecords.PartialDB &
   repost.PartialDB &
   feedItem.PartialDB &
   follow.PartialDB &
+  actorBlock.PartialDB &
   like.PartialDB &
   subscription.PartialDB

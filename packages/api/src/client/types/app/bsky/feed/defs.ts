@@ -118,10 +118,12 @@ export interface ThreadViewPost {
   parent?:
     | ThreadViewPost
     | NotFoundPost
+    | BlockedPost
     | { $type: string; [k: string]: unknown }
   replies?: (
     | ThreadViewPost
     | NotFoundPost
+    | BlockedPost
     | { $type: string; [k: string]: unknown }
   )[]
   [k: string]: unknown
@@ -155,4 +157,22 @@ export function isNotFoundPost(v: unknown): v is NotFoundPost {
 
 export function validateNotFoundPost(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#notFoundPost', v)
+}
+
+export interface BlockedPost {
+  uri: string
+  blocked: true
+  [k: string]: unknown
+}
+
+export function isBlockedPost(v: unknown): v is BlockedPost {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#blockedPost'
+  )
+}
+
+export function validateBlockedPost(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#blockedPost', v)
 }

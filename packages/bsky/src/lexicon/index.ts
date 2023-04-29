@@ -75,6 +75,7 @@ import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
+import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
@@ -786,6 +787,13 @@ export class GraphNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  getBlocks<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyGraphGetBlocks.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.graph.getBlocks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   getFollowers<AV extends AuthVerifier>(

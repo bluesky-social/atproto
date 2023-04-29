@@ -1,7 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../../context'
 import { Cursor, GenericKeyset, paginate } from '../../../../../db/pagination'
-import { countAll, notSoftDeletedClause } from '../../../../../db/util'
+import { notSoftDeletedClause } from '../../../../../db/util'
 import { Server } from '../../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
@@ -17,6 +17,8 @@ export default function (server: Server, ctx: AppContext) {
       const { services } = ctx
       const { ref } = db.dynamic
 
+      const actorService = ctx.services.appView.actor(ctx.db)
+
       let suggestionsQb = db
         .selectFrom('user_account')
         .innerJoin('did_handle', 'user_account.did', 'did_handle.did')
@@ -30,6 +32,9 @@ export default function (server: Server, ctx: AppContext) {
             .selectAll()
             .where('creator', '=', requester)
             .whereRef('subjectDid', '=', ref('did_handle.did')),
+        )
+        .whereNotExists(
+          actorService.blockQb(requester, [ref('did_handle.did')]),
         )
         .selectAll('did_handle')
         .select('profile_agg.postsCount as postsCount')
