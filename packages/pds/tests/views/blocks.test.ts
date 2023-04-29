@@ -292,4 +292,36 @@ describe('pds views with blocking', () => {
     )
     expect(resDan.data.actors.some((actor) => actor.did === carol)).toBeFalsy()
   })
+
+  it('returns a list of blocks', async () => {
+    await agent.api.app.bsky.graph.block.create(
+      { repo: dan },
+      { createdAt: new Date().toISOString(), subject: alice },
+      sc.getHeaders(dan),
+    )
+
+    const res = await agent.api.app.bsky.graph.getBlocks(
+      {},
+      { headers: sc.getHeaders(dan) },
+    )
+    const dids = res.data.blocks.map((block) => block.did).sort()
+    expect(dids).toEqual([alice, carol].sort())
+  })
+
+  it('paginates getBlocks', async () => {
+    const full = await agent.api.app.bsky.graph.getBlocks(
+      {},
+      { headers: sc.getHeaders(dan) },
+    )
+    const first = await agent.api.app.bsky.graph.getBlocks(
+      { limit: 1 },
+      { headers: sc.getHeaders(dan) },
+    )
+    const second = await agent.api.app.bsky.graph.getBlocks(
+      { cursor: first.data.cursor },
+      { headers: sc.getHeaders(dan) },
+    )
+    const combined = [...first.data.blocks, ...second.data.blocks]
+    expect(combined).toEqual(full.data.blocks)
+  })
 })

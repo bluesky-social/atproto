@@ -33,8 +33,8 @@ export default function (server: Server, ctx: AppContext) {
         ])
 
       const keyset = new TimeCidKeyset(
-        ref('follow.createdAt'),
-        ref('follow.cid'),
+        ref('actor_block.createdAt'),
+        ref('actor_block.cid'),
       )
       blocksReq = paginate(blocksReq, {
         limit,
@@ -42,16 +42,16 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
 
-      const followsRes = await blocksReq.execute()
+      const blocksRes = await blocksReq.execute()
 
       const actorService = services.appView.actor(db)
-      const blocks = await actorService.views.profile(followsRes, requester)
+      const blocks = await actorService.views.profile(blocksRes, requester)
 
       return {
         encoding: 'application/json',
         body: {
           blocks,
-          cursor: keyset.packFromResult(followsRes),
+          cursor: keyset.packFromResult(blocksRes),
         },
       }
     },
