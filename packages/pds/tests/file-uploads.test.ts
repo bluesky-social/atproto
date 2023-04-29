@@ -135,14 +135,16 @@ describe('file uploads', () => {
   })
 
   it('can fetch the file after being referenced', async () => {
-    const fetchedFile = await aliceAgent.api.com.atproto.sync.getBlob({
+    const { headers, data } = await aliceAgent.api.com.atproto.sync.getBlob({
       did: alice.did,
       cid: smallBlob.ref.toString(),
     })
-    expect(fetchedFile.headers['content-type']).toEqual('image/jpeg')
-    expect(
-      uint8arrays.equals(smallFile, new Uint8Array(fetchedFile.data)),
-    ).toBeTruthy()
+    expect(headers['content-type']).toEqual('image/jpeg')
+    expect(headers['content-security-policy']).toEqual(
+      `default-src 'none'; sandbox`,
+    )
+    expect(headers['x-content-type-options']).toEqual('nosniff')
+    expect(uint8arrays.equals(smallFile, new Uint8Array(data))).toBeTruthy()
   })
 
   it('serves the referenced blob', async () => {
