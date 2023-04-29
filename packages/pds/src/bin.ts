@@ -5,11 +5,31 @@ import Database from './db'
 import PDS from './index'
 import { DiskBlobStore, MemoryBlobStore } from './storage'
 import { BlobStore } from '@atproto/repo'
+import * as fs from 'node:fs';
 
 const run = async () => {
   let db: Database
 
-  const keypair = await crypto.EcdsaKeypair.create()
+  const keypairPath = process.env.KEYPAIR_PATH
+  let keypair: crypto.EcdsaKeypair | null = null
+  if (keypairPath) {
+    try {
+      keypair = await crypto.EcdsaKeypair.import(
+        JSON.parse(fs.readFileSync(keypairPath, { encoding: 'utf8' })),
+      )
+    } catch (e) {
+      console.log("Unable to load keypair: will generate new keypair.");
+      console.log(e)
+    }
+  }
+  if (!keypair) {
+    keypair = await crypto.EcdsaKeypair.create({ exportable: true })
+    if (keypairPath) {
+      fs.writeFileSync(keypairPath, JSON.stringify(await keypair!.export()), {
+        encoding: 'utf8',
+      })
+    }
+  }
   const cfg = ServerConfig.readEnv({
     serverDid: keypair.did(),
     recoveryKey: keypair.did(),
