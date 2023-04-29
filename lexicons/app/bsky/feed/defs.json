@@ -67,10 +67,10 @@
       "required": ["post"],
       "properties": {
         "post": {"type": "ref", "ref": "#postView"},
-        "parent": {"type": "union", "refs": ["#threadViewPost", "#notFoundPost"]},
+        "parent": {"type": "union", "refs": ["#threadViewPost", "#notFoundPost", "#blockedPost"]},
         "replies": {
           "type": "array",
-          "items": {"type": "union", "refs": ["#threadViewPost", "#notFoundPost"]}
+          "items": {"type": "union", "refs": ["#threadViewPost", "#notFoundPost", "#blockedPost"]}
         }
       }
     },
@@ -80,6 +80,14 @@
       "properties": {
         "uri": {"type": "string", "format": "at-uri"},
         "notFound": {"type": "boolean", "const": true}
+      }
+    },
+    "blockedPost": {
+      "type": "object",
+      "required": ["uri", "blocked"],
+      "properties": {
+        "uri": {"type": "string", "format": "at-uri"},
+        "blocked": {"type": "boolean", "const": true}
       }
     }
   }

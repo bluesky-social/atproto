@@ -17,6 +17,8 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('The seenAt parameter is unsupported')
       }
 
+      const actorService = ctx.services.appView.actor(ctx.db)
+
       let notifBuilder = ctx.db.db
         .selectFrom('user_notification as notif')
         .innerJoin('did_handle as author', 'author.did', 'notif.author')
@@ -36,6 +38,7 @@ export default function (server: Server, ctx: AppContext) {
             .whereRef('did', '=', ref('notif.author'))
             .where('mutedByDid', '=', requester),
         )
+        .whereNotExists(actorService.blockQb(requester, [ref('notif.author')]))
         .where((clause) =>
           clause
             .where('reasonSubject', 'is', null)
@@ -94,7 +97,6 @@ export default function (server: Server, ctx: AppContext) {
         : null
 
       // @NOTE calling into app-view, will eventually be replaced
-      const actorService = ctx.services.appView.actor(ctx.db)
       const labelService = ctx.services.appView.label(ctx.db)
       const recordUris = notifs.map((notif) => notif.uri)
       const [blocks, authors, labels] = await Promise.all([

@@ -7,21 +7,18 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyFeedDefs from './defs'
+import * as AppBskyActorDefs from '../actor/defs'
 
 export interface QueryParams {
-  uri: string
-  depth?: number
+  limit: number
+  cursor?: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  thread:
-    | AppBskyFeedDefs.ThreadViewPost
-    | AppBskyFeedDefs.NotFoundPost
-    | AppBskyFeedDefs.BlockedPost
-    | { $type: string; [k: string]: unknown }
+  cursor?: string
+  blocks: AppBskyActorDefs.ProfileView[]
   [k: string]: unknown
 }
 
@@ -35,7 +32,6 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'NotFound'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

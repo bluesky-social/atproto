@@ -12,6 +12,8 @@ export default function (server: Server, ctx: AppContext) {
       const { services, db } = ctx
       const { ref } = db.db.dynamic
 
+      const actorService = ctx.services.appView.actor(ctx.db)
+
       let builder = db.db
         .selectFrom('repost')
         .where('repost.subject', '=', uri)
@@ -22,6 +24,9 @@ export default function (server: Server, ctx: AppContext) {
           'repost.creator',
         )
         .where(notSoftDeletedClause(ref('creator_repo')))
+        .whereNotExists(
+          actorService.blockQb(requester, [ref('repost.creator')]),
+        )
         .selectAll('creator')
         .select(['repost.cid as cid', 'repost.createdAt as createdAt'])
 
