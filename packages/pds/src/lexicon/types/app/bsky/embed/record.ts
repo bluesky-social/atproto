@@ -31,7 +31,11 @@ export function validateMain(v: unknown): ValidationResult {
 }
 
 export interface View {
-  record: ViewRecord | ViewNotFound | { $type: string; [k: string]: unknown }
+  record:
+    | ViewRecord
+    | ViewNotFound
+    | ViewBlocked
+    | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
 
@@ -89,4 +93,21 @@ export function isViewNotFound(v: unknown): v is ViewNotFound {
 
 export function validateViewNotFound(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.embed.record#viewNotFound', v)
+}
+
+export interface ViewBlocked {
+  uri: string
+  [k: string]: unknown
+}
+
+export function isViewBlocked(v: unknown): v is ViewBlocked {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.embed.record#viewBlocked'
+  )
+}
+
+export function validateViewBlocked(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.record#viewBlocked', v)
 }

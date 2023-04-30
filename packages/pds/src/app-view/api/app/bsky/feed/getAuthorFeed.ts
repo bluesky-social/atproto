@@ -3,6 +3,7 @@ import { FeedKeyset, composeFeed } from '../util/feed'
 import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
@@ -12,6 +13,22 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const db = ctx.db.db
       const { ref } = db.dynamic
+
+      // first verify there is not a block between requester & subject
+      const blocks = await ctx.services.appView
+        .actor(ctx.db)
+        .getBlocks(requester, actor)
+      if (blocks.blocking) {
+        throw new InvalidRequestError(
+          `Requester has blocked actor: ${actor}`,
+          'BlockedActor',
+        )
+      } else if (blocks.blockedBy) {
+        throw new InvalidRequestError(
+          `Requester is blocked by actor: $${actor}`,
+          'BlockedByActor',
+        )
+      }
 
       const feedService = ctx.services.appView.feed(ctx.db)
       const labelService = ctx.services.appView.label(ctx.db)

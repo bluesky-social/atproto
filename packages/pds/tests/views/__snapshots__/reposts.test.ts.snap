@@ -7,6 +7,7 @@ Array [
     "handle": "eve.test",
     "labels": Array [],
     "viewer": Object {
+      "blockedBy": false,
       "muted": false,
     },
   },
@@ -23,6 +24,7 @@ Array [
       },
     ],
     "viewer": Object {
+      "blockedBy": false,
       "following": "record(0)",
       "muted": false,
     },
@@ -32,6 +34,7 @@ Array [
     "handle": "carol.test",
     "labels": Array [],
     "viewer": Object {
+      "blockedBy": false,
       "followedBy": "record(2)",
       "following": "record(1)",
       "muted": false,
@@ -46,6 +49,7 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "viewer": Object {
+      "blockedBy": false,
       "followedBy": "record(4)",
       "following": "record(3)",
       "muted": false,
@@ -61,6 +65,7 @@ Array [
     "handle": "eve.test",
     "labels": Array [],
     "viewer": Object {
+      "blockedBy": false,
       "muted": false,
     },
   },
@@ -77,6 +82,7 @@ Array [
       },
     ],
     "viewer": Object {
+      "blockedBy": false,
       "following": "record(0)",
       "muted": false,
     },
