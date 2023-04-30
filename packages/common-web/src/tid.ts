@@ -6,7 +6,9 @@ let lastTimestamp = 0
 let timestampCount = 0
 let clockid: number | null = null
 
-const dedash = str => str.replaceAll('-', '')
+function dedash(str: string): string {
+  return str.replaceAll('-', '')
+}
 
 export class TID {
   str: string
