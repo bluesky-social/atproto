@@ -93,7 +93,7 @@ export class TID {
   }
 
   equals(other: TID): boolean {
-    return this.str == other.str
+    return this.str === other.str
   }
 
   newerThan(other: TID): boolean {
