@@ -56,7 +56,7 @@ export class TID {
   static oldestFirst(a: TID, b: TID): number {
     return a.compareTo(b)
   }
-  
+
   static newestFirst(a: TID, b: TID): number {
     return b.compareTo(a)
   }
