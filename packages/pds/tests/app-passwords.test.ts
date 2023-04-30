@@ -52,6 +52,14 @@ describe('app_passwords', () => {
     expect(decoded?.scope).toEqual('com.atproto.appPass')
   })
 
+  it('doesn’t allow revocation of app-specific passwords', async () => {
+    const revocation = appAgent.api.com.atproto.server.revokeAppPassword({
+      name: 'test-pass',
+    })
+
+    expect(revocation).rejects.toThrow('Token could not be verified')
+  })
+
   it('allows actions to be performed from app', async () => {
     await appAgent.api.app.bsky.feed.post.create(
       {
@@ -112,8 +120,8 @@ describe('app_passwords', () => {
     expect(res.data.passwords[0].name).toEqual('test-pass')
   })
 
-  it('revokes an app-specific password', async () => {
-    await appAgent.api.com.atproto.server.revokeAppPassword({
+  it('revokes the app-specific password only with the account login', async () => {
+    await accntAgent.api.com.atproto.server.revokeAppPassword({
       name: 'test-pass',
     })
   })
