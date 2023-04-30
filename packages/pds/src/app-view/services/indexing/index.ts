@@ -8,6 +8,7 @@ import * as Post from './plugins/post'
 import * as Like from './plugins/like'
 import * as Repost from './plugins/repost'
 import * as Follow from './plugins/follow'
+import * as Block from './plugins/block'
 import * as Profile from './plugins/profile'
 import { BackgroundQueue } from '../../../event-stream/background-queue'
 
@@ -17,6 +18,7 @@ export class IndexingService {
     like: Like.PluginType
     repost: Repost.PluginType
     follow: Follow.PluginType
+    block: Block.PluginType
     profile: Profile.PluginType
   }
 
@@ -26,6 +28,7 @@ export class IndexingService {
       like: Like.makePlugin(this.db, backgroundQueue),
       repost: Repost.makePlugin(this.db, backgroundQueue),
       follow: Follow.makePlugin(this.db, backgroundQueue),
+      block: Block.makePlugin(this.db, backgroundQueue),
       profile: Profile.makePlugin(this.db, backgroundQueue),
     }
   }
@@ -101,6 +104,7 @@ export class IndexingService {
     ])
     await removeActorAggregates(this.db.db, did)
     await Promise.all([
+      this.db.db.deleteFrom('actor_block').where('creator', '=', did).execute(),
       this.db.db.deleteFrom('follow').where('creator', '=', did).execute(),
       this.db.db.deleteFrom('post').where('creator', '=', did).execute(),
       this.db.db.deleteFrom('profile').where('creator', '=', did).execute(),

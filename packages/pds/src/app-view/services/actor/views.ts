@@ -64,6 +64,18 @@ export class ActorViews {
           .select('uri')
           .as('requesterFollowedBy'),
         this.db.db
+          .selectFrom('actor_block')
+          .where('creator', '=', viewer)
+          .whereRef('subjectDid', '=', ref('did_handle.did'))
+          .select('uri')
+          .as('requesterBlocking'),
+        this.db.db
+          .selectFrom('actor_block')
+          .whereRef('creator', '=', ref('did_handle.did'))
+          .where('subjectDid', '=', viewer)
+          .select('uri')
+          .as('requesterBlockedBy'),
+        this.db.db
           .selectFrom('mute')
           .whereRef('did', '=', ref('did_handle.did'))
           .where('mutedByDid', '=', viewer)
@@ -102,6 +114,8 @@ export class ActorViews {
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: {
           muted: !!profileInfo?.requesterMuted,
+          blockedBy: !!profileInfo.requesterBlockedBy,
+          blocking: profileInfo.requesterBlocking || undefined,
           following: profileInfo?.requesterFollowing || undefined,
           followedBy: profileInfo?.requesterFollowedBy || undefined,
         },
@@ -148,6 +162,18 @@ export class ActorViews {
           .select('uri')
           .as('requesterFollowedBy'),
         this.db.db
+          .selectFrom('actor_block')
+          .where('creator', '=', viewer)
+          .whereRef('subjectDid', '=', ref('did_handle.did'))
+          .select('uri')
+          .as('requesterBlocking'),
+        this.db.db
+          .selectFrom('actor_block')
+          .whereRef('creator', '=', ref('did_handle.did'))
+          .where('subjectDid', '=', viewer)
+          .select('uri')
+          .as('requesterBlockedBy'),
+        this.db.db
           .selectFrom('mute')
           .whereRef('did', '=', ref('did_handle.did'))
           .where('mutedByDid', '=', viewer)
@@ -179,6 +205,8 @@ export class ActorViews {
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: {
           muted: !!profileInfo?.requesterMuted,
+          blockedBy: !!profileInfo.requesterBlockedBy,
+          blocking: profileInfo.requesterBlocking || undefined,
           following: profileInfo?.requesterFollowing || undefined,
           followedBy: profileInfo?.requesterFollowedBy || undefined,
         },

@@ -42,3 +42,5 @@ export const def = {
 }
 
 export type ArrayEl<A> = A extends readonly (infer T)[] ? T : never
+
+export type NotEmptyArray<T> = [T, ...T[]]

@@ -9,6 +9,12 @@ import {
   PostInfoMap,
 } from '../../../../services/feed'
 import { Labels } from '../../../../services/label'
+import {
+  BlockedPost,
+  NotFoundPost,
+  ThreadViewPost,
+  isNotFoundPost,
+} from '../../../../../lexicon/types/app/bsky/feed/defs'
 
 export type PostThread = {
   post: FeedRow
@@ -46,6 +52,12 @@ export default function (server: Server, ctx: AppContext) {
         embeds,
         labels,
       )
+
+      if (isNotFoundPost(thread)) {
+        // @TODO technically this could be returned as a NotFoundPost based on lexicon
+        throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
+      }
+
       return {
         encoding: 'application/json',
         body: { thread },
@@ -61,7 +73,7 @@ const composeThread = (
   actors: ActorViewMap,
   embeds: FeedEmbeds,
   labels: Labels,
-) => {
+): ThreadViewPost | NotFoundPost | BlockedPost => {
   const post = feedService.formatPostView(
     threadData.post.postUri,
     actors,
@@ -70,7 +82,23 @@ const composeThread = (
     labels,
   )
 
-  let parent
+  if (!post) {
+    return {
+      $type: 'app.bsky.feed.defs#notFoundPost',
+      uri: threadData.post.postUri,
+      notFound: true,
+    }
+  }
+
+  if (post.author.viewer?.blocking || post.author.viewer?.blockedBy) {
+    return {
+      $type: 'app.bsky.feed.defs#blockedPost',
+      uri: threadData.post.postUri,
+      blocked: true,
+    }
+  }
+
+  let parent: ThreadViewPost | NotFoundPost | BlockedPost | undefined
   if (threadData.parent) {
     if (threadData.parent instanceof ParentNotFoundError) {
       parent = {
@@ -90,7 +118,7 @@ const composeThread = (
     }
   }
 
-  let replies
+  let replies: (ThreadViewPost | NotFoundPost | BlockedPost)[] | undefined
   if (threadData.replies) {
     replies = threadData.replies.map((reply) =>
       composeThread(reply, feedService, posts, actors, embeds, labels),
