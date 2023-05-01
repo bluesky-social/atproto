@@ -21,7 +21,6 @@ import { Leader } from '../db/leader'
 import { subLogger } from '../logger'
 import { ConsecutiveList, LatestQueue, PartitionedQueue } from './util'
 import { retryHttp } from '../util/retry'
-import { IndexingService } from '../services/indexing'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
 export const REPO_SUB_ID = 1000
@@ -61,7 +60,6 @@ export class RepoSubscription {
                 details.info?.name === 'OutdatedCursor' &&
                 this.backfillConcurrency // Supports backfill
               ) {
-                console.log('saw outdated')
                 // On next message with a seq number, we'll note that seq and stop processing messages while backfill completes.
                 needsBackfill = true
               }
@@ -102,7 +100,6 @@ export class RepoSubscription {
               })
           }
           if (typeof needsBackfill === 'number') {
-            console.log('start backfill')
             await this.backfillFrom(needsBackfill)
           }
         })
@@ -110,7 +107,6 @@ export class RepoSubscription {
           throw new Error('Repo sub completed, but should be persistent')
         }
       } catch (err) {
-        console.error('sub fail', err)
         subLogger.error(
           { err, provider: this.service },
           'repo subscription error',
@@ -227,7 +223,6 @@ export class RepoSubscription {
     // Fetch next page once all items on the queue are in progress.
     let cursor: string | undefined
     do {
-      console.log({ cursor })
       const { data: page } = await retryHttp(() =>
         agent.api.com.atproto.sync.listRepos({
           cursor,
@@ -252,7 +247,6 @@ export class RepoSubscription {
             rethrowAllSettled(result)
           })
           .catch((err) => {
-            console.error('repo fail', repo, err)
             subLogger.error(
               { err, provider: this.service, repo },
               'repo subscription backfill failed on a repository',
