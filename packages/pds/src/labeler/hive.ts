@@ -73,21 +73,74 @@ export const respToClasses = (res: HiveResp): HiveRespClass[] => {
   return classes
 }
 
-// sexual: https://docs.thehive.ai/docs/sexual-content
+// Matches only one (or none) of: porn, sexual, nudity
+//
+// porn: sexual and nudity. including both explicit activity or full-frontal and suggestive/intent
+// sexual: sexually suggestive, not explicit; may include some forms of nudity
+// nudity: non-sexual nudity (eg, artistic, possibly some photographic)
+//
+// hive docs/definitions: https://docs.thehive.ai/docs/sexual-content
+export const sexualLabels = (classes: HiveRespClass[]): string[] => {
+  const scores = {}
+
+  for (const cls of classes) {
+    scores[cls.class] = cls.score
+  }
+
+  // first check if porn...
+  for (const pornClass of [
+    'yes_sexual_activity',
+    'animal_genitalia_and_human',
+    'yes_realistic_nsfw',
+  ]) {
+    if (scores[pornClass] >= 0.9) {
+      return ['porn']
+    }
+  }
+  if (scores['general_nsfw'] >= 0.9) {
+    // special case for some anime examples
+    if (scores['animated_animal_genitalia'] >= 0.5) {
+      return ['porn']
+    }
+    // special case for some pornographic/explicit classic drawings
+    if (scores['yes_undressed'] >= 0.9 && scores['yes_sexual_activity'] > 0.9) {
+      return ['porn']
+    }
+  }
+
+  // then check for sexual suggestive (which may include nudity)...
+  if (scores['yes_sexual_intent'] >= 0.9) {
+    return ['sexual']
+  }
+  if (scores['yes_undressed'] >= 0.9) {
+    // special case for bondage examples
+    if (scores['yes_sex_toy'] > 0.75) {
+      return ['sexual']
+    }
+  }
+
+  // then finally non-sexual nudity...
+  for (const nudityClass of [
+    'yes_male_nudity',
+    'yes_female_nudity',
+    'yes_undressed',
+  ]) {
+    if (scores[nudityClass] >= 0.9) {
+      return ['nudity']
+    }
+  }
+  return []
+}
+
 // gore and violence: https://docs.thehive.ai/docs/class-descriptions-violence-gore
 const labelForClass = {
-  yes_sexual_activity: 'porn',
-  animal_genitalia_and_human: 'porn', // for some reason not included in 'yes_sexual_activity'
-  yes_male_nudity: 'nudity',
-  yes_female_nudity: 'nudity',
-  general_suggestive: 'sexual',
   very_bloody: 'gore',
   human_corpse: 'corpse',
   yes_self_harm: 'self-harm',
 }
 
 export const summarizeLabels = (classes: HiveRespClass[]): string[] => {
-  const labels: string[] = []
+  const labels: string[] = sexualLabels(classes)
   for (const cls of classes) {
     if (labelForClass[cls.class] && cls.score >= 0.9) {
       labels.push(labelForClass[cls.class])
