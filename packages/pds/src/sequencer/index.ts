@@ -12,7 +12,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   polling = false
   queued = false
 
-  constructor(public db: Database, public lastSeen?: number) {
+  constructor(public db: Database, public lastSeen = 0) {
     super()
     // note: this does not err when surpassed, just prints a warning to stderr
     this.setMaxListeners(100)
@@ -111,8 +111,11 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   // polling for new events
   // because of a race between sequenced times, we need to take into account that some valid events
   // may have been written at early seq numbers but not yet been commited
-  private async pollAndEmit(opts: { maxRetries?: number; latestSeq?: number }) {
-    const { maxRetries = 0, latestSeq } = opts
+  private async pollAndEmit(opts?: {
+    maxRetries?: number
+    latestSeq?: number
+  }) {
+    const { maxRetries = 0, latestSeq } = opts || {}
     const evts = await this.requestSeqRange({
       earliestSeq: this.lastSeen,
       latestSeq,
@@ -121,15 +124,15 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     if (!tailEvt) return
     for (const evt of evts) {
       // happy path, if the seq # is unbroken, then emit
-      if (evt.seq === (this.lastSeen ?? -1) + 1) {
+      if (evt.seq === this.lastSeen + 1) {
         this.emit('events', [evt])
         this.lastSeen = evt.seq
       } else if (maxRetries < 1) {
         break
       }
     }
-    if (tailEvt <= (this.lastSeen ?? -1)) return
-    if (maxRetries === 0) return
+    if (tailEvt <= this.lastSeen) return
+    if (maxRetries < 1) return
     await wait(50)
     return this.pollAndEmit({
       maxRetries: maxRetries - 1,
