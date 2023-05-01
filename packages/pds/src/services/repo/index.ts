@@ -244,7 +244,7 @@ export class RepoService {
 
   async afterRebaseProcessing(did: string, rebaseData: RebaseData) {
     const [seqEvt] = await Promise.all([
-      sequencer.formatSeqRebase(this.db, did, rebaseData),
+      sequencer.formatSeqRebase(did, rebaseData),
       this.blobs.processRebaseBlobs(did, rebaseData.commit),
     ])
     await sequencer.sequenceEvt(this.db, seqEvt)
