@@ -4,6 +4,15 @@ import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow } from '../../../services/feed'
 import { FeedViewPost } from '../../../../lexicon/types/app/bsky/feed/defs'
+import { NotEmptyArray } from '@atproto/common'
+
+const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
+  '!no-promote',
+  'porn',
+  'sexual',
+  'corpse',
+  'self-harm',
+]
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
@@ -27,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
           qb
             .selectFrom('label')
             .selectAll()
-            .where('val', '=', '!no-promote')
+            .where('val', 'in', NO_WHATS_HOT_LABELS)
             .where((clause) =>
               clause
                 .whereRef('label.uri', '=', ref('post.creator'))

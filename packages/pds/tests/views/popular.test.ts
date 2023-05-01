@@ -12,12 +12,6 @@ describe('popular views', () => {
   // account dids, for convenience
   let alice: string
   let bob: string
-  let carol: string
-  let dan: string
-  let eve: string
-  let frank: string
-  let george: string
-  let helen: string
 
   const account = {
     email: 'blah@test.com',
@@ -32,6 +26,7 @@ describe('popular views', () => {
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
     await basicSeed(sc)
+
     await sc.createAccount('eve', {
       ...account,
       email: 'eve@test.com',
@@ -59,12 +54,6 @@ describe('popular views', () => {
 
     alice = sc.dids.alice
     bob = sc.dids.bob
-    carol = sc.dids.carol
-    dan = sc.dids.dan
-    eve = sc.dids.eve
-    frank = sc.dids.frank
-    george = sc.dids.george
-    helen = sc.dids.helen
     await server.ctx.backgroundQueue.processAll()
   })
 
@@ -79,32 +68,20 @@ describe('popular views', () => {
       'image/jpeg',
     )
     const one = await sc.post(alice, 'first post', undefined, [img])
-    await sc.like(alice, one.ref)
-    await sc.like(bob, one.ref)
-    await sc.like(carol, one.ref)
-    await sc.like(dan, one.ref)
-    await sc.like(eve, one.ref)
-    await sc.like(frank, one.ref)
-    await sc.like(george, one.ref)
-    await sc.like(helen, one.ref)
     const two = await sc.post(bob, 'bobby boi')
-    await sc.like(alice, two.ref)
-    await sc.like(bob, two.ref)
-    await sc.like(carol, two.ref)
-    await sc.like(dan, two.ref)
-    await sc.like(eve, two.ref)
-    await sc.like(frank, two.ref)
-    await sc.like(george, two.ref)
-    await sc.like(helen, two.ref)
     const three = await sc.reply(bob, one.ref, one.ref, 'reply')
-    await sc.like(alice, three.ref)
-    await sc.like(bob, three.ref)
-    await sc.like(carol, three.ref)
-    await sc.like(dan, three.ref)
-    await sc.like(eve, three.ref)
-    await sc.like(frank, three.ref)
-    await sc.like(george, three.ref)
-    await sc.like(helen, three.ref)
+
+    for (let i = 0; i < 12; i++) {
+      const name = `user${i}`
+      await sc.createAccount(name, {
+        handle: `user${i}.test`,
+        email: `user${i}@test.com`,
+        password: 'password',
+      })
+      await sc.like(sc.dids[name], one.ref)
+      await sc.like(sc.dids[name], two.ref)
+      await sc.like(sc.dids[name], three.ref)
+    }
     await server.ctx.backgroundQueue.processAll()
 
     const res = await agent.api.app.bsky.unspecced.getPopular(
