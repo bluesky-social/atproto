@@ -16,12 +16,12 @@ describe('repo subscription backfill', () => {
   beforeAll(async () => {
     testEnv = await runTestEnv({
       dbPostgresSchema: 'subscription_backfill',
-      bsky: { repoSubBackfillConcurrency: 15 },
+      bsky: { repoSubBackfillConcurrency: 9 },
     })
     agent = new AtpAgent({ service: testEnv.bsky.url })
     pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
-    await wait(50) // allow pending sub to be established
+    await wait(100) // allow pending sub to be established
     await testEnv.bsky.sub.destroy()
     await usersBulk(sc, 50)
 
