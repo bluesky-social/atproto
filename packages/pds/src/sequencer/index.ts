@@ -3,7 +3,7 @@ import TypedEmitter from 'typed-emitter'
 import Database from '../db'
 import { seqLogger as log } from '../logger'
 import { RepoSeqEntry } from '../db/tables/repo-seq'
-import { cborDecode, check } from '@atproto/common'
+import { cborDecode, check, wait } from '@atproto/common'
 import { commitEvt, handleEvt, SeqEvt } from './events'
 
 export * from './events'
@@ -108,11 +108,15 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     return seqEvts
   }
 
+  // polling for new events
+  // because of a race between sequenced times, we need to take into account that some valid events
+  // may have been written at early seq numbers but not yet been commited
   private async pollAndEmit() {
     const evts = await this.requestSeqRange({ earliestSeq: this.lastSeen })
     const tailEvt = evts.at(-1)?.seq
     if (!tailEvt) return
     for (const evt of evts) {
+      // happy path, if the seq # is unbroken, then emit
       if (evt.seq === (this.lastSeen ?? -1) + 1) {
         this.emit('events', [evt])
         this.lastSeen = evt.seq
@@ -121,6 +125,11 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       }
     }
     if (tailEvt <= (this.lastSeen ?? -1)) return
+
+    // if we did not have an unbroken sequence of evts,
+    // then wait 50ms in the hopes that those transactions clear & retry that exact range
+    // anything still held up will not be emitted on live tail, but will be in backfill
+    await wait(50)
     const retry = await this.requestSeqRange({
       earliestSeq: this.lastSeen,
       latestSeq: tailEvt,
