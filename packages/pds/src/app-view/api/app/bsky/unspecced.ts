@@ -4,11 +4,11 @@ import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow } from '../../../services/feed'
 import { FeedViewPost } from '../../../../lexicon/types/app/bsky/feed/defs'
+import { NotEmptyArray } from '@atproto/common'
 
-const NO_WHATS_HOT_LABELS = [
+const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   '!no-promote',
   'porn',
-  'nudity',
   'sexual',
   'corpse',
   'self-harm',

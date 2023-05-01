@@ -3,12 +3,13 @@ import Database from '../../db'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import { ids } from '../../lexicon/lexicons'
 import { sql } from 'kysely'
+import { NotEmptyArray } from '@atproto/common'
 
 export type Labels = Record<string, Label[]>
 
 // @TODO forward these labels to client
 // these are labels are currently only used server side & not sent to client since it does not handle them correctly
-const SERVER_SIDE_LABELS = ['!no-promote']
+const SERVER_SIDE_LABELS: NotEmptyArray<string> = ['!no-promote']
 
 export class LabelService {
   constructor(public db: Database) {}
