@@ -23,6 +23,9 @@ export class BskyAgent extends AtpAgent {
   getPost: typeof this.api.app.bsky.feed.post.get = (params) =>
     this.api.app.bsky.feed.post.get(params)
 
+  getPosts: typeof this.api.app.bsky.feed.getPosts = (params, opts) =>
+    this.api.app.bsky.feed.getPosts(params, opts)
+
   getLikes: typeof this.api.app.bsky.feed.getLikes = (params, opts) =>
     this.api.app.bsky.feed.getLikes(params, opts)
 
@@ -40,6 +43,11 @@ export class BskyAgent extends AtpAgent {
 
   getProfiles: typeof this.api.app.bsky.actor.getProfiles = (params, opts) =>
     this.api.app.bsky.actor.getProfiles(params, opts)
+
+  getSuggestions: typeof this.api.app.bsky.actor.getSuggestions = (
+    params,
+    opts,
+  ) => this.api.app.bsky.actor.getSuggestions(params, opts)
 
   searchActors: typeof this.api.app.bsky.actor.searchActors = (params, opts) =>
     this.api.app.bsky.actor.searchActors(params, opts)

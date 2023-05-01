@@ -82,10 +82,10 @@ describe('account', () => {
   it('creates an invite code', async () => {
     inviteCode = await createInviteCode(agent, 1)
     const split = inviteCode.split('-')
-    const host = split.slice(0, -1).join('.')
-    const code = split.at(-1)
+    const host = split.slice(0, -2).join('.')
+    const code = split.slice(-2).join('-')
     expect(host).toBe('pds.public.url') // Hostname of public url
-    expect(code?.length).toBe(7)
+    expect(code.length).toBe(11)
   })
 
   it('serves the accounts system config', async () => {
@@ -394,7 +394,7 @@ describe('account', () => {
   }
 
   const getTokenFromMail = (mail: Mail.Options) =>
-    mail.html?.toString().match(/>(\d{6})</)?.[1]
+    mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1]
 
   it('can reset account password', async () => {
     const mail = await getMailFrom(
@@ -465,6 +465,38 @@ describe('account', () => {
         password,
       }),
     ).resolves.toBeDefined()
+  })
+
+  it('changing password invalidates past refresh tokens', async () => {
+    const mail = await getMailFrom(
+      agent.api.com.atproto.server.requestPasswordReset({ email }),
+    )
+
+    expect(mail.to).toEqual(email)
+    expect(mail.html).toContain('Reset your password')
+    expect(mail.html).toContain('alice.test')
+
+    const token = getTokenFromMail(mail)
+
+    if (token === undefined) {
+      return expect(token).toBeDefined()
+    }
+
+    const session = await agent.api.com.atproto.server.createSession({
+      identifier: handle,
+      password,
+    })
+
+    await agent.api.com.atproto.server.resetPassword({
+      token: token.toLowerCase(), // Reset should work case-insensitively
+      password,
+    })
+
+    await expect(
+      agent.api.com.atproto.server.refreshSession(undefined, {
+        headers: { authorization: `Bearer ${session.data.refreshJwt}` },
+      }),
+    ).rejects.toThrow('Token has been revoked')
   })
 
   it('allows only unexpired password reset tokens', async () => {

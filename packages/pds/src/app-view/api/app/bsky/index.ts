@@ -10,6 +10,7 @@ import getProfiles from './actor/getProfiles'
 import getRepostedBy from './feed/getRepostedBy'
 import getFollowers from './graph/getFollowers'
 import getFollows from './graph/getFollows'
+import getBlocks from './graph/getBlocks'
 import getUsersSearch from './actor/searchActors'
 import getUsersTypeahead from './actor/searchActorsTypeahead'
 import getSuggestions from './actor/getSuggestions'
@@ -28,6 +29,7 @@ export default function (server: Server, ctx: AppContext) {
   getRepostedBy(server, ctx)
   getFollowers(server, ctx)
   getFollows(server, ctx)
+  getBlocks(server, ctx)
   getUsersSearch(server, ctx)
   getUsersTypeahead(server, ctx)
   getSuggestions(server, ctx)

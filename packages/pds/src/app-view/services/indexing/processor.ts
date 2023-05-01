@@ -199,17 +199,27 @@ export class RecordProcessor<T, S> {
         op.inserted ?? null,
       )
       if (forDelete.toDelete.length > 0) {
-        await this.db
-          .deleteFrom('user_notification')
-          .where('recordUri', 'in', forDelete.toDelete)
-          .execute()
+        // Notifs can be deleted in background: they are expensive to delete and
+        // listNotifications already excludes notifs with missing records.
+        this.appDb.onCommit(() => {
+          this.backgroundQueue.add(async (db) => {
+            await db.db
+              .deleteFrom('user_notification')
+              .where('recordUri', 'in', forDelete.toDelete)
+              .execute()
+          })
+        })
       }
       notifs = forDelete.notifs
     } else if (op.inserted) {
       notifs = this.params.notifsForInsert(op.inserted)
     }
     if (notifs.length > 0) {
-      await this.db.insertInto('user_notification').values(notifs).execute()
+      this.appDb.onCommit(() => {
+        this.backgroundQueue.add(async (db) => {
+          await db.db.insertInto('user_notification').values(notifs).execute()
+        })
+      })
     }
   }
 

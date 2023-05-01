@@ -12,6 +12,8 @@ export default function (server: Server, ctx: AppContext) {
       const { services, db } = ctx
       const { ref } = db.db.dynamic
 
+      const actorService = ctx.services.appView.actor(ctx.db)
+
       let builder = db.db
         .selectFrom('like')
         .where('like.subject', '=', uri)
@@ -22,6 +24,7 @@ export default function (server: Server, ctx: AppContext) {
           'like.creator',
         )
         .where(notSoftDeletedClause(ref('creator_repo')))
+        .whereNotExists(actorService.blockQb(requester, [ref('like.creator')]))
         .selectAll('creator')
         .select([
           'like.cid as cid',
