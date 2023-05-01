@@ -8,18 +8,18 @@ import { NotEmptyArray } from '@atproto/common'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   '!no-promote',
-  'porn',
-  'sexual',
   'corpse',
   'self-harm',
 ]
+
+const NSFW_LABELS = ['porn', 'sexual']
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getPopular({
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
-      const { limit, cursor } = params
+      const { limit, cursor, includeNsfw } = params
       const requester = auth.credentials.did
       const db = ctx.db.db
       const { ref } = db.dynamic
@@ -27,6 +27,10 @@ export default function (server: Server, ctx: AppContext) {
       const feedService = ctx.services.appView.feed(ctx.db)
       const actorService = ctx.services.appView.actor(ctx.db)
       const labelService = ctx.services.appView.label(ctx.db)
+
+      const labelsToFilter = includeNsfw
+        ? NO_WHATS_HOT_LABELS
+        : [...NO_WHATS_HOT_LABELS, ...NSFW_LABELS]
 
       const postsQb = feedService
         .selectPostQb()
@@ -36,7 +40,7 @@ export default function (server: Server, ctx: AppContext) {
           qb
             .selectFrom('label')
             .selectAll()
-            .where('val', 'in', NO_WHATS_HOT_LABELS)
+            .where('val', 'in', labelsToFilter)
             .where((clause) =>
               clause
                 .whereRef('label.uri', '=', ref('post.creator'))

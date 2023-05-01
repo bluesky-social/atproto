@@ -9,6 +9,7 @@ import { CID } from 'multiformats/cid'
 import * as AppBskyFeedDefs from '../feed/defs'
 
 export interface QueryParams {
+  includeNsfw?: boolean
   limit?: number
   cursor?: string
 }
