@@ -164,6 +164,18 @@ export class SeedClient {
     return this.follows[from][to]
   }
 
+  async unfollow(from: string, to: string) {
+    const follow = this.follows[from][to]
+    if (!follow) {
+      throw new Error('follow does not exist')
+    }
+    await this.agent.api.app.bsky.graph.follow.delete(
+      { repo: from, rkey: follow.uri.rkey },
+      this.getHeaders(from),
+    )
+    delete this.follows[from][to]
+  }
+
   async post(
     by: string,
     text: string,

@@ -27,7 +27,13 @@ export type ActorView = {
   handle: string
   displayName?: string
   avatar?: string
-  viewer?: { muted: boolean }
+  viewer?: {
+    muted?: boolean
+    blockedBy?: boolean
+    blocking?: string
+    following?: string
+    followedBy?: string
+  }
 }
 export type ActorViewMap = { [did: string]: ActorView }
 

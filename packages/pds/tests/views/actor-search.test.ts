@@ -230,7 +230,7 @@ const snapTypeaheadPg = [
   {
     did: 'user(0)',
     handle: 'cara-wiegand69.test',
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
@@ -238,7 +238,7 @@ const snapTypeaheadPg = [
     displayName: 'Carol Littel',
     handle: 'eudora-dietrich4.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
@@ -246,7 +246,7 @@ const snapTypeaheadPg = [
     displayName: 'Sadie Carter',
     handle: 'shane-torphy52.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
@@ -254,13 +254,13 @@ const snapTypeaheadPg = [
     displayName: 'Carlton Abernathy IV',
     handle: 'aliya-hodkiewicz.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
     did: 'user(4)',
     handle: 'carlos6.test',
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
@@ -268,7 +268,7 @@ const snapTypeaheadPg = [
     displayName: 'Latoya Windler',
     handle: 'carolina-mcdermott77.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
@@ -276,7 +276,7 @@ const snapTypeaheadPg = [
     displayName: 'Rachel Kshlerin',
     handle: 'cayla-marquardt39.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
 ]
@@ -287,19 +287,19 @@ const snapTypeaheadSqlite = [
     displayName: 'Carlton Abernathy IV',
     handle: 'aliya-hodkiewicz.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
     did: 'user(1)',
     handle: 'cara-wiegand69.test',
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
     did: 'user(2)',
     handle: 'carlos6.test',
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
@@ -307,7 +307,7 @@ const snapTypeaheadSqlite = [
     displayName: 'Latoya Windler',
     handle: 'carolina-mcdermott77.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
@@ -315,7 +315,7 @@ const snapTypeaheadSqlite = [
     displayName: 'Carol Littel',
     handle: 'eudora-dietrich4.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
@@ -323,7 +323,7 @@ const snapTypeaheadSqlite = [
     displayName: 'Sadie Carter',
     handle: 'shane-torphy52.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
 ]
@@ -332,7 +332,7 @@ const snapSearchPg = [
   {
     did: 'user(0)',
     handle: 'cara-wiegand69.test',
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
@@ -341,7 +341,7 @@ const snapSearchPg = [
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'eudora-dietrich4.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
@@ -350,7 +350,7 @@ const snapSearchPg = [
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'shane-torphy52.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
@@ -359,13 +359,13 @@ const snapSearchPg = [
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'aliya-hodkiewicz.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
     did: 'user(4)',
     handle: 'carlos6.test',
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
@@ -374,7 +374,7 @@ const snapSearchPg = [
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'carolina-mcdermott77.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
@@ -383,7 +383,7 @@ const snapSearchPg = [
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'cayla-marquardt39.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
 ]
@@ -395,19 +395,19 @@ const snapSearchSqlite = [
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'aliya-hodkiewicz.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
     did: 'user(1)',
     handle: 'cara-wiegand69.test',
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
     did: 'user(2)',
     handle: 'carlos6.test',
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
@@ -416,7 +416,7 @@ const snapSearchSqlite = [
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'carolina-mcdermott77.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
@@ -425,7 +425,7 @@ const snapSearchSqlite = [
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'eudora-dietrich4.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
@@ -434,7 +434,7 @@ const snapSearchSqlite = [
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'shane-torphy52.test',
     avatar,
-    viewer: { muted: false },
+    viewer: { blockedBy: false, muted: false },
     labels: [],
   },
 ]

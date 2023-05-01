@@ -1,9 +1,10 @@
 import AtpAgent from '@atproto/api'
-import { runTestServer, CloseFn } from '../_util'
+import { runTestServer, CloseFn, TestServerInfo } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('popular views', () => {
+  let server: TestServerInfo
   let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
@@ -24,7 +25,7 @@ describe('popular views', () => {
   }
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    server = await runTestServer({
       dbPostgresSchema: 'views_popular',
     })
     close = server.close
@@ -104,6 +105,7 @@ describe('popular views', () => {
     await sc.like(frank, three.ref)
     await sc.like(george, three.ref)
     await sc.like(helen, three.ref)
+    await server.ctx.backgroundQueue.processAll()
 
     const res = await agent.api.app.bsky.unspecced.getPopular(
       {},

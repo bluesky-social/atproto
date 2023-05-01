@@ -82,6 +82,7 @@ describe('indexing', () => {
     await services
       .repo(db)
       .processWrites({ did: sc.dids.alice, writes: [createRecord] }, 1)
+    await server.ctx.backgroundQueue.processAll()
 
     const getAfterCreate = await agent.api.app.bsky.feed.getPostThread(
       { uri: uri.toString() },
@@ -94,6 +95,7 @@ describe('indexing', () => {
     await services
       .repo(db)
       .processWrites({ did: sc.dids.alice, writes: [updateRecord] }, 1)
+    await server.ctx.backgroundQueue.processAll()
 
     const getAfterUpdate = await agent.api.app.bsky.feed.getPostThread(
       { uri: uri.toString() },
@@ -106,6 +108,7 @@ describe('indexing', () => {
     await services
       .repo(db)
       .processWrites({ did: sc.dids.alice, writes: [deleteRecord] }, 1)
+    await server.ctx.backgroundQueue.processAll()
 
     const getAfterDelete = agent.api.app.bsky.feed.getPostThread(
       { uri: uri.toString() },
@@ -154,6 +157,7 @@ describe('indexing', () => {
     await services
       .repo(db)
       .processWrites({ did: sc.dids.dan, writes: [createRecord] }, 1)
+    await server.ctx.backgroundQueue.processAll()
 
     const getAfterCreate = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.dan },
@@ -166,6 +170,7 @@ describe('indexing', () => {
     await services
       .repo(db)
       .processWrites({ did: sc.dids.dan, writes: [updateRecord] }, 1)
+    await server.ctx.backgroundQueue.processAll()
 
     const getAfterUpdate = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.dan },
@@ -178,6 +183,7 @@ describe('indexing', () => {
     await services
       .repo(db)
       .processWrites({ did: sc.dids.dan, writes: [deleteRecord] }, 1)
+    await server.ctx.backgroundQueue.processAll()
 
     const getAfterDelete = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.dan },

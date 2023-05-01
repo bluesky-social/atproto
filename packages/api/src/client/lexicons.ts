@@ -3394,6 +3394,13 @@ export const schemaDict = {
           muted: {
             type: 'boolean',
           },
+          blockedBy: {
+            type: 'boolean',
+          },
+          blocking: {
+            type: 'string',
+            format: 'at-uri',
+          },
           following: {
             type: 'string',
             format: 'at-uri',
@@ -3793,6 +3800,7 @@ export const schemaDict = {
             refs: [
               'lex:app.bsky.embed.record#viewRecord',
               'lex:app.bsky.embed.record#viewNotFound',
+              'lex:app.bsky.embed.record#viewBlocked',
             ],
           },
         },
@@ -3842,6 +3850,16 @@ export const schemaDict = {
         },
       },
       viewNotFound: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+      viewBlocked: {
         type: 'object',
         required: ['uri'],
         properties: {
@@ -4022,6 +4040,7 @@ export const schemaDict = {
             refs: [
               'lex:app.bsky.feed.defs#threadViewPost',
               'lex:app.bsky.feed.defs#notFoundPost',
+              'lex:app.bsky.feed.defs#blockedPost',
             ],
           },
           replies: {
@@ -4031,6 +4050,7 @@ export const schemaDict = {
               refs: [
                 'lex:app.bsky.feed.defs#threadViewPost',
                 'lex:app.bsky.feed.defs#notFoundPost',
+                'lex:app.bsky.feed.defs#blockedPost',
               ],
             },
           },
@@ -4045,6 +4065,20 @@ export const schemaDict = {
             format: 'at-uri',
           },
           notFound: {
+            type: 'boolean',
+            const: true,
+          },
+        },
+      },
+      blockedPost: {
+        type: 'object',
+        required: ['uri', 'blocked'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          blocked: {
             type: 'boolean',
             const: true,
           },
@@ -4097,6 +4131,14 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'BlockedActor',
+          },
+          {
+            name: 'BlockedByActor',
+          },
+        ],
       },
     },
   },
@@ -4207,6 +4249,7 @@ export const schemaDict = {
                 refs: [
                   'lex:app.bsky.feed.defs#threadViewPost',
                   'lex:app.bsky.feed.defs#notFoundPost',
+                  'lex:app.bsky.feed.defs#blockedPost',
                 ],
               },
             },
@@ -4514,6 +4557,31 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphBlock: {
+    lexicon: 1,
+    id: 'app.bsky.graph.block',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A block.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['subject', 'createdAt'],
+          properties: {
+            subject: {
+              type: 'string',
+              format: 'did',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphFollow: {
     lexicon: 1,
     id: 'app.bsky.graph.follow',
@@ -4533,6 +4601,49 @@ export const schemaDict = {
             createdAt: {
               type: 'string',
               format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphGetBlocks: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getBlocks',
+    defs: {
+      main: {
+        type: 'query',
+        description: "Who is the requester's account blocking?",
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['blocks'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              blocks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
             },
           },
         },
@@ -5088,7 +5199,9 @@ export const ids = {
   AppBskyFeedLike: 'app.bsky.feed.like',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
+  AppBskyGraphBlock: 'app.bsky.graph.block',
   AppBskyGraphFollow: 'app.bsky.graph.follow',
+  AppBskyGraphGetBlocks: 'app.bsky.graph.getBlocks',
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
