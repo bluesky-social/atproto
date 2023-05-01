@@ -144,7 +144,7 @@ describe('repo subscribe repos', () => {
 
   const randomPost = (by: string) => sc.post(by, randomStr(8, 'base32'))
   const makePosts = async () => {
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 10; i++) {
       await Promise.all([
         randomPost(alice),
         randomPost(bob),
@@ -223,7 +223,7 @@ describe('repo subscribe repos', () => {
 
     ws.terminate()
 
-    expect(evts.length).toBe(12)
+    expect(evts.length).toBe(40)
 
     await wait(100) // Let cleanup occur on server
     expect(ctx.sequencer.listeners('events').length).toEqual(0)
@@ -352,7 +352,7 @@ describe('repo subscribe repos', () => {
     expect(info.header.t).toBe('#info')
     const body = info.body as Record<string, unknown>
     expect(body.name).toEqual('OutdatedCursor')
-    expect(evts.length).toBe(12)
+    expect(evts.length).toBe(40)
   })
 
   it('errors on future cursor', async () => {

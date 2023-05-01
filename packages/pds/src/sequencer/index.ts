@@ -56,10 +56,11 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
   async requestSeqRange(opts: {
     earliestSeq?: number
+    latestSeq?: number
     earliestTime?: string
     limit?: number
   }): Promise<SeqEvt[]> {
-    const { earliestSeq, earliestTime, limit } = opts
+    const { earliestSeq, latestSeq, earliestTime, limit } = opts
 
     let seqQb = this.db.db
       .selectFrom('repo_seq')
@@ -68,6 +69,9 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       .where('invalidatedBy', 'is', null)
     if (earliestSeq !== undefined) {
       seqQb = seqQb.where('seq', '>', earliestSeq)
+    }
+    if (latestSeq !== undefined) {
+      seqQb = seqQb.where('seq', '<=', latestSeq)
     }
     if (earliestTime !== undefined) {
       seqQb = seqQb.where('sequencedAt', '>=', earliestTime)
@@ -106,9 +110,28 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
   private async pollAndEmit() {
     const evts = await this.requestSeqRange({ earliestSeq: this.lastSeen })
-    if (evts.length < 1) return
-    this.lastSeen = evts[evts.length - 1].seq
-    this.emit('events', evts)
+    const tailEvt = evts.at(-1)?.seq
+    if (!tailEvt) return
+    for (const evt of evts) {
+      if (evt.seq === (this.lastSeen ?? -1) + 1) {
+        this.emit('events', [evt])
+        this.lastSeen = evt.seq
+      } else {
+        break
+      }
+    }
+    if (tailEvt <= (this.lastSeen ?? -1)) return
+    const retry = await this.requestSeqRange({
+      earliestSeq: this.lastSeen,
+      latestSeq: tailEvt,
+    })
+    if (retry.length < 1) return
+    for (const evt of retry) {
+      if (evt.seq > (this.lastSeen ?? -1)) {
+        this.emit('events', [evt])
+        this.lastSeen = evt.seq
+      }
+    }
   }
 
   async pollDb() {
