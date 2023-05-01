@@ -111,8 +111,12 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   // polling for new events
   // because of a race between sequenced times, we need to take into account that some valid events
   // may have been written at early seq numbers but not yet been commited
-  private async pollAndEmit() {
-    const evts = await this.requestSeqRange({ earliestSeq: this.lastSeen })
+  private async pollAndEmit(opts: { maxRetries?: number; latestSeq?: number }) {
+    const { maxRetries = 0, latestSeq } = opts
+    const evts = await this.requestSeqRange({
+      earliestSeq: this.lastSeen,
+      latestSeq,
+    })
     const tailEvt = evts.at(-1)?.seq
     if (!tailEvt) return
     for (const evt of evts) {
@@ -120,32 +124,22 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       if (evt.seq === (this.lastSeen ?? -1) + 1) {
         this.emit('events', [evt])
         this.lastSeen = evt.seq
-      } else {
+      } else if (maxRetries < 1) {
         break
       }
     }
     if (tailEvt <= (this.lastSeen ?? -1)) return
-
-    // if we did not have an unbroken sequence of evts,
-    // then wait 50ms in the hopes that those transactions clear & retry that exact range
-    // anything still held up will not be emitted on live tail, but will be in backfill
+    if (maxRetries === 0) return
     await wait(50)
-    const retry = await this.requestSeqRange({
-      earliestSeq: this.lastSeen,
+    return this.pollAndEmit({
+      maxRetries: maxRetries - 1,
       latestSeq: tailEvt,
     })
-    if (retry.length < 1) return
-    for (const evt of retry) {
-      if (evt.seq > (this.lastSeen ?? -1)) {
-        this.emit('events', [evt])
-        this.lastSeen = evt.seq
-      }
-    }
   }
 
   async pollDb() {
     try {
-      await this.pollAndEmit()
+      await this.pollAndEmit({ maxRetries: 2 })
     } catch (err) {
       log.error({ err, lastSeen: this.lastSeen }, 'sequencer failed to poll db')
     } finally {
