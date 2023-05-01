@@ -186,15 +186,14 @@ export class RepoBlobs {
   }
 
   async deleteForUser(did: string): Promise<void> {
-    this.db.assertTransaction()
-    const [deleted] = await Promise.all([
-      this.db.db
-        .deleteFrom('blob')
-        .where('creator', '=', did)
-        .returningAll()
-        .execute(),
-      this.db.db.deleteFrom('repo_blob').where('did', '=', did).execute(),
-    ])
+    // Not done in transaction because it would be too long, prone to contention.
+    // Also, this can safely be run multiple times if it fails.
+    const deleted = await this.db.db
+      .deleteFrom('blob')
+      .where('creator', '=', did)
+      .returningAll()
+      .execute()
+    await this.db.db.deleteFrom('repo_blob').where('did', '=', did).execute()
     const deletedCids = deleted.map((d) => d.cid)
     let duplicateCids: string[] = []
     if (deletedCids.length > 0) {
