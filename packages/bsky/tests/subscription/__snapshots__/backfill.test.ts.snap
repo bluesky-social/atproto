@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`sync ingests all repos via backfill. 1`] = `
+exports[`repo subscription backfill ingests all repos via backfill. 1`] = `
 Array [
   Object {
     "did": "user(0)",

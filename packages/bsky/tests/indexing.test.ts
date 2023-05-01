@@ -221,9 +221,7 @@ describe('indexing', () => {
       const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
         did: sc.dids.alice,
       })
-      await db.transaction((tx) =>
-        services.indexing(tx).indexRepo(sc.dids.alice, head.root),
-      )
+      await services.indexing(db).indexRepo(sc.dids.alice, head.root)
       // Check
       const { data: profile } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
@@ -266,9 +264,7 @@ describe('indexing', () => {
       const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
         did: sc.dids.alice,
       })
-      await db.transaction((tx) =>
-        services.indexing(tx).indexRepo(sc.dids.alice, head.root),
-      )
+      await services.indexing(db).indexRepo(sc.dids.alice, head.root)
       // Check
       const { data: profile } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
@@ -313,9 +309,7 @@ describe('indexing', () => {
       const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
         did: sc.dids.alice,
       })
-      await db.transaction((tx) =>
-        services.indexing(tx).indexRepo(sc.dids.alice, head.root),
-      )
+      await services.indexing(db).indexRepo(sc.dids.alice, head.root)
       // Check
       const getGoodPost = agent.api.app.bsky.feed.getPostThread(
         { uri: writes[0].uri.toString(), depth: 0 },

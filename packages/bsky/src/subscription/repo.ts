@@ -155,38 +155,38 @@ export class RepoSubscription {
   private async handleCommit(msg: message.Commit) {
     const { db, services } = this.ctx
     const { root, rootCid, ops } = await getOps(msg)
-    const indexRecords = async (indexingTx: IndexingService) => {
+    const indexingSvc = services.indexing(db)
+    const indexRecords = async () => {
       if (msg.tooBig) {
-        return await indexingTx.indexRepo(msg.repo, rootCid.toString())
+        return await indexingSvc.indexRepo(msg.repo, rootCid.toString())
       }
       if (msg.rebase) {
-        const needsReindex = await indexingTx.checkCommitNeedsIndexing(root)
+        const needsReindex = await indexingSvc.checkCommitNeedsIndexing(root)
         if (!needsReindex) return
-        return await indexingTx.indexRepo(msg.repo, rootCid.toString())
+        return await indexingSvc.indexRepo(msg.repo, rootCid.toString())
       }
       for (const op of ops) {
-        if (op.action === WriteOpAction.Delete) {
-          await indexingTx.deleteRecord(op.uri)
-        } else {
-          // @TODO skip-and-log records that don't validate
-          await indexingTx.indexRecord(
-            op.uri,
-            op.cid,
-            op.record,
-            op.action, // create or update
-            msg.time,
-          )
-        }
+        await db.transaction(async (tx) => {
+          if (op.action === WriteOpAction.Delete) {
+            await indexingSvc.transact(tx).deleteRecord(op.uri)
+          } else {
+            // @TODO skip-and-log records that don't validate
+            await indexingSvc.transact(tx).indexRecord(
+              op.uri,
+              op.cid,
+              op.record,
+              op.action, // create or update
+              msg.time,
+            )
+          }
+        })
       }
     }
-    await db.transaction(async (tx) => {
-      const indexingTx = services.indexing(tx)
-      await Promise.all([
-        indexRecords(indexingTx),
-        indexingTx.indexHandle(msg.repo, msg.time),
-      ])
-      await indexingTx.setCommitLastSeen(root, msg)
-    })
+    await Promise.all([
+      indexRecords(),
+      indexingSvc.indexHandle(msg.repo, msg.time),
+    ])
+    await indexingSvc.setCommitLastSeen(root, msg)
   }
 
   private async handleUpdateHandle(msg: message.Handle) {
@@ -245,12 +245,11 @@ export class RepoSubscription {
         queue
           .add(async () => {
             const now = new Date().toISOString()
-            await Promise.all([
+            const result = await Promise.allSettled([
               services.indexing(db).indexHandle(repo.did, now),
-              db.transaction((tx) => {
-                return services.indexing(tx).indexRepo(repo.did, repo.head)
-              }),
+              services.indexing(db).indexRepo(repo.did, repo.head),
             ])
+            rethrowAllSettled(result)
           })
           .catch((err) => {
             console.error('repo fail', repo, err)
@@ -479,4 +478,12 @@ function wsToHttp(url: string) {
     return url
   }
   return url.replace('ws', 'http')
+}
+
+function rethrowAllSettled(result: PromiseSettledResult<unknown>[]) {
+  for (const item of result) {
+    if (item.status === 'rejected') {
+      throw item.reason
+    }
+  }
 }

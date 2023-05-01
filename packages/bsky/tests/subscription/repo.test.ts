@@ -7,7 +7,7 @@ import { AppContext, Database } from '../../src'
 import { DatabaseSchemaType } from '../../src/db/database-schema'
 import { ids } from '../../src/lexicon/lexicons'
 
-describe('sync', () => {
+describe('repo subscription', () => {
   let testEnv: TestEnvInfo
   let ctx: AppContext
   let pdsAgent: AtpAgent

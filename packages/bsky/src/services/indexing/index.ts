@@ -52,6 +52,11 @@ export class IndexingService {
     return (db: Database) => new IndexingService(db, didResolver, labeler)
   }
 
+  transact(tx: Database) {
+    tx.assertTransaction()
+    return new IndexingService(tx, this.didResolver, this.labeler)
+  }
+
   async indexRecord(
     uri: AtUri,
     cid: CID,
@@ -108,7 +113,6 @@ export class IndexingService {
   }
 
   async indexRepo(did: string, commit: string) {
-    this.db.assertTransaction()
     const now = new Date().toISOString()
     const { pds, signingKey } = await this.didResolver.resolveAtprotoData(
       did,
@@ -129,7 +133,9 @@ export class IndexingService {
     )
 
     // Wipe index for actor, prep for reindexing
-    await this.unindexActor(did)
+    await this.db.transaction(async (tx) => {
+      await this.transact(tx).unindexActor(did)
+    })
 
     // Iterate over all records and index them in batches
     const contentList = [...walkContentsWithCids(checkout.contents)]
@@ -140,7 +146,15 @@ export class IndexingService {
         const { cid, collection, rkey, record } = item
         const uri = AtUri.make(did, collection, rkey)
         try {
-          await this.indexRecord(uri, cid, record, WriteOpAction.Create, now)
+          await this.db.transaction(async (tx) => {
+            await this.transact(tx).indexRecord(
+              uri,
+              cid,
+              record,
+              WriteOpAction.Create,
+              now,
+            )
+          })
         } catch (err) {
           if (err instanceof ValidationError) {
             subLogger.warn(

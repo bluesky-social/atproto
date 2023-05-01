@@ -6,7 +6,7 @@ import usersBulk from '../seeds/users-bulk'
 import { chunkArray, DAY, wait } from '@atproto/common'
 import { ids } from '@atproto/api/src/client/lexicons'
 
-describe('sync', () => {
+describe('repo subscription backfill', () => {
   let testEnv: TestEnvInfo
   let agent: AtpAgent
   let pdsAgent: AtpAgent
@@ -56,9 +56,7 @@ describe('sync', () => {
 
     // Check all backfilled profiles
     const profilesAfter = await getAllProfiles(agent, dids)
-    dids.forEach((did, i) => {
-      expect([did, i]).toEqual([profilesAfter[i]?.did, i])
-    })
+    expect(dids).toEqual(profilesAfter.map((p) => p.did))
     expect(forSnapshot(profilesAfter)).toMatchSnapshot()
   })
 
