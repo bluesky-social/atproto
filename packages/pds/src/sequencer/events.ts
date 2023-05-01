@@ -26,6 +26,12 @@ export const sequenceEvt = async (
     throw new Error(`Failed to sequence evt: ${evt}`)
   }
   await dbTxn.notify('repo_seq')
+  if (evt.eventType === 'rebase') {
+    await invalidatePrevRepoOps(dbTxn, evt.did, res.seq)
+  } else if (evt.eventType === 'handle') {
+    await invalidatePrevHandleOps(dbTxn, evt.did, res.seq)
+  }
+
   return res.seq
 }
 
