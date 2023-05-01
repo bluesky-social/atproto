@@ -6,6 +6,10 @@ import { sql } from 'kysely'
 
 export type Labels = Record<string, Label[]>
 
+// @TODO forward these labels to client
+// these are labels are currently only used server side & not sent to client since it does not handle them correctly
+const SERVER_SIDE_LABELS = ['!no-promote']
+
 export class LabelService {
   constructor(public db: Database) {}
 
@@ -68,6 +72,7 @@ export class LabelService {
     const res = await this.db.db
       .selectFrom('label')
       .where('label.uri', 'in', subjects)
+      .where('label.val', 'not in', SERVER_SIDE_LABELS)
       .if(!includeNeg, (qb) => qb.where('neg', '=', false))
       .selectAll()
       .execute()
