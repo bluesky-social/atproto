@@ -133,6 +133,10 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     }
     if (tailEvt <= this.lastSeen) return
     if (maxRetries < 1) return
+    // if we did not have an unbroken sequence of evts,
+    // then wait 50ms in the hopes that those transactions clear & retry that exact range
+    // we retry twice (for a total of ~100ms) before moving on
+    // anything still held up will not be emitted on live tail, but will be in backfill
     await wait(50)
     return this.pollAndEmit({
       maxRetries: maxRetries - 1,
