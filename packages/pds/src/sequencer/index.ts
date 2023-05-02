@@ -132,7 +132,10 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       }
     }
     if (tailEvt <= this.lastSeen) return
-    if (maxRetries < 1) return
+    if (maxRetries < 1) {
+      this.lastSeen = tailEvt
+      return
+    }
     // if we did not have an unbroken sequence of evts,
     // then wait 50ms in the hopes that those transactions clear & retry that exact range
     // we retry twice (for a total of ~100ms) before moving on
