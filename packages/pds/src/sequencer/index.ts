@@ -133,7 +133,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     }
     if (tailEvt <= this.lastSeen) return
     if (maxRetries < 1) {
-      this.lastSeen = tailEvt
+      this.lastSeen = Math.max(this.lastSeen, tailEvt)
       return
     }
     // if we did not have an unbroken sequence of evts,
