@@ -131,7 +131,9 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         break
       }
     }
+    // if the last event in current window is earlier than or equal to the last event emitted, then there is nothing else for us here
     if (tailEvt <= this.lastSeen) return
+    // if we're done with retries then bump up our lastSeen to the tail of this window & move on
     if (maxRetries < 1) {
       this.lastSeen = Math.max(this.lastSeen, tailEvt)
       return
