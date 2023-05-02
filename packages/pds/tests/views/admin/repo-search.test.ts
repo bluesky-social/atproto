@@ -84,122 +84,7 @@ describe('pds admin repo search view', () => {
     if (db.dialect === 'pg') {
       expect(forSnapshot(result.data.repos)).toMatchInlineSnapshot(snapPg)
     } else {
-      expect(forSnapshot(result.data.repos)).toMatchInlineSnapshot(
-        snapSqlite,
-        `
-        Array [
-          Object {
-            "did": "user(0)",
-            "email": "aliya-hodkiewicz.test@bsky.app",
-            "handle": "aliya-hodkiewicz.test",
-            "indexedAt": "1970-01-01T00:00:00.000Z",
-            "moderation": Object {},
-            "relatedRecords": Array [
-              Object {
-                "$type": "app.bsky.actor.profile",
-                "avatar": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(0)",
-                  },
-                  "size": 3976,
-                },
-                "description": "",
-                "displayName": "Carlton Abernathy IV",
-              },
-            ],
-          },
-          Object {
-            "did": "user(1)",
-            "email": "cara-wiegand69.test@bsky.app",
-            "handle": "cara-wiegand69.test",
-            "indexedAt": "1970-01-01T00:00:00.000Z",
-            "moderation": Object {
-              "currentAction": Object {
-                "action": "com.atproto.admin.defs#takedown",
-                "id": 1,
-              },
-            },
-            "relatedRecords": Array [],
-          },
-          Object {
-            "did": "user(2)",
-            "email": "carlos6.test@bsky.app",
-            "handle": "carlos6.test",
-            "indexedAt": "1970-01-01T00:00:00.000Z",
-            "moderation": Object {},
-            "relatedRecords": Array [],
-          },
-          Object {
-            "did": "user(3)",
-            "email": "carolina-mcdermott77.test@bsky.app",
-            "handle": "carolina-mcdermott77.test",
-            "indexedAt": "1970-01-01T00:00:00.000Z",
-            "moderation": Object {},
-            "relatedRecords": Array [
-              Object {
-                "$type": "app.bsky.actor.profile",
-                "avatar": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(0)",
-                  },
-                  "size": 3976,
-                },
-                "description": "",
-                "displayName": "Latoya Windler",
-              },
-            ],
-          },
-          Object {
-            "did": "user(4)",
-            "email": "eudora-dietrich4.test@bsky.app",
-            "handle": "eudora-dietrich4.test",
-            "indexedAt": "1970-01-01T00:00:00.000Z",
-            "moderation": Object {},
-            "relatedRecords": Array [
-              Object {
-                "$type": "app.bsky.actor.profile",
-                "avatar": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(0)",
-                  },
-                  "size": 3976,
-                },
-                "description": "",
-                "displayName": "Carol Littel",
-              },
-            ],
-          },
-          Object {
-            "did": "user(5)",
-            "email": "shane-torphy52.test@bsky.app",
-            "handle": "shane-torphy52.test",
-            "indexedAt": "1970-01-01T00:00:00.000Z",
-            "moderation": Object {},
-            "relatedRecords": Array [
-              Object {
-                "$type": "app.bsky.actor.profile",
-                "avatar": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(0)",
-                  },
-                  "size": 3976,
-                },
-                "description": "",
-                "displayName": "Sadie Carter",
-              },
-            ],
-          },
-        ]
-      `,
-      )
+      expect(forSnapshot(result.data.repos)).toMatchInlineSnapshot(snapSqlite)
     }
   })
 
@@ -408,8 +293,8 @@ Array [
 const snapSqlite = `
 Array [
   Object {
-    "account": "aliya-hodkiewicz.test@bsky.app",
     "did": "user(0)",
+    "email": "aliya-hodkiewicz.test@bsky.app",
     "handle": "aliya-hodkiewicz.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {},
@@ -430,8 +315,8 @@ Array [
     ],
   },
   Object {
-    "account": "cara-wiegand69.test@bsky.app",
     "did": "user(1)",
+    "email": "cara-wiegand69.test@bsky.app",
     "handle": "cara-wiegand69.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {
@@ -443,16 +328,16 @@ Array [
     "relatedRecords": Array [],
   },
   Object {
-    "account": "carlos6.test@bsky.app",
     "did": "user(2)",
+    "email": "carlos6.test@bsky.app",
     "handle": "carlos6.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {},
     "relatedRecords": Array [],
   },
   Object {
-    "account": "carolina-mcdermott77.test@bsky.app",
     "did": "user(3)",
+    "email": "carolina-mcdermott77.test@bsky.app",
     "handle": "carolina-mcdermott77.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {},
@@ -473,8 +358,8 @@ Array [
     ],
   },
   Object {
-    "account": "eudora-dietrich4.test@bsky.app",
     "did": "user(4)",
+    "email": "eudora-dietrich4.test@bsky.app",
     "handle": "eudora-dietrich4.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {},
@@ -495,8 +380,8 @@ Array [
     ],
   },
   Object {
-    "account": "shane-torphy52.test@bsky.app",
     "did": "user(5)",
+    "email": "shane-torphy52.test@bsky.app",
     "handle": "shane-torphy52.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "moderation": Object {},
