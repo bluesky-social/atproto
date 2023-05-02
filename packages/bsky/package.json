@@ -2,6 +2,7 @@
   "name": "@atproto/bsky",
   "version": "0.0.0",
   "license": "MIT",
+  "repository": "git@github.com:bluesky-social/atproto.git",
   "main": "src/index.ts",
   "bin": "dist/bin.ts",
   "scripts": {
