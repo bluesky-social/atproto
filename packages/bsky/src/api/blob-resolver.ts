@@ -118,14 +118,6 @@ export async function resolveBlob(
 
 async function getBlob(opts: { pds: string; did: string; cid: string }) {
   const { pds, did, cid } = opts
-  // Check pds protocol and hostname to prevent potential SSRF
-  const { hostname, protocol } = new URL(pds)
-  if (!['http:', 'https:'].includes(protocol)) {
-    throw createError(400, 'Invalid pds protocol')
-  }
-  if (!hostname) {
-    throw createError(400, 'Invalid pds hostname')
-  }
   return axios.get(`${pds}/xrpc/com.atproto.sync.getBlob`, {
     params: { did, cid },
     decompress: true,
