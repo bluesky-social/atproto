@@ -345,18 +345,20 @@ export class AccountService {
   }
 
   async deleteAccount(did: string): Promise<void> {
-    this.db.assertTransaction()
-    await Promise.all([
-      this.db.db.deleteFrom('refresh_token').where('did', '=', did).execute(),
-      this.db.db
-        .deleteFrom('user_account')
-        .where('user_account.did', '=', did)
-        .execute(),
-      this.db.db
-        .deleteFrom('did_handle')
-        .where('did_handle.did', '=', did)
-        .execute(),
-    ])
+    // Not done in transaction because it would be too long, prone to contention.
+    // Also, this can safely be run multiple times if it fails.
+    await this.db.db
+      .deleteFrom('refresh_token')
+      .where('did', '=', did)
+      .execute()
+    await this.db.db
+      .deleteFrom('user_account')
+      .where('user_account.did', '=', did)
+      .execute()
+    await this.db.db
+      .deleteFrom('did_handle')
+      .where('did_handle.did', '=', did)
+      .execute()
   }
 
   selectInviteCodesQb() {
