@@ -8,7 +8,7 @@ import { RepoRoot } from '../../db/tables/repo-root'
 import { countAll, notSoftDeletedClause, nullToZero } from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
-import { sequenceHandleUpdate } from '../../sequencer'
+import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -146,7 +146,8 @@ export class AccountService {
     if (res.numUpdatedRows < 1) {
       throw new UserAlreadyExistsError()
     }
-    await sequenceHandleUpdate(this.db, did, handle)
+    const seqEvt = await sequencer.formatSeqHandleUpdate(did, handle)
+    await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
   async updateEmail(did: string, email: string) {

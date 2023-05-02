@@ -20,7 +20,7 @@ import {
 import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { RecordService } from '../record'
-import { sequenceCommit, sequenceRebase } from '../../sequencer'
+import * as sequencer from '../../sequencer'
 import { Labeler } from '../../labeler'
 import { wait } from '@atproto/common'
 
@@ -206,10 +206,12 @@ export class RepoService {
     commitData: CommitData,
     writes: PreparedWrite[],
   ) {
-    await Promise.all([
+    const [seqEvt] = await Promise.all([
+      sequencer.formatSeqCommit(did, commitData, writes),
       this.blobs.processWriteBlobs(did, commitData.commit, writes),
-      sequenceCommit(this.db, did, commitData, writes),
     ])
+
+    await sequencer.sequenceEvt(this.db, seqEvt)
 
     // @TODO move to appview
     writes.map((write) => {
@@ -241,10 +243,11 @@ export class RepoService {
   }
 
   async afterRebaseProcessing(did: string, rebaseData: RebaseData) {
-    await Promise.all([
+    const [seqEvt] = await Promise.all([
+      sequencer.formatSeqRebase(did, rebaseData),
       this.blobs.processRebaseBlobs(did, rebaseData.commit),
-      sequenceRebase(this.db, did, rebaseData),
     ])
+    await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
   async deleteRepo(did: string) {
