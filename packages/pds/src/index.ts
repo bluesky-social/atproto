@@ -11,6 +11,7 @@ import events from 'events'
 import { createTransport } from 'nodemailer'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
+import { Analytics } from '@atproto/analytics'
 import { AppView } from './app-view'
 import API, { health } from './api'
 import Database from './db'
@@ -33,7 +34,6 @@ import {
 } from './image/invalidator'
 import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
 import { BackgroundQueue } from './event-stream/background-queue'
-import { analytics } from './util/analytics'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -64,9 +64,11 @@ export class PDS {
     imgInvalidator?: ImageInvalidator
     repoSigningKey: crypto.Keypair
     plcRotationKey: crypto.Keypair
+    analytics?: Analytics
     config: ServerConfig
   }): PDS {
-    const { db, blobstore, repoSigningKey, plcRotationKey, config } = opts
+    const { db, blobstore, repoSigningKey, plcRotationKey, analytics, config } =
+      opts
     let maybeImgInvalidator = opts.imgInvalidator
     const auth = new ServerAuth({
       jwtSecret: config.jwtSecret,
@@ -161,6 +163,7 @@ export class PDS {
       services,
       mailer,
       imgUriBuilder,
+      analytics,
       backgroundQueue,
     })
 
@@ -206,7 +209,7 @@ export class PDS {
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()
-    await analytics.closeAndFlush()
+    await this.ctx.analytics?.close()
   }
 }
 

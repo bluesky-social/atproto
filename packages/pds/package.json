@@ -26,6 +26,7 @@
     "postpublish": "npm run update-main-to-src"
   },
   "dependencies": {
+    "@atproto/analytics": "*",
     "@atproto/api": "*",
     "@atproto/common": "*",
     "@atproto/crypto": "*",
@@ -36,7 +37,6 @@
     "@atproto/uri": "*",
     "@atproto/xrpc-server": "*",
     "@did-plc/lib": "^0.0.1",
-    "@segment/analytics-node": "^1.0.0-beta.26",
     "better-sqlite3": "^7.6.2",
     "bytes": "^3.1.2",
     "cors": "^2.8.5",

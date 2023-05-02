@@ -1,6 +1,7 @@
 import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
 import { DidResolver } from '@atproto/did-resolver'
+import { Analytics } from '@atproto/analytics'
 import { Database } from './db'
 import { ServerConfig } from './config'
 import * as auth from './auth'
@@ -29,6 +30,7 @@ export class AppContext {
       sequencer: Sequencer
       labeler: Labeler
       backgroundQueue: BackgroundQueue
+      analytics?: Analytics
     },
   ) {}
 
@@ -102,6 +104,10 @@ export class AppContext {
 
   get backgroundQueue(): BackgroundQueue {
     return this.opts.backgroundQueue
+  }
+
+  get analytics(): Analytics | undefined {
+    return this.opts.analytics
   }
 
   get plcClient(): plc.Client {
