@@ -49,7 +49,6 @@ export const getPds = (doc: DidDocument): string | undefined => {
     services = [services]
   }
   const found = services.find((service) => service.id === '#atproto_pds')
-  console.log('found', found)
   if (!found) return undefined
   if (found.type !== 'AtprotoPersonalDataServer') {
     return undefined
