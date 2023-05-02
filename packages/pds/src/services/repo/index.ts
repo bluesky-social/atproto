@@ -241,6 +241,7 @@ export class RepoService {
     swapCommit?: CID,
     now?: string,
   ) {
+    this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
     const currRoot = await storage.lockHead()
     if (!currRoot) {
