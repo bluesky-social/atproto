@@ -1,9 +1,13 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import { TID } from '@atproto/common'
-import { LexiconDefNotFoundError, RepoRecord } from '@atproto/lexicon'
+import { TID, dataToCborBlock } from '@atproto/common'
 import {
-  cidForRecord,
+  LexiconDefNotFoundError,
+  RepoRecord,
+  lexToIpld,
+} from '@atproto/lexicon'
+import {
+  cborToLex,
   RecordDeleteOp,
   RecordCreateOp,
   RecordUpdateOp,
@@ -127,7 +131,7 @@ export const prepareCreate = async (opts: {
   return {
     action: WriteOpAction.Create,
     uri: AtUri.make(did, collection, rkey),
-    cid: await cidForRecord(record),
+    cid: await cidForSafeRecord(record),
     swapCid,
     record,
     blobs: blobsForWrite(record),
@@ -150,7 +154,7 @@ export const prepareUpdate = async (opts: {
   return {
     action: WriteOpAction.Update,
     uri: AtUri.make(did, collection, rkey),
-    cid: await cidForRecord(record),
+    cid: await cidForSafeRecord(record),
     swapCid,
     record,
     blobs: blobsForWrite(record),
@@ -212,4 +216,17 @@ function separateEmbeds(embed: PostRecord['embed']) {
     return [{ $type: lex.ids.AppBskyEmbedRecord, ...embed.record }, embed.media]
   }
   return [embed]
+}
+
+async function cidForSafeRecord(record: RepoRecord) {
+  try {
+    const block = await dataToCborBlock(lexToIpld(record))
+    cborToLex(block.bytes)
+    return block.cid
+  } catch (err) {
+    // Block does not properly transform between lex and cbor
+    const badRecordErr = new InvalidRecordError('Bad record')
+    badRecordErr.cause = err
+    throw badRecordErr
+  }
 }

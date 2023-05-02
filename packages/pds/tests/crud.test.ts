@@ -7,6 +7,7 @@ import * as deleteRecord from '@atproto/api/src/client/types/com/atproto/repo/de
 import * as applyWrites from '@atproto/api/src/client/types/com/atproto/repo/applyWrites'
 import { cidForCbor, TID } from '@atproto/common'
 import { BlobNotFoundError } from '@atproto/repo'
+import { defaultFetchHandler } from '@atproto/xrpc'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
 import { adminAuth, CloseFn, paginateAll, runTestServer } from './_util'
 import AppContext from '../src/context'
@@ -829,6 +830,30 @@ describe('crud operations', () => {
         applyWrites.InvalidSwapError,
       )
     })
+
+    it("writes fail on values that can't reliably transform between cbor to lex", async () => {
+      const passthroughBody = (data: unknown) =>
+        typedArrayToBuffer(new TextEncoder().encode(JSON.stringify(data)))
+      const result = await defaultFetchHandler(
+        aliceAgent.service.origin + `/xrpc/com.atproto.repo.createRecord`,
+        'post',
+        { ...aliceAgent.api.xrpc.headers, 'Content-Type': 'application/json' },
+        passthroughBody({
+          repo: alice.did,
+          collection: 'app.bsky.feed.post',
+          record: {
+            text: 'x',
+            createdAt: new Date().toISOString(),
+            deepObject: createDeepObject(4000),
+          },
+        }),
+      )
+      expect(result.status).toEqual(400)
+      expect(result.body).toEqual({
+        error: 'InvalidRequest',
+        message: 'Bad record',
+      })
+    })
   })
 
   it('prevents duplicate likes', async () => {
@@ -1074,3 +1099,20 @@ describe('crud operations', () => {
     )
   })
 })
+
+function createDeepObject(depth: number) {
+  const obj: any = {}
+  let iter = obj
+  for (let i = 0; i < depth; ++i) {
+    iter.x = {}
+    iter = iter.x
+  }
+  return obj
+}
+
+function typedArrayToBuffer(array: Uint8Array): ArrayBuffer {
+  return array.buffer.slice(
+    array.byteOffset,
+    array.byteLength + array.byteOffset,
+  )
+}
