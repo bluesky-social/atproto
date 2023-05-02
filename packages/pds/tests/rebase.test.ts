@@ -47,9 +47,12 @@ describe('repo rebases', () => {
     }
 
     const carBefore = await agent.api.com.atproto.sync.getRepo({ did: alice })
-    await ctx.db.transaction((dbTxn) =>
-      ctx.services.repo(dbTxn).rebaseRepo(alice, new Date().toISOString()),
+
+    await agent.api.com.atproto.repo.rebaseRepo(
+      { repo: alice },
+      { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
+
     const commitPath = await agent.api.com.atproto.sync.getCommitPath({
       did: alice,
     })
@@ -103,8 +106,9 @@ describe('repo rebases', () => {
     await sc.deletePost(alice, post1.ref.uri)
     await sc.deletePost(alice, post3.ref.uri)
 
-    await ctx.db.transaction((dbTxn) =>
-      ctx.services.repo(dbTxn).rebaseRepo(alice, new Date().toISOString()),
+    await agent.api.com.atproto.repo.rebaseRepo(
+      { repo: alice },
+      { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
 
     const repoBlobs = await ctx.db.db
