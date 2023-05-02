@@ -42,6 +42,8 @@ export function createServices(resources: {
       repoSigningKey,
       messageDispatcher,
       blobstore,
+      imgUriBuilder,
+      imgInvalidator,
       labeler,
     ),
     moderation: ModerationService.creator(

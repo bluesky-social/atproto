@@ -23,6 +23,8 @@ import { RecordService } from '../record'
 import * as sequencer from '../../sequencer'
 import { Labeler } from '../../labeler'
 import { wait } from '@atproto/common'
+import { ImageInvalidator } from '../../image/invalidator'
+import { ImageUriBuilder } from '../../image/uri'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -32,19 +34,31 @@ export class RepoService {
     public repoSigningKey: crypto.Keypair,
     public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
+    public imgUriBuilder: ImageUriBuilder,
+    public imgInvalidator: ImageInvalidator,
     public labeler: Labeler,
   ) {
-    this.blobs = new RepoBlobs(db, blobstore)
+    this.blobs = new RepoBlobs(db, blobstore, imgUriBuilder, imgInvalidator)
   }
 
   static creator(
     keypair: crypto.Keypair,
     messageDispatcher: MessageQueue,
     blobstore: BlobStore,
+    imgUriBuilder: ImageUriBuilder,
+    imgInvalidator: ImageInvalidator,
     labeler: Labeler,
   ) {
     return (db: Database) =>
-      new RepoService(db, keypair, messageDispatcher, blobstore, labeler)
+      new RepoService(
+        db,
+        keypair,
+        messageDispatcher,
+        blobstore,
+        imgUriBuilder,
+        imgInvalidator,
+        labeler,
+      )
   }
 
   services = {
@@ -61,6 +75,8 @@ export class RepoService {
         this.repoSigningKey,
         this.messageDispatcher,
         this.blobstore,
+        this.imgUriBuilder,
+        this.imgInvalidator,
         this.labeler,
       )
       return fn(srvc)

@@ -13,9 +13,16 @@ import { Blob as BlobTable } from '../../db/tables/blob'
 import * as img from '../../image'
 import { BlobRef } from '@atproto/lexicon'
 import { PreparedDelete, PreparedUpdate } from '../../repo'
+import { ImageInvalidator } from '../../image/invalidator'
+import { ImageUriBuilder } from '../../image/uri'
 
 export class RepoBlobs {
-  constructor(public db: Database, public blobstore: BlobStore) {}
+  constructor(
+    public db: Database,
+    public blobstore: BlobStore,
+    public imgUriBuilder: ImageUriBuilder,
+    public imgInvalidator: ImageInvalidator,
+  ) {}
 
   async addUntetheredBlob(
     creator: string,
@@ -118,9 +125,16 @@ export class RepoBlobs {
       .where('creator', '=', did)
       .where('cid', 'in', cidsToDelete)
       .execute()
-    await Promise.all(
-      cidsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
-    )
+    await Promise.all([
+      ...cidsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
+      ...cidsToDelete.map((cid) => {
+        const paths = ImageUriBuilder.commonSignedUris.map((id) => {
+          const uri = this.imgUriBuilder.getCommonSignedUri(id, cid)
+          return uri.replace(this.imgUriBuilder.endpoint, '')
+        })
+        return this.imgInvalidator.invalidate(cid, paths)
+      }),
+    ])
   }
 
   async verifyBlobAndMakePermanent(
