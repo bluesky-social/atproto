@@ -844,7 +844,7 @@ describe('crud operations', () => {
           record: {
             text: 'x',
             createdAt: new Date().toISOString(),
-            deepObject: createDeepObject(2500),
+            deepObject: createDeepObject(4000),
           },
         }),
       )
