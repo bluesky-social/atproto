@@ -29,6 +29,7 @@ import {
   XRPCStreamHandlerConfig,
   XRPCStreamHandler,
   Params,
+  InternalServerError,
 } from './types'
 import {
   decodeQueryParams,
@@ -244,7 +245,14 @@ export class Server {
           }
         }
       } catch (err: unknown) {
-        next(err)
+        // Express will not call the next middleware (errorMiddleware in this case)
+        // if the value passed to next is falsy (e.g. null, undefined, 0).
+        // Hence we replace it with an InternalServerError.
+        if (!err) {
+          next(new InternalServerError())
+        } else {
+          next(err)
+        }
       }
     }
   }

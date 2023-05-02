@@ -1,14 +1,21 @@
 import { s32encode, s32decode } from './util'
+
+const TID_LEN = 13
+
 let lastTimestamp = 0
 let timestampCount = 0
 let clockid: number | null = null
+
+function dedash(str: string): string {
+  return str.replaceAll('-', '')
+}
 
 export class TID {
   str: string
 
   constructor(str: string) {
-    const noDashes = str.replace(/-/g, '')
-    if (noDashes.length !== 13) {
+    const noDashes = dedash(str)
+    if (noDashes.length !== TID_LEN) {
       throw new Error(`Poorly formatted TID: ${noDashes.length} length`)
     }
     this.str = noDashes
@@ -46,31 +53,24 @@ export class TID {
     return new TID(str)
   }
 
-  static newestFirst(a: TID, b: TID): number {
-    return a.compareTo(b) * -1
-  }
-
   static oldestFirst(a: TID, b: TID): number {
     return a.compareTo(b)
   }
 
+  static newestFirst(a: TID, b: TID): number {
+    return b.compareTo(a)
+  }
+
   static is(str: string): boolean {
-    try {
-      TID.fromStr(str)
-      return true
-    } catch (err) {
-      return false
-    }
+    return dedash(str).length === TID_LEN
   }
 
   timestamp(): number {
-    const substr = this.str.slice(0, 11)
-    return s32decode(substr)
+    return s32decode(this.str.slice(0, 11))
   }
 
   clockid(): number {
-    const substr = this.str.slice(11, 13)
-    return s32decode(substr)
+    return s32decode(this.str.slice(11, 13))
   }
 
   formatted(): string {
@@ -93,7 +93,7 @@ export class TID {
   }
 
   equals(other: TID): boolean {
-    return this.compareTo(other) === 0
+    return this.str === other.str
   }
 
   newerThan(other: TID): boolean {

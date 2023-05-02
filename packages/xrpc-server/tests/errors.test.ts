@@ -28,6 +28,15 @@ const LEXICONS = [
   },
   {
     lexicon: 1,
+    id: 'io.example.throwFalsyValue',
+    defs: {
+      main: {
+        type: 'query',
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'io.example.query',
     defs: {
       main: {
@@ -107,6 +116,9 @@ describe('Errors', () => {
       return { status: 400 }
     }
   })
+  server.method('io.example.throwFalsyValue', () => {
+    throw ''
+  })
   server.method('io.example.query', () => {
     return undefined
   })
@@ -140,7 +152,7 @@ describe('Errors', () => {
       })
       throw new Error('Didnt throw')
     } catch (e) {
-      expect(e instanceof XRPCError).toBeTruthy()
+      expect(e).toBeInstanceOf(XRPCError)
       expect((e as XRPCError).success).toBeFalsy()
       expect((e as XRPCError).error).toBe('Foo')
       expect((e as XRPCError).message).toBe('It was this one!')
@@ -151,10 +163,19 @@ describe('Errors', () => {
       })
       throw new Error('Didnt throw')
     } catch (e) {
-      expect(e instanceof XRPCError).toBeTruthy()
+      expect(e).toBeInstanceOf(XRPCError)
       expect((e as XRPCError).success).toBeFalsy()
       expect((e as XRPCError).error).toBe('Bar')
       expect((e as XRPCError).message).toBe('It was that one!')
+    }
+    try {
+      await client.call('io.example.throwFalsyValue')
+      throw new Error('Didnt throw')
+    } catch (e) {
+      expect(e instanceof XRPCError).toBeTruthy()
+      expect((e as XRPCError).success).toBeFalsy()
+      expect((e as XRPCError).error).toBe('InternalServerError')
+      expect((e as XRPCError).message).toBe('Internal Server Error')
     }
     try {
       await client.call('io.example.error', {
@@ -162,7 +183,7 @@ describe('Errors', () => {
       })
       throw new Error('Didnt throw')
     } catch (e) {
-      expect(e instanceof XRPCError).toBeTruthy()
+      expect(e).toBeInstanceOf(XRPCError)
       expect((e as XRPCError).success).toBeFalsy()
       expect((e as XRPCError).error).toBe('InvalidRequest')
       expect((e as XRPCError).message).toBe('Invalid Request')
@@ -171,8 +192,8 @@ describe('Errors', () => {
       await client.call('io.example.invalidResponse')
       throw new Error('Didnt throw')
     } catch (e: any) {
-      expect(e instanceof XRPCError).toBeTruthy()
-      expect(e instanceof XRPCInvalidResponseError).toBeTruthy()
+      expect(e).toBeInstanceOf(XRPCError)
+      expect(e).toBeInstanceOf(XRPCInvalidResponseError)
       expect(e.success).toBeFalsy()
       expect(e.error).toBe('Invalid Response')
       expect(e.message).toBe(
@@ -193,7 +214,7 @@ describe('Errors', () => {
       await badClient.call('io.example.query')
       throw new Error('Didnt throw')
     } catch (e: any) {
-      expect(e instanceof XRPCError).toBeTruthy()
+      expect(e).toBeInstanceOf(XRPCError)
       expect(e.success).toBeFalsy()
       expect(e.error).toBe('InvalidRequest')
       expect(e.message).toBe('Incorrect HTTP method (POST) expected GET')
@@ -202,7 +223,7 @@ describe('Errors', () => {
       await badClient.call('io.example.procedure')
       throw new Error('Didnt throw')
     } catch (e: any) {
-      expect(e instanceof XRPCError).toBeTruthy()
+      expect(e).toBeInstanceOf(XRPCError)
       expect(e.success).toBeFalsy()
       expect(e.error).toBe('InvalidRequest')
       expect(e.message).toBe('Incorrect HTTP method (GET) expected POST')
@@ -211,7 +232,7 @@ describe('Errors', () => {
       await badClient.call('io.example.doesNotExist')
       throw new Error('Didnt throw')
     } catch (e: any) {
-      expect(e instanceof XRPCError).toBeTruthy()
+      expect(e).toBeInstanceOf(XRPCError)
       expect(e.success).toBeFalsy()
       expect(e.error).toBe('MethodNotImplemented')
       expect(e.message).toBe('Method Not Implemented')

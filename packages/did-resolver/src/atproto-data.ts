@@ -53,10 +53,18 @@ export const getPds = (doc: DidDocument): string | undefined => {
   if (found.type !== 'AtprotoPersonalDataServer') {
     return undefined
   }
-  if (typeof found.serviceEndpoint === 'string') {
-    return found.serviceEndpoint
+  if (typeof found.serviceEndpoint !== 'string') {
+    return undefined
   }
-  return undefined
+  // Check pds protocol and hostname to prevent potential SSRF
+  const { hostname, protocol } = new URL(found.serviceEndpoint)
+  if (!['http:', 'https:'].includes(protocol)) {
+    throw new Error('Invalid pds protocol')
+  }
+  if (!hostname) {
+    throw new Error('Invalid pds hostname')
+  }
+  return found.serviceEndpoint
 }
 
 export const parseToAtprotoDocument = (
