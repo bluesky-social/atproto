@@ -28,6 +28,15 @@ const LEXICONS = [
   },
   {
     lexicon: 1,
+    id: 'io.example.throwFalsyValue',
+    defs: {
+      main: {
+        type: 'query',
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'io.example.query',
     defs: {
       main: {
@@ -107,6 +116,9 @@ describe('Errors', () => {
       return { status: 400 }
     }
   })
+  server.method('io.example.throwFalsyValue', () => {
+    throw ''
+  })
   server.method('io.example.query', () => {
     return undefined
   })
@@ -155,6 +167,15 @@ describe('Errors', () => {
       expect((e as XRPCError).success).toBeFalsy()
       expect((e as XRPCError).error).toBe('Bar')
       expect((e as XRPCError).message).toBe('It was that one!')
+    }
+    try {
+      await client.call('io.example.throwFalsyValue')
+      throw new Error('Didnt throw')
+    } catch (e) {
+      expect(e instanceof XRPCError).toBeTruthy()
+      expect((e as XRPCError).success).toBeFalsy()
+      expect((e as XRPCError).error).toBe('InternalServerError')
+      expect((e as XRPCError).message).toBe('Internal Server Error')
     }
     try {
       await client.call('io.example.error', {
