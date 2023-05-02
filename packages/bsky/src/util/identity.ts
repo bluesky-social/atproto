@@ -1,4 +1,8 @@
-import { NoHandleRecordError, resolveDns } from '@atproto/identifier'
+import {
+  ManyHandleRecordsError,
+  NoHandleRecordError,
+  resolveDns,
+} from '@atproto/identifier'
 import { httpLogger } from '../logger'
 import { AtpAgent } from '@atproto/api'
 import { retryHttp } from './retry'
@@ -10,7 +14,10 @@ export const resolveExternalHandle = async (
     const did = await resolveDns(handle)
     return did
   } catch (err) {
-    if (err instanceof NoHandleRecordError) {
+    if (
+      err instanceof NoHandleRecordError ||
+      err instanceof ManyHandleRecordsError
+    ) {
       // no worries it's just not found
     } else {
       httpLogger.error({ err, handle }, 'could not resolve dns handle')
