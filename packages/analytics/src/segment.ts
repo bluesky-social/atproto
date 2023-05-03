@@ -37,5 +37,3 @@ export class SegmentAnalytics implements Analytics {
     await this.segment.closeAndFlush()
   }
 }
-
-// : 'SEGMENT_WRITE_KEY', // TODO: get this from .env
