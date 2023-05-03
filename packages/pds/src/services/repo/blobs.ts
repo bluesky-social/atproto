@@ -88,16 +88,7 @@ export class RepoBlobs {
       (w) => w.action === WriteOpAction.Update,
     ) as PreparedUpdate[]
     const uris = [...deletes, ...updates].map((w) => w.uri.toString())
-    console.log(uris)
     if (uris.length === 0) return
-
-    const check = await this.db.db
-      .selectFrom('repo_blob')
-      .where('did', '=', did)
-      .selectAll()
-      .execute()
-
-    console.log('check: ', check)
 
     const deletedRepoBlobs = await this.db.db
       .deleteFrom('repo_blob')
@@ -105,7 +96,6 @@ export class RepoBlobs {
       .where('recordUri', 'in', uris)
       .returningAll()
       .execute()
-    console.log(deletedRepoBlobs)
     if (deletedRepoBlobs.length < 1) return
 
     const deletedRepoBlobCids = deletedRepoBlobs.map((row) => row.cid)
@@ -125,11 +115,9 @@ export class RepoBlobs {
       .flat()
       .map((b) => b.cid.toString())
     const cidsToKeep = [...newBlobCids, ...duplicateCids.map((row) => row.cid)]
-    console.log('new blob cids: ', newBlobCids)
     const cidsToDelete = deletedRepoBlobCids.filter(
       (cid) => !cidsToKeep.includes(cid),
     )
-    console.log('to delete: ', cidsToDelete)
     if (cidsToDelete.length < 1) return
 
     await this.db.db
@@ -137,9 +125,20 @@ export class RepoBlobs {
       .where('creator', '=', did)
       .where('cid', 'in', cidsToDelete)
       .execute()
+
+    // check if these blobs are used by other users before deleting from blobstore
+    const stillUsedRes = await this.db.db
+      .selectFrom('blob')
+      .where('cid', 'in', cidsToDelete)
+      .select('cid')
+      .distinct()
+      .execute()
+    const stillUsed = stillUsedRes.map((row) => row.cid)
+
+    const blobsToDelete = cidsToDelete.filter((cid) => !stillUsed.includes(cid))
     await Promise.all([
-      ...cidsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
-      ...cidsToDelete.map((cid) => {
+      ...blobsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
+      ...blobsToDelete.map((cid) => {
         const paths = ImageUriBuilder.commonSignedUris.map((id) => {
           const uri = this.imgUriBuilder.getCommonSignedUri(id, cid)
           return uri.replace(this.imgUriBuilder.endpoint, '')

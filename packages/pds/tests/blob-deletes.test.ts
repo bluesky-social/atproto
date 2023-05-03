@@ -1,28 +1,17 @@
-import fs from 'fs/promises'
-import { gzipSync } from 'zlib'
-import AtpAgent from '@atproto/api'
-import { CloseFn, runTestServer, TestServerInfo } from './_util'
-import { Database, ServerConfig } from '../src'
+import AtpAgent, { BlobRef } from '@atproto/api'
+import { runTestServer, TestServerInfo } from './_util'
+import { Database } from '../src'
 import DiskBlobStore from '../src/storage/disk-blobstore'
-import * as uint8arrays from 'uint8arrays'
-import * as image from '../src/image'
-import axios from 'axios'
-import { randomBytes } from '@atproto/crypto'
-import { BlobRef } from '@atproto/lexicon'
 import { ids } from '../src/lexicon/lexicons'
 import { SeedClient } from './seeds/client'
-import userSeed from './seeds/users'
 
 describe('blob deletes', () => {
   let server: TestServerInfo
   let agent: AtpAgent
   let sc: SeedClient
 
-  let bobAgent: AtpAgent
   let blobstore: DiskBlobStore
   let db: Database
-  let cfg: ServerConfig
-  let serverUrl: string
 
   let alice: string
   let bob: string
@@ -35,11 +24,18 @@ describe('blob deletes', () => {
     db = server.ctx.db
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
-    await userSeed(sc)
+    await sc.createAccount('alice', {
+      email: 'alice@test.com',
+      handle: 'alice.test',
+      password: 'alice-pass',
+    })
+    await sc.createAccount('bob', {
+      email: 'bob@test.com',
+      handle: 'bob.test',
+      password: 'bob-pass',
+    })
     alice = sc.dids.alice
     bob = sc.dids.bob
-    cfg = server.ctx.cfg
-    serverUrl = server.url
   })
 
   afterAll(async () => {
@@ -63,14 +59,6 @@ describe('blob deletes', () => {
     const post = await sc.post(alice, 'test', undefined, [img])
     await sc.deletePost(alice, post.ref.uri)
 
-    const thing = await db.db
-      .selectFrom('repo_blob')
-      .selectAll()
-      .where('did', '=', alice)
-      .execute()
-
-    console.log(thing)
-
     const dbBlobs = await getDbBlobsForDid(alice)
     expect(dbBlobs.length).toBe(0)
 
@@ -78,205 +66,141 @@ describe('blob deletes', () => {
     expect(hasImg).toBeFalsy()
   })
 
-  // it('can reference the file', async () => {
-  //   await updateProfile(aliceAgent, {
-  //     displayName: 'Alice',
-  //     avatar: smallBlob,
-  //   })
-  // })
+  it('deletes blob when blob-ref in record is updated', async () => {
+    const img = await sc.uploadFile(
+      alice,
+      'tests/image/fixtures/key-portrait-small.jpg',
+      'image/jpeg',
+    )
+    const img2 = await sc.uploadFile(
+      alice,
+      'tests/image/fixtures/key-landscape-small.jpg',
+      'image/jpeg',
+    )
+    await updateProfile(sc, alice, img.image, img.image)
+    await updateProfile(sc, alice, img2.image, img2.image)
 
-  // it('after being referenced, the file is moved to permanent storage', async () => {
-  //   const found = await db.db
-  //     .selectFrom('blob')
-  //     .selectAll()
-  //     .where('cid', '=', smallBlob.ref.toString())
-  //     .executeTakeFirst()
+    const dbBlobs = await getDbBlobsForDid(alice)
+    expect(dbBlobs.length).toBe(1)
+    expect(dbBlobs[0].cid).toEqual(img2.image.ref.toString())
 
-  //   expect(found?.tempKey).toBeNull()
-  //   expect(await blobstore.hasStored(smallBlob.ref)).toBeTruthy()
-  //   const storedBytes = await blobstore.getBytes(smallBlob.ref)
-  //   expect(uint8arrays.equals(smallFile, storedBytes)).toBeTruthy()
-  // })
+    const hasImg = await blobstore.hasStored(img.image.ref)
+    expect(hasImg).toBeFalsy()
 
-  // it('can fetch the file after being referenced', async () => {
-  //   const { headers, data } = await aliceAgent.api.com.atproto.sync.getBlob({
-  //     did: alice.did,
-  //     cid: smallBlob.ref.toString(),
-  //   })
-  //   expect(headers['content-type']).toEqual('image/jpeg')
-  //   expect(headers['content-security-policy']).toEqual(
-  //     `default-src 'none'; sandbox`,
-  //   )
-  //   expect(headers['x-content-type-options']).toEqual('nosniff')
-  //   expect(uint8arrays.equals(smallFile, new Uint8Array(data))).toBeTruthy()
-  // })
+    const hasImg2 = await blobstore.hasStored(img2.image.ref)
+    expect(hasImg2).toBeTruthy()
 
-  // it('serves the referenced blob', async () => {
-  //   const profile = await aliceAgent.api.app.bsky.actor.getProfile({
-  //     actor: 'alice.test',
-  //   })
-  //   const avatar = profile.data.avatar as string
-  //   expect(typeof avatar).toBe('string')
-  //   const url = avatar.replace(cfg.publicUrl, serverUrl)
-  //   const res = await axios.get(url, { responseType: 'stream' })
-  //   expect(res.headers['content-type']).toBe('image/jpeg')
-  //   const info = await image.getInfo(res.data)
-  //   expect(info).toEqual(
-  //     expect.objectContaining({
-  //       height: 1000,
-  //       width: 1000,
-  //     }),
-  //   )
-  // })
+    // reset
+    await updateProfile(sc, alice)
+  })
 
-  // let largeBlob: BlobRef
-  // let largeFile: Uint8Array
+  it('does not delete blob when blob-ref in record is not updated', async () => {
+    const img = await sc.uploadFile(
+      alice,
+      'tests/image/fixtures/key-portrait-small.jpg',
+      'image/jpeg',
+    )
+    const img2 = await sc.uploadFile(
+      alice,
+      'tests/image/fixtures/key-landscape-small.jpg',
+      'image/jpeg',
+    )
+    await updateProfile(sc, alice, img.image, img.image)
+    await updateProfile(sc, alice, img.image, img2.image)
 
-  // it('does not allow referencing a file that is outside blob constraints', async () => {
-  //   largeFile = await fs.readFile('tests/image/fixtures/hd-key.jpg')
-  //   const res = await aliceAgent.api.com.atproto.repo.uploadBlob(largeFile, {
-  //     encoding: 'image/jpeg',
-  //   })
-  //   largeBlob = res.data.blob
+    const dbBlobs = await getDbBlobsForDid(alice)
+    expect(dbBlobs.length).toBe(2)
 
-  //   const profilePromise = updateProfile(aliceAgent, {
-  //     avatar: largeBlob,
-  //   })
+    const hasImg = await blobstore.hasStored(img.image.ref)
+    expect(hasImg).toBeTruthy()
 
-  //   await expect(profilePromise).rejects.toThrow()
-  // })
+    const hasImg2 = await blobstore.hasStored(img2.image.ref)
+    expect(hasImg2).toBeTruthy()
+    await updateProfile(sc, alice)
+  })
 
-  // it('does not make a blob permanent if referencing failed', async () => {
-  //   const found = await db.db
-  //     .selectFrom('blob')
-  //     .selectAll()
-  //     .where('cid', '=', largeBlob.ref.toString())
-  //     .executeTakeFirst()
+  it('does not delete blob when blob is reused by another record in same commit', async () => {
+    const img = await sc.uploadFile(
+      alice,
+      'tests/image/fixtures/key-portrait-small.jpg',
+      'image/jpeg',
+    )
+    const post = await sc.post(alice, 'post', undefined, [img])
 
-  //   expect(found?.tempKey).toBeDefined()
-  //   expect(await blobstore.hasTemp(found?.tempKey as string)).toBeTruthy()
-  //   expect(await blobstore.hasStored(largeBlob.ref)).toBeFalsy()
-  // })
+    await agent.com.atproto.repo.applyWrites(
+      {
+        repo: alice,
+        writes: [
+          {
+            $type: 'com.atproto.repo.applyWrites#delete',
+            collection: 'app.bsky.feed.post',
+            rkey: post.ref.uri.rkey,
+          },
+          {
+            $type: 'com.atproto.repo.applyWrites#create',
+            collection: 'app.bsky.feed.post',
+            value: {
+              text: 'post2',
+              embed: {
+                $type: 'app.bsky.embed.images',
+                images: [
+                  {
+                    image: img.image,
+                    alt: 'alt',
+                  },
+                ],
+              },
+              createdAt: new Date().toISOString(),
+            },
+          },
+        ],
+      },
+      { encoding: 'application/json', headers: sc.getHeaders(alice) },
+    )
 
-  // it('permits duplicate uploads of the same file', async () => {
-  //   const file = await fs.readFile(
-  //     'tests/image/fixtures/key-landscape-small.jpg',
-  //   )
-  //   const { data: uploadA } = await aliceAgent.api.com.atproto.repo.uploadBlob(
-  //     file,
-  //     {
-  //       encoding: 'image/jpeg',
-  //     } as any,
-  //   )
-  //   const { data: uploadB } = await bobAgent.api.com.atproto.repo.uploadBlob(
-  //     file,
-  //     {
-  //       encoding: 'image/jpeg',
-  //     } as any,
-  //   )
-  //   expect(uploadA).toEqual(uploadB)
+    const dbBlobs = await getDbBlobsForDid(alice)
+    expect(dbBlobs.length).toBe(1)
 
-  //   await updateProfile(aliceAgent, {
-  //     displayName: 'Alice',
-  //     avatar: uploadA.blob,
-  //   })
-  //   const profileA = await aliceAgent.api.app.bsky.actor.profile.get({
-  //     repo: alice.did,
-  //     rkey: 'self',
-  //   })
-  //   expect((profileA.value as any).avatar.cid).toEqual(uploadA.cid)
-  //   await updateProfile(bobAgent, {
-  //     displayName: 'Bob',
-  //     avatar: uploadB.blob,
-  //   })
-  //   const profileB = await bobAgent.api.app.bsky.actor.profile.get({
-  //     repo: bob.did,
-  //     rkey: 'self',
-  //   })
-  //   expect((profileB.value as any).avatar.cid).toEqual(uploadA.cid)
-  //   const { data: uploadAfterPermanent } =
-  //     await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
-  //       encoding: 'image/jpeg',
-  //     } as any)
-  //   expect(uploadAfterPermanent).toEqual(uploadA)
-  //   const blob = await db.db
-  //     .selectFrom('blob')
-  //     .selectAll()
-  //     .where('cid', '=', uploadAfterPermanent.blob.ref.toString())
-  //     .executeTakeFirstOrThrow()
-  //   expect(blob.tempKey).toEqual(null)
-  // })
+    const hasImg = await blobstore.hasStored(img.image.ref)
+    expect(hasImg).toBeTruthy()
+  })
 
-  // it('supports compression during upload', async () => {
-  //   const { data: uploaded } = await aliceAgent.api.com.atproto.repo.uploadBlob(
-  //     gzipSync(smallFile),
-  //     {
-  //       encoding: 'image/jpeg',
-  //       headers: {
-  //         'content-encoding': 'gzip',
-  //       },
-  //     } as any,
-  //   )
-  //   expect(uploaded.blob.ref.equals(smallBlob.ref)).toBeTruthy()
-  // })
+  it('does not delete blob from blob store if another user is using it', async () => {
+    const imgAlice = await sc.uploadFile(
+      alice,
+      'tests/image/fixtures/key-landscape-small.jpg',
+      'image/jpeg',
+    )
+    const imgBob = await sc.uploadFile(
+      bob,
+      'tests/image/fixtures/key-landscape-small.jpg',
+      'image/jpeg',
+    )
+    const postAlice = await sc.post(alice, 'post', undefined, [imgAlice])
+    await sc.post(bob, 'post', undefined, [imgBob])
+    await sc.deletePost(alice, postAlice.ref.uri)
 
-  // it('corrects a bad mimetype', async () => {
-  //   const file = await fs.readFile(
-  //     'tests/image/fixtures/key-landscape-large.jpg',
-  //   )
-  //   const res = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
-  //     encoding: 'video/mp4',
-  //   } as any)
-
-  //   const found = await db.db
-  //     .selectFrom('blob')
-  //     .selectAll()
-  //     .where('cid', '=', res.data.blob.ref.toString())
-  //     .executeTakeFirst()
-
-  //   expect(found?.mimeType).toBe('image/jpeg')
-  //   expect(found?.width).toBe(1280)
-  //   expect(found?.height).toBe(742)
-  // })
-
-  // it('handles pngs', async () => {
-  //   const file = await fs.readFile('tests/image/fixtures/at.png')
-  //   const res = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
-  //     encoding: 'image/png',
-  //   })
-
-  //   const found = await db.db
-  //     .selectFrom('blob')
-  //     .selectAll()
-  //     .where('cid', '=', res.data.blob.ref.toString())
-  //     .executeTakeFirst()
-
-  //   expect(found?.mimeType).toBe('image/png')
-  //   expect(found?.width).toBe(554)
-  //   expect(found?.height).toBe(532)
-  // })
-
-  // it('handles unknown mimetypes', async () => {
-  //   const file = await randomBytes(20000)
-  //   const res = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
-  //     encoding: 'test/fake',
-  //   } as any)
-
-  //   const found = await db.db
-  //     .selectFrom('blob')
-  //     .selectAll()
-  //     .where('cid', '=', res.data.blob.ref.toString())
-  //     .executeTakeFirst()
-
-  //   expect(found?.mimeType).toBe('test/fake')
-  // })
+    const hasImg = await blobstore.hasStored(imgBob.image.ref)
+    expect(hasImg).toBeTruthy()
+  })
 })
 
-async function updateProfile(agent: AtpAgent, record: Record<string, unknown>) {
-  return await agent.api.com.atproto.repo.putRecord({
-    repo: agent.session?.did ?? '',
-    collection: ids.AppBskyActorProfile,
-    rkey: 'self',
-    record,
-  })
+async function updateProfile(
+  sc: SeedClient,
+  did: string,
+  avatar?: BlobRef,
+  banner?: BlobRef,
+) {
+  return await sc.agent.api.com.atproto.repo.putRecord(
+    {
+      repo: did,
+      collection: ids.AppBskyActorProfile,
+      rkey: 'self',
+      record: {
+        avatar: avatar,
+        banner: banner,
+      },
+    },
+    { encoding: 'application/json', headers: sc.getHeaders(did) },
+  )
 }
