@@ -164,6 +164,7 @@ export class PDS {
       services,
       mailer,
       imgUriBuilder,
+      imgInvalidator,
       backgroundQueue,
     })
 

@@ -12,6 +12,7 @@ import { MessageDispatcher } from './event-stream/message-queue'
 import Sequencer from './sequencer'
 import { Labeler } from './labeler'
 import { BackgroundQueue } from './event-stream/background-queue'
+import { ImageInvalidator } from './image/invalidator'
 
 export class AppContext {
   constructor(
@@ -22,6 +23,7 @@ export class AppContext {
       plcRotationKey: crypto.Keypair
       auth: auth.ServerAuth
       imgUriBuilder: ImageUriBuilder
+      imgInvalidator?: ImageInvalidator
       cfg: ServerConfig
       mailer: ServerMailer
       services: Services
@@ -78,6 +80,10 @@ export class AppContext {
 
   get imgUriBuilder(): ImageUriBuilder {
     return this.opts.imgUriBuilder
+  }
+
+  get imgInvalidator(): ImageInvalidator | undefined {
+    return this.opts.imgInvalidator
   }
 
   get cfg(): ServerConfig {
