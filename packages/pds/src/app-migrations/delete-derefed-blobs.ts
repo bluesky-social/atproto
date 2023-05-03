@@ -7,7 +7,7 @@ import { chunkArray } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { ImageUriBuilder } from '../image/uri'
 
-async function main(ctx: AppContext) {
+export async function migration(ctx: AppContext) {
   await derefedRecords(ctx)
   await derefedProfiles(ctx)
 
@@ -97,7 +97,7 @@ async function derefedProfiles(ctx: AppContext) {
     .leftJoin('profile', 'profile.creator', 'did_handle.did')
     .leftJoin('ipld_block', (join) =>
       join
-        .onRef('ipld_block.content', '=', 'profile.creator')
+        .onRef('ipld_block.creator', '=', 'profile.creator')
         .onRef('ipld_block.cid', '=', 'profile.cid'),
     )
     .select(['did_handle.did as did', 'ipld_block.content as content'])
