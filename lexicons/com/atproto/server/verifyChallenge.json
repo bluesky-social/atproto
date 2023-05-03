@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.server.verifyChallenge",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Verify a multifactor auth challenge on your account.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["id", "code"],
+          "properties": {
+            "id": {"type": "string"},
+            "code": {"type": "string"}
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "com.atproto.server.defs#challengeView"
+        }
+      }
+    }
+  }
+}

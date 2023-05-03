@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.server.removeChallenge",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Remove a multifactor auth challenge from your account.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["id"],
+          "properties": {
+            "id": {"type": "string"}
+          }
+        }
+      }
+    }
+  }
+}

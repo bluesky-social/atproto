@@ -25,6 +25,88 @@
         "usedBy": {"type": "string", "format": "did"},
         "usedAt": {"type": "string", "format": "datetime"}
       }
+    },
+    "challengeView": {
+      "type": "object",
+      "description": "Account's view of the multifactor challenge when logged-in.",
+      "required": ["id", "status", "settings"],
+      "properties": {
+        "id": {"type": "string"},
+        "status": {"type": "string", "knownValues": ["verified", "unverified"]},
+        "settings": {
+          "type": "union",
+          "refs": [
+            "com.atproto.server.defs#challengeEmailView"
+          ]
+        }
+      }
+    },
+    "challengeViewPublic": {
+      "type": "object",
+      "description": "Account's view of the multifactor challenge when performing auth.",
+      "required": ["id", "settings"],
+      "properties": {
+        "id": {"type": "string"},
+        "settings": {
+          "type": "union",
+          "refs": [
+            "com.atproto.server.defs#challengeEmailViewPublic"
+          ]
+        }
+      }
+    },
+    "challengeViewPrivate": {
+      "type": "object",
+      "description": "Account's view of the multifactor challenge immediately after it is added, possibly including secrets.",
+      "required": ["id", "status", "settings"],
+      "properties": {
+        "id": {"type": "string"},
+        "status": {"type": "string", "knownValues": ["verified", "unverified"]},
+        "settings": {
+          "type": "union",
+          "refs": [
+            "com.atproto.server.defs#challengeEmailView"
+          ]
+        }
+      }
+    },
+    "challengeSettings": {
+      "type": "object",
+      "description": "Settings that an account may set when adding the multifactor challenge.",
+      "required": ["settings"],
+      "properties": {
+        "default": {"type": "boolean"},
+        "settings": {
+          "type": "union",
+          "refs": [
+            "com.atproto.server.defs#challengeEmailSettings"
+          ]
+        }
+      }
+    },
+    "challengeEmailView": {
+      "type": "object",
+      "required": ["email"],
+      "properties": {
+        "email": {"type": "string"}
+      }
+    },
+    "challengeEmailViewPublic": {
+      "type": "object",
+      "properties": {
+        "emailRedacted": {"type": "string"}
+      }
+    },
+    "challengeEmailSettings": {
+      "type": "object",
+      "required": ["email"],
+      "properties": {
+        "email": {"type": "string"}
+      }
+    },
+    "challengeEmailParams": {
+      "type": "object",
+      "properties": {}
     }
   }
 }

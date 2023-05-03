@@ -13,7 +13,17 @@
           "properties": {
             "inviteCodeRequired": {"type": "boolean"},
             "availableUserDomains": {"type": "array", "items": {"type": "string"}},
-            "links": {"type": "ref", "ref": "#links"}
+            "links": {"type": "ref", "ref": "#links"},
+            "challenges": {
+              "type": "array",
+              "description": "Parameters of multifactor challeges as implemented by the server.",
+              "items": {
+                "type": "union",
+                "refs": [
+                  "com.atproto.server.defs#challengeEmailParams"
+                ]
+              }
+            }
           }
         }
       }

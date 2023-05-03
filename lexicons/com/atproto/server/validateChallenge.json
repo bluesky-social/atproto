@@ -1,21 +1,18 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.server.createSession",
+  "id": "com.atproto.server.validateChallenge",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Create an authentication session.",
+      "description": "Validate a multifactor auth challenge to login to your account.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["identifier", "password"],
+          "required": ["id", "code"],
           "properties": {
-            "identifier": {
-              "type": "string",
-              "description": "Handle or other identifier supported by the server for the authenticating user."
-            },
-            "password": {"type": "string"}
+            "id": {"type": "string"},
+            "code": {"type": "string"}
           }
         }
       },
@@ -29,16 +26,13 @@
             "refreshJwt": {"type": "string"},
             "handle": {"type": "string", "format": "handle"},
             "did": {"type": "string", "format": "did"},
-            "email": {"type": "string"},
-            "challenges": {
-              "type": "array",
-              "items": {"type": "ref", "ref": "com.atproto.server.defs#challengeViewPublic"}
-            }
+            "email": {"type": "string"}
           }
         }
       },
       "errors": [
-        {"name": "AccountTakedown"}
+        {"name": "ChallengeFailed"},
+        {"name": "ChallengeExpired"}
       ]
     }
   }

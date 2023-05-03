@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.server.requestChallenge",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Request a multifactor auth challenge for login to your account.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["id"],
+          "properties": {
+            "id": {"type": "string"}
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.server.addChallenge",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Add a multifactor auth challenge to your account.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "com.atproto.server.defs#challengeSettings"
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "com.atproto.server.defs#challengeViewPrivate"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.server.listChallenges",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List multifactor auth challenges for your account.",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["challenges"],
+          "properties": {
+            "challenges": {
+              "type": "array",
+              "items": {"type": "ref", "ref": "com.atproto.server.defs#challengeView"}
+            }
+          }
+        }
+      }
+    }
+  }
+}
