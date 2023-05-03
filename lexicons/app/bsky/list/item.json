@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.list.item",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "An item under a declared list",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["name", "createdAt"],
+        "properties": {
+          "subject": {"type": "string", "format": "did"},
+          "list": {"type": "string", "format": "at-uri"},
+          "createdAt": {"type": "string", "format": "datetime"}
+        }
+      }
+    }
+  }
+}
