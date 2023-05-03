@@ -58,6 +58,7 @@ describe('blob deletes', () => {
     )
     const post = await sc.post(alice, 'test', undefined, [img])
     await sc.deletePost(alice, post.ref.uri)
+    await server.ctx.backgroundQueue.processAll()
 
     const dbBlobs = await getDbBlobsForDid(alice)
     expect(dbBlobs.length).toBe(0)
@@ -79,6 +80,7 @@ describe('blob deletes', () => {
     )
     await updateProfile(sc, alice, img.image, img.image)
     await updateProfile(sc, alice, img2.image, img2.image)
+    await server.ctx.backgroundQueue.processAll()
 
     const dbBlobs = await getDbBlobsForDid(alice)
     expect(dbBlobs.length).toBe(1)
@@ -107,6 +109,7 @@ describe('blob deletes', () => {
     )
     await updateProfile(sc, alice, img.image, img.image)
     await updateProfile(sc, alice, img.image, img2.image)
+    await server.ctx.backgroundQueue.processAll()
 
     const dbBlobs = await getDbBlobsForDid(alice)
     expect(dbBlobs.length).toBe(2)
@@ -157,6 +160,7 @@ describe('blob deletes', () => {
       },
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
+    await server.ctx.backgroundQueue.processAll()
 
     const dbBlobs = await getDbBlobsForDid(alice)
     expect(dbBlobs.length).toBe(1)

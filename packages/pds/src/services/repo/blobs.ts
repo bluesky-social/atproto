@@ -15,11 +15,13 @@ import { BlobRef } from '@atproto/lexicon'
 import { PreparedDelete, PreparedUpdate } from '../../repo'
 import { ImageInvalidator } from '../../image/invalidator'
 import { ImageUriBuilder } from '../../image/uri'
+import { BackgroundQueue } from '../../event-stream/background-queue'
 
 export class RepoBlobs {
   constructor(
     public db: Database,
     public blobstore: BlobStore,
+    public backgroundQueue: BackgroundQueue,
     public imgUriBuilder: ImageUriBuilder,
     public imgInvalidator: ImageInvalidator,
   ) {}
@@ -136,16 +138,26 @@ export class RepoBlobs {
     const stillUsed = stillUsedRes.map((row) => row.cid)
 
     const blobsToDelete = cidsToDelete.filter((cid) => !stillUsed.includes(cid))
-    await Promise.all([
-      ...blobsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
-      ...blobsToDelete.map((cid) => {
-        const paths = ImageUriBuilder.commonSignedUris.map((id) => {
-          const uri = this.imgUriBuilder.getCommonSignedUri(id, cid)
-          return uri.replace(this.imgUriBuilder.endpoint, '')
+
+    // move actual blob deletion to the background queue
+    if (blobsToDelete.length > 0) {
+      this.db.onCommit(() => {
+        this.backgroundQueue.add(async () => {
+          await Promise.allSettled([
+            ...blobsToDelete.map((cid) =>
+              this.blobstore.delete(CID.parse(cid)),
+            ),
+            ...blobsToDelete.map((cid) => {
+              const paths = ImageUriBuilder.commonSignedUris.map((id) => {
+                const uri = this.imgUriBuilder.getCommonSignedUri(id, cid)
+                return uri.replace(this.imgUriBuilder.endpoint, '')
+              })
+              return this.imgInvalidator.invalidate(cid, paths)
+            }),
+          ])
         })
-        return this.imgInvalidator.invalidate(cid, paths)
-      }),
-    ])
+      })
+    }
   }
 
   async verifyBlobAndMakePermanent(

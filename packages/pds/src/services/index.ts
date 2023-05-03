@@ -42,6 +42,7 @@ export function createServices(resources: {
       repoSigningKey,
       messageDispatcher,
       blobstore,
+      backgroundQueue,
       imgUriBuilder,
       imgInvalidator,
       labeler,

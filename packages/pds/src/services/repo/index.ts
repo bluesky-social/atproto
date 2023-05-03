@@ -25,6 +25,7 @@ import { Labeler } from '../../labeler'
 import { wait } from '@atproto/common'
 import { ImageInvalidator } from '../../image/invalidator'
 import { ImageUriBuilder } from '../../image/uri'
+import { BackgroundQueue } from '../../event-stream/background-queue'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -34,17 +35,25 @@ export class RepoService {
     public repoSigningKey: crypto.Keypair,
     public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
+    public backgroundQueue: BackgroundQueue,
     public imgUriBuilder: ImageUriBuilder,
     public imgInvalidator: ImageInvalidator,
     public labeler: Labeler,
   ) {
-    this.blobs = new RepoBlobs(db, blobstore, imgUriBuilder, imgInvalidator)
+    this.blobs = new RepoBlobs(
+      db,
+      blobstore,
+      backgroundQueue,
+      imgUriBuilder,
+      imgInvalidator,
+    )
   }
 
   static creator(
     keypair: crypto.Keypair,
     messageDispatcher: MessageQueue,
     blobstore: BlobStore,
+    backgroundQueue: BackgroundQueue,
     imgUriBuilder: ImageUriBuilder,
     imgInvalidator: ImageInvalidator,
     labeler: Labeler,
@@ -55,6 +64,7 @@ export class RepoService {
         keypair,
         messageDispatcher,
         blobstore,
+        backgroundQueue,
         imgUriBuilder,
         imgInvalidator,
         labeler,
@@ -75,6 +85,7 @@ export class RepoService {
         this.repoSigningKey,
         this.messageDispatcher,
         this.blobstore,
+        this.backgroundQueue,
         this.imgUriBuilder,
         this.imgInvalidator,
         this.labeler,
