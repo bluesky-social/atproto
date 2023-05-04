@@ -8,6 +8,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('name', 'varchar', (col) => col.notNull())
     .addColumn('description', 'varchar')
+    .addColumn('descriptionFacets', 'varchar')
     .addColumn('avatarCid', 'varchar')
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
@@ -26,6 +27,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('subjectDid', 'varchar', (col) => col.notNull())
     .addColumn('listUri', 'varchar', (col) => col.notNull())
+    .addColumn('reason', 'varchar')
+    .addColumn('reasonFacets', 'varchar')
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .addUniqueConstraint('list_item_unique_subect_in_list', [

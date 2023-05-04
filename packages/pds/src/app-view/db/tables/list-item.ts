@@ -6,6 +6,8 @@ export interface ListItem {
   creator: string
   subjectDid: string
   listUri: string
+  reason: string | null
+  reasonFacets: string | null
   createdAt: string
   indexedAt: string
 }

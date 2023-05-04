@@ -33,6 +33,9 @@ export default function (server: Server, ctx: AppContext) {
       const lists = listsRes.map((row) => ({
         name: row.name,
         description: row.description ?? undefined,
+        descriptionFacets: row.descriptionFacets
+          ? JSON.parse(row.descriptionFacets)
+          : undefined,
         avatar: row.avatarCid
           ? ctx.imgUriBuilder.getCommonSignedUri('avatar', row.avatarCid)
           : undefined,

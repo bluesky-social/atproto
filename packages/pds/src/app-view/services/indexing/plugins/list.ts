@@ -29,6 +29,9 @@ const insertFn = async (
       creator: uri.host,
       name: obj.name,
       description: obj.description,
+      descriptionFacets: obj.descriptionFacets
+        ? JSON.stringify(obj.descriptionFacets)
+        : undefined,
       avatarCid: obj.avatar?.ref.toString(),
       createdAt: obj.createdAt,
       indexedAt: timestamp,

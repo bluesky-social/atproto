@@ -34,7 +34,12 @@ export default function (server: Server, ctx: AppContext) {
         )
         .where(notSoftDeletedClause(ref('subject_repo')))
         .selectAll('subject')
-        .select(['list_item.cid as cid', 'list_item.createdAt as createdAt'])
+        .select([
+          'list_item.cid as cid',
+          'list_item.createdAt as createdAt',
+          'list_item.reason as reason',
+          'list_item.reasonFacets as reasonFacets',
+        ])
 
       const keyset = new TimeCidKeyset(
         ref('list_item.createdAt'),
@@ -47,13 +52,24 @@ export default function (server: Server, ctx: AppContext) {
       })
       const itemsRes = await itemsReq.execute()
 
-      const items = await services.appView
+      const itemProfiles = await services.appView
         .actor(db)
         .views.profile(itemsRes, requester)
+
+      const items = itemsRes.map((item, i) => ({
+        subject: itemProfiles[i],
+        reason: item.reason ?? undefined,
+        reasonFacets: item.reasonFacets
+          ? JSON.parse(item.reasonFacets)
+          : undefined,
+      }))
 
       const subject = {
         name: listRes.name,
         description: listRes.description ?? undefined,
+        descriptionFacets: listRes.descriptionFacets
+          ? JSON.parse(listRes.descriptionFacets)
+          : undefined,
         avatar: listRes.avatarCid
           ? ctx.imgUriBuilder.getCommonSignedUri('avatar', listRes.avatarCid)
           : undefined,

@@ -6,6 +6,7 @@ export interface List {
   creator: string
   name: string
   description: string | null
+  descriptionFacets: string | null
   avatarCid: string | null
   createdAt: string
   indexedAt: string
