@@ -76,8 +76,8 @@ const main = async () => {
     config: cfg,
     imgInvalidator: cfInvalidator,
   })
-  await deletedAccountCleanupMigration(pds.ctx)
   await pds.start()
+  await deletedAccountCleanupMigration(pds.ctx)
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
     await pds.destroy()

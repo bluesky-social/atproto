@@ -49,6 +49,7 @@ async function main(tx: Database, ctx: AppContext) {
         log(did, 'clean-up failed', err)
       }
     }
+    log('complete')
   })
 }
 
