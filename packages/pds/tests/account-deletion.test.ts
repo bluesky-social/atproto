@@ -27,6 +27,8 @@ import { RepoCommitBlock } from '../src/db/tables/repo-commit-block'
 import { Record } from '../src/db/tables/record'
 import { RepoSeq } from '../src/db/tables/repo-seq'
 import { ACKNOWLEDGE } from '../src/lexicon/types/com/atproto/admin/defs'
+import { UserState } from '../src/db/tables/user-state'
+import { ActorBlock } from '../src/app-view/db/tables/actor-block'
 
 describe('account deletion', () => {
   let server: util.TestServerInfo
@@ -161,6 +163,9 @@ describe('account deletion', () => {
     expect(updatedDbContents.users).toEqual(
       initialDbContents.users.filter((row) => row.did !== carol.did),
     )
+    expect(updatedDbContents.userState).toEqual(
+      initialDbContents.userState.filter((row) => row.did !== carol.did),
+    )
     expect(updatedDbContents.blocks).toEqual(
       initialDbContents.blocks.filter((row) => row.creator !== carol.did),
     )
@@ -186,6 +191,9 @@ describe('account deletion', () => {
     )
     expect(updatedDbContents.likes).toEqual(
       initialDbContents.likes.filter((row) => row.creator !== carol.did),
+    )
+    expect(updatedDbContents.actorBlocks).toEqual(
+      initialDbContents.actorBlocks.filter((row) => row.creator !== carol.did),
     )
     expect(updatedDbContents.reposts).toEqual(
       initialDbContents.reposts.filter((row) => row.creator !== carol.did),
@@ -275,6 +283,7 @@ describe('account deletion', () => {
 type DbContents = {
   roots: RepoRoot[]
   users: UserAccount[]
+  userState: UserState[]
   blocks: IpldBlock[]
   seqs: Selectable<RepoSeq>[]
   commitHistories: RepoCommitHistory[]
@@ -287,6 +296,7 @@ type DbContents = {
   likes: Like[]
   reposts: Repost[]
   follows: Follow[]
+  actorBlocks: ActorBlock[]
   repoBlobs: RepoBlob[]
   blobs: Blob[]
 }
@@ -295,6 +305,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
   const [
     roots,
     users,
+    userState,
     blocks,
     seqs,
     commitHistories,
@@ -307,11 +318,13 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     likes,
     reposts,
     follows,
+    actorBlocks,
     repoBlobs,
     blobs,
   ] = await Promise.all([
     db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
     db.db.selectFrom('user_account').orderBy('did').selectAll().execute(),
+    db.db.selectFrom('user_state').orderBy('did').selectAll().execute(),
     db.db
       .selectFrom('ipld_block')
       .orderBy('creator')
@@ -352,6 +365,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     db.db.selectFrom('like').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('repost').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('follow').orderBy('uri').selectAll().execute(),
+    db.db.selectFrom('actor_block').orderBy('uri').selectAll().execute(),
     db.db
       .selectFrom('repo_blob')
       .orderBy('did')
@@ -364,6 +378,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
   return {
     roots,
     users,
+    userState,
     blocks,
     seqs,
     commitHistories,
@@ -376,6 +391,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     likes,
     reposts,
     follows,
+    actorBlocks,
     repoBlobs,
     blobs,
   }
