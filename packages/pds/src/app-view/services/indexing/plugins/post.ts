@@ -20,7 +20,8 @@ import { BackgroundQueue } from '../../../../event-stream/background-queue'
 import RecordProcessor from '../processor'
 import { PostHierarchy } from '../../../db/tables/post-hierarchy'
 import { UserNotification } from '../../../../db/tables/user-notification'
-import { countAll, excluded } from '../../../../db/util'
+import { countAll, excluded, dbBool } from '../../../../db/util'
+import { hasBlock } from './block'
 
 type Post = DatabaseSchemaType['post']
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
@@ -52,6 +53,7 @@ const insertFn = async (
     replyRootCid: obj.reply?.root?.cid || null,
     replyParent: obj.reply?.parent?.uri || null,
     replyParentCid: obj.reply?.parent?.cid || null,
+    replyBlocked: dbBool(false), // @TODO
     indexedAt: timestamp,
   }
   const [insertedPost] = await Promise.all([
@@ -123,10 +125,12 @@ const insertFn = async (
       await db.insertInto('post_embed_external').values(externalEmbed).execute()
     } else if (isEmbedRecord(postEmbed)) {
       const { record } = postEmbed
+      const blocked = await hasBlock(db, [uri.host, new AtUri(record.uri).host])
       const recordEmbed = {
         postUri: uri.toString(),
         embedUri: record.uri,
         embedCid: record.cid,
+        blocked: dbBool(blocked),
       }
       embeds.push(recordEmbed)
       await db.insertInto('post_embed_record').values(recordEmbed).execute()

@@ -9,6 +9,7 @@ export interface Post {
   replyRootCid: string | null
   replyParent: string | null
   replyParentCid: string | null
+  replyBlocked: 0 | 1
   createdAt: string
   indexedAt: string
 }

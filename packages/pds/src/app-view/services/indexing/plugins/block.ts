@@ -1,3 +1,4 @@
+import assert from 'assert'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Block from '../../../../lexicon/types/app/bsky/graph/block'
@@ -33,7 +34,13 @@ const insertFn = async (
     .onConflict((oc) => oc.doNothing())
     .returningAll()
     .executeTakeFirst()
-  return inserted || null
+  if (!inserted) {
+    return null
+  }
+  await updateEmbedsQb(db, [inserted.creator, inserted.subjectDid])
+    .set({ blocked: 1 })
+    .execute()
+  return inserted
 }
 
 const findDuplicate = async (
@@ -63,7 +70,15 @@ const deleteFn = async (
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
-  return deleted || null
+  if (!deleted) {
+    return null
+  }
+  const blockPair = [deleted.creator, deleted.subjectDid]
+  const remainingBlock = await hasBlock(db, blockPair)
+  if (!remainingBlock) {
+    await updateEmbedsQb(db, blockPair).set({ blocked: 0 }).execute()
+  }
+  return deleted
 }
 
 const notifsForDelete = (
@@ -94,3 +109,33 @@ export const makePlugin = (
 }
 
 export default makePlugin
+
+function updateEmbedsQb(db: DatabaseSchema, blockPair: string[]) {
+  assert(blockPair.length === 2)
+  return db
+    .updateTable('post_embed_record as update_embed')
+    .whereExists((qb) =>
+      qb
+        .selectFrom('post_embed_record as match_embed')
+        .selectAll()
+        .innerJoin('post', 'post.uri', 'match_embed.postUri')
+        .innerJoin('post as embed', 'embed.uri', 'match_embed.embedUri')
+        .whereRef('update_embed.postUri', '=', 'match_embed.postUri')
+        .whereRef('update_embed.embedUri', '=', 'match_embed.embedUri')
+        .where('post.creator', 'in', blockPair)
+        .where('embed.creator', 'in', blockPair)
+        .whereRef('post.creator', '!=', 'embed.creator'),
+    )
+}
+
+export async function hasBlock(db: DatabaseSchema, blockPair: string[]) {
+  assert(blockPair.length === 2)
+  const block = await db
+    .selectFrom('actor_block')
+    .where('creator', 'in', blockPair)
+    .where('subjectDid', 'in', blockPair)
+    .whereRef('creator', '!=', 'subjectDid')
+    .select('uri')
+    .executeTakeFirst()
+  return !!block
+}

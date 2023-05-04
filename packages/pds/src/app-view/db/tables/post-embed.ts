@@ -21,6 +21,7 @@ export interface PostEmbedRecord {
   postUri: string
   embedUri: string
   embedCid: string
+  blocked: 0 | 1
 }
 
 export type PartialDB = {

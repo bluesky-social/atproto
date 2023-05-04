@@ -231,7 +231,7 @@ export class FeedService {
       .selectFrom('post_embed_record')
       .innerJoin('record as embed', 'embed.uri', 'embedUri')
       .where('postUri', 'in', uris)
-      .select(['postUri', 'embed.uri as uri', 'embed.did as did'])
+      .select(['postUri', 'embed.uri as uri', 'embed.did as did', 'blocked'])
       .execute()
     const [images, externals, records] = await Promise.all([
       imgPromise,
@@ -303,7 +303,7 @@ export class FeedService {
         deepEmbeds = formatted?.embed ? [formatted.embed] : []
       }
       const recordEmbed = {
-        record: getRecordEmbedView(cur.uri, formatted, deepEmbeds),
+        record: getRecordEmbedView(cur, formatted, deepEmbeds),
       }
       if (acc[cur.postUri]) {
         const mediaEmbed = acc[cur.postUri]
@@ -367,10 +367,18 @@ function truncateUtf8(str: string | null | undefined, length: number) {
 }
 
 function getRecordEmbedView(
-  uri: string,
+  embedRow: { uri: string; blocked: 0 | 1 },
   post?: PostView,
   embeds?: ViewRecord['embeds'],
 ): (ViewRecord | ViewNotFound | ViewBlocked) & { $type: string } {
+  const { blocked, uri } = embedRow
+  if (blocked) {
+    // Blocked for third-parties
+    return {
+      $type: 'app.bsky.embed.record#viewBlocked',
+      uri,
+    }
+  }
   if (!post) {
     return {
       $type: 'app.bsky.embed.record#viewNotFound',
@@ -378,6 +386,7 @@ function getRecordEmbedView(
     }
   }
   if (post.author.viewer?.blocking || post.author.viewer?.blockedBy) {
+    // Blocked for first-parties
     return {
       $type: 'app.bsky.embed.record#viewBlocked',
       uri,

@@ -42,6 +42,10 @@ export const valuesList = (vals: unknown[]) => {
   return sql`(values (${sql.join(vals, sql`), (`)}))`
 }
 
+export const dbBool = (bool: boolean): 0 | 1 => {
+  return bool ? (1 as const) : (0 as const)
+}
+
 export const dummyDialect = {
   createAdapter() {
     return new SqliteAdapter()
