@@ -8,7 +8,7 @@
       "key": "tid",
       "record": {
         "type": "object",
-        "required": ["name", "createdAt"],
+        "required": ["subject", "list", "createdAt"],
         "properties": {
           "subject": {"type": "string", "format": "did"},
           "list": {"type": "string", "format": "at-uri"},
