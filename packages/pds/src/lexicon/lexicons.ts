@@ -3434,6 +3434,28 @@ export const schemaDict = {
           },
         },
       },
+      listItemView: {
+        type: 'object',
+        required: ['subject'],
+        properties: {
+          subject: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          reason: {
+            type: 'string',
+            maxLength: 5000,
+            maxGraphemes: 1000,
+          },
+          reasonFacets: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
+        },
+      },
     },
   },
   AppBskyActorGetProfile: {
@@ -4817,7 +4839,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileView',
+                  ref: 'lex:app.bsky.actor.defs#listItemView',
                 },
               },
             },
@@ -5041,6 +5063,18 @@ export const schemaDict = {
             list: {
               type: 'string',
               format: 'at-uri',
+            },
+            reason: {
+              type: 'string',
+              maxLength: 5000,
+              maxGraphemes: 1000,
+            },
+            reasonFacets: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.richtext.facet',
+              },
             },
             createdAt: {
               type: 'string',

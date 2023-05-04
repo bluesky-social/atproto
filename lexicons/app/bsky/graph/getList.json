@@ -23,7 +23,7 @@
             "list": {"type": "ref", "ref": "app.bsky.actor.defs#listView"},
             "items": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"}
+              "items": {"type": "ref", "ref": "app.bsky.actor.defs#listItemView"}
             }
           }
         }

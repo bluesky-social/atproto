@@ -95,6 +95,18 @@
         "avatar": {"type": "string"},
         "indexedAt": {"type": "string", "format": "datetime"}
       }
+    },
+    "listItemView": {
+      "type": "object",
+      "required": ["subject"],
+      "properties": {
+        "subject": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
+        "reason": {"type": "string", "maxLength": 5000, "maxGraphemes": 1000},
+        "reasonFacets": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
+        }
+      }
     }
   }
 }
