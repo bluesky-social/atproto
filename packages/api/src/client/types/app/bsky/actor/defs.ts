@@ -101,3 +101,24 @@ export function isViewerState(v: unknown): v is ViewerState {
 export function validateViewerState(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#viewerState', v)
 }
+
+export interface ListView {
+  name: string
+  description?: string
+  avatar?: string
+  owner: ProfileView
+  indexedAt?: string
+  [k: string]: unknown
+}
+
+export function isListView(v: unknown): v is ListView {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#listView'
+  )
+}
+
+export function validateListView(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#listView', v)
+}

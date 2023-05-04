@@ -3411,6 +3411,33 @@ export const schemaDict = {
           },
         },
       },
+      listView: {
+        type: 'object',
+        required: ['name', 'owner'],
+        properties: {
+          name: {
+            type: 'string',
+            maxLength: 64,
+            minLength: 1,
+          },
+          description: {
+            type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
+          },
+          avatar: {
+            type: 'string',
+          },
+          owner: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
     },
   },
   AppBskyActorGetProfile: {
@@ -4754,6 +4781,147 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetList: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getList',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Fetch a list of actors',
+        parameters: {
+          type: 'params',
+          required: ['list'],
+          properties: {
+            list: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['list', 'items'],
+            properties: {
+              list: {
+                type: 'ref',
+                ref: 'lex:app.bsky.actor.defs#listView',
+              },
+              items: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphGetListBlocks: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getListBlocks',
+    defs: {
+      main: {
+        type: 'query',
+        description: "Which lists is the requester's account blocking?",
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['blocks'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              blocks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphGetLists: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getLists',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Fetch a list of lists that belong to an actor',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject', 'follows'],
+            properties: {
+              subject: {
+                type: 'ref',
+                ref: 'lex:app.bsky.actor.defs#profileView',
+              },
+              lists: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#listView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphGetMutes: {
     lexicon: 1,
     id: 'app.bsky.graph.getMutes',
@@ -4791,6 +4959,96 @@ export const schemaDict = {
                   ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphList: {
+    lexicon: 1,
+    id: 'app.bsky.graph.list',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A declaration of a list of actors.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['name', 'createdAt'],
+          properties: {
+            name: {
+              type: 'string',
+              maxLength: 64,
+              minLength: 1,
+            },
+            description: {
+              type: 'string',
+              maxGraphemes: 300,
+              maxLength: 3000,
+            },
+            avatar: {
+              type: 'blob',
+              accept: ['image/png', 'image/jpeg'],
+              maxSize: 1000000,
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphListblock: {
+    lexicon: 1,
+    id: 'app.bsky.graph.listblock',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A block of an entire list of users.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['subject', 'createdAt'],
+          properties: {
+            subject: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphListitem: {
+    lexicon: 1,
+    id: 'app.bsky.graph.listitem',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'An item under a declared list of actors',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['name', 'createdAt'],
+          properties: {
+            subject: {
+              type: 'string',
+              format: 'did',
+            },
+            list: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
             },
           },
         },
@@ -5208,7 +5466,13 @@ export const ids = {
   AppBskyGraphGetBlocks: 'app.bsky.graph.getBlocks',
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
+  AppBskyGraphGetList: 'app.bsky.graph.getList',
+  AppBskyGraphGetListBlocks: 'app.bsky.graph.getListBlocks',
+  AppBskyGraphGetLists: 'app.bsky.graph.getLists',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
+  AppBskyGraphList: 'app.bsky.graph.list',
+  AppBskyGraphListblock: 'app.bsky.graph.listblock',
+  AppBskyGraphListitem: 'app.bsky.graph.listitem',
   AppBskyGraphMuteActor: 'app.bsky.graph.muteActor',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',

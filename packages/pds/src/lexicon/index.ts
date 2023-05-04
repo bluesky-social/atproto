@@ -78,6 +78,9 @@ import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
+import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
+import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
+import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
@@ -807,6 +810,27 @@ export class GraphNS {
     cfg: ConfigOf<AV, AppBskyGraphGetFollows.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.graph.getFollows' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getList<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyGraphGetList.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.graph.getList' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getListBlocks<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyGraphGetListBlocks.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.graph.getListBlocks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getLists<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyGraphGetLists.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.graph.getLists' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
