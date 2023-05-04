@@ -16,7 +16,12 @@ const {
   S3BlobStore,
   CloudfrontInvalidator,
 } = require('@atproto/aws')
-const { Database, ServerConfig, PDS } = require('@atproto/pds')
+const {
+  Database,
+  ServerConfig,
+  PDS,
+  deletedAccountCleanupMigration,
+} = require('@atproto/pds')
 const { Secp256k1Keypair } = require('@atproto/crypto')
 
 const main = async () => {
@@ -71,6 +76,7 @@ const main = async () => {
     config: cfg,
     imgInvalidator: cfInvalidator,
   })
+  await deletedAccountCleanupMigration(pds.ctx)
   await pds.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
