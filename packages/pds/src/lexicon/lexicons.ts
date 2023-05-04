@@ -3413,7 +3413,7 @@ export const schemaDict = {
       },
       listView: {
         type: 'object',
-        required: ['name', 'owner'],
+        required: ['name'],
         properties: {
           name: {
             type: 'string',
@@ -3427,10 +3427,6 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
-          },
-          owner: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#profileView',
           },
           indexedAt: {
             type: 'string',
@@ -4903,7 +4899,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['subject', 'follows'],
+            required: ['subject', 'lists'],
             properties: {
               subject: {
                 type: 'ref',

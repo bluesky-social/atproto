@@ -19,7 +19,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   subject: AppBskyActorDefs.ProfileView
-  lists?: AppBskyActorDefs.ListView[]
+  lists: AppBskyActorDefs.ListView[]
   [k: string]: unknown
 }
 

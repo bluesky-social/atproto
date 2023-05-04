@@ -18,7 +18,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["subject", "follows"],
+          "required": ["subject", "lists"],
           "properties": {
             "subject": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
             "lists": {

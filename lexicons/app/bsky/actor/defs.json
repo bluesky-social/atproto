@@ -88,12 +88,11 @@
     },
     "listView": {
       "type": "object",
-      "required": ["name", "owner"],
+      "required": ["name"],
       "properties": {
         "name": {"type": "string", "maxLength": 64, "minLength": 1},
         "description": {"type": "string", "maxGraphemes": 300, "maxLength": 3000},
         "avatar": {"type": "string"},
-        "owner": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
         "indexedAt": {"type": "string", "format": "datetime"}
       }
     }
