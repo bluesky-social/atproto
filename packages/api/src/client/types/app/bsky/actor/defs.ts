@@ -106,6 +106,7 @@ export function validateViewerState(v: unknown): ValidationResult {
 export interface ListView {
   name: string
   description?: string
+  descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: string
   indexedAt?: string
   [k: string]: unknown

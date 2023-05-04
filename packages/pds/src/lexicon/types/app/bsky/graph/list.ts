@@ -5,10 +5,12 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
+import * as AppBskyRichtextFacet from '../richtext/facet'
 
 export interface Record {
   name: string
   description?: string
+  descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: BlobRef
   createdAt: string
   [k: string]: unknown

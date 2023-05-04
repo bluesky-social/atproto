@@ -12,6 +12,10 @@
         "properties": {
           "name": {"type": "string", "maxLength": 64, "minLength": 1},
           "description": {"type": "string", "maxGraphemes": 300, "maxLength": 3000},
+          "descriptionFacets": {
+            "type": "array",
+            "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
+          },
           "avatar": {
             "type": "blob",
             "accept": ["image/png", "image/jpeg"],

@@ -3425,6 +3425,13 @@ export const schemaDict = {
             maxGraphemes: 300,
             maxLength: 3000,
           },
+          descriptionFacets: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
           avatar: {
             type: 'string',
           },
@@ -5004,6 +5011,13 @@ export const schemaDict = {
               type: 'string',
               maxGraphemes: 300,
               maxLength: 3000,
+            },
+            descriptionFacets: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.richtext.facet',
+              },
             },
             avatar: {
               type: 'blob',
