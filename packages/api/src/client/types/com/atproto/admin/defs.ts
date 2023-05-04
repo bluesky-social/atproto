@@ -108,6 +108,7 @@ export type ActionType =
   | 'lex:com.atproto.admin.defs#takedown'
   | 'lex:com.atproto.admin.defs#flag'
   | 'lex:com.atproto.admin.defs#acknowledge'
+  | 'lex:com.atproto.admin.defs#escalate'
   | (string & {})
 
 /** Moderation action type: Takedown. Indicates that content should not be served by the PDS. */
@@ -116,6 +117,8 @@ export const TAKEDOWN = 'com.atproto.admin.defs#takedown'
 export const FLAG = 'com.atproto.admin.defs#flag'
 /** Moderation action type: Acknowledge. Indicates that the content was reviewed and not considered to violate PDS rules. */
 export const ACKNOWLEDGE = 'com.atproto.admin.defs#acknowledge'
+/** Moderation action type: Escalate. Indicates that the content has been flagged for additional review. */
+export const ESCALATE = 'com.atproto.admin.defs#escalate'
 
 export interface ReportView {
   id: number
