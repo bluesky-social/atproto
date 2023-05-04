@@ -61,7 +61,7 @@ export async function migration(ctx: AppContext) {
 async function derefedRecords(ctx: AppContext) {
   const db = ctx.db
   const { ref } = db.db.dynamic
-  const deletedRepoBlobs = await db.db
+  await db.db
     .deleteFrom('repo_blob')
     .whereNotExists(
       db.db
@@ -71,23 +71,6 @@ async function derefedRecords(ctx: AppContext) {
     )
     .returningAll()
     .execute()
-
-  const byUser = deletedRepoBlobs.reduce((acc, cur) => {
-    acc[cur.did] ??= []
-    acc[cur.did].push(cur.cid)
-    return acc
-  }, {} as Record<string, string[]>)
-
-  for (const did of Object.keys(byUser)) {
-    const deletedRepoBlobs = byUser[did]
-    if (deletedRepoBlobs.length < 1) continue
-    await db.db
-      .selectFrom('repo_blob')
-      .where('did', '=', did)
-      .where('cid', 'in', deletedRepoBlobs)
-      .select('cid')
-      .execute()
-  }
 }
 
 async function derefedProfiles(ctx: AppContext) {
