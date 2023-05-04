@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.graph.list-block",
+  "id": "app.bsky.graph.listblock",
   "defs": {
     "main": {
       "type": "record",

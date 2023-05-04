@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.list.declaration",
+  "id": "app.bsky.graph.list",
   "defs": {
     "main": {
       "type": "record",
-      "description": "A declaration of the existence of a list.",
+      "description": "A declaration of a list of actors.",
       "key": "tid",
       "record": {
         "type": "object",
