@@ -53,8 +53,15 @@ const insertFn = async (
     replyRootCid: obj.reply?.root?.cid || null,
     replyParent: obj.reply?.parent?.uri || null,
     replyParentCid: obj.reply?.parent?.cid || null,
-    replyBlocked: dbBool(false), // @TODO
+    replyBlocked: dbBool(false), // Set below
     indexedAt: timestamp,
+  }
+  if (post.replyParent) {
+    const blocked = await hasBlock(db, [
+      uri.host,
+      new AtUri(post.replyParent).host,
+    ])
+    post.replyBlocked = dbBool(blocked)
   }
   const [insertedPost] = await Promise.all([
     db

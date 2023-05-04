@@ -40,6 +40,9 @@ const insertFn = async (
   await updateEmbedsQb(db, [inserted.creator, inserted.subjectDid])
     .set({ blocked: 1 })
     .execute()
+  await updateRepliesQb(db, [inserted.creator, inserted.subjectDid])
+    .set({ replyBlocked: 1 })
+    .execute()
   return inserted
 }
 
@@ -77,6 +80,7 @@ const deleteFn = async (
   const remainingBlock = await hasBlock(db, blockPair)
   if (!remainingBlock) {
     await updateEmbedsQb(db, blockPair).set({ blocked: 0 }).execute()
+    await updateRepliesQb(db, blockPair).set({ replyBlocked: 0 }).execute()
   }
   return deleted
 }
@@ -125,6 +129,22 @@ function updateEmbedsQb(db: DatabaseSchema, blockPair: string[]) {
         .where('post.creator', 'in', blockPair)
         .where('embed.creator', 'in', blockPair)
         .whereRef('post.creator', '!=', 'embed.creator'),
+    )
+}
+
+function updateRepliesQb(db: DatabaseSchema, blockPair: string[]) {
+  assert(blockPair.length === 2)
+  return db
+    .updateTable('post as update_post')
+    .whereExists((qb) =>
+      qb
+        .selectFrom('post as match_reply')
+        .selectAll()
+        .innerJoin('post as parent', 'parent.uri', 'match_reply.replyParent')
+        .whereRef('update_post.uri', '=', 'match_reply.uri')
+        .where('match_reply.creator', 'in', blockPair)
+        .where('parent.creator', 'in', blockPair)
+        .whereRef('match_reply.creator', '!=', 'parent.creator'),
     )
 }
 
