@@ -72,7 +72,7 @@ export const ensureValidHandleRegex = (handle: string): void => {
 }
 
 export const normalizeHandle = (handle: string): string => {
-  return new URL(`https://${handle.toLowerCase()}`).hostname
+  return new URL(`https://${handle}`).hostname.toLowerCase()
 }
 
 export const normalizeAndEnsureValidHandle = (handle: string): string => {
