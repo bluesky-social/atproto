@@ -50,7 +50,12 @@ export const getReasonType = (reasonType: ReportInput['reasonType']) => {
 }
 
 export const getAction = (action: ActionInput['action']) => {
-  if (action === TAKEDOWN || action === FLAG || action === ACKNOWLEDGE || action === ESCALATE) { 
+  if (
+    action === TAKEDOWN ||
+    action === FLAG ||
+    action === ACKNOWLEDGE ||
+    action === ESCALATE
+  ) {
     return action as ModerationAction['action']
   }
   throw new InvalidRequestError('Invalid action')
