@@ -70,7 +70,8 @@
       "knownValues": [
         "#takedown",
         "#flag",
-        "#acknowledge"
+        "#acknowledge",
+        "#escalate"
       ]
     },
     "takedown": {
@@ -84,6 +85,10 @@
     "acknowledge": {
       "type": "token",
       "description": "Moderation action type: Acknowledge. Indicates that the content was reviewed and not considered to violate PDS rules."
+    },
+    "escalate": {
+      "type": "token",
+      "description": "Moderation action type: Escalate. Indicates that the content has been flagged for additional review."
     },
     "reportView": {
       "type": "object",

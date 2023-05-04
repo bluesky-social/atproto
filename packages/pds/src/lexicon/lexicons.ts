@@ -182,6 +182,7 @@ export const schemaDict = {
           'lex:com.atproto.admin.defs#takedown',
           'lex:com.atproto.admin.defs#flag',
           'lex:com.atproto.admin.defs#acknowledge',
+          'lex:com.atproto.admin.defs#escalate',
         ],
       },
       takedown: {
@@ -198,6 +199,11 @@ export const schemaDict = {
         type: 'token',
         description:
           'Moderation action type: Acknowledge. Indicates that the content was reviewed and not considered to violate PDS rules.',
+      },
+      escalate: {
+        type: 'token',
+        description:
+          'Moderation action type: Escalate. Indicates that the content has been flagged for additional review.',
       },
       reportView: {
         type: 'object',

@@ -356,6 +356,10 @@ export class AccountService {
       .where('user_account.did', '=', did)
       .execute()
     await this.db.db
+      .deleteFrom('user_state')
+      .where('user_state.did', '=', did)
+      .execute()
+    await this.db.db
       .deleteFrom('did_handle')
       .where('did_handle.did', '=', did)
       .execute()

@@ -90,6 +90,7 @@ export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
   DefsFlag: 'com.atproto.admin.defs#flag',
   DefsAcknowledge: 'com.atproto.admin.defs#acknowledge',
+  DefsEscalate: 'com.atproto.admin.defs#escalate',
 }
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
