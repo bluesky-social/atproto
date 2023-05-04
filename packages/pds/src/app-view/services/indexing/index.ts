@@ -7,6 +7,9 @@ import * as Like from './plugins/like'
 import * as Repost from './plugins/repost'
 import * as Follow from './plugins/follow'
 import * as Block from './plugins/block'
+import * as List from './plugins/list'
+import * as ListItem from './plugins/list_item'
+import * as ListBlock from './plugins/list_block'
 import * as Profile from './plugins/profile'
 import { BackgroundQueue } from '../../../event-stream/background-queue'
 
@@ -17,6 +20,9 @@ export class IndexingService {
     repost: Repost.PluginType
     follow: Follow.PluginType
     block: Block.PluginType
+    list: List.PluginType
+    listItem: ListItem.PluginType
+    listBlock: ListBlock.PluginType
     profile: Profile.PluginType
   }
 
@@ -27,6 +33,9 @@ export class IndexingService {
       repost: Repost.makePlugin(this.db, backgroundQueue),
       follow: Follow.makePlugin(this.db, backgroundQueue),
       block: Block.makePlugin(this.db, backgroundQueue),
+      list: List.makePlugin(this.db, backgroundQueue),
+      listItem: ListItem.makePlugin(this.db, backgroundQueue),
+      listBlock: ListBlock.makePlugin(this.db, backgroundQueue),
       profile: Profile.makePlugin(this.db, backgroundQueue),
     }
   }
@@ -103,6 +112,15 @@ export class IndexingService {
       .execute()
     await this.db.db
       .deleteFrom('actor_block')
+      .where('creator', '=', did)
+      .execute()
+    await this.db.db.deleteFrom('list').where('creator', '=', did).execute()
+    await this.db.db
+      .deleteFrom('list_item')
+      .where('creator', '=', did)
+      .execute()
+    await this.db.db
+      .deleteFrom('list_block')
       .where('creator', '=', did)
       .execute()
     await this.db.db.deleteFrom('follow').where('creator', '=', did).execute()
