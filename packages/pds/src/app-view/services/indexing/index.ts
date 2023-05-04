@@ -110,5 +110,9 @@ export class IndexingService {
     await this.db.db.deleteFrom('profile').where('creator', '=', did).execute()
     await this.db.db.deleteFrom('repost').where('creator', '=', did).execute()
     await this.db.db.deleteFrom('like').where('creator', '=', did).execute()
+    await this.db.db
+      .deleteFrom('actor_block')
+      .where('creator', '=', did)
+      .execute()
   }
 }

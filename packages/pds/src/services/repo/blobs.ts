@@ -12,9 +12,19 @@ import Database from '../../db'
 import { Blob as BlobTable } from '../../db/tables/blob'
 import * as img from '../../image'
 import { BlobRef } from '@atproto/lexicon'
+import { PreparedDelete, PreparedUpdate } from '../../repo'
+import { ImageInvalidator } from '../../image/invalidator'
+import { ImageUriBuilder } from '../../image/uri'
+import { BackgroundQueue } from '../../event-stream/background-queue'
 
 export class RepoBlobs {
-  constructor(public db: Database, public blobstore: BlobStore) {}
+  constructor(
+    public db: Database,
+    public blobstore: BlobStore,
+    public backgroundQueue: BackgroundQueue,
+    public imgUriBuilder: ImageUriBuilder,
+    public imgInvalidator: ImageInvalidator,
+  ) {}
 
   async addUntetheredBlob(
     creator: string,
@@ -55,6 +65,8 @@ export class RepoBlobs {
   }
 
   async processWriteBlobs(did: string, commit: CID, writes: PreparedWrite[]) {
+    await this.deleteDereferencedBlobs(did, writes)
+
     const blobPromises: Promise<void>[] = []
     for (const write of writes) {
       if (
@@ -68,6 +80,84 @@ export class RepoBlobs {
       }
     }
     await Promise.all(blobPromises)
+  }
+
+  async deleteDereferencedBlobs(did: string, writes: PreparedWrite[]) {
+    const deletes = writes.filter(
+      (w) => w.action === WriteOpAction.Delete,
+    ) as PreparedDelete[]
+    const updates = writes.filter(
+      (w) => w.action === WriteOpAction.Update,
+    ) as PreparedUpdate[]
+    const uris = [...deletes, ...updates].map((w) => w.uri.toString())
+    if (uris.length === 0) return
+
+    const deletedRepoBlobs = await this.db.db
+      .deleteFrom('repo_blob')
+      .where('did', '=', did)
+      .where('recordUri', 'in', uris)
+      .returningAll()
+      .execute()
+    if (deletedRepoBlobs.length < 1) return
+
+    const deletedRepoBlobCids = deletedRepoBlobs.map((row) => row.cid)
+    const duplicateCids = await this.db.db
+      .selectFrom('repo_blob')
+      .where('did', '=', did)
+      .where('cid', 'in', deletedRepoBlobCids)
+      .select('cid')
+      .execute()
+
+    const newBlobCids = writes
+      .map((w) =>
+        w.action === WriteOpAction.Create || w.action === WriteOpAction.Update
+          ? w.blobs
+          : [],
+      )
+      .flat()
+      .map((b) => b.cid.toString())
+    const cidsToKeep = [...newBlobCids, ...duplicateCids.map((row) => row.cid)]
+    const cidsToDelete = deletedRepoBlobCids.filter(
+      (cid) => !cidsToKeep.includes(cid),
+    )
+    if (cidsToDelete.length < 1) return
+
+    await this.db.db
+      .deleteFrom('blob')
+      .where('creator', '=', did)
+      .where('cid', 'in', cidsToDelete)
+      .execute()
+
+    // check if these blobs are used by other users before deleting from blobstore
+    const stillUsedRes = await this.db.db
+      .selectFrom('blob')
+      .where('cid', 'in', cidsToDelete)
+      .select('cid')
+      .distinct()
+      .execute()
+    const stillUsed = stillUsedRes.map((row) => row.cid)
+
+    const blobsToDelete = cidsToDelete.filter((cid) => !stillUsed.includes(cid))
+
+    // move actual blob deletion to the background queue
+    if (blobsToDelete.length > 0) {
+      this.db.onCommit(() => {
+        this.backgroundQueue.add(async () => {
+          await Promise.allSettled([
+            ...blobsToDelete.map((cid) =>
+              this.blobstore.delete(CID.parse(cid)),
+            ),
+            ...blobsToDelete.map((cid) => {
+              const paths = ImageUriBuilder.commonSignedUris.map((id) => {
+                const uri = this.imgUriBuilder.getCommonSignedUri(id, cid)
+                return uri.replace(this.imgUriBuilder.endpoint, '')
+              })
+              return this.imgInvalidator.invalidate(cid, paths)
+            }),
+          ])
+        })
+      })
+    }
   }
 
   async verifyBlobAndMakePermanent(
@@ -125,51 +215,11 @@ export class RepoBlobs {
   }
 
   async processRebaseBlobs(did: string, newRoot: CID) {
-    const deleteUnreferenced = this.db.db
-      .deleteFrom('repo_blob')
-      .where('did', '=', did)
-      .where(
-        'recordUri',
-        'not in',
-        this.db.db.selectFrom('record').where('did', '=', did).select('uri'),
-      )
-      .returningAll()
-      .execute()
-
-    const updateReferenced = this.db.db
+    await this.db.db
       .updateTable('repo_blob')
       .set({ commit: newRoot.toString() })
       .where('did', '=', did)
-      .where(
-        'recordUri',
-        'in',
-        this.db.db.selectFrom('record').where('did', '=', did).select('uri'),
-      )
       .execute()
-
-    // delete blobs that have been rebased away & only belong to the repo in question
-    const [deleted] = await Promise.all([deleteUnreferenced, updateReferenced])
-    const deletedCids = deleted.map((row) => row.cid)
-    if (deleted.length > 0) {
-      const [duplicates] = await Promise.all([
-        this.db.db
-          .selectFrom('repo_blob')
-          .where('cid', 'in', deletedCids)
-          .selectAll()
-          .execute(),
-        this.db.db
-          .deleteFrom('blob')
-          .where('creator', '=', did)
-          .where('cid', 'in', deletedCids)
-          .returningAll()
-          .execute(),
-      ])
-      const duplicateCids = duplicates.map((row) => row.cid)
-      const toDelete = deletedCids.filter((cid) => !duplicateCids.includes(cid))
-      await Promise.all(
-        toDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
-      )
-    }
   }
 
   async listForCommits(did: string, commits: CID[]): Promise<CID[]> {
