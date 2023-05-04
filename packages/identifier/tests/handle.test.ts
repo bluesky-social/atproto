@@ -191,7 +191,9 @@ describe('service constraints & normalization', () => {
 
   it('normalizes handles', () => {
     expect(normalizeAndEnsureValidHandle('JoHn.TeST')).toBe('john.test')
-    expect(normalizeAndEnsureValidHandle('mañana.com')).toBe('xn--maana-pta.com')
+    expect(normalizeAndEnsureValidHandle('mañana.com')).toBe(
+      'xn--maana-pta.com'
+    )
   })
 
   it('throws on invalid normalized handles', () => {
