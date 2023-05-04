@@ -190,8 +190,8 @@ describe('service constraints & normalization', () => {
   })
 
   it('normalizes handles', () => {
-    const normalized = normalizeAndEnsureValidHandle('JoHn.TeST')
-    expect(normalized).toBe('john.test')
+    expect(normalizeAndEnsureValidHandle('JoHn.TeST')).toBe('john.test')
+    expect(normalizeAndEnsureValidHandle('mañana')).toBe('xn--maana-pta')
   })
 
   it('throws on invalid normalized handles', () => {
