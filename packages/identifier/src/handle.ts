@@ -1,4 +1,5 @@
 import { reservedSubdomains } from './reserved'
+import punycode from 'punycode/punycode.js'
 
 export * from './resolve'
 
@@ -72,7 +73,7 @@ export const ensureValidHandleRegex = (handle: string): void => {
 }
 
 export const normalizeHandle = (handle: string): string => {
-  return handle.toLowerCase()
+  return punycode.toASCII(handle.toLowerCase())
 }
 
 export const normalizeAndEnsureValidHandle = (handle: string): string => {
