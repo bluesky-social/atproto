@@ -4851,16 +4851,16 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['blocks'],
+            required: ['lists'],
             properties: {
               cursor: {
                 type: 'string',
               },
-              blocks: {
+              lists: {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileView',
+                  ref: 'lex:app.bsky.actor.defs#listView',
                 },
               },
             },

@@ -7,8 +7,8 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 
 export interface Record {
-  subject?: string
-  list?: string
+  subject: string
+  list: string
   createdAt: string
   [k: string]: unknown
 }

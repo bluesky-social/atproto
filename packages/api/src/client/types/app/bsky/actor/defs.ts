@@ -106,7 +106,6 @@ export interface ListView {
   name: string
   description?: string
   avatar?: string
-  owner: ProfileView
   indexedAt?: string
   [k: string]: unknown
 }

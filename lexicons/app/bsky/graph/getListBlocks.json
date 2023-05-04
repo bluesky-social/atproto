@@ -16,12 +16,12 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["blocks"],
+          "required": ["lists"],
           "properties": {
             "cursor": {"type": "string"},
-            "blocks": {
+            "lists": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"}
+              "items": {"type": "ref", "ref": "app.bsky.actor.defs#listView"}
             }
           }
         }
