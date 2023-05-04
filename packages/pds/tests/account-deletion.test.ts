@@ -28,6 +28,7 @@ import { Record } from '../src/db/tables/record'
 import { RepoSeq } from '../src/db/tables/repo-seq'
 import { ACKNOWLEDGE } from '../src/lexicon/types/com/atproto/admin/defs'
 import { UserState } from '../src/db/tables/user-state'
+import { ActorBlock } from '../src/app-view/db/tables/actor-block'
 
 describe('account deletion', () => {
   let server: util.TestServerInfo
@@ -191,6 +192,9 @@ describe('account deletion', () => {
     expect(updatedDbContents.likes).toEqual(
       initialDbContents.likes.filter((row) => row.creator !== carol.did),
     )
+    expect(updatedDbContents.actorBlocks).toEqual(
+      initialDbContents.actorBlocks.filter((row) => row.creator !== carol.did),
+    )
     expect(updatedDbContents.reposts).toEqual(
       initialDbContents.reposts.filter((row) => row.creator !== carol.did),
     )
@@ -292,6 +296,7 @@ type DbContents = {
   likes: Like[]
   reposts: Repost[]
   follows: Follow[]
+  actorBlocks: ActorBlock[]
   repoBlobs: RepoBlob[]
   blobs: Blob[]
 }
@@ -313,6 +318,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     likes,
     reposts,
     follows,
+    actorBlocks,
     repoBlobs,
     blobs,
   ] = await Promise.all([
@@ -359,6 +365,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     db.db.selectFrom('like').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('repost').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('follow').orderBy('uri').selectAll().execute(),
+    db.db.selectFrom('actor_block').orderBy('uri').selectAll().execute(),
     db.db
       .selectFrom('repo_blob')
       .orderBy('did')
@@ -384,6 +391,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     likes,
     reposts,
     follows,
+    actorBlocks,
     repoBlobs,
     blobs,
   }
