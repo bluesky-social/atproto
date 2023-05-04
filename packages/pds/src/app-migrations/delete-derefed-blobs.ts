@@ -6,30 +6,33 @@ import { dedupe } from '../labeler/util'
 import { chunkArray } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { ImageUriBuilder } from '../image/uri'
+import Database from '../db'
 
 export async function migration(ctx: AppContext) {
-  await derefedRecords(ctx)
-  await derefedProfiles(ctx)
+  const deletedDbBlobs = await ctx.db.transaction(async (dbTxn) => {
+    await derefedRecords(dbTxn)
+    await derefedProfiles(dbTxn)
+    const { ref } = dbTxn.db.dynamic
 
-  const db = ctx.db
-  const { ref } = db.db.dynamic
-  const deletedDbBlobs = await db.db
-    .deleteFrom('blob')
-    .whereNotExists(
-      db.db
-        .selectFrom('repo_blob')
-        .whereRef('repo_blob.did', '=', ref('blob.creator'))
-        .whereRef('repo_blob.cid', '=', ref('blob.cid'))
-        .selectAll(),
-    )
-    .returningAll()
-    .execute()
+    const deleted = await dbTxn.db
+      .deleteFrom('blob')
+      .whereNotExists(
+        dbTxn.db
+          .selectFrom('repo_blob')
+          .whereRef('repo_blob.did', '=', ref('blob.creator'))
+          .whereRef('repo_blob.cid', '=', ref('blob.cid'))
+          .selectAll(),
+      )
+      .returningAll()
+      .execute()
+    return deleted
+  })
 
   const deletedDbBlobCids = dedupe(deletedDbBlobs.map((row) => row.cid))
 
   const stillExistingChunks = await Promise.all(
     chunkArray(deletedDbBlobCids, 100).map(async (chunk) => {
-      const res = await db.db
+      const res = await ctx.db.db
         .selectFrom('blob')
         .where('cid', 'in', chunk)
         .select('cid')
@@ -46,7 +49,7 @@ export async function migration(ctx: AppContext) {
   const chunks = chunkArray(toDeleteBlobs, 100)
   for (const chunk of chunks) {
     await Promise.all([
-      ...chunk.map((cid) => ctx.blobstore.delete(CID.parse(cid))),
+      ...chunk.map((cid) => ctx.blobstore.quarantine(CID.parse(cid))),
       ...chunk.map((cid) => {
         const paths = ImageUriBuilder.commonSignedUris.map((id) => {
           const uri = ctx.imgUriBuilder.getCommonSignedUri(id, cid)
@@ -58,13 +61,14 @@ export async function migration(ctx: AppContext) {
   }
 }
 
-async function derefedRecords(ctx: AppContext) {
-  const db = ctx.db
-  const { ref } = db.db.dynamic
-  await db.db
+async function derefedRecords(dbTxn: Database) {
+  dbTxn.assertTransaction()
+
+  const { ref } = dbTxn.db.dynamic
+  await dbTxn.db
     .deleteFrom('repo_blob')
     .whereNotExists(
-      db.db
+      dbTxn.db
         .selectFrom('record')
         .whereRef('record.uri', '=', ref('repo_blob.recordUri'))
         .selectAll(),
@@ -73,9 +77,10 @@ async function derefedRecords(ctx: AppContext) {
     .execute()
 }
 
-async function derefedProfiles(ctx: AppContext) {
-  const db = ctx.db
-  const profilesRes = await db.db
+async function derefedProfiles(dbTxn: Database) {
+  dbTxn.assertTransaction()
+
+  const profilesRes = await dbTxn.db
     .selectFrom('did_handle')
     .leftJoin('profile', 'profile.creator', 'did_handle.did')
     .leftJoin('ipld_block', (join) =>
@@ -105,7 +110,7 @@ async function derefedProfiles(ctx: AppContext) {
   for (const did of Object.keys(profileBlobs)) {
     const uri = AtUri.make(did, 'app.bsky.actor.profile', 'self').toString()
     const cids = profileBlobs[did]
-    let builder = db.db
+    let builder = dbTxn.db
       .deleteFrom('repo_blob')
       .where('did', '=', did)
       .where('recordUri', '=', uri)
