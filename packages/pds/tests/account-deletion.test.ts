@@ -27,6 +27,7 @@ import { RepoCommitBlock } from '../src/db/tables/repo-commit-block'
 import { Record } from '../src/db/tables/record'
 import { RepoSeq } from '../src/db/tables/repo-seq'
 import { ACKNOWLEDGE } from '../src/lexicon/types/com/atproto/admin/defs'
+import { UserState } from '../src/db/tables/user-state'
 
 describe('account deletion', () => {
   let server: util.TestServerInfo
@@ -161,6 +162,9 @@ describe('account deletion', () => {
     expect(updatedDbContents.users).toEqual(
       initialDbContents.users.filter((row) => row.did !== carol.did),
     )
+    expect(updatedDbContents.userState).toEqual(
+      initialDbContents.userState.filter((row) => row.did !== carol.did),
+    )
     expect(updatedDbContents.blocks).toEqual(
       initialDbContents.blocks.filter((row) => row.creator !== carol.did),
     )
@@ -275,6 +279,7 @@ describe('account deletion', () => {
 type DbContents = {
   roots: RepoRoot[]
   users: UserAccount[]
+  userState: UserState[]
   blocks: IpldBlock[]
   seqs: Selectable<RepoSeq>[]
   commitHistories: RepoCommitHistory[]
@@ -295,6 +300,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
   const [
     roots,
     users,
+    userState,
     blocks,
     seqs,
     commitHistories,
@@ -312,6 +318,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
   ] = await Promise.all([
     db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
     db.db.selectFrom('user_account').orderBy('did').selectAll().execute(),
+    db.db.selectFrom('user_state').orderBy('did').selectAll().execute(),
     db.db
       .selectFrom('ipld_block')
       .orderBy('creator')
@@ -364,6 +371,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
   return {
     roots,
     users,
+    userState,
     blocks,
     seqs,
     commitHistories,
