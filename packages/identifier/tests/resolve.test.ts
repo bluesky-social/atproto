@@ -1,4 +1,4 @@
-import { NoHandleRecordError, resolveDns } from '../src'
+import { ManyHandleRecordsError, NoHandleRecordError, resolveDns } from '../src'
 
 jest.mock('dns/promises', () => {
   return {
@@ -29,6 +29,9 @@ jest.mock('dns/promises', () => {
           ],
         ]
       }
+      if (handle === '_atproto.multi.test') {
+        return [['did=did:example:firstDid'], ['did=did:example:secondDid']]
+      }
     },
   }
 })
@@ -38,11 +41,19 @@ describe('handle resolution', () => {
     const did = await resolveDns('simple.test')
     expect(did).toBe('did:example:simpleDid')
   })
+
   it('handles a noisy DNS resolution', async () => {
     const did = await resolveDns('noisy.test')
     expect(did).toBe('did:example:noisyDid')
   })
+
   it('handles a bad DNS resolution', async () => {
     await expect(resolveDns('bad.test')).rejects.toThrow(NoHandleRecordError)
+  })
+
+  it('throws on multiple dids under same domain', async () => {
+    await expect(resolveDns('multi.test')).rejects.toThrow(
+      ManyHandleRecordsError,
+    )
   })
 })

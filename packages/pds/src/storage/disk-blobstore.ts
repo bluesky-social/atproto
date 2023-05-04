@@ -121,7 +121,15 @@ export class DiskBlobStore implements BlobStore {
   }
 
   async delete(cid: CID): Promise<void> {
-    await fs.rm(this.getStoredPath(cid))
+    try {
+      await fs.rm(this.getStoredPath(cid))
+    } catch (err) {
+      if (isErrnoException(err) && err.code === 'ENOENT') {
+        // if blob not found, then it's already been deleted & we can just return
+        return
+      }
+      throw err
+    }
   }
 }
 

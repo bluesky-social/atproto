@@ -10,7 +10,10 @@ export const resolveExternalHandle = async (
     const did = await ident.resolveDns(handle)
     return did
   } catch (err) {
-    if (err instanceof ident.NoHandleRecordError) {
+    if (
+      err instanceof ident.NoHandleRecordError ||
+      err instanceof ident.ManyHandleRecordsError
+    ) {
       // no worries it's just not found
     } else {
       log.error({ err, handle }, 'could not resolve dns handle')

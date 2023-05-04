@@ -18,6 +18,7 @@
     "postpublish": "npm run update-main-to-src"
   },
   "license": "MIT",
+  "repository": "git@github.com:bluesky-social/atproto.git",
   "dependencies": {
     "@atproto/identifier": "*",
     "@atproto/nsid": "*"

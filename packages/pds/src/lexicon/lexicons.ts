@@ -5111,6 +5111,10 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            includeNsfw: {
+              type: 'boolean',
+              default: false,
+            },
             limit: {
               type: 'integer',
               minimum: 1,

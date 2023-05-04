@@ -8,7 +8,7 @@ import { RepoRoot } from '../../db/tables/repo-root'
 import { countAll, notSoftDeletedClause, nullToZero } from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
-import { sequenceHandleUpdate } from '../../sequencer'
+import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -146,7 +146,8 @@ export class AccountService {
     if (res.numUpdatedRows < 1) {
       throw new UserAlreadyExistsError()
     }
-    await sequenceHandleUpdate(this.db, did, handle)
+    const seqEvt = await sequencer.formatSeqHandleUpdate(did, handle)
+    await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
   async updateEmail(did: string, email: string) {
@@ -344,18 +345,20 @@ export class AccountService {
   }
 
   async deleteAccount(did: string): Promise<void> {
-    this.db.assertTransaction()
-    await Promise.all([
-      this.db.db.deleteFrom('refresh_token').where('did', '=', did).execute(),
-      this.db.db
-        .deleteFrom('user_account')
-        .where('user_account.did', '=', did)
-        .execute(),
-      this.db.db
-        .deleteFrom('did_handle')
-        .where('did_handle.did', '=', did)
-        .execute(),
-    ])
+    // Not done in transaction because it would be too long, prone to contention.
+    // Also, this can safely be run multiple times if it fails.
+    await this.db.db
+      .deleteFrom('refresh_token')
+      .where('did', '=', did)
+      .execute()
+    await this.db.db
+      .deleteFrom('user_account')
+      .where('user_account.did', '=', did)
+      .execute()
+    await this.db.db
+      .deleteFrom('did_handle')
+      .where('did_handle.did', '=', did)
+      .execute()
   }
 
   selectInviteCodesQb() {

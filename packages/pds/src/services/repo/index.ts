@@ -20,9 +20,12 @@ import {
 import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { RecordService } from '../record'
-import { sequenceCommit, sequenceRebase } from '../../sequencer'
+import * as sequencer from '../../sequencer'
 import { Labeler } from '../../labeler'
 import { wait } from '@atproto/common'
+import { ImageInvalidator } from '../../image/invalidator'
+import { ImageUriBuilder } from '../../image/uri'
+import { BackgroundQueue } from '../../event-stream/background-queue'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -32,19 +35,40 @@ export class RepoService {
     public repoSigningKey: crypto.Keypair,
     public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
+    public backgroundQueue: BackgroundQueue,
+    public imgUriBuilder: ImageUriBuilder,
+    public imgInvalidator: ImageInvalidator,
     public labeler: Labeler,
   ) {
-    this.blobs = new RepoBlobs(db, blobstore)
+    this.blobs = new RepoBlobs(
+      db,
+      blobstore,
+      backgroundQueue,
+      imgUriBuilder,
+      imgInvalidator,
+    )
   }
 
   static creator(
     keypair: crypto.Keypair,
     messageDispatcher: MessageQueue,
     blobstore: BlobStore,
+    backgroundQueue: BackgroundQueue,
+    imgUriBuilder: ImageUriBuilder,
+    imgInvalidator: ImageInvalidator,
     labeler: Labeler,
   ) {
     return (db: Database) =>
-      new RepoService(db, keypair, messageDispatcher, blobstore, labeler)
+      new RepoService(
+        db,
+        keypair,
+        messageDispatcher,
+        blobstore,
+        backgroundQueue,
+        imgUriBuilder,
+        imgInvalidator,
+        labeler,
+      )
   }
 
   services = {
@@ -61,6 +85,9 @@ export class RepoService {
         this.repoSigningKey,
         this.messageDispatcher,
         this.blobstore,
+        this.backgroundQueue,
+        this.imgUriBuilder,
+        this.imgInvalidator,
         this.labeler,
       )
       return fn(srvc)
@@ -201,10 +228,12 @@ export class RepoService {
     commitData: CommitData,
     writes: PreparedWrite[],
   ) {
-    await Promise.all([
+    const [seqEvt] = await Promise.all([
+      sequencer.formatSeqCommit(did, commitData, writes),
       this.blobs.processWriteBlobs(did, commitData.commit, writes),
-      sequenceCommit(this.db, did, commitData, writes),
     ])
+
+    await sequencer.sequenceEvt(this.db, seqEvt)
 
     // @TODO move to appview
     writes.map((write) => {
@@ -257,29 +286,32 @@ export class RepoService {
   }
 
   async afterRebaseProcessing(did: string, rebaseData: RebaseData) {
-    await Promise.all([
+    const [seqEvt] = await Promise.all([
+      sequencer.formatSeqRebase(did, rebaseData),
       this.blobs.processRebaseBlobs(did, rebaseData.commit),
-      sequenceRebase(this.db, did, rebaseData),
     ])
+    await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
   async deleteRepo(did: string) {
-    this.db.assertTransaction()
+    // Not done in transaction because it would be too long, prone to contention.
+    // Also, this can safely be run multiple times if it fails.
     // delete all blocks from this did & no other did
-    await Promise.all([
-      this.db.db.deleteFrom('ipld_block').where('creator', '=', did).execute(),
-      this.db.db
-        .deleteFrom('repo_commit_block')
-        .where('creator', '=', did)
-        .execute(),
-      this.db.db
-        .deleteFrom('repo_commit_history')
-        .where('creator', '=', did)
-        .execute(),
-      this.db.db.deleteFrom('repo_root').where('did', '=', did).execute(),
-      this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute(),
-      this.blobs.deleteForUser(did),
-    ])
+    await this.db.db.deleteFrom('repo_root').where('did', '=', did).execute()
+    await this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute()
+    await this.db.db
+      .deleteFrom('repo_commit_block')
+      .where('creator', '=', did)
+      .execute()
+    await this.db.db
+      .deleteFrom('repo_commit_history')
+      .where('creator', '=', did)
+      .execute()
+    await this.db.db
+      .deleteFrom('ipld_block')
+      .where('creator', '=', did)
+      .execute()
+    await this.blobs.deleteForUser(did)
   }
 }
 
