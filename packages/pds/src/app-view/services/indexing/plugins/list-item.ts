@@ -45,6 +45,7 @@ const findDuplicate = async (
   const found = await db
     .selectFrom('list_item')
     .where('creator', '=', uri.host)
+    .where('listUri', '=', obj.list)
     .where('subjectDid', '=', obj.subject)
     .selectAll()
     .executeTakeFirst()

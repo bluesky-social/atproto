@@ -19,6 +19,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .on('actor_block')
     .column('subjectDid')
     .execute()
+  // index on `creator` added in `block-lists` migration
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
