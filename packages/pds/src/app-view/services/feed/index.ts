@@ -148,7 +148,7 @@ export class FeedService {
             : undefined,
           viewer: {
             muted: !!cur?.requesterMuted || !!listMutes[cur.did],
-            muteByList: listMutes[cur.did],
+            mutedByList: listMutes[cur.did],
             blockedBy: !!cur?.requesterBlockedBy,
             blocking: cur?.requesterBlocking || undefined,
             following: cur?.requesterFollowing || undefined,
