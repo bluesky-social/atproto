@@ -7,7 +7,7 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyActorDefs from '../actor/defs'
+import * as AppBskyGraphDefs from './defs'
 
 export interface QueryParams {
   limit: number
@@ -18,7 +18,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  lists: AppBskyActorDefs.ListView[]
+  lists: AppBskyGraphDefs.ListView[]
   [k: string]: unknown
 }
 

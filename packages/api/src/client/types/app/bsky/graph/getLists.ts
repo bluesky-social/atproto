@@ -7,6 +7,7 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 import * as AppBskyActorDefs from '../actor/defs'
+import * as AppBskyGraphDefs from './defs'
 
 export interface QueryParams {
   actor: string
@@ -19,7 +20,7 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   subject: AppBskyActorDefs.ProfileView
-  lists: AppBskyActorDefs.ListView[]
+  lists: AppBskyGraphDefs.ListView[]
   [k: string]: unknown
 }
 

@@ -21,10 +21,10 @@
           "required": ["list", "items"],
           "properties": {
             "cursor": {"type": "string"},
-            "list": {"type": "ref", "ref": "app.bsky.actor.defs#listView"},
+            "list": {"type": "ref", "ref": "app.bsky.graph.defs#listView"},
             "items": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.actor.defs#listItemView"}
+              "items": {"type": "ref", "ref": "app.bsky.graph.defs#listItemView"}
             }
           }
         }

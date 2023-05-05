@@ -4653,6 +4653,77 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphDefs: {
+    lexicon: 1,
+    id: 'app.bsky.graph.defs',
+    defs: {
+      listView: {
+        type: 'object',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            maxLength: 64,
+            minLength: 1,
+          },
+          description: {
+            type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
+          },
+          descriptionFacets: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
+          avatar: {
+            type: 'string',
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listViewerState',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      listItemView: {
+        type: 'object',
+        required: ['subject'],
+        properties: {
+          subject: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          reason: {
+            type: 'string',
+            maxLength: 5000,
+            maxGraphemes: 1000,
+          },
+          reasonFacets: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
+        },
+      },
+      listViewerState: {
+        type: 'object',
+        properties: {
+          blocked: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphFollow: {
     lexicon: 1,
     id: 'app.bsky.graph.follow',
@@ -4862,13 +4933,13 @@ export const schemaDict = {
               },
               list: {
                 type: 'ref',
-                ref: 'lex:app.bsky.actor.defs#listView',
+                ref: 'lex:app.bsky.graph.defs#listView',
               },
               items: {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#listItemView',
+                  ref: 'lex:app.bsky.graph.defs#listItemView',
                 },
               },
             },
@@ -4911,7 +4982,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#listView',
+                  ref: 'lex:app.bsky.graph.defs#listView',
                 },
               },
             },
@@ -4963,7 +5034,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#listView',
+                  ref: 'lex:app.bsky.graph.defs#listView',
                 },
               },
             },
@@ -5531,6 +5602,7 @@ export const ids = {
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
   AppBskyGraphBlock: 'app.bsky.graph.block',
+  AppBskyGraphDefs: 'app.bsky.graph.defs',
   AppBskyGraphFollow: 'app.bsky.graph.follow',
   AppBskyGraphGetBlocks: 'app.bsky.graph.getBlocks',
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',

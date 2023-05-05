@@ -21,7 +21,7 @@
             "cursor": {"type": "string"},
             "lists": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.actor.defs#listView"}
+              "items": {"type": "ref", "ref": "app.bsky.graph.defs#listView"}
             }
           }
         }
