@@ -415,7 +415,7 @@ describe('pds views with blocking from block lists', () => {
     await agent.api.app.bsky.graph.listblock.create(
       { repo: dan },
       {
-        subject: listUri,
+        subject: otherListUri,
         createdAt: new Date().toISOString(),
       },
       sc.getHeaders(dan),
