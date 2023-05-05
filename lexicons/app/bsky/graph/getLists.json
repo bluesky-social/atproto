@@ -18,10 +18,9 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["subject", "lists"],
+          "required": ["lists"],
           "properties": {
             "cursor": {"type": "string"},
-            "subject": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
             "lists": {
               "type": "array",
               "items": {"type": "ref", "ref": "app.bsky.graph.defs#listView"}

@@ -4,8 +4,10 @@
   "defs": {
     "listView": {
       "type": "object",
-      "required": ["name", "purpose"],
+      "required": ["uri", "creator", "name", "purpose"],
       "properties": {
+        "uri": {"type": "string", "format": "at-uri"},
+        "creator": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
         "name": {"type": "string", "maxLength": 64, "minLength": 1},
         "purpose": {"type": "ref", "ref": "#listPurpose"},
         "description": {"type": "string", "maxGraphemes": 300, "maxLength": 3000},

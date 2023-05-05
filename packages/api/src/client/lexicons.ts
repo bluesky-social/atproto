@@ -4594,8 +4594,16 @@ export const schemaDict = {
     defs: {
       listView: {
         type: 'object',
-        required: ['name', 'purpose'],
+        required: ['uri', 'creator', 'name', 'purpose'],
         properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          creator: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
           name: {
             type: 'string',
             maxLength: 64,
@@ -4968,14 +4976,10 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['subject', 'lists'],
+            required: ['lists'],
             properties: {
               cursor: {
                 type: 'string',
-              },
-              subject: {
-                type: 'ref',
-                ref: 'lex:app.bsky.actor.defs#profileView',
               },
               lists: {
                 type: 'array',

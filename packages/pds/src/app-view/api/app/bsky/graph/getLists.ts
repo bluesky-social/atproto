@@ -39,12 +39,14 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
 
-      const [listsRes, subject] = await Promise.all([
+      const [listsRes, creator] = await Promise.all([
         listsReq.execute(),
         actorService.views.profile(creatorRes, requester),
       ])
 
       const lists = listsRes.map((row) => ({
+        uri: row.uri,
+        creator: creator,
         name: row.name,
         purpose: row.purpose,
         description: row.description ?? undefined,
@@ -63,7 +65,6 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: {
-          subject,
           lists,
           cursor: keyset.packFromResult(listsRes),
         },

@@ -2,6 +2,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
+import { ProfileView } from '../../../../../lexicon/types/app/bsky/actor/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getList({
@@ -14,8 +15,10 @@ export default function (server: Server, ctx: AppContext) {
 
       const listRes = await ctx.db.db
         .selectFrom('list')
+        .innerJoin('did_handle', 'did_handle.did', 'list.creator')
         .where('list.uri', '=', list)
         .selectAll('list')
+        .selectAll('did_handle')
         .select(
           ctx.db.db
             .selectFrom('list_block')
@@ -58,19 +61,29 @@ export default function (server: Server, ctx: AppContext) {
       })
       const itemsRes = await itemsReq.execute()
 
-      const itemProfiles = await services.appView
-        .actor(db)
-        .views.profile(itemsRes, requester)
+      const actorService = services.appView.actor(db)
+      const profiles = await actorService.views.profile(itemsRes, requester)
+      const profilesMap = profiles.reduce(
+        (acc, cur) => ({
+          ...acc,
+          [cur.did]: cur,
+        }),
+        {} as Record<string, ProfileView>,
+      )
 
-      const items = itemsRes.map((item, i) => ({
-        subject: itemProfiles[i],
+      const items = itemsRes.map((item) => ({
+        subject: profilesMap[item.did],
         reason: item.reason ?? undefined,
         reasonFacets: item.reasonFacets
           ? JSON.parse(item.reasonFacets)
           : undefined,
       }))
 
+      const creator = await actorService.views.profile(listRes, requester)
+
       const subject = {
+        uri: listRes.uri,
+        creator,
         name: listRes.name,
         purpose: listRes.purpose,
         description: listRes.description ?? undefined,
