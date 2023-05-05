@@ -3441,6 +3441,10 @@ export const schemaDict = {
           avatar: {
             type: 'string',
           },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#listViewerState',
+          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
@@ -3466,6 +3470,15 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:app.bsky.richtext.facet',
             },
+          },
+        },
+      },
+      listViewerState: {
+        type: 'object',
+        properties: {
+          blocked: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -4844,6 +4857,9 @@ export const schemaDict = {
             type: 'object',
             required: ['list', 'items'],
             properties: {
+              cursor: {
+                type: 'string',
+              },
               list: {
                 type: 'ref',
                 ref: 'lex:app.bsky.actor.defs#listView',
@@ -4917,7 +4933,7 @@ export const schemaDict = {
           properties: {
             actor: {
               type: 'string',
-              format: 'at-uri',
+              format: 'did',
             },
             limit: {
               type: 'integer',
@@ -4936,6 +4952,9 @@ export const schemaDict = {
             type: 'object',
             required: ['subject', 'lists'],
             properties: {
+              cursor: {
+                type: 'string',
+              },
               subject: {
                 type: 'ref',
                 ref: 'lex:app.bsky.actor.defs#profileView',

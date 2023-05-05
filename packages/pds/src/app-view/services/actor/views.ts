@@ -8,6 +8,8 @@ import { DidHandle } from '../../../db/tables/did-handle'
 import Database from '../../../db'
 import { ImageUriBuilder } from '../../../image/uri'
 import { LabelService } from '../label'
+import { DbRef } from '../../../db/util'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export class ActorViews {
   constructor(private db: Database, private imgUriBuilder: ImageUriBuilder) {}
@@ -75,6 +77,8 @@ export class ActorViews {
           .where('subjectDid', '=', viewer)
           .select('uri')
           .as('requesterBlockedBy'),
+        this.listBlockQb(ref('did_handle.did'), viewer).as('blockedByList'),
+        this.listBlockQb(viewer, ref('did_handle.did')).as('blockingList'),
         this.db.db
           .selectFrom('mute')
           .whereRef('did', '=', ref('did_handle.did'))
@@ -114,8 +118,12 @@ export class ActorViews {
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: {
           muted: !!profileInfo?.requesterMuted,
-          blockedBy: !!profileInfo.requesterBlockedBy,
-          blocking: profileInfo.requesterBlocking || undefined,
+          blockedBy:
+            !!profileInfo.requesterBlockedBy || !!profileInfo.blockedByList,
+          blocking:
+            profileInfo.requesterBlocking ||
+            profileInfo.blockingList ||
+            undefined,
           following: profileInfo?.requesterFollowing || undefined,
           followedBy: profileInfo?.requesterFollowedBy || undefined,
         },
@@ -173,6 +181,8 @@ export class ActorViews {
           .where('subjectDid', '=', viewer)
           .select('uri')
           .as('requesterBlockedBy'),
+        this.listBlockQb(ref('did_handle.did'), viewer).as('blockedByList'),
+        this.listBlockQb(viewer, ref('did_handle.did')).as('blockingList'),
         this.db.db
           .selectFrom('mute')
           .whereRef('did', '=', ref('did_handle.did'))
@@ -205,8 +215,12 @@ export class ActorViews {
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: {
           muted: !!profileInfo?.requesterMuted,
-          blockedBy: !!profileInfo.requesterBlockedBy,
-          blocking: profileInfo.requesterBlocking || undefined,
+          blockedBy:
+            !!profileInfo.requesterBlockedBy || !!profileInfo.blockedByList,
+          blocking:
+            profileInfo.requesterBlocking ||
+            profileInfo.blockingList ||
+            undefined,
           following: profileInfo?.requesterFollowing || undefined,
           followedBy: profileInfo?.requesterFollowedBy || undefined,
         },
@@ -241,6 +255,32 @@ export class ActorViews {
     }))
 
     return Array.isArray(result) ? views : views[0]
+  }
+
+  listBlockQb(creator: string | DbRef, subject: string | DbRef) {
+    let builder = this.db.db
+      .selectFrom('list_block')
+      .innerJoin('list', 'list.uri', 'list_block.subjectUri')
+      .innerJoin('list_item', (join) =>
+        join
+          .onRef('list_item.creator', '=', 'list.creator')
+          .onRef('list_item.listUri', '=', 'list.uri'),
+      )
+      .select('list_block.uri')
+      .limit(1)
+
+    if (typeof creator === 'string') {
+      builder = builder.where('list_block.creator', '=', creator)
+    } else {
+      builder = builder.whereRef('list_block.creator', '=', creator)
+    }
+    if (typeof subject === 'string') {
+      builder = builder.where('list_item.subjectDid', '=', subject)
+    } else {
+      builder = builder.whereRef('list_item.subjectDid', '=', subject)
+    }
+
+    return builder
   }
 }
 

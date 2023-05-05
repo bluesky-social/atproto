@@ -17,6 +17,7 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
+  cursor?: string
   subject: AppBskyActorDefs.ProfileView
   lists: AppBskyActorDefs.ListView[]
   [k: string]: unknown

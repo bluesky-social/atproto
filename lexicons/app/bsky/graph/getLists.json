@@ -9,7 +9,7 @@
         "type": "params",
         "required": ["actor"],
         "properties": {
-          "actor": {"type": "string", "format": "at-uri"},
+          "actor": {"type": "string", "format": "did"},
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
           "cursor": {"type": "string"}
         }
@@ -20,6 +20,7 @@
           "type": "object",
           "required": ["subject", "lists"],
           "properties": {
+            "cursor": {"type": "string"},
             "subject": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
             "lists": {
               "type": "array",

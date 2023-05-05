@@ -20,7 +20,6 @@ const insertFn = async (
   obj: List.Record,
   timestamp: string,
 ): Promise<IndexedList | null> => {
-  if (uri.rkey !== 'self') return null
   const inserted = await db
     .insertInto('list')
     .values({

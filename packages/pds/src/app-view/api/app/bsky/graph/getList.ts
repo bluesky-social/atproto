@@ -2,7 +2,6 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
-import { notSoftDeletedClause } from '../../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getList({
@@ -16,7 +15,15 @@ export default function (server: Server, ctx: AppContext) {
       const listRes = await ctx.db.db
         .selectFrom('list')
         .where('list.uri', '=', list)
-        .selectAll()
+        .selectAll('list')
+        .select(
+          ctx.db.db
+            .selectFrom('list_block')
+            .where('list_block.creator', '=', requester)
+            .whereRef('list_block.subjectUri', '=', ref('list.uri'))
+            .select('list_block.uri')
+            .as('viewerBlocked'),
+        )
         .executeTakeFirst()
 
       if (!listRes) {
@@ -32,7 +39,6 @@ export default function (server: Server, ctx: AppContext) {
           'subject.did',
           'list_item.subjectDid',
         )
-        .where(notSoftDeletedClause(ref('subject_repo')))
         .selectAll('subject')
         .select([
           'list_item.cid as cid',
@@ -74,6 +80,9 @@ export default function (server: Server, ctx: AppContext) {
           ? ctx.imgUriBuilder.getCommonSignedUri('avatar', listRes.avatarCid)
           : undefined,
         indexedAt: listRes.indexedAt,
+        viewer: {
+          blocked: listRes.viewerBlocked ?? undefined,
+        },
       }
 
       return {

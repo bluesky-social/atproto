@@ -20,6 +20,7 @@
           "type": "object",
           "required": ["list", "items"],
           "properties": {
+            "cursor": {"type": "string"},
             "list": {"type": "ref", "ref": "app.bsky.actor.defs#listView"},
             "items": {
               "type": "array",

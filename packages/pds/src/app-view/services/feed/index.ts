@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { cborToLexRecord } from '@atproto/repo'
 import Database from '../../../db'
-import { notSoftDeletedClause } from '../../../db/util'
+import { DbRef, notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
 import { isView as isViewImages } from '../../../lexicon/types/app/bsky/embed/images'
 import { isView as isViewExternal } from '../../../lexicon/types/app/bsky/embed/external'
@@ -118,6 +118,10 @@ export class FeedService {
             .where('subjectDid', '=', requester)
             .select('uri')
             .as('requesterBlockedBy'),
+          this.listBlockQb(ref('did_handle.did'), requester).as(
+            'blockedByList',
+          ),
+          this.listBlockQb(requester, ref('did_handle.did')).as('blockingList'),
           this.db.db
             .selectFrom('mute')
             .whereRef('did', '=', ref('did_handle.did'))
@@ -140,8 +144,8 @@ export class FeedService {
             : undefined,
           viewer: {
             muted: !!cur?.requesterMuted,
-            blockedBy: !!cur?.requesterBlockedBy,
-            blocking: cur?.requesterBlocking || undefined,
+            blockedBy: !!cur?.requesterBlockedBy || !!cur?.blockedByList,
+            blocking: cur?.requesterBlocking || cur?.blockingList || undefined,
             following: cur?.requesterFollowing || undefined,
             followedBy: cur?.requesterFollowedBy || undefined,
           },
@@ -323,6 +327,32 @@ export class FeedService {
       return acc
     }, embeds)
     return embeds
+  }
+
+  listBlockQb(creator: string | DbRef, subject: string | DbRef) {
+    let builder = this.db.db
+      .selectFrom('list_block')
+      .innerJoin('list', 'list.uri', 'list_block.subjectUri')
+      .innerJoin('list_item', (join) =>
+        join
+          .onRef('list_item.creator', '=', 'list.creator')
+          .onRef('list_item.listUri', '=', 'list.uri'),
+      )
+      .select('list_block.uri')
+      .limit(1)
+
+    if (typeof creator === 'string') {
+      builder = builder.where('list_block.creator', '=', creator)
+    } else {
+      builder = builder.whereRef('list_block.creator', '=', creator)
+    }
+    if (typeof subject === 'string') {
+      builder = builder.where('list_item.subjectDid', '=', subject)
+    } else {
+      builder = builder.whereRef('list_item.subjectDid', '=', subject)
+    }
+
+    return builder
   }
 
   formatPostView(

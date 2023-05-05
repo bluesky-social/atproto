@@ -108,6 +108,7 @@ export interface ListView {
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: string
+  viewer?: ListViewerState
   indexedAt?: string
   [k: string]: unknown
 }
@@ -141,4 +142,21 @@ export function isListItemView(v: unknown): v is ListItemView {
 
 export function validateListItemView(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#listItemView', v)
+}
+
+export interface ListViewerState {
+  blocked?: string
+  [k: string]: unknown
+}
+
+export function isListViewerState(v: unknown): v is ListViewerState {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#listViewerState'
+  )
+}
+
+export function validateListViewerState(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#listViewerState', v)
 }

@@ -97,6 +97,7 @@
             "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
           },
         "avatar": {"type": "string"},
+        "viewer": {"type": "ref", "ref": "#listViewerState"},
         "indexedAt": {"type": "string", "format": "datetime"}
       }
     },
@@ -110,6 +111,12 @@
           "type": "array",
           "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
         }
+      }
+    },
+    "listViewerState": {
+      "type": "object",
+      "properties": {
+        "blocked": {"type": "string", "format": "at-uri"}
       }
     }
   }

@@ -20,7 +20,15 @@ export default function (server: Server, ctx: AppContext) {
             .whereRef('list_block.subjectUri', '=', ref('list.uri'))
             .selectAll(),
         )
-        .selectAll()
+        .selectAll('list')
+        .select(
+          ctx.db.db
+            .selectFrom('list_block')
+            .where('list_block.creator', '=', requester)
+            .whereRef('list_block.subjectUri', '=', ref('list.uri'))
+            .select('list_block.uri')
+            .as('viewerBlocked'),
+        )
 
       const keyset = new TimeCidKeyset(ref('list.createdAt'), ref('list.cid'))
       listsReq = paginate(listsReq, {
@@ -40,6 +48,9 @@ export default function (server: Server, ctx: AppContext) {
           ? ctx.imgUriBuilder.getCommonSignedUri('avatar', row.avatarCid)
           : undefined,
         indexedAt: row.indexedAt,
+        viewer: {
+          blocked: row.viewerBlocked ?? undefined,
+        },
       }))
 
       return {
