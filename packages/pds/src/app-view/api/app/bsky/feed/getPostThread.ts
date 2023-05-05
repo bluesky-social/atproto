@@ -90,7 +90,11 @@ const composeThread = (
     }
   }
 
-  if (post.author.viewer?.blocking || post.author.viewer?.blockedBy) {
+  if (
+    threadData.post.replyBlocked ||
+    post.author.viewer?.blocking ||
+    post.author.viewer?.blockedBy
+  ) {
     return {
       $type: 'app.bsky.feed.defs#blockedPost',
       uri: threadData.post.postUri,

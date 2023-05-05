@@ -48,5 +48,6 @@ export type FeedRow = {
   originatorDid: string
   replyParent: string | null
   replyRoot: string | null
+  replyBlocked: 0 | 1
   sortAt: string
 }

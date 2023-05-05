@@ -44,6 +44,7 @@ export class FeedService {
         'post.creator as postAuthorDid',
         'post.replyParent as replyParent',
         'post.replyRoot as replyRoot',
+        'post.replyBlocked as replyBlocked',
         'post.indexedAt as sortAt',
       ])
   }
@@ -71,6 +72,7 @@ export class FeedService {
       .select([
         'post.replyRoot',
         'post.replyParent',
+        'post.replyBlocked',
         'post.creator as postAuthorDid',
       ])
   }
