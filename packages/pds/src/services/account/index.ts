@@ -331,7 +331,7 @@ export class AccountService {
           .onRef('list_item.listUri', '=', 'list.uri'),
       )
       .where('list_mute.mutedByDid', '=', requester)
-      .whereRef('list_item.subjectDid', 'in', subjectRefs)
+      .whereRef('list_item.subjectDid', 'in', sql`(${subjectRefs})`)
       .select('list_item.subjectDid as muted')
     return actorMute.union(listMute)
   }
