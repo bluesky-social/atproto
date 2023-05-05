@@ -5,9 +5,11 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import * as AppBskyGraphDefs from './defs'
 import * as AppBskyRichtextFacet from '../richtext/facet'
 
 export interface Record {
+  purpose: AppBskyGraphDefs.ListPurpose
   name: string
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]

@@ -5,6 +5,7 @@ export interface List {
   cid: string
   creator: string
   name: string
+  purpose: string
   description: string | null
   descriptionFacets: string | null
   avatarCid: string | null

@@ -103,6 +103,9 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
 }
+export const APP_BSKY_GRAPH = {
+  DefsBlocklist: 'app.bsky.graph.defs#blocklist',
+}
 
 export function createServer(options?: XrpcOptions): Server {
   return new Server(options)

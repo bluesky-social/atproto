@@ -4659,12 +4659,16 @@ export const schemaDict = {
     defs: {
       listView: {
         type: 'object',
-        required: ['name'],
+        required: ['name', 'purpose'],
         properties: {
           name: {
             type: 'string',
             maxLength: 64,
             minLength: 1,
+          },
+          purpose: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listPurpose',
           },
           description: {
             type: 'string',
@@ -4712,6 +4716,14 @@ export const schemaDict = {
             },
           },
         },
+      },
+      listPurpose: {
+        type: 'string',
+        knownValues: ['lex:app.bsky.graph.defs#blocklist'],
+      },
+      blocklist: {
+        type: 'token',
+        description: 'A list of actors to do an aggregate block on',
       },
       listViewerState: {
         type: 'object',
@@ -5096,8 +5108,12 @@ export const schemaDict = {
         key: 'tid',
         record: {
           type: 'object',
-          required: ['name', 'createdAt'],
+          required: ['name', 'purpose', 'createdAt'],
           properties: {
+            purpose: {
+              type: 'ref',
+              ref: 'lex:app.bsky.graph.defs#listPurpose',
+            },
             name: {
               type: 'string',
               maxLength: 64,

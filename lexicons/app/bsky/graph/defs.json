@@ -4,9 +4,10 @@
   "defs": {
     "listView": {
       "type": "object",
-      "required": ["name"],
+      "required": ["name", "purpose"],
       "properties": {
         "name": {"type": "string", "maxLength": 64, "minLength": 1},
+        "purpose": {"type": "ref", "ref": "#listPurpose"},
         "description": {"type": "string", "maxGraphemes": 300, "maxLength": 3000},
           "descriptionFacets": {
             "type": "array",
@@ -28,6 +29,16 @@
           "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
         }
       }
+    },
+    "listPurpose": {
+      "type": "string",
+      "knownValues": [
+        "app.bsky.graph.defs#blocklist"
+      ]
+    },
+    "blocklist": {
+      "type": "token",
+      "description": "A list of actors to do an aggregate block on"
     },
     "listViewerState": {
       "type": "object",

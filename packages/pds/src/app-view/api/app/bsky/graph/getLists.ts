@@ -46,6 +46,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const lists = listsRes.map((row) => ({
         name: row.name,
+        purpose: row.purpose,
         description: row.description ?? undefined,
         descriptionFacets: row.descriptionFacets
           ? JSON.parse(row.descriptionFacets)

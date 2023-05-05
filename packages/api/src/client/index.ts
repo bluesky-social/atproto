@@ -225,6 +225,9 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
 }
+export const APP_BSKY_GRAPH = {
+  DefsBlocklist: 'app.bsky.graph.defs#blocklist',
+}
 
 export class AtpBaseClient {
   xrpc: XrpcClient = new XrpcClient()

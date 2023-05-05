@@ -10,6 +10,7 @@ import * as AppBskyActorDefs from '../actor/defs'
 
 export interface ListView {
   name: string
+  purpose: ListPurpose
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: string
@@ -48,6 +49,11 @@ export function isListItemView(v: unknown): v is ListItemView {
 export function validateListItemView(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.graph.defs#listItemView', v)
 }
+
+export type ListPurpose = 'lex:app.bsky.graph.defs#blocklist' | (string & {})
+
+/** A list of actors to do an aggregate block on */
+export const BLOCKLIST = 'app.bsky.graph.defs#blocklist'
 
 export interface ListViewerState {
   blocked?: string

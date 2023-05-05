@@ -72,6 +72,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const subject = {
         name: listRes.name,
+        purpose: listRes.purpose,
         description: listRes.description ?? undefined,
         descriptionFacets: listRes.descriptionFacets
           ? JSON.parse(listRes.descriptionFacets)
