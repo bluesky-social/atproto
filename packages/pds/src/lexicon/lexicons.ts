@@ -3400,6 +3400,10 @@ export const schemaDict = {
           muted: {
             type: 'boolean',
           },
+          mutedByList: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listView',
+          },
           blockedBy: {
             type: 'boolean',
           },
@@ -4662,18 +4666,17 @@ export const schemaDict = {
       },
       listPurpose: {
         type: 'string',
-        knownValues: ['app.bsky.graph.defs#blocklist'],
+        knownValues: ['app.bsky.graph.defs#modlist'],
       },
-      blocklist: {
+      modlocklist: {
         type: 'token',
-        description: 'A list of actors to do an aggregate block on',
+        description: 'A list of actors to apply an aggregate moderation on',
       },
       listViewerState: {
         type: 'object',
         properties: {
-          blocked: {
-            type: 'string',
-            format: 'at-uri',
+          muted: {
+            type: 'boolean',
           },
         },
       },
@@ -4903,13 +4906,13 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyGraphGetListBlocks: {
+  AppBskyGraphGetListMutes: {
     lexicon: 1,
-    id: 'app.bsky.graph.getListBlocks',
+    id: 'app.bsky.graph.getListMutes',
     defs: {
       main: {
         type: 'query',
-        description: "Which lists is the requester's account blocking?",
+        description: "Which lists is the requester's account muting?",
         parameters: {
           type: 'params',
           properties: {
@@ -5084,31 +5087,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyGraphListblock: {
-    lexicon: 1,
-    id: 'app.bsky.graph.listblock',
-    defs: {
-      main: {
-        type: 'record',
-        description: 'A block of an entire list of users.',
-        key: 'tid',
-        record: {
-          type: 'object',
-          required: ['subject', 'createdAt'],
-          properties: {
-            subject: {
-              type: 'string',
-              format: 'at-uri',
-            },
-            createdAt: {
-              type: 'string',
-              format: 'datetime',
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyGraphListitem: {
     lexicon: 1,
     id: 'app.bsky.graph.listitem',
@@ -5173,6 +5151,29 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphSubscribeMuteList: {
+    lexicon: 1,
+    id: 'app.bsky.graph.subscribeMuteList',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Mute a list of actors.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['list'],
+            properties: {
+              list: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphUnmuteActor: {
     lexicon: 1,
     id: 'app.bsky.graph.unmuteActor',
@@ -5189,6 +5190,29 @@ export const schemaDict = {
               actor: {
                 type: 'string',
                 format: 'at-identifier',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphUnsubscribeMuteList: {
+    lexicon: 1,
+    id: 'app.bsky.graph.unsubscribeMuteList',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Unmute a list of actors.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['list'],
+            properties: {
+              list: {
+                type: 'string',
+                format: 'at-uri',
               },
             },
           },
@@ -5563,14 +5587,15 @@ export const ids = {
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
   AppBskyGraphGetList: 'app.bsky.graph.getList',
-  AppBskyGraphGetListBlocks: 'app.bsky.graph.getListBlocks',
+  AppBskyGraphGetListMutes: 'app.bsky.graph.getListMutes',
   AppBskyGraphGetLists: 'app.bsky.graph.getLists',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
   AppBskyGraphList: 'app.bsky.graph.list',
-  AppBskyGraphListblock: 'app.bsky.graph.listblock',
   AppBskyGraphListitem: 'app.bsky.graph.listitem',
   AppBskyGraphMuteActor: 'app.bsky.graph.muteActor',
+  AppBskyGraphSubscribeMuteList: 'app.bsky.graph.subscribeMuteList',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
+  AppBskyGraphUnsubscribeMuteList: 'app.bsky.graph.unsubscribeMuteList',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',

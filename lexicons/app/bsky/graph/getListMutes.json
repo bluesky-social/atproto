@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.graph.getListBlocks",
+  "id": "app.bsky.graph.getListMutes",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Which lists is the requester's account blocking?",
+      "description": "Which lists is the requester's account muting?",
       "parameters": {
         "type": "params",
         "properties": {

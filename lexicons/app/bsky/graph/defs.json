@@ -35,17 +35,17 @@
     "listPurpose": {
       "type": "string",
       "knownValues": [
-        "app.bsky.graph.defs#blocklist"
+        "app.bsky.graph.defs#modlist"
       ]
     },
-    "blocklist": {
+    "modlocklist": {
       "type": "token",
-      "description": "A list of actors to do an aggregate block on"
+      "description": "A list of actors to apply an aggregate moderation on"
     },
     "listViewerState": {
       "type": "object",
       "properties": {
-        "blocked": {"type": "string", "format": "at-uri"}
+        "muted": {"type": "boolean"}
       }
     }
   }

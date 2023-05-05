@@ -52,13 +52,13 @@ export function validateListItemView(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.graph.defs#listItemView', v)
 }
 
-export type ListPurpose = 'app.bsky.graph.defs#blocklist' | (string & {})
+export type ListPurpose = 'app.bsky.graph.defs#modlist' | (string & {})
 
-/** A list of actors to do an aggregate block on */
-export const BLOCKLIST = 'app.bsky.graph.defs#blocklist'
+/** A list of actors to apply an aggregate moderation on */
+export const MODLOCKLIST = 'app.bsky.graph.defs#modlocklist'
 
 export interface ListViewerState {
-  blocked?: string
+  muted?: boolean
   [k: string]: unknown
 }
 

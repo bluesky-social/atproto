@@ -79,11 +79,13 @@ import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
-import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
+import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
+import * as AppBskyGraphSubscribeMuteList from './types/app/bsky/graph/subscribeMuteList'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
+import * as AppBskyGraphUnsubscribeMuteList from './types/app/bsky/graph/unsubscribeMuteList'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
@@ -104,7 +106,7 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
 }
 export const APP_BSKY_GRAPH = {
-  DefsBlocklist: 'app.bsky.graph.defs#blocklist',
+  DefsModlocklist: 'app.bsky.graph.defs#modlocklist',
 }
 
 export function createServer(options?: XrpcOptions): Server {
@@ -824,10 +826,10 @@ export class GraphNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getListBlocks<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyGraphGetListBlocks.Handler<ExtractAuth<AV>>>,
+  getListMutes<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyGraphGetListMutes.Handler<ExtractAuth<AV>>>,
   ) {
-    const nsid = 'app.bsky.graph.getListBlocks' // @ts-ignore
+    const nsid = 'app.bsky.graph.getListMutes' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -852,10 +854,24 @@ export class GraphNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  subscribeMuteList<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyGraphSubscribeMuteList.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.graph.subscribeMuteList' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   unmuteActor<AV extends AuthVerifier>(
     cfg: ConfigOf<AV, AppBskyGraphUnmuteActor.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.graph.unmuteActor' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unsubscribeMuteList<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyGraphUnsubscribeMuteList.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.graph.unsubscribeMuteList' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

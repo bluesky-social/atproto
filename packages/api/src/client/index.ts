@@ -95,14 +95,15 @@ import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
-import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
+import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphList from './types/app/bsky/graph/list'
-import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
+import * as AppBskyGraphSubscribeMuteList from './types/app/bsky/graph/subscribeMuteList'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
+import * as AppBskyGraphUnsubscribeMuteList from './types/app/bsky/graph/unsubscribeMuteList'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
@@ -197,14 +198,15 @@ export * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 export * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
-export * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
+export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 export * as AppBskyGraphList from './types/app/bsky/graph/list'
-export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
+export * as AppBskyGraphSubscribeMuteList from './types/app/bsky/graph/subscribeMuteList'
 export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
+export * as AppBskyGraphUnsubscribeMuteList from './types/app/bsky/graph/unsubscribeMuteList'
 export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
@@ -226,7 +228,7 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
 }
 export const APP_BSKY_GRAPH = {
-  DefsBlocklist: 'app.bsky.graph.defs#blocklist',
+  DefsModlocklist: 'app.bsky.graph.defs#modlocklist',
 }
 
 export class AtpBaseClient {
@@ -1364,7 +1366,6 @@ export class GraphNS {
   block: BlockRecord
   follow: FollowRecord
   list: ListRecord
-  listblock: ListblockRecord
   listitem: ListitemRecord
 
   constructor(service: AtpServiceClient) {
@@ -1372,7 +1373,6 @@ export class GraphNS {
     this.block = new BlockRecord(service)
     this.follow = new FollowRecord(service)
     this.list = new ListRecord(service)
-    this.listblock = new ListblockRecord(service)
     this.listitem = new ListitemRecord(service)
   }
 
@@ -1420,14 +1420,14 @@ export class GraphNS {
       })
   }
 
-  getListBlocks(
-    params?: AppBskyGraphGetListBlocks.QueryParams,
-    opts?: AppBskyGraphGetListBlocks.CallOptions,
-  ): Promise<AppBskyGraphGetListBlocks.Response> {
+  getListMutes(
+    params?: AppBskyGraphGetListMutes.QueryParams,
+    opts?: AppBskyGraphGetListMutes.CallOptions,
+  ): Promise<AppBskyGraphGetListMutes.Response> {
     return this._service.xrpc
-      .call('app.bsky.graph.getListBlocks', params, undefined, opts)
+      .call('app.bsky.graph.getListMutes', params, undefined, opts)
       .catch((e) => {
-        throw AppBskyGraphGetListBlocks.toKnownErr(e)
+        throw AppBskyGraphGetListMutes.toKnownErr(e)
       })
   }
 
@@ -1464,6 +1464,17 @@ export class GraphNS {
       })
   }
 
+  subscribeMuteList(
+    data?: AppBskyGraphSubscribeMuteList.InputSchema,
+    opts?: AppBskyGraphSubscribeMuteList.CallOptions,
+  ): Promise<AppBskyGraphSubscribeMuteList.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.subscribeMuteList', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyGraphSubscribeMuteList.toKnownErr(e)
+      })
+  }
+
   unmuteActor(
     data?: AppBskyGraphUnmuteActor.InputSchema,
     opts?: AppBskyGraphUnmuteActor.CallOptions,
@@ -1472,6 +1483,17 @@ export class GraphNS {
       .call('app.bsky.graph.unmuteActor', opts?.qp, data, opts)
       .catch((e) => {
         throw AppBskyGraphUnmuteActor.toKnownErr(e)
+      })
+  }
+
+  unsubscribeMuteList(
+    data?: AppBskyGraphUnsubscribeMuteList.InputSchema,
+    opts?: AppBskyGraphUnsubscribeMuteList.CallOptions,
+  ): Promise<AppBskyGraphUnsubscribeMuteList.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.unsubscribeMuteList', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyGraphUnsubscribeMuteList.toKnownErr(e)
       })
   }
 }
@@ -1654,71 +1676,6 @@ export class ListRecord {
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.graph.list', ...params },
-      { headers },
-    )
-  }
-}
-
-export class ListblockRecord {
-  _service: AtpServiceClient
-
-  constructor(service: AtpServiceClient) {
-    this._service = service
-  }
-
-  async list(
-    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
-  ): Promise<{
-    cursor?: string
-    records: { uri: string; value: AppBskyGraphListblock.Record }[]
-  }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.graph.listblock',
-      ...params,
-    })
-    return res.data
-  }
-
-  async get(
-    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{
-    uri: string
-    cid: string
-    value: AppBskyGraphListblock.Record
-  }> {
-    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.graph.listblock',
-      ...params,
-    })
-    return res.data
-  }
-
-  async create(
-    params: Omit<
-      ComAtprotoRepoCreateRecord.InputSchema,
-      'collection' | 'record'
-    >,
-    record: AppBskyGraphListblock.Record,
-    headers?: Record<string, string>,
-  ): Promise<{ uri: string; cid: string }> {
-    record.$type = 'app.bsky.graph.listblock'
-    const res = await this._service.xrpc.call(
-      'com.atproto.repo.createRecord',
-      undefined,
-      { collection: 'app.bsky.graph.listblock', ...params, record },
-      { encoding: 'application/json', headers },
-    )
-    return res.data
-  }
-
-  async delete(
-    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
-    headers?: Record<string, string>,
-  ): Promise<void> {
-    await this._service.xrpc.call(
-      'com.atproto.repo.deleteRecord',
-      undefined,
-      { collection: 'app.bsky.graph.listblock', ...params },
       { headers },
     )
   }
