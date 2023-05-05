@@ -50,7 +50,7 @@ export function validateListItemView(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.graph.defs#listItemView', v)
 }
 
-export type ListPurpose = 'lex:app.bsky.graph.defs#blocklist' | (string & {})
+export type ListPurpose = 'app.bsky.graph.defs#blocklist' | (string & {})
 
 /** A list of actors to do an aggregate block on */
 export const BLOCKLIST = 'app.bsky.graph.defs#blocklist'

@@ -3417,71 +3417,6 @@ export const schemaDict = {
           },
         },
       },
-      listView: {
-        type: 'object',
-        required: ['name'],
-        properties: {
-          name: {
-            type: 'string',
-            maxLength: 64,
-            minLength: 1,
-          },
-          description: {
-            type: 'string',
-            maxGraphemes: 300,
-            maxLength: 3000,
-          },
-          descriptionFacets: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:app.bsky.richtext.facet',
-            },
-          },
-          avatar: {
-            type: 'string',
-          },
-          viewer: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#listViewerState',
-          },
-          indexedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-        },
-      },
-      listItemView: {
-        type: 'object',
-        required: ['subject'],
-        properties: {
-          subject: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#profileView',
-          },
-          reason: {
-            type: 'string',
-            maxLength: 5000,
-            maxGraphemes: 1000,
-          },
-          reasonFacets: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:app.bsky.richtext.facet',
-            },
-          },
-        },
-      },
-      listViewerState: {
-        type: 'object',
-        properties: {
-          blocked: {
-            type: 'string',
-            format: 'at-uri',
-          },
-        },
-      },
     },
   },
   AppBskyActorGetProfile: {
@@ -4719,7 +4654,7 @@ export const schemaDict = {
       },
       listPurpose: {
         type: 'string',
-        knownValues: ['lex:app.bsky.graph.defs#blocklist'],
+        knownValues: ['app.bsky.graph.defs#blocklist'],
       },
       blocklist: {
         type: 'token',

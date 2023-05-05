@@ -6,7 +6,6 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
-import * as AppBskyRichtextFacet from '../richtext/facet'
 
 export interface ProfileViewBasic {
   did: string
@@ -101,62 +100,4 @@ export function isViewerState(v: unknown): v is ViewerState {
 
 export function validateViewerState(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#viewerState', v)
-}
-
-export interface ListView {
-  name: string
-  description?: string
-  descriptionFacets?: AppBskyRichtextFacet.Main[]
-  avatar?: string
-  viewer?: ListViewerState
-  indexedAt?: string
-  [k: string]: unknown
-}
-
-export function isListView(v: unknown): v is ListView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.actor.defs#listView'
-  )
-}
-
-export function validateListView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.actor.defs#listView', v)
-}
-
-export interface ListItemView {
-  subject: ProfileView
-  reason?: string
-  reasonFacets?: AppBskyRichtextFacet.Main[]
-  [k: string]: unknown
-}
-
-export function isListItemView(v: unknown): v is ListItemView {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.actor.defs#listItemView'
-  )
-}
-
-export function validateListItemView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.actor.defs#listItemView', v)
-}
-
-export interface ListViewerState {
-  blocked?: string
-  [k: string]: unknown
-}
-
-export function isListViewerState(v: unknown): v is ListViewerState {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.actor.defs#listViewerState'
-  )
-}
-
-export function validateListViewerState(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.actor.defs#listViewerState', v)
 }
