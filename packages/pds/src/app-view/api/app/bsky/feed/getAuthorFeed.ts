@@ -47,14 +47,14 @@ export default function (server: Server, ctx: AppContext) {
       let feedItemsQb = feedService
         .selectFeedItemQb()
         .where('originatorDid', '=', actorDidQb)
-        .where((qb) => {
+        .where((qb) =>
           // Hide reposts of muted content
-          return qb
-            .where('type', '==', 'post')
+          qb
+            .where('type', '=', 'post')
             .orWhereNotExists(
               accountService.mutedQb(requester, [ref('post.creator')]),
-            )
-        })
+            ),
+        )
         .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
 
       const keyset = new FeedKeyset(

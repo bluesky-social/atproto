@@ -44,13 +44,13 @@ describe('pds views with mutes from mute lists', () => {
       'tests/image/fixtures/key-portrait-small.jpg',
       'image/jpeg',
     )
-    // alice creates block list with bob & carol that dan uses
+    // alice creates mute list with bob & carol that dan uses
     const list = await agent.api.app.bsky.graph.list.create(
       { repo: alice },
       {
-        name: 'alice blocks',
+        name: 'alice mutes',
         purpose: 'app.bsky.graph.defs#modlist',
-        description: 'big list of blocks',
+        description: 'big list of mutes',
         avatar: avatar.image,
         createdAt: new Date().toISOString(),
       },
@@ -96,29 +96,25 @@ describe('pds views with mutes from mute lists', () => {
     expect(forSnapshot(res.data.thread)).toMatchSnapshot()
   })
 
-  // it('errors on getting author feed', async () => {
-  //   const attempt1 = agent.api.app.bsky.feed.getAuthorFeed(
-  //     { actor: carol },
-  //     { headers: sc.getHeaders(dan) },
-  //   )
-  //   await expect(attempt1).rejects.toThrow(BlockedActorError)
+  it('does not show reposted content from a muted account in  author feed', async () => {
+    await sc.repost(alice, sc.posts[carol][0].ref)
 
-  //   const attempt2 = agent.api.app.bsky.feed.getAuthorFeed(
-  //     { actor: dan },
-  //     { headers: sc.getHeaders(carol) },
-  //   )
-  //   await expect(attempt2).rejects.toThrow(BlockedByActorError)
-  // })
+    const res = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: alice },
+      { headers: sc.getHeaders(dan) },
+    )
+    expect(
+      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+    ).toBe(false)
+  })
 
   it('removes content from muted users on getTimeline', async () => {
-    const resDan = await agent.api.app.bsky.feed.getTimeline(
+    const res = await agent.api.app.bsky.feed.getTimeline(
       { limit: 100 },
       { headers: sc.getHeaders(dan) },
     )
     expect(
-      resDan.data.feed.some((post) =>
-        [bob, carol].includes(post.post.author.did),
-      ),
+      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
     ).toBe(false)
   })
 
@@ -136,62 +132,60 @@ describe('pds views with mutes from mute lists', () => {
       await sc.like(sc.dids[name], sc.posts[dan][0].ref)
     }
 
-    const resDan = await agent.api.app.bsky.unspecced.getPopular(
+    const res = await agent.api.app.bsky.unspecced.getPopular(
       {},
       { headers: sc.getHeaders(dan) },
     )
     expect(
-      resDan.data.feed.some((post) =>
-        [bob, carol].includes(post.post.author.did),
-      ),
+      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
     ).toBe(false)
   })
 
   it('returns mute status on getProfile', async () => {
-    const resDan = await agent.api.app.bsky.actor.getProfile(
+    const res = await agent.api.app.bsky.actor.getProfile(
       { actor: carol },
       { headers: sc.getHeaders(dan) },
     )
-    expect(resDan.data.viewer?.muted).toBe(true)
-    expect(resDan.data.viewer?.mutedByList?.uri).toBe(listUri)
+    expect(res.data.viewer?.muted).toBe(true)
+    expect(res.data.viewer?.mutedByList?.uri).toBe(listUri)
   })
 
   it('returns mute status on getProfiles', async () => {
-    const resDan = await agent.api.app.bsky.actor.getProfiles(
+    const res = await agent.api.app.bsky.actor.getProfiles(
       { actors: [alice, carol] },
       { headers: sc.getHeaders(dan) },
     )
-    expect(resDan.data.profiles[0].viewer?.muted).toBe(false)
-    expect(resDan.data.profiles[0].viewer?.mutedByList).toBeUndefined()
-    expect(resDan.data.profiles[1].viewer?.muted).toBe(true)
-    expect(resDan.data.profiles[1].viewer?.mutedByList?.uri).toEqual(listUri)
+    expect(res.data.profiles[0].viewer?.muted).toBe(false)
+    expect(res.data.profiles[0].viewer?.mutedByList).toBeUndefined()
+    expect(res.data.profiles[1].viewer?.muted).toBe(true)
+    expect(res.data.profiles[1].viewer?.mutedByList?.uri).toEqual(listUri)
   })
 
   it('does not return notifs for muted accounts', async () => {
-    const resDan = await agent.api.app.bsky.notification.listNotifications(
+    const res = await agent.api.app.bsky.notification.listNotifications(
       {
         limit: 100,
       },
       { headers: sc.getHeaders(dan) },
     )
     expect(
-      resDan.data.notifications.some((notif) =>
+      res.data.notifications.some((notif) =>
         [bob, carol].includes(notif.author.did),
       ),
     ).toBeFalsy()
   })
 
   it('flags muted accounts in in get suggestions', async () => {
-    // unfollow so they _would_ show up in suggestions if not for block
+    // unfollow so they _would_ show up in suggestions if not for mute
     await sc.unfollow(dan, carol)
 
-    const resDan = await agent.api.app.bsky.actor.getSuggestions(
+    const res = await agent.api.app.bsky.actor.getSuggestions(
       {
         limit: 100,
       },
       { headers: sc.getHeaders(dan) },
     )
-    for (const actor of resDan.data.actors) {
+    for (const actor of res.data.actors) {
       if ([bob, carol].includes(actor.did)) {
         expect(actor.viewer?.muted).toBe(true)
         expect(actor.viewer?.mutedByList?.uri).toEqual(listUri)
