@@ -8,7 +8,7 @@ import { DidHandle } from '../../../db/tables/did-handle'
 import Database from '../../../db'
 import { ImageUriBuilder } from '../../../image/uri'
 import { LabelService } from '../label'
-import { DbRef } from '../../../db/util'
+import { ListViewBasic } from '../../../lexicon/types/app/bsky/graph/defs'
 
 export class ActorViews {
   constructor(private db: Database, private imgUriBuilder: ImageUriBuilder) {}
@@ -76,8 +76,6 @@ export class ActorViews {
           .where('subjectDid', '=', viewer)
           .select('uri')
           .as('requesterBlockedBy'),
-        this.listBlockQb(ref('did_handle.did'), viewer).as('blockedByList'),
-        this.listBlockQb(viewer, ref('did_handle.did')).as('blockingList'),
         this.db.db
           .selectFrom('mute')
           .whereRef('did', '=', ref('did_handle.did'))
@@ -85,11 +83,11 @@ export class ActorViews {
           .select('did')
           .as('requesterMuted'),
       ])
-      .execute()
 
-    const [profileInfos, labels] = await Promise.all([
-      profileInfosQb,
+    const [profileInfos, labels, listMutes] = await Promise.all([
+      profileInfosQb.execute(),
       this.services.label(this.db).getLabelsForProfiles(dids),
+      this.getListMutes(dids, viewer),
     ])
 
     const profileInfoByDid = profileInfos.reduce((acc, info) => {
@@ -107,24 +105,21 @@ export class ActorViews {
       return {
         did: result.did,
         handle: result.handle,
-        displayName: truncateUtf8(profileInfo?.displayName, 64) || undefined,
-        description: truncateUtf8(profileInfo?.description, 256) || undefined,
+        displayName: truncateUtf8(profileInfo?.displayName, 64) ?? undefined,
+        description: truncateUtf8(profileInfo?.description, 256) ?? undefined,
         avatar,
         banner,
         followsCount: profileInfo?.followsCount ?? 0,
         followersCount: profileInfo?.followersCount ?? 0,
         postsCount: profileInfo?.postsCount ?? 0,
-        indexedAt: profileInfo?.indexedAt || undefined,
+        indexedAt: profileInfo?.indexedAt ?? undefined,
         viewer: {
-          muted: !!profileInfo?.requesterMuted,
-          blockedBy:
-            !!profileInfo.requesterBlockedBy || !!profileInfo.blockedByList,
-          blocking:
-            profileInfo.requesterBlocking ||
-            profileInfo.blockingList ||
-            undefined,
-          following: profileInfo?.requesterFollowing || undefined,
-          followedBy: profileInfo?.requesterFollowedBy || undefined,
+          muted: !!profileInfo?.requesterMuted ?? !!listMutes[result.did],
+          mutedByList: listMutes[result.did],
+          blockedBy: !!profileInfo.requesterBlockedBy,
+          blocking: profileInfo.requesterBlocking ?? undefined,
+          following: profileInfo?.requesterFollowing ?? undefined,
+          followedBy: profileInfo?.requesterFollowedBy ?? undefined,
         },
         labels: labels[result.did] ?? [],
       }
@@ -180,8 +175,6 @@ export class ActorViews {
           .where('subjectDid', '=', viewer)
           .select('uri')
           .as('requesterBlockedBy'),
-        this.listBlockQb(ref('did_handle.did'), viewer).as('blockedByList'),
-        this.listBlockQb(viewer, ref('did_handle.did')).as('blockingList'),
         this.db.db
           .selectFrom('mute')
           .whereRef('did', '=', ref('did_handle.did'))
@@ -189,11 +182,11 @@ export class ActorViews {
           .select('did')
           .as('requesterMuted'),
       ])
-      .execute()
 
-    const [profileInfos, labels] = await Promise.all([
-      profileInfosQb,
+    const [profileInfos, labels, listMutes] = await Promise.all([
+      profileInfosQb.execute(),
       this.services.label(this.db).getLabelsForProfiles(dids),
+      this.getListMutes(dids, viewer),
     ])
 
     const profileInfoByDid = profileInfos.reduce((acc, info) => {
@@ -208,20 +201,17 @@ export class ActorViews {
       return {
         did: result.did,
         handle: result.handle,
-        displayName: truncateUtf8(profileInfo?.displayName, 64) || undefined,
-        description: truncateUtf8(profileInfo?.description, 256) || undefined,
+        displayName: truncateUtf8(profileInfo?.displayName, 64) ?? undefined,
+        description: truncateUtf8(profileInfo?.description, 256) ?? undefined,
         avatar,
-        indexedAt: profileInfo?.indexedAt || undefined,
+        indexedAt: profileInfo?.indexedAt ?? undefined,
         viewer: {
-          muted: !!profileInfo?.requesterMuted,
-          blockedBy:
-            !!profileInfo.requesterBlockedBy || !!profileInfo.blockedByList,
-          blocking:
-            profileInfo.requesterBlocking ||
-            profileInfo.blockingList ||
-            undefined,
-          following: profileInfo?.requesterFollowing || undefined,
-          followedBy: profileInfo?.requesterFollowedBy || undefined,
+          muted: !!profileInfo?.requesterMuted ?? !!listMutes[result.did],
+          mutedByList: listMutes[result.did],
+          blockedBy: !!profileInfo.requesterBlockedBy,
+          blocking: profileInfo.requesterBlocking ?? undefined,
+          following: profileInfo?.requesterFollowing ?? undefined,
+          followedBy: profileInfo?.requesterFollowedBy ?? undefined,
         },
         labels: labels[result.did] ?? [],
       }
@@ -256,30 +246,42 @@ export class ActorViews {
     return Array.isArray(result) ? views : views[0]
   }
 
-  listBlockQb(creator: string | DbRef, subject: string | DbRef) {
-    let builder = this.db.db
-      .selectFrom('list_block')
-      .innerJoin('list', 'list.uri', 'list_block.subjectUri')
+  async getListMutes(
+    subjects: string[],
+    mutedBy: string,
+  ): Promise<Record<string, ListViewBasic>> {
+    if (subjects.length < 1) return {}
+    const res = await this.db.db
+      .selectFrom('list_mute')
+      .innerJoin('list', 'list.uri', 'list_mute.listUri')
       .innerJoin('list_item', (join) =>
         join
           .onRef('list_item.creator', '=', 'list.creator')
           .onRef('list_item.listUri', '=', 'list.uri'),
       )
-      .select('list_block.uri')
-      .limit(1)
-
-    if (typeof creator === 'string') {
-      builder = builder.where('list_block.creator', '=', creator)
-    } else {
-      builder = builder.whereRef('list_block.creator', '=', creator)
-    }
-    if (typeof subject === 'string') {
-      builder = builder.where('list_item.subjectDid', '=', subject)
-    } else {
-      builder = builder.whereRef('list_item.subjectDid', '=', subject)
-    }
-
-    return builder
+      .where('list_mute.mutedByDid', '=', mutedBy)
+      .where('list_item.subjectDid', 'in', subjects)
+      .selectAll('list')
+      .select('list_item.subjectDid as subjectDid')
+      .execute()
+    return res.reduce(
+      (acc, cur) => ({
+        ...acc,
+        [cur.subjectDid]: {
+          uri: cur.uri,
+          name: cur.name,
+          purpose: cur.purpose,
+          avatar: cur.avatarCid
+            ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
+            : undefined,
+          viewer: {
+            muted: true,
+          },
+          indexedAt: cur.indexedAt,
+        },
+      }),
+      {} as Record<string, ListViewBasic>,
+    )
   }
 }
 

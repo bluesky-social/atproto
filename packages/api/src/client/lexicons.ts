@@ -3402,7 +3402,7 @@ export const schemaDict = {
           },
           mutedByList: {
             type: 'ref',
-            ref: 'lex:app.bsky.graph.defs#listView',
+            ref: 'lex:app.bsky.graph.defs#listViewBasic',
           },
           blockedBy: {
             type: 'boolean',
@@ -4596,6 +4596,36 @@ export const schemaDict = {
     lexicon: 1,
     id: 'app.bsky.graph.defs',
     defs: {
+      listViewBasic: {
+        type: 'object',
+        required: ['uri', 'creator', 'name', 'purpose'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          name: {
+            type: 'string',
+            maxLength: 64,
+            minLength: 1,
+          },
+          purpose: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listPurpose',
+          },
+          avatar: {
+            type: 'string',
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listViewerState',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
       listView: {
         type: 'object',
         required: ['uri', 'creator', 'name', 'purpose'],

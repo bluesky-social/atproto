@@ -22,11 +22,11 @@ export class GraphService {
       .selectAll('did_handle')
       .select(
         this.db.db
-          .selectFrom('list_block')
-          .where('list_block.creator', '=', requester)
-          .whereRef('list_block.subjectUri', '=', ref('list.uri'))
-          .select('list_block.uri')
-          .as('viewerBlocked'),
+          .selectFrom('list_mute')
+          .where('list_mute.mutedByDid', '=', requester)
+          .whereRef('list_mute.listUri', '=', ref('list.uri'))
+          .select('list_mute.listUri')
+          .as('viewerMuted'),
       )
   }
 
@@ -44,12 +44,6 @@ export class GraphService {
   }
 
   blockQb(requester: string, refs: NotEmptyArray<DbRef>) {
-    return this.actorBlockQb(requester, refs).union(
-      this.blockListQb(requester, refs),
-    )
-  }
-
-  actorBlockQb(requester: string, refs: NotEmptyArray<DbRef>) {
     const subjectRefs = sql.join(refs)
     return this.db.db
       .selectFrom('actor_block')
@@ -64,33 +58,6 @@ export class GraphService {
           .whereRef('actor_block.creator', 'in', sql`(${subjectRefs})`),
       )
       .select(['creator', 'subjectDid'])
-  }
-
-  blockListQb(requester: string, refs: NotEmptyArray<DbRef>) {
-    const subjectRefs = sql.join(refs)
-
-    return this.db.db
-      .selectFrom('list_block')
-      .innerJoin('list', 'list.uri', 'list_block.subjectUri')
-      .innerJoin('list_item', (join) =>
-        join
-          .onRef('list_item.creator', '=', 'list.creator')
-          .onRef('list_item.listUri', '=', 'list.uri'),
-      )
-      .where((qb) =>
-        qb
-          .where('list_block.creator', '=', requester)
-          .whereRef('list_item.subjectDid', 'in', sql`(${subjectRefs})`),
-      )
-      .orWhere((qb) =>
-        qb
-          .where('list_item.subjectDid', '=', requester)
-          .whereRef('list_block.creator', 'in', sql`(${subjectRefs})`),
-      )
-      .select([
-        'list_block.creator as creator',
-        'list_item.subjectDid as subjectDid',
-      ])
   }
 
   async getBlocks(
@@ -113,46 +80,19 @@ export class GraphService {
     }
 
     const accnts = [requester, subjectDid]
-    const actorBlockReq = this.db.db
+    const blockRes = await this.db.db
       .selectFrom('actor_block')
       .where('creator', 'in', accnts)
       .where('subjectDid', 'in', accnts)
       .selectAll()
+      .execute()
 
-    const listBlockReq = this.db.db
-      .selectFrom('list_block')
-      .innerJoin('list', 'list.uri', 'list_block.subjectUri')
-      .innerJoin('list_item', (join) =>
-        join
-          .onRef('list_item.creator', '=', 'list.creator')
-          .onRef('list_item.listUri', '=', 'list.uri'),
-      )
-      .where('list_block.creator', 'in', accnts)
-      .where('list_item.subjectDid', 'in', accnts)
-      .select([
-        'list_block.creator as creator',
-        'list_item.subjectDid as subjectDid',
-      ])
-
-    const [actorBlockRes, listBlockRes] = await Promise.all([
-      actorBlockReq.execute(),
-      listBlockReq.execute(),
-    ])
-
-    const blocking =
-      actorBlockRes.some(
-        (row) => row.creator === requester && row.subjectDid === subjectDid,
-      ) ||
-      listBlockRes.some(
-        (row) => row.creator === requester && row.subjectDid === subjectDid,
-      )
-    const blockedBy =
-      actorBlockRes.some(
-        (row) => row.creator === subjectDid && row.subjectDid === requester,
-      ) ||
-      listBlockRes.some(
-        (row) => row.creator === subjectDid && row.subjectDid === requester,
-      )
+    const blocking = blockRes.some(
+      (row) => row.creator === requester && row.subjectDid === subjectDid,
+    )
+    const blockedBy = blockRes.some(
+      (row) => row.creator === subjectDid && row.subjectDid === requester,
+    )
 
     return {
       blocking,
@@ -175,12 +115,12 @@ export class GraphService {
         : undefined,
       indexedAt: list.indexedAt,
       viewer: {
-        blocked: list.viewerBlocked ?? undefined,
+        muted: !!list.viewerMuted,
       },
     }
   }
 }
 
 type ListInfo = List & {
-  viewerBlocked: string | null
+  viewerMuted: string | null
 }

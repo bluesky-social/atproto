@@ -11,7 +11,6 @@ import getRepostedBy from './feed/getRepostedBy'
 import getFollowers from './graph/getFollowers'
 import getFollows from './graph/getFollows'
 import getList from './graph/getList'
-import getListBlocks from './graph/getListBlocks'
 import getLists from './graph/getLists'
 import getBlocks from './graph/getBlocks'
 import getUsersSearch from './actor/searchActors'
@@ -33,7 +32,6 @@ export default function (server: Server, ctx: AppContext) {
   getFollowers(server, ctx)
   getFollows(server, ctx)
   getList(server, ctx)
-  getListBlocks(server, ctx)
   getLists(server, ctx)
   getBlocks(server, ctx)
   getUsersSearch(server, ctx)

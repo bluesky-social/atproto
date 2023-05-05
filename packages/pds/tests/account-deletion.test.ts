@@ -31,7 +31,6 @@ import { UserState } from '../src/db/tables/user-state'
 import { ActorBlock } from '../src/app-view/db/tables/actor-block'
 import { List } from '../src/app-view/db/tables/list'
 import { ListItem } from '../src/app-view/db/tables/list-item'
-import { ListBlock } from '../src/app-view/db/tables/list-block'
 
 describe('account deletion', () => {
   let server: util.TestServerInfo
@@ -204,9 +203,6 @@ describe('account deletion', () => {
     expect(updatedDbContents.listItems).toEqual(
       initialDbContents.listItems.filter((row) => row.creator !== carol.did),
     )
-    expect(updatedDbContents.listBlocks).toEqual(
-      initialDbContents.listBlocks.filter((row) => row.creator !== carol.did),
-    )
     expect(updatedDbContents.reposts).toEqual(
       initialDbContents.reposts.filter((row) => row.creator !== carol.did),
     )
@@ -311,7 +307,6 @@ type DbContents = {
   actorBlocks: ActorBlock[]
   lists: List[]
   listItems: ListItem[]
-  listBlocks: ListBlock[]
   repoBlobs: RepoBlob[]
   blobs: Blob[]
 }
@@ -336,7 +331,6 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     actorBlocks,
     lists,
     listItems,
-    listBlocks,
     repoBlobs,
     blobs,
   ] = await Promise.all([
@@ -386,7 +380,6 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     db.db.selectFrom('actor_block').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('list').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('list_item').orderBy('uri').selectAll().execute(),
-    db.db.selectFrom('list_block').orderBy('uri').selectAll().execute(),
     db.db
       .selectFrom('repo_blob')
       .orderBy('did')
@@ -415,7 +408,6 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     actorBlocks,
     lists,
     listItems,
-    listBlocks,
     repoBlobs,
     blobs,
   }

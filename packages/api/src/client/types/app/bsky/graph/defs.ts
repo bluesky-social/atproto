@@ -8,6 +8,28 @@ import { CID } from 'multiformats/cid'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as AppBskyRichtextFacet from '../richtext/facet'
 
+export interface ListViewBasic {
+  uri: string
+  name: string
+  purpose: ListPurpose
+  avatar?: string
+  viewer?: ListViewerState
+  indexedAt?: string
+  [k: string]: unknown
+}
+
+export function isListViewBasic(v: unknown): v is ListViewBasic {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.graph.defs#listViewBasic'
+  )
+}
+
+export function validateListViewBasic(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.graph.defs#listViewBasic', v)
+}
+
 export interface ListView {
   uri: string
   creator: AppBskyActorDefs.ProfileView

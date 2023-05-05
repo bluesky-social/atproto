@@ -73,7 +73,7 @@ export default function (server: Server, ctx: AppContext) {
           : undefined,
         indexedAt: listRes.indexedAt,
         viewer: {
-          blocked: listRes.viewerBlocked ?? undefined,
+          muted: !!listRes.viewerMuted,
         },
       }
 

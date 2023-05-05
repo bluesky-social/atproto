@@ -5,13 +5,19 @@ import * as scrypt from '../../db/scrypt'
 import { UserAccount } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
-import { countAll, notSoftDeletedClause, nullToZero } from '../../db/util'
+import {
+  DbRef,
+  countAll,
+  notSoftDeletedClause,
+  nullToZero,
+} from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { NotEmptyArray } from '@atproto/common'
 
 export class AccountService {
   constructor(public db: Database) {}
@@ -282,6 +288,27 @@ export class AccountService {
       acc[cur.did] = true
       return acc
     }, {} as Record<string, boolean>)
+  }
+
+  mutedQb(requester: string, refs: NotEmptyArray<DbRef>) {
+    const subjectRefs = sql.join(refs)
+    const actorMute = this.db.db
+      .selectFrom('mute')
+      .where('mutedByDid', '=', requester)
+      .where('did', 'in', sql`(${subjectRefs})`)
+      .select('did as muted')
+    const listMute = this.db.db
+      .selectFrom('list_mute')
+      .innerJoin('list', 'list.uri', 'list_mute.listUri')
+      .innerJoin('list_item', (join) =>
+        join
+          .onRef('list_item.creator', '=', 'list.creator')
+          .onRef('list_item.listUri', '=', 'list.uri'),
+      )
+      .where('list_mute.mutedByDid', '=', requester)
+      .whereRef('list_item.subjectDid', 'in', subjectRefs)
+      .select('list_item.subjectDid as muted')
+    return actorMute.union(listMute)
   }
 
   async search(opts: {

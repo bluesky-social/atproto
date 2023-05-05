@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { cborToLexRecord } from '@atproto/repo'
 import Database from '../../../db'
-import { DbRef, notSoftDeletedClause } from '../../../db/util'
+import { notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
 import { isView as isViewImages } from '../../../lexicon/types/app/bsky/embed/images'
 import { isView as isViewExternal } from '../../../lexicon/types/app/bsky/embed/external'
@@ -13,14 +13,21 @@ import {
 import { PostView } from '../../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
 import { Labels, LabelService } from '../label'
+import { ActorService } from '../actor'
 
 export * from './types'
 
 export class FeedService {
-  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
+  services: {
+    label: LabelService
+    actor: ActorService
+  }
 
-  services = {
-    label: LabelService.creator(),
+  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {
+    this.services = {
+      label: LabelService.creator()(db),
+      actor: ActorService.creator(imgUriBuilder)(db),
+    }
   }
 
   static creator(imgUriBuilder: ImageUriBuilder) {
@@ -82,7 +89,7 @@ export class FeedService {
   ): Promise<ActorViewMap> {
     if (dids.length < 1) return {}
     const { ref } = this.db.db.dynamic
-    const [actors, labels] = await Promise.all([
+    const [actors, labels, listMutes] = await Promise.all([
       this.db.db
         .selectFrom('did_handle')
         .where('did_handle.did', 'in', dids)
@@ -118,10 +125,6 @@ export class FeedService {
             .where('subjectDid', '=', requester)
             .select('uri')
             .as('requesterBlockedBy'),
-          this.listBlockQb(ref('did_handle.did'), requester).as(
-            'blockedByList',
-          ),
-          this.listBlockQb(requester, ref('did_handle.did')).as('blockingList'),
           this.db.db
             .selectFrom('mute')
             .whereRef('did', '=', ref('did_handle.did'))
@@ -130,7 +133,8 @@ export class FeedService {
             .as('requesterMuted'),
         ])
         .execute(),
-      this.services.label(this.db).getLabelsForProfiles(dids),
+      this.services.label.getLabelsForProfiles(dids),
+      this.services.actor.views.getListMutes(dids, requester),
     ])
     return actors.reduce((acc, cur) => {
       return {
@@ -143,9 +147,10 @@ export class FeedService {
             ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
             : undefined,
           viewer: {
-            muted: !!cur?.requesterMuted,
-            blockedBy: !!cur?.requesterBlockedBy || !!cur?.blockedByList,
-            blocking: cur?.requesterBlocking || cur?.blockingList || undefined,
+            muted: !!cur?.requesterMuted || !!listMutes[cur.did],
+            muteByList: listMutes[cur.did],
+            blockedBy: !!cur?.requesterBlockedBy,
+            blocking: cur?.requesterBlocking || undefined,
             following: cur?.requesterFollowing || undefined,
             followedBy: cur?.requesterFollowedBy || undefined,
           },
@@ -251,7 +256,7 @@ export class FeedService {
           requester,
         ),
         this.embedsForPosts(nestedUris, requester, _depth + 1),
-        this.services.label(this.db).getLabelsForSubjects(nestedUris),
+        this.services.label.getLabelsForSubjects(nestedUris),
       ])
     let embeds = images.reduce((acc, cur) => {
       const embed = (acc[cur.postUri] ??= {
@@ -327,32 +332,6 @@ export class FeedService {
       return acc
     }, embeds)
     return embeds
-  }
-
-  listBlockQb(creator: string | DbRef, subject: string | DbRef) {
-    let builder = this.db.db
-      .selectFrom('list_block')
-      .innerJoin('list', 'list.uri', 'list_block.subjectUri')
-      .innerJoin('list_item', (join) =>
-        join
-          .onRef('list_item.creator', '=', 'list.creator')
-          .onRef('list_item.listUri', '=', 'list.uri'),
-      )
-      .select('list_block.uri')
-      .limit(1)
-
-    if (typeof creator === 'string') {
-      builder = builder.where('list_block.creator', '=', creator)
-    } else {
-      builder = builder.whereRef('list_block.creator', '=', creator)
-    }
-    if (typeof subject === 'string') {
-      builder = builder.where('list_item.subjectDid', '=', subject)
-    } else {
-      builder = builder.whereRef('list_item.subjectDid', '=', subject)
-    }
-
-    return builder
   }
 
   formatPostView(

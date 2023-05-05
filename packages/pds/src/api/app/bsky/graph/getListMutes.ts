@@ -1,10 +1,10 @@
-import { Server } from '../../../../../lexicon'
-import { paginate, TimeCidKeyset } from '../../../../../db/pagination'
-import AppContext from '../../../../../context'
-import { ProfileView } from '../../../../../lexicon/types/app/bsky/actor/defs'
+import { Server } from '../../../../lexicon'
+import { paginate, TimeCidKeyset } from '../../../../db/pagination'
+import AppContext from '../../../../context'
+import { ProfileView } from '../../../../lexicon/types/app/bsky/actor/defs'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.graph.getListBlocks({
+  server.app.bsky.graph.getListMutes({
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const { limit, cursor } = params
@@ -18,9 +18,9 @@ export default function (server: Server, ctx: AppContext) {
         .getListsQb(requester)
         .whereExists(
           ctx.db.db
-            .selectFrom('list_block')
-            .where('list_block.creator', '=', requester)
-            .whereRef('list_block.subjectUri', '=', ref('list.uri'))
+            .selectFrom('list_mute')
+            .where('list_mute.mutedByDid', '=', requester)
+            .whereRef('list_mute.listUri', '=', ref('list.uri'))
             .selectAll(),
         )
 

@@ -46,20 +46,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
-    .createTable('list_block')
-    .addColumn('uri', 'varchar', (col) => col.primaryKey())
-    .addColumn('cid', 'varchar', (col) => col.notNull())
-    .addColumn('creator', 'varchar', (col) => col.notNull())
-    .addColumn('subjectUri', 'varchar', (col) => col.notNull())
+    .createTable('list_mute')
+    .addColumn('listUri', 'varchar', (col) => col.notNull())
+    .addColumn('mutedByDid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
-    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .addUniqueConstraint('list_block_unique_subject', ['creator', 'subjectUri'])
-    .execute()
-
-  await db.schema
-    .createIndex('list_block_subject_idx')
-    .on('list_block')
-    .column('subjectUri')
+    .addPrimaryKeyConstraint('list_mute_pkey', ['mutedByDid', 'listUri'])
     .execute()
 
   // missed index in `actor-block-init` migration
@@ -73,9 +64,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropIndex('list_creator_idx').execute()
   await db.schema.dropIndex('list_item_subject_idx').execute()
-  await db.schema.dropIndex('list_block_subject_idx').execute()
   await db.schema.dropIndex('actor_block_creator_idx').execute()
   await db.schema.dropTable('list').execute()
   await db.schema.dropTable('list_item').execute()
-  await db.schema.dropTable('list_block').execute()
+  await db.schema.dropTable('list_mute').execute()
 }

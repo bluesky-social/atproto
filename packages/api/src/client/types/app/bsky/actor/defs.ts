@@ -84,7 +84,7 @@ export function validateProfileViewDetailed(v: unknown): ValidationResult {
 
 export interface ViewerState {
   muted?: boolean
-  mutedByList?: AppBskyGraphDefs.ListView
+  mutedByList?: AppBskyGraphDefs.ListViewBasic
   blockedBy?: boolean
   blocking?: string
   following?: string
