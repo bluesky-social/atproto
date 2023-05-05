@@ -1,9 +1,9 @@
-import { Server } from '../../../../lexicon'
-import { FeedKeyset, composeFeed } from './util/feed'
-import { paginate } from '../../../../db/pagination'
-import AppContext from '../../../../context'
-import { FeedRow } from '../../../services/feed'
-import { FeedViewPost } from '../../../../lexicon/types/app/bsky/feed/defs'
+import { Server } from '../../../../../lexicon'
+import { FeedKeyset, composeFeed } from '../util/feed'
+import { paginate } from '../../../../../db/pagination'
+import AppContext from '../../../../../context'
+import { FeedRow } from '../../../../services/feed'
+import { FeedViewPost } from '../../../../../lexicon/types/app/bsky/feed/defs'
 import { NotEmptyArray } from '@atproto/common'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [

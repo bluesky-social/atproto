@@ -16,7 +16,8 @@ import getUsersTypeahead from './actor/searchActorsTypeahead'
 import getSuggestions from './actor/getSuggestions'
 import listNotifications from './notification/listNotifications'
 import getUnreadCount from './notification/getUnreadCount'
-import unspecced from './unspecced'
+import getPopular from './unspecced/getPopular'
+import fromNetwork from './unspecced/fromNetwork'
 
 export default function (server: Server, ctx: AppContext) {
   getTimeline(server, ctx)
@@ -35,5 +36,6 @@ export default function (server: Server, ctx: AppContext) {
   getSuggestions(server, ctx)
   listNotifications(server, ctx)
   getUnreadCount(server, ctx)
-  unspecced(server, ctx)
+  getPopular(server, ctx)
+  fromNetwork(server, ctx)
 }

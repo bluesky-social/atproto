@@ -100,6 +100,7 @@ import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notificatio
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
+import * as AppBskyUnspeccedFromNetwork from './types/app/bsky/unspecced/fromNetwork'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
@@ -195,6 +196,7 @@ export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notificatio
 export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
+export * as AppBskyUnspeccedFromNetwork from './types/app/bsky/unspecced/fromNetwork'
 export * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 
 export const COM_ATPROTO_ADMIN = {
@@ -1596,6 +1598,17 @@ export class UnspeccedNS {
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  fromNetwork(
+    params?: AppBskyUnspeccedFromNetwork.QueryParams,
+    opts?: AppBskyUnspeccedFromNetwork.CallOptions,
+  ): Promise<AppBskyUnspeccedFromNetwork.Response> {
+    return this._service.xrpc
+      .call('app.bsky.unspecced.fromNetwork', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedFromNetwork.toKnownErr(e)
+      })
   }
 
   getPopular(

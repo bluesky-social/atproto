@@ -84,6 +84,7 @@ import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+import * as AppBskyUnspeccedFromNetwork from './types/app/bsky/unspecced/fromNetwork'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 
 export const COM_ATPROTO_ADMIN = {
@@ -881,6 +882,13 @@ export class UnspeccedNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  fromNetwork<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyUnspeccedFromNetwork.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.unspecced.fromNetwork' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   getPopular<AV extends AuthVerifier>(
