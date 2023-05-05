@@ -290,6 +290,31 @@ export class AccountService {
     }, {} as Record<string, boolean>)
   }
 
+  async subscribeMuteList(info: {
+    list: string
+    mutedByDid: string
+    createdAt?: Date
+  }) {
+    const { list, mutedByDid, createdAt = new Date() } = info
+    await this.db.db
+      .insertInto('list_mute')
+      .values({
+        listUri: list,
+        mutedByDid,
+        createdAt: createdAt.toISOString(),
+      })
+      .execute()
+  }
+
+  async unsubscribeMuteList(info: { list: string; mutedByDid: string }) {
+    const { list, mutedByDid } = info
+    await this.db.db
+      .deleteFrom('list_mute')
+      .where('listUri', '=', list)
+      .where('mutedByDid', '=', mutedByDid)
+      .execute()
+  }
+
   mutedQb(requester: string, refs: NotEmptyArray<DbRef>) {
     const subjectRefs = sql.join(refs)
     const actorMute = this.db.db
