@@ -25,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
       const { ref } = db.dynamic
 
       const feedService = ctx.services.appView.feed(ctx.db)
-      const actorService = ctx.services.appView.actor(ctx.db)
+      const graphService = ctx.services.appView.graph(ctx.db)
       const labelService = ctx.services.appView.label(ctx.db)
 
       const labelsToFilter = includeNsfw
@@ -54,7 +54,7 @@ export default function (server: Server, ctx: AppContext) {
             .where('mutedByDid', '=', requester)
             .whereRef('did', '=', ref('post.creator')),
         )
-        .whereNotExists(actorService.blockQb(requester, [ref('post.creator')]))
+        .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
 
       const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))
 

@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('The seenAt parameter is unsupported')
       }
 
-      const actorService = ctx.services.appView.actor(ctx.db)
+      const graphService = ctx.services.appView.graph(ctx.db)
 
       let notifBuilder = ctx.db.db
         .selectFrom('user_notification as notif')
@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
             .whereRef('did', '=', ref('notif.author'))
             .where('mutedByDid', '=', requester),
         )
-        .whereNotExists(actorService.blockQb(requester, [ref('notif.author')]))
+        .whereNotExists(graphService.blockQb(requester, [ref('notif.author')]))
         .where((clause) =>
           clause
             .where('reasonSubject', 'is', null)
@@ -95,6 +95,8 @@ export default function (server: Server, ctx: AppContext) {
             .whereRef(sql`(creator, cid)`, 'in', valuesList(recordTuples))
             .select(['cid', 'content as bytes'])
         : null
+
+      const actorService = ctx.services.appView.actor(ctx.db)
 
       // @NOTE calling into app-view, will eventually be replaced
       const labelService = ctx.services.appView.label(ctx.db)

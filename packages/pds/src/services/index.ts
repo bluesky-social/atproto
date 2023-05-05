@@ -10,6 +10,7 @@ import { RecordService } from './record'
 import { RepoService } from './repo'
 import { ModerationService } from './moderation'
 import { ActorService } from '../app-view/services/actor'
+import { GraphService } from '../app-view/services/graph'
 import { FeedService } from '../app-view/services/feed'
 import { IndexingService } from '../app-view/services/indexing'
 import { Labeler } from '../labeler'
@@ -55,6 +56,7 @@ export function createServices(resources: {
     ),
     appView: {
       actor: ActorService.creator(imgUriBuilder),
+      graph: GraphService.creator(imgUriBuilder),
       feed: FeedService.creator(imgUriBuilder),
       indexing: IndexingService.creator(backgroundQueue),
       label: LabelService.creator(),
@@ -72,6 +74,7 @@ export type Services = {
     feed: FromDb<FeedService>
     indexing: FromDb<IndexingService>
     actor: FromDb<ActorService>
+    graph: FromDb<GraphService>
     label: FromDb<LabelService>
   }
 }

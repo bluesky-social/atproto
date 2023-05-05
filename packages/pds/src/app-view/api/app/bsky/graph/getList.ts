@@ -13,42 +13,20 @@ export default function (server: Server, ctx: AppContext) {
       const { services, db } = ctx
       const { ref } = db.db.dynamic
 
-      const listRes = await ctx.db.db
-        .selectFrom('list')
-        .innerJoin('did_handle', 'did_handle.did', 'list.creator')
-        .where('list.uri', '=', list)
-        .selectAll('list')
-        .selectAll('did_handle')
-        .select(
-          ctx.db.db
-            .selectFrom('list_block')
-            .where('list_block.creator', '=', requester)
-            .whereRef('list_block.subjectUri', '=', ref('list.uri'))
-            .select('list_block.uri')
-            .as('viewerBlocked'),
-        )
-        .executeTakeFirst()
+      const graphService = ctx.services.appView.graph(ctx.db)
 
+      const listRes = await graphService
+        .getListsQb(requester)
+        .where('list.uri', '=', list)
+        .executeTakeFirst()
       if (!listRes) {
         throw new InvalidRequestError(`List not found: ${list}`)
       }
 
-      let itemsReq = ctx.db.db
-        .selectFrom('list_item')
+      let itemsReq = graphService
+        .getListItemsQb()
         .where('list_item.listUri', '=', list)
         .where('list_item.creator', '=', listRes.creator)
-        .innerJoin(
-          'did_handle as subject',
-          'subject.did',
-          'list_item.subjectDid',
-        )
-        .selectAll('subject')
-        .select([
-          'list_item.cid as cid',
-          'list_item.createdAt as createdAt',
-          'list_item.reason as reason',
-          'list_item.reasonFacets as reasonFacets',
-        ])
 
       const keyset = new TimeCidKeyset(
         ref('list_item.createdAt'),

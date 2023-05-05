@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
 
       // first verify there is not a block between requester & subject
       const blocks = await ctx.services.appView
-        .actor(ctx.db)
+        .graph(ctx.db)
         .getBlocks(requester, actor)
       if (blocks.blocking) {
         throw new InvalidRequestError(

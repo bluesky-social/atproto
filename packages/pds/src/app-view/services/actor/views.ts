@@ -9,7 +9,6 @@ import Database from '../../../db'
 import { ImageUriBuilder } from '../../../image/uri'
 import { LabelService } from '../label'
 import { DbRef } from '../../../db/util'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export class ActorViews {
   constructor(private db: Database, private imgUriBuilder: ImageUriBuilder) {}

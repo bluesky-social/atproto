@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const feedService = ctx.services.appView.feed(ctx.db)
-      const actorService = ctx.services.appView.actor(ctx.db)
+      const graphService = ctx.services.appView.graph(ctx.db)
       const labelService = ctx.services.appView.label(ctx.db)
 
       const followingIdsSubquery = db
@@ -49,7 +49,7 @@ export default function (server: Server, ctx: AppContext) {
           ),
         )
         .whereNotExists(
-          actorService.blockQb(requester, [
+          graphService.blockQb(requester, [
             ref('post.creator'),
             ref('originatorDid'),
           ]),

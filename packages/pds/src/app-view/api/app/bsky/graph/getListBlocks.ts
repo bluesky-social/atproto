@@ -12,25 +12,16 @@ export default function (server: Server, ctx: AppContext) {
       const { db } = ctx
       const { ref } = db.db.dynamic
 
-      let listsReq = ctx.db.db
-        .selectFrom('list')
-        .innerJoin('did_handle', 'did_handle.did', 'list.creator')
+      const graphService = ctx.services.appView.graph(ctx.db)
+
+      let listsReq = graphService
+        .getListsQb(requester)
         .whereExists(
           ctx.db.db
             .selectFrom('list_block')
             .where('list_block.creator', '=', requester)
             .whereRef('list_block.subjectUri', '=', ref('list.uri'))
             .selectAll(),
-        )
-        .selectAll('list')
-        .selectAll('did_handle')
-        .select(
-          ctx.db.db
-            .selectFrom('list_block')
-            .where('list_block.creator', '=', requester)
-            .whereRef('list_block.subjectUri', '=', ref('list.uri'))
-            .select('list_block.uri')
-            .as('viewerBlocked'),
         )
 
       const keyset = new TimeCidKeyset(ref('list.createdAt'), ref('list.cid'))
@@ -51,23 +42,9 @@ export default function (server: Server, ctx: AppContext) {
         {} as Record<string, ProfileView>,
       )
 
-      const lists = listsRes.map((row) => ({
-        uri: row.uri,
-        creator: profilesMap[row.creator],
-        name: row.name,
-        purpose: row.purpose,
-        description: row.description ?? undefined,
-        descriptionFacets: row.descriptionFacets
-          ? JSON.parse(row.descriptionFacets)
-          : undefined,
-        avatar: row.avatarCid
-          ? ctx.imgUriBuilder.getCommonSignedUri('avatar', row.avatarCid)
-          : undefined,
-        indexedAt: row.indexedAt,
-        viewer: {
-          blocked: row.viewerBlocked ?? undefined,
-        },
-      }))
+      const lists = listsRes.map((row) =>
+        graphService.formatListView(row, profilesMap),
+      )
 
       return {
         encoding: 'application/json',
