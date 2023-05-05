@@ -228,7 +228,7 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
 }
 export const APP_BSKY_GRAPH = {
-  DefsModlocklist: 'app.bsky.graph.defs#modlocklist',
+  DefsModlist: 'app.bsky.graph.defs#modlist',
 }
 
 export class AtpBaseClient {

@@ -77,7 +77,7 @@ export function validateListItemView(v: unknown): ValidationResult {
 export type ListPurpose = 'app.bsky.graph.defs#modlist' | (string & {})
 
 /** A list of actors to apply an aggregate moderation on */
-export const MODLOCKLIST = 'app.bsky.graph.defs#modlocklist'
+export const MODLIST = 'app.bsky.graph.defs#modlist'
 
 export interface ListViewerState {
   muted?: boolean

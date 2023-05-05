@@ -4698,7 +4698,7 @@ export const schemaDict = {
         type: 'string',
         knownValues: ['app.bsky.graph.defs#modlist'],
       },
-      modlocklist: {
+      modlist: {
         type: 'token',
         description: 'A list of actors to apply an aggregate moderation on',
       },
