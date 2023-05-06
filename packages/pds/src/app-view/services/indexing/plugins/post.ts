@@ -208,16 +208,18 @@ const notifsForInsert = (obj: IndexedPost) => {
   }
   const ancestors = [...obj.ancestors].sort((a, b) => a.depth - b.depth)
   for (const relation of ancestors) {
-    const ancestorUri = new AtUri(relation.ancestorUri)
-    maybeNotify({
-      userDid: ancestorUri.host,
-      reason: 'reply',
-      reasonSubject: ancestorUri.toString(),
-      author: obj.post.creator,
-      recordUri: obj.post.uri,
-      recordCid: obj.post.cid,
-      indexedAt: obj.post.indexedAt,
-    })
+    if (relation.depth < 5) {
+      const ancestorUri = new AtUri(relation.ancestorUri)
+      maybeNotify({
+        userDid: ancestorUri.host,
+        reason: 'reply',
+        reasonSubject: ancestorUri.toString(),
+        author: obj.post.creator,
+        recordUri: obj.post.uri,
+        recordCid: obj.post.cid,
+        indexedAt: obj.post.indexedAt,
+      })
+    }
   }
   return notifs
 }
