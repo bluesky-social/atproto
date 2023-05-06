@@ -186,6 +186,18 @@ export class PDS {
     }
 
     app.use(health.createRouter(ctx))
+    app.get('/', function (req, res) {
+      res.type('text/plain')
+      res.send(
+        'This is an AT Protocol Personal Data Server (PDS): https://github.com/bluesky-social/atproto\n\nMost API routes are under /xrpc/',
+      )
+    })
+    app.get('/robots.txt', function (req, res) {
+      res.type('text/plain')
+      res.send(
+        '# Hello!\n\n# Crawling the public API is allowed\nUser-agent: *\nAllow: /',
+      )
+    })
     app.use(server.xrpc.router)
     app.use(error.handler)
 
