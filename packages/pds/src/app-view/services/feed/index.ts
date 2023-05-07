@@ -33,6 +33,7 @@ export class FeedService {
       .selectFrom('post')
       .innerJoin('repo_root as author_repo', 'author_repo.did', 'post.creator')
       .innerJoin('record', 'record.uri', 'post.uri')
+      .where('post.replyBlocked', '=', 0)
       .where(notSoftDeletedClause(ref('author_repo')))
       .where(notSoftDeletedClause(ref('record')))
       .select([
@@ -65,6 +66,7 @@ export class FeedService {
         'post_record.uri',
         'feed_item.postUri',
       )
+      .where('post.replyBlocked', '=', 0)
       .where(notSoftDeletedClause(ref('author_repo')))
       .where(notSoftDeletedClause(ref('originator_repo')))
       .where(notSoftDeletedClause(ref('post_record')))
@@ -171,6 +173,7 @@ export class FeedService {
       )
       .innerJoin('repo_root', 'repo_root.did', 'post.creator')
       .innerJoin('record', 'record.uri', 'post.uri')
+      .where('post.replyBlocked', '=', 0)
       .where(notSoftDeletedClause(ref('repo_root'))) // Ensures post reply parent/roots get omitted from views when taken down
       .where(notSoftDeletedClause(ref('record')))
       .select([

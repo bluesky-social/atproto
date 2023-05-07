@@ -90,11 +90,8 @@ const composeThread = (
     }
   }
 
-  if (
-    threadData.post.replyBlocked ||
-    post.author.viewer?.blocking ||
-    post.author.viewer?.blockedBy
-  ) {
+  if (post.author.viewer?.blocking || post.author.viewer?.blockedBy) {
+    // Globally blocked replies via post.replyBlocked are fully filtered out of results.
     return {
       $type: 'app.bsky.feed.defs#blockedPost',
       uri: threadData.post.postUri,
