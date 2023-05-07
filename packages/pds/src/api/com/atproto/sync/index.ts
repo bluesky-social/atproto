@@ -1,6 +1,6 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-// import getBlob from './getBlob'
+import getBlob from './getBlob'
 import getBlocks from './getBlocks'
 import getCheckout from './getCheckout'
 import getCommitPath from './getCommitPath'
@@ -12,7 +12,7 @@ import listBlobs from './listBlobs'
 import listRepos from './listRepos'
 
 export default function (server: Server, ctx: AppContext) {
-  // getBlob(server, ctx)
+  getBlob(server, ctx)
   getBlocks(server, ctx)
   getCheckout(server, ctx)
   getCommitPath(server, ctx)
