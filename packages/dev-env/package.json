@@ -4,7 +4,11 @@
   "main": "src/test-env.ts",
   "bin": "dist/cli.js",
   "license": "MIT",
-  "repository": "git@github.com:bluesky-social/atproto.git",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto.git",
+    "directory": "packages/dev-env"
+  },
   "scripts": {
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
