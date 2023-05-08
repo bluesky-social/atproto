@@ -133,7 +133,7 @@ export const sexualLabels = (classes: HiveRespClass[]): string[] => {
   // as a stop gap, we label underwear posts as !no-promote to keep them out of what's hot
   for (const nudityClass of ['yes_male_underwear', 'yes_female_underwear']) {
     if (scores[nudityClass] >= 0.9) {
-      return ['!no-promote']
+      return ['underwear']
     }
   }
 
