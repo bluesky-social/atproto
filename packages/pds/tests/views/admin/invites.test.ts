@@ -1,26 +1,30 @@
 import AtpAgent from '@atproto/api'
-import { runTestServer, CloseFn, adminAuth, moderatorAuth } from '../../_util'
+import {
+  runTestServer,
+  adminAuth,
+  moderatorAuth,
+  TestServerInfo,
+} from '../../_util'
 import { randomStr } from '@atproto/crypto'
 import { SeedClient } from '../../seeds/client'
 
 describe('pds admin invite views', () => {
   let agent: AtpAgent
   let sc: SeedClient
-  let close: CloseFn
+  let server: TestServerInfo
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    server = await runTestServer({
       dbPostgresSchema: 'views_admin_invites',
       inviteRequired: true,
       userInviteInterval: 1,
     })
-    close = server.close
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
   })
 
   afterAll(async () => {
-    await close()
+    await server.close()
   })
 
   let alice: string
@@ -226,6 +230,16 @@ describe('pds admin invite views', () => {
       { headers: sc.getHeaders(carol) },
     )
     expect(res.data.codes.length).toBe(0)
+  })
+
+  it('creates codes in the background but disables them', async () => {
+    const res = await server.ctx.db.db
+      .selectFrom('invite_code')
+      .where('forUser', '=', carol)
+      .selectAll()
+      .execute()
+    expect(res.length).toBe(5)
+    expect(res.every((row) => row.disabled === 1))
   })
 
   it('does not allow non-admin moderations to disable account invites', async () => {
