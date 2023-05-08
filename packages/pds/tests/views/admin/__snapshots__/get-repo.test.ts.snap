@@ -9,6 +9,7 @@ Object {
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "invites": Array [],
+  "invitesDisabled": false,
   "labels": Array [],
   "moderation": Object {
     "actions": Array [
@@ -101,6 +102,7 @@ Object {
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "invites": Array [],
+  "invitesDisabled": false,
   "labels": Array [
     Object {
       "cts": "1970-01-01T00:00:00.000Z",

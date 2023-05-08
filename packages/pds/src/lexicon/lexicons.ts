@@ -333,6 +333,9 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.server.defs#inviteCode',
           },
+          invitesDisabled: {
+            type: 'boolean',
+          },
         },
       },
       repoViewDetail: {
@@ -387,6 +390,9 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.server.defs#inviteCode',
             },
+          },
+          invitesDisabled: {
+            type: 'boolean',
           },
         },
       },

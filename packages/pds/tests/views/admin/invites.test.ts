@@ -224,11 +224,17 @@ describe('pds admin invite views', () => {
       { encoding: 'application/json', headers: { authorization: adminAuth() } },
     )
 
-    const res = await agent.api.com.atproto.server.getAccountInviteCodes(
+    const repoRes = await agent.api.com.atproto.admin.getRepo(
+      { did: carol },
+      { headers: { authorization: adminAuth() } },
+    )
+    expect(repoRes.data.invitesDisabled).toBe(true)
+
+    const invRes = await agent.api.com.atproto.server.getAccountInviteCodes(
       {},
       { headers: sc.getHeaders(carol) },
     )
-    expect(res.data.codes.length).toBe(0)
+    expect(invRes.data.codes.length).toBe(0)
   })
 
   it('creates codes in the background but disables them', async () => {
@@ -258,11 +264,17 @@ describe('pds admin invite views', () => {
       { encoding: 'application/json', headers: { authorization: adminAuth() } },
     )
 
-    const res = await agent.api.com.atproto.server.getAccountInviteCodes(
+    const repoRes = await agent.api.com.atproto.admin.getRepo(
+      { did: carol },
+      { headers: { authorization: adminAuth() } },
+    )
+    expect(repoRes.data.invitesDisabled).toBe(false)
+
+    const invRes = await agent.api.com.atproto.server.getAccountInviteCodes(
       {},
       { headers: sc.getHeaders(carol) },
     )
-    expect(res.data.codes.length).toBeGreaterThan(0)
+    expect(invRes.data.codes.length).toBeGreaterThan(0)
   })
 
   it('does not allow non-admin moderations to enable account invites', async () => {
