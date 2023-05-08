@@ -15,6 +15,7 @@
           "maxLength": 640
         },
         "avatar": { "type": "string" },
+        "actorType": {"type": "ref", "ref": "#actorType"},
         "viewer": {"type": "ref", "ref": "#viewerState"},
         "labels": {
           "type": "array",
@@ -39,6 +40,7 @@
           "maxLength": 2560
         },
         "avatar": { "type": "string" },
+        "actorType": {"type": "ref", "ref": "#actorType"},
         "indexedAt": {"type": "string", "format": "datetime"},
         "viewer": {"type": "ref", "ref": "#viewerState"},
         "labels": {
@@ -64,6 +66,7 @@
           "maxLength": 2560
         },
         "avatar": { "type": "string" },
+        "actorType": {"type": "ref", "ref": "#actorType"},
         "banner": { "type": "string" },
         "followersCount": {"type": "integer"},
         "followsCount": {"type": "integer"},
@@ -85,6 +88,21 @@
         "following": {"type": "string", "format": "at-uri"},
         "followedBy": {"type": "string", "format": "at-uri"}
       }
+    },
+    "actorType": {
+      "type": "string",
+      "knownValues":[
+        "app.bsky.actor.defs#user",
+        "app.bsky.actor.defs#feedGenerator"
+      ]
+    },
+    "user": {
+      "type": "token",
+      "description": "Actor type: User. This is the default option and an actor is assumed to be a user unless suggested otherwise."
+    },
+    "feedGenerator": {
+      "type": "token",
+      "description": "Actor type: Feed Generator. A service that provides a custom feed."
     }
   }
 }
