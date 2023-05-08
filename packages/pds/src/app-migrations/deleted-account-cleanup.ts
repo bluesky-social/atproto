@@ -11,6 +11,8 @@ export async function deletedAccountCleanupMigration(ctx: AppContext) {
 }
 
 async function main(tx: Database, ctx: AppContext) {
+  log('beginning')
+
   const softDeletedAccounts = await tx.db
     .selectFrom('moderation_action')
     .innerJoin('repo_root', (join) =>
@@ -40,6 +42,7 @@ async function main(tx: Database, ctx: AppContext) {
         break
       }
       try {
+        log(did, 'starting clean-up')
         await ctx.services.record(ctx.db).deleteForActor(did)
         await ctx.services.repo(ctx.db).deleteRepo(did)
         await ctx.services.account(ctx.db).deleteAccount(did)
