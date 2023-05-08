@@ -8,7 +8,7 @@ export async function up(db: Kysely<Schema>): Promise<void> {
     .execute()
   await db.schema
     .alterTable('post_embed_record')
-    .addColumn('blocked', 'int2', (col) => col.defaultTo(0).notNull())
+    .addColumn('embedBlocked', 'int2', (col) => col.defaultTo(0).notNull())
     .execute()
   // data migration
   const { ref } = db.dynamic
@@ -20,7 +20,7 @@ export async function up(db: Kysely<Schema>): Promise<void> {
   const embedPostPair = sql`(${ref('embed.creator')}, ${ref('post.creator')})`
   await db
     .updateTable('post_embed_record as update_embed')
-    .set({ blocked: 1 })
+    .set({ embedBlocked: 1 })
     .whereExists((qb) =>
       qb
         .selectFrom('post_embed_record as match_embed')
@@ -70,7 +70,7 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.alterTable('post').dropColumn('replyBlocked').execute()
   await db.schema
     .alterTable('post_embed_record')
-    .dropColumn('blocked')
+    .dropColumn('embedBlocked')
     .execute()
 }
 
@@ -84,7 +84,7 @@ interface PostEmbedRecord {
   postUri: string
   embedUri: string
   embedCid: string
-  blocked: 0 | 1
+  embedBlocked: 0 | 1
 }
 
 interface Post {

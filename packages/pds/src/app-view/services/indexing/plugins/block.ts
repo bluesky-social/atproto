@@ -38,7 +38,7 @@ const insertFn = async (
     return null
   }
   await updateEmbedsQb(db, [inserted.creator, inserted.subjectDid])
-    .set({ blocked: 1 })
+    .set({ embedBlocked: 1 })
     .execute()
   await updateRepliesQb(db, [inserted.creator, inserted.subjectDid])
     .set({ replyBlocked: 1 })
@@ -79,7 +79,7 @@ const deleteFn = async (
   const blockPair = [deleted.creator, deleted.subjectDid]
   const remainingBlock = await hasBlock(db, blockPair)
   if (!remainingBlock) {
-    await updateEmbedsQb(db, blockPair).set({ blocked: 0 }).execute()
+    await updateEmbedsQb(db, blockPair).set({ embedBlocked: 0 }).execute()
     await updateRepliesQb(db, blockPair).set({ replyBlocked: 0 }).execute()
   }
   return deleted

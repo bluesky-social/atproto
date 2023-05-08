@@ -236,7 +236,12 @@ export class FeedService {
       .selectFrom('post_embed_record')
       .innerJoin('record as embed', 'embed.uri', 'embedUri')
       .where('postUri', 'in', uris)
-      .select(['postUri', 'embed.uri as uri', 'embed.did as did', 'blocked'])
+      .select([
+        'postUri',
+        'embed.uri as uri',
+        'embed.did as did',
+        'embedBlocked',
+      ])
       .execute()
     const [images, externals, records] = await Promise.all([
       imgPromise,
@@ -372,12 +377,12 @@ function truncateUtf8(str: string | null | undefined, length: number) {
 }
 
 function getRecordEmbedView(
-  embedRow: { uri: string; blocked: 0 | 1 },
+  embedRow: { uri: string; embedBlocked: 0 | 1 },
   post?: PostView,
   embeds?: ViewRecord['embeds'],
 ): (ViewRecord | ViewNotFound | ViewBlocked) & { $type: string } {
-  const { blocked, uri } = embedRow
-  if (blocked) {
+  const { embedBlocked, uri } = embedRow
+  if (embedBlocked) {
     // Blocked for third-parties
     return {
       $type: 'app.bsky.embed.record#viewBlocked',

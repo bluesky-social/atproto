@@ -137,7 +137,7 @@ const insertFn = async (
         postUri: uri.toString(),
         embedUri: record.uri,
         embedCid: record.cid,
-        blocked: dbBool(blocked),
+        embedBlocked: dbBool(blocked),
       }
       embeds.push(recordEmbed)
       await db.insertInto('post_embed_record').values(recordEmbed).execute()
