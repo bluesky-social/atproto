@@ -100,6 +100,7 @@ export class AccountService {
         did,
         passwordScrypt,
         createdAt: new Date().toISOString(),
+        invitesDisabled: 0,
       })
       .onConflict((oc) => oc.doNothing())
       .returning('did')

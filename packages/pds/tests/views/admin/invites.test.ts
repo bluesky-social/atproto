@@ -224,7 +224,6 @@ describe('pds admin invite views', () => {
       { encoding: 'application/json', headers: { authorization: adminAuth() } },
     )
 
-    // does not disable existing invites
     const res = await agent.api.com.atproto.server.getAccountInviteCodes(
       {},
       { headers: sc.getHeaders(carol) },
