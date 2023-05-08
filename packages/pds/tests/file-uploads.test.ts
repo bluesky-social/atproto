@@ -134,7 +134,8 @@ describe('file uploads', () => {
     expect(uint8arrays.equals(smallFile, storedBytes)).toBeTruthy()
   })
 
-  it('can fetch the file after being referenced', async () => {
+  // @TODO re-enable when blob sync is turned back on
+  it.skip('can fetch the file after being referenced', async () => {
     const { headers, data } = await aliceAgent.api.com.atproto.sync.getBlob({
       did: alice.did,
       cid: smallBlob.ref.toString(),
