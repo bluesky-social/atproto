@@ -176,3 +176,57 @@ export function isBlockedPost(v: unknown): v is BlockedPost {
 export function validateBlockedPost(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#blockedPost', v)
 }
+
+export interface SkeletonFeedPost {
+  post: string
+  replyTo?: SkeletonReplyRef
+  reason?: SkeletonReasonRepost | { $type: string; [k: string]: unknown }
+  [k: string]: unknown
+}
+
+export function isSkeletonFeedPost(v: unknown): v is SkeletonFeedPost {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#skeletonFeedPost'
+  )
+}
+
+export function validateSkeletonFeedPost(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#skeletonFeedPost', v)
+}
+
+export interface SkeletonReplyRef {
+  root: string
+  parent: string
+  [k: string]: unknown
+}
+
+export function isSkeletonReplyRef(v: unknown): v is SkeletonReplyRef {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#skeletonReplyRef'
+  )
+}
+
+export function validateSkeletonReplyRef(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#skeletonReplyRef', v)
+}
+
+export interface SkeletonReasonRepost {
+  by: string
+  [k: string]: unknown
+}
+
+export function isSkeletonReasonRepost(v: unknown): v is SkeletonReasonRepost {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#skeletonReasonRepost'
+  )
+}
+
+export function validateSkeletonReasonRepost(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#skeletonReasonRepost', v)
+}

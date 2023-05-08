@@ -89,6 +89,9 @@
         "followedBy": {"type": "string", "format": "at-uri"}
       }
     },
+    "actorInfo": {
+
+    },
     "actorType": {
       "type": "string",
       "knownValues":[
