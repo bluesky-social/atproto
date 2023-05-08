@@ -3,6 +3,7 @@ import { Database } from '../../src'
 import { CloseFn, runTestServer } from '../_util'
 import { RecordRef, SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
+import { dataMigrationQbs } from '../../src/db/migrations/20230504T210229992Z-block-third-party'
 
 describe('block third-party data migration', () => {
   let db: Database
@@ -66,7 +67,20 @@ describe('block third-party data migration', () => {
         [sc.posts[dan][1].ref.uriStr]: sc.posts[carol][0].ref.uriStr,
       },
     }
+    const reset = async () => {
+      await db.db.updateTable('post').set({ replyBlocked: 0 }).execute()
+      await db.db
+        .updateTable('post_embed_record')
+        .set({ embedBlocked: 0 })
+        .execute()
+    }
+    const migrate = async () => {
+      for (const qb of migrationQbs) {
+        await qb.execute()
+      }
+    }
 
+    const migrationQbs = dataMigrationQbs(db.db)
     // setup, dan blocks carol
     const danBlocksCarol = await agent.api.app.bsky.graph.block.create(
       { repo: dan },
@@ -75,9 +89,9 @@ describe('block third-party data migration', () => {
     )
     await expect(getBlocked()).resolves.toEqual(blockFixture)
 
-    // migrate down then back up, should land in same state
-    await db.migrateToOrThrow('_20230428T195614638Z')
-    await db.migrateToLatestOrThrow()
+    // reset then migrate, should land in same state
+    await reset()
+    await migrate()
     await expect(getBlocked()).resolves.toEqual(blockFixture)
 
     // setup, carol blocks dan (testing symmetry of blocks)
@@ -92,9 +106,9 @@ describe('block third-party data migration', () => {
     )
     await expect(getBlocked()).resolves.toEqual(blockFixture)
 
-    // migrate down then back up, should land in same state
-    await db.migrateToOrThrow('_20230428T195614638Z')
-    await db.migrateToLatestOrThrow()
+    // reset then migrate, should land in same state
+    await reset()
+    await migrate()
     await expect(getBlocked()).resolves.toEqual(blockFixture)
   })
 })

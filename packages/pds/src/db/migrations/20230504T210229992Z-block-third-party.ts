@@ -1,7 +1,6 @@
 import { Kysely, sql } from 'kysely'
 
-export async function up(db: Kysely<Schema>): Promise<void> {
-  // schema migration
+export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .alterTable('post')
     .addColumn('replyBlocked', 'int2', (col) => col.defaultTo(0).notNull())
@@ -10,6 +9,17 @@ export async function up(db: Kysely<Schema>): Promise<void> {
     .alterTable('post_embed_record')
     .addColumn('embedBlocked', 'int2', (col) => col.defaultTo(0).notNull())
     .execute()
+}
+
+export async function down(db: Kysely<unknown>): Promise<void> {
+  await db.schema.alterTable('post').dropColumn('replyBlocked').execute()
+  await db.schema
+    .alterTable('post_embed_record')
+    .dropColumn('embedBlocked')
+    .execute()
+}
+
+export function dataMigrationQbs(db: Kysely<Schema>) {
   // data migration
   const { ref } = db.dynamic
   const blockPair = sql`(${ref('actor_block.creator')}, ${ref(
@@ -18,7 +28,7 @@ export async function up(db: Kysely<Schema>): Promise<void> {
   // embed blocked when there's a block relationship between poster and embed author
   const postEmbedPair = sql`(${ref('post.creator')}, ${ref('embed.creator')})`
   const embedPostPair = sql`(${ref('embed.creator')}, ${ref('post.creator')})`
-  await db
+  const migrateEmbedsQb = db
     .updateTable('post_embed_record as update_embed')
     .set({ embedBlocked: 1 })
     .whereExists((qb) =>
@@ -37,7 +47,6 @@ export async function up(db: Kysely<Schema>): Promise<void> {
         .whereRef('update_embed.postUri', '=', 'match_embed.postUri')
         .whereRef('update_embed.embedUri', '=', 'match_embed.embedUri'),
     )
-    .execute()
 
   // reply blocked when there's a block relationship between poster and reply author
   const postReplyPair = sql`(${ref('parent.creator')}, ${ref(
@@ -46,7 +55,7 @@ export async function up(db: Kysely<Schema>): Promise<void> {
   const replyPostPair = sql`(${ref('match_reply.creator')}, ${ref(
     'parent.creator',
   )})`
-  await db
+  const migrateRepliesQb = db
     .updateTable('post as update_post')
     .set({ replyBlocked: 1 })
     .whereExists((qb) =>
@@ -63,15 +72,7 @@ export async function up(db: Kysely<Schema>): Promise<void> {
         )
         .whereRef('update_post.uri', '=', 'match_reply.uri'),
     )
-    .execute()
-}
-
-export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.alterTable('post').dropColumn('replyBlocked').execute()
-  await db.schema
-    .alterTable('post_embed_record')
-    .dropColumn('embedBlocked')
-    .execute()
+  return [migrateEmbedsQb, migrateRepliesQb]
 }
 
 type Schema = {
