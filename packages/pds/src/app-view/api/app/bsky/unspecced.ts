@@ -12,7 +12,7 @@ const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   'self-harm',
 ]
 
-const NSFW_LABELS = ['porn', 'sexual']
+const NSFW_LABELS = ['porn', 'sexual', 'nudity']
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
@@ -36,6 +36,13 @@ export default function (server: Server, ctx: AppContext) {
         .selectPostQb()
         .leftJoin('post_agg', 'post_agg.uri', 'post.uri')
         .where('post_agg.likeCount', '>=', 12)
+        .where('post.replyParent', 'is', null)
+        .whereNotExists((qb) =>
+          qb
+            .selectFrom('post_embed_record')
+            .selectAll()
+            .whereRef('post_embed_record.postUri', '=', ref('post.uri')),
+        )
         .whereNotExists((qb) =>
           qb
             .selectFrom('label')
@@ -70,19 +77,10 @@ export default function (server: Server, ctx: AppContext) {
         requester,
       )
 
-      const noRecordEmbeds = feed.map((post) => {
-        delete post.post.record['embed']
-        if (post.reply) {
-          delete post.reply.parent.record['embed']
-          delete post.reply.root.record['embed']
-        }
-        return post
-      })
-
       return {
         encoding: 'application/json',
         body: {
-          feed: noRecordEmbeds,
+          feed: feed,
           cursor: keyset.packFromResult(feedItems),
         },
       }
