@@ -17,7 +17,11 @@
     "postpublish": "npm run update-main-to-src"
   },
   "license": "MIT",
-  "repository": "git@github.com:bluesky-social/atproto.git",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto.git",
+    "directory": "packages/xrpc"
+  },
   "dependencies": {
     "@atproto/lexicon": "*",
     "zod": "^3.14.2"

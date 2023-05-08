@@ -14,6 +14,10 @@
     "postbuild": "tsc --build tsconfig.build.json"
   },
   "license": "MIT",
-  "repository": "git@github.com:bluesky-social/atproto.git",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto.git",
+    "directory": "packages/nsid"
+  },
   "dependencies": {}
 }
