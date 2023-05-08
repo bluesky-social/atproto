@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - disable-blob-api
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
