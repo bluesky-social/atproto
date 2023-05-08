@@ -66,7 +66,6 @@ describe('pds views with blocking', () => {
   })
 
   it('blocks thread post', async () => {
-    const { carol, dan } = sc.dids
     const { data: threadAlice } = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.posts[carol][0].ref.uriStr },
       { headers: sc.getHeaders(dan) },
@@ -309,7 +308,6 @@ describe('pds views with blocking', () => {
   })
 
   it('does not serve blocked replies', async () => {
-    const { alice, carol, dan } = sc.dids
     const getBlockedReplyCount = async () => {
       const { count } = await server.ctx.db.db
         .selectFrom('post')
@@ -378,7 +376,6 @@ describe('pds views with blocking', () => {
   })
 
   it('does not serve blocked embeds to third-party', async () => {
-    const { alice, carol, dan } = sc.dids
     const getBlockedEmbedCount = async () => {
       const { count } = await server.ctx.db.db
         .selectFrom('post_embed_record')
