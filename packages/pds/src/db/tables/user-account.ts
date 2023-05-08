@@ -5,6 +5,7 @@ export interface UserAccount {
   createdAt: string
   passwordResetToken: string | null
   passwordResetGrantedAt: string | null
+  invitesDisabled: 0 | 1
 }
 
 export const tableName = 'user_account'

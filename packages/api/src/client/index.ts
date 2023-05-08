@@ -8,6 +8,7 @@ import {
 import { schemas } from './lexicons'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
+import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
@@ -103,6 +104,7 @@ import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
+export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 export * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 export * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 export * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
@@ -279,6 +281,17 @@ export class AdminNS {
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  disableAccountInvites(
+    data?: ComAtprotoAdminDisableAccountInvites.InputSchema,
+    opts?: ComAtprotoAdminDisableAccountInvites.CallOptions,
+  ): Promise<ComAtprotoAdminDisableAccountInvites.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.disableAccountInvites', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminDisableAccountInvites.toKnownErr(e)
+      })
   }
 
   disableInviteCodes(

@@ -9,6 +9,7 @@ import {
   StreamAuthVerifier,
 } from '@atproto/xrpc-server'
 import { schemas } from './lexicons'
+import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
@@ -154,6 +155,16 @@ export class AdminNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  disableAccountInvites<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminDisableAccountInvites.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.disableAccountInvites' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   disableInviteCodes<AV extends AuthVerifier>(

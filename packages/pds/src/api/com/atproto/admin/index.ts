@@ -10,6 +10,7 @@ import getModerationAction from './getModerationAction'
 import getModerationActions from './getModerationActions'
 import getModerationReport from './getModerationReport'
 import getModerationReports from './getModerationReports'
+import disableAccountInvites from './disableAccountInvites'
 import disableInviteCodes from './disableInviteCodes'
 import getInviteCodes from './getInviteCodes'
 import updateAccountHandle from './updateAccountHandle'
@@ -26,6 +27,7 @@ export default function (server: Server, ctx: AppContext) {
   getModerationActions(server, ctx)
   getModerationReport(server, ctx)
   getModerationReports(server, ctx)
+  disableAccountInvites(server, ctx)
   disableInviteCodes(server, ctx)
   getInviteCodes(server, ctx)
   updateAccountHandle(server, ctx)
