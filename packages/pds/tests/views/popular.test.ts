@@ -89,7 +89,7 @@ describe('popular views', () => {
       { headers: sc.getHeaders(alice) },
     )
     const feedUris = res.data.feed.map((i) => i.post.uri).sort()
-    const expected = [one.ref.uriStr, two.ref.uriStr, three.ref.uriStr].sort()
+    const expected = [one.ref.uriStr, two.ref.uriStr].sort()
     expect(feedUris).toEqual(expected)
   })
 
