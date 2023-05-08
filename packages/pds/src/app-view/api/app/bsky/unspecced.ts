@@ -65,7 +65,6 @@ export default function (server: Server, ctx: AppContext) {
       feedQb = paginate(feedQb, { limit, cursor, keyset })
 
       const feedItems: FeedRow[] = await feedQb.execute()
-      // console.log(feedItems)
       const feed: FeedViewPost[] = await composeFeed(
         feedService,
         labelService,
