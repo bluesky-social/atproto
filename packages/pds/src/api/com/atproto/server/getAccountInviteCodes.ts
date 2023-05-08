@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
         accntSrvc.getAccountInviteCodes(requester),
       ])
       const unusedCodes = userCodes.filter(
-        (row) => row.available > row.uses.length,
+        (row) => !row.disabled && row.available > row.uses.length,
       )
 
       let created: string[] = []

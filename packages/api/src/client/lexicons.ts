@@ -644,6 +644,29 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminEnableAccountInvites: {
+    lexicon: 1,
+    id: 'com.atproto.admin.enableAccountInvites',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Re-enable an accounts ability to receive invite codes',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['account'],
+            properties: {
+              account: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminGetInviteCodes: {
     lexicon: 1,
     id: 'com.atproto.admin.getInviteCodes',
@@ -5151,6 +5174,7 @@ export const ids = {
   ComAtprotoAdminDisableAccountInvites:
     'com.atproto.admin.disableAccountInvites',
   ComAtprotoAdminDisableInviteCodes: 'com.atproto.admin.disableInviteCodes',
+  ComAtprotoAdminEnableAccountInvites: 'com.atproto.admin.enableAccountInvites',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
   ComAtprotoAdminGetModerationAction: 'com.atproto.admin.getModerationAction',
   ComAtprotoAdminGetModerationActions: 'com.atproto.admin.getModerationActions',
