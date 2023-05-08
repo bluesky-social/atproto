@@ -10,7 +10,10 @@ import Database from '../db'
 
 export async function migration(ctx: AppContext) {
   await derefedRecords(ctx.db)
+  console.log('deleted derefed records')
+
   await derefedProfiles(ctx.db)
+  console.log('deleted derefed profiles')
   const { ref } = ctx.db.db.dynamic
 
   const deletedDbBlobs = await ctx.db.db
@@ -24,6 +27,7 @@ export async function migration(ctx: AppContext) {
     )
     .returningAll()
     .execute()
+  console.log('deleted db blob rows')
 
   const deletedDbBlobCids = dedupe(deletedDbBlobs.map((row) => row.cid))
 
@@ -43,9 +47,13 @@ export async function migration(ctx: AppContext) {
     (cid) => !stillExisting.includes(cid),
   )
 
+  console.log(`deleting ${toDeleteBlobs.length} blobs`)
+
   const chunks = chunkArray(toDeleteBlobs, 100)
   for (const chunk of chunks) {
-    await Promise.all([
+    console.log('deleting chunk')
+    console.log(chunk)
+    await Promise.allSettled([
       ...chunk.map((cid) => ctx.blobstore.quarantine(CID.parse(cid))),
       ...chunk.map((cid) => {
         const paths = ImageUriBuilder.commonSignedUris.map((id) => {
