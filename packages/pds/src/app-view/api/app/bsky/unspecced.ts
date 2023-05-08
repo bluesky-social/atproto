@@ -41,6 +41,7 @@ export default function (server: Server, ctx: AppContext) {
             .selectFrom('label')
             .selectAll()
             .where('val', 'in', labelsToFilter)
+            .where('neg', '=', 0)
             .where((clause) =>
               clause
                 .whereRef('label.uri', '=', ref('post.creator'))

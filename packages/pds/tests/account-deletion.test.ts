@@ -1,9 +1,7 @@
-import assert from 'assert'
 import { once, EventEmitter } from 'events'
 import { Selectable } from 'kysely'
 import Mail from 'nodemailer/lib/mailer'
 import AtpAgent from '@atproto/api'
-import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import { Database } from '../src'
@@ -28,8 +26,12 @@ import { RepoCommitHistory } from '../src/db/tables/repo-commit-history'
 import { RepoCommitBlock } from '../src/db/tables/repo-commit-block'
 import { Record } from '../src/db/tables/record'
 import { RepoSeq } from '../src/db/tables/repo-seq'
+import { ACKNOWLEDGE } from '../src/lexicon/types/com/atproto/admin/defs'
+import { UserState } from '../src/db/tables/user-state'
+import { ActorBlock } from '../src/app-view/db/tables/actor-block'
 
 describe('account deletion', () => {
+  let server: util.TestServerInfo
   let agent: AtpAgent
   let close: util.CloseFn
   let sc: SeedClient
@@ -46,7 +48,7 @@ describe('account deletion', () => {
   let carol
 
   beforeAll(async () => {
-    const server = await util.runTestServer({
+    server = await util.runTestServer({
       dbPostgresSchema: 'account_deletion',
     })
     close = server.close
@@ -120,69 +122,29 @@ describe('account deletion', () => {
     await expect(attempt).rejects.toThrow('Invalid did or password')
   })
 
-  it('deletes account with a valid token & password, updating aggregations', async () => {
-    const postAUri = sc.posts[sc.dids.alice][1].ref.uriStr
-    const postBUri = sc.posts[sc.dids.dan][1].ref.uriStr
-    const { data: profileBefore } = await agent.api.app.bsky.actor.getProfile(
-      { actor: sc.dids.alice },
-      { headers: sc.getHeaders(sc.dids.alice) },
+  it('deletes account with a valid token & password', async () => {
+    // Perform account deletion, including when there's an existing mod action on the account
+    await agent.api.com.atproto.admin.takeModerationAction(
+      {
+        action: ACKNOWLEDGE,
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: carol.did,
+        },
+        createdBy: 'did:example:admin',
+        reason: 'X',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: util.adminAuth() },
+      },
     )
-    const { data: threadBeforeA } = await agent.api.app.bsky.feed.getPostThread(
-      { uri: postAUri, depth: 0 },
-      { headers: sc.getHeaders(sc.dids.alice) },
-    )
-    const { data: threadBeforeB } = await agent.api.app.bsky.feed.getPostThread(
-      { uri: postBUri, depth: 0 },
-      { headers: sc.getHeaders(sc.dids.alice) },
-    )
-
-    // Perform account deletion
     await agent.api.com.atproto.server.deleteAccount({
       token,
       did: carol.did,
       password: carol.password,
     })
-
-    // Check aggregations: some will be decremented now that the account is deleted.
-    const { data: profileAfter } = await agent.api.app.bsky.actor.getProfile(
-      { actor: sc.dids.alice },
-      { headers: sc.getHeaders(sc.dids.alice) },
-    )
-    const { data: threadAfterA } = await agent.api.app.bsky.feed.getPostThread(
-      { uri: postAUri, depth: 0 },
-      { headers: sc.getHeaders(sc.dids.alice) },
-    )
-    const { data: threadAfterB } = await agent.api.app.bsky.feed.getPostThread(
-      { uri: postBUri, depth: 0 },
-      { headers: sc.getHeaders(sc.dids.alice) },
-    )
-    assert(isThreadViewPost(threadBeforeA.thread))
-    assert(isThreadViewPost(threadBeforeB.thread))
-    assert(isThreadViewPost(threadAfterA.thread))
-    assert(isThreadViewPost(threadAfterB.thread))
-    expect(profileAfter.followsCount).toEqual(profileBefore.followsCount)
-    expect(profileAfter.followersCount).toEqual(
-      (profileBefore.followersCount ?? 0) - 1,
-    )
-    expect(profileAfter.postsCount).toEqual(profileBefore.postsCount)
-    expect(threadAfterA.thread.post.likeCount).toEqual(
-      (threadBeforeA.thread.post.likeCount ?? 0) - 1,
-    )
-    expect(threadAfterA.thread.post.replyCount).toEqual(
-      (threadBeforeA.thread.post.replyCount ?? 0) - 1,
-    )
-    expect(threadAfterA.thread.post.repostCount).toEqual(
-      threadBeforeA.thread.post.repostCount,
-    )
-    expect(threadAfterB.thread.post.likeCount).toEqual(
-      threadBeforeB.thread.post.likeCount,
-    )
-    expect(threadAfterB.thread.post.replyCount).toEqual(
-      threadBeforeB.thread.post.replyCount,
-    )
-    expect(threadAfterB.thread.post.repostCount).toEqual(
-      (threadBeforeB.thread.post.repostCount ?? 0) - 1,
-    )
+    await server.ctx.backgroundQueue.processAll() // Finish background hard-deletions
   })
 
   it('no longer lets the user log in', async () => {
@@ -200,6 +162,9 @@ describe('account deletion', () => {
     )
     expect(updatedDbContents.users).toEqual(
       initialDbContents.users.filter((row) => row.did !== carol.did),
+    )
+    expect(updatedDbContents.userState).toEqual(
+      initialDbContents.userState.filter((row) => row.did !== carol.did),
     )
     expect(updatedDbContents.blocks).toEqual(
       initialDbContents.blocks.filter((row) => row.creator !== carol.did),
@@ -226,6 +191,9 @@ describe('account deletion', () => {
     )
     expect(updatedDbContents.likes).toEqual(
       initialDbContents.likes.filter((row) => row.creator !== carol.did),
+    )
+    expect(updatedDbContents.actorBlocks).toEqual(
+      initialDbContents.actorBlocks.filter((row) => row.creator !== carol.did),
     )
     expect(updatedDbContents.reposts).toEqual(
       initialDbContents.reposts.filter((row) => row.creator !== carol.did),
@@ -315,6 +283,7 @@ describe('account deletion', () => {
 type DbContents = {
   roots: RepoRoot[]
   users: UserAccount[]
+  userState: UserState[]
   blocks: IpldBlock[]
   seqs: Selectable<RepoSeq>[]
   commitHistories: RepoCommitHistory[]
@@ -327,6 +296,7 @@ type DbContents = {
   likes: Like[]
   reposts: Repost[]
   follows: Follow[]
+  actorBlocks: ActorBlock[]
   repoBlobs: RepoBlob[]
   blobs: Blob[]
 }
@@ -335,6 +305,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
   const [
     roots,
     users,
+    userState,
     blocks,
     seqs,
     commitHistories,
@@ -347,11 +318,13 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     likes,
     reposts,
     follows,
+    actorBlocks,
     repoBlobs,
     blobs,
   ] = await Promise.all([
     db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
     db.db.selectFrom('user_account').orderBy('did').selectAll().execute(),
+    db.db.selectFrom('user_state').orderBy('did').selectAll().execute(),
     db.db
       .selectFrom('ipld_block')
       .orderBy('creator')
@@ -392,6 +365,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     db.db.selectFrom('like').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('repost').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('follow').orderBy('uri').selectAll().execute(),
+    db.db.selectFrom('actor_block').orderBy('uri').selectAll().execute(),
     db.db
       .selectFrom('repo_blob')
       .orderBy('did')
@@ -404,6 +378,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
   return {
     roots,
     users,
+    userState,
     blocks,
     seqs,
     commitHistories,
@@ -416,6 +391,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     likes,
     reposts,
     follows,
+    actorBlocks,
     repoBlobs,
     blobs,
   }

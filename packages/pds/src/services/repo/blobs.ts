@@ -15,11 +15,13 @@ import { BlobRef } from '@atproto/lexicon'
 import { PreparedDelete, PreparedUpdate } from '../../repo'
 import { ImageInvalidator } from '../../image/invalidator'
 import { ImageUriBuilder } from '../../image/uri'
+import { BackgroundQueue } from '../../event-stream/background-queue'
 
 export class RepoBlobs {
   constructor(
     public db: Database,
     public blobstore: BlobStore,
+    public backgroundQueue: BackgroundQueue,
     public imgUriBuilder: ImageUriBuilder,
     public imgInvalidator: ImageInvalidator,
   ) {}
@@ -136,16 +138,26 @@ export class RepoBlobs {
     const stillUsed = stillUsedRes.map((row) => row.cid)
 
     const blobsToDelete = cidsToDelete.filter((cid) => !stillUsed.includes(cid))
-    await Promise.all([
-      ...blobsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
-      ...blobsToDelete.map((cid) => {
-        const paths = ImageUriBuilder.commonSignedUris.map((id) => {
-          const uri = this.imgUriBuilder.getCommonSignedUri(id, cid)
-          return uri.replace(this.imgUriBuilder.endpoint, '')
+
+    // move actual blob deletion to the background queue
+    if (blobsToDelete.length > 0) {
+      this.db.onCommit(() => {
+        this.backgroundQueue.add(async () => {
+          await Promise.allSettled([
+            ...blobsToDelete.map((cid) =>
+              this.blobstore.delete(CID.parse(cid)),
+            ),
+            ...blobsToDelete.map((cid) => {
+              const paths = ImageUriBuilder.commonSignedUris.map((id) => {
+                const uri = this.imgUriBuilder.getCommonSignedUri(id, cid)
+                return uri.replace(this.imgUriBuilder.endpoint, '')
+              })
+              return this.imgInvalidator.invalidate(cid, paths)
+            }),
+          ])
         })
-        return this.imgInvalidator.invalidate(cid, paths)
-      }),
-    ])
+      })
+    }
   }
 
   async verifyBlobAndMakePermanent(
@@ -224,15 +236,14 @@ export class RepoBlobs {
   }
 
   async deleteForUser(did: string): Promise<void> {
-    this.db.assertTransaction()
-    const [deleted] = await Promise.all([
-      this.db.db
-        .deleteFrom('blob')
-        .where('creator', '=', did)
-        .returningAll()
-        .execute(),
-      this.db.db.deleteFrom('repo_blob').where('did', '=', did).execute(),
-    ])
+    // Not done in transaction because it would be too long, prone to contention.
+    // Also, this can safely be run multiple times if it fails.
+    const deleted = await this.db.db
+      .deleteFrom('blob')
+      .where('creator', '=', did)
+      .returningAll()
+      .execute()
+    await this.db.db.deleteFrom('repo_blob').where('did', '=', did).execute()
     const deletedCids = deleted.map((d) => d.cid)
     let duplicateCids: string[] = []
     if (deletedCids.length > 0) {

@@ -25,6 +25,7 @@ import { Labeler } from '../../labeler'
 import { wait } from '@atproto/common'
 import { ImageInvalidator } from '../../image/invalidator'
 import { ImageUriBuilder } from '../../image/uri'
+import { BackgroundQueue } from '../../event-stream/background-queue'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -34,17 +35,25 @@ export class RepoService {
     public repoSigningKey: crypto.Keypair,
     public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
+    public backgroundQueue: BackgroundQueue,
     public imgUriBuilder: ImageUriBuilder,
     public imgInvalidator: ImageInvalidator,
     public labeler: Labeler,
   ) {
-    this.blobs = new RepoBlobs(db, blobstore, imgUriBuilder, imgInvalidator)
+    this.blobs = new RepoBlobs(
+      db,
+      blobstore,
+      backgroundQueue,
+      imgUriBuilder,
+      imgInvalidator,
+    )
   }
 
   static creator(
     keypair: crypto.Keypair,
     messageDispatcher: MessageQueue,
     blobstore: BlobStore,
+    backgroundQueue: BackgroundQueue,
     imgUriBuilder: ImageUriBuilder,
     imgInvalidator: ImageInvalidator,
     labeler: Labeler,
@@ -55,6 +64,7 @@ export class RepoService {
         keypair,
         messageDispatcher,
         blobstore,
+        backgroundQueue,
         imgUriBuilder,
         imgInvalidator,
         labeler,
@@ -75,6 +85,7 @@ export class RepoService {
         this.repoSigningKey,
         this.messageDispatcher,
         this.blobstore,
+        this.backgroundQueue,
         this.imgUriBuilder,
         this.imgInvalidator,
         this.labeler,
@@ -267,22 +278,24 @@ export class RepoService {
   }
 
   async deleteRepo(did: string) {
-    this.db.assertTransaction()
+    // Not done in transaction because it would be too long, prone to contention.
+    // Also, this can safely be run multiple times if it fails.
     // delete all blocks from this did & no other did
-    await Promise.all([
-      this.db.db.deleteFrom('ipld_block').where('creator', '=', did).execute(),
-      this.db.db
-        .deleteFrom('repo_commit_block')
-        .where('creator', '=', did)
-        .execute(),
-      this.db.db
-        .deleteFrom('repo_commit_history')
-        .where('creator', '=', did)
-        .execute(),
-      this.db.db.deleteFrom('repo_root').where('did', '=', did).execute(),
-      this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute(),
-      this.blobs.deleteForUser(did),
-    ])
+    await this.db.db.deleteFrom('repo_root').where('did', '=', did).execute()
+    await this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute()
+    await this.db.db
+      .deleteFrom('repo_commit_block')
+      .where('creator', '=', did)
+      .execute()
+    await this.db.db
+      .deleteFrom('repo_commit_history')
+      .where('creator', '=', did)
+      .execute()
+    await this.db.db
+      .deleteFrom('ipld_block')
+      .where('creator', '=', did)
+      .execute()
+    await this.blobs.deleteForUser(did)
   }
 }
 
