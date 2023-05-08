@@ -9,24 +9,21 @@ import { ImageUriBuilder } from '../image/uri'
 import Database from '../db'
 
 export async function migration(ctx: AppContext) {
-  const deletedDbBlobs = await ctx.db.transaction(async (dbTxn) => {
-    await derefedRecords(dbTxn)
-    await derefedProfiles(dbTxn)
-    const { ref } = dbTxn.db.dynamic
+  await derefedRecords(ctx.db)
+  await derefedProfiles(ctx.db)
+  const { ref } = ctx.db.db.dynamic
 
-    const deleted = await dbTxn.db
-      .deleteFrom('blob')
-      .whereNotExists(
-        dbTxn.db
-          .selectFrom('repo_blob')
-          .whereRef('repo_blob.did', '=', ref('blob.creator'))
-          .whereRef('repo_blob.cid', '=', ref('blob.cid'))
-          .selectAll(),
-      )
-      .returningAll()
-      .execute()
-    return deleted
-  })
+  const deletedDbBlobs = await ctx.db.db
+    .deleteFrom('blob')
+    .whereNotExists(
+      ctx.db.db
+        .selectFrom('repo_blob')
+        .whereRef('repo_blob.did', '=', ref('blob.creator'))
+        .whereRef('repo_blob.cid', '=', ref('blob.cid'))
+        .selectAll(),
+    )
+    .returningAll()
+    .execute()
 
   const deletedDbBlobCids = dedupe(deletedDbBlobs.map((row) => row.cid))
 
@@ -62,8 +59,6 @@ export async function migration(ctx: AppContext) {
 }
 
 async function derefedRecords(dbTxn: Database) {
-  dbTxn.assertTransaction()
-
   const { ref } = dbTxn.db.dynamic
   await dbTxn.db
     .deleteFrom('repo_blob')
@@ -78,8 +73,6 @@ async function derefedRecords(dbTxn: Database) {
 }
 
 async function derefedProfiles(dbTxn: Database) {
-  dbTxn.assertTransaction()
-
   const profilesRes = await dbTxn.db
     .selectFrom('did_handle')
     .leftJoin('profile', 'profile.creator', 'did_handle.did')
