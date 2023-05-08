@@ -3,7 +3,11 @@
   "version": "0.0.1",
   "main": "src/index.ts",
   "license": "MIT",
-  "repository": "git@github.com:bluesky-social/atproto.git",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto.git",
+    "directory": "packages/aws"
+  },
   "scripts": {
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
