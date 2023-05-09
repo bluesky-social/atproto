@@ -12,6 +12,7 @@ export interface QueryParams {}
 export interface InputSchema {
   email: string
   handle: string
+  did?: string
   inviteCode?: string
   password: string
   recoveryKey?: string
