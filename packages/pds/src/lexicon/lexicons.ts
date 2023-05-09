@@ -4034,8 +4034,12 @@ export const schemaDict = {
         required: ['post'],
         properties: {
           post: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#postView',
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.defs#postView',
+              'lex:app.bsky.feed.defs#notFoundPost',
+              'lex:app.bsky.feed.defs#blockedPost',
+            ],
           },
           reply: {
             type: 'ref',
@@ -4052,12 +4056,20 @@ export const schemaDict = {
         required: ['root', 'parent'],
         properties: {
           root: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#postView',
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.defs#postView',
+              'lex:app.bsky.feed.defs#notFoundPost',
+              'lex:app.bsky.feed.defs#blockedPost',
+            ],
           },
           parent: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#postView',
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.defs#postView',
+              'lex:app.bsky.feed.defs#notFoundPost',
+              'lex:app.bsky.feed.defs#blockedPost',
+            ],
           },
         },
       },
@@ -4437,9 +4449,9 @@ export const schemaDict = {
               thread: {
                 type: 'union',
                 refs: [
-                  'lex:app.bsky.feed.defs#threadViewPost',
-                  'lex:app.bsky.feed.defs#notFoundPost',
-                  'lex:app.bsky.feed.defs#blockedPost',
+                  'lex:app.bsky.feed.getPostThread#threadViewPost',
+                  'lex:app.bsky.feed.getPostThread#notFoundPost',
+                  'lex:app.bsky.feed.getPostThread#blockedPost',
                 ],
               },
             },

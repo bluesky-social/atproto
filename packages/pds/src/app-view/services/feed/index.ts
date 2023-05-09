@@ -1,5 +1,4 @@
 import { sql } from 'kysely'
-import { cborToLexRecord } from '@atproto/repo'
 import Database from '../../../db'
 import { notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
@@ -10,21 +9,29 @@ import {
   ViewNotFound,
   ViewRecord,
 } from '../../../lexicon/types/app/bsky/embed/record'
-import { PostView } from '../../../lexicon/types/app/bsky/feed/defs'
+import {
+  FeedViewPost,
+  PostView,
+  SkeletonFeedPost,
+  isSkeletonReasonRepost,
+} from '../../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
-import { Labels, LabelService } from '../label'
+import { LabelService } from '../label'
+import { FeedViews } from './views'
+import { AtUri } from '@atproto/uri'
 
 export * from './types'
 
 export class FeedService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
 
-  services = {
-    label: LabelService.creator(),
-  }
-
   static creator(imgUriBuilder: ImageUriBuilder) {
     return (db: Database) => new FeedService(db, imgUriBuilder)
+  }
+
+  views = new FeedViews(this.db)
+  services = {
+    label: LabelService.creator()(this.db),
   }
 
   selectPostQb() {
@@ -126,7 +133,7 @@ export class FeedService {
             .as('requesterMuted'),
         ])
         .execute(),
-      this.services.label(this.db).getLabelsForProfiles(dids),
+      this.services.label.getLabelsForProfiles(dids),
     ])
     return actors.reduce((acc, cur) => {
       return {
@@ -247,7 +254,7 @@ export class FeedService {
           requester,
         ),
         this.embedsForPosts(nestedUris, requester, _depth + 1),
-        this.services.label(this.db).getLabelsForSubjects(nestedUris),
+        this.services.label.getLabelsForSubjects(nestedUris),
       ])
     let embeds = images.reduce((acc, cur) => {
       const embed = (acc[cur.postUri] ??= {
@@ -288,7 +295,7 @@ export class FeedService {
       return acc
     }, embeds)
     embeds = records.reduce((acc, cur) => {
-      const formatted = this.formatPostView(
+      const formatted = this.views.formatPostView(
         cur.uri,
         actorViews,
         postViews,
@@ -325,32 +332,33 @@ export class FeedService {
     return embeds
   }
 
-  formatPostView(
-    uri: string,
-    actors: ActorViewMap,
-    posts: PostInfoMap,
-    embeds: FeedEmbeds,
-    labels: Labels,
-  ): PostView | undefined {
-    const post = posts[uri]
-    const author = actors[post?.creator]
-    if (!post || !author) return undefined
-    return {
-      uri: post.uri,
-      cid: post.cid,
-      author: author,
-      record: cborToLexRecord(post.recordBytes),
-      embed: embeds[uri],
-      replyCount: post.replyCount ?? 0,
-      repostCount: post.repostCount ?? 0,
-      likeCount: post.likeCount ?? 0,
-      indexedAt: post.indexedAt,
-      viewer: {
-        repost: post.requesterRepost ?? undefined,
-        like: post.requesterLike ?? undefined,
-      },
-      labels: labels[uri] ?? [],
+  async hydrateFeed(
+    items: SkeletonFeedPost[],
+    requester: string,
+  ): Promise<FeedViewPost[]> {
+    const actorDids = new Set<string>()
+    const postUris = new Set<string>()
+    for (const item of items) {
+      actorDids.add(new AtUri(item.post).hostname)
+      postUris.add(item.post)
+      if (item.reason && isSkeletonReasonRepost(item.reason)) {
+        actorDids.add(item.reason.by)
+      }
+      if (item.replyTo) {
+        postUris.add(item.replyTo.parent)
+        postUris.add(item.replyTo.root)
+        actorDids.add(new AtUri(item.replyTo.parent).hostname)
+        actorDids.add(new AtUri(item.replyTo.root).hostname)
+      }
     }
+    const [actors, posts, embeds, labels] = await Promise.all([
+      this.getActorViews(Array.from(actorDids), requester),
+      this.getPostViews(Array.from(postUris), requester),
+      this.embedsForPosts(Array.from(postUris), requester),
+      this.services.label.getLabelsForSubjects(Array.from(postUris)),
+    ])
+
+    return this.views.formatFeed(items, actors, posts, embeds, labels)
   }
 }
 

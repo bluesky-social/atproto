@@ -61,7 +61,11 @@ export function validateViewerState(v: unknown): ValidationResult {
 }
 
 export interface FeedViewPost {
-  post: PostView
+  post:
+    | PostView
+    | NotFoundPost
+    | BlockedPost
+    | { $type: string; [k: string]: unknown }
   reply?: ReplyRef
   reason?: ReasonRepost | { $type: string; [k: string]: unknown }
   [k: string]: unknown
@@ -80,8 +84,16 @@ export function validateFeedViewPost(v: unknown): ValidationResult {
 }
 
 export interface ReplyRef {
-  root: PostView
-  parent: PostView
+  root:
+    | PostView
+    | NotFoundPost
+    | BlockedPost
+    | { $type: string; [k: string]: unknown }
+  parent:
+    | PostView
+    | NotFoundPost
+    | BlockedPost
+    | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
 

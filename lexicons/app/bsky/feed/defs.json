@@ -41,7 +41,7 @@
       "type": "object",
       "required": ["post"],
       "properties": {
-        "post": {"type": "ref", "ref": "app.bsky.feed.defs#postView"},
+        "post": {"type": "union", "refs": ["#postView", "#notFoundPost", "#blockedPost"]},
         "reply": {"type": "ref", "ref": "#replyRef"},
         "reason": {"type": "union", "refs": ["#reasonRepost"]}
       }
@@ -50,8 +50,8 @@
       "type": "object",
       "required": ["root", "parent"],
       "properties": {
-        "root": {"type": "ref", "ref": "app.bsky.feed.defs#postView"},
-        "parent": {"type": "ref", "ref": "app.bsky.feed.defs#postView"}
+        "root": {"type": "union", "refs": ["#postView", "#notFoundPost", "#blockedPost"]},
+        "parent": {"type": "union", "refs": ["#postView", "#notFoundPost", "#blockedPost"]}
       }
     },
     "reasonRepost": {

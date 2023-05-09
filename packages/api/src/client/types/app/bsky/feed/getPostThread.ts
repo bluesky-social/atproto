@@ -6,7 +6,6 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyFeedDefs from './defs'
 
 export interface QueryParams {
   uri: string
@@ -17,9 +16,9 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   thread:
-    | AppBskyFeedDefs.ThreadViewPost
-    | AppBskyFeedDefs.NotFoundPost
-    | AppBskyFeedDefs.BlockedPost
+    | ThreadViewPost
+    | NotFoundPost
+    | BlockedPost
     | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }

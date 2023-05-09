@@ -2,6 +2,11 @@ import { View as ViewImages } from '../../../lexicon/types/app/bsky/embed/images
 import { View as ViewExternal } from '../../../lexicon/types/app/bsky/embed/external'
 import { View as ViewRecord } from '../../../lexicon/types/app/bsky/embed/record'
 import { View as ViewRecordWithMedia } from '../../../lexicon/types/app/bsky/embed/recordWithMedia'
+import {
+  BlockedPost,
+  NotFoundPost,
+  PostView,
+} from '../../../lexicon/types/app/bsky/feed/defs'
 
 export type FeedEmbeds = {
   [uri: string]: ViewImages | ViewExternal | ViewRecord | ViewRecordWithMedia
@@ -50,3 +55,5 @@ export type FeedRow = {
   replyRoot: string | null
   sortAt: string
 }
+
+export type MaybePostView = PostView | NotFoundPost | BlockedPost

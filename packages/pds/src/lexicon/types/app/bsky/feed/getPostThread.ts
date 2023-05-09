@@ -7,7 +7,6 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyFeedDefs from './defs'
 
 export interface QueryParams {
   uri: string
@@ -18,9 +17,9 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   thread:
-    | AppBskyFeedDefs.ThreadViewPost
-    | AppBskyFeedDefs.NotFoundPost
-    | AppBskyFeedDefs.BlockedPost
+    | ThreadViewPost
+    | NotFoundPost
+    | BlockedPost
     | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }

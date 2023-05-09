@@ -20,11 +20,7 @@
           "properties": {
             "thread": {
               "type": "union",
-              "refs": [
-                "app.bsky.feed.defs#threadViewPost",
-                "app.bsky.feed.defs#notFoundPost",
-                "app.bsky.feed.defs#blockedPost"
-              ]
+              "refs":["#threadViewPost", "#notFoundPost", "#blockedPost"] 
             }
           }
         }
