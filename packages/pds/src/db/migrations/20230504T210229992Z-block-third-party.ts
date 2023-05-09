@@ -19,6 +19,11 @@ export async function down(db: Kysely<unknown>): Promise<void> {
     .execute()
 }
 
+// This is a data migration, documented here so it can be run manually.
+// Two reasons it's not wrapped into the migration above:
+//   - These could be expensive updates, and we don't necessarily want to wrap them together in a long transaction.
+//   - They should be run once all app nodes are indexing replyBlocked and embedBlocked
+
 export function dataMigrationQbs(db: Kysely<Schema>) {
   // data migration
   const { ref } = db.dynamic
