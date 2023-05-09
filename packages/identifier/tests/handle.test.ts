@@ -199,6 +199,13 @@ describe('service constraints & normalization', () => {
     expectThrow('about.test', 'Reserved handle')
     expectThrow('atp.test', 'Reserved handle')
     expectThrow('barackobama.test', 'Reserved handle')
+
+    expectThrow('atproto.local', 'Handle TLD is invalid or disallowed')
+    expectThrow('atproto.arpa', 'Handle TLD is invalid or disallowed')
+    expectThrow('atproto.invalid', 'Handle TLD is invalid or disallowed')
+    expectThrow('atproto.localhost', 'Handle TLD is invalid or disallowed')
+    expectThrow('atproto.onion', 'Handle TLD is invalid or disallowed')
+    expectThrow('atproto.internal', 'Handle TLD is invalid or disallowed')
   })
 
   it('normalizes handles', () => {
