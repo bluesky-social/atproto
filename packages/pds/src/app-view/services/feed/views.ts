@@ -4,7 +4,6 @@ import {
   FeedViewPost,
   PostView,
   SkeletonFeedPost,
-  isPostView,
   isSkeletonReasonRepost,
 } from '../../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, MaybePostView, PostInfoMap } from './types'
@@ -28,15 +27,9 @@ export class FeedViews {
   ): FeedViewPost[] {
     const feed: FeedViewPost[] = []
     for (const item of items) {
-      const post = this.formatMaybePostView(
-        item.post,
-        actors,
-        posts,
-        embeds,
-        labels,
-      )
+      const post = this.formatPostView(item.post, actors, posts, embeds, labels)
       // skip over not found & blocked posts
-      if (!isPostView(post)) {
+      if (!post) {
         continue
       }
       const feedPost = { post }
@@ -117,7 +110,10 @@ export class FeedViews {
     if (post.author.viewer?.blockedBy || post.author.viewer?.blocking) {
       return this.blockedPost(uri)
     }
-    return post
+    return {
+      $type: 'app.bsky.feed.defs#postView',
+      ...post,
+    }
   }
 
   blockedPost(uri: string) {
