@@ -62,6 +62,7 @@ export interface ProfileViewDetailed {
   description?: string
   avatar?: string
   actorType?: ActorType
+  actorInfo?: InfoFeedGenerator | { $type: string; [k: string]: unknown }
   banner?: string
   followersCount?: number
   followsCount?: number
@@ -103,6 +104,23 @@ export function isViewerState(v: unknown): v is ViewerState {
 
 export function validateViewerState(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#viewerState', v)
+}
+
+export interface InfoFeedGenerator {
+  likes: number
+  [k: string]: unknown
+}
+
+export function isInfoFeedGenerator(v: unknown): v is InfoFeedGenerator {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#infoFeedGenerator'
+  )
+}
+
+export function validateInfoFeedGenerator(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#infoFeedGenerator', v)
 }
 
 export type ActorType =

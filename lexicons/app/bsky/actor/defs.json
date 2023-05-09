@@ -67,6 +67,7 @@
         },
         "avatar": { "type": "string" },
         "actorType": {"type": "ref", "ref": "#actorType"},
+        "actorInfo": {"type": "union", "refs": ["#infoFeedGenerator"]},
         "banner": { "type": "string" },
         "followersCount": {"type": "integer"},
         "followsCount": {"type": "integer"},
@@ -89,8 +90,12 @@
         "followedBy": {"type": "string", "format": "at-uri"}
       }
     },
-    "actorInfo": {
-
+    "infoFeedGenerator": {
+      "type": "object",
+      "required": ["likes"],
+      "properties": {
+        "likes": {"type": "integer"}
+      }
     },
     "actorType": {
       "type": "string",

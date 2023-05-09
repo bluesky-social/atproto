@@ -80,6 +80,7 @@ import * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 import * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
 import * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
+import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
@@ -176,6 +177,7 @@ export * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 export * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
 export * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
 export * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
+export * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
@@ -1106,6 +1108,17 @@ export class FeedNS {
       .call('app.bsky.feed.getAuthorFeed', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetAuthorFeed.toKnownErr(e)
+      })
+  }
+
+  getFeed(
+    params?: AppBskyFeedGetFeed.QueryParams,
+    opts?: AppBskyFeedGetFeed.CallOptions,
+  ): Promise<AppBskyFeedGetFeed.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getFeed', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetFeed.toKnownErr(e)
       })
   }
 

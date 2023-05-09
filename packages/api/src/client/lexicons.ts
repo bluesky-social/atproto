@@ -3377,6 +3377,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#actorType',
           },
+          actorInfo: {
+            type: 'union',
+            refs: ['lex:app.bsky.actor.defs#infoFeedGenerator'],
+          },
           banner: {
             type: 'string',
           },
@@ -3426,6 +3430,15 @@ export const schemaDict = {
           followedBy: {
             type: 'string',
             format: 'at-uri',
+          },
+        },
+      },
+      infoFeedGenerator: {
+        type: 'object',
+        required: ['likes'],
+        properties: {
+          likes: {
+            type: 'integer',
           },
         },
       },
@@ -4216,6 +4229,54 @@ export const schemaDict = {
             name: 'BlockedByActor',
           },
         ],
+      },
+    },
+  },
+  AppBskyFeedGetFeed: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getFeed',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Compose and hydrate a feed from a user's selected feed generator",
+        parameters: {
+          type: 'params',
+          properties: {
+            feed: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -5318,6 +5379,7 @@ export const ids = {
   AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
   AppBskyFeedDefs: 'app.bsky.feed.defs',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
+  AppBskyFeedGetFeed: 'app.bsky.feed.getFeed',
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
