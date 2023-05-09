@@ -43,8 +43,6 @@ export function createServices(resources: {
       messageDispatcher,
       blobstore,
       backgroundQueue,
-      imgUriBuilder,
-      imgInvalidator,
       labeler,
     ),
     moderation: ModerationService.creator(

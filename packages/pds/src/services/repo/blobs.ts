@@ -13,8 +13,6 @@ import { Blob as BlobTable } from '../../db/tables/blob'
 import * as img from '../../image'
 import { BlobRef } from '@atproto/lexicon'
 import { PreparedDelete, PreparedUpdate } from '../../repo'
-import { ImageInvalidator } from '../../image/invalidator'
-import { ImageUriBuilder } from '../../image/uri'
 import { BackgroundQueue } from '../../event-stream/background-queue'
 
 export class RepoBlobs {
@@ -22,8 +20,6 @@ export class RepoBlobs {
     public db: Database,
     public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
-    public imgUriBuilder: ImageUriBuilder,
-    public imgInvalidator: ImageInvalidator,
   ) {}
 
   async addUntetheredBlob(
@@ -143,18 +139,9 @@ export class RepoBlobs {
     if (blobsToDelete.length > 0) {
       this.db.onCommit(() => {
         this.backgroundQueue.add(async () => {
-          await Promise.allSettled([
-            ...blobsToDelete.map((cid) =>
-              this.blobstore.delete(CID.parse(cid)),
-            ),
-            ...blobsToDelete.map((cid) => {
-              const paths = ImageUriBuilder.commonSignedUris.map((id) => {
-                const uri = this.imgUriBuilder.getCommonSignedUri(id, cid)
-                return uri.replace(this.imgUriBuilder.endpoint, '')
-              })
-              return this.imgInvalidator.invalidate(cid, paths)
-            }),
-          ])
+          await Promise.allSettled(
+            blobsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
+          )
         })
       })
     }

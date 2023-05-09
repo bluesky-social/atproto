@@ -23,8 +23,6 @@ import { RecordService } from '../record'
 import * as sequencer from '../../sequencer'
 import { Labeler } from '../../labeler'
 import { wait } from '@atproto/common'
-import { ImageInvalidator } from '../../image/invalidator'
-import { ImageUriBuilder } from '../../image/uri'
 import { BackgroundQueue } from '../../event-stream/background-queue'
 
 export class RepoService {
@@ -36,17 +34,9 @@ export class RepoService {
     public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
-    public imgUriBuilder: ImageUriBuilder,
-    public imgInvalidator: ImageInvalidator,
     public labeler: Labeler,
   ) {
-    this.blobs = new RepoBlobs(
-      db,
-      blobstore,
-      backgroundQueue,
-      imgUriBuilder,
-      imgInvalidator,
-    )
+    this.blobs = new RepoBlobs(db, blobstore, backgroundQueue)
   }
 
   static creator(
@@ -54,8 +44,6 @@ export class RepoService {
     messageDispatcher: MessageQueue,
     blobstore: BlobStore,
     backgroundQueue: BackgroundQueue,
-    imgUriBuilder: ImageUriBuilder,
-    imgInvalidator: ImageInvalidator,
     labeler: Labeler,
   ) {
     return (db: Database) =>
@@ -65,8 +53,6 @@ export class RepoService {
         messageDispatcher,
         blobstore,
         backgroundQueue,
-        imgUriBuilder,
-        imgInvalidator,
         labeler,
       )
   }
@@ -86,8 +72,6 @@ export class RepoService {
         this.messageDispatcher,
         this.blobstore,
         this.backgroundQueue,
-        this.imgUriBuilder,
-        this.imgInvalidator,
         this.labeler,
       )
       return fn(srvc)
