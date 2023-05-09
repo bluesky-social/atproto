@@ -64,16 +64,9 @@ async function migration(ctx: AppContext) {
   const chunks = chunkArray(toDeleteBlobs, 100)
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i]
-    const res = await Promise.allSettled([
-      ...chunk.map((cid) => ctx.blobstore.quarantine(CID.parse(cid))),
-      ...chunk.map((cid) => {
-        const paths = ImageUriBuilder.commonSignedUris.map((id) => {
-          const uri = ctx.imgUriBuilder.getCommonSignedUri(id, cid)
-          return uri.replace(ctx.imgUriBuilder.endpoint, '')
-        })
-        return ctx.imgInvalidator?.invalidate(cid, paths)
-      }),
-    ])
+    const res = await Promise.allSettled(
+      chunk.map((cid) => ctx.blobstore.quarantine(CID.parse(cid))),
+    )
     const rejected = res.filter((r) => r.status === 'rejected')
     for (const res of rejected) {
       if (res.status === 'rejected') {
