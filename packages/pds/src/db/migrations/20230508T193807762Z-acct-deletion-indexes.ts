@@ -4,7 +4,6 @@ import { Dialect } from '..'
 // Indexes to support efficient account deletion
 
 export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
-  /* Temporarily skipping index creation, will re-enable asap
   await db.schema // Also supports record deletes
     .createIndex('duplicate_record_duplicate_of_idx')
     .on('duplicate_record')
@@ -20,7 +19,6 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .on('user_notification')
     .column('author')
     .execute()
-  */
   if (dialect !== 'sqlite') {
     // We want to keep record of the moderations actions even when deleting the underlying repo_blob record.
     await db.schema
@@ -45,9 +43,7 @@ export async function down(
       )
       .execute()
   }
-  /* Temporarily skipping index creation, will re-enable asap
   await db.schema.dropIndex('user_notification_author_idx').execute()
   await db.schema.dropIndex('like_creator_idx').execute()
   await db.schema.dropIndex('duplicate_record_duplicate_of_idx').execute()
-  */
 }

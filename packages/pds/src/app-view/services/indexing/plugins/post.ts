@@ -22,6 +22,7 @@ import { PostHierarchy } from '../../../db/tables/post-hierarchy'
 import { UserNotification } from '../../../../db/tables/user-notification'
 import { countAll, excluded, dbBool } from '../../../../db/util'
 import { hasBlock } from './block'
+import { toSimplifiedISOSafe } from '../util'
 
 type Post = DatabaseSchemaType['post']
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
@@ -48,7 +49,7 @@ const insertFn = async (
     cid: cid.toString(),
     creator: uri.host,
     text: obj.text,
-    createdAt: obj.createdAt,
+    createdAt: toSimplifiedISOSafe(obj.createdAt),
     replyRoot: obj.reply?.root?.uri || null,
     replyRootCid: obj.reply?.root?.cid || null,
     replyParent: obj.reply?.parent?.uri || null,

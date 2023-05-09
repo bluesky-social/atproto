@@ -10,6 +10,7 @@ import {
 } from '../../../../db/database-schema'
 import { BackgroundQueue } from '../../../../event-stream/background-queue'
 import RecordProcessor from '../processor'
+import { toSimplifiedISOSafe } from '../util'
 
 const lexId = lex.ids.AppBskyGraphBlock
 type IndexedBlock = DatabaseSchemaType['actor_block']
@@ -28,7 +29,7 @@ const insertFn = async (
       cid: cid.toString(),
       creator: uri.host,
       subjectDid: obj.subject,
-      createdAt: obj.createdAt,
+      createdAt: toSimplifiedISOSafe(obj.createdAt),
       indexedAt: timestamp,
     })
     .onConflict((oc) => oc.doNothing())
