@@ -4172,6 +4172,10 @@ export const schemaDict = {
             type: 'string',
             format: 'did',
           },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
         },
       },
     },
@@ -4242,6 +4246,7 @@ export const schemaDict = {
           "Compose and hydrate a feed from a user's selected feed generator",
         parameters: {
           type: 'params',
+          required: ['feed'],
           properties: {
             feed: {
               type: 'string',
@@ -4289,8 +4294,9 @@ export const schemaDict = {
         description: 'A skeleton of a feed provided by a feed generator',
         parameters: {
           type: 'params',
+          required: ['feed'],
           properties: {
-            algorithm: {
+            feed: {
               type: 'string',
             },
             limit: {

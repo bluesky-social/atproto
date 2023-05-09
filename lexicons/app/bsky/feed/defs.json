@@ -111,7 +111,8 @@
       "type": "object",
       "required": ["by", "indexedAt"],
       "properties": {
-        "by": {"type": "string", "format": "did"}
+        "by": {"type": "string", "format": "did"},
+        "indexedAt": {"type": "string", "format": "datetime"}
       }
     }
   }

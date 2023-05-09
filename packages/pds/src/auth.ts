@@ -274,6 +274,16 @@ export const createServiceJwt = async (
   return `${toSignStr}.${ui8.toString(sig, 'base64url')}`
 }
 
+export const createServiceAuthHeaders = async (
+  accountDid: string,
+  keypair: crypto.Keypair,
+) => {
+  const jwt = await createServiceJwt(accountDid, keypair)
+  return {
+    headers: { authorization: `Bearer ${jwt}` },
+  }
+}
+
 const jsonToB64Url = (json: Record<string, unknown>): string => {
   return common.utf8ToB64Url(JSON.stringify(json))
 }

@@ -10,7 +10,7 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyFeedDefs from './defs'
 
 export interface QueryParams {
-  feed?: string
+  feed: string
   limit: number
   cursor?: string
 }

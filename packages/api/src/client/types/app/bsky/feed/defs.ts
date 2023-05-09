@@ -216,6 +216,7 @@ export function validateSkeletonReplyRef(v: unknown): ValidationResult {
 
 export interface SkeletonReasonRepost {
   by: string
+  indexedAt: string
   [k: string]: unknown
 }
 

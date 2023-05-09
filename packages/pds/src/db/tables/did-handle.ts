@@ -2,6 +2,7 @@
 export interface DidHandle {
   did: string
   handle: string
+  actorType: 'user' | 'feed-generator'
 }
 
 export const tableName = 'did_handle'
