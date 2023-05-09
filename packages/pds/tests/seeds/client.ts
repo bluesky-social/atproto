@@ -1,12 +1,15 @@
 import fs from 'fs/promises'
+import { CID } from 'multiformats/cid'
 import AtpAgent from '@atproto/api'
 import { Main as Facet } from '@atproto/api/src/client/types/app/bsky/richtext/facet'
 import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/takeModerationAction'
 import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/moderation/createReport'
+import { Record as PostRecord } from '@atproto/api/src/client/types/app/bsky/feed/post'
+import { Record as LikeRecord } from '@atproto/api/src/client/types/app/bsky/feed/like'
+import { Record as FollowRecord } from '@atproto/api/src/client/types/app/bsky/graph/follow'
 import { AtUri } from '@atproto/uri'
-import { CID } from 'multiformats/cid'
-import { adminAuth } from '../_util'
 import { BlobRef } from '@atproto/lexicon'
+import { adminAuth } from '../_util'
 
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.
@@ -151,12 +154,13 @@ export class SeedClient {
     return this.profiles[by]
   }
 
-  async follow(from: string, to: string) {
+  async follow(from: string, to: string, overrides?: Partial<FollowRecord>) {
     const res = await this.agent.api.app.bsky.graph.follow.create(
       { repo: from },
       {
         subject: to,
         createdAt: new Date().toISOString(),
+        ...overrides,
       },
       this.getHeaders(from),
     )
@@ -183,6 +187,7 @@ export class SeedClient {
     facets?: Facet[],
     images?: ImageRef[],
     quote?: RecordRef,
+    overrides?: Partial<PostRecord>,
   ) {
     const imageEmbed = images && {
       $type: 'app.bsky.embed.images',
@@ -208,6 +213,7 @@ export class SeedClient {
         facets,
         embed,
         createdAt: new Date().toISOString(),
+        ...overrides,
       },
       this.getHeaders(by),
     )
@@ -245,10 +251,14 @@ export class SeedClient {
     return { image: res.data.blob, alt: filePath }
   }
 
-  async like(by: string, subject: RecordRef) {
+  async like(by: string, subject: RecordRef, overrides?: Partial<LikeRecord>) {
     const res = await this.agent.api.app.bsky.feed.like.create(
       { repo: by },
-      { subject: subject.raw, createdAt: new Date().toISOString() },
+      {
+        subject: subject.raw,
+        createdAt: new Date().toISOString(),
+        ...overrides,
+      },
       this.getHeaders(by),
     )
     this.likes[by] ??= {}

@@ -15,6 +15,7 @@ import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { PostHierarchy } from '../../../db/tables/post-hierarchy'
 import { Notification } from '../../../db/tables/notification'
+import { toSimplifiedISOSafe } from '../util'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -43,7 +44,7 @@ const insertFn = async (
     cid: cid.toString(),
     creator: uri.host,
     text: obj.text,
-    createdAt: obj.createdAt,
+    createdAt: toSimplifiedISOSafe(obj.createdAt),
     replyRoot: obj.reply?.root?.uri || null,
     replyRootCid: obj.reply?.root?.cid || null,
     replyParent: obj.reply?.parent?.uri || null,

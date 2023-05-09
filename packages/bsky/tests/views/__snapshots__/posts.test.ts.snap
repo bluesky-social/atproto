@@ -40,7 +40,7 @@ Array [
     "likeCount": 3,
     "record": Object {
       "$type": "app.bsky.feed.post",
-      "createdAt": "1970-01-01T00:00:00.000Z",
+      "createdAt": "1970-01-01T00:00:00.000000Z",
       "text": "again",
     },
     "replyCount": 2,

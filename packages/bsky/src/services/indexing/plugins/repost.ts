@@ -5,6 +5,7 @@ import * as Repost from '../../../lexicon/types/app/bsky/feed/repost'
 import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
+import { toSimplifiedISOSafe } from '../util'
 
 const lexId = lex.ids.AppBskyFeedRepost
 type IndexedRepost = Selectable<DatabaseSchemaType['repost']>
@@ -22,7 +23,7 @@ const insertFn = async (
     creator: uri.host,
     subject: obj.subject.uri,
     subjectCid: obj.subject.cid,
-    createdAt: obj.createdAt,
+    createdAt: toSimplifiedISOSafe(obj.createdAt),
     indexedAt: timestamp,
   }
   const [inserted] = await Promise.all([

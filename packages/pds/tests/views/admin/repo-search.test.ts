@@ -306,6 +306,7 @@ Array [
     "did": "user(0)",
     "handle": "aliya-hodkiewicz.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "invitesDisabled": false,
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
@@ -330,6 +331,7 @@ Array [
     "did": "user(1)",
     "handle": "cara-wiegand69.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "invitesDisabled": false,
     "moderation": Object {
       "currentAction": Object {
         "action": "com.atproto.admin.defs#takedown",
@@ -345,6 +347,7 @@ Array [
     "did": "user(2)",
     "handle": "carlos6.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "invitesDisabled": false,
     "moderation": Object {},
     "relatedRecords": Array [],
   },
@@ -355,6 +358,7 @@ Array [
     "did": "user(3)",
     "handle": "carolina-mcdermott77.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "invitesDisabled": false,
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
@@ -379,6 +383,7 @@ Array [
     "did": "user(4)",
     "handle": "eudora-dietrich4.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "invitesDisabled": false,
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
@@ -403,6 +408,7 @@ Array [
     "did": "user(5)",
     "handle": "shane-torphy52.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "invitesDisabled": false,
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
