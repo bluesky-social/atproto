@@ -124,6 +124,7 @@ async function derefedProfiles(dbTxn: Database) {
       }
     } catch (err) {
       console.log('skipping profile record', cur.did)
+      console.log(err)
     }
     return acc
   }, {} as Record<string, string[]>)
