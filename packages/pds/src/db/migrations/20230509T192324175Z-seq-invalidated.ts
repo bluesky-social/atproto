@@ -1,4 +1,4 @@
-import { Kysely } from 'kysely'
+import { Kysely, sql } from 'kysely'
 import { Dialect } from '..'
 
 export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
@@ -7,21 +7,31 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
       .alterTable('repo_seq')
       .dropConstraint('invalidated_by_fkey')
       .execute()
+    await db.schema.alterTable('repo_seq').dropColumn('invalidatedBy').execute()
+    await db.schema
+      .alterTable('repo_seq')
+      .addColumn('invalidated', 'int2', (col) => col.notNull().defaultTo(0))
+      .execute()
+  } else {
+    await db.schema.dropTable('repo_seq').execute()
+    await db.schema
+      .createTable('repo_seq')
+      .addColumn('seq', 'integer', (col) => col.autoIncrement().primaryKey())
+      .addColumn('did', 'varchar', (col) => col.notNull())
+      .addColumn('eventType', 'varchar', (col) => col.notNull())
+      .addColumn('event', sql`blob`, (col) => col.notNull())
+      .addColumn('invalidated', 'int2')
+      .addColumn('sequencedAt', 'varchar', (col) => col.notNull())
+      .execute()
   }
-  await db.schema.alterTable('repo_seq').dropColumn('invalidatedBy').execute()
-  await db.schema
-    .alterTable('repo_seq')
-    .addColumn('invalidated', 'int2', (col) => col.notNull().defaultTo(0))
-    .execute()
 }
 
 export async function down(
   db: Kysely<unknown>,
   dialect: Dialect,
 ): Promise<void> {
-  await db.schema.alterTable('repo_seq').dropColumn('invalidated').execute()
-
   if (dialect === 'pg') {
+    await db.schema.alterTable('repo_seq').dropColumn('invalidated').execute()
     await db.schema
       .alterTable('repo_seq')
       .addColumn('invalidatedBy', 'bigint')
@@ -37,9 +47,22 @@ export async function down(
       )
       .execute()
   } else {
+    await db.schema.dropTable('repo_seq').execute()
     await db.schema
-      .alterTable('repo_seq')
-      .addColumn('invalidatedBy', 'integer')
+      .createTable('repo_seq')
+      .addColumn('seq', 'integer', (col) => col.autoIncrement().primaryKey())
+      .addColumn('did', 'varchar', (col) => col.notNull())
+      .addColumn('eventType', 'varchar', (col) => col.notNull())
+      .addColumn('event', sql`blob`, (col) => col.notNull())
+      .addColumn('invalidated', 'int2')
+      .addColumn('sequencedAt', 'varchar', (col) => col.notNull())
+      .addForeignKeyConstraint(
+        'invalidated_by_fkey',
+        // @ts-ignore
+        ['invalidatedBy'],
+        'repo_seq',
+        ['seq'],
+      )
       .execute()
   }
 }
