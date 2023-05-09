@@ -41,7 +41,7 @@
       "type": "object",
       "required": ["post"],
       "properties": {
-        "post": {"type": "union", "refs": ["#postView", "#notFoundPost", "#blockedPost"]},
+        "post": {"type": "ref", "ref": "#postView"},
         "reply": {"type": "ref", "ref": "#replyRef"},
         "reason": {"type": "union", "refs": ["#reasonRepost"]}
       }

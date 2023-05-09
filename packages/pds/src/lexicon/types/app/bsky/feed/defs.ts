@@ -61,11 +61,7 @@ export function validateViewerState(v: unknown): ValidationResult {
 }
 
 export interface FeedViewPost {
-  post:
-    | PostView
-    | NotFoundPost
-    | BlockedPost
-    | { $type: string; [k: string]: unknown }
+  post: PostView
   reply?: ReplyRef
   reason?: ReasonRepost | { $type: string; [k: string]: unknown }
   [k: string]: unknown

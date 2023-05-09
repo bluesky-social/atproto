@@ -4034,12 +4034,8 @@ export const schemaDict = {
         required: ['post'],
         properties: {
           post: {
-            type: 'union',
-            refs: [
-              'lex:app.bsky.feed.defs#postView',
-              'lex:app.bsky.feed.defs#notFoundPost',
-              'lex:app.bsky.feed.defs#blockedPost',
-            ],
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#postView',
           },
           reply: {
             type: 'ref',
@@ -4449,9 +4445,9 @@ export const schemaDict = {
               thread: {
                 type: 'union',
                 refs: [
-                  'lex:app.bsky.feed.getPostThread#threadViewPost',
-                  'lex:app.bsky.feed.getPostThread#notFoundPost',
-                  'lex:app.bsky.feed.getPostThread#blockedPost',
+                  'lex:app.bsky.feed.defs#threadViewPost',
+                  'lex:app.bsky.feed.defs#notFoundPost',
+                  'lex:app.bsky.feed.defs#blockedPost',
                 ],
               },
             },

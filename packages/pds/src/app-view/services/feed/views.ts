@@ -26,7 +26,8 @@ export class FeedViews {
     embeds: FeedEmbeds,
     labels: Labels,
   ): FeedViewPost[] {
-    return items.map((item) => {
+    const feed: FeedViewPost[] = []
+    for (const item of items) {
       const post = this.formatMaybePostView(
         item.post,
         actors,
@@ -34,8 +35,9 @@ export class FeedViews {
         embeds,
         labels,
       )
+      // skip over not found & blocked posts
       if (!isPostView(post)) {
-        return { post }
+        continue
       }
       const feedPost = { post }
       if (item.reason && isSkeletonReasonRepost(item.reason)) {
@@ -70,8 +72,9 @@ export class FeedViews {
           }
         }
       }
-      return feedPost
-    })
+      feed.push(feedPost)
+    }
+    return feed
   }
 
   formatPostView(

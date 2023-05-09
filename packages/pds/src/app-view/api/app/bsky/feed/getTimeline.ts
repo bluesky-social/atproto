@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
-import { FeedAlgorithm, FeedKeyset, composeFeed } from '../util/feed'
+import { FeedAlgorithm, FeedKeyset, feedRowsToSkeleton } from '../util/feed'
 import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
@@ -22,7 +22,6 @@ export default function (server: Server, ctx: AppContext) {
 
       const feedService = ctx.services.appView.feed(ctx.db)
       const actorService = ctx.services.appView.actor(ctx.db)
-      const labelService = ctx.services.appView.label(ctx.db)
 
       const followingIdsSubquery = db
         .selectFrom('follow')
@@ -66,12 +65,8 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
       const feedItems: FeedRow[] = await feedItemsQb.execute()
-      const feed = await composeFeed(
-        feedService,
-        labelService,
-        feedItems,
-        requester,
-      )
+      const skeleton = feedRowsToSkeleton(feedItems)
+      const feed = await feedService.hydrateFeed(skeleton, requester)
 
       return {
         encoding: 'application/json',

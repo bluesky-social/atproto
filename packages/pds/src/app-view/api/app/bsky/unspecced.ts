@@ -1,9 +1,9 @@
 import { Server } from '../../../../lexicon'
-import { FeedKeyset, composeFeed } from './util/feed'
+import { FeedKeyset, feedRowsToSkeleton } from './util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow } from '../../../services/feed'
-import { FeedViewPost } from '../../../../lexicon/types/app/bsky/feed/defs'
+import { isPostView } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { NotEmptyArray } from '@atproto/common'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
@@ -26,7 +26,6 @@ export default function (server: Server, ctx: AppContext) {
 
       const feedService = ctx.services.appView.feed(ctx.db)
       const actorService = ctx.services.appView.actor(ctx.db)
-      const labelService = ctx.services.appView.label(ctx.db)
 
       const labelsToFilter = includeNsfw
         ? NO_WHATS_HOT_LABELS
@@ -63,18 +62,18 @@ export default function (server: Server, ctx: AppContext) {
       feedQb = paginate(feedQb, { limit, cursor, keyset })
 
       const feedItems: FeedRow[] = await feedQb.execute()
-      const feed: FeedViewPost[] = await composeFeed(
-        feedService,
-        labelService,
-        feedItems,
-        requester,
-      )
+      const skeleton = feedRowsToSkeleton(feedItems)
+      const feed = await feedService.hydrateFeed(skeleton, requester)
 
       const noRecordEmbeds = feed.map((post) => {
         delete post.post.record['embed']
         if (post.reply) {
-          delete post.reply.parent.record['embed']
-          delete post.reply.root.record['embed']
+          if (isPostView(post.reply.parent)) {
+            delete post.reply.parent.record['embed']
+          }
+          if (isPostView(post.reply.root)) {
+            delete post.reply.root.record['embed']
+          }
         }
         return post
       })

@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const posts: PostView[] = []
       for (const uri of uris) {
-        const post = feedService.formatPostView(
+        const post = feedService.views.formatPostView(
           uri,
           actors,
           postViews,
