@@ -1,11 +1,13 @@
 import { Kysely } from 'kysely'
 import { Dialect } from '..'
 
-export async function up(db: Kysely<unknown>): Promise<void> {
-  await db.schema
-    .alterTable('repo_seq')
-    .dropConstraint('invalidated_by_fkey')
-    .execute()
+export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
+  if (dialect === 'pg') {
+    await db.schema
+      .alterTable('repo_seq')
+      .dropConstraint('invalidated_by_fkey')
+      .execute()
+  }
   await db.schema.alterTable('repo_seq').dropColumn('invalidatedBy').execute()
   await db.schema
     .alterTable('repo_seq')
