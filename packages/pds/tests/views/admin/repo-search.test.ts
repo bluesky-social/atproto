@@ -82,165 +82,7 @@ describe('pds admin repo search view', () => {
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
     if (db.dialect === 'pg') {
-      expect(forSnapshot(result.data.repos)).toMatchInlineSnapshot(
-        snapPg,
-        `
-        Array [
-          Object {
-            "account": Object {
-              "email": "cara-wiegand69.test@bsky.app",
-            },
-            "did": "user(0)",
-            "handle": "cara-wiegand69.test",
-            "indexedAt": "1970-01-01T00:00:00.000Z",
-            "invitesDisabled": false,
-            "moderation": Object {
-              "currentAction": Object {
-                "action": "com.atproto.admin.defs#takedown",
-                "id": 1,
-              },
-            },
-            "relatedRecords": Array [],
-          },
-          Object {
-            "account": Object {
-              "email": "eudora-dietrich4.test@bsky.app",
-            },
-            "did": "user(1)",
-            "handle": "eudora-dietrich4.test",
-            "indexedAt": "1970-01-01T00:00:00.000Z",
-            "invitesDisabled": false,
-            "moderation": Object {},
-            "relatedRecords": Array [
-              Object {
-                "$type": "app.bsky.actor.profile",
-                "avatar": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(0)",
-                  },
-                  "size": 3976,
-                },
-                "description": "",
-                "displayName": "Carol Littel",
-              },
-            ],
-          },
-          Object {
-            "account": Object {
-              "email": "shane-torphy52.test@bsky.app",
-            },
-            "did": "user(2)",
-            "handle": "shane-torphy52.test",
-            "indexedAt": "1970-01-01T00:00:00.000Z",
-            "invitesDisabled": false,
-            "moderation": Object {},
-            "relatedRecords": Array [
-              Object {
-                "$type": "app.bsky.actor.profile",
-                "avatar": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(0)",
-                  },
-                  "size": 3976,
-                },
-                "description": "",
-                "displayName": "Sadie Carter",
-              },
-            ],
-          },
-          Object {
-            "account": Object {
-              "email": "aliya-hodkiewicz.test@bsky.app",
-            },
-            "did": "user(3)",
-            "handle": "aliya-hodkiewicz.test",
-            "indexedAt": "1970-01-01T00:00:00.000Z",
-            "invitesDisabled": false,
-            "moderation": Object {},
-            "relatedRecords": Array [
-              Object {
-                "$type": "app.bsky.actor.profile",
-                "avatar": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(0)",
-                  },
-                  "size": 3976,
-                },
-                "description": "",
-                "displayName": "Carlton Abernathy IV",
-              },
-            ],
-          },
-          Object {
-            "account": Object {
-              "email": "carlos6.test@bsky.app",
-            },
-            "did": "user(4)",
-            "handle": "carlos6.test",
-            "indexedAt": "1970-01-01T00:00:00.000Z",
-            "invitesDisabled": false,
-            "moderation": Object {},
-            "relatedRecords": Array [],
-          },
-          Object {
-            "account": Object {
-              "email": "carolina-mcdermott77.test@bsky.app",
-            },
-            "did": "user(5)",
-            "handle": "carolina-mcdermott77.test",
-            "indexedAt": "1970-01-01T00:00:00.000Z",
-            "invitesDisabled": false,
-            "moderation": Object {},
-            "relatedRecords": Array [
-              Object {
-                "$type": "app.bsky.actor.profile",
-                "avatar": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(0)",
-                  },
-                  "size": 3976,
-                },
-                "description": "",
-                "displayName": "Latoya Windler",
-              },
-            ],
-          },
-          Object {
-            "account": Object {
-              "email": "cayla-marquardt39.test@bsky.app",
-            },
-            "did": "user(6)",
-            "handle": "cayla-marquardt39.test",
-            "indexedAt": "1970-01-01T00:00:00.000Z",
-            "invitesDisabled": false,
-            "moderation": Object {},
-            "relatedRecords": Array [
-              Object {
-                "$type": "app.bsky.actor.profile",
-                "avatar": Object {
-                  "$type": "blob",
-                  "mimeType": "image/jpeg",
-                  "ref": Object {
-                    "$link": "cids(0)",
-                  },
-                  "size": 3976,
-                },
-                "description": "",
-                "displayName": "Rachel Kshlerin",
-              },
-            ],
-          },
-        ]
-      `,
-      )
+      expect(forSnapshot(result.data.repos)).toMatchInlineSnapshot(snapPg)
     } else {
       expect(forSnapshot(result.data.repos)).toMatchInlineSnapshot(snapSqlite)
     }
@@ -308,6 +150,7 @@ Array [
     "did": "user(0)",
     "handle": "cara-wiegand69.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "invitesDisabled": false,
     "moderation": Object {
       "currentAction": Object {
         "action": "com.atproto.admin.defs#takedown",
@@ -323,6 +166,7 @@ Array [
     "did": "user(1)",
     "handle": "eudora-dietrich4.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "invitesDisabled": false,
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
@@ -347,6 +191,7 @@ Array [
     "did": "user(2)",
     "handle": "shane-torphy52.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "invitesDisabled": false,
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
@@ -371,6 +216,7 @@ Array [
     "did": "user(3)",
     "handle": "aliya-hodkiewicz.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "invitesDisabled": false,
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
@@ -395,6 +241,7 @@ Array [
     "did": "user(4)",
     "handle": "carlos6.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "invitesDisabled": false,
     "moderation": Object {},
     "relatedRecords": Array [],
   },
@@ -405,6 +252,7 @@ Array [
     "did": "user(5)",
     "handle": "carolina-mcdermott77.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "invitesDisabled": false,
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
@@ -429,6 +277,7 @@ Array [
     "did": "user(6)",
     "handle": "cayla-marquardt39.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "invitesDisabled": false,
     "moderation": Object {},
     "relatedRecords": Array [
       Object {
