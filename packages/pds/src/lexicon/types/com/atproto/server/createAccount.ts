@@ -41,6 +41,7 @@ export interface HandlerError {
   status: number
   message?: string
   error?:
+    | 'IpAddressBlocked'
     | 'InvalidHandle'
     | 'InvalidPassword'
     | 'InvalidInviteCode'

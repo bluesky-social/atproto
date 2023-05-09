@@ -38,6 +38,12 @@ export interface Response {
   data: OutputSchema
 }
 
+export class IpAddressBlockedError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export class InvalidHandleError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message)

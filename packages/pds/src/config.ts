@@ -29,6 +29,8 @@ export interface ServerConfigValues {
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
 
+  blockedIps?: string[]
+
   databaseLocation?: string
 
   availableUserDomains: string[]
@@ -102,6 +104,10 @@ export class ServerConfig {
     )
     const privacyPolicyUrl = process.env.PRIVACY_POLICY_URL
     const termsOfServiceUrl = process.env.TERMS_OF_SERVICE_URL
+
+    const blockedIps = process.env.BLOCKED_IPS
+    ? process.env.BLOCKED_IPS.split(',')
+    : []
 
     const databaseLocation = process.env.DATABASE_LOC
 
@@ -298,6 +304,10 @@ export class ServerConfig {
       return this.publicUrl + this.cfg.termsOfServiceUrl
     }
     return this.cfg.termsOfServiceUrl
+  }
+
+  get blockedIps() {
+    return this.cfg.blockedIps
   }
 
   get databaseLocation() {

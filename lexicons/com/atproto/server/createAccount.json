@@ -33,6 +33,7 @@
         }
       },
       "errors": [
+        {"name": "IpAddressBlocked"}
         {"name": "InvalidHandle"},
         {"name": "InvalidPassword"},
         {"name": "InvalidInviteCode"},

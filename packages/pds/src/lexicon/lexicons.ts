@@ -2057,6 +2057,9 @@ export const schemaDict = {
         },
         errors: [
           {
+            name: 'IpAddressBlocked'
+          }
+          {
             name: 'InvalidHandle',
           },
           {

@@ -12,6 +12,14 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount(async ({ input, req }) => {
     const { email, password, inviteCode, recoveryKey } = input.body
 
+    const blockedIps = ctx.cfg.blockedIps
+    if (blockedIps && blockedIps.includes(req.ip)) {
+      throw new InvalidRequestError(
+        'IP address is blocked',
+        'IpAddressBlocked'
+      )
+    }
+
     if (ctx.cfg.inviteRequired && !inviteCode) {
       throw new InvalidRequestError(
         'No invite code provided',
