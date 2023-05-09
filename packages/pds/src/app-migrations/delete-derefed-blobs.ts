@@ -17,14 +17,12 @@ export async function deleteDerefedBlobsMigration(ctx: AppContext) {
 
 async function migration(ctx: AppContext) {
   await derefedRecords(ctx.db)
-  console.log('deleted derefed records')
 
   await derefedProfiles(ctx.db)
-  console.log('deleted derefed profiles')
   const { ref } = ctx.db.db.dynamic
 
-  const toDeleteDbBlobs = await ctx.db.db
-    .selectFrom('blob')
+  const deletedDbBlobs = await ctx.db.db
+    .deleteFrom('blob')
     .whereNotExists(
       ctx.db.db
         .selectFrom('repo_blob')
@@ -32,13 +30,18 @@ async function migration(ctx: AppContext) {
         .whereRef('repo_blob.cid', '=', ref('blob.cid'))
         .selectAll(),
     )
-    .selectAll()
+    .returningAll()
     .execute()
 
-  const toDeleteDbBlobCids = dedupe(toDeleteDbBlobs.map((row) => row.cid))
+  const deletedDbBlobCids = dedupe(deletedDbBlobs.map((row) => row.cid))
+
+  console.log('deleted db blobs')
+  for (const row of deletedDbBlobs) {
+    console.log(row)
+  }
 
   const stillExistingChunks = await Promise.all(
-    chunkArray(toDeleteDbBlobCids, 100).map(async (chunk) => {
+    chunkArray(deletedDbBlobCids, 100).map(async (chunk) => {
       const res = await ctx.db.db
         .selectFrom('blob')
         .where('cid', 'in', chunk)
@@ -49,16 +52,18 @@ async function migration(ctx: AppContext) {
   )
   const stillExisting = stillExistingChunks.flat()
 
-  const toDeleteBlobs = toDeleteDbBlobCids.filter(
+  const toDeleteBlobs = deletedDbBlobCids.filter(
     (cid) => !stillExisting.includes(cid),
   )
 
   console.log(`deleting ${toDeleteBlobs.length} blobs`)
+  for (const row of toDeleteBlobs) {
+    console.log(row)
+  }
 
   const chunks = chunkArray(toDeleteBlobs, 100)
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i]
-    console.log('deleting chunk: ', i)
     const res = await Promise.allSettled([
       ...chunk.map((cid) => ctx.blobstore.quarantine(CID.parse(cid))),
       ...chunk.map((cid) => {
@@ -72,30 +77,17 @@ async function migration(ctx: AppContext) {
     const rejected = res.filter((r) => r.status === 'rejected')
     for (const res of rejected) {
       if (res.status === 'rejected') {
-        console.log(res.reason)
+        console.log('rejected: ', res.reason)
       }
     }
   }
 
   console.log('finished quarantining & invalidating')
-
-  // await ctx.db.db
-  //   .deleteFrom('blob')
-  //   .whereNotExists(
-  //     ctx.db.db
-  //       .selectFrom('repo_blob')
-  //       .whereRef('repo_blob.did', '=', ref('blob.creator'))
-  //       .whereRef('repo_blob.cid', '=', ref('blob.cid'))
-  //       .selectAll(),
-  //   )
-  //   .execute()
-
-  console.log('all done!')
 }
 
 async function derefedRecords(dbTxn: Database) {
   const { ref } = dbTxn.db.dynamic
-  await dbTxn.db
+  const res = await dbTxn.db
     .deleteFrom('repo_blob')
     .whereNotExists(
       dbTxn.db
@@ -105,6 +97,10 @@ async function derefedRecords(dbTxn: Database) {
     )
     .returningAll()
     .execute()
+  console.log(`deleted derefed records`)
+  for (const row of res) {
+    console.log(row)
+  }
 }
 
 async function derefedProfiles(dbTxn: Database) {
@@ -135,6 +131,7 @@ async function derefedProfiles(dbTxn: Database) {
     return acc
   }, {} as Record<string, string[]>)
 
+  console.log('deleting derefed profiles')
   for (const did of Object.keys(profileBlobs)) {
     const uri = AtUri.make(did, 'app.bsky.actor.profile', 'self').toString()
     const cids = profileBlobs[did]
@@ -142,9 +139,13 @@ async function derefedProfiles(dbTxn: Database) {
       .deleteFrom('repo_blob')
       .where('did', '=', did)
       .where('recordUri', '=', uri)
+      .returningAll()
     if (cids.length > 0) {
       builder = builder.where('cid', 'not in', cids)
     }
-    await builder.execute()
+    const res = await builder.execute()
+    for (const row of res) {
+      console.log(row)
+    }
   }
 }
