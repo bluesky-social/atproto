@@ -101,9 +101,9 @@ import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphList from './types/app/bsky/graph/list'
 import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
-import * as AppBskyGraphSubscribeMuteList from './types/app/bsky/graph/subscribeMuteList'
+import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
-import * as AppBskyGraphUnsubscribeMuteList from './types/app/bsky/graph/unsubscribeMuteList'
+import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
@@ -204,9 +204,9 @@ export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 export * as AppBskyGraphList from './types/app/bsky/graph/list'
 export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
-export * as AppBskyGraphSubscribeMuteList from './types/app/bsky/graph/subscribeMuteList'
+export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
-export * as AppBskyGraphUnsubscribeMuteList from './types/app/bsky/graph/unsubscribeMuteList'
+export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
@@ -1464,14 +1464,14 @@ export class GraphNS {
       })
   }
 
-  subscribeMuteList(
-    data?: AppBskyGraphSubscribeMuteList.InputSchema,
-    opts?: AppBskyGraphSubscribeMuteList.CallOptions,
-  ): Promise<AppBskyGraphSubscribeMuteList.Response> {
+  muteActorList(
+    data?: AppBskyGraphMuteActorList.InputSchema,
+    opts?: AppBskyGraphMuteActorList.CallOptions,
+  ): Promise<AppBskyGraphMuteActorList.Response> {
     return this._service.xrpc
-      .call('app.bsky.graph.subscribeMuteList', opts?.qp, data, opts)
+      .call('app.bsky.graph.muteActorList', opts?.qp, data, opts)
       .catch((e) => {
-        throw AppBskyGraphSubscribeMuteList.toKnownErr(e)
+        throw AppBskyGraphMuteActorList.toKnownErr(e)
       })
   }
 
@@ -1486,14 +1486,14 @@ export class GraphNS {
       })
   }
 
-  unsubscribeMuteList(
-    data?: AppBskyGraphUnsubscribeMuteList.InputSchema,
-    opts?: AppBskyGraphUnsubscribeMuteList.CallOptions,
-  ): Promise<AppBskyGraphUnsubscribeMuteList.Response> {
+  unmuteActorList(
+    data?: AppBskyGraphUnmuteActorList.InputSchema,
+    opts?: AppBskyGraphUnmuteActorList.CallOptions,
+  ): Promise<AppBskyGraphUnmuteActorList.Response> {
     return this._service.xrpc
-      .call('app.bsky.graph.unsubscribeMuteList', opts?.qp, data, opts)
+      .call('app.bsky.graph.unmuteActorList', opts?.qp, data, opts)
       .catch((e) => {
-        throw AppBskyGraphUnsubscribeMuteList.toKnownErr(e)
+        throw AppBskyGraphUnmuteActorList.toKnownErr(e)
       })
   }
 }

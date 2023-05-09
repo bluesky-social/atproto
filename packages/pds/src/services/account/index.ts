@@ -290,7 +290,7 @@ export class AccountService {
     }, {} as Record<string, boolean>)
   }
 
-  async subscribeMuteList(info: {
+  async muteActorList(info: {
     list: string
     mutedByDid: string
     createdAt?: Date
@@ -306,7 +306,7 @@ export class AccountService {
       .execute()
   }
 
-  async unsubscribeMuteList(info: { list: string; mutedByDid: string }) {
+  async unmuteActorList(info: { list: string; mutedByDid: string }) {
     const { list, mutedByDid } = info
     await this.db.db
       .deleteFrom('list_mute')
@@ -323,17 +323,12 @@ export class AccountService {
       .where('did', 'in', sql`(${subjectRefs})`)
       .select('did as muted')
     const listMute = this.db.db
-      .selectFrom('list_mute')
-      .innerJoin('list', 'list.uri', 'list_mute.listUri')
-      .innerJoin('list_item', (join) =>
-        join
-          .onRef('list_item.creator', '=', 'list.creator')
-          .onRef('list_item.listUri', '=', 'list.uri'),
-      )
+      .selectFrom('list_item')
+      .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
       .where('list_mute.mutedByDid', '=', requester)
       .whereRef('list_item.subjectDid', 'in', sql`(${subjectRefs})`)
       .select('list_item.subjectDid as muted')
-    return actorMute.union(listMute)
+    return actorMute.unionAll(listMute)
   }
 
   async search(opts: {

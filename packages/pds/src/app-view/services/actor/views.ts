@@ -252,13 +252,9 @@ export class ActorViews {
   ): Promise<Record<string, ListViewBasic>> {
     if (subjects.length < 1) return {}
     const res = await this.db.db
-      .selectFrom('list_mute')
-      .innerJoin('list', 'list.uri', 'list_mute.listUri')
-      .innerJoin('list_item', (join) =>
-        join
-          .onRef('list_item.creator', '=', 'list.creator')
-          .onRef('list_item.listUri', '=', 'list.uri'),
-      )
+      .selectFrom('list_item')
+      .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
+      .innerJoin('list', 'list.uri', 'list_item.listUri')
       .where('list_mute.mutedByDid', '=', mutedBy)
       .where('list_item.subjectDid', 'in', subjects)
       .selectAll('list')

@@ -4628,7 +4628,7 @@ export const schemaDict = {
       },
       listView: {
         type: 'object',
-        required: ['uri', 'creator', 'name', 'purpose'],
+        required: ['uri', 'creator', 'name', 'purpose', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
@@ -4700,7 +4700,8 @@ export const schemaDict = {
       },
       modlist: {
         type: 'token',
-        description: 'A list of actors to apply an aggregate moderation on',
+        description:
+          'A list of actors to apply an aggregate moderation action (mute/block) on',
       },
       listViewerState: {
         type: 'object',
@@ -4992,7 +4993,7 @@ export const schemaDict = {
           properties: {
             actor: {
               type: 'string',
-              format: 'did',
+              format: 'at-identifier',
             },
             limit: {
               type: 'integer',
@@ -5181,9 +5182,9 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyGraphSubscribeMuteList: {
+  AppBskyGraphMuteActorList: {
     lexicon: 1,
-    id: 'app.bsky.graph.subscribeMuteList',
+    id: 'app.bsky.graph.muteActorList',
     defs: {
       main: {
         type: 'procedure',
@@ -5227,9 +5228,9 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyGraphUnsubscribeMuteList: {
+  AppBskyGraphUnmuteActorList: {
     lexicon: 1,
-    id: 'app.bsky.graph.unsubscribeMuteList',
+    id: 'app.bsky.graph.unmuteActorList',
     defs: {
       main: {
         type: 'procedure',
@@ -5623,9 +5624,9 @@ export const ids = {
   AppBskyGraphList: 'app.bsky.graph.list',
   AppBskyGraphListitem: 'app.bsky.graph.listitem',
   AppBskyGraphMuteActor: 'app.bsky.graph.muteActor',
-  AppBskyGraphSubscribeMuteList: 'app.bsky.graph.subscribeMuteList',
+  AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
-  AppBskyGraphUnsubscribeMuteList: 'app.bsky.graph.unsubscribeMuteList',
+  AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',

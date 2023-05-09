@@ -39,7 +39,7 @@ export interface ListView {
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: string
   viewer?: ListViewerState
-  indexedAt?: string
+  indexedAt: string
   [k: string]: unknown
 }
 
@@ -76,7 +76,7 @@ export function validateListItemView(v: unknown): ValidationResult {
 
 export type ListPurpose = 'app.bsky.graph.defs#modlist' | (string & {})
 
-/** A list of actors to apply an aggregate moderation on */
+/** A list of actors to apply an aggregate moderation action (mute/block) on */
 export const MODLIST = 'app.bsky.graph.defs#modlist'
 
 export interface ListViewerState {

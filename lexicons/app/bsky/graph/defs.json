@@ -16,17 +16,17 @@
     },
     "listView": {
       "type": "object",
-      "required": ["uri", "creator", "name", "purpose"],
+      "required": ["uri", "creator", "name", "purpose", "indexedAt"],
       "properties": {
         "uri": {"type": "string", "format": "at-uri"},
         "creator": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
         "name": {"type": "string", "maxLength": 64, "minLength": 1},
         "purpose": {"type": "ref", "ref": "#listPurpose"},
         "description": {"type": "string", "maxGraphemes": 300, "maxLength": 3000},
-          "descriptionFacets": {
-            "type": "array",
-            "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
-          },
+        "descriptionFacets": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
+        },
         "avatar": {"type": "string"},
         "viewer": {"type": "ref", "ref": "#listViewerState"},
         "indexedAt": {"type": "string", "format": "datetime"}
@@ -52,7 +52,7 @@
     },
     "modlist": {
       "type": "token",
-      "description": "A list of actors to apply an aggregate moderation on"
+      "description": "A list of actors to apply an aggregate moderation action (mute/block) on"
     },
     "listViewerState": {
       "type": "object",

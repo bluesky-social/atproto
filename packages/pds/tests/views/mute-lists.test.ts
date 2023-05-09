@@ -80,7 +80,7 @@ describe('pds views with mutes from mute lists', () => {
   })
 
   it('uses a list for mutes', async () => {
-    await agent.api.app.bsky.graph.subscribeMuteList(
+    await agent.api.app.bsky.graph.muteActorList(
       {
         list: listUri,
       },
@@ -261,7 +261,7 @@ describe('pds views with mutes from mute lists', () => {
   })
 
   it('returns a users own list mutes', async () => {
-    await agent.api.app.bsky.graph.subscribeMuteList(
+    await agent.api.app.bsky.graph.muteActorList(
       {
         list: otherListUri,
       },
@@ -293,7 +293,7 @@ describe('pds views with mutes from mute lists', () => {
   })
 
   it('allows unsubscribing from a mute list', async () => {
-    await agent.api.app.bsky.graph.unsubscribeMuteList(
+    await agent.api.app.bsky.graph.unmuteActorList(
       {
         list: otherListUri,
       },

@@ -83,9 +83,9 @@ import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
-import * as AppBskyGraphSubscribeMuteList from './types/app/bsky/graph/subscribeMuteList'
+import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
-import * as AppBskyGraphUnsubscribeMuteList from './types/app/bsky/graph/unsubscribeMuteList'
+import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
@@ -854,10 +854,10 @@ export class GraphNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  subscribeMuteList<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyGraphSubscribeMuteList.Handler<ExtractAuth<AV>>>,
+  muteActorList<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyGraphMuteActorList.Handler<ExtractAuth<AV>>>,
   ) {
-    const nsid = 'app.bsky.graph.subscribeMuteList' // @ts-ignore
+    const nsid = 'app.bsky.graph.muteActorList' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -868,10 +868,10 @@ export class GraphNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  unsubscribeMuteList<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyGraphUnsubscribeMuteList.Handler<ExtractAuth<AV>>>,
+  unmuteActorList<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyGraphUnmuteActorList.Handler<ExtractAuth<AV>>>,
   ) {
-    const nsid = 'app.bsky.graph.unsubscribeMuteList' // @ts-ignore
+    const nsid = 'app.bsky.graph.unmuteActorList' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

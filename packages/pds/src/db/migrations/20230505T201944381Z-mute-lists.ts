@@ -32,11 +32,16 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('reasonFacets', 'varchar')
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .addUniqueConstraint('list_item_unique_subect_in_list', [
-      'creator',
+    .addUniqueConstraint('list_item_unique_subject_in_list', [
       'listUri',
       'subjectDid',
     ])
+    .execute()
+
+  await db.schema
+    .createIndex('list_item_creator_idx')
+    .on('list_item')
+    .column('creator')
     .execute()
 
   await db.schema
@@ -51,13 +56,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('mutedByDid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint('list_mute_pkey', ['mutedByDid', 'listUri'])
-    .execute()
-
-  // missed index in `actor-block-init` migration
-  await db.schema
-    .createIndex('actor_block_creator_idx')
-    .on('actor_block')
-    .column('creator')
     .execute()
 }
 

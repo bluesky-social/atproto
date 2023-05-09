@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.graph.subscribeMuteList",
+  "id": "app.bsky.graph.muteActorList",
   "defs": {
     "main": {
       "type": "procedure",

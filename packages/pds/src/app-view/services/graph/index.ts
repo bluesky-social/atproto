@@ -47,15 +47,18 @@ export class GraphService {
     const subjectRefs = sql.join(refs)
     return this.db.db
       .selectFrom('actor_block')
-      .where((qb) =>
-        qb
-          .where('actor_block.creator', '=', requester)
-          .whereRef('actor_block.subjectDid', 'in', sql`(${subjectRefs})`),
-      )
-      .orWhere((qb) =>
-        qb
-          .where('actor_block.subjectDid', '=', requester)
-          .whereRef('actor_block.creator', 'in', sql`(${subjectRefs})`),
+      .where((outer) =>
+        outer
+          .where((qb) =>
+            qb
+              .where('actor_block.creator', '=', requester)
+              .whereRef('actor_block.subjectDid', 'in', sql`(${subjectRefs})`),
+          )
+          .orWhere((qb) =>
+            qb
+              .where('actor_block.subjectDid', '=', requester)
+              .whereRef('actor_block.creator', 'in', sql`(${subjectRefs})`),
+          ),
       )
       .select(['creator', 'subjectDid'])
   }
