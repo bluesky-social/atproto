@@ -143,14 +143,9 @@ export class RepoService {
     const storage = new SqlRepoStorage(this.db, did)
     const commit = await this.formatCommit(storage, did, writes, swapCommitCid)
     try {
-      await this.serviceTx(async (srvcTx) => {
-        await srvcTx.processCommit(
-          did,
-          writes,
-          commit,
-          new Date().toISOString(),
-        )
-      })
+      await this.serviceTx(async (srvcTx) =>
+        srvcTx.processCommit(did, writes, commit, new Date().toISOString()),
+      )
     } catch (err) {
       if (err instanceof ConcurrentWriteError) {
         if (times <= 1) {
@@ -251,7 +246,30 @@ export class RepoService {
     })
   }
 
-  async rebaseRepo(did: string, now: string, swapCommit?: CID) {
+  async rebaseRepo(did: string, swapCommit?: CID) {
+    this.db.assertNotTransaction()
+    const storage = new SqlRepoStorage(this.db, did)
+    const currRoot = await storage.getHead()
+    if (!currRoot) {
+      throw new InvalidRequestError(
+        `${did} is not a registered repo on this server`,
+      )
+    }
+    const repo = await Repo.load(storage, currRoot)
+    const rebaseData = await repo.formatRebase(this.repoSigningKey)
+
+    // rebases are expensive & should be done rarely, we don't try to re-process on concurrent writes
+    await this.serviceTx(async (srvcTx) =>
+      srvcTx.processRebase(did, rebaseData, swapCommit),
+    )
+  }
+
+  async processRebase(
+    did: string,
+    rebaseData: RebaseData,
+    swapCommit?: CID,
+    now?: string,
+  ) {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
     const currRoot = await storage.lockHead()
@@ -261,8 +279,6 @@ export class RepoService {
     if (swapCommit && !currRoot.equals(swapCommit)) {
       throw new BadCommitSwapError(currRoot)
     }
-    const repo = await Repo.load(storage, currRoot)
-    const rebaseData = await repo.formatRebase(this.repoSigningKey)
     await Promise.all([
       storage.applyRebase(rebaseData),
       this.afterRebaseProcessing(did, rebaseData),
