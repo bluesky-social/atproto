@@ -66,7 +66,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       .selectFrom('repo_seq')
       .selectAll()
       .orderBy('seq', 'asc')
-      .where('invalidatedBy', 'is', null)
+      .where('invalidated', '=', 0)
     if (earliestSeq !== undefined) {
       seqQb = seqQb.where('seq', '>', earliestSeq)
     }
