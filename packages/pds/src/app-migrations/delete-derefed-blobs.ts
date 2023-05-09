@@ -16,8 +16,8 @@ export async function migration(ctx: AppContext) {
   console.log('deleted derefed profiles')
   const { ref } = ctx.db.db.dynamic
 
-  const deletedDbBlobs = await ctx.db.db
-    .deleteFrom('blob')
+  const toDeleteDbBlobs = await ctx.db.db
+    .selectFrom('blob')
     .whereNotExists(
       ctx.db.db
         .selectFrom('repo_blob')
@@ -25,14 +25,13 @@ export async function migration(ctx: AppContext) {
         .whereRef('repo_blob.cid', '=', ref('blob.cid'))
         .selectAll(),
     )
-    .returningAll()
+    .selectAll()
     .execute()
-  console.log('deleted db blob rows')
 
-  const deletedDbBlobCids = dedupe(deletedDbBlobs.map((row) => row.cid))
+  const toDeleteDbBlobCids = dedupe(toDeleteDbBlobs.map((row) => row.cid))
 
   const stillExistingChunks = await Promise.all(
-    chunkArray(deletedDbBlobCids, 100).map(async (chunk) => {
+    chunkArray(toDeleteDbBlobCids, 100).map(async (chunk) => {
       const res = await ctx.db.db
         .selectFrom('blob')
         .where('cid', 'in', chunk)
@@ -43,16 +42,16 @@ export async function migration(ctx: AppContext) {
   )
   const stillExisting = stillExistingChunks.flat()
 
-  const toDeleteBlobs = deletedDbBlobCids.filter(
+  const toDeleteBlobs = toDeleteDbBlobCids.filter(
     (cid) => !stillExisting.includes(cid),
   )
 
   console.log(`deleting ${toDeleteBlobs.length} blobs`)
 
   const chunks = chunkArray(toDeleteBlobs, 100)
-  for (const chunk of chunks) {
-    console.log('deleting chunk')
-    console.log(chunk)
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i]
+    console.log('deleting chunk: ', i)
     await Promise.allSettled([
       ...chunk.map((cid) => ctx.blobstore.quarantine(CID.parse(cid))),
       ...chunk.map((cid) => {
@@ -64,6 +63,21 @@ export async function migration(ctx: AppContext) {
       }),
     ])
   }
+
+  console.log('finished quarantining & invalidating')
+
+  await ctx.db.db
+    .deleteFrom('blob')
+    .whereNotExists(
+      ctx.db.db
+        .selectFrom('repo_blob')
+        .whereRef('repo_blob.did', '=', ref('blob.creator'))
+        .whereRef('repo_blob.cid', '=', ref('blob.cid'))
+        .selectAll(),
+    )
+    .execute()
+
+  console.log('all done!')
 }
 
 async function derefedRecords(dbTxn: Database) {
