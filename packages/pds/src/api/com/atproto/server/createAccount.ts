@@ -219,6 +219,11 @@ const getDidAndPlcOp = async (
       'DID document pds endpoint does not match service endpoint',
       'PoorlyFormattedDidDoc',
     )
+  } else if (atpData.signingKey !== ctx.repoSigningKey.did(0)) {
+    throw new InvalidRequestError(
+      'DID document signing key does not match service signing key',
+      'PoorlyFormattedDidDoc',
+    )
   }
 
   if (input.did.startsWith('did:plc')) {

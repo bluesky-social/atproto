@@ -252,6 +252,18 @@ describe('account', () => {
     await expect(attempt3).rejects.toThrow(
       'PLC DID does not include service rotation key',
     )
+
+    const did4 = await ctx.plcClient.createDid({
+      ...baseDidInfo,
+      signingKey: userKey.did(),
+    })
+    const attempt4 = agent.api.com.atproto.server.createAccount({
+      ...baseAccntInfo,
+      did: did4,
+    })
+    await expect(attempt4).rejects.toThrow(
+      'DID document signing key does not match service signing key',
+    )
   })
 
   it('allows administrative email updates', async () => {
