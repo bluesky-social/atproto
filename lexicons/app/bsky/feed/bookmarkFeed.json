@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.bookmarkFeed",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Bookmark a 3rd party feed for use across clients",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["feed"],
+          "properties": {
+            "feed": { "type": "string", "format": "at-identifier" }
+          }
+        }
+      }
+    }
+  }
+}

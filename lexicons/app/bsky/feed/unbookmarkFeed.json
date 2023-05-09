@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.unbookmarkFeed",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Remove a bookmark for a 3rd party feed",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["feed"],
+          "properties": {
+            "feed": { "type": "string", "format": "at-identifier" }
+          }
+        }
+      }
+    }
+  }
+}

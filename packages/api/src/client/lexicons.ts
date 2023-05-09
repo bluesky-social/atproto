@@ -3958,6 +3958,29 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedBookmarkFeed: {
+    lexicon: 1,
+    id: 'app.bsky.feed.bookmarkFeed',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Bookmark a 3rd party feed for use across clients',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              feed: {
+                type: 'string',
+                format: 'at-identifier',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedDefs: {
     lexicon: 1,
     id: 'app.bsky.feed.defs',
@@ -4241,6 +4264,50 @@ export const schemaDict = {
             name: 'BlockedByActor',
           },
         ],
+      },
+    },
+  },
+  AppBskyFeedGetBookmarkedFeeds: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getBookmarkedFeeds',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Retrieve a list of the authenticated user's bookmarked feeds",
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feeds'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feeds: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -4749,6 +4816,29 @@ export const schemaDict = {
             createdAt: {
               type: 'string',
               format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedUnbookmarkFeed: {
+    lexicon: 1,
+    id: 'app.bsky.feed.unbookmarkFeed',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Remove a bookmark for a 3rd party feed',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              feed: {
+                type: 'string',
+                format: 'at-identifier',
+              },
             },
           },
         },
@@ -5391,8 +5481,10 @@ export const ids = {
   AppBskyEmbedImages: 'app.bsky.embed.images',
   AppBskyEmbedRecord: 'app.bsky.embed.record',
   AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
+  AppBskyFeedBookmarkFeed: 'app.bsky.feed.bookmarkFeed',
   AppBskyFeedDefs: 'app.bsky.feed.defs',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
+  AppBskyFeedGetBookmarkedFeeds: 'app.bsky.feed.getBookmarkedFeeds',
   AppBskyFeedGetFeed: 'app.bsky.feed.getFeed',
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
@@ -5403,6 +5495,7 @@ export const ids = {
   AppBskyFeedLike: 'app.bsky.feed.like',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
+  AppBskyFeedUnbookmarkFeed: 'app.bsky.feed.unbookmarkFeed',
   AppBskyGraphBlock: 'app.bsky.graph.block',
   AppBskyGraphFollow: 'app.bsky.graph.follow',
   AppBskyGraphGetBlocks: 'app.bsky.graph.getBlocks',

@@ -78,8 +78,10 @@ import * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 import * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 import * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
+import * as AppBskyFeedBookmarkFeed from './types/app/bsky/feed/bookmarkFeed'
 import * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
+import * as AppBskyFeedGetBookmarkedFeeds from './types/app/bsky/feed/getBookmarkedFeeds'
 import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
@@ -90,6 +92,7 @@ import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedLike from './types/app/bsky/feed/like'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
+import * as AppBskyFeedUnbookmarkFeed from './types/app/bsky/feed/unbookmarkFeed'
 import * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
@@ -175,8 +178,10 @@ export * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 export * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 export * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
+export * as AppBskyFeedBookmarkFeed from './types/app/bsky/feed/bookmarkFeed'
 export * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
 export * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
+export * as AppBskyFeedGetBookmarkedFeeds from './types/app/bsky/feed/getBookmarkedFeeds'
 export * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
@@ -187,6 +192,7 @@ export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 export * as AppBskyFeedLike from './types/app/bsky/feed/like'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
+export * as AppBskyFeedUnbookmarkFeed from './types/app/bsky/feed/unbookmarkFeed'
 export * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 export * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
@@ -1100,6 +1106,17 @@ export class FeedNS {
     this.repost = new RepostRecord(service)
   }
 
+  bookmarkFeed(
+    data?: AppBskyFeedBookmarkFeed.InputSchema,
+    opts?: AppBskyFeedBookmarkFeed.CallOptions,
+  ): Promise<AppBskyFeedBookmarkFeed.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.bookmarkFeed', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyFeedBookmarkFeed.toKnownErr(e)
+      })
+  }
+
   getAuthorFeed(
     params?: AppBskyFeedGetAuthorFeed.QueryParams,
     opts?: AppBskyFeedGetAuthorFeed.CallOptions,
@@ -1108,6 +1125,17 @@ export class FeedNS {
       .call('app.bsky.feed.getAuthorFeed', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetAuthorFeed.toKnownErr(e)
+      })
+  }
+
+  getBookmarkedFeeds(
+    params?: AppBskyFeedGetBookmarkedFeeds.QueryParams,
+    opts?: AppBskyFeedGetBookmarkedFeeds.CallOptions,
+  ): Promise<AppBskyFeedGetBookmarkedFeeds.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getBookmarkedFeeds', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetBookmarkedFeeds.toKnownErr(e)
       })
   }
 
@@ -1185,6 +1213,17 @@ export class FeedNS {
       .call('app.bsky.feed.getTimeline', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetTimeline.toKnownErr(e)
+      })
+  }
+
+  unbookmarkFeed(
+    data?: AppBskyFeedUnbookmarkFeed.InputSchema,
+    opts?: AppBskyFeedUnbookmarkFeed.CallOptions,
+  ): Promise<AppBskyFeedUnbookmarkFeed.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.unbookmarkFeed', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyFeedUnbookmarkFeed.toKnownErr(e)
       })
   }
 }
