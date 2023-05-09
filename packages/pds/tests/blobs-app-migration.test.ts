@@ -4,7 +4,7 @@ import { Database } from '../src'
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import { ids } from '../src/lexicon/lexicons'
 import { ImageRef, SeedClient } from './seeds/client'
-import { migration } from '../src/app-migrations/delete-derefed-blobs'
+import { deleteDerefedBlobsMigration } from '../src/app-migrations/delete-derefed-blobs'
 
 describe('blob deletes app migration', () => {
   let server: TestServerInfo
@@ -101,7 +101,11 @@ describe('blob deletes app migration', () => {
   })
 
   it('runs migration', async () => {
-    await migration(server.ctx)
+    // const before = await db.db.selectFrom('blob').selectAll().execute()
+    await deleteDerefedBlobsMigration(server.ctx)
+    // const after = await db.db.selectFrom('blob').selectAll().execute()
+    // console.log('before: ', before)
+    // console.log('after: ', after)
   })
 
   const checkBlob = async (

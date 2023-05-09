@@ -83,6 +83,7 @@ export class RepoBlobs {
   }
 
   async deleteDereferencedBlobs(did: string, writes: PreparedWrite[]) {
+    return
     const deletes = writes.filter(
       (w) => w.action === WriteOpAction.Delete,
     ) as PreparedDelete[]
