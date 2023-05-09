@@ -62,7 +62,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropIndex('list_creator_idx').execute()
   await db.schema.dropIndex('list_item_subject_idx').execute()
-  await db.schema.dropIndex('actor_block_creator_idx').execute()
   await db.schema.dropTable('list').execute()
   await db.schema.dropTable('list_item').execute()
   await db.schema.dropTable('list_mute').execute()
