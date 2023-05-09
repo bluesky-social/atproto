@@ -38,7 +38,9 @@
         {"name": "InvalidPassword"},
         {"name": "InvalidInviteCode"},
         {"name": "HandleNotAvailable"},
-        {"name": "UnsupportedDomain"}
+        {"name": "UnsupportedDomain"},
+        {"name": "CouldNotResolveDid"},
+        {"name": "PoorlyFormattedDidDoc"}
       ]
     }
   }

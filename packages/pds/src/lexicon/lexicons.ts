@@ -2169,6 +2169,12 @@ export const schemaDict = {
           {
             name: 'UnsupportedDomain',
           },
+          {
+            name: 'CouldNotResolveDid',
+          },
+          {
+            name: 'PoorlyFormattedDidDoc',
+          },
         ],
       },
     },

@@ -69,6 +69,18 @@ export class UnsupportedDomainError extends XRPCError {
   }
 }
 
+export class CouldNotResolveDidError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
+export class PoorlyFormattedDidDocError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'InvalidHandle') return new InvalidHandleError(e)
@@ -76,6 +88,9 @@ export function toKnownErr(e: any) {
     if (e.error === 'InvalidInviteCode') return new InvalidInviteCodeError(e)
     if (e.error === 'HandleNotAvailable') return new HandleNotAvailableError(e)
     if (e.error === 'UnsupportedDomain') return new UnsupportedDomainError(e)
+    if (e.error === 'CouldNotResolveDid') return new CouldNotResolveDidError(e)
+    if (e.error === 'PoorlyFormattedDidDoc')
+      return new PoorlyFormattedDidDocError(e)
   }
   return e
 }

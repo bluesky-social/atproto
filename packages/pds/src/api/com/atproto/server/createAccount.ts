@@ -206,15 +206,18 @@ const getDidAndPlcOp = async (
   } catch (err) {
     throw new InvalidRequestError(
       `could not resolve valid DID document :${input.did}`,
+      'CouldNotResolveDid',
     )
   }
   if (atpData.handle !== handle) {
     throw new InvalidRequestError(
-      `provided handle ${handle} does not match DID document handle ${atpData.handle}`,
+      'provided handle does not match DID document handle',
+      'PoorlyFormattedDidDoc',
     )
   } else if (atpData.pds !== ctx.cfg.publicUrl) {
     throw new InvalidRequestError(
-      `DID document pds endpoint ${atpData.pds} does not match service endpoint ${ctx.cfg.publicUrl}`,
+      'DID document pds endpoint does not match service endpoint',
+      'PoorlyFormattedDidDoc',
     )
   }
 
@@ -222,7 +225,8 @@ const getDidAndPlcOp = async (
     const data = await ctx.plcClient.getDocumentData(input.did)
     if (!data.rotationKeys.includes(ctx.plcRotationKey.did())) {
       throw new InvalidRequestError(
-        `PLC DID does not include service rotation key: ${ctx.plcRotationKey.did()}`,
+        'PLC DID does not include service rotation key',
+        'PoorlyFormattedDidDoc',
       )
     }
   }

@@ -47,6 +47,8 @@ export interface HandlerError {
     | 'InvalidInviteCode'
     | 'HandleNotAvailable'
     | 'UnsupportedDomain'
+    | 'CouldNotResolveDid'
+    | 'PoorlyFormattedDidDoc'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
