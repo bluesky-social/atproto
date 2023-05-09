@@ -39,12 +39,17 @@ describe('handle validation', () => {
     expectValid('jaymome-johnber123456.test')
     expectValid('jay.mome-johnber123456.test')
     expectValid('john.test.bsky.app')
-    expectValid('laptop.local')
-    expectValid('laptop.arpa')
 
     // NOTE: this probably isn't ever going to be a real domain, but my read of
     // the RFC is that it would be possible
     expectValid('john.t')
+  })
+
+  // NOTE: we may change this at the proto level; currently only disallowed at
+  // the registration level
+  it('allows .local and .arpa handles (proto-level)', () => {
+    expectValid('laptop.local')
+    expectValid('laptop.arpa')
   })
 
   it('allows punycode handles', () => {
@@ -111,6 +116,13 @@ describe('handle validation', () => {
     expectInvalid('joh-.test')
     expectInvalid('john.-est')
     expectInvalid('john.tes-')
+  })
+
+  it('throws on "dotless" TLD handles', () => {
+    expectInvalid('org')
+    expectInvalid('ai')
+    expectInvalid('gg')
+    expectInvalid('io')
   })
 
   it('correctly validates corner cases (modern vs. old RFCs)', () => {
