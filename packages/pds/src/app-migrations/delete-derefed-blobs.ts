@@ -113,13 +113,17 @@ async function derefedProfiles(dbTxn: Database) {
       acc[cur.did] = []
       return acc
     }
-    const record = cborToLex(cur.content) as ProfileRecord
-    acc[cur.did] ??= []
-    if (record.avatar) {
-      acc[cur.did].push(record.avatar.ref.toString())
-    }
-    if (record.banner) {
-      acc[cur.did].push(record.banner.ref.toString())
+    try {
+      const record = cborToLex(cur.content) as ProfileRecord
+      acc[cur.did] ??= []
+      if (record.avatar) {
+        acc[cur.did].push(record.avatar.ref.toString())
+      }
+      if (record.banner) {
+        acc[cur.did].push(record.banner.ref.toString())
+      }
+    } catch (err) {
+      console.log('skipping profile record', cur.did)
     }
     return acc
   }, {} as Record<string, string[]>)
