@@ -3,7 +3,11 @@
   "version": "0.1.0",
   "main": "src/index.ts",
   "license": "MIT",
-  "repository": "git@github.com:bluesky-social/atproto.git",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto.git",
+    "directory": "packages/repo"
+  },
   "scripts": {
     "test": "jest",
     "test:profile": "node --inspect ../../node_modules/.bin/jest",
