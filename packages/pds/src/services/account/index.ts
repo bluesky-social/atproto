@@ -416,6 +416,8 @@ export class AccountService {
       .deleteFrom('did_handle')
       .where('did_handle.did', '=', did)
       .execute()
+    const seqEvt = await sequencer.formatSeqTombstone(did)
+    await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
   selectInviteCodesQb() {
