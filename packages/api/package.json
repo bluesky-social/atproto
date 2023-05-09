@@ -10,7 +10,10 @@
     "update-main-to-src": "node ./update-pkg.js --update-main-to-src",
     "prepublish": "npm run update-main-to-dist",
     "postpublish": "npm run update-main-to-src",
-    "test": "jest"
+    "test": "jest",
+    "bench": "jest --config jest.bench.config.js",
+    "bench:profile": "node --inspect-brk ../../node_modules/.bin/jest --config jest.bench.config.js"
+
   },
   "license": "MIT",
   "repository": {
