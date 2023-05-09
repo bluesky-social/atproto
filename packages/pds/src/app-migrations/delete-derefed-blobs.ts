@@ -52,7 +52,7 @@ export async function migration(ctx: AppContext) {
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i]
     console.log('deleting chunk: ', i)
-    await Promise.allSettled([
+    const res = await Promise.allSettled([
       ...chunk.map((cid) => ctx.blobstore.quarantine(CID.parse(cid))),
       ...chunk.map((cid) => {
         const paths = ImageUriBuilder.commonSignedUris.map((id) => {
@@ -62,6 +62,12 @@ export async function migration(ctx: AppContext) {
         return ctx.imgInvalidator?.invalidate(cid, paths)
       }),
     ])
+    const rejected = res.filter((r) => r.status === 'rejected')
+    for (const res of rejected) {
+      if (res.status === 'rejected') {
+        console.log(res.reason)
+      }
+    }
   }
 
   console.log('finished quarantining & invalidating')
