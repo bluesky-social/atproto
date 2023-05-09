@@ -201,7 +201,13 @@ export const forSnapshot = (obj: unknown) => {
       return take(unknown, str)
     }
     if (str.match(/^\d{4}-\d{2}-\d{2}T/)) {
-      return constantDate
+      if (str.match(/\d{6}Z$/)) {
+        return constantDate.replace('Z', '000Z') // e.g. microseconds in record createdAt
+      } else if (str.endsWith('+00:00')) {
+        return constantDate.replace('Z', '+00:00') // e.g. timezone in record createdAt
+      } else {
+        return constantDate
+      }
     }
     if (str.match(/^\d+::bafy/)) {
       return constantKeysetCursor
