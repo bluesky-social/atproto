@@ -147,7 +147,12 @@ export const runPds = async (cfg: PdsConfig): Promise<PdsServerInfo> => {
   })
 
   const blobstore = new pds.MemoryBlobStore()
-  const db = pds.Database.memory()
+  const db = config.dbPostgresUrl
+    ? pds.Database.postgres({
+        url: config.dbPostgresUrl,
+        schema: config.dbPostgresSchema,
+      })
+    : pds.Database.memory()
   await db.migrateToLatestOrThrow()
   const repoSigningKey = await crypto.Secp256k1Keypair.create()
   const plcRotationKey = await crypto.Secp256k1Keypair.create()

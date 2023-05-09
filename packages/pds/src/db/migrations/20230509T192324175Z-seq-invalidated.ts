@@ -24,7 +24,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
       .addColumn('did', 'varchar', (col) => col.notNull())
       .addColumn('eventType', 'varchar', (col) => col.notNull())
       .addColumn('event', sql`blob`, (col) => col.notNull())
-      .addColumn('invalidated', 'int2')
+      .addColumn('invalidated', 'int2', (col) => col.notNull().defaultTo(0))
       .addColumn('sequencedAt', 'varchar', (col) => col.notNull())
       .execute()
   }
