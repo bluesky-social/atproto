@@ -66,16 +66,16 @@ export async function migration(ctx: AppContext) {
 
   console.log('finished quarantining & invalidating')
 
-  await ctx.db.db
-    .deleteFrom('blob')
-    .whereNotExists(
-      ctx.db.db
-        .selectFrom('repo_blob')
-        .whereRef('repo_blob.did', '=', ref('blob.creator'))
-        .whereRef('repo_blob.cid', '=', ref('blob.cid'))
-        .selectAll(),
-    )
-    .execute()
+  // await ctx.db.db
+  //   .deleteFrom('blob')
+  //   .whereNotExists(
+  //     ctx.db.db
+  //       .selectFrom('repo_blob')
+  //       .whereRef('repo_blob.did', '=', ref('blob.creator'))
+  //       .whereRef('repo_blob.cid', '=', ref('blob.cid'))
+  //       .selectAll(),
+  //   )
+  //   .execute()
 
   console.log('all done!')
 }

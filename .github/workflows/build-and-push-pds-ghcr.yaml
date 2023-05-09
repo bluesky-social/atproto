@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - delete-blobs-app-migration
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
