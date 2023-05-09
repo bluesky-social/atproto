@@ -7,8 +7,15 @@ import { chunkArray } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { ImageUriBuilder } from '../image/uri'
 import Database from '../db'
+import { appMigration } from '../db/leader'
 
-export async function migration(ctx: AppContext) {
+const MIGRATION_NAME = '2023-05-08-deleted-blobs-cleanup'
+
+export async function deleteDerefedBlobsMigration(ctx: AppContext) {
+  await appMigration(ctx.db, MIGRATION_NAME, (_tx) => migration(ctx))
+}
+
+async function migration(ctx: AppContext) {
   await derefedRecords(ctx.db)
   console.log('deleted derefed records')
 
