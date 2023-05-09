@@ -15,17 +15,14 @@ async function main(tx: Database, ctx: AppContext) {
 
   const softDeletedAccounts = await tx.db
     .selectFrom('moderation_action')
-    .innerJoin('repo_root', (join) =>
-      join
-        .onRef('repo_root.did', '=', 'moderation_action.subjectDid')
-        .onRef('repo_root.takedownId', '=', 'moderation_action.id'),
-    )
+    // did_handle is last table hit by account deletion
+    .innerJoin('did_handle', 'did_handle.did', 'moderation_action.subjectDid')
     .where('reason', '=', 'ACCOUNT DELETION')
     .where('action', '=', 'com.atproto.admin.defs#takedown')
     .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
     .whereRef('subjectDid', '=', 'createdBy')
     .where('reversedAt', 'is', null)
-    .select(['subjectDid as did', 'takedownId'])
+    .select('subjectDid as did')
     .execute()
 
   if (softDeletedAccounts.length >= 50) {
@@ -35,12 +32,7 @@ async function main(tx: Database, ctx: AppContext) {
   }
 
   tx.onCommit(async () => {
-    for (const { did, takedownId } of softDeletedAccounts) {
-      if (!takedownId) {
-        // pure dummy-check
-        log(`bailing, saw an account that was not taken down: ${did}`)
-        break
-      }
+    for (const { did } of softDeletedAccounts) {
       try {
         log(did, 'starting clean-up')
         await ctx.services.record(ctx.db).deleteForActor(did)
