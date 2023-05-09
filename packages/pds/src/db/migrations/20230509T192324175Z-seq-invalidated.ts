@@ -1,6 +1,10 @@
 import { Kysely, sql } from 'kysely'
 import { Dialect } from '..'
 
+const repoSeqDidIndex = 'repo_seq_did_index'
+const repoSeqEventTypeIndex = 'repo_seq_event_type_index'
+const repoSeqSequencedAtIndex = 'repo_seq_sequenced_at_index'
+
 export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
   if (dialect === 'pg') {
     await db.schema
@@ -54,7 +58,7 @@ export async function down(
       .addColumn('did', 'varchar', (col) => col.notNull())
       .addColumn('eventType', 'varchar', (col) => col.notNull())
       .addColumn('event', sql`blob`, (col) => col.notNull())
-      .addColumn('invalidated', 'int2')
+      .addColumn('invalidatedBy', 'integer')
       .addColumn('sequencedAt', 'varchar', (col) => col.notNull())
       .addForeignKeyConstraint(
         'invalidated_by_fkey',
@@ -63,6 +67,27 @@ export async function down(
         'repo_seq',
         ['seq'],
       )
+      .execute()
+
+    // for filtering seqs based on did
+    await db.schema
+      .createIndex(repoSeqDidIndex)
+      .on('repo_seq')
+      .column('did')
+      .execute()
+
+    // for filtering seqs based on event type
+    await db.schema
+      .createIndex(repoSeqEventTypeIndex)
+      .on('repo_seq')
+      .column('eventType')
+      .execute()
+
+    // for entering into the seq stream at a particular time
+    await db.schema
+      .createIndex(repoSeqSequencedAtIndex)
+      .on('repo_seq')
+      .column('sequencedAt')
       .execute()
   }
 }
