@@ -24,20 +24,20 @@ export async function down(
       .alterTable('repo_seq')
       .addColumn('invalidatedBy', 'bigint')
       .execute()
+    await db.schema
+      .alterTable('repo_seq')
+      .addForeignKeyConstraint(
+        'invalidated_by_fkey',
+        // @ts-ignore
+        ['invalidatedBy'],
+        'repo_seq',
+        ['seq'],
+      )
+      .execute()
   } else {
     await db.schema
       .alterTable('repo_seq')
       .addColumn('invalidatedBy', 'integer')
       .execute()
   }
-  await db.schema
-    .alterTable('repo_seq')
-    .addForeignKeyConstraint(
-      'invalidated_by_fkey',
-      // @ts-ignore
-      ['invalidatedBy'],
-      'repo_seq',
-      ['seq'],
-    )
-    .execute()
 }
