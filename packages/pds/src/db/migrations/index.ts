@@ -43,4 +43,5 @@ export * as _20230416T221236745Z from './20230416T221236745Z-app-specific-passwo
 export * as _20230420T143821201Z from './20230420T143821201Z-post-profile-aggs'
 export * as _20230427T194652255Z from './20230427T194652255Z-notif-record-index'
 export * as _20230428T195614638Z from './20230428T195614638Z-actor-block-init'
-export * as _20230505T201944381Z from './20230505T201944381Z-mute-lists'
+export * as _20230508T193807762Z from './20230508T193807762Z-acct-deletion-indexes'
+export * as _20230509T105302750Z from './20230509T105302750Z-mute-lists'
