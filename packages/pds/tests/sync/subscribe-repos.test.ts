@@ -297,9 +297,12 @@ describe('repo subscribe repos', () => {
 
   it('sync rebases', async () => {
     const prevHead = await agent.api.com.atproto.sync.getHead({ did: alice })
-    await ctx.db.transaction((dbTxn) =>
-      ctx.services.repo(dbTxn).rebaseRepo(alice, new Date().toISOString()),
+
+    await agent.api.com.atproto.repo.rebaseRepo(
+      { repo: alice },
+      { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
+
     const currHead = await agent.api.com.atproto.sync.getHead({ did: alice })
 
     const ws = new WebSocket(

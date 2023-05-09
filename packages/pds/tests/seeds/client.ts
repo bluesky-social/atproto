@@ -91,6 +91,7 @@ export class SeedClient {
       handle: string
       email: string
       password: string
+      inviteCode?: string
     },
   ) {
     const { data: account } =

@@ -3,7 +3,11 @@
   "version": "0.1.1",
   "main": "src/index.ts",
   "license": "MIT",
-  "repository": "git@github.com:bluesky-social/atproto.git",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto.git",
+    "directory": "packages/crypto"
+  },
   "scripts": {
     "test": "jest ",
     "prettier": "prettier --check src/",
