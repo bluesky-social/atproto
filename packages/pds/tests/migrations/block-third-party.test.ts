@@ -3,7 +3,7 @@ import { Database } from '../../src'
 import { CloseFn, runTestServer } from '../_util'
 import { RecordRef, SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import { dataMigrationQbs } from '../../src/db/migrations/20230504T210229992Z-block-third-party'
+import { dataMigrationQbs } from '../../src/db/migrations/20230509T210229992Z-block-third-party'
 
 describe('block third-party data migration', () => {
   let db: Database
