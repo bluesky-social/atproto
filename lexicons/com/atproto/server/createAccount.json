@@ -39,8 +39,8 @@
         {"name": "InvalidInviteCode"},
         {"name": "HandleNotAvailable"},
         {"name": "UnsupportedDomain"},
-        {"name": "CouldNotResolveDid"},
-        {"name": "PoorlyFormattedDidDoc"}
+        {"name": "UnresolvableDid"},
+        {"name": "IncompatibleDidDoc"}
       ]
     }
   }
