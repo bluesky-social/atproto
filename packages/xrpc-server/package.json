@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@atproto/common": "*",
+    "@atproto/crypto": "*",
     "@atproto/lexicon": "*",
     "cbor-x": "^1.5.1",
     "express": "^4.17.2",

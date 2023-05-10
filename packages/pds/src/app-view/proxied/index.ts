@@ -1,5 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { dedupeStrs } from '@atproto/common'
+import { createServiceJwt } from '@atproto/xrpc-server'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import {
@@ -8,7 +9,6 @@ import {
   isReasonRepost,
   isThreadViewPost,
 } from '../../lexicon/types/app/bsky/feed/defs'
-import { createServiceJwt } from '../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   if (!ctx.cfg.bskyAppViewEndpoint) {
