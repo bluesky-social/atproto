@@ -4,7 +4,7 @@ import Database from '../db'
 import { seqLogger as log } from '../logger'
 import { RepoSeqEntry } from '../db/tables/repo-seq'
 import { cborDecode, check, wait } from '@atproto/common'
-import { commitEvt, handleEvt, SeqEvt } from './events'
+import { commitEvt, handleEvt, tombstoneEvt, SeqEvt } from './events'
 
 export * from './events'
 
@@ -98,6 +98,13 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       } else if (check.is(evt, handleEvt)) {
         seqEvts.push({
           type: 'handle',
+          seq: row.seq,
+          time: row.sequencedAt,
+          evt,
+        })
+      } else if (check.is(evt, tombstoneEvt)) {
+        seqEvts.push({
+          type: 'tombstone',
           seq: row.seq,
           time: row.sequencedAt,
           evt,
