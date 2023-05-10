@@ -179,7 +179,7 @@ export class PDS {
     })
 
     server = API(server, ctx)
-    if (ctx.cfg.bskyAppViewEndpoint) {
+    if (ctx.cfg.bskyAppViewEndpoint && ctx.cfg.bskyAppViewDid) {
       server = proxiedAppView(server, ctx)
     } else {
       server = inProcessAppView(server, ctx)

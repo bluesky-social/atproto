@@ -3,13 +3,13 @@ import { AuthRequiredError, verifyJwt } from '@atproto/xrpc-server'
 import { DidResolver } from '@atproto/did-resolver'
 
 export const authVerifier =
-  (didResolver: DidResolver) =>
+  (serverDid: string, didResolver: DidResolver) =>
   async (reqCtx: { req: express.Request; res: express.Response }) => {
     const jwtStr = getJwtStrFromReq(reqCtx.req)
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-    const did = await verifyJwt(jwtStr, async (did: string) => {
+    const did = await verifyJwt(jwtStr, serverDid, async (did: string) => {
       const atprotoData = await didResolver.resolveAtprotoData(did)
       return atprotoData.signingKey
     })
@@ -17,12 +17,12 @@ export const authVerifier =
   }
 
 export const authOptionalVerifier =
-  (didResolver: DidResolver) =>
+  (serverDid: string, didResolver: DidResolver) =>
   async (reqCtx: { req: express.Request; res: express.Response }) => {
     if (!reqCtx.req.headers.authorization) {
       return { credentials: { did: null } }
     }
-    return authVerifier(didResolver)(reqCtx)
+    return authVerifier(serverDid, didResolver)(reqCtx)
   }
 
 export const getJwtStrFromReq = (req: express.Request): string | null => {
