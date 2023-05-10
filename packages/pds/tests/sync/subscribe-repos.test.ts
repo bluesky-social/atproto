@@ -296,14 +296,14 @@ describe('repo subscribe repos', () => {
       password: 'baddie1-pass',
       displayName: undefined,
       description: undefined,
-    })).did;
+    })).did
     const baddie2 = (await sc.createAccount("baddie2.test", {
       email: 'baddie2@test.com',
       handle: 'baddie2.test',
       password: 'baddie2-pass',
       displayName: undefined,
       description: undefined,
-    })).did;
+    })).did
 
     for (var did of [baddie1, baddie2]) {
       await ctx.services.record(db).deleteForActor(did)
