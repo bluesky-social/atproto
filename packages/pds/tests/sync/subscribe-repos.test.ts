@@ -120,6 +120,22 @@ describe('repo subscribe repos', () => {
     return evts
   }
 
+  const getAllEvents = (userDid: string, frames: Frame[]) => {
+    const types = []
+    for (const frame of frames) {
+      if (frame instanceof MessageFrame) {
+        if (
+          (frame.header.t === "#commit" && (frame.body as CommitEvt).repo === userDid)
+          || (frame.header.t === "#handle" && (frame.body as HandleEvt).did === userDid)
+          || (frame.header.t === "#tombstone" && (frame.body as TombstoneEvt).did === userDid)
+        ) {
+          types.push(frame.body)
+        }
+      }
+    }
+    return types
+  }
+
   const verifyCommitEvents = async (frames: Frame[]) => {
     await verifyRepo(alice, getCommitEvents(alice, frames))
     await verifyRepo(bob, getCommitEvents(bob, frames))
@@ -322,6 +338,33 @@ describe('repo subscribe repos', () => {
     const tombstoneEvts = getTombstoneEvts(evts.slice(-2))
     verifyTombstoneEvent(tombstoneEvts[0], baddie1)
     verifyTombstoneEvent(tombstoneEvts[1], baddie2)
+  })
+
+  it('account deletions invalidate all seq ops', async () => {
+    const baddie3 = (await sc.createAccount("baddie3.test", {
+      email: 'baddie3@test.com',
+      handle: 'baddie3.test',
+      password: 'baddie3-pass',
+      displayName: undefined,
+      description: undefined,
+    })).did
+
+    await randomPost(baddie3)
+    await sc.updateHandle(baddie3, 'baddie3-update.test')
+
+    await ctx.services.account(db).deleteAccount(baddie3)
+
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
+    )
+
+    const gen = byFrame(ws)
+    const evts = await readTillCaughtUp(gen)
+    ws.terminate()
+
+    const didEvts = getAllEvents(baddie3, evts)
+    expect(didEvts.length).toBe(1)
+    verifyTombstoneEvent(didEvts[0], baddie3)
   })
 
   it('does not return invalidated events', async () => {
