@@ -6,6 +6,7 @@ import 'express-async-errors'
 
 import express from 'express'
 import cors from 'cors'
+import compression from 'compression'
 import http from 'http'
 import events from 'events'
 import { createTransport } from 'nodemailer'
@@ -88,6 +89,7 @@ export class PDS {
 
     const app = express()
     app.use(cors())
+    app.use(compression())
     app.use(loggerMiddleware)
 
     let imgUriEndpoint = config.imgUriEndpoint
