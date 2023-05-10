@@ -4133,8 +4133,9 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileView',
           },
-          hostname: {
+          did: {
             type: 'string',
+            format: 'did',
           },
           description: {
             type: 'string',
@@ -4231,10 +4232,11 @@ export const schemaDict = {
         key: 'named',
         record: {
           type: 'object',
-          required: ['hostname', 'createdAt'],
+          required: ['did', 'createdAt'],
           properties: {
-            hostname: {
+            did: {
               type: 'string',
+              format: 'did',
             },
             description: {
               type: 'string',
@@ -4424,7 +4426,7 @@ export const schemaDict = {
           properties: {
             feed: {
               type: 'string',
-              format: 'at-identifier',
+              format: 'at-uri',
             },
             limit: {
               type: 'integer',
@@ -4472,6 +4474,7 @@ export const schemaDict = {
           properties: {
             feed: {
               type: 'string',
+              format: 'at-uri',
             },
             limit: {
               type: 'integer',

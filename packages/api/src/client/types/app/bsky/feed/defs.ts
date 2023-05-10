@@ -189,7 +189,7 @@ export function validateBlockedPost(v: unknown): ValidationResult {
 export interface GeneratorView {
   uri: string
   creator: AppBskyActorDefs.ProfileView
-  hostname?: string
+  did?: string
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: string

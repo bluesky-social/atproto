@@ -8,6 +8,7 @@ import * as Repost from './plugins/repost'
 import * as Follow from './plugins/follow'
 import * as Block from './plugins/block'
 import * as Profile from './plugins/profile'
+import * as FeedGenerator from './plugins/feed-generator'
 import { BackgroundQueue } from '../../../event-stream/background-queue'
 
 export class IndexingService {
@@ -18,6 +19,7 @@ export class IndexingService {
     follow: Follow.PluginType
     block: Block.PluginType
     profile: Profile.PluginType
+    feedGenerator: FeedGenerator.PluginType
   }
 
   constructor(public db: Database, public backgroundQueue: BackgroundQueue) {
@@ -28,6 +30,7 @@ export class IndexingService {
       follow: Follow.makePlugin(this.db, backgroundQueue),
       block: Block.makePlugin(this.db, backgroundQueue),
       profile: Profile.makePlugin(this.db, backgroundQueue),
+      feedGenerator: FeedGenerator.makePlugin(this.db, backgroundQueue),
     }
   }
 

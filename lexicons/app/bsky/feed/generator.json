@@ -8,9 +8,9 @@
       "key": "named",
       "record": {
         "type": "object",
-        "required": ["hostname", "createdAt"],
+        "required": ["did", "createdAt"],
         "properties": {
-          "hostname": {"type": "string"},
+          "did": {"type": "string", "format": "did"},
           "description": {"type": "string", "maxGraphemes": 300, "maxLength": 3000},
           "descriptionFacets": {
             "type": "array",

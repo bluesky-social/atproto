@@ -10,25 +10,17 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const { feed } = params
-      const db = ctx.db.db
       const requester = auth.credentials.did
 
-      let feedDid: string
-      if (feed.startsWith('did:')) {
-        feedDid = feed
-      } else {
-        const found = await db
-          .selectFrom('did_handle')
-          .where('handle', '=', feed)
-          .select('did')
-          .executeTakeFirst()
-        if (!found) {
-          throw new InvalidRequestError(
-            `could not resolve feed handle: ${feed}`,
-          )
-        }
-        feedDid = found.did
+      const found = await ctx.db.db
+        .selectFrom('feed_generator')
+        .where('uri', '=', feed)
+        .select('feedDid')
+        .executeTakeFirst()
+      if (!found) {
+        throw new InvalidRequestError('could not resolve find feed')
       }
+      const feedDid = found.feedDid
       const resolved = await ctx.didResolver.resolveDid(feedDid)
       if (!resolved) {
         throw new InvalidRequestError(

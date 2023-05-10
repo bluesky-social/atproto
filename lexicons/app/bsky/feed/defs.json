@@ -92,11 +92,12 @@
     },
     "generatorView": {
       "type": "object",
-      "required": ["uri", "creator", "indexedAt"],
+      "required": ["uri", "name", "creator", "indexedAt"],
       "properties": {
         "uri": {"type": "string", "format": "at-uri"},
+        "name": {"type": "string"},
         "creator": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
-        "hostname": {"type": "string"},
+        "did": {"type": "string", "format": "did"},
         "description": {"type": "string", "maxGraphemes": 300, "maxLength": 3000},
         "descriptionFacets": {
           "type": "array",

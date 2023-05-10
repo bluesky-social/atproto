@@ -35,6 +35,8 @@ import {
 } from './image/invalidator'
 import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
 import { BackgroundQueue } from './event-stream/background-queue'
+import DidSqlCache from './did-cache'
+import { DidResolver } from '@atproto/did-resolver'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -75,6 +77,13 @@ export class PDS {
       adminPass: config.adminPassword,
       moderatorPass: config.moderatorPassword,
     })
+
+    const didCache = new DidSqlCache(
+      db,
+      config.didCacheStaleTTL,
+      config.didCacheMaxTTL,
+    )
+    const didResolver = new DidResolver({ plcUrl: config.didPlcUrl }, didCache)
 
     const messageDispatcher = new MessageDispatcher()
     const sequencer = new Sequencer(db)
@@ -156,6 +165,8 @@ export class PDS {
       blobstore,
       repoSigningKey,
       plcRotationKey,
+      didResolver,
+      didCache,
       cfg: config,
       auth,
       messageDispatcher,

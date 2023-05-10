@@ -8,7 +8,7 @@ import { CID } from 'multiformats/cid'
 import * as AppBskyRichtextFacet from '../richtext/facet'
 
 export interface Record {
-  hostname: string
+  did: string
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: BlobRef

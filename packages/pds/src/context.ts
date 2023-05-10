@@ -12,6 +12,7 @@ import { MessageDispatcher } from './event-stream/message-queue'
 import Sequencer from './sequencer'
 import { Labeler } from './labeler'
 import { BackgroundQueue } from './event-stream/background-queue'
+import DidSqlCache from './did-cache'
 
 export class AppContext {
   constructor(
@@ -20,6 +21,8 @@ export class AppContext {
       blobstore: BlobStore
       repoSigningKey: crypto.Keypair
       plcRotationKey: crypto.Keypair
+      didResolver: DidResolver
+      didCache: DidSqlCache
       auth: auth.ServerAuth
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
@@ -113,7 +116,11 @@ export class AppContext {
   }
 
   get didResolver(): DidResolver {
-    return new DidResolver({ plcUrl: this.cfg.didPlcUrl })
+    return this.didResolver
+  }
+
+  get didCache(): DidResolver {
+    return this.didCache
   }
 }
 
