@@ -12,7 +12,6 @@ export interface ProfileViewBasic {
   handle: string
   displayName?: string
   avatar?: string
-  actorType?: ActorType
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   [k: string]: unknown
@@ -36,7 +35,6 @@ export interface ProfileView {
   displayName?: string
   description?: string
   avatar?: string
-  actorType?: ActorType
   indexedAt?: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
@@ -61,8 +59,6 @@ export interface ProfileViewDetailed {
   displayName?: string
   description?: string
   avatar?: string
-  actorType?: ActorType
-  actorInfo?: InfoFeedGenerator | { $type: string; [k: string]: unknown }
   banner?: string
   followersCount?: number
   followsCount?: number
@@ -105,30 +101,3 @@ export function isViewerState(v: unknown): v is ViewerState {
 export function validateViewerState(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#viewerState', v)
 }
-
-export interface InfoFeedGenerator {
-  likes: number
-  [k: string]: unknown
-}
-
-export function isInfoFeedGenerator(v: unknown): v is InfoFeedGenerator {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.actor.defs#infoFeedGenerator'
-  )
-}
-
-export function validateInfoFeedGenerator(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.actor.defs#infoFeedGenerator', v)
-}
-
-export type ActorType =
-  | 'app.bsky.actor.defs#user'
-  | 'app.bsky.actor.defs#feedGenerator'
-  | (string & {})
-
-/** Actor type: User. This is the default option and an actor is assumed to be a user unless suggested otherwise. */
-export const USER = 'app.bsky.actor.defs#user'
-/** Actor type: Feed Generator. A service that provides a custom feed. */
-export const FEEDGENERATOR = 'app.bsky.actor.defs#feedGenerator'

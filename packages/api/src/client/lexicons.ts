@@ -3285,10 +3285,6 @@ export const schemaDict = {
           avatar: {
             type: 'string',
           },
-          actorType: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#actorType',
-          },
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#viewerState',
@@ -3326,10 +3322,6 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
-          },
-          actorType: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#actorType',
           },
           indexedAt: {
             type: 'string',
@@ -3372,14 +3364,6 @@ export const schemaDict = {
           },
           avatar: {
             type: 'string',
-          },
-          actorType: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#actorType',
-          },
-          actorInfo: {
-            type: 'union',
-            refs: ['lex:app.bsky.actor.defs#infoFeedGenerator'],
           },
           banner: {
             type: 'string',
@@ -3432,32 +3416,6 @@ export const schemaDict = {
             format: 'at-uri',
           },
         },
-      },
-      infoFeedGenerator: {
-        type: 'object',
-        required: ['likes'],
-        properties: {
-          likes: {
-            type: 'integer',
-          },
-        },
-      },
-      actorType: {
-        type: 'string',
-        knownValues: [
-          'app.bsky.actor.defs#user',
-          'app.bsky.actor.defs#feedGenerator',
-        ],
-      },
-      user: {
-        type: 'token',
-        description:
-          'Actor type: User. This is the default option and an actor is assumed to be a user unless suggested otherwise.',
-      },
-      feedGenerator: {
-        type: 'token',
-        description:
-          'Actor type: Feed Generator. A service that provides a custom feed.',
       },
     },
   },
