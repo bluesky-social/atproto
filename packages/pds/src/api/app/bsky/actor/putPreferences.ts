@@ -18,9 +18,11 @@ export default function (server: Server, ctx: AppContext) {
           throw new InvalidRequestError('Preference is missing a $type')
         }
       }
-      await services
-        .account(db)
-        .putPreferences(requester, checkedPreferences, 'app.bsky')
+      await db.transaction(async (tx) => {
+        await services
+          .account(tx)
+          .putPreferences(requester, checkedPreferences, 'app.bsky')
+      })
     },
   })
 }

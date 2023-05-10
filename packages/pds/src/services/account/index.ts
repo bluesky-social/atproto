@@ -470,6 +470,7 @@ export class AccountService {
     const prefsRes = await this.db.db
       .selectFrom('user_pref')
       .where('did', '=', did)
+      .orderBy('id')
       .selectAll()
       .execute()
     return prefsRes
@@ -492,7 +493,7 @@ export class AccountService {
     const allPrefs = await this.db.db
       .selectFrom('user_pref')
       .where('did', '=', did)
-      .select('name')
+      .select(['id', 'name'])
       .execute()
     const putPrefs = values.map((value) => {
       return {
@@ -501,32 +502,19 @@ export class AccountService {
         valueJson: JSON.stringify(value),
       }
     })
-    // compute which prefs to nix: all existing prefs in namespace that aren't being put.
-    const putPrefNames = putPrefs.map((pref) => pref.name)
-    const existingPrefNames = allPrefs
+    const allPrefIdsInNamespace = allPrefs
       .filter((pref) => matchNamespace(namespace, pref.name))
-      .map((pref) => pref.name)
-    const toDeletePrefNames = existingPrefNames.filter(
-      (name) => !putPrefNames.includes(name),
-    )
-    // remove and put prefs
-    if (toDeletePrefNames.length) {
+      .map((pref) => pref.id)
+    // replace all prefs in given namespace
+    if (allPrefIdsInNamespace.length) {
       await this.db.db
         .deleteFrom('user_pref')
         .where('did', '=', did)
-        .where('name', 'in', toDeletePrefNames)
+        .where('id', 'in', allPrefIdsInNamespace)
         .execute()
     }
     if (putPrefs.length) {
-      await this.db.db
-        .insertInto('user_pref')
-        .values(putPrefs)
-        .onConflict((oc) =>
-          oc
-            .columns(['did', 'name'])
-            .doUpdateSet({ valueJson: excluded(this.db.db, 'valueJson') }),
-        )
-        .execute()
+      await this.db.db.insertInto('user_pref').values(putPrefs).execute()
     }
   }
 }
