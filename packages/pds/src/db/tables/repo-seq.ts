@@ -1,4 +1,4 @@
-import { GeneratedAlways, Insertable, Selectable } from 'kysely'
+import { Generated, GeneratedAlways, Insertable, Selectable } from 'kysely'
 
 export type EventType = 'append' | 'rebase' | 'handle' | 'migrate' | 'tombstone'
 
@@ -7,7 +7,7 @@ export interface RepoSeq {
   did: string
   eventType: EventType
   event: Uint8Array
-  invalidatedBy: number | null
+  invalidated: Generated<0 | 1>
   sequencedAt: string
 }
 
