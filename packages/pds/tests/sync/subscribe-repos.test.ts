@@ -101,7 +101,7 @@ describe('repo subscribe repos', () => {
     expect(typeof evt.seq).toBe('number')
   }
 
-  const verifyTombstoneEvent = (evt: HandleEvt, did: string, handle: string) => {
+  const verifyTombstoneEvent = (evt: TombstoneEvt, did: string) => {
     expect(evt.did).toBe(did)
     expect(typeof evt.time).toBe('string')
     expect(typeof evt.seq).toBe('number')
