@@ -44,6 +44,24 @@ describe('user preferences', () => {
     })
   })
 
+  it('only gets preferences in app.bsky namespace.', async () => {
+    const { db, services } = server.ctx
+    await db.transaction(async (tx) => {
+      await services
+        .account(tx)
+        .putPreferences(
+          sc.dids.alice,
+          [{ $type: 'com.atproto.server.defs#unknown' }],
+          'com.atproto',
+        )
+    })
+    const { data } = await agent.api.app.bsky.actor.getPreferences(
+      {},
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+    expect(data).toEqual({ preferences: [] })
+  })
+
   it('puts preferences, all creates.', async () => {
     await agent.api.app.bsky.actor.putPreferences(
       {
@@ -82,6 +100,12 @@ describe('user preferences', () => {
         },
       ],
     })
+    // Ensure other prefs were not clobbered
+    const { db, services } = server.ctx
+    const otherPrefs = await services
+      .account(db)
+      .getPreferences(sc.dids.alice, 'com.atproto')
+    expect(otherPrefs).toEqual([{ $type: 'com.atproto.server.defs#unknown' }])
   })
 
   it('puts preferences, updates and removals.', async () => {
@@ -116,18 +140,14 @@ describe('user preferences', () => {
 
   it('puts preferences, clearing them.', async () => {
     await agent.api.app.bsky.actor.putPreferences(
-      {
-        preferences: [],
-      },
+      { preferences: [] },
       { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
     )
     const { data } = await agent.api.app.bsky.actor.getPreferences(
       {},
       { headers: sc.getHeaders(sc.dids.alice) },
     )
-    expect(data).toEqual({
-      preferences: [],
-    })
+    expect(data).toEqual({ preferences: [] })
   })
 
   it('fails putting preferences outside namespace.', async () => {

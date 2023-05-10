@@ -5,7 +5,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
   let builder = db.schema.createTable('user_pref')
   builder =
     dialect === 'pg'
-      ? builder.addColumn('id', 'serial', (col) => col.primaryKey())
+      ? builder.addColumn('id', 'bigserial', (col) => col.primaryKey())
       : builder.addColumn('id', 'integer', (col) =>
           col.autoIncrement().primaryKey(),
         )
