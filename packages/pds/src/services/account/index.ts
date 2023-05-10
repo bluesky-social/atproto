@@ -463,7 +463,10 @@ export class AccountService {
     return res?.lastSeenNotifs
   }
 
-  async getPreferences(did: string, namespace?: string): Promise<unknown[]> {
+  async getPreferences(
+    did: string,
+    namespace?: string,
+  ): Promise<UserPreference[]> {
     const prefsRes = await this.db.db
       .selectFrom('user_pref')
       .where('did', '=', did)
@@ -476,7 +479,7 @@ export class AccountService {
 
   async putPreferences(
     did: string,
-    values: (Record<string, unknown> & { $type: string })[],
+    values: UserPreference[],
     namespace: string,
   ): Promise<void> {
     this.db.assertTransaction()
@@ -527,6 +530,8 @@ export class AccountService {
     }
   }
 }
+
+export type UserPreference = Record<string, unknown> & { $type: string }
 
 type CodeDetail = {
   code: string
