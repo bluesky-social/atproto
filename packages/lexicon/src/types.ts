@@ -56,7 +56,7 @@ export const lexUnknown = z.object({
 })
 export type LexUnknown = z.infer<typeof lexUnknown>
 
-export const lexPrimitive = z.union([
+export const lexPrimitive = z.discriminatedUnion('type', [
   lexBoolean,
   lexInteger,
   lexString,
@@ -81,7 +81,7 @@ export const lexCidLink = z.object({
 })
 export type LexCidLink = z.infer<typeof lexCidLink>
 
-export const lexIpldType = z.union([lexBytes, lexCidLink])
+export const lexIpldType = z.discriminatedUnion('type', [lexBytes, lexCidLink])
 export type LexIpldType = z.infer<typeof lexIpldType>
 
 // references
@@ -102,7 +102,7 @@ export const lexRefUnion = z.object({
 })
 export type LexRefUnion = z.infer<typeof lexRefUnion>
 
-export const lexRefVariant = z.union([lexRef, lexRefUnion])
+export const lexRefVariant = z.discriminatedUnion('type', [lexRef, lexRefUnion])
 export type LexRefVariant = z.infer<typeof lexRefVariant>
 
 // blobs
@@ -229,7 +229,7 @@ export type LexRecord = z.infer<typeof lexRecord>
 // core
 // =
 
-export const lexUserType = z.union([
+export const lexUserType = z.discriminatedUnion('type', [
   lexRecord,
 
   lexXrpcQuery,

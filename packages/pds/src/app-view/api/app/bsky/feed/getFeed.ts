@@ -1,9 +1,11 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  InvalidRequestError,
+  createServiceAuthHeaders,
+} from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
 import { getFeedGen } from '@atproto/did-resolver'
 import { AtpAgent } from '@atproto/api'
-import { createServiceAuthHeaders } from '../../../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeed({
@@ -32,10 +34,11 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`not a valid feed generator: ${feedDid}`)
       }
       const agent = new AtpAgent({ service: fgEndpoint })
-      const headers = await createServiceAuthHeaders(
-        requester,
-        ctx.repoSigningKey,
-      )
+      const headers = await createServiceAuthHeaders({
+        iss: requester,
+        aud: feedDid,
+        keypair: ctx.repoSigningKey,
+      })
       const res = await agent.api.app.bsky.feed.getFeedSkeleton(params, headers)
       const feedService = ctx.services.appView.feed(ctx.db)
       const hydrated = await feedService.hydrateFeed(res.data.feed, requester)

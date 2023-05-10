@@ -11,7 +11,7 @@ describe('pds posts views', () => {
 
   beforeAll(async () => {
     testEnv = await runTestEnv({
-      dbPostgresSchema: 'views_posts',
+      dbPostgresSchema: 'proxy_posts',
     })
     agent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(agent)

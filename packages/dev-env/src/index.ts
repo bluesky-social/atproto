@@ -104,6 +104,8 @@ export class DevEnvServer {
             hostname: 'localhost',
             port: this.port,
             didPlcUrl: this.env.plcUrl,
+            didCacheMaxTTL: DAY,
+            didCacheStaleTTL: HOUR,
             serverDid,
             recoveryKey: keypair.did(),
             jwtSecret: crytpo.randomBytes(8).toString('base64'),
@@ -144,8 +146,19 @@ export class DevEnvServer {
           )
         }
 
+        const keypair = await crypto.Secp256k1Keypair.create()
+        const plcClient = new plc.Client(this.env.plcUrl)
+        const serverDid = await plcClient.createDid({
+          signingKey: keypair.did(),
+          rotationKeys: [keypair.did()],
+          handle: 'localhost',
+          pds: `http://localhost:${this.port}`,
+          signer: keypair,
+        })
+
         const config = new bsky.ServerConfig({
           version: '0.0.0',
+          serverDid,
           didPlcUrl: this.env.plcUrl,
           publicUrl: 'https://bsky.public.url',
           imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',

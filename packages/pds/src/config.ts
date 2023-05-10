@@ -54,6 +54,7 @@ export interface ServerConfigValues {
   appViewRepoProvider?: string
 
   bskyAppViewEndpoint?: string
+  bskyAppViewDid?: string
 }
 
 export class ServerConfig {
@@ -162,6 +163,7 @@ export class ServerConfig {
     const bskyAppViewEndpoint = nonemptyString(
       process.env.BSKY_APP_VIEW_ENDPOINT,
     )
+    const bskyAppViewDid = nonemptyString(process.env.BSKY_APP_VIEW_DID)
 
     return new ServerConfig({
       debugMode,
@@ -202,6 +204,7 @@ export class ServerConfig {
       repoBackfillLimitMs,
       appViewRepoProvider,
       bskyAppViewEndpoint,
+      bskyAppViewDid,
       ...overrides,
     })
   }
@@ -386,6 +389,10 @@ export class ServerConfig {
 
   get bskyAppViewEndpoint() {
     return this.cfg.bskyAppViewEndpoint
+  }
+
+  get bskyAppViewDid() {
+    return this.cfg.bskyAppViewDid
   }
 }
 
