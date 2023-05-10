@@ -2,15 +2,10 @@ import { sql } from 'kysely'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import * as scrypt from '../../db/scrypt'
-import { UserAccount, UserAccountEntry } from '../../db/tables/user-account'
+import { UserAccountEntry } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
-import {
-  countAll,
-  excluded,
-  notSoftDeletedClause,
-  nullToZero,
-} from '../../db/util'
+import { countAll, notSoftDeletedClause, nullToZero } from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
