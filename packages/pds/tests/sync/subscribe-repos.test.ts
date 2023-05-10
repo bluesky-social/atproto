@@ -84,9 +84,25 @@ describe('repo subscribe repos', () => {
     return evts
   }
 
+  const getTombstoneEvts = (frames: Frame[]): HandleEvt[] => {
+    const evts: TombstoneEvt[] = []
+    for (const frame of frames) {
+      if (frame instanceof MessageFrame && frame.header.t === '#tombstone') {
+        evts.push(frame.body)
+      }
+    }
+    return evts
+  }
+
   const verifyHandleEvent = (evt: HandleEvt, did: string, handle: string) => {
     expect(evt.did).toBe(did)
     expect(evt.handle).toBe(handle)
+    expect(typeof evt.time).toBe('string')
+    expect(typeof evt.seq).toBe('number')
+  }
+
+  const verifyTombstoneEvent = (evt: HandleEvt, did: string, handle: string) => {
+    expect(evt.did).toBe(did)
     expect(typeof evt.time).toBe('string')
     expect(typeof evt.seq).toBe('number')
   }
@@ -271,6 +287,41 @@ describe('repo subscribe repos', () => {
     const handleEvts = getHandleEvts(evts.slice(-2))
     verifyHandleEvent(handleEvts[0], alice, 'alice2.test')
     verifyHandleEvent(handleEvts[1], bob, 'bob2.test')
+  })
+
+  it('syncs tombstones', async () => {
+    const baddie1 = (await sc.createAccount("baddie1.test", {
+      email: 'baddie1@test.com',
+      handle: 'baddie1.test',
+      password: 'baddie1-pass',
+      displayName: undefined,
+      description: undefined,
+    })).did;
+    const baddie2 = (await sc.createAccount("baddie2.test", {
+      email: 'baddie2@test.com',
+      handle: 'baddie2.test',
+      password: 'baddie2-pass',
+      displayName: undefined,
+      description: undefined,
+    })).did;
+
+    for (var did of [baddie1, baddie2]) {
+      await ctx.services.record(db).deleteForActor(did)
+      await ctx.services.repo(db).deleteRepo(did)
+      await ctx.services.account(db).deleteAccount(did)
+    }
+
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
+    )
+
+    const gen = byFrame(ws)
+    const evts = await readTillCaughtUp(gen)
+    ws.terminate()
+
+    const tombstoneEvts = getTombstoneEvts(evts.slice(-2))
+    verifyTombstoneEvent(tombstoneEvts[0], baddie1)
+    verifyTombstoneEvent(tombstoneEvts[1], baddie2)
   })
 
   it('does not return invalidated events', async () => {
