@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.server.putAccountPreferences",
+  "id": "app.bsky.actor.putPreferences",
   "defs": {
     "main": {
       "type": "procedure",
@@ -13,7 +13,7 @@
           "properties": {
             "preferences": {
               "type": "ref",
-              "ref": "com.atproto.server.defs#preferences"
+              "ref": "app.bsky.actor.defs#preferences"
             }
           }
         }
