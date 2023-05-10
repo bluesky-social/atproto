@@ -90,6 +90,30 @@
         "blocked": {"type": "boolean", "const": true}
       }
     },
+    "generatorView": {
+      "type": "object",
+      "required": ["uri", "creator", "indexedAt"],
+      "properties": {
+        "uri": {"type": "string", "format": "at-uri"},
+        "creator": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
+        "hostname": {"type": "string"},
+        "description": {"type": "string", "maxGraphemes": 300, "maxLength": 3000},
+        "descriptionFacets": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
+        },
+        "avatar": {"type": "string"},
+        "viewer": {"type": "ref", "ref": "#generatorViewerState"},
+        "indexedAt": {"type": "string", "format": "datetime"}
+      }
+    },
+    "generatorViewerState": {
+      "type": "object",
+      "properties": {
+        "subscribed": {"type": "boolean"},
+        "like": {"type": "string", "format": "at-uri"}
+      }
+    },
     "skeletonFeedPost": {
       "type": "object",
       "required": ["post"],

@@ -1,0 +1,29 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.generator",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A declaration of the existence of a feed generator",
+      "key": "named",
+      "record": {
+        "type": "object",
+        "required": ["hostname", "createdAt"],
+        "properties": {
+          "hostname": {"type": "string"},
+          "description": {"type": "string", "maxGraphemes": 300, "maxLength": 3000},
+          "descriptionFacets": {
+            "type": "array",
+            "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
+          },
+          "avatar": {
+            "type": "blob",
+            "accept": ["image/png", "image/jpeg"],
+            "maxSize": 1000000
+          },
+          "createdAt": {"type": "string", "format": "datetime"}
+        }
+      }
+    }
+  }
+}

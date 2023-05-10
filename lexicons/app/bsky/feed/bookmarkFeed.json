@@ -11,7 +11,7 @@
           "type": "object",
           "required": ["feed"],
           "properties": {
-            "feed": { "type": "string", "format": "at-identifier" }
+            "feed": { "type": "string", "format": "at-uri" }
           }
         }
       }

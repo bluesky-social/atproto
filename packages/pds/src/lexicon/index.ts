@@ -70,6 +70,7 @@ import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestio
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
 import * as AppBskyFeedBookmarkFeed from './types/app/bsky/feed/bookmarkFeed'
+import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 import * as AppBskyFeedGetBookmarkedFeeds from './types/app/bsky/feed/getBookmarkedFeeds'
 import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
@@ -753,6 +754,13 @@ export class FeedNS {
     cfg: ConfigOf<AV, AppBskyFeedBookmarkFeed.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.feed.bookmarkFeed' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getActorFeeds<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedGetActorFeeds.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.getActorFeeds' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

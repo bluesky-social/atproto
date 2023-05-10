@@ -3973,7 +3973,7 @@ export const schemaDict = {
             properties: {
               feed: {
                 type: 'string',
-                format: 'at-identifier',
+                format: 'at-uri',
               },
             },
           },
@@ -4163,6 +4163,58 @@ export const schemaDict = {
           },
         },
       },
+      generatorView: {
+        type: 'object',
+        required: ['uri', 'creator', 'indexedAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          creator: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          hostname: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
+          },
+          descriptionFacets: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
+          avatar: {
+            type: 'string',
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#generatorViewerState',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      generatorViewerState: {
+        type: 'object',
+        properties: {
+          subscribed: {
+            type: 'boolean',
+          },
+          like: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
       skeletonFeedPost: {
         type: 'object',
         required: ['post'],
@@ -4206,6 +4258,95 @@ export const schemaDict = {
           indexedAt: {
             type: 'string',
             format: 'datetime',
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedGenerator: {
+    lexicon: 1,
+    id: 'app.bsky.feed.generator',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A declaration of the existence of a feed generator',
+        key: 'named',
+        record: {
+          type: 'object',
+          required: ['hostname', 'createdAt'],
+          properties: {
+            hostname: {
+              type: 'string',
+            },
+            description: {
+              type: 'string',
+              maxGraphemes: 300,
+              maxLength: 3000,
+            },
+            descriptionFacets: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.richtext.facet',
+              },
+            },
+            avatar: {
+              type: 'blob',
+              accept: ['image/png', 'image/jpeg'],
+              maxSize: 1000000,
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedGetActorFeeds: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getActorFeeds',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Retrieve a list of feeds created by a given actor',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feeds'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feeds: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#generatorView',
+                },
+              },
+            },
           },
         },
       },
@@ -4302,7 +4443,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.actor.defs#profileView',
+                  ref: 'lex:app.bsky.feed.defs#generatorView',
                 },
               },
             },
@@ -4837,7 +4978,7 @@ export const schemaDict = {
             properties: {
               feed: {
                 type: 'string',
-                format: 'at-identifier',
+                format: 'at-uri',
               },
             },
           },
@@ -5483,6 +5624,8 @@ export const ids = {
   AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
   AppBskyFeedBookmarkFeed: 'app.bsky.feed.bookmarkFeed',
   AppBskyFeedDefs: 'app.bsky.feed.defs',
+  AppBskyFeedGenerator: 'app.bsky.feed.generator',
+  AppBskyFeedGetActorFeeds: 'app.bsky.feed.getActorFeeds',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetBookmarkedFeeds: 'app.bsky.feed.getBookmarkedFeeds',
   AppBskyFeedGetFeed: 'app.bsky.feed.getFeed',

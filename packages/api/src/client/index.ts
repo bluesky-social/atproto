@@ -80,6 +80,8 @@ import * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 import * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
 import * as AppBskyFeedBookmarkFeed from './types/app/bsky/feed/bookmarkFeed'
 import * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
+import * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
+import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 import * as AppBskyFeedGetBookmarkedFeeds from './types/app/bsky/feed/getBookmarkedFeeds'
 import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
@@ -180,6 +182,8 @@ export * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 export * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
 export * as AppBskyFeedBookmarkFeed from './types/app/bsky/feed/bookmarkFeed'
 export * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
+export * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
+export * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 export * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 export * as AppBskyFeedGetBookmarkedFeeds from './types/app/bsky/feed/getBookmarkedFeeds'
 export * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
@@ -1095,12 +1099,14 @@ export class EmbedNS {
 
 export class FeedNS {
   _service: AtpServiceClient
+  generator: GeneratorRecord
   like: LikeRecord
   post: PostRecord
   repost: RepostRecord
 
   constructor(service: AtpServiceClient) {
     this._service = service
+    this.generator = new GeneratorRecord(service)
     this.like = new LikeRecord(service)
     this.post = new PostRecord(service)
     this.repost = new RepostRecord(service)
@@ -1114,6 +1120,17 @@ export class FeedNS {
       .call('app.bsky.feed.bookmarkFeed', opts?.qp, data, opts)
       .catch((e) => {
         throw AppBskyFeedBookmarkFeed.toKnownErr(e)
+      })
+  }
+
+  getActorFeeds(
+    params?: AppBskyFeedGetActorFeeds.QueryParams,
+    opts?: AppBskyFeedGetActorFeeds.CallOptions,
+  ): Promise<AppBskyFeedGetActorFeeds.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getActorFeeds', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetActorFeeds.toKnownErr(e)
       })
   }
 
@@ -1225,6 +1242,67 @@ export class FeedNS {
       .catch((e) => {
         throw AppBskyFeedUnbookmarkFeed.toKnownErr(e)
       })
+  }
+}
+
+export class GeneratorRecord {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedGenerator.Record }[]
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.generator',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyFeedGenerator.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.generator',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyFeedGenerator.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.feed.generator'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.feed.generator', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.generator', ...params },
+      { headers },
+    )
   }
 }
 

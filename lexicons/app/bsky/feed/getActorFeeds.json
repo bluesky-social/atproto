@@ -1,13 +1,15 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.feed.getBookmarkedFeeds",
+  "id": "app.bsky.feed.getActorFeeds",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Retrieve a list of the authenticated user's bookmarked feeds",
+      "description": "Retrieve a list of feeds created by a given actor",
       "parameters": {
         "type": "params",
+        "required": ["actor"],
         "properties": {
+          "actor": {"type": "string", "format": "at-identifier"},
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
           "cursor": {"type": "string"}
         }
