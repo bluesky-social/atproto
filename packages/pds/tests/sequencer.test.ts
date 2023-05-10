@@ -68,7 +68,7 @@ describe('sequencer', () => {
       did,
       eventType: 'append',
       event: Buffer.from(cborEncode(e.evt)),
-      invalidatedBy: null,
+      invalidated: 0,
       sequencedAt: e.time,
     }
   }

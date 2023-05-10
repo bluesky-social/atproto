@@ -1,26 +1,35 @@
 import AtpAgent from '@atproto/api'
-import { runTestServer, CloseFn, adminAuth, moderatorAuth } from '../../_util'
+import {
+  runTestServer,
+  adminAuth,
+  moderatorAuth,
+  TestServerInfo,
+} from '../../_util'
 import { randomStr } from '@atproto/crypto'
+import { SeedClient } from '../../seeds/client'
 
 describe('pds admin invite views', () => {
   let agent: AtpAgent
-  let close: CloseFn
+  let sc: SeedClient
+  let server: TestServerInfo
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    server = await runTestServer({
       dbPostgresSchema: 'views_admin_invites',
       inviteRequired: true,
       userInviteInterval: 1,
     })
-    close = server.close
     agent = new AtpAgent({ service: server.url })
+    sc = new SeedClient(agent)
   })
 
   afterAll(async () => {
-    await close()
+    await server.close()
   })
 
   let alice: string
+  let bob: string
+  let carol: string
 
   beforeAll(async () => {
     const adminCode = await agent.api.com.atproto.server.createInviteCode(
@@ -28,34 +37,43 @@ describe('pds admin invite views', () => {
       { encoding: 'application/json', headers: { authorization: adminAuth() } },
     )
 
-    const aliceRes = await agent.api.com.atproto.server.createAccount({
+    await sc.createAccount('alice', {
       handle: 'alice.test',
       email: 'alice@test.com',
       password: 'alice',
       inviteCode: adminCode.data.code,
     })
-    alice = aliceRes.data.did
-    const bobRes = await agent.api.com.atproto.server.createAccount({
+    await sc.createAccount('bob', {
       handle: 'bob.test',
       email: 'bob@test.com',
       password: 'bob',
       inviteCode: adminCode.data.code,
     })
+    await sc.createAccount('carol', {
+      handle: 'carol.test',
+      email: 'carol@test.com',
+      password: 'carol',
+      inviteCode: adminCode.data.code,
+    })
+
+    alice = sc.dids.alice
+    bob = sc.dids.bob
+    carol = sc.dids.carol
 
     const aliceCodes = await agent.api.com.atproto.server.getAccountInviteCodes(
       {},
-      { headers: { authorization: `Bearer ${aliceRes.data.accessJwt}` } },
+      { headers: sc.getHeaders(alice) },
     )
     await agent.api.com.atproto.server.getAccountInviteCodes(
       {},
-      { headers: { authorization: `Bearer ${bobRes.data.accessJwt}` } },
+      { headers: sc.getHeaders(bob) },
     )
     await agent.api.com.atproto.server.createInviteCode(
-      { useCount: 5, forAccount: aliceRes.data.did },
+      { useCount: 5, forAccount: alice },
       { encoding: 'application/json', headers: { authorization: adminAuth() } },
     )
     await agent.api.com.atproto.admin.disableInviteCodes(
-      { codes: [adminCode.data.code], accounts: [bobRes.data.did] },
+      { codes: [adminCode.data.code], accounts: [bob] },
       { encoding: 'application/json', headers: { authorization: adminAuth() } },
     )
 
@@ -97,7 +115,7 @@ describe('pds admin invite views', () => {
       forAccount: 'admin',
       createdBy: 'admin',
     })
-    expect(result.data.codes.at(-1)?.uses.length).toBe(2)
+    expect(result.data.codes.at(-1)?.uses.length).toBe(3)
   })
 
   it('paginates by recency', async () => {
@@ -133,7 +151,7 @@ describe('pds admin invite views', () => {
       forAccount: 'admin',
       createdBy: 'admin',
     })
-    expect(result.data.codes[0].uses.length).toBe(2)
+    expect(result.data.codes[0].uses.length).toBe(3)
   })
 
   it('paginates by usage', async () => {
@@ -171,7 +189,7 @@ describe('pds admin invite views', () => {
       { headers: { authorization: adminAuth() } },
     )
     expect(aliceView.data.invitedBy?.available).toBe(10)
-    expect(aliceView.data.invitedBy?.uses.length).toBe(2)
+    expect(aliceView.data.invitedBy?.uses.length).toBe(3)
     expect(aliceView.data.invites?.length).toBe(6)
   })
 
@@ -198,5 +216,75 @@ describe('pds admin invite views', () => {
       },
     )
     await expect(attemptCreateInvite).rejects.toThrow('Authentication Required')
+  })
+
+  it('disables an account from getting additional invite codes', async () => {
+    await agent.api.com.atproto.admin.disableAccountInvites(
+      { account: carol },
+      { encoding: 'application/json', headers: { authorization: adminAuth() } },
+    )
+
+    const repoRes = await agent.api.com.atproto.admin.getRepo(
+      { did: carol },
+      { headers: { authorization: adminAuth() } },
+    )
+    expect(repoRes.data.invitesDisabled).toBe(true)
+
+    const invRes = await agent.api.com.atproto.server.getAccountInviteCodes(
+      {},
+      { headers: sc.getHeaders(carol) },
+    )
+    expect(invRes.data.codes.length).toBe(0)
+  })
+
+  it('creates codes in the background but disables them', async () => {
+    const res = await server.ctx.db.db
+      .selectFrom('invite_code')
+      .where('forUser', '=', carol)
+      .selectAll()
+      .execute()
+    expect(res.length).toBe(5)
+    expect(res.every((row) => row.disabled === 1))
+  })
+
+  it('does not allow non-admin moderations to disable account invites', async () => {
+    const attempt = agent.api.com.atproto.admin.disableAccountInvites(
+      { account: alice },
+      {
+        encoding: 'application/json',
+        headers: { authorization: moderatorAuth() },
+      },
+    )
+    await expect(attempt).rejects.toThrow('Authentication Required')
+  })
+
+  it('re-enables an accounts invites', async () => {
+    await agent.api.com.atproto.admin.enableAccountInvites(
+      { account: carol },
+      { encoding: 'application/json', headers: { authorization: adminAuth() } },
+    )
+
+    const repoRes = await agent.api.com.atproto.admin.getRepo(
+      { did: carol },
+      { headers: { authorization: adminAuth() } },
+    )
+    expect(repoRes.data.invitesDisabled).toBe(false)
+
+    const invRes = await agent.api.com.atproto.server.getAccountInviteCodes(
+      {},
+      { headers: sc.getHeaders(carol) },
+    )
+    expect(invRes.data.codes.length).toBeGreaterThan(0)
+  })
+
+  it('does not allow non-admin moderations to enable account invites', async () => {
+    const attempt = agent.api.com.atproto.admin.enableAccountInvites(
+      { account: alice },
+      {
+        encoding: 'application/json',
+        headers: { authorization: moderatorAuth() },
+      },
+    )
+    await expect(attempt).rejects.toThrow('Authentication Required')
   })
 })
