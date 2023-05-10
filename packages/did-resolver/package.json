@@ -28,7 +28,7 @@
     "@atproto/common-web": "*",
     "@atproto/crypto": "*",
     "axios": "^0.27.2",
-    "zod": "^3.14.2"
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@did-plc/lib": "^0.0.1",
