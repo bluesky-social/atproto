@@ -17,6 +17,13 @@ export const sequenceEvt = async (
   dbTxn: Database,
   evt: RepoSeqInsert,
 ): Promise<number> => {
+  await dbTxn.notify('repo_seq')
+  if (evt.eventType === 'rebase') {
+    await invalidatePrevRepoOps(dbTxn, evt.did)
+  } else if (evt.eventType === 'handle') {
+    await invalidatePrevHandleOps(dbTxn, evt.did)
+  }
+
   const res = await dbTxn.db
     .insertInto('repo_seq')
     .values(evt)
@@ -24,12 +31,6 @@ export const sequenceEvt = async (
     .executeTakeFirst()
   if (!res) {
     throw new Error(`Failed to sequence evt: ${evt}`)
-  }
-  await dbTxn.notify('repo_seq')
-  if (evt.eventType === 'rebase') {
-    await invalidatePrevRepoOps(dbTxn, evt.did, res.seq)
-  } else if (evt.eventType === 'handle') {
-    await invalidatePrevHandleOps(dbTxn, evt.did, res.seq)
   }
 
   return res.seq
@@ -84,7 +85,6 @@ export const formatSeqCommit = async (
     eventType: 'append' as const,
     event: cborEncode(evt),
     sequencedAt: new Date().toISOString(),
-    invalidatedBy: null,
   }
 }
 
@@ -131,7 +131,6 @@ export const formatSeqHandleUpdate = async (
 export const invalidatePrevSeqEvts = async (
   db: Database,
   did: string,
-  invalidatedBy: number,
   eventTypes: EventType[],
 ) => {
   if (eventTypes.length < 1) return
@@ -139,25 +138,17 @@ export const invalidatePrevSeqEvts = async (
     .updateTable('repo_seq')
     .where('did', '=', did)
     .where('eventType', 'in', eventTypes)
-    .where('seq', '!=', invalidatedBy)
-    .set({ invalidatedBy })
+    .where('invalidated', '=', 0)
+    .set({ invalidated: 1 })
     .execute()
 }
 
-export const invalidatePrevRepoOps = async (
-  db: Database,
-  did: string,
-  invalidatedBy: number,
-) => {
-  return invalidatePrevSeqEvts(db, did, invalidatedBy, ['append', 'rebase'])
+export const invalidatePrevRepoOps = async (db: Database, did: string) => {
+  return invalidatePrevSeqEvts(db, did, ['append', 'rebase'])
 }
 
-export const invalidatePrevHandleOps = async (
-  db: Database,
-  did: string,
-  invalidatedBy: number,
-) => {
-  return invalidatePrevSeqEvts(db, did, invalidatedBy, ['handle'])
+export const invalidatePrevHandleOps = async (db: Database, did: string) => {
+  return invalidatePrevSeqEvts(db, did, ['handle'])
 }
 
 export const commitEvtOp = z.object({

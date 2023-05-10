@@ -2,6 +2,22 @@ import { reservedSubdomains } from './reserved'
 
 export * from './resolve'
 
+// Currently these are registration-time restrictions, not protocol-level
+// restrictions. We have a couple accounts in the wild that we need to clean up
+// before hard-disallow.
+// See also: https://en.wikipedia.org/wiki/Top-level_domain#Reserved_domains
+const DISALLOWED_TLDS = [
+  '.local',
+  '.arpa',
+  '.invalid',
+  '.localhost',
+  '.internal',
+  // policy could concievably change on ".onion" some day
+  '.onion',
+  // NOTE: .test is allowed in testing and devopment. In practical terms
+  // "should" "never" actually resolve and get registered in production
+]
+
 // Handle constraints, in English:
 //  - must be a possible domain name
 //    - RFC-1035 is commonly referenced, but has been updated. eg, RFC-3696,
@@ -98,6 +114,12 @@ export const ensureHandleServiceConstraints = (
   availableUserDomains: string[],
   reserved = reservedSubdomains,
 ): void => {
+  const disallowedTld = DISALLOWED_TLDS.find((domain) =>
+    handle.endsWith(domain),
+  )
+  if (disallowedTld) {
+    throw new DisallowedDomainError('Handle TLD is invalid or disallowed')
+  }
   const supportedDomain = availableUserDomains.find((domain) =>
     handle.endsWith(domain),
   )
@@ -130,7 +152,8 @@ export const fulfillsHandleServiceConstraints = (
     if (
       err instanceof InvalidHandleError ||
       err instanceof ReservedHandleError ||
-      err instanceof UnsupportedDomainError
+      err instanceof UnsupportedDomainError ||
+      err instanceof DisallowedDomainError
     ) {
       return false
     }
@@ -142,3 +165,4 @@ export const fulfillsHandleServiceConstraints = (
 export class InvalidHandleError extends Error {}
 export class ReservedHandleError extends Error {}
 export class UnsupportedDomainError extends Error {}
+export class DisallowedDomainError extends Error {}

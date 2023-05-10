@@ -16,7 +16,7 @@ describe('pds thread proxy views', () => {
 
   beforeAll(async () => {
     testEnv = await runTestEnv({
-      dbPostgresSchema: 'views_thread',
+      dbPostgresSchema: 'proxy_thread',
     })
     close = testEnv.close
     agent = new AtpAgent({ service: testEnv.pds.url })
