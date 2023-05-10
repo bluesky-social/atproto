@@ -305,7 +305,7 @@ describe('repo subscribe repos', () => {
       description: undefined,
     })).did
 
-    for (var did of [baddie1, baddie2]) {
+    for (const did of [baddie1, baddie2]) {
       await ctx.services.record(db).deleteForActor(did)
       await ctx.services.repo(db).deleteRepo(did)
       await ctx.services.account(db).deleteAccount(did)
