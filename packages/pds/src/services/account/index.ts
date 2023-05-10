@@ -5,7 +5,12 @@ import * as scrypt from '../../db/scrypt'
 import { UserAccount } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
-import { countAll, notSoftDeletedClause, nullToZero } from '../../db/util'
+import {
+  countAll,
+  excluded,
+  notSoftDeletedClause,
+  nullToZero,
+} from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
@@ -457,6 +462,70 @@ export class AccountService {
       .executeTakeFirst()
     return res?.lastSeenNotifs
   }
+
+  async getPreferences(did: string, namespace?: string): Promise<unknown[]> {
+    const prefsRes = await this.db.db
+      .selectFrom('user_pref')
+      .where('did', '=', did)
+      .selectAll()
+      .execute()
+    return prefsRes
+      .filter((pref) => !namespace || matchNamespace(namespace, pref.name))
+      .map((pref) => JSON.parse(pref.valueJson))
+  }
+
+  async putPreferences(
+    did: string,
+    values: (Record<string, unknown> & { $type: string })[],
+    namespace: string,
+  ): Promise<void> {
+    this.db.assertTransaction()
+    if (!values.every((value) => matchNamespace(namespace, value.$type))) {
+      throw new InvalidRequestError(
+        `Some preferences are not in the ${namespace} namespace`,
+      )
+    }
+    // get all current prefs for user and prep new pref rows
+    const allPrefs = await this.db.db
+      .selectFrom('user_pref')
+      .where('did', '=', did)
+      .select('name')
+      .execute()
+    const putPrefs = values.map((value) => {
+      return {
+        did,
+        name: value.$type,
+        valueJson: JSON.stringify(value),
+      }
+    })
+    // compute which prefs to nix: all existing prefs in namespace that aren't being put.
+    const putPrefNames = putPrefs.map((pref) => pref.name)
+    const existingPrefNames = allPrefs
+      .filter((pref) => matchNamespace(namespace, pref.name))
+      .map((pref) => pref.name)
+    const toDeletePrefNames = existingPrefNames.filter(
+      (name) => !putPrefNames.includes(name),
+    )
+    // remove and put prefs
+    if (toDeletePrefNames.length) {
+      await this.db.db
+        .deleteFrom('user_pref')
+        .where('did', '=', did)
+        .where('name', 'in', toDeletePrefNames)
+        .execute()
+    }
+    if (putPrefs.length) {
+      await this.db.db
+        .insertInto('user_pref')
+        .values(putPrefs)
+        .onConflict((oc) =>
+          oc
+            .columns(['did', 'name'])
+            .doUpdateSet({ valueJson: excluded(this.db.db, 'valueJson') }),
+        )
+        .execute()
+    }
+  }
 }
 
 type CodeDetail = {
@@ -483,4 +552,8 @@ export class ListKeyset extends TimeCidKeyset<{
   labelResult(result: { indexedAt: string; handle: string }) {
     return { primary: result.indexedAt, secondary: result.handle }
   }
+}
+
+const matchNamespace = (namespace: string, fullname: string) => {
+  return fullname === namespace || fullname.startsWith(`${namespace}.`)
 }
