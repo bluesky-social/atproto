@@ -261,7 +261,7 @@ export const lexiconDoc = z
     description: z.string().optional(),
     defs: z.record(lexUserType),
   })
-  .superRefine((doc: LexiconDoc, ctx) => {
+  .superRefine((doc, ctx) => {
     for (const defId in doc.defs) {
       const def = doc.defs[defId]
       if (

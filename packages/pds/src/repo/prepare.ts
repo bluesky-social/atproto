@@ -30,6 +30,7 @@ import {
   Record as PostRecord,
   isRecord as isPost,
 } from '../lexicon/types/app/bsky/feed/post'
+import { isRecord as isList } from '../lexicon/types/app/bsky/graph/list'
 import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
 
 // @TODO do this dynamically off of schemas
@@ -52,6 +53,18 @@ export const blobsForWrite = (record: unknown): PreparedBlobRef[] => {
       })
     }
     return refs
+  } else if (isList(record)) {
+    const doc = lex.schemaDict.AppBskyGraphList
+    if (!record.avatar) {
+      return []
+    }
+    return [
+      {
+        cid: record.avatar.ref,
+        mimeType: record.avatar.mimeType,
+        constraints: doc.defs.main.record.properties.avatar,
+      },
+    ]
   } else if (isPost(record)) {
     const refs: PreparedBlobRef[] = []
     const embeds = separateEmbeds(record.embed)

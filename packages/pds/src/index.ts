@@ -14,7 +14,8 @@ import { BlobStore } from '@atproto/repo'
 import { AppViewIndexer } from './app-view/indexer'
 import inProcessAppView from './app-view/api'
 import proxiedAppView from './app-view/proxied'
-import API, { health } from './api'
+import API from './api'
+import * as basicRoutes from './basic-routes'
 import Database from './db'
 import { ServerAuth } from './auth'
 import * as error from './error'
@@ -185,7 +186,7 @@ export class PDS {
       server = inProcessAppView(server, ctx)
     }
 
-    app.use(health.createRouter(ctx))
+    app.use(basicRoutes.createRouter(ctx))
     app.use(server.xrpc.router)
     app.use(error.handler)
 

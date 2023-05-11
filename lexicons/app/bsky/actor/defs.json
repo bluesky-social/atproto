@@ -80,6 +80,7 @@
       "type": "object",
       "properties": {
         "muted": {"type": "boolean"},
+        "mutedByList": {"type": "ref", "ref": "app.bsky.graph.defs#listViewBasic"},
         "blockedBy": {"type": "boolean"},
         "blocking": {"type": "string", "format": "at-uri"},
         "following": {"type": "string", "format": "at-uri"},

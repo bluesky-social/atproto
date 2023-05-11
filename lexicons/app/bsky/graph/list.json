@@ -1,0 +1,30 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.list",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A declaration of a list of actors.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["name", "purpose", "createdAt"],
+        "properties": {
+          "purpose": {"type": "ref", "ref": "app.bsky.graph.defs#listPurpose"},
+          "name": {"type": "string", "maxLength": 64, "minLength": 1},
+          "description": {"type": "string", "maxGraphemes": 300, "maxLength": 3000},
+          "descriptionFacets": {
+            "type": "array",
+            "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
+          },
+          "avatar": {
+            "type": "blob",
+            "accept": ["image/png", "image/jpeg"],
+            "maxSize": 1000000
+          },
+          "createdAt": {"type": "string", "format": "datetime"}
+        }
+      }
+    }
+  }
+}

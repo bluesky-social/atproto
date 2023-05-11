@@ -14,6 +14,8 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('The seenAt parameter is unsupported')
       }
 
+      const accountService = ctx.services.account(ctx.db)
+
       const result = await ctx.db.db
         .selectFrom('user_notification as notif')
         .select(countAll.as('count'))
@@ -29,11 +31,7 @@ export default function (server: Server, ctx: AppContext) {
         .where(notSoftDeletedClause(ref('record')))
         .where('notif.userDid', '=', requester)
         .whereNotExists(
-          ctx.db.db // Omit mentions and replies by muted actors
-            .selectFrom('mute')
-            .selectAll()
-            .whereRef('did', '=', ref('notif.author'))
-            .where('mutedByDid', '=', requester),
+          accountService.mutedQb(requester, [ref('notif.author')]),
         )
         .whereRef('notif.indexedAt', '>', 'user_state.lastSeenNotifs')
         .executeTakeFirst()

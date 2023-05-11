@@ -14,6 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       const { ref } = db.db.dynamic
 
       const actorService = services.appView.actor(db)
+      const graphService = services.appView.graph(db)
 
       const creatorRes = await actorService.getActor(actor)
       if (!creatorRes) {
@@ -31,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
         )
         .where(notSoftDeletedClause(ref('subject_repo')))
         .whereNotExists(
-          actorService.blockQb(requester, [ref('follow.creator')]),
+          graphService.blockQb(requester, [ref('follow.creator')]),
         )
         .selectAll('subject')
         .select(['follow.cid as cid', 'follow.createdAt as createdAt'])

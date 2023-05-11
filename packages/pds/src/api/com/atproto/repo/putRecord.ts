@@ -14,6 +14,8 @@ import {
 } from '../../../../repo'
 import { ConcurrentWriteError } from '../../../../services/repo'
 
+const ALLOWED_PUTS = [ids.AppBskyActorProfile, ids.AppBskyGraphList]
+
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
     auth: ctx.accessVerifierCheckTakedown,
@@ -35,10 +37,12 @@ export default function (server: Server, ctx: AppContext) {
       if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
       }
-      if (collection !== ids.AppBskyActorProfile || rkey !== 'self') {
+      if (!ALLOWED_PUTS.includes(collection)) {
         // @TODO temporary
         throw new InvalidRequestError(
-          `Temporarily only accepting puts for ${ids.AppBskyActorProfile}/self.`,
+          `Temporarily only accepting puts for collections: ${ALLOWED_PUTS.join(
+            ', ',
+          )}`,
         )
       }
       if (validate === false) {
