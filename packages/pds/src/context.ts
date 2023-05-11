@@ -119,7 +119,7 @@ export class AppContext {
     return this.opts.didResolver
   }
 
-  get didCache(): DidResolver {
+  get didCache(): DidSqlCache {
     return this.opts.didCache
   }
 }
