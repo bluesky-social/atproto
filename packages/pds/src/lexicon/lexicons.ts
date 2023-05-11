@@ -835,6 +835,15 @@ export const schemaDict = {
             resolved: {
               type: 'boolean',
             },
+            actionType: {
+              type: 'string',
+              knownValues: [
+                'com.atproto.admin.defs#takedown',
+                'com.atproto.admin.defs#flag',
+                'com.atproto.admin.defs#acknowledge',
+                'com.atproto.admin.defs#escalate',
+              ],
+            },
             limit: {
               type: 'integer',
               minimum: 1,

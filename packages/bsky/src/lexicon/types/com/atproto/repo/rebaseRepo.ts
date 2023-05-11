@@ -7,42 +7,29 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as ComAtprotoAdminDefs from './defs'
 
-export interface QueryParams {
-  subject?: string
-  resolved?: boolean
-  actionType?:
-    | 'com.atproto.admin.defs#takedown'
-    | 'com.atproto.admin.defs#flag'
-    | 'com.atproto.admin.defs#acknowledge'
-    | 'com.atproto.admin.defs#escalate'
-    | (string & {})
-  limit: number
-  cursor?: string
-}
+export interface QueryParams {}
 
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  cursor?: string
-  reports: ComAtprotoAdminDefs.ReportView[]
+export interface InputSchema {
+  /** The handle or DID of the repo. */
+  repo: string
+  /** Compare and swap with the previous commit by cid. */
+  swapCommit?: string
   [k: string]: unknown
 }
 
-export type HandlerInput = undefined
-
-export interface HandlerSuccess {
+export interface HandlerInput {
   encoding: 'application/json'
-  body: OutputSchema
+  body: InputSchema
 }
 
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'InvalidSwap'
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
+export type HandlerOutput = HandlerError | void
 export type Handler<HA extends HandlerAuth = never> = (ctx: {
   auth: HA
   params: QueryParams
