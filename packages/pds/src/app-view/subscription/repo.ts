@@ -7,6 +7,8 @@ import { PreparedWrite } from '../../repo'
 import {
   Commit,
   isCommit,
+  Handle,
+  isHandle,
   OutputSchema as Message,
 } from '../../lexicon/types/com/atproto/sync/subscribeRepos'
 import { ids, lexicons } from '../../lexicon/lexicons'
@@ -24,28 +26,19 @@ export class RepoSubscription {
   constructor(public ctx: AppContext, public service: string) {}
 
   async run() {
-    const { db } = this.ctx
     while (!this.destroyed) {
       try {
         const { ran } = await this.leader.run(async ({ signal }) => {
           const sub = this.getSubscription({ signal })
           for await (const msg of sub) {
-            if (!isCommit(msg)) {
+            if (!isProcessable(msg)) {
               appViewLogger.warn(
                 { msg },
                 'unexpected message on repo subscription stream',
               )
               continue
             }
-            try {
-              const ops = await getOps(msg)
-              await db.transaction(async (tx) => {
-                await this.handleOps(tx, ops, msg.time)
-                await this.setState(tx, { cursor: msg.seq })
-              })
-            } catch (err) {
-              throw new ProcessingError(msg, { cause: err })
-            }
+            await this.handleMessage(msg)
           }
         })
         if (ran && !this.destroyed) {
@@ -77,6 +70,17 @@ export class RepoSubscription {
     this.leader.destroy(new DisconnectError())
   }
 
+  private async handleMessage(msg: ProcessableMessage) {
+    if (isCommit(msg)) {
+      await this.handleCommit(msg)
+    } else if (isHandle(msg)) {
+      await this.handleUpdateHandle(msg)
+    } else {
+      const exhaustiveCheck: never = msg
+      throw new Error(`Unhandled message type: ${exhaustiveCheck['$type']}`)
+    }
+  }
+
   private async handleOps(
     tx: Database,
     ops: PreparedWrite[],
@@ -96,6 +100,30 @@ export class RepoSubscription {
           timestamp,
         )
       }
+    }
+  }
+
+  private async handleCommit(msg: Commit) {
+    const { db } = this.ctx
+    try {
+      const ops = await getOps(msg)
+      await db.transaction(async (tx) => {
+        await this.handleOps(tx, ops, msg.time)
+        await this.setState(tx, { cursor: msg.seq })
+      })
+    } catch (err) {
+      throw new ProcessingError(msg, { cause: err })
+    }
+  }
+
+  private async handleUpdateHandle(msg: Handle) {
+    const { db } = this.ctx
+    try {
+      await db.transaction(async (tx) => {
+        await this.upsertHandle(tx, msg)
+      })
+    } catch (err) {
+      throw new ProcessingError(msg, { cause: err })
     }
   }
 
@@ -160,7 +188,25 @@ export class RepoSubscription {
       },
     })
   }
+
+  private async upsertHandle(tx: Database, handle: Handle) {
+    tx.assertTransaction()
+    const res = await tx.db
+      .selectFrom('did_handle')
+      .where('did', '=', handle.did)
+      .where('handle', '=', handle.handle)
+      .executeTakeFirst()
+    if (!res) {
+      await tx.db
+        .insertInto('did_handle')
+        .values({ did: handle.did, handle: handle.handle })
+        .executeTakeFirst()
+    }
+  }
 }
+
+// These are the messages that the app-view will handle
+type ProcessableMessage = Commit | Handle
 
 async function getOps(msg: Commit): Promise<PreparedWrite[]> {
   const { ops } = msg
@@ -207,6 +253,10 @@ function ifString(val: unknown): string | undefined {
 
 function ifNumber(val: unknown): number | undefined {
   return typeof val === 'number' ? val : undefined
+}
+
+function isProcessable(msg: Message): msg is ProcessableMessage {
+  return isCommit(msg) || isHandle(msg)
 }
 
 class ProcessingError extends Error {
