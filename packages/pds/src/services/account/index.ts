@@ -303,6 +303,7 @@ export class AccountService {
         mutedByDid,
         createdAt: createdAt.toISOString(),
       })
+      .onConflict((oc) => oc.doNothing())
       .execute()
   }
 
