@@ -38,7 +38,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('did_cache')
     .addColumn('did', 'varchar', (col) => col.primaryKey())
-    .addColumn('doc', 'jsonb', (col) => col.notNull())
+    .addColumn('doc', 'text', (col) => col.notNull())
     .addColumn('updatedAt', 'bigint', (col) => col.notNull())
     .execute()
 }

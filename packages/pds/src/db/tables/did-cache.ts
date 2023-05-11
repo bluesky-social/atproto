@@ -1,8 +1,6 @@
-import { DidDocument } from '@atproto/did-resolver'
-
 export interface DidCache {
   did: string
-  doc: DidDocument
+  doc: string // json representation of DidDocument
   updatedAt: number
 }
 

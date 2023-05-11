@@ -1,6 +1,7 @@
 import PQueue from 'p-queue'
 import { CacheResult, DidCache, DidDocument } from '@atproto/did-resolver'
 import Database from './db'
+import { excluded } from './db/util'
 
 export class DidSqlCache extends DidCache {
   public pQueue: PQueue | null //null during teardown
@@ -17,9 +18,12 @@ export class DidSqlCache extends DidCache {
   async cacheDid(did: string, doc: DidDocument): Promise<void> {
     await this.db.db
       .insertInto('did_cache')
-      .values({ did, doc, updatedAt: Date.now() })
+      .values({ did, doc: JSON.stringify(doc), updatedAt: Date.now() })
       .onConflict((oc) =>
-        oc.column('did').doUpdateSet({ doc, updatedAt: Date.now() }),
+        oc.column('did').doUpdateSet({
+          doc: excluded(this.db.db, 'doc'),
+          updatedAt: Date.now(),
+        }),
       )
       .executeTakeFirst()
   }
@@ -55,7 +59,7 @@ export class DidSqlCache extends DidCache {
 
     const stale = now > updatedAt + this.staleTTL
     return {
-      doc: res.doc,
+      doc: JSON.parse(res.doc) as DidDocument,
       updatedAt,
       did,
       stale,
