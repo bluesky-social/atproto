@@ -342,6 +342,7 @@ export class FeedService {
     const author = actors[post?.creator]
     if (!post || !author) return undefined
     return {
+      $type: 'app.bsky.feed.defs#postView',
       uri: post.uri,
       cid: post.cid,
       author: author,

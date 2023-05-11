@@ -8,6 +8,7 @@ Object {
     "parent": Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
           "did": "user(0)",
@@ -39,6 +40,7 @@ Object {
       "replies": Array [],
     },
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
         "did": "user(2)",
@@ -128,6 +130,7 @@ Object {
     "replies": Array [],
   },
   "post": Object {
+    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -174,6 +177,7 @@ exports[`pds thread proxy views fetches deep post thread 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
+    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -206,6 +210,7 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "did": "user(2)",
           "handle": "carol.test",
@@ -244,6 +249,7 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(1)@jpeg",
           "did": "user(3)",
@@ -334,6 +340,7 @@ Object {
         Object {
           "$type": "app.bsky.feed.defs#threadViewPost",
           "post": Object {
+            "$type": "app.bsky.feed.defs#postView",
             "author": Object {
               "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
               "did": "user(0)",
@@ -384,6 +391,7 @@ exports[`pds thread proxy views fetches shallow post thread 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
+    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -416,6 +424,7 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "did": "user(2)",
           "handle": "carol.test",
@@ -453,6 +462,7 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(1)@jpeg",
           "did": "user(3)",
@@ -548,6 +558,7 @@ exports[`pds thread proxy views handles deleted posts correctly 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
+    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -578,6 +589,7 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
           "did": "user(2)",
@@ -625,6 +637,7 @@ Object {
         Object {
           "$type": "app.bsky.feed.defs#threadViewPost",
           "post": Object {
+            "$type": "app.bsky.feed.defs#postView",
             "author": Object {
               "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
               "did": "user(0)",
@@ -673,6 +686,7 @@ exports[`pds thread proxy views handles deleted posts correctly 2`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
+    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -712,6 +726,7 @@ Object {
     "uri": "record(4)",
   },
   "post": Object {
+    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -756,6 +771,7 @@ exports[`pds thread proxy views includes the muted status of post authors. 1`] =
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
+    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -788,6 +804,7 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "did": "user(2)",
           "handle": "carol.test",
@@ -826,6 +843,7 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(1)@jpeg",
           "did": "user(3)",
@@ -916,6 +934,7 @@ Object {
         Object {
           "$type": "app.bsky.feed.defs#threadViewPost",
           "post": Object {
+            "$type": "app.bsky.feed.defs#postView",
             "author": Object {
               "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
               "did": "user(0)",
