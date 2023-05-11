@@ -5,7 +5,6 @@ import {
   REASONOTHER,
 } from '@atproto/api/src/client/types/com/atproto/moderation/defs'
 import { TestNetwork } from '../index'
-import { ServerType } from '../types'
 import { postTexts, replyTexts } from './data'
 import labeledImgB64 from './labeled-img-b64'
 
@@ -23,7 +22,7 @@ function* dateGen() {
   return ''
 }
 
-export async function generateMockSetup(network: TestNetwork) {
+export async function generateMockSetup(env: TestNetwork) {
   const date = dateGen()
 
   const rand = (n: number) => Math.floor(Math.random() * n)
@@ -35,10 +34,10 @@ export async function generateMockSetup(network: TestNetwork) {
   }
 
   const clients = {
-    loggedout: env.listOfType(ServerType.PersonalDataServer)[0].getClient(),
-    alice: env.listOfType(ServerType.PersonalDataServer)[0].getClient(),
-    bob: env.listOfType(ServerType.PersonalDataServer)[0].getClient(),
-    carla: env.listOfType(ServerType.PersonalDataServer)[0].getClient(),
+    loggedout: env.pds.getClient(),
+    alice: env.pds.getClient(),
+    bob: env.pds.getClient(),
+    carla: env.pds.getClient(),
   }
   interface User {
     email: string
@@ -186,7 +185,7 @@ export async function generateMockSetup(network: TestNetwork) {
     },
   )
 
-  const ctx = env.listOfType(ServerType.PersonalDataServer)[0].ctx
+  const ctx = env.pds.ctx
   if (ctx) {
     await ctx.db.db
       .insertInto('label')

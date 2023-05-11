@@ -1,22 +1,21 @@
 import assert from 'assert'
 import getPort from 'get-port'
 import { wait } from '@atproto/common-web'
-import { BskyServerInfo, PlcServerInfo, TestServerParams } from './types'
+import { TestServerParams } from './types'
 import { TestPlc } from './plc'
 import { TestPds } from './pds'
-import { runBsky } from './bsky'
+import { TestBsky } from './bsky'
 import { mockNetworkUtilities } from './util'
+import { TestNetwork } from './network'
 
-export class TestNetwork {
-  constructor(
-    public plc: PlcServerInfo,
-    public pds: TestPds,
-    public bsky?: BskyServerInfo,
-  ) {}
+export class TestNetworkWithAppView extends TestNetwork {
+  constructor(public plc: TestPlc, public pds: TestPds, public bsky: TestBsky) {
+    super(plc, pds)
+  }
 
   static async create(
     params: Partial<TestServerParams> = {},
-  ): Promise<TestNetwork> {
+  ): Promise<TestNetworkWithAppView> {
     const dbPostgresUrl = params.dbPostgresUrl || process.env.DB_POSTGRES_URL
     assert(dbPostgresUrl, 'Missing postgres url for tests')
     const dbPostgresSchema =
@@ -30,7 +29,7 @@ export class TestNetwork {
       plcUrl: plc.url,
       bskyAppViewEndpoint: `http://localhost:${bskyPort}`,
     })
-    const bsky = await runBsky({
+    const bsky = await TestBsky.create({
       port: bskyPort,
       plcUrl: plc.url,
       repoProvider: `ws://localhost:${pds.port}`,
@@ -39,12 +38,12 @@ export class TestNetwork {
     })
     mockNetworkUtilities(pds)
 
-    return new TestNetwork(plc, pds, bsky)
+    return new TestNetworkWithAppView(plc, pds, bsky)
   }
 
   async processAll(timeout = 5000) {
     if (!this.bsky) return
-    const sub = this.bsky.sub
+    const sub = this.bsky.server.sub
     if (!sub) return
     const { db } = this.pds.ctx.db
     const start = Date.now()
