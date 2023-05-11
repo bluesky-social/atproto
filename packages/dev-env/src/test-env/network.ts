@@ -1,21 +1,16 @@
 import assert from 'assert'
 import getPort from 'get-port'
 import { wait } from '@atproto/common-web'
-import {
-  BskyServerInfo,
-  PdsServerInfo,
-  PlcServerInfo,
-  TestServerParams,
-} from './types'
-import { runPlc } from './plc'
-import { runPds } from './pds'
+import { BskyServerInfo, PlcServerInfo, TestServerParams } from './types'
+import { TestPlc } from './plc'
+import { TestPds } from './pds'
 import { runBsky } from './bsky'
 import { mockNetworkUtilities } from './util'
 
 export class TestNetwork {
   constructor(
     public plc: PlcServerInfo,
-    public pds: PdsServerInfo,
+    public pds: TestPds,
     public bsky?: BskyServerInfo,
   ) {}
 
@@ -27,9 +22,9 @@ export class TestNetwork {
     const dbPostgresSchema =
       params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
 
-    const plc = await runPlc({})
+    const plc = await TestPlc.create({})
     const bskyPort = await getPort()
-    const pds = await runPds({
+    const pds = await TestPds.create({
       dbPostgresUrl,
       dbPostgresSchema,
       plcUrl: plc.url,

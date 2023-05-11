@@ -4,8 +4,9 @@ import {
   REASONSPAM,
   REASONOTHER,
 } from '@atproto/api/src/client/types/com/atproto/moderation/defs'
-import { TestNetwork } from '../index'
+import { DevEnv } from '../index'
 import { ServerType } from '../types'
+import { genServerCfg } from '../util'
 import { postTexts, replyTexts } from './data'
 import labeledImgB64 from './labeled-img-b64'
 
@@ -23,8 +24,16 @@ function* dateGen() {
   return ''
 }
 
-export async function generateMockSetup(network: TestNetwork) {
+async function createNeededServers(env: DevEnv, numNeeded = 1) {
+  await env.add(await genServerCfg(ServerType.DidPlaceholder))
+  while (env.listOfType(ServerType.PersonalDataServer).length < numNeeded) {
+    await env.add(await genServerCfg(ServerType.PersonalDataServer))
+  }
+}
+
+export async function generateMockSetup(env: DevEnv) {
   const date = dateGen()
+  await createNeededServers(env)
 
   const rand = (n: number) => Math.floor(Math.random() * n)
   const picka = <T>(arr: Array<T>): T => {

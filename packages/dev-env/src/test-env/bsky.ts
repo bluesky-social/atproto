@@ -3,6 +3,13 @@ import * as bsky from '@atproto/bsky'
 import { DAY, HOUR } from '@atproto/common-web'
 import { BskyConfig, BskyServerInfo } from './types'
 
+export class TestBsky {
+  constructor(
+    public url: string,
+    public port: number,
+    public server: bsky.BskyAppView,
+  ) {}
+}
 export const runBsky = async (cfg: BskyConfig): Promise<BskyServerInfo> => {
   const config = new bsky.ServerConfig({
     version: '0.0.0',
