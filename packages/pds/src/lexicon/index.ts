@@ -67,9 +67,11 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
+import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
@@ -724,6 +726,13 @@ export class ActorNS {
     this._server = server
   }
 
+  getPreferences<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyActorGetPreferences.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.actor.getPreferences' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getProfile<AV extends AuthVerifier>(
     cfg: ConfigOf<AV, AppBskyActorGetProfile.Handler<ExtractAuth<AV>>>,
   ) {
@@ -742,6 +751,13 @@ export class ActorNS {
     cfg: ConfigOf<AV, AppBskyActorGetSuggestions.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.actor.getSuggestions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  putPreferences<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyActorPutPreferences.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.actor.putPreferences' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

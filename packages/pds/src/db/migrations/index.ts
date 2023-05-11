@@ -47,3 +47,4 @@ export * as _20230508T193807762Z from './20230508T193807762Z-acct-deletion-index
 export * as _20230508T232711152Z from './20230508T232711152Z-disable-account-invites'
 export * as _20230509T192324175Z from './20230509T192324175Z-seq-invalidated'
 export * as _20230511T154721392Z from './20230511T154721392Z-mute-lists'
+export * as _20230511T171739449Z from './20230511T171739449Z-actor-preferences'
