@@ -4221,13 +4221,13 @@ export const schemaDict = {
             type: 'string',
             format: 'at-uri',
           },
-          creator: {
-            type: 'ref',
-            ref: 'lex:app.bsky.actor.defs#profileView',
-          },
           did: {
             type: 'string',
             format: 'did',
+          },
+          creator: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
           },
           displayName: {
             type: 'string',
