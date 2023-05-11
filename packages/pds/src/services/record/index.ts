@@ -281,7 +281,10 @@ export class RecordService {
 // For now we just want to ensure we're tracking links from follows, likes, and reposts.
 
 function getBacklinks(uri: AtUri, record: unknown): Backlink[] {
-  if (record?.['$type'] === ids.AppBskyGraphFollow) {
+  if (
+    record?.['$type'] === ids.AppBskyGraphFollow ||
+    record?.['$type'] === ids.AppBskyGraphBlock
+  ) {
     const subject = record['subject']
     if (typeof subject !== 'string') {
       return []
