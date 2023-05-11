@@ -6,6 +6,7 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+import * as AppBskyGraphDefs from '../graph/defs'
 
 export interface ProfileViewBasic {
   did: string
@@ -83,6 +84,7 @@ export function validateProfileViewDetailed(v: unknown): ValidationResult {
 
 export interface ViewerState {
   muted?: boolean
+  mutedByList?: AppBskyGraphDefs.ListViewBasic
   blockedBy?: boolean
   blocking?: string
   following?: string

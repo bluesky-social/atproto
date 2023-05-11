@@ -25,8 +25,9 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.db
       const { ref } = db.dynamic
 
+      const accountService = ctx.services.account(ctx.db)
       const feedService = ctx.services.appView.feed(ctx.db)
-      const actorService = ctx.services.appView.actor(ctx.db)
+      const graphService = ctx.services.appView.graph(ctx.db)
 
       const labelsToFilter = includeNsfw
         ? NO_WHATS_HOT_LABELS
@@ -50,13 +51,9 @@ export default function (server: Server, ctx: AppContext) {
             ),
         )
         .whereNotExists(
-          db
-            .selectFrom('mute')
-            .selectAll()
-            .where('mutedByDid', '=', requester)
-            .whereRef('did', '=', ref('post.creator')),
+          accountService.mutedQb(requester, [ref('post.creator')]),
         )
-        .whereNotExists(actorService.blockQb(requester, [ref('post.creator')]))
+        .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
 
       const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))
 

@@ -18,6 +18,7 @@ import {
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
 import { LabelService } from '../label'
 import { FeedViews } from './views'
+import { ActorService } from '../actor'
 import { AtUri } from '@atproto/uri'
 
 export * from './types'
@@ -32,6 +33,7 @@ export class FeedService {
   views = new FeedViews(this.db, this.imgUriBuilder)
   services = {
     label: LabelService.creator()(this.db),
+    actor: ActorService.creator(this.imgUriBuilder)(this.db),
   }
 
   selectPostQb() {
@@ -106,7 +108,7 @@ export class FeedService {
   ): Promise<ActorViewMap> {
     if (dids.length < 1) return {}
     const { ref } = this.db.db.dynamic
-    const [actors, labels] = await Promise.all([
+    const [actors, labels, listMutes] = await Promise.all([
       this.db.db
         .selectFrom('did_handle')
         .where('did_handle.did', 'in', dids)
@@ -151,6 +153,7 @@ export class FeedService {
         ])
         .execute(),
       this.services.label.getLabelsForProfiles(dids),
+      this.services.actor.views.getListMutes(dids, requester),
     ])
     return actors.reduce((acc, cur) => {
       return {
@@ -163,7 +166,8 @@ export class FeedService {
             ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
             : undefined,
           viewer: {
-            muted: !!cur?.requesterMuted,
+            muted: !!cur?.requesterMuted || !!listMutes[cur.did],
+            mutedByList: listMutes[cur.did],
             blockedBy: !!cur?.requesterBlockedBy,
             blocking: cur?.requesterBlocking || undefined,
             following: cur?.requesterFollowing || undefined,

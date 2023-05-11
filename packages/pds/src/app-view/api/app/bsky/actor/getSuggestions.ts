@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
       const { services } = ctx
       const { ref } = db.dynamic
 
-      const actorService = ctx.services.appView.actor(ctx.db)
+      const graphService = ctx.services.appView.graph(ctx.db)
 
       let suggestionsQb = db
         .selectFrom('user_account')
@@ -34,7 +34,7 @@ export default function (server: Server, ctx: AppContext) {
             .whereRef('subjectDid', '=', ref('did_handle.did')),
         )
         .whereNotExists(
-          actorService.blockQb(requester, [ref('did_handle.did')]),
+          graphService.blockQb(requester, [ref('did_handle.did')]),
         )
         .selectAll('did_handle')
         .select('profile_agg.postsCount as postsCount')

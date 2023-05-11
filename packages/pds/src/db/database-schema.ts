@@ -19,6 +19,7 @@ import * as deleteAccountToken from './tables/delete-account-token'
 import * as moderation from './tables/moderation'
 import * as mute from './tables/mute'
 import * as feedBookmark from './tables/feed-bookmark'
+import * as listMute from './tables/list-mute'
 import * as label from './tables/label'
 import * as repoSeq from './tables/repo-seq'
 import * as appMigration from './tables/app-migration'
@@ -48,6 +49,7 @@ export type DatabaseSchemaType = appView.DatabaseSchemaType &
   moderation.PartialDB &
   mute.PartialDB &
   feedBookmark.PartialDB &
+  listMute.PartialDB &
   label.PartialDB &
   repoSeq.PartialDB
 

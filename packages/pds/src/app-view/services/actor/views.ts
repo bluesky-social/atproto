@@ -8,6 +8,7 @@ import { DidHandle } from '../../../db/tables/did-handle'
 import Database from '../../../db'
 import { ImageUriBuilder } from '../../../image/uri'
 import { LabelService } from '../label'
+import { ListViewBasic } from '../../../lexicon/types/app/bsky/graph/defs'
 
 export class ActorViews {
   constructor(private db: Database, private imgUriBuilder: ImageUriBuilder) {}
@@ -82,11 +83,11 @@ export class ActorViews {
           .select('did')
           .as('requesterMuted'),
       ])
-      .execute()
 
-    const [profileInfos, labels] = await Promise.all([
-      profileInfosQb,
+    const [profileInfos, labels, listMutes] = await Promise.all([
+      profileInfosQb.execute(),
       this.services.label(this.db).getLabelsForProfiles(dids),
+      this.getListMutes(dids, viewer),
     ])
 
     const profileInfoByDid = profileInfos.reduce((acc, info) => {
@@ -108,12 +109,13 @@ export class ActorViews {
         description: truncateUtf8(profileInfo?.description, 256) || undefined,
         avatar,
         banner,
-        followsCount: profileInfo?.followsCount ?? 0,
-        followersCount: profileInfo?.followersCount ?? 0,
-        postsCount: profileInfo?.postsCount ?? 0,
+        followsCount: profileInfo?.followsCount || 0,
+        followersCount: profileInfo?.followersCount || 0,
+        postsCount: profileInfo?.postsCount || 0,
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: {
-          muted: !!profileInfo?.requesterMuted,
+          muted: !!profileInfo?.requesterMuted || !!listMutes[result.did],
+          mutedByList: listMutes[result.did],
           blockedBy: !!profileInfo.requesterBlockedBy,
           blocking: profileInfo.requesterBlocking || undefined,
           following: profileInfo?.requesterFollowing || undefined,
@@ -180,11 +182,11 @@ export class ActorViews {
           .select('did')
           .as('requesterMuted'),
       ])
-      .execute()
 
-    const [profileInfos, labels] = await Promise.all([
-      profileInfosQb,
+    const [profileInfos, labels, listMutes] = await Promise.all([
+      profileInfosQb.execute(),
       this.services.label(this.db).getLabelsForProfiles(dids),
+      this.getListMutes(dids, viewer),
     ])
 
     const profileInfoByDid = profileInfos.reduce((acc, info) => {
@@ -204,7 +206,8 @@ export class ActorViews {
         avatar,
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: {
-          muted: !!profileInfo?.requesterMuted,
+          muted: !!profileInfo?.requesterMuted || !!listMutes[result.did],
+          mutedByList: listMutes[result.did],
           blockedBy: !!profileInfo.requesterBlockedBy,
           blocking: profileInfo.requesterBlocking || undefined,
           following: profileInfo?.requesterFollowing || undefined,
@@ -241,6 +244,40 @@ export class ActorViews {
     }))
 
     return Array.isArray(result) ? views : views[0]
+  }
+
+  async getListMutes(
+    subjects: string[],
+    mutedBy: string,
+  ): Promise<Record<string, ListViewBasic>> {
+    if (subjects.length < 1) return {}
+    const res = await this.db.db
+      .selectFrom('list_item')
+      .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
+      .innerJoin('list', 'list.uri', 'list_item.listUri')
+      .where('list_mute.mutedByDid', '=', mutedBy)
+      .where('list_item.subjectDid', 'in', subjects)
+      .selectAll('list')
+      .select('list_item.subjectDid as subjectDid')
+      .execute()
+    return res.reduce(
+      (acc, cur) => ({
+        ...acc,
+        [cur.subjectDid]: {
+          uri: cur.uri,
+          name: cur.name,
+          purpose: cur.purpose,
+          avatar: cur.avatarCid
+            ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
+            : undefined,
+          viewer: {
+            muted: true,
+          },
+          indexedAt: cur.indexedAt,
+        },
+      }),
+      {} as Record<string, ListViewBasic>,
+    )
   }
 }
 
