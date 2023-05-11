@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import AtpAgent, { AtUri } from '@atproto/api'
 import { runTestServer, CloseFn, TestServerInfo, forSnapshot } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -305,5 +305,32 @@ describe('pds views with mutes from mute lists', () => {
       { headers: sc.getHeaders(dan) },
     )
     expect(res.data.lists.length).toBe(1)
+  })
+
+  it('updates list', async () => {
+    const uri = new AtUri(listUri)
+    await agent.api.com.atproto.repo.putRecord(
+      {
+        repo: uri.hostname,
+        collection: uri.collection,
+        rkey: uri.rkey,
+        record: {
+          name: 'updated alice mutes',
+          purpose: 'app.bsky.graph.defs#modlist',
+          description: 'new descript',
+          createdAt: new Date().toISOString(),
+        },
+      },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+
+    const got = await agent.api.app.bsky.graph.getList(
+      { list: listUri },
+      { headers: sc.getHeaders(alice) },
+    )
+    expect(got.data.list.name).toBe('updated alice mutes')
+    expect(got.data.list.description).toBe('new descript')
+    expect(got.data.list.avatar).toBeUndefined()
+    expect(got.data.items.length).toBe(2)
   })
 })
