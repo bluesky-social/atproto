@@ -92,12 +92,12 @@
     },
     "generatorView": {
       "type": "object",
-      "required": ["uri", "name", "creator", "indexedAt"],
+      "required": ["uri", "creator", "indexedAt"],
       "properties": {
         "uri": {"type": "string", "format": "at-uri"},
-        "name": {"type": "string"},
-        "creator": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
         "did": {"type": "string", "format": "did"},
+        "creator": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
+        "displayName": {"type": "string"},
         "description": {"type": "string", "maxGraphemes": 300, "maxLength": 3000},
         "descriptionFacets": {
           "type": "array",

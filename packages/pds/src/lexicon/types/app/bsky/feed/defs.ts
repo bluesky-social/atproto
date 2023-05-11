@@ -190,6 +190,7 @@ export interface GeneratorView {
   uri: string
   creator: AppBskyActorDefs.ProfileView
   did?: string
+  displayName?: string
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: string

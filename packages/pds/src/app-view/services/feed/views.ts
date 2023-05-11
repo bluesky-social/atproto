@@ -11,7 +11,6 @@ import { ActorViewMap, FeedEmbeds, MaybePostView, PostInfoMap } from './types'
 import { Labels } from '../label'
 import { FeedGenerator } from '../../db/tables/feed-generator'
 import { ProfileView } from '../../../lexicon/types/app/bsky/actor/defs'
-import { AtUri } from '@atproto/uri'
 import { ImageUriBuilder } from '../../../image/uri'
 
 export * from './types'
@@ -29,9 +28,9 @@ export class FeedViews {
   ): GeneratorView {
     return {
       uri: info.uri,
-      name: new AtUri(info.uri).rkey,
-      creator: profiles[info.creator],
       did: info.feedDid,
+      creator: profiles[info.creator],
+      displayName: info.displayName ?? undefined,
       description: info.description ?? undefined,
       descriptionFacets: info.descriptionFacets
         ? JSON.parse(info.descriptionFacets)

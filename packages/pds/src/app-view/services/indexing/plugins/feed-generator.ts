@@ -27,6 +27,7 @@ const insertFn = async (
       cid: cid.toString(),
       creator: uri.host,
       feedDid: obj.did,
+      displayName: obj.displayName,
       description: obj.description,
       descriptionFacets: obj.descriptionFacets
         ? JSON.stringify(obj.descriptionFacets)

@@ -5,6 +5,7 @@ export interface FeedGenerator {
   cid: string
   creator: string
   feedDid: string
+  displayName: string | null
   description: string | null
   descriptionFacets: string | null
   avatarCid: string | null

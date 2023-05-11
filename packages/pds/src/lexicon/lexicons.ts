@@ -4225,6 +4225,9 @@ export const schemaDict = {
             type: 'string',
             format: 'did',
           },
+          displayName: {
+            type: 'string',
+          },
           description: {
             type: 'string',
             maxGraphemes: 300,
@@ -4317,7 +4320,7 @@ export const schemaDict = {
       main: {
         type: 'record',
         description: 'A declaration of the existence of a feed generator',
-        key: 'named',
+        key: 'any',
         record: {
           type: 'object',
           required: ['did', 'createdAt'],
@@ -4325,6 +4328,11 @@ export const schemaDict = {
             did: {
               type: 'string',
               format: 'did',
+            },
+            displayName: {
+              type: 'string',
+              maxGraphemes: 64,
+              maxLength: 640,
             },
             description: {
               type: 'string',
