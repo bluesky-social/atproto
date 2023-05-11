@@ -10,6 +10,7 @@ import {
 import { BackgroundQueue } from '../../../../event-stream/background-queue'
 import RecordProcessor from '../processor'
 import { countAll, excluded } from '../../../../db/util'
+import { toSimplifiedISOSafe } from '../util'
 
 const lexId = lex.ids.AppBskyFeedRepost
 type IndexedRepost = DatabaseSchemaType['repost']
@@ -27,7 +28,7 @@ const insertFn = async (
     creator: uri.host,
     subject: obj.subject.uri,
     subjectCid: obj.subject.cid,
-    createdAt: obj.createdAt,
+    createdAt: toSimplifiedISOSafe(obj.createdAt),
     indexedAt: timestamp,
   }
   const [inserted] = await Promise.all([

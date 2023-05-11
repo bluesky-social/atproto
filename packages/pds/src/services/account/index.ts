@@ -2,7 +2,7 @@ import { sql } from 'kysely'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import * as scrypt from '../../db/scrypt'
-import { UserAccount } from '../../db/tables/user-account'
+import { UserAccount, UserAccountEntry } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
 import {
@@ -29,7 +29,7 @@ export class AccountService {
   async getAccount(
     handleOrDid: string,
     includeSoftDeleted = false,
-  ): Promise<(UserAccount & DidHandle & RepoRoot) | null> {
+  ): Promise<(UserAccountEntry & DidHandle & RepoRoot) | null> {
     const { ref } = this.db.db.dynamic
     const result = await this.db.db
       .selectFrom('user_account')
@@ -55,7 +55,7 @@ export class AccountService {
   async getAccountByEmail(
     email: string,
     includeSoftDeleted = false,
-  ): Promise<(UserAccount & DidHandle & RepoRoot) | null> {
+  ): Promise<(UserAccountEntry & DidHandle & RepoRoot) | null> {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('user_account')
