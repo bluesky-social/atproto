@@ -92,13 +92,21 @@ import * as AppBskyFeedLike from './types/app/bsky/feed/like'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 import * as AppBskyGraphBlock from './types/app/bsky/graph/block'
+import * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
 import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
+import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
+import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
+import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
+import * as AppBskyGraphList from './types/app/bsky/graph/list'
+import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
+import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
+import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
@@ -190,13 +198,21 @@ export * as AppBskyFeedLike from './types/app/bsky/feed/like'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
 export * as AppBskyGraphBlock from './types/app/bsky/graph/block'
+export * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
 export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
 export * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
+export * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
+export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
+export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
+export * as AppBskyGraphList from './types/app/bsky/graph/list'
+export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
+export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
+export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
@@ -216,6 +232,9 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonSexual: 'com.atproto.moderation.defs#reasonSexual',
   DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
+}
+export const APP_BSKY_GRAPH = {
+  DefsModlist: 'app.bsky.graph.defs#modlist',
 }
 
 export class AtpBaseClient {
@@ -1385,11 +1404,15 @@ export class GraphNS {
   _service: AtpServiceClient
   block: BlockRecord
   follow: FollowRecord
+  list: ListRecord
+  listitem: ListitemRecord
 
   constructor(service: AtpServiceClient) {
     this._service = service
     this.block = new BlockRecord(service)
     this.follow = new FollowRecord(service)
+    this.list = new ListRecord(service)
+    this.listitem = new ListitemRecord(service)
   }
 
   getBlocks(
@@ -1425,6 +1448,39 @@ export class GraphNS {
       })
   }
 
+  getList(
+    params?: AppBskyGraphGetList.QueryParams,
+    opts?: AppBskyGraphGetList.CallOptions,
+  ): Promise<AppBskyGraphGetList.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getList', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetList.toKnownErr(e)
+      })
+  }
+
+  getListMutes(
+    params?: AppBskyGraphGetListMutes.QueryParams,
+    opts?: AppBskyGraphGetListMutes.CallOptions,
+  ): Promise<AppBskyGraphGetListMutes.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getListMutes', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetListMutes.toKnownErr(e)
+      })
+  }
+
+  getLists(
+    params?: AppBskyGraphGetLists.QueryParams,
+    opts?: AppBskyGraphGetLists.CallOptions,
+  ): Promise<AppBskyGraphGetLists.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getLists', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetLists.toKnownErr(e)
+      })
+  }
+
   getMutes(
     params?: AppBskyGraphGetMutes.QueryParams,
     opts?: AppBskyGraphGetMutes.CallOptions,
@@ -1447,6 +1503,17 @@ export class GraphNS {
       })
   }
 
+  muteActorList(
+    data?: AppBskyGraphMuteActorList.InputSchema,
+    opts?: AppBskyGraphMuteActorList.CallOptions,
+  ): Promise<AppBskyGraphMuteActorList.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.muteActorList', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyGraphMuteActorList.toKnownErr(e)
+      })
+  }
+
   unmuteActor(
     data?: AppBskyGraphUnmuteActor.InputSchema,
     opts?: AppBskyGraphUnmuteActor.CallOptions,
@@ -1455,6 +1522,17 @@ export class GraphNS {
       .call('app.bsky.graph.unmuteActor', opts?.qp, data, opts)
       .catch((e) => {
         throw AppBskyGraphUnmuteActor.toKnownErr(e)
+      })
+  }
+
+  unmuteActorList(
+    data?: AppBskyGraphUnmuteActorList.InputSchema,
+    opts?: AppBskyGraphUnmuteActorList.CallOptions,
+  ): Promise<AppBskyGraphUnmuteActorList.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.unmuteActorList', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyGraphUnmuteActorList.toKnownErr(e)
       })
   }
 }
@@ -1576,6 +1654,128 @@ export class FollowRecord {
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.graph.follow', ...params },
+      { headers },
+    )
+  }
+}
+
+export class ListRecord {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphList.Record }[]
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.graph.list',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyGraphList.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.graph.list',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyGraphList.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.graph.list'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.graph.list', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.graph.list', ...params },
+      { headers },
+    )
+  }
+}
+
+export class ListitemRecord {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphListitem.Record }[]
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.graph.listitem',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyGraphListitem.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.graph.listitem',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyGraphListitem.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.graph.listitem'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.graph.listitem', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.graph.listitem', ...params },
       { headers },
     )
   }

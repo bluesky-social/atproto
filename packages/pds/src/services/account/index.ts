@@ -5,13 +5,19 @@ import * as scrypt from '../../db/scrypt'
 import { UserAccount, UserAccountEntry } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
-import { countAll, notSoftDeletedClause, nullToZero } from '../../db/util'
+import {
+  DbRef,
+  countAll,
+  notSoftDeletedClause,
+  nullToZero,
+} from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { NotEmptyArray } from '@atproto/common'
 
 export class AccountService {
   constructor(public db: Database) {}
@@ -282,6 +288,48 @@ export class AccountService {
       acc[cur.did] = true
       return acc
     }, {} as Record<string, boolean>)
+  }
+
+  async muteActorList(info: {
+    list: string
+    mutedByDid: string
+    createdAt?: Date
+  }) {
+    const { list, mutedByDid, createdAt = new Date() } = info
+    await this.db.db
+      .insertInto('list_mute')
+      .values({
+        listUri: list,
+        mutedByDid,
+        createdAt: createdAt.toISOString(),
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+  }
+
+  async unmuteActorList(info: { list: string; mutedByDid: string }) {
+    const { list, mutedByDid } = info
+    await this.db.db
+      .deleteFrom('list_mute')
+      .where('listUri', '=', list)
+      .where('mutedByDid', '=', mutedByDid)
+      .execute()
+  }
+
+  mutedQb(requester: string, refs: NotEmptyArray<DbRef>) {
+    const subjectRefs = sql.join(refs)
+    const actorMute = this.db.db
+      .selectFrom('mute')
+      .where('mutedByDid', '=', requester)
+      .where('did', 'in', sql`(${subjectRefs})`)
+      .select('did as muted')
+    const listMute = this.db.db
+      .selectFrom('list_item')
+      .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
+      .where('list_mute.mutedByDid', '=', requester)
+      .whereRef('list_item.subjectDid', 'in', sql`(${subjectRefs})`)
+      .select('list_item.subjectDid as muted')
+    return actorMute.unionAll(listMute)
   }
 
   async search(opts: {

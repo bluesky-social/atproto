@@ -444,7 +444,7 @@ describe('crud operations', () => {
         },
       })
       await expect(put).rejects.toThrow(
-        'Temporarily only accepting puts for app.bsky.actor.profile/self',
+        'Temporarily only accepting puts for collections: app.bsky.actor.profile, app.bsky.graph.list',
       )
     })
 

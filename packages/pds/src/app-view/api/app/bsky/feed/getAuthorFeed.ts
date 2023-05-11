@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
 
       // first verify there is not a block between requester & subject
       const blocks = await ctx.services.appView
-        .actor(ctx.db)
+        .graph(ctx.db)
         .getBlocks(requester, actor)
       if (blocks.blocking) {
         throw new InvalidRequestError(
@@ -30,7 +30,9 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      const accountService = ctx.services.account(ctx.db)
       const feedService = ctx.services.appView.feed(ctx.db)
+      const graphService = ctx.services.appView.graph(ctx.db)
       const labelService = ctx.services.appView.label(ctx.db)
 
       const userLookupCol = actor.startsWith('did:')
@@ -41,20 +43,19 @@ export default function (server: Server, ctx: AppContext) {
         .select('did')
         .where(userLookupCol, '=', actor)
         .limit(1)
-      const mutedDidsQb = db
-        .selectFrom('mute')
-        .select('did')
-        .where('mutedByDid', '=', requester)
 
       let feedItemsQb = feedService
         .selectFeedItemQb()
         .where('originatorDid', '=', actorDidQb)
-        .where((qb) => {
+        .where((qb) =>
           // Hide reposts of muted content
-          return qb
-            .where('type', '!=', 'repost')
-            .orWhere('post.creator', 'not in', mutedDidsQb)
-        })
+          qb
+            .where('type', '=', 'post')
+            .orWhereNotExists(
+              accountService.mutedQb(requester, [ref('post.creator')]),
+            ),
+        )
+        .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
 
       const keyset = new FeedKeyset(
         ref('feed_item.sortAt'),
