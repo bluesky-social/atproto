@@ -12,7 +12,7 @@ import { PDS, ServerConfig, Database, MemoryBlobStore } from '../src/index'
 import { FeedViewPost } from '../src/lexicon/types/app/bsky/feed/defs'
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import AppContext from '../src/context'
-import { HOUR } from '@atproto/common'
+import { DAY, HOUR } from '@atproto/common'
 import { lexToJson } from '@atproto/lexicon'
 
 const ADMIN_PASSWORD = 'admin-pass'
@@ -82,6 +82,8 @@ export const runTestServer = async (
     inviteRequired: false,
     userInviteInterval: null,
     didPlcUrl: plcUrl,
+    didCacheMaxTTL: DAY,
+    didCacheStaleTTL: HOUR,
     jwtSecret: 'jwt-secret',
     availableUserDomains: ['.test'],
     appUrlPasswordReset: 'app://forgot-password',

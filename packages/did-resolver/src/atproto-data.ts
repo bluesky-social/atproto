@@ -69,7 +69,7 @@ export const getFeedGen = (doc: DidDocument): string | undefined => {
   }
   const found = services.find((service) => service.id === '#bsky_fg')
   if (!found) return undefined
-  if (found.type !== 'BlueskyFeedGenerator') {
+  if (found.type !== 'BskyFeedGenerator') {
     return undefined
   }
   if (typeof found.serviceEndpoint !== 'string') {

@@ -116,11 +116,11 @@ export class AppContext {
   }
 
   get didResolver(): DidResolver {
-    return this.didResolver
+    return this.opts.didResolver
   }
 
   get didCache(): DidResolver {
-    return this.didCache
+    return this.opts.didCache
   }
 }
 
