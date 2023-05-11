@@ -1,6 +1,6 @@
 {
   "name": "@atproto/api",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "main": "src/index.ts",
   "scripts": {
     "codegen": "lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
