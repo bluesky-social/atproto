@@ -12,8 +12,18 @@ const run = async () => {
 
 [ created by Bluesky ]`)
 
-  const network = await TestNetwork.create()
+  const network = await TestNetwork.create({
+    pds: { port: 2583 },
+    plc: { port: 2582 },
+  })
   await generateMockSetup(network)
+
+  console.log(
+    `👤 DID Placeholder server started http://localhost:${network.plc.port}`,
+  )
+  console.log(
+    `🌞 Personal Data server started http://localhost:${network.pds.port}`,
+  )
 }
 
 run()

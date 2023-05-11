@@ -21,13 +21,14 @@ export class TestNetworkWithAppView extends TestNetwork {
     const dbPostgresSchema =
       params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
 
-    const plc = await TestPlc.create({})
-    const bskyPort = await getPort()
+    const plc = await TestPlc.create(params.plc ?? {})
+    const bskyPort = params.bsky?.port ?? (await getPort())
     const pds = await TestPds.create({
       dbPostgresUrl,
       dbPostgresSchema,
       plcUrl: plc.url,
       bskyAppViewEndpoint: `http://localhost:${bskyPort}`,
+      ...params.pds,
     })
     const bsky = await TestBsky.create({
       port: bskyPort,
@@ -35,6 +36,7 @@ export class TestNetworkWithAppView extends TestNetwork {
       repoProvider: `ws://localhost:${pds.port}`,
       dbPostgresSchema: `appview_${dbPostgresSchema}`,
       dbPostgresUrl,
+      ...params.bsky,
     })
     mockNetworkUtilities(pds)
 

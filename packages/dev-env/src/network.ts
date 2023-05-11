@@ -13,11 +13,12 @@ export class TestNetwork {
     const dbPostgresSchema =
       params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
 
-    const plc = await TestPlc.create({})
+    const plc = await TestPlc.create(params.plc ?? {})
     const pds = await TestPds.create({
       dbPostgresUrl,
       dbPostgresSchema,
       plcUrl: plc.url,
+      ...params.pds,
     })
     mockNetworkUtilities(pds)
 
