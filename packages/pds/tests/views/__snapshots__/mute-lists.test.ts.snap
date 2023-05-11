@@ -299,7 +299,6 @@ Object {
   "cursor": "0000000000000::bafycid",
   "items": Array [
     Object {
-      "reason": "idk",
       "subject": Object {
         "did": "user(0)",
         "handle": "carol.test",
@@ -322,7 +321,6 @@ Object {
       },
     },
     Object {
-      "reason": "because",
       "subject": Object {
         "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
         "description": "hi im bob label_me",

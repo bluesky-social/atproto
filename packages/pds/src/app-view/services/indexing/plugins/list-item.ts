@@ -35,10 +35,6 @@ const insertFn = async (
       creator: uri.host,
       subjectDid: obj.subject,
       listUri: obj.list,
-      reason: obj.reason,
-      reasonFacets: obj.reasonFacets
-        ? JSON.stringify(obj.reasonFacets)
-        : undefined,
       createdAt: obj.createdAt,
       indexedAt: timestamp,
     })

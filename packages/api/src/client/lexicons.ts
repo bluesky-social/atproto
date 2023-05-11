@@ -4680,18 +4680,6 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileView',
           },
-          reason: {
-            type: 'string',
-            maxLength: 5000,
-            maxGraphemes: 1000,
-          },
-          reasonFacets: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:app.bsky.richtext.facet',
-            },
-          },
         },
       },
       listPurpose: {
@@ -5137,18 +5125,6 @@ export const schemaDict = {
             list: {
               type: 'string',
               format: 'at-uri',
-            },
-            reason: {
-              type: 'string',
-              maxLength: 5000,
-              maxGraphemes: 1000,
-            },
-            reasonFacets: {
-              type: 'array',
-              items: {
-                type: 'ref',
-                ref: 'lex:app.bsky.richtext.facet',
-              },
             },
             createdAt: {
               type: 'string',

@@ -35,12 +35,7 @@ export class GraphService {
       .selectFrom('list_item')
       .innerJoin('did_handle as subject', 'subject.did', 'list_item.subjectDid')
       .selectAll('subject')
-      .select([
-        'list_item.cid as cid',
-        'list_item.createdAt as createdAt',
-        'list_item.reason as reason',
-        'list_item.reasonFacets as reasonFacets',
-      ])
+      .select(['list_item.cid as cid', 'list_item.createdAt as createdAt'])
   }
 
   blockQb(requester: string, refs: NotEmptyArray<DbRef>) {

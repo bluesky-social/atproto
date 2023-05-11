@@ -57,8 +57,6 @@ export function validateListView(v: unknown): ValidationResult {
 
 export interface ListItemView {
   subject: AppBskyActorDefs.ProfileView
-  reason?: string
-  reasonFacets?: AppBskyRichtextFacet.Main[]
   [k: string]: unknown
 }
 
