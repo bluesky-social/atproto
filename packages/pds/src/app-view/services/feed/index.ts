@@ -29,7 +29,7 @@ export class FeedService {
     return (db: Database) => new FeedService(db, imgUriBuilder)
   }
 
-  views = new FeedViews(this.db)
+  views = new FeedViews(this.db, this.imgUriBuilder)
   services = {
     label: LabelService.creator()(this.db),
   }
@@ -80,6 +80,23 @@ export class FeedService {
         'post.replyParent',
         'post.creator as postAuthorDid',
       ])
+  }
+
+  selectFeedGeneratorQb(requester: string) {
+    const { ref } = this.db.db.dynamic
+    return this.db.db
+      .selectFrom('feed_generator')
+      .innerJoin('did_handle', 'did_handle.did', 'feed_generator.creator')
+      .selectAll()
+      .select((qb) =>
+        qb
+          .selectFrom('like')
+          .where('like.creator', '=', requester)
+          .whereRef('like.subject', '=', ref('feed_generator.uri'))
+          .limit(1)
+          .select('uri')
+          .as('viewerLike'),
+      )
   }
 
   // @NOTE keep in sync with actorService.views.profile()

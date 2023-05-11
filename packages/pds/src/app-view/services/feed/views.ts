@@ -2,20 +2,49 @@ import { cborToLexRecord } from '@atproto/repo'
 import Database from '../../../db'
 import {
   FeedViewPost,
+  GeneratorView,
   PostView,
   SkeletonFeedPost,
   isSkeletonReasonRepost,
 } from '../../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, MaybePostView, PostInfoMap } from './types'
 import { Labels } from '../label'
+import { FeedGenerator } from '../../db/tables/feed-generator'
+import { ProfileView } from '../../../lexicon/types/app/bsky/actor/defs'
+import { AtUri } from '@atproto/uri'
+import { ImageUriBuilder } from '../../../image/uri'
 
 export * from './types'
 
 export class FeedViews {
-  constructor(public db: Database) {}
+  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
 
-  static creator() {
-    return (db: Database) => new FeedViews(db)
+  static creator(imgUriBuilder: ImageUriBuilder) {
+    return (db: Database) => new FeedViews(db, imgUriBuilder)
+  }
+
+  formatFeedGeneratorView(
+    info: FeedGeneratorInfo,
+    profiles: Record<string, ProfileView>,
+  ): GeneratorView {
+    return {
+      uri: info.uri,
+      name: new AtUri(info.uri).rkey,
+      creator: profiles[info.creator],
+      did: info.feedDid,
+      description: info.description ?? undefined,
+      descriptionFacets: info.descriptionFacets
+        ? JSON.parse(info.descriptionFacets)
+        : undefined,
+      avatar: info.avatarCid
+        ? this.imgUriBuilder.getCommonSignedUri('avatar', info.avatarCid)
+        : undefined,
+      viewer: {
+        subscribed: true,
+        like: info.viewerLike ?? undefined,
+      },
+      indexedAt: info.indexedAt,
+    }
   }
 
   formatFeed(
@@ -131,4 +160,9 @@ export class FeedViews {
       notFound: true as const,
     }
   }
+}
+
+type FeedGeneratorInfo = FeedGenerator & {
+  viewerLike?: string
+  viewerSubscribed?: string
 }
