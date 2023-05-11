@@ -979,6 +979,68 @@ describe('crud operations', () => {
     await expect(getRepost3).resolves.toBeDefined()
   })
 
+  it('prevents duplicate blocks', async () => {
+    const now = new Date().toISOString()
+
+    const { data: block1 } = await aliceAgent.api.com.atproto.repo.createRecord(
+      {
+        repo: alice.did,
+        collection: 'app.bsky.graph.block',
+        record: {
+          $type: 'app.bsky.graph.block',
+          subject: bob.did,
+          createdAt: now,
+        },
+      },
+    )
+
+    const { data: block2 } = await bobAgent.api.com.atproto.repo.createRecord({
+      repo: bob.did,
+      collection: 'app.bsky.graph.block',
+      record: {
+        $type: 'app.bsky.graph.block',
+        subject: alice.did,
+        createdAt: now,
+      },
+    })
+
+    const { data: block3 } = await aliceAgent.api.com.atproto.repo.createRecord(
+      {
+        repo: alice.did,
+        collection: 'app.bsky.graph.block',
+        record: {
+          $type: 'app.bsky.graph.block',
+          subject: bob.did,
+          createdAt: now,
+        },
+      },
+    )
+
+    const getBlock1 = aliceAgent.api.com.atproto.repo.getRecord({
+      repo: alice.did,
+      collection: 'app.bsky.graph.block',
+      rkey: new AtUri(block1.uri).rkey,
+    })
+
+    await expect(getBlock1).rejects.toThrow('Could not locate record:')
+
+    const getBlock2 = aliceAgent.api.com.atproto.repo.getRecord({
+      repo: bob.did,
+      collection: 'app.bsky.graph.block',
+      rkey: new AtUri(block2.uri).rkey,
+    })
+
+    await expect(getBlock2).resolves.toBeDefined()
+
+    const getBlock3 = aliceAgent.api.com.atproto.repo.getRecord({
+      repo: alice.did,
+      collection: 'app.bsky.graph.block',
+      rkey: new AtUri(block3.uri).rkey,
+    })
+
+    await expect(getBlock3).resolves.toBeDefined()
+  })
+
   it('prevents duplicate follows', async () => {
     const now = new Date().toISOString()
 
