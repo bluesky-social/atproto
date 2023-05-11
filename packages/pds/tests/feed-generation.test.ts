@@ -15,8 +15,10 @@ describe('feed generation', () => {
   let server: TestServerInfo
   let agent: AtpAgent
   let sc: SeedClient
+  let gen: SimpleFeedGenerator
 
   let alice: string
+  let feedUri: string
 
   beforeAll(async () => {
     server = await runTestServer({
@@ -26,17 +28,9 @@ describe('feed generation', () => {
     sc = new SeedClient(agent)
     await basicSeed(sc)
     await server.ctx.backgroundQueue.processAll()
-    alice = sc.dids.alice
-  })
-
-  afterAll(async () => {
-    await server.close()
-  })
-
-  it('works', async () => {
-    const gen = await SimpleFeedGenerator.create(
+    gen = await SimpleFeedGenerator.create(
       server.ctx.cfg.didPlcUrl,
-      async () => {
+      async ({ req }) => {
         const feed = [
           {
             post: sc.posts[sc.dids.alice][0].ref.uriStr,
@@ -49,32 +43,47 @@ describe('feed generation', () => {
           encoding: 'application/json',
           body: {
             feed,
+            $auth: jwtBody(req.headers.authorization), // for testing purposes
           },
         }
       },
     )
-    const res = await agent.api.app.bsky.feed.generator.create(
-      { repo: alice },
-      {
-        did: gen.did,
-        createdAt: new Date().toISOString(),
-      },
-      sc.getHeaders(alice),
-    )
+    alice = sc.dids.alice
+  })
 
-    const feed = await agent.api.app.bsky.feed.getFeed(
-      { feed: res.uri },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(feed.data.feed[0].post.uri).toEqual(
-      sc.posts[sc.dids.alice][0].ref.uriStr,
-    )
-    expect(feed.data.feed[1].post.uri).toEqual(
-      sc.posts[sc.dids.bob][0].ref.uriStr,
-    )
-
+  afterAll(async () => {
+    await server.close()
     await gen.destroy()
+  })
+
+  describe('repo', () => {
+    it('feed gen records can be created', async () => {
+      const res = await agent.api.app.bsky.feed.generator.create(
+        { repo: alice },
+        {
+          did: gen.did,
+          createdAt: new Date().toISOString(),
+        },
+        sc.getHeaders(alice),
+      )
+      feedUri = res.uri
+    })
+  })
+
+  describe('getFeed', () => {
+    it('resolves feed contents', async () => {
+      const feed = await agent.api.app.bsky.feed.getFeed(
+        { feed: feedUri },
+        { headers: sc.getHeaders(alice) },
+      )
+      expect(feed.data.feed.length).toEqual(2)
+      expect(feed.data.feed[0].post.uri).toEqual(
+        sc.posts[sc.dids.alice][0].ref.uriStr,
+      )
+      expect(feed.data.feed[1].post.uri).toEqual(
+        sc.posts[sc.dids.bob][0].ref.uriStr,
+      )
+    })
   })
 })
 
@@ -127,4 +136,13 @@ const createFgDid = async (plcUrl: string, port: number): Promise<string> => {
   const did = await plc.didForCreateOp(op)
   await plcClient.sendOperation(did, op)
   return did
+}
+
+const jwtBody = (authHeader?: string): Record<string, unknown> | undefined => {
+  if (!authHeader?.startsWith('Bearer')) return undefined
+  const jwt = authHeader.replace('Bearer ', '')
+  const [, bodyb64] = jwt.split('.')
+  const body = JSON.parse(Buffer.from(bodyb64, 'base64').toString())
+  if (!body || typeof body !== 'object') return undefined
+  return body
 }
