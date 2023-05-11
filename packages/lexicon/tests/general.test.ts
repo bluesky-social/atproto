@@ -741,6 +741,53 @@ describe('XRPC parameter validation', () => {
       }),
     ).toThrow('array must be an array')
   })
+
+  it('fails when reference is not an primitive', () => {
+    const lexicon = new Lexicons([
+      {
+        lexicon: 1,
+        id: 'com.example.query',
+        defs: {
+          main: {
+            type: 'query',
+            parameters: {
+              type: 'params',
+              properties: {
+                invalidRef: {
+                  type: 'ref',
+                  ref: '#object',
+                },
+              },
+            },
+          },
+          object: {
+            type: 'object',
+          },
+        },
+      },
+    ])
+    expect(() => {
+      lexicon.assertValidXrpcParams('com.example.query', {
+        invalidRef: {},
+      })
+    }).toThrow('invalidRef target must be one of string, integer, boolean')
+  })
+  it('handles references correctly', () => {
+    let result = lex.assertValidXrpcParams('com.example.refQuery', {
+      integerRef: 123,
+      enumRef: 'one',
+    })
+    expect(result).toEqual({
+      integerRef: 123,
+      enumRef: 'one',
+    })
+
+    expect(() => {
+      lex.assertValidXrpcParams('com.example.refQuery', {
+        enumRef: 'five',
+      })
+    }).toThrow('enumRef must be one of (one|two|three)')
+  })
 })
 
 describe('XRPC input validation', () => {

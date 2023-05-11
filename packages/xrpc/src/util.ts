@@ -1,9 +1,12 @@
 import {
   jsonStringToLex,
+  Lexicons,
+  LexXrpcParametersProperty,
   LexXrpcProcedure,
   LexXrpcQuery,
   stringifyLex,
 } from '@atproto/lexicon'
+import { PROPERTY_VALID_REF_TYPES } from '@atproto/lexicon/src/validators/xrpc'
 import {
   CallOptions,
   Headers,
@@ -22,6 +25,7 @@ export function getMethodSchemaHTTPMethod(
 }
 
 export function constructMethodCallUri(
+  lexicons: Lexicons,
   nsid: string,
   schema: LexXrpcProcedure | LexXrpcQuery,
   serviceUri: URL,
@@ -43,11 +47,14 @@ export function constructMethodCallUri(
           vals.concat(value).forEach((val) => {
             uri.searchParams.append(
               key,
-              encodeQueryParam(paramSchema.items.type, val),
+              encodeQueryParam(lexicons, paramSchema.items, val),
             )
           })
         } else {
-          uri.searchParams.set(key, encodeQueryParam(paramSchema.type, value))
+          uri.searchParams.set(
+            key,
+            encodeQueryParam(lexicons, paramSchema, value),
+          )
         }
       }
     }
@@ -57,30 +64,37 @@ export function constructMethodCallUri(
 }
 
 export function encodeQueryParam(
-  type:
-    | 'string'
-    | 'float'
-    | 'integer'
-    | 'boolean'
-    | 'datetime'
-    | 'array'
-    | 'unknown',
+  lexicons: Lexicons,
+  param: LexXrpcParametersProperty,
   value: any,
 ): string {
-  if (type === 'string' || type === 'unknown') {
+  if (param.type === 'ref') {
+    let resolved = lexicons.getDefOrThrow(param.ref, PROPERTY_VALID_REF_TYPES)
+    // We can safely cast here because we've already validated the type,
+    // ideally Lexicons::getDefOrThrow would guarantee this.
+    return encodeQueryParam(
+      lexicons,
+      resolved as LexXrpcParametersProperty,
+      value,
+    )
+  }
+
+  const type = param.type
+  if (type === 'string') {
+    if (param.format === 'datetime') {
+      if (value instanceof Date) {
+        return value.toISOString()
+      }
+      return String(value)
+    }
     return String(value)
   }
-  if (type === 'float') {
-    return String(Number(value))
+  if (type === 'unknown') {
+    return String(value)
   } else if (type === 'integer') {
     return String(Number(value) | 0)
   } else if (type === 'boolean') {
     return value ? 'true' : 'false'
-  } else if (type === 'datetime') {
-    if (value instanceof Date) {
-      return value.toISOString()
-    }
-    return String(value)
   }
   throw new Error(`Unsupported query param type: ${type}`)
 }

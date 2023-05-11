@@ -27,11 +27,11 @@ export function validateOneOf(
   path: string,
   def: LexRefVariant | LexUserType,
   value: unknown,
-  mustBeObj = false, // this is the only type constraint we need currently (used by xrpc body schema validators)
+  validTypes: Array<LexUserType['type']> = [],
 ): ValidationResult {
   let error
 
-  let concreteDefs
+  let concreteDefs: LexUserType[]
   if (def.type === 'union') {
     if (!isDiscriminatedObject(value)) {
       return {
@@ -61,10 +61,25 @@ export function validateOneOf(
     concreteDefs = toConcreteTypes(lexicons, def)
   }
 
+  if (validTypes.length !== 0) {
+    const concreteDefsTypes = concreteDefs.map((def) => def.type)
+    if (!validTypes.some((type) => concreteDefsTypes.includes(type))) {
+      return {
+        success: false,
+        error: new ValidationError(
+          `${path} target must be one of ${validTypes.join(', ')}`,
+        ),
+      }
+    }
+  }
+
   for (const concreteDef of concreteDefs) {
-    const result = mustBeObj
-      ? ComplexValidators.object(lexicons, path, concreteDef, value)
-      : ComplexValidators.validate(lexicons, path, concreteDef, value)
+    const result = ComplexValidators.validate(
+      lexicons,
+      path,
+      concreteDef,
+      value,
+    )
     if (result.success) {
       return result
     }
@@ -86,9 +101,9 @@ export function assertValidOneOf(
   path: string,
   def: LexRefVariant | LexUserType,
   value: unknown,
-  mustBeObj = false,
+  validTypes?: Array<LexUserType['type']>,
 ) {
-  const res = validateOneOf(lexicons, path, def, value, mustBeObj)
+  const res = validateOneOf(lexicons, path, def, value, validTypes)
   if (!res.success) throw res.error
   return res.value
 }

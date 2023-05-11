@@ -47,6 +47,11 @@ export default [
           boolean: { type: 'boolean' },
         },
       },
+      integer: { type: 'integer' },
+      enum: {
+        type: 'string',
+        enum: ['one', 'two', 'three'],
+      },
     },
   },
   {
@@ -65,6 +70,27 @@ export default [
             string: { type: 'string' },
             array: { type: 'array', items: { type: 'string' } },
             def: { type: 'integer', default: 0 },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: { type: 'ref', ref: 'com.example.kitchenSink#object' },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'com.example.refQuery',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'A query with ref params',
+        parameters: {
+          type: 'params',
+          properties: {
+            integerRef: { type: 'ref', ref: 'com.example.kitchenSink#integer' },
+            enumRef: { type: 'ref', ref: 'com.example.kitchenSink#enum' },
           },
         },
         output: {
