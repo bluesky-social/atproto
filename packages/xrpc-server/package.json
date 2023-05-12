@@ -1,6 +1,6 @@
 {
   "name": "@atproto/xrpc-server",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "src/index.ts",
   "scripts": {
     "test": "jest",
@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@atproto/common": "*",
+    "@atproto/crypto": "*",
     "@atproto/lexicon": "*",
     "cbor-x": "^1.5.1",
     "express": "^4.17.2",

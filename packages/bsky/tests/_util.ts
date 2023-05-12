@@ -10,7 +10,7 @@ import {
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
-import { createServiceJwt } from '@atproto/pds/src/auth'
+import { createServiceJwt } from '@atproto/xrpc-server'
 
 // for pds
 export const adminAuth = () => {
@@ -24,7 +24,11 @@ export const adminAuth = () => {
 }
 
 export const appViewHeaders = async (did: string, env: TestEnvInfo) => {
-  const jwt = await createServiceJwt(did, env.pds.ctx.repoSigningKey)
+  const jwt = await createServiceJwt({
+    iss: did,
+    aud: env.bsky.ctx.cfg.serverDid,
+    keypair: env.pds.ctx.repoSigningKey,
+  })
   return { authorization: `Bearer ${jwt}` }
 }
 

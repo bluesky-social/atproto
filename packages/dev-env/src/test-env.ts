@@ -3,6 +3,7 @@ import { AddressInfo } from 'net'
 import * as crypto from '@atproto/crypto'
 import * as pds from '@atproto/pds'
 import * as plc from '@did-plc/server'
+import { Client as PlcClient } from '@did-plc/lib'
 import * as bsky from '@atproto/bsky'
 import { AtpAgent } from '@atproto/api'
 import { DidResolver } from '@atproto/did-resolver'
@@ -72,19 +73,20 @@ export const runTestEnv = async (
     params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
 
   const plc = await runPlc({})
-  const bskyPort = await getPort()
+  const pdsPort = await getPort()
+  const bsky = await runBsky({
+    plcUrl: plc.url,
+    repoProvider: `ws://localhost:${pdsPort}`,
+    dbPostgresSchema: `appview_${dbPostgresSchema}`,
+    dbPostgresUrl,
+  })
   const pds = await runPds({
+    port: pdsPort,
     dbPostgresUrl,
     dbPostgresSchema,
     plcUrl: plc.url,
-    bskyAppViewEndpoint: `http://localhost:${bskyPort}`,
-  })
-  const bsky = await runBsky({
-    port: bskyPort,
-    plcUrl: plc.url,
-    repoProvider: `ws://localhost:${pds.port}`,
-    dbPostgresSchema: `appview_${dbPostgresSchema}`,
-    dbPostgresUrl,
+    bskyAppViewEndpoint: `http://localhost:${bsky.port}`,
+    bskyAppViewDid: bsky.ctx.cfg.serverDid,
   })
   mockNetworkUtilities(pds)
 
@@ -117,14 +119,28 @@ export const runPlc = async (cfg: PlcConfig): Promise<PlcServerInfo> => {
 }
 
 export const runPds = async (cfg: PdsConfig): Promise<PdsServerInfo> => {
+  const repoSigningKey = await crypto.Secp256k1Keypair.create()
+  const plcRotationKey = await crypto.Secp256k1Keypair.create()
   const recoveryKey = await crypto.Secp256k1Keypair.create()
+
+  const port = cfg.port || (await getPort())
+
+  const plcClient = new PlcClient(cfg.plcUrl)
+  const serverDid = await plcClient.createDid({
+    signingKey: repoSigningKey.did(),
+    rotationKeys: [recoveryKey.did(), plcRotationKey.did()],
+    handle: 'pds.test',
+    pds: `http://localhost:${port}`,
+    signer: plcRotationKey,
+  })
 
   const config = new pds.ServerConfig({
     debugMode: true,
     version: '0.0.0',
     scheme: 'http',
     hostname: 'localhost',
-    serverDid: 'did:fake:donotuse',
+    port,
+    serverDid,
     recoveryKey: recoveryKey.did(),
     adminPassword: 'admin-pass',
     inviteRequired: false,
@@ -154,8 +170,6 @@ export const runPds = async (cfg: PdsConfig): Promise<PdsServerInfo> => {
       })
     : pds.Database.memory()
   await db.migrateToLatestOrThrow()
-  const repoSigningKey = await crypto.Secp256k1Keypair.create()
-  const plcRotationKey = await crypto.Secp256k1Keypair.create()
 
   // Disable communication to app view within pds
   MessageDispatcher.prototype.send = async () => {}
@@ -168,8 +182,7 @@ export const runPds = async (cfg: PdsConfig): Promise<PdsServerInfo> => {
     config,
   })
 
-  const listener = await server.start()
-  const port = (listener.address() as AddressInfo).port
+  await server.start()
   const url = `http://localhost:${port}`
   return {
     port,
@@ -182,10 +195,24 @@ export const runPds = async (cfg: PdsConfig): Promise<PdsServerInfo> => {
 }
 
 export const runBsky = async (cfg: BskyConfig): Promise<BskyServerInfo> => {
+  const serviceKeypair = await crypto.Secp256k1Keypair.create()
+  const plcClient = new PlcClient(cfg.plcUrl)
+
+  const port = cfg.port || (await getPort())
+  const serverDid = await plcClient.createDid({
+    signingKey: serviceKeypair.did(),
+    rotationKeys: [serviceKeypair.did()],
+    handle: 'bsky.test',
+    pds: `http://localhost:${port}`,
+    signer: serviceKeypair,
+  })
+
   const config = new bsky.ServerConfig({
     version: '0.0.0',
+    port,
     didPlcUrl: cfg.plcUrl,
     publicUrl: 'https://bsky.public.url',
+    serverDid,
     imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
     imgUriKey:
       'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
@@ -217,8 +244,7 @@ export const runBsky = async (cfg: BskyConfig): Promise<BskyServerInfo> => {
   await migrationDb.close()
 
   const server = bsky.BskyAppView.create({ db, config })
-  const listener = await server.start()
-  const port = (listener.address() as AddressInfo).port
+  await server.start()
   const url = `http://localhost:${port}`
   const sub = server.sub
   if (!sub) {
