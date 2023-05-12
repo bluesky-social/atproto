@@ -23,6 +23,10 @@ describe('feed generation', () => {
 
   let alice: string
   let feedUriAll: string
+  let feedUriAllRef: {
+    uri: string
+    cid: string
+  }
   let feedUriEven: string
   let feedUriOdd: string // Unsupported by feed gen
 
@@ -72,6 +76,7 @@ describe('feed generation', () => {
       sc.getHeaders(alice),
     )
     feedUriAll = all.uri
+    feedUriAllRef = all
     feedUriEven = even.uri
     feedUriOdd = odd.uri
   })
@@ -125,6 +130,27 @@ describe('feed generation', () => {
 
     const paginatedAll: FeedAlgorithm[] = results(await paginateAll(paginator))
     expect(forSnapshot(paginatedAll)).toMatchSnapshot()
+  })
+
+  it('embeds feed generator records in posts', async () => {
+    const res = await agent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.bob },
+      {
+        text: 'cool feed!',
+        embed: {
+          $type: 'app.bsky.embed.record',
+          record: feedUriAllRef,
+        },
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(sc.dids.bob),
+    )
+    const view = await agent.api.app.bsky.feed.getPosts(
+      { uris: [res.uri] },
+      { headers: sc.getHeaders(sc.dids.bob) },
+    )
+    expect(view.data.posts.length).toBe(1)
+    expect(forSnapshot(view.data.posts[0])).toMatchSnapshot()
   })
 
   describe('getFeed', () => {
