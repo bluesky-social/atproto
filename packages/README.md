@@ -31,7 +31,7 @@ Running `yarn bench:profile` will launch `bench` with `--inspect-brk` flag.
 Execution will be paused until a debugger is attached, you can read more 
 about node debuggers [here](https://nodejs.org/en/docs/guides/debugging-getting-started#inspector-clients)
 
-The easiest way to profile is *IMO* to just:
+An easy way to profile is:
 
 1. open `about://inspect` in chrome
 2. select which process to connect to(there will probably only be one)
