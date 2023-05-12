@@ -4277,41 +4277,19 @@ export const schemaDict = {
             type: 'string',
             format: 'at-uri',
           },
-          replyTo: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#skeletonReplyRef',
-          },
           reason: {
             type: 'union',
             refs: ['lex:app.bsky.feed.defs#skeletonReasonRepost'],
           },
         },
       },
-      skeletonReplyRef: {
-        type: 'object',
-        required: ['root', 'parent'],
-        properties: {
-          root: {
-            type: 'string',
-            ref: 'at-uri',
-          },
-          parent: {
-            type: 'string',
-            ref: 'at-uri',
-          },
-        },
-      },
       skeletonReasonRepost: {
         type: 'object',
-        required: ['by', 'indexedAt'],
+        required: ['repost'],
         properties: {
-          by: {
+          repost: {
             type: 'string',
-            format: 'did',
-          },
-          indexedAt: {
-            type: 'string',
-            format: 'datetime',
+            ref: 'at-uri',
           },
         },
       },

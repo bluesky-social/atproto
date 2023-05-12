@@ -231,7 +231,6 @@ export function validateGeneratorViewerState(v: unknown): ValidationResult {
 
 export interface SkeletonFeedPost {
   post: string
-  replyTo?: SkeletonReplyRef
   reason?: SkeletonReasonRepost | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
@@ -248,27 +247,8 @@ export function validateSkeletonFeedPost(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#skeletonFeedPost', v)
 }
 
-export interface SkeletonReplyRef {
-  root: string
-  parent: string
-  [k: string]: unknown
-}
-
-export function isSkeletonReplyRef(v: unknown): v is SkeletonReplyRef {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#skeletonReplyRef'
-  )
-}
-
-export function validateSkeletonReplyRef(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#skeletonReplyRef', v)
-}
-
 export interface SkeletonReasonRepost {
-  by: string
-  indexedAt: string
+  repost: string
   [k: string]: unknown
 }
 

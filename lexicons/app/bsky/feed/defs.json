@@ -120,24 +120,14 @@
       "required": ["post"],
       "properties": {
         "post": {"type": "string", "format": "at-uri"},
-        "replyTo": {"type": "ref", "ref": "#skeletonReplyRef"},
         "reason": {"type": "union", "refs": ["#skeletonReasonRepost"]}
-      }
-    },
-    "skeletonReplyRef": {
-      "type": "object",
-      "required": ["root", "parent"],
-      "properties": {
-        "root": {"type": "string", "ref": "at-uri"},
-        "parent": {"type": "string", "ref": "at-uri"}
       }
     },
     "skeletonReasonRepost": {
       "type": "object",
-      "required": ["by", "indexedAt"],
+      "required": ["repost"],
       "properties": {
-        "by": {"type": "string", "format": "did"},
-        "indexedAt": {"type": "string", "format": "datetime"}
+        "repost": {"type": "string", "ref": "at-uri"}
       }
     }
   }
