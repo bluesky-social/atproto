@@ -162,7 +162,7 @@ describe('feed generation', () => {
       // Reply (accurate)
       {
         post: sc.replies[sc.dids.carol][0].ref.uriStr,
-        replyRef: {
+        replyTo: {
           root: sc.posts[alice][1].ref.uriStr,
           parent: sc.posts[alice][1].ref.uriStr,
         },
