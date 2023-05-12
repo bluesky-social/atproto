@@ -13,6 +13,7 @@ export interface QueryParams {}
 export interface InputSchema {
   email: string
   handle: string
+  did?: string
   inviteCode?: string
   password: string
   recoveryKey?: string
@@ -46,6 +47,8 @@ export interface HandlerError {
     | 'InvalidInviteCode'
     | 'HandleNotAvailable'
     | 'UnsupportedDomain'
+    | 'UnresolvableDid'
+    | 'IncompatibleDidDoc'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
