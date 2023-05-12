@@ -9,7 +9,9 @@ import {
   StreamAuthVerifier,
 } from '@atproto/xrpc-server'
 import { schemas } from './lexicons'
+import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
+import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
 import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
@@ -35,6 +37,7 @@ import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRe
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
+import * as ComAtprotoRepoRebaseRepo from './types/com/atproto/repo/rebaseRepo'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
@@ -158,6 +161,16 @@ export class AdminNS {
     this._server = server
   }
 
+  disableAccountInvites<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminDisableAccountInvites.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.disableAccountInvites' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   disableInviteCodes<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -165,6 +178,16 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.disableInviteCodes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  enableAccountInvites<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminEnableAccountInvites.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.enableAccountInvites' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -402,6 +425,13 @@ export class RepoNS {
     cfg: ConfigOf<AV, ComAtprotoRepoPutRecord.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.repo.putRecord' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  rebaseRepo<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoRepoRebaseRepo.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.repo.rebaseRepo' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

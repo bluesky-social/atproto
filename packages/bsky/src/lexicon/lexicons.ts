@@ -333,6 +333,9 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.server.defs#inviteCode',
           },
+          invitesDisabled: {
+            type: 'boolean',
+          },
         },
       },
       repoViewDetail: {
@@ -387,6 +390,9 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.server.defs#inviteCode',
             },
+          },
+          invitesDisabled: {
+            type: 'boolean',
           },
         },
       },
@@ -589,6 +595,30 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminDisableAccountInvites: {
+    lexicon: 1,
+    id: 'com.atproto.admin.disableAccountInvites',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Disable an account from receiving new invite codes, but does not invalidate existing codes',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['account'],
+            properties: {
+              account: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminDisableInviteCodes: {
     lexicon: 1,
     id: 'com.atproto.admin.disableInviteCodes',
@@ -613,6 +643,29 @@ export const schemaDict = {
                 items: {
                   type: 'string',
                 },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminEnableAccountInvites: {
+    lexicon: 1,
+    id: 'com.atproto.admin.enableAccountInvites',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Re-enable an accounts ability to receive invite codes',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['account'],
+            properties: {
+              account: {
+                type: 'string',
+                format: 'did',
               },
             },
           },
@@ -781,6 +834,15 @@ export const schemaDict = {
             },
             resolved: {
               type: 'boolean',
+            },
+            actionType: {
+              type: 'string',
+              knownValues: [
+                'com.atproto.admin.defs#takedown',
+                'com.atproto.admin.defs#flag',
+                'com.atproto.admin.defs#acknowledge',
+                'com.atproto.admin.defs#escalate',
+              ],
             },
             limit: {
               type: 'integer',
@@ -1947,6 +2009,41 @@ export const schemaDict = {
               cid: {
                 type: 'string',
                 format: 'cid',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidSwap',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoRepoRebaseRepo: {
+    lexicon: 1,
+    id: 'com.atproto.repo.rebaseRepo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Simple rebase of repo that deletes history',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repo'],
+            properties: {
+              repo: {
+                type: 'string',
+                format: 'at-identifier',
+                description: 'The handle or DID of the repo.',
+              },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous commit by cid.',
               },
             },
           },
@@ -5207,7 +5304,10 @@ export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
+  ComAtprotoAdminDisableAccountInvites:
+    'com.atproto.admin.disableAccountInvites',
   ComAtprotoAdminDisableInviteCodes: 'com.atproto.admin.disableInviteCodes',
+  ComAtprotoAdminEnableAccountInvites: 'com.atproto.admin.enableAccountInvites',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
   ComAtprotoAdminGetModerationAction: 'com.atproto.admin.getModerationAction',
   ComAtprotoAdminGetModerationActions: 'com.atproto.admin.getModerationActions',
@@ -5237,6 +5337,7 @@ export const ids = {
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
+  ComAtprotoRepoRebaseRepo: 'com.atproto.repo.rebaseRepo',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoRepoUploadBlob: 'com.atproto.repo.uploadBlob',
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',
