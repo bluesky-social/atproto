@@ -249,8 +249,8 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
     }
   }
 
-  // a feed generator that returns some posts
-  const fg = await env.createFeedGen(async () => {
+  // a couple feed generators that returns some posts
+  const fg1 = await env.createFeedGen(async () => {
     const feed = posts
       .filter(() => rand(2) === 0)
       .map((post) => ({ post: post.uri }))
@@ -261,10 +261,25 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
       },
     }
   })
-
   await alice.agent.api.app.bsky.feed.generator.create(
     { repo: alice.did },
-    { did: fg.did, createdAt: new Date().toISOString() },
+    { did: fg1.did, createdAt: new Date().toISOString() },
+  )
+
+  const fg2 = await env.createFeedGen(async () => {
+    const feed = posts
+      .filter(() => rand(2) === 0)
+      .map((post) => ({ post: post.uri }))
+    return {
+      encoding: 'application/json',
+      body: {
+        feed,
+      },
+    }
+  })
+  await bob.agent.api.app.bsky.feed.generator.create(
+    { repo: bob.did },
+    { did: fg2.did, createdAt: new Date().toISOString() },
   )
 }
 
