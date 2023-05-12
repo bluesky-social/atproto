@@ -24,6 +24,9 @@ const run = async () => {
   console.log(
     `🌞 Personal Data server started http://localhost:${network.pds.port}`,
   )
+  for (const fg of network.feedGens) {
+    console.log(`🤖 Feed Generator started http://localhost:${fg.port}`)
+  }
 }
 
 run()

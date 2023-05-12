@@ -248,6 +248,24 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
       }
     }
   }
+
+  // a feed generator that returns some posts
+  const fg = await env.createFeedGen(async () => {
+    const feed = posts
+      .filter(() => rand(2) === 0)
+      .map((post) => ({ post: post.uri }))
+    return {
+      encoding: 'application/json',
+      body: {
+        feed,
+      },
+    }
+  })
+
+  await alice.agent.api.app.bsky.feed.generator.create(
+    { repo: alice.did },
+    { did: fg.did, createdAt: new Date().toISOString() },
+  )
 }
 
 function ucfirst(str: string): string {
