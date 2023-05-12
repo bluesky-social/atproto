@@ -11,6 +11,7 @@ import {
   FeedViewPost,
   GeneratorView,
 } from '@atproto/api/src/client/types/app/bsky/feed/defs'
+import { FeedAlgorithm } from '../src/app-view/api/app/bsky/util/feed'
 
 describe('feed generation', () => {
   let network: TestNetworkNoAppView
@@ -89,6 +90,38 @@ describe('feed generation', () => {
     expect(paginatedAll[0].uri).toEqual(feedUriOdd)
     expect(paginatedAll[1].uri).toEqual(feedUriEven)
     expect(paginatedAll[2].uri).toEqual(feedUriAll)
+    expect(forSnapshot(paginatedAll)).toMatchSnapshot()
+  })
+
+  it('bookmarks and paginates through bookmarked feeds.', async () => {
+    await agent.api.app.bsky.feed.bookmarkFeed(
+      { feed: feedUriEven },
+      { headers: sc.getHeaders(sc.dids.bob), encoding: 'application/json' },
+    )
+    await agent.api.app.bsky.feed.bookmarkFeed(
+      { feed: feedUriAll },
+      { headers: sc.getHeaders(sc.dids.bob), encoding: 'application/json' },
+    )
+    const { data } = await agent.api.app.bsky.feed.getBookmarkedFeeds(
+      {},
+      { headers: sc.getHeaders(sc.dids.bob) },
+    )
+    expect(data.feeds.map((f) => f.uri)).toEqual([feedUriAll, feedUriEven])
+    await agent.api.app.bsky.feed.bookmarkFeed(
+      { feed: feedUriOdd },
+      { headers: sc.getHeaders(sc.dids.bob), encoding: 'application/json' },
+    )
+
+    const results = (results) => results.flatMap((res) => res.feeds)
+    const paginator = async (cursor?: string) => {
+      const res = await agent.api.app.bsky.feed.getBookmarkedFeeds(
+        { cursor, limit: 2 },
+        { headers: sc.getHeaders(sc.dids.bob) },
+      )
+      return res.data
+    }
+
+    const paginatedAll: FeedAlgorithm[] = results(await paginateAll(paginator))
     expect(forSnapshot(paginatedAll)).toMatchSnapshot()
   })
 
@@ -176,6 +209,24 @@ describe('feed generation', () => {
           indexedAt: new Date().toISOString(),
         },
       },
+      // @TODO
+      // // Reply (inaccurate)
+      // {
+      //   post: sc.replies[sc.dids.bob][0].ref.uriStr,
+      //   replyTo: {
+      //     root: sc.posts[sc.dids.bob][0].ref.uriStr,
+      //     parent: sc.posts[sc.dids.bob][0].ref.uriStr,
+      //   },
+      // },
+      // // Repost (inaccurate)
+      // {
+      //   post: sc.posts[alice][1].ref.uriStr,
+      //   reason: {
+      //     $type: 'app.bsky.feed.defs#skeletonReasonRepost',
+      //     by: sc.dids.carol,
+      //     indexedAt: new Date().toISOString(),
+      //   },
+      // },
     ]
     const offset = cursor ? parseInt(cursor, 10) : 0
     const fullFeed = candidates.filter((_, i) =>

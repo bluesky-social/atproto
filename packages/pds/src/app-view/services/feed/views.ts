@@ -39,7 +39,7 @@ export class FeedViews {
         ? this.imgUriBuilder.getCommonSignedUri('avatar', info.avatarCid)
         : undefined,
       viewer: {
-        subscribed: true,
+        subscribed: true, // @TODO change to bookmarked? and set dynamically.
         like: info.viewerLike ?? undefined,
       },
       indexedAt: info.indexedAt,

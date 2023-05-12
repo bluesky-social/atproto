@@ -22,9 +22,10 @@ export default function (server: Server, ctx: AppContext) {
           'feed_generator.uri',
         )
         .where('feed_bookmark.userDid', '=', requester)
+        .select('feed_bookmark.createdAt as createdAt') // Cursor based on bookmarked time, createdAt not used in view logic
 
       const keyset = new TimeCidKeyset(
-        ref('feed_generator.createdAt'),
+        ref('feed_bookmark.createdAt'),
         ref('feed_generator.cid'),
       )
       feedsQb = paginate(feedsQb, {
@@ -51,6 +52,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           feeds,
+          cursor: keyset.packFromResult(feedsRes),
         },
       }
     },
