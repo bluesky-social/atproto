@@ -1,13 +1,12 @@
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
-import { runTestEnv, CloseFn, processAll, TestEnvInfo } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds thread proxy views', () => {
+  let network: TestNetwork
   let agent: AtpAgent
-  let testEnv: TestEnvInfo
-  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
@@ -15,11 +14,10 @@ describe('pds thread proxy views', () => {
   let bob: string
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_thread',
     })
-    close = testEnv.close
-    agent = new AtpAgent({ service: testEnv.pds.url })
+    agent = network.pds.getClient()
     sc = new SeedClient(agent)
     await basicSeed(sc)
     alice = sc.dids.alice
@@ -29,11 +27,11 @@ describe('pds thread proxy views', () => {
   beforeAll(async () => {
     // Add a repost of a reply so that we can confirm viewer state in the thread
     await sc.repost(bob, sc.replies[alice][0].ref)
-    await processAll(testEnv)
+    await network.processAll()
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('fetches deep post thread', async () => {
@@ -120,7 +118,7 @@ describe('pds thread proxy views', () => {
     )
     indexes.aliceReplyReply = sc.replies[alice].length - 1
 
-    await processAll(testEnv)
+    await network.processAll()
 
     const thread1 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
@@ -129,7 +127,7 @@ describe('pds thread proxy views', () => {
     expect(forSnapshot(thread1.data.thread)).toMatchSnapshot()
 
     await sc.deletePost(bob, sc.replies[bob][indexes.bobReply].ref.uri)
-    await processAll(testEnv)
+    await network.processAll()
 
     const thread2 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },

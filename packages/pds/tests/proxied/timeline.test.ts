@@ -1,5 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { runTestEnv, CloseFn, processAll } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { forSnapshot, getOriginator, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
@@ -7,8 +7,8 @@ import basicSeed from '../seeds/basic'
 import { FeedAlgorithm } from '../../src/app-view/api/app/bsky/util/feed'
 
 describe('timeline proxy views', () => {
+  let network: TestNetwork
   let agent: AtpAgent
-  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
@@ -18,23 +18,22 @@ describe('timeline proxy views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_timeline',
     })
-    close = testEnv.close
-    agent = new AtpAgent({ service: testEnv.pds.url })
+    agent = network.pds.getClient()
     sc = new SeedClient(agent)
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
-    await processAll(testEnv)
-    await testEnv.pds.ctx.labeler.processAll()
+    await network.processAll()
+    await network.pds.ctx.labeler.processAll()
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it("fetches authenticated user's home feed w/ reverse-chronological algorithm", async () => {

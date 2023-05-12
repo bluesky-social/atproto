@@ -13,7 +13,7 @@ describe('pds actor search views', () => {
   let headers: { [s: string]: string }
 
   beforeAll(async () => {
-    const testEnv = await TestNetwork.create({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_actor_search',
     })
     agent = network.bsky.getClient()
@@ -25,7 +25,7 @@ describe('pds actor search views', () => {
     await usersBulkSeed(sc)
 
     // Skip did/handle resolution for expediency
-    const { db } = testEnv.bsky.ctx
+    const { db } = network.bsky.ctx
     const now = new Date().toISOString()
     await db.db
       .insertInto('actor')
@@ -46,7 +46,7 @@ describe('pds actor search views', () => {
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('typeahead gives relevant results', async () => {
