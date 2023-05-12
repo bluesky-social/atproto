@@ -1,7 +1,5 @@
-import { wait } from '@atproto/common'
 import { AtUri } from '@atproto/uri'
 import { lexToJson } from '@atproto/lexicon'
-import { TestEnvInfo } from '@atproto/dev-env'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import {
@@ -10,7 +8,6 @@ import {
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
-import { createServiceJwt } from '@atproto/xrpc-server'
 
 // for pds
 export const adminAuth = () => {
@@ -21,15 +18,6 @@ export const adminAuth = () => {
       'base64pad',
     )
   )
-}
-
-export const appViewHeaders = async (did: string, env: TestEnvInfo) => {
-  const jwt = await createServiceJwt({
-    iss: did,
-    aud: env.bsky.ctx.cfg.serverDid,
-    keypair: env.pds.ctx.repoSigningKey,
-  })
-  return { authorization: `Bearer ${jwt}` }
 }
 
 // Swap out identifiers and dates with stable
@@ -164,25 +152,6 @@ export const paginateAll = async <T extends { cursor?: string }>(
     cursor = res.cursor
   } while (cursor && results.length < limit)
   return results
-}
-
-export const processAll = async (server: TestEnvInfo, timeout = 5000) => {
-  const { bsky, pds } = server
-  const sub = bsky.sub
-  if (!sub) return
-  const { db } = pds.ctx.db
-  const start = Date.now()
-  while (Date.now() - start < timeout) {
-    await wait(50)
-    if (!sub) return
-    const state = await sub.getState()
-    const { lastSeq } = await db
-      .selectFrom('repo_seq')
-      .select(db.fn.max('repo_seq.seq').as('lastSeq'))
-      .executeTakeFirstOrThrow()
-    if (state.cursor === lastSeq) return
-  }
-  throw new Error(`Sequence was not processed within ${timeout}ms`)
 }
 
 // @NOTE mutates
