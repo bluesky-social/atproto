@@ -75,7 +75,7 @@ export default function (server: Server, ctx: AppContext) {
         : []
 
       const hydrated = await feedService.hydrateFeed(
-        getOrderedFeedItems(feedItemUris, feedItems),
+        getOrderedFeedItems(skeleton.feed, feedItems),
         requester,
       )
 
@@ -97,12 +97,21 @@ function getSkeleFeedItemUri(item: SkeletonFeedPost) {
   return item.post
 }
 
-function getOrderedFeedItems(uris: string[], feedItems: FeedRow[]) {
+function getOrderedFeedItems(
+  skeletonItems: SkeletonFeedPost[],
+  feedItems: FeedRow[],
+) {
   const SKIP = []
   const feedItemsByUri = feedItems.reduce((acc, item) => {
     return Object.assign(acc, { [item.uri]: item })
-  }, {} as Record<string, FeedRow[]>)
-  return uris.flatMap((uri) => {
-    return feedItemsByUri[uri] ?? SKIP
+  }, {} as Record<string, FeedRow>)
+  return skeletonItems.flatMap((item) => {
+    const uri = getSkeleFeedItemUri(item)
+    const feedItem = feedItemsByUri[uri]
+    if (!feedItem || item.post !== feedItem.postUri) {
+      // Couldn't find the record, or skeleton repost referenced the wrong post
+      return SKIP
+    }
+    return feedItem
   })
 }

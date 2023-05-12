@@ -201,15 +201,14 @@ describe('feed generation', () => {
           repost: sc.reposts[sc.dids.carol][0].uriStr,
         },
       },
-      // // Repost (inaccurate)
-      // {
-      //   post: sc.posts[alice][1].ref.uriStr,
-      //   reason: {
-      //     $type: 'app.bsky.feed.defs#skeletonReasonRepost',
-      //     by: sc.dids.carol,
-      //     indexedAt: new Date().toISOString(),
-      //   },
-      // },
+      // Repost (inaccurate)
+      {
+        post: sc.posts[alice][1].ref.uriStr,
+        reason: {
+          $type: 'app.bsky.feed.defs#skeletonReasonRepost',
+          repost: sc.reposts[sc.dids.carol][0].uriStr,
+        },
+      },
     ]
     const offset = cursor ? parseInt(cursor, 10) : 0
     const fullFeed = candidates.filter((_, i) =>

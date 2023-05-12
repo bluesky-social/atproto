@@ -1,5 +1,5 @@
 import { Server } from '../../../../lexicon'
-import { FeedKeyset, feedRowsToSkeleton } from './util/feed'
+import { FeedKeyset } from './util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow } from '../../../services/feed'
