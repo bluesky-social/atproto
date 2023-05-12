@@ -262,7 +262,7 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
     }
   })
   await alice.agent.api.app.bsky.feed.generator.create(
-    { repo: alice.did },
+    { repo: alice.did, rkey: 'alice-favs' },
     { did: fg1.did, createdAt: new Date().toISOString() },
   )
 
@@ -278,7 +278,7 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
     }
   })
   await bob.agent.api.app.bsky.feed.generator.create(
-    { repo: bob.did },
+    { repo: bob.did, rkey: 'bob-redux' },
     { did: fg2.did, createdAt: new Date().toISOString() },
   )
 }
