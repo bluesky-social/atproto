@@ -20,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         .select('feedDid')
         .executeTakeFirst()
       if (!found) {
-        throw new InvalidRequestError('could not resolve find feed')
+        throw new InvalidRequestError('could not find feed')
       }
       const feedDid = found.feedDid
       const resolved = await ctx.didResolver.resolveDid(feedDid)
