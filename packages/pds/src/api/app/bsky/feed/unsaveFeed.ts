@@ -5,7 +5,7 @@ import AppContext from '../../../../context'
 import { AtUri } from '@atproto/uri'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.feed.bookmarkFeed({
+  server.app.bsky.feed.unsaveFeed({
     auth: ctx.accessVerifier,
     handler: async ({ auth, input }) => {
       const { feed } = input.body
@@ -18,13 +18,9 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       await ctx.db.db
-        .insertInto('feed_bookmark')
-        .values({
-          userDid: requester,
-          feedUri: feedUri.toString(),
-          createdAt: new Date().toISOString(),
-        })
-        .onConflict((oc) => oc.doNothing())
+        .deleteFrom('saved_feed')
+        .where('userDid', '=', requester)
+        .where('feedUri', '=', feedUri.toString())
         .execute()
     },
   })

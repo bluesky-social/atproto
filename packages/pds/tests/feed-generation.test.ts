@@ -6,7 +6,7 @@ import basicSeed from './seeds/basic'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { TestFeedGen } from '@atproto/dev-env/src/feed-gen'
 import { TID } from '@atproto/common'
-import { InvalidRequestError, UpstreamFailureError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { forSnapshot, paginateAll } from './_util'
 import {
   FeedViewPost,
@@ -100,28 +100,28 @@ describe('feed generation', () => {
     expect(forSnapshot(paginatedAll)).toMatchSnapshot()
   })
 
-  it('bookmarks and paginates through bookmarked feeds.', async () => {
-    await agent.api.app.bsky.feed.bookmarkFeed(
+  it('saves feeds and paginates through saved feeds.', async () => {
+    await agent.api.app.bsky.feed.saveFeed(
       { feed: feedUriEven },
       { headers: sc.getHeaders(sc.dids.bob), encoding: 'application/json' },
     )
-    await agent.api.app.bsky.feed.bookmarkFeed(
+    await agent.api.app.bsky.feed.saveFeed(
       { feed: feedUriAll },
       { headers: sc.getHeaders(sc.dids.bob), encoding: 'application/json' },
     )
-    const { data } = await agent.api.app.bsky.feed.getBookmarkedFeeds(
+    const { data } = await agent.api.app.bsky.feed.getSavedFeeds(
       {},
       { headers: sc.getHeaders(sc.dids.bob) },
     )
     expect(data.feeds.map((f) => f.uri)).toEqual([feedUriAll, feedUriEven])
-    await agent.api.app.bsky.feed.bookmarkFeed(
+    await agent.api.app.bsky.feed.saveFeed(
       { feed: feedUriOdd },
       { headers: sc.getHeaders(sc.dids.bob), encoding: 'application/json' },
     )
 
     const results = (results) => results.flatMap((res) => res.feeds)
     const paginator = async (cursor?: string) => {
-      const res = await agent.api.app.bsky.feed.getBookmarkedFeeds(
+      const res = await agent.api.app.bsky.feed.getSavedFeeds(
         { cursor, limit: 2 },
         { headers: sc.getHeaders(sc.dids.bob) },
       )

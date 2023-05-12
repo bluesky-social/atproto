@@ -43,7 +43,7 @@ export class FeedViews {
         ? this.imgUriBuilder.getCommonSignedUri('avatar', info.avatarCid)
         : undefined,
       viewer: {
-        subscribed: !!info.viewerBookmark,
+        saved: !!info.viewerSaved,
         like: info.viewerLike ?? undefined,
       },
       indexedAt: info.indexedAt,

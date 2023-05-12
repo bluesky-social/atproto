@@ -45,7 +45,7 @@ export type ActorViewMap = { [did: string]: ActorView }
 
 export type FeedGenInfo = FeedGenerator & {
   viewerLike: string | null
-  viewerBookmark: string | null
+  viewerSaved: string | null
 }
 
 export type FeedGenInfoMap = { [uri: string]: FeedGenInfo }

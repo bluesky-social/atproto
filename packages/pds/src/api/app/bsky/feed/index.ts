@@ -1,11 +1,11 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import bookmarkFeed from './bookmarkFeed'
-import unbookmarkFeed from './unbookmarkFeed'
-import getBookmarkedFeeds from './getBookmarkedFeeds'
+import saveFeed from './saveFeed'
+import unsaveFeed from './unsaveFeed'
+import getSavedFeeds from './getSavedFeeds'
 
 export default function (server: Server, ctx: AppContext) {
-  bookmarkFeed(server, ctx)
-  unbookmarkFeed(server, ctx)
-  getBookmarkedFeeds(server, ctx)
+  saveFeed(server, ctx)
+  unsaveFeed(server, ctx)
+  getSavedFeeds(server, ctx)
 }

@@ -18,7 +18,7 @@ import * as repoBlob from './tables/repo-blob'
 import * as deleteAccountToken from './tables/delete-account-token'
 import * as moderation from './tables/moderation'
 import * as mute from './tables/mute'
-import * as feedBookmark from './tables/feed-bookmark'
+import * as savedFeed from './tables/saved-feed'
 import * as listMute from './tables/list-mute'
 import * as label from './tables/label'
 import * as repoSeq from './tables/repo-seq'
@@ -48,7 +48,7 @@ export type DatabaseSchemaType = appView.DatabaseSchemaType &
   deleteAccountToken.PartialDB &
   moderation.PartialDB &
   mute.PartialDB &
-  feedBookmark.PartialDB &
+  savedFeed.PartialDB &
   listMute.PartialDB &
   label.PartialDB &
   repoSeq.PartialDB

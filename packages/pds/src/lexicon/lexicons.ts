@@ -4009,29 +4009,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyFeedBookmarkFeed: {
-    lexicon: 1,
-    id: 'app.bsky.feed.bookmarkFeed',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Bookmark a 3rd party feed for use across clients',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['feed'],
-            properties: {
-              feed: {
-                type: 'string',
-                format: 'at-uri',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyFeedDefs: {
     lexicon: 1,
     id: 'app.bsky.feed.defs',
@@ -4261,7 +4238,7 @@ export const schemaDict = {
       generatorViewerState: {
         type: 'object',
         properties: {
-          subscribed: {
+          saved: {
             type: 'boolean',
           },
           like: {
@@ -4444,50 +4421,6 @@ export const schemaDict = {
             name: 'BlockedByActor',
           },
         ],
-      },
-    },
-  },
-  AppBskyFeedGetBookmarkedFeeds: {
-    lexicon: 1,
-    id: 'app.bsky.feed.getBookmarkedFeeds',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "Retrieve a list of the authenticated user's bookmarked feeds",
-        parameters: {
-          type: 'params',
-          properties: {
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['feeds'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              feeds: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#generatorView',
-                },
-              },
-            },
-          },
-        },
       },
     },
   },
@@ -4818,6 +4751,49 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetSavedFeeds: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getSavedFeeds',
+    defs: {
+      main: {
+        type: 'query',
+        description: "Retrieve a list of the authenticated user's saved feeds",
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feeds'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feeds: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#generatorView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedGetTimeline: {
     lexicon: 1,
     id: 'app.bsky.feed.getTimeline',
@@ -5013,13 +4989,36 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyFeedUnbookmarkFeed: {
+  AppBskyFeedSaveFeed: {
     lexicon: 1,
-    id: 'app.bsky.feed.unbookmarkFeed',
+    id: 'app.bsky.feed.saveFeed',
     defs: {
       main: {
         type: 'procedure',
-        description: 'Remove a bookmark for a 3rd party feed',
+        description: 'Save a 3rd party feed for use across clients',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              feed: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedUnsaveFeed: {
+    lexicon: 1,
+    id: 'app.bsky.feed.unsaveFeed',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Unsave a 3rd party feed',
         input: {
           encoding: 'application/json',
           schema: {
@@ -6050,23 +6049,23 @@ export const ids = {
   AppBskyEmbedImages: 'app.bsky.embed.images',
   AppBskyEmbedRecord: 'app.bsky.embed.record',
   AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
-  AppBskyFeedBookmarkFeed: 'app.bsky.feed.bookmarkFeed',
   AppBskyFeedDefs: 'app.bsky.feed.defs',
   AppBskyFeedGenerator: 'app.bsky.feed.generator',
   AppBskyFeedGetActorFeeds: 'app.bsky.feed.getActorFeeds',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
-  AppBskyFeedGetBookmarkedFeeds: 'app.bsky.feed.getBookmarkedFeeds',
   AppBskyFeedGetFeed: 'app.bsky.feed.getFeed',
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
+  AppBskyFeedGetSavedFeeds: 'app.bsky.feed.getSavedFeeds',
   AppBskyFeedGetTimeline: 'app.bsky.feed.getTimeline',
   AppBskyFeedLike: 'app.bsky.feed.like',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
-  AppBskyFeedUnbookmarkFeed: 'app.bsky.feed.unbookmarkFeed',
+  AppBskyFeedSaveFeed: 'app.bsky.feed.saveFeed',
+  AppBskyFeedUnsaveFeed: 'app.bsky.feed.unsaveFeed',
   AppBskyGraphBlock: 'app.bsky.graph.block',
   AppBskyGraphDefs: 'app.bsky.graph.defs',
   AppBskyGraphFollow: 'app.bsky.graph.follow',

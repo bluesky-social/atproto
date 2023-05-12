@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.feed.getBookmarkedFeeds",
+  "id": "app.bsky.feed.getSavedFeeds",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Retrieve a list of the authenticated user's bookmarked feeds",
+      "description": "Retrieve a list of the authenticated user's saved feeds",
       "parameters": {
         "type": "params",
         "properties": {

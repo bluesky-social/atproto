@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.feed.bookmarkFeed",
+  "id": "app.bsky.feed.saveFeed",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Bookmark a 3rd party feed for use across clients",
+      "description": "Save a 3rd party feed for use across clients",
       "input": {
         "encoding": "application/json",
         "schema": {

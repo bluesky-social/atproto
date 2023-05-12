@@ -106,11 +106,11 @@ export class FeedService {
       )
       .select((qb) =>
         qb
-          .selectFrom('feed_bookmark')
-          .where('feed_bookmark.userDid', '=', requester)
-          .whereRef('feed_bookmark.feedUri', '=', 'feed_generator.uri')
+          .selectFrom('saved_feed')
+          .where('saved_feed.userDid', '=', requester)
+          .whereRef('saved_feed.feedUri', '=', 'feed_generator.uri')
           .select('userDid')
-          .as('viewerBookmark'),
+          .as('viewerSaved'),
       )
   }
 

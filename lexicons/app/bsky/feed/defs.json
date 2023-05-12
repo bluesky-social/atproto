@@ -111,7 +111,7 @@
     "generatorViewerState": {
       "type": "object",
       "properties": {
-        "subscribed": {"type": "boolean"},
+        "saved": {"type": "boolean"},
         "like": {"type": "string", "format": "at-uri"}
       }
     },

@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.feed.unbookmarkFeed",
+  "id": "app.bsky.feed.unsaveFeed",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Remove a bookmark for a 3rd party feed",
+      "description": "Unsave a 3rd party feed",
       "input": {
         "encoding": "application/json",
         "schema": {
