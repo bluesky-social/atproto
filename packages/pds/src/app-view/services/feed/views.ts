@@ -4,10 +4,14 @@ import {
   FeedViewPost,
   GeneratorView,
   PostView,
-  SkeletonFeedPost,
-  isSkeletonReasonRepost,
 } from '../../../lexicon/types/app/bsky/feed/defs'
-import { ActorViewMap, FeedEmbeds, MaybePostView, PostInfoMap } from './types'
+import {
+  ActorViewMap,
+  FeedEmbeds,
+  FeedRow,
+  MaybePostView,
+  PostInfoMap,
+} from './types'
 import { Labels } from '../label'
 import { FeedGenerator } from '../../db/tables/feed-generator'
 import { ProfileView } from '../../../lexicon/types/app/bsky/actor/defs'
@@ -47,7 +51,7 @@ export class FeedViews {
   }
 
   formatFeed(
-    items: SkeletonFeedPost[],
+    items: FeedRow[],
     actors: ActorViewMap,
     posts: PostInfoMap,
     embeds: FeedEmbeds,
@@ -55,32 +59,38 @@ export class FeedViews {
   ): FeedViewPost[] {
     const feed: FeedViewPost[] = []
     for (const item of items) {
-      const post = this.formatPostView(item.post, actors, posts, embeds, labels)
+      const post = this.formatPostView(
+        item.postUri,
+        actors,
+        posts,
+        embeds,
+        labels,
+      )
       // skip over not found & blocked posts
       if (!post) {
         continue
       }
       const feedPost = { post }
-      if (item.reason && isSkeletonReasonRepost(item.reason)) {
-        const originator = actors[item.reason.by]
+      if (item.type === 'repost') {
+        const originator = actors[item.originatorDid]
         if (originator) {
           feedPost['reason'] = {
             $type: 'app.bsky.feed.defs#reasonRepost',
             by: originator,
-            indexedAt: item.reason.indexedAt,
+            indexedAt: item.sortAt,
           }
         }
       }
-      if (item.replyTo) {
+      if (item.replyParent && item.replyRoot) {
         const replyParent = this.formatMaybePostView(
-          item.replyTo.parent,
+          item.replyParent,
           actors,
           posts,
           embeds,
           labels,
         )
         const replyRoot = this.formatMaybePostView(
-          item.replyTo.root,
+          item.replyRoot,
           actors,
           posts,
           embeds,

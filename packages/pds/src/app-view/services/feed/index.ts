@@ -1,4 +1,5 @@
 import { sql } from 'kysely'
+import { AtUri } from '@atproto/uri'
 import Database from '../../../db'
 import { notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
@@ -12,14 +13,17 @@ import {
 import {
   FeedViewPost,
   PostView,
-  SkeletonFeedPost,
-  isSkeletonReasonRepost,
 } from '../../../lexicon/types/app/bsky/feed/defs'
-import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
+import {
+  ActorViewMap,
+  FeedEmbeds,
+  PostInfoMap,
+  FeedItemType,
+  FeedRow,
+} from './types'
 import { LabelService } from '../label'
 import { FeedViews } from './views'
 import { ActorService } from '../actor'
-import { AtUri } from '@atproto/uri'
 
 export * from './types'
 
@@ -354,22 +358,24 @@ export class FeedService {
   }
 
   async hydrateFeed(
-    items: SkeletonFeedPost[],
+    items: FeedRow[],
     requester: string,
   ): Promise<FeedViewPost[]> {
     const actorDids = new Set<string>()
     const postUris = new Set<string>()
     for (const item of items) {
-      actorDids.add(new AtUri(item.post).hostname)
-      postUris.add(item.post)
-      if (item.reason && isSkeletonReasonRepost(item.reason)) {
-        actorDids.add(item.reason.by)
+      actorDids.add(item.postAuthorDid)
+      postUris.add(item.postUri)
+      if (item.postAuthorDid !== item.originatorDid) {
+        actorDids.add(item.originatorDid)
       }
-      if (item.replyTo) {
-        postUris.add(item.replyTo.parent)
-        postUris.add(item.replyTo.root)
-        actorDids.add(new AtUri(item.replyTo.parent).hostname)
-        actorDids.add(new AtUri(item.replyTo.root).hostname)
+      if (item.replyParent) {
+        postUris.add(item.replyParent)
+        actorDids.add(new AtUri(item.replyParent).hostname)
+      }
+      if (item.replyRoot) {
+        postUris.add(item.replyRoot)
+        actorDids.add(new AtUri(item.replyRoot).hostname)
       }
     }
     const [actors, posts, embeds, labels] = await Promise.all([

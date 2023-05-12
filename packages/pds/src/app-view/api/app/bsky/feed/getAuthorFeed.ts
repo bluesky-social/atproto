@@ -1,5 +1,5 @@
 import { Server } from '../../../../../lexicon'
-import { FeedKeyset, feedRowsToSkeleton } from '../util/feed'
+import { FeedKeyset } from '../util/feed'
 import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
@@ -68,8 +68,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const feedItems: FeedRow[] = await feedItemsQb.execute()
-      const skeleton = feedRowsToSkeleton(feedItems)
-      const feed = await feedService.hydrateFeed(skeleton, requester)
+      const feed = await feedService.hydrateFeed(feedItems, requester)
 
       return {
         encoding: 'application/json',

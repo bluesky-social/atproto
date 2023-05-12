@@ -61,8 +61,7 @@ export default function (server: Server, ctx: AppContext) {
       feedQb = paginate(feedQb, { limit, cursor, keyset })
 
       const feedItems: FeedRow[] = await feedQb.execute()
-      const skeleton = feedRowsToSkeleton(feedItems)
-      const feed = await feedService.hydrateFeed(skeleton, requester)
+      const feed = await feedService.hydrateFeed(feedItems, requester)
 
       // filter out any quote post where the internal post has a filtered label
       const noLabeledQuotePosts = feed.filter((post) => {

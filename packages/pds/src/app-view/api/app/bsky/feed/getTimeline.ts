@@ -1,6 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
-import { FeedAlgorithm, FeedKeyset, feedRowsToSkeleton } from '../util/feed'
+import { FeedAlgorithm, FeedKeyset } from '../util/feed'
 import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
@@ -60,8 +60,7 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
       const feedItems: FeedRow[] = await feedItemsQb.execute()
-      const skeleton = feedRowsToSkeleton(feedItems)
-      const feed = await feedService.hydrateFeed(skeleton, requester)
+      const feed = await feedService.hydrateFeed(feedItems, requester)
 
       return {
         encoding: 'application/json',

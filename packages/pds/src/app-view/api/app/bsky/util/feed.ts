@@ -8,14 +8,7 @@ export const feedRowsToSkeleton = (rows: FeedRow[]): SkeletonFeedPost[] => {
     if (row.type === 'repost') {
       post.reason = {
         $type: 'app.bsky.feed.defs#skeletonReasonRepost',
-        by: row.originatorDid,
-        indexedAt: row.sortAt,
-      }
-    }
-    if (row.replyRoot && row.replyParent) {
-      post.replyTo = {
-        root: row.replyRoot,
-        parent: row.replyParent,
+        repost: row.uri,
       }
     }
     return post

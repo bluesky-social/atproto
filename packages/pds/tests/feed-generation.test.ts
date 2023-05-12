@@ -12,6 +12,7 @@ import {
   GeneratorView,
 } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 import { FeedAlgorithm } from '../src/app-view/api/app/bsky/util/feed'
+import { SkeletonFeedPost } from '../src/lexicon/types/app/bsky/feed/defs'
 
 describe('feed generation', () => {
   let network: TestNetworkNoAppView
@@ -186,38 +187,20 @@ describe('feed generation', () => {
     if (feedName !== 'all' && feedName !== 'even') {
       throw new InvalidRequestError('Unknown feed')
     }
-    const candidates = [
+    const candidates: SkeletonFeedPost[] = [
       { post: sc.posts[sc.dids.alice][0].ref.uriStr },
       { post: sc.posts[sc.dids.bob][0].ref.uriStr },
       { post: sc.posts[sc.dids.carol][0].ref.uriStr },
-      // Post doesn't exist
-      { post: `at://did:plc:unknown/app.bsky.feed.post/${TID.nextStr()}` },
-      // Reply (accurate)
-      {
-        post: sc.replies[sc.dids.carol][0].ref.uriStr,
-        replyTo: {
-          root: sc.posts[alice][1].ref.uriStr,
-          parent: sc.posts[alice][1].ref.uriStr,
-        },
-      },
+      { post: `at://did:plc:unknown/app.bsky.feed.post/${TID.nextStr()}` }, // Doesn't exist
+      { post: sc.replies[sc.dids.carol][0].ref.uriStr }, // Reply
       // Repost (accurate)
       {
         post: sc.posts[sc.dids.dan][1].ref.uriStr,
         reason: {
           $type: 'app.bsky.feed.defs#skeletonReasonRepost',
-          by: sc.dids.carol,
-          indexedAt: new Date().toISOString(),
+          repost: sc.reposts[sc.dids.carol][0].uriStr,
         },
       },
-      // @TODO
-      // // Reply (inaccurate)
-      // {
-      //   post: sc.replies[sc.dids.bob][0].ref.uriStr,
-      //   replyTo: {
-      //     root: sc.posts[sc.dids.bob][0].ref.uriStr,
-      //     parent: sc.posts[sc.dids.bob][0].ref.uriStr,
-      //   },
-      // },
       // // Repost (inaccurate)
       // {
       //   post: sc.posts[alice][1].ref.uriStr,
