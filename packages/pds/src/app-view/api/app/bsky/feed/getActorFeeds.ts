@@ -46,6 +46,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: {
+          cursor: keyset.packFromResult(feedsRes),
           feeds,
         },
       }

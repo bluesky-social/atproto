@@ -1,6 +1,7 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import getTimeline from './feed/getTimeline'
+import getActorFeeds from './feed/getActorFeeds'
 import getAuthorFeed from './feed/getAuthorFeed'
 import getFeed from './feed/getFeed'
 import getLikes from './feed/getLikes'
@@ -23,6 +24,7 @@ import unspecced from './unspecced'
 
 export default function (server: Server, ctx: AppContext) {
   getTimeline(server, ctx)
+  getActorFeeds(server, ctx)
   getAuthorFeed(server, ctx)
   getFeed(server, ctx)
   getLikes(server, ctx)
