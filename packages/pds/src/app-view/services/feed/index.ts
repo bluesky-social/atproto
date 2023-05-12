@@ -89,7 +89,6 @@ export class FeedService {
   }
 
   selectFeedGeneratorQb(requester: string) {
-    const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('feed_generator')
       .innerJoin('did_handle', 'did_handle.did', 'feed_generator.creator')
@@ -98,10 +97,17 @@ export class FeedService {
         qb
           .selectFrom('like')
           .where('like.creator', '=', requester)
-          .whereRef('like.subject', '=', ref('feed_generator.uri'))
-          .limit(1)
+          .whereRef('like.subject', '=', 'feed_generator.uri')
           .select('uri')
           .as('viewerLike'),
+      )
+      .select((qb) =>
+        qb
+          .selectFrom('feed_bookmark')
+          .where('feed_bookmark.userDid', '=', requester)
+          .whereRef('feed_bookmark.feedUri', '=', 'feed_generator.uri')
+          .select('userDid')
+          .as('viewerBookmark'),
       )
   }
 

@@ -100,7 +100,7 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "uri": "record(0)",
     "viewer": Object {
-      "subscribed": true,
+      "subscribed": false,
     },
   },
   Object {
@@ -124,7 +124,7 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "uri": "record(3)",
     "viewer": Object {
-      "subscribed": true,
+      "subscribed": false,
     },
   },
   Object {
@@ -148,7 +148,7 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "uri": "record(4)",
     "viewer": Object {
-      "subscribed": true,
+      "subscribed": false,
     },
   },
 ]
