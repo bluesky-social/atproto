@@ -261,9 +261,21 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
       },
     }
   })
-  await alice.agent.api.app.bsky.feed.generator.create(
+  const fgAliceRes = await alice.agent.api.app.bsky.feed.generator.create(
     { repo: alice.did, rkey: 'alice-favs' },
-    { did: fg1.did, createdAt: new Date().toISOString() },
+    { did: fg1.did, createdAt: date.next().value },
+  )
+
+  await alice.agent.api.app.bsky.feed.post.create(
+    { repo: alice.did },
+    {
+      text: 'check out my algorithm!',
+      embed: {
+        $type: 'app.bsky.embed.record',
+        record: fgAliceRes,
+      },
+      createdAt: date.next().value,
+    },
   )
 
   const fg2 = await env.createFeedGen(async () => {
@@ -277,9 +289,21 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
       },
     }
   })
-  await bob.agent.api.app.bsky.feed.generator.create(
+  const fgBobRes = await bob.agent.api.app.bsky.feed.generator.create(
     { repo: bob.did, rkey: 'bob-redux' },
-    { did: fg2.did, createdAt: new Date().toISOString() },
+    { did: fg2.did, createdAt: date.next().value },
+  )
+
+  await alice.agent.api.app.bsky.feed.post.create(
+    { repo: alice.did },
+    {
+      text: `bobs feed is neat too`,
+      embed: {
+        $type: 'app.bsky.embed.record',
+        record: fgBobRes,
+      },
+      createdAt: date.next().value,
+    },
   )
 }
 
