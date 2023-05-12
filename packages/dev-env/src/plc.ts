@@ -28,6 +28,6 @@ export class TestPlc {
   }
 
   async close() {
-    await this.server.destroy
+    await this.server.destroy()
   }
 }
