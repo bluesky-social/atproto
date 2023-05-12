@@ -1,32 +1,27 @@
 import AtpAgent from '@atproto/api'
-import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
-import {
-  appViewHeaders,
-  forSnapshot,
-  processAll,
-  stripViewerFromPost,
-} from '../_util'
+import { TestNetwork } from '@atproto/dev-env'
+import { forSnapshot, stripViewerFromPost } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds posts views', () => {
-  let testEnv: TestEnvInfo
+  let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_posts',
     })
-    agent = new AtpAgent({ service: testEnv.bsky.url })
-    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
+    agent = network.bsky.getClient()
+    const pdsAgent = network.pds.getClient()
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
-    await processAll(testEnv)
+    await network.processAll()
   })
 
   afterAll(async () => {
-    await testEnv.close()
+    await network.close()
   })
 
   it('fetches posts', async () => {
@@ -40,7 +35,7 @@ describe('pds posts views', () => {
     ]
     const posts = await agent.api.app.bsky.feed.getPosts(
       { uris },
-      { headers: await appViewHeaders(sc.dids.alice, testEnv) },
+      { headers: await network.serviceHeaders(sc.dids.alice) },
     )
 
     expect(posts.data.posts.length).toBe(uris.length)
@@ -59,7 +54,7 @@ describe('pds posts views', () => {
 
     const authed = await agent.api.app.bsky.feed.getPosts(
       { uris },
-      { headers: await appViewHeaders(sc.dids.alice, testEnv) },
+      { headers: await network.serviceHeaders(sc.dids.alice) },
     )
     const unauthed = await agent.api.app.bsky.feed.getPosts({
       uris,

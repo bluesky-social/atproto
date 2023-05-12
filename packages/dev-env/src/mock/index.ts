@@ -4,7 +4,7 @@ import {
   REASONSPAM,
   REASONOTHER,
 } from '@atproto/api/src/client/types/com/atproto/moderation/defs'
-import { TestNetwork } from '../index'
+import { TestNetworkNoAppView } from '../index'
 import { postTexts, replyTexts } from './data'
 import labeledImgB64 from './labeled-img-b64'
 
@@ -22,7 +22,7 @@ function* dateGen() {
   return ''
 }
 
-export async function generateMockSetup(env: TestNetwork) {
+export async function generateMockSetup(env: TestNetworkNoAppView) {
   const date = dateGen()
 
   const rand = (n: number) => Math.floor(Math.random() * n)

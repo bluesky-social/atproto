@@ -1,33 +1,33 @@
 import AtpAgent from '@atproto/api'
-import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
-import { appViewHeaders, processAll, stripViewer } from '../_util'
+import { TestNetwork } from '@atproto/dev-env'
+import { stripViewer } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds user search views', () => {
+  let network: TestNetwork
   let agent: AtpAgent
-  let testEnv: TestEnvInfo
   let sc: SeedClient
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_suggestions',
     })
-    agent = new AtpAgent({ service: testEnv.bsky.url })
-    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
+    agent = network.bsky.getClient()
+    const pdsAgent = network.pds.getClient()
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
-    await processAll(testEnv)
+    await network.processAll()
   })
 
   afterAll(async () => {
-    await testEnv.close()
+    await network.close()
   })
 
   it('actor suggestion gives users', async () => {
     const result = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 3 },
-      { headers: await appViewHeaders(sc.dids.carol, testEnv) },
+      { headers: await network.serviceHeaders(sc.dids.carol) },
     )
 
     const handles = result.data.actors.map((u) => u.handle)
@@ -49,7 +49,7 @@ describe('pds user search views', () => {
   it('does not suggest followed users', async () => {
     const result = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 3 },
-      { headers: await appViewHeaders(sc.dids.alice, testEnv) },
+      { headers: await network.serviceHeaders(sc.dids.alice) },
     )
 
     // alice follows everyone
@@ -59,11 +59,11 @@ describe('pds user search views', () => {
   it('paginates', async () => {
     const result1 = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 1 },
-      { headers: await appViewHeaders(sc.dids.carol, testEnv) },
+      { headers: await network.serviceHeaders(sc.dids.carol) },
     )
     const result2 = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 1, cursor: result1.data.cursor },
-      { headers: await appViewHeaders(sc.dids.carol, testEnv) },
+      { headers: await network.serviceHeaders(sc.dids.carol) },
     )
 
     expect(result1.data.actors.length).toBe(1)
@@ -78,7 +78,7 @@ describe('pds user search views', () => {
   it('fetches suggestions unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.actor.getSuggestions(
       {},
-      { headers: await appViewHeaders(sc.dids.carol, testEnv) },
+      { headers: await network.serviceHeaders(sc.dids.carol) },
     )
     const { data: unauthed } = await agent.api.app.bsky.actor.getSuggestions({})
     const omitViewerFollows = ({ did }) => {

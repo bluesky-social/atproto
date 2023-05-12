@@ -1,7 +1,7 @@
-import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
 import { AtUri } from '@atproto/uri'
-import { adminAuth, appViewHeaders, forSnapshot, processAll } from './_util'
+import { adminAuth, forSnapshot } from './_util'
 import { ImageRef, RecordRef, SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import {
@@ -15,23 +15,23 @@ import {
 } from '../src/lexicon/types/com/atproto/moderation/defs'
 
 describe('moderation', () => {
-  let testEnv: TestEnvInfo
+  let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'moderation',
     })
-    agent = new AtpAgent({ service: testEnv.bsky.url })
-    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
+    agent = network.bsky.getClient()
+    const pdsAgent = network.pds.getClient()
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
-    await processAll(testEnv)
+    await network.processAll()
   })
 
   afterAll(async () => {
-    await testEnv.close()
+    await network.close()
   })
 
   describe('reporting', () => {
@@ -46,7 +46,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: await appViewHeaders(sc.dids.alice, testEnv),
+            headers: await network.serviceHeaders(sc.dids.alice),
             encoding: 'application/json',
           },
         )
@@ -61,7 +61,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: await appViewHeaders(sc.dids.carol, testEnv),
+            headers: await network.serviceHeaders(sc.dids.carol),
             encoding: 'application/json',
           },
         )
@@ -78,7 +78,7 @@ describe('moderation', () => {
           },
         },
         {
-          headers: await appViewHeaders(sc.dids.alice, testEnv),
+          headers: await network.serviceHeaders(sc.dids.alice),
           encoding: 'application/json',
         },
       )
@@ -99,7 +99,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: await appViewHeaders(sc.dids.alice, testEnv),
+            headers: await network.serviceHeaders(sc.dids.alice),
             encoding: 'application/json',
           },
         )
@@ -115,7 +115,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: await appViewHeaders(sc.dids.carol, testEnv),
+            headers: await network.serviceHeaders(sc.dids.carol),
             encoding: 'application/json',
           },
         )
@@ -138,7 +138,7 @@ describe('moderation', () => {
           },
         },
         {
-          headers: await appViewHeaders(sc.dids.alice, testEnv),
+          headers: await network.serviceHeaders(sc.dids.alice),
           encoding: 'application/json',
         },
       )
@@ -155,7 +155,7 @@ describe('moderation', () => {
           },
         },
         {
-          headers: await appViewHeaders(sc.dids.carol, testEnv),
+          headers: await network.serviceHeaders(sc.dids.carol),
           encoding: 'application/json',
         },
       )
@@ -175,7 +175,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: await appViewHeaders(sc.dids.alice, testEnv),
+            headers: await network.serviceHeaders(sc.dids.alice),
             encoding: 'application/json',
           },
         )
@@ -192,7 +192,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: await appViewHeaders(sc.dids.carol, testEnv),
+            headers: await network.serviceHeaders(sc.dids.carol),
             encoding: 'application/json',
           },
         )
@@ -252,7 +252,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: await appViewHeaders(sc.dids.alice, testEnv),
+            headers: await network.serviceHeaders(sc.dids.alice),
             encoding: 'application/json',
           },
         )
@@ -317,7 +317,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: await appViewHeaders(sc.dids.alice, testEnv),
+            headers: await network.serviceHeaders(sc.dids.alice),
             encoding: 'application/json',
           },
         )
@@ -701,7 +701,7 @@ describe('moderation', () => {
     })
 
     it('negates an existing label and reverses.', async () => {
-      const { ctx } = testEnv.bsky
+      const { ctx } = network.bsky
       const post = sc.posts[sc.dids.bob][0].ref
       const labelingService = ctx.services.label(ctx.db)
       await labelingService.formatAndCreate(
@@ -731,7 +731,7 @@ describe('moderation', () => {
     })
 
     it('no-ops when negating an already-negated label and reverses.', async () => {
-      const { ctx } = testEnv.bsky
+      const { ctx } = network.bsky
       const post = sc.posts[sc.dids.bob][0].ref
       const labelingService = ctx.services.label(ctx.db)
       const action = await actionWithLabels({
@@ -774,7 +774,7 @@ describe('moderation', () => {
     })
 
     it('no-ops when creating an existing label and reverses.', async () => {
-      const { ctx } = testEnv.bsky
+      const { ctx } = network.bsky
       const post = sc.posts[sc.dids.bob][0].ref
       const labelingService = ctx.services.label(ctx.db)
       await labelingService.formatAndCreate(
@@ -814,7 +814,7 @@ describe('moderation', () => {
     })
 
     it('creates and negates labels on a repo and reverses.', async () => {
-      const { ctx } = testEnv.bsky
+      const { ctx } = network.bsky
       const labelingService = ctx.services.label(ctx.db)
       await labelingService.formatAndCreate(
         ctx.cfg.labelerDid,
@@ -894,7 +894,7 @@ describe('moderation', () => {
     let imageUri: string
     let actionId: number
     beforeAll(async () => {
-      const { ctx } = testEnv.bsky
+      const { ctx } = network.bsky
       post = sc.posts[sc.dids.carol][0]
       blob = post.images[1]
       imageUri = ctx.imgUriBuilder
@@ -903,7 +903,7 @@ describe('moderation', () => {
           sc.dids.carol,
           blob.image.ref.toString(),
         )
-        .replace(ctx.cfg.publicUrl || '', testEnv.bsky.url)
+        .replace(ctx.cfg.publicUrl || '', network.bsky.url)
       // Warm image server cache
       await fetch(imageUri)
       const cached = await fetch(imageUri)
@@ -930,7 +930,7 @@ describe('moderation', () => {
 
     it('prevents resolution of blob', async () => {
       const blobPath = `/blob/${sc.dids.carol}/${blob.image.ref.toString()}`
-      const resolveBlob = await fetch(`${testEnv.bsky.url}${blobPath}`)
+      const resolveBlob = await fetch(`${network.bsky.url}${blobPath}`)
       expect(resolveBlob.status).toEqual(404)
       expect(await resolveBlob.json()).toEqual({
         error: 'NotFoundError',
@@ -959,7 +959,7 @@ describe('moderation', () => {
 
       // Can resolve blob
       const blobPath = `/blob/${sc.dids.carol}/${blob.image.ref.toString()}`
-      const resolveBlob = await fetch(`${testEnv.bsky.url}${blobPath}`)
+      const resolveBlob = await fetch(`${network.bsky.url}${blobPath}`)
       expect(resolveBlob.status).toEqual(200)
 
       // Can fetch through image server

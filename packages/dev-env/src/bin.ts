@@ -1,5 +1,5 @@
 import { generateMockSetup } from './mock'
-import { TestNetwork } from './network'
+import { TestNetworkNoAppView } from './network-no-appview'
 
 const run = async () => {
   console.log(`
@@ -12,7 +12,7 @@ const run = async () => {
 
 [ created by Bluesky ]`)
 
-  const network = await TestNetwork.create({
+  const network = await TestNetworkNoAppView.create({
     pds: { port: 2583 },
     plc: { port: 2582 },
   })

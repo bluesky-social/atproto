@@ -7,14 +7,13 @@ import { keywordLabeling } from '../../src/labeler/util'
 import { cidForCbor, streamToBytes, TID } from '@atproto/common'
 import * as ui8 from 'uint8arrays'
 import { LabelService } from '../../src/services/label'
-import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { DidResolver } from '@atproto/did-resolver'
 import { SeedClient } from '../seeds/client'
 import usersSeed from '../seeds/users'
-import { processAll } from '../_util'
 
 describe('labeler', () => {
-  let testEnv: TestEnvInfo
+  let network: TestNetwork
   let labeler: Labeler
   let labelSrvc: LabelService
   let ctx: AppContext
@@ -27,18 +26,18 @@ describe('labeler', () => {
   const profileUri = () => AtUri.make(alice, 'app.bsky.actor.profile', 'self')
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'labeler',
     })
-    ctx = testEnv.bsky.ctx
-    const pdsCtx = testEnv.pds.ctx
+    ctx = network.bsky.ctx
+    const pdsCtx = network.pds.ctx
     labelerDid = ctx.cfg.labelerDid
     labeler = new TestLabeler(ctx)
     labelSrvc = ctx.services.label(ctx.db)
-    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
+    const pdsAgent = new AtpAgent({ service: network.pds.url })
     const sc = new SeedClient(pdsAgent)
     await usersSeed(sc)
-    await processAll(testEnv)
+    await network.processAll()
     alice = sc.dids.alice
     const repoSvc = pdsCtx.services.repo(pdsCtx.db)
     const storeBlob = async (bytes: Uint8Array) => {
@@ -70,7 +69,7 @@ describe('labeler', () => {
   })
 
   afterAll(async () => {
-    await testEnv.close()
+    await network.close()
   })
 
   it('labels text in posts', async () => {

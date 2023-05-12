@@ -1,22 +1,22 @@
 import { once } from 'events'
 import { wait } from '@atproto/common'
-import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { Database } from '../src'
 import { Leader } from '../src/db/leader'
 
 describe('db', () => {
-  let testEnv: TestEnvInfo
+  let network: TestNetwork
   let db: Database
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_db',
     })
-    db = testEnv.bsky.ctx.db
+    db = network.bsky.ctx.db
   })
 
   afterAll(async () => {
-    await testEnv.close()
+    await network.close()
   })
 
   describe('transaction()', () => {

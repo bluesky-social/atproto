@@ -2,6 +2,7 @@ import { AddressInfo } from 'net'
 import * as bsky from '@atproto/bsky'
 import { DAY, HOUR } from '@atproto/common-web'
 import { BskyConfig } from './types'
+import { AtpAgent } from '@atproto/api'
 
 export class TestBsky {
   constructor(
@@ -58,6 +59,17 @@ export class TestBsky {
 
   get ctx(): bsky.AppContext {
     return this.server.ctx
+  }
+
+  get sub() {
+    if (!this.server.sub) {
+      throw new Error('No subscription on dev-env server')
+    }
+    return this.server.sub
+  }
+
+  getClient() {
+    return new AtpAgent({ service: this.url })
   }
 
   async close() {
