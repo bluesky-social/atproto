@@ -53,8 +53,10 @@ export class TestPds {
     const repoSigningKey = await Secp256k1Keypair.create()
     const plcRotationKey = await Secp256k1Keypair.create()
 
-    // Disable communication to app view within pds
-    MessageDispatcher.prototype.send = async () => {}
+    if (config.bskyAppViewEndpoint) {
+      // Disable communication to app view within pds
+      MessageDispatcher.prototype.send = async () => {}
+    }
 
     const server = pds.PDS.create({
       db,
