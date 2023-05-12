@@ -4536,6 +4536,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'UnknownFeed',
+          },
+        ],
       },
     },
   },
@@ -4584,6 +4589,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'UnknownFeed',
+          },
+        ],
       },
     },
   },

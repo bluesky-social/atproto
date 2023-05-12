@@ -1,11 +1,12 @@
 import { AtpAgent } from '@atproto/api'
 import { Handler as SkeletonHandler } from '@atproto/pds/src/lexicon/types/app/bsky/feed/getFeedSkeleton'
+import { UnknownFeedError } from '@atproto/api/src/client/types/app/bsky/feed/getFeed'
 import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { TestFeedGen } from '@atproto/dev-env/src/feed-gen'
 import { TID } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, UpstreamFailureError } from '@atproto/xrpc-server'
 import { forSnapshot, paginateAll } from './_util'
 import {
   FeedViewPost,
@@ -160,7 +161,7 @@ describe('feed generation', () => {
         sc.replies[sc.dids.carol][0].ref.uriStr,
         sc.posts[sc.dids.dan][1].ref.uriStr,
       ])
-      expect(forSnapshot(paginatedAll)).toMatchSnapshot() // @TODO check reply hydration
+      expect(forSnapshot(paginatedAll)).toMatchSnapshot()
     })
 
     it('fails on unknown feed.', async () => {
@@ -168,7 +169,7 @@ describe('feed generation', () => {
         { feed: feedUriOdd },
         { headers: sc.getHeaders(alice) },
       )
-      await expect(tryGetFeed).rejects.toThrow('Unknown feed') // @TODO consider adding this error to getFeed lexicon
+      await expect(tryGetFeed).rejects.toThrow(UnknownFeedError)
     })
 
     it('receives proper auth details.', async () => {
@@ -179,13 +180,31 @@ describe('feed generation', () => {
       expect(feed.data['$auth']?.['aud']).toEqual(gen.did)
       expect(feed.data['$auth']?.['iss']).toEqual(alice)
     })
+
+    it('receives proper auth details.', async () => {
+      const feed = await agent.api.app.bsky.feed.getFeed(
+        { feed: feedUriEven },
+        { headers: sc.getHeaders(alice) },
+      )
+      expect(feed.data['$auth']?.['aud']).toEqual(gen.did)
+      expect(feed.data['$auth']?.['iss']).toEqual(alice)
+    })
+
+    it('returns an upstream failure error when the feed is down.', async () => {
+      await network.feedGens.pop()?.close() // @NOTE must be last test
+      const tryGetFeed = agent.api.app.bsky.feed.getFeed(
+        { feed: feedUriEven },
+        { headers: sc.getHeaders(alice) },
+      )
+      await expect(tryGetFeed).rejects.toThrow('Feed unavailable')
+    })
   })
 
   const feedGenHandler: SkeletonHandler = async ({ req, params }) => {
     const { feed, limit, cursor } = params
     const feedName = feed.split('/').at(-1)
     if (feedName !== 'all' && feedName !== 'even') {
-      throw new InvalidRequestError('Unknown feed')
+      throw new InvalidRequestError('Unknown feed', 'UnknownFeed')
     }
     const candidates: SkeletonFeedPost[] = [
       { post: sc.posts[sc.dids.alice][0].ref.uriStr },

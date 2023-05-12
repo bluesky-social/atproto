@@ -1,13 +1,19 @@
 import {
   InvalidRequestError,
+  UpstreamFailureError,
   createServiceAuthHeaders,
 } from '@atproto/xrpc-server'
 import { getFeedGen } from '@atproto/did-resolver'
 import { AtpAgent } from '@atproto/api'
 import { SkeletonFeedPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
+import {
+  OutputSchema as SkeletonOutput,
+  UnknownFeedError,
+} from '@atproto/api/src/client/types/app/bsky/feed/getFeedSkeleton'
 import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
+import { ResponseType, XRPCError } from '@atproto/xrpc'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeed({
@@ -42,10 +48,23 @@ export default function (server: Server, ctx: AppContext) {
         aud: feedDid,
         keypair: ctx.repoSigningKey,
       })
-      const { data: skeleton } = await agent.api.app.bsky.feed.getFeedSkeleton(
-        params,
-        headers,
-      )
+
+      let skeleton: SkeletonOutput
+      try {
+        const result = await agent.api.app.bsky.feed.getFeedSkeleton(
+          params,
+          headers,
+        )
+        skeleton = result.data
+      } catch (err) {
+        if (err instanceof UnknownFeedError) {
+          throw new InvalidRequestError(err.message, 'UnknownFeed')
+        }
+        if (err instanceof XRPCError && err.status === ResponseType.Unknown) {
+          throw new UpstreamFailureError('Feed unavailable')
+        }
+        throw err
+      }
 
       // Hydrate feed skeleton
       const { ref } = ctx.db.db.dynamic
