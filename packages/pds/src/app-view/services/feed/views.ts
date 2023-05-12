@@ -8,12 +8,12 @@ import {
 import {
   ActorViewMap,
   FeedEmbeds,
+  FeedGenInfo,
   FeedRow,
   MaybePostView,
   PostInfoMap,
 } from './types'
 import { Labels } from '../label'
-import { FeedGenerator } from '../../db/tables/feed-generator'
 import { ProfileView } from '../../../lexicon/types/app/bsky/actor/defs'
 import { ImageUriBuilder } from '../../../image/uri'
 
@@ -27,7 +27,7 @@ export class FeedViews {
   }
 
   formatFeedGeneratorView(
-    info: FeedGeneratorInfo,
+    info: FeedGenInfo,
     profiles: Record<string, ProfileView>,
   ): GeneratorView {
     return {
@@ -169,9 +169,4 @@ export class FeedViews {
       notFound: true as const,
     }
   }
-}
-
-type FeedGeneratorInfo = FeedGenerator & {
-  viewerLike?: string
-  viewerBookmark?: string
 }

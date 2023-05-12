@@ -7,6 +7,7 @@ import {
   NotFoundPost,
   PostView,
 } from '../../../lexicon/types/app/bsky/feed/defs'
+import { FeedGenerator } from '../../db/tables/feed-generator'
 
 export type FeedEmbeds = {
   [uri: string]: ViewImages | ViewExternal | ViewRecord | ViewRecordWithMedia
@@ -41,6 +42,13 @@ export type ActorView = {
   }
 }
 export type ActorViewMap = { [did: string]: ActorView }
+
+export type FeedGenInfo = FeedGenerator & {
+  viewerLike: string | null
+  viewerBookmark: string | null
+}
+
+export type FeedGenInfoMap = { [uri: string]: FeedGenInfo }
 
 export type FeedItemType = 'post' | 'repost'
 

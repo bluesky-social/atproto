@@ -3,12 +3,14 @@ import { AtUri } from '@atproto/uri'
 import Database from '../../../db'
 import { notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
+import { ids } from '../../../lexicon/lexicons'
 import { isView as isViewImages } from '../../../lexicon/types/app/bsky/embed/images'
 import { isView as isViewExternal } from '../../../lexicon/types/app/bsky/embed/external'
 import {
   ViewBlocked,
   ViewNotFound,
   ViewRecord,
+  View as RecordEmbedView,
 } from '../../../lexicon/types/app/bsky/embed/record'
 import {
   FeedViewPost,
@@ -20,6 +22,7 @@ import {
   PostInfoMap,
   FeedItemType,
   FeedRow,
+  FeedGenInfoMap,
 } from './types'
 import { LabelService } from '../label'
 import { FeedViews } from './views'
@@ -241,6 +244,20 @@ export class FeedService {
     )
   }
 
+  async getFeedGeneratorViews(generatorUris: string[], requester: string) {
+    if (generatorUris.length < 1) return {}
+    const feedGens = await this.selectFeedGeneratorQb(requester)
+      .where('uri', 'in', generatorUris)
+      .execute()
+    return feedGens.reduce(
+      (acc, cur) => ({
+        ...acc,
+        [cur.uri]: cur,
+      }),
+      {} as FeedGenInfoMap,
+    )
+  }
+
   async embedsForPosts(
     uris: string[],
     requester: string,
@@ -277,15 +294,22 @@ export class FeedService {
       recordPromise,
     ])
     const nestedUris = records.map((p) => p.uri)
-    const [postViews, actorViews, deepEmbedViews, labelViews] =
+    const nestedPostUris = nestedUris.filter(
+      (uri) => new AtUri(uri).collection === ids.AppBskyFeedPost,
+    )
+    const nestedFeedGenUris = nestedUris.filter(
+      (uri) => new AtUri(uri).collection === ids.AppBskyFeedGenerator,
+    )
+    const [postViews, actorViews, deepEmbedViews, labelViews, feedGenViews] =
       await Promise.all([
-        this.getPostViews(nestedUris, requester),
+        this.getPostViews(nestedPostUris, requester),
         this.getActorViews(
           records.map((p) => p.did),
           requester,
         ),
-        this.embedsForPosts(nestedUris, requester, _depth + 1),
-        this.services.label.getLabelsForSubjects(nestedUris),
+        this.embedsForPosts(nestedPostUris, requester, _depth + 1),
+        this.services.label.getLabelsForSubjects(nestedPostUris),
+        this.getFeedGeneratorViews(nestedFeedGenUris, requester),
       ])
     let embeds = images.reduce((acc, cur) => {
       const embed = (acc[cur.postUri] ??= {
@@ -326,22 +350,43 @@ export class FeedService {
       return acc
     }, embeds)
     embeds = records.reduce((acc, cur) => {
-      const formatted = this.views.formatPostView(
-        cur.uri,
-        actorViews,
-        postViews,
-        deepEmbedViews,
-        labelViews,
-      )
-      let deepEmbeds: ViewRecord['embeds'] | undefined
-      if (_depth < 1) {
-        // Omit field entirely when too deep: e.g. don't include it on the embeds within a record embed.
-        // Otherwise list any embeds that appear within the record. A consumer may discover an embed
-        // within the raw record, then look within this array to find the presented view of it.
-        deepEmbeds = formatted?.embed ? [formatted.embed] : []
-      }
-      const recordEmbed = {
-        record: getRecordEmbedView(cur.uri, formatted, deepEmbeds),
+      const collection = new AtUri(cur.uri).collection
+      let recordEmbed: RecordEmbedView
+      if (collection === ids.AppBskyFeedGenerator && feedGenViews[cur.uri]) {
+        recordEmbed = {
+          record: {
+            $type: 'app.bsky.feed.defs#generatorView',
+            ...this.views.formatFeedGeneratorView(
+              feedGenViews[cur.uri],
+              actorViews,
+            ),
+          },
+        }
+      } else if (collection === ids.AppBskyFeedPost && postViews[cur.uri]) {
+        const formatted = this.views.formatPostView(
+          cur.uri,
+          actorViews,
+          postViews,
+          deepEmbedViews,
+          labelViews,
+        )
+        let deepEmbeds: ViewRecord['embeds'] | undefined
+        if (_depth < 1) {
+          // Omit field entirely when too deep: e.g. don't include it on the embeds within a record embed.
+          // Otherwise list any embeds that appear within the record. A consumer may discover an embed
+          // within the raw record, then look within this array to find the presented view of it.
+          deepEmbeds = formatted?.embed ? [formatted.embed] : []
+        }
+        recordEmbed = {
+          record: getRecordEmbedView(cur.uri, formatted, deepEmbeds),
+        }
+      } else {
+        recordEmbed = {
+          record: {
+            $type: 'app.bsky.embed.record#viewNotFound',
+            uri: cur.uri,
+          },
+        }
       }
       if (acc[cur.postUri]) {
         const mediaEmbed = acc[cur.postUri]

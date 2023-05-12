@@ -14,7 +14,15 @@
       "type": "object",
       "required":  ["record"],
       "properties": {
-        "record": {"type": "union", "refs": ["#viewRecord", "#viewNotFound", "#viewBlocked"]}
+        "record": {
+          "type": "union",
+          "refs": [
+            "#viewRecord",
+            "#viewNotFound",
+            "#viewBlocked",
+            "app.bsky.feed.defs#generatorView"
+          ]
+        }
       }
     },
     "viewRecord": {

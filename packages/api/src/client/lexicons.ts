@@ -3899,6 +3899,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.record#viewRecord',
               'lex:app.bsky.embed.record#viewNotFound',
               'lex:app.bsky.embed.record#viewBlocked',
+              'lex:app.bsky.feed.defs#generatorView',
             ],
           },
         },
