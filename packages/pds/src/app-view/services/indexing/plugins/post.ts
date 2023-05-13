@@ -210,9 +210,14 @@ const notifsForInsert = (obj: IndexedPost) => {
   const ancestors = [...obj.ancestors].sort((a, b) => a.depth - b.depth)
   const BLESSED_HELL_THREAD =
     'at://did:plc:wgaezxqi2spqm3mhrb5xvkzi/app.bsky.feed.post/3juzlwllznd24'
-  const BLESSED_EUROVISION_HELL_THREAD = 'at://did:plc:by3jhwdqgbtrcc7q4tkkv3cf/app.bsky.feed.post/3jvmzalmn5o2r'
+  const BLESSED_EUROVISION_HELL_THREAD =
+    'at://did:plc:by3jhwdqgbtrcc7q4tkkv3cf/app.bsky.feed.post/3jvmzalmn5o2r'
   for (const relation of ancestors) {
-    if (relation.depth < 5 || obj.post.replyRoot === BLESSED_HELL_THREAD || obj.post.replyRoot === BLESSED_EUROVISION_HELL_THREAD) {
+    if (
+      relation.depth < 5 ||
+      obj.post.replyRoot === BLESSED_HELL_THREAD ||
+      obj.post.replyRoot === BLESSED_EUROVISION_HELL_THREAD
+    ) {
       const ancestorUri = new AtUri(relation.ancestorUri)
       maybeNotify({
         userDid: ancestorUri.host,
