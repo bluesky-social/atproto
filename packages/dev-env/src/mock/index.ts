@@ -263,7 +263,12 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
   })
   const fgAliceRes = await alice.agent.api.app.bsky.feed.generator.create(
     { repo: alice.did, rkey: 'alice-favs' },
-    { did: fg1.did, createdAt: date.next().value },
+    {
+      did: fg1.did,
+      displayName: 'alices feed',
+      description: 'all my fav stuff',
+      createdAt: date.next().value,
+    },
   )
 
   await alice.agent.api.app.bsky.feed.post.create(
