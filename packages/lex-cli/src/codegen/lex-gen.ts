@@ -16,9 +16,9 @@ import {
   LexIpldType,
   LexXrpcParametersProperty,
   LexRef,
+  PROPERTY_VALID_REF_TYPES,
 } from '@atproto/lexicon'
 import { toCamelCase, toTitleCase, toScreamingSnakeCase } from './util'
-import { PROPERTY_VALID_REF_TYPES } from '@atproto/lexicon/src/validators/xrpc'
 
 interface Commentable<T> {
   addJsDoc: ({ description }: { description: string }) => T

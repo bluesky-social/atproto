@@ -11,7 +11,6 @@ import * as PrimitiveValidators from './primitives'
 import { array } from './complex'
 import { validateOneOf } from '../util'
 
-// Where should this go?
 export const PROPERTY_VALID_REF_TYPES: Array<LexUserType['type']> = [
   'string',
   'integer',

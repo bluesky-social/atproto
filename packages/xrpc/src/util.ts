@@ -4,9 +4,9 @@ import {
   LexXrpcParametersProperty,
   LexXrpcProcedure,
   LexXrpcQuery,
+  PROPERTY_VALID_REF_TYPES,
   stringifyLex,
 } from '@atproto/lexicon'
-import { PROPERTY_VALID_REF_TYPES } from '@atproto/lexicon/src/validators/xrpc'
 import {
   CallOptions,
   Headers,
