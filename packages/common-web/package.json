@@ -1,7 +1,7 @@
 {
   "name": "@atproto/common-web",
   "version": "0.1.0",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -24,6 +24,7 @@
     "postpublish": "npm run update-main-to-src"
   },
   "dependencies": {
+    "grapheme-splitter": "^1.0.4",
     "multiformats": "^9.6.4",
     "uint8arrays": "3.0.0",
     "zod": "^3.21.4"
