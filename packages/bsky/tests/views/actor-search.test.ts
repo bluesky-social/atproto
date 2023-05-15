@@ -2,7 +2,7 @@ import AtpAgent from '@atproto/api'
 import { wait } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { adminAuth, forSnapshot, paginateAll, stripViewer } from '../_util'
+import { forSnapshot, paginateAll, stripViewer } from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
 
@@ -229,7 +229,7 @@ describe('pds actor search views', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: adminAuth() },
+        headers: network.pds.adminAuthHeaders(),
       },
     )
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(

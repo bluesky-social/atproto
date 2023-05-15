@@ -1,11 +1,6 @@
 import AtpAgent from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
-import {
-  adminAuth,
-  forSnapshot,
-  paginateAll,
-  stripViewerFromPost,
-} from '../_util'
+import { forSnapshot, paginateAll, stripViewerFromPost } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
@@ -164,7 +159,7 @@ describe('pds author feed views', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
 
@@ -184,7 +179,7 @@ describe('pds author feed views', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: adminAuth() },
+        headers: network.pds.adminAuthHeaders(),
       },
     )
   })
@@ -213,7 +208,7 @@ describe('pds author feed views', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
 
@@ -234,7 +229,7 @@ describe('pds author feed views', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: adminAuth() },
+        headers: network.pds.adminAuthHeaders(),
       },
     )
   })

@@ -1,6 +1,7 @@
 import { Kysely } from 'kysely'
 import * as userAccount from './tables/user-account'
 import * as userState from './tables/user-state'
+import * as userPref from './tables/user-pref'
 import * as didHandle from './tables/did-handle'
 import * as repoRoot from './tables/repo-root'
 import * as didCache from './tables/did-cache'
@@ -29,6 +30,7 @@ export type DatabaseSchemaType = appView.DatabaseSchemaType &
   appMigration.PartialDB &
   userAccount.PartialDB &
   userState.PartialDB &
+  userPref.PartialDB &
   didHandle.PartialDB &
   refreshToken.PartialDB &
   appPassword.PartialDB &

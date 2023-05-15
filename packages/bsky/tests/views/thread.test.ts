@@ -2,7 +2,7 @@ import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { Database } from '../../src'
-import { adminAuth, forSnapshot, stripViewerFromThread } from '../_util'
+import { forSnapshot, stripViewerFromThread } from '../_util'
 import { RecordRef, SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import threadSeed, { walk, item, Item } from '../seeds/thread'
@@ -216,7 +216,7 @@ describe('pds thread views', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
 
@@ -239,7 +239,7 @@ describe('pds thread views', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -258,7 +258,7 @@ describe('pds thread views', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
 
@@ -279,7 +279,7 @@ describe('pds thread views', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -298,7 +298,7 @@ describe('pds thread views', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
 
@@ -319,7 +319,7 @@ describe('pds thread views', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -340,7 +340,7 @@ describe('pds thread views', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
 
@@ -362,7 +362,7 @@ describe('pds thread views', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -389,7 +389,7 @@ describe('pds thread views', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
 
@@ -410,7 +410,7 @@ describe('pds thread views', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -438,7 +438,7 @@ describe('pds thread views', () => {
             },
             {
               encoding: 'application/json',
-              headers: { authorization: adminAuth() },
+              headers: network.pds.adminAuthHeaders(),
             },
           ),
         ),
@@ -463,7 +463,7 @@ describe('pds thread views', () => {
             },
             {
               encoding: 'application/json',
-              headers: { authorization: adminAuth() },
+              headers: network.pds.adminAuthHeaders(),
             },
           ),
         ),

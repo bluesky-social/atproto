@@ -86,6 +86,31 @@
         "following": {"type": "string", "format": "at-uri"},
         "followedBy": {"type": "string", "format": "at-uri"}
       }
+    },
+    "preferences": {
+      "type": "array",
+      "items": {
+        "type": "union",
+        "refs": [
+          "#adultContentPref",
+          "#contentLabelPref"
+        ]
+      }
+    },
+    "adultContentPref": {
+      "type": "object",
+      "required": ["enabled"],
+      "properties": {
+        "enabled": {"type": "boolean", "default": false}
+      }
+    },
+    "contentLabelPref": {
+      "type": "object",
+      "required": ["label", "visibility"],
+      "properties": {
+        "label": {"type": "string"},
+        "visibility": {"type": "string", "knownValues": ["show", "warn", "hide"]}
+      }
     }
   }
 }

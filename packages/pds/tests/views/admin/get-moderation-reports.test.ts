@@ -157,6 +157,15 @@ describe('pds admin get moderation reports view', () => {
     expect(forSnapshot(unresolved.data.reports)).toMatchSnapshot()
   })
 
+  it('gets all moderation reports by active resolution action type.', async () => {
+    const reportsWithTakedown =
+      await agent.api.com.atproto.admin.getModerationReports(
+        { actionType: TAKEDOWN },
+        { headers: { authorization: adminAuth() } },
+      )
+    expect(forSnapshot(reportsWithTakedown.data.reports)).toMatchSnapshot()
+  })
+
   it('paginates.', async () => {
     const results = (results) => results.flatMap((res) => res.reports)
     const paginator = async (cursor?: string) => {

@@ -2,7 +2,7 @@ import fs from 'fs/promises'
 import AtpAgent from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { adminAuth, forSnapshot, stripViewer } from '../_util'
+import { forSnapshot, stripViewer } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -185,7 +185,7 @@ describe('pds profile views', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     const promise = agent.api.app.bsky.actor.getProfile(
@@ -204,7 +204,7 @@ describe('pds profile views', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: adminAuth() },
+        headers: network.pds.adminAuthHeaders(),
       },
     )
   })

@@ -23,6 +23,7 @@ export class TestNetworkNoAppView {
       plcUrl: plc.url,
       ...params.pds,
     })
+
     mockNetworkUtilities(pds)
 
     return new TestNetworkNoAppView(plc, pds)

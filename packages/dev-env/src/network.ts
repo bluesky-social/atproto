@@ -1,13 +1,13 @@
 import assert from 'assert'
 import getPort from 'get-port'
 import { wait } from '@atproto/common-web'
+import { createServiceJwt } from '@atproto/xrpc-server'
 import { TestServerParams } from './types'
 import { TestPlc } from './plc'
 import { TestPds } from './pds'
 import { TestBsky } from './bsky'
 import { mockNetworkUtilities } from './util'
 import { TestNetworkNoAppView } from './network-no-appview'
-import { createServiceJwt } from '@atproto/xrpc-server'
 
 export class TestNetwork extends TestNetworkNoAppView {
   constructor(public plc: TestPlc, public pds: TestPds, public bsky: TestBsky) {
@@ -23,6 +23,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
 
     const plc = await TestPlc.create(params.plc ?? {})
+
     const bskyPort = params.bsky?.port ?? (await getPort())
     const pdsPort = params.pds?.port ?? (await getPort())
     const bsky = await TestBsky.create({

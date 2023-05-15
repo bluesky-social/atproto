@@ -1,24 +1,13 @@
 import { AtUri } from '@atproto/uri'
 import { lexToJson } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
-import * as uint8arrays from 'uint8arrays'
 import {
   FeedViewPost,
   PostView,
+  isPostView,
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
-
-// for pds
-export const adminAuth = () => {
-  return (
-    'Basic ' +
-    uint8arrays.toString(
-      uint8arrays.fromString('admin:admin-pass', 'utf8'),
-      'base64pad',
-    )
-  )
-}
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
@@ -163,7 +152,10 @@ export const stripViewer = <T extends { viewer?: Record<string, unknown> }>(
 }
 
 // @NOTE mutates
-export const stripViewerFromPost = (post: PostView): PostView => {
+export const stripViewerFromPost = (post: unknown): PostView => {
+  if (!isPostView(post)) {
+    throw new Error('Expected post view')
+  }
   post.author = stripViewer(post.author)
   const recordEmbed =
     post.embed && isViewRecord(post.embed.record)

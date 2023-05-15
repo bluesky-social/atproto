@@ -1,7 +1,7 @@
 import AtpAgent from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { adminAuth, forSnapshot, getOriginator, paginateAll } from '../_util'
+import { forSnapshot, getOriginator, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { FeedAlgorithm } from '../../src/api/app/bsky/util/feed'
@@ -172,7 +172,7 @@ describe('timeline views', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         ),
       ),
@@ -196,7 +196,7 @@ describe('timeline views', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         ),
       ),
@@ -221,7 +221,7 @@ describe('timeline views', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         ),
       ),
@@ -245,7 +245,7 @@ describe('timeline views', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         ),
       ),

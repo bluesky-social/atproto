@@ -1,11 +1,12 @@
+import getPort from 'get-port'
+import * as ui8 from 'uint8arrays'
 import * as pds from '@atproto/pds'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { MessageDispatcher } from '@atproto/pds/src/event-stream/message-queue'
 import { AtpAgent } from '@atproto/api'
 import { Client as PlcClient } from '@did-plc/lib'
-import getPort from 'get-port'
-import { PdsConfig } from './types'
 import { DAY, HOUR } from '@atproto/common-web'
+import { PdsConfig } from './types'
 
 export class TestPds {
   constructor(
@@ -37,7 +38,7 @@ export class TestPds {
       scheme: 'http',
       port,
       hostname: 'localhost',
-      serverDid: serverDid,
+      serverDid,
       recoveryKey: recoveryKey.did(),
       adminPassword: 'admin-pass',
       inviteRequired: false,
@@ -93,6 +94,22 @@ export class TestPds {
 
   getClient(): AtpAgent {
     return new AtpAgent({ service: `http://localhost:${this.port}` })
+  }
+
+  adminAuth(): string {
+    return (
+      'Basic ' +
+      ui8.toString(
+        ui8.fromString(`admin:${this.ctx.cfg.adminPassword}`, 'utf8'),
+        'base64pad',
+      )
+    )
+  }
+
+  adminAuthHeaders() {
+    return {
+      authorization: this.adminAuth(),
+    }
   }
 
   async close() {
