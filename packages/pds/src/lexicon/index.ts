@@ -74,9 +74,11 @@ import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestio
 import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
+import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator'
 import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
+import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
@@ -800,6 +802,16 @@ export class FeedNS {
     this._server = server
   }
 
+  describeFeedGenerator<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyFeedDescribeFeedGenerator.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.describeFeedGenerator' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getActorFeeds<AV extends AuthVerifier>(
     cfg: ConfigOf<AV, AppBskyFeedGetActorFeeds.Handler<ExtractAuth<AV>>>,
   ) {
@@ -818,6 +830,13 @@ export class FeedNS {
     cfg: ConfigOf<AV, AppBskyFeedGetFeed.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.feed.getFeed' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getFeedGenerator<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedGetFeedGenerator.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.getFeedGenerator' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

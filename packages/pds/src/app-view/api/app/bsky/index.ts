@@ -3,6 +3,7 @@ import AppContext from '../../../../context'
 import getTimeline from './feed/getTimeline'
 import getActorFeeds from './feed/getActorFeeds'
 import getAuthorFeed from './feed/getAuthorFeed'
+import getFeedGenerator from './feed/getFeedGenerator'
 import getFeed from './feed/getFeed'
 import getLikes from './feed/getLikes'
 import getPostThread from './feed/getPostThread'
@@ -26,6 +27,7 @@ export default function (server: Server, ctx: AppContext) {
   getTimeline(server, ctx)
   getActorFeeds(server, ctx)
   getAuthorFeed(server, ctx)
+  getFeedGenerator(server, ctx)
   getFeed(server, ctx)
   getLikes(server, ctx)
   getPostThread(server, ctx)

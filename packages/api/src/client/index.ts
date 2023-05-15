@@ -84,10 +84,12 @@ import * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 import * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 import * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
 import * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
+import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator'
 import * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
 import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
+import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
@@ -199,10 +201,12 @@ export * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 export * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 export * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
 export * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
+export * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator'
 export * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
 export * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 export * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 export * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
+export * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
 export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
@@ -1192,6 +1196,17 @@ export class FeedNS {
     this.repost = new RepostRecord(service)
   }
 
+  describeFeedGenerator(
+    params?: AppBskyFeedDescribeFeedGenerator.QueryParams,
+    opts?: AppBskyFeedDescribeFeedGenerator.CallOptions,
+  ): Promise<AppBskyFeedDescribeFeedGenerator.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.describeFeedGenerator', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedDescribeFeedGenerator.toKnownErr(e)
+      })
+  }
+
   getActorFeeds(
     params?: AppBskyFeedGetActorFeeds.QueryParams,
     opts?: AppBskyFeedGetActorFeeds.CallOptions,
@@ -1222,6 +1237,17 @@ export class FeedNS {
       .call('app.bsky.feed.getFeed', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetFeed.toKnownErr(e)
+      })
+  }
+
+  getFeedGenerator(
+    params?: AppBskyFeedGetFeedGenerator.QueryParams,
+    opts?: AppBskyFeedGetFeedGenerator.CallOptions,
+  ): Promise<AppBskyFeedGetFeedGenerator.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getFeedGenerator', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetFeedGenerator.toKnownErr(e)
       })
   }
 

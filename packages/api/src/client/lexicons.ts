@@ -4379,6 +4379,52 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedDescribeFeedGenerator: {
+    lexicon: 1,
+    id: 'app.bsky.feed.describeFeedGenerator',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns information about a given feed generator including TOS & offered feed URIs',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'feeds'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              feeds: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'at-uri',
+                },
+              },
+              links: {
+                type: 'ref',
+                ref: 'lex:app.bsky.feed.describeFeedGenerator#links',
+              },
+            },
+          },
+        },
+      },
+      links: {
+        type: 'object',
+        properties: {
+          privacyPolicy: {
+            type: 'string',
+          },
+          termsOfService: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedGenerator: {
     lexicon: 1,
     id: 'app.bsky.feed.generator',
@@ -4581,6 +4627,45 @@ export const schemaDict = {
             name: 'UnknownFeed',
           },
         ],
+      },
+    },
+  },
+  AppBskyFeedGetFeedGenerator: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getFeedGenerator',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Retrieve a list of feeds created by a given actor',
+        parameters: {
+          type: 'params',
+          required: ['feed'],
+          properties: {
+            feed: {
+              type: 'string',
+              format: 'at-uri',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['view', 'isOnline', 'isValid'],
+            properties: {
+              view: {
+                type: 'ref',
+                ref: 'lex:app.bsky.feed.defs#generatorView',
+              },
+              isOnline: {
+                type: 'boolean',
+              },
+              isValid: {
+                type: 'boolean',
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -6158,10 +6243,12 @@ export const ids = {
   AppBskyEmbedRecord: 'app.bsky.embed.record',
   AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
   AppBskyFeedDefs: 'app.bsky.feed.defs',
+  AppBskyFeedDescribeFeedGenerator: 'app.bsky.feed.describeFeedGenerator',
   AppBskyFeedGenerator: 'app.bsky.feed.generator',
   AppBskyFeedGetActorFeeds: 'app.bsky.feed.getActorFeeds',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetFeed: 'app.bsky.feed.getFeed',
+  AppBskyFeedGetFeedGenerator: 'app.bsky.feed.getFeedGenerator',
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
