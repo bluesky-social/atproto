@@ -14,16 +14,17 @@ export class TestNetworkNoAppView {
       params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
 
     const plc = await TestPlc.create(params.plc ?? {})
+    await plc.server.start()
+
     const pds = await TestPds.create({
       dbPostgresUrl,
       dbPostgresSchema,
       plcUrl: plc.url,
       ...params.pds,
     })
-    mockNetworkUtilities(pds)
-
-    await plc.server.start()
     await pds.server.start()
+
+    mockNetworkUtilities(pds)
 
     return new TestNetworkNoAppView(plc, pds)
   }
