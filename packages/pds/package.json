@@ -1,7 +1,12 @@
 {
   "name": "@atproto/pds",
-  "version": "0.1.4",
+  "version": "0.1.8",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto.git",
+    "directory": "packages/pds"
+  },
   "main": "src/index.ts",
   "bin": "dist/bin.ts",
   "scripts": {
@@ -9,8 +14,8 @@
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
     "start": "node dist/bin.js",
-    "test": "jest",
-    "test:pg": "../pg/with-test-db.sh yarn test",
+    "test": "../pg/with-test-db.sh jest",
+    "test:sqlite": "jest --testPathIgnorePatterns /tests/proxied/*",
     "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "jest --updateSnapshot",
     "prettier": "prettier --check src/",

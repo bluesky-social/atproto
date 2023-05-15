@@ -16,7 +16,7 @@ describe('blob resolver', () => {
 
   beforeAll(async () => {
     testEnv = await runTestEnv({
-      dbPostgresSchema: 'blob_resolver',
+      dbPostgresSchema: 'bsky_blob_resolver',
     })
     const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     const sc = new SeedClient(pdsAgent)
@@ -31,15 +31,20 @@ describe('blob resolver', () => {
   })
 
   afterAll(async () => {
-    await testEnv?.close()
+    await testEnv.close()
   })
 
   it('resolves blob with good signature check.', async () => {
-    const { data, status } = await client.get(
+    const { data, status, headers } = await client.get(
       `/blob/${fileDid}/${fileCid.toString()}`,
       { responseType: 'arraybuffer' },
     )
     expect(status).toEqual(200)
+    expect(headers['content-type']).toEqual('image/jpeg')
+    expect(headers['content-security-policy']).toEqual(
+      `default-src 'none'; sandbox`,
+    )
+    expect(headers['x-content-type-options']).toEqual('nosniff')
     await expect(verifyCidForBytes(fileCid, data)).resolves.toBeUndefined()
   })
 

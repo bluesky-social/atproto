@@ -131,7 +131,7 @@ Array [
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
+          "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
         "replyCount": 2,
@@ -181,6 +181,7 @@ Array [
                 },
                 "cid": "cids(7)",
                 "indexedAt": "1970-01-01T00:00:00.000Z",
+                "labels": Array [],
                 "uri": "record(8)",
                 "value": Object {
                   "$type": "app.bsky.feed.post",
@@ -227,6 +228,7 @@ Array [
             },
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
+          "labels": Array [],
           "uri": "record(6)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -302,7 +304,7 @@ Array [
       "likeCount": 3,
       "record": Object {
         "$type": "app.bsky.feed.post",
-        "createdAt": "1970-01-01T00:00:00.000Z",
+        "createdAt": "1970-01-01T00:00:00.000000Z",
         "text": "again",
       },
       "replyCount": 2,
@@ -437,7 +439,7 @@ Array [
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
+          "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
         "replyCount": 2,
@@ -465,7 +467,7 @@ Array [
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
+          "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
         "replyCount": 2,
@@ -493,7 +495,7 @@ Array [
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
-        "createdAt": "1970-01-01T00:00:00.000Z",
+        "createdAt": "1970-01-01T00:00:00.000+00:00",
         "text": "bobby boy here",
       },
       "replyCount": 0,
@@ -585,6 +587,7 @@ Array [
                   },
                   "cid": "cids(4)",
                   "indexedAt": "1970-01-01T00:00:00.000Z",
+                  "labels": Array [],
                   "uri": "record(2)",
                   "value": Object {
                     "$type": "app.bsky.feed.post",
@@ -596,6 +599,7 @@ Array [
             },
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
+          "labels": Array [],
           "uri": "record(1)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -677,7 +681,7 @@ Array [
       },
     },
     "reason": Object {
-      "$type": "app.bsky.feed.feedViewPost#reasonRepost",
+      "$type": "app.bsky.feed.defs#reasonRepost",
       "by": Object {
         "did": "user(2)",
         "handle": "carol.test",
@@ -738,7 +742,7 @@ Array [
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
+          "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
         "replyCount": 2,
@@ -766,7 +770,7 @@ Array [
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
+          "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
         "replyCount": 2,
@@ -820,6 +824,7 @@ Array [
             "cid": "cids(4)",
             "embeds": Array [],
             "indexedAt": "1970-01-01T00:00:00.000Z",
+            "labels": Array [],
             "uri": "record(2)",
             "value": Object {
               "$type": "app.bsky.feed.post",
@@ -902,7 +907,7 @@ Array [
       "likeCount": 3,
       "record": Object {
         "$type": "app.bsky.feed.post",
-        "createdAt": "1970-01-01T00:00:00.000Z",
+        "createdAt": "1970-01-01T00:00:00.000000Z",
         "text": "again",
       },
       "replyCount": 2,
@@ -914,7 +919,7 @@ Array [
       },
     },
     "reason": Object {
-      "$type": "app.bsky.feed.feedViewPost#reasonRepost",
+      "$type": "app.bsky.feed.defs#reasonRepost",
       "by": Object {
         "did": "user(2)",
         "handle": "dan.test",
@@ -977,6 +982,7 @@ Array [
                   },
                   "cid": "cids(6)",
                   "indexedAt": "1970-01-01T00:00:00.000Z",
+                  "labels": Array [],
                   "uri": "record(6)",
                   "value": Object {
                     "$type": "app.bsky.feed.post",
@@ -988,6 +994,7 @@ Array [
             },
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
+          "labels": Array [],
           "uri": "record(5)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -1229,7 +1236,7 @@ Array [
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
+          "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
         "replyCount": 2,
@@ -1279,6 +1286,7 @@ Array [
                 },
                 "cid": "cids(7)",
                 "indexedAt": "1970-01-01T00:00:00.000Z",
+                "labels": Array [],
                 "uri": "record(9)",
                 "value": Object {
                   "$type": "app.bsky.feed.post",
@@ -1325,6 +1333,7 @@ Array [
             },
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
+          "labels": Array [],
           "uri": "record(8)",
           "value": Object {
             "$type": "app.bsky.feed.post",
@@ -1405,7 +1414,7 @@ Array [
       "likeCount": 3,
       "record": Object {
         "$type": "app.bsky.feed.post",
-        "createdAt": "1970-01-01T00:00:00.000Z",
+        "createdAt": "1970-01-01T00:00:00.000000Z",
         "text": "again",
       },
       "replyCount": 2,

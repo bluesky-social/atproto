@@ -39,6 +39,8 @@ export const createRouter = (ctx: AppContext): express.Router => {
       // closing chunk) if the bytes don't match the expected cid.
       res.statusCode = 200
       res.setHeader('content-type', verifiedImage.contentType)
+      res.setHeader('x-content-type-options', 'nosniff')
+      res.setHeader('content-security-policy', `default-src 'none'; sandbox`)
       pipeline(verifiedImage.stream, res, (err) => {
         if (err) {
           log.warn(

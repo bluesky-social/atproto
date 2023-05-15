@@ -3,10 +3,15 @@ import {
   ACKNOWLEDGE,
   FLAG,
   TAKEDOWN,
+  ESCALATE,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import {
   REASONOTHER,
   REASONSPAM,
+  REASONMISLEADING,
+  REASONRUDE,
+  REASONSEXUAL,
+  REASONVIOLATION,
 } from '../../lexicon/types/com/atproto/moderation/defs'
 
 export const actionTableName = 'moderation_action'
@@ -16,7 +21,7 @@ export const reportResolutionTableName = 'moderation_report_resolution'
 
 export interface ModerationAction {
   id: Generated<number>
-  action: typeof TAKEDOWN | typeof FLAG | typeof ACKNOWLEDGE
+  action: typeof TAKEDOWN | typeof FLAG | typeof ACKNOWLEDGE | typeof ESCALATE
   subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
   subjectDid: string
   subjectUri: string | null
@@ -43,7 +48,13 @@ export interface ModerationReport {
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
-  reasonType: typeof REASONSPAM | typeof REASONOTHER
+  reasonType:
+    | typeof REASONSPAM
+    | typeof REASONOTHER
+    | typeof REASONMISLEADING
+    | typeof REASONRUDE
+    | typeof REASONSEXUAL
+    | typeof REASONVIOLATION
   reason: string | null
   reportedByDid: string
   createdAt: string

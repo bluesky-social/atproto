@@ -14,7 +14,7 @@
       "type": "object",
       "required":  ["record"],
       "properties": {
-        "record": {"type": "union", "refs": ["#viewRecord", "#viewNotFound"]}
+        "record": {"type": "union", "refs": ["#viewRecord", "#viewNotFound", "#viewBlocked"]}
       }
     },
     "viewRecord": {
@@ -25,6 +25,10 @@
         "cid": {"type": "string", "format": "cid"},
         "author": {"type": "ref", "ref": "app.bsky.actor.defs#profileViewBasic"},
         "value": {"type": "unknown"},
+        "labels": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "com.atproto.label.defs#label"}
+        },
         "embeds": {
           "type": "array",
           "items": {
@@ -41,6 +45,13 @@
       }
     },
     "viewNotFound": {
+      "type": "object",
+      "required":  ["uri"],
+      "properties": {
+        "uri": {"type": "string", "format": "at-uri"}
+      }
+    },
+    "viewBlocked": {
       "type": "object",
       "required":  ["uri"],
       "properties": {

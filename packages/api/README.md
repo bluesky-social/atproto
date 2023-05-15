@@ -57,6 +57,7 @@ await agent.getTimeline(params, opts)
 await agent.getAuthorFeed(params, opts)
 await agent.getPostThread(params, opts)
 await agent.getPost(params)
+await agent.getPosts(params, opts)
 await agent.getLikes(params, opts)
 await agent.getRepostedBy(params, opts)
 await agent.post(record)
@@ -77,6 +78,7 @@ await agent.deleteFollow(followUri)
 await agent.getProfile(params, opts)
 await agent.upsertProfile(updateFn)
 await agent.getProfiles(params, opts)
+await agent.getSuggestions(params, opts)
 await agent.searchActors(params, opts)
 await agent.searchActorsTypeahead(params, opts)
 await agent.mute(did)
@@ -174,7 +176,7 @@ const res1 = await agent.com.atproto.repo.createRecord(
     record: {
       $type: 'app.bsky.feed.post',
       text: 'Hello, world!',
-      createdAt: (new Date()).toISOString()
+      createdAt: new Date().toISOString()
     }
   }
 )
@@ -182,7 +184,7 @@ const res2 = await agent.com.atproto.repo.listRecords({repo: alice.did, collecti
 
 const res3 = await agent.app.bsky.feed.post.create({repo: alice.did}, {
   text: 'Hello, world!',
-  createdAt: (new Date()).toISOString()
+  createdAt: new Date().toISOString()
 })
 const res4 = await agent.app.bsky.feed.post.list({repo: alice.did})
 ```

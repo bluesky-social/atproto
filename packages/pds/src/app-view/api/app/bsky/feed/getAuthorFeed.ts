@@ -3,6 +3,7 @@ import { FeedKeyset, composeFeed } from '../util/feed'
 import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
@@ -13,7 +14,25 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.db
       const { ref } = db.dynamic
 
+      // first verify there is not a block between requester & subject
+      const blocks = await ctx.services.appView
+        .graph(ctx.db)
+        .getBlocks(requester, actor)
+      if (blocks.blocking) {
+        throw new InvalidRequestError(
+          `Requester has blocked actor: ${actor}`,
+          'BlockedActor',
+        )
+      } else if (blocks.blockedBy) {
+        throw new InvalidRequestError(
+          `Requester is blocked by actor: $${actor}`,
+          'BlockedByActor',
+        )
+      }
+
+      const accountService = ctx.services.account(ctx.db)
       const feedService = ctx.services.appView.feed(ctx.db)
+      const graphService = ctx.services.appView.graph(ctx.db)
       const labelService = ctx.services.appView.label(ctx.db)
 
       const userLookupCol = actor.startsWith('did:')
@@ -24,20 +43,19 @@ export default function (server: Server, ctx: AppContext) {
         .select('did')
         .where(userLookupCol, '=', actor)
         .limit(1)
-      const mutedDidsQb = db
-        .selectFrom('mute')
-        .select('did')
-        .where('mutedByDid', '=', requester)
 
       let feedItemsQb = feedService
         .selectFeedItemQb()
         .where('originatorDid', '=', actorDidQb)
-        .where((qb) => {
+        .where((qb) =>
           // Hide reposts of muted content
-          return qb
-            .where('type', '!=', 'repost')
-            .orWhere('post.creator', 'not in', mutedDidsQb)
-        })
+          qb
+            .where('type', '=', 'post')
+            .orWhereNotExists(
+              accountService.mutedQb(requester, [ref('post.creator')]),
+            ),
+        )
+        .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
 
       const keyset = new FeedKeyset(
         ref('feed_item.sortAt'),

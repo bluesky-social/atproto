@@ -19,6 +19,7 @@ Object {
   ],
   "postsCount": 2,
   "viewer": Object {
+    "blockedBy": false,
     "muted": false,
   },
 }
@@ -38,6 +39,7 @@ Array [
     "labels": Array [],
     "postsCount": 4,
     "viewer": Object {
+      "blockedBy": false,
       "followedBy": "record(1)",
       "following": "record(0)",
       "muted": false,
@@ -55,6 +57,7 @@ Array [
     "labels": Array [],
     "postsCount": 3,
     "viewer": Object {
+      "blockedBy": false,
       "muted": false,
     },
   },
@@ -66,6 +69,7 @@ Array [
     "labels": Array [],
     "postsCount": 2,
     "viewer": Object {
+      "blockedBy": false,
       "following": "record(2)",
       "muted": false,
     },
@@ -86,6 +90,7 @@ Array [
     ],
     "postsCount": 2,
     "viewer": Object {
+      "blockedBy": false,
       "followedBy": "record(3)",
       "muted": false,
     },
@@ -106,6 +111,7 @@ Object {
   "labels": Array [],
   "postsCount": 4,
   "viewer": Object {
+    "blockedBy": false,
     "followedBy": "record(1)",
     "following": "record(0)",
     "muted": false,
@@ -130,6 +136,7 @@ Object {
   ],
   "postsCount": 2,
   "viewer": Object {
+    "blockedBy": false,
     "followedBy": "record(0)",
     "muted": false,
   },
@@ -149,6 +156,7 @@ Object {
   "labels": Array [],
   "postsCount": 4,
   "viewer": Object {
+    "blockedBy": false,
     "muted": false,
   },
 }
@@ -168,6 +176,7 @@ Object {
   "labels": Array [],
   "postsCount": 4,
   "viewer": Object {
+    "blockedBy": false,
     "muted": false,
   },
 }
@@ -183,6 +192,7 @@ Object {
   "labels": Array [],
   "postsCount": 4,
   "viewer": Object {
+    "blockedBy": false,
     "muted": false,
   },
 }
@@ -201,6 +211,7 @@ Object {
   "labels": Array [],
   "postsCount": 4,
   "viewer": Object {
+    "blockedBy": false,
     "muted": false,
   },
 }

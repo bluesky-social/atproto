@@ -1,4 +1,4 @@
-import { Selectable } from 'kysely'
+import { Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -78,10 +78,11 @@ export class ModerationService {
   async getReports(opts: {
     subject?: string
     resolved?: boolean
+    actionType?: string
     limit: number
     cursor?: string
   }): Promise<ModerationReportRow[]> {
-    const { subject, resolved, limit, cursor } = opts
+    const { subject, resolved, actionType, limit, cursor } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_report')
     if (subject) {
@@ -103,6 +104,24 @@ export class ModerationService {
       builder = resolved
         ? builder.whereExists(resolutionsQuery)
         : builder.whereNotExists(resolutionsQuery)
+    }
+    if (actionType !== undefined) {
+      const resolutionActionsQuery = this.db.db
+        .selectFrom('moderation_report_resolution')
+        .innerJoin(
+          'moderation_action',
+          'moderation_action.id',
+          'moderation_report_resolution.actionId',
+        )
+        .whereRef(
+          'moderation_report_resolution.reportId',
+          '=',
+          ref('moderation_report.id'),
+        )
+        .where('moderation_action.action', '=', sql`${actionType}`)
+        .where('moderation_action.reversedAt', 'is', null)
+        .selectAll()
+      builder = builder.whereExists(resolutionActionsQuery)
     }
     if (cursor) {
       const cursorNumeric = parseInt(cursor, 10)

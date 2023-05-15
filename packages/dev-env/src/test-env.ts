@@ -3,12 +3,15 @@ import { AddressInfo } from 'net'
 import * as crypto from '@atproto/crypto'
 import * as pds from '@atproto/pds'
 import * as plc from '@did-plc/server'
+import { Client as PlcClient } from '@did-plc/lib'
 import * as bsky from '@atproto/bsky'
 import { AtpAgent } from '@atproto/api'
 import { DidResolver } from '@atproto/did-resolver'
 import { defaultFetchHandler } from '@atproto/xrpc'
 import { MessageDispatcher } from '@atproto/pds/src/event-stream/message-queue'
 import { RepoSubscription } from '@atproto/bsky/src/subscription/repo'
+import getPort from 'get-port'
+import { DAY, HOUR, wait } from '@atproto/common-web'
 
 export type CloseFn = () => Promise<void>
 
@@ -70,16 +73,20 @@ export const runTestEnv = async (
     params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
 
   const plc = await runPlc({})
-  const pds = await runPds({
-    dbPostgresUrl,
-    dbPostgresSchema,
-    plcUrl: plc.url,
-  })
+  const pdsPort = await getPort()
   const bsky = await runBsky({
     plcUrl: plc.url,
-    repoProvider: `ws://localhost:${pds.port}`,
-    dbPostgresSchema,
+    repoProvider: `ws://localhost:${pdsPort}`,
+    dbPostgresSchema: `appview_${dbPostgresSchema}`,
     dbPostgresUrl,
+  })
+  const pds = await runPds({
+    port: pdsPort,
+    dbPostgresUrl,
+    dbPostgresSchema,
+    plcUrl: plc.url,
+    bskyAppViewEndpoint: `http://localhost:${bsky.port}`,
+    bskyAppViewDid: bsky.ctx.cfg.serverDid,
   })
   mockNetworkUtilities(pds)
 
@@ -112,14 +119,28 @@ export const runPlc = async (cfg: PlcConfig): Promise<PlcServerInfo> => {
 }
 
 export const runPds = async (cfg: PdsConfig): Promise<PdsServerInfo> => {
+  const repoSigningKey = await crypto.Secp256k1Keypair.create()
+  const plcRotationKey = await crypto.Secp256k1Keypair.create()
   const recoveryKey = await crypto.Secp256k1Keypair.create()
+
+  const port = cfg.port || (await getPort())
+
+  const plcClient = new PlcClient(cfg.plcUrl)
+  const serverDid = await plcClient.createDid({
+    signingKey: repoSigningKey.did(),
+    rotationKeys: [recoveryKey.did(), plcRotationKey.did()],
+    handle: 'pds.test',
+    pds: `http://localhost:${port}`,
+    signer: plcRotationKey,
+  })
 
   const config = new pds.ServerConfig({
     debugMode: true,
     version: '0.0.0',
     scheme: 'http',
     hostname: 'localhost',
-    serverDid: 'did:fake:donotuse',
+    port,
+    serverDid,
     recoveryKey: recoveryKey.did(),
     adminPassword: 'admin-pass',
     inviteRequired: false,
@@ -138,13 +159,17 @@ export const runPds = async (cfg: PdsConfig): Promise<PdsServerInfo> => {
     repoBackfillLimitMs: 1000 * 60 * 60, // 1hr
     labelerDid: 'did:example:labeler',
     labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
+    ...cfg,
   })
 
   const blobstore = new pds.MemoryBlobStore()
-  const db = pds.Database.memory()
+  const db = config.dbPostgresUrl
+    ? pds.Database.postgres({
+        url: config.dbPostgresUrl,
+        schema: config.dbPostgresSchema,
+      })
+    : pds.Database.memory()
   await db.migrateToLatestOrThrow()
-  const repoSigningKey = await crypto.Secp256k1Keypair.create()
-  const plcRotationKey = await crypto.Secp256k1Keypair.create()
 
   // Disable communication to app view within pds
   MessageDispatcher.prototype.send = async () => {}
@@ -157,8 +182,7 @@ export const runPds = async (cfg: PdsConfig): Promise<PdsServerInfo> => {
     config,
   })
 
-  const listener = await server.start()
-  const port = (listener.address() as AddressInfo).port
+  await server.start()
   const url = `http://localhost:${port}`
   return {
     port,
@@ -171,13 +195,29 @@ export const runPds = async (cfg: PdsConfig): Promise<PdsServerInfo> => {
 }
 
 export const runBsky = async (cfg: BskyConfig): Promise<BskyServerInfo> => {
+  const serviceKeypair = await crypto.Secp256k1Keypair.create()
+  const plcClient = new PlcClient(cfg.plcUrl)
+
+  const port = cfg.port || (await getPort())
+  const serverDid = await plcClient.createDid({
+    signingKey: serviceKeypair.did(),
+    rotationKeys: [serviceKeypair.did()],
+    handle: 'bsky.test',
+    pds: `http://localhost:${port}`,
+    signer: serviceKeypair,
+  })
+
   const config = new bsky.ServerConfig({
     version: '0.0.0',
+    port,
     didPlcUrl: cfg.plcUrl,
     publicUrl: 'https://bsky.public.url',
+    serverDid,
     imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
     imgUriKey:
       'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
+    didCacheStaleTTL: HOUR,
+    didCacheMaxTTL: DAY,
     ...cfg,
     // Each test suite gets its own lock id for the repo subscription
     repoSubLockId: uniqueLockId(),
@@ -204,8 +244,7 @@ export const runBsky = async (cfg: BskyConfig): Promise<BskyServerInfo> => {
   await migrationDb.close()
 
   const server = bsky.BskyAppView.create({ db, config })
-  const listener = await server.start()
-  const port = (listener.address() as AddressInfo).port
+  await server.start()
   const url = `http://localhost:${port}`
   const sub = server.sub
   if (!sub) {
@@ -234,8 +273,8 @@ const uniqueLockId = () => {
 
 export const mockNetworkUtilities = (pds: PdsServerInfo) => {
   // Map pds public url to its local url when resolving from plc
-  const origResolveDid = DidResolver.prototype.resolveDid
-  DidResolver.prototype.resolveDid = async function (did) {
+  const origResolveDid = DidResolver.prototype.resolveDidNoCache
+  DidResolver.prototype.resolveDidNoCache = async function (did) {
     const result = await (origResolveDid.call(this, did) as ReturnType<
       typeof origResolveDid
     >)
@@ -266,4 +305,23 @@ export const mockNetworkUtilities = (pds: PdsServerInfo) => {
       return defaultFetchHandler(httpUri, ...args)
     },
   })
+}
+
+export const processAll = async (server: TestEnvInfo, timeout = 5000) => {
+  const { bsky, pds } = server
+  const sub = bsky.sub
+  if (!sub) return
+  const { db } = pds.ctx.db
+  const start = Date.now()
+  while (Date.now() - start < timeout) {
+    await wait(50)
+    if (!sub) return
+    const state = await sub.getState()
+    const { lastSeq } = await db
+      .selectFrom('repo_seq')
+      .select(db.fn.max('repo_seq.seq').as('lastSeq'))
+      .executeTakeFirstOrThrow()
+    if (state.cursor === lastSeq) return
+  }
+  throw new Error(`Sequence was not processed within ${timeout}ms`)
 }

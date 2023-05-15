@@ -35,6 +35,7 @@ export class Outbox {
     // catch up as much as we can
     if (backfillCursor !== undefined) {
       for await (const evt of this.getBackfill(backfillCursor, backFillTime)) {
+        if (signal?.aborted) return
         this.lastSeen = evt.seq
         yield evt
       }
@@ -81,6 +82,7 @@ export class Outbox {
     while (true) {
       try {
         for await (const evt of this.outBuffer.events()) {
+          if (signal?.aborted) return
           if (evt.seq > this.lastSeen) {
             this.lastSeen = evt.seq
             yield evt
@@ -102,14 +104,14 @@ export class Outbox {
       const evts = await this.sequencer.requestSeqRange({
         earliestTime: backfillTime,
         earliestSeq: this.lastSeen > -1 ? this.lastSeen : backfillCursor,
-        limit: 50,
+        limit: 10,
       })
       for (const evt of evts) {
         yield evt
       }
       // if we're within 50 of the sequencer, we call it good & switch to cutover
       const seqCursor = this.sequencer.lastSeen ?? -1
-      if (seqCursor - this.lastSeen < 50) break
+      if (seqCursor - this.lastSeen < 10) break
       if (evts.length < 1) break
     }
   }

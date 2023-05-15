@@ -10,6 +10,7 @@ import {
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
+import { createServiceJwt } from '@atproto/xrpc-server'
 
 // for pds
 export const adminAuth = () => {
@@ -20,6 +21,15 @@ export const adminAuth = () => {
       'base64pad',
     )
   )
+}
+
+export const appViewHeaders = async (did: string, env: TestEnvInfo) => {
+  const jwt = await createServiceJwt({
+    iss: did,
+    aud: env.bsky.ctx.cfg.serverDid,
+    keypair: env.pds.ctx.repoSigningKey,
+  })
+  return { authorization: `Bearer ${jwt}` }
 }
 
 // Swap out identifiers and dates with stable
@@ -54,7 +64,13 @@ export const forSnapshot = (obj: unknown) => {
       return take(unknown, str)
     }
     if (str.match(/^\d{4}-\d{2}-\d{2}T/)) {
-      return constantDate
+      if (str.match(/\d{6}Z$/)) {
+        return constantDate.replace('Z', '000Z') // e.g. microseconds in record createdAt
+      } else if (str.endsWith('+00:00')) {
+        return constantDate.replace('Z', '+00:00') // e.g. timezone in record createdAt
+      } else {
+        return constantDate
+      }
     }
     if (str.match(/^\d+::bafy/)) {
       return constantKeysetCursor

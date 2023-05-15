@@ -32,8 +32,22 @@ export interface Response {
   data: OutputSchema
 }
 
+export class BlockedActorError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
+export class BlockedByActorError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
+    if (e.error === 'BlockedActor') return new BlockedActorError(e)
+    if (e.error === 'BlockedByActor') return new BlockedByActorError(e)
   }
   return e
 }

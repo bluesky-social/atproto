@@ -1,6 +1,6 @@
 import * as crypto from '@atproto/crypto'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import * as uint8arrays from 'uint8arrays'
+import * as ui8 from 'uint8arrays'
 import express from 'express'
 import * as jwt from 'jsonwebtoken'
 import AppContext from './context'
@@ -167,9 +167,7 @@ export const parseBasicAuth = (
   const b64 = token.slice(BASIC.length)
   let parsed: string[]
   try {
-    parsed = uint8arrays
-      .toString(uint8arrays.fromString(b64, 'base64pad'), 'utf8')
-      .split(':')
+    parsed = ui8.toString(ui8.fromString(b64, 'base64pad'), 'utf8').split(':')
   } catch (err) {
     return null
   }
@@ -252,5 +250,5 @@ export const moderatorVerifier =
   }
 
 export const getRefreshTokenId = () => {
-  return uint8arrays.toString(crypto.randomBytes(32), 'base64')
+  return ui8.toString(crypto.randomBytes(32), 'base64')
 }

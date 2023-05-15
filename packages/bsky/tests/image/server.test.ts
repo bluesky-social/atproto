@@ -16,7 +16,7 @@ describe('image processing server', () => {
 
   beforeAll(async () => {
     testEnv = await runTestEnv({
-      dbPostgresSchema: 'image_processing_server',
+      dbPostgresSchema: 'bsky_image_processing_server',
       bsky: {
         imgUriKey:
           'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',

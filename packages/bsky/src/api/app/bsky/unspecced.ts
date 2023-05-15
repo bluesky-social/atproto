@@ -4,13 +4,12 @@ import { FeedKeyset, composeFeed } from './util/feed'
 import { paginate } from '../../../db/pagination'
 import AppContext from '../../../context'
 import { FeedRow, FeedItemType } from '../../../services/types'
-import { authOptionalVerifier } from '../../auth'
 import { countAll } from '../../../db/util'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getPopular({
-    auth: authOptionalVerifier,
+    auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {
       const { limit, cursor } = params
       const requester = auth.credentials.did

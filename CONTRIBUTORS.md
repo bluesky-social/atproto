@@ -4,4 +4,10 @@ ATProto receives so many contributions that we could never list everyone who des
 
 ### The AT Protocol maintainers give their thanks to:
 
-#### [rmcan](https://github.com/rmcan) Security disclosure, April 2023
+#### [rmcan](https://github.com/rmcan), Security disclosure, April 2023
+
+#### [ianklatzco](https://github.com/ianklatzco), Security disclosure, April 2023
+
+#### lily, Security disclosure, May 2023
+
+#### [april](https://github.com/april), Security disclosure, May 2023

@@ -3,7 +3,7 @@ import TypedEmitter from 'typed-emitter'
 import Database from '../db'
 import { seqLogger as log } from '../logger'
 import { RepoSeqEntry } from '../db/tables/repo-seq'
-import { cborDecode, check } from '@atproto/common'
+import { cborDecode, check, wait } from '@atproto/common'
 import { commitEvt, handleEvt, SeqEvt } from './events'
 
 export * from './events'
@@ -12,7 +12,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   polling = false
   queued = false
 
-  constructor(public db: Database, public lastSeen?: number) {
+  constructor(public db: Database, public lastSeen = 0) {
     super()
     // note: this does not err when surpassed, just prints a warning to stderr
     this.setMaxListeners(100)
@@ -56,18 +56,22 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
   async requestSeqRange(opts: {
     earliestSeq?: number
+    latestSeq?: number
     earliestTime?: string
     limit?: number
   }): Promise<SeqEvt[]> {
-    const { earliestSeq, earliestTime, limit } = opts
+    const { earliestSeq, latestSeq, earliestTime, limit } = opts
 
     let seqQb = this.db.db
       .selectFrom('repo_seq')
       .selectAll()
       .orderBy('seq', 'asc')
-      .where('invalidatedBy', 'is', null)
+      .where('invalidated', '=', 0)
     if (earliestSeq !== undefined) {
       seqQb = seqQb.where('seq', '>', earliestSeq)
+    }
+    if (latestSeq !== undefined) {
+      seqQb = seqQb.where('seq', '<=', latestSeq)
     }
     if (earliestTime !== undefined) {
       seqQb = seqQb.where('sequencedAt', '>=', earliestTime)
@@ -104,13 +108,50 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     return seqEvts
   }
 
+  // polling for new events
+  // because of a race between sequenced times, we need to take into account that some valid events
+  // may have been written at early seq numbers but not yet been commited
+  private async pollAndEmit(opts?: {
+    maxRetries?: number
+    latestSeq?: number
+  }) {
+    const { maxRetries = 0, latestSeq } = opts || {}
+    const evts = await this.requestSeqRange({
+      earliestSeq: this.lastSeen,
+      latestSeq,
+    })
+    const tailEvt = evts.at(-1)?.seq
+    if (!tailEvt) return
+    for (const evt of evts) {
+      // happy path, if the seq # is unbroken, then emit
+      if (evt.seq === this.lastSeen + 1) {
+        this.emit('events', [evt])
+        this.lastSeen = evt.seq
+      } else if (maxRetries < 1) {
+        break
+      }
+    }
+    // if the last event in current window is earlier than or equal to the last event emitted, then there is nothing else for us here
+    if (tailEvt <= this.lastSeen) return
+    // if we're done with retries then bump up our lastSeen to the tail of this window & move on
+    if (maxRetries < 1) {
+      this.lastSeen = Math.max(this.lastSeen, tailEvt)
+      return
+    }
+    // if we did not have an unbroken sequence of evts,
+    // then wait 50ms in the hopes that those transactions clear & retry that exact range
+    // we retry twice (for a total of ~100ms) before moving on
+    // anything still held up will not be emitted on live tail, but will be in backfill
+    await wait(50)
+    return this.pollAndEmit({
+      maxRetries: maxRetries - 1,
+      latestSeq: tailEvt,
+    })
+  }
+
   async pollDb() {
     try {
-      const evts = await this.requestSeqRange({ earliestSeq: this.lastSeen })
-      if (evts.length > 0) {
-        this.lastSeen = evts[evts.length - 1].seq
-        this.emit('events', evts)
-      }
+      await this.pollAndEmit({ maxRetries: 2 })
     } catch (err) {
       log.error({ err, lastSeen: this.lastSeen }, 'sequencer failed to poll db')
     } finally {

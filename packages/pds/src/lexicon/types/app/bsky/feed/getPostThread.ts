@@ -20,6 +20,7 @@ export interface OutputSchema {
   thread:
     | AppBskyFeedDefs.ThreadViewPost
     | AppBskyFeedDefs.NotFoundPost
+    | AppBskyFeedDefs.BlockedPost
     | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }

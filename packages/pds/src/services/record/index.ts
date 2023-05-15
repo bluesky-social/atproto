@@ -227,15 +227,14 @@ export class RecordService {
   }
 
   async deleteForActor(did: string) {
-    this.db.assertTransaction()
-    await this.messageDispatcher.send(this.db, deleteRepo(did))
-    await Promise.all([
-      this.db.db.deleteFrom('record').where('did', '=', did).execute(),
-      this.db.db
-        .deleteFrom('user_notification')
-        .where('author', '=', did)
-        .execute(),
-    ])
+    // Not done in transaction because it would be too long, prone to contention.
+    // Also, this can safely be run multiple times if it fails.
+    await this.messageDispatcher.send(this.db, deleteRepo(did)) // Needs record table
+    await this.db.db.deleteFrom('record').where('did', '=', did).execute()
+    await this.db.db
+      .deleteFrom('user_notification')
+      .where('author', '=', did)
+      .execute()
   }
 
   async removeBacklinksByUri(uri: AtUri) {
@@ -279,10 +278,13 @@ export class RecordService {
 }
 
 // @NOTE in the future this can be replaced with a more generic routine that pulls backlinks based on lex docs.
-// For now we just want to ensure we're tracking links from follows, likes, and reposts.
+// For now we just want to ensure we're tracking links from follows, blocks, likes, and reposts.
 
 function getBacklinks(uri: AtUri, record: unknown): Backlink[] {
-  if (record?.['$type'] === ids.AppBskyGraphFollow) {
+  if (
+    record?.['$type'] === ids.AppBskyGraphFollow ||
+    record?.['$type'] === ids.AppBskyGraphBlock
+  ) {
     const subject = record['subject']
     if (typeof subject !== 'string') {
       return []

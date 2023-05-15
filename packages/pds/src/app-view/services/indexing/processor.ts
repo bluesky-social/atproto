@@ -193,23 +193,40 @@ export class RecordProcessor<T, S> {
 
   async handleNotifs(op: { deleted?: S; inserted?: S }) {
     let notifs: UserNotification[] = []
+    const runOnCommit: ((db: Database) => Promise<void>)[] = []
     if (op.deleted) {
       const forDelete = this.params.notifsForDelete(
         op.deleted,
         op.inserted ?? null,
       )
       if (forDelete.toDelete.length > 0) {
-        await this.db
-          .deleteFrom('user_notification')
-          .where('recordUri', 'in', forDelete.toDelete)
-          .execute()
+        // Notifs can be deleted in background: they are expensive to delete and
+        // listNotifications already excludes notifs with missing records.
+        runOnCommit.push(async (db) => {
+          await db.db
+            .deleteFrom('user_notification')
+            .where('recordUri', 'in', forDelete.toDelete)
+            .execute()
+        })
       }
       notifs = forDelete.notifs
     } else if (op.inserted) {
       notifs = this.params.notifsForInsert(op.inserted)
     }
     if (notifs.length > 0) {
-      await this.db.insertInto('user_notification').values(notifs).execute()
+      runOnCommit.push(async (db) => {
+        await db.db.insertInto('user_notification').values(notifs).execute()
+      })
+    }
+    if (runOnCommit.length) {
+      // Need to ensure notif deletion always happens before creation, otherwise delete may clobber in a race.
+      this.appDb.onCommit(() => {
+        this.backgroundQueue.add(async (db) => {
+          for (const fn of runOnCommit) {
+            await fn(db)
+          }
+        })
+      })
     }
   }
 

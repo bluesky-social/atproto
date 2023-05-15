@@ -10,6 +10,7 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "viewer": Object {
+      "blockedBy": false,
       "muted": true,
     },
   },
@@ -21,6 +22,7 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "viewer": Object {
+      "blockedBy": false,
       "muted": true,
     },
   },
@@ -29,6 +31,7 @@ Array [
     "handle": "nicolas-krajcik10.test",
     "labels": Array [],
     "viewer": Object {
+      "blockedBy": false,
       "muted": true,
     },
   },
@@ -40,6 +43,7 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "viewer": Object {
+      "blockedBy": false,
       "muted": true,
     },
   },
@@ -51,6 +55,7 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "viewer": Object {
+      "blockedBy": false,
       "muted": true,
     },
   },
@@ -62,6 +67,7 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "viewer": Object {
+      "blockedBy": false,
       "muted": true,
     },
   },

@@ -85,7 +85,7 @@ export const ensureValidNsid = (nsid: string): void => {
       throw new InvalidNsidError('NSID domain part too long (max 63 chars)')
     }
     if (l.length > 128 && i + 1 == labels.length) {
-      throw new InvalidNsidError('NSID name part too long (max 127 chars)')
+      throw new InvalidNsidError('NSID name part too long (max 128 chars)')
     }
     if (l.endsWith('-')) {
       throw new InvalidNsidError('NSID parts can not end with hyphen')

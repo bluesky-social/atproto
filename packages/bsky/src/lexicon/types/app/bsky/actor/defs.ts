@@ -83,6 +83,8 @@ export function validateProfileViewDetailed(v: unknown): ValidationResult {
 
 export interface ViewerState {
   muted?: boolean
+  blockedBy?: boolean
+  blocking?: string
   following?: string
   followedBy?: string
   [k: string]: unknown
@@ -98,4 +100,45 @@ export function isViewerState(v: unknown): v is ViewerState {
 
 export function validateViewerState(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#viewerState', v)
+}
+
+export type Preferences = (
+  | AdultContentPref
+  | ContentLabelPref
+  | { $type: string; [k: string]: unknown }
+)[]
+
+export interface AdultContentPref {
+  enabled: boolean
+  [k: string]: unknown
+}
+
+export function isAdultContentPref(v: unknown): v is AdultContentPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#adultContentPref'
+  )
+}
+
+export function validateAdultContentPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#adultContentPref', v)
+}
+
+export interface ContentLabelPref {
+  label: string
+  visibility: 'show' | 'warn' | 'hide' | (string & {})
+  [k: string]: unknown
+}
+
+export function isContentLabelPref(v: unknown): v is ContentLabelPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#contentLabelPref'
+  )
+}
+
+export function validateContentLabelPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#contentLabelPref', v)
 }

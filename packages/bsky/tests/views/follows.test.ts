@@ -1,7 +1,8 @@
 import AtpAgent from '@atproto/api'
-import { CloseFn, runTestEnv } from '@atproto/dev-env'
+import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
 import {
   adminAuth,
+  appViewHeaders,
   forSnapshot,
   paginateAll,
   processAll,
@@ -13,17 +14,16 @@ import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 
 describe('pds follow views', () => {
   let agent: AtpAgent
-  let close: CloseFn
+  let testEnv: TestEnvInfo
   let sc: SeedClient
 
   // account dids, for convenience
   let alice: string
 
   beforeAll(async () => {
-    const testEnv = await runTestEnv({
-      dbPostgresSchema: 'views_follows',
+    testEnv = await runTestEnv({
+      dbPostgresSchema: 'bsky_views_follows',
     })
-    close = testEnv.close
     agent = new AtpAgent({ service: testEnv.bsky.url })
     const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
     sc = new SeedClient(pdsAgent)
@@ -33,7 +33,7 @@ describe('pds follow views', () => {
   })
 
   afterAll(async () => {
-    await close()
+    await testEnv.close()
   })
 
   // TODO(bsky) blocks followers by actor takedown via labels
@@ -42,35 +42,35 @@ describe('pds follow views', () => {
   it('fetches followers', async () => {
     const aliceFollowers = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
 
     const bobFollowers = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.bob },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(forSnapshot(bobFollowers.data)).toMatchSnapshot()
 
     const carolFollowers = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.carol },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(forSnapshot(carolFollowers.data)).toMatchSnapshot()
 
     const danFollowers = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.dan },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(forSnapshot(danFollowers.data)).toMatchSnapshot()
 
     const eveFollowers = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.eve },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(forSnapshot(eveFollowers.data)).toMatchSnapshot()
@@ -79,11 +79,11 @@ describe('pds follow views', () => {
   it('fetches followers by handle', async () => {
     const byDid = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
     const byHandle = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.accounts[alice].handle },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
     expect(byHandle.data).toEqual(byDid.data)
   })
@@ -97,7 +97,7 @@ describe('pds follow views', () => {
           cursor,
           limit: 2,
         },
-        { headers: sc.getHeaders(alice, true) },
+        { headers: await appViewHeaders(alice, testEnv) },
       )
       return res.data
     }
@@ -109,7 +109,7 @@ describe('pds follow views', () => {
 
     const full = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(full.data.followers.length).toEqual(4)
@@ -119,7 +119,7 @@ describe('pds follow views', () => {
   it('fetches followers unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
     const { data: unauthed } = await agent.api.app.bsky.graph.getFollowers({
       actor: sc.dids.alice,
@@ -148,7 +148,7 @@ describe('pds follow views', () => {
 
     const aliceFollowers = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(aliceFollowers.data.followers.map((f) => f.did)).not.toContain(
@@ -171,35 +171,35 @@ describe('pds follow views', () => {
   it('fetches follows', async () => {
     const aliceFollowers = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(forSnapshot(aliceFollowers.data)).toMatchSnapshot()
 
     const bobFollowers = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.bob },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(forSnapshot(bobFollowers.data)).toMatchSnapshot()
 
     const carolFollowers = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.carol },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(forSnapshot(carolFollowers.data)).toMatchSnapshot()
 
     const danFollowers = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.dan },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(forSnapshot(danFollowers.data)).toMatchSnapshot()
 
     const eveFollowers = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.eve },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(forSnapshot(eveFollowers.data)).toMatchSnapshot()
@@ -208,11 +208,11 @@ describe('pds follow views', () => {
   it('fetches follows by handle', async () => {
     const byDid = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
     const byHandle = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.accounts[alice].handle },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
     expect(byHandle.data).toEqual(byDid.data)
   })
@@ -226,7 +226,7 @@ describe('pds follow views', () => {
           cursor,
           limit: 2,
         },
-        { headers: sc.getHeaders(alice, true) },
+        { headers: await appViewHeaders(alice, testEnv) },
       )
       return res.data
     }
@@ -238,7 +238,7 @@ describe('pds follow views', () => {
 
     const full = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(full.data.follows.length).toEqual(4)
@@ -248,7 +248,7 @@ describe('pds follow views', () => {
   it('fetches follows unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
     const { data: unauthed } = await agent.api.app.bsky.graph.getFollows({
       actor: sc.dids.alice,
@@ -277,7 +277,7 @@ describe('pds follow views', () => {
 
     const aliceFollows = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.alice },
-      { headers: sc.getHeaders(alice, true) },
+      { headers: await appViewHeaders(alice, testEnv) },
     )
 
     expect(aliceFollows.data.follows.map((f) => f.did)).not.toContain(

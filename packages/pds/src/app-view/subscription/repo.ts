@@ -58,10 +58,10 @@ export class RepoSubscription {
           {
             err,
             seq: msg?.seq,
-            repo: msg?.repo,
-            commit: msg?.commit,
+            repoDid: msg?.repo,
+            repoCommit: msg?.commit,
             time: msg?.time,
-            service: this.service,
+            subscriptionUrl: this.service,
           },
           'repo subscription errored',
         )

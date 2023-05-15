@@ -144,7 +144,7 @@ describe('repo subscribe repos', () => {
 
   const randomPost = (by: string) => sc.post(by, randomStr(8, 'base32'))
   const makePosts = async () => {
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 10; i++) {
       await Promise.all([
         randomPost(alice),
         randomPost(bob),
@@ -223,7 +223,7 @@ describe('repo subscribe repos', () => {
 
     ws.terminate()
 
-    expect(evts.length).toBe(12)
+    expect(evts.length).toBe(40)
 
     await wait(100) // Let cleanup occur on server
     expect(ctx.sequencer.listeners('events').length).toEqual(0)
@@ -297,9 +297,12 @@ describe('repo subscribe repos', () => {
 
   it('sync rebases', async () => {
     const prevHead = await agent.api.com.atproto.sync.getHead({ did: alice })
-    await ctx.db.transaction((dbTxn) =>
-      ctx.services.repo(dbTxn).rebaseRepo(alice, new Date().toISOString()),
+
+    await agent.api.com.atproto.repo.rebaseRepo(
+      { repo: alice },
+      { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
+
     const currHead = await agent.api.com.atproto.sync.getHead({ did: alice })
 
     const ws = new WebSocket(
@@ -352,7 +355,7 @@ describe('repo subscribe repos', () => {
     expect(info.header.t).toBe('#info')
     const body = info.body as Record<string, unknown>
     expect(body.name).toEqual('OutdatedCursor')
-    expect(evts.length).toBe(12)
+    expect(evts.length).toBe(40)
   })
 
   it('errors on future cursor', async () => {

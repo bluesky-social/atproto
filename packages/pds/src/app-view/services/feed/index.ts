@@ -5,18 +5,29 @@ import { notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
 import { isView as isViewImages } from '../../../lexicon/types/app/bsky/embed/images'
 import { isView as isViewExternal } from '../../../lexicon/types/app/bsky/embed/external'
-import { View as ViewRecord } from '../../../lexicon/types/app/bsky/embed/record'
+import {
+  ViewBlocked,
+  ViewNotFound,
+  ViewRecord,
+} from '../../../lexicon/types/app/bsky/embed/record'
 import { PostView } from '../../../lexicon/types/app/bsky/feed/defs'
 import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from './types'
 import { Labels, LabelService } from '../label'
+import { ActorService } from '../actor'
 
 export * from './types'
 
 export class FeedService {
-  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
+  services: {
+    label: LabelService
+    actor: ActorService
+  }
 
-  services = {
-    label: LabelService.creator(),
+  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {
+    this.services = {
+      label: LabelService.creator()(db),
+      actor: ActorService.creator(imgUriBuilder)(db),
+    }
   }
 
   static creator(imgUriBuilder: ImageUriBuilder) {
@@ -78,7 +89,7 @@ export class FeedService {
   ): Promise<ActorViewMap> {
     if (dids.length < 1) return {}
     const { ref } = this.db.db.dynamic
-    const [actors, labels] = await Promise.all([
+    const [actors, labels, listMutes] = await Promise.all([
       this.db.db
         .selectFrom('did_handle')
         .where('did_handle.did', 'in', dids)
@@ -103,6 +114,18 @@ export class FeedService {
             .select('uri')
             .as('requesterFollowedBy'),
           this.db.db
+            .selectFrom('actor_block')
+            .where('creator', '=', requester)
+            .whereRef('subjectDid', '=', ref('did_handle.did'))
+            .select('uri')
+            .as('requesterBlocking'),
+          this.db.db
+            .selectFrom('actor_block')
+            .whereRef('creator', '=', ref('did_handle.did'))
+            .where('subjectDid', '=', requester)
+            .select('uri')
+            .as('requesterBlockedBy'),
+          this.db.db
             .selectFrom('mute')
             .whereRef('did', '=', ref('did_handle.did'))
             .where('mutedByDid', '=', requester)
@@ -110,7 +133,8 @@ export class FeedService {
             .as('requesterMuted'),
         ])
         .execute(),
-      this.services.label(this.db).getLabelsForProfiles(dids),
+      this.services.label.getLabelsForProfiles(dids),
+      this.services.actor.views.getListMutes(dids, requester),
     ])
     return actors.reduce((acc, cur) => {
       return {
@@ -123,7 +147,10 @@ export class FeedService {
             ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
             : undefined,
           viewer: {
-            muted: !!cur?.requesterMuted,
+            muted: !!cur?.requesterMuted || !!listMutes[cur.did],
+            mutedByList: listMutes[cur.did],
+            blockedBy: !!cur?.requesterBlockedBy,
+            blocking: cur?.requesterBlocking || undefined,
             following: cur?.requesterFollowing || undefined,
             followedBy: cur?.requesterFollowedBy || undefined,
           },
@@ -229,7 +256,7 @@ export class FeedService {
           requester,
         ),
         this.embedsForPosts(nestedUris, requester, _depth + 1),
-        this.services.label(this.db).getLabelsForSubjects(nestedUris),
+        this.services.label.getLabelsForSubjects(nestedUris),
       ])
     let embeds = images.reduce((acc, cur) => {
       const embed = (acc[cur.postUri] ??= {
@@ -285,20 +312,7 @@ export class FeedService {
         deepEmbeds = formatted?.embed ? [formatted.embed] : []
       }
       const recordEmbed = {
-        record: formatted
-          ? {
-              $type: 'app.bsky.embed.record#viewRecord',
-              uri: formatted.uri,
-              cid: formatted.cid,
-              author: formatted.author,
-              value: formatted.record,
-              embeds: deepEmbeds,
-              indexedAt: formatted.indexedAt,
-            }
-          : {
-              $type: 'app.bsky.embed.record#viewNotFound',
-              uri: cur.uri,
-            },
+        record: getRecordEmbedView(cur.uri, formatted, deepEmbeds),
       }
       if (acc[cur.postUri]) {
         const mediaEmbed = acc[cur.postUri]
@@ -359,4 +373,33 @@ function truncateUtf8(str: string | null | undefined, length: number) {
     return decoder.decode(truncated).replace(/\uFFFD$/, '')
   }
   return str
+}
+
+function getRecordEmbedView(
+  uri: string,
+  post?: PostView,
+  embeds?: ViewRecord['embeds'],
+): (ViewRecord | ViewNotFound | ViewBlocked) & { $type: string } {
+  if (!post) {
+    return {
+      $type: 'app.bsky.embed.record#viewNotFound',
+      uri,
+    }
+  }
+  if (post.author.viewer?.blocking || post.author.viewer?.blockedBy) {
+    return {
+      $type: 'app.bsky.embed.record#viewBlocked',
+      uri,
+    }
+  }
+  return {
+    $type: 'app.bsky.embed.record#viewRecord',
+    uri: post.uri,
+    cid: post.cid,
+    author: post.author,
+    value: post.record,
+    labels: post.labels,
+    indexedAt: post.indexedAt,
+    embeds,
+  }
 }

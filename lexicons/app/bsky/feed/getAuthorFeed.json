@@ -27,7 +27,11 @@
             }
           }
         }
-      }
+      },
+      "errors": [
+        {"name": "BlockedActor"},
+        {"name": "BlockedByActor"}
+      ]
     }
   }
 }
