@@ -15,6 +15,7 @@ export class TestPlc {
     const port = cfg.port || (await getPort())
     const url = `http://localhost:${port}`
     const server = plc.PlcServer.create({ db, port, ...cfg })
+    await server.start()
     return new TestPlc(url, port, server)
   }
 

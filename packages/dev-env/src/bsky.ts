@@ -63,6 +63,7 @@ export class TestBsky {
     await migrationDb.close()
 
     const server = bsky.BskyAppView.create({ db, config })
+    await server.start()
     return new TestBsky(url, port, server)
   }
 

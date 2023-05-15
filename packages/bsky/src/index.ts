@@ -50,6 +50,7 @@ export class BskyAppView {
     config: ServerConfig
     imgInvalidator?: ImageInvalidator
   }): BskyAppView {
+    console.log('CREATING bsky')
     const { db, config } = opts
     let maybeImgInvalidator = opts.imgInvalidator
     const app = express()
@@ -103,6 +104,7 @@ export class BskyAppView {
       })
     }
 
+    console.log('services')
     const services = createServices({
       imgUriBuilder,
       imgInvalidator,
@@ -119,6 +121,8 @@ export class BskyAppView {
       didCache,
       labeler,
     })
+
+    console.log('server')
 
     let server = createServer({
       validateResponse: config.debugMode,
@@ -139,6 +143,7 @@ export class BskyAppView {
     app.use(server.xrpc.router)
     app.use(error.handler)
 
+    console.log('PROVIDER: ', config.repoProvider)
     const sub = config.repoProvider
       ? new RepoSubscription(ctx, config.repoProvider, config.repoSubLockId)
       : undefined

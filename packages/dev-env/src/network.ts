@@ -23,7 +23,6 @@ export class TestNetwork extends TestNetworkNoAppView {
       params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
 
     const plc = await TestPlc.create(params.plc ?? {})
-    await plc.server.start()
 
     const bskyPort = params.bsky?.port ?? (await getPort())
     const pdsPort = params.pds?.port ?? (await getPort())
@@ -45,9 +44,6 @@ export class TestNetwork extends TestNetworkNoAppView {
       ...params.pds,
     })
     mockNetworkUtilities(pds)
-
-    await pds.server.start()
-    await bsky.server.start()
 
     return new TestNetwork(plc, pds, bsky)
   }
