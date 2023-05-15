@@ -34,6 +34,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       ...params.bsky,
     })
     const pds = await TestPds.create({
+      port: pdsPort,
       dbPostgresUrl,
       dbPostgresSchema,
       plcUrl: plc.url,
