@@ -100,7 +100,9 @@ export const schemaDict = {
             type: 'union',
             refs: [
               'lex:com.atproto.admin.defs#repoView',
+              'lex:com.atproto.admin.defs#repoViewNotFound',
               'lex:com.atproto.admin.defs#recordView',
+              'lex:com.atproto.admin.defs#recordViewNotFound',
             ],
           },
           subjectBlobs: {
@@ -274,7 +276,9 @@ export const schemaDict = {
             type: 'union',
             refs: [
               'lex:com.atproto.admin.defs#repoView',
+              'lex:com.atproto.admin.defs#repoViewNotFound',
               'lex:com.atproto.admin.defs#recordView',
+              'lex:com.atproto.admin.defs#recordViewNotFound',
             ],
           },
           reportedBy: {
@@ -396,6 +400,16 @@ export const schemaDict = {
           },
         },
       },
+      repoViewNotFound: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
       repoRef: {
         type: 'object',
         required: ['did'],
@@ -498,6 +512,16 @@ export const schemaDict = {
           repo: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#repoView',
+          },
+        },
+      },
+      recordViewNotFound: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -905,6 +929,11 @@ export const schemaDict = {
             ref: 'lex:com.atproto.admin.defs#recordViewDetail',
           },
         },
+        errors: [
+          {
+            name: 'RecordNotFound',
+          },
+        ],
       },
     },
   },
@@ -932,6 +961,11 @@ export const schemaDict = {
             ref: 'lex:com.atproto.admin.defs#repoViewDetail',
           },
         },
+        errors: [
+          {
+            name: 'RepoNotFound',
+          },
+        ],
       },
     },
   },
@@ -2123,6 +2157,10 @@ export const schemaDict = {
                 type: 'string',
                 format: 'handle',
               },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
               inviteCode: {
                 type: 'string',
               },
@@ -2173,6 +2211,12 @@ export const schemaDict = {
           },
           {
             name: 'UnsupportedDomain',
+          },
+          {
+            name: 'UnresolvableDid',
+          },
+          {
+            name: 'IncompatibleDidDoc',
           },
         ],
       },
@@ -3497,6 +3541,10 @@ export const schemaDict = {
           muted: {
             type: 'boolean',
           },
+          mutedByList: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listViewBasic',
+          },
           blockedBy: {
             type: 'boolean',
           },
@@ -4768,6 +4816,115 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphDefs: {
+    lexicon: 1,
+    id: 'app.bsky.graph.defs',
+    defs: {
+      listViewBasic: {
+        type: 'object',
+        required: ['uri', 'creator', 'name', 'purpose'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          name: {
+            type: 'string',
+            maxLength: 64,
+            minLength: 1,
+          },
+          purpose: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listPurpose',
+          },
+          avatar: {
+            type: 'string',
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listViewerState',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      listView: {
+        type: 'object',
+        required: ['uri', 'creator', 'name', 'purpose', 'indexedAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          creator: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          name: {
+            type: 'string',
+            maxLength: 64,
+            minLength: 1,
+          },
+          purpose: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listPurpose',
+          },
+          description: {
+            type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
+          },
+          descriptionFacets: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
+          avatar: {
+            type: 'string',
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listViewerState',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      listItemView: {
+        type: 'object',
+        required: ['subject'],
+        properties: {
+          subject: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+        },
+      },
+      listPurpose: {
+        type: 'string',
+        knownValues: ['app.bsky.graph.defs#modlist'],
+      },
+      modlist: {
+        type: 'token',
+        description:
+          'A list of actors to apply an aggregate moderation action (mute/block) on',
+      },
+      listViewerState: {
+        type: 'object',
+        properties: {
+          muted: {
+            type: 'boolean',
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphFollow: {
     lexicon: 1,
     id: 'app.bsky.graph.follow',
@@ -4940,6 +5097,149 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetList: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getList',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Fetch a list of actors',
+        parameters: {
+          type: 'params',
+          required: ['list'],
+          properties: {
+            list: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['list', 'items'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              list: {
+                type: 'ref',
+                ref: 'lex:app.bsky.graph.defs#listView',
+              },
+              items: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#listItemView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphGetListMutes: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getListMutes',
+    defs: {
+      main: {
+        type: 'query',
+        description: "Which lists is the requester's account muting?",
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['lists'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              lists: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#listView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphGetLists: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getLists',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Fetch a list of lists that belong to an actor',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['lists'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              lists: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#listView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphGetMutes: {
     lexicon: 1,
     id: 'app.bsky.graph.getMutes',
@@ -4983,6 +5283,82 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphList: {
+    lexicon: 1,
+    id: 'app.bsky.graph.list',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A declaration of a list of actors.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['name', 'purpose', 'createdAt'],
+          properties: {
+            purpose: {
+              type: 'ref',
+              ref: 'lex:app.bsky.graph.defs#listPurpose',
+            },
+            name: {
+              type: 'string',
+              maxLength: 64,
+              minLength: 1,
+            },
+            description: {
+              type: 'string',
+              maxGraphemes: 300,
+              maxLength: 3000,
+            },
+            descriptionFacets: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.richtext.facet',
+              },
+            },
+            avatar: {
+              type: 'blob',
+              accept: ['image/png', 'image/jpeg'],
+              maxSize: 1000000,
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphListitem: {
+    lexicon: 1,
+    id: 'app.bsky.graph.listitem',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'An item under a declared list of actors',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['subject', 'list', 'createdAt'],
+          properties: {
+            subject: {
+              type: 'string',
+              format: 'did',
+            },
+            list: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphMuteActor: {
     lexicon: 1,
     id: 'app.bsky.graph.muteActor',
@@ -5006,6 +5382,29 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphMuteActorList: {
+    lexicon: 1,
+    id: 'app.bsky.graph.muteActorList',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Mute a list of actors.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['list'],
+            properties: {
+              list: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphUnmuteActor: {
     lexicon: 1,
     id: 'app.bsky.graph.unmuteActor',
@@ -5022,6 +5421,29 @@ export const schemaDict = {
               actor: {
                 type: 'string',
                 format: 'at-identifier',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphUnmuteActorList: {
+    lexicon: 1,
+    id: 'app.bsky.graph.unmuteActorList',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Unmute a list of actors.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['list'],
+            properties: {
+              list: {
+                type: 'string',
+                format: 'at-uri',
               },
             },
           },
@@ -5396,13 +5818,21 @@ export const ids = {
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
   AppBskyGraphBlock: 'app.bsky.graph.block',
+  AppBskyGraphDefs: 'app.bsky.graph.defs',
   AppBskyGraphFollow: 'app.bsky.graph.follow',
   AppBskyGraphGetBlocks: 'app.bsky.graph.getBlocks',
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
+  AppBskyGraphGetList: 'app.bsky.graph.getList',
+  AppBskyGraphGetListMutes: 'app.bsky.graph.getListMutes',
+  AppBskyGraphGetLists: 'app.bsky.graph.getLists',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
+  AppBskyGraphList: 'app.bsky.graph.list',
+  AppBskyGraphListitem: 'app.bsky.graph.listitem',
   AppBskyGraphMuteActor: 'app.bsky.graph.muteActor',
+  AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
+  AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
