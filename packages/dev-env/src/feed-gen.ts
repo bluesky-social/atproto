@@ -9,6 +9,8 @@ import { createServer } from '@atproto/pds/src/lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export class TestFeedGen {
+  destroyed = false
+
   constructor(
     public port: number,
     public server: http.Server,
@@ -50,8 +52,10 @@ export class TestFeedGen {
 
   close(): Promise<void> {
     return new Promise((resolve, reject) => {
+      if (this.destroyed) return resolve()
       this.server.close((err) => {
         if (err) return reject(err)
+        this.destroyed = true
         resolve()
       })
     })

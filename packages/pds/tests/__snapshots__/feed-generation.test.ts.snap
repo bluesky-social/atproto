@@ -34,9 +34,10 @@ Object {
       "description": "Provides all feed candidates",
       "did": "user(1)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
-      "likeCount": 0,
+      "likeCount": 2,
       "uri": "record(1)",
       "viewer": Object {
+        "like": "record(4)",
         "saved": true,
       },
     },
@@ -134,9 +135,10 @@ Array [
     "description": "Provides all feed candidates",
     "did": "user(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "likeCount": 0,
+    "likeCount": 2,
     "uri": "record(4)",
     "viewer": Object {
+      "like": "record(5)",
       "saved": false,
     },
   },
@@ -831,6 +833,37 @@ Array [
 ]
 `;
 
+exports[`feed generation getFeedGenerator describes a feed gen & returns online status 1`] = `
+Object {
+  "isOnline": true,
+  "isValid": true,
+  "view": Object {
+    "creator": Object {
+      "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "did": "user(1)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "followedBy": "record(2)",
+        "following": "record(1)",
+        "muted": false,
+      },
+    },
+    "description": "Provides all feed candidates",
+    "did": "user(0)",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 2,
+    "uri": "record(0)",
+    "viewer": Object {
+      "like": "record(3)",
+      "saved": true,
+    },
+  },
+}
+`;
+
 exports[`feed generation saves feeds and paginates through saved feeds. 1`] = `
 Array [
   Object {
@@ -877,9 +910,10 @@ Array [
     "description": "Provides all feed candidates",
     "did": "user(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "likeCount": 0,
+    "likeCount": 2,
     "uri": "record(3)",
     "viewer": Object {
+      "like": "record(4)",
       "saved": true,
     },
   },
@@ -903,7 +937,7 @@ Array [
     "did": "user(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "likeCount": 0,
-    "uri": "record(4)",
+    "uri": "record(5)",
     "viewer": Object {
       "saved": true,
     },

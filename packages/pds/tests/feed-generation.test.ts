@@ -13,6 +13,7 @@ import {
 } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 import { FeedAlgorithm } from '../src/app-view/api/app/bsky/util/feed'
 import { SkeletonFeedPost } from '../src/lexicon/types/app/bsky/feed/defs'
+import { RecordRef } from './seeds/client'
 
 describe('feed generation', () => {
   let network: TestNetworkNoAppView
@@ -22,10 +23,7 @@ describe('feed generation', () => {
 
   let alice: string
   let feedUriAll: string
-  let feedUriAllRef: {
-    uri: string
-    cid: string
-  }
+  let feedUriAllRef: RecordRef
   let feedUriEven: string
   let feedUriOdd: string // Unsupported by feed gen
 
@@ -80,12 +78,16 @@ describe('feed generation', () => {
       sc.getHeaders(alice),
     )
     feedUriAll = all.uri
-    feedUriAllRef = all
+    feedUriAllRef = new RecordRef(all.uri, all.cid)
     feedUriEven = even.uri
     feedUriOdd = odd.uri
   })
 
   it('getActorFeeds fetches feed generators by actor.', async () => {
+    // add some likes
+    await sc.like(sc.dids.bob, feedUriAllRef)
+    await sc.like(sc.dids.carol, feedUriAllRef)
+
     const results = (results) => results.flatMap((res) => res.feeds)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getActorFeeds(
@@ -143,7 +145,7 @@ describe('feed generation', () => {
         text: 'cool feed!',
         embed: {
           $type: 'app.bsky.embed.record',
-          record: feedUriAllRef,
+          record: feedUriAllRef.raw,
         },
         createdAt: new Date().toISOString(),
       },
@@ -155,6 +157,61 @@ describe('feed generation', () => {
     )
     expect(view.data.posts.length).toBe(1)
     expect(forSnapshot(view.data.posts[0])).toMatchSnapshot()
+  })
+
+  describe('getFeedGenerator', () => {
+    it('describes a feed gen & returns online status', async () => {
+      const resEven = await agent.api.app.bsky.feed.getFeedGenerator(
+        { feed: feedUriAll },
+        { headers: sc.getHeaders(sc.dids.bob) },
+      )
+      expect(forSnapshot(resEven.data)).toMatchSnapshot()
+      expect(resEven.data.isOnline).toBe(true)
+      expect(resEven.data.isValid).toBe(true)
+    })
+
+    it('handles an unsupported algo', async () => {
+      const resOdd = await agent.api.app.bsky.feed.getFeedGenerator(
+        { feed: feedUriOdd },
+        { headers: sc.getHeaders(sc.dids.bob) },
+      )
+      expect(resOdd.data.isOnline).toBe(true)
+      expect(resOdd.data.isValid).toBe(false)
+    })
+
+    it('handles an offline feed', async () => {
+      // make an invalid feed gen in bob's repo
+      const allUriBob = AtUri.make(
+        sc.dids.bob,
+        'app.bsky.feed.generator',
+        'all',
+      )
+      const bobFg = await network.createFeedGen({
+        [allUriBob.toString()]: feedGenHandler('all'),
+      })
+
+      await agent.api.app.bsky.feed.generator.create(
+        { repo: sc.dids.bob, rkey: 'all' },
+        {
+          did: bobFg.did,
+          description: 'Provides all feed candidates - by bob',
+          createdAt: new Date().toISOString(),
+        },
+        sc.getHeaders(sc.dids.bob),
+      )
+
+      // now take it offline
+      await bobFg.close()
+
+      const res = await agent.api.app.bsky.feed.getFeedGenerator(
+        {
+          feed: allUriBob.toString(),
+        },
+        { headers: sc.getHeaders(sc.dids.alice) },
+      )
+      expect(res.data.isOnline).toBe(false)
+      expect(res.data.isValid).toBe(false)
+    })
   })
 
   describe('getFeed', () => {
@@ -221,7 +278,7 @@ describe('feed generation', () => {
     })
 
     it('returns an upstream failure error when the feed is down.', async () => {
-      await network.feedGens.pop()?.close() // @NOTE must be last test
+      await gen.close() // @NOTE must be last test
       const tryGetFeed = agent.api.app.bsky.feed.getFeed(
         { feed: feedUriEven },
         { headers: sc.getHeaders(alice) },
