@@ -71,10 +71,12 @@ import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 import * as AppBskyActorDefs from './types/app/bsky/actor/defs'
+import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
+import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
@@ -177,10 +179,12 @@ export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 export * as AppBskyActorDefs from './types/app/bsky/actor/defs'
+export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 export * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 export * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
+export * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
@@ -1012,6 +1016,17 @@ export class ActorNS {
     this.profile = new ProfileRecord(service)
   }
 
+  getPreferences(
+    params?: AppBskyActorGetPreferences.QueryParams,
+    opts?: AppBskyActorGetPreferences.CallOptions,
+  ): Promise<AppBskyActorGetPreferences.Response> {
+    return this._service.xrpc
+      .call('app.bsky.actor.getPreferences', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyActorGetPreferences.toKnownErr(e)
+      })
+  }
+
   getProfile(
     params?: AppBskyActorGetProfile.QueryParams,
     opts?: AppBskyActorGetProfile.CallOptions,
@@ -1042,6 +1057,17 @@ export class ActorNS {
       .call('app.bsky.actor.getSuggestions', params, undefined, opts)
       .catch((e) => {
         throw AppBskyActorGetSuggestions.toKnownErr(e)
+      })
+  }
+
+  putPreferences(
+    data?: AppBskyActorPutPreferences.InputSchema,
+    opts?: AppBskyActorPutPreferences.CallOptions,
+  ): Promise<AppBskyActorPutPreferences.Response> {
+    return this._service.xrpc
+      .call('app.bsky.actor.putPreferences', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyActorPutPreferences.toKnownErr(e)
       })
   }
 

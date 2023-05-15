@@ -333,6 +333,9 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.server.defs#inviteCode',
           },
+          invitesDisabled: {
+            type: 'boolean',
+          },
         },
       },
       repoViewDetail: {
@@ -387,6 +390,9 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.server.defs#inviteCode',
             },
+          },
+          invitesDisabled: {
+            type: 'boolean',
           },
         },
       },
@@ -589,6 +595,30 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminDisableAccountInvites: {
+    lexicon: 1,
+    id: 'com.atproto.admin.disableAccountInvites',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Disable an account from receiving new invite codes, but does not invalidate existing codes',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['account'],
+            properties: {
+              account: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminDisableInviteCodes: {
     lexicon: 1,
     id: 'com.atproto.admin.disableInviteCodes',
@@ -613,6 +643,29 @@ export const schemaDict = {
                 items: {
                   type: 'string',
                 },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminEnableAccountInvites: {
+    lexicon: 1,
+    id: 'com.atproto.admin.enableAccountInvites',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Re-enable an accounts ability to receive invite codes',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['account'],
+            properties: {
+              account: {
+                type: 'string',
+                format: 'did',
               },
             },
           },
@@ -781,6 +834,15 @@ export const schemaDict = {
             },
             resolved: {
               type: 'boolean',
+            },
+            actionType: {
+              type: 'string',
+              knownValues: [
+                'com.atproto.admin.defs#takedown',
+                'com.atproto.admin.defs#flag',
+                'com.atproto.admin.defs#acknowledge',
+                'com.atproto.admin.defs#escalate',
+              ],
             },
             limit: {
               type: 'integer',
@@ -1947,6 +2009,41 @@ export const schemaDict = {
               cid: {
                 type: 'string',
                 format: 'cid',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidSwap',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoRepoRebaseRepo: {
+    lexicon: 1,
+    id: 'com.atproto.repo.rebaseRepo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Simple rebase of repo that deletes history',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repo'],
+            properties: {
+              repo: {
+                type: 'string',
+                format: 'at-identifier',
+                description: 'The handle or DID of the repo.',
+              },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous commit by cid.',
               },
             },
           },
@@ -3417,6 +3514,66 @@ export const schemaDict = {
           },
         },
       },
+      preferences: {
+        type: 'array',
+        items: {
+          type: 'union',
+          refs: [
+            'lex:app.bsky.actor.defs#adultContentPref',
+            'lex:app.bsky.actor.defs#contentLabelPref',
+          ],
+        },
+      },
+      adultContentPref: {
+        type: 'object',
+        required: ['enabled'],
+        properties: {
+          enabled: {
+            type: 'boolean',
+            default: false,
+          },
+        },
+      },
+      contentLabelPref: {
+        type: 'object',
+        required: ['label', 'visibility'],
+        properties: {
+          label: {
+            type: 'string',
+          },
+          visibility: {
+            type: 'string',
+            knownValues: ['show', 'warn', 'hide'],
+          },
+        },
+      },
+    },
+  },
+  AppBskyActorGetPreferences: {
+    lexicon: 1,
+    id: 'app.bsky.actor.getPreferences',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get private preferences attached to the account.',
+        parameters: {
+          type: 'params',
+          properties: {},
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['preferences'],
+            properties: {
+              preferences: {
+                type: 'ref',
+                ref: 'lex:app.bsky.actor.defs#preferences',
+              },
+            },
+          },
+        },
+      },
     },
   },
   AppBskyActorGetProfile: {
@@ -3557,6 +3714,29 @@ export const schemaDict = {
               type: 'blob',
               accept: ['image/png', 'image/jpeg'],
               maxSize: 1000000,
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyActorPutPreferences: {
+    lexicon: 1,
+    id: 'app.bsky.actor.putPreferences',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Sets the private preferences attached to the account.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['preferences'],
+            properties: {
+              preferences: {
+                type: 'ref',
+                ref: 'lex:app.bsky.actor.defs#preferences',
+              },
             },
           },
         },
@@ -5124,7 +5304,10 @@ export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
+  ComAtprotoAdminDisableAccountInvites:
+    'com.atproto.admin.disableAccountInvites',
   ComAtprotoAdminDisableInviteCodes: 'com.atproto.admin.disableInviteCodes',
+  ComAtprotoAdminEnableAccountInvites: 'com.atproto.admin.enableAccountInvites',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
   ComAtprotoAdminGetModerationAction: 'com.atproto.admin.getModerationAction',
   ComAtprotoAdminGetModerationActions: 'com.atproto.admin.getModerationActions',
@@ -5154,6 +5337,7 @@ export const ids = {
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
+  ComAtprotoRepoRebaseRepo: 'com.atproto.repo.rebaseRepo',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoRepoUploadBlob: 'com.atproto.repo.uploadBlob',
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',
@@ -5189,10 +5373,12 @@ export const ids = {
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
   AppBskyActorDefs: 'app.bsky.actor.defs',
+  AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
   AppBskyActorGetProfiles: 'app.bsky.actor.getProfiles',
   AppBskyActorGetSuggestions: 'app.bsky.actor.getSuggestions',
   AppBskyActorProfile: 'app.bsky.actor.profile',
+  AppBskyActorPutPreferences: 'app.bsky.actor.putPreferences',
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
   AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
   AppBskyEmbedExternal: 'app.bsky.embed.external',

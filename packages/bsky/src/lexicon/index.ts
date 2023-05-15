@@ -9,7 +9,9 @@ import {
   StreamAuthVerifier,
 } from '@atproto/xrpc-server'
 import { schemas } from './lexicons'
+import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
+import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
 import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
@@ -35,6 +37,7 @@ import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRe
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
+import * as ComAtprotoRepoRebaseRepo from './types/com/atproto/repo/rebaseRepo'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
@@ -64,9 +67,11 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
+import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
@@ -156,6 +161,16 @@ export class AdminNS {
     this._server = server
   }
 
+  disableAccountInvites<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminDisableAccountInvites.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.disableAccountInvites' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   disableInviteCodes<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -163,6 +178,16 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.disableInviteCodes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  enableAccountInvites<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminEnableAccountInvites.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.enableAccountInvites' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -400,6 +425,13 @@ export class RepoNS {
     cfg: ConfigOf<AV, ComAtprotoRepoPutRecord.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.repo.putRecord' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  rebaseRepo<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoRepoRebaseRepo.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.repo.rebaseRepo' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -686,6 +718,13 @@ export class ActorNS {
     this._server = server
   }
 
+  getPreferences<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyActorGetPreferences.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.actor.getPreferences' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getProfile<AV extends AuthVerifier>(
     cfg: ConfigOf<AV, AppBskyActorGetProfile.Handler<ExtractAuth<AV>>>,
   ) {
@@ -704,6 +743,13 @@ export class ActorNS {
     cfg: ConfigOf<AV, AppBskyActorGetSuggestions.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.actor.getSuggestions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  putPreferences<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyActorPutPreferences.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.actor.putPreferences' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

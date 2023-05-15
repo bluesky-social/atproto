@@ -168,6 +168,104 @@ describe('account', () => {
     ])
   })
 
+  it('allows a user to bring their own DID', async () => {
+    const inviteCode = await createInviteCode(agent, 1)
+    const userKey = await crypto.Secp256k1Keypair.create()
+    const handle = 'byo-did.test'
+    const did = await ctx.plcClient.createDid({
+      signingKey: ctx.repoSigningKey.did(),
+      handle,
+      rotationKeys: [
+        userKey.did(),
+        ctx.cfg.recoveryKey,
+        ctx.plcRotationKey.did(),
+      ],
+      pds: ctx.cfg.publicUrl,
+      signer: userKey,
+    })
+
+    const res = await agent.api.com.atproto.server.createAccount({
+      email: 'byo-did@test.com',
+      handle,
+      did,
+      password: 'byo-did-pass',
+      inviteCode,
+    })
+
+    expect(res.data.handle).toEqual(handle)
+    expect(res.data.did).toEqual(did)
+  })
+
+  it('requires that the did a user brought be correctly set up for the server', async () => {
+    const inviteCode = await createInviteCode(agent, 1)
+    const userKey = await crypto.Secp256k1Keypair.create()
+    const baseDidInfo = {
+      signingKey: ctx.repoSigningKey.did(),
+      handle: 'byo-did.test',
+      rotationKeys: [
+        userKey.did(),
+        ctx.cfg.recoveryKey,
+        ctx.plcRotationKey.did(),
+      ],
+      pds: ctx.cfg.publicUrl,
+      signer: userKey,
+    }
+    const baseAccntInfo = {
+      email: 'byo-did@test.com',
+      handle: 'byo-did.test',
+      password: 'byo-did-pass',
+      inviteCode,
+    }
+
+    const did1 = await ctx.plcClient.createDid({
+      ...baseDidInfo,
+      handle: 'different-handle.test',
+    })
+    const attempt1 = agent.api.com.atproto.server.createAccount({
+      ...baseAccntInfo,
+      did: did1,
+    })
+    await expect(attempt1).rejects.toThrow(
+      'provided handle does not match DID document handle',
+    )
+
+    const did2 = await ctx.plcClient.createDid({
+      ...baseDidInfo,
+      pds: 'https://other-pds.com',
+    })
+    const attempt2 = agent.api.com.atproto.server.createAccount({
+      ...baseAccntInfo,
+      did: did2,
+    })
+    await expect(attempt2).rejects.toThrow(
+      'DID document pds endpoint does not match service endpoint',
+    )
+
+    const did3 = await ctx.plcClient.createDid({
+      ...baseDidInfo,
+      rotationKeys: [userKey.did()],
+    })
+    const attempt3 = agent.api.com.atproto.server.createAccount({
+      ...baseAccntInfo,
+      did: did3,
+    })
+    await expect(attempt3).rejects.toThrow(
+      'PLC DID does not include service rotation key',
+    )
+
+    const did4 = await ctx.plcClient.createDid({
+      ...baseDidInfo,
+      signingKey: userKey.did(),
+    })
+    const attempt4 = agent.api.com.atproto.server.createAccount({
+      ...baseAccntInfo,
+      did: did4,
+    })
+    await expect(attempt4).rejects.toThrow(
+      'DID document signing key does not match service signing key',
+    )
+  })
+
   it('allows administrative email updates', async () => {
     await agent.api.com.atproto.admin.updateAccountEmail(
       {

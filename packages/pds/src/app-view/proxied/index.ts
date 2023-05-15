@@ -1,5 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { dedupeStrs } from '@atproto/common'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import {
@@ -8,19 +9,25 @@ import {
   isReasonRepost,
   isThreadViewPost,
 } from '../../lexicon/types/app/bsky/feed/defs'
-import { createServiceJwt } from '../../auth'
 
 export default function (server: Server, ctx: AppContext) {
-  if (!ctx.cfg.bskyAppViewEndpoint) {
+  const appviewEndpoint = ctx.cfg.bskyAppViewEndpoint
+  const appviewDid = ctx.cfg.bskyAppViewDid
+  if (!appviewEndpoint) {
     throw new Error('Could not find bsky appview endpoint')
   }
-  const agent = new AtpAgent({ service: ctx.cfg.bskyAppViewEndpoint })
+  if (!appviewDid) {
+    throw new Error('Could not find bsky appview did')
+  }
+
+  const agent = new AtpAgent({ service: appviewEndpoint })
 
   const headers = async (did: string) => {
-    const jwt = await createServiceJwt(did, ctx.repoSigningKey)
-    return {
-      headers: { authorization: `Bearer ${jwt}` },
-    }
+    return createServiceAuthHeaders({
+      iss: did,
+      aud: appviewDid,
+      keypair: ctx.repoSigningKey,
+    })
   }
 
   server.app.bsky.actor.getProfile({
