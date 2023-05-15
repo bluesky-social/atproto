@@ -35,6 +35,7 @@ export class TestPds {
       debugMode: true,
       version: '0.0.0',
       scheme: 'http',
+      port,
       hostname: 'localhost',
       serverDid,
       recoveryKey: recoveryKey.did(),

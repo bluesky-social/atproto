@@ -28,6 +28,7 @@ export class TestBsky {
     })
     const config = new bsky.ServerConfig({
       version: '0.0.0',
+      port,
       didPlcUrl: cfg.plcUrl,
       publicUrl: 'https://bsky.public.url',
       serverDid,

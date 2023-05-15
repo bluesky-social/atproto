@@ -44,6 +44,9 @@ export class TestNetwork extends TestNetworkNoAppView {
     })
     mockNetworkUtilities(pds)
 
+    console.log('PDS RUNNING ON: ', pds.port)
+    console.log('SUBSCRIPTION ON: ', bsky.ctx.cfg.repoProvider)
+
     return new TestNetwork(plc, pds, bsky)
   }
 
@@ -76,7 +79,7 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async close() {
-    await this.bsky?.close()
+    await this.bsky.close()
     await this.pds.close()
     await this.plc.close()
   }
