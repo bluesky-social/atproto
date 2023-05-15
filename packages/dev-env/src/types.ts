@@ -1,24 +1,27 @@
-export enum ServerType {
-  PersonalDataServer = 'pds',
-  DidPlaceholder = 'plc',
-  BskyAppView = 'bsky',
+import * as pds from '@atproto/pds'
+import * as bsky from '@atproto/bsky'
+
+export type PlcConfig = {
+  port?: number
+  version?: string
 }
 
-export interface ServerConfig {
-  type: ServerType
-  port: number
+export type PdsConfig = Partial<pds.ServerConfig> & {
+  plcUrl: string
+  migration?: string
 }
 
-export interface StartParams {
-  servers?: ServerConfig[]
+export type BskyConfig = Partial<bsky.ServerConfig> & {
+  plcUrl: string
+  repoProvider: string
+  dbPostgresUrl: string
+  migration?: string
 }
 
-export const PORTS = {
-  [ServerType.BskyAppView]: 2584,
-  [ServerType.PersonalDataServer]: 2583,
-  [ServerType.DidPlaceholder]: 2582,
-}
-
-export const SERVER_TYPE_LABELS = {
-  [ServerType.PersonalDataServer]: 'personal data server',
+export type TestServerParams = {
+  dbPostgresUrl: string
+  dbPostgresSchema: string
+  pds: Partial<pds.ServerConfig>
+  plc: Partial<pds.ServerConfig>
+  bsky: Partial<bsky.ServerConfig>
 }

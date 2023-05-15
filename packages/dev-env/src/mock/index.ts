@@ -4,9 +4,7 @@ import {
   REASONSPAM,
   REASONOTHER,
 } from '@atproto/api/src/client/types/com/atproto/moderation/defs'
-import { DevEnv } from '../index'
-import { ServerType } from '../types'
-import { genServerCfg } from '../util'
+import { TestNetworkNoAppView } from '../index'
 import { postTexts, replyTexts } from './data'
 import labeledImgB64 from './labeled-img-b64'
 
@@ -24,16 +22,8 @@ function* dateGen() {
   return ''
 }
 
-async function createNeededServers(env: DevEnv, numNeeded = 1) {
-  await env.add(await genServerCfg(ServerType.DidPlaceholder))
-  while (env.listOfType(ServerType.PersonalDataServer).length < numNeeded) {
-    await env.add(await genServerCfg(ServerType.PersonalDataServer))
-  }
-}
-
-export async function generateMockSetup(env: DevEnv) {
+export async function generateMockSetup(env: TestNetworkNoAppView) {
   const date = dateGen()
-  await createNeededServers(env)
 
   const rand = (n: number) => Math.floor(Math.random() * n)
   const picka = <T>(arr: Array<T>): T => {
@@ -44,10 +34,10 @@ export async function generateMockSetup(env: DevEnv) {
   }
 
   const clients = {
-    loggedout: env.listOfType(ServerType.PersonalDataServer)[0].getClient(),
-    alice: env.listOfType(ServerType.PersonalDataServer)[0].getClient(),
-    bob: env.listOfType(ServerType.PersonalDataServer)[0].getClient(),
-    carla: env.listOfType(ServerType.PersonalDataServer)[0].getClient(),
+    loggedout: env.pds.getClient(),
+    alice: env.pds.getClient(),
+    bob: env.pds.getClient(),
+    carla: env.pds.getClient(),
   }
   interface User {
     email: string
@@ -195,7 +185,7 @@ export async function generateMockSetup(env: DevEnv) {
     },
   )
 
-  const ctx = env.listOfType(ServerType.PersonalDataServer)[0].ctx
+  const ctx = env.pds.ctx
   if (ctx) {
     await ctx.db.db
       .insertInto('label')

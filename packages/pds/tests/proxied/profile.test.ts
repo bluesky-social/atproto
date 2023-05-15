@@ -1,12 +1,12 @@
 import AtpAgent from '@atproto/api'
-import { runTestEnv, CloseFn, processAll } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds profile proxy views', () => {
+  let network: TestNetwork
   let agent: AtpAgent
-  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
@@ -15,21 +15,20 @@ describe('pds profile proxy views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_profile',
     })
-    close = testEnv.close
-    agent = new AtpAgent({ service: testEnv.pds.url })
+    agent = network.pds.getClient()
     sc = new SeedClient(agent)
     await basicSeed(sc)
-    await processAll(testEnv)
+    await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('fetches own profile', async () => {

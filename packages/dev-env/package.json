@@ -1,8 +1,8 @@
 {
   "name": "@atproto/dev-env",
   "version": "0.1.0",
-  "main": "src/test-env.ts",
-  "bin": "dist/cli.js",
+  "main": "src/index.ts",
+  "bin": "dist/bin.js",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -12,7 +12,7 @@
   "scripts": {
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
-    "start": "node dist/cli.js",
+    "start": "node dist/bin.js",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",
@@ -27,13 +27,15 @@
     "@atproto/did-resolver": "*",
     "@atproto/pds": "*",
     "@atproto/uri": "*",
+    "@atproto/xrpc-server": "*",
     "@did-plc/lib": "^0.0.1",
     "@did-plc/server": "^0.0.1",
     "better-sqlite3": "^7.6.2",
     "chalk": "^5.0.1",
     "dotenv": "^16.0.1",
     "get-port": "^6.1.2",
-    "sharp": "^0.31.2"
+    "sharp": "^0.31.2",
+    "uint8arrays": "3.0.0"
   },
   "devDependencies": {
     "ts-node": "^10.8.1"

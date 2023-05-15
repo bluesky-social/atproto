@@ -1,26 +1,25 @@
 import AtpAgent from '@atproto/api'
-import { runTestEnv, CloseFn, processAll } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds user search proxy views', () => {
+  let network: TestNetwork
   let agent: AtpAgent
-  let close: CloseFn
   let sc: SeedClient
 
   beforeAll(async () => {
-    const testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_suggestions',
     })
-    close = testEnv.close
-    agent = new AtpAgent({ service: testEnv.pds.url })
+    agent = network.pds.getClient()
     sc = new SeedClient(agent)
     await basicSeed(sc)
-    await processAll(testEnv)
+    await network.processAll()
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('actor suggestion gives users', async () => {

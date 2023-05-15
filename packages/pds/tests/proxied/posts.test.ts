@@ -1,26 +1,26 @@
 import AtpAgent from '@atproto/api'
-import { TestEnvInfo, processAll, runTestEnv } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds posts views', () => {
-  let testEnv: TestEnvInfo
+  let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_posts',
     })
-    agent = new AtpAgent({ service: testEnv.pds.url })
+    agent = network.pds.getClient()
     sc = new SeedClient(agent)
     await basicSeed(sc)
-    await processAll(testEnv)
+    await network.processAll()
   })
 
   afterAll(async () => {
-    await testEnv.close()
+    await network.close()
   })
 
   it('fetches posts', async () => {

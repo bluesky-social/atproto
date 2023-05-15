@@ -1,7 +1,7 @@
-import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
 import { AtUri } from '@atproto/uri'
-import { adminAuth, appViewHeaders, forSnapshot, processAll } from './_util'
+import { forSnapshot } from './_util'
 import { ImageRef, RecordRef, SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import {
@@ -15,23 +15,23 @@ import {
 } from '../src/lexicon/types/com/atproto/moderation/defs'
 
 describe('moderation', () => {
-  let testEnv: TestEnvInfo
+  let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'moderation',
     })
-    agent = new AtpAgent({ service: testEnv.bsky.url })
-    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
+    agent = network.bsky.getClient()
+    const pdsAgent = network.pds.getClient()
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
-    await processAll(testEnv)
+    await network.processAll()
   })
 
   afterAll(async () => {
-    await testEnv.close()
+    await network.close()
   })
 
   describe('reporting', () => {
@@ -46,7 +46,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: await appViewHeaders(sc.dids.alice, testEnv),
+            headers: await network.serviceHeaders(sc.dids.alice),
             encoding: 'application/json',
           },
         )
@@ -61,7 +61,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: await appViewHeaders(sc.dids.carol, testEnv),
+            headers: await network.serviceHeaders(sc.dids.carol),
             encoding: 'application/json',
           },
         )
@@ -78,7 +78,7 @@ describe('moderation', () => {
           },
         },
         {
-          headers: await appViewHeaders(sc.dids.alice, testEnv),
+          headers: await network.serviceHeaders(sc.dids.alice),
           encoding: 'application/json',
         },
       )
@@ -99,7 +99,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: await appViewHeaders(sc.dids.alice, testEnv),
+            headers: await network.serviceHeaders(sc.dids.alice),
             encoding: 'application/json',
           },
         )
@@ -115,7 +115,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: await appViewHeaders(sc.dids.carol, testEnv),
+            headers: await network.serviceHeaders(sc.dids.carol),
             encoding: 'application/json',
           },
         )
@@ -138,7 +138,7 @@ describe('moderation', () => {
           },
         },
         {
-          headers: await appViewHeaders(sc.dids.alice, testEnv),
+          headers: await network.serviceHeaders(sc.dids.alice),
           encoding: 'application/json',
         },
       )
@@ -155,7 +155,7 @@ describe('moderation', () => {
           },
         },
         {
-          headers: await appViewHeaders(sc.dids.carol, testEnv),
+          headers: await network.serviceHeaders(sc.dids.carol),
           encoding: 'application/json',
         },
       )
@@ -175,7 +175,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: await appViewHeaders(sc.dids.alice, testEnv),
+            headers: await network.serviceHeaders(sc.dids.alice),
             encoding: 'application/json',
           },
         )
@@ -192,7 +192,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: await appViewHeaders(sc.dids.carol, testEnv),
+            headers: await network.serviceHeaders(sc.dids.carol),
             encoding: 'application/json',
           },
         )
@@ -209,7 +209,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
       const { data: actionResolvedReports } =
@@ -221,7 +221,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
 
@@ -236,7 +236,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -252,7 +252,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: await appViewHeaders(sc.dids.alice, testEnv),
+            headers: await network.serviceHeaders(sc.dids.alice),
             encoding: 'application/json',
           },
         )
@@ -269,7 +269,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
 
@@ -281,7 +281,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
 
@@ -298,7 +298,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -317,7 +317,7 @@ describe('moderation', () => {
             },
           },
           {
-            headers: await appViewHeaders(sc.dids.alice, testEnv),
+            headers: await network.serviceHeaders(sc.dids.alice),
             encoding: 'application/json',
           },
         )
@@ -335,7 +335,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
 
@@ -347,7 +347,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
 
@@ -364,7 +364,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -386,7 +386,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
       expect(action1).toEqual(
@@ -413,7 +413,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
       expect(action2).toEqual(
@@ -435,7 +435,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       await agent.api.com.atproto.admin.reverseModerationAction(
@@ -446,7 +446,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -467,7 +467,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
       const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
@@ -483,7 +483,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       await expect(flagPromise).rejects.toThrow(
@@ -499,7 +499,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       const { data: flag } =
@@ -516,7 +516,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
 
@@ -529,7 +529,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -548,7 +548,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
       const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
@@ -563,7 +563,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       await expect(flagPromise).rejects.toThrow(
@@ -579,7 +579,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       const { data: flag } =
@@ -595,7 +595,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
 
@@ -608,7 +608,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -632,7 +632,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
       const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
@@ -649,7 +649,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       await expect(flagPromise).rejects.toThrow(
@@ -664,7 +664,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       const { data: flag } =
@@ -682,7 +682,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
 
@@ -695,13 +695,13 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
 
     it('negates an existing label and reverses.', async () => {
-      const { ctx } = testEnv.bsky
+      const { ctx } = network.bsky
       const post = sc.posts[sc.dids.bob][0].ref
       const labelingService = ctx.services.label(ctx.db)
       await labelingService.formatAndCreate(
@@ -731,7 +731,7 @@ describe('moderation', () => {
     })
 
     it('no-ops when negating an already-negated label and reverses.', async () => {
-      const { ctx } = testEnv.bsky
+      const { ctx } = network.bsky
       const post = sc.posts[sc.dids.bob][0].ref
       const labelingService = ctx.services.label(ctx.db)
       const action = await actionWithLabels({
@@ -774,7 +774,7 @@ describe('moderation', () => {
     })
 
     it('no-ops when creating an existing label and reverses.', async () => {
-      const { ctx } = testEnv.bsky
+      const { ctx } = network.bsky
       const post = sc.posts[sc.dids.bob][0].ref
       const labelingService = ctx.services.label(ctx.db)
       await labelingService.formatAndCreate(
@@ -814,7 +814,7 @@ describe('moderation', () => {
     })
 
     it('creates and negates labels on a repo and reverses.', async () => {
-      const { ctx } = testEnv.bsky
+      const { ctx } = network.bsky
       const labelingService = ctx.services.label(ctx.db)
       await labelingService.formatAndCreate(
         ctx.cfg.labelerDid,
@@ -849,7 +849,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       return result.data
@@ -864,7 +864,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     }
@@ -872,7 +872,7 @@ describe('moderation', () => {
     async function getRecordLabels(uri: string) {
       const result = await agent.api.com.atproto.admin.getRecord(
         { uri },
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       )
       const labels = result.data.labels ?? []
       return labels.map((l) => l.val)
@@ -881,7 +881,7 @@ describe('moderation', () => {
     async function getRepoLabels(did: string) {
       const result = await agent.api.com.atproto.admin.getRepo(
         { did },
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       )
       const labels = result.data.labels ?? []
       return labels.map((l) => l.val)
@@ -894,7 +894,7 @@ describe('moderation', () => {
     let imageUri: string
     let actionId: number
     beforeAll(async () => {
-      const { ctx } = testEnv.bsky
+      const { ctx } = network.bsky
       post = sc.posts[sc.dids.carol][0]
       blob = post.images[1]
       imageUri = ctx.imgUriBuilder
@@ -903,7 +903,7 @@ describe('moderation', () => {
           sc.dids.carol,
           blob.image.ref.toString(),
         )
-        .replace(ctx.cfg.publicUrl || '', testEnv.bsky.url)
+        .replace(ctx.cfg.publicUrl || '', network.bsky.url)
       // Warm image server cache
       await fetch(imageUri)
       const cached = await fetch(imageUri)
@@ -922,7 +922,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       actionId = takeAction.data.id
@@ -930,7 +930,7 @@ describe('moderation', () => {
 
     it('prevents resolution of blob', async () => {
       const blobPath = `/blob/${sc.dids.carol}/${blob.image.ref.toString()}`
-      const resolveBlob = await fetch(`${testEnv.bsky.url}${blobPath}`)
+      const resolveBlob = await fetch(`${network.bsky.url}${blobPath}`)
       expect(resolveBlob.status).toEqual(404)
       expect(await resolveBlob.json()).toEqual({
         error: 'NotFoundError',
@@ -953,13 +953,13 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
 
       // Can resolve blob
       const blobPath = `/blob/${sc.dids.carol}/${blob.image.ref.toString()}`
-      const resolveBlob = await fetch(`${testEnv.bsky.url}${blobPath}`)
+      const resolveBlob = await fetch(`${network.bsky.url}${blobPath}`)
       expect(resolveBlob.status).toEqual(200)
 
       // Can fetch through image server
