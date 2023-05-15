@@ -89,7 +89,6 @@ export class Subscription<T = unknown> {
     const params = (await this.opts.getParams?.()) ?? {}
     const query = encodeQueryParams(params)
     const url = `${this.opts.service}/xrpc/${this.opts.method}?${query}`
-    console.log('OPPENING SOCKET: ', url)
     return new WebSocket(url, this.opts)
   }
 }
