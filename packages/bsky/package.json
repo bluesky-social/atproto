@@ -7,7 +7,7 @@
     "url": "https://github.com/bluesky-social/atproto.git",
     "directory": "packages/bsky"
   },
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "bin": "dist/bin.ts",
   "scripts": {
     "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",

@@ -1,13 +1,13 @@
 import assert from 'assert'
 import getPort from 'get-port'
 import { wait } from '@atproto/common-web'
+import { createServiceJwt } from '@atproto/xrpc-server'
 import { TestServerParams } from './types'
 import { TestPlc } from './plc'
 import { TestPds } from './pds'
 import { TestBsky } from './bsky'
 import { mockNetworkUtilities } from './util'
 import { TestNetworkNoAppView } from './network-no-appview'
-import { createServiceJwt } from '@atproto/pds/src/auth'
 
 export class TestNetwork extends TestNetworkNoAppView {
   constructor(public plc: TestPlc, public pds: TestPds, public bsky: TestBsky) {
@@ -24,20 +24,22 @@ export class TestNetwork extends TestNetworkNoAppView {
 
     const plc = await TestPlc.create(params.plc ?? {})
     const bskyPort = params.bsky?.port ?? (await getPort())
+    const pdsPort = params.pds?.port ?? (await getPort())
+    const bsky = await TestBsky.create({
+      port: bskyPort,
+      plcUrl: plc.url,
+      repoProvider: `ws://localhost:${pdsPort}`,
+      dbPostgresSchema: `appview_${dbPostgresSchema}`,
+      dbPostgresUrl,
+      ...params.bsky,
+    })
     const pds = await TestPds.create({
       dbPostgresUrl,
       dbPostgresSchema,
       plcUrl: plc.url,
-      bskyAppViewEndpoint: `http://localhost:${bskyPort}`,
+      bskyAppViewEndpoint: bsky.url,
+      bskyAppViewDid: bsky.ctx.cfg.serverDid,
       ...params.pds,
-    })
-    const bsky = await TestBsky.create({
-      port: bskyPort,
-      plcUrl: plc.url,
-      repoProvider: `ws://localhost:${pds.port}`,
-      dbPostgresSchema: `appview_${dbPostgresSchema}`,
-      dbPostgresUrl,
-      ...params.bsky,
     })
     mockNetworkUtilities(pds)
 
@@ -64,7 +66,11 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async serviceHeaders(did: string) {
-    const jwt = await createServiceJwt(did, this.pds.ctx.repoSigningKey)
+    const jwt = await createServiceJwt({
+      iss: did,
+      aud: this.bsky.ctx.cfg.serverDid,
+      keypair: this.pds.ctx.repoSigningKey,
+    })
     return { authorization: `Bearer ${jwt}` }
   }
 
