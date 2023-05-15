@@ -250,19 +250,22 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
   }
 
   // a couple feed generators that returns some posts
-  const fg1 = await env.createFeedGen(async () => {
-    const feed = posts
-      .filter(() => rand(2) === 0)
-      .map((post) => ({ post: post.uri }))
-    return {
-      encoding: 'application/json',
-      body: {
-        feed,
-      },
-    }
+  const fg1Uri = AtUri.make(alice.did, 'app.bsky.feed.generator', 'alice-favs')
+  const fg1 = await env.createFeedGen({
+    [fg1Uri.toString()]: async () => {
+      const feed = posts
+        .filter(() => rand(2) === 0)
+        .map((post) => ({ post: post.uri }))
+      return {
+        encoding: 'application/json',
+        body: {
+          feed,
+        },
+      }
+    },
   })
   const fgAliceRes = await alice.agent.api.app.bsky.feed.generator.create(
-    { repo: alice.did, rkey: 'alice-favs' },
+    { repo: alice.did, rkey: fg1Uri.rkey },
     {
       did: fg1.did,
       displayName: 'alices feed',
@@ -292,19 +295,22 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
     )
   }
 
-  const fg2 = await env.createFeedGen(async () => {
-    const feed = posts
-      .filter(() => rand(2) === 0)
-      .map((post) => ({ post: post.uri }))
-    return {
-      encoding: 'application/json',
-      body: {
-        feed,
-      },
-    }
+  const fg2Uri = AtUri.make(bob.did, 'app.bsky.feed.generator', 'bob-redux')
+  const fg2 = await env.createFeedGen({
+    [fg2Uri.toString()]: async () => {
+      const feed = posts
+        .filter(() => rand(2) === 0)
+        .map((post) => ({ post: post.uri }))
+      return {
+        encoding: 'application/json',
+        body: {
+          feed,
+        },
+      }
+    },
   })
   const fgBobRes = await bob.agent.api.app.bsky.feed.generator.create(
-    { repo: bob.did, rkey: 'bob-redux' },
+    { repo: bob.did, rkey: fg2Uri.rkey },
     { did: fg2.did, createdAt: date.next().value },
   )
 

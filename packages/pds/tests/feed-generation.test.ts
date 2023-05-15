@@ -1,4 +1,4 @@
-import { AtpAgent } from '@atproto/api'
+import { AtUri, AtpAgent } from '@atproto/api'
 import { Handler as SkeletonHandler } from '@atproto/pds/src/lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { UnknownFeedError } from '@atproto/api/src/client/types/app/bsky/feed/getFeed'
 import { SeedClient } from './seeds/client'
@@ -6,7 +6,6 @@ import basicSeed from './seeds/basic'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { TestFeedGen } from '@atproto/dev-env/src/feed-gen'
 import { TID } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { forSnapshot, paginateAll } from './_util'
 import {
   FeedViewPost,
@@ -38,8 +37,13 @@ describe('feed generation', () => {
     sc = new SeedClient(agent)
     await basicSeed(sc)
     await network.pds.ctx.backgroundQueue.processAll()
-    gen = await network.createFeedGen(feedGenHandler)
     alice = sc.dids.alice
+    const allUri = AtUri.make(alice, 'app.bsky.feed.generator', 'all')
+    const evenUri = AtUri.make(alice, 'app.bsky.feed.generator', 'even')
+    gen = await network.createFeedGen({
+      [allUri.toString()]: feedGenHandler('all'),
+      [evenUri.toString()]: feedGenHandler('even'),
+    })
   })
 
   afterAll(async () => {
@@ -226,52 +230,50 @@ describe('feed generation', () => {
     })
   })
 
-  const feedGenHandler: SkeletonHandler = async ({ req, params }) => {
-    const { feed, limit, cursor } = params
-    const feedName = feed.split('/').at(-1)
-    if (feedName !== 'all' && feedName !== 'even') {
-      throw new InvalidRequestError('Unknown feed', 'UnknownFeed')
-    }
-    const candidates: SkeletonFeedPost[] = [
-      { post: sc.posts[sc.dids.alice][0].ref.uriStr },
-      { post: sc.posts[sc.dids.bob][0].ref.uriStr },
-      { post: sc.posts[sc.dids.carol][0].ref.uriStr },
-      { post: `at://did:plc:unknown/app.bsky.feed.post/${TID.nextStr()}` }, // Doesn't exist
-      { post: sc.replies[sc.dids.carol][0].ref.uriStr }, // Reply
-      // Repost (accurate)
-      {
-        post: sc.posts[sc.dids.dan][1].ref.uriStr,
-        reason: {
-          $type: 'app.bsky.feed.defs#skeletonReasonRepost',
-          repost: sc.reposts[sc.dids.carol][0].uriStr,
+  const feedGenHandler =
+    (feedName: 'even' | 'all'): SkeletonHandler =>
+    async ({ req, params }) => {
+      const { limit, cursor } = params
+      const candidates: SkeletonFeedPost[] = [
+        { post: sc.posts[sc.dids.alice][0].ref.uriStr },
+        { post: sc.posts[sc.dids.bob][0].ref.uriStr },
+        { post: sc.posts[sc.dids.carol][0].ref.uriStr },
+        { post: `at://did:plc:unknown/app.bsky.feed.post/${TID.nextStr()}` }, // Doesn't exist
+        { post: sc.replies[sc.dids.carol][0].ref.uriStr }, // Reply
+        // Repost (accurate)
+        {
+          post: sc.posts[sc.dids.dan][1].ref.uriStr,
+          reason: {
+            $type: 'app.bsky.feed.defs#skeletonReasonRepost',
+            repost: sc.reposts[sc.dids.carol][0].uriStr,
+          },
         },
-      },
-      // Repost (inaccurate)
-      {
-        post: sc.posts[alice][1].ref.uriStr,
-        reason: {
-          $type: 'app.bsky.feed.defs#skeletonReasonRepost',
-          repost: sc.reposts[sc.dids.carol][0].uriStr,
+        // Repost (inaccurate)
+        {
+          post: sc.posts[alice][1].ref.uriStr,
+          reason: {
+            $type: 'app.bsky.feed.defs#skeletonReasonRepost',
+            repost: sc.reposts[sc.dids.carol][0].uriStr,
+          },
         },
-      },
-    ]
-    const offset = cursor ? parseInt(cursor, 10) : 0
-    const fullFeed = candidates.filter((_, i) =>
-      feedName === 'even' ? i % 2 === 0 : true,
-    )
-    const feedResults = fullFeed.slice(offset, offset + limit)
-    const lastResult = feedResults.at(-1)
-    return {
-      encoding: 'application/json',
-      body: {
-        feed: feedResults,
-        cursor: lastResult
-          ? (fullFeed.indexOf(lastResult) + 1).toString()
-          : undefined,
-        $auth: jwtBody(req.headers.authorization), // for testing purposes
-      },
+      ]
+      const offset = cursor ? parseInt(cursor, 10) : 0
+      const fullFeed = candidates.filter((_, i) =>
+        feedName === 'even' ? i % 2 === 0 : true,
+      )
+      const feedResults = fullFeed.slice(offset, offset + limit)
+      const lastResult = feedResults.at(-1)
+      return {
+        encoding: 'application/json',
+        body: {
+          feed: feedResults,
+          cursor: lastResult
+            ? (fullFeed.indexOf(lastResult) + 1).toString()
+            : undefined,
+          $auth: jwtBody(req.headers.authorization), // for testing purposes
+        },
+      }
     }
-  }
 })
 
 const jwtBody = (authHeader?: string): Record<string, unknown> | undefined => {

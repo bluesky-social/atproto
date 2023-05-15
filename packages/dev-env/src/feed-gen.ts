@@ -6,6 +6,7 @@ import * as plc from '@did-plc/lib'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { Handler as SkeletonHandler } from '@atproto/pds/src/lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { createServer } from '@atproto/pds/src/lexicon'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export class TestFeedGen {
   constructor(
@@ -16,13 +17,31 @@ export class TestFeedGen {
 
   static async create(
     plcUrl: string,
-    fn: SkeletonHandler,
+    feeds: Record<string, SkeletonHandler>,
   ): Promise<TestFeedGen> {
     const port = await getPort()
     const did = await createFgDid(plcUrl, port)
     const app = express()
     const lexServer = createServer()
-    lexServer.app.bsky.feed.getFeedSkeleton(fn)
+
+    lexServer.app.bsky.feed.getFeedSkeleton(async (args) => {
+      const handler = feeds[args.params.feed]
+      if (!handler) {
+        throw new InvalidRequestError('unknown feed', 'UnknownFeed')
+      }
+      return handler(args)
+    })
+
+    lexServer.app.bsky.feed.describeFeedGenerator(async () => {
+      return {
+        encoding: 'application/json',
+        body: {
+          did,
+          feeds: Object.keys(feeds),
+        },
+      }
+    })
+
     app.use(lexServer.xrpc.router)
     const server = app.listen(port)
     await events.once(server, 'listening')
