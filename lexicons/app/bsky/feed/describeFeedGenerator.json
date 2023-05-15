@@ -9,7 +9,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["feed"],
+          "required": ["did", "feeds"],
           "properties": {
             "did": {"type": "string", "format": "did"},
             "feeds": {
