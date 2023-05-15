@@ -194,6 +194,7 @@ export interface GeneratorView {
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: string
+  likeCount?: number
   viewer?: GeneratorViewerState
   indexedAt: string
   [k: string]: unknown

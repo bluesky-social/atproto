@@ -34,6 +34,7 @@ Object {
       "description": "Provides all feed candidates",
       "did": "user(1)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
+      "likeCount": 0,
       "uri": "record(1)",
       "viewer": Object {
         "saved": true,
@@ -83,6 +84,7 @@ Array [
     "description": "Provides odd-indexed feed candidates",
     "did": "user(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 0,
     "uri": "record(0)",
     "viewer": Object {
       "saved": false,
@@ -107,6 +109,7 @@ Array [
     "description": "Provides even-indexed feed candidates",
     "did": "user(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 0,
     "uri": "record(3)",
     "viewer": Object {
       "saved": false,
@@ -131,6 +134,7 @@ Array [
     "description": "Provides all feed candidates",
     "did": "user(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 0,
     "uri": "record(4)",
     "viewer": Object {
       "saved": false,
@@ -848,6 +852,7 @@ Array [
     "description": "Provides odd-indexed feed candidates",
     "did": "user(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 0,
     "uri": "record(0)",
     "viewer": Object {
       "saved": true,
@@ -872,6 +877,7 @@ Array [
     "description": "Provides all feed candidates",
     "did": "user(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 0,
     "uri": "record(3)",
     "viewer": Object {
       "saved": true,
@@ -896,6 +902,7 @@ Array [
     "description": "Provides even-indexed feed candidates",
     "did": "user(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 0,
     "uri": "record(4)",
     "viewer": Object {
       "saved": true,

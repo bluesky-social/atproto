@@ -4327,6 +4327,10 @@ export const schemaDict = {
           avatar: {
             type: 'string',
           },
+          likeCount: {
+            type: 'integer',
+            minimum: 0,
+          },
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#generatorViewerState',

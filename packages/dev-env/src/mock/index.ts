@@ -282,6 +282,15 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
       createdAt: date.next().value,
     },
   )
+  for (const user of [alice, bob, carla]) {
+    await user.agent.api.app.bsky.feed.like.create(
+      { repo: user.did },
+      {
+        subject: fgAliceRes,
+        createdAt: date.next().value,
+      },
+    )
+  }
 
   const fg2 = await env.createFeedGen(async () => {
     const feed = posts

@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import Database from '../../../db'
-import { notSoftDeletedClause } from '../../../db/util'
+import { countAll, notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
 import { ids } from '../../../lexicon/lexicons'
 import { isView as isViewImages } from '../../../lexicon/types/app/bsky/embed/images'
@@ -96,6 +96,13 @@ export class FeedService {
       .selectFrom('feed_generator')
       .innerJoin('did_handle', 'did_handle.did', 'feed_generator.creator')
       .selectAll()
+      .select((qb) =>
+        qb
+          .selectFrom('like')
+          .whereRef('like.subject', '=', 'feed_generator.uri')
+          .select(countAll.as('count'))
+          .as('likeCount'),
+      )
       .select((qb) =>
         qb
           .selectFrom('like')

@@ -104,6 +104,7 @@
           "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
         },
         "avatar": {"type": "string"},
+        "likeCount": {"type": "integer", "minimum": 0 },
         "viewer": {"type": "ref", "ref": "#generatorViewerState"},
         "indexedAt": {"type": "string", "format": "datetime"}
       }
