@@ -1,7 +1,7 @@
 import { TestNetwork } from '@atproto/dev-env'
 import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
 import { AtUri } from '@atproto/uri'
-import { adminAuth, forSnapshot } from './_util'
+import { forSnapshot } from './_util'
 import { ImageRef, RecordRef, SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import {
@@ -209,7 +209,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
       const { data: actionResolvedReports } =
@@ -221,7 +221,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
 
@@ -236,7 +236,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -269,7 +269,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
 
@@ -281,7 +281,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
 
@@ -298,7 +298,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -335,7 +335,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
 
@@ -347,7 +347,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
 
@@ -364,7 +364,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -386,7 +386,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
       expect(action1).toEqual(
@@ -413,7 +413,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
       expect(action2).toEqual(
@@ -435,7 +435,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       await agent.api.com.atproto.admin.reverseModerationAction(
@@ -446,7 +446,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -467,7 +467,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
       const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
@@ -483,7 +483,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       await expect(flagPromise).rejects.toThrow(
@@ -499,7 +499,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       const { data: flag } =
@@ -516,7 +516,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
 
@@ -529,7 +529,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -548,7 +548,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
       const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
@@ -563,7 +563,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       await expect(flagPromise).rejects.toThrow(
@@ -579,7 +579,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       const { data: flag } =
@@ -595,7 +595,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
 
@@ -608,7 +608,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -632,7 +632,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
       const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
@@ -649,7 +649,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       await expect(flagPromise).rejects.toThrow(
@@ -664,7 +664,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       const { data: flag } =
@@ -682,7 +682,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         )
 
@@ -695,7 +695,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     })
@@ -849,7 +849,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       return result.data
@@ -864,7 +864,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
     }
@@ -872,7 +872,7 @@ describe('moderation', () => {
     async function getRecordLabels(uri: string) {
       const result = await agent.api.com.atproto.admin.getRecord(
         { uri },
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       )
       const labels = result.data.labels ?? []
       return labels.map((l) => l.val)
@@ -881,7 +881,7 @@ describe('moderation', () => {
     async function getRepoLabels(did: string) {
       const result = await agent.api.com.atproto.admin.getRepo(
         { did },
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       )
       const labels = result.data.labels ?? []
       return labels.map((l) => l.val)
@@ -922,7 +922,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
       actionId = takeAction.data.id
@@ -953,7 +953,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: network.pds.adminAuthHeaders(),
         },
       )
 
