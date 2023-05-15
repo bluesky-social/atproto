@@ -14,7 +14,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   did: string
-  feeds: string[]
+  feeds: Feed[]
   links?: Links
   [k: string]: unknown
 }
@@ -39,6 +39,23 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
   req: express.Request
   res: express.Response
 }) => Promise<HandlerOutput> | HandlerOutput
+
+export interface Feed {
+  uri: string
+  [k: string]: unknown
+}
+
+export function isFeed(v: unknown): v is Feed {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.describeFeedGenerator#feed'
+  )
+}
+
+export function validateFeed(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.describeFeedGenerator#feed', v)
+}
 
 export interface Links {
   privacyPolicy?: string

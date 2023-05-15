@@ -37,7 +37,8 @@ export default function (server: Server, ctx: AppContext) {
       try {
         const res = await agent.api.app.bsky.feed.describeFeedGenerator()
         isOnline = true
-        isValid = res.data.did === feedDid && res.data.feeds.includes(feed)
+        isValid =
+          res.data.did === feedDid && res.data.feeds.some((f) => f.uri === feed)
       } catch (err) {
         isOnline = false
         isValid = false

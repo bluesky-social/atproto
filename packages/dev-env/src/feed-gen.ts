@@ -39,7 +39,9 @@ export class TestFeedGen {
         encoding: 'application/json',
         body: {
           did,
-          feeds: Object.keys(feeds),
+          feeds: Object.keys(feeds).map((uri) => ({
+            uri,
+          })),
         },
       }
     })

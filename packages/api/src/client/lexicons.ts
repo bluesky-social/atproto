@@ -4400,8 +4400,8 @@ export const schemaDict = {
               feeds: {
                 type: 'array',
                 items: {
-                  type: 'string',
-                  format: 'at-uri',
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.describeFeedGenerator#feed',
                 },
               },
               links: {
@@ -4409,6 +4409,16 @@ export const schemaDict = {
                 ref: 'lex:app.bsky.feed.describeFeedGenerator#links',
               },
             },
+          },
+        },
+      },
+      feed: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },

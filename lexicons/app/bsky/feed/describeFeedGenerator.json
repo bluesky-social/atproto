@@ -14,11 +14,18 @@
             "did": {"type": "string", "format": "did"},
             "feeds": {
               "type": "array",
-              "items": {"type": "string", "format": "at-uri"}
+              "items": {"type": "ref", "ref": "#feed"}
             },
             "links": {"type": "ref", "ref": "#links"}
           }
         }
+      }
+    },
+    "feed": {
+      "type": "object",
+      "required": ["uri"],
+      "properties": {
+        "uri": {"type": "string", "format": "at-uri"}
       }
     },
     "links": {
