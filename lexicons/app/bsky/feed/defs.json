@@ -92,9 +92,10 @@
     },
     "generatorView": {
       "type": "object",
-      "required": ["uri", "creator", "indexedAt"],
+      "required": ["uri", "cid", "creator", "indexedAt"],
       "properties": {
         "uri": {"type": "string", "format": "at-uri"},
+        "cid": {"type": "string", "format": "cid"},
         "did": {"type": "string", "format": "did"},
         "creator": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
         "displayName": {"type": "string"},

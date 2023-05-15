@@ -4295,11 +4295,15 @@ export const schemaDict = {
       },
       generatorView: {
         type: 'object',
-        required: ['uri', 'creator', 'indexedAt'],
+        required: ['uri', 'cid', 'creator', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
             format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
           },
           did: {
             type: 'string',
@@ -4646,7 +4650,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Retrieve a list of feeds created by a given actor',
+        description:
+          'Get information about a specific feed offered by a feed generator, such as its online status',
         parameters: {
           type: 'params',
           required: ['feed'],

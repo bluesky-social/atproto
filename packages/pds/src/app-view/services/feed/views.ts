@@ -32,6 +32,7 @@ export class FeedViews {
   ): GeneratorView {
     return {
       uri: info.uri,
+      cid: info.cid,
       did: info.feedDid,
       creator: profiles[info.creator],
       displayName: info.displayName ?? undefined,
