@@ -1,8 +1,10 @@
-import { AddressInfo } from 'net'
+import getPort from 'get-port'
 import * as bsky from '@atproto/bsky'
 import { DAY, HOUR } from '@atproto/common-web'
-import { BskyConfig } from './types'
 import { AtpAgent } from '@atproto/api'
+import { Secp256k1Keypair } from '@atproto/crypto'
+import { Client as PlcClient } from '@did-plc/lib'
+import { BskyConfig } from './types'
 
 export class TestBsky {
   constructor(
@@ -12,10 +14,23 @@ export class TestBsky {
   ) {}
 
   static async create(cfg: BskyConfig): Promise<TestBsky> {
+    const serviceKeypair = await Secp256k1Keypair.create()
+    const plcClient = new PlcClient(cfg.plcUrl)
+
+    const port = cfg.port || (await getPort())
+    const url = `http://localhost:${port}`
+    const serverDid = await plcClient.createDid({
+      signingKey: serviceKeypair.did(),
+      rotationKeys: [serviceKeypair.did()],
+      handle: 'bsky.test',
+      pds: `http://localhost:${port}`,
+      signer: serviceKeypair,
+    })
     const config = new bsky.ServerConfig({
       version: '0.0.0',
       didPlcUrl: cfg.plcUrl,
       publicUrl: 'https://bsky.public.url',
+      serverDid,
       imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
       imgUriKey:
         'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
@@ -47,9 +62,7 @@ export class TestBsky {
     await migrationDb.close()
 
     const server = bsky.BskyAppView.create({ db, config })
-    const listener = await server.start()
-    const port = (listener.address() as AddressInfo).port
-    const url = `http://localhost:${port}`
+    await server.start()
     const sub = server.sub
     if (!sub) {
       throw new Error('No appview sub setup')

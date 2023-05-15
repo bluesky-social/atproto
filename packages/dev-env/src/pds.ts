@@ -1,9 +1,11 @@
+import getPort from 'get-port'
+import * as ui8 from 'uint8arrays'
 import * as pds from '@atproto/pds'
-import { PdsConfig } from './types'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { MessageDispatcher } from '@atproto/pds/src/event-stream/message-queue'
-import { AddressInfo } from 'net'
 import { AtpAgent } from '@atproto/api'
+import { Client as PlcClient } from '@did-plc/lib'
+import { PdsConfig } from './types'
 
 export class TestPds {
   constructor(
@@ -13,14 +15,28 @@ export class TestPds {
   ) {}
 
   static async create(cfg: PdsConfig): Promise<TestPds> {
+    const repoSigningKey = await Secp256k1Keypair.create()
+    const plcRotationKey = await Secp256k1Keypair.create()
     const recoveryKey = await Secp256k1Keypair.create()
+
+    const port = cfg.port || (await getPort())
+    const url = `http://localhost:${port}`
+    const plcClient = new PlcClient(cfg.plcUrl)
+
+    const serverDid = await plcClient.createDid({
+      signingKey: repoSigningKey.did(),
+      rotationKeys: [recoveryKey.did(), plcRotationKey.did()],
+      handle: 'pds.test',
+      pds: `http://localhost:${port}`,
+      signer: plcRotationKey,
+    })
 
     const config = new pds.ServerConfig({
       debugMode: true,
       version: '0.0.0',
       scheme: 'http',
       hostname: 'localhost',
-      serverDid: 'did:fake:donotuse',
+      serverDid,
       recoveryKey: recoveryKey.did(),
       adminPassword: 'admin-pass',
       inviteRequired: false,
@@ -50,8 +66,6 @@ export class TestPds {
         })
       : pds.Database.memory()
     await db.migrateToLatestOrThrow()
-    const repoSigningKey = await Secp256k1Keypair.create()
-    const plcRotationKey = await Secp256k1Keypair.create()
 
     if (config.bskyAppViewEndpoint) {
       // Disable communication to app view within pds
@@ -66,9 +80,7 @@ export class TestPds {
       config,
     })
 
-    const listener = await server.start()
-    const port = (listener.address() as AddressInfo).port
-    const url = `http://localhost:${port}`
+    await server.start()
     return new TestPds(url, port, server)
   }
 
@@ -78,6 +90,22 @@ export class TestPds {
 
   getClient(): AtpAgent {
     return new AtpAgent({ service: `http://localhost:${this.port}` })
+  }
+
+  adminAuth(): string {
+    return (
+      'Basic ' +
+      ui8.toString(
+        ui8.fromString(`admin:${this.ctx.cfg.adminPassword}`, 'utf8'),
+        'base64pad',
+      )
+    )
+  }
+
+  adminAuthHeaders() {
+    return {
+      authorization: this.adminAuth(),
+    }
   }
 
   async close() {
