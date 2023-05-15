@@ -117,17 +117,16 @@ export function encodeMethodCallBody(
   headers: Headers,
   data?: any,
 ): ArrayBuffer | undefined {
-  const normalizedHeaders = normalizeHeaders(headers)
-  if (!normalizedHeaders['content-type'] || typeof data === 'undefined') {
+  if (!headers['content-type'] || typeof data === 'undefined') {
     return undefined
   }
   if (data instanceof ArrayBuffer) {
     return data
   }
-  if (normalizedHeaders['content-type'].startsWith('text/')) {
+  if (headers['content-type'].startsWith('text/')) {
     return new TextEncoder().encode(data.toString())
   }
-  if (normalizedHeaders['content-type'].startsWith('application/json')) {
+  if (headers['content-type'].startsWith('application/json')) {
     return new TextEncoder().encode(stringifyLex(data))
   }
   return data
