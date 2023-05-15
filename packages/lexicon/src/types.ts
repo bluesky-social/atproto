@@ -234,6 +234,10 @@ export type LexRecord = z.infer<typeof lexRecord>
 // core
 // =
 
+// We need to use `z.custom` here because
+// lexXrpcProperty and lexObject are refined
+// `z.union` would work, but it's too slow
+// see #915 for details
 export const lexUserType = z.custom<
   | LexRecord
   | LexXrpcQuery
@@ -294,7 +298,26 @@ export const lexUserType = z.custom<
         return lexUnknown.parse(val)
     }
   },
-  { fatal: false },
+  (val) => {
+    if (!val || typeof val !== 'object') {
+      return {
+        message: 'Must be an object',
+        fatal: true,
+      }
+    }
+
+    if (val['type'] === undefined) {
+      return {
+        message: 'Must have a type',
+        fatal: true,
+      }
+    }
+
+    return {
+      message: `Invalid type: ${val['type']} must be one of: record, query, procedure, subscription, blob, array, token, object, boolean, integer, string, bytes, cid-link, unknown`,
+      fatal: true,
+    }
+  },
 )
 export type LexUserType = z.infer<typeof lexUserType>
 
