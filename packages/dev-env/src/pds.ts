@@ -80,8 +80,6 @@ export class TestPds {
       plcRotationKey,
       config,
     })
-
-    await server.start()
     return new TestPds(url, port, server)
   }
 

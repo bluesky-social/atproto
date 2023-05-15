@@ -63,11 +63,6 @@ export class TestBsky {
     await migrationDb.close()
 
     const server = bsky.BskyAppView.create({ db, config })
-    await server.start()
-    const sub = server.sub
-    if (!sub) {
-      throw new Error('No appview sub setup')
-    }
     return new TestBsky(url, port, server)
   }
 

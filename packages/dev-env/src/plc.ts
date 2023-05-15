@@ -1,7 +1,7 @@
+import getPort from 'get-port'
 import { Client as PlcClient } from '@did-plc/lib'
 import * as plc from '@did-plc/server'
 import { PlcConfig } from './types'
-import { AddressInfo } from 'net'
 
 export class TestPlc {
   constructor(
@@ -12,10 +12,9 @@ export class TestPlc {
 
   static async create(cfg: PlcConfig): Promise<TestPlc> {
     const db = plc.Database.mock()
-    const server = plc.PlcServer.create({ db, ...cfg })
-    const listener = await server.start()
-    const port = (listener.address() as AddressInfo).port
+    const port = cfg.port || (await getPort())
     const url = `http://localhost:${port}`
+    const server = plc.PlcServer.create({ db, port, ...cfg })
     return new TestPlc(url, port, server)
   }
 

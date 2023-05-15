@@ -22,6 +22,9 @@ export class TestNetworkNoAppView {
     })
     mockNetworkUtilities(pds)
 
+    await plc.server.start()
+    await pds.server.start()
+
     return new TestNetworkNoAppView(plc, pds)
   }
 
