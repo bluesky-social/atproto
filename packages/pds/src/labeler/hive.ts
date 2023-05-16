@@ -146,6 +146,7 @@ export const sexualLabels = (classes: HiveRespClass[]): string[] => {
 const labelForClass = {
   very_bloody: 'gore',
   human_corpse: 'corpse',
+  hanging: 'corpse',
   yes_self_harm: 'self-harm',
 }
 
