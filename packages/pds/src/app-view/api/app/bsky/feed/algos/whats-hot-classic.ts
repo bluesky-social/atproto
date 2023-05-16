@@ -9,6 +9,10 @@ const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   '!no-promote',
   'corpse',
   'self-harm',
+  'porn',
+  'sexual',
+  'nudity',
+  'underwear',
 ]
 
 const handler: AlgoHandler = async (
@@ -26,6 +30,7 @@ const handler: AlgoHandler = async (
   const postsQb = feedService
     .selectPostQb()
     .leftJoin('post_agg', 'post_agg.uri', 'post.uri')
+    .leftJoin('post_embed_record', 'post_embed_record.postUri', 'post.uri')
     .where('post_agg.likeCount', '>=', 12)
     .where('post.replyParent', 'is', null)
     .whereNotExists((qb) =>
@@ -37,7 +42,8 @@ const handler: AlgoHandler = async (
         .where((clause) =>
           clause
             .whereRef('label.uri', '=', ref('post.creator'))
-            .orWhereRef('label.uri', '=', ref('post.uri')),
+            .orWhereRef('label.uri', '=', ref('post.uri'))
+            .orWhereRef('label.uri', '=', ref('post_embed_record.embedUri')),
         ),
     )
     .whereNotExists(accountService.mutedQb(requester, [ref('post.creator')]))
