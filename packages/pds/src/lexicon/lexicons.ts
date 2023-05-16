@@ -1194,6 +1194,7 @@ export const schemaDict = {
         description: 'Provides the DID of a repo.',
         parameters: {
           type: 'params',
+          required: ['handle'],
           properties: {
             handle: {
               type: 'string',
