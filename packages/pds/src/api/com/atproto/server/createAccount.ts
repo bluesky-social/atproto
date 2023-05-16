@@ -8,7 +8,7 @@ import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
 import Database from '../../../../db'
-import { AtprotoData } from '@atproto/did-resolver'
+import { AtprotoData } from '@atproto/identity'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount(async ({ input, req }) => {
@@ -156,9 +156,8 @@ const ensureValidHandle = async (
       if (input.did === undefined) {
         throw new InvalidRequestError(err.message, 'UnsupportedDomain')
       }
-      const resolvedHandleDid = await ident.resolveHandle(
+      const resolvedHandleDid = await ctx.idResolver.handle.resolve(
         input.handle,
-        ctx.cfg.scheme,
       )
       if (input.did !== resolvedHandleDid) {
         throw new InvalidRequestError('External handle did not resolve to DID')
@@ -201,7 +200,7 @@ const getDidAndPlcOp = async (
   // determine if we have the capability to make changes to their DID
   let atpData: AtprotoData
   try {
-    atpData = await ctx.didResolver.resolveAtprotoData(input.did)
+    atpData = await ctx.idResolver.did.resolveAtprotoData(input.did)
   } catch (err) {
     throw new InvalidRequestError(
       `could not resolve valid DID document :${input.did}`,

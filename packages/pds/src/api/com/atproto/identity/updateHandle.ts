@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       } catch (err) {
         if (err instanceof ident.UnsupportedDomainError) {
-          const did = await ident.resolveHandle(handle, ctx.cfg.scheme)
+          const did = await ctx.idResolver.handle.resolve(handle)
           if (did !== requester) {
             throw new InvalidRequestError(
               'External handle did not resolve to DID',

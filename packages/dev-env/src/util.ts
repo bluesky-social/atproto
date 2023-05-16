@@ -1,5 +1,5 @@
 import { AtpAgent } from '@atproto/api'
-import { DidResolver } from '@atproto/did-resolver'
+import { DidResolver } from '@atproto/identity'
 import { defaultFetchHandler } from '@atproto/xrpc'
 import { TestPds } from './pds'
 

@@ -2,14 +2,14 @@ import AtpAgent from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { SeedClient } from './seeds/client'
 import userSeed from './seeds/users'
-import { DidResolver } from '@atproto/did-resolver'
+import { IdResolver } from '@atproto/identity'
 import DidSqlCache from '../src/did-cache'
 import { wait } from '@atproto/common'
 
 describe('did cache', () => {
   let network: TestNetwork
   let sc: SeedClient
-  let didResolver: DidResolver
+  let idResolver: IdResolver
   let didCache: DidSqlCache
 
   let alice: string
@@ -21,7 +21,7 @@ describe('did cache', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_did_cache',
     })
-    didResolver = network.bsky.ctx.didResolver
+    idResolver = network.bsky.ctx.idResolver
     didCache = network.bsky.ctx.didCache
     const pdsAgent = new AtpAgent({ service: network.pds.url })
     sc = new SeedClient(pdsAgent)

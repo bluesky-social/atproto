@@ -1,8 +1,8 @@
 import express from 'express'
 import cors from 'cors'
 import http from 'http'
-import { DIDDocument } from 'did-resolver'
 import DidWebDb from './db'
+import { DidDocument } from '../../src'
 
 const DOC_PATH = '/.well-known/did.json'
 
@@ -72,22 +72,22 @@ export class DidWebServer {
     return server
   }
 
-  async getByPath(didPath?: string): Promise<DIDDocument | null> {
+  async getByPath(didPath?: string): Promise<DidDocument | null> {
     if (!didPath) return null
     return this._db.get(didPath)
   }
 
-  async getById(did?: string): Promise<DIDDocument | null> {
+  async getById(did?: string): Promise<DidDocument | null> {
     if (!did) return null
     const path = idToPath(did)
     return this.getByPath(path)
   }
 
-  async put(didDoc: DIDDocument) {
+  async put(didDoc: DidDocument) {
     await this._db.put(idToPath(didDoc.id), didDoc)
   }
 
-  async delete(didOrDoc: string | DIDDocument) {
+  async delete(didOrDoc: string | DidDocument) {
     const did = typeof didOrDoc === 'string' ? didOrDoc : didOrDoc.id
     const path = idToPath(did)
     await this._db.del(path)

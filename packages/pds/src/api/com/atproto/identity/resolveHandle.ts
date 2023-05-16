@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // this is not someone on our server, but we help with resolving anyway
-      did = await ident.resolveHandle(handle, ctx.cfg.scheme)
+      did = await ctx.idResolver.handle.resolve(handle)
     }
     if (!did) {
       throw new InvalidRequestError('Unable to resolve handle')

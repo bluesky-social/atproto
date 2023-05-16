@@ -10,7 +10,7 @@ import {
   Commit,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
-import { DidResolver } from '@atproto/did-resolver'
+import { IdResolver } from '@atproto/identity'
 import { chunkArray } from '@atproto/common'
 import { ValidationError } from '@atproto/lexicon'
 import * as ident from '@atproto/identifier'
@@ -36,7 +36,7 @@ export class IndexingService {
 
   constructor(
     public db: Database,
-    public didResolver: DidResolver,
+    public idResolver: IdResolver,
     public labeler: Labeler,
   ) {
     this.records = {
@@ -48,8 +48,8 @@ export class IndexingService {
     }
   }
 
-  static creator(didResolver: DidResolver, labeler: Labeler) {
-    return (db: Database) => new IndexingService(db, didResolver, labeler)
+  static creator(idResolver: IdResolver, labeler: Labeler) {
+    return (db: Database) => new IndexingService(db, idResolver, labeler)
   }
 
   async indexRecord(
@@ -86,7 +86,7 @@ export class IndexingService {
     if (actor && !force) {
       return
     }
-    const { handle } = await this.didResolver.resolveAtprotoData(did, true)
+    const { handle } = await this.idResolver.did.resolveAtprotoData(did, true)
     const handleToDid = await ident.resolveHandle(handle)
     if (did !== handleToDid) {
       return // No bidirectional link between did and handle
@@ -110,7 +110,7 @@ export class IndexingService {
   async indexRepo(did: string, commit: string) {
     this.db.assertTransaction()
     const now = new Date().toISOString()
-    const { pds, signingKey } = await this.didResolver.resolveAtprotoData(
+    const { pds, signingKey } = await this.idResolver.did.resolveAtprotoData(
       did,
       true,
     )
@@ -202,7 +202,7 @@ export class IndexingService {
 
   async tombstoneActor(did: string) {
     this.db.assertTransaction()
-    const doc = await this.didResolver.resolveDid(did, true)
+    const doc = await this.idResolver.did.resolveDid(did, true)
     if (doc === null) {
       await Promise.all([
         this.unindexActor(did),
