@@ -59,14 +59,3 @@ export const resolveHttp = async (
   }
   return maybeDid
 }
-
-export class NoHandleRecordError extends Error {
-  constructor(public handle: string) {
-    super(`No record found at ${handle}`)
-  }
-}
-export class ManyHandleRecordsError extends Error {
-  constructor(public handle: string, records: string[]) {
-    super(`Many records found at record found at ${handle}: ${records}`)
-  }
-}
