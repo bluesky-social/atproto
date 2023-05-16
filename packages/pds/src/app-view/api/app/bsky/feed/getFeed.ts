@@ -6,6 +6,7 @@ import {
 import { getFeedGen } from '@atproto/did-resolver'
 import { AtpAgent } from '@atproto/api'
 import { SkeletonFeedPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
+import { QueryParams as GetFeedParams } from '@atproto/api/src/client/types/app/bsky/feed/getFeed'
 import {
   OutputSchema as SkeletonOutput,
   UnknownFeedError,
@@ -14,6 +15,8 @@ import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
+import algos from './algos'
+import { AlgoResponse } from './algos/types'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeed({
@@ -22,91 +25,107 @@ export default function (server: Server, ctx: AppContext) {
       const { feed } = params
       const requester = auth.credentials.did
 
-      // Resolve and fetch feed skeleton
-      const found = await ctx.db.db
-        .selectFrom('feed_generator')
-        .where('uri', '=', feed)
-        .select('feedDid')
-        .executeTakeFirst()
-      if (!found) {
-        throw new InvalidRequestError('could not find feed')
-      }
-      const feedDid = found.feedDid
-      const resolved = await ctx.didResolver.resolveDid(feedDid)
-      if (!resolved) {
-        throw new InvalidRequestError(
-          `could not resolve did document: ${feedDid}`,
-        )
-      }
-      const fgEndpoint = await getFeedGen(resolved)
-      if (!fgEndpoint) {
-        throw new InvalidRequestError(`not a valid feed generator: ${feedDid}`)
-      }
-      const agent = new AtpAgent({ service: fgEndpoint })
-      const headers = await createServiceAuthHeaders({
-        iss: requester,
-        aud: feedDid,
-        keypair: ctx.repoSigningKey,
-      })
+      const localAlgo = algos[feed]
 
-      let skeleton: SkeletonOutput
-      try {
-        const result = await agent.api.app.bsky.feed.getFeedSkeleton(
-          params,
-          headers,
-        )
-        skeleton = result.data
-      } catch (err) {
-        if (err instanceof UnknownFeedError) {
-          throw new InvalidRequestError(err.message, 'UnknownFeed')
-        }
-        if (err instanceof XRPCError && err.status === ResponseType.Unknown) {
-          throw new UpstreamFailureError('Feed unavailable')
-        }
-        throw err
-      }
+      const res =
+        algos !== undefined
+          ? await localAlgo(ctx, params, requester)
+          : await skeletonFromFeedGen(ctx, params, requester)
 
-      // Hydrate feed skeleton
-      const { ref } = ctx.db.db.dynamic
       const feedService = ctx.services.appView.feed(ctx.db)
-      const graphService = ctx.services.appView.graph(ctx.db)
-      const accountService = ctx.services.account(ctx.db)
-      const feedItemUris = skeleton.feed.map(getSkeleFeedItemUri)
-
-      const feedItems = feedItemUris.length
-        ? await feedService
-            .selectFeedItemQb()
-            .where('feed_item.uri', 'in', feedItemUris)
-            .whereNotExists(
-              // Hide posts and reposts of or by muted actors
-              accountService.mutedQb(requester, [
-                ref('post.creator'),
-                ref('originatorDid'),
-              ]),
-            )
-            .whereNotExists(
-              graphService.blockQb(requester, [
-                ref('post.creator'),
-                ref('originatorDid'),
-              ]),
-            )
-            .execute()
-        : []
-
-      const hydrated = await feedService.hydrateFeed(
-        getOrderedFeedItems(skeleton.feed, feedItems),
-        requester,
-      )
+      const hydrated = await feedService.hydrateFeed(res.feedItems, requester)
 
       return {
         encoding: 'application/json',
         body: {
-          ...skeleton,
+          cursor: res.cursor,
           feed: hydrated,
         },
       }
     },
   })
+}
+
+async function skeletonFromFeedGen(
+  ctx: AppContext,
+  params: GetFeedParams,
+  requester: string,
+): Promise<AlgoResponse> {
+  const { feed } = params
+  // Resolve and fetch feed skeleton
+  const found = await ctx.db.db
+    .selectFrom('feed_generator')
+    .where('uri', '=', feed)
+    .select('feedDid')
+    .executeTakeFirst()
+  if (!found) {
+    throw new InvalidRequestError('could not find feed')
+  }
+  const feedDid = found.feedDid
+  const resolved = await ctx.didResolver.resolveDid(feedDid)
+  if (!resolved) {
+    throw new InvalidRequestError(`could not resolve did document: ${feedDid}`)
+  }
+  const fgEndpoint = await getFeedGen(resolved)
+  if (!fgEndpoint) {
+    throw new InvalidRequestError(`not a valid feed generator: ${feedDid}`)
+  }
+  const agent = new AtpAgent({ service: fgEndpoint })
+  const headers = await createServiceAuthHeaders({
+    iss: requester,
+    aud: feedDid,
+    keypair: ctx.repoSigningKey,
+  })
+
+  let skeleton: SkeletonOutput
+  try {
+    const result = await agent.api.app.bsky.feed.getFeedSkeleton(
+      params,
+      headers,
+    )
+    skeleton = result.data
+  } catch (err) {
+    if (err instanceof UnknownFeedError) {
+      throw new InvalidRequestError(err.message, 'UnknownFeed')
+    }
+    if (err instanceof XRPCError && err.status === ResponseType.Unknown) {
+      throw new UpstreamFailureError('Feed unavailable')
+    }
+    throw err
+  }
+
+  // Hydrate feed skeleton
+  const { ref } = ctx.db.db.dynamic
+  const feedService = ctx.services.appView.feed(ctx.db)
+  const graphService = ctx.services.appView.graph(ctx.db)
+  const accountService = ctx.services.account(ctx.db)
+  const feedItemUris = skeleton.feed.map(getSkeleFeedItemUri)
+
+  const feedItems = (await feedItemUris.length)
+    ? await feedService
+        .selectFeedItemQb()
+        .where('feed_item.uri', 'in', feedItemUris)
+        .whereNotExists(
+          // Hide posts and reposts of or by muted actors
+          accountService.mutedQb(requester, [
+            ref('post.creator'),
+            ref('originatorDid'),
+          ]),
+        )
+        .whereNotExists(
+          graphService.blockQb(requester, [
+            ref('post.creator'),
+            ref('originatorDid'),
+          ]),
+        )
+        .execute()
+    : []
+
+  const orderedItems = getOrderedFeedItems(skeleton.feed, feedItems)
+  return {
+    cursor: skeleton.cursor,
+    feedItems: orderedItems,
+  }
 }
 
 function getSkeleFeedItemUri(item: SkeletonFeedPost) {
