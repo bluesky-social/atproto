@@ -47,15 +47,10 @@ export const resolveHttp = async (
   signal?: AbortSignal,
 ): Promise<string | undefined> => {
   const url = `${scheme}://${handle}/.well-known/atproto-handle/${handle}`
-  let maybeDid: string
   try {
     const res = await fetch(url, { signal })
-    maybeDid = await res.text()
+    return await res.text()
   } catch (err) {
     return undefined
   }
-  if (!maybeDid.startsWith('did:')) {
-    return undefined
-  }
-  return maybeDid
 }
