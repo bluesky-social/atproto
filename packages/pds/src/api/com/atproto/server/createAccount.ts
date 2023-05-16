@@ -8,7 +8,6 @@ import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
 import Database from '../../../../db'
-import { resolveExternalHandle } from '../identity/util'
 import { AtprotoData } from '@atproto/did-resolver'
 
 export default function (server: Server, ctx: AppContext) {
@@ -157,9 +156,9 @@ const ensureValidHandle = async (
       if (input.did === undefined) {
         throw new InvalidRequestError(err.message, 'UnsupportedDomain')
       }
-      const resolvedHandleDid = await resolveExternalHandle(
-        ctx.cfg.scheme,
+      const resolvedHandleDid = await ident.resolveHandle(
         input.handle,
+        ctx.cfg.scheme,
       )
       if (input.did !== resolvedHandleDid) {
         throw new InvalidRequestError('External handle did not resolve to DID')

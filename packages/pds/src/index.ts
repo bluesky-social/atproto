@@ -16,6 +16,7 @@ import inProcessAppView from './app-view/api'
 import proxiedAppView from './app-view/proxied'
 import API from './api'
 import * as basicRoutes from './basic-routes'
+import * as wellKnown from './well-known'
 import Database from './db'
 import { ServerAuth } from './auth'
 import * as error from './error'
@@ -187,6 +188,7 @@ export class PDS {
     }
 
     app.use(basicRoutes.createRouter(ctx))
+    app.use(wellKnown.createRouter(ctx))
     app.use(server.xrpc.router)
     app.use(error.handler)
 

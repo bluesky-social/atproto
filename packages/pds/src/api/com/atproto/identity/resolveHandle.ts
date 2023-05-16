@@ -2,7 +2,6 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as ident from '@atproto/identifier'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { resolveExternalHandle } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.resolveHandle(async ({ req, params }) => {
@@ -22,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // this is not someone on our server, but we help with resolving anyway
-      did = await resolveExternalHandle(ctx.cfg.scheme, handle)
+      did = await ident.resolveHandle(handle, ctx.cfg.scheme)
     }
     if (!did) {
       throw new InvalidRequestError('Unable to resolve handle')
