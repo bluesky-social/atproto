@@ -4,7 +4,7 @@ import AppContext from './context'
 export const createRouter = (ctx: AppContext): express.Router => {
   const router = express.Router()
 
-  router.get('/.well-known/atproto-handle/:handle', async function (req, res) {
+  router.get('/.well-known/atproto-did/:handle', async function (req, res) {
     const handle = req.params.handle
     const supportedHandle = ctx.cfg.availableUserDomains.some(
       (host) => handle.endsWith(host) || handle === host.slice(1),

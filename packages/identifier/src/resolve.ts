@@ -46,7 +46,7 @@ export const resolveHttp = async (
   scheme = 'https',
   signal?: AbortSignal,
 ): Promise<string | undefined> => {
-  const url = `${scheme}://${handle}/.well-known/atproto-handle/${handle}`
+  const url = `${scheme}://${handle}/.well-known/atproto-did/${handle}`
   try {
     const res = await fetch(url, { signal })
     return await res.text()
