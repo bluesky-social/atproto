@@ -48,7 +48,7 @@ describe('handle resolution', () => {
   })
 
   it('handles a bad DNS resolution', async () => {
-    const did = resolveDns('bad.test')
+    const did = await resolveDns('bad.test')
     expect(did).toBeUndefined()
   })
 
