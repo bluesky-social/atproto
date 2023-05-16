@@ -48,7 +48,7 @@ export class HandleResolver {
     handle: string,
     signal?: AbortSignal,
   ): Promise<string | undefined> {
-    const url = `http://${handle}/.well-known/atproto-did/${handle}`
+    const url = `https://${handle}/.well-known/atproto-did/${handle}`
     try {
       const res = await fetch(url, { signal })
       return await res.text()

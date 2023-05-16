@@ -13,7 +13,6 @@ import { AtUri } from '@atproto/uri'
 import { IdResolver } from '@atproto/identity'
 import { chunkArray } from '@atproto/common'
 import { ValidationError } from '@atproto/lexicon'
-import * as ident from '@atproto/identifier'
 import Database from '../../db'
 import * as Post from './plugins/post'
 import * as Like from './plugins/like'
@@ -87,7 +86,7 @@ export class IndexingService {
       return
     }
     const { handle } = await this.idResolver.did.resolveAtprotoData(did, true)
-    const handleToDid = await ident.resolveHandle(handle)
+    const handleToDid = await this.idResolver.handle.resolve(handle)
     if (did !== handleToDid) {
       return // No bidirectional link between did and handle
     }
@@ -202,7 +201,7 @@ export class IndexingService {
 
   async tombstoneActor(did: string) {
     this.db.assertTransaction()
-    const doc = await this.idResolver.did.resolveDid(did, true)
+    const doc = await this.idResolver.did.resolve(did, true)
     if (doc === null) {
       await Promise.all([
         this.unindexActor(did),
