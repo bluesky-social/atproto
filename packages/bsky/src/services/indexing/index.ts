@@ -13,6 +13,7 @@ import { AtUri } from '@atproto/uri'
 import { DidResolver } from '@atproto/did-resolver'
 import { chunkArray } from '@atproto/common'
 import { ValidationError } from '@atproto/lexicon'
+import * as ident from '@atproto/identifier'
 import Database from '../../db'
 import * as Post from './plugins/post'
 import * as Like from './plugins/like'
@@ -22,7 +23,6 @@ import * as Profile from './plugins/profile'
 import RecordProcessor from './processor'
 import { subLogger } from '../../logger'
 import { retryHttp } from '../../util/retry'
-import { resolveExternalHandle } from '../../util/identity'
 import { Labeler } from '../../labeler'
 
 export class IndexingService {
@@ -87,7 +87,7 @@ export class IndexingService {
       return
     }
     const { handle } = await this.didResolver.resolveAtprotoData(did, true)
-    const handleToDid = await resolveExternalHandle(handle)
+    const handleToDid = await ident.resolveHandle(handle)
     if (did !== handleToDid) {
       return // No bidirectional link between did and handle
     }
