@@ -1,4 +1,4 @@
-import GraphemeSplitter from 'grapheme-splitter'
+import Graphemer from 'graphemer'
 import * as ui8 from 'uint8arrays'
 
 // counts the number of bytes in a utf8 string
@@ -8,7 +8,7 @@ export const utf8Len = (str: string): number => {
 
 // counts the number of graphemes (user-displayed characters) in a string
 export const graphemeLen = (str: string): number => {
-  const splitter = new GraphemeSplitter()
+  const splitter = new Graphemer()
   return splitter.countGraphemes(str)
 }
 
