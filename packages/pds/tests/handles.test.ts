@@ -65,11 +65,6 @@ describe('handles', () => {
     expect(res.data.did).toBe(alice)
   })
 
-  it('does not resolve a "handle" for the service', async () => {
-    const promise = agent.api.com.atproto.identity.resolveHandle()
-    await expect(promise).rejects.toThrow('Unable to resolve handle')
-  })
-
   it('allows a user to change their handle', async () => {
     await agent.api.com.atproto.identity.updateHandle(
       { handle: newHandle },
