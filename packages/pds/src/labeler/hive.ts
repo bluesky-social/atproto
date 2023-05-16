@@ -109,8 +109,10 @@ export const sexualLabels = (classes: HiveRespClass[]): string[] => {
   }
 
   // then check for sexual suggestive (which may include nudity)...
-  if (scores['yes_sexual_intent'] >= 0.9) {
-    return ['sexual']
+  for (const sexualClass of ['yes_sexual_intent', 'yes_sex_toy']) {
+    if (scores[sexualClass] >= 0.9) {
+      return ['sexual']
+    }
   }
   if (scores['yes_undressed'] >= 0.9) {
     // special case for bondage examples
