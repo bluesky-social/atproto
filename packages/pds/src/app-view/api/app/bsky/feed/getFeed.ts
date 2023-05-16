@@ -27,18 +27,18 @@ export default function (server: Server, ctx: AppContext) {
 
       const localAlgo = algos[feed]
 
-      const res =
-        algos !== undefined
+      const { feedItems, ...rest } =
+        localAlgo !== undefined
           ? await localAlgo(ctx, params, requester)
           : await skeletonFromFeedGen(ctx, params, requester)
 
       const feedService = ctx.services.appView.feed(ctx.db)
-      const hydrated = await feedService.hydrateFeed(res.feedItems, requester)
+      const hydrated = await feedService.hydrateFeed(feedItems, requester)
 
       return {
         encoding: 'application/json',
         body: {
-          cursor: res.cursor,
+          ...rest,
           feed: hydrated,
         },
       }
@@ -94,12 +94,14 @@ async function skeletonFromFeedGen(
     throw err
   }
 
+  const { feed: skeletonFeed, ...rest } = skeleton
+
   // Hydrate feed skeleton
   const { ref } = ctx.db.db.dynamic
   const feedService = ctx.services.appView.feed(ctx.db)
   const graphService = ctx.services.appView.graph(ctx.db)
   const accountService = ctx.services.account(ctx.db)
-  const feedItemUris = skeleton.feed.map(getSkeleFeedItemUri)
+  const feedItemUris = skeletonFeed.map(getSkeleFeedItemUri)
 
   const feedItems = (await feedItemUris.length)
     ? await feedService
@@ -121,9 +123,9 @@ async function skeletonFromFeedGen(
         .execute()
     : []
 
-  const orderedItems = getOrderedFeedItems(skeleton.feed, feedItems)
+  const orderedItems = getOrderedFeedItems(skeletonFeed, feedItems)
   return {
-    cursor: skeleton.cursor,
+    ...rest,
     feedItems: orderedItems,
   }
 }
