@@ -24,9 +24,9 @@ export const mockNetworkUtilities = (pds: TestPds) => {
     )
     if (!isPdsHandle) return undefined
 
-    const url = `${pds.url}/.well-known/atproto-did/${handle}`
+    const url = `${pds.url}/.well-known/atproto-did`
     try {
-      const res = await fetch(url)
+      const res = await fetch(url, { headers: { host: handle } })
       return await res.text()
     } catch (err) {
       return undefined
