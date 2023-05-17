@@ -14,15 +14,14 @@ export default function (server: Server, ctx: AppContext) {
 
       let builder = db.db
         .selectFrom('post')
-        .innerJoin('post_embed_record', (join) => join
-          .on('post.uri', '=', 'post_embed_record.postUri')
+        .innerJoin('post_embed_record', (join) =>
+          join.on('post.uri', '=', 'post_embed_record.postUri'),
         )
         .where('post.uri', '=', uri)
         .innerJoin('actor as creator', 'creator.did', 'post.creator')
         .where(notSoftDeletedClause(ref('creator')))
         .selectAll('creator')
         .select(['post.cid as cid', 'post.sortAt as sortAt'])
-        
 
       if (cid) {
         builder = builder.where('post_embed_record.embedCid', '=', cid)
