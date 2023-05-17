@@ -15,6 +15,16 @@ const handler: AlgoHandler = async (
   const feedService = ctx.services.appView.feed(ctx.db)
   const graphService = ctx.services.appView.graph(ctx.db)
 
+  const followCountRes = await ctx.db.db
+    .selectFrom('follow')
+    .where('follow.creator', '=', requester)
+    .select(countAll.as('count'))
+    .executeTakeFirst()
+
+  const followCount = followCountRes?.count ?? 0
+  // total follows/100, with a minimum of 2 & a max of 8
+  const likeThreshold = Math.max(Math.min(Math.floor(followCount / 100), 8), 2)
+
   const { ref } = ctx.db.db.dynamic
 
   const postsQb = feedService
@@ -22,7 +32,7 @@ const handler: AlgoHandler = async (
     .leftJoin('post_agg', 'post_agg.uri', 'post.uri')
     .where((qb) =>
       qb
-        // select all posts/reposts from a follow that have >= 5 likes
+        // select all posts/reposts from a follow that have >= threshold likes
         .where((fromFollows) =>
           fromFollows
             .where((followsInner) =>
@@ -35,24 +45,24 @@ const handler: AlgoHandler = async (
                     .whereRef('follow.subjectDid', '=', ref('originatorDid')),
                 ),
             )
-            .where('post_agg.likeCount', '>=', 5),
+            .where('post_agg.likeCount', '>=', likeThreshold),
         )
-        // and all posts from the network that have >= 5 likes from *your* follows
+        // and all posts from the network that have >= threshold likes from *your* follows
         .orWhere((fromAll) =>
           fromAll.where('feed_item.type', '=', 'post').where(
             (qb) =>
               qb
                 .selectFrom('like')
-                .where('like.subject', '=', 'post.uri')
+                .whereRef('like.subject', '=', 'post.uri')
                 .whereExists((qbInner) =>
                   qbInner
                     .selectFrom('follow')
                     .where('follow.creator', '=', requester)
-                    .whereRef('follow.subjectDid', '=', ref('like.creator')),
+                    .whereRef('follow.subjectDid', '=', 'like.creator'),
                 )
                 .select(countAll.as('count')),
             '>=',
-            5,
+            likeThreshold,
           ),
         ),
     )
