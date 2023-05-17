@@ -16,8 +16,8 @@ export default function (server: Server, ctx: AppContext) {
 
       let builder = db.db
         .selectFrom('post')
-        .innerJoin('post_embed_record', (join) => join
-          .on('post.uri', '=', 'post_embed_record.postUri')
+        .innerJoin('post_embed_record', (join) =>
+          join.on('post.uri', '=', 'post_embed_record.postUri'),
         )
         .where('post.uri', '=', uri)
         .innerJoin('did_handle as creator', 'creator.did', 'post.creator')
@@ -27,9 +27,7 @@ export default function (server: Server, ctx: AppContext) {
           'post.creator',
         )
         .where(notSoftDeletedClause(ref('creator_repo')))
-        .whereNotExists(
-          graphService.blockQb(requester, [ref('post.creator')]),
-        )
+        .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
         .selectAll('creator')
         .select(['post.cid as cid', 'post.createdAt as createdAt'])
 
@@ -37,10 +35,7 @@ export default function (server: Server, ctx: AppContext) {
         builder = builder.where('post_embed_record.embedCid', '=', cid)
       }
 
-      const keyset = new TimeCidKeyset(
-        ref('post.createdAt'),
-        ref('post.cid'),
-      )
+      const keyset = new TimeCidKeyset(ref('post.createdAt'), ref('post.cid'))
       builder = paginate(builder, {
         limit,
         cursor,
