@@ -9,7 +9,7 @@ import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {
-  /** The handle to resolve. If not supplied, will resolve the host's own handle. */
+  /** The handle to resolve. */
   handle: string
 }
 

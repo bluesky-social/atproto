@@ -1199,8 +1199,7 @@ export const schemaDict = {
             handle: {
               type: 'string',
               format: 'handle',
-              description:
-                "The handle to resolve. If not supplied, will resolve the host's own handle.",
+              description: 'The handle to resolve.',
             },
           },
         },
