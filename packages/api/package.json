@@ -1,6 +1,6 @@
 {
   "name": "@atproto/api",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "main": "src/index.ts",
   "scripts": {
     "codegen": "lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
@@ -13,7 +13,6 @@
     "test": "jest",
     "bench": "jest --config jest.bench.config.js",
     "bench:profile": "node --inspect-brk ../../node_modules/.bin/jest --config jest.bench.config.js"
-
   },
   "license": "MIT",
   "repository": {
