@@ -300,6 +300,36 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
+  server.app.bsky.feed.getEmbeddedBy({
+    auth: ctx.accessVerifier,
+    handler: async ({ auth, params }) => {
+      const requester = auth.credentials.did
+      const res = await agent.api.app.bsky.feed.getEmbeddedBy(
+        params,
+        await headers(requester),
+      )
+
+      const { cursor, uri, cid, embeddedBy } = res.data
+      const dids = embeddedBy.map((embed) => embed.did)
+      const mutes = await ctx.services.account(ctx.db).getMutes(requester, dids)
+
+      for (const embed of embeddedBy) {
+        embed.viewer ??= {}
+        embed.viewer.muted = mutes[embed.did] ?? false
+      }
+
+      return {
+        encoding: 'application/json',
+        body: {
+          cursor,
+          uri,
+          cid,
+          embeddedBy,
+        },
+      }
+    },
+  })
+
   server.app.bsky.feed.getTimeline({
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {

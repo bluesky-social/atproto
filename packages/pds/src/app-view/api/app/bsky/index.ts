@@ -8,6 +8,7 @@ import getPosts from './feed/getPosts'
 import getProfile from './actor/getProfile'
 import getProfiles from './actor/getProfiles'
 import getRepostedBy from './feed/getRepostedBy'
+import getEmbeddedBy from './feed/getEmbeddedBy'
 import getFollowers from './graph/getFollowers'
 import getFollows from './graph/getFollows'
 import getList from './graph/getList'
@@ -29,6 +30,7 @@ export default function (server: Server, ctx: AppContext) {
   getProfile(server, ctx)
   getProfiles(server, ctx)
   getRepostedBy(server, ctx)
+  getEmbeddedBy(server, ctx)
   getFollowers(server, ctx)
   getFollows(server, ctx)
   getList(server, ctx)

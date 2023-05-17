@@ -4548,6 +4548,65 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetEmbeddedBy: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getEmbeddedBy',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['uri'],
+          properties: {
+            uri: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            cid: {
+              type: 'string',
+              format: 'cid',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri', 'repostedBy'],
+            properties: {
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              cursor: {
+                type: 'string',
+              },
+              embeddedBy: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedGetTimeline: {
     lexicon: 1,
     id: 'app.bsky.feed.getTimeline',
@@ -5391,6 +5450,7 @@ export const ids = {
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
+  AppBskyFeedGetEmbeddedBy: 'app.bsky.feed.getEmbeddedBy',
   AppBskyFeedGetTimeline: 'app.bsky.feed.getTimeline',
   AppBskyFeedLike: 'app.bsky.feed.like',
   AppBskyFeedPost: 'app.bsky.feed.post',

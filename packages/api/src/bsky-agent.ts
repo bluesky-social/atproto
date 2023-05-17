@@ -32,6 +32,9 @@ export class BskyAgent extends AtpAgent {
   getRepostedBy: typeof this.api.app.bsky.feed.getRepostedBy = (params, opts) =>
     this.api.app.bsky.feed.getRepostedBy(params, opts)
 
+  getEmbeddedBy: typeof this.api.app.bsky.feed.getEmbeddedBy = (params, opts) =>
+    this.api.app.bsky.feed.getEmbeddedBy(params, opts)
+
   getFollows: typeof this.api.app.bsky.graph.getFollows = (params, opts) =>
     this.api.app.bsky.graph.getFollows(params, opts)
 
