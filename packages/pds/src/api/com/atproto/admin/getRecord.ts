@@ -12,7 +12,9 @@ export default function (server: Server, ctx: AppContext) {
       const result = await services
         .record(db)
         .getRecord(new AtUri(uri), cid ?? null, true)
-      if (!result) throw new InvalidRequestError('Record not found')
+      if (!result) {
+        throw new InvalidRequestError('Record not found', 'RecordNotFound')
+      }
       return {
         encoding: 'application/json',
         body: await services.moderation(db).views.recordDetail(result),
