@@ -2,6 +2,7 @@ import AtpAgent, { AtUri } from '@atproto/api'
 import { runTestServer, TestServerInfo } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
+import { makeAlgos } from '../../src'
 
 describe('algo whats-hot-classic', () => {
   let server: TestServerInfo
@@ -12,16 +13,22 @@ describe('algo whats-hot-classic', () => {
   let alice: string
   let bob: string
 
+  const feedPublisherDid = 'did:example:feed-publisher'
   const feedUri = AtUri.make(
-    'did:plc:z72i7hdynmk6r22z27h6tvur',
+    feedPublisherDid,
     'app.bsky.feed.generator',
     'whats-hot-classic',
   ).toString()
 
   beforeAll(async () => {
-    server = await runTestServer({
-      dbPostgresSchema: 'algo_whats_hot_classic',
-    })
+    server = await runTestServer(
+      {
+        dbPostgresSchema: 'algo_whats_hot_classic',
+      },
+      {
+        algos: makeAlgos(feedPublisherDid),
+      },
+    )
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
     await basicSeed(sc)

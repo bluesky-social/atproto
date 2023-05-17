@@ -1,9 +1,9 @@
-import AppContext from '../../../../../../context'
+import AppContext from '../context'
 import { NotEmptyArray } from '@atproto/common'
 import { QueryParams as SkeletonParams } from '@atproto/api/src/client/types/app/bsky/feed/getFeedSkeleton'
-import { FeedKeyset } from '../../util/feed'
-import { paginate } from '../../../../../../db/pagination'
+import { paginate } from '../db/pagination'
 import { AlgoHandler, AlgoResponse } from './types'
+import { FeedKeyset } from '../app-view/api/app/bsky/util/feed'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   '!no-promote',

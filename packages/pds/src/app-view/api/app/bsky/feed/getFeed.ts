@@ -15,8 +15,7 @@ import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import algos from './algos'
-import { AlgoResponse } from './algos/types'
+import { AlgoResponse } from '../../../../../feed-gen/types'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeed({
@@ -25,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
       const { feed } = params
       const requester = auth.credentials.did
 
-      const localAlgo = algos[feed]
+      const localAlgo = ctx.algos[feed]
 
       const { feedItems, ...rest } =
         localAlgo !== undefined

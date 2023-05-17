@@ -2,7 +2,7 @@ import AtpAgent, { AtUri } from '@atproto/api'
 import { runTestServer, TestServerInfo } from '../_util'
 import { SeedClient } from '../seeds/client'
 import userSeed from '../seeds/users'
-import { countAll } from '../../src/db/util'
+import { makeAlgos } from '../../src'
 
 describe('algo skyline', () => {
   let server: TestServerInfo
@@ -15,16 +15,22 @@ describe('algo skyline', () => {
   let carol: string
   let dan: string
 
+  const feedPublisherDid = 'did:example:feed-publisher'
   const feedUri = AtUri.make(
-    'did:plc:z72i7hdynmk6r22z27h6tvur',
+    feedPublisherDid,
     'app.bsky.feed.generator',
     'skyline',
   ).toString()
 
   beforeAll(async () => {
-    server = await runTestServer({
-      dbPostgresSchema: 'algo_skyline',
-    })
+    server = await runTestServer(
+      {
+        dbPostgresSchema: 'algo_skyline',
+      },
+      {
+        algos: makeAlgos(feedPublisherDid),
+      },
+    )
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
     await userSeed(sc)

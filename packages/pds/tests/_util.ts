@@ -14,6 +14,7 @@ import DiskBlobStore from '../src/storage/disk-blobstore'
 import AppContext from '../src/context'
 import { DAY, HOUR } from '@atproto/common'
 import { lexToJson } from '@atproto/lexicon'
+import { MountedAlgos } from '../src/feed-gen/types'
 
 const ADMIN_PASSWORD = 'admin-pass'
 const MODERATOR_PASSWORD = 'moderator-pass'
@@ -27,6 +28,7 @@ export type TestServerInfo = {
 
 export type TestServerOpts = {
   migration?: string
+  algos?: MountedAlgos
 }
 
 export const runTestServer = async (
@@ -139,6 +141,7 @@ export const runTestServer = async (
     repoSigningKey,
     plcRotationKey,
     config: cfg,
+    algos: opts.algos,
   })
   const pdsServer = await pds.start()
   const pdsPort = (pdsServer.address() as AddressInfo).port

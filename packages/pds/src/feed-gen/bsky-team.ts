@@ -1,9 +1,9 @@
 import { NotEmptyArray } from '@atproto/common'
 import { QueryParams as SkeletonParams } from '@atproto/api/src/client/types/app/bsky/feed/getFeedSkeleton'
-import AppContext from '../../../../../../context'
-import { FeedKeyset } from '../../util/feed'
-import { paginate } from '../../../../../../db/pagination'
+import AppContext from '../context'
+import { paginate } from '../db/pagination'
 import { AlgoHandler, AlgoResponse } from './types'
+import { FeedKeyset } from '../app-view/api/app/bsky/util/feed'
 
 const BSKY_TEAM: NotEmptyArray<string> = [
   'did:plc:oky5czdrnfjpqslsw2a5iclo', // jay

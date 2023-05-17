@@ -1,6 +1,6 @@
-import AppContext from '../../../../../../context'
+import AppContext from '../context'
 import { QueryParams as SkeletonParams } from '@atproto/api/src/client/types/app/bsky/feed/getFeedSkeleton'
-import { FeedRow } from '../../../../../services/feed'
+import { FeedRow } from '../app-view/services/feed'
 
 export type AlgoResponse = {
   feedItems: FeedRow[]
@@ -12,3 +12,5 @@ export type AlgoHandler = (
   params: SkeletonParams,
   requester: string,
 ) => Promise<AlgoResponse>
+
+export type MountedAlgos = Record<string, AlgoHandler>
