@@ -20,6 +20,10 @@ const handler: AlgoHandler = async (
   params: SkeletonParams,
   requester: string,
 ): Promise<AlgoResponse> => {
+  if (ctx.db.dialect === 'sqlite') {
+    throw new Error('what-hot algo not available in sqlite')
+  }
+
   const { limit = 50, cursor } = params
   const accountService = ctx.services.account(ctx.db)
   const feedService = ctx.services.appView.feed(ctx.db)
