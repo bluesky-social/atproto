@@ -189,7 +189,7 @@ const getThreadData = async (
   return {
     post,
     parent: post.replyParent
-      ? getParentData(parentsByUri, post.replyParent)
+      ? getParentData(parentsByUri, post.replyParent, depth)
       : undefined,
     replies: getChildrenData(childrenByParentUri, uri, depth),
   }
@@ -198,13 +198,15 @@ const getThreadData = async (
 const getParentData = (
   postsByUri: Record<string, FeedRow>,
   uri: string,
-): PostThread | ParentNotFoundError => {
+  depth: number,
+): PostThread | ParentNotFoundError | undefined => {
+  if (depth === 0) return undefined
   const post = postsByUri[uri]
   if (!post) return new ParentNotFoundError(uri)
   return {
     post,
     parent: post.replyParent
-      ? getParentData(postsByUri, post.replyParent)
+      ? getParentData(postsByUri, post.replyParent, depth - 1)
       : undefined,
     replies: [],
   }
