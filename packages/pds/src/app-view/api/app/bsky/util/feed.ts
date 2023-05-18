@@ -3,6 +3,7 @@ import { TimeCidKeyset } from '../../../../../db/pagination'
 import { FeedViewPost } from '../../../../../lexicon/types/app/bsky/feed/defs'
 import { FeedRow, FeedService } from '../../../../services/feed'
 import { LabelService } from '../../../../services/label'
+import { AppBskyFeedPost } from '@atproto/api'
 
 // Present post and repost results into FeedViewPosts
 // Including links to embedded media
@@ -69,28 +70,32 @@ export const composeFeed = async (
           )
         : undefined
 
-      if (
-        mutedKeywords?.every(
-          (r) => !post.record.text.toLowerCase().includes(r.toLowerCase()),
-        )
-      ) {
-        feed.push({
-          post,
-          reason: reasonType
-            ? {
-                $type: reasonType,
-                by: actors[row.originatorDid],
-                indexedAt: row.sortAt,
-              }
-            : undefined,
-          reply:
-            replyRoot && replyParent // @TODO consider supporting #postNotFound here
+      if (AppBskyFeedPost.isRecord(post)) {
+        const res = AppBskyFeedPost.validateRecord(post)
+        if (
+          res.success &&
+          mutedKeywords?.every(
+            (r) => !post.text.toLowerCase().includes(r.toLowerCase()),
+          )
+        ) {
+          feed.push({
+            post,
+            reason: reasonType
               ? {
-                  root: replyRoot,
-                  parent: replyParent,
+                  $type: reasonType,
+                  by: actors[row.originatorDid],
+                  indexedAt: row.sortAt,
                 }
               : undefined,
-        })
+            reply:
+              replyRoot && replyParent // @TODO consider supporting #postNotFound here
+                ? {
+                    root: replyRoot,
+                    parent: replyParent,
+                  }
+                : undefined,
+          })
+        }
       }
     }
   }
