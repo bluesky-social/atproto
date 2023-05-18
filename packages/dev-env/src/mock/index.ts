@@ -6,7 +6,8 @@ import {
 } from '@atproto/api/src/client/types/com/atproto/moderation/defs'
 import { TestNetworkNoAppView } from '../index'
 import { postTexts, replyTexts } from './data'
-import labeledImgB64 from './labeled-img-b64'
+import labeledImgB64 from './img/labeled-img-b64'
+import blurHashB64 from './img/blur-hash-avatar-b64'
 
 // NOTE
 // deterministic date generator
@@ -264,12 +265,20 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
       }
     },
   })
+  const avatarImg = Buffer.from(blurHashB64, 'base64')
+  const avatarRes = await alice.agent.api.com.atproto.repo.uploadBlob(
+    avatarImg,
+    {
+      encoding: 'image/png',
+    },
+  )
   const fgAliceRes = await alice.agent.api.app.bsky.feed.generator.create(
     { repo: alice.did, rkey: fg1Uri.rkey },
     {
       did: fg1.did,
       displayName: 'alices feed',
       description: 'all my fav stuff',
+      avatar: avatarRes.data.blob,
       createdAt: date.next().value,
     },
   )
@@ -311,7 +320,11 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
   })
   const fgBobRes = await bob.agent.api.app.bsky.feed.generator.create(
     { repo: bob.did, rkey: fg2Uri.rkey },
-    { did: fg2.did, createdAt: date.next().value },
+    {
+      did: fg2.did,
+      displayName: 'Bobby boy hot new algo',
+      createdAt: date.next().value,
+    },
   )
 
   await alice.agent.api.app.bsky.feed.post.create(

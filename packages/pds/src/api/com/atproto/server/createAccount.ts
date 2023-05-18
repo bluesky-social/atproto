@@ -88,12 +88,12 @@ export default function (server: Server, ctx: AppContext) {
           .execute()
       }
 
-      // Setup repo root
-      await repoTxn.createRepo(did, [], now)
-
       const access = ctx.auth.createAccessToken({ did })
       const refresh = ctx.auth.createRefreshToken({ did })
       await ctx.services.auth(dbTxn).grantRefreshToken(refresh.payload, null)
+
+      // Setup repo root
+      await repoTxn.createRepo(did, [], now)
 
       return {
         did,

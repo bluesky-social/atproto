@@ -15,7 +15,10 @@
       "output": {
         "encoding": "application/json",
         "schema": {"type": "ref", "ref": "com.atproto.admin.defs#repoViewDetail"}
-      }
+      },
+      "errors": [
+        {"name": "RepoNotFound"}
+      ]
     }
   }
 }

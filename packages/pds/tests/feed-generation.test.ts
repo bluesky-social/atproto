@@ -53,6 +53,7 @@ describe('feed generation', () => {
       { repo: alice, rkey: 'all' },
       {
         did: gen.did,
+        displayName: 'All',
         description: 'Provides all feed candidates',
         createdAt: new Date().toISOString(),
       },
@@ -62,6 +63,7 @@ describe('feed generation', () => {
       { repo: alice, rkey: 'even' },
       {
         did: gen.did,
+        displayName: 'Even',
         description: 'Provides even-indexed feed candidates',
         createdAt: new Date().toISOString(),
       },
@@ -72,6 +74,7 @@ describe('feed generation', () => {
       { repo: alice, rkey: 'odd' },
       {
         did: gen.did,
+        displayName: 'Odd',
         description: 'Provides odd-indexed feed candidates',
         createdAt: new Date().toISOString(),
       },
@@ -194,6 +197,7 @@ describe('feed generation', () => {
         { repo: sc.dids.bob, rkey: 'all' },
         {
           did: bobFg.did,
+          displayName: 'All by bob',
           description: 'Provides all feed candidates - by bob',
           createdAt: new Date().toISOString(),
         },
