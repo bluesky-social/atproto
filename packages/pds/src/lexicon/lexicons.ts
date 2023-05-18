@@ -4618,6 +4618,12 @@ export const schemaDict = {
             cursor: {
               type: 'string',
             },
+            mutedKeywords: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
           },
         },
         output: {

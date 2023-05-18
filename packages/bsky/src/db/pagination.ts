@@ -105,13 +105,18 @@ export const paginate = <
     cursor?: string
     direction?: 'asc' | 'desc'
     keyset: K
+    mutedKeywords?: string[]
   },
 ): QB => {
-  const { limit, cursor, keyset, direction = 'desc' } = opts
+  const { limit, cursor, keyset, mutedKeywords, direction = 'desc' } = opts
   const keysetSql = keyset.getSql(keyset.unpack(cursor), direction)
-  return qb
-    .if(!!limit, (q) => q.limit(limit as number))
-    .orderBy(keyset.primary, direction)
-    .orderBy(keyset.secondary, direction)
-    .if(!!keysetSql, (qb) => (keysetSql ? qb.where(keysetSql) : qb)) as QB
+  console.log(mutedKeywords)
+  return (
+    qb
+      .if(!!limit, (q) => q.limit(limit as number))
+      // .if(!!mutedKeywords && mutedKeywords.length > 0, (q) => q.where())
+      .orderBy(keyset.primary, direction)
+      .orderBy(keyset.secondary, direction)
+      .if(!!keysetSql, (qb) => (keysetSql ? qb.where(keysetSql) : qb)) as QB
+  )
 }

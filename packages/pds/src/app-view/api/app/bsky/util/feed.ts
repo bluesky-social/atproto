@@ -11,6 +11,7 @@ export const composeFeed = async (
   labelService: LabelService,
   rows: FeedRow[],
   requester: string,
+  mutedKeywords?: string[],
 ): Promise<FeedViewPost[]> => {
   const actorDids = new Set<string>()
   const postUris = new Set<string>()
@@ -68,23 +69,29 @@ export const composeFeed = async (
           )
         : undefined
 
-      feed.push({
-        post,
-        reason: reasonType
-          ? {
-              $type: reasonType,
-              by: actors[row.originatorDid],
-              indexedAt: row.sortAt,
-            }
-          : undefined,
-        reply:
-          replyRoot && replyParent // @TODO consider supporting #postNotFound here
+      if (
+        mutedKeywords?.every(
+          (r) => !post.record.text.toLowerCase().includes(r.toLowerCase()),
+        )
+      ) {
+        feed.push({
+          post,
+          reason: reasonType
             ? {
-                root: replyRoot,
-                parent: replyParent,
+                $type: reasonType,
+                by: actors[row.originatorDid],
+                indexedAt: row.sortAt,
               }
             : undefined,
-      })
+          reply:
+            replyRoot && replyParent // @TODO consider supporting #postNotFound here
+              ? {
+                  root: replyRoot,
+                  parent: replyParent,
+                }
+              : undefined,
+        })
+      }
     }
   }
   return feed

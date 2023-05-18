@@ -13,6 +13,7 @@ export interface QueryParams {
   algorithm?: string
   limit: number
   cursor?: string
+  mutedKeywords?: string[]
 }
 
 export type InputSchema = undefined
