@@ -23,7 +23,8 @@
             },
             "rkey": {
               "type": "string",
-              "description": "The key of the record."
+              "description": "The key of the record.",
+              "maxLength": 15
             },
             "validate": {
               "type": "boolean",
