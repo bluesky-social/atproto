@@ -4,13 +4,10 @@ import {
   createServiceAuthHeaders,
 } from '@atproto/xrpc-server'
 import { getFeedGen } from '@atproto/did-resolver'
-import { AtpAgent } from '@atproto/api'
-import { SkeletonFeedPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
-import { QueryParams as GetFeedParams } from '@atproto/api/src/client/types/app/bsky/feed/getFeed'
-import {
-  OutputSchema as SkeletonOutput,
-  UnknownFeedError,
-} from '@atproto/api/src/client/types/app/bsky/feed/getFeedSkeleton'
+import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
+import { SkeletonFeedPost } from '../../../../../lexicon/types/app/bsky/feed/defs'
+import { QueryParams as GetFeedParams } from '../../../../../lexicon/types/app/bsky/feed/getFeed'
+import { OutputSchema as SkeletonOutput } from '../../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
@@ -84,7 +81,7 @@ async function skeletonFromFeedGen(
     )
     skeleton = result.data
   } catch (err) {
-    if (err instanceof UnknownFeedError) {
+    if (err instanceof AppBskyFeedGetFeedSkeleton.UnknownFeedError) {
       throw new InvalidRequestError(err.message, 'UnknownFeed')
     }
     if (err instanceof XRPCError && err.status === ResponseType.Unknown) {

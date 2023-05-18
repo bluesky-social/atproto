@@ -1,6 +1,6 @@
 import AppContext from '../context'
 import { DAY, NotEmptyArray } from '@atproto/common'
-import { QueryParams as SkeletonParams } from '@atproto/api/src/client/types/app/bsky/feed/getFeedSkeleton'
+import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { AlgoHandler, AlgoResponse } from './types'
 import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'

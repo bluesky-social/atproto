@@ -1,5 +1,5 @@
 import AppContext from '../context'
-import { QueryParams as SkeletonParams } from '@atproto/api/src/client/types/app/bsky/feed/getFeedSkeleton'
+import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { FeedRow } from '../app-view/services/feed'
 
 export type AlgoResponse = {

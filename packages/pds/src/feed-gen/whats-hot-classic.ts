@@ -1,6 +1,6 @@
 import AppContext from '../context'
 import { NotEmptyArray } from '@atproto/common'
-import { QueryParams as SkeletonParams } from '@atproto/api/src/client/types/app/bsky/feed/getFeedSkeleton'
+import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { paginate } from '../db/pagination'
 import { AlgoHandler, AlgoResponse } from './types'
 import { FeedKeyset } from '../app-view/api/app/bsky/util/feed'
