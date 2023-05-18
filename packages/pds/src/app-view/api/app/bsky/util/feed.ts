@@ -4,6 +4,7 @@ import { FeedViewPost } from '../../../../../lexicon/types/app/bsky/feed/defs'
 import { FeedRow, FeedService } from '../../../../services/feed'
 import { LabelService } from '../../../../services/label'
 import { AppBskyFeedPost } from '@atproto/api'
+import { PostView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 
 // Present post and repost results into FeedViewPosts
 // Including links to embedded media
@@ -70,14 +71,8 @@ export const composeFeed = async (
           )
         : undefined
 
-      if (AppBskyFeedPost.isRecord(post)) {
-        const res = AppBskyFeedPost.validateRecord(post)
-        if (
-          res.success &&
-          mutedKeywords?.every(
-            (r) => !post.text.toLowerCase().includes(r.toLowerCase()),
-          )
-        ) {
+      if (excludesMutedKeywords(post.record, mutedKeywords)) {
+        {
           feed.push({
             post,
             reason: reasonType
@@ -104,6 +99,28 @@ export const composeFeed = async (
 
 export enum FeedAlgorithm {
   ReverseChronological = 'reverse-chronological',
+}
+
+function excludesMutedKeywords(
+  post: unknown,
+  mutedKeywords?: string[],
+): boolean {
+  if (AppBskyFeedPost.isRecord(post)) {
+    console.log('It is a record')
+    const res = AppBskyFeedPost.validateRecord(post)
+    if (!mutedKeywords) return true
+    return (
+      res.success &&
+      mutedKeywords.every(
+        (r) => !post.text.toLowerCase().includes(r.toLowerCase()),
+      )
+    )
+  }
+  if (AppBskyFeedPost.isRecord(post)) {
+    console.log('interesting...')
+  }
+  console.log('nahhhh...')
+  return true
 }
 
 export class FeedKeyset extends TimeCidKeyset<FeedRow> {
