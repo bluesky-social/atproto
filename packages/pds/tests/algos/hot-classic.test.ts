@@ -4,7 +4,7 @@ import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { makeAlgos } from '../../src'
 
-describe('algo whats-hot-classic', () => {
+describe('algo hot-classic', () => {
   let server: TestServerInfo
   let agent: AtpAgent
   let sc: SeedClient
@@ -17,13 +17,13 @@ describe('algo whats-hot-classic', () => {
   const feedUri = AtUri.make(
     feedPublisherDid,
     'app.bsky.feed.generator',
-    'whats-hot-classic',
+    'hot-classic',
   ).toString()
 
   beforeAll(async () => {
     server = await runTestServer(
       {
-        dbPostgresSchema: 'algo_whats_hot_classic',
+        dbPostgresSchema: 'algo_hot_classic',
       },
       {
         algos: makeAlgos(feedPublisherDid),
