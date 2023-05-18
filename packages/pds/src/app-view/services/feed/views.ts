@@ -45,7 +45,6 @@ export class FeedViews {
         : undefined,
       likeCount: info.likeCount,
       viewer: {
-        saved: !!info.viewerSaved,
         like: info.viewerLike ?? undefined,
       },
       indexedAt: info.indexedAt,

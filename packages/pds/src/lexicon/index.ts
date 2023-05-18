@@ -79,12 +79,12 @@ import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
+import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
-import * as AppBskyFeedGetSavedFeeds from './types/app/bsky/feed/getSavedFeeds'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedSaveFeed from './types/app/bsky/feed/saveFeed'
 import * as AppBskyFeedUnsaveFeed from './types/app/bsky/feed/unsaveFeed'
@@ -840,6 +840,13 @@ export class FeedNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getFeedGenerators<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedGetFeedGenerators.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.getFeedGenerators' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getFeedSkeleton<AV extends AuthVerifier>(
     cfg: ConfigOf<AV, AppBskyFeedGetFeedSkeleton.Handler<ExtractAuth<AV>>>,
   ) {
@@ -872,13 +879,6 @@ export class FeedNS {
     cfg: ConfigOf<AV, AppBskyFeedGetRepostedBy.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.feed.getRepostedBy' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getSavedFeeds<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyFeedGetSavedFeeds.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'app.bsky.feed.getSavedFeeds' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

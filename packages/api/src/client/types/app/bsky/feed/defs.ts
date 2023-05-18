@@ -214,7 +214,6 @@ export function validateGeneratorView(v: unknown): ValidationResult {
 }
 
 export interface GeneratorViewerState {
-  saved?: boolean
   like?: string
   [k: string]: unknown
 }

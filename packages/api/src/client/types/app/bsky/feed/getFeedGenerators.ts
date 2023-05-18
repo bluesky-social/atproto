@@ -9,14 +9,12 @@ import { CID } from 'multiformats/cid'
 import * as AppBskyFeedDefs from './defs'
 
 export interface QueryParams {
-  limit?: number
-  cursor?: string
+  feeds: string[]
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor?: string
   feeds: AppBskyFeedDefs.GeneratorView[]
   [k: string]: unknown
 }

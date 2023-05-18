@@ -3595,11 +3595,18 @@ export const schemaDict = {
           },
         },
       },
-      pinnedFeedsPref: {
+      savedFeedsPref: {
         type: 'object',
-        required: ['feeds'],
+        required: ['pinned', 'feeds'],
         properties: {
-          feeds: {
+          pinned: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'at-uri',
+            },
+          },
+          saved: {
             type: 'array',
             items: {
               type: 'string',
@@ -4395,9 +4402,6 @@ export const schemaDict = {
       generatorViewerState: {
         type: 'object',
         properties: {
-          saved: {
-            type: 'boolean',
-          },
           like: {
             type: 'string',
             format: 'at-uri',
@@ -4731,6 +4735,45 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetFeedGenerators: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getFeedGenerators',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get information about a list of feed generators',
+        parameters: {
+          type: 'params',
+          required: ['feeds'],
+          properties: {
+            feeds: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feeds'],
+            properties: {
+              feeds: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#generatorView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedGetFeedSkeleton: {
     lexicon: 1,
     id: 'app.bsky.feed.getFeedSkeleton',
@@ -4996,49 +5039,6 @@ export const schemaDict = {
                 items: {
                   type: 'ref',
                   ref: 'lex:app.bsky.actor.defs#profileView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyFeedGetSavedFeeds: {
-    lexicon: 1,
-    id: 'app.bsky.feed.getSavedFeeds',
-    defs: {
-      main: {
-        type: 'query',
-        description: "Retrieve a list of the authenticated user's saved feeds",
-        parameters: {
-          type: 'params',
-          properties: {
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['feeds'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              feeds: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#generatorView',
                 },
               },
             },
@@ -6311,12 +6311,12 @@ export const ids = {
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetFeed: 'app.bsky.feed.getFeed',
   AppBskyFeedGetFeedGenerator: 'app.bsky.feed.getFeedGenerator',
+  AppBskyFeedGetFeedGenerators: 'app.bsky.feed.getFeedGenerators',
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
-  AppBskyFeedGetSavedFeeds: 'app.bsky.feed.getSavedFeeds',
   AppBskyFeedGetTimeline: 'app.bsky.feed.getTimeline',
   AppBskyFeedLike: 'app.bsky.feed.like',
   AppBskyFeedPost: 'app.bsky.feed.post',

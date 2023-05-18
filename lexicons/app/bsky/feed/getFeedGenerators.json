@@ -1,15 +1,18 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.feed.getSavedFeeds",
+  "id": "app.bsky.feed.getFeedGenerators",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Retrieve a list of the authenticated user's saved feeds",
+      "description": "Get information about a list of feed generators",
       "parameters": {
         "type": "params",
+        "required": ["feeds"],
         "properties": {
-          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "cursor": {"type": "string"}
+          "feeds": {
+            "type": "array",
+            "items": {"type": "string", "format": "at-uri"}
+          }
         }
       },
       "output": {
@@ -18,7 +21,6 @@
           "type": "object",
           "required": ["feeds"],
           "properties": {
-            "cursor": {"type": "string"},
             "feeds": {
               "type": "array",
               "items": {"type": "ref", "ref": "app.bsky.feed.defs#generatorView"}

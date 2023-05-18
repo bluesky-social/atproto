@@ -93,7 +93,8 @@
         "type": "union",
         "refs": [
           "#adultContentPref",
-          "#contentLabelPref"
+          "#contentLabelPref",
+          "#savedFeedsPref"
         ]
       }
     },
@@ -112,11 +113,18 @@
         "visibility": {"type": "string", "knownValues": ["show", "warn", "hide"]}
       }
     },
-    "pinnedFeedsPref": {
+    "savedFeedsPref": {
       "type": "object",
-      "required": ["feeds"],
+      "required": ["pinned", "feeds"],
       "properties": {
-        "feeds": {
+        "pinned": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "at-uri"
+          }
+        },
+        "saved": {
           "type": "array",
           "items": {
             "type": "string",
