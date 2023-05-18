@@ -111,6 +111,19 @@
         "label": {"type": "string"},
         "visibility": {"type": "string", "knownValues": ["show", "warn", "hide"]}
       }
+    },
+    "pinnedFeedsPref": {
+      "type": "object",
+      "required": ["feeds"],
+      "properties": {
+        "feeds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "at-uri"
+          }
+        }
+      }
     }
   }
 }

@@ -3595,6 +3595,19 @@ export const schemaDict = {
           },
         },
       },
+      pinnedFeedsPref: {
+        type: 'object',
+        required: ['feeds'],
+        properties: {
+          feeds: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'at-uri',
+            },
+          },
+        },
+      },
     },
   },
   AppBskyActorGetPreferences: {
@@ -4491,8 +4504,8 @@ export const schemaDict = {
             },
             displayName: {
               type: 'string',
-              maxGraphemes: 64,
-              maxLength: 640,
+              maxGraphemes: 24,
+              maxLength: 240,
             },
             description: {
               type: 'string',
