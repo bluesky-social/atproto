@@ -107,6 +107,7 @@ export function validateViewerState(v: unknown): ValidationResult {
 export type Preferences = (
   | AdultContentPref
   | ContentLabelPref
+  | SavedFeedsPref
   | { $type: string; [k: string]: unknown }
 )[]
 
@@ -147,7 +148,7 @@ export function validateContentLabelPref(v: unknown): ValidationResult {
 
 export interface SavedFeedsPref {
   pinned: string[]
-  saved?: string[]
+  saved: string[]
   [k: string]: unknown
 }
 

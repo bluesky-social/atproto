@@ -115,7 +115,7 @@
     },
     "savedFeedsPref": {
       "type": "object",
-      "required": ["pinned", "feeds"],
+      "required": ["pinned", "saved"],
       "properties": {
         "pinned": {
           "type": "array",

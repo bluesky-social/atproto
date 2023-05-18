@@ -100,8 +100,6 @@ import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedLike from './types/app/bsky/feed/like'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
-import * as AppBskyFeedSaveFeed from './types/app/bsky/feed/saveFeed'
-import * as AppBskyFeedUnsaveFeed from './types/app/bsky/feed/unsaveFeed'
 import * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 import * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
 import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
@@ -217,8 +215,6 @@ export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 export * as AppBskyFeedLike from './types/app/bsky/feed/like'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
-export * as AppBskyFeedSaveFeed from './types/app/bsky/feed/saveFeed'
-export * as AppBskyFeedUnsaveFeed from './types/app/bsky/feed/unsaveFeed'
 export * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 export * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
 export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
@@ -1325,28 +1321,6 @@ export class FeedNS {
       .call('app.bsky.feed.getTimeline', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetTimeline.toKnownErr(e)
-      })
-  }
-
-  saveFeed(
-    data?: AppBskyFeedSaveFeed.InputSchema,
-    opts?: AppBskyFeedSaveFeed.CallOptions,
-  ): Promise<AppBskyFeedSaveFeed.Response> {
-    return this._service.xrpc
-      .call('app.bsky.feed.saveFeed', opts?.qp, data, opts)
-      .catch((e) => {
-        throw AppBskyFeedSaveFeed.toKnownErr(e)
-      })
-  }
-
-  unsaveFeed(
-    data?: AppBskyFeedUnsaveFeed.InputSchema,
-    opts?: AppBskyFeedUnsaveFeed.CallOptions,
-  ): Promise<AppBskyFeedUnsaveFeed.Response> {
-    return this._service.xrpc
-      .call('app.bsky.feed.unsaveFeed', opts?.qp, data, opts)
-      .catch((e) => {
-        throw AppBskyFeedUnsaveFeed.toKnownErr(e)
       })
   }
 }

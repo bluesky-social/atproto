@@ -86,8 +86,6 @@ import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
-import * as AppBskyFeedSaveFeed from './types/app/bsky/feed/saveFeed'
-import * as AppBskyFeedUnsaveFeed from './types/app/bsky/feed/unsaveFeed'
 import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
@@ -886,20 +884,6 @@ export class FeedNS {
     cfg: ConfigOf<AV, AppBskyFeedGetTimeline.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.feed.getTimeline' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  saveFeed<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyFeedSaveFeed.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'app.bsky.feed.saveFeed' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  unsaveFeed<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyFeedUnsaveFeed.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'app.bsky.feed.unsaveFeed' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
