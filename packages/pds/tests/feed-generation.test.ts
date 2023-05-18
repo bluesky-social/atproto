@@ -11,7 +11,6 @@ import {
   FeedViewPost,
   GeneratorView,
 } from '@atproto/api/src/client/types/app/bsky/feed/defs'
-import { FeedAlgorithm } from '../src/app-view/api/app/bsky/util/feed'
 import { SkeletonFeedPost } from '../src/lexicon/types/app/bsky/feed/defs'
 import { RecordRef } from './seeds/client'
 
@@ -106,38 +105,6 @@ describe('feed generation', () => {
     expect(paginatedAll[0].uri).toEqual(feedUriOdd)
     expect(paginatedAll[1].uri).toEqual(feedUriEven)
     expect(paginatedAll[2].uri).toEqual(feedUriAll)
-    expect(forSnapshot(paginatedAll)).toMatchSnapshot()
-  })
-
-  it('saves feeds and paginates through saved feeds.', async () => {
-    await agent.api.app.bsky.feed.saveFeed(
-      { feed: feedUriEven },
-      { headers: sc.getHeaders(sc.dids.bob), encoding: 'application/json' },
-    )
-    await agent.api.app.bsky.feed.saveFeed(
-      { feed: feedUriAll },
-      { headers: sc.getHeaders(sc.dids.bob), encoding: 'application/json' },
-    )
-    const { data } = await agent.api.app.bsky.feed.getSavedFeeds(
-      {},
-      { headers: sc.getHeaders(sc.dids.bob) },
-    )
-    expect(data.feeds.map((f) => f.uri)).toEqual([feedUriAll, feedUriEven])
-    await agent.api.app.bsky.feed.saveFeed(
-      { feed: feedUriOdd },
-      { headers: sc.getHeaders(sc.dids.bob), encoding: 'application/json' },
-    )
-
-    const results = (results) => results.flatMap((res) => res.feeds)
-    const paginator = async (cursor?: string) => {
-      const res = await agent.api.app.bsky.feed.getSavedFeeds(
-        { cursor, limit: 2 },
-        { headers: sc.getHeaders(sc.dids.bob) },
-      )
-      return res.data
-    }
-
-    const paginatedAll: FeedAlgorithm[] = results(await paginateAll(paginator))
     expect(forSnapshot(paginatedAll)).toMatchSnapshot()
   })
 

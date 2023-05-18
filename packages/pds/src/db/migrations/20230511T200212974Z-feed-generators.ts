@@ -28,14 +28,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
-    .createTable('saved_feed')
-    .addColumn('userDid', 'varchar', (col) => col.notNull())
-    .addColumn('feedUri', 'varchar', (col) => col.notNull())
-    .addColumn('createdAt', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint('saved_feed_pkey', ['userDid', 'feedUri'])
-    .execute()
-
-  await db.schema
     .createTable('did_cache')
     .addColumn('did', 'varchar', (col) => col.primaryKey())
     .addColumn('doc', 'text', (col) => col.notNull())
@@ -45,7 +37,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('did_cache').execute()
-  await db.schema.dropTable('saved_feed').execute()
   await db.schema.dropIndex('feed_generator_creator_index').execute()
   await db.schema.dropIndex('feed_generator_feed_did_index').execute()
   await db.schema.dropTable('feed_generator').execute()

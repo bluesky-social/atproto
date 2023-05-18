@@ -111,14 +111,6 @@ export class FeedService {
           .select('uri')
           .as('viewerLike'),
       )
-      .select((qb) =>
-        qb
-          .selectFrom('saved_feed')
-          .where('saved_feed.userDid', '=', requester)
-          .whereRef('saved_feed.feedUri', '=', 'feed_generator.uri')
-          .select('userDid')
-          .as('viewerSaved'),
-      )
   }
 
   // @NOTE keep in sync with actorService.views.profile()
