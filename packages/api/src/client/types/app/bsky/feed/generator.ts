@@ -9,7 +9,7 @@ import * as AppBskyRichtextFacet from '../richtext/facet'
 
 export interface Record {
   did: string
-  displayName?: string
+  displayName: string
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: BlobRef

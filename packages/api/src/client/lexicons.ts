@@ -4295,7 +4295,7 @@ export const schemaDict = {
       },
       generatorView: {
         type: 'object',
-        required: ['uri', 'cid', 'creator', 'indexedAt'],
+        required: ['uri', 'cid', 'creator', 'displayName', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
@@ -4449,7 +4449,7 @@ export const schemaDict = {
         key: 'any',
         record: {
           type: 'object',
-          required: ['did', 'createdAt'],
+          required: ['did', 'displayName', 'createdAt'],
           properties: {
             did: {
               type: 'string',

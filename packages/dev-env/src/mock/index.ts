@@ -320,7 +320,11 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
   })
   const fgBobRes = await bob.agent.api.app.bsky.feed.generator.create(
     { repo: bob.did, rkey: fg2Uri.rkey },
-    { did: fg2.did, createdAt: date.next().value },
+    {
+      did: fg2.did,
+      displayName: 'Bobby boy hot new algo',
+      createdAt: date.next().value,
+    },
   )
 
   await alice.agent.api.app.bsky.feed.post.create(
