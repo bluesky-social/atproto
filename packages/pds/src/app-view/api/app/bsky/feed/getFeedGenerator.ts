@@ -31,17 +31,24 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`not a valid feed generator: ${feedDid}`)
       }
 
-      const agent = new AtpAgent({ service: fgEndpoint })
       let isOnline: boolean
       let isValid: boolean
-      try {
-        const res = await agent.api.app.bsky.feed.describeFeedGenerator()
+
+      if (ctx.algos[feed]) {
+        isValid = true
         isOnline = true
-        isValid =
-          res.data.did === feedDid && res.data.feeds.some((f) => f.uri === feed)
-      } catch (err) {
-        isOnline = false
-        isValid = false
+      } else {
+        const agent = new AtpAgent({ service: fgEndpoint })
+        try {
+          const res = await agent.api.app.bsky.feed.describeFeedGenerator()
+          isOnline = true
+          isValid =
+            res.data.did === feedDid &&
+            res.data.feeds.some((f) => f.uri === feed)
+        } catch (err) {
+          isOnline = false
+          isValid = false
+        }
       }
 
       const profiles = await feedService.getActorViews(

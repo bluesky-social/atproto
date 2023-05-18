@@ -13,6 +13,7 @@ import Sequencer from './sequencer'
 import { Labeler } from './labeler'
 import { BackgroundQueue } from './event-stream/background-queue'
 import DidSqlCache from './did-cache'
+import { MountedAlgos } from './feed-gen/types'
 
 export class AppContext {
   constructor(
@@ -32,6 +33,7 @@ export class AppContext {
       sequencer: Sequencer
       labeler: Labeler
       backgroundQueue: BackgroundQueue
+      algos: MountedAlgos
     },
   ) {}
 
@@ -121,6 +123,10 @@ export class AppContext {
 
   get didCache(): DidSqlCache {
     return this.opts.didCache
+  }
+
+  get algos(): MountedAlgos {
+    return this.opts.algos
   }
 }
 
