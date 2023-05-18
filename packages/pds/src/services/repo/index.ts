@@ -88,11 +88,12 @@ export class RepoService {
       this.repoSigningKey,
       writeOps,
     )
-    await storage.applyCommit(commit)
     await Promise.all([
+      storage.applyCommit(commit),
       this.indexWrites(writes, now),
-      this.afterWriteProcessing(did, commit, writes),
+      this.blobs.processWriteBlobs(did, commit.commit, writes),
     ])
+    await this.afterWriteProcessing(did, commit, writes)
   }
 
   async processCommit(
@@ -112,9 +113,11 @@ export class RepoService {
       storage.applyCommit(commitData),
       // & send to indexing
       this.indexWrites(writes, now),
+      // process blobs
+      this.blobs.processWriteBlobs(did, commitData.commit, writes),
       // do any other processing needed after write
-      this.afterWriteProcessing(did, commitData, writes),
     ])
+    await this.afterWriteProcessing(did, commitData, writes)
   }
 
   async processWrites(
@@ -212,13 +215,6 @@ export class RepoService {
     commitData: CommitData,
     writes: PreparedWrite[],
   ) {
-    const [seqEvt] = await Promise.all([
-      sequencer.formatSeqCommit(did, commitData, writes),
-      this.blobs.processWriteBlobs(did, commitData.commit, writes),
-    ])
-
-    await sequencer.sequenceEvt(this.db, seqEvt)
-
     // @TODO move to appview
     writes.map((write) => {
       if (
@@ -228,6 +224,9 @@ export class RepoService {
         this.labeler.processRecord(write.uri, write.record)
       }
     })
+
+    const seqEvt = await sequencer.formatSeqCommit(did, commitData, writes)
+    await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
   async rebaseRepo(did: string, swapCommit?: CID) {

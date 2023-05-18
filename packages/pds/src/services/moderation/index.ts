@@ -223,8 +223,7 @@ export class ModerationService {
     // Resolve subject info
     let subjectInfo: SubjectInfo
     if ('did' in subject) {
-      const repo = await new SqlRepoStorage(this.db, subject.did).getHead()
-      if (!repo) throw new InvalidRequestError('Repo not found')
+      // Allowing dids that may not exist: may have been deleted but needs to remain actionable.
       subjectInfo = {
         subjectType: 'com.atproto.admin.defs#repoRef',
         subjectDid: subject.did,
@@ -235,15 +234,12 @@ export class ModerationService {
         throw new InvalidRequestError('Blobs do not apply to repo subjects')
       }
     } else {
-      const record = await this.services
-        .record(this.db)
-        .getRecord(subject.uri, subject.cid.toString() ?? null, true)
-      if (!record) throw new InvalidRequestError('Record not found')
+      // Allowing records/blobs that may not exist: may have been deleted but needs to remain actionable.
       subjectInfo = {
         subjectType: 'com.atproto.repo.strongRef',
         subjectDid: subject.uri.host,
         subjectUri: subject.uri.toString(),
-        subjectCid: record.cid,
+        subjectCid: subject.cid.toString(),
       }
       if (subjectBlobCids?.length) {
         const cidsFromSubject = await this.db.db

@@ -100,7 +100,9 @@ export const schemaDict = {
             type: 'union',
             refs: [
               'lex:com.atproto.admin.defs#repoView',
+              'lex:com.atproto.admin.defs#repoViewNotFound',
               'lex:com.atproto.admin.defs#recordView',
+              'lex:com.atproto.admin.defs#recordViewNotFound',
             ],
           },
           subjectBlobs: {
@@ -274,7 +276,9 @@ export const schemaDict = {
             type: 'union',
             refs: [
               'lex:com.atproto.admin.defs#repoView',
+              'lex:com.atproto.admin.defs#repoViewNotFound',
               'lex:com.atproto.admin.defs#recordView',
+              'lex:com.atproto.admin.defs#recordViewNotFound',
             ],
           },
           reportedBy: {
@@ -396,6 +400,16 @@ export const schemaDict = {
           },
         },
       },
+      repoViewNotFound: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
       repoRef: {
         type: 'object',
         required: ['did'],
@@ -498,6 +512,16 @@ export const schemaDict = {
           repo: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#repoView',
+          },
+        },
+      },
+      recordViewNotFound: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -905,6 +929,11 @@ export const schemaDict = {
             ref: 'lex:com.atproto.admin.defs#recordViewDetail',
           },
         },
+        errors: [
+          {
+            name: 'RecordNotFound',
+          },
+        ],
       },
     },
   },
@@ -932,6 +961,11 @@ export const schemaDict = {
             ref: 'lex:com.atproto.admin.defs#repoViewDetail',
           },
         },
+        errors: [
+          {
+            name: 'RepoNotFound',
+          },
+        ],
       },
     },
   },

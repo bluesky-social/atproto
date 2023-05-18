@@ -10,7 +10,7 @@ const handler: AlgoHandler = async (
   params: SkeletonParams,
   requester: string,
 ): Promise<AlgoResponse> => {
-  const { cursor, limit } = params
+  const { cursor, limit = 50 } = params
   const accountService = ctx.services.account(ctx.db)
   const feedService = ctx.services.appView.feed(ctx.db)
   const graphService = ctx.services.appView.graph(ctx.db)
