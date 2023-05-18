@@ -144,3 +144,20 @@ export function isContentLabelPref(v: unknown): v is ContentLabelPref {
 export function validateContentLabelPref(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#contentLabelPref', v)
 }
+
+export interface PinnedFeedsPref {
+  feeds: string[]
+  [k: string]: unknown
+}
+
+export function isPinnedFeedsPref(v: unknown): v is PinnedFeedsPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#pinnedFeedsPref'
+  )
+}
+
+export function validatePinnedFeedsPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#pinnedFeedsPref', v)
+}
