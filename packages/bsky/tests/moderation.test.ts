@@ -13,6 +13,7 @@ import {
   REASONOTHER,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
+import { TID, cidForCbor } from '@atproto/common'
 
 describe('moderation', () => {
   let network: TestNetwork
@@ -227,6 +228,107 @@ describe('moderation', () => {
 
       expect(forSnapshot(actionResolvedReports)).toMatchSnapshot()
 
+      // Cleanup
+      await agent.api.com.atproto.admin.reverseModerationAction(
+        {
+          id: action.id,
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
+    })
+
+    it('resolves reports on missing repos and records.', async () => {
+      const unknownDid = 'did:plc:unknown'
+      const unknownPostUri = `at://did:plc:unknown/app.bsky.feed.post/${TID.nextStr()}`
+      const unknownPostCid = (await cidForCbor({})).toString()
+      // Report user and post unknown to bsky
+      const { data: reportA } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONSPAM,
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: unknownDid,
+            },
+          },
+          {
+            headers: await network.serviceHeaders(sc.dids.alice),
+            encoding: 'application/json',
+          },
+        )
+      const { data: reportB } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONOTHER,
+            reason: 'defamation',
+            subject: {
+              $type: 'com.atproto.repo.strongRef',
+              uri: unknownPostUri,
+              cid: unknownPostCid,
+            },
+          },
+          {
+            headers: await network.serviceHeaders(sc.dids.carol),
+            encoding: 'application/json',
+          },
+        )
+      // Take action on deleted content
+      const { data: action } =
+        await agent.api.com.atproto.admin.takeModerationAction(
+          {
+            action: FLAG,
+            subject: {
+              $type: 'com.atproto.repo.strongRef',
+              uri: unknownPostUri,
+              cid: unknownPostCid,
+            },
+            createdBy: 'did:example:admin',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: network.pds.adminAuthHeaders(),
+          },
+        )
+      await agent.api.com.atproto.admin.resolveModerationReports(
+        {
+          actionId: action.id,
+          reportIds: [reportB.id, reportA.id],
+          createdBy: 'did:example:admin',
+        },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
+      // Check report and action details
+      const { data: recordActionDetail } =
+        await agent.api.com.atproto.admin.getModerationAction(
+          { id: action.id },
+          { headers: network.pds.adminAuthHeaders() },
+        )
+      const { data: reportADetail } =
+        await agent.api.com.atproto.admin.getModerationReport(
+          { id: reportA.id },
+          { headers: network.pds.adminAuthHeaders() },
+        )
+      const { data: reportBDetail } =
+        await agent.api.com.atproto.admin.getModerationReport(
+          { id: reportB.id },
+          { headers: network.pds.adminAuthHeaders() },
+        )
+      expect(
+        forSnapshot({
+          recordActionDetail,
+          reportADetail,
+          reportBDetail,
+        }),
+      ).toMatchSnapshot()
       // Cleanup
       await agent.api.com.atproto.admin.reverseModerationAction(
         {

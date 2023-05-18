@@ -35,7 +35,9 @@
           "type": "union",
           "refs": [
             "#repoView",
-            "#recordView"
+            "#repoViewNotFound",
+            "#recordView",
+            "#recordViewNotFound"
           ]
         },
         "subjectBlobs": {"type": "array", "items": {"type": "ref", "ref": "#blobView"}},
@@ -120,7 +122,9 @@
           "type": "union",
           "refs": [
             "#repoView",
-            "#recordView"
+            "#repoViewNotFound",
+            "#recordView",
+            "#recordViewNotFound"
           ]
         },
         "reportedBy": {"type": "string", "format": "did"},
@@ -164,6 +168,13 @@
         "invitesDisabled": {"type": "boolean"}
       }
     },
+    "repoViewNotFound": {
+      "type": "object",
+      "required": ["did"],
+      "properties": {
+        "did": {"type": "string", "format": "did"}
+      }
+    },
     "repoRef": {
       "type": "object",
       "required": ["did"],
@@ -199,6 +210,13 @@
         "indexedAt": {"type": "string", "format": "datetime"},
         "moderation": {"type": "ref", "ref": "#moderationDetail"},
         "repo": {"type": "ref", "ref": "#repoView"}
+      }
+    },
+    "recordViewNotFound": {
+      "type": "object",
+      "required": ["uri"],
+      "properties": {
+        "uri": {"type": "string", "format": "at-uri"}
       }
     },
     "moderation": {

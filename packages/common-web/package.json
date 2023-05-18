@@ -24,6 +24,7 @@
     "postpublish": "npm run update-main-to-src"
   },
   "dependencies": {
+    "graphemer": "^1.4.0",
     "multiformats": "^9.6.4",
     "uint8arrays": "3.0.0",
     "zod": "^3.21.4"
