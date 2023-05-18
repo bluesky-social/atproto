@@ -4,6 +4,7 @@ import getTimeline from './feed/getTimeline'
 import getActorFeeds from './feed/getActorFeeds'
 import getAuthorFeed from './feed/getAuthorFeed'
 import getFeedGenerator from './feed/getFeedGenerator'
+import getFeedGenerators from './feed/getFeedGenerators'
 import describeFeedGenerator from './feed/describeFeedGenerator'
 import getFeed from './feed/getFeed'
 import getLikes from './feed/getLikes'
@@ -29,6 +30,7 @@ export default function (server: Server, ctx: AppContext) {
   getActorFeeds(server, ctx)
   getAuthorFeed(server, ctx)
   getFeedGenerator(server, ctx)
+  getFeedGenerators(server, ctx)
   describeFeedGenerator(server, ctx)
   getFeed(server, ctx)
   getLikes(server, ctx)

@@ -3569,6 +3569,7 @@ export const schemaDict = {
           refs: [
             'lex:app.bsky.actor.defs#adultContentPref',
             'lex:app.bsky.actor.defs#contentLabelPref',
+            'lex:app.bsky.actor.defs#savedFeedsPref',
           ],
         },
       },
@@ -3597,7 +3598,7 @@ export const schemaDict = {
       },
       savedFeedsPref: {
         type: 'object',
-        required: ['pinned', 'feeds'],
+        required: ['pinned', 'saved'],
         properties: {
           pinned: {
             type: 'array',
@@ -5242,52 +5243,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyFeedSaveFeed: {
-    lexicon: 1,
-    id: 'app.bsky.feed.saveFeed',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Save a 3rd party feed for use across clients',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['feed'],
-            properties: {
-              feed: {
-                type: 'string',
-                format: 'at-uri',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyFeedUnsaveFeed: {
-    lexicon: 1,
-    id: 'app.bsky.feed.unsaveFeed',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Unsave a 3rd party feed',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['feed'],
-            properties: {
-              feed: {
-                type: 'string',
-                format: 'at-uri',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyGraphBlock: {
     lexicon: 1,
     id: 'app.bsky.graph.block',
@@ -6321,8 +6276,6 @@ export const ids = {
   AppBskyFeedLike: 'app.bsky.feed.like',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
-  AppBskyFeedSaveFeed: 'app.bsky.feed.saveFeed',
-  AppBskyFeedUnsaveFeed: 'app.bsky.feed.unsaveFeed',
   AppBskyGraphBlock: 'app.bsky.graph.block',
   AppBskyGraphDefs: 'app.bsky.graph.defs',
   AppBskyGraphFollow: 'app.bsky.graph.follow',

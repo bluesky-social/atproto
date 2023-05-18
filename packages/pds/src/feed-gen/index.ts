@@ -14,5 +14,5 @@ export const makeAlgos = (did: string): MountedAlgos => ({
   [AtUri.make(did, coll, 'skyline').toString()]: skyline,
   [AtUri.make(did, coll, 'bsky-team').toString()]: bskyTeam,
   [AtUri.make(did, coll, 'whats-hot').toString()]: whatsHot,
-  [AtUri.make(did, coll, 'whats-hot-classic').toString()]: whatsHotClassic,
+  [AtUri.make(did, coll, 'hot-classic').toString()]: whatsHotClassic,
 })
