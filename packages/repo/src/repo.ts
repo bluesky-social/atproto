@@ -1,5 +1,6 @@
 import { CID } from 'multiformats/cid'
 import * as crypto from '@atproto/crypto'
+import * as nsid from '@atproto/nsid'
 import {
   Commit,
   def,
@@ -116,6 +117,11 @@ export class Repo extends ReadableRepo {
 
     let data = this.data
     for (const write of writes) {
+      nsid.ensureValidNsid(write.collection)
+      if (write.rkey.length > 15) {
+        throw new Error('Rkey longer than 15 chars')
+      }
+
       if (write.action === WriteOpAction.Create) {
         const cid = await commitBlocks.add(write.record)
         const dataKey = write.collection + '/' + write.rkey
