@@ -219,13 +219,15 @@ export class RepoService {
     await sequencer.sequenceEvt(this.db, seqEvt)
 
     // @TODO move to appview
-    writes.map((write) => {
-      if (
-        write.action === WriteOpAction.Create ||
-        write.action === WriteOpAction.Update
-      ) {
-        this.labeler.processRecord(write.uri, write.record)
-      }
+    this.db.onCommit(() => {
+      writes.map((write) => {
+        if (
+          write.action === WriteOpAction.Create ||
+          write.action === WriteOpAction.Update
+        ) {
+          this.labeler.processRecord(write.uri, write.record)
+        }
+      })
     })
   }
 
