@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - custom-feeds
+      - bsky-algos
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
