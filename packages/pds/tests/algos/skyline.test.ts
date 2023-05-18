@@ -4,7 +4,7 @@ import { SeedClient } from '../seeds/client'
 import userSeed from '../seeds/users'
 import { makeAlgos } from '../../src'
 
-describe('algo skyline', () => {
+describe('algo with friends', () => {
   let server: TestServerInfo
   let agent: AtpAgent
   let sc: SeedClient
@@ -19,13 +19,13 @@ describe('algo skyline', () => {
   const feedUri = AtUri.make(
     feedPublisherDid,
     'app.bsky.feed.generator',
-    'skyline',
+    'with-friends',
   ).toString()
 
   beforeAll(async () => {
     server = await runTestServer(
       {
-        dbPostgresSchema: 'algo_skyline',
+        dbPostgresSchema: 'algo_with_friends',
       },
       {
         algos: makeAlgos(feedPublisherDid),
