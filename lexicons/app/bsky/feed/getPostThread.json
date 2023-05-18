@@ -9,7 +9,8 @@
         "required": ["uri"],
         "properties": {
           "uri": {"type": "string", "format": "at-uri"},
-          "depth": {"type": "integer"}
+          "depth": {"type": "integer"},
+          "parentHeight": {"type": "integer"}
         }
       },
       "output": {
