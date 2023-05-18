@@ -52,7 +52,7 @@
       "required": ["action", "collection", "rkey", "value"],
       "properties": {
         "collection": {"type": "string", "format": "nsid"},
-        "rkey": {"type": "string", "maxLength": 15},
+        "rkey": {"type": "string"},
         "value": {"type": "unknown"}
       }
     },

@@ -1637,7 +1637,6 @@ export const schemaDict = {
           },
           rkey: {
             type: 'string',
-            maxLength: 15,
           },
           value: {
             type: 'unknown',
