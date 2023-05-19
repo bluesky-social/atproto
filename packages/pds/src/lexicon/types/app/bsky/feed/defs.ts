@@ -11,6 +11,7 @@ import * as AppBskyEmbedExternal from '../embed/external'
 import * as AppBskyEmbedRecord from '../embed/record'
 import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
+import * as AppBskyRichtextFacet from '../richtext/facet'
 
 export interface PostView {
   uri: string
@@ -80,8 +81,16 @@ export function validateFeedViewPost(v: unknown): ValidationResult {
 }
 
 export interface ReplyRef {
-  root: PostView
-  parent: PostView
+  root:
+    | PostView
+    | NotFoundPost
+    | BlockedPost
+    | { $type: string; [k: string]: unknown }
+  parent:
+    | PostView
+    | NotFoundPost
+    | BlockedPost
+    | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
 
@@ -175,4 +184,83 @@ export function isBlockedPost(v: unknown): v is BlockedPost {
 
 export function validateBlockedPost(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#blockedPost', v)
+}
+
+export interface GeneratorView {
+  uri: string
+  cid: string
+  did?: string
+  creator: AppBskyActorDefs.ProfileView
+  displayName: string
+  description?: string
+  descriptionFacets?: AppBskyRichtextFacet.Main[]
+  avatar?: string
+  likeCount?: number
+  viewer?: GeneratorViewerState
+  indexedAt: string
+  [k: string]: unknown
+}
+
+export function isGeneratorView(v: unknown): v is GeneratorView {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#generatorView'
+  )
+}
+
+export function validateGeneratorView(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#generatorView', v)
+}
+
+export interface GeneratorViewerState {
+  like?: string
+  [k: string]: unknown
+}
+
+export function isGeneratorViewerState(v: unknown): v is GeneratorViewerState {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#generatorViewerState'
+  )
+}
+
+export function validateGeneratorViewerState(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#generatorViewerState', v)
+}
+
+export interface SkeletonFeedPost {
+  post: string
+  reason?: SkeletonReasonRepost | { $type: string; [k: string]: unknown }
+  [k: string]: unknown
+}
+
+export function isSkeletonFeedPost(v: unknown): v is SkeletonFeedPost {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#skeletonFeedPost'
+  )
+}
+
+export function validateSkeletonFeedPost(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#skeletonFeedPost', v)
+}
+
+export interface SkeletonReasonRepost {
+  repost: string
+  [k: string]: unknown
+}
+
+export function isSkeletonReasonRepost(v: unknown): v is SkeletonReasonRepost {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#skeletonReasonRepost'
+  )
+}
+
+export function validateSkeletonReasonRepost(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#skeletonReasonRepost', v)
 }

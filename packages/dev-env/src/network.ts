@@ -43,6 +43,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       bskyAppViewDid: bsky.ctx.cfg.serverDid,
       ...params.pds,
     })
+
     mockNetworkUtilities(pds)
 
     return new TestNetwork(plc, pds, bsky)

@@ -107,6 +107,7 @@ export function validateViewerState(v: unknown): ValidationResult {
 export type Preferences = (
   | AdultContentPref
   | ContentLabelPref
+  | SavedFeedsPref
   | { $type: string; [k: string]: unknown }
 )[]
 
@@ -143,4 +144,22 @@ export function isContentLabelPref(v: unknown): v is ContentLabelPref {
 
 export function validateContentLabelPref(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#contentLabelPref', v)
+}
+
+export interface SavedFeedsPref {
+  pinned: string[]
+  saved: string[]
+  [k: string]: unknown
+}
+
+export function isSavedFeedsPref(v: unknown): v is SavedFeedsPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#savedFeedsPref'
+  )
+}
+
+export function validateSavedFeedsPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#savedFeedsPref', v)
 }

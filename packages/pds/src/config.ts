@@ -1,4 +1,4 @@
-import { parseIntWithFallback, DAY } from '@atproto/common'
+import { parseIntWithFallback, DAY, HOUR } from '@atproto/common'
 
 export interface ServerConfigValues {
   debugMode?: boolean
@@ -18,6 +18,8 @@ export interface ServerConfigValues {
   jwtSecret: string
 
   didPlcUrl: string
+  didCacheStaleTTL: number
+  didCacheMaxTTL: number
 
   serverDid: string
   recoveryKey: string
@@ -82,6 +84,14 @@ export class ServerConfig {
     const jwtSecret = process.env.JWT_SECRET || 'jwt_secret'
 
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
+    const didCacheStaleTTL = parseIntWithFallback(
+      process.env.DID_CACHE_STALE_TTL,
+      HOUR,
+    )
+    const didCacheMaxTTL = parseIntWithFallback(
+      process.env.DID_CACHE_MAX_TTL,
+      DAY,
+    )
 
     const serverDid = overrides?.serverDid || process.env.SERVER_DID
     if (typeof serverDid !== 'string') {
@@ -169,6 +179,8 @@ export class ServerConfig {
       jwtSecret,
       recoveryKey,
       didPlcUrl,
+      didCacheStaleTTL,
+      didCacheMaxTTL,
       serverDid,
       adminPassword,
       moderatorPassword,
@@ -257,6 +269,14 @@ export class ServerConfig {
 
   get didPlcUrl() {
     return this.cfg.didPlcUrl
+  }
+
+  get didCacheStaleTTL() {
+    return this.cfg.didCacheStaleTTL
+  }
+
+  get didCacheMaxTTL() {
+    return this.cfg.didCacheMaxTTL
   }
 
   get serverDid() {

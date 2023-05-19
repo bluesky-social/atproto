@@ -84,7 +84,14 @@ import * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 import * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 import * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
 import * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
+import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator'
+import * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
+import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
+import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
+import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
+import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
+import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
@@ -192,7 +199,14 @@ export * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 export * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 export * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
 export * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
+export * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator'
+export * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
+export * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 export * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
+export * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
+export * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
+export * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
+export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
@@ -1165,15 +1179,39 @@ export class EmbedNS {
 
 export class FeedNS {
   _service: AtpServiceClient
+  generator: GeneratorRecord
   like: LikeRecord
   post: PostRecord
   repost: RepostRecord
 
   constructor(service: AtpServiceClient) {
     this._service = service
+    this.generator = new GeneratorRecord(service)
     this.like = new LikeRecord(service)
     this.post = new PostRecord(service)
     this.repost = new RepostRecord(service)
+  }
+
+  describeFeedGenerator(
+    params?: AppBskyFeedDescribeFeedGenerator.QueryParams,
+    opts?: AppBskyFeedDescribeFeedGenerator.CallOptions,
+  ): Promise<AppBskyFeedDescribeFeedGenerator.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.describeFeedGenerator', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedDescribeFeedGenerator.toKnownErr(e)
+      })
+  }
+
+  getActorFeeds(
+    params?: AppBskyFeedGetActorFeeds.QueryParams,
+    opts?: AppBskyFeedGetActorFeeds.CallOptions,
+  ): Promise<AppBskyFeedGetActorFeeds.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getActorFeeds', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetActorFeeds.toKnownErr(e)
+      })
   }
 
   getAuthorFeed(
@@ -1184,6 +1222,50 @@ export class FeedNS {
       .call('app.bsky.feed.getAuthorFeed', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetAuthorFeed.toKnownErr(e)
+      })
+  }
+
+  getFeed(
+    params?: AppBskyFeedGetFeed.QueryParams,
+    opts?: AppBskyFeedGetFeed.CallOptions,
+  ): Promise<AppBskyFeedGetFeed.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getFeed', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetFeed.toKnownErr(e)
+      })
+  }
+
+  getFeedGenerator(
+    params?: AppBskyFeedGetFeedGenerator.QueryParams,
+    opts?: AppBskyFeedGetFeedGenerator.CallOptions,
+  ): Promise<AppBskyFeedGetFeedGenerator.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getFeedGenerator', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetFeedGenerator.toKnownErr(e)
+      })
+  }
+
+  getFeedGenerators(
+    params?: AppBskyFeedGetFeedGenerators.QueryParams,
+    opts?: AppBskyFeedGetFeedGenerators.CallOptions,
+  ): Promise<AppBskyFeedGetFeedGenerators.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getFeedGenerators', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetFeedGenerators.toKnownErr(e)
+      })
+  }
+
+  getFeedSkeleton(
+    params?: AppBskyFeedGetFeedSkeleton.QueryParams,
+    opts?: AppBskyFeedGetFeedSkeleton.CallOptions,
+  ): Promise<AppBskyFeedGetFeedSkeleton.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getFeedSkeleton', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetFeedSkeleton.toKnownErr(e)
       })
   }
 
@@ -1240,6 +1322,67 @@ export class FeedNS {
       .catch((e) => {
         throw AppBskyFeedGetTimeline.toKnownErr(e)
       })
+  }
+}
+
+export class GeneratorRecord {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedGenerator.Record }[]
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.generator',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyFeedGenerator.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.generator',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyFeedGenerator.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.feed.generator'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.feed.generator', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.generator', ...params },
+      { headers },
+    )
   }
 }
 

@@ -74,12 +74,18 @@ import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestio
 import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
+import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
+import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
+import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
+import * as AppBskyFeedGetSavedFeeds from './types/app/bsky/feed/getSavedFeeds'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
+import * as AppBskyFeedSaveFeed from './types/app/bsky/feed/saveFeed'
+import * as AppBskyFeedUnsaveFeed from './types/app/bsky/feed/unsaveFeed'
 import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
@@ -794,10 +800,31 @@ export class FeedNS {
     this._server = server
   }
 
+  getActorFeeds<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedGetActorFeeds.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.getActorFeeds' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getAuthorFeed<AV extends AuthVerifier>(
     cfg: ConfigOf<AV, AppBskyFeedGetAuthorFeed.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.feed.getAuthorFeed' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getFeed<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedGetFeed.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.getFeed' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getFeedSkeleton<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedGetFeedSkeleton.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.getFeedSkeleton' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -829,10 +856,31 @@ export class FeedNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getSavedFeeds<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedGetSavedFeeds.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.getSavedFeeds' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getTimeline<AV extends AuthVerifier>(
     cfg: ConfigOf<AV, AppBskyFeedGetTimeline.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.feed.getTimeline' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  saveFeed<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedSaveFeed.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.saveFeed' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unsaveFeed<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyFeedUnsaveFeed.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.feed.unsaveFeed' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

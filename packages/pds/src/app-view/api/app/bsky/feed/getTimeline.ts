@@ -1,6 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
-import { FeedAlgorithm, FeedKeyset, composeFeed } from '../util/feed'
+import { FeedAlgorithm, FeedKeyset } from '../util/feed'
 import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
@@ -22,7 +22,6 @@ export default function (server: Server, ctx: AppContext) {
       const accountService = ctx.services.account(ctx.db)
       const feedService = ctx.services.appView.feed(ctx.db)
       const graphService = ctx.services.appView.graph(ctx.db)
-      const labelService = ctx.services.appView.label(ctx.db)
 
       const followingIdsSubquery = db
         .selectFrom('follow')
@@ -61,12 +60,7 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
       const feedItems: FeedRow[] = await feedItemsQb.execute()
-      const feed = await composeFeed(
-        feedService,
-        labelService,
-        feedItems,
-        requester,
-      )
+      const feed = await feedService.hydrateFeed(feedItems, requester)
 
       return {
         encoding: 'application/json',

@@ -1,9 +1,9 @@
 import { Server } from '../../../../lexicon'
-import { FeedKeyset, composeFeed } from './util/feed'
+import { FeedKeyset } from './util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow } from '../../../services/feed'
-import { FeedViewPost } from '../../../../lexicon/types/app/bsky/feed/defs'
+import { isPostView } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { NotEmptyArray } from '@atproto/common'
 import { isViewRecord } from '../../../../lexicon/types/app/bsky/embed/record'
 
@@ -28,7 +28,6 @@ export default function (server: Server, ctx: AppContext) {
       const accountService = ctx.services.account(ctx.db)
       const feedService = ctx.services.appView.feed(ctx.db)
       const graphService = ctx.services.appView.graph(ctx.db)
-      const labelService = ctx.services.appView.label(ctx.db)
 
       const labelsToFilter = includeNsfw
         ? NO_WHATS_HOT_LABELS
@@ -62,12 +61,7 @@ export default function (server: Server, ctx: AppContext) {
       feedQb = paginate(feedQb, { limit, cursor, keyset })
 
       const feedItems: FeedRow[] = await feedQb.execute()
-      const feed: FeedViewPost[] = await composeFeed(
-        feedService,
-        labelService,
-        feedItems,
-        requester,
-      )
+      const feed = await feedService.hydrateFeed(feedItems, requester)
 
       // filter out any quote post where the internal post has a filtered label
       const noLabeledQuotePosts = feed.filter((post) => {
@@ -83,8 +77,12 @@ export default function (server: Server, ctx: AppContext) {
       const noRecordEmbeds = noLabeledQuotePosts.map((post) => {
         delete post.post.record['embed']
         if (post.reply) {
-          delete post.reply.parent.record['embed']
-          delete post.reply.root.record['embed']
+          if (isPostView(post.reply.parent)) {
+            delete post.reply.parent.record['embed']
+          }
+          if (isPostView(post.reply.root)) {
+            delete post.reply.root.record['embed']
+          }
         }
         return post
       })

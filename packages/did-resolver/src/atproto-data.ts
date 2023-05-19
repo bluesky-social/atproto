@@ -56,14 +56,26 @@ export const getPds = (doc: DidDocument): string | undefined => {
   if (typeof found.serviceEndpoint !== 'string') {
     return undefined
   }
-  // Check pds protocol and hostname to prevent potential SSRF
-  const { hostname, protocol } = new URL(found.serviceEndpoint)
-  if (!['http:', 'https:'].includes(protocol)) {
-    throw new Error('Invalid pds protocol')
+  validateUrl(found.serviceEndpoint)
+  return found.serviceEndpoint
+}
+
+export const getFeedGen = (doc: DidDocument): string | undefined => {
+  let services = doc.service
+  if (!services) return undefined
+  if (typeof services !== 'object') return undefined
+  if (!Array.isArray(services)) {
+    services = [services]
   }
-  if (!hostname) {
-    throw new Error('Invalid pds hostname')
+  const found = services.find((service) => service.id === '#bsky_fg')
+  if (!found) return undefined
+  if (found.type !== 'BskyFeedGenerator') {
+    return undefined
   }
+  if (typeof found.serviceEndpoint !== 'string') {
+    return undefined
+  }
+  validateUrl(found.serviceEndpoint)
   return found.serviceEndpoint
 }
 
@@ -94,4 +106,15 @@ export const ensureAtpDocument = (doc: DidDocument): AtprotoData => {
     throw new Error(`Could not parse pds from doc: ${doc}`)
   }
   return { did, signingKey, handle, pds }
+}
+
+// Check protocol and hostname to prevent potential SSRF
+const validateUrl = (url: string) => {
+  const { hostname, protocol } = new URL(url)
+  if (!['http:', 'https:'].includes(protocol)) {
+    throw new Error('Invalid pds protocol')
+  }
+  if (!hostname) {
+    throw new Error('Invalid pds hostname')
+  }
 }

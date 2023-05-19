@@ -6,7 +6,8 @@ import {
 } from '@atproto/api/src/client/types/com/atproto/moderation/defs'
 import { TestNetworkNoAppView } from '../index'
 import { postTexts, replyTexts } from './data'
-import labeledImgB64 from './labeled-img-b64'
+import labeledImgB64 from './img/labeled-img-b64'
+import blurHashB64 from './img/blur-hash-avatar-b64'
 
 // NOTE
 // deterministic date generator
@@ -248,6 +249,95 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
       }
     }
   }
+
+  // a couple feed generators that returns some posts
+  const fg1Uri = AtUri.make(alice.did, 'app.bsky.feed.generator', 'alice-favs')
+  const fg1 = await env.createFeedGen({
+    [fg1Uri.toString()]: async () => {
+      const feed = posts
+        .filter(() => rand(2) === 0)
+        .map((post) => ({ post: post.uri }))
+      return {
+        encoding: 'application/json',
+        body: {
+          feed,
+        },
+      }
+    },
+  })
+  const avatarImg = Buffer.from(blurHashB64, 'base64')
+  const avatarRes = await alice.agent.api.com.atproto.repo.uploadBlob(
+    avatarImg,
+    {
+      encoding: 'image/png',
+    },
+  )
+  const fgAliceRes = await alice.agent.api.app.bsky.feed.generator.create(
+    { repo: alice.did, rkey: fg1Uri.rkey },
+    {
+      did: fg1.did,
+      displayName: 'alices feed',
+      description: 'all my fav stuff',
+      avatar: avatarRes.data.blob,
+      createdAt: date.next().value,
+    },
+  )
+
+  await alice.agent.api.app.bsky.feed.post.create(
+    { repo: alice.did },
+    {
+      text: 'check out my algorithm!',
+      embed: {
+        $type: 'app.bsky.embed.record',
+        record: fgAliceRes,
+      },
+      createdAt: date.next().value,
+    },
+  )
+  for (const user of [alice, bob, carla]) {
+    await user.agent.api.app.bsky.feed.like.create(
+      { repo: user.did },
+      {
+        subject: fgAliceRes,
+        createdAt: date.next().value,
+      },
+    )
+  }
+
+  const fg2Uri = AtUri.make(bob.did, 'app.bsky.feed.generator', 'bob-redux')
+  const fg2 = await env.createFeedGen({
+    [fg2Uri.toString()]: async () => {
+      const feed = posts
+        .filter(() => rand(2) === 0)
+        .map((post) => ({ post: post.uri }))
+      return {
+        encoding: 'application/json',
+        body: {
+          feed,
+        },
+      }
+    },
+  })
+  const fgBobRes = await bob.agent.api.app.bsky.feed.generator.create(
+    { repo: bob.did, rkey: fg2Uri.rkey },
+    {
+      did: fg2.did,
+      displayName: 'Bobby boy hot new algo',
+      createdAt: date.next().value,
+    },
+  )
+
+  await alice.agent.api.app.bsky.feed.post.create(
+    { repo: alice.did },
+    {
+      text: `bobs feed is neat too`,
+      embed: {
+        $type: 'app.bsky.embed.record',
+        record: fgBobRes,
+      },
+      createdAt: date.next().value,
+    },
+  )
 }
 
 function ucfirst(str: string): string {

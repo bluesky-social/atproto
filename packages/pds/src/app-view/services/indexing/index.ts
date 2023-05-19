@@ -10,6 +10,7 @@ import * as Block from './plugins/block'
 import * as List from './plugins/list'
 import * as ListItem from './plugins/list-item'
 import * as Profile from './plugins/profile'
+import * as FeedGenerator from './plugins/feed-generator'
 import { BackgroundQueue } from '../../../event-stream/background-queue'
 
 export class IndexingService {
@@ -22,6 +23,7 @@ export class IndexingService {
     list: List.PluginType
     listItem: ListItem.PluginType
     profile: Profile.PluginType
+    feedGenerator: FeedGenerator.PluginType
   }
 
   constructor(public db: Database, public backgroundQueue: BackgroundQueue) {
@@ -34,6 +36,7 @@ export class IndexingService {
       list: List.makePlugin(this.db, backgroundQueue),
       listItem: ListItem.makePlugin(this.db, backgroundQueue),
       profile: Profile.makePlugin(this.db, backgroundQueue),
+      feedGenerator: FeedGenerator.makePlugin(this.db, backgroundQueue),
     }
   }
 

@@ -26,6 +26,7 @@ import * as lex from '../lexicon/lexicons'
 import { isMain as isExternalEmbed } from '../lexicon/types/app/bsky/embed/external'
 import { isMain as isImagesEmbed } from '../lexicon/types/app/bsky/embed/images'
 import { isMain as isRecordWithMediaEmbed } from '../lexicon/types/app/bsky/embed/recordWithMedia'
+import { isRecord as isFeedGenerator } from '../lexicon/types/app/bsky/feed/generator'
 import {
   Record as PostRecord,
   isRecord as isPost,
@@ -53,6 +54,18 @@ export const blobsForWrite = (record: unknown): PreparedBlobRef[] => {
       })
     }
     return refs
+  } else if (isFeedGenerator(record)) {
+    const doc = lex.schemaDict.AppBskyFeedGenerator
+    if (!record.avatar) {
+      return []
+    }
+    return [
+      {
+        cid: record.avatar.ref,
+        mimeType: record.avatar.mimeType,
+        constraints: doc.defs.main.record.properties.avatar,
+      },
+    ]
   } else if (isList(record)) {
     const doc = lex.schemaDict.AppBskyGraphList
     if (!record.avatar) {

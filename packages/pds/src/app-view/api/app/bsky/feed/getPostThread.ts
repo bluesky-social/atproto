@@ -74,7 +74,7 @@ const composeThread = (
   embeds: FeedEmbeds,
   labels: Labels,
 ): ThreadViewPost | NotFoundPost | BlockedPost => {
-  const post = feedService.formatPostView(
+  const post = feedService.views.formatPostView(
     threadData.post.postUri,
     actors,
     posts,

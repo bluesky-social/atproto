@@ -36,12 +36,16 @@ import {
 } from './image/invalidator'
 import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
 import { BackgroundQueue } from './event-stream/background-queue'
+import DidSqlCache from './did-cache'
+import { DidResolver } from '@atproto/did-resolver'
+import { MountedAlgos } from './feed-gen/types'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './db'
 export { DiskBlobStore, MemoryBlobStore } from './storage'
 export { AppContext } from './context'
+export { makeAlgos } from './feed-gen'
 
 export class PDS {
   public ctx: AppContext
@@ -67,15 +71,30 @@ export class PDS {
     imgInvalidator?: ImageInvalidator
     repoSigningKey: crypto.Keypair
     plcRotationKey: crypto.Keypair
+    algos?: MountedAlgos
     config: ServerConfig
   }): PDS {
-    const { db, blobstore, repoSigningKey, plcRotationKey, config } = opts
+    const {
+      db,
+      blobstore,
+      repoSigningKey,
+      plcRotationKey,
+      algos = {},
+      config,
+    } = opts
     let maybeImgInvalidator = opts.imgInvalidator
     const auth = new ServerAuth({
       jwtSecret: config.jwtSecret,
       adminPass: config.adminPassword,
       moderatorPass: config.moderatorPassword,
     })
+
+    const didCache = new DidSqlCache(
+      db,
+      config.didCacheStaleTTL,
+      config.didCacheMaxTTL,
+    )
+    const didResolver = new DidResolver({ plcUrl: config.didPlcUrl }, didCache)
 
     const messageDispatcher = new MessageDispatcher()
     const sequencer = new Sequencer(db)
@@ -157,6 +176,8 @@ export class PDS {
       blobstore,
       repoSigningKey,
       plcRotationKey,
+      didResolver,
+      didCache,
       cfg: config,
       auth,
       messageDispatcher,
@@ -166,6 +187,7 @@ export class PDS {
       mailer,
       imgUriBuilder,
       backgroundQueue,
+      algos,
     })
 
     const appViewIndexer = new AppViewIndexer(ctx)
@@ -180,7 +202,7 @@ export class PDS {
     })
 
     server = API(server, ctx)
-    if (ctx.cfg.bskyAppViewEndpoint) {
+    if (ctx.cfg.bskyAppViewEndpoint && ctx.cfg.bskyAppViewDid) {
       server = proxiedAppView(server, ctx)
     } else {
       server = inProcessAppView(server, ctx)
