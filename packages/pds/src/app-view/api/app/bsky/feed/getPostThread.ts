@@ -32,7 +32,12 @@ export default function (server: Server, ctx: AppContext) {
       const feedService = ctx.services.appView.feed(ctx.db)
       const labelService = ctx.services.appView.label(ctx.db)
 
-      const threadData = await getThreadData(feedService, uri, depth, parentHeight)
+      const threadData = await getThreadData(
+        feedService,
+        uri,
+        depth,
+        parentHeight,
+      )
       if (!threadData) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
