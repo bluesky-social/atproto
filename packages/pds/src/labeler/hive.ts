@@ -151,6 +151,8 @@ const labelForClass = {
   very_bloody: 'gore',
   human_corpse: 'corpse',
   hanging: 'corpse',
+}
+const labelForClassLessSensitive = {
   yes_self_harm: 'self-harm',
 }
 
@@ -159,6 +161,11 @@ export const summarizeLabels = (classes: HiveRespClass[]): string[] => {
   for (const cls of classes) {
     if (labelForClass[cls.class] && cls.score >= 0.9) {
       labels.push(labelForClass[cls.class])
+    }
+  }
+  for (const cls of classes) {
+    if (labelForClassLessSensitive[cls.class] && cls.score >= 0.96) {
+      labels.push(labelForClassLessSensitive[cls.class])
     }
   }
   return labels
