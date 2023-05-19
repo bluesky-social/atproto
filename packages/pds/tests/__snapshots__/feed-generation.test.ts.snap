@@ -866,3 +866,58 @@ Object {
   },
 }
 `;
+
+exports[`feed generation getFeedGenerators describes multiple feed gens 1`] = `
+Object {
+  "feeds": Array [
+    Object {
+      "cid": "cids(0)",
+      "creator": Object {
+        "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+        "did": "user(1)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "followedBy": "record(2)",
+          "following": "record(1)",
+          "muted": false,
+        },
+      },
+      "description": "Provides all feed candidates",
+      "did": "user(0)",
+      "displayName": "All",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "likeCount": 2,
+      "uri": "record(0)",
+      "viewer": Object {
+        "like": "record(3)",
+      },
+    },
+    Object {
+      "cid": "cids(1)",
+      "creator": Object {
+        "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+        "did": "user(1)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "followedBy": "record(2)",
+          "following": "record(1)",
+          "muted": false,
+        },
+      },
+      "description": "Provides even-indexed feed candidates",
+      "did": "user(0)",
+      "displayName": "Even",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "likeCount": 0,
+      "uri": "record(4)",
+      "viewer": Object {},
+    },
+  ],
+}
+`;

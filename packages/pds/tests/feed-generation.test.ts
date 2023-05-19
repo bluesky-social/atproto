@@ -185,6 +185,16 @@ describe('feed generation', () => {
     })
   })
 
+  describe('getFeedGenerators', () => {
+    it('describes multiple feed gens', async () => {
+      const resEven = await agent.api.app.bsky.feed.getFeedGenerators(
+        { feeds: [feedUriEven, feedUriAll] },
+        { headers: sc.getHeaders(sc.dids.bob) },
+      )
+      expect(forSnapshot(resEven.data)).toMatchSnapshot()
+    })
+  })
+
   describe('getFeed', () => {
     it('resolves basic feed contents.', async () => {
       const feed = await agent.api.app.bsky.feed.getFeed(
