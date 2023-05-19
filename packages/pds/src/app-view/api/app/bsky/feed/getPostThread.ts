@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
-      const { uri, depth = 6, parentHeight = 80 } = params
+      const { uri, depth, parentHeight } = params
       const requester = auth.credentials.did
 
       const feedService = ctx.services.appView.feed(ctx.db)
