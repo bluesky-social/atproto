@@ -29,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
           : await skeletonFromFeedGen(ctx, params, requester)
 
       const feedService = ctx.services.appView.feed(ctx.db)
-      const hydrated = await feedService.hydrateFeed(feedItems, requester)
+      const hydrated = await feedService.hydrateFeed(feedItems, requester, true)
 
       return {
         encoding: 'application/json',

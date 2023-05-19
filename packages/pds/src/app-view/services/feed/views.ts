@@ -57,6 +57,7 @@ export class FeedViews {
     posts: PostInfoMap,
     embeds: FeedEmbeds,
     labels: Labels,
+    usePostViewUnion?: boolean,
   ): FeedViewPost[] {
     const feed: FeedViewPost[] = []
     for (const item of items) {
@@ -89,6 +90,7 @@ export class FeedViews {
           posts,
           embeds,
           labels,
+          usePostViewUnion,
         )
         const replyRoot = this.formatMaybePostView(
           item.replyRoot,
@@ -96,6 +98,7 @@ export class FeedViews {
           posts,
           embeds,
           labels,
+          usePostViewUnion,
         )
         if (replyRoot && replyParent) {
           feedPost['reply'] = {
@@ -143,10 +146,15 @@ export class FeedViews {
     posts: PostInfoMap,
     embeds: FeedEmbeds,
     labels: Labels,
-  ): MaybePostView {
+    usePostViewUnion?: boolean,
+  ): MaybePostView | undefined {
     const post = this.formatPostView(uri, actors, posts, embeds, labels)
-    if (!post) return this.notFoundPost(uri)
+    if (!post) {
+      if (!usePostViewUnion) return
+      return this.notFoundPost(uri)
+    }
     if (post.author.viewer?.blockedBy || post.author.viewer?.blocking) {
+      if (!usePostViewUnion) return
       return this.blockedPost(uri)
     }
     return {

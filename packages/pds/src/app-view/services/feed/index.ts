@@ -410,6 +410,8 @@ export class FeedService {
   async hydrateFeed(
     items: FeedRow[],
     requester: string,
+    // @TODO (deprecated) remove this once all clients support the blocked/not-found union on post views
+    usePostViewUnion?: boolean,
   ): Promise<FeedViewPost[]> {
     const actorDids = new Set<string>()
     const postUris = new Set<string>()
@@ -435,7 +437,14 @@ export class FeedService {
       this.services.label.getLabelsForSubjects(Array.from(postUris)),
     ])
 
-    return this.views.formatFeed(items, actors, posts, embeds, labels)
+    return this.views.formatFeed(
+      items,
+      actors,
+      posts,
+      embeds,
+      labels,
+      usePostViewUnion,
+    )
   }
 }
 
