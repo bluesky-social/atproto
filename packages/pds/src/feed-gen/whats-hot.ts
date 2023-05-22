@@ -44,16 +44,26 @@ const handler: AlgoHandler = async (
     'post.indexedAt',
   )}::timestamp))/3600 + 2) ^ 1.8)`
 
+  // @NOTE this affects perf in an non-intuitive way: too short (~12hrs) and the query planner comes-up
+  // with a slower plan that involves sorting everything last rather than sorting candidates on its own in parallel.
   const dayAgo = new Date(Date.now() - DAY).toISOString()
 
   // first reduce the number of candidate posts to go through
-  // and calculate score for each candidate post
+  // and calculate score for each candidate post. this could be
+  // pulled out into its own materialized view if desired.
   const candidates = ctx.db.db
     .selectFrom('post')
     .innerJoin('post_agg', 'post_agg.uri', 'post.uri')
-    .leftJoin('post_embed_record', 'post_embed_record.postUri', 'post.uri')
-    .where('post.replyParent', 'is', null)
     .where('post.indexedAt', '>', dayAgo)
+    .where('post.replyParent', 'is', null)
+    .where('post_agg.likeCount', '>', 10) // helps cull resultset that needs to be sorted
+    .select('post.uri')
+    .select(computeScore.as('score'))
+
+  let builder = feedService
+    .selectPostQb()
+    .innerJoin(candidates.as('candidate'), 'candidate.uri', 'post.uri')
+    .leftJoin('post_embed_record', 'post_embed_record.postUri', 'post.uri')
     .whereNotExists((qb) =>
       qb
         .selectFrom('label')
@@ -69,12 +79,6 @@ const handler: AlgoHandler = async (
     )
     .whereNotExists(accountService.mutedQb(requester, [ref('post.creator')]))
     .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
-    .select('post.uri')
-    .select(computeScore.as('score'))
-
-  let builder = feedService
-    .selectPostQb()
-    .innerJoin(candidates.as('candidate'), 'candidate.uri', 'post.uri')
     .orderBy('candidate.score', 'desc')
     .limit(limit)
     .select('candidate.score')
