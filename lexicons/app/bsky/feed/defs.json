@@ -128,7 +128,7 @@
       "type": "object",
       "required": ["repost"],
       "properties": {
-        "repost": {"type": "string", "ref": "at-uri"}
+        "repost": {"type": "string", "format": "at-uri"}
       }
     }
   }
