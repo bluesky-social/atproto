@@ -99,7 +99,7 @@ async function skeletonFromFeedGen(
   const accountService = ctx.services.account(ctx.db)
   const feedItemUris = skeletonFeed.map(getSkeleFeedItemUri)
 
-  const feedItems = (await feedItemUris.length)
+  const feedItems = feedItemUris.length
     ? await feedService
         .selectFeedItemQb()
         .where('feed_item.uri', 'in', feedItemUris)
