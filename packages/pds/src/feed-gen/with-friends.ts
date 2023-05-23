@@ -1,9 +1,10 @@
+import { sql } from 'kysely'
 import AppContext from '../context'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { paginate } from '../db/pagination'
-import { countAll } from '../db/util'
 import { AlgoHandler, AlgoResponse } from './types'
 import { FeedKeyset } from '../app-view/api/app/bsky/util/feed'
+import { valuesList } from '../db/util'
 
 const handler: AlgoHandler = async (
   ctx: AppContext,
@@ -15,66 +16,55 @@ const handler: AlgoHandler = async (
   const feedService = ctx.services.appView.feed(ctx.db)
   const graphService = ctx.services.appView.graph(ctx.db)
 
-  const followCountRes = await ctx.db.db
-    .selectFrom('follow')
-    .where('follow.creator', '=', requester)
-    .select(countAll.as('count'))
-    .executeTakeFirst()
-
-  const followCount = followCountRes?.count ?? 0
-  // total follows/100, with a minimum of 2 & a max of 8
-  const likeThreshold = Math.max(Math.min(Math.floor(followCount / 100), 8), 2)
-
   const { ref } = ctx.db.db.dynamic
 
-  const postsQb = feedService
-    .selectFeedItemQb()
-    .leftJoin('post_agg', 'post_agg.uri', 'post.uri')
-    .where((qb) =>
+  const postRate = sql`(10000 * ${ref('postsCount')} / extract(epoch from ${ref(
+    'user_account.createdAt',
+  )}::timestamp))`
+  const mostActiveMutuals = await ctx.db.db
+    .selectFrom('follow')
+    .select('subjectDid as did')
+    .innerJoin('user_account', 'user_account.did', 'follow.subjectDid')
+    .innerJoin('profile_agg', 'profile_agg.did', 'follow.subjectDid')
+    .where('follow.creator', '=', requester)
+    .whereExists((qb) =>
       qb
-        // select all posts/reposts from a follow that have >= threshold likes
-        .where((fromFollows) =>
-          fromFollows
-            .where((followsInner) =>
-              followsInner
-                .where('originatorDid', '=', requester)
-                .orWhereExists((qb) =>
-                  qb
-                    .selectFrom('follow')
-                    .where('follow.creator', '=', requester)
-                    .whereRef('follow.subjectDid', '=', ref('originatorDid')),
-                ),
-            )
-            .where('post_agg.likeCount', '>=', likeThreshold),
-        )
-        // and all posts from the network that have >= threshold likes from *your* follows
-        .orWhere((fromAll) =>
-          fromAll.where('feed_item.type', '=', 'post').where(
-            (qb) =>
-              qb
-                .selectFrom('like')
-                .whereRef('like.subject', '=', 'post.uri')
-                .whereExists((qbInner) =>
-                  qbInner
-                    .selectFrom('follow')
-                    .where('follow.creator', '=', requester)
-                    .whereRef('follow.subjectDid', '=', 'like.creator'),
-                )
-                .select(countAll.as('count')),
-            '>=',
-            likeThreshold,
-          ),
-        ),
+        .selectFrom('follow as mutual')
+        .where('mutual.subjectDid', '=', requester)
+        .whereRef('mutual.creator', '=', 'follow.subjectDid'),
     )
+    .orderBy(postRate, 'desc')
+    .limit(25)
+    .execute()
+
+  if (!mostActiveMutuals.length) {
+    return { feedItems: [] }
+  }
+
+  // All posts that hit a certain threshold of likes and also have
+  // at least one like by one of your most active mutuals.
+  let postsQb = feedService
+    .selectFeedItemQb()
+    .innerJoin('post_agg', 'post_agg.uri', 'feed_item.uri')
+    .where('feed_item.type', '=', 'post')
+    .where('post_agg.likeCount', '>=', 10)
+    .whereExists((qb) => {
+      return qb
+        .selectFrom('like')
+        .whereRef('like.subject', '=', 'post.uri')
+        .whereRef(
+          'like.creator',
+          'in',
+          valuesList(mostActiveMutuals.map((follow) => follow.did)),
+        )
+    })
     .whereNotExists(accountService.mutedQb(requester, [ref('post.creator')]))
     .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
 
-  const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))
+  const keyset = new FeedKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))
+  postsQb = paginate(postsQb, { limit, cursor, keyset })
 
-  let feedQb = ctx.db.db.selectFrom(postsQb.as('feed_items')).selectAll()
-  feedQb = paginate(feedQb, { limit, cursor, keyset })
-
-  const feedItems = await feedQb.execute()
+  const feedItems = await postsQb.execute()
   return {
     feedItems,
     cursor: keyset.packFromResult(feedItems),
