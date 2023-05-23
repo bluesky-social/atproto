@@ -5202,7 +5202,7 @@ export const schemaDict = {
     defs: {
       listViewBasic: {
         type: 'object',
-        required: ['uri', 'creator', 'name', 'purpose'],
+        required: ['uri', 'name', 'purpose'],
         properties: {
           uri: {
             type: 'string',
