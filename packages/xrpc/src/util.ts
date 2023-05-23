@@ -85,6 +85,15 @@ export function encodeQueryParam(
   throw new Error(`Unsupported query param type: ${type}`)
 }
 
+export function normalizeHeaders(headers: Headers): Headers {
+  const normalized: Headers = {}
+  for (const [header, value] of Object.entries(headers)) {
+    normalized[header.toLowerCase()] = value
+  }
+
+  return normalized
+}
+
 export function constructMethodCallHeaders(
   schema: LexXrpcProcedure | LexXrpcQuery,
   data?: any,
@@ -108,16 +117,16 @@ export function encodeMethodCallBody(
   headers: Headers,
   data?: any,
 ): ArrayBuffer | undefined {
-  if (!headers['Content-Type'] || typeof data === 'undefined') {
+  if (!headers['content-type'] || typeof data === 'undefined') {
     return undefined
   }
   if (data instanceof ArrayBuffer) {
     return data
   }
-  if (headers['Content-Type'].startsWith('text/')) {
+  if (headers['content-type'].startsWith('text/')) {
     return new TextEncoder().encode(data.toString())
   }
-  if (headers['Content-Type'].startsWith('application/json')) {
+  if (headers['content-type'].startsWith('application/json')) {
     return new TextEncoder().encode(stringifyLex(data))
   }
   return data
