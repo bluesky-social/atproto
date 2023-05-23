@@ -1611,7 +1611,7 @@ export const schemaDict = {
       create: {
         type: 'object',
         description: 'Create a new record.',
-        required: ['action', 'collection', 'value'],
+        required: ['collection', 'value'],
         properties: {
           collection: {
             type: 'string',
@@ -1628,7 +1628,7 @@ export const schemaDict = {
       update: {
         type: 'object',
         description: 'Update an existing record.',
-        required: ['action', 'collection', 'rkey', 'value'],
+        required: ['collection', 'rkey', 'value'],
         properties: {
           collection: {
             type: 'string',
@@ -1645,7 +1645,7 @@ export const schemaDict = {
       delete: {
         type: 'object',
         description: 'Delete an existing record.',
-        required: ['action', 'collection', 'rkey'],
+        required: ['collection', 'rkey'],
         properties: {
           collection: {
             type: 'string',

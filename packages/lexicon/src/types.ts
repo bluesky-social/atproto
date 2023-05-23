@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { NSID } from '@atproto/nsid'
+import { requiredPropertiesRefinement } from './util'
 
 // primitives
 // =
@@ -141,28 +142,32 @@ export const lexToken = z.object({
 })
 export type LexToken = z.infer<typeof lexToken>
 
-export const lexObject = z.object({
-  type: z.literal('object'),
-  description: z.string().optional(),
-  required: z.string().array().optional(),
-  nullable: z.string().array().optional(),
-  properties: z
-    .record(
-      z.union([lexRefVariant, lexIpldType, lexArray, lexBlob, lexPrimitive]),
-    )
-    .optional(),
-})
+export const lexObject = z
+  .object({
+    type: z.literal('object'),
+    description: z.string().optional(),
+    required: z.string().array().optional(),
+    nullable: z.string().array().optional(),
+    properties: z
+      .record(
+        z.union([lexRefVariant, lexIpldType, lexArray, lexBlob, lexPrimitive]),
+      )
+      .optional(),
+  })
+  .superRefine(requiredPropertiesRefinement)
 export type LexObject = z.infer<typeof lexObject>
 
 // xrpc
 // =
 
-export const lexXrpcParameters = z.object({
-  type: z.literal('params'),
-  description: z.string().optional(),
-  required: z.string().array().optional(),
-  properties: z.record(z.union([lexPrimitive, lexPrimitiveArray])),
-})
+export const lexXrpcParameters = z
+  .object({
+    type: z.literal('params'),
+    description: z.string().optional(),
+    required: z.string().array().optional(),
+    properties: z.record(z.union([lexPrimitive, lexPrimitiveArray])),
+  })
+  .superRefine(requiredPropertiesRefinement)
 export type LexXrpcParameters = z.infer<typeof lexXrpcParameters>
 
 export const lexXrpcBody = z.object({
@@ -229,26 +234,91 @@ export type LexRecord = z.infer<typeof lexRecord>
 // core
 // =
 
-export const lexUserType = z.discriminatedUnion('type', [
-  lexRecord,
+// We need to use `z.custom` here because
+// lexXrpcProperty and lexObject are refined
+// `z.union` would work, but it's too slow
+// see #915 for details
+export const lexUserType = z.custom<
+  | LexRecord
+  | LexXrpcQuery
+  | LexXrpcProcedure
+  | LexXrpcSubscription
+  | LexBlob
+  | LexArray
+  | LexToken
+  | LexObject
+  | LexBoolean
+  | LexInteger
+  | LexString
+  | LexBytes
+  | LexCidLink
+  | LexUnknown
+>(
+  (val) => {
+    if (!val || typeof val !== 'object') {
+      return
+    }
 
-  lexXrpcQuery,
-  lexXrpcProcedure,
-  lexXrpcSubscription,
+    if (val['type'] === undefined) {
+      return
+    }
 
-  lexBlob,
+    switch (val['type']) {
+      case 'record':
+        return lexRecord.parse(val)
 
-  lexArray,
-  lexToken,
-  lexObject,
+      case 'query':
+        return lexXrpcQuery.parse(val)
+      case 'procedure':
+        return lexXrpcProcedure.parse(val)
+      case 'subscription':
+        return lexXrpcSubscription.parse(val)
 
-  lexBoolean,
-  lexInteger,
-  lexString,
-  lexBytes,
-  lexCidLink,
-  lexUnknown,
-])
+      case 'blob':
+        return lexBlob.parse(val)
+
+      case 'array':
+        return lexArray.parse(val)
+      case 'token':
+        return lexToken.parse(val)
+      case 'object':
+        return lexObject.parse(val)
+
+      case 'boolean':
+        return lexBoolean.parse(val)
+      case 'integer':
+        return lexInteger.parse(val)
+      case 'string':
+        return lexString.parse(val)
+      case 'bytes':
+        return lexBytes.parse(val)
+      case 'cid-link':
+        return lexCidLink.parse(val)
+      case 'unknown':
+        return lexUnknown.parse(val)
+    }
+  },
+  (val) => {
+    if (!val || typeof val !== 'object') {
+      return {
+        message: 'Must be an object',
+        fatal: true,
+      }
+    }
+
+    if (val['type'] === undefined) {
+      return {
+        message: 'Must have a type',
+        fatal: true,
+      }
+    }
+
+    return {
+      message: `Invalid type: ${val['type']} must be one of: record, query, procedure, subscription, blob, array, token, object, boolean, integer, string, bytes, cid-link, unknown`,
+      fatal: true,
+    }
+  },
+)
 export type LexUserType = z.infer<typeof lexUserType>
 
 export const lexiconDoc = z
