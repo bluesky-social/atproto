@@ -84,6 +84,8 @@ describe('algo whats-hot', () => {
       .where('uri', '=', three.ref.uriStr)
       .set({ indexedAt: new Date(Date.now() - 5 * HOUR).toISOString() })
       .execute()
+    await server.ctx.db.refreshMaterializedView('algo_whats_hot_view')
+
     const res = await agent.api.app.bsky.feed.getFeed(
       { feed: feedUri },
       { headers: sc.getHeaders(alice) },

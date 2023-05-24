@@ -1,3 +1,4 @@
+// @NOTE postgres-only
 export const whatsHotViewTableName = 'algo_whats_hot_view'
 
 export interface AlgoWhatsHotView {

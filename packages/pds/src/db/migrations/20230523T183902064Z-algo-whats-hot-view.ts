@@ -23,9 +23,19 @@ export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
     .execute()
 
   // define view query for whats-hot feed
+  // tldr: scored by like count depreciated over time.
+
+  // From: https://medium.com/hacking-and-gonzo/how-hacker-news-ranking-algorithm-works-1d9b0cf2c08d
+  // Score = (P-1) / (T+2)^G
+  // where,
+  // P = points of an item (and -1 is to negate submitters vote)
+  // T = time since submission (in hours)
+  // G = Gravity, defaults to 1.8 in news.arc
+
   const likeCount = ref('post_agg.likeCount')
   const indexedAt = ref('post.indexedAt')
-  const computeScore = sql<number>`${likeCount} / ((EXTRACT(epoch FROM AGE(now(), ${indexedAt}::timestamp)) / 3600 + 2) ^ 1.8)`
+  const computeScore = sql<number>`round(1000000 * (${likeCount} / ((EXTRACT(epoch FROM AGE(now(), ${indexedAt}::timestamp)) / 3600 + 2) ^ 1.8)))`
+
   const viewQb = db
     .selectFrom('post')
     .innerJoin('post_agg', 'post_agg.uri', 'post.uri')
@@ -52,9 +62,24 @@ export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
     )
     .select(['post.uri as uri', 'post.cid as cid', computeScore.as('score')])
 
-  await sql`create materialized view algo_whats_hot_view as (${viewQb}) with no data`.execute(
-    db,
-  )
+  await db.schema
+    .createView('algo_whats_hot_view')
+    .materialized()
+    .as(viewQb)
+    .execute()
+
+  // unique index required for pg to refresh view w/ "concurrently" param.
+  await db.schema
+    .createIndex('algo_whats_hot_view_uri_idx')
+    .on('algo_whats_hot_view')
+    .column('uri')
+    .unique()
+    .execute()
+  await db.schema
+    .createIndex('algo_whats_hot_view_cursor_idx')
+    .on('algo_whats_hot_view')
+    .columns(['score', 'cid'])
+    .execute()
 }
 
 export async function down(

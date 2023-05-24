@@ -1,3 +1,4 @@
+// @NOTE postgres-only
 export const tableName = 'view_param'
 
 // materialized views are difficult to change,
