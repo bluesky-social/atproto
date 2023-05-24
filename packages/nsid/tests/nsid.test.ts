@@ -10,9 +10,6 @@ describe('NSID parsing & creation', () => {
     expect(NSID.parse('com.example.foo').authority).toBe('example.com')
     expect(NSID.parse('com.example.foo').name).toBe('foo')
     expect(NSID.parse('com.example.foo').toString()).toBe('com.example.foo')
-    expect(NSID.parse('com.example.*').authority).toBe('example.com')
-    expect(NSID.parse('com.example.*').name).toBe('*')
-    expect(NSID.parse('com.example.*').toString()).toBe('com.example.*')
     expect(NSID.parse('com.long-thing1.cool.fooBarBaz').authority).toBe(
       'cool.long-thing1.com',
     )
@@ -26,9 +23,6 @@ describe('NSID parsing & creation', () => {
     expect(NSID.create('example.com', 'foo').authority).toBe('example.com')
     expect(NSID.create('example.com', 'foo').name).toBe('foo')
     expect(NSID.create('example.com', 'foo').toString()).toBe('com.example.foo')
-    expect(NSID.create('example.com', '*').authority).toBe('example.com')
-    expect(NSID.create('example.com', '*').name).toBe('*')
-    expect(NSID.create('example.com', '*').toString()).toBe('com.example.*')
     expect(NSID.create('cool.long-thing1.com', 'fooBarBaz').authority).toBe(
       'cool.long-thing1.com',
     )

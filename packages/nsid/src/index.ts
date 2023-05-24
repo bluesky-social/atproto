@@ -8,7 +8,6 @@ segment   = alpha *( alpha / number / "-" )
 authority = segment *( delim segment )
 name      = segment
 nsid      = authority delim name
-nsid-ns   = authority delim "*"
 
 */
 
@@ -55,12 +54,10 @@ export class NSID {
 }
 
 // Human readable constraints on NSID:
-// - a valid domain in reversed notation. which means the same as a loose domain!
+// - a valid domain in reversed notation
+// - followed by an additional period-separated name, which is camel-case letters
 export const ensureValidNsid = (nsid: string): void => {
-  // to handle nsid-ns
-  const split = nsid.split('.')
-  const toCheck =
-    split.at(-1) === '*' ? split.slice(0, -1).join('.') : split.join('.')
+  const toCheck = nsid
 
   // check that all chars are boring ASCII
   if (!/^[a-zA-Z0-9.-]*$/.test(toCheck)) {
@@ -73,7 +70,7 @@ export const ensureValidNsid = (nsid: string): void => {
     throw new InvalidNsidError('NSID is too long (317 chars max)')
   }
   const labels = toCheck.split('.')
-  if (split.length < 3) {
+  if (labels.length < 3) {
     throw new InvalidNsidError('NSID needs at least three parts')
   }
   for (let i = 0; i < labels.length; i++) {
@@ -96,7 +93,6 @@ export const ensureValidNsid = (nsid: string): void => {
   }
 }
 
-// nsid-ns is not handled in regex yet
 export const ensureValidNsidRegex = (nsid: string): void => {
   // simple regex to enforce most constraints via just regex and length.
   // hand wrote this regex based on above constraints
