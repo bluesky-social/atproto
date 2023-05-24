@@ -76,7 +76,7 @@ export class HandleResolver {
     signal?: AbortSignal,
   ): Promise<string | undefined> {
     const url = new URL(
-      `com.atproto.identity.resolveHandle?handle=${handle}`,
+      `/xrpc/com.atproto.identity.resolveHandle?handle=${handle}`,
       `https://${handle}`,
     )
     try {
