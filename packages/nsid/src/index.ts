@@ -6,7 +6,7 @@ number    = "1" / "2" / "3" / "4" / "5" / "6" / "7" / "8" / "9" / "0"
 delim     = "."
 segment   = alpha *( alpha / number / "-" )
 authority = segment *( delim segment )
-name      = segment
+name      = alpha *( alpha )
 nsid      = authority delim name
 
 */
@@ -81,14 +81,14 @@ export const ensureValidNsid = (nsid: string): void => {
     if (l.length > 63) {
       throw new InvalidNsidError('NSID part too long (max 63 chars)')
     }
-    if (l.length > 128 && i + 1 == labels.length) {
-      throw new InvalidNsidError('NSID name part too long (max 128 chars)')
+    if (l.endsWith('-') || l.startsWith('-')) {
+      throw new InvalidNsidError('NSID parts can not start or end with hyphen')
     }
-    if (l.endsWith('-')) {
-      throw new InvalidNsidError('NSID parts can not end with hyphen')
+    if (/^[0-9]/.test(l) && i == 0) {
+      throw new InvalidNsidError('NSID first part may not start with a digit')
     }
-    if (!/^[a-zA-Z]/.test(l)) {
-      throw new InvalidNsidError('NSID parts must start with ASCII letter')
+    if (!/^[a-zA-Z]+$/.test(l) && i + 1 == labels.length) {
+      throw new InvalidNsidError('NSID name part must be only letters')
     }
   }
 }
@@ -97,7 +97,7 @@ export const ensureValidNsidRegex = (nsid: string): void => {
   // simple regex to enforce most constraints via just regex and length.
   // hand wrote this regex based on above constraints
   if (
-    !/^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9-]{0,126}[a-zA-Z0-9])?)$/.test(
+    !/^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z]{0,61}[a-zA-Z])?)$/.test(
       nsid,
     )
   ) {
