@@ -64,13 +64,12 @@ describe('feed generation', () => {
       },
       sc.getHeaders(alice),
     )
-    // updated in next test
     const even = await agent.api.app.bsky.feed.generator.create(
       { repo: alice, rkey: 'even' },
       {
         did: gen.did,
-        displayName: 'Temp',
-        description: 'Temp',
+        displayName: 'Even',
+        description: 'Provides even-indexed feed candidates',
         createdAt: new Date().toISOString(),
       },
       sc.getHeaders(alice),
@@ -80,8 +79,8 @@ describe('feed generation', () => {
       { repo: alice, rkey: 'odd' },
       {
         did: gen.did,
-        displayName: 'Odd',
-        description: 'Provides odd-indexed feed candidates',
+        displayName: 'Temp', // updated in next test
+        description: 'Temp', // updated in next test
         createdAt: new Date().toISOString(),
       },
       sc.getHeaders(alice),
@@ -97,11 +96,11 @@ describe('feed generation', () => {
       {
         repo: alice,
         collection: ids.AppBskyFeedGenerator,
-        rkey: 'even',
+        rkey: 'odd',
         record: {
           did: gen.did,
-          displayName: 'Even',
-          description: 'Provides even-indexed feed candidates',
+          displayName: 'Odd',
+          description: 'Provides odd-indexed feed candidates',
           createdAt: new Date().toISOString(),
         },
       },
