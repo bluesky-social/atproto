@@ -13,6 +13,7 @@ import {
 } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 import { SkeletonFeedPost } from '../src/lexicon/types/app/bsky/feed/defs'
 import { RecordRef } from './seeds/client'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('feed generation', () => {
   let network: TestNetworkNoAppView
@@ -47,6 +48,11 @@ describe('feed generation', () => {
     await network.close()
   })
 
+  it('describes the feed generator', async () => {
+    const res = await agent.api.app.bsky.feed.describeFeedGenerator()
+    expect(res.data.did).toBe(network.pds.ctx.cfg.feedGenDid)
+  })
+
   it('feed gen records can be created.', async () => {
     const all = await agent.api.app.bsky.feed.generator.create(
       { repo: alice, rkey: 'all' },
@@ -73,8 +79,8 @@ describe('feed generation', () => {
       { repo: alice, rkey: 'odd' },
       {
         did: gen.did,
-        displayName: 'Odd',
-        description: 'Provides odd-indexed feed candidates',
+        displayName: 'Temp', // updated in next test
+        description: 'Temp', // updated in next test
         createdAt: new Date().toISOString(),
       },
       sc.getHeaders(alice),
@@ -83,6 +89,23 @@ describe('feed generation', () => {
     feedUriAllRef = new RecordRef(all.uri, all.cid)
     feedUriEven = even.uri
     feedUriOdd = odd.uri
+  })
+
+  it('feed gen records can be updated', async () => {
+    await agent.api.com.atproto.repo.putRecord(
+      {
+        repo: alice,
+        collection: ids.AppBskyFeedGenerator,
+        rkey: 'odd',
+        record: {
+          did: gen.did,
+          displayName: 'Odd',
+          description: 'Provides odd-indexed feed candidates',
+          createdAt: new Date().toISOString(),
+        },
+      },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
   })
 
   it('getActorFeeds fetches feed generators by actor.', async () => {
