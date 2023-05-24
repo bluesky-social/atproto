@@ -6176,6 +6176,32 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetPopularFeedGenerators: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getPopularFeedGenerators',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'An unspecced view of globally popular feed generators',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feeds'],
+            properties: {
+              feeds: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#generatorView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -6301,4 +6327,6 @@ export const ids = {
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedGetPopular: 'app.bsky.unspecced.getPopular',
+  AppBskyUnspeccedGetPopularFeedGenerators:
+    'app.bsky.unspecced.getPopularFeedGenerators',
 }
