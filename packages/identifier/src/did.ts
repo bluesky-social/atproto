@@ -38,7 +38,7 @@ export const ensureValidDid = (did: string): void => {
     throw new InvalidDidError('DID can not end with ":" or "%"')
   }
 
-  if (did.length > 8 * 1024) {
+  if (did.length > 2 * 1024) {
     throw new InvalidDidError('DID is far too long')
   }
 }
@@ -50,7 +50,7 @@ export const ensureValidDidRegex = (did: string): void => {
     throw new InvalidDidError("DID didn't validate via regex")
   }
 
-  if (did.length > 8 * 1024) {
+  if (did.length > 2 * 1024) {
     throw new InvalidDidError('DID is far too long')
   }
 }
