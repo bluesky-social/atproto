@@ -75,6 +75,7 @@ describe('pds notification views', () => {
       sc.replies[alice][0].ref,
       'indeed',
     )
+    await server.ctx.backgroundQueue.processAll()
 
     const notifCountAlice =
       await agent.api.app.bsky.notification.getUnreadCount(

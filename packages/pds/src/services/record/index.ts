@@ -278,10 +278,13 @@ export class RecordService {
 }
 
 // @NOTE in the future this can be replaced with a more generic routine that pulls backlinks based on lex docs.
-// For now we just want to ensure we're tracking links from follows, likes, and reposts.
+// For now we just want to ensure we're tracking links from follows, blocks, likes, and reposts.
 
 function getBacklinks(uri: AtUri, record: unknown): Backlink[] {
-  if (record?.['$type'] === ids.AppBskyGraphFollow) {
+  if (
+    record?.['$type'] === ids.AppBskyGraphFollow ||
+    record?.['$type'] === ids.AppBskyGraphBlock
+  ) {
     const subject = record['subject']
     if (typeof subject !== 'string') {
       return []

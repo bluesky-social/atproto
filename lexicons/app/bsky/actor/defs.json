@@ -80,10 +80,57 @@
       "type": "object",
       "properties": {
         "muted": {"type": "boolean"},
+        "mutedByList": {"type": "ref", "ref": "app.bsky.graph.defs#listViewBasic"},
         "blockedBy": {"type": "boolean"},
         "blocking": {"type": "string", "format": "at-uri"},
         "following": {"type": "string", "format": "at-uri"},
         "followedBy": {"type": "string", "format": "at-uri"}
+      }
+    },
+    "preferences": {
+      "type": "array",
+      "items": {
+        "type": "union",
+        "refs": [
+          "#adultContentPref",
+          "#contentLabelPref",
+          "#savedFeedsPref"
+        ]
+      }
+    },
+    "adultContentPref": {
+      "type": "object",
+      "required": ["enabled"],
+      "properties": {
+        "enabled": {"type": "boolean", "default": false}
+      }
+    },
+    "contentLabelPref": {
+      "type": "object",
+      "required": ["label", "visibility"],
+      "properties": {
+        "label": {"type": "string"},
+        "visibility": {"type": "string", "knownValues": ["show", "warn", "hide"]}
+      }
+    },
+    "savedFeedsPref": {
+      "type": "object",
+      "required": ["pinned", "saved"],
+      "properties": {
+        "pinned": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "at-uri"
+          }
+        },
+        "saved": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "at-uri"
+          }
+        }
       }
     }
   }

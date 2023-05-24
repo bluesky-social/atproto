@@ -1,37 +1,35 @@
 import axios, { AxiosInstance } from 'axios'
 import { CID } from 'multiformats/cid'
-import { AtpAgent } from '@atproto/api'
 import { verifyCidForBytes } from '@atproto/common'
-import { runTestEnv, TestEnvInfo } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import { randomBytes } from '@atproto/crypto'
-import { processAll } from './_util'
 
 describe('blob resolver', () => {
-  let testEnv: TestEnvInfo
+  let network: TestNetwork
   let client: AxiosInstance
   let fileDid: string
   let fileCid: CID
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_blob_resolver',
     })
-    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
+    const pdsAgent = network.pds.getClient()
     const sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
-    await processAll(testEnv)
+    await network.processAll()
     fileDid = sc.dids.carol
     fileCid = sc.posts[fileDid][0].images[0].image.ref
     client = axios.create({
-      baseURL: testEnv.bsky.url,
+      baseURL: network.bsky.url,
       validateStatus: () => true,
     })
   })
 
   afterAll(async () => {
-    await testEnv.close()
+    await network.close()
   })
 
   it('resolves blob with good signature check.', async () => {
@@ -80,8 +78,8 @@ describe('blob resolver', () => {
   })
 
   it('fails on blob with bad signature check.', async () => {
-    await testEnv.pds.ctx.blobstore.delete(fileCid)
-    await testEnv.pds.ctx.blobstore.putPermanent(fileCid, randomBytes(100))
+    await network.pds.ctx.blobstore.delete(fileCid)
+    await network.pds.ctx.blobstore.putPermanent(fileCid, randomBytes(100))
     const tryGetBlob = client.get(`/blob/${fileDid}/${fileCid.toString()}`)
     await expect(tryGetBlob).rejects.toThrow(
       'maxContentLength size of -1 exceeded',

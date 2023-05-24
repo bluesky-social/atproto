@@ -13,6 +13,7 @@ import * as listItem from './tables/list-item'
 import * as listBlock from './tables/list-block'
 import * as actorBlock from './tables/actor-block'
 import * as like from './tables/like'
+import * as feedGenerator from './tables/feed-generator'
 import * as subscription from './tables/subscription'
 
 // @NOTE app-view also shares did-handle, record, and repo-root tables w/ main pds
@@ -31,4 +32,5 @@ export type DatabaseSchemaType = duplicateRecords.PartialDB &
   listBlock.PartialDB &
   actorBlock.PartialDB &
   like.PartialDB &
+  feedGenerator.PartialDB &
   subscription.PartialDB

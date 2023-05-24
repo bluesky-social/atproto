@@ -9,6 +9,7 @@ import {
 } from '../../../../db/database-schema'
 import { BackgroundQueue } from '../../../../event-stream/background-queue'
 import RecordProcessor from '../processor'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 const lexId = lex.ids.AppBskyGraphListitem
 type IndexedListItem = DatabaseSchemaType['list_item']
@@ -20,6 +21,12 @@ const insertFn = async (
   obj: ListItem.Record,
   timestamp: string,
 ): Promise<IndexedListItem | null> => {
+  const listUri = new AtUri(obj.list)
+  if (listUri.hostname !== uri.hostname) {
+    throw new InvalidRequestError(
+      'Creator of listitem does not match creator of list',
+    )
+  }
   const inserted = await db
     .insertInto('list_item')
     .values({
@@ -28,10 +35,6 @@ const insertFn = async (
       creator: uri.host,
       subjectDid: obj.subject,
       listUri: obj.list,
-      reason: obj.reason,
-      reasonFacets: obj.reasonFacets
-        ? JSON.stringify(obj.reasonFacets)
-        : undefined,
       createdAt: obj.createdAt,
       indexedAt: timestamp,
     })

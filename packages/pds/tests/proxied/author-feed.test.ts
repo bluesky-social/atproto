@@ -1,12 +1,12 @@
 import AtpAgent from '@atproto/api'
-import { runTestEnv, CloseFn, processAll } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { forSnapshot, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds author feed proxy views', () => {
+  let network: TestNetwork
   let agent: AtpAgent
-  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
@@ -16,23 +16,22 @@ describe('pds author feed proxy views', () => {
   let dan: string
 
   beforeAll(async () => {
-    const testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_author_feed',
     })
-    close = testEnv.close
-    agent = new AtpAgent({ service: testEnv.pds.url })
+    agent = network.pds.getClient()
     sc = new SeedClient(agent)
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
-    await testEnv.pds.ctx.labeler.processAll()
-    await processAll(testEnv)
+    await network.pds.ctx.labeler.processAll()
+    await network.processAll()
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('fetches full author feeds for self (sorted, minimal viewer state).', async () => {

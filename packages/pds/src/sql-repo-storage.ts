@@ -150,21 +150,16 @@ export class SqlRepoStorage extends RepoStorage {
     await this.indexCommitCids([
       { commit: rebase.commit, prev: null, cids: allCids },
     ])
+    const { ref } = this.db.db.dynamic
     await this.db.db
       .deleteFrom('ipld_block')
       .where('ipld_block.creator', '=', this.did)
-      .where(
-        'cid',
-        'in',
+      .whereNotExists(
         this.db.db
-          .selectFrom('ipld_block as block')
-          .leftJoin('repo_commit_block', (join) =>
-            join
-              .onRef('block.creator', '=', 'repo_commit_block.creator')
-              .onRef('block.cid', '=', 'repo_commit_block.block'),
-          )
-          .where('repo_commit_block.creator', 'is', null)
-          .select('block.cid'),
+          .selectFrom('repo_commit_block')
+          .selectAll()
+          .where('repo_commit_block.creator', '=', this.did)
+          .whereRef('repo_commit_block.block', '=', ref('ipld_block.cid')),
       )
       .execute()
     await this.updateHead(rebase.commit, rebase.rebased)

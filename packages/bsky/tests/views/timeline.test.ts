@@ -1,22 +1,15 @@
 import AtpAgent from '@atproto/api'
-import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import {
-  adminAuth,
-  appViewHeaders,
-  forSnapshot,
-  getOriginator,
-  paginateAll,
-  processAll,
-} from '../_util'
+import { forSnapshot, getOriginator, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { FeedAlgorithm } from '../../src/api/app/bsky/util/feed'
 import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 
 describe('timeline views', () => {
+  let network: TestNetwork
   let agent: AtpAgent
-  let testEnv: TestEnvInfo
   let sc: SeedClient
 
   // account dids, for convenience
@@ -26,15 +19,15 @@ describe('timeline views', () => {
   let dan: string
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_home_feed',
     })
-    agent = new AtpAgent({ service: testEnv.bsky.url })
-    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
+    agent = network.bsky.getClient()
+    const pdsAgent = network.pds.getClient()
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
-    await processAll(testEnv)
-    await testEnv.bsky.ctx.labeler.processAll()
+    await network.processAll()
+    await network.bsky.ctx.labeler.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
@@ -42,27 +35,27 @@ describe('timeline views', () => {
     // Label posts as "kind" to check labels on embed views
     const labelPostA = sc.posts[bob][0].ref
     const labelPostB = sc.posts[carol][0].ref
-    await testEnv.bsky.ctx.services
-      .label(testEnv.bsky.ctx.db)
+    await network.bsky.ctx.services
+      .label(network.bsky.ctx.db)
       .formatAndCreate(
-        testEnv.bsky.ctx.cfg.labelerDid,
+        network.bsky.ctx.cfg.labelerDid,
         labelPostA.uriStr,
         labelPostA.cidStr,
         { create: ['kind'] },
       )
-    await testEnv.bsky.ctx.services
-      .label(testEnv.bsky.ctx.db)
+    await network.bsky.ctx.services
+      .label(network.bsky.ctx.db)
       .formatAndCreate(
-        testEnv.bsky.ctx.cfg.labelerDid,
+        network.bsky.ctx.cfg.labelerDid,
         labelPostB.uriStr,
         labelPostB.cidStr,
         { create: ['kind'] },
       )
-    await testEnv.bsky.ctx.labeler.processAll()
+    await network.bsky.ctx.labeler.processAll()
   })
 
   afterAll(async () => {
-    await testEnv.close()
+    await network.close()
   })
 
   // @TODO(bsky) blocks posts, reposts, replies by actor takedown via labels
@@ -80,7 +73,7 @@ describe('timeline views', () => {
     const aliceTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
-        headers: await appViewHeaders(alice, testEnv),
+        headers: await network.serviceHeaders(alice),
       },
     )
 
@@ -90,7 +83,7 @@ describe('timeline views', () => {
     const bobTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
-        headers: await appViewHeaders(bob, testEnv),
+        headers: await network.serviceHeaders(bob),
       },
     )
 
@@ -100,7 +93,7 @@ describe('timeline views', () => {
     const carolTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
-        headers: await appViewHeaders(carol, testEnv),
+        headers: await network.serviceHeaders(carol),
       },
     )
 
@@ -110,7 +103,7 @@ describe('timeline views', () => {
     const danTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
-        headers: await appViewHeaders(dan, testEnv),
+        headers: await network.serviceHeaders(dan),
       },
     )
 
@@ -122,13 +115,13 @@ describe('timeline views', () => {
     const defaultTL = await agent.api.app.bsky.feed.getTimeline(
       {},
       {
-        headers: await appViewHeaders(alice, testEnv),
+        headers: await network.serviceHeaders(alice),
       },
     )
     const reverseChronologicalTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
       {
-        headers: await appViewHeaders(alice, testEnv),
+        headers: await network.serviceHeaders(alice),
       },
     )
     expect(defaultTL.data.feed).toEqual(reverseChronologicalTL.data.feed)
@@ -143,7 +136,7 @@ describe('timeline views', () => {
           cursor,
           limit: 4,
         },
-        { headers: await appViewHeaders(carol, testEnv) },
+        { headers: await network.serviceHeaders(carol) },
       )
       return res.data
     }
@@ -157,7 +150,7 @@ describe('timeline views', () => {
       {
         algorithm: FeedAlgorithm.ReverseChronological,
       },
-      { headers: await appViewHeaders(carol, testEnv) },
+      { headers: await network.serviceHeaders(carol) },
     )
 
     expect(full.data.feed.length).toEqual(7)
@@ -179,7 +172,7 @@ describe('timeline views', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         ),
       ),
@@ -187,7 +180,7 @@ describe('timeline views', () => {
 
     const aliceTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
-      { headers: await appViewHeaders(alice, testEnv) },
+      { headers: await network.serviceHeaders(alice) },
     )
 
     expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
@@ -203,7 +196,7 @@ describe('timeline views', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         ),
       ),
@@ -228,7 +221,7 @@ describe('timeline views', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         ),
       ),
@@ -236,7 +229,7 @@ describe('timeline views', () => {
 
     const aliceTL = await agent.api.app.bsky.feed.getTimeline(
       { algorithm: FeedAlgorithm.ReverseChronological },
-      { headers: await appViewHeaders(alice, testEnv) },
+      { headers: await network.serviceHeaders(alice) },
     )
 
     expect(forSnapshot(aliceTL.data.feed)).toMatchSnapshot()
@@ -252,7 +245,7 @@ describe('timeline views', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         ),
       ),

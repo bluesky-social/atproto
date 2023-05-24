@@ -8,7 +8,9 @@ import {
 import { schemas } from './lexicons'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
+import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
+import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
 import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
@@ -36,6 +38,7 @@ import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRe
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
+import * as ComAtprotoRepoRebaseRepo from './types/com/atproto/repo/rebaseRepo'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
@@ -68,10 +71,12 @@ import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 import * as AppBskyActorDefs from './types/app/bsky/actor/defs'
+import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 import * as AppBskyActorProfile from './types/app/bsky/actor/profile'
+import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
@@ -79,7 +84,14 @@ import * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 import * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 import * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
 import * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
+import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator'
+import * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
+import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
+import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
+import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
+import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
+import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
@@ -96,13 +108,16 @@ import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
+import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 import * as AppBskyGraphList from './types/app/bsky/graph/list'
 import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
+import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
+import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
@@ -110,7 +125,9 @@ import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
+export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 export * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
+export * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 export * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 export * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
 export * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
@@ -138,6 +155,7 @@ export * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRe
 export * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
+export * as ComAtprotoRepoRebaseRepo from './types/com/atproto/repo/rebaseRepo'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 export * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
@@ -170,10 +188,12 @@ export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 export * as AppBskyActorDefs from './types/app/bsky/actor/defs'
+export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 export * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
 export * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestions'
 export * as AppBskyActorProfile from './types/app/bsky/actor/profile'
+export * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences'
 export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors'
 export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external'
@@ -181,7 +201,14 @@ export * as AppBskyEmbedImages from './types/app/bsky/embed/images'
 export * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 export * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
 export * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
+export * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator'
+export * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
+export * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 export * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
+export * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
+export * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
+export * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
+export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
@@ -198,13 +225,16 @@ export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 export * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
 export * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
+export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
 export * as AppBskyGraphList from './types/app/bsky/graph/list'
 export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
+export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
+export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
@@ -226,7 +256,7 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
 }
 export const APP_BSKY_GRAPH = {
-  DefsBlocklist: 'app.bsky.graph.defs#blocklist',
+  DefsModlist: 'app.bsky.graph.defs#modlist',
 }
 
 export class AtpBaseClient {
@@ -298,6 +328,17 @@ export class AdminNS {
     this._service = service
   }
 
+  disableAccountInvites(
+    data?: ComAtprotoAdminDisableAccountInvites.InputSchema,
+    opts?: ComAtprotoAdminDisableAccountInvites.CallOptions,
+  ): Promise<ComAtprotoAdminDisableAccountInvites.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.disableAccountInvites', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminDisableAccountInvites.toKnownErr(e)
+      })
+  }
+
   disableInviteCodes(
     data?: ComAtprotoAdminDisableInviteCodes.InputSchema,
     opts?: ComAtprotoAdminDisableInviteCodes.CallOptions,
@@ -306,6 +347,17 @@ export class AdminNS {
       .call('com.atproto.admin.disableInviteCodes', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminDisableInviteCodes.toKnownErr(e)
+      })
+  }
+
+  enableAccountInvites(
+    data?: ComAtprotoAdminEnableAccountInvites.InputSchema,
+    opts?: ComAtprotoAdminEnableAccountInvites.CallOptions,
+  ): Promise<ComAtprotoAdminEnableAccountInvites.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.enableAccountInvites', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminEnableAccountInvites.toKnownErr(e)
       })
   }
 
@@ -602,6 +654,17 @@ export class RepoNS {
       .call('com.atproto.repo.putRecord', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoRepoPutRecord.toKnownErr(e)
+      })
+  }
+
+  rebaseRepo(
+    data?: ComAtprotoRepoRebaseRepo.InputSchema,
+    opts?: ComAtprotoRepoRebaseRepo.CallOptions,
+  ): Promise<ComAtprotoRepoRebaseRepo.Response> {
+    return this._service.xrpc
+      .call('com.atproto.repo.rebaseRepo', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoRepoRebaseRepo.toKnownErr(e)
       })
   }
 
@@ -971,6 +1034,17 @@ export class ActorNS {
     this.profile = new ProfileRecord(service)
   }
 
+  getPreferences(
+    params?: AppBskyActorGetPreferences.QueryParams,
+    opts?: AppBskyActorGetPreferences.CallOptions,
+  ): Promise<AppBskyActorGetPreferences.Response> {
+    return this._service.xrpc
+      .call('app.bsky.actor.getPreferences', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyActorGetPreferences.toKnownErr(e)
+      })
+  }
+
   getProfile(
     params?: AppBskyActorGetProfile.QueryParams,
     opts?: AppBskyActorGetProfile.CallOptions,
@@ -1001,6 +1075,17 @@ export class ActorNS {
       .call('app.bsky.actor.getSuggestions', params, undefined, opts)
       .catch((e) => {
         throw AppBskyActorGetSuggestions.toKnownErr(e)
+      })
+  }
+
+  putPreferences(
+    data?: AppBskyActorPutPreferences.InputSchema,
+    opts?: AppBskyActorPutPreferences.CallOptions,
+  ): Promise<AppBskyActorPutPreferences.Response> {
+    return this._service.xrpc
+      .call('app.bsky.actor.putPreferences', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyActorPutPreferences.toKnownErr(e)
       })
   }
 
@@ -1098,15 +1183,39 @@ export class EmbedNS {
 
 export class FeedNS {
   _service: AtpServiceClient
+  generator: GeneratorRecord
   like: LikeRecord
   post: PostRecord
   repost: RepostRecord
 
   constructor(service: AtpServiceClient) {
     this._service = service
+    this.generator = new GeneratorRecord(service)
     this.like = new LikeRecord(service)
     this.post = new PostRecord(service)
     this.repost = new RepostRecord(service)
+  }
+
+  describeFeedGenerator(
+    params?: AppBskyFeedDescribeFeedGenerator.QueryParams,
+    opts?: AppBskyFeedDescribeFeedGenerator.CallOptions,
+  ): Promise<AppBskyFeedDescribeFeedGenerator.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.describeFeedGenerator', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedDescribeFeedGenerator.toKnownErr(e)
+      })
+  }
+
+  getActorFeeds(
+    params?: AppBskyFeedGetActorFeeds.QueryParams,
+    opts?: AppBskyFeedGetActorFeeds.CallOptions,
+  ): Promise<AppBskyFeedGetActorFeeds.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getActorFeeds', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetActorFeeds.toKnownErr(e)
+      })
   }
 
   getAuthorFeed(
@@ -1117,6 +1226,50 @@ export class FeedNS {
       .call('app.bsky.feed.getAuthorFeed', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetAuthorFeed.toKnownErr(e)
+      })
+  }
+
+  getFeed(
+    params?: AppBskyFeedGetFeed.QueryParams,
+    opts?: AppBskyFeedGetFeed.CallOptions,
+  ): Promise<AppBskyFeedGetFeed.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getFeed', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetFeed.toKnownErr(e)
+      })
+  }
+
+  getFeedGenerator(
+    params?: AppBskyFeedGetFeedGenerator.QueryParams,
+    opts?: AppBskyFeedGetFeedGenerator.CallOptions,
+  ): Promise<AppBskyFeedGetFeedGenerator.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getFeedGenerator', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetFeedGenerator.toKnownErr(e)
+      })
+  }
+
+  getFeedGenerators(
+    params?: AppBskyFeedGetFeedGenerators.QueryParams,
+    opts?: AppBskyFeedGetFeedGenerators.CallOptions,
+  ): Promise<AppBskyFeedGetFeedGenerators.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getFeedGenerators', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetFeedGenerators.toKnownErr(e)
+      })
+  }
+
+  getFeedSkeleton(
+    params?: AppBskyFeedGetFeedSkeleton.QueryParams,
+    opts?: AppBskyFeedGetFeedSkeleton.CallOptions,
+  ): Promise<AppBskyFeedGetFeedSkeleton.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getFeedSkeleton', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetFeedSkeleton.toKnownErr(e)
       })
   }
 
@@ -1173,6 +1326,67 @@ export class FeedNS {
       .catch((e) => {
         throw AppBskyFeedGetTimeline.toKnownErr(e)
       })
+  }
+}
+
+export class GeneratorRecord {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedGenerator.Record }[]
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.generator',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyFeedGenerator.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.generator',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyFeedGenerator.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.feed.generator'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.feed.generator', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.generator', ...params },
+      { headers },
+    )
   }
 }
 
@@ -1431,6 +1645,17 @@ export class GraphNS {
       })
   }
 
+  getListMutes(
+    params?: AppBskyGraphGetListMutes.QueryParams,
+    opts?: AppBskyGraphGetListMutes.CallOptions,
+  ): Promise<AppBskyGraphGetListMutes.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getListMutes', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetListMutes.toKnownErr(e)
+      })
+  }
+
   getLists(
     params?: AppBskyGraphGetLists.QueryParams,
     opts?: AppBskyGraphGetLists.CallOptions,
@@ -1464,6 +1689,17 @@ export class GraphNS {
       })
   }
 
+  muteActorList(
+    data?: AppBskyGraphMuteActorList.InputSchema,
+    opts?: AppBskyGraphMuteActorList.CallOptions,
+  ): Promise<AppBskyGraphMuteActorList.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.muteActorList', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyGraphMuteActorList.toKnownErr(e)
+      })
+  }
+
   unmuteActor(
     data?: AppBskyGraphUnmuteActor.InputSchema,
     opts?: AppBskyGraphUnmuteActor.CallOptions,
@@ -1472,6 +1708,17 @@ export class GraphNS {
       .call('app.bsky.graph.unmuteActor', opts?.qp, data, opts)
       .catch((e) => {
         throw AppBskyGraphUnmuteActor.toKnownErr(e)
+      })
+  }
+
+  unmuteActorList(
+    data?: AppBskyGraphUnmuteActorList.InputSchema,
+    opts?: AppBskyGraphUnmuteActorList.CallOptions,
+  ): Promise<AppBskyGraphUnmuteActorList.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.unmuteActorList', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyGraphUnmuteActorList.toKnownErr(e)
       })
   }
 }

@@ -1,32 +1,13 @@
-import { wait } from '@atproto/common'
 import { AtUri } from '@atproto/uri'
 import { lexToJson } from '@atproto/lexicon'
-import { TestEnvInfo } from '@atproto/dev-env'
 import { CID } from 'multiformats/cid'
-import * as uint8arrays from 'uint8arrays'
 import {
   FeedViewPost,
   PostView,
+  isPostView,
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
-import { createServiceJwt } from '@atproto/pds/src/auth'
-
-// for pds
-export const adminAuth = () => {
-  return (
-    'Basic ' +
-    uint8arrays.toString(
-      uint8arrays.fromString('admin:admin-pass', 'utf8'),
-      'base64pad',
-    )
-  )
-}
-
-export const appViewHeaders = async (did: string, env: TestEnvInfo) => {
-  const jwt = await createServiceJwt(did, env.pds.ctx.repoSigningKey)
-  return { authorization: `Bearer ${jwt}` }
-}
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
@@ -60,7 +41,13 @@ export const forSnapshot = (obj: unknown) => {
       return take(unknown, str)
     }
     if (str.match(/^\d{4}-\d{2}-\d{2}T/)) {
-      return constantDate
+      if (str.match(/\d{6}Z$/)) {
+        return constantDate.replace('Z', '000Z') // e.g. microseconds in record createdAt
+      } else if (str.endsWith('+00:00')) {
+        return constantDate.replace('Z', '+00:00') // e.g. timezone in record createdAt
+      } else {
+        return constantDate
+      }
     }
     if (str.match(/^\d+::bafy/)) {
       return constantKeysetCursor
@@ -156,25 +143,6 @@ export const paginateAll = async <T extends { cursor?: string }>(
   return results
 }
 
-export const processAll = async (server: TestEnvInfo, timeout = 5000) => {
-  const { bsky, pds } = server
-  const sub = bsky.sub
-  if (!sub) return
-  const { db } = pds.ctx.db
-  const start = Date.now()
-  while (Date.now() - start < timeout) {
-    await wait(50)
-    if (!sub) return
-    const state = await sub.getState()
-    const { lastSeq } = await db
-      .selectFrom('repo_seq')
-      .select(db.fn.max('repo_seq.seq').as('lastSeq'))
-      .executeTakeFirstOrThrow()
-    if (state.cursor === lastSeq) return
-  }
-  throw new Error(`Sequence was not processed within ${timeout}ms`)
-}
-
 // @NOTE mutates
 export const stripViewer = <T extends { viewer?: Record<string, unknown> }>(
   val: T,
@@ -184,7 +152,10 @@ export const stripViewer = <T extends { viewer?: Record<string, unknown> }>(
 }
 
 // @NOTE mutates
-export const stripViewerFromPost = (post: PostView): PostView => {
+export const stripViewerFromPost = (post: unknown): PostView => {
+  if (!isPostView(post)) {
+    throw new Error('Expected post view')
+  }
   post.author = stripViewer(post.author)
   const recordEmbed =
     post.embed && isViewRecord(post.embed.record)

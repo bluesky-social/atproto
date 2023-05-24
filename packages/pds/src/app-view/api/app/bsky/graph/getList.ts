@@ -51,10 +51,6 @@ export default function (server: Server, ctx: AppContext) {
 
       const items = itemsRes.map((item) => ({
         subject: profilesMap[item.did],
-        reason: item.reason ?? undefined,
-        reasonFacets: item.reasonFacets
-          ? JSON.parse(item.reasonFacets)
-          : undefined,
       }))
 
       const creator = await actorService.views.profile(listRes, requester)
@@ -73,6 +69,7 @@ export default function (server: Server, ctx: AppContext) {
           : undefined,
         indexedAt: listRes.indexedAt,
         viewer: {
+          muted: !!listRes.viewerMuted,
           blocked: listRes.viewerBlocked ?? undefined,
         },
       }

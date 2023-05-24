@@ -1,39 +1,31 @@
 import AtpAgent from '@atproto/api'
 import { wait } from '@atproto/common'
-import { CloseFn, runTestEnv } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import {
-  adminAuth,
-  forSnapshot,
-  paginateAll,
-  processAll,
-  stripViewer,
-} from '../_util'
+import { forSnapshot, paginateAll, stripViewer } from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
-import { appViewHeaders } from '../_util'
 
 describe('pds actor search views', () => {
+  let network: TestNetwork
   let agent: AtpAgent
-  let close: CloseFn
   let sc: SeedClient
   let headers: { [s: string]: string }
 
   beforeAll(async () => {
-    const testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_actor_search',
     })
-    close = testEnv.close
-    agent = new AtpAgent({ service: testEnv.bsky.url })
-    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
+    agent = network.bsky.getClient()
+    const pdsAgent = network.pds.getClient()
     sc = new SeedClient(pdsAgent)
 
     await wait(50) // allow pending sub to be established
-    await testEnv.bsky.sub.destroy()
+    await network.bsky.sub?.destroy()
     await usersBulkSeed(sc)
 
     // Skip did/handle resolution for expediency
-    const { db } = testEnv.bsky.ctx
+    const { db } = network.bsky.ctx
     const now = new Date().toISOString()
     await db.db
       .insertInto('actor')
@@ -48,13 +40,13 @@ describe('pds actor search views', () => {
       .execute()
 
     // Process remaining profiles
-    testEnv.bsky.sub.resume()
-    await processAll(testEnv, 50000)
-    headers = await appViewHeaders(Object.values(sc.dids)[0], testEnv)
+    network.bsky.sub?.resume()
+    await network.processAll(50000)
+    headers = await network.serviceHeaders(Object.values(sc.dids)[0])
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('typeahead gives relevant results', async () => {
@@ -237,7 +229,7 @@ describe('pds actor search views', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: adminAuth() },
+        headers: network.pds.adminAuthHeaders(),
       },
     )
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(

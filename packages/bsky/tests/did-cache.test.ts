@@ -1,6 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
-import { processAll } from './_util'
+import { TestNetwork } from '@atproto/dev-env'
 import { SeedClient } from './seeds/client'
 import userSeed from './seeds/users'
 import { DidResolver } from '@atproto/did-resolver'
@@ -8,7 +7,7 @@ import DidSqlCache from '../src/did-cache'
 import { wait } from '@atproto/common'
 
 describe('did cache', () => {
-  let testEnv: TestEnvInfo
+  let network: TestNetwork
   let sc: SeedClient
   let didResolver: DidResolver
   let didCache: DidSqlCache
@@ -19,15 +18,15 @@ describe('did cache', () => {
   let dan: string
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_did_cache',
     })
-    didResolver = testEnv.bsky.ctx.didResolver
-    didCache = testEnv.bsky.ctx.didCache
-    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
+    didResolver = network.bsky.ctx.didResolver
+    didCache = network.bsky.ctx.didCache
+    const pdsAgent = new AtpAgent({ service: network.pds.url })
     sc = new SeedClient(pdsAgent)
     await userSeed(sc)
-    await processAll(testEnv)
+    await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
@@ -35,7 +34,7 @@ describe('did cache', () => {
   })
 
   afterAll(async () => {
-    await testEnv.close()
+    await network.close()
   })
 
   it('caches dids on lookup', async () => {
@@ -85,9 +84,9 @@ describe('did cache', () => {
   })
 
   it('accurately reports expired dids & refreshes the cache', async () => {
-    const didCache = new DidSqlCache(testEnv.bsky.ctx.db, 1, 60000)
+    const didCache = new DidSqlCache(network.bsky.ctx.db, 1, 60000)
     const shortCacheResolver = new DidResolver(
-      { plcUrl: testEnv.bsky.ctx.cfg.didPlcUrl },
+      { plcUrl: network.bsky.ctx.cfg.didPlcUrl },
       didCache,
     )
     const doc = await shortCacheResolver.resolveDid(alice)
@@ -114,9 +113,9 @@ describe('did cache', () => {
   })
 
   it('does not return expired dids & refreshes the cache', async () => {
-    const didCache = new DidSqlCache(testEnv.bsky.ctx.db, 0, 1)
+    const didCache = new DidSqlCache(network.bsky.ctx.db, 0, 1)
     const shortExpireResolver = new DidResolver(
-      { plcUrl: testEnv.bsky.ctx.cfg.didPlcUrl },
+      { plcUrl: network.bsky.ctx.cfg.didPlcUrl },
       didCache,
     )
     const doc = await shortExpireResolver.resolveDid(alice)

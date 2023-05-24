@@ -12,11 +12,6 @@
         "properties": {
           "subject": {"type": "string", "format": "did"},
           "list": {"type": "string", "format": "at-uri"},
-          "reason": {"type": "string", "maxLength": 5000, "maxGraphemes": 1000},
-          "reasonFacets": {
-            "type": "array",
-            "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
-          },
           "createdAt": {"type": "string", "format": "datetime"}
         }
       }

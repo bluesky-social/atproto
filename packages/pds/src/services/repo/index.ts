@@ -23,8 +23,6 @@ import { RecordService } from '../record'
 import * as sequencer from '../../sequencer'
 import { Labeler } from '../../labeler'
 import { wait } from '@atproto/common'
-import { ImageInvalidator } from '../../image/invalidator'
-import { ImageUriBuilder } from '../../image/uri'
 import { BackgroundQueue } from '../../event-stream/background-queue'
 
 export class RepoService {
@@ -36,17 +34,9 @@ export class RepoService {
     public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
-    public imgUriBuilder: ImageUriBuilder,
-    public imgInvalidator: ImageInvalidator,
     public labeler: Labeler,
   ) {
-    this.blobs = new RepoBlobs(
-      db,
-      blobstore,
-      backgroundQueue,
-      imgUriBuilder,
-      imgInvalidator,
-    )
+    this.blobs = new RepoBlobs(db, blobstore, backgroundQueue)
   }
 
   static creator(
@@ -54,8 +44,6 @@ export class RepoService {
     messageDispatcher: MessageQueue,
     blobstore: BlobStore,
     backgroundQueue: BackgroundQueue,
-    imgUriBuilder: ImageUriBuilder,
-    imgInvalidator: ImageInvalidator,
     labeler: Labeler,
   ) {
     return (db: Database) =>
@@ -65,8 +53,6 @@ export class RepoService {
         messageDispatcher,
         blobstore,
         backgroundQueue,
-        imgUriBuilder,
-        imgInvalidator,
         labeler,
       )
   }
@@ -86,8 +72,6 @@ export class RepoService {
         this.messageDispatcher,
         this.blobstore,
         this.backgroundQueue,
-        this.imgUriBuilder,
-        this.imgInvalidator,
         this.labeler,
       )
       return fn(srvc)
@@ -104,11 +88,12 @@ export class RepoService {
       this.repoSigningKey,
       writeOps,
     )
-    await storage.applyCommit(commit)
     await Promise.all([
+      storage.applyCommit(commit),
       this.indexWrites(writes, now),
-      this.afterWriteProcessing(did, commit, writes),
+      this.blobs.processWriteBlobs(did, commit.commit, writes),
     ])
+    await this.afterWriteProcessing(did, commit, writes)
   }
 
   async processCommit(
@@ -128,9 +113,11 @@ export class RepoService {
       storage.applyCommit(commitData),
       // & send to indexing
       this.indexWrites(writes, now),
+      // process blobs
+      this.blobs.processWriteBlobs(did, commitData.commit, writes),
       // do any other processing needed after write
-      this.afterWriteProcessing(did, commitData, writes),
     ])
+    await this.afterWriteProcessing(did, commitData, writes)
   }
 
   async processWrites(
@@ -143,14 +130,9 @@ export class RepoService {
     const storage = new SqlRepoStorage(this.db, did)
     const commit = await this.formatCommit(storage, did, writes, swapCommitCid)
     try {
-      await this.serviceTx(async (srvcTx) => {
-        await srvcTx.processCommit(
-          did,
-          writes,
-          commit,
-          new Date().toISOString(),
-        )
-      })
+      await this.serviceTx(async (srvcTx) =>
+        srvcTx.processCommit(did, writes, commit, new Date().toISOString()),
+      )
     } catch (err) {
       if (err instanceof ConcurrentWriteError) {
         if (times <= 1) {
@@ -233,13 +215,6 @@ export class RepoService {
     commitData: CommitData,
     writes: PreparedWrite[],
   ) {
-    const [seqEvt] = await Promise.all([
-      sequencer.formatSeqCommit(did, commitData, writes),
-      this.blobs.processWriteBlobs(did, commitData.commit, writes),
-    ])
-
-    await sequencer.sequenceEvt(this.db, seqEvt)
-
     // @TODO move to appview
     writes.map((write) => {
       if (
@@ -249,9 +224,35 @@ export class RepoService {
         this.labeler.processRecord(write.uri, write.record)
       }
     })
+
+    const seqEvt = await sequencer.formatSeqCommit(did, commitData, writes)
+    await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
-  async rebaseRepo(did: string, now: string, swapCommit?: CID) {
+  async rebaseRepo(did: string, swapCommit?: CID) {
+    this.db.assertNotTransaction()
+    const storage = new SqlRepoStorage(this.db, did)
+    const currRoot = await storage.getHead()
+    if (!currRoot) {
+      throw new InvalidRequestError(
+        `${did} is not a registered repo on this server`,
+      )
+    }
+    const repo = await Repo.load(storage, currRoot)
+    const rebaseData = await repo.formatRebase(this.repoSigningKey)
+
+    // rebases are expensive & should be done rarely, we don't try to re-process on concurrent writes
+    await this.serviceTx(async (srvcTx) =>
+      srvcTx.processRebase(did, rebaseData, swapCommit),
+    )
+  }
+
+  async processRebase(
+    did: string,
+    rebaseData: RebaseData,
+    swapCommit?: CID,
+    now?: string,
+  ) {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
     const currRoot = await storage.lockHead()
@@ -261,8 +262,6 @@ export class RepoService {
     if (swapCommit && !currRoot.equals(swapCommit)) {
       throw new BadCommitSwapError(currRoot)
     }
-    const repo = await Repo.load(storage, currRoot)
-    const rebaseData = await repo.formatRebase(this.repoSigningKey)
     await Promise.all([
       storage.applyRebase(rebaseData),
       this.afterRebaseProcessing(did, rebaseData),

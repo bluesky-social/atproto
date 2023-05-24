@@ -2,16 +2,22 @@ import { sql } from 'kysely'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import * as scrypt from '../../db/scrypt'
-import { UserAccount } from '../../db/tables/user-account'
+import { UserAccountEntry } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
-import { countAll, notSoftDeletedClause, nullToZero } from '../../db/util'
+import {
+  DbRef,
+  countAll,
+  notSoftDeletedClause,
+  nullToZero,
+} from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { NotEmptyArray } from '@atproto/common'
 
 export class AccountService {
   constructor(public db: Database) {}
@@ -23,7 +29,7 @@ export class AccountService {
   async getAccount(
     handleOrDid: string,
     includeSoftDeleted = false,
-  ): Promise<(UserAccount & DidHandle & RepoRoot) | null> {
+  ): Promise<(UserAccountEntry & DidHandle & RepoRoot) | null> {
     const { ref } = this.db.db.dynamic
     const result = await this.db.db
       .selectFrom('user_account')
@@ -49,7 +55,7 @@ export class AccountService {
   async getAccountByEmail(
     email: string,
     includeSoftDeleted = false,
-  ): Promise<(UserAccount & DidHandle & RepoRoot) | null> {
+  ): Promise<(UserAccountEntry & DidHandle & RepoRoot) | null> {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('user_account')
@@ -284,6 +290,48 @@ export class AccountService {
     }, {} as Record<string, boolean>)
   }
 
+  async muteActorList(info: {
+    list: string
+    mutedByDid: string
+    createdAt?: Date
+  }) {
+    const { list, mutedByDid, createdAt = new Date() } = info
+    await this.db.db
+      .insertInto('list_mute')
+      .values({
+        listUri: list,
+        mutedByDid,
+        createdAt: createdAt.toISOString(),
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+  }
+
+  async unmuteActorList(info: { list: string; mutedByDid: string }) {
+    const { list, mutedByDid } = info
+    await this.db.db
+      .deleteFrom('list_mute')
+      .where('listUri', '=', list)
+      .where('mutedByDid', '=', mutedByDid)
+      .execute()
+  }
+
+  mutedQb(requester: string, refs: NotEmptyArray<DbRef>) {
+    const subjectRefs = sql.join(refs)
+    const actorMute = this.db.db
+      .selectFrom('mute')
+      .where('mutedByDid', '=', requester)
+      .where('did', 'in', sql`(${subjectRefs})`)
+      .select('did as muted')
+    const listMute = this.db.db
+      .selectFrom('list_item')
+      .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
+      .where('list_mute.mutedByDid', '=', requester)
+      .whereRef('list_item.subjectDid', 'in', sql`(${subjectRefs})`)
+      .select('list_item.subjectDid as muted')
+    return actorMute.unionAll(listMute)
+  }
+
   async search(opts: {
     term: string
     limit: number
@@ -457,7 +505,64 @@ export class AccountService {
       .executeTakeFirst()
     return res?.lastSeenNotifs
   }
+
+  async getPreferences(
+    did: string,
+    namespace?: string,
+  ): Promise<UserPreference[]> {
+    const prefsRes = await this.db.db
+      .selectFrom('user_pref')
+      .where('did', '=', did)
+      .orderBy('id')
+      .selectAll()
+      .execute()
+    return prefsRes
+      .filter((pref) => !namespace || matchNamespace(namespace, pref.name))
+      .map((pref) => JSON.parse(pref.valueJson))
+  }
+
+  async putPreferences(
+    did: string,
+    values: UserPreference[],
+    namespace: string,
+  ): Promise<void> {
+    this.db.assertTransaction()
+    if (!values.every((value) => matchNamespace(namespace, value.$type))) {
+      throw new InvalidRequestError(
+        `Some preferences are not in the ${namespace} namespace`,
+      )
+    }
+    // get all current prefs for user and prep new pref rows
+    const allPrefs = await this.db.db
+      .selectFrom('user_pref')
+      .where('did', '=', did)
+      .select(['id', 'name'])
+      .execute()
+    const putPrefs = values.map((value) => {
+      return {
+        did,
+        name: value.$type,
+        valueJson: JSON.stringify(value),
+      }
+    })
+    const allPrefIdsInNamespace = allPrefs
+      .filter((pref) => matchNamespace(namespace, pref.name))
+      .map((pref) => pref.id)
+    // replace all prefs in given namespace
+    if (allPrefIdsInNamespace.length) {
+      await this.db.db
+        .deleteFrom('user_pref')
+        .where('did', '=', did)
+        .where('id', 'in', allPrefIdsInNamespace)
+        .execute()
+    }
+    if (putPrefs.length) {
+      await this.db.db.insertInto('user_pref').values(putPrefs).execute()
+    }
+  }
 }
+
+export type UserPreference = Record<string, unknown> & { $type: string }
 
 type CodeDetail = {
   code: string
@@ -483,4 +588,8 @@ export class ListKeyset extends TimeCidKeyset<{
   labelResult(result: { indexedAt: string; handle: string }) {
     return { primary: result.indexedAt, secondary: result.handle }
   }
+}
+
+const matchNamespace = (namespace: string, fullname: string) => {
+  return fullname === namespace || fullname.startsWith(`${namespace}.`)
 }

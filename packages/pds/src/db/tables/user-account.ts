@@ -1,3 +1,5 @@
+import { Generated, Selectable } from 'kysely'
+
 export interface UserAccount {
   did: string
   email: string
@@ -5,7 +7,10 @@ export interface UserAccount {
   createdAt: string
   passwordResetToken: string | null
   passwordResetGrantedAt: string | null
+  invitesDisabled: Generated<0 | 1>
 }
+
+export type UserAccountEntry = Selectable<UserAccount>
 
 export const tableName = 'user_account'
 

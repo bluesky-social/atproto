@@ -451,13 +451,13 @@ export class ModerationViews {
         .selectAll()
         .where('did', '=', result.subjectDid)
         .executeTakeFirst()
-      if (!repoResult) {
-        throw new Error(
-          `Subject is missing: (${result.id}) ${result.subjectDid}`,
-        )
+      if (repoResult) {
+        subject = await this.repo(repoResult)
+        subject.$type = 'com.atproto.admin.defs#repoView'
+      } else {
+        subject = { did: result.subjectDid }
+        subject.$type = 'com.atproto.admin.defs#repoViewNotFound'
       }
-      subject = await this.repo(repoResult)
-      subject.$type = 'com.atproto.admin.defs#repoView'
     } else if (
       result.subjectType === 'com.atproto.repo.strongRef' &&
       result.subjectUri !== null
@@ -467,13 +467,13 @@ export class ModerationViews {
         .selectAll()
         .where('uri', '=', result.subjectUri)
         .executeTakeFirst()
-      if (!recordResult) {
-        throw new Error(
-          `Subject is missing: (${result.id}) ${result.subjectUri}`,
-        )
+      if (recordResult) {
+        subject = await this.record(recordResult)
+        subject.$type = 'com.atproto.admin.defs#recordView'
+      } else {
+        subject = { uri: result.subjectUri }
+        subject.$type = 'com.atproto.admin.defs#recordViewNotFound'
       }
-      subject = await this.record(recordResult)
-      subject.$type = 'com.atproto.admin.defs#recordView'
     } else {
       throw new Error(`Bad subject data: (${result.id}) ${result.subjectType}`)
     }

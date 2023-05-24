@@ -9,3 +9,7 @@ ATProto receives so many contributions that we could never list everyone who des
 #### [ianklatzco](https://github.com/ianklatzco), Security disclosure, April 2023
 
 #### lily, Security disclosure, May 2023
+
+#### [april](https://github.com/april), Security disclosure, May 2023
+
+#### [TowhidKashem](https://github.com/TowhidKashem), Security disclosure, May 2023

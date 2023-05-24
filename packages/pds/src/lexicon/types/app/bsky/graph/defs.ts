@@ -8,6 +8,28 @@ import { CID } from 'multiformats/cid'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as AppBskyRichtextFacet from '../richtext/facet'
 
+export interface ListViewBasic {
+  uri: string
+  name: string
+  purpose: ListPurpose
+  avatar?: string
+  viewer?: ListViewerState
+  indexedAt?: string
+  [k: string]: unknown
+}
+
+export function isListViewBasic(v: unknown): v is ListViewBasic {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.graph.defs#listViewBasic'
+  )
+}
+
+export function validateListViewBasic(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.graph.defs#listViewBasic', v)
+}
+
 export interface ListView {
   uri: string
   creator: AppBskyActorDefs.ProfileView
@@ -17,7 +39,7 @@ export interface ListView {
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: string
   viewer?: ListViewerState
-  indexedAt?: string
+  indexedAt: string
   [k: string]: unknown
 }
 
@@ -35,8 +57,6 @@ export function validateListView(v: unknown): ValidationResult {
 
 export interface ListItemView {
   subject: AppBskyActorDefs.ProfileView
-  reason?: string
-  reasonFacets?: AppBskyRichtextFacet.Main[]
   [k: string]: unknown
 }
 
@@ -52,12 +72,13 @@ export function validateListItemView(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.graph.defs#listItemView', v)
 }
 
-export type ListPurpose = 'app.bsky.graph.defs#blocklist' | (string & {})
+export type ListPurpose = 'app.bsky.graph.defs#modlist' | (string & {})
 
-/** A list of actors to do an aggregate block on */
-export const BLOCKLIST = 'app.bsky.graph.defs#blocklist'
+/** A list of actors to apply an aggregate moderation action (mute/block) on */
+export const MODLIST = 'app.bsky.graph.defs#modlist'
 
 export interface ListViewerState {
+  muted?: boolean
   blocked?: string
   [k: string]: unknown
 }

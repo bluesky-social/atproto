@@ -109,8 +109,10 @@ export const sexualLabels = (classes: HiveRespClass[]): string[] => {
   }
 
   // then check for sexual suggestive (which may include nudity)...
-  if (scores['yes_sexual_intent'] >= 0.9) {
-    return ['sexual']
+  for (const sexualClass of ['yes_sexual_intent', 'yes_sex_toy']) {
+    if (scores[sexualClass] >= 0.9) {
+      return ['sexual']
+    }
   }
   if (scores['yes_undressed'] >= 0.9) {
     // special case for bondage examples
@@ -119,7 +121,7 @@ export const sexualLabels = (classes: HiveRespClass[]): string[] => {
     }
   }
 
-  // then finally non-sexual nudity...
+  // then non-sexual nudity...
   for (const nudityClass of [
     'yes_male_nudity',
     'yes_female_nudity',
@@ -129,6 +131,18 @@ export const sexualLabels = (classes: HiveRespClass[]): string[] => {
       return ['nudity']
     }
   }
+
+  // then finally flag remaining "underwear" images in to sexually suggestive
+  // (after non-sexual content already labeled above)
+  for (const nudityClass of ['yes_male_underwear', 'yes_female_underwear']) {
+    if (scores[nudityClass] >= 0.9) {
+      // TODO: retaining 'underwear' label for a short time to help understand
+      // the impact of labeling all "underwear" as "sexual". This *will* be
+      // pulling in somewhat non-sexual content in to "sexual" label.
+      return ['sexual', 'underwear']
+    }
+  }
+
   return []
 }
 
@@ -136,6 +150,9 @@ export const sexualLabels = (classes: HiveRespClass[]): string[] => {
 const labelForClass = {
   very_bloody: 'gore',
   human_corpse: 'corpse',
+  hanging: 'corpse',
+}
+const labelForClassLessSensitive = {
   yes_self_harm: 'self-harm',
 }
 
@@ -144,6 +161,11 @@ export const summarizeLabels = (classes: HiveRespClass[]): string[] => {
   for (const cls of classes) {
     if (labelForClass[cls.class] && cls.score >= 0.9) {
       labels.push(labelForClass[cls.class])
+    }
+  }
+  for (const cls of classes) {
+    if (labelForClassLessSensitive[cls.class] && cls.score >= 0.96) {
+      labels.push(labelForClassLessSensitive[cls.class])
     }
   }
   return labels

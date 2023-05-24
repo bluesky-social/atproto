@@ -1,12 +1,11 @@
 import AtpAgent from '@atproto/api'
-import { runTestEnv, CloseFn, processAll, TestEnvInfo } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('popular proxy views', () => {
+  let network: TestNetwork
   let agent: AtpAgent
-  let testEnv: TestEnvInfo
-  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
@@ -23,11 +22,10 @@ describe('popular proxy views', () => {
   }
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_popular',
     })
-    close = testEnv.close
-    agent = new AtpAgent({ service: testEnv.pds.url })
+    agent = network.pds.getClient()
     sc = new SeedClient(agent)
     await basicSeed(sc)
     await sc.createAccount('eve', {
@@ -42,7 +40,7 @@ describe('popular proxy views', () => {
       handle: 'frank.test',
       password: 'frank-pass',
     })
-    await processAll(testEnv)
+    await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
@@ -52,7 +50,7 @@ describe('popular proxy views', () => {
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('returns well liked posts', async () => {
@@ -80,7 +78,7 @@ describe('popular proxy views', () => {
     await sc.like(eve, three.ref)
     await sc.like(frank, three.ref)
 
-    await processAll(testEnv)
+    await network.processAll()
 
     const res = await agent.api.app.bsky.unspecced.getPopular(
       {},
