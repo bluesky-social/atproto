@@ -16,7 +16,13 @@ const {
   S3BlobStore,
   CloudfrontInvalidator,
 } = require('@atproto/aws')
-const { Database, ServerConfig, PDS, makeAlgos } = require('@atproto/pds')
+const {
+  Database,
+  ServerConfig,
+  PDS,
+  ViewMaintainer,
+  makeAlgos,
+} = require('@atproto/pds')
 const { Secp256k1Keypair } = require('@atproto/crypto')
 
 const main = async () => {
@@ -25,9 +31,9 @@ const main = async () => {
   const migrateDb = Database.postgres({
     url: pgUrl(env.dbMigrateCreds),
     schema: env.dbSchema,
+    poolSize: 1,
   })
   await migrateDb.migrateToLatestOrThrow()
-  await migrateDb.close()
   // Use lower-credentialed user to run the app
   const db = Database.postgres({
     url: pgUrl(env.dbCreds),
@@ -73,10 +79,15 @@ const main = async () => {
     imgInvalidator: cfInvalidator,
     algos,
   })
+  const viewMaintainer = new ViewMaintainer(migrateDb)
+  const viewMaintainerRunning = viewMaintainer.run()
   await pds.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
     await pds.destroy()
+    viewMaintainer.destroy()
+    await viewMaintainerRunning
+    await migrateDb.close()
   })
 }
 
