@@ -4,6 +4,7 @@ import AppContext from '../../../../context'
 import { adminVerifier } from '../../../auth'
 import { paginate } from '../../../../db/pagination'
 import { ListKeyset } from '../../../../services/actor'
+import { ensureValidDid } from '@atproto/identifier'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
@@ -16,9 +17,17 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('The invitedBy parameter is unsupported')
       }
 
+      let searchField: 'did' | 'handle'
+      try {
+        ensureValidDid(term)
+        searchField = 'did'
+      } catch (err) {
+        searchField = 'handle'
+      }
+
       const { ref } = db.db.dynamic
       const keyset = new ListKeyset(ref('indexedAt'), ref('handle'))
-      let resultQb = services.actor(db).searchQb(term).selectAll()
+      let resultQb = services.actor(db).searchQb(searchField, term).selectAll()
       resultQb = paginate(resultQb, { keyset, cursor, limit })
 
       const results = await resultQb.execute()
