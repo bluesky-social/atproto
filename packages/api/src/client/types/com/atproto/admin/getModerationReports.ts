@@ -10,6 +10,7 @@ import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
   subject?: string
+  ignoreSubjects?: string[]
   resolved?: boolean
   actionType?:
     | 'com.atproto.admin.defs#takedown'

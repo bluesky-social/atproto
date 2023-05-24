@@ -856,6 +856,13 @@ export const schemaDict = {
             subject: {
               type: 'string',
             },
+            ignoreSubjects: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
             resolved: {
               type: 'boolean',
             },
