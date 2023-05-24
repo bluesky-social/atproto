@@ -195,6 +195,17 @@ describe('feed generation', () => {
     })
   })
 
+  describe('getPopularFeedGenerators', () => {
+    it('gets popular feed generators', async () => {
+      const resEven =
+        await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+          {},
+          { headers: sc.getHeaders(sc.dids.bob) },
+        )
+      expect(resEven.data.feeds.map((f) => f.likeCount)).toEqual([2, 0, 0, 0])
+    })
+  })
+
   describe('getFeed', () => {
     it('resolves basic feed contents.', async () => {
       const feed = await agent.api.app.bsky.feed.getFeed(

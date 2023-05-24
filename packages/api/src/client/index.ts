@@ -121,6 +121,7 @@ import * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
+import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
@@ -236,6 +237,7 @@ export * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 export * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
+export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 
 export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
@@ -2014,6 +2016,22 @@ export class UnspeccedNS {
       .call('app.bsky.unspecced.getPopular', params, undefined, opts)
       .catch((e) => {
         throw AppBskyUnspeccedGetPopular.toKnownErr(e)
+      })
+  }
+
+  getPopularFeedGenerators(
+    params?: AppBskyUnspeccedGetPopularFeedGenerators.QueryParams,
+    opts?: AppBskyUnspeccedGetPopularFeedGenerators.CallOptions,
+  ): Promise<AppBskyUnspeccedGetPopularFeedGenerators.Response> {
+    return this._service.xrpc
+      .call(
+        'app.bsky.unspecced.getPopularFeedGenerators',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw AppBskyUnspeccedGetPopularFeedGenerators.toKnownErr(e)
       })
   }
 }
