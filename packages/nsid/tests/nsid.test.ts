@@ -59,18 +59,18 @@ describe('NSID validation', () => {
     const tooLongNsid = 'com.' + 'o'.repeat(64) + '.foo'
     expectInvalid(tooLongNsid)
 
-    const longEnd = 'com.example.' + 'o'.repeat(128)
+    const longEnd = 'com.example.' + 'o'.repeat(63)
     expectValid(longEnd)
 
-    const tooLongEnd = 'com.example.' + 'o'.repeat(129)
+    const tooLongEnd = 'com.example.' + 'o'.repeat(64)
     expectInvalid(tooLongEnd)
 
-    const longOverall = 'com.' + 'middle.'.repeat(50) + 'foo'
-    expect(longOverall.length).toBe(357)
+    const longOverall = 'com.' + 'middle.'.repeat(40) + 'foo'
+    expect(longOverall.length).toBe(287)
     expectValid(longOverall)
 
-    const tooLongOverall = 'com.' + 'middle.'.repeat(100) + 'foo'
-    expect(tooLongOverall.length).toBe(707)
+    const tooLongOverall = 'com.' + 'middle.'.repeat(50) + 'foo'
+    expect(tooLongOverall.length).toBe(357)
     expectInvalid(tooLongOverall)
 
     expectValid('a.b.c')

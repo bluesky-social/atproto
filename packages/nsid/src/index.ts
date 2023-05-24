@@ -69,8 +69,8 @@ export const ensureValidNsid = (nsid: string): void => {
     )
   }
 
-  if (toCheck.length > 253 + 1 + 128) {
-    throw new InvalidNsidError('NSID is too long (382 chars max)')
+  if (toCheck.length > 253 + 1 + 63) {
+    throw new InvalidNsidError('NSID is too long (317 chars max)')
   }
   const labels = toCheck.split('.')
   if (split.length < 3) {
@@ -81,8 +81,8 @@ export const ensureValidNsid = (nsid: string): void => {
     if (l.length < 1) {
       throw new InvalidNsidError('NSID parts can not be empty')
     }
-    if (l.length > 63 && i + 1 < labels.length) {
-      throw new InvalidNsidError('NSID domain part too long (max 63 chars)')
+    if (l.length > 63) {
+      throw new InvalidNsidError('NSID part too long (max 63 chars)')
     }
     if (l.length > 128 && i + 1 == labels.length) {
       throw new InvalidNsidError('NSID name part too long (max 128 chars)')
@@ -107,8 +107,8 @@ export const ensureValidNsidRegex = (nsid: string): void => {
   ) {
     throw new InvalidNsidError("NSID didn't validate via regex")
   }
-  if (nsid.length > 253 + 1 + 128) {
-    throw new InvalidNsidError('NSID is too long (382 chars max)')
+  if (nsid.length > 253 + 1 + 63) {
+    throw new InvalidNsidError('NSID is too long (317 chars max)')
   }
 }
 
