@@ -13,6 +13,7 @@ describe('algo whats-hot', () => {
   // account dids, for convenience
   let alice: string
   let bob: string
+  let carol: string
 
   const feedPublisherDid = 'did:example:feed-publisher'
   const feedUri = AtUri.make(
@@ -36,6 +37,7 @@ describe('algo whats-hot', () => {
 
     alice = sc.dids.alice
     bob = sc.dids.bob
+    carol = sc.dids.carol
     await server.ctx.backgroundQueue.processAll()
   })
 
@@ -49,24 +51,30 @@ describe('algo whats-hot', () => {
       'tests/image/fixtures/key-landscape-small.jpg',
       'image/jpeg',
     )
-    const one = await sc.post(alice, 'first post', undefined, [img])
-    const two = await sc.post(bob, 'bobby boi')
-    const three = await sc.post(bob, 'another one')
+    const one = await sc.post(carol, 'carol is in the chat')
+    const two = await sc.post(carol, "it's me, carol")
+    const three = await sc.post(alice, 'first post', undefined, [img])
+    const four = await sc.post(bob, 'bobby boi')
+    const five = await sc.post(bob, 'another one')
 
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 20; i++) {
       const name = `user${i}`
       await sc.createAccount(name, {
         handle: `user${i}.test`,
         email: `user${i}@test.com`,
         password: 'password',
       })
+      await sc.like(sc.dids[name], three.ref) // will be down-regulated by time
       if (i > 3) {
         await sc.like(sc.dids[name], one.ref)
       }
       if (i > 5) {
         await sc.like(sc.dids[name], two.ref)
       }
-      await sc.like(sc.dids[name], three.ref)
+      if (i > 7) {
+        await sc.like(sc.dids[name], four.ref)
+        await sc.like(sc.dids[name], five.ref)
+      }
     }
     await server.ctx.backgroundQueue.processAll()
 
