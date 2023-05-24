@@ -47,6 +47,11 @@ describe('feed generation', () => {
     await network.close()
   })
 
+  it('describes the feed generator', async () => {
+    const res = await agent.api.app.bsky.feed.describeFeedGenerator()
+    expect(res.data.did).toBe(network.pds.ctx.cfg.feedGenDid)
+  })
+
   it('feed gen records can be created.', async () => {
     const all = await agent.api.app.bsky.feed.generator.create(
       { repo: alice, rkey: 'all' },
