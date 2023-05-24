@@ -13,6 +13,7 @@ import {
 } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 import { SkeletonFeedPost } from '../src/lexicon/types/app/bsky/feed/defs'
 import { RecordRef } from './seeds/client'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('feed generation', () => {
   let network: TestNetworkNoAppView
@@ -63,12 +64,13 @@ describe('feed generation', () => {
       },
       sc.getHeaders(alice),
     )
+    // updated in next test
     const even = await agent.api.app.bsky.feed.generator.create(
       { repo: alice, rkey: 'even' },
       {
         did: gen.did,
-        displayName: 'Even',
-        description: 'Provides even-indexed feed candidates',
+        displayName: 'Temp',
+        description: 'Temp',
         createdAt: new Date().toISOString(),
       },
       sc.getHeaders(alice),
@@ -88,6 +90,23 @@ describe('feed generation', () => {
     feedUriAllRef = new RecordRef(all.uri, all.cid)
     feedUriEven = even.uri
     feedUriOdd = odd.uri
+  })
+
+  it('feed gen records can be updated', async () => {
+    await agent.api.com.atproto.repo.putRecord(
+      {
+        repo: alice,
+        collection: ids.AppBskyFeedGenerator,
+        rkey: 'even',
+        record: {
+          did: gen.did,
+          displayName: 'Even',
+          description: 'Provides even-indexed feed candidates',
+          createdAt: new Date().toISOString(),
+        },
+      },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
   })
 
   it('getActorFeeds fetches feed generators by actor.', async () => {
