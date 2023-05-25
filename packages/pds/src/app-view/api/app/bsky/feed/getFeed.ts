@@ -2,7 +2,10 @@ import {
   InvalidRequestError,
   UpstreamFailureError,
   createServiceAuthHeaders,
+  ServerTimer,
+  serverTimingHeader,
 } from '@atproto/xrpc-server'
+import { ResponseType, XRPCError } from '@atproto/xrpc'
 import {
   DidDocument,
   PoorlyFormattedDidDocumentError,
@@ -15,7 +18,6 @@ import { OutputSchema as SkeletonOutput } from '../../../../../lexicon/types/app
 import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
-import { ResponseType, XRPCError } from '@atproto/xrpc'
 import { AlgoResponse } from '../../../../../feed-gen/types'
 
 export default function (server: Server, ctx: AppContext) {
@@ -24,22 +26,28 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { feed } = params
       const requester = auth.credentials.did
-
+      const feedService = ctx.services.appView.feed(ctx.db)
       const localAlgo = ctx.algos[feed]
 
+      const timerSkele = new ServerTimer('skele').start()
       const { feedItems, ...rest } =
         localAlgo !== undefined
           ? await localAlgo(ctx, params, requester)
           : await skeletonFromFeedGen(ctx, params, requester)
+      timerSkele.stop()
 
-      const feedService = ctx.services.appView.feed(ctx.db)
+      const timerHydr = new ServerTimer('hydr').start()
       const hydrated = await feedService.hydrateFeed(feedItems, requester)
+      timerHydr.stop()
 
       return {
         encoding: 'application/json',
         body: {
           ...rest,
           feed: hydrated,
+        },
+        headers: {
+          'server-timing': serverTimingHeader([timerSkele, timerHydr]),
         },
       }
     },
