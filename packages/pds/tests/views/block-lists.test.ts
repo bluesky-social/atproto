@@ -73,7 +73,6 @@ describe('pds views with blocking from block lists', () => {
       {
         subject: sc.dids.bob,
         list: list.uri,
-        reason: 'because',
         createdAt: new Date().toISOString(),
       },
       sc.getHeaders(alice),
@@ -83,7 +82,6 @@ describe('pds views with blocking from block lists', () => {
       {
         subject: sc.dids.carol,
         list: list.uri,
-        reason: 'idk',
         createdAt: new Date().toISOString(),
       },
       sc.getHeaders(alice),
