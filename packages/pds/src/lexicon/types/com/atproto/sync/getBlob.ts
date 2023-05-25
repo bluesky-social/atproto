@@ -22,6 +22,7 @@ export type HandlerInput = undefined
 export interface HandlerSuccess {
   encoding: '*/*'
   body: Uint8Array | stream.Readable
+  headers?: Record<string, string>
 }
 
 export interface HandlerError {

@@ -446,6 +446,10 @@ function genServerXrpcMethod(
         type: 'Uint8Array | stream.Readable',
       })
     }
+    handlerSuccess.addProperty({
+      name: 'headers?',
+      type: 'Record<string, string>',
+    })
   }
 
   // export interface HandlerError {...}
