@@ -82,7 +82,7 @@ export class HandleResolver {
     try {
       const res = await fetch(url, { signal })
       const data = await res.json()
-      return data.did
+      return typeof data?.did === 'string' ? data.did : undefined
     } catch (err) {
       return undefined
     }
