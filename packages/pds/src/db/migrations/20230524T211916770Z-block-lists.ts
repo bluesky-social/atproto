@@ -17,16 +17,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .on('list_block')
     .column('subjectUri')
     .execute()
-
-  // missed index in `actor-block-init` migration
-  await db.schema
-    .createIndex('actor_block_creator_idx')
-    .on('actor_block')
-    .column('creator')
-    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropIndex('actor_block_creator_idx').execute()
   await db.schema.dropTable('list_block').execute()
 }
