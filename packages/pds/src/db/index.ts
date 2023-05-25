@@ -21,6 +21,7 @@ import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
 import { dbLogger as log } from '../logger'
+import { wait } from '@atproto/common'
 
 export class Database {
   txEvt = new EventEmitter() as TxnEmitter
@@ -179,7 +180,13 @@ export class Database {
       .transaction()
       .execute(async (txn) => {
         const dbTxn = new Database(txn, this.cfg, this.channels)
-        const txRes = await fn(dbTxn).finally(() => leakyTxPlugin.endTx())
+        const txRes = await fn(dbTxn)
+          .catch(async (err) => {
+            leakyTxPlugin.endTx()
+            await wait(10)
+            throw err
+          })
+          .finally(() => leakyTxPlugin.endTx())
         txMsgs = dbTxn.txChannelMsgs
         return { txRes, dbTxn }
       })
