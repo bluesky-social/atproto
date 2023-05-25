@@ -298,7 +298,10 @@ export class RepoService {
     }
 
     const recordCountBefore = await this.countRecordBlocks(did)
-    await storage.applyRebase(rebaseData)
+    await Promise.all([
+      storage.applyRebase(rebaseData),
+      this.blobs.processRebaseBlobs(did, rebaseData.commit),
+    ])
     const recordCountAfter = await this.countRecordBlocks(did)
     // This is purely a dummy check on a very sensitive operation
     if (recordCountBefore !== recordCountAfter) {
@@ -308,6 +311,11 @@ export class RepoService {
     }
 
     await this.afterRebaseProcessing(did, rebaseData)
+  }
+
+  async afterRebaseProcessing(did: string, rebaseData: RebaseData) {
+    const seqEvt = await sequencer.formatSeqRebase(did, rebaseData)
+    await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
   // used for integrity check
@@ -323,14 +331,6 @@ export class RepoService {
       .select(countAll.as('count'))
       .executeTakeFirst()
     return res?.count ?? 0
-  }
-
-  async afterRebaseProcessing(did: string, rebaseData: RebaseData) {
-    const [seqEvt] = await Promise.all([
-      sequencer.formatSeqRebase(did, rebaseData),
-      this.blobs.processRebaseBlobs(did, rebaseData.commit),
-    ])
-    await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
   async deleteRepo(did: string) {
