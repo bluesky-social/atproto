@@ -6,6 +6,7 @@ import AppContext from '../../context'
 import {
   FeedViewPost,
   ThreadViewPost,
+  isPostView,
   isReasonRepost,
   isThreadViewPost,
 } from '../../lexicon/types/app/bsky/feed/defs'
@@ -478,8 +479,12 @@ const didsForFeedViewPosts = (feed: FeedViewPost[]): string[] => {
   for (const item of feed) {
     dids.push(item.post.author.did)
     if (item.reply) {
-      dids.push(item.reply.parent.author.did)
-      dids.push(item.reply.root.author.did)
+      if (isPostView(item.reply.parent)) {
+        dids.push(item.reply.parent.author.did)
+      }
+      if (isPostView(item.reply.root)) {
+        dids.push(item.reply.root.author.did)
+      }
     }
     if (item.reason && isReasonRepost(item.reason)) {
       dids.push(item.reason.by.did)
@@ -499,13 +504,16 @@ const processFeedViewPostMutes = (
     item.post.author.viewer ??= {}
     item.post.author.viewer.muted = false
     if (item.reply) {
-      item.reply.parent.author.viewer ??= {}
-      item.reply.parent.author.viewer.muted =
-        mutes[item.reply.parent.author.did] ?? false
-
-      item.reply.root.author.viewer ??= {}
-      item.reply.root.author.viewer.muted =
-        mutes[item.reply.root.author.did] ?? false
+      if (isPostView(item.reply.parent)) {
+        item.reply.parent.author.viewer ??= {}
+        item.reply.parent.author.viewer.muted =
+          mutes[item.reply.parent.author.did] ?? false
+      }
+      if (isPostView(item.reply.root)) {
+        item.reply.root.author.viewer ??= {}
+        item.reply.root.author.viewer.muted =
+          mutes[item.reply.root.author.did] ?? false
+      }
     }
     if (item.reason && isReasonRepost(item.reason)) {
       item.reason.by.viewer ??= {}

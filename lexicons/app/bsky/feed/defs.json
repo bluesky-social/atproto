@@ -41,7 +41,7 @@
       "type": "object",
       "required": ["post"],
       "properties": {
-        "post": {"type": "ref", "ref": "app.bsky.feed.defs#postView"},
+        "post": {"type": "ref", "ref": "#postView"},
         "reply": {"type": "ref", "ref": "#replyRef"},
         "reason": {"type": "union", "refs": ["#reasonRepost"]}
       }
@@ -50,8 +50,8 @@
       "type": "object",
       "required": ["root", "parent"],
       "properties": {
-        "root": {"type": "ref", "ref": "app.bsky.feed.defs#postView"},
-        "parent": {"type": "ref", "ref": "app.bsky.feed.defs#postView"}
+        "root": {"type": "union", "refs": ["#postView", "#notFoundPost", "#blockedPost"]},
+        "parent": {"type": "union", "refs": ["#postView", "#notFoundPost", "#blockedPost"]}
       }
     },
     "reasonRepost": {
@@ -88,6 +88,47 @@
       "properties": {
         "uri": {"type": "string", "format": "at-uri"},
         "blocked": {"type": "boolean", "const": true}
+      }
+    },
+    "generatorView": {
+      "type": "object",
+      "required": ["uri", "cid", "creator", "displayName", "indexedAt"],
+      "properties": {
+        "uri": {"type": "string", "format": "at-uri"},
+        "cid": {"type": "string", "format": "cid"},
+        "did": {"type": "string", "format": "did"},
+        "creator": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
+        "displayName": {"type": "string"},
+        "description": {"type": "string", "maxGraphemes": 300, "maxLength": 3000},
+        "descriptionFacets": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
+        },
+        "avatar": {"type": "string"},
+        "likeCount": {"type": "integer", "minimum": 0 },
+        "viewer": {"type": "ref", "ref": "#generatorViewerState"},
+        "indexedAt": {"type": "string", "format": "datetime"}
+      }
+    },
+    "generatorViewerState": {
+      "type": "object",
+      "properties": {
+        "like": {"type": "string", "format": "at-uri"}
+      }
+    },
+    "skeletonFeedPost": {
+      "type": "object",
+      "required": ["post"],
+      "properties": {
+        "post": {"type": "string", "format": "at-uri"},
+        "reason": {"type": "union", "refs": ["#skeletonReasonRepost"]}
+      }
+    },
+    "skeletonReasonRepost": {
+      "type": "object",
+      "required": ["repost"],
+      "properties": {
+        "repost": {"type": "string", "format": "at-uri"}
       }
     }
   }

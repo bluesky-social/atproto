@@ -1,4 +1,4 @@
-import { parseIntWithFallback, DAY } from '@atproto/common'
+import { parseIntWithFallback, DAY, HOUR } from '@atproto/common'
 
 export interface ServerConfigValues {
   debugMode?: boolean
@@ -18,6 +18,8 @@ export interface ServerConfigValues {
   jwtSecret: string
 
   didPlcUrl: string
+  didCacheStaleTTL: number
+  didCacheMaxTTL: number
 
   serverDid: string
   recoveryKey: string
@@ -45,6 +47,8 @@ export interface ServerConfigValues {
   hiveApiKey?: string
   labelerDid: string
   labelerKeywords: Record<string, string>
+
+  feedGenDid?: string
 
   maxSubscriptionBuffer: number
   repoBackfillLimitMs: number
@@ -82,6 +86,14 @@ export class ServerConfig {
     const jwtSecret = process.env.JWT_SECRET || 'jwt_secret'
 
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
+    const didCacheStaleTTL = parseIntWithFallback(
+      process.env.DID_CACHE_STALE_TTL,
+      HOUR,
+    )
+    const didCacheMaxTTL = parseIntWithFallback(
+      process.env.DID_CACHE_MAX_TTL,
+      DAY,
+    )
 
     const serverDid = overrides?.serverDid || process.env.SERVER_DID
     if (typeof serverDid !== 'string') {
@@ -133,6 +145,8 @@ export class ServerConfig {
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const labelerKeywords = {}
 
+    const feedGenDid = process.env.FEED_GEN_DID
+
     const dbPostgresUrl = process.env.DB_POSTGRES_URL
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
 
@@ -169,6 +183,8 @@ export class ServerConfig {
       jwtSecret,
       recoveryKey,
       didPlcUrl,
+      didCacheStaleTTL,
+      didCacheMaxTTL,
       serverDid,
       adminPassword,
       moderatorPassword,
@@ -188,6 +204,7 @@ export class ServerConfig {
       hiveApiKey,
       labelerDid,
       labelerKeywords,
+      feedGenDid,
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
       appViewRepoProvider,
@@ -257,6 +274,14 @@ export class ServerConfig {
 
   get didPlcUrl() {
     return this.cfg.didPlcUrl
+  }
+
+  get didCacheStaleTTL() {
+    return this.cfg.didCacheStaleTTL
+  }
+
+  get didCacheMaxTTL() {
+    return this.cfg.didCacheMaxTTL
   }
 
   get serverDid() {
@@ -353,6 +378,10 @@ export class ServerConfig {
 
   get labelerKeywords() {
     return this.cfg.labelerKeywords
+  }
+
+  get feedGenDid() {
+    return this.cfg.feedGenDid
   }
 
   get maxSubscriptionBuffer() {

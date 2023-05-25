@@ -1,5 +1,6 @@
 import { CID } from 'multiformats/cid'
-import { Lexicons } from '../src/index'
+import { lexiconDoc, Lexicons } from '../src/index'
+import { object } from '../src/validators/complex'
 import LexiconDocs from './_scaffolds/lexicons'
 
 describe('Lexicons collection', () => {
@@ -83,6 +84,22 @@ describe('General validation', () => {
       if (res.success) throw new Error('Asserted')
       expect(res.error?.message).toBe('Object must have the property "object"')
     }
+  })
+  it('fails when a required property is missing', () => {
+    const schema = {
+      lexicon: 1,
+      id: 'com.example.kitchenSink',
+      defs: {
+        test: {
+          type: 'object',
+          required: ['foo'],
+          properties: {},
+        },
+      },
+    }
+    expect(() => {
+      lexiconDoc.parse(schema)
+    }).toThrow('Required field \\"foo\\" not defined')
   })
 })
 

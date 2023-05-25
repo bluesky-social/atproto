@@ -5,6 +5,7 @@ import { Secp256k1Keypair } from '@atproto/crypto'
 import { MessageDispatcher } from '@atproto/pds/src/event-stream/message-queue'
 import { AtpAgent } from '@atproto/api'
 import { Client as PlcClient } from '@did-plc/lib'
+import { DAY, HOUR } from '@atproto/common-web'
 import { PdsConfig } from './types'
 
 export class TestPds {
@@ -43,6 +44,8 @@ export class TestPds {
       inviteRequired: false,
       userInviteInterval: null,
       didPlcUrl: cfg.plcUrl,
+      didCacheMaxTTL: DAY,
+      didCacheStaleTTL: HOUR,
       jwtSecret: 'jwt-secret',
       availableUserDomains: ['.test'],
       appUrlPasswordReset: 'app://forgot-password',
@@ -56,6 +59,7 @@ export class TestPds {
       repoBackfillLimitMs: 1000 * 60 * 60, // 1hr
       labelerDid: 'did:example:labeler',
       labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
+      feedGenDid: 'did:example:feedGen',
       ...cfg,
     })
 
@@ -80,6 +84,7 @@ export class TestPds {
       plcRotationKey,
       config,
     })
+
     await server.start()
     return new TestPds(url, port, server)
   }

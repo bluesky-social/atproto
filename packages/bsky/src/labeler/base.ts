@@ -24,7 +24,6 @@ export abstract class Labeler {
   processRecord(uri: AtUri, obj: unknown) {
     this.processingQueue?.add(() =>
       this.createAndStoreLabels(uri, obj).catch((err) => {
-        console.log(err)
         log.error(
           { err, uri: uri.toString(), record: obj },
           'failed to label record',

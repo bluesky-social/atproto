@@ -1,5 +1,5 @@
 import { Server } from '../../../../../lexicon'
-import { FeedKeyset, composeFeed } from '../util/feed'
+import { FeedKeyset } from '../util/feed'
 import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
@@ -33,7 +33,6 @@ export default function (server: Server, ctx: AppContext) {
       const accountService = ctx.services.account(ctx.db)
       const feedService = ctx.services.appView.feed(ctx.db)
       const graphService = ctx.services.appView.graph(ctx.db)
-      const labelService = ctx.services.appView.label(ctx.db)
 
       const userLookupCol = actor.startsWith('did:')
         ? 'did_handle.did'
@@ -69,12 +68,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const feedItems: FeedRow[] = await feedItemsQb.execute()
-      const feed = await composeFeed(
-        feedService,
-        labelService,
-        feedItems,
-        requester,
-      )
+      const feed = await feedService.hydrateFeed(feedItems, requester)
 
       return {
         encoding: 'application/json',

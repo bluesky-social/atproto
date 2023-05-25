@@ -26,6 +26,7 @@ export class TestBsky {
       pds: `http://localhost:${port}`,
       signer: serviceKeypair,
     })
+
     const config = new bsky.ServerConfig({
       version: '0.0.0',
       port,
@@ -64,6 +65,7 @@ export class TestBsky {
 
     const server = bsky.BskyAppView.create({ db, config })
     await server.start()
+
     return new TestBsky(url, port, server)
   }
 

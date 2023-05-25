@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - custom-feeds
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}

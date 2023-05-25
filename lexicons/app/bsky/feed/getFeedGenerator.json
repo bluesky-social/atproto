@@ -1,0 +1,29 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.getFeedGenerator",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get information about a specific feed offered by a feed generator, such as its online status",
+      "parameters": {
+        "type": "params",
+        "required": ["feed"],
+        "properties": {
+          "feed": {"type": "string", "format": "at-uri"}
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["view", "isOnline", "isValid"],
+          "properties": {
+            "view": {"type": "ref", "ref": "app.bsky.feed.defs#generatorView"},
+            "isOnline": {"type": "boolean"},
+            "isValid": {"type": "boolean"}
+          }
+        }
+      }
+    }
+  }
+}

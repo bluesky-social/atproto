@@ -100,7 +100,9 @@ export const schemaDict = {
             type: 'union',
             refs: [
               'lex:com.atproto.admin.defs#repoView',
+              'lex:com.atproto.admin.defs#repoViewNotFound',
               'lex:com.atproto.admin.defs#recordView',
+              'lex:com.atproto.admin.defs#recordViewNotFound',
             ],
           },
           subjectBlobs: {
@@ -274,7 +276,9 @@ export const schemaDict = {
             type: 'union',
             refs: [
               'lex:com.atproto.admin.defs#repoView',
+              'lex:com.atproto.admin.defs#repoViewNotFound',
               'lex:com.atproto.admin.defs#recordView',
+              'lex:com.atproto.admin.defs#recordViewNotFound',
             ],
           },
           reportedBy: {
@@ -396,6 +400,16 @@ export const schemaDict = {
           },
         },
       },
+      repoViewNotFound: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
       repoRef: {
         type: 'object',
         required: ['did'],
@@ -498,6 +512,16 @@ export const schemaDict = {
           repo: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#repoView',
+          },
+        },
+      },
+      recordViewNotFound: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -905,6 +929,11 @@ export const schemaDict = {
             ref: 'lex:com.atproto.admin.defs#recordViewDetail',
           },
         },
+        errors: [
+          {
+            name: 'RecordNotFound',
+          },
+        ],
       },
     },
   },
@@ -932,6 +961,11 @@ export const schemaDict = {
             ref: 'lex:com.atproto.admin.defs#repoViewDetail',
           },
         },
+        errors: [
+          {
+            name: 'RepoNotFound',
+          },
+        ],
       },
     },
   },
@@ -1577,7 +1611,7 @@ export const schemaDict = {
       create: {
         type: 'object',
         description: 'Create a new record.',
-        required: ['action', 'collection', 'value'],
+        required: ['collection', 'value'],
         properties: {
           collection: {
             type: 'string',
@@ -1585,6 +1619,7 @@ export const schemaDict = {
           },
           rkey: {
             type: 'string',
+            maxLength: 15,
           },
           value: {
             type: 'unknown',
@@ -1594,7 +1629,7 @@ export const schemaDict = {
       update: {
         type: 'object',
         description: 'Update an existing record.',
-        required: ['action', 'collection', 'rkey', 'value'],
+        required: ['collection', 'rkey', 'value'],
         properties: {
           collection: {
             type: 'string',
@@ -1611,7 +1646,7 @@ export const schemaDict = {
       delete: {
         type: 'object',
         description: 'Delete an existing record.',
-        required: ['action', 'collection', 'rkey'],
+        required: ['collection', 'rkey'],
         properties: {
           collection: {
             type: 'string',
@@ -1650,6 +1685,7 @@ export const schemaDict = {
               rkey: {
                 type: 'string',
                 description: 'The key of the record.',
+                maxLength: 15,
               },
               validate: {
                 type: 'boolean',
@@ -1971,6 +2007,7 @@ export const schemaDict = {
               rkey: {
                 type: 'string',
                 description: 'The key of the record.',
+                maxLength: 15,
               },
               validate: {
                 type: 'boolean',
@@ -3535,6 +3572,7 @@ export const schemaDict = {
           refs: [
             'lex:app.bsky.actor.defs#adultContentPref',
             'lex:app.bsky.actor.defs#contentLabelPref',
+            'lex:app.bsky.actor.defs#savedFeedsPref',
           ],
         },
       },
@@ -3558,6 +3596,26 @@ export const schemaDict = {
           visibility: {
             type: 'string',
             knownValues: ['show', 'warn', 'hide'],
+          },
+        },
+      },
+      savedFeedsPref: {
+        type: 'object',
+        required: ['pinned', 'saved'],
+        properties: {
+          pinned: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'at-uri',
+            },
+          },
+          saved: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'at-uri',
+            },
           },
         },
       },
@@ -4001,6 +4059,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.record#viewRecord',
               'lex:app.bsky.embed.record#viewNotFound',
               'lex:app.bsky.embed.record#viewBlocked',
+              'lex:app.bsky.feed.defs#generatorView',
             ],
           },
         },
@@ -4204,12 +4263,20 @@ export const schemaDict = {
         required: ['root', 'parent'],
         properties: {
           root: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#postView',
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.defs#postView',
+              'lex:app.bsky.feed.defs#notFoundPost',
+              'lex:app.bsky.feed.defs#blockedPost',
+            ],
           },
           parent: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#postView',
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.defs#postView',
+              'lex:app.bsky.feed.defs#notFoundPost',
+              'lex:app.bsky.feed.defs#blockedPost',
+            ],
           },
         },
       },
@@ -4284,6 +4351,242 @@ export const schemaDict = {
           },
         },
       },
+      generatorView: {
+        type: 'object',
+        required: ['uri', 'cid', 'creator', 'displayName', 'indexedAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          creator: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          displayName: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
+          },
+          descriptionFacets: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
+          avatar: {
+            type: 'string',
+          },
+          likeCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#generatorViewerState',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      generatorViewerState: {
+        type: 'object',
+        properties: {
+          like: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+      skeletonFeedPost: {
+        type: 'object',
+        required: ['post'],
+        properties: {
+          post: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          reason: {
+            type: 'union',
+            refs: ['lex:app.bsky.feed.defs#skeletonReasonRepost'],
+          },
+        },
+      },
+      skeletonReasonRepost: {
+        type: 'object',
+        required: ['repost'],
+        properties: {
+          repost: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedDescribeFeedGenerator: {
+    lexicon: 1,
+    id: 'app.bsky.feed.describeFeedGenerator',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns information about a given feed generator including TOS & offered feed URIs',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'feeds'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              feeds: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.describeFeedGenerator#feed',
+                },
+              },
+              links: {
+                type: 'ref',
+                ref: 'lex:app.bsky.feed.describeFeedGenerator#links',
+              },
+            },
+          },
+        },
+      },
+      feed: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+      links: {
+        type: 'object',
+        properties: {
+          privacyPolicy: {
+            type: 'string',
+          },
+          termsOfService: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedGenerator: {
+    lexicon: 1,
+    id: 'app.bsky.feed.generator',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A declaration of the existence of a feed generator',
+        key: 'any',
+        record: {
+          type: 'object',
+          required: ['did', 'displayName', 'createdAt'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+            },
+            displayName: {
+              type: 'string',
+              maxGraphemes: 24,
+              maxLength: 240,
+            },
+            description: {
+              type: 'string',
+              maxGraphemes: 300,
+              maxLength: 3000,
+            },
+            descriptionFacets: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.richtext.facet',
+              },
+            },
+            avatar: {
+              type: 'blob',
+              accept: ['image/png', 'image/jpeg'],
+              maxSize: 1000000,
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedGetActorFeeds: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getActorFeeds',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Retrieve a list of feeds created by a given actor',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feeds'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feeds: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#generatorView',
+                },
+              },
+            },
+          },
+        },
+      },
     },
   },
   AppBskyFeedGetAuthorFeed: {
@@ -4337,6 +4640,192 @@ export const schemaDict = {
           },
           {
             name: 'BlockedByActor',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyFeedGetFeed: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getFeed',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Compose and hydrate a feed from a user's selected feed generator",
+        parameters: {
+          type: 'params',
+          required: ['feed'],
+          properties: {
+            feed: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'UnknownFeed',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyFeedGetFeedGenerator: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getFeedGenerator',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get information about a specific feed offered by a feed generator, such as its online status',
+        parameters: {
+          type: 'params',
+          required: ['feed'],
+          properties: {
+            feed: {
+              type: 'string',
+              format: 'at-uri',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['view', 'isOnline', 'isValid'],
+            properties: {
+              view: {
+                type: 'ref',
+                ref: 'lex:app.bsky.feed.defs#generatorView',
+              },
+              isOnline: {
+                type: 'boolean',
+              },
+              isValid: {
+                type: 'boolean',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedGetFeedGenerators: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getFeedGenerators',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get information about a list of feed generators',
+        parameters: {
+          type: 'params',
+          required: ['feeds'],
+          properties: {
+            feeds: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feeds'],
+            properties: {
+              feeds: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#generatorView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedGetFeedSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getFeedSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'A skeleton of a feed provided by a feed generator',
+        parameters: {
+          type: 'params',
+          required: ['feed'],
+          properties: {
+            feed: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#skeletonFeedPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'UnknownFeed',
           },
         ],
       },
@@ -4788,7 +5277,7 @@ export const schemaDict = {
     defs: {
       listViewBasic: {
         type: 'object',
-        required: ['uri', 'creator', 'name', 'purpose'],
+        required: ['uri', 'name', 'purpose'],
         properties: {
           uri: {
             type: 'string',
@@ -5687,6 +6176,32 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetPopularFeedGenerators: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getPopularFeedGenerators',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'An unspecced view of globally popular feed generators',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feeds'],
+            properties: {
+              feeds: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#generatorView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -5774,7 +6289,14 @@ export const ids = {
   AppBskyEmbedRecord: 'app.bsky.embed.record',
   AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
   AppBskyFeedDefs: 'app.bsky.feed.defs',
+  AppBskyFeedDescribeFeedGenerator: 'app.bsky.feed.describeFeedGenerator',
+  AppBskyFeedGenerator: 'app.bsky.feed.generator',
+  AppBskyFeedGetActorFeeds: 'app.bsky.feed.getActorFeeds',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
+  AppBskyFeedGetFeed: 'app.bsky.feed.getFeed',
+  AppBskyFeedGetFeedGenerator: 'app.bsky.feed.getFeedGenerator',
+  AppBskyFeedGetFeedGenerators: 'app.bsky.feed.getFeedGenerators',
+  AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
@@ -5805,4 +6327,6 @@ export const ids = {
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedGetPopular: 'app.bsky.unspecced.getPopular',
+  AppBskyUnspeccedGetPopularFeedGenerators:
+    'app.bsky.unspecced.getPopularFeedGenerators',
 }
