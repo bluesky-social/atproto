@@ -21,7 +21,9 @@ export default function (server: Server, ctx: AppContext) {
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
 
       try {
-        await ctx.services.repo(ctx.db).rebaseRepo(repo, swapCommitCid)
+        await ctx.db.transaction((dbTxn) =>
+          ctx.services.repo(dbTxn).rebaseRepo(repo, swapCommitCid),
+        )
       } catch (err) {
         if (err instanceof BadCommitSwapError) {
           throw new InvalidRequestError(err.message, 'InvalidSwap')
