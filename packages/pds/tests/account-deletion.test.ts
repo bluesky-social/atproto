@@ -294,7 +294,7 @@ describe('account deletion', () => {
 
 type DbContents = {
   roots: RepoRoot[]
-  users: UserAccount[]
+  users: Selectable<UserAccount>[]
   userState: UserState[]
   blocks: IpldBlock[]
   seqs: Selectable<RepoSeq>[]
