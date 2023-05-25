@@ -234,32 +234,28 @@ export class RepoService {
     await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
-  // rebases are expensive & should be done rarely, we don't try to re-process on concurrent writes
   async rebaseRepo(did: string, swapCommit?: CID) {
-    this.db.assertTransaction()
+    this.db.assertNotTransaction()
+    const rebaseData = await this.formatRebase(did, swapCommit)
+
+    // rebases are expensive & should be done rarely, we don't try to re-process on concurrent writes
+    await this.serviceTx(async (srvcTx) =>
+      srvcTx.processRebase(did, rebaseData),
+    )
+  }
+
+  async formatRebase(did: string, swapCommit?: CID): Promise<RebaseData> {
     const storage = new SqlRepoStorage(this.db, did, new Date().toISOString())
-    const currRoot = await storage.lockHead()
+    const currRoot = await storage.getHead()
     if (!currRoot) {
-      throw new ConcurrentWriteError()
+      throw new InvalidRequestError(
+        `${did} is not a registered repo on this server`,
+      )
     }
     if (swapCommit && !currRoot.equals(swapCommit)) {
       throw new BadCommitSwapError(currRoot)
     }
-    const rebaseData = await this.formatRebase(did, currRoot)
-    const recordCountBefore = await this.countRecordBlocks(did)
-    await storage.applyRebase(rebaseData)
-    const recordCountAfter = await this.countRecordBlocks(did)
-    // This is purely a dummy check on a very sensitive operation
-    if (recordCountBefore !== recordCountAfter) {
-      throw new Error(
-        `Record blocks deleted during rebase. Rolling back: ${did}`,
-      )
-    }
 
-    await this.afterRebaseProcessing(did, rebaseData)
-  }
-
-  async formatRebase(did: string, currRoot: CID): Promise<RebaseData> {
     const records = await this.db.db
       .selectFrom('record')
       .where('did', '=', did)
@@ -291,6 +287,27 @@ export class RepoService {
       blocks: newBlocks,
       preservedCids: currCids.toList(),
     }
+  }
+
+  async processRebase(did: string, rebaseData: RebaseData) {
+    this.db.assertTransaction()
+    const storage = new SqlRepoStorage(this.db, did)
+    const lockedHead = await storage.lockHead()
+    if (!rebaseData.rebased.equals(lockedHead)) {
+      throw new ConcurrentWriteError()
+    }
+
+    const recordCountBefore = await this.countRecordBlocks(did)
+    await storage.applyRebase(rebaseData)
+    const recordCountAfter = await this.countRecordBlocks(did)
+    // This is purely a dummy check on a very sensitive operation
+    if (recordCountBefore !== recordCountAfter) {
+      throw new Error(
+        `Record blocks deleted during rebase. Rolling back: ${did}`,
+      )
+    }
+
+    await this.afterRebaseProcessing(did, rebaseData)
   }
 
   // used for integrity check
