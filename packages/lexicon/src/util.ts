@@ -10,6 +10,10 @@ import {
 import { z } from 'zod'
 
 export function toLexUri(str: string, baseUri?: string): string {
+  if (str.split('#').length > 2) {
+    throw new Error('Uri can only have one hash segment')
+  }
+
   if (str.startsWith('lex:')) {
     return str
   }

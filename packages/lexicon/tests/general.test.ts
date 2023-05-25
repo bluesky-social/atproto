@@ -101,6 +101,57 @@ describe('General validation', () => {
       lexiconDoc.parse(schema)
     }).toThrow('Required field \\"foo\\" not defined')
   })
+  it('fails lexicon parsing when uri is invalid', () => {
+    const schema = {
+      lexicon: 1,
+      id: 'com.example.invalidUri',
+      defs: {
+        main: {
+          type: 'object',
+          properties: {
+            test: { type: 'ref', ref: 'com.example.invalid#test#test' },
+          },
+        },
+      },
+    }
+
+    expect(() => {
+      new Lexicons([schema])
+    }).toThrow('Uri can only have one hash segment')
+  })
+  it('fails validation when ref uri has multiple hash segments', () => {
+    const schema = {
+      lexicon: 1,
+      id: 'com.example.invalidUri',
+      defs: {
+        main: {
+          type: 'object',
+          properties: {
+            test: { type: 'integer' },
+          },
+        },
+        object: {
+          type: 'object',
+          required: ['test'],
+          properties: {
+            test: {
+              type: 'union',
+              refs: ['com.example.invalidUri'],
+            },
+          },
+        },
+      },
+    }
+    const lexicons = new Lexicons([schema])
+    expect(() => {
+      lexicons.validate('com.example.invalidUri#object', {
+        test: {
+          $type: 'com.example.invalidUri#main#main',
+          test: 123,
+        },
+      })
+    }).toThrow('Uri can only have one hash segment')
+  })
   it('union handles both implicit and explicit #main', () => {
     const schemas = [
       {
