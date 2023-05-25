@@ -860,7 +860,6 @@ export const schemaDict = {
               type: 'array',
               items: {
                 type: 'string',
-                format: 'did',
               },
             },
             resolved: {
