@@ -27,7 +27,8 @@ export class GraphService {
           .whereRef('list_block.subjectUri', '=', ref('list.uri'))
           .select('list_block.uri')
           .as('viewerBlocked'),
-          this.db.db.selectFrom('list_mute')
+        this.db.db
+          .selectFrom('list_mute')
           .where('list_mute.mutedByDid', '=', requester)
           .whereRef('list_mute.listUri', '=', ref('list.uri'))
           .select('list_mute.listUri')
@@ -40,17 +41,12 @@ export class GraphService {
       .selectFrom('list_item')
       .innerJoin('did_handle as subject', 'subject.did', 'list_item.subjectDid')
       .selectAll('subject')
-<<<<<<< HEAD
-      .select([
-        'list_item.cid as cid',
-        'list_item.createdAt as createdAt',
-        'list_item.reason as reason',
-        'list_item.reasonFacets as reasonFacets',
-      ])
+      .select(['list_item.cid as cid', 'list_item.createdAt as createdAt'])
   }
 
   blockQb(requester: string, refs: NotEmptyArray<DbRef>) {
     return this.actorBlockQb(requester, refs).union(
+      // @TODO union all
       this.blockListQb(requester, refs),
     )
   }
@@ -68,32 +64,9 @@ export class GraphService {
         qb
           .where('actor_block.subjectDid', '=', requester)
           .whereRef('actor_block.creator', 'in', sql`(${subjectRefs})`),
-=======
-      .select(['list_item.cid as cid', 'list_item.createdAt as createdAt'])
-  }
-
-  blockQb(requester: string, refs: NotEmptyArray<DbRef>) {
-    const subjectRefs = sql.join(refs)
-    return this.db.db
-      .selectFrom('actor_block')
-      .where((outer) =>
-        outer
-          .where((qb) =>
-            qb
-              .where('actor_block.creator', '=', requester)
-              .whereRef('actor_block.subjectDid', 'in', sql`(${subjectRefs})`),
-          )
-          .orWhere((qb) =>
-            qb
-              .where('actor_block.subjectDid', '=', requester)
-              .whereRef('actor_block.creator', 'in', sql`(${subjectRefs})`),
-          ),
->>>>>>> origin/main
       )
-      .select(['creator', 'subjectDid'])
   }
 
-<<<<<<< HEAD
   blockListQb(requester: string, refs: NotEmptyArray<DbRef>) {
     const subjectRefs = sql.join(refs)
 
@@ -121,8 +94,6 @@ export class GraphService {
       ])
   }
 
-=======
->>>>>>> origin/main
   async getBlocks(
     requester: string,
     subjectHandleOrDid: string,
@@ -143,16 +114,11 @@ export class GraphService {
     }
 
     const accnts = [requester, subjectDid]
-<<<<<<< HEAD
     const actorBlockReq = this.db.db
-=======
-    const blockRes = await this.db.db
->>>>>>> origin/main
       .selectFrom('actor_block')
       .where('creator', 'in', accnts)
       .where('subjectDid', 'in', accnts)
       .selectAll()
-<<<<<<< HEAD
 
     const listBlockReq = this.db.db
       .selectFrom('list_block')
@@ -188,16 +154,6 @@ export class GraphService {
       listBlockRes.some(
         (row) => row.creator === subjectDid && row.subjectDid === requester,
       )
-=======
-      .execute()
-
-    const blocking = blockRes.some(
-      (row) => row.creator === requester && row.subjectDid === subjectDid,
-    )
-    const blockedBy = blockRes.some(
-      (row) => row.creator === subjectDid && row.subjectDid === requester,
-    )
->>>>>>> origin/main
 
     return {
       blocking,
@@ -220,20 +176,14 @@ export class GraphService {
         : undefined,
       indexedAt: list.indexedAt,
       viewer: {
-<<<<<<< HEAD
-        blocked: list.viewerBlocked ?? undefined,
-=======
         muted: !!list.viewerMuted,
->>>>>>> origin/main
+        blocked: list.viewerBlocked ?? undefined,
       },
     }
   }
 }
 
 type ListInfo = List & {
-<<<<<<< HEAD
   viewerBlocked: string | null
-=======
   viewerMuted: string | null
->>>>>>> origin/main
 }

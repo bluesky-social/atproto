@@ -1,11 +1,7 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import Database from '../../../db'
-<<<<<<< HEAD
-import { DbRef, notSoftDeletedClause } from '../../../db/util'
-=======
-import { countAll, notSoftDeletedClause } from '../../../db/util'
->>>>>>> origin/main
+import { DbRef, countAll, notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
 import { ids } from '../../../lexicon/lexicons'
 import { isView as isViewImages } from '../../../lexicon/types/app/bsky/embed/images'
@@ -186,16 +182,10 @@ export class FeedService {
             ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
             : undefined,
           viewer: {
-<<<<<<< HEAD
-            muted: !!cur?.requesterMuted,
-            blockedBy: !!cur?.requesterBlockedBy || !!cur?.blockedByList,
-            blocking: cur?.requesterBlocking || cur?.blockingList || undefined,
-=======
             muted: !!cur?.requesterMuted || !!listMutes[cur.did],
             mutedByList: listMutes[cur.did],
-            blockedBy: !!cur?.requesterBlockedBy,
-            blocking: cur?.requesterBlocking || undefined,
->>>>>>> origin/main
+            blockedBy: !!cur?.requesterBlockedBy || !!cur?.blockedByList,
+            blocking: cur?.requesterBlocking || cur?.blockingList || undefined,
             following: cur?.requesterFollowing || undefined,
             followedBy: cur?.requesterFollowedBy || undefined,
           },
@@ -421,7 +411,6 @@ export class FeedService {
     return embeds
   }
 
-<<<<<<< HEAD
   listBlockQb(creator: string | DbRef, subject: string | DbRef) {
     let builder = this.db.db
       .selectFrom('list_block')
@@ -448,32 +437,6 @@ export class FeedService {
     return builder
   }
 
-  formatPostView(
-    uri: string,
-    actors: ActorViewMap,
-    posts: PostInfoMap,
-    embeds: FeedEmbeds,
-    labels: Labels,
-  ): PostView | undefined {
-    const post = posts[uri]
-    const author = actors[post?.creator]
-    if (!post || !author) return undefined
-    return {
-      uri: post.uri,
-      cid: post.cid,
-      author: author,
-      record: cborToLexRecord(post.recordBytes),
-      embed: embeds[uri],
-      replyCount: post.replyCount ?? 0,
-      repostCount: post.repostCount ?? 0,
-      likeCount: post.likeCount ?? 0,
-      indexedAt: post.indexedAt,
-      viewer: {
-        repost: post.requesterRepost ?? undefined,
-        like: post.requesterLike ?? undefined,
-      },
-      labels: labels[uri] ?? [],
-=======
   async hydrateFeed(
     items: FeedRow[],
     requester: string,
@@ -496,7 +459,6 @@ export class FeedService {
         postUris.add(item.replyRoot)
         actorDids.add(new AtUri(item.replyRoot).hostname)
       }
->>>>>>> origin/main
     }
     const [actors, posts, embeds, labels] = await Promise.all([
       this.getActorViews(Array.from(actorDids), requester),

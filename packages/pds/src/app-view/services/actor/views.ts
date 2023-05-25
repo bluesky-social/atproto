@@ -215,20 +215,14 @@ export class ActorViews {
         avatar,
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: {
-<<<<<<< HEAD
-          muted: !!profileInfo?.requesterMuted,
+          muted: !!profileInfo?.requesterMuted || !!listMutes[result.did],
+          mutedByList: listMutes[result.did],
           blockedBy:
             !!profileInfo.requesterBlockedBy || !!profileInfo.blockedByList,
           blocking:
             profileInfo.requesterBlocking ||
             profileInfo.blockingList ||
             undefined,
-=======
-          muted: !!profileInfo?.requesterMuted || !!listMutes[result.did],
-          mutedByList: listMutes[result.did],
-          blockedBy: !!profileInfo.requesterBlockedBy,
-          blocking: profileInfo.requesterBlocking || undefined,
->>>>>>> origin/main
           following: profileInfo?.requesterFollowing || undefined,
           followedBy: profileInfo?.requesterFollowedBy || undefined,
         },
@@ -265,7 +259,6 @@ export class ActorViews {
     return Array.isArray(result) ? views : views[0]
   }
 
-<<<<<<< HEAD
   listBlockQb(creator: string | DbRef, subject: string | DbRef) {
     let builder = this.db.db
       .selectFrom('list_block')
@@ -290,7 +283,8 @@ export class ActorViews {
     }
 
     return builder
-=======
+  }
+
   async getListMutes(
     subjects: string[],
     mutedBy: string,
@@ -323,7 +317,6 @@ export class ActorViews {
       }),
       {} as Record<string, ListViewBasic>,
     )
->>>>>>> origin/main
   }
 }
 
