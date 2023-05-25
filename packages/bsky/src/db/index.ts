@@ -14,6 +14,7 @@ import { Pool as PgPool, types as pgTypes } from 'pg'
 import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
+import { wait } from '@atproto/common'
 
 export class Database {
   migrator: Migrator
@@ -62,7 +63,13 @@ export class Database {
       .transaction()
       .execute(async (txn) => {
         const dbTxn = new Database(txn, this.cfg)
-        const txRes = await fn(dbTxn).finally(() => leakyTxPlugin.endTx())
+        const txRes = await fn(dbTxn)
+          .catch(async (err) => {
+            leakyTxPlugin.endTx()
+            await wait(10)
+            throw err
+          })
+          .finally(() => leakyTxPlugin.endTx())
         return txRes
       })
     return res

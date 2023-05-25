@@ -125,6 +125,37 @@ describe('db', () => {
 
       expect(res.length).toBe(0)
     })
+
+    it('ensures all inflight querys are rolled back', async () => {
+      let promise: Promise<unknown> | undefined = undefined
+      try {
+        await db.transaction(async (dbTxn) => {
+          const queryA = dbTxn.db
+            .insertInto('actor')
+            .values({ handle: 'a', did: 'a', indexedAt: 'bad-date' })
+            .execute()
+          const queryB = dbTxn.db
+            .insertInto('actor')
+            .values({ handle: 'b', did: 'b', indexedAt: 'bad-date' })
+            .execute()
+
+          promise = Promise.allSettled([queryA, queryB])
+          throw new Error()
+        })
+      } catch (err) {
+        expect(err).toBeDefined()
+      }
+      if (promise) {
+        await promise
+      }
+
+      const res = await db.db
+        .selectFrom('actor')
+        .selectAll()
+        .where('did', 'in', ['a', 'b'])
+        .execute()
+      expect(res.length).toBe(0)
+    })
   })
 
   describe('Leader', () => {
