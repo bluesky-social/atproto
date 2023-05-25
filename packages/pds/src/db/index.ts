@@ -21,7 +21,6 @@ import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
 import { dbLogger as log } from '../logger'
-import { wait } from '@atproto/common'
 
 export class Database {
   txEvt = new EventEmitter() as TxnEmitter
@@ -183,7 +182,7 @@ export class Database {
         const txRes = await fn(dbTxn)
           .catch(async (err) => {
             leakyTxPlugin.endTx()
-            await wait(10)
+            await leakyTxPlugin.allSettled()
             throw err
           })
           .finally(() => leakyTxPlugin.endTx())
@@ -303,6 +302,9 @@ type Channels = {
 class LeakyTxPlugin implements KyselyPlugin {
   private txOver: boolean
 
+  inFlightResolves: Record<string, () => void> = {}
+  inFlightPromises: Promise<void>[] = []
+
   endTx() {
     this.txOver = true
   }
@@ -311,12 +313,27 @@ class LeakyTxPlugin implements KyselyPlugin {
     if (this.txOver) {
       throw new Error('tx already failed')
     }
+    const inFlightPromise = new Promise<void>((resolve) => {
+      this.inFlightResolves[args.queryId.queryId] = () => {
+        resolve()
+      }
+    })
+    this.inFlightPromises.push(inFlightPromise)
+
     return args.node
   }
 
   async transformResult(
     args: PluginTransformResultArgs,
   ): Promise<QueryResult<UnknownRow>> {
+    const resolve = this.inFlightResolves[args.queryId.queryId]
+    if (resolve) {
+      resolve()
+    }
     return args.result
+  }
+
+  async allSettled(): Promise<void> {
+    await Promise.allSettled(this.inFlightPromises)
   }
 }
