@@ -251,7 +251,9 @@ export class RepoService {
     const recordCountAfter = await this.countRecordBlocks(did)
     // This is purely a dummy check on a very sensitive operation
     if (recordCountBefore !== recordCountAfter) {
-      throw new Error('Record blocks deleted during rebase. Rolling back')
+      throw new Error(
+        `Record blocks deleted during rebase. Rolling back: ${did}`,
+      )
     }
 
     await this.afterRebaseProcessing(did, rebaseData)
