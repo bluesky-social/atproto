@@ -45,8 +45,7 @@ export class GraphService {
   }
 
   blockQb(requester: string, refs: NotEmptyArray<DbRef>) {
-    return this.actorBlockQb(requester, refs).union(
-      // @TODO union all
+    return this.actorBlockQb(requester, refs).unionAll(
       this.blockListQb(requester, refs),
     )
   }
@@ -65,11 +64,11 @@ export class GraphService {
           .where('actor_block.subjectDid', '=', requester)
           .whereRef('actor_block.creator', 'in', sql`(${subjectRefs})`),
       )
+      .select(['creator', 'subjectDid'])
   }
 
   blockListQb(requester: string, refs: NotEmptyArray<DbRef>) {
     const subjectRefs = sql.join(refs)
-
     return this.db.db
       .selectFrom('list_block')
       .innerJoin('list', 'list.uri', 'list_block.subjectUri')
