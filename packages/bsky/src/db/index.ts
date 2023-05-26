@@ -62,7 +62,14 @@ export class Database {
       .transaction()
       .execute(async (txn) => {
         const dbTxn = new Database(txn, this.cfg)
-        const txRes = await fn(dbTxn).finally(() => leakyTxPlugin.endTx())
+        const txRes = await fn(dbTxn)
+          .catch(async (err) => {
+            leakyTxPlugin.endTx()
+            // ensure that all in-flight queries are flushed & the connection is open
+            await dbTxn.db.getExecutor().provideConnection(async () => {})
+            throw err
+          })
+          .finally(() => leakyTxPlugin.endTx())
         return txRes
       })
     return res
