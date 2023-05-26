@@ -1,17 +1,15 @@
 import { DAY, HOUR } from '@atproto/common-web'
-import { DidCache } from './did-cache'
-import { CacheResult, DidDocument } from './types'
+import { DidCache, CacheResult, DidDocument } from '../types'
 
 type CacheVal = {
   doc: DidDocument
   updatedAt: number
 }
 
-export class MemoryCache extends DidCache {
+export class MemoryCache implements DidCache {
   public staleTTL: number
   public maxTTL: number
   constructor(staleTTL?: number, maxTTL?: number) {
-    super()
     this.staleTTL = staleTTL ?? HOUR
     this.maxTTL = maxTTL ?? DAY
   }

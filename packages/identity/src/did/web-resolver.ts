@@ -1,17 +1,16 @@
 import axios, { AxiosError } from 'axios'
 import BaseResolver from './base-resolver'
-import { WebResolverOpts } from './types'
-import { PoorlyFormattedDidError } from './errors'
-import { DidCache } from './did-cache'
+import { DidCache } from '../types'
+import { PoorlyFormattedDidError } from '../errors'
 
 export const DOC_PATH = '/.well-known/did.json'
 
 export class DidWebResolver extends BaseResolver {
-  constructor(public opts: WebResolverOpts, public cache?: DidCache) {
+  constructor(public timeout: number, public cache?: DidCache) {
     super(cache)
   }
 
-  async resolveDidNoCheck(did: string): Promise<unknown> {
+  async resolveNoCheck(did: string): Promise<unknown> {
     const parsedId = did.split(':').slice(2).join(':')
     const parts = parsedId.split(':').map(decodeURIComponent)
     let path: string
@@ -31,7 +30,7 @@ export class DidWebResolver extends BaseResolver {
     try {
       const res = await axios.get(url.toString(), {
         responseType: 'json',
-        timeout: this.opts.timeout,
+        timeout: this.timeout,
       })
       return res.data
     } catch (err) {

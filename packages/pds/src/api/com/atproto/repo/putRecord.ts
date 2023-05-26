@@ -14,7 +14,11 @@ import {
 } from '../../../../repo'
 import { ConcurrentWriteError } from '../../../../services/repo'
 
-const ALLOWED_PUTS = [ids.AppBskyActorProfile, ids.AppBskyGraphList]
+const ALLOWED_PUTS = [
+  ids.AppBskyActorProfile,
+  ids.AppBskyGraphList,
+  ids.AppBskyFeedGenerator,
+]
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({

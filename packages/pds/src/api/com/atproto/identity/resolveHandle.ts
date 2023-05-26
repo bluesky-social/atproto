@@ -2,11 +2,19 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as ident from '@atproto/identifier'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { resolveExternalHandle } from './util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.identity.resolveHandle(async ({ req, params }) => {
-    const handle = ident.normalizeHandle(params.handle || req.hostname)
+  server.com.atproto.identity.resolveHandle(async ({ params }) => {
+    let handle: string
+    try {
+      handle = ident.normalizeAndEnsureValidHandle(params.handle)
+    } catch (err) {
+      if (err instanceof ident.InvalidHandleError) {
+        throw new InvalidRequestError(err.message, 'InvalidHandle')
+      } else {
+        throw err
+      }
+    }
 
     let did: string | undefined
     const user = await ctx.services.account(ctx.db).getAccount(handle, true)
@@ -22,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // this is not someone on our server, but we help with resolving anyway
-      did = await resolveExternalHandle(ctx.cfg.scheme, handle)
+      did = await ctx.idResolver.handle.resolve(handle)
     }
     if (!did) {
       throw new InvalidRequestError('Unable to resolve handle')

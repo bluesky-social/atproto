@@ -1,9 +1,9 @@
-import AppContext from '../context'
-import { DAY, NotEmptyArray } from '@atproto/common'
+import { NotEmptyArray } from '@atproto/common'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { AlgoHandler, AlgoResponse } from './types'
-import { sql } from 'kysely'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { GenericKeyset, paginate } from '../db/pagination'
+import AppContext from '../context'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   '!no-promote',
@@ -24,36 +24,19 @@ const handler: AlgoHandler = async (
     throw new Error('what-hot algo not available in sqlite')
   }
 
-  const { limit = 50, cursor } = params
+  const { limit, cursor } = params
   const accountService = ctx.services.account(ctx.db)
   const feedService = ctx.services.appView.feed(ctx.db)
   const graphService = ctx.services.appView.graph(ctx.db)
 
   const { ref } = ctx.db.db.dynamic
 
-  // From: https://medium.com/hacking-and-gonzo/how-hacker-news-ranking-algorithm-works-1d9b0cf2c08d
-  // Score = (P-1) / (T+2)^G
-  // where,
-  // P = points of an item (and -1 is to negate submitters vote)
-  // T = time since submission (in hours)
-  // G = Gravity, defaults to 1.8 in news.arc
+  // candidates are ranked within a materialized view by like count, depreciated over time.
 
-  const computeScore = sql<number>`${ref(
-    'post_agg.likeCount',
-  )} / ((EXTRACT(epoch FROM AGE(CURRENT_TIMESTAMP, ${ref(
-    'post.indexedAt',
-  )}::timestamp))/3600 + 2) ^ 1.8)`
-
-  const dayAgo = new Date(Date.now() - DAY).toISOString()
-
-  // first reduce the number of candidate posts to go through
-  // and calculate score for each candidate post
-  const candidates = ctx.db.db
-    .selectFrom('post')
-    .innerJoin('post_agg', 'post_agg.uri', 'post.uri')
+  let builder = feedService
+    .selectPostQb()
+    .innerJoin('algo_whats_hot_view as candidate', 'candidate.uri', 'post.uri')
     .leftJoin('post_embed_record', 'post_embed_record.postUri', 'post.uri')
-    .where('post.replyParent', 'is', null)
-    .where('post.indexedAt', '>', dayAgo)
     .whereNotExists((qb) =>
       qb
         .selectFrom('label')
@@ -67,43 +50,49 @@ const handler: AlgoHandler = async (
             .orWhereRef('label.uri', '=', ref('post_embed_record.embedUri')),
         ),
     )
-    .whereNotExists(accountService.mutedQb(requester, [ref('post.creator')]))
+    .where((qb) =>
+      accountService.whereNotMuted(qb, requester, [ref('post.creator')]),
+    )
     .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
-    .select('post.uri')
-    .select(computeScore.as('score'))
-
-  let builder = feedService
-    .selectPostQb()
-    .innerJoin(candidates.as('candidate'), 'candidate.uri', 'post.uri')
-    .orderBy('candidate.score', 'desc')
-    .limit(limit)
     .select('candidate.score')
+    .select('candidate.cid')
 
-  if (cursor !== undefined) {
-    const [cursorScore, cursorCid] = cursor.split('::')
-    const cursorInt = parseInt(cursorScore)
-    if (isNaN(cursorInt)) {
-      throw new InvalidRequestError('Malformed cursor')
-    }
-    const maxScore = cursorInt / 1e10
-    builder = builder
-      .where('candidate.score', '<', maxScore)
-      .where('post.cid', '!=', cursorCid)
-  }
+  const keyset = new ScoreKeyset(ref('candidate.score'), ref('candidate.cid'))
+  builder = paginate(builder, { limit, cursor, keyset })
 
   const feedItems = await builder.execute()
 
-  const lowItem = feedItems.at(-1)
-  let returnCursor: string | undefined
-  if (lowItem) {
-    const score = Math.floor(lowItem.score * 1e10)
-    returnCursor = score.toString() + '::' + lowItem.cid
-  }
-
   return {
     feedItems,
-    cursor: returnCursor?.toString(),
+    cursor: keyset.packFromResult(feedItems),
   }
 }
 
 export default handler
+
+type Result = { score: number; cid: string }
+type LabeledResult = { primary: number; secondary: string }
+export class ScoreKeyset extends GenericKeyset<Result, LabeledResult> {
+  labelResult(result: Result) {
+    return {
+      primary: result.score,
+      secondary: result.cid,
+    }
+  }
+  labeledResultToCursor(labeled: LabeledResult) {
+    return {
+      primary: Math.round(labeled.primary).toString(),
+      secondary: labeled.secondary,
+    }
+  }
+  cursorToLabeledResult(cursor: { primary: string; secondary: string }) {
+    const score = parseInt(cursor.primary, 10)
+    if (isNaN(score)) {
+      throw new InvalidRequestError('Malformed cursor')
+    }
+    return {
+      primary: score,
+      secondary: cursor.secondary,
+    }
+  }
+}

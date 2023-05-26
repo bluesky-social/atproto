@@ -5,9 +5,8 @@ import axios, { AxiosError } from 'axios'
 import { CID } from 'multiformats/cid'
 import { ensureValidDid } from '@atproto/identifier'
 import { forwardStreamErrors, VerifyCidTransform } from '@atproto/common'
-import { DidResolver } from '@atproto/did-resolver'
+import { IdResolver, DidNotFoundError } from '@atproto/identity'
 import { TAKEDOWN } from '../lexicon/types/com/atproto/admin/defs'
-import { DidNotFoundError } from '@atproto/did-resolver'
 import AppContext from '../context'
 import { httpLogger as log } from '../logger'
 import { retryHttp } from '../util/retry'
@@ -82,12 +81,12 @@ export async function resolveBlob(
   cid: CID,
   ctx: {
     db: Database
-    didResolver: DidResolver
+    idResolver: IdResolver
   },
 ) {
   const cidStr = cid.toString()
   const [{ pds }, takedown] = await Promise.all([
-    ctx.didResolver.resolveAtprotoData(did), // @TODO cache did info
+    ctx.idResolver.did.resolveAtprotoData(did), // @TODO cache did info
     ctx.db.db
       .selectFrom('moderation_action_subject_blob')
       .select('actionId')

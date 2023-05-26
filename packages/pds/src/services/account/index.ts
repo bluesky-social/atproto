@@ -1,4 +1,4 @@
-import { sql } from 'kysely'
+import { SelectQueryBuilder, WhereInterface, sql } from 'kysely'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import * as scrypt from '../../db/scrypt'
@@ -316,7 +316,11 @@ export class AccountService {
       .execute()
   }
 
-  mutedQb(requester: string, refs: NotEmptyArray<DbRef>) {
+  whereNotMuted<W extends WhereInterface<any, any>>(
+    qb: W,
+    requester: string,
+    refs: NotEmptyArray<DbRef>,
+  ) {
     const subjectRefs = sql.join(refs)
     const actorMute = this.db.db
       .selectFrom('mute')
@@ -329,7 +333,8 @@ export class AccountService {
       .where('list_mute.mutedByDid', '=', requester)
       .whereRef('list_item.subjectDid', 'in', sql`(${subjectRefs})`)
       .select('list_item.subjectDid as muted')
-    return actorMute.unionAll(listMute)
+    // Splitting the mute from list-mute checks seems to be more flexible for the query-planner and often quicker
+    return qb.whereNotExists(actorMute).whereNotExists(listMute)
   }
 
   async search(opts: {

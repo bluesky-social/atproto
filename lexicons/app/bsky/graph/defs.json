@@ -4,7 +4,7 @@
   "defs": {
     "listViewBasic": {
       "type": "object",
-      "required": ["uri", "creator", "name", "purpose"],
+      "required": ["uri", "name", "purpose"],
       "properties": {
         "uri": {"type": "string", "format": "at-uri"},
         "name": {"type": "string", "maxLength": 64, "minLength": 1},

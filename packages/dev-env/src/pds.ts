@@ -59,6 +59,7 @@ export class TestPds {
       repoBackfillLimitMs: 1000 * 60 * 60, // 1hr
       labelerDid: 'did:example:labeler',
       labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
+      feedGenDid: 'did:example:feedGen',
       ...cfg,
     })
 

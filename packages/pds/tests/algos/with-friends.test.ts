@@ -1,6 +1,6 @@
 import AtpAgent, { AtUri } from '@atproto/api'
 import { runTestServer, TestServerInfo } from '../_util'
-import { SeedClient } from '../seeds/client'
+import { RecordRef, SeedClient } from '../seeds/client'
 import userSeed from '../seeds/users'
 import { makeAlgos } from '../../src'
 
@@ -50,7 +50,7 @@ describe('algo with friends', () => {
   let expectedFeed: string[]
 
   it('setup', async () => {
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 10; i++) {
       const name = `user${i}`
       await sc.createAccount(name, {
         handle: `user${i}.test`,
@@ -59,47 +59,63 @@ describe('algo with friends', () => {
       })
     }
 
+    const hitLikeThreshold = async (ref: RecordRef) => {
+      for (let i = 0; i < 10; i++) {
+        const name = `user${i}`
+        await sc.like(sc.dids[name], ref)
+      }
+    }
+
+    // bob and dan are mutuals of alice, all userN are out-of-network.
     await sc.follow(alice, bob)
     await sc.follow(alice, carol)
+    await sc.follow(alice, dan)
+    await sc.follow(bob, alice)
+    await sc.follow(dan, alice)
     const one = await sc.post(bob, 'one')
     const two = await sc.post(bob, 'two')
     const three = await sc.post(carol, 'three')
     const four = await sc.post(carol, 'four')
     const five = await sc.post(dan, 'five')
     const six = await sc.post(dan, 'six')
+    const seven = await sc.post(sc.dids.user0, 'seven')
+    const eight = await sc.post(sc.dids.user0, 'eight')
+    const nine = await sc.post(sc.dids.user1, 'nine')
+    const ten = await sc.post(sc.dids.user1, 'ten')
 
-    // in-network post with threshold in-network likes
+    // 1, 2, 3, 4, 6, 8, 10 hit like threshold
+    await hitLikeThreshold(one.ref)
+    await hitLikeThreshold(two.ref)
+    await hitLikeThreshold(three.ref)
+    await hitLikeThreshold(four.ref)
+    await hitLikeThreshold(six.ref)
+    await hitLikeThreshold(eight.ref)
+    await hitLikeThreshold(ten.ref)
+
+    // 1, 4, 7, 8, 10 liked by mutual
     await sc.like(bob, one.ref)
+    await sc.like(dan, four.ref)
+    await sc.like(bob, seven.ref)
+    await sc.like(dan, eight.ref)
+    await sc.like(bob, nine.ref)
+    await sc.like(dan, ten.ref)
+
+    // all liked by non-mutual
     await sc.like(carol, one.ref)
-    await sc.like(dan, one.ref)
-
-    // in-network post with threshold likes
     await sc.like(carol, two.ref)
-    await sc.like(dan, two.ref)
-
-    // in-network post without threshold likes
-    await sc.like(bob, three.ref)
-
-    // in-network post with no in-network likes but threshold likes
-    await sc.like(sc.dids.user0, four.ref)
-    await sc.like(sc.dids.user1, four.ref)
-    await sc.like(sc.dids.user2, four.ref)
-    await sc.like(sc.dids.user3, four.ref)
-
-    // out-network post with threshold in-network likes
-    await sc.like(bob, five.ref)
+    await sc.like(carol, three.ref)
+    await sc.like(carol, four.ref)
     await sc.like(carol, five.ref)
-
-    // out-network post with many likes but not in-network threshold
-    await sc.like(sc.dids.user0, six.ref)
-    await sc.like(sc.dids.user1, six.ref)
-    await sc.like(sc.dids.user2, six.ref)
-    await sc.like(sc.dids.user3, six.ref)
+    await sc.like(carol, six.ref)
+    await sc.like(carol, seven.ref)
+    await sc.like(carol, eight.ref)
+    await sc.like(carol, nine.ref)
+    await sc.like(carol, ten.ref)
 
     expectedFeed = [
-      five.ref.uriStr,
+      ten.ref.uriStr,
+      eight.ref.uriStr,
       four.ref.uriStr,
-      two.ref.uriStr,
       one.ref.uriStr,
     ]
   })

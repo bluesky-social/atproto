@@ -48,6 +48,8 @@ export interface ServerConfigValues {
   labelerDid: string
   labelerKeywords: Record<string, string>
 
+  feedGenDid?: string
+
   maxSubscriptionBuffer: number
   repoBackfillLimitMs: number
 
@@ -143,6 +145,8 @@ export class ServerConfig {
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const labelerKeywords = {}
 
+    const feedGenDid = process.env.FEED_GEN_DID
+
     const dbPostgresUrl = process.env.DB_POSTGRES_URL
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
 
@@ -200,6 +204,7 @@ export class ServerConfig {
       hiveApiKey,
       labelerDid,
       labelerKeywords,
+      feedGenDid,
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
       appViewRepoProvider,
@@ -373,6 +378,10 @@ export class ServerConfig {
 
   get labelerKeywords() {
     return this.cfg.labelerKeywords
+  }
+
+  get feedGenDid() {
+    return this.cfg.feedGenDid
   }
 
   get maxSubscriptionBuffer() {

@@ -8,7 +8,7 @@ import { cidForCbor, streamToBytes, TID } from '@atproto/common'
 import * as ui8 from 'uint8arrays'
 import { LabelService } from '../../src/services/label'
 import { TestNetwork } from '@atproto/dev-env'
-import { DidResolver } from '@atproto/did-resolver'
+import { IdResolver } from '@atproto/identity'
 import { SeedClient } from '../seeds/client'
 import usersSeed from '../seeds/users'
 
@@ -178,11 +178,11 @@ class TestLabeler extends Labeler {
 
   constructor(opts: {
     db: Database
-    didResolver: DidResolver
+    idResolver: IdResolver
     cfg: ServerConfig
   }) {
-    const { db, cfg, didResolver } = opts
-    super({ db, cfg, didResolver })
+    const { db, cfg, idResolver } = opts
+    super({ db, cfg, idResolver })
     this.keywords = cfg.labelerKeywords
   }
 

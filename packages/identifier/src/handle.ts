@@ -1,7 +1,5 @@
 import { reservedSubdomains } from './reserved'
 
-export * from './resolve'
-
 // Currently these are registration-time restrictions, not protocol-level
 // restrictions. We have a couple accounts in the wild that we need to clean up
 // before hard-disallow.

@@ -219,6 +219,12 @@ export class Server {
         if (!outputUnvalidated || isHandlerSuccess(outputUnvalidated)) {
           // validate response
           const output = validateResOutput(outputUnvalidated)
+          // set headers
+          if (output?.headers) {
+            Object.entries(output.headers).forEach(([name, val]) => {
+              res.header(name, val)
+            })
+          }
           // send response
           if (
             output?.encoding === 'application/json' ||

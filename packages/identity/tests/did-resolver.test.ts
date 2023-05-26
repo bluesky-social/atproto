@@ -6,7 +6,7 @@ import { DidResolver, DidDocument } from '../src'
 import { DidWebServer } from './web/server'
 import DidWebDb from './web/db'
 
-describe('resolver', () => {
+describe('did resolver', () => {
   let close: () => Promise<void>
   let webServer: DidWebServer
   let plcUrl: string
@@ -70,7 +70,7 @@ describe('resolver', () => {
   })
 
   it('resolve valid did:web', async () => {
-    const didRes = await resolver.ensureResolveDid(webDid)
+    const didRes = await resolver.ensureResolve(webDid)
     expect(didRes).toEqual(didWebDoc)
   })
 
@@ -84,13 +84,13 @@ describe('resolver', () => {
   })
 
   it('throws on malformed did:webs', async () => {
-    await expect(resolver.ensureResolveDid(`did:web:asdf`)).rejects.toThrow()
-    await expect(resolver.ensureResolveDid(`did:web:`)).rejects.toThrow()
-    await expect(resolver.ensureResolveDid(``)).rejects.toThrow()
+    await expect(resolver.ensureResolve(`did:web:asdf`)).rejects.toThrow()
+    await expect(resolver.ensureResolve(`did:web:`)).rejects.toThrow()
+    await expect(resolver.ensureResolve(``)).rejects.toThrow()
   })
 
   it('resolve valid did:plc', async () => {
-    const didRes = await resolver.ensureResolveDid(plcDid)
+    const didRes = await resolver.ensureResolve(plcDid)
     expect(didRes).toEqual(didPlcDoc)
   })
 
@@ -104,7 +104,7 @@ describe('resolver', () => {
   })
 
   it('throws on malformed did:plc', async () => {
-    await expect(resolver.ensureResolveDid(`did:plc:asdf`)).rejects.toThrow()
-    await expect(resolver.ensureResolveDid(`did:plc`)).rejects.toThrow()
+    await expect(resolver.ensureResolve(`did:plc:asdf`)).rejects.toThrow()
+    await expect(resolver.ensureResolve(`did:plc`)).rejects.toThrow()
   })
 })

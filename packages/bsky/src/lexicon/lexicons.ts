@@ -1617,7 +1617,7 @@ export const schemaDict = {
       create: {
         type: 'object',
         description: 'Create a new record.',
-        required: ['action', 'collection', 'value'],
+        required: ['collection', 'value'],
         properties: {
           collection: {
             type: 'string',
@@ -1635,7 +1635,7 @@ export const schemaDict = {
       update: {
         type: 'object',
         description: 'Update an existing record.',
-        required: ['action', 'collection', 'rkey', 'value'],
+        required: ['collection', 'rkey', 'value'],
         properties: {
           collection: {
             type: 'string',
@@ -1652,7 +1652,7 @@ export const schemaDict = {
       delete: {
         type: 'object',
         description: 'Delete an existing record.',
-        required: ['action', 'collection', 'rkey'],
+        required: ['collection', 'rkey'],
         properties: {
           collection: {
             type: 'string',
@@ -4438,7 +4438,7 @@ export const schemaDict = {
         properties: {
           repost: {
             type: 'string',
-            ref: 'at-uri',
+            format: 'at-uri',
           },
         },
       },
@@ -4930,6 +4930,15 @@ export const schemaDict = {
             },
             depth: {
               type: 'integer',
+              default: 6,
+              minimum: 0,
+              maximum: 1000,
+            },
+            parentHeight: {
+              type: 'integer',
+              default: 80,
+              minimum: 0,
+              maximum: 1000,
             },
           },
         },
@@ -5283,7 +5292,7 @@ export const schemaDict = {
     defs: {
       listViewBasic: {
         type: 'object',
-        required: ['uri', 'creator', 'name', 'purpose'],
+        required: ['uri', 'name', 'purpose'],
         properties: {
           uri: {
             type: 'string',

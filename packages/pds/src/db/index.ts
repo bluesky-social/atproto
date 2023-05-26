@@ -16,6 +16,7 @@ import SqliteDB from 'better-sqlite3'
 import { Pool as PgPool, Client as PgClient, types as pgTypes } from 'pg'
 import EventEmitter from 'events'
 import TypedEmitter from 'typed-emitter'
+import { wait } from '@atproto/common'
 import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
 import { dummyDialect } from './util'
 import * as migrations from './migrations'
@@ -179,7 +180,14 @@ export class Database {
       .transaction()
       .execute(async (txn) => {
         const dbTxn = new Database(txn, this.cfg, this.channels)
-        const txRes = await fn(dbTxn).finally(() => leakyTxPlugin.endTx())
+        const txRes = await fn(dbTxn)
+          .catch(async (err) => {
+            leakyTxPlugin.endTx()
+            // ensure that all in-flight queries are flushed & the connection is open
+            await dbTxn.db.getExecutor().provideConnection(async () => {})
+            throw err
+          })
+          .finally(() => leakyTxPlugin.endTx())
         txMsgs = dbTxn.txChannelMsgs
         return { txRes, dbTxn }
       })
@@ -243,6 +251,53 @@ export class Database {
       throw new Error('An unknown failure occurred while migrating')
     }
     return results
+  }
+
+  async maintainMaterializedViews(opts: {
+    views: string[]
+    intervalSec: number
+    signal: AbortSignal
+  }) {
+    assert(
+      this.dialect === 'pg',
+      'Can only maintain materialized views on postgres',
+    )
+    const { views, intervalSec, signal } = opts
+    while (!signal.aborted) {
+      await Promise.all(
+        views.map(async (view) => {
+          try {
+            await this.refreshMaterializedView(view)
+            log.info(
+              { view, time: new Date().toISOString() },
+              'materialized view refreshed',
+            )
+          } catch (err) {
+            log.error(
+              { view, err, time: new Date().toISOString() },
+              'materialized view refresh failed',
+            )
+          }
+        }),
+      )
+      // super basic synchronization by agreeing when the intervals land relative to unix timestamp
+      const now = Date.now()
+      const intervalMs = 1000 * intervalSec
+      const nextIteration = Math.ceil(now / intervalMs)
+      const nextInMs = nextIteration * intervalMs - now
+      await wait(nextInMs)
+    }
+  }
+
+  async refreshMaterializedView(view: string) {
+    assert(
+      this.dialect === 'pg',
+      'Can only maintain materialized views on postgres',
+    )
+    const { ref } = this.db.dynamic
+    await sql`refresh materialized view concurrently ${ref(view)}`.execute(
+      this.db,
+    )
   }
 }
 

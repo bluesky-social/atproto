@@ -1,4 +1,4 @@
-import { DIDDocument } from 'did-resolver'
+import { DidDocument } from '../../src/types'
 
 interface DidStore {
   put(key: string, val: string): Promise<void>
@@ -38,11 +38,11 @@ export class DidWebDb {
     return new DidWebDb(store)
   }
 
-  async put(didPath: string, didDoc: DIDDocument): Promise<void> {
+  async put(didPath: string, didDoc: DidDocument): Promise<void> {
     await this.store.put(didPath, JSON.stringify(didDoc))
   }
 
-  async get(didPath: string): Promise<DIDDocument | null> {
+  async get(didPath: string): Promise<DidDocument | null> {
     try {
       const got = await this.store.get(didPath)
       return JSON.parse(got)

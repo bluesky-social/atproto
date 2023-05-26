@@ -30,8 +30,8 @@ export default function (server: Server, ctx: AppContext) {
         .where(notSoftDeletedClause(ref('author_repo')))
         .where(notSoftDeletedClause(ref('record')))
         .where('notif.userDid', '=', requester)
-        .whereNotExists(
-          accountService.mutedQb(requester, [ref('notif.author')]),
+        .where((qb) =>
+          accountService.whereNotMuted(qb, requester, [ref('notif.author')]),
         )
         .whereRef('notif.indexedAt', '>', 'user_state.lastSeenNotifs')
         .executeTakeFirst()
