@@ -1,9 +1,10 @@
+import { sql } from 'kysely'
+import { HOUR } from '@atproto/common'
 import AtpAgent, { AtUri } from '@atproto/api'
 import { runTestServer, TestServerInfo } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { makeAlgos } from '../../src'
-import { HOUR } from '@atproto/common'
 
 describe('algo whats-hot', () => {
   let server: TestServerInfo
@@ -84,6 +85,10 @@ describe('algo whats-hot', () => {
       .where('uri', '=', three.ref.uriStr)
       .set({ indexedAt: new Date(Date.now() - 5 * HOUR).toISOString() })
       .execute()
+
+    await sql`refresh materialized view algo_whats_hot_view`.execute(
+      server.ctx.db.db,
+    )
     await server.ctx.db.refreshMaterializedView('algo_whats_hot_view')
 
     const res = await agent.api.app.bsky.feed.getFeed(
