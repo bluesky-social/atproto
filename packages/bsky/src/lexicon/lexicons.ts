@@ -4403,7 +4403,7 @@ export const schemaDict = {
         properties: {
           repost: {
             type: 'string',
-            ref: 'at-uri',
+            format: 'at-uri',
           },
         },
       },

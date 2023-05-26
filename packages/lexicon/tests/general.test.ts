@@ -101,6 +101,22 @@ describe('General validation', () => {
       lexiconDoc.parse(schema)
     }).toThrow('Required field \\"foo\\" not defined')
   })
+  it('fails when unknown fields are present', () => {
+    const schema = {
+      lexicon: 1,
+      id: 'com.example.unknownFields',
+      defs: {
+        test: {
+          type: 'object',
+          foo: 3,
+        },
+      },
+    }
+
+    expect(() => {
+      lexiconDoc.parse(schema)
+    }).toThrow("Unrecognized key(s) in object: 'foo'")
+  })
   it('fails lexicon parsing when uri is invalid', () => {
     const schema = {
       lexicon: 1,
