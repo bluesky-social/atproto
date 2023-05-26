@@ -23,13 +23,13 @@ const handler: AlgoHandler = async (
         .selectFrom('follow')
         .where('follow.creator', '=', requester)
         .whereRef('follow.subjectDid', '=', 'post.creator')
-        .selectAll(),
-    )
-    .whereExists((qb) =>
-      qb
-        .selectFrom('follow')
-        .whereRef('follow.creator', '=', 'post.creator')
-        .where('follow.subjectDid', '=', requester)
+        .whereExists((inner) =>
+          inner
+            .selectFrom('follow as follow_inner')
+            .whereRef('follow_inner.creator', '=', 'follow.subjectDid')
+            .where('follow_inner.subjectDid', '=', requester)
+            .selectAll(),
+        )
         .selectAll(),
     )
     .where((qb) =>
