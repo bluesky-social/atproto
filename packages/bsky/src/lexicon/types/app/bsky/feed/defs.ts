@@ -188,12 +188,14 @@ export function validateBlockedPost(v: unknown): ValidationResult {
 
 export interface GeneratorView {
   uri: string
+  cid: string
   did?: string
   creator: AppBskyActorDefs.ProfileView
-  displayName?: string
+  displayName: string
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: string
+  likeCount?: number
   viewer?: GeneratorViewerState
   indexedAt: string
   [k: string]: unknown
@@ -212,7 +214,6 @@ export function validateGeneratorView(v: unknown): ValidationResult {
 }
 
 export interface GeneratorViewerState {
-  saved?: boolean
   like?: string
   [k: string]: unknown
 }

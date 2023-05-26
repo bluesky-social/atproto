@@ -7,27 +7,15 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as ComAtprotoAdminDefs from './defs'
 
-export interface QueryParams {
-  subject?: string
-  ignoreSubjects?: string[]
-  resolved?: boolean
-  actionType?:
-    | 'com.atproto.admin.defs#takedown'
-    | 'com.atproto.admin.defs#flag'
-    | 'com.atproto.admin.defs#acknowledge'
-    | 'com.atproto.admin.defs#escalate'
-    | (string & {})
-  limit: number
-  cursor?: string
-}
+export interface QueryParams {}
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor?: string
-  reports: ComAtprotoAdminDefs.ReportView[]
+  did: string
+  feeds: Feed[]
+  links?: Links
   [k: string]: unknown
 }
 
@@ -51,3 +39,38 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
   req: express.Request
   res: express.Response
 }) => Promise<HandlerOutput> | HandlerOutput
+
+export interface Feed {
+  uri: string
+  [k: string]: unknown
+}
+
+export function isFeed(v: unknown): v is Feed {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.describeFeedGenerator#feed'
+  )
+}
+
+export function validateFeed(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.describeFeedGenerator#feed', v)
+}
+
+export interface Links {
+  privacyPolicy?: string
+  termsOfService?: string
+  [k: string]: unknown
+}
+
+export function isLinks(v: unknown): v is Links {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.describeFeedGenerator#links'
+  )
+}
+
+export function validateLinks(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.describeFeedGenerator#links', v)
+}
