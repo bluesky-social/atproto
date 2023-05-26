@@ -31,7 +31,9 @@ const main = async () => {
   const migrateDb = Database.postgres({
     url: pgUrl(env.dbMigrateCreds),
     schema: env.dbSchema,
-    poolSize: 1,
+    // We need one connection for the
+    // view-maintainer lock then one for anything else.
+    poolSize: 2,
   })
   await migrateDb.migrateToLatestOrThrow()
   // Use lower-credentialed user to run the app
@@ -91,9 +93,18 @@ const main = async () => {
   })
 }
 
-const pgUrl = ({ username = "postgres", password = "postgres", host = "0.0.0.0", port = "5432", database = "postgres", sslmode }) => {
+const pgUrl = ({
+  username = 'postgres',
+  password = 'postgres',
+  host = '0.0.0.0',
+  port = '5432',
+  database = 'postgres',
+  sslmode,
+}) => {
   const enc = encodeURIComponent
-  return `postgresql://${username}:${enc(password)}@${host}:${port}/${database}${sslmode ? `?sslmode=${enc(sslmode)}` : ''}`
+  return `postgresql://${username}:${enc(
+    password,
+  )}@${host}:${port}/${database}${sslmode ? `?sslmode=${enc(sslmode)}` : ''}`
 }
 
 const smtpUrl = ({ username, password, host }) => {
