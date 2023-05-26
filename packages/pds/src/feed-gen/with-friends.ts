@@ -1,10 +1,8 @@
-import { sql } from 'kysely'
 import AppContext from '../context'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { paginate } from '../db/pagination'
 import { AlgoHandler, AlgoResponse } from './types'
 import { FeedKeyset } from '../app-view/api/app/bsky/util/feed'
-import { valuesList } from '../db/util'
 
 const handler: AlgoHandler = async (
   ctx: AppContext,
@@ -18,46 +16,17 @@ const handler: AlgoHandler = async (
 
   const { ref } = ctx.db.db.dynamic
 
-  const postRate = sql`(10000 * ${ref('postsCount')} / extract(epoch from ${ref(
-    'user_account.createdAt',
-  )}::timestamp))`
-  const mostActiveMutuals = await ctx.db.db
-    .selectFrom('follow')
-    .select('subjectDid as did')
-    .innerJoin('user_account', 'user_account.did', 'follow.subjectDid')
-    .innerJoin('profile_agg', 'profile_agg.did', 'follow.subjectDid')
-    .where('follow.creator', '=', requester)
-    .whereExists((qb) =>
-      qb
-        .selectFrom('follow as mutual')
-        .where('mutual.subjectDid', '=', requester)
-        .whereRef('mutual.creator', '=', 'follow.subjectDid'),
-    )
-    .orderBy(postRate, 'desc')
-    .limit(25)
-    .execute()
-
-  if (!mostActiveMutuals.length) {
-    return { feedItems: [] }
-  }
-
-  // All posts that hit a certain threshold of likes and also have
-  // at least one like by one of your most active mutuals.
   let postsQb = feedService
     .selectFeedItemQb()
     .innerJoin('post_agg', 'post_agg.uri', 'feed_item.uri')
     .where('feed_item.type', '=', 'post')
-    .where('post_agg.likeCount', '>=', 10)
-    .whereExists((qb) => {
-      return qb
-        .selectFrom('like')
-        .whereRef('like.subject', '=', 'post.uri')
-        .whereRef(
-          'like.creator',
-          'in',
-          valuesList(mostActiveMutuals.map((follow) => follow.did)),
-        )
-    })
+    .where('post_agg.likeCount', '>=', 5)
+    .whereExists((qb) =>
+      qb
+        .selectFrom('follow')
+        .where('follow.creator', '=', requester)
+        .whereRef('follow.subjectDid', '=', 'originatorDid'),
+    )
     .where((qb) =>
       accountService.whereNotMuted(qb, requester, [ref('post.creator')]),
     )
@@ -74,3 +43,51 @@ const handler: AlgoHandler = async (
 }
 
 export default handler
+
+// Original algorithm, temporarily disabled because of performance issues
+// --------------------------
+
+// const postRate = sql`(10000 * ${ref('postsCount')} / extract(epoch from ${ref(
+//   'user_account.createdAt',
+// )}::timestamp))`
+// const mostActiveMutuals = await ctx.db.db
+//   .selectFrom('follow')
+//   .select('subjectDid as did')
+//   .innerJoin('user_account', 'user_account.did', 'follow.subjectDid')
+//   .innerJoin('profile_agg', 'profile_agg.did', 'follow.subjectDid')
+//   .where('follow.creator', '=', requester)
+//   .whereExists((qb) =>
+//     qb
+//       .selectFrom('follow as mutual')
+//       .where('mutual.subjectDid', '=', requester)
+//       .whereRef('mutual.creator', '=', 'follow.subjectDid'),
+//   )
+//   .orderBy(postRate, 'desc')
+//   .limit(25)
+//   .execute()
+
+// if (!mostActiveMutuals.length) {
+//   return { feedItems: [] }
+// }
+
+// // All posts that hit a certain threshold of likes and also have
+// // at least one like by one of your most active mutuals.
+// let postsQb = feedService
+//   .selectFeedItemQb()
+//   .innerJoin('post_agg', 'post_agg.uri', 'feed_item.uri')
+//   .where('feed_item.type', '=', 'post')
+//   .where('post_agg.likeCount', '>=', 5)
+//   .whereExists((qb) => {
+//     return qb
+//       .selectFrom('like')
+//       .whereRef('like.subject', '=', 'post.uri')
+//       .whereRef(
+//         'like.creator',
+//         'in',
+//         valuesList(mostActiveMutuals.map((follow) => follow.did)),
+//       )
+//   })
+//   .where((qb) =>
+//     accountService.whereNotMuted(qb, requester, [ref('post.creator')]),
+//   )
+//   .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))

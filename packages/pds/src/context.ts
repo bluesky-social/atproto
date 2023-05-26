@@ -118,7 +118,7 @@ export class AppContext {
   }
 
   get idResolver(): IdResolver {
-    return new IdResolver({ plcUrl: this.cfg.didPlcUrl })
+    return this.opts.idResolver
   }
 
   get didCache(): DidSqlCache {
