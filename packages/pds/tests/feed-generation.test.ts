@@ -163,7 +163,8 @@ describe('feed generation', () => {
       expect(resEven.data.isValid).toBe(true)
     })
 
-    it('handles an unsupported algo', async () => {
+    // @TODO temporarily skipping while external feedgens catch-up on describeFeedGenerator
+    it.skip('handles an unsupported algo', async () => {
       const resOdd = await agent.api.app.bsky.feed.getFeedGenerator(
         { feed: feedUriOdd },
         { headers: sc.getHeaders(sc.dids.bob) },
@@ -172,7 +173,8 @@ describe('feed generation', () => {
       expect(resOdd.data.isValid).toBe(false)
     })
 
-    it('handles an offline feed', async () => {
+    // @TODO temporarily skipping while external feedgens catch-up on describeFeedGenerator
+    it.skip('handles an offline feed', async () => {
       // make an invalid feed gen in bob's repo
       const allUriBob = AtUri.make(
         sc.dids.bob,
@@ -225,7 +227,7 @@ describe('feed generation', () => {
           {},
           { headers: sc.getHeaders(sc.dids.bob) },
         )
-      expect(resEven.data.feeds.map((f) => f.likeCount)).toEqual([2, 0, 0, 0])
+      expect(resEven.data.feeds.map((f) => f.likeCount)).toEqual([2, 0, 0])
     })
   })
 
