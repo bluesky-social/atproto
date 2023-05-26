@@ -448,7 +448,7 @@ function genServerXrpcMethod(
     }
     handlerSuccess.addProperty({
       name: 'headers?',
-      type: 'Record<string, string>',
+      type: '{ [key: string]: string }',
     })
   }
 

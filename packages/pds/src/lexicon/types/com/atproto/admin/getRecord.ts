@@ -21,7 +21,7 @@ export type HandlerInput = undefined
 export interface HandlerSuccess {
   encoding: 'application/json'
   body: OutputSchema
-  headers?: Record<string, string>
+  headers?: { [key: string]: string }
 }
 
 export interface HandlerError {
