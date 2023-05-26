@@ -26,11 +26,15 @@ const handler: AlgoHandler = async (
     .selectPostQb()
     .innerJoin('algo_whats_hot_view as candidate', 'candidate.uri', 'post.uri')
     .leftJoin('post_embed_record', 'post_embed_record.postUri', 'post.uri')
-    .whereExists((qb) =>
+    .where((qb) =>
       qb
-        .selectFrom('follow')
-        .where('follow.creator', '=', requester)
-        .whereRef('follow.subjectDid', '=', 'post.creator'),
+        .where('post.creator', '=', requester)
+        .orWhereExists((inner) =>
+          inner
+            .selectFrom('follow')
+            .where('follow.creator', '=', requester)
+            .whereRef('follow.subjectDid', '=', 'post.creator'),
+        ),
     )
     .where((qb) =>
       accountService.whereNotMuted(qb, requester, [ref('post.creator')]),
