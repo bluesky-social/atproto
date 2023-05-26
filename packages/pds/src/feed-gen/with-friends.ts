@@ -58,7 +58,9 @@ const handler: AlgoHandler = async (
           valuesList(mostActiveMutuals.map((follow) => follow.did)),
         )
     })
-    .whereNotExists(accountService.mutedQb(requester, [ref('post.creator')]))
+    .where((qb) =>
+      accountService.whereNotMuted(qb, requester, [ref('post.creator')]),
+    )
     .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
 
   const keyset = new FeedKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))

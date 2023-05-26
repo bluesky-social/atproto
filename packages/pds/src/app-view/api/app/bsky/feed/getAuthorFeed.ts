@@ -50,8 +50,10 @@ export default function (server: Server, ctx: AppContext) {
           // Hide reposts of muted content
           qb
             .where('type', '=', 'post')
-            .orWhereNotExists(
-              accountService.mutedQb(requester, [ref('post.creator')]),
+            .orWhere((qb) =>
+              accountService.whereNotMuted(qb, requester, [
+                ref('post.creator'),
+              ]),
             ),
         )
         .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
