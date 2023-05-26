@@ -339,8 +339,6 @@ export class AccountService {
     cursor?: string
     includeSoftDeleted?: boolean
   }): Promise<(RepoRoot & DidHandle & { distance: number })[]> {
-    // TODO: Implement sqlite specific version?
-    // There are some common calls to join and select, should we refactor instead of early exit approach?
     if (opts.searchField === 'did') {
       const didSearchBuilder = this.db.db
         .selectFrom('did_handle')

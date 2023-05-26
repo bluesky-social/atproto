@@ -3,7 +3,6 @@ import AppContext from '../../../../context'
 import { SearchKeyset } from '../../../../services/util/search'
 import { sql } from 'kysely'
 import { ListKeyset } from '../../../../services/account'
-import { ensureValidDid } from '@atproto/identifier'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
@@ -28,13 +27,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      let searchField: 'did' | 'handle'
-      try {
-        ensureValidDid(term)
-        searchField = 'did'
-      } catch (err) {
-        searchField = 'handle'
-      }
+      const searchField = term.startsWith('did:') ? 'did' : 'handle'
 
       const results = await services
         .account(db)
