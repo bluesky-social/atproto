@@ -28,8 +28,8 @@ const handler: AlgoHandler = async (
     )
     .select('follow.subjectDid')
 
-  const postsQb = feedService
-    .selectPostQb()
+  let feedQb = feedService
+    .selectFeedItemQb()
     .where((qb) =>
       qb
         .where('post.creator', '=', requester)
@@ -40,9 +40,7 @@ const handler: AlgoHandler = async (
     )
     .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
 
-  const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))
-
-  let feedQb = ctx.db.db.selectFrom(postsQb.as('feed_items')).selectAll()
+  const keyset = new FeedKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))
   feedQb = paginate(feedQb, { limit, cursor, keyset })
 
   const feedItems = await feedQb.execute()
