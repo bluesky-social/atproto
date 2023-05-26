@@ -1,4 +1,4 @@
-import { DidResolver } from '@atproto/did-resolver'
+import { IdResolver } from '@atproto/identity'
 import Database from '../db'
 import { ImageUriBuilder } from '../image/uri'
 import { ActorService } from './actor'
@@ -12,14 +12,14 @@ import { Labeler } from '../labeler'
 export function createServices(resources: {
   imgUriBuilder: ImageUriBuilder
   imgInvalidator: ImageInvalidator
-  didResolver: DidResolver
+  idResolver: IdResolver
   labeler: Labeler
 }): Services {
-  const { imgUriBuilder, imgInvalidator, didResolver, labeler } = resources
+  const { imgUriBuilder, imgInvalidator, idResolver, labeler } = resources
   return {
     actor: ActorService.creator(imgUriBuilder),
     feed: FeedService.creator(imgUriBuilder),
-    indexing: IndexingService.creator(didResolver, labeler),
+    indexing: IndexingService.creator(idResolver, labeler),
     moderation: ModerationService.creator(imgUriBuilder, imgInvalidator),
     label: LabelService.creator(),
   }

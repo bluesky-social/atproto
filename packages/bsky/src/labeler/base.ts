@@ -6,7 +6,7 @@ import { dedupe, getFieldsFromRecord } from './util'
 import { labelerLogger as log } from '../logger'
 import { resolveBlob } from '../api/blob-resolver'
 import Database from '../db'
-import { DidResolver } from '@atproto/did-resolver'
+import { IdResolver } from '@atproto/identity'
 import { ServerConfig } from '../config'
 
 export abstract class Labeler {
@@ -14,7 +14,7 @@ export abstract class Labeler {
   constructor(
     protected ctx: {
       db: Database
-      didResolver: DidResolver
+      idResolver: IdResolver
       cfg: ServerConfig
     },
   ) {

@@ -4,7 +4,7 @@ import { AddressInfo } from 'net'
 import events from 'events'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import cors from 'cors'
-import { DidResolver } from '@atproto/did-resolver'
+import { IdResolver } from '@atproto/identity'
 import API, { health, blobResolver } from './api'
 import Database from './db'
 import * as error from './error'
@@ -61,7 +61,7 @@ export class BskyAppView {
       config.didCacheStaleTTL,
       config.didCacheMaxTTL,
     )
-    const didResolver = new DidResolver({ plcUrl: config.didPlcUrl }, didCache)
+    const idResolver = new IdResolver({ plcUrl: config.didPlcUrl, didCache })
 
     const imgUriBuilder = new ImageUriBuilder(
       config.imgUriEndpoint || `${config.publicUrl}/image`,
@@ -93,20 +93,20 @@ export class BskyAppView {
       labeler = new HiveLabeler(config.hiveApiKey, {
         db,
         cfg: config,
-        didResolver,
+        idResolver,
       })
     } else {
       labeler = new KeywordLabeler({
         db,
         cfg: config,
-        didResolver,
+        idResolver,
       })
     }
 
     const services = createServices({
       imgUriBuilder,
       imgInvalidator,
-      didResolver,
+      idResolver,
       labeler,
     })
 
@@ -115,7 +115,7 @@ export class BskyAppView {
       cfg: config,
       services,
       imgUriBuilder,
-      didResolver,
+      idResolver,
       didCache,
       labeler,
     })

@@ -1,5 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as didResolver from '@atproto/did-resolver'
+import * as id from '@atproto/identity'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
@@ -14,12 +14,12 @@ export default function (server: Server, ctx: AppContext) {
 
     let didDoc
     try {
-      didDoc = await ctx.didResolver.ensureResolveDid(account.did)
+      didDoc = await ctx.idResolver.did.ensureResolve(account.did)
     } catch (err) {
       throw new InvalidRequestError(`Could not resolve DID: ${err}`)
     }
 
-    const handle = didResolver.getHandle(didDoc)
+    const handle = id.getHandle(didDoc)
     const handleIsCorrect = handle === account.handle
 
     const collections = await ctx.services
