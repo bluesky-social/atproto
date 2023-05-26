@@ -215,8 +215,11 @@ export class RepoService {
     commitData: CommitData,
     writes: PreparedWrite[],
   ) {
+    const seqEvt = await sequencer.formatSeqCommit(did, commitData, writes)
+    await sequencer.sequenceEvt(this.db, seqEvt)
+
     // @TODO move to appview
-    writes.map((write) => {
+    writes.forEach((write) => {
       if (
         write.action === WriteOpAction.Create ||
         write.action === WriteOpAction.Update
@@ -224,9 +227,6 @@ export class RepoService {
         this.labeler.processRecord(write.uri, write.record)
       }
     })
-
-    const seqEvt = await sequencer.formatSeqCommit(did, commitData, writes)
-    await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
   async rebaseRepo(did: string, swapCommit?: CID) {
