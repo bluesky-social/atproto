@@ -1228,12 +1228,12 @@ export const schemaDict = {
         description: 'Provides the DID of a repo.',
         parameters: {
           type: 'params',
+          required: ['handle'],
           properties: {
             handle: {
               type: 'string',
               format: 'handle',
-              description:
-                "The handle to resolve. If not supplied, will resolve the host's own handle.",
+              description: 'The handle to resolve.',
             },
           },
         },
@@ -4924,6 +4924,15 @@ export const schemaDict = {
             },
             depth: {
               type: 'integer',
+              default: 6,
+              minimum: 0,
+              maximum: 1000,
+            },
+            parentHeight: {
+              type: 'integer',
+              default: 80,
+              minimum: 0,
+              maximum: 1000,
             },
           },
         },

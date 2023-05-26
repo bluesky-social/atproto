@@ -10,7 +10,7 @@ import {
   DidDocument,
   PoorlyFormattedDidDocumentError,
   getFeedGen,
-} from '@atproto/did-resolver'
+} from '@atproto/identity'
 import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
 import { SkeletonFeedPost } from '../../../../../lexicon/types/app/bsky/feed/defs'
 import { QueryParams as GetFeedParams } from '../../../../../lexicon/types/app/bsky/feed/getFeed'
@@ -73,7 +73,7 @@ async function skeletonFromFeedGen(
 
   let resolved: DidDocument | null
   try {
-    resolved = await ctx.didResolver.resolveDid(feedDid)
+    resolved = await ctx.idResolver.did.resolve(feedDid)
   } catch (err) {
     if (err instanceof PoorlyFormattedDidDocumentError) {
       throw new InvalidRequestError(`invalid did document: ${feedDid}`)

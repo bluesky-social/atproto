@@ -3,7 +3,7 @@ import {
   DidDocument,
   PoorlyFormattedDidDocumentError,
   getFeedGen,
-} from '@atproto/did-resolver'
+} from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
       const feedDid = feedInfo.feedDid
       let resolved: DidDocument | null
       try {
-        resolved = await ctx.didResolver.resolveDid(feedDid)
+        resolved = await ctx.idResolver.did.resolve(feedDid)
       } catch (err) {
         if (err instanceof PoorlyFormattedDidDocumentError) {
           throw new InvalidRequestError(`invalid did document: ${feedDid}`)

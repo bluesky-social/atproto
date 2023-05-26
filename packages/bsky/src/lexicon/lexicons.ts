@@ -4403,7 +4403,7 @@ export const schemaDict = {
         properties: {
           repost: {
             type: 'string',
-            ref: 'at-uri',
+            format: 'at-uri',
           },
         },
       },
@@ -4760,6 +4760,15 @@ export const schemaDict = {
             },
             depth: {
               type: 'integer',
+              default: 6,
+              minimum: 0,
+              maximum: 1000,
+            },
+            parentHeight: {
+              type: 'integer',
+              default: 80,
+              minimum: 0,
+              maximum: 1000,
             },
           },
         },

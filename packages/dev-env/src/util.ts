@@ -1,12 +1,10 @@
-import { AtpAgent } from '@atproto/api'
-import { DidResolver } from '@atproto/did-resolver'
-import { defaultFetchHandler } from '@atproto/xrpc'
+import { DidResolver, HandleResolver } from '@atproto/identity'
 import { TestPds } from './pds'
 
 export const mockNetworkUtilities = (pds: TestPds) => {
   // Map pds public url to its local url when resolving from plc
-  const origResolveDid = DidResolver.prototype.resolveDidNoCache
-  DidResolver.prototype.resolveDidNoCache = async function (did) {
+  const origResolveDid = DidResolver.prototype.resolveNoCache
+  DidResolver.prototype.resolveNoCache = async function (did) {
     const result = await (origResolveDid.call(this, did) as ReturnType<
       typeof origResolveDid
     >)
@@ -20,21 +18,18 @@ export const mockNetworkUtilities = (pds: TestPds) => {
     return result
   }
 
-  // Map pds public url and handles to pds local url
-  AtpAgent.configure({
-    fetch: (httpUri, ...args) => {
-      const url = new URL(httpUri)
-      const pdsUrl = pds.ctx.cfg.publicUrl
-      const pdsHandleDomains = pds.ctx.cfg.availableUserDomains
-      if (
-        url.origin === pdsUrl ||
-        pdsHandleDomains.some((handleDomain) => url.host.endsWith(handleDomain))
-      ) {
-        url.protocol = 'http:'
-        url.host = `localhost:${pds.port}`
-        return defaultFetchHandler(url.href, ...args)
-      }
-      return defaultFetchHandler(httpUri, ...args)
-    },
-  })
+  HandleResolver.prototype.resolve = async function (handle: string) {
+    const isPdsHandle = pds.ctx.cfg.availableUserDomains.some((domain) =>
+      handle.endsWith(domain),
+    )
+    if (!isPdsHandle) return undefined
+
+    const url = `${pds.url}/.well-known/atproto-did`
+    try {
+      const res = await fetch(url, { headers: { host: handle } })
+      return await res.text()
+    } catch (err) {
+      return undefined
+    }
+  }
 }

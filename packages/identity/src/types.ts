@@ -1,17 +1,19 @@
 import * as z from 'zod'
 
+export type IdentityResolverOpts = {
+  timeout?: number
+  plcUrl?: string
+  didCache?: DidCache
+}
+
+export type HandleResolverOpts = {
+  timeout?: number
+}
+
 export type DidResolverOpts = {
-  timeout: number
-  plcUrl: string
-}
-
-export type WebResolverOpts = {
-  timeout: number
-}
-
-export type PlcResolverOpts = {
-  timeout: number
-  plcUrl: string
+  timeout?: number
+  plcUrl?: string
+  didCache?: DidCache
 }
 
 export type AtprotoData = {
@@ -26,6 +28,17 @@ export type CacheResult = {
   doc: DidDocument
   updatedAt: number
   stale: boolean
+}
+
+export interface DidCache {
+  cacheDid(did: string, doc: DidDocument): Promise<void>
+  checkCache(did: string): Promise<CacheResult | null>
+  refreshCache(
+    did: string,
+    getDoc: () => Promise<DidDocument | null>,
+  ): Promise<void>
+  clearEntry(did: string): Promise<void>
+  clear(): Promise<void>
 }
 
 export const verificationMethod = z.object({

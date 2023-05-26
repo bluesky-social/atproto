@@ -10,6 +10,10 @@ import {
 import { z } from 'zod'
 
 export function toLexUri(str: string, baseUri?: string): string {
+  if (str.split('#').length > 2) {
+    throw new Error('Uri can only have one hash segment')
+  }
+
   if (str.startsWith('lex:')) {
     return str
   }
@@ -41,7 +45,7 @@ export function validateOneOf(
         ),
       }
     }
-    if (!def.refs.includes(toLexUri(value.$type))) {
+    if (!refsContainType(def.refs, value.$type)) {
       if (def.closed) {
         return {
           success: false,
@@ -143,5 +147,20 @@ export function requiredPropertiesRefinement<
         message: `Required field "${field}" not defined`,
       })
     }
+  }
+}
+
+// to avoid bugs like #0189 this needs to handle both
+// explicit and implicit #main
+const refsContainType = (refs: string[], type: string) => {
+  const lexUri = toLexUri(type)
+  if (refs.includes(lexUri)) {
+    return true
+  }
+
+  if (lexUri.endsWith('#main')) {
+    return refs.includes(lexUri.replace('#main', ''))
+  } else {
+    return refs.includes(lexUri + '#main')
   }
 }

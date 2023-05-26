@@ -11,7 +11,8 @@ import * as AppBskyFeedDefs from './defs'
 
 export interface QueryParams {
   uri: string
-  depth?: number
+  depth: number
+  parentHeight: number
 }
 
 export type InputSchema = undefined

@@ -1,6 +1,6 @@
 import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
-import { DidResolver } from '@atproto/did-resolver'
+import { IdResolver } from '@atproto/identity'
 import { Database } from './db'
 import { ServerConfig } from './config'
 import * as auth from './auth'
@@ -22,7 +22,7 @@ export class AppContext {
       blobstore: BlobStore
       repoSigningKey: crypto.Keypair
       plcRotationKey: crypto.Keypair
-      didResolver: DidResolver
+      idResolver: IdResolver
       didCache: DidSqlCache
       auth: auth.ServerAuth
       imgUriBuilder: ImageUriBuilder
@@ -117,8 +117,8 @@ export class AppContext {
     return new plc.Client(this.cfg.didPlcUrl)
   }
 
-  get didResolver(): DidResolver {
-    return this.opts.didResolver
+  get idResolver(): IdResolver {
+    return new IdResolver({ plcUrl: this.cfg.didPlcUrl })
   }
 
   get didCache(): DidSqlCache {

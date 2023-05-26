@@ -8,8 +8,8 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 
 export interface QueryParams {
-  /** The handle to resolve. If not supplied, will resolve the host's own handle. */
-  handle?: string
+  /** The handle to resolve. */
+  handle: string
 }
 
 export type InputSchema = undefined
