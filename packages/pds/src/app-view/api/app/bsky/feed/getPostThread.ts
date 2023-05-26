@@ -26,13 +26,18 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
-      const { uri, depth = 6 } = params
+      const { uri, depth, parentHeight } = params
       const requester = auth.credentials.did
 
       const feedService = ctx.services.appView.feed(ctx.db)
       const labelService = ctx.services.appView.label(ctx.db)
 
-      const threadData = await getThreadData(feedService, uri, depth)
+      const threadData = await getThreadData(
+        feedService,
+        uri,
+        depth,
+        parentHeight,
+      )
       if (!threadData) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
@@ -159,6 +164,7 @@ const getThreadData = async (
   feedService: FeedService,
   uri: string,
   depth: number,
+  parentHeight: number,
 ): Promise<PostThread | null> => {
   const [parents, children] = await Promise.all([
     feedService
@@ -189,7 +195,7 @@ const getThreadData = async (
   return {
     post,
     parent: post.replyParent
-      ? getParentData(parentsByUri, post.replyParent)
+      ? getParentData(parentsByUri, post.replyParent, parentHeight)
       : undefined,
     replies: getChildrenData(childrenByParentUri, uri, depth),
   }
@@ -198,13 +204,15 @@ const getThreadData = async (
 const getParentData = (
   postsByUri: Record<string, FeedRow>,
   uri: string,
-): PostThread | ParentNotFoundError => {
+  depth: number,
+): PostThread | ParentNotFoundError | undefined => {
+  if (depth === 0) return undefined
   const post = postsByUri[uri]
   if (!post) return new ParentNotFoundError(uri)
   return {
     post,
     parent: post.replyParent
-      ? getParentData(postsByUri, post.replyParent)
+      ? getParentData(postsByUri, post.replyParent, depth - 1)
       : undefined,
     replies: [],
   }
