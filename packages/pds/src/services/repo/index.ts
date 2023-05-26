@@ -2,11 +2,15 @@ import { CID } from 'multiformats/cid'
 import * as crypto from '@atproto/crypto'
 import {
   BlobStore,
+  MemoryBlockstore,
+  BlockMap,
   CommitData,
   RebaseData,
   Repo,
   WriteOpAction,
 } from '@atproto/repo'
+import * as repo from '@atproto/repo'
+import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
@@ -24,6 +28,7 @@ import * as sequencer from '../../sequencer'
 import { Labeler } from '../../labeler'
 import { wait } from '@atproto/common'
 import { BackgroundQueue } from '../../event-stream/background-queue'
+import { countAll } from '../../db/util'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -231,49 +236,101 @@ export class RepoService {
 
   async rebaseRepo(did: string, swapCommit?: CID) {
     this.db.assertNotTransaction()
-    const storage = new SqlRepoStorage(this.db, did)
+    const rebaseData = await this.formatRebase(did, swapCommit)
+
+    // rebases are expensive & should be done rarely, we don't try to re-process on concurrent writes
+    await this.serviceTx(async (srvcTx) =>
+      srvcTx.processRebase(did, rebaseData),
+    )
+  }
+
+  async formatRebase(did: string, swapCommit?: CID): Promise<RebaseData> {
+    const storage = new SqlRepoStorage(this.db, did, new Date().toISOString())
     const currRoot = await storage.getHead()
     if (!currRoot) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
       )
     }
-    const repo = await Repo.load(storage, currRoot)
-    const rebaseData = await repo.formatRebase(this.repoSigningKey)
-
-    // rebases are expensive & should be done rarely, we don't try to re-process on concurrent writes
-    await this.serviceTx(async (srvcTx) =>
-      srvcTx.processRebase(did, rebaseData, swapCommit),
-    )
-  }
-
-  async processRebase(
-    did: string,
-    rebaseData: RebaseData,
-    swapCommit?: CID,
-    now?: string,
-  ) {
-    this.db.assertTransaction()
-    const storage = new SqlRepoStorage(this.db, did, now)
-    const currRoot = await storage.lockHead()
-    if (!currRoot) {
-      throw new ConcurrentWriteError()
-    }
     if (swapCommit && !currRoot.equals(swapCommit)) {
       throw new BadCommitSwapError(currRoot)
     }
+
+    const records = await this.db.db
+      .selectFrom('record')
+      .where('did', '=', did)
+      .select(['uri', 'cid'])
+      .execute()
+    const memoryStore = new MemoryBlockstore()
+    let data = await repo.MST.create(memoryStore)
+    for (const record of records) {
+      const uri = new AtUri(record.uri)
+      const cid = CID.parse(record.cid)
+      const dataKey = repo.formatDataKey(uri.collection, uri.rkey)
+      data = await data.add(dataKey, cid)
+    }
+    const commit = await repo.signCommit(
+      {
+        did,
+        version: 2,
+        prev: null,
+        data: await data.getPointer(),
+      },
+      this.repoSigningKey,
+    )
+    const currCids = await data.allCids()
+    const newBlocks = new BlockMap()
+    const commitCid = await newBlocks.add(commit)
+    return {
+      commit: commitCid,
+      rebased: currRoot,
+      blocks: newBlocks,
+      preservedCids: currCids.toList(),
+    }
+  }
+
+  async processRebase(did: string, rebaseData: RebaseData) {
+    this.db.assertTransaction()
+    const storage = new SqlRepoStorage(this.db, did)
+    const lockedHead = await storage.lockHead()
+    if (!rebaseData.rebased.equals(lockedHead)) {
+      throw new ConcurrentWriteError()
+    }
+
+    const recordCountBefore = await this.countRecordBlocks(did)
     await Promise.all([
       storage.applyRebase(rebaseData),
-      this.afterRebaseProcessing(did, rebaseData),
+      this.blobs.processRebaseBlobs(did, rebaseData.commit),
     ])
+    const recordCountAfter = await this.countRecordBlocks(did)
+    // This is purely a dummy check on a very sensitive operation
+    if (recordCountBefore !== recordCountAfter) {
+      throw new Error(
+        `Record blocks deleted during rebase. Rolling back: ${did}`,
+      )
+    }
+
+    await this.afterRebaseProcessing(did, rebaseData)
   }
 
   async afterRebaseProcessing(did: string, rebaseData: RebaseData) {
-    const [seqEvt] = await Promise.all([
-      sequencer.formatSeqRebase(did, rebaseData),
-      this.blobs.processRebaseBlobs(did, rebaseData.commit),
-    ])
+    const seqEvt = await sequencer.formatSeqRebase(did, rebaseData)
     await sequencer.sequenceEvt(this.db, seqEvt)
+  }
+
+  // used for integrity check
+  private async countRecordBlocks(did: string): Promise<number> {
+    const res = await this.db.db
+      .selectFrom('record')
+      .where('record.did', '=', did)
+      .innerJoin('ipld_block', (join) =>
+        join
+          .onRef('ipld_block.creator', '=', 'record.did')
+          .onRef('ipld_block.cid', '=', 'record.cid'),
+      )
+      .select(countAll.as('count'))
+      .executeTakeFirst()
+    return res?.count ?? 0
   }
 
   async deleteRepo(did: string) {
