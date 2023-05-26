@@ -1,14 +1,13 @@
 import * as crypto from '@atproto/crypto'
 import { check } from '@atproto/common-web'
-import { AtprotoData, DidDocument, didDocument } from './types'
+import { DidCache, AtprotoData, DidDocument, didDocument } from '../types'
 import * as atprotoData from './atproto-data'
-import { DidNotFoundError, PoorlyFormattedDidDocumentError } from './errors'
-import { DidCache } from './did-cache'
+import { DidNotFoundError, PoorlyFormattedDidDocumentError } from '../errors'
 
 export abstract class BaseResolver {
   constructor(public cache?: DidCache) {}
 
-  abstract resolveDidNoCheck(did: string): Promise<unknown | null>
+  abstract resolveNoCheck(did: string): Promise<unknown | null>
 
   validateDidDoc(did: string, val: unknown): DidDocument {
     if (!check.is(val, didDocument)) {
@@ -20,17 +19,17 @@ export abstract class BaseResolver {
     return val
   }
 
-  async resolveDidNoCache(did: string): Promise<DidDocument | null> {
-    const got = await this.resolveDidNoCheck(did)
+  async resolveNoCache(did: string): Promise<DidDocument | null> {
+    const got = await this.resolveNoCheck(did)
     if (got === null) return null
     return this.validateDidDoc(did, got)
   }
 
   async refreshCache(did: string): Promise<void> {
-    await this.cache?.refreshCache(did, () => this.resolveDidNoCache(did))
+    await this.cache?.refreshCache(did, () => this.resolveNoCache(did))
   }
 
-  async resolveDid(
+  async resolve(
     did: string,
     forceRefresh = false,
   ): Promise<DidDocument | null> {
@@ -44,7 +43,7 @@ export abstract class BaseResolver {
       }
     }
 
-    const got = await this.resolveDidNoCache(did)
+    const got = await this.resolveNoCache(did)
     if (got === null) {
       await this.cache?.clearEntry(did)
       return null
@@ -53,11 +52,8 @@ export abstract class BaseResolver {
     return got
   }
 
-  async ensureResolveDid(
-    did: string,
-    forceRefresh = false,
-  ): Promise<DidDocument> {
-    const result = await this.resolveDid(did, forceRefresh)
+  async ensureResolve(did: string, forceRefresh = false): Promise<DidDocument> {
+    const result = await this.resolve(did, forceRefresh)
     if (result === null) {
       throw new DidNotFoundError(did)
     }
@@ -68,7 +64,7 @@ export abstract class BaseResolver {
     did: string,
     forceRefresh = false,
   ): Promise<AtprotoData> {
-    const didDocument = await this.ensureResolveDid(did, forceRefresh)
+    const didDocument = await this.ensureResolve(did, forceRefresh)
     return atprotoData.ensureAtpDocument(didDocument)
   }
 

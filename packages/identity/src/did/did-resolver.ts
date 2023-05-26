@@ -1,24 +1,23 @@
 import { DidWebResolver } from './web-resolver'
 import { DidPlcResolver } from './plc-resolver'
-import { DidResolverOpts } from './types'
+import { DidResolverOpts } from '../types'
 import BaseResolver from './base-resolver'
-import { PoorlyFormattedDidError, UnsupportedDidMethodError } from './errors'
-import { DidCache } from './did-cache'
+import { PoorlyFormattedDidError, UnsupportedDidMethodError } from '../errors'
 
 export class DidResolver extends BaseResolver {
   methods: Record<string, BaseResolver>
 
-  constructor(opts: Partial<DidResolverOpts> = {}, cache?: DidCache) {
-    super(cache)
+  constructor(opts: DidResolverOpts) {
+    super(opts.didCache)
     const { timeout = 3000, plcUrl = 'https://plc.directory' } = opts
     // do not pass cache to sub-methods or we will be double caching
     this.methods = {
-      plc: new DidPlcResolver({ timeout, plcUrl }),
-      web: new DidWebResolver({ timeout }),
+      plc: new DidPlcResolver(plcUrl, timeout),
+      web: new DidWebResolver(timeout),
     }
   }
 
-  async resolveDidNoCheck(did: string): Promise<unknown> {
+  async resolveNoCheck(did: string): Promise<unknown> {
     const split = did.split(':')
     if (split[0] !== 'did') {
       throw new PoorlyFormattedDidError(did)
@@ -27,7 +26,7 @@ export class DidResolver extends BaseResolver {
     if (!method) {
       throw new UnsupportedDidMethodError(did)
     }
-    return method.resolveDidNoCheck(did)
+    return method.resolveNoCheck(did)
   }
 }
 

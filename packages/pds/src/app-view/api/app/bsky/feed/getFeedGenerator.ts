@@ -1,5 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { getFeedGen } from '@atproto/did-resolver'
+import { getFeedGen } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
@@ -20,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const feedDid = feedInfo.feedDid
-      const resolved = await ctx.didResolver.resolveDid(feedDid)
+      const resolved = await ctx.idResolver.did.resolve(feedDid)
       if (!resolved) {
         throw new InvalidRequestError(
           `could not resolve did document: ${feedDid}`,

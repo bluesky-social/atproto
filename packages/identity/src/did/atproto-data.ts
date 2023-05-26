@@ -1,5 +1,5 @@
 import * as crypto from '@atproto/crypto'
-import { DidDocument, AtprotoData } from './types'
+import { DidDocument, AtprotoData } from '../types'
 
 export const getDid = (doc: DidDocument): string => {
   const id = doc.id

@@ -3,7 +3,7 @@ import {
   UpstreamFailureError,
   createServiceAuthHeaders,
 } from '@atproto/xrpc-server'
-import { getFeedGen } from '@atproto/did-resolver'
+import { getFeedGen } from '@atproto/identity'
 import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
 import { SkeletonFeedPost } from '../../../../../lexicon/types/app/bsky/feed/defs'
 import { QueryParams as GetFeedParams } from '../../../../../lexicon/types/app/bsky/feed/getFeed'
@@ -58,7 +58,7 @@ async function skeletonFromFeedGen(
     throw new InvalidRequestError('could not find feed')
   }
   const feedDid = found.feedDid
-  const resolved = await ctx.didResolver.resolveDid(feedDid)
+  const resolved = await ctx.idResolver.did.resolve(feedDid)
   if (!resolved) {
     throw new InvalidRequestError(`could not resolve did document: ${feedDid}`)
   }

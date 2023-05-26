@@ -1,21 +1,21 @@
 import axios, { AxiosError } from 'axios'
 import BaseResolver from './base-resolver'
-import { PlcResolverOpts } from './types'
-import { DidCache } from './did-cache'
+import { DidCache } from '../types'
 
 export class DidPlcResolver extends BaseResolver {
-  constructor(public opts: PlcResolverOpts, public cache?: DidCache) {
+  constructor(
+    public plcUrl: string,
+    public timeout: number,
+    public cache?: DidCache,
+  ) {
     super(cache)
   }
 
-  async resolveDidNoCheck(did: string): Promise<unknown> {
+  async resolveNoCheck(did: string): Promise<unknown> {
     try {
-      const res = await axios.get(
-        `${this.opts.plcUrl}/${encodeURIComponent(did)}`,
-        {
-          timeout: this.opts.timeout,
-        },
-      )
+      const res = await axios.get(`${this.plcUrl}/${encodeURIComponent(did)}`, {
+        timeout: this.timeout,
+      })
       return res.data
     } catch (err) {
       if (err instanceof AxiosError && err.response?.status === 404) {

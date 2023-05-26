@@ -24,7 +24,7 @@
     "@atproto/api": "*",
     "@atproto/bsky": "*",
     "@atproto/crypto": "*",
-    "@atproto/did-resolver": "*",
+    "@atproto/identity": "*",
     "@atproto/pds": "*",
     "@atproto/uri": "*",
     "@atproto/xrpc-server": "*",

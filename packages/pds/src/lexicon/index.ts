@@ -101,6 +101,7 @@ import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notificatio
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
+import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 
 export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
@@ -1027,6 +1028,16 @@ export class UnspeccedNS {
     cfg: ConfigOf<AV, AppBskyUnspeccedGetPopular.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.unspecced.getPopular' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getPopularFeedGenerators<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetPopularFeedGenerators.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getPopularFeedGenerators' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

@@ -3,7 +3,7 @@ import AtpAgent, {
   ComAtprotoServerCreateAccount,
   ComAtprotoServerResetPassword,
 } from '@atproto/api'
-import { DidResolver } from '@atproto/did-resolver'
+import { IdResolver } from '@atproto/identity'
 import * as crypto from '@atproto/crypto'
 import Mail from 'nodemailer/lib/mailer'
 import { AppContext, Database } from '../src'
@@ -40,7 +40,7 @@ describe('account', () => {
   let close: util.CloseFn
   let mailer: ServerMailer
   let db: Database
-  let didResolver: DidResolver
+  let idResolver: IdResolver
   const mailCatcher = new EventEmitter()
   let _origSendMail
 
@@ -58,7 +58,7 @@ describe('account', () => {
     ctx = server.ctx
     serverUrl = server.url
     repoSigningKey = server.ctx.repoSigningKey.did()
-    didResolver = new DidResolver({ plcUrl: ctx.cfg.didPlcUrl })
+    idResolver = new IdResolver({ plcUrl: ctx.cfg.didPlcUrl })
     agent = new AtpAgent({ service: serverUrl })
 
     // Catch emails for use in tests
@@ -140,7 +140,7 @@ describe('account', () => {
   })
 
   it('generates a properly formatted PLC DID', async () => {
-    const didData = await didResolver.resolveAtprotoData(did)
+    const didData = await idResolver.did.resolveAtprotoData(did)
 
     expect(didData.did).toBe(did)
     expect(didData.handle).toBe(handle)
