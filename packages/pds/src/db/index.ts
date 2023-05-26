@@ -264,11 +264,22 @@ export class Database {
     )
     const { views, intervalSec, signal } = opts
     while (!signal.aborted) {
-      try {
-        await views.map((view) => this.refreshMaterializedView(view))
-      } catch (err) {
-        log.error(err, 'materialized view refresh failed')
-      }
+      await Promise.all(
+        views.map(async (view) => {
+          try {
+            await this.refreshMaterializedView(view)
+            log.info(
+              { view, time: new Date().toISOString() },
+              'materialized view refreshed',
+            )
+          } catch (err) {
+            log.error(
+              { view, err, time: new Date().toISOString() },
+              'materialized view refresh failed',
+            )
+          }
+        }),
+      )
       // super basic synchronization by agreeing when the intervals land relative to unix timestamp
       const now = Date.now()
       const intervalMs = 1000 * intervalSec
