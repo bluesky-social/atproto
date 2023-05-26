@@ -1228,12 +1228,12 @@ export const schemaDict = {
         description: 'Provides the DID of a repo.',
         parameters: {
           type: 'params',
+          required: ['handle'],
           properties: {
             handle: {
               type: 'string',
               format: 'handle',
-              description:
-                "The handle to resolve. If not supplied, will resolve the host's own handle.",
+              description: 'The handle to resolve.',
             },
           },
         },
@@ -4924,6 +4924,15 @@ export const schemaDict = {
             },
             depth: {
               type: 'integer',
+              default: 6,
+              minimum: 0,
+              maximum: 1000,
+            },
+            parentHeight: {
+              type: 'integer',
+              default: 80,
+              minimum: 0,
+              maximum: 1000,
             },
           },
         },
@@ -6176,6 +6185,32 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetPopularFeedGenerators: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getPopularFeedGenerators',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'An unspecced view of globally popular feed generators',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feeds'],
+            properties: {
+              feeds: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#generatorView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -6301,4 +6336,6 @@ export const ids = {
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedGetPopular: 'app.bsky.unspecced.getPopular',
+  AppBskyUnspeccedGetPopularFeedGenerators:
+    'app.bsky.unspecced.getPopularFeedGenerators',
 }

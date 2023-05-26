@@ -1,5 +1,5 @@
 import * as plc from '@did-plc/lib'
-import { DidResolver } from '@atproto/did-resolver'
+import { IdResolver } from '@atproto/identity'
 import { Database } from './db'
 import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
@@ -15,7 +15,7 @@ export class AppContext {
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       services: Services
-      didResolver: DidResolver
+      idResolver: IdResolver
       didCache: DidSqlCache
       labeler: Labeler
     },
@@ -41,8 +41,8 @@ export class AppContext {
     return new plc.Client(this.cfg.didPlcUrl)
   }
 
-  get didResolver(): DidResolver {
-    return this.opts.didResolver
+  get idResolver(): IdResolver {
+    return this.opts.idResolver
   }
 
   get didCache(): DidSqlCache {
@@ -50,11 +50,11 @@ export class AppContext {
   }
 
   get authVerifier() {
-    return auth.authVerifier(this.cfg.serverDid, this.didResolver)
+    return auth.authVerifier(this.cfg.serverDid, this.idResolver)
   }
 
   get authOptionalVerifier() {
-    return auth.authOptionalVerifier(this.cfg.serverDid, this.didResolver)
+    return auth.authOptionalVerifier(this.cfg.serverDid, this.idResolver)
   }
 
   get labeler(): Labeler {

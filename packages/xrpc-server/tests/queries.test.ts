@@ -82,6 +82,7 @@ describe('Queries', () => {
     return {
       encoding: 'application/json',
       body: { message: ctx.params.message },
+      headers: { 'x-test-header-name': 'test-value' },
     }
   })
   xrpc.addLexicons(LEXICONS)
@@ -117,5 +118,6 @@ describe('Queries', () => {
     expect(res3.success).toBeTruthy()
     expect(res3.headers['content-type']).toBe('application/json; charset=utf-8')
     expect(res3.data?.message).toBe('hello world')
+    expect(res3.headers['x-test-header-name']).toEqual('test-value')
   })
 })

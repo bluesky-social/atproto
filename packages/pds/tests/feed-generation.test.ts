@@ -13,6 +13,7 @@ import {
 } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 import { SkeletonFeedPost } from '../src/lexicon/types/app/bsky/feed/defs'
 import { RecordRef } from './seeds/client'
+import { ids } from '../src/lexicon/lexicons'
 
 describe('feed generation', () => {
   let network: TestNetworkNoAppView
@@ -47,6 +48,11 @@ describe('feed generation', () => {
     await network.close()
   })
 
+  it('describes the feed generator', async () => {
+    const res = await agent.api.app.bsky.feed.describeFeedGenerator()
+    expect(res.data.did).toBe(network.pds.ctx.cfg.feedGenDid)
+  })
+
   it('feed gen records can be created.', async () => {
     const all = await agent.api.app.bsky.feed.generator.create(
       { repo: alice, rkey: 'all' },
@@ -73,8 +79,8 @@ describe('feed generation', () => {
       { repo: alice, rkey: 'odd' },
       {
         did: gen.did,
-        displayName: 'Odd',
-        description: 'Provides odd-indexed feed candidates',
+        displayName: 'Temp', // updated in next test
+        description: 'Temp', // updated in next test
         createdAt: new Date().toISOString(),
       },
       sc.getHeaders(alice),
@@ -83,6 +89,23 @@ describe('feed generation', () => {
     feedUriAllRef = new RecordRef(all.uri, all.cid)
     feedUriEven = even.uri
     feedUriOdd = odd.uri
+  })
+
+  it('feed gen records can be updated', async () => {
+    await agent.api.com.atproto.repo.putRecord(
+      {
+        repo: alice,
+        collection: ids.AppBskyFeedGenerator,
+        rkey: 'odd',
+        record: {
+          did: gen.did,
+          displayName: 'Odd',
+          description: 'Provides odd-indexed feed candidates',
+          createdAt: new Date().toISOString(),
+        },
+      },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
   })
 
   it('getActorFeeds fetches feed generators by actor.', async () => {
@@ -195,6 +218,17 @@ describe('feed generation', () => {
     })
   })
 
+  describe('getPopularFeedGenerators', () => {
+    it('gets popular feed generators', async () => {
+      const resEven =
+        await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+          {},
+          { headers: sc.getHeaders(sc.dids.bob) },
+        )
+      expect(resEven.data.feeds.map((f) => f.likeCount)).toEqual([2, 0, 0, 0])
+    })
+  })
+
   describe('getFeed', () => {
     it('resolves basic feed contents.', async () => {
       const feed = await agent.api.app.bsky.feed.getFeed(
@@ -258,13 +292,23 @@ describe('feed generation', () => {
       expect(feed.data['$auth']?.['iss']).toEqual(alice)
     })
 
+    it('provides timing info in server-timing header.', async () => {
+      const result = await agent.api.app.bsky.feed.getFeed(
+        { feed: feedUriEven },
+        { headers: sc.getHeaders(alice) },
+      )
+      expect(result.headers['server-timing']).toMatch(
+        /^skele;dur=\d+, hydr;dur=\d+$/,
+      )
+    })
+
     it('returns an upstream failure error when the feed is down.', async () => {
       await gen.close() // @NOTE must be last test
       const tryGetFeed = agent.api.app.bsky.feed.getFeed(
         { feed: feedUriEven },
         { headers: sc.getHeaders(alice) },
       )
-      await expect(tryGetFeed).rejects.toThrow('Feed unavailable')
+      await expect(tryGetFeed).rejects.toThrow('feed unavailable')
     })
   })
 

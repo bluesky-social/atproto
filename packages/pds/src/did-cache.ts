@@ -1,9 +1,9 @@
 import PQueue from 'p-queue'
-import { CacheResult, DidCache, DidDocument } from '@atproto/did-resolver'
+import { CacheResult, DidCache, DidDocument } from '@atproto/identity'
 import Database from './db'
 import { excluded } from './db/util'
 
-export class DidSqlCache extends DidCache {
+export class DidSqlCache implements DidCache {
   public pQueue: PQueue | null //null during teardown
 
   constructor(
@@ -11,7 +11,6 @@ export class DidSqlCache extends DidCache {
     public staleTTL: number,
     public maxTTL: number,
   ) {
-    super()
     this.pQueue = new PQueue()
   }
 

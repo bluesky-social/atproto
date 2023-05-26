@@ -35,7 +35,9 @@ const handler: AlgoHandler = async (
   const postsQb = feedService
     .selectPostQb()
     .where('post.creator', 'in', BSKY_TEAM)
-    .whereNotExists(accountService.mutedQb(requester, [ref('post.creator')]))
+    .where((qb) =>
+      accountService.whereNotMuted(qb, requester, [ref('post.creator')]),
+    )
     .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
 
   const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))

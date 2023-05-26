@@ -16,6 +16,7 @@ import inProcessAppView from './app-view/api'
 import proxiedAppView from './app-view/proxied'
 import API from './api'
 import * as basicRoutes from './basic-routes'
+import * as wellKnown from './well-known'
 import Database from './db'
 import { ServerAuth } from './auth'
 import * as error from './error'
@@ -37,7 +38,7 @@ import {
 import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
 import { BackgroundQueue } from './event-stream/background-queue'
 import DidSqlCache from './did-cache'
-import { DidResolver } from '@atproto/did-resolver'
+import { IdResolver } from '@atproto/identity'
 import { MountedAlgos } from './feed-gen/types'
 
 export type { ServerConfigValues } from './config'
@@ -95,7 +96,7 @@ export class PDS {
       config.didCacheStaleTTL,
       config.didCacheMaxTTL,
     )
-    const didResolver = new DidResolver({ plcUrl: config.didPlcUrl }, didCache)
+    const idResolver = new IdResolver({ plcUrl: config.didPlcUrl, didCache })
 
     const messageDispatcher = new MessageDispatcher()
     const sequencer = new Sequencer(db)
@@ -177,7 +178,7 @@ export class PDS {
       blobstore,
       repoSigningKey,
       plcRotationKey,
-      didResolver,
+      idResolver,
       didCache,
       cfg: config,
       auth,
@@ -210,6 +211,7 @@ export class PDS {
     }
 
     app.use(basicRoutes.createRouter(ctx))
+    app.use(wellKnown.createRouter(ctx))
     app.use(server.xrpc.router)
     app.use(error.handler)
 

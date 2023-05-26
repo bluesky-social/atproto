@@ -1,12 +1,12 @@
 {
-  "name": "@atproto/did-resolver",
+  "name": "@atproto/identity",
   "version": "0.1.0",
   "main": "src/index.ts",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/bluesky-social/atproto.git",
-    "directory": "packages/did-resolver"
+    "directory": "packages/identity"
   },
   "scripts": {
     "test": "jest",
