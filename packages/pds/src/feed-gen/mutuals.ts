@@ -16,21 +16,24 @@ const handler: AlgoHandler = async (
 
   const { ref } = ctx.db.db.dynamic
 
-  const postsQb = feedService
-    .selectPostQb()
+  const mutualsSubquery = ctx.db.db
+    .selectFrom('follow')
+    .where('follow.creator', '=', requester)
     .whereExists((qb) =>
       qb
-        .selectFrom('follow')
-        .where('follow.creator', '=', requester)
-        .whereRef('follow.subjectDid', '=', 'post.creator')
-        .whereExists((inner) =>
-          inner
-            .selectFrom('follow as follow_inner')
-            .whereRef('follow_inner.creator', '=', 'follow.subjectDid')
-            .where('follow_inner.subjectDid', '=', requester)
-            .selectAll(),
-        )
+        .selectFrom('follow as follow_inner')
+        .whereRef('follow_inner.creator', '=', 'follow.subjectDid')
+        .where('follow_inner.subjectDid', '=', requester)
         .selectAll(),
+    )
+    .select('follow.subjectDid')
+
+  const postsQb = feedService
+    .selectPostQb()
+    .where((qb) =>
+      qb
+        .where('post.creator', '=', requester)
+        .orWhere('post.creator', 'in', mutualsSubquery),
     )
     .where((qb) =>
       accountService.whereNotMuted(qb, requester, [ref('post.creator')]),
