@@ -81,10 +81,8 @@ export class ModerationService {
     actionType?: string
     limit: number
     cursor?: string
-    ignoreSubjects?: string[]
   }): Promise<ModerationReportRow[]> {
-    const { subject, resolved, actionType, limit, cursor, ignoreSubjects } =
-      opts
+    const { subject, resolved, actionType, limit, cursor } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_report')
     if (subject) {
@@ -92,13 +90,6 @@ export class ModerationService {
         return qb
           .where('subjectDid', '=', subject)
           .orWhere('subjectUri', '=', subject)
-      })
-    }
-    if (ignoreSubjects?.length) {
-      builder = builder.where((qb) => {
-        return qb
-          .where('subjectDid', 'not in', ignoreSubjects)
-          .where('subjectUri', 'not in', ignoreSubjects)
       })
     }
     if (resolved !== undefined) {
