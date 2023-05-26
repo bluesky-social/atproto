@@ -77,7 +77,9 @@ const handler: AlgoHandler = async (
             .orWhereRef('label.uri', '=', ref('post_embed_record.embedUri')),
         ),
     )
-    .whereNotExists(accountService.mutedQb(requester, [ref('post.creator')]))
+    .where((qb) =>
+      accountService.whereNotMuted(qb, requester, [ref('post.creator')]),
+    )
     .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
     .orderBy('candidate.score', 'desc')
     .limit(limit)
