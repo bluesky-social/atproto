@@ -35,9 +35,9 @@ export default function (server: Server, ctx: AppContext) {
             .where('originatorDid', '=', requester)
             .orWhere('originatorDid', 'in', followingIdsSubquery),
         )
-        .whereNotExists(
+        .where((qb) =>
           // Hide posts and reposts of or by muted actors
-          accountService.mutedQb(requester, [
+          accountService.whereNotMuted(qb, requester, [
             ref('post.creator'),
             ref('originatorDid'),
           ]),

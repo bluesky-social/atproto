@@ -136,9 +136,9 @@ async function skeletonFromFeedGen(
     ? await feedService
         .selectFeedItemQb()
         .where('feed_item.uri', 'in', feedItemUris)
-        .whereNotExists(
+        .where((qb) =>
           // Hide posts and reposts of or by muted actors
-          accountService.mutedQb(requester, [
+          accountService.whereNotMuted(qb, requester, [
             ref('post.creator'),
             ref('originatorDid'),
           ]),
