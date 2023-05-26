@@ -21,7 +21,6 @@ import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
 import { dbLogger as log } from '../logger'
-import { wait } from '@atproto/common'
 
 export class Database {
   txEvt = new EventEmitter() as TxnEmitter
@@ -183,7 +182,8 @@ export class Database {
         const txRes = await fn(dbTxn)
           .catch(async (err) => {
             leakyTxPlugin.endTx()
-            await wait(10)
+            // ensure that all in-flight queries are flushed & the connection is open
+            await dbTxn.db.getExecutor().provideConnection(async () => {})
             throw err
           })
           .finally(() => leakyTxPlugin.endTx())

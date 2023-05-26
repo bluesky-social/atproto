@@ -132,18 +132,24 @@ describe('db', () => {
 
     it('ensures all inflight querys are rolled back', async () => {
       let promise: Promise<unknown> | undefined = undefined
+      const names: string[] = []
       try {
         await db.transaction(async (dbTxn) => {
-          const queryA = dbTxn.db
-            .insertInto('repo_root')
-            .values({ root: 'a', did: 'a', indexedAt: 'bad-date' })
-            .execute()
-          const queryB = dbTxn.db
-            .insertInto('repo_root')
-            .values({ root: 'b', did: 'b', indexedAt: 'bad-date' })
-            .execute()
-
-          promise = Promise.allSettled([queryA, queryB])
+          const queries: Promise<unknown>[] = []
+          for (let i = 0; i < 20; i++) {
+            const name = `user${i}`
+            const query = dbTxn.db
+              .insertInto('repo_root')
+              .values({
+                root: name,
+                did: name,
+                indexedAt: 'bad-date',
+              })
+              .execute()
+            names.push(name)
+            queries.push(query)
+          }
+          promise = Promise.allSettled(queries)
           throw new Error()
         })
       } catch (err) {
@@ -156,7 +162,7 @@ describe('db', () => {
       const res = await db.db
         .selectFrom('repo_root')
         .selectAll()
-        .where('did', 'in', ['a', 'b'])
+        .where('did', 'in', names)
         .execute()
       expect(res.length).toBe(0)
     })
