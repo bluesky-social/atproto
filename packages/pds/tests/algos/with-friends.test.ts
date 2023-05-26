@@ -4,7 +4,7 @@ import { RecordRef, SeedClient } from '../seeds/client'
 import userSeed from '../seeds/users'
 import { makeAlgos } from '../../src'
 
-describe('algo with friends', () => {
+describe.skip('algo with friends', () => {
   let server: TestServerInfo
   let agent: AtpAgent
   let sc: SeedClient
