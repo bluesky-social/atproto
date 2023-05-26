@@ -80,9 +80,9 @@ const main = async () => {
   })
 }
 
-const pgUrl = ({ username, password, host, port }) => {
+const pgUrl = ({ username = "postgres", password = "postgres", host = "0.0.0.0", port = "5432", database = "postgres", sslmode }) => {
   const enc = encodeURIComponent
-  return `postgresql://${username}:${enc(password)}@${host}:${port}/postgres`
+  return `postgresql://${username}:${enc(password)}@${host}:${port}/${database}${sslmode ? `?sslmode=${enc(sslmode)}` : ''}`
 }
 
 const smtpUrl = ({ username, password, host }) => {
