@@ -101,6 +101,144 @@ describe('General validation', () => {
       lexiconDoc.parse(schema)
     }).toThrow('Required field \\"foo\\" not defined')
   })
+  it('fails lexicon parsing when uri is invalid', () => {
+    const schema = {
+      lexicon: 1,
+      id: 'com.example.invalidUri',
+      defs: {
+        main: {
+          type: 'object',
+          properties: {
+            test: { type: 'ref', ref: 'com.example.invalid#test#test' },
+          },
+        },
+      },
+    }
+
+    expect(() => {
+      new Lexicons([schema])
+    }).toThrow('Uri can only have one hash segment')
+  })
+  it('fails validation when ref uri has multiple hash segments', () => {
+    const schema = {
+      lexicon: 1,
+      id: 'com.example.invalidUri',
+      defs: {
+        main: {
+          type: 'object',
+          properties: {
+            test: { type: 'integer' },
+          },
+        },
+        object: {
+          type: 'object',
+          required: ['test'],
+          properties: {
+            test: {
+              type: 'union',
+              refs: ['com.example.invalidUri'],
+            },
+          },
+        },
+      },
+    }
+    const lexicons = new Lexicons([schema])
+    expect(() => {
+      lexicons.validate('com.example.invalidUri#object', {
+        test: {
+          $type: 'com.example.invalidUri#main#main',
+          test: 123,
+        },
+      })
+    }).toThrow('Uri can only have one hash segment')
+  })
+  it('union handles both implicit and explicit #main', () => {
+    const schemas = [
+      {
+        lexicon: 1,
+        id: 'com.example.implicitMain',
+        defs: {
+          main: {
+            type: 'object',
+            required: ['test'],
+            properties: {
+              test: { type: 'string' },
+            },
+          },
+        },
+      },
+      {
+        lexicon: 1,
+        id: 'com.example.testImplicitMain',
+        defs: {
+          main: {
+            type: 'object',
+            required: ['union'],
+            properties: {
+              union: {
+                type: 'union',
+                refs: ['com.example.implicitMain'],
+              },
+            },
+          },
+        },
+      },
+      {
+        lexicon: 1,
+        id: 'com.example.testExplicitMain',
+        defs: {
+          main: {
+            type: 'object',
+            required: ['union'],
+            properties: {
+              union: {
+                type: 'union',
+                refs: ['com.example.implicitMain#main'],
+              },
+            },
+          },
+        },
+      },
+    ]
+
+    const lexicon = new Lexicons(schemas)
+
+    let result = lexicon.validate('com.example.testImplicitMain', {
+      union: {
+        $type: 'com.example.implicitMain',
+        test: 123,
+      },
+    })
+    expect(result.success).toBeFalsy()
+    expect(result['error']?.message).toBe('Object/union/test must be a string')
+
+    result = lexicon.validate('com.example.testImplicitMain', {
+      union: {
+        $type: 'com.example.implicitMain#main',
+        test: 123,
+      },
+    })
+    expect(result.success).toBeFalsy()
+    expect(result['error']?.message).toBe('Object/union/test must be a string')
+
+    result = lexicon.validate('com.example.testExplicitMain', {
+      union: {
+        $type: 'com.example.implicitMain',
+        test: 123,
+      },
+    })
+    expect(result.success).toBeFalsy()
+    expect(result['error']?.message).toBe('Object/union/test must be a string')
+
+    result = lexicon.validate('com.example.testExplicitMain', {
+      union: {
+        $type: 'com.example.implicitMain#main',
+        test: 123,
+      },
+    })
+    expect(result.success).toBeFalsy()
+    expect(result['error']?.message).toBe('Object/union/test must be a string')
+  })
 })
 
 describe('Record validation', () => {
