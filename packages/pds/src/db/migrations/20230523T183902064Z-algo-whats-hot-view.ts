@@ -44,7 +44,7 @@ export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
       '>',
       db
         .selectFrom('view_param')
-        .where('name', '=', sql`'whats_hot_interval'`)
+        .where('name', '=', 'whats_hot_interval')
         .select(
           sql`to_char(now() - value::interval, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`.as(
             'val',
@@ -57,15 +57,16 @@ export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
       '>',
       db // helps cull result set that needs to be sorted
         .selectFrom('view_param')
-        .where('name', '=', sql`'whats_hot_like_threshold'`)
+        .where('name', '=', 'whats_hot_like_threshold')
         .select(sql`value::integer`.as('val')),
     )
     .select(['post.uri as uri', 'post.cid as cid', computeScore.as('score')])
 
-  // @NOTE created with no data: must be refreshed manually before use
-  await sql`create materialized view algo_whats_hot_view as (${viewQb}) with no data`.execute(
-    db,
-  )
+  await db.schema
+    .createView('algo_whats_hot_view')
+    .materialized()
+    .as(viewQb)
+    .execute()
 
   // unique index required for pg to refresh view w/ "concurrently" param.
   await db.schema
