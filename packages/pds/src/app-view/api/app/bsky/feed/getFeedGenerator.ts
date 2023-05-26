@@ -1,5 +1,9 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { getFeedGen } from '@atproto/identity'
+import {
+  DidDocument,
+  PoorlyFormattedDidDocumentError,
+  getFeedGen,
+} from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
@@ -20,15 +24,26 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const feedDid = feedInfo.feedDid
-      const resolved = await ctx.idResolver.did.resolve(feedDid)
+      let resolved: DidDocument | null
+      try {
+        resolved = await ctx.idResolver.did.resolve(feedDid)
+      } catch (err) {
+        if (err instanceof PoorlyFormattedDidDocumentError) {
+          throw new InvalidRequestError(`invalid did document: ${feedDid}`)
+        }
+        throw err
+      }
       if (!resolved) {
         throw new InvalidRequestError(
           `could not resolve did document: ${feedDid}`,
         )
       }
-      const fgEndpoint = await getFeedGen(resolved)
+
+      const fgEndpoint = getFeedGen(resolved)
       if (!fgEndpoint) {
-        throw new InvalidRequestError(`not a valid feed generator: ${feedDid}`)
+        throw new InvalidRequestError(
+          `invalid feed generator service details in did document: ${feedDid}`,
+        )
       }
 
       let isOnline: boolean

@@ -292,13 +292,23 @@ describe('feed generation', () => {
       expect(feed.data['$auth']?.['iss']).toEqual(alice)
     })
 
+    it('provides timing info in server-timing header.', async () => {
+      const result = await agent.api.app.bsky.feed.getFeed(
+        { feed: feedUriEven },
+        { headers: sc.getHeaders(alice) },
+      )
+      expect(result.headers['server-timing']).toMatch(
+        /^skele;dur=\d+, hydr;dur=\d+$/,
+      )
+    })
+
     it('returns an upstream failure error when the feed is down.', async () => {
       await gen.close() // @NOTE must be last test
       const tryGetFeed = agent.api.app.bsky.feed.getFeed(
         { feed: feedUriEven },
         { headers: sc.getHeaders(alice) },
       )
-      await expect(tryGetFeed).rejects.toThrow('Feed unavailable')
+      await expect(tryGetFeed).rejects.toThrow('feed unavailable')
     })
   })
 

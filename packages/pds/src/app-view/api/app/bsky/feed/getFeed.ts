@@ -2,8 +2,15 @@ import {
   InvalidRequestError,
   UpstreamFailureError,
   createServiceAuthHeaders,
+  ServerTimer,
+  serverTimingHeader,
 } from '@atproto/xrpc-server'
-import { getFeedGen } from '@atproto/identity'
+import { ResponseType, XRPCError } from '@atproto/xrpc'
+import {
+  DidDocument,
+  PoorlyFormattedDidDocumentError,
+  getFeedGen,
+} from '@atproto/identity'
 import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
 import { SkeletonFeedPost } from '../../../../../lexicon/types/app/bsky/feed/defs'
 import { QueryParams as GetFeedParams } from '../../../../../lexicon/types/app/bsky/feed/getFeed'
@@ -11,7 +18,6 @@ import { OutputSchema as SkeletonOutput } from '../../../../../lexicon/types/app
 import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
-import { ResponseType, XRPCError } from '@atproto/xrpc'
 import { AlgoResponse } from '../../../../../feed-gen/types'
 
 export default function (server: Server, ctx: AppContext) {
@@ -20,22 +26,28 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { feed } = params
       const requester = auth.credentials.did
-
+      const feedService = ctx.services.appView.feed(ctx.db)
       const localAlgo = ctx.algos[feed]
 
+      const timerSkele = new ServerTimer('skele').start()
       const { feedItems, ...rest } =
         localAlgo !== undefined
           ? await localAlgo(ctx, params, requester)
           : await skeletonFromFeedGen(ctx, params, requester)
+      timerSkele.stop()
 
-      const feedService = ctx.services.appView.feed(ctx.db)
+      const timerHydr = new ServerTimer('hydr').start()
       const hydrated = await feedService.hydrateFeed(feedItems, requester)
+      timerHydr.stop()
 
       return {
         encoding: 'application/json',
         body: {
           ...rest,
           feed: hydrated,
+        },
+        headers: {
+          'server-timing': serverTimingHeader([timerSkele, timerHydr]),
         },
       }
     },
@@ -58,14 +70,27 @@ async function skeletonFromFeedGen(
     throw new InvalidRequestError('could not find feed')
   }
   const feedDid = found.feedDid
-  const resolved = await ctx.idResolver.did.resolve(feedDid)
+
+  let resolved: DidDocument | null
+  try {
+    resolved = await ctx.idResolver.did.resolve(feedDid)
+  } catch (err) {
+    if (err instanceof PoorlyFormattedDidDocumentError) {
+      throw new InvalidRequestError(`invalid did document: ${feedDid}`)
+    }
+    throw err
+  }
   if (!resolved) {
     throw new InvalidRequestError(`could not resolve did document: ${feedDid}`)
   }
-  const fgEndpoint = await getFeedGen(resolved)
+
+  const fgEndpoint = getFeedGen(resolved)
   if (!fgEndpoint) {
-    throw new InvalidRequestError(`not a valid feed generator: ${feedDid}`)
+    throw new InvalidRequestError(
+      `invalid feed generator service details in did document: ${feedDid}`,
+    )
   }
+
   const agent = new AtpAgent({ service: fgEndpoint })
   const headers = await createServiceAuthHeaders({
     iss: requester,
@@ -84,8 +109,16 @@ async function skeletonFromFeedGen(
     if (err instanceof AppBskyFeedGetFeedSkeleton.UnknownFeedError) {
       throw new InvalidRequestError(err.message, 'UnknownFeed')
     }
-    if (err instanceof XRPCError && err.status === ResponseType.Unknown) {
-      throw new UpstreamFailureError('Feed unavailable')
+    if (err instanceof XRPCError) {
+      if (err.status === ResponseType.Unknown) {
+        throw new UpstreamFailureError('feed unavailable')
+      }
+      if (err.status === ResponseType.InvalidResponse) {
+        throw new UpstreamFailureError(
+          'feed provided an invalid response',
+          'InvalidFeedResponse',
+        )
+      }
     }
     throw err
   }
