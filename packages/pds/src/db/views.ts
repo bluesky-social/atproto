@@ -12,7 +12,7 @@ export class ViewMaintainer {
   destroyed = false
 
   // @NOTE the db must be authed as the owner of the materialized view, per postgres.
-  constructor(public db: Database, public intervalSec = 120) {
+  constructor(public db: Database, public intervalSec = 60) {
     assert(
       this.db.dialect === 'pg',
       'View maintainer can only be used with postgres',
