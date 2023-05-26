@@ -3,6 +3,7 @@ import withFriends from './with-friends'
 import bskyTeam from './bsky-team'
 import whatsHot from './whats-hot'
 import hotClassic from './hot-classic'
+import mutuals from './mutuals'
 import { ids } from '../lexicon/lexicons'
 import { MountedAlgos } from './types'
 
@@ -15,4 +16,5 @@ export const makeAlgos = (did: string): MountedAlgos => ({
   [AtUri.make(did, coll, 'bsky-team').toString()]: bskyTeam,
   [AtUri.make(did, coll, 'whats-hot').toString()]: whatsHot,
   [AtUri.make(did, coll, 'hot-classic').toString()]: hotClassic,
+  [AtUri.make(did, coll, 'mutuals').toString()]: mutuals,
 })
