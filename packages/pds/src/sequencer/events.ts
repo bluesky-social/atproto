@@ -22,8 +22,6 @@ export const sequenceEvt = async (
     await invalidatePrevRepoOps(dbTxn, evt.did)
   } else if (evt.eventType === 'handle') {
     await invalidatePrevHandleOps(dbTxn, evt.did)
-  } else if (evt.eventType === 'tombstone') {
-    await invalidatePrevOps(dbTxn, evt.did)
   }
 
   const res = await dbTxn.db
@@ -165,10 +163,6 @@ export const invalidatePrevRepoOps = async (db: Database, did: string) => {
 
 export const invalidatePrevHandleOps = async (db: Database, did: string) => {
   return invalidatePrevSeqEvts(db, did, ['handle'])
-}
-
-export const invalidatePrevOps = async (db: Database, did: string) => {
-  return invalidatePrevSeqEvts(db, did, ['append', 'handle', 'rebase'])
 }
 
 export const commitEvtOp = z.object({
