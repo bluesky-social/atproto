@@ -164,7 +164,7 @@ export class FeedService {
             .as('requesterMuted'),
         ])
         .execute(),
-      this.services.label.getLabelsForProfiles(dids),
+      this.services.label.getLabelsForSubjects(dids),
       this.services.actor.views.getListMutes(dids, requester),
     ])
     return actors.reduce((acc, cur) => {

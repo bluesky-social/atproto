@@ -101,7 +101,7 @@ export class FeedService {
             .as('requesterFollowedBy'),
         ])
         .execute(),
-      this.services.label(this.db).getLabelsForProfiles(dids),
+      this.services.label(this.db).getLabelsForSubjects(dids),
     ])
     return actors.reduce((acc, cur) => {
       return {
