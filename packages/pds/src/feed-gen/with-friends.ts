@@ -2,7 +2,10 @@ import AppContext from '../context'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { paginate } from '../db/pagination'
 import { AlgoHandler, AlgoResponse } from './types'
-import { FeedKeyset } from '../app-view/api/app/bsky/util/feed'
+import {
+  FeedKeyset,
+  getFeedDateThreshold,
+} from '../app-view/api/app/bsky/util/feed'
 
 const handler: AlgoHandler = async (
   ctx: AppContext,
@@ -31,6 +34,7 @@ const handler: AlgoHandler = async (
       accountService.whereNotMuted(qb, requester, [ref('post.creator')]),
     )
     .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
+    .where('feed_item.sortAt', '>', getFeedDateThreshold())
 
   const keyset = new FeedKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))
   postsQb = paginate(postsQb, { limit, cursor, keyset })

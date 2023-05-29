@@ -1,6 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
-import { FeedAlgorithm, FeedKeyset } from '../util/feed'
+import { FeedAlgorithm, FeedKeyset, getFeedDateThreshold } from '../util/feed'
 import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
@@ -48,7 +48,7 @@ export default function (server: Server, ctx: AppContext) {
             ref('originatorDid'),
           ]),
         )
-        .where('feed_item.sortAt', '>', getTimelineDateThreshold())
+        .where('feed_item.sortAt', '>', getFeedDateThreshold())
 
       const keyset = new FeedKeyset(
         ref('feed_item.sortAt'),
@@ -72,11 +72,4 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
-}
-
-// For users with sparse feeds, avoid scanning back further than two weeks
-const getTimelineDateThreshold = () => {
-  const timelineDateThreshold = new Date()
-  timelineDateThreshold.setDate(timelineDateThreshold.getDate() - 14)
-  return timelineDateThreshold.toISOString()
 }
