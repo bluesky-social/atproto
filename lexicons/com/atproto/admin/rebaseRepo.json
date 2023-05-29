@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.repo.rebaseRepo",
+  "id": "com.atproto.admin.rebaseRepo",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Simple rebase of repo that deletes history",
+      "description": "Administrative action to rebase an account's repo",
       "input": {
         "encoding": "application/json",
         "schema": {

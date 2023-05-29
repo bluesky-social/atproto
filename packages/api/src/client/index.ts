@@ -18,6 +18,7 @@ import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/g
 import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
+import * as ComAtprotoAdminRebaseRepo from './types/com/atproto/admin/rebaseRepo'
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -134,6 +135,7 @@ export * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/g
 export * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
+export * as ComAtprotoAdminRebaseRepo from './types/com/atproto/admin/rebaseRepo'
 export * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -433,6 +435,17 @@ export class AdminNS {
       .call('com.atproto.admin.getRepo', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoAdminGetRepo.toKnownErr(e)
+      })
+  }
+
+  rebaseRepo(
+    data?: ComAtprotoAdminRebaseRepo.InputSchema,
+    opts?: ComAtprotoAdminRebaseRepo.CallOptions,
+  ): Promise<ComAtprotoAdminRebaseRepo.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.rebaseRepo', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminRebaseRepo.toKnownErr(e)
       })
   }
 
