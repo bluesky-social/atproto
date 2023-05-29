@@ -34,6 +34,7 @@ export default function (server: Server, ctx: AppContext) {
             .where('originatorDid', '=', requester)
             .orWhere('originatorDid', 'in', followingIdsSubquery),
         )
+        .where('feed_item.sortAt', '>', getTimelineDateThreshold())
 
       const keyset = new FeedKeyset(
         ref('feed_item.sortAt'),
@@ -62,4 +63,11 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+// For users with sparse feeds, avoid scanning back further than two weeks
+const getTimelineDateThreshold = () => {
+  const timelineDateThreshold = new Date()
+  timelineDateThreshold.setDate(timelineDateThreshold.getDate() - 14)
+  return timelineDateThreshold.toISOString()
 }
