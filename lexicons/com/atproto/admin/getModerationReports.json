@@ -9,6 +9,7 @@
         "type": "params",
         "properties": {
           "subject": {"type": "string"},
+          "ignoreSubjects": {"type": "array", "items": {"type": "string"}},
           "resolved": {"type": "boolean"},
           "actionType": {
             "type": "string",
