@@ -60,7 +60,7 @@ export class LabelService {
       .execute()
   }
 
-  async getLabelsForSubjects(
+  async getLabelsForUris(
     subjects: string[],
     includeNeg?: boolean,
   ): Promise<Labels> {
@@ -92,7 +92,7 @@ export class LabelService {
       AtUri.make(did, ids.AppBskyActorProfile, 'self').toString(),
     )
     const subjects = [...dids, ...profileUris]
-    const labels = await this.getLabelsForSubjects(subjects, includeNeg)
+    const labels = await this.getLabelsForUris(subjects, includeNeg)
     // combine labels for profile + did
     return Object.keys(labels).reduce((acc, cur) => {
       const did = cur.startsWith('at://') ? new AtUri(cur).hostname : cur
@@ -103,7 +103,7 @@ export class LabelService {
   }
 
   async getLabels(subject: string, includeNeg?: boolean): Promise<Label[]> {
-    const labels = await this.getLabelsForSubjects([subject], includeNeg)
+    const labels = await this.getLabelsForUris([subject], includeNeg)
     return labels[subject] ?? []
   }
 

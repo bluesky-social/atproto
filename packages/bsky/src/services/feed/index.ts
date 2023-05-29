@@ -234,7 +234,7 @@ export class FeedService {
           viewer,
         ),
         this.embedsForPosts(nestedUris, viewer, _depth + 1),
-        this.services.label(this.db).getLabelsForSubjects(nestedUris),
+        this.services.label(this.db).getLabelsForUris(nestedUris),
       ])
     let embeds = images.reduce((acc, cur) => {
       const embed = (acc[cur.postUri] ??= {

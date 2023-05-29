@@ -307,7 +307,7 @@ export class FeedService {
           requester,
         ),
         this.embedsForPosts(nestedPostUris, requester, _depth + 1),
-        this.services.label.getLabelsForSubjects(nestedPostUris),
+        this.services.label.getLabelsForUris(nestedPostUris),
         this.getFeedGeneratorViews(nestedFeedGenUris, requester),
       ])
     let embeds = images.reduce((acc, cur) => {
@@ -434,7 +434,7 @@ export class FeedService {
       this.getActorViews(Array.from(actorDids), requester),
       this.getPostViews(Array.from(postUris), requester),
       this.embedsForPosts(Array.from(postUris), requester),
-      this.services.label.getLabelsForSubjects(Array.from(postUris)),
+      this.services.label.getLabelsForUris(Array.from(postUris)),
     ])
 
     return this.views.formatFeed(

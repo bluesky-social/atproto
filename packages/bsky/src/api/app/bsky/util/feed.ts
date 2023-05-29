@@ -32,7 +32,7 @@ export const composeFeed = async (
     feedService.getActorViews(Array.from(actorDids), viewer),
     feedService.getPostViews(Array.from(postUris), viewer),
     feedService.embedsForPosts(Array.from(postUris), viewer),
-    labelService.getLabelsForSubjects(Array.from(postUris)),
+    labelService.getLabelsForUris(Array.from(postUris)),
   ])
 
   const feed: FeedViewPost[] = []
