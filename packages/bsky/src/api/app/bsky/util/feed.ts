@@ -101,9 +101,9 @@ export class FeedKeyset extends TimeCidKeyset<FeedRow> {
   }
 }
 
-// For users with sparse feeds, avoid scanning back further than two weeks
-export const getFeedDateThreshold = (days = 14) => {
-  const timelineDateThreshold = new Date()
+// For users with sparse feeds, avoid scanning more than one week for a single page
+export const getFeedDateThreshold = (from: string | undefined, days = 7) => {
+  const timelineDateThreshold = from ? new Date(from) : new Date()
   timelineDateThreshold.setDate(timelineDateThreshold.getDate() - days)
   return timelineDateThreshold.toISOString()
 }

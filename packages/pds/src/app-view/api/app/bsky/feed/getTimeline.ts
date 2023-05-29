@@ -28,6 +28,12 @@ export default function (server: Server, ctx: AppContext) {
         .select('follow.subjectDid')
         .where('follow.creator', '=', requester)
 
+      const keyset = new FeedKeyset(
+        ref('feed_item.sortAt'),
+        ref('feed_item.cid'),
+      )
+      const sortFrom = keyset.unpack(cursor)?.primary
+
       let feedItemsQb = feedService
         .selectFeedItemQb()
         .where((qb) =>
@@ -48,12 +54,7 @@ export default function (server: Server, ctx: AppContext) {
             ref('originatorDid'),
           ]),
         )
-        .where('feed_item.sortAt', '>', getFeedDateThreshold())
-
-      const keyset = new FeedKeyset(
-        ref('feed_item.sortAt'),
-        ref('feed_item.cid'),
-      )
+        .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom))
 
       feedItemsQb = paginate(feedItemsQb, {
         limit,

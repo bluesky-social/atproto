@@ -31,6 +31,9 @@ const handler: AlgoHandler = async (
     )
     .select('follow.subjectDid')
 
+  const keyset = new FeedKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))
+  const sortFrom = keyset.unpack(cursor)?.primary
+
   let feedQb = feedService
     .selectFeedItemQb()
     .where((qb) =>
@@ -42,9 +45,8 @@ const handler: AlgoHandler = async (
       accountService.whereNotMuted(qb, requester, [ref('post.creator')]),
     )
     .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
-    .where('feed_item.sortAt', '>', getFeedDateThreshold())
+    .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom))
 
-  const keyset = new FeedKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))
   feedQb = paginate(feedQb, { limit, cursor, keyset })
 
   const feedItems = await feedQb.execute()
