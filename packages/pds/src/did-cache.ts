@@ -2,6 +2,7 @@ import PQueue from 'p-queue'
 import { CacheResult, DidCache, DidDocument } from '@atproto/identity'
 import Database from './db'
 import { excluded } from './db/util'
+import { dbLogger } from './logger'
 
 export class DidSqlCache implements DidCache {
   public pQueue: PQueue | null //null during teardown
@@ -32,11 +33,15 @@ export class DidSqlCache implements DidCache {
     getDoc: () => Promise<DidDocument | null>,
   ): Promise<void> {
     this.pQueue?.add(async () => {
-      const doc = await getDoc()
-      if (doc) {
-        await this.cacheDid(did, doc)
-      } else {
-        await this.clearEntry(did)
+      try {
+        const doc = await getDoc()
+        if (doc) {
+          await this.cacheDid(did, doc)
+        } else {
+          await this.clearEntry(did)
+        }
+      } catch (err) {
+        dbLogger.error({ did, err }, 'refreshing did cache failed')
       }
     })
   }
