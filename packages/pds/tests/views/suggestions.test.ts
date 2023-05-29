@@ -17,6 +17,14 @@ describe('pds user search views', () => {
     sc = new SeedClient(agent)
     await basicSeed(sc)
     await server.ctx.backgroundQueue.processAll()
+
+    const suggestions = [sc.dids.bob, sc.dids.carol, sc.dids.dan].map(
+      (did) => ({ did }),
+    )
+    await server.ctx.db.db
+      .insertInto('suggested_follow')
+      .values(suggestions)
+      .execute()
   })
 
   afterAll(async () => {
@@ -25,7 +33,7 @@ describe('pds user search views', () => {
 
   it('actor suggestion gives users', async () => {
     const result = await agent.api.app.bsky.actor.getSuggestions(
-      { limit: 3 },
+      {},
       { headers: sc.getHeaders(sc.dids.carol) },
     )
 
@@ -47,7 +55,7 @@ describe('pds user search views', () => {
 
   it('does not suggest followed users', async () => {
     const result = await agent.api.app.bsky.actor.getSuggestions(
-      { limit: 3 },
+      {},
       { headers: sc.getHeaders(sc.dids.alice) },
     )
 
@@ -66,11 +74,12 @@ describe('pds user search views', () => {
     )
 
     expect(result1.data.actors.length).toBe(1)
-    expect(result1.data.actors[0].handle).toEqual('bob.test')
-    expect(result1.data.actors[0].displayName).toEqual('bobby')
-
     expect(result2.data.actors.length).toBe(1)
-    expect(result2.data.actors[0].handle).toEqual('dan.test')
-    expect(result2.data.actors[0].displayName).toBeUndefined()
+
+    const handles = [...result1.data.actors, ...result2.data.actors].map(
+      (a) => a.handle,
+    )
+    expect(handles).toContain('bob.test')
+    expect(handles).toContain('dan.test')
   })
 })
