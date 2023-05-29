@@ -343,7 +343,8 @@ export class FeedService {
     const post = posts[uri]
     const author = actors[post?.creator]
     if (!post || !author) return undefined
-    // If the author labels are not hydrated yet, attempt to pull them from labels
+    // If the author labels are not hydrated yet, attempt to pull them
+    // from labels: e.g. compatible with composeFeed() batching label hydration.
     author.labels ??= labels[author.did] ?? []
     return {
       $type: 'app.bsky.feed.defs#postView',
