@@ -8,9 +8,9 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "subject": {"type": "string"},
-          "ignoreSubjects": {"type": "array", "items": {"type": "string"}},
-          "resolved": {"type": "boolean"},
+          "subject": { "type": "string" },
+          "ignoreSubjects": { "type": "array", "items": { "type": "string" } },
+          "resolved": { "type": "boolean" },
           "actionType": {
             "type": "string",
             "knownValues": [
@@ -20,8 +20,17 @@
               "com.atproto.admin.defs#escalate"
             ]
           },
-          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "cursor": {"type": "string"}
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" },
+          "reverse": {
+            "type": "boolean",
+            "description": "Reverse the order of the returned records? when true, returns reports in chronological order"
+          }
         }
       },
       "output": {
@@ -30,8 +39,14 @@
           "type": "object",
           "required": ["reports"],
           "properties": {
-            "cursor": {"type": "string"},
-            "reports": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.defs#reportView"}}
+            "cursor": { "type": "string" },
+            "reports": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "com.atproto.admin.defs#reportView"
+              }
+            }
           }
         }
       }

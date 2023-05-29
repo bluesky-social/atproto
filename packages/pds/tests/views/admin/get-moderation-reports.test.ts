@@ -184,6 +184,29 @@ describe('pds admin get moderation reports view', () => {
     expect(forSnapshot(unresolved.data.reports)).toMatchSnapshot()
   })
 
+  it('allows reverting the order of reports.', async () => {
+    const [
+      {
+        data: { reports: reverseList },
+      },
+      {
+        data: { reports: defaultList },
+      },
+    ] = await Promise.all([
+      agent.api.com.atproto.admin.getModerationReports(
+        { reverse: true },
+        { headers: { authorization: adminAuth() } },
+      ),
+      agent.api.com.atproto.admin.getModerationReports(
+        {},
+        { headers: { authorization: adminAuth() } },
+      ),
+    ])
+
+    expect(defaultList[0].id).toEqual(reverseList[reverseList.length - 1].id)
+    expect(defaultList[defaultList.length - 1].id).toEqual(reverseList[0].id)
+  })
+
   it('gets all moderation reports by active resolution action type.', async () => {
     const reportsWithTakedown =
       await agent.api.com.atproto.admin.getModerationReports(
@@ -215,5 +238,28 @@ describe('pds admin get moderation reports view', () => {
 
     expect(full.data.reports.length).toEqual(6)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+  })
+
+  it('paginates reverted list of reports.', async () => {
+    const paginator =
+      (reverse = false) =>
+      async (cursor?: string) => {
+        const res = await agent.api.com.atproto.admin.getModerationReports(
+          { cursor, limit: 3, reverse },
+          { headers: { authorization: adminAuth() } },
+        )
+        return res.data
+      }
+
+    const [reverseResponse, defaultResponse] = await Promise.all([
+      paginateAll(paginator(true)),
+      paginateAll(paginator()),
+    ])
+
+    const reverseList = reverseResponse.flatMap((res) => res.reports)
+    const defaultList = defaultResponse.flatMap((res) => res.reports)
+
+    expect(defaultList[0].id).toEqual(reverseList[reverseList.length - 1].id)
+    expect(defaultList[defaultList.length - 1].id).toEqual(reverseList[0].id)
   })
 })
