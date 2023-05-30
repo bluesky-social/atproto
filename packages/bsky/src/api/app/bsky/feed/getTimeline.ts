@@ -1,6 +1,11 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import { FeedAlgorithm, FeedKeyset, composeFeed } from '../util/feed'
+import {
+  FeedAlgorithm,
+  FeedKeyset,
+  composeFeed,
+  getFeedDateThreshold,
+} from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 
@@ -26,6 +31,12 @@ export default function (server: Server, ctx: AppContext) {
         .select('follow.subjectDid')
         .where('follow.creator', '=', requester)
 
+      const keyset = new FeedKeyset(
+        ref('feed_item.sortAt'),
+        ref('feed_item.cid'),
+      )
+      const sortFrom = keyset.unpack(cursor)?.primary
+
       // @NOTE mutes applied on pds
       let feedItemsQb = feedService
         .selectFeedItemQb()
@@ -34,12 +45,7 @@ export default function (server: Server, ctx: AppContext) {
             .where('originatorDid', '=', requester)
             .orWhere('originatorDid', 'in', followingIdsSubquery),
         )
-        .where('feed_item.sortAt', '>', getTimelineDateThreshold())
-
-      const keyset = new FeedKeyset(
-        ref('feed_item.sortAt'),
-        ref('feed_item.cid'),
-      )
+        .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom))
 
       feedItemsQb = paginate(feedItemsQb, {
         limit,
@@ -63,11 +69,4 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
-}
-
-// For users with sparse feeds, avoid scanning back further than two weeks
-const getTimelineDateThreshold = () => {
-  const timelineDateThreshold = new Date()
-  timelineDateThreshold.setDate(timelineDateThreshold.getDate() - 14)
-  return timelineDateThreshold.toISOString()
 }

@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       throw new InvalidRequestError(`Could not find shared history`)
     }
 
-    const commitChunks = chunkArray(commitPath, 50)
+    const commitChunks = chunkArray(commitPath, 25)
     const carStream = repo.writeCar(latest, async (car) => {
       for (const chunk of commitChunks) {
         const blocks = await storage.getAllBlocksForCommits(chunk)
