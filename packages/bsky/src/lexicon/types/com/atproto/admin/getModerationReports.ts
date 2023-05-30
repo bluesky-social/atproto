@@ -21,6 +21,8 @@ export interface QueryParams {
     | (string & {})
   limit: number
   cursor?: string
+  /** Reverse the order of the returned records? when true, returns reports in chronological order */
+  reverse?: boolean
 }
 
 export type InputSchema = undefined
@@ -36,6 +38,7 @@ export type HandlerInput = undefined
 export interface HandlerSuccess {
   encoding: 'application/json'
   body: OutputSchema
+  headers?: { [key: string]: string }
 }
 
 export interface HandlerError {
