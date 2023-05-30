@@ -4,6 +4,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('suggested_follow')
     .addColumn('did', 'varchar', (col) => col.primaryKey())
+    .addColumn('order', 'integer', (col) => col.notNull())
     .execute()
 }
 

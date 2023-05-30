@@ -18,9 +18,11 @@ describe('pds user search views', () => {
     await basicSeed(sc)
     await server.ctx.backgroundQueue.processAll()
 
-    const suggestions = [sc.dids.bob, sc.dids.carol, sc.dids.dan].map(
-      (did) => ({ did }),
-    )
+    const suggestions = [
+      { did: sc.dids.bob, order: 1 },
+      { did: sc.dids.carol, order: 2 },
+      { did: sc.dids.dan, order: 3 },
+    ]
     await server.ctx.db.db
       .insertInto('suggested_follow')
       .values(suggestions)
@@ -37,20 +39,12 @@ describe('pds user search views', () => {
       { headers: sc.getHeaders(sc.dids.carol) },
     )
 
-    const handles = result.data.actors.map((u) => u.handle)
-    const displayNames = result.data.actors.map((u) => u.displayName)
-
-    const shouldContain: { handle: string; displayName: string | null }[] = [
-      { handle: 'bob.test', displayName: 'bobby' },
-      { handle: 'dan.test', displayName: null },
-    ]
-
-    shouldContain.forEach((actor) => {
-      expect(handles).toContain(actor.handle)
-      if (actor.displayName) {
-        expect(displayNames).toContain(actor.displayName)
-      }
-    })
+    // does not include carol, because she is requesting
+    expect(result.data.actors.length).toBe(2)
+    expect(result.data.actors[0].handle).toEqual('bob.test')
+    expect(result.data.actors[0].displayName).toEqual('bobby')
+    expect(result.data.actors[1].handle).toEqual('dan.test')
+    expect(result.data.actors[1].displayName).toBeUndefined()
   })
 
   it('does not suggest followed users', async () => {
@@ -74,12 +68,8 @@ describe('pds user search views', () => {
     )
 
     expect(result1.data.actors.length).toBe(1)
+    expect(result1.data.actors[0].handle).toEqual('bob.test')
     expect(result2.data.actors.length).toBe(1)
-
-    const handles = [...result1.data.actors, ...result2.data.actors].map(
-      (a) => a.handle,
-    )
-    expect(handles).toContain('bob.test')
-    expect(handles).toContain('dan.test')
+    expect(result2.data.actors[0].handle).toEqual('dan.test')
   })
 })

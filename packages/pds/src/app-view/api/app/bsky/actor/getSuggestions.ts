@@ -35,9 +35,21 @@ export default function (server: Server, ctx: AppContext) {
         .selectAll('did_handle')
         .select('profile_agg.postsCount as postsCount')
         .limit(limit)
+        .orderBy('suggested_follow.order', 'asc')
 
       if (cursor) {
-        suggestionsQb = suggestionsQb.where('suggested_follow.did', '>', cursor)
+        const cursorRow = await db
+          .selectFrom('suggested_follow')
+          .where('did', '=', cursor)
+          .selectAll()
+          .executeTakeFirst()
+        if (cursorRow) {
+          suggestionsQb = suggestionsQb.where(
+            'suggested_follow.order',
+            '>',
+            cursorRow.order,
+          )
+        }
       }
 
       const suggestionsRes = await suggestionsQb.execute()
