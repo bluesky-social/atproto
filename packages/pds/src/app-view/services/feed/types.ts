@@ -7,6 +7,7 @@ import {
   NotFoundPost,
   PostView,
 } from '../../../lexicon/types/app/bsky/feed/defs'
+import { Label } from '../../../lexicon/types/com/atproto/label/defs'
 import { FeedGenerator } from '../../db/tables/feed-generator'
 
 export type FeedEmbeds = {
@@ -40,6 +41,7 @@ export type ActorView = {
     following?: string
     followedBy?: string
   }
+  labels?: Label[]
 }
 export type ActorViewMap = { [did: string]: ActorView }
 

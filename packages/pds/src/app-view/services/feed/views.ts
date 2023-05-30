@@ -122,6 +122,9 @@ export class FeedViews {
     const post = posts[uri]
     const author = actors[post?.creator]
     if (!post || !author) return undefined
+    // If the author labels are not hydrated yet, attempt to pull them
+    // from labels: e.g. compatible with hydrateFeed() batching label hydration.
+    author.labels ??= labels[author.did] ?? []
     return {
       uri: post.uri,
       cid: post.cid,

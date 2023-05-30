@@ -117,6 +117,7 @@ export class FeedService {
   async getActorViews(
     dids: string[],
     requester: string,
+    skipLabels?: boolean, // @NOTE used by hydrateFeed() to batch label hydration
   ): Promise<ActorViewMap> {
     if (dids.length < 1) return {}
     const { ref } = this.db.db.dynamic
@@ -164,10 +165,11 @@ export class FeedService {
             .as('requesterMuted'),
         ])
         .execute(),
-      this.services.label.getLabelsForProfiles(dids),
+      this.services.label.getLabelsForSubjects(skipLabels ? [] : dids),
       this.services.actor.views.getListMutes(dids, requester),
     ])
     return actors.reduce((acc, cur) => {
+      const actorLabels = labels[cur.did] ?? []
       return {
         ...acc,
         [cur.did]: {
@@ -185,7 +187,7 @@ export class FeedService {
             following: cur?.requesterFollowing || undefined,
             followedBy: cur?.requesterFollowedBy || undefined,
           },
-          labels: labels[cur.did] ?? [],
+          labels: skipLabels ? undefined : actorLabels,
         },
       }
     }, {} as ActorViewMap)
@@ -307,7 +309,7 @@ export class FeedService {
           requester,
         ),
         this.embedsForPosts(nestedPostUris, requester, _depth + 1),
-        this.services.label.getLabelsForSubjects(nestedPostUris),
+        this.services.label.getLabelsForUris(nestedPostUris),
         this.getFeedGeneratorViews(nestedFeedGenUris, requester),
       ])
     let embeds = images.reduce((acc, cur) => {
@@ -431,10 +433,10 @@ export class FeedService {
       }
     }
     const [actors, posts, embeds, labels] = await Promise.all([
-      this.getActorViews(Array.from(actorDids), requester),
+      this.getActorViews(Array.from(actorDids), requester, true),
       this.getPostViews(Array.from(postUris), requester),
       this.embedsForPosts(Array.from(postUris), requester),
-      this.services.label.getLabelsForSubjects(Array.from(postUris)),
+      this.services.label.getLabelsForSubjects([...postUris, ...actorDids]),
     ])
 
     return this.views.formatFeed(

@@ -80,7 +80,7 @@ export class ActorViews {
 
     const [profileInfos, labels] = await Promise.all([
       profileInfosQb.execute(),
-      this.services.label(this.db).getLabelsForProfiles(dids),
+      this.services.label(this.db).getLabelsForSubjects(dids),
     ])
 
     const profileInfoByDid = profileInfos.reduce((acc, info) => {
@@ -169,7 +169,7 @@ export class ActorViews {
 
     const [profileInfos, labels] = await Promise.all([
       profileInfosQb.execute(),
-      this.services.label(this.db).getLabelsForProfiles(dids),
+      this.services.label(this.db).getLabelsForSubjects(dids),
     ])
 
     const profileInfoByDid = profileInfos.reduce((acc, info) => {

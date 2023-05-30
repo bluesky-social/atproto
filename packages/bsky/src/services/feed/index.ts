@@ -70,6 +70,7 @@ export class FeedService {
   async getActorViews(
     dids: string[],
     viewer: string | null,
+    skipLabels?: boolean, // @NOTE used by composeFeed() to batch label hydration
   ): Promise<ActorViewMap> {
     if (dids.length < 1) return {}
     const { ref } = this.db.db.dynamic
@@ -101,9 +102,10 @@ export class FeedService {
             .as('requesterFollowedBy'),
         ])
         .execute(),
-      this.services.label(this.db).getLabelsForProfiles(dids),
+      this.services.label(this.db).getLabelsForSubjects(skipLabels ? [] : dids),
     ])
     return actors.reduce((acc, cur) => {
+      const actorLabels = labels[cur.did] ?? []
       return {
         ...acc,
         [cur.did]: {
@@ -124,7 +126,7 @@ export class FeedService {
                 // muted field hydrated on pds
               }
             : undefined,
-          labels: labels[cur.did] ?? [],
+          labels: skipLabels ? undefined : actorLabels,
         },
       }
     }, {} as ActorViewMap)
@@ -234,7 +236,7 @@ export class FeedService {
           viewer,
         ),
         this.embedsForPosts(nestedUris, viewer, _depth + 1),
-        this.services.label(this.db).getLabelsForSubjects(nestedUris),
+        this.services.label(this.db).getLabelsForUris(nestedUris),
       ])
     let embeds = images.reduce((acc, cur) => {
       const embed = (acc[cur.postUri] ??= {
@@ -341,6 +343,9 @@ export class FeedService {
     const post = posts[uri]
     const author = actors[post?.creator]
     if (!post || !author) return undefined
+    // If the author labels are not hydrated yet, attempt to pull them
+    // from labels: e.g. compatible with composeFeed() batching label hydration.
+    author.labels ??= labels[author.did] ?? []
     return {
       $type: 'app.bsky.feed.defs#postView',
       uri: post.uri,

@@ -32,10 +32,10 @@ export default function (server: Server, ctx: AppContext) {
       }
       const relevant = getRelevantIds(threadData)
       const [actors, posts, embeds, labels] = await Promise.all([
-        feedService.getActorViews(Array.from(relevant.dids), requester),
+        feedService.getActorViews(Array.from(relevant.dids), requester, true),
         feedService.getPostViews(Array.from(relevant.uris), requester),
         feedService.embedsForPosts(Array.from(relevant.uris), requester),
-        labelService.getLabelsForSubjects(Array.from(relevant.uris)),
+        labelService.getLabelsForSubjects([...relevant.uris, ...relevant.dids]),
       ])
 
       const thread = composeThread(
