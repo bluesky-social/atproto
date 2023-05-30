@@ -78,13 +78,16 @@ describe('Queries', () => {
       body: new TextEncoder().encode(String(ctx.params.message)),
     }
   })
-  server.method('io.example.pingThree', (ctx: { params: xrpcServer.Params }) => {
-    return {
-      encoding: 'application/json',
-      body: { message: ctx.params.message },
-      headers: { 'x-test-header-name': 'test-value' },
-    }
-  })
+  server.method(
+    'io.example.pingThree',
+    (ctx: { params: xrpcServer.Params }) => {
+      return {
+        encoding: 'application/json',
+        body: { message: ctx.params.message },
+        headers: { 'x-test-header-name': 'test-value' },
+      }
+    },
+  )
   xrpc.addLexicons(LEXICONS)
 
   let client: ServiceClient
