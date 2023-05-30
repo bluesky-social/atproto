@@ -39,7 +39,7 @@ export const ensureValidDid = (did: string): void => {
   }
 
   if (did.length > 2 * 1024) {
-    throw new InvalidDidError('DID is far too long')
+    throw new InvalidDidError('DID is too long (2048 chars max)')
   }
 }
 
@@ -51,7 +51,7 @@ export const ensureValidDidRegex = (did: string): void => {
   }
 
   if (did.length > 2 * 1024) {
-    throw new InvalidDidError('DID is far too long')
+    throw new InvalidDidError('DID is too long (2048 chars max)')
   }
 }
 

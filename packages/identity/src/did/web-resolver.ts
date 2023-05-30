@@ -19,7 +19,7 @@ export class DidWebResolver extends BaseResolver {
     } else if (parts.length === 1) {
       path = parts[0] + DOC_PATH
     } else {
-      // how we *would* resolve a did:web with path, atproto supported it
+      // how we *would* resolve a did:web with path, if atproto supported it
       //path = parts.join('/') + '/did.json'
       throw new UnsupportedDidWebPathError(did)
     }
