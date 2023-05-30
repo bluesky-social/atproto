@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
         feedService.getActorViews(Array.from(dids), requester),
         feedService.getPostViews(Array.from(uris), requester),
         feedService.embedsForPosts(Array.from(uris), requester),
-        labelService.getLabelsForUris(Array.from(uris)),
+        labelService.getLabelsForSubjects(Array.from(uris)),
       ])
 
       const posts: PostView[] = []

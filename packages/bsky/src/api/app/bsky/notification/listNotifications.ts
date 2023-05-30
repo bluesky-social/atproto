@@ -68,7 +68,7 @@ export default function (server: Server, ctx: AppContext) {
           })),
           requester,
         ),
-        labelService.getLabelsForUris(recordUris),
+        labelService.getLabelsForSubjects(recordUris),
       ])
 
       const notifications = notifs.map((notif, i) => ({
