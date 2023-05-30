@@ -100,7 +100,7 @@ export class ServerAuth {
   ): { did: string; scope: AuthScope } {
     const creds = this.getCredentials(req, scopes)
     if (creds === null) {
-      throw new AuthRequiredError()
+      throw new AuthRequiredError(undefined, 'AuthMissing')
     }
     return creds
   }
@@ -113,7 +113,7 @@ export class ServerAuth {
   verifyAdmin(req: express.Request) {
     const parsed = parseBasicAuth(req.headers.authorization || '')
     if (!parsed) {
-      return { admin: false, moderator: false }
+      return { admin: false, moderator: false, missing: true }
     }
     const { username, password } = parsed
     if (username !== 'admin') {
@@ -218,6 +218,47 @@ export const accessVerifierCheckTakedown =
       artifacts: auth.getToken(ctx.req),
     }
   }
+
+export const optionalAccessOrAdminVerifier = (auth: ServerAuth) => {
+  const verifyAccess = accessVerifier(auth)
+  return async (ctx: { req: express.Request; res: express.Response }) => {
+    try {
+      return await verifyAccess(ctx)
+    } catch (err) {
+      if (
+        err instanceof AuthRequiredError &&
+        err.customErrorName === 'AuthMissing'
+      ) {
+        // Missing access bearer, move onto admin basic auth
+        const credentials = auth.verifyAdmin(ctx.req)
+        if (credentials.missing) {
+          // If both are missing, passthrough: this auth scheme is optional
+          return { credentials: null }
+        } else if (credentials.admin) {
+          return { credentials }
+        } else {
+          throw new AuthRequiredError()
+        }
+      }
+      throw err
+    }
+  }
+}
+
+export const isUserOrAdmin = (
+  auth: {
+    credentials: null | { admin: boolean } | { did: string }
+  },
+  did: string,
+) => {
+  if (!auth.credentials) {
+    return false
+  }
+  if ('did' in auth.credentials) {
+    return auth.credentials.did === did
+  }
+  return auth.credentials.admin
+}
 
 export const refreshVerifier =
   (auth: ServerAuth) =>

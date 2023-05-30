@@ -81,6 +81,10 @@ export class AppContext {
     return auth.moderatorVerifier(this.auth)
   }
 
+  get optionalAccessOrAdminVerifier() {
+    return auth.optionalAccessOrAdminVerifier(this.auth)
+  }
+
   get imgUriBuilder(): ImageUriBuilder {
     return this.opts.imgUriBuilder
   }
