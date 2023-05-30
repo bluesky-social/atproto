@@ -91,7 +91,7 @@ describe('did resolver', () => {
 
   it('throws on did:web with path components', async () => {
     await expect(
-      resolver.ensureResolveDid(`did:web:example.com:u:bob`),
+      resolver.ensureResolve(`did:web:example.com:u:bob`),
     ).rejects.toThrow()
   })
 

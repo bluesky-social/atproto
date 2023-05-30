@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios'
 import BaseResolver from './base-resolver'
 import { DidCache } from '../types'
-import { PoorlyFormattedDidError } from '../errors'
+import { PoorlyFormattedDidError, UnsupportedDidWebPathError } from '../errors'
 
 export const DOC_PATH = '/.well-known/did.json'
 
