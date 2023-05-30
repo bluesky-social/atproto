@@ -883,6 +883,11 @@ export const schemaDict = {
             cursor: {
               type: 'string',
             },
+            reverse: {
+              type: 'boolean',
+              description:
+                'Reverse the order of the returned records? when true, returns reports in chronological order',
+            },
           },
         },
         output: {
