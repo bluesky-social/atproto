@@ -9,5 +9,5 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  // Migration code
+  await db.schema.dropIndex('repo_blob_did_idx').execute()
 }
