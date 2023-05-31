@@ -107,7 +107,7 @@ export default function (server: Server, ctx: AppContext) {
           })),
           requester,
         ),
-        labelService.getLabelsForSubjects(recordUris),
+        labelService.getLabelsForUris(recordUris),
       ])
 
       const bytesByCid = blocks.reduce((acc, block) => {

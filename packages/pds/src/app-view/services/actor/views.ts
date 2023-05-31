@@ -86,7 +86,7 @@ export class ActorViews {
 
     const [profileInfos, labels, listMutes] = await Promise.all([
       profileInfosQb.execute(),
-      this.services.label(this.db).getLabelsForProfiles(dids),
+      this.services.label(this.db).getLabelsForSubjects(dids),
       this.getListMutes(dids, viewer),
     ])
 
@@ -185,7 +185,7 @@ export class ActorViews {
 
     const [profileInfos, labels, listMutes] = await Promise.all([
       profileInfosQb.execute(),
-      this.services.label(this.db).getLabelsForProfiles(dids),
+      this.services.label(this.db).getLabelsForSubjects(dids),
       this.getListMutes(dids, viewer),
     ])
 

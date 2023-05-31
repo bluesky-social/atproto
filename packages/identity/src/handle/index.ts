@@ -1,4 +1,3 @@
-import { isErrnoException } from '@atproto/common-web'
 import dns from 'dns/promises'
 import { HandleResolverOpts } from '../types'
 
@@ -43,10 +42,7 @@ export class HandleResolver {
     try {
       chunkedResults = await dns.resolveTxt(`${SUBDOMAIN}.${handle}`)
     } catch (err) {
-      if (isErrnoException(err) && err.code === 'ENOTFOUND') {
-        return undefined
-      }
-      throw err
+      return undefined
     }
     const results = chunkedResults.map((chunks) => chunks.join(''))
     const found = results.filter((i) => i.startsWith(PREFIX))

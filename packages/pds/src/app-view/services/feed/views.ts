@@ -29,12 +29,19 @@ export class FeedViews {
   formatFeedGeneratorView(
     info: FeedGenInfo,
     profiles: Record<string, ProfileView>,
+    labels?: Labels,
   ): GeneratorView {
+    const profile = profiles[info.creator]
+    if (profile) {
+      // If the creator labels are not hydrated yet, attempt to pull them
+      // from labels: e.g. compatible with embedsForPosts() batching label hydration.
+      profile.labels ??= labels?.[info.creator] ?? []
+    }
     return {
       uri: info.uri,
       cid: info.cid,
       did: info.feedDid,
-      creator: profiles[info.creator],
+      creator: profile,
       displayName: info.displayName ?? undefined,
       description: info.description ?? undefined,
       descriptionFacets: info.descriptionFacets
@@ -122,6 +129,9 @@ export class FeedViews {
     const post = posts[uri]
     const author = actors[post?.creator]
     if (!post || !author) return undefined
+    // If the author labels are not hydrated yet, attempt to pull them
+    // from labels: e.g. compatible with hydrateFeed() batching label hydration.
+    author.labels ??= labels[author.did] ?? []
     return {
       uri: post.uri,
       cid: post.cid,
