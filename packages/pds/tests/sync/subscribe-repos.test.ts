@@ -352,6 +352,8 @@ describe('repo subscribe repos', () => {
     await randomPost(baddie3)
     await sc.updateHandle(baddie3, 'baddie3-update.test')
 
+    await ctx.services.record(db).deleteForActor(baddie3)
+    await ctx.services.repo(db).deleteRepo(baddie3)
     await ctx.services.account(db).deleteAccount(baddie3)
 
     const ws = new WebSocket(
