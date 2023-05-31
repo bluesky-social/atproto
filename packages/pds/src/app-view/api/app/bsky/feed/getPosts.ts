@@ -19,10 +19,10 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       const [actors, postViews, embeds, labels] = await Promise.all([
-        feedService.getActorViews(Array.from(dids), requester),
-        feedService.getPostViews(Array.from(uris), requester),
-        feedService.embedsForPosts(Array.from(uris), requester),
-        labelService.getLabelsForUris(Array.from(uris)),
+        feedService.getActorViews(dids, requester, { skipLabels: true }),
+        feedService.getPostViews(uris, requester),
+        feedService.embedsForPosts(uris, requester),
+        labelService.getLabelsForSubjects([...uris, ...dids]),
       ])
 
       const posts: PostView[] = []

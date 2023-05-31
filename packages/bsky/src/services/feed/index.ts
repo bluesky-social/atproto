@@ -1,6 +1,7 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { jsonStringToLex } from '@atproto/lexicon'
+import { dedupeStrs } from '@atproto/common'
 import Database from '../../db'
 import { countAll, noMatch, notSoftDeletedClause } from '../../db/util'
 import { ImageUriBuilder } from '../../image/uri'
@@ -70,10 +71,11 @@ export class FeedService {
   async getActorViews(
     dids: string[],
     viewer: string | null,
-    skipLabels?: boolean, // @NOTE used by composeFeed() to batch label hydration
+    opts?: { skipLabels?: boolean }, // @NOTE used by composeFeed() to batch label hydration
   ): Promise<ActorViewMap> {
     if (dids.length < 1) return {}
     const { ref } = this.db.db.dynamic
+    const { skipLabels } = opts ?? {}
     const [actors, labels] = await Promise.all([
       this.db.db
         .selectFrom('actor')
@@ -227,16 +229,16 @@ export class FeedService {
       extPromise,
       recordPromise,
     ])
-    const nestedUris = records.map((p) => p.uri)
+    const nestedUris = dedupeStrs(records.map((p) => p.uri))
+    const nestedDids = dedupeStrs(records.map((p) => p.did))
     const [postViews, actorViews, deepEmbedViews, labelViews] =
       await Promise.all([
         this.getPostViews(nestedUris, viewer),
-        this.getActorViews(
-          records.map((p) => p.did),
-          viewer,
-        ),
+        this.getActorViews(nestedDids, viewer, { skipLabels: true }),
         this.embedsForPosts(nestedUris, viewer, _depth + 1),
-        this.services.label(this.db).getLabelsForUris(nestedUris),
+        this.services
+          .label(this.db)
+          .getLabelsForSubjects([...nestedUris, ...nestedDids]),
       ])
     let embeds = images.reduce((acc, cur) => {
       const embed = (acc[cur.postUri] ??= {

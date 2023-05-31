@@ -29,7 +29,9 @@ export const composeFeed = async (
     }
   }
   const [actors, posts, embeds, labels] = await Promise.all([
-    feedService.getActorViews(Array.from(actorDids), viewer, true),
+    feedService.getActorViews(Array.from(actorDids), viewer, {
+      skipLabels: true,
+    }),
     feedService.getPostViews(Array.from(postUris), viewer),
     feedService.embedsForPosts(Array.from(postUris), viewer),
     labelService.getLabelsForSubjects([...postUris, ...actorDids]),
