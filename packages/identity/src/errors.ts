@@ -21,3 +21,9 @@ export class PoorlyFormattedDidDocumentError extends Error {
     super(`Poorly formatted DID Document: ${doc}`)
   }
 }
+
+export class UnsupportedDidWebPathError extends Error {
+  constructor(public did: string) {
+    super(`Unsupported did:web paths: ${did}`)
+  }
+}

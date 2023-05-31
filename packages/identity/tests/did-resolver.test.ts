@@ -89,6 +89,12 @@ describe('did resolver', () => {
     await expect(resolver.ensureResolve(``)).rejects.toThrow()
   })
 
+  it('throws on did:web with path components', async () => {
+    await expect(
+      resolver.ensureResolve(`did:web:example.com:u:bob`),
+    ).rejects.toThrow()
+  })
+
   it('resolve valid did:plc', async () => {
     const didRes = await resolver.ensureResolve(plcDid)
     expect(didRes).toEqual(didPlcDoc)
