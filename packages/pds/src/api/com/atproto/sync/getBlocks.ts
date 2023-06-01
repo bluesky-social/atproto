@@ -6,7 +6,6 @@ import AppContext from '../../../../context'
 import { blocksToCarStream } from '@atproto/repo'
 import { byteIterableToStream } from '@atproto/common'
 import { isUserOrAdmin } from '../../../../auth'
-import { softDeleted } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getBlocks({
@@ -15,8 +14,10 @@ export default function (server: Server, ctx: AppContext) {
       const { did } = params
       // takedown check for anyone other than an admin or the user
       if (!isUserOrAdmin(auth, did)) {
-        const account = await ctx.services.account(ctx.db).getAccount(did, true)
-        if (!account || softDeleted(account)) {
+        const available = await ctx.services
+          .account(ctx.db)
+          .isRepoAvailable(did)
+        if (!available) {
           throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
         }
       }

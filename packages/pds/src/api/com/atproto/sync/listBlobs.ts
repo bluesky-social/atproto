@@ -4,7 +4,6 @@ import { Server } from '../../../../lexicon'
 import SqlRepoStorage from '../../../../sql-repo-storage'
 import AppContext from '../../../../context'
 import { isUserOrAdmin } from '../../../../auth'
-import { softDeleted } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.listBlobs({
@@ -13,8 +12,10 @@ export default function (server: Server, ctx: AppContext) {
       const { did } = params
       // takedown check for anyone other than an admin or the user
       if (!isUserOrAdmin(auth, did)) {
-        const account = await ctx.services.account(ctx.db).getAccount(did, true)
-        if (!account || softDeleted(account)) {
+        const available = await ctx.services
+          .account(ctx.db)
+          .isRepoAvailable(did)
+        if (!available) {
           throw new InvalidRequestError(`Could not find root for DID: ${did}`)
         }
       }
