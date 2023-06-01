@@ -8,10 +8,13 @@ export default function () {
   })
 }
 
-function filter(req: express.Request, res: express.Response) {
-  const contentType = res.getHeaders()['content-type']
+function filter(_req: express.Request, res: express.Response) {
+  const contentType = res.getHeader('Content-type')
   if (contentType === 'application/vnd.ipld.car') {
     return true
   }
-  return compressible(req, res)
+  if (contentType === undefined || !compressible(contentType)) {
+    return false
+  }
+  return true
 }
