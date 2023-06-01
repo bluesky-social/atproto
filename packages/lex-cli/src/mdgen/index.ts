@@ -46,16 +46,31 @@ async function genMdLines(lexicons: LexiconDoc[]): Promise<StringTree> {
     if (lexicon.description) {
       desc.push(lexicon.description, ``)
     }
-    doc.push([
-      `---`,
-      ``,
-      `## ${lexicon.id}`,
-      '',
-      desc,
-      '```json',
-      JSON.stringify(lexicon, null, 2),
-      '```',
-    ])
+    doc.push([`---`, ``, `## ${lexicon.id}`, '', desc, ''])
+    // @ts-ignore
+    const parameters = lexicon.defs.main.parameters
+    const properties = parameters.properties
+    // @ts-ignore
+    const output = lexicon.defs.main.output
+    if (lexicon.defs.main.type === 'query' && parameters) {
+      console.log(properties)
+      doc.push(
+        '| Name | Format | Description | Required',
+        '| ---- | ------ | ------------ | --------',
+      )
+      for (const key of Object.keys(properties)) {
+        doc.push(
+          `| ${key} | ${properties[key].format} | ${
+            properties[key].description
+          } | ${parameters.required.includes(key)}`,
+          '',
+        )
+      }
+    }
+    if (output) {
+      console.log(output)
+      doc.push(['Output', '```json', output, '```', ''])
+    }
   }
   return doc
 }
