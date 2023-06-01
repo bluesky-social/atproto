@@ -104,6 +104,14 @@ describe('server', () => {
     expect(res.headers['content-encoding']).toEqual('gzip')
   })
 
+  it('does not compress small payloads', async () => {
+    const res = await axios.get(`${server.url}/xrpc/_health`, {
+      decompress: false,
+      headers: { 'accept-encoding': 'gzip' },
+    })
+    expect(res.headers['content-encoding']).toBeUndefined()
+  })
+
   it('healthcheck succeeds when database is available.', async () => {
     const { data, status } = await axios.get(`${server.url}/xrpc/_health`)
     expect(status).toEqual(200)
