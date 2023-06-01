@@ -23,10 +23,10 @@ describe('feed generation', () => {
 
   let alice: string
   let feedUriAll: string
-  let feedUriBadPagination: string
   let feedUriAllRef: RecordRef
   let feedUriEven: string
   let feedUriOdd: string // Unsupported by feed gen
+  let feedUriBadPagination: string
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -71,17 +71,6 @@ describe('feed generation', () => {
       },
       sc.getHeaders(alice),
     )
-    const allBadPagination = await agent.api.app.bsky.feed.generator.create(
-      { repo: alice, rkey: 'bad-pagination' },
-      {
-        did: gen.did,
-        displayName: 'All Bad Pagination',
-        description:
-          'Provides all feed candidates, blindly ignoring pagination limit',
-        createdAt: new Date().toISOString(),
-      },
-      sc.getHeaders(alice),
-    )
     const even = await agent.api.app.bsky.feed.generator.create(
       { repo: alice, rkey: 'even' },
       {
@@ -103,11 +92,22 @@ describe('feed generation', () => {
       },
       sc.getHeaders(alice),
     )
+    const badPagination = await agent.api.app.bsky.feed.generator.create(
+      { repo: alice, rkey: 'bad-pagination' },
+      {
+        did: gen.did,
+        displayName: 'Bad Pagination',
+        description:
+          'Provides all feed candidates, blindly ignoring pagination limit',
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
     feedUriAll = all.uri
-    feedUriBadPagination = allBadPagination.uri
     feedUriAllRef = new RecordRef(all.uri, all.cid)
     feedUriEven = even.uri
     feedUriOdd = odd.uri
+    feedUriBadPagination = badPagination.uri
   })
 
   it('feed gen records can be updated', async () => {
@@ -145,8 +145,8 @@ describe('feed generation', () => {
 
     expect(paginatedAll.length).toEqual(4)
     expect(paginatedAll[0].uri).toEqual(feedUriOdd)
-    expect(paginatedAll[1].uri).toEqual(feedUriEven)
-    expect(paginatedAll[2].uri).toEqual(feedUriBadPagination)
+    expect(paginatedAll[1].uri).toEqual(feedUriBadPagination)
+    expect(paginatedAll[2].uri).toEqual(feedUriEven)
     expect(paginatedAll[3].uri).toEqual(feedUriAll)
     expect(forSnapshot(paginatedAll)).toMatchSnapshot()
   })
