@@ -137,4 +137,67 @@ describe('agent', () => {
     })
     await expect(p).rejects.toThrow('Record/displayName must be a string')
   })
+
+  describe('app', () => {
+    it('should retrieve the api app', () => {
+      const agent = new BskyAgent({ service: server.url })
+      expect(agent.app).toBe(agent.api.app)
+    })
+  })
+
+  describe('post', () => {
+    it('should throw if no session', async () => {
+      const agent = new BskyAgent({ service: server.url })
+      await expect(agent.post({ text: 'foo' })).rejects.toThrow('Not logged in')
+    })
+  })
+
+  describe('deletePost', () => {
+    it('should throw if no session', async () => {
+      const agent = new BskyAgent({ service: server.url })
+      await expect(agent.deletePost('foo')).rejects.toThrow('Not logged in')
+    })
+  })
+
+  describe('like', () => {
+    it('should throw if no session', async () => {
+      const agent = new BskyAgent({ service: server.url })
+      await expect(agent.like('foo', 'bar')).rejects.toThrow('Not logged in')
+    })
+  })
+
+  describe('deleteLike', () => {
+    it('should throw if no session', async () => {
+      const agent = new BskyAgent({ service: server.url })
+      await expect(agent.deleteLike('foo')).rejects.toThrow('Not logged in')
+    })
+  })
+
+  describe('repost', () => {
+    it('should throw if no session', async () => {
+      const agent = new BskyAgent({ service: server.url })
+      await expect(agent.repost('foo', 'bar')).rejects.toThrow('Not logged in')
+    })
+  })
+
+  describe('deleteRepost', () => {
+    it('should throw if no session', async () => {
+      const agent = new BskyAgent({ service: server.url })
+      await expect(agent.deleteRepost('foo')).rejects.toThrow('Not logged in')
+    })
+  })
+
+  describe('follow', () => {
+    it('should throw if no session', async () => {
+      const agent = new BskyAgent({ service: server.url })
+      await expect(agent.follow('foo')).rejects.toThrow('Not logged in')
+    })
+  })
+
+  describe('deleteFollow', () => {
+    it('should throw if no session', async () => {
+      const agent = new BskyAgent({ service: server.url })
+      await expect(agent.deleteFollow('foo')).rejects.toThrow('Not logged in')
+    })
+  })
 })

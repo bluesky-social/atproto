@@ -1,0 +1,40 @@
+{
+  "name": "@atproto/identity",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto.git",
+    "directory": "packages/identity"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:log": "cat test.log | pino-pretty",
+    "prettier": "prettier --check src/ tests/",
+    "prettier:fix": "prettier --write src/ tests/",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "yarn lint --fix",
+    "verify": "run-p prettier lint",
+    "verify:fix": "yarn prettier:fix && yarn lint:fix",
+    "build": "node ./build.js",
+    "postbuild": "tsc --build tsconfig.build.json",
+    "update-main-to-dist": "node ./update-pkg.js --update-main-to-dist",
+    "update-main-to-src": "node ./update-pkg.js --update-main-to-src",
+    "prepublish": "npm run update-main-to-dist",
+    "postpublish": "npm run update-main-to-src"
+  },
+  "dependencies": {
+    "@atproto/common-web": "*",
+    "@atproto/crypto": "*",
+    "axios": "^0.27.2",
+    "zod": "^3.21.4"
+  },
+  "devDependencies": {
+    "@did-plc/lib": "^0.0.1",
+    "@did-plc/server": "^0.0.1",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "get-port": "^6.1.2"
+  }
+}

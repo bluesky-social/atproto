@@ -118,7 +118,7 @@ describe('pds views with blocking', () => {
   })
 
   it('strips blocked users out of getTimeline', async () => {
-    const resCarol = await agent.api.app.bsky.unspecced.getPopular(
+    const resCarol = await agent.api.app.bsky.feed.getTimeline(
       { limit: 100 },
       { headers: sc.getHeaders(carol) },
     )
@@ -126,9 +126,9 @@ describe('pds views with blocking', () => {
       resCarol.data.feed.some((post) => post.post.author.did === dan),
     ).toBeFalsy()
 
-    const resDan = await agent.api.app.bsky.unspecced.getPopular(
+    const resDan = await agent.api.app.bsky.feed.getTimeline(
       { limit: 100 },
-      { headers: sc.getHeaders(carol) },
+      { headers: sc.getHeaders(dan) },
     )
     expect(
       resDan.data.feed.some((post) => post.post.author.did === carol),
@@ -228,7 +228,7 @@ describe('pds views with blocking', () => {
       {
         limit: 100,
       },
-      { headers: sc.getHeaders(carol) },
+      { headers: sc.getHeaders(dan) },
     )
     expect(
       resDan.data.notifications.some((notif) => notif.author.did === carol),

@@ -144,10 +144,8 @@ describe('pds admin repo search view', () => {
 const snapPg = `
 Array [
   Object {
-    "account": Object {
-      "email": "cara-wiegand69.test@bsky.app",
-    },
     "did": "user(0)",
+    "email": "cara-wiegand69.test@bsky.app",
     "handle": "cara-wiegand69.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "invitesDisabled": false,
@@ -160,10 +158,8 @@ Array [
     "relatedRecords": Array [],
   },
   Object {
-    "account": Object {
-      "email": "eudora-dietrich4.test@bsky.app",
-    },
     "did": "user(1)",
+    "email": "eudora-dietrich4.test@bsky.app",
     "handle": "eudora-dietrich4.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "invitesDisabled": false,
@@ -185,10 +181,8 @@ Array [
     ],
   },
   Object {
-    "account": Object {
-      "email": "shane-torphy52.test@bsky.app",
-    },
     "did": "user(2)",
+    "email": "shane-torphy52.test@bsky.app",
     "handle": "shane-torphy52.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "invitesDisabled": false,
@@ -210,10 +204,8 @@ Array [
     ],
   },
   Object {
-    "account": Object {
-      "email": "aliya-hodkiewicz.test@bsky.app",
-    },
     "did": "user(3)",
+    "email": "aliya-hodkiewicz.test@bsky.app",
     "handle": "aliya-hodkiewicz.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "invitesDisabled": false,
@@ -235,10 +227,8 @@ Array [
     ],
   },
   Object {
-    "account": Object {
-      "email": "carlos6.test@bsky.app",
-    },
     "did": "user(4)",
+    "email": "carlos6.test@bsky.app",
     "handle": "carlos6.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "invitesDisabled": false,
@@ -246,10 +236,8 @@ Array [
     "relatedRecords": Array [],
   },
   Object {
-    "account": Object {
-      "email": "carolina-mcdermott77.test@bsky.app",
-    },
     "did": "user(5)",
+    "email": "carolina-mcdermott77.test@bsky.app",
     "handle": "carolina-mcdermott77.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "invitesDisabled": false,
@@ -271,10 +259,8 @@ Array [
     ],
   },
   Object {
-    "account": Object {
-      "email": "cayla-marquardt39.test@bsky.app",
-    },
     "did": "user(6)",
+    "email": "cayla-marquardt39.test@bsky.app",
     "handle": "cayla-marquardt39.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "invitesDisabled": false,
@@ -300,10 +286,8 @@ Array [
 const snapSqlite = `
 Array [
   Object {
-    "account": Object {
-      "email": "aliya-hodkiewicz.test@bsky.app",
-    },
     "did": "user(0)",
+    "email": "aliya-hodkiewicz.test@bsky.app",
     "handle": "aliya-hodkiewicz.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "invitesDisabled": false,
@@ -325,10 +309,8 @@ Array [
     ],
   },
   Object {
-    "account": Object {
-      "email": "cara-wiegand69.test@bsky.app",
-    },
     "did": "user(1)",
+    "email": "cara-wiegand69.test@bsky.app",
     "handle": "cara-wiegand69.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "invitesDisabled": false,
@@ -341,10 +323,8 @@ Array [
     "relatedRecords": Array [],
   },
   Object {
-    "account": Object {
-      "email": "carlos6.test@bsky.app",
-    },
     "did": "user(2)",
+    "email": "carlos6.test@bsky.app",
     "handle": "carlos6.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "invitesDisabled": false,
@@ -352,10 +332,8 @@ Array [
     "relatedRecords": Array [],
   },
   Object {
-    "account": Object {
-      "email": "carolina-mcdermott77.test@bsky.app",
-    },
     "did": "user(3)",
+    "email": "carolina-mcdermott77.test@bsky.app",
     "handle": "carolina-mcdermott77.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "invitesDisabled": false,
@@ -377,10 +355,8 @@ Array [
     ],
   },
   Object {
-    "account": Object {
-      "email": "eudora-dietrich4.test@bsky.app",
-    },
     "did": "user(4)",
+    "email": "eudora-dietrich4.test@bsky.app",
     "handle": "eudora-dietrich4.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "invitesDisabled": false,
@@ -402,10 +378,8 @@ Array [
     ],
   },
   Object {
-    "account": Object {
-      "email": "shane-torphy52.test@bsky.app",
-    },
     "did": "user(5)",
+    "email": "shane-torphy52.test@bsky.app",
     "handle": "shane-torphy52.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "invitesDisabled": false,

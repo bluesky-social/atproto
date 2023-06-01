@@ -10,9 +10,18 @@ import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
   subject?: string
+  ignoreSubjects?: string[]
   resolved?: boolean
+  actionType?:
+    | 'com.atproto.admin.defs#takedown'
+    | 'com.atproto.admin.defs#flag'
+    | 'com.atproto.admin.defs#acknowledge'
+    | 'com.atproto.admin.defs#escalate'
+    | (string & {})
   limit?: number
   cursor?: string
+  /** Reverse the order of the returned records? when true, returns reports in chronological order */
+  reverse?: boolean
 }
 
 export type InputSchema = undefined

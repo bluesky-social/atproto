@@ -1,6 +1,6 @@
 import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
-import { DidResolver } from '@atproto/did-resolver'
+import { IdResolver } from '@atproto/identity'
 import { Database } from './db'
 import { ServerConfig } from './config'
 import * as auth from './auth'
@@ -12,6 +12,8 @@ import { MessageDispatcher } from './event-stream/message-queue'
 import Sequencer from './sequencer'
 import { Labeler } from './labeler'
 import { BackgroundQueue } from './event-stream/background-queue'
+import DidSqlCache from './did-cache'
+import { MountedAlgos } from './feed-gen/types'
 
 export class AppContext {
   constructor(
@@ -20,6 +22,8 @@ export class AppContext {
       blobstore: BlobStore
       repoSigningKey: crypto.Keypair
       plcRotationKey: crypto.Keypair
+      idResolver: IdResolver
+      didCache: DidSqlCache
       auth: auth.ServerAuth
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
@@ -29,6 +33,7 @@ export class AppContext {
       sequencer: Sequencer
       labeler: Labeler
       backgroundQueue: BackgroundQueue
+      algos: MountedAlgos
     },
   ) {}
 
@@ -112,8 +117,16 @@ export class AppContext {
     return new plc.Client(this.cfg.didPlcUrl)
   }
 
-  get didResolver(): DidResolver {
-    return new DidResolver({ plcUrl: this.cfg.didPlcUrl })
+  get idResolver(): IdResolver {
+    return this.opts.idResolver
+  }
+
+  get didCache(): DidSqlCache {
+    return this.opts.didCache
+  }
+
+  get algos(): MountedAlgos {
+    return this.opts.algos
   }
 }
 

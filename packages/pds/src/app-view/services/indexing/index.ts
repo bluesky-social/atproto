@@ -7,7 +7,10 @@ import * as Like from './plugins/like'
 import * as Repost from './plugins/repost'
 import * as Follow from './plugins/follow'
 import * as Block from './plugins/block'
+import * as List from './plugins/list'
+import * as ListItem from './plugins/list-item'
 import * as Profile from './plugins/profile'
+import * as FeedGenerator from './plugins/feed-generator'
 import { BackgroundQueue } from '../../../event-stream/background-queue'
 
 export class IndexingService {
@@ -17,7 +20,10 @@ export class IndexingService {
     repost: Repost.PluginType
     follow: Follow.PluginType
     block: Block.PluginType
+    list: List.PluginType
+    listItem: ListItem.PluginType
     profile: Profile.PluginType
+    feedGenerator: FeedGenerator.PluginType
   }
 
   constructor(public db: Database, public backgroundQueue: BackgroundQueue) {
@@ -27,7 +33,10 @@ export class IndexingService {
       repost: Repost.makePlugin(this.db, backgroundQueue),
       follow: Follow.makePlugin(this.db, backgroundQueue),
       block: Block.makePlugin(this.db, backgroundQueue),
+      list: List.makePlugin(this.db, backgroundQueue),
+      listItem: ListItem.makePlugin(this.db, backgroundQueue),
       profile: Profile.makePlugin(this.db, backgroundQueue),
+      feedGenerator: FeedGenerator.makePlugin(this.db, backgroundQueue),
     }
   }
 
@@ -103,6 +112,11 @@ export class IndexingService {
       .execute()
     await this.db.db
       .deleteFrom('actor_block')
+      .where('creator', '=', did)
+      .execute()
+    await this.db.db.deleteFrom('list').where('creator', '=', did).execute()
+    await this.db.db
+      .deleteFrom('list_item')
       .where('creator', '=', did)
       .execute()
     await this.db.db.deleteFrom('follow').where('creator', '=', did).execute()

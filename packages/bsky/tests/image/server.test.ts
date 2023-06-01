@@ -2,20 +2,19 @@ import axios, { AxiosInstance } from 'axios'
 import { CID } from 'multiformats/cid'
 import { AtpAgent } from '@atproto/api'
 import { cidForCbor } from '@atproto/common'
-import { runTestEnv, TestEnvInfo } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { getInfo } from '../../src/image/sharp'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import { processAll } from '../_util'
 
 describe('image processing server', () => {
-  let testEnv: TestEnvInfo
+  let network: TestNetwork
   let client: AxiosInstance
   let fileDid: string
   let fileCid: CID
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_image_processing_server',
       bsky: {
         imgUriKey:
@@ -23,25 +22,25 @@ describe('image processing server', () => {
         imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
       },
     })
-    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
+    const pdsAgent = new AtpAgent({ service: network.pds.url })
     const sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
-    await processAll(testEnv)
+    await network.processAll()
     fileDid = sc.dids.carol
     fileCid = sc.posts[fileDid][0].images[0].image.ref
     client = axios.create({
-      baseURL: `${testEnv.bsky.url}/image`,
+      baseURL: `${network.bsky.url}/image`,
       validateStatus: () => true,
     })
   })
 
   afterAll(async () => {
-    await testEnv.close()
+    await network.close()
   })
 
   it('processes image from blob resolver.', async () => {
     const res = await client.get(
-      testEnv.bsky.ctx.imgUriBuilder.getSignedPath({
+      network.bsky.ctx.imgUriBuilder.getSignedPath({
         did: fileDid,
         cid: fileCid,
         format: 'jpeg',
@@ -71,7 +70,7 @@ describe('image processing server', () => {
   })
 
   it('caches results.', async () => {
-    const path = testEnv.bsky.ctx.imgUriBuilder.getSignedPath({
+    const path = network.bsky.ctx.imgUriBuilder.getSignedPath({
       did: fileDid,
       cid: fileCid,
       format: 'jpeg',
@@ -89,7 +88,7 @@ describe('image processing server', () => {
   })
 
   it('errors on bad signature.', async () => {
-    const path = testEnv.bsky.ctx.imgUriBuilder.getSignedPath({
+    const path = network.bsky.ctx.imgUriBuilder.getSignedPath({
       did: fileDid,
       cid: fileCid,
       format: 'jpeg',
@@ -106,7 +105,7 @@ describe('image processing server', () => {
   it('errors on missing file.', async () => {
     const missingCid = await cidForCbor('missing-file')
     const res = await client.get(
-      testEnv.bsky.ctx.imgUriBuilder.getSignedPath({
+      network.bsky.ctx.imgUriBuilder.getSignedPath({
         did: fileDid,
         cid: missingCid,
         format: 'jpeg',

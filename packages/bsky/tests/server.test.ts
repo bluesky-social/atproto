@@ -1,27 +1,27 @@
 import { AddressInfo } from 'net'
 import express from 'express'
 import axios, { AxiosError } from 'axios'
-import { runTestEnv, TestEnvInfo } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { handler as errorHandler } from '../src/error'
 import { Database } from '../src'
 
 describe('server', () => {
-  let testEnv: TestEnvInfo
+  let network: TestNetwork
   let db: Database
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_server',
     })
-    db = testEnv.bsky.ctx.db
+    db = network.bsky.ctx.db
   })
 
   afterAll(async () => {
-    await testEnv.close()
+    await network.close()
   })
 
   it('preserves 404s.', async () => {
-    const promise = axios.get(`${testEnv.bsky.url}/unknown`)
+    const promise = axios.get(`${network.bsky.url}/unknown`)
     await expect(promise).rejects.toThrow('failed with status code 404')
   })
 
@@ -49,7 +49,7 @@ describe('server', () => {
   })
 
   it('healthcheck succeeds when database is available.', async () => {
-    const { data, status } = await axios.get(`${testEnv.bsky.url}/xrpc/_health`)
+    const { data, status } = await axios.get(`${network.bsky.url}/xrpc/_health`)
     expect(status).toEqual(200)
     expect(data).toEqual({ version: '0.0.0' })
   })
@@ -59,7 +59,7 @@ describe('server', () => {
     let error: AxiosError
     try {
       await axios.post(
-        `${testEnv.bsky.url}/xrpc/com.atproto.repo.createRecord`,
+        `${network.bsky.url}/xrpc/com.atproto.repo.createRecord`,
         {
           data: 'x'.repeat(100 * 1024), // 100kb
         },
@@ -81,11 +81,11 @@ describe('server', () => {
   })
 
   it('healthcheck fails when database is unavailable.', async () => {
-    await testEnv.bsky.sub.destroy()
+    await network.bsky.sub.destroy()
     await db.close()
     let error: AxiosError
     try {
-      await axios.get(`${testEnv.bsky.url}/xrpc/_health`)
+      await axios.get(`${network.bsky.url}/xrpc/_health`)
       throw new Error('Healthcheck should have failed')
     } catch (err) {
       if (axios.isAxiosError(err)) {

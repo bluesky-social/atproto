@@ -2,10 +2,8 @@
 
 exports[`pds admin get repo view gets a repo by did, even when taken down. 1`] = `
 Object {
-  "account": Object {
-    "email": "alice@test.com",
-  },
   "did": "user(0)",
+  "email": "alice@test.com",
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "invites": Array [],
@@ -95,10 +93,8 @@ Object {
 
 exports[`pds admin get repo view serves labels. 1`] = `
 Object {
-  "account": Object {
-    "email": "alice@test.com",
-  },
   "did": "user(0)",
+  "email": "alice@test.com",
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "invites": Array [],

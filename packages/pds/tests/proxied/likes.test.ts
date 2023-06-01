@@ -1,12 +1,12 @@
 import AtpAgent from '@atproto/api'
-import { runTestEnv, CloseFn, processAll } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { SeedClient } from '../seeds/client'
 import likesSeed from '../seeds/likes'
 import { constantDate, forSnapshot, paginateAll } from '../_util'
 
 describe('pds like proxy views', () => {
+  let network: TestNetwork
   let agent: AtpAgent
-  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
@@ -14,20 +14,19 @@ describe('pds like proxy views', () => {
   let bob: string
 
   beforeAll(async () => {
-    const testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_likes',
     })
-    close = testEnv.close
-    agent = new AtpAgent({ service: testEnv.pds.url })
+    agent = network.pds.getClient()
     sc = new SeedClient(agent)
     await likesSeed(sc)
-    await processAll(testEnv)
+    await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   const getCursors = (items: { createdAt?: string }[]) =>

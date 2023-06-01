@@ -271,6 +271,7 @@ Array [
     },
     "reply": Object {
       "parent": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "did": "user(3)",
@@ -352,6 +353,7 @@ Array [
         "viewer": Object {},
       },
       "root": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "did": "user(0)",
@@ -418,6 +420,7 @@ Array [
     },
     "reply": Object {
       "parent": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "did": "user(0)",
@@ -444,6 +447,7 @@ Array [
         "viewer": Object {},
       },
       "root": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "did": "user(0)",
@@ -555,6 +559,7 @@ Array [
     },
     "reply": Object {
       "parent": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "did": "user(0)",
@@ -581,6 +586,7 @@ Array [
         "viewer": Object {},
       },
       "root": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "did": "user(0)",

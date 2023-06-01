@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.muteActorList",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Mute a list of actors.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["list"],
+          "properties": {
+            "list": { "type": "string", "format": "at-uri" }
+          }
+        }
+      }
+    }
+  }
+}

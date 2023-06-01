@@ -1,4 +1,4 @@
-import { Selectable } from 'kysely'
+import { Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { BlobStore } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
@@ -96,10 +96,21 @@ export class ModerationService {
   async getReports(opts: {
     subject?: string
     resolved?: boolean
+    actionType?: string
     limit: number
     cursor?: string
+    ignoreSubjects?: string[]
+    reverse?: boolean
   }): Promise<ModerationReportRow[]> {
-    const { subject, resolved, limit, cursor } = opts
+    const {
+      subject,
+      resolved,
+      actionType,
+      limit,
+      cursor,
+      ignoreSubjects,
+      reverse = false,
+    } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_report')
     if (subject) {
@@ -109,6 +120,15 @@ export class ModerationService {
           .orWhere('subjectUri', '=', subject)
       })
     }
+
+    if (ignoreSubjects?.length) {
+      builder = builder.where((qb) => {
+        return qb
+          .where('subjectDid', 'not in', ignoreSubjects)
+          .where('subjectUri', 'not in', ignoreSubjects)
+      })
+    }
+
     if (resolved !== undefined) {
       const resolutionsQuery = this.db.db
         .selectFrom('moderation_report_resolution')
@@ -122,16 +142,36 @@ export class ModerationService {
         ? builder.whereExists(resolutionsQuery)
         : builder.whereNotExists(resolutionsQuery)
     }
+    if (actionType !== undefined) {
+      const resolutionActionsQuery = this.db.db
+        .selectFrom('moderation_report_resolution')
+        .innerJoin(
+          'moderation_action',
+          'moderation_action.id',
+          'moderation_report_resolution.actionId',
+        )
+        .whereRef(
+          'moderation_report_resolution.reportId',
+          '=',
+          ref('moderation_report.id'),
+        )
+        .where('moderation_action.action', '=', sql`${actionType}`)
+        .where('moderation_action.reversedAt', 'is', null)
+        .selectAll()
+      builder = builder.whereExists(resolutionActionsQuery)
+    }
+
     if (cursor) {
       const cursorNumeric = parseInt(cursor, 10)
       if (isNaN(cursorNumeric)) {
         throw new InvalidRequestError('Malformed cursor')
       }
-      builder = builder.where('id', '<', cursorNumeric)
+      builder = builder.where('id', reverse ? '>' : '<', cursorNumeric)
     }
+
     return await builder
       .selectAll()
-      .orderBy('id', 'desc')
+      .orderBy('id', reverse ? 'asc' : 'desc')
       .limit(limit)
       .execute()
   }
@@ -204,8 +244,7 @@ export class ModerationService {
     // Resolve subject info
     let subjectInfo: SubjectInfo
     if ('did' in subject) {
-      const repo = await new SqlRepoStorage(this.db, subject.did).getHead()
-      if (!repo) throw new InvalidRequestError('Repo not found')
+      // Allowing dids that may not exist: may have been deleted but needs to remain actionable.
       subjectInfo = {
         subjectType: 'com.atproto.admin.defs#repoRef',
         subjectDid: subject.did,
@@ -216,15 +255,12 @@ export class ModerationService {
         throw new InvalidRequestError('Blobs do not apply to repo subjects')
       }
     } else {
-      const record = await this.services
-        .record(this.db)
-        .getRecord(subject.uri, subject.cid.toString() ?? null, true)
-      if (!record) throw new InvalidRequestError('Record not found')
+      // Allowing records/blobs that may not exist: may have been deleted but needs to remain actionable.
       subjectInfo = {
         subjectType: 'com.atproto.repo.strongRef',
         subjectDid: subject.uri.host,
         subjectUri: subject.uri.toString(),
-        subjectCid: record.cid,
+        subjectCid: subject.cid.toString(),
       }
       if (subjectBlobCids?.length) {
         const cidsFromSubject = await this.db.db
