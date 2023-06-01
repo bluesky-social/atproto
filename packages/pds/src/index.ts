@@ -6,12 +6,12 @@ import 'express-async-errors'
 
 import express from 'express'
 import cors from 'cors'
-import compression from 'compression'
 import http from 'http'
 import events from 'events'
 import { createTransport } from 'nodemailer'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
+import { IdResolver } from '@atproto/identity'
 import { AppViewIndexer } from './app-view/indexer'
 import inProcessAppView from './app-view/api'
 import proxiedAppView from './app-view/proxied'
@@ -21,6 +21,7 @@ import * as wellKnown from './well-known'
 import Database from './db'
 import { ServerAuth } from './auth'
 import * as error from './error'
+import compression from './util/compression'
 import { dbLogger, loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
@@ -39,7 +40,6 @@ import {
 import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
 import { BackgroundQueue } from './event-stream/background-queue'
 import DidSqlCache from './did-cache'
-import { IdResolver } from '@atproto/identity'
 import { MountedAlgos } from './feed-gen/types'
 
 export type { ServerConfigValues } from './config'
@@ -111,8 +111,8 @@ export class PDS {
 
     const app = express()
     app.use(cors())
-    app.use(compression())
     app.use(loggerMiddleware)
+    app.use(compression())
 
     let imgUriEndpoint = config.imgUriEndpoint
     if (!imgUriEndpoint) {
