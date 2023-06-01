@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.1.5",
+  "version": "0.1.11",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -34,8 +34,8 @@
     "@atproto/api": "*",
     "@atproto/common": "*",
     "@atproto/crypto": "*",
-    "@atproto/did-resolver": "*",
     "@atproto/identifier": "*",
+    "@atproto/identity": "*",
     "@atproto/lexicon": "*",
     "@atproto/repo": "*",
     "@atproto/uri": "*",

@@ -6,9 +6,8 @@ number    = "1" / "2" / "3" / "4" / "5" / "6" / "7" / "8" / "9" / "0"
 delim     = "."
 segment   = alpha *( alpha / number / "-" )
 authority = segment *( delim segment )
-name      = segment
+name      = alpha *( alpha )
 nsid      = authority delim name
-nsid-ns   = authority delim "*"
 
 */
 
@@ -55,12 +54,10 @@ export class NSID {
 }
 
 // Human readable constraints on NSID:
-// - a valid domain in reversed notation. which means the same as a loose domain!
+// - a valid domain in reversed notation
+// - followed by an additional period-separated name, which is camel-case letters
 export const ensureValidNsid = (nsid: string): void => {
-  // to handle nsid-ns
-  const split = nsid.split('.')
-  const toCheck =
-    split.at(-1) === '*' ? split.slice(0, -1).join('.') : split.join('.')
+  const toCheck = nsid
 
   // check that all chars are boring ASCII
   if (!/^[a-zA-Z0-9.-]*$/.test(toCheck)) {
@@ -69,11 +66,11 @@ export const ensureValidNsid = (nsid: string): void => {
     )
   }
 
-  if (toCheck.length > 253 + 1 + 128) {
-    throw new InvalidNsidError('NSID is too long (382 chars max)')
+  if (toCheck.length > 253 + 1 + 63) {
+    throw new InvalidNsidError('NSID is too long (317 chars max)')
   }
   const labels = toCheck.split('.')
-  if (split.length < 3) {
+  if (labels.length < 3) {
     throw new InvalidNsidError('NSID needs at least three parts')
   }
   for (let i = 0; i < labels.length; i++) {
@@ -81,34 +78,33 @@ export const ensureValidNsid = (nsid: string): void => {
     if (l.length < 1) {
       throw new InvalidNsidError('NSID parts can not be empty')
     }
-    if (l.length > 63 && i + 1 < labels.length) {
-      throw new InvalidNsidError('NSID domain part too long (max 63 chars)')
+    if (l.length > 63) {
+      throw new InvalidNsidError('NSID part too long (max 63 chars)')
     }
-    if (l.length > 128 && i + 1 == labels.length) {
-      throw new InvalidNsidError('NSID name part too long (max 128 chars)')
+    if (l.endsWith('-') || l.startsWith('-')) {
+      throw new InvalidNsidError('NSID parts can not start or end with hyphen')
     }
-    if (l.endsWith('-')) {
-      throw new InvalidNsidError('NSID parts can not end with hyphen')
+    if (/^[0-9]/.test(l) && i == 0) {
+      throw new InvalidNsidError('NSID first part may not start with a digit')
     }
-    if (!/^[a-zA-Z]/.test(l)) {
-      throw new InvalidNsidError('NSID parts must start with ASCII letter')
+    if (!/^[a-zA-Z]+$/.test(l) && i + 1 == labels.length) {
+      throw new InvalidNsidError('NSID name part must be only letters')
     }
   }
 }
 
-// nsid-ns is not handled in regex yet
 export const ensureValidNsidRegex = (nsid: string): void => {
   // simple regex to enforce most constraints via just regex and length.
   // hand wrote this regex based on above constraints
   if (
-    !/^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9-]{0,126}[a-zA-Z0-9])?)$/.test(
+    !/^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z]{0,61}[a-zA-Z])?)$/.test(
       nsid,
     )
   ) {
     throw new InvalidNsidError("NSID didn't validate via regex")
   }
-  if (nsid.length > 253 + 1 + 128) {
-    throw new InvalidNsidError('NSID is too long (382 chars max)')
+  if (nsid.length > 253 + 1 + 63) {
+    throw new InvalidNsidError('NSID is too long (317 chars max)')
   }
 }
 

@@ -17,7 +17,8 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('The seenAt parameter is unsupported')
       }
 
-      const actorService = ctx.services.appView.actor(ctx.db)
+      const accountService = ctx.services.account(ctx.db)
+      const graphService = ctx.services.appView.graph(ctx.db)
 
       let notifBuilder = ctx.db.db
         .selectFrom('user_notification as notif')
@@ -31,14 +32,10 @@ export default function (server: Server, ctx: AppContext) {
         .where(notSoftDeletedClause(ref('author_repo')))
         .where(notSoftDeletedClause(ref('record')))
         .where('notif.userDid', '=', requester)
-        .whereNotExists(
-          ctx.db.db // Omit mentions and replies by muted actors
-            .selectFrom('mute')
-            .selectAll()
-            .whereRef('did', '=', ref('notif.author'))
-            .where('mutedByDid', '=', requester),
+        .where((qb) =>
+          accountService.whereNotMuted(qb, requester, [ref('notif.author')]),
         )
-        .whereNotExists(actorService.blockQb(requester, [ref('notif.author')]))
+        .whereNotExists(graphService.blockQb(requester, [ref('notif.author')]))
         .where((clause) =>
           clause
             .where('reasonSubject', 'is', null)
@@ -96,6 +93,8 @@ export default function (server: Server, ctx: AppContext) {
             .select(['cid', 'content as bytes'])
         : null
 
+      const actorService = ctx.services.appView.actor(ctx.db)
+
       // @NOTE calling into app-view, will eventually be replaced
       const labelService = ctx.services.appView.label(ctx.db)
       const recordUris = notifs.map((notif) => notif.uri)
@@ -108,7 +107,7 @@ export default function (server: Server, ctx: AppContext) {
           })),
           requester,
         ),
-        labelService.getLabelsForSubjects(recordUris),
+        labelService.getLabelsForUris(recordUris),
       ])
 
       const bytesByCid = blocks.reduce((acc, block) => {

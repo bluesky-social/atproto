@@ -1,19 +1,13 @@
 import AtpAgent from '@atproto/api'
-import { TestEnvInfo, runTestEnv } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import {
-  adminAuth,
-  appViewHeaders,
-  forSnapshot,
-  paginateAll,
-  processAll,
-} from '../_util'
+import { forSnapshot, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
 
 describe('notification views', () => {
-  let testEnv: TestEnvInfo
+  let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
@@ -21,20 +15,20 @@ describe('notification views', () => {
   let alice: string
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_notifications',
     })
-    agent = new AtpAgent({ service: testEnv.bsky.url })
-    const pdsAgent = new AtpAgent({ service: testEnv.pds.url })
+    agent = network.bsky.getClient()
+    const pdsAgent = network.pds.getClient()
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
-    await processAll(testEnv)
-    await testEnv.bsky.ctx.labeler.processAll()
+    await network.processAll()
+    await network.bsky.ctx.labeler.processAll()
     alice = sc.dids.alice
   })
 
   afterAll(async () => {
-    await testEnv.close()
+    await network.close()
   })
 
   const sort = (notifs: Notification[]) => {
@@ -59,14 +53,14 @@ describe('notification views', () => {
     const notifCountAlice =
       await agent.api.app.bsky.notification.getUnreadCount(
         {},
-        { headers: await appViewHeaders(alice, testEnv) },
+        { headers: await network.serviceHeaders(alice) },
       )
 
     expect(notifCountAlice.data.count).toBe(11)
 
     const notifCountBob = await agent.api.app.bsky.notification.getUnreadCount(
       {},
-      { headers: await appViewHeaders(sc.dids.bob, testEnv) },
+      { headers: await network.serviceHeaders(sc.dids.bob) },
     )
 
     expect(notifCountBob.data.count).toBe(4)
@@ -81,19 +75,19 @@ describe('notification views', () => {
       sc.replies[alice][0].ref,
       'indeed',
     )
-    await processAll(testEnv)
+    await network.processAll()
 
     const notifCountAlice =
       await agent.api.app.bsky.notification.getUnreadCount(
         {},
-        { headers: await appViewHeaders(alice, testEnv) },
+        { headers: await network.serviceHeaders(alice) },
       )
 
     expect(notifCountAlice.data.count).toBe(12)
 
     const notifCountBob = await agent.api.app.bsky.notification.getUnreadCount(
       {},
-      { headers: await appViewHeaders(sc.dids.bob, testEnv) },
+      { headers: await network.serviceHeaders(sc.dids.bob) },
     )
 
     expect(notifCountBob.data.count).toBe(5)
@@ -104,11 +98,11 @@ describe('notification views', () => {
     const first = await sc.reply(sc.dids.bob, root.ref, root.ref, 'first')
     await sc.deletePost(sc.dids.alice, root.ref.uri)
     const second = await sc.reply(sc.dids.carol, root.ref, first.ref, 'second')
-    await processAll(testEnv)
+    await network.processAll()
 
     const notifsAlice = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await appViewHeaders(sc.dids.alice, testEnv) },
+      { headers: await network.serviceHeaders(sc.dids.alice) },
     )
     const hasNotif = notifsAlice.data.notifications.some(
       (notif) => notif.uri === second.ref.uriStr,
@@ -118,14 +112,14 @@ describe('notification views', () => {
     // cleanup
     await sc.deletePost(sc.dids.bob, first.ref.uri)
     await sc.deletePost(sc.dids.carol, second.ref.uri)
-    await processAll(testEnv)
+    await network.processAll()
   })
 
   it('generates notifications for quotes', async () => {
     // Dan was quoted by alice
     const notifsDan = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await appViewHeaders(sc.dids.dan, testEnv) },
+      { headers: await network.serviceHeaders(sc.dids.dan) },
     )
     expect(forSnapshot(sort(notifsDan.data.notifications))).toMatchSnapshot()
   })
@@ -133,7 +127,7 @@ describe('notification views', () => {
   it('fetches notifications without a last-seen', async () => {
     const notifRes = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await appViewHeaders(alice, testEnv) },
+      { headers: await network.serviceHeaders(alice) },
     )
 
     const notifs = notifRes.data.notifications
@@ -151,7 +145,7 @@ describe('notification views', () => {
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.notification.listNotifications(
         { cursor, limit: 6 },
-        { headers: await appViewHeaders(alice, testEnv) },
+        { headers: await network.serviceHeaders(alice) },
       )
       return res.data
     }
@@ -163,7 +157,7 @@ describe('notification views', () => {
 
     const full = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await appViewHeaders(alice, testEnv) },
+      { headers: await network.serviceHeaders(alice) },
     )
 
     expect(full.data.notifications.length).toEqual(12)
@@ -173,12 +167,12 @@ describe('notification views', () => {
   it('fetches notification count with a last-seen', async () => {
     const full = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await appViewHeaders(alice, testEnv) },
+      { headers: await network.serviceHeaders(alice) },
     )
     const seenAt = full.data.notifications[3].indexedAt
     const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
       { seenAt },
-      { headers: await appViewHeaders(alice, testEnv) },
+      { headers: await network.serviceHeaders(alice) },
     )
 
     expect(notifCount.data.count).toBe(
@@ -190,12 +184,12 @@ describe('notification views', () => {
   it('fetches notifications with a last-seen', async () => {
     const full = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await appViewHeaders(alice, testEnv) },
+      { headers: await network.serviceHeaders(alice) },
     )
     const seenAt = full.data.notifications[3].indexedAt
     const notifRes = await agent.api.app.bsky.notification.listNotifications(
       { seenAt },
-      { headers: await appViewHeaders(alice, testEnv) },
+      { headers: await network.serviceHeaders(alice) },
     )
 
     const notifs = notifRes.data.notifications
@@ -223,7 +217,7 @@ describe('notification views', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         ),
       ),
@@ -231,11 +225,11 @@ describe('notification views', () => {
 
     const notifRes = await agent.api.app.bsky.notification.listNotifications(
       {},
-      { headers: await appViewHeaders(alice, testEnv) },
+      { headers: await network.serviceHeaders(alice) },
     )
     const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
       {},
-      { headers: await appViewHeaders(alice, testEnv) },
+      { headers: await network.serviceHeaders(alice) },
     )
 
     const notifs = sort(notifRes.data.notifications)
@@ -254,7 +248,7 @@ describe('notification views', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: network.pds.adminAuthHeaders(),
           },
         ),
       ),

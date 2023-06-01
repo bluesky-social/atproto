@@ -14,7 +14,9 @@ import { BlobStore } from '@atproto/repo'
 import { AppViewIndexer } from './app-view/indexer'
 import inProcessAppView from './app-view/api'
 import proxiedAppView from './app-view/proxied'
-import API, { health } from './api'
+import API from './api'
+import * as basicRoutes from './basic-routes'
+import * as wellKnown from './well-known'
 import Database from './db'
 import { ServerAuth } from './auth'
 import * as error from './error'
@@ -35,12 +37,17 @@ import {
 } from './image/invalidator'
 import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
 import { BackgroundQueue } from './event-stream/background-queue'
+import DidSqlCache from './did-cache'
+import { IdResolver } from '@atproto/identity'
+import { MountedAlgos } from './feed-gen/types'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './db'
+export { ViewMaintainer } from './db/views'
 export { DiskBlobStore, MemoryBlobStore } from './storage'
 export { AppContext } from './context'
+export { makeAlgos } from './feed-gen'
 
 export class PDS {
   public ctx: AppContext
@@ -66,15 +73,30 @@ export class PDS {
     imgInvalidator?: ImageInvalidator
     repoSigningKey: crypto.Keypair
     plcRotationKey: crypto.Keypair
+    algos?: MountedAlgos
     config: ServerConfig
   }): PDS {
-    const { db, blobstore, repoSigningKey, plcRotationKey, config } = opts
+    const {
+      db,
+      blobstore,
+      repoSigningKey,
+      plcRotationKey,
+      algos = {},
+      config,
+    } = opts
     let maybeImgInvalidator = opts.imgInvalidator
     const auth = new ServerAuth({
       jwtSecret: config.jwtSecret,
       adminPass: config.adminPassword,
       moderatorPass: config.moderatorPassword,
     })
+
+    const didCache = new DidSqlCache(
+      db,
+      config.didCacheStaleTTL,
+      config.didCacheMaxTTL,
+    )
+    const idResolver = new IdResolver({ plcUrl: config.didPlcUrl, didCache })
 
     const messageDispatcher = new MessageDispatcher()
     const sequencer = new Sequencer(db)
@@ -156,6 +178,8 @@ export class PDS {
       blobstore,
       repoSigningKey,
       plcRotationKey,
+      idResolver,
+      didCache,
       cfg: config,
       auth,
       messageDispatcher,
@@ -165,6 +189,7 @@ export class PDS {
       mailer,
       imgUriBuilder,
       backgroundQueue,
+      algos,
     })
 
     const appViewIndexer = new AppViewIndexer(ctx)
@@ -179,13 +204,14 @@ export class PDS {
     })
 
     server = API(server, ctx)
-    if (ctx.cfg.bskyAppViewEndpoint) {
+    if (ctx.cfg.bskyAppViewEndpoint && ctx.cfg.bskyAppViewDid) {
       server = proxiedAppView(server, ctx)
     } else {
       server = inProcessAppView(server, ctx)
     }
 
-    app.use(health.createRouter(ctx))
+    app.use(basicRoutes.createRouter(ctx))
+    app.use(wellKnown.createRouter(ctx))
     app.use(server.xrpc.router)
     app.use(error.handler)
 

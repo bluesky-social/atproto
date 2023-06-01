@@ -1,33 +1,31 @@
 import AtpAgent from '@atproto/api'
-import { runTestEnv, CloseFn, processAll, TestEnvInfo } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { forSnapshot, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
 
 describe('pds notification proxy views', () => {
+  let network: TestNetwork
   let agent: AtpAgent
-  let testEnv: TestEnvInfo
-  let close: CloseFn
   let sc: SeedClient
 
   // account dids, for convenience
   let alice: string
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_notifications',
     })
-    close = testEnv.close
-    agent = new AtpAgent({ service: testEnv.pds.url })
+    agent = new AtpAgent({ service: network.pds.url })
     sc = new SeedClient(agent)
     await basicSeed(sc)
-    await processAll(testEnv)
+    await network.processAll()
     alice = sc.dids.alice
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   const sort = (notifs: Notification[]) => {
@@ -66,7 +64,7 @@ describe('pds notification proxy views', () => {
       'indeed',
     )
 
-    await processAll(testEnv)
+    await network.processAll()
 
     const notifCountAlice =
       await agent.api.app.bsky.notification.getUnreadCount(

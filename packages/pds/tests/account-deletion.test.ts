@@ -29,6 +29,8 @@ import { RepoSeq } from '../src/db/tables/repo-seq'
 import { ACKNOWLEDGE } from '../src/lexicon/types/com/atproto/admin/defs'
 import { UserState } from '../src/db/tables/user-state'
 import { ActorBlock } from '../src/app-view/db/tables/actor-block'
+import { List } from '../src/app-view/db/tables/list'
+import { ListItem } from '../src/app-view/db/tables/list-item'
 
 describe('account deletion', () => {
   let server: util.TestServerInfo
@@ -195,6 +197,12 @@ describe('account deletion', () => {
     expect(updatedDbContents.actorBlocks).toEqual(
       initialDbContents.actorBlocks.filter((row) => row.creator !== carol.did),
     )
+    expect(updatedDbContents.lists).toEqual(
+      initialDbContents.lists.filter((row) => row.creator !== carol.did),
+    )
+    expect(updatedDbContents.listItems).toEqual(
+      initialDbContents.listItems.filter((row) => row.creator !== carol.did),
+    )
     expect(updatedDbContents.reposts).toEqual(
       initialDbContents.reposts.filter((row) => row.creator !== carol.did),
     )
@@ -297,6 +305,8 @@ type DbContents = {
   reposts: Repost[]
   follows: Follow[]
   actorBlocks: ActorBlock[]
+  lists: List[]
+  listItems: ListItem[]
   repoBlobs: RepoBlob[]
   blobs: Blob[]
 }
@@ -319,6 +329,8 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     reposts,
     follows,
     actorBlocks,
+    lists,
+    listItems,
     repoBlobs,
     blobs,
   ] = await Promise.all([
@@ -366,6 +378,8 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     db.db.selectFrom('repost').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('follow').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('actor_block').orderBy('uri').selectAll().execute(),
+    db.db.selectFrom('list').orderBy('uri').selectAll().execute(),
+    db.db.selectFrom('list_item').orderBy('uri').selectAll().execute(),
     db.db
       .selectFrom('repo_blob')
       .orderBy('did')
@@ -392,6 +406,8 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     reposts,
     follows,
     actorBlocks,
+    lists,
+    listItems,
     repoBlobs,
     blobs,
   }

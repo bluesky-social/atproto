@@ -25,7 +25,8 @@
         }
       },
       "errors": [
-        {"name": "InvalidSwap"}
+        {"name": "InvalidSwap"},
+        {"name": "ConcurrentWrites"}
       ]
     }
   }

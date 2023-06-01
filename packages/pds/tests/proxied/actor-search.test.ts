@@ -1,29 +1,28 @@
 import AtpAgent from '@atproto/api'
-import { runTestEnv, CloseFn, processAll } from '@atproto/dev-env'
+import { TestNetwork } from '@atproto/dev-env'
 import { forSnapshot, paginateAll } from '../_util'
 import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
 import { wait } from '@atproto/common'
 
 describe('pds user search proxy views', () => {
+  let network: TestNetwork
   let agent: AtpAgent
-  let close: CloseFn
   let sc: SeedClient
   let headers: { [s: string]: string }
 
   beforeAll(async () => {
-    const testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_user_search',
     })
-    close = testEnv.close
-    agent = new AtpAgent({ service: testEnv.pds.url })
+    agent = new AtpAgent({ service: network.pds.url })
     sc = new SeedClient(agent)
     await wait(50) // allow pending sub to be established
-    await testEnv.bsky.sub.destroy()
+    await network.bsky.sub.destroy()
     await usersBulkSeed(sc)
 
     // Skip did/handle resolution for expediency
-    const { db } = testEnv.bsky.ctx
+    const { db } = network.bsky.ctx
     const now = new Date().toISOString()
     await db.db
       .insertInto('actor')
@@ -38,13 +37,13 @@ describe('pds user search proxy views', () => {
       .execute()
 
     // Process remaining profiles
-    testEnv.bsky.sub.resume()
-    await processAll(testEnv, 50000)
+    network.bsky.sub.resume()
+    await network.processAll(50000)
     headers = sc.getHeaders(Object.values(sc.dids)[0])
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('typeahead gives relevant results', async () => {

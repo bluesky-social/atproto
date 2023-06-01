@@ -60,6 +60,7 @@ describe('DID permissive validation', () => {
     expectValid('did:example:123456789abcdefghi')
     expectValid('did:plc:7iza6de2dwap2sbkpav7c6c6')
     expectValid('did:web:example.com')
+    expectValid('did:web:localhost%3A1234')
     expectValid('did:key:zQ3shZc2QzApp2oymGvQbzP8eKheVshBHbU4ZYjeXqwSKEn6N')
     expectValid('did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a')
   })

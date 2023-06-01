@@ -43,7 +43,12 @@ export function validateActionView(v: unknown): ValidationResult {
 export interface ActionViewDetail {
   id: number
   action: ActionType
-  subject: RepoView | RecordView | { $type: string; [k: string]: unknown }
+  subject:
+    | RepoView
+    | RepoViewNotFound
+    | RecordView
+    | RecordViewNotFound
+    | { $type: string; [k: string]: unknown }
   subjectBlobs: BlobView[]
   createLabelVals?: string[]
   negateLabelVals?: string[]
@@ -150,7 +155,12 @@ export interface ReportViewDetail {
   id: number
   reasonType: ComAtprotoModerationDefs.ReasonType
   reason?: string
-  subject: RepoView | RecordView | { $type: string; [k: string]: unknown }
+  subject:
+    | RepoView
+    | RepoViewNotFound
+    | RecordView
+    | RecordViewNotFound
+    | { $type: string; [k: string]: unknown }
   reportedBy: string
   createdAt: string
   resolvedByActions: ActionView[]
@@ -219,6 +229,23 @@ export function validateRepoViewDetail(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#repoViewDetail', v)
 }
 
+export interface RepoViewNotFound {
+  did: string
+  [k: string]: unknown
+}
+
+export function isRepoViewNotFound(v: unknown): v is RepoViewNotFound {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#repoViewNotFound'
+  )
+}
+
+export function validateRepoViewNotFound(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#repoViewNotFound', v)
+}
+
 export interface RepoRef {
   did: string
   [k: string]: unknown
@@ -281,6 +308,23 @@ export function isRecordViewDetail(v: unknown): v is RecordViewDetail {
 
 export function validateRecordViewDetail(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#recordViewDetail', v)
+}
+
+export interface RecordViewNotFound {
+  uri: string
+  [k: string]: unknown
+}
+
+export function isRecordViewNotFound(v: unknown): v is RecordViewNotFound {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#recordViewNotFound'
+  )
+}
+
+export function validateRecordViewNotFound(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#recordViewNotFound', v)
 }
 
 export interface Moderation {

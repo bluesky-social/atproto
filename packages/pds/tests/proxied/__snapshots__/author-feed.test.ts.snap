@@ -4,6 +4,7 @@ exports[`pds author feed proxy views fetches full author feeds for self (sorted,
 Array [
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -40,6 +41,7 @@ Array [
     },
     "reply": Object {
       "parent": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
           "did": "user(2)",
@@ -129,6 +131,7 @@ Array [
         "viewer": Object {},
       },
       "root": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
           "did": "user(0)",
@@ -157,6 +160,7 @@ Array [
   },
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -306,6 +310,7 @@ Array [
   },
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -333,6 +338,7 @@ Array [
   },
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -365,6 +371,7 @@ exports[`pds author feed proxy views fetches full author feeds for self (sorted,
 Array [
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -453,6 +460,7 @@ Array [
     },
     "reply": Object {
       "parent": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
           "did": "user(2)",
@@ -482,6 +490,7 @@ Array [
         },
       },
       "root": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
           "did": "user(2)",
@@ -514,6 +523,7 @@ Array [
   },
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -550,6 +560,7 @@ Array [
   },
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -591,6 +602,7 @@ exports[`pds author feed proxy views fetches full author feeds for self (sorted,
 Array [
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "did": "user(0)",
         "handle": "dan.test",
@@ -761,6 +773,7 @@ Array [
   },
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "did": "user(2)",
         "handle": "carol.test",
@@ -795,6 +808,7 @@ Array [
     },
     "reply": Object {
       "parent": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(6)/cids(5)@jpeg",
           "did": "user(1)",
@@ -824,6 +838,7 @@ Array [
         },
       },
       "root": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(6)/cids(5)@jpeg",
           "did": "user(1)",
@@ -856,6 +871,7 @@ Array [
   },
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "did": "user(2)",
         "handle": "carol.test",
@@ -974,6 +990,7 @@ exports[`pds author feed proxy views fetches full author feeds for self (sorted,
 Array [
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -1017,6 +1034,7 @@ Array [
   },
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "did": "user(2)",
         "handle": "dan.test",
@@ -1173,6 +1191,7 @@ Array [
   },
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "did": "user(2)",
         "handle": "dan.test",
@@ -1203,6 +1222,7 @@ exports[`pds author feed proxy views omits reposts from muted users. 1`] = `
 Array [
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "did": "user(0)",
         "handle": "dan.test",
@@ -1360,6 +1380,7 @@ Array [
   },
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "did": "user(0)",
         "handle": "dan.test",
@@ -1391,6 +1412,7 @@ exports[`pds author feed proxy views reflects fetching user's state in the feed.
 Array [
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -1429,6 +1451,7 @@ Array [
     },
     "reply": Object {
       "parent": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
           "did": "user(2)",
@@ -1517,6 +1540,7 @@ Array [
         "viewer": Object {},
       },
       "root": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
           "did": "user(0)",
@@ -1549,6 +1573,7 @@ Array [
   },
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -1697,6 +1722,7 @@ Array [
   },
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -1728,6 +1754,7 @@ Array [
   },
   Object {
     "post": Object {
+      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",

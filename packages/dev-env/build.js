@@ -3,7 +3,7 @@ const { copy } = require('esbuild-plugin-copy')
 require('esbuild')
   .build({
     logLevel: 'info',
-    entryPoints: ['src/index.ts', 'src/cli.ts'],
+    entryPoints: ['src/index.ts', 'src/bin.ts'],
     bundle: true,
     sourcemap: true,
     outdir: 'dist',

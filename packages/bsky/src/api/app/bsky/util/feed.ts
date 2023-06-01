@@ -29,10 +29,12 @@ export const composeFeed = async (
     }
   }
   const [actors, posts, embeds, labels] = await Promise.all([
-    feedService.getActorViews(Array.from(actorDids), viewer),
+    feedService.getActorViews(Array.from(actorDids), viewer, {
+      skipLabels: true,
+    }),
     feedService.getPostViews(Array.from(postUris), viewer),
     feedService.embedsForPosts(Array.from(postUris), viewer),
-    labelService.getLabelsForSubjects(Array.from(postUris)),
+    labelService.getLabelsForSubjects([...postUris, ...actorDids]),
   ])
 
   const feed: FeedViewPost[] = []
@@ -99,4 +101,11 @@ export class FeedKeyset extends TimeCidKeyset<FeedRow> {
   labelResult(result: FeedRow) {
     return { primary: result.sortAt, secondary: result.cid }
   }
+}
+
+// For users with sparse feeds, avoid scanning more than one week for a single page
+export const getFeedDateThreshold = (from: string | undefined, days = 7) => {
+  const timelineDateThreshold = from ? new Date(from) : new Date()
+  timelineDateThreshold.setDate(timelineDateThreshold.getDate() - days)
+  return timelineDateThreshold.toISOString()
 }
