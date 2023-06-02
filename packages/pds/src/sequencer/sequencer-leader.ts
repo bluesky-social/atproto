@@ -1,7 +1,7 @@
 import { DisconnectError } from '@atproto/xrpc-server'
 import { Leader } from '../db/leader'
 import { seqLogger as log } from '../logger'
-import Database, { ChannelMsg } from '../db'
+import Database from '../db'
 import { jitter, wait } from '@atproto/common'
 
 export const SQUENCER_LEADER_ID = 1100
@@ -19,8 +19,8 @@ export class SequencerLeader {
     while (!this.destroyed) {
       try {
         const { ran } = await this.leader.run(async ({ signal }) => {
-          const seqListener = (msg: ChannelMsg) => {
-            if (msg !== 'new_event') return
+          const seqListener = () => {
+            console.log('GOT EVT')
             if (this.polling) {
               this.queued = true
             } else {
@@ -28,10 +28,13 @@ export class SequencerLeader {
               this.pollDb()
             }
           }
-          this.db.channels.repo_seq.addListener('message', seqListener)
+          this.db.channels.new_repo_event.addListener('message', seqListener)
           await new Promise<void>((resolve) => {
             signal.addEventListener('abort', () => {
-              this.db.channels.repo_seq.removeListener('message', seqListener)
+              this.db.channels.new_repo_event.removeListener(
+                'message',
+                seqListener,
+              )
               resolve()
             })
           })
@@ -91,7 +94,7 @@ export class SequencerLeader {
         .insertInto('outgoing_repo_seq')
         .values({ eventId: row.id })
         .execute()
-      await this.db.notify('repo_seq', 'outgoing_seq')
+      await this.db.notify('outgoing_repo_seq')
     }
   }
 

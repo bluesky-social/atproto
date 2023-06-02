@@ -82,7 +82,7 @@ describe('sequencer', () => {
     }
   }
 
-  it('sends to outbox', async () => {
+  it.only('sends to outbox', async () => {
     const count = 20
     totalEvts += count
     await createPosts(count)

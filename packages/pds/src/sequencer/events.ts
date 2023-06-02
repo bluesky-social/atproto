@@ -14,7 +14,7 @@ import { CID } from 'multiformats/cid'
 import { EventType, RepoSeqInsert } from '../db/tables/repo-seq'
 
 export const sequenceEvt = async (dbTxn: Database, evt: RepoSeqInsert) => {
-  await dbTxn.notify('repo_seq', 'new_event')
+  await dbTxn.notify('new_repo_event')
   if (evt.eventType === 'rebase') {
     await invalidatePrevRepoOps(dbTxn, evt.did)
   } else if (evt.eventType === 'handle') {

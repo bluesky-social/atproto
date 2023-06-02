@@ -23,8 +23,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     if (curr) {
       this.lastSeen = curr.seq
     }
-    this.db.channels.repo_seq.addListener('message', (msg) => {
-      if (msg !== 'outgoing_seq') return
+    this.db.channels.outgoing_repo_seq.addListener('message', () => {
       if (this.polling) {
         this.queued = true
       } else {
@@ -117,7 +116,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       const evts = await this.requestSeqRange({
         earliestSeq: this.lastSeen,
       })
-      this.emit('events', evts)
+      console.log(evts)
     } catch (err) {
       log.error({ err, lastSeen: this.lastSeen }, 'sequencer failed to poll db')
     } finally {
