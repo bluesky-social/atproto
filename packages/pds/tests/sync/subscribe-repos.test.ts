@@ -125,9 +125,12 @@ describe('repo subscribe repos', () => {
     for (const frame of frames) {
       if (frame instanceof MessageFrame) {
         if (
-          (frame.header.t === "#commit" && (frame.body as CommitEvt).repo === userDid)
-          || (frame.header.t === "#handle" && (frame.body as HandleEvt).did === userDid)
-          || (frame.header.t === "#tombstone" && (frame.body as TombstoneEvt).did === userDid)
+          (frame.header.t === '#commit' &&
+            (frame.body as CommitEvt).repo === userDid) ||
+          (frame.header.t === '#handle' &&
+            (frame.body as HandleEvt).did === userDid) ||
+          (frame.header.t === '#tombstone' &&
+            (frame.body as TombstoneEvt).did === userDid)
         ) {
           types.push(frame.body)
         }
@@ -306,20 +309,24 @@ describe('repo subscribe repos', () => {
   })
 
   it('syncs tombstones', async () => {
-    const baddie1 = (await sc.createAccount("baddie1.test", {
-      email: 'baddie1@test.com',
-      handle: 'baddie1.test',
-      password: 'baddie1-pass',
-      displayName: undefined,
-      description: undefined,
-    })).did
-    const baddie2 = (await sc.createAccount("baddie2.test", {
-      email: 'baddie2@test.com',
-      handle: 'baddie2.test',
-      password: 'baddie2-pass',
-      displayName: undefined,
-      description: undefined,
-    })).did
+    const baddie1 = (
+      await sc.createAccount('baddie1.test', {
+        email: 'baddie1@test.com',
+        handle: 'baddie1.test',
+        password: 'baddie1-pass',
+        displayName: undefined,
+        description: undefined,
+      })
+    ).did
+    const baddie2 = (
+      await sc.createAccount('baddie2.test', {
+        email: 'baddie2@test.com',
+        handle: 'baddie2.test',
+        password: 'baddie2-pass',
+        displayName: undefined,
+        description: undefined,
+      })
+    ).did
 
     for (const did of [baddie1, baddie2]) {
       await ctx.services.record(db).deleteForActor(did)
@@ -341,13 +348,15 @@ describe('repo subscribe repos', () => {
   })
 
   it('account deletions invalidate all seq ops', async () => {
-    const baddie3 = (await sc.createAccount("baddie3.test", {
-      email: 'baddie3@test.com',
-      handle: 'baddie3.test',
-      password: 'baddie3-pass',
-      displayName: undefined,
-      description: undefined,
-    })).did
+    const baddie3 = (
+      await sc.createAccount('baddie3.test', {
+        email: 'baddie3@test.com',
+        handle: 'baddie3.test',
+        password: 'baddie3-pass',
+        displayName: undefined,
+        description: undefined,
+      })
+    ).did
 
     await randomPost(baddie3)
     await sc.updateHandle(baddie3, 'baddie3-update.test')
