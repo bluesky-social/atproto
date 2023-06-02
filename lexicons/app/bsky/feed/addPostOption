@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.addPostOption",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Add a webhook to a list of post options.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["postOption"],
+          "properties": {
+            "postOption": { "type": "object", "ref": "app.bsky.feed.defs#feedViewPostOption" }
+          }
+        }
+      }
+    }
+  }
+}
