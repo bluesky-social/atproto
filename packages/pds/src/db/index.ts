@@ -116,13 +116,10 @@ export class Database {
     })
   }
 
-  async notify(channel: keyof Channels) {
+  async notify(channel: keyof Channels, message: ChannelMsg) {
     if (channel !== 'repo_seq') {
       throw new Error(`attempted sending on unavailable channel: ${channel}`)
     }
-    // hardcoded b/c of type system & we only have one msg type
-    const message: ChannelMsg = 'repo_seq'
-
     // if in a sqlite tx, we buffer the notification until the tx successfully commits
     if (this.isTransaction && this.dialect === 'sqlite') {
       // no duplicate notifies in a tx per Postgres semantics
@@ -332,7 +329,7 @@ type PgOptions = {
 }
 
 type ChannelEvents = {
-  message: () => void
+  message: (msg: ChannelMsg) => void
 }
 
 type ChannelEmitter = TypedEmitter<ChannelEvents>
@@ -343,7 +340,7 @@ type TxnEvents = {
 
 type TxnEmitter = TypedEmitter<TxnEvents>
 
-type ChannelMsg = 'repo_seq'
+type ChannelMsg = 'new_event' | 'outgoing_seq'
 
 type Channels = {
   repo_seq: ChannelEmitter

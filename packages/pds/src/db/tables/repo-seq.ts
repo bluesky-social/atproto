@@ -3,7 +3,7 @@ import { Generated, GeneratedAlways, Insertable, Selectable } from 'kysely'
 export type EventType = 'append' | 'rebase' | 'handle' | 'migrate' | 'tombstone'
 
 export interface RepoSeq {
-  seq: GeneratedAlways<number>
+  id: GeneratedAlways<number>
   did: string
   eventType: EventType
   event: Uint8Array

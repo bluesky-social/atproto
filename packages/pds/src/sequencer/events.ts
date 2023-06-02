@@ -17,7 +17,7 @@ export const sequenceEvt = async (
   dbTxn: Database,
   evt: RepoSeqInsert,
 ): Promise<number> => {
-  await dbTxn.notify('repo_seq')
+  await dbTxn.notify('repo_seq', 'new_event')
   if (evt.eventType === 'rebase') {
     await invalidatePrevRepoOps(dbTxn, evt.did)
   } else if (evt.eventType === 'handle') {
