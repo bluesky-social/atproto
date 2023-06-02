@@ -4,6 +4,9 @@ import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/ge
 import { AlgoHandler, AlgoResponse } from './types'
 import { GenericKeyset, paginate } from '../db/pagination'
 import AppContext from '../context'
+import { notSoftDeletedClause } from '../db/util'
+import { sql } from 'kysely'
+import { FeedItemType } from '../app-view/services/feed'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   '!no-promote',
@@ -26,17 +29,20 @@ const handler: AlgoHandler = async (
 
   const { limit, cursor } = params
   const accountService = ctx.services.account(ctx.db)
-  const feedService = ctx.services.appView.feed(ctx.db)
   const graphService = ctx.services.appView.graph(ctx.db)
 
   const { ref } = ctx.db.db.dynamic
 
   // candidates are ranked within a materialized view by like count, depreciated over time.
 
-  let builder = feedService
-    .selectPostQb()
-    .innerJoin('algo_whats_hot_view as candidate', 'candidate.uri', 'post.uri')
-    .leftJoin('post_embed_record', 'post_embed_record.postUri', 'post.uri')
+  let builder = ctx.db.db
+    .selectFrom('algo_whats_hot_view as candidate')
+    .innerJoin('post', 'post.uri', 'candidate.uri')
+    .innerJoin('repo_root as author_repo', 'author_repo.did', 'post.creator')
+    .innerJoin('record', 'record.uri', 'post.uri')
+    .leftJoin('post_embed_record', 'post_embed_record.postUri', 'candidate.uri')
+    .where(notSoftDeletedClause(ref('author_repo')))
+    .where(notSoftDeletedClause(ref('record')))
     .whereNotExists((qb) =>
       qb
         .selectFrom('label')
@@ -54,8 +60,19 @@ const handler: AlgoHandler = async (
       accountService.whereNotMuted(qb, requester, [ref('post.creator')]),
     )
     .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
-    .select('candidate.score')
-    .select('candidate.cid')
+    .select([
+      sql<FeedItemType>`${'post'}`.as('type'),
+      'post.uri as uri',
+      'post.cid as cid',
+      'post.uri as postUri',
+      'post.creator as originatorDid',
+      'post.creator as postAuthorDid',
+      'post.replyParent as replyParent',
+      'post.replyRoot as replyRoot',
+      'post.indexedAt as sortAt',
+      'candidate.score',
+      'candidate.cid',
+    ])
 
   const keyset = new ScoreKeyset(ref('candidate.score'), ref('candidate.cid'))
   builder = paginate(builder, { limit, cursor, keyset })
