@@ -73,8 +73,6 @@ const handler: AlgoHandler = async (
       'candidate.score',
       'candidate.cid',
     ])
-    .select('candidate.score')
-    .select('candidate.cid')
 
   const keyset = new ScoreKeyset(ref('candidate.score'), ref('candidate.cid'))
   builder = paginate(builder, { limit, cursor, keyset })
