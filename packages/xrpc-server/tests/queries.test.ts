@@ -7,7 +7,7 @@ import * as xrpcServer from '../src'
 const LEXICONS = [
   {
     lexicon: 1,
-    id: 'io.example.ping1',
+    id: 'io.example.pingOne',
     defs: {
       main: {
         type: 'query',
@@ -25,7 +25,7 @@ const LEXICONS = [
   },
   {
     lexicon: 1,
-    id: 'io.example.ping2',
+    id: 'io.example.pingTwo',
     defs: {
       main: {
         type: 'query',
@@ -43,7 +43,7 @@ const LEXICONS = [
   },
   {
     lexicon: 1,
-    id: 'io.example.ping3',
+    id: 'io.example.pingThree',
     defs: {
       main: {
         type: 'query',
@@ -69,22 +69,25 @@ const LEXICONS = [
 describe('Queries', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS)
-  server.method('io.example.ping1', (ctx: { params: xrpcServer.Params }) => {
+  server.method('io.example.pingOne', (ctx: { params: xrpcServer.Params }) => {
     return { encoding: 'text/plain', body: ctx.params.message }
   })
-  server.method('io.example.ping2', (ctx: { params: xrpcServer.Params }) => {
+  server.method('io.example.pingTwo', (ctx: { params: xrpcServer.Params }) => {
     return {
       encoding: 'application/octet-stream',
       body: new TextEncoder().encode(String(ctx.params.message)),
     }
   })
-  server.method('io.example.ping3', (ctx: { params: xrpcServer.Params }) => {
-    return {
-      encoding: 'application/json',
-      body: { message: ctx.params.message },
-      headers: { 'x-test-header-name': 'test-value' },
-    }
-  })
+  server.method(
+    'io.example.pingThree',
+    (ctx: { params: xrpcServer.Params }) => {
+      return {
+        encoding: 'application/json',
+        body: { message: ctx.params.message },
+        headers: { 'x-test-header-name': 'test-value' },
+      }
+    },
+  )
   xrpc.addLexicons(LEXICONS)
 
   let client: ServiceClient
@@ -98,21 +101,21 @@ describe('Queries', () => {
   })
 
   it('serves requests', async () => {
-    const res1 = await client.call('io.example.ping1', {
+    const res1 = await client.call('io.example.pingOne', {
       message: 'hello world',
     })
     expect(res1.success).toBeTruthy()
     expect(res1.headers['content-type']).toBe('text/plain; charset=utf-8')
     expect(res1.data).toBe('hello world')
 
-    const res2 = await client.call('io.example.ping2', {
+    const res2 = await client.call('io.example.pingTwo', {
       message: 'hello world',
     })
     expect(res2.success).toBeTruthy()
     expect(res2.headers['content-type']).toBe('application/octet-stream')
     expect(new TextDecoder().decode(res2.data)).toBe('hello world')
 
-    const res3 = await client.call('io.example.ping3', {
+    const res3 = await client.call('io.example.pingThree', {
       message: 'hello world',
     })
     expect(res3.success).toBeTruthy()
