@@ -340,7 +340,7 @@ type TxnEvents = {
 
 type TxnEmitter = TypedEmitter<TxnEvents>
 
-type ChannelMsg = 'new_event' | 'outgoing_seq'
+export type ChannelMsg = 'new_event' | 'outgoing_seq'
 
 type Channels = {
   repo_seq: ChannelEmitter

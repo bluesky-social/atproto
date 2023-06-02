@@ -13,10 +13,7 @@ import { PreparedWrite } from '../repo'
 import { CID } from 'multiformats/cid'
 import { EventType, RepoSeqInsert } from '../db/tables/repo-seq'
 
-export const sequenceEvt = async (
-  dbTxn: Database,
-  evt: RepoSeqInsert,
-): Promise<number> => {
+export const sequenceEvt = async (dbTxn: Database, evt: RepoSeqInsert) => {
   await dbTxn.notify('repo_seq', 'new_event')
   if (evt.eventType === 'rebase') {
     await invalidatePrevRepoOps(dbTxn, evt.did)
@@ -27,13 +24,11 @@ export const sequenceEvt = async (
   const res = await dbTxn.db
     .insertInto('repo_seq')
     .values(evt)
-    .returning('seq')
+    .returning('id')
     .executeTakeFirst()
   if (!res) {
     throw new Error(`Failed to sequence evt: ${evt}`)
   }
-
-  return res.seq
 }
 
 export const formatSeqCommit = async (

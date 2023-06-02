@@ -1,7 +1,7 @@
 import AtpAgent from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
 import { cborEncode, readFromGenerator, wait } from '@atproto/common'
-import Sequencer, { SeqEvt } from '../src/sequencer'
+import { Sequencer, SeqEvt } from '../src/sequencer'
 import Outbox, { StreamConsumerTooSlowError } from '../src/sequencer/outbox'
 import { Database } from '../src'
 import { SeedClient } from './seeds/client'
@@ -54,10 +54,11 @@ describe('sequencer', () => {
 
   const loadFromDb = (lastSeen: number) => {
     return db.db
-      .selectFrom('repo_seq')
+      .selectFrom('outgoing_repo_seq')
+      .innerJoin('repo_seq', 'repo_seq.id', 'outgoing_repo_seq.eventId')
       .selectAll()
-      .where('repo_seq.seq', '>', lastSeen)
-      .orderBy('repo_seq.seq', 'asc')
+      .where('seq', '>', lastSeen)
+      .orderBy('seq', 'asc')
       .execute()
   }
 

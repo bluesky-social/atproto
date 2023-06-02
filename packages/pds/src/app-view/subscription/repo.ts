@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { AtUri } from '@atproto/uri'
-import { wait } from '@atproto/common'
+import { wait, jitter } from '@atproto/common'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
 import { WriteOpAction, readCarWithRoot, cborToLexRecord } from '@atproto/repo'
 import { PreparedWrite } from '../../repo'
@@ -195,10 +195,6 @@ async function getOps(msg: Commit): Promise<PreparedWrite[]> {
       throw new Error(`Unknown repo op action: ${op.action}`)
     }
   })
-}
-
-function jitter(maxMs) {
-  return Math.round((Math.random() - 0.5) * maxMs * 2)
 }
 
 function ifString(val: unknown): string | undefined {

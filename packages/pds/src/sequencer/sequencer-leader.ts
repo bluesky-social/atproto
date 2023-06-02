@@ -1,32 +1,53 @@
 import { DisconnectError } from '@atproto/xrpc-server'
-import AppContext from '../context'
 import { Leader } from '../db/leader'
 import { seqLogger as log } from '../logger'
+import Database, { ChannelMsg } from '../db'
+import { jitter, wait } from '@atproto/common'
 
 export const SQUENCER_LEADER_ID = 1100
 
 export class SequencerLeader {
-  leader = new Leader(SQUENCER_LEADER_ID, this.ctx.db)
+  leader = new Leader(SQUENCER_LEADER_ID, this.db)
 
   destroyed = false
   polling = false
   queued = false
 
-  constructor(public ctx: AppContext) {}
+  constructor(public db: Database) {}
 
   async run() {
     while (!this.destroyed) {
-      const { ran } = await this.leader.run(async () => {
-        this.ctx.db.channels.repo_seq.addListener('message', (msg) => {
-          if (msg !== 'new_event') return
-          if (this.polling) {
-            this.queued = true
-          } else {
-            this.polling = true
-            this.pollDb()
+      try {
+        const { ran } = await this.leader.run(async ({ signal }) => {
+          const seqListener = (msg: ChannelMsg) => {
+            if (msg !== 'new_event') return
+            if (this.polling) {
+              this.queued = true
+            } else {
+              this.polling = true
+              this.pollDb()
+            }
           }
+          this.db.channels.repo_seq.addListener('message', seqListener)
+          await new Promise<void>((resolve) => {
+            signal.addEventListener('abort', () => {
+              this.db.channels.repo_seq.removeListener('message', seqListener)
+              resolve()
+            })
+          })
         })
-      })
+        if (ran && !this.destroyed) {
+          throw new Error(
+            'Sequencer leader completed, but should be persistent',
+          )
+        }
+      } catch (err) {
+        log.error({ err }, 'sequence leader errored')
+      } finally {
+        if (!this.destroyed) {
+          await wait(1000 + jitter(500))
+        }
+      }
     }
   }
 
@@ -53,7 +74,7 @@ export class SequencerLeader {
   }
 
   async sequenceOutgoing() {
-    const unsequenced = await this.ctx.db.db
+    const unsequenced = await this.db.db
       .selectFrom('repo_seq')
       .whereNotExists((qb) =>
         qb
@@ -66,11 +87,11 @@ export class SequencerLeader {
       .execute()
 
     for (const row of unsequenced) {
-      await this.ctx.db.db
+      await this.db.db
         .insertInto('outgoing_repo_seq')
         .values({ eventId: row.id })
         .execute()
-      await this.ctx.db.notify('repo_seq', 'outgoing_seq')
+      await this.db.notify('repo_seq', 'outgoing_seq')
     }
   }
 
