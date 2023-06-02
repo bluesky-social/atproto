@@ -130,6 +130,27 @@
       "properties": {
         "repost": {"type": "string", "format": "at-uri"}
       }
+    },
+    "feedViewPostOption": {
+      "type": "object",
+      "required": ["title", "callbackUri"],
+      "properties": {
+        "title": {
+          "type": "object",
+          "required": ["text"],
+          "properties": {
+            "text": {"type": "string", "format": "uri"}
+          }
+        },
+        "callbackUri": {
+          "type": "object",
+          "description": "A URI used as a callback for this option.",
+          "required": ["uri"],
+          "properties": {
+            "uri": {"type": "string", "format": "uri"}
+          }
+        }
+      }
     }
   }
 }
