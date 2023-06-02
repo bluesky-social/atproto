@@ -1,6 +1,5 @@
 import express from 'express'
 import compression from 'compression'
-import compressible from 'compressible'
 
 export default function () {
   return compression({
@@ -13,8 +12,5 @@ function filter(_req: express.Request, res: express.Response) {
   if (contentType === 'application/vnd.ipld.car') {
     return true
   }
-  if (contentType === undefined || !compressible(contentType)) {
-    return false
-  }
-  return true
+  return compression.filter(_req, res)
 }
