@@ -1,0 +1,27 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.getPostOptions",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "A view of options for a post in an actor's feed.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "cursor": {"type": "string"}
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["options"],
+          "properties": {
+            "cursor": {"type": "string"},
+            "options": {"type": "ref", "ref": "app.bsky.feed.defs#feedViewPostOption"}
+          }
+        }
+      }
+    }
+  }
+}
