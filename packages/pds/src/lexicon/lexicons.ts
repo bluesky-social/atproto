@@ -235,6 +235,10 @@ export const schemaDict = {
               'lex:com.atproto.repo.strongRef',
             ],
           },
+          subjectRepo: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#subjectRepoView',
+          },
           reportedBy: {
             type: 'string',
             format: 'did',
@@ -339,6 +343,53 @@ export const schemaDict = {
           },
           invitesDisabled: {
             type: 'boolean',
+          },
+        },
+      },
+      subjectRepoView: {
+        type: 'object',
+        nullable: [
+          'creator',
+          'handle',
+          'indexedAt',
+          'displayName',
+          'cid',
+          'banner',
+          'avatar',
+          'uri',
+          'description',
+        ],
+        properties: {
+          creator: {
+            type: 'string',
+            format: 'did',
+          },
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          displayName: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+          },
+          banner: {
+            type: 'string',
+          },
+          avatar: {
+            type: 'string',
+          },
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
           },
         },
       },

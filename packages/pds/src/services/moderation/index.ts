@@ -1,4 +1,4 @@
-import { Selectable, sql } from 'kysely'
+import { Selectable, Selection, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { BlobStore } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
@@ -11,6 +11,8 @@ import { ModerationViews } from './views'
 import SqlRepoStorage from '../../sql-repo-storage'
 import { ImageInvalidator } from '../../image/invalidator'
 import { ImageUriBuilder } from '../../image/uri'
+import { Profile } from '../../app-view/db/tables/profile'
+import { DidHandle } from '../../db/tables/did-handle'
 
 export class ModerationService {
   constructor(
@@ -37,7 +39,11 @@ export class ModerationService {
       )
   }
 
-  views = new ModerationViews(this.db, this.messageDispatcher)
+  views = new ModerationViews(
+    this.db,
+    this.messageDispatcher,
+    this.imgUriBuilder,
+  )
 
   services = {
     record: RecordService.creator(this.messageDispatcher),
@@ -85,10 +91,14 @@ export class ModerationService {
       .execute()
   }
 
-  async getReport(id: number): Promise<ModerationReportRow | undefined> {
+  async getReport(
+    id: number,
+  ): Promise<ModerationReportRowWithSubjectRepo | undefined> {
     return await this.db.db
       .selectFrom('moderation_report')
-      .selectAll()
+      .leftJoin('did_handle', 'did_handle.did', 'moderation_report.subjectDid')
+      .leftJoin('profile', 'profile.creator', 'moderation_report.subjectDid')
+      .selectAll(['moderation_report', 'profile', 'did_handle'])
       .where('id', '=', id)
       .executeTakeFirst()
   }
@@ -101,7 +111,7 @@ export class ModerationService {
     cursor?: string
     ignoreSubjects?: string[]
     reverse?: boolean
-  }): Promise<ModerationReportRow[]> {
+  }): Promise<ModerationReportRowWithSubjectRepo[]> {
     const {
       subject,
       resolved,
@@ -170,13 +180,17 @@ export class ModerationService {
     }
 
     return await builder
-      .selectAll()
+      .leftJoin('profile', 'profile.creator', 'moderation_report.subjectDid')
+      .leftJoin('did_handle', 'did_handle.did', 'moderation_report.subjectDid')
+      .selectAll(['moderation_report', 'profile', 'did_handle'])
       .orderBy('id', reverse ? 'asc' : 'desc')
       .limit(limit)
       .execute()
   }
 
-  async getReportOrThrow(id: number): Promise<ModerationReportRow> {
+  async getReportOrThrow(
+    id: number,
+  ): Promise<ModerationReportRowWithSubjectRepo> {
     const report = await this.getReport(id)
     if (!report) throw new InvalidRequestError('Report not found')
     return report
@@ -486,7 +500,7 @@ export class ModerationService {
     subject: { did: string } | { uri: AtUri; cid?: CID }
     reportedBy: string
     createdAt?: Date
-  }): Promise<ModerationReportRow> {
+  }): Promise<ModerationReportRowWithSubjectRepo | undefined> {
     const {
       reasonType,
       reason,
@@ -519,7 +533,7 @@ export class ModerationService {
       }
     }
 
-    const report = await this.db.db
+    const insertedReport = await this.db.db
       .insertInto('moderation_report')
       .values({
         reasonType,
@@ -528,8 +542,17 @@ export class ModerationService {
         reportedByDid: reportedBy,
         ...subjectInfo,
       })
-      .returningAll()
+      .returning('id')
       .executeTakeFirstOrThrow()
+
+    const report = await this.db.db
+      .selectFrom('moderation_report')
+      .where('id', '=', insertedReport.id)
+      .leftJoin('did_handle', 'did_handle.did', 'moderation_report.subjectDid')
+      .leftJoin('profile', 'profile.creator', 'moderation_report.subjectDid')
+      .selectAll(['moderation_report', 'profile', 'did_handle'])
+      .limit(1)
+      .executeTakeFirst()
 
     return report
   }
@@ -538,6 +561,11 @@ export class ModerationService {
 export type ModerationActionRow = Selectable<ModerationAction>
 
 export type ModerationReportRow = Selectable<ModerationReport>
+export type ModerationReportRowWithSubjectRepo = ModerationReportRow & {
+  [K in keyof Profile]: Profile[K] | null
+} & {
+  [K in keyof DidHandle]: DidHandle[K] | null
+}
 
 export type SubjectInfo =
   | {

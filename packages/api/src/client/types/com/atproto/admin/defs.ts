@@ -133,6 +133,7 @@ export interface ReportView {
     | RepoRef
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
+  subjectRepo?: SubjectRepoView
   reportedBy: string
   createdAt: string
   resolvedByActionIds: number[]
@@ -201,6 +202,31 @@ export function isRepoView(v: unknown): v is RepoView {
 
 export function validateRepoView(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#repoView', v)
+}
+
+export interface SubjectRepoView {
+  creator?: string | null
+  handle?: string | null
+  displayName?: string | null
+  description?: string | null
+  banner?: string | null
+  avatar?: string | null
+  uri?: string | null
+  cid?: string | null
+  indexedAt?: string | null
+  [k: string]: unknown
+}
+
+export function isSubjectRepoView(v: unknown): v is SubjectRepoView {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#subjectRepoView'
+  )
+}
+
+export function validateSubjectRepoView(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#subjectRepoView', v)
 }
 
 export interface RepoViewDetail {
