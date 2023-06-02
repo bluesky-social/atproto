@@ -161,8 +161,10 @@ describe('repo subscribe repos', () => {
     const isDone = async (evt: any) => {
       if (evt === undefined) return false
       if (evt instanceof ErrorFrame) return true
+      await ctx.sequencerLeader.isCaughtUp()
       const curr = await db.db
-        .selectFrom('repo_seq')
+        .selectFrom('outgoing_repo_seq')
+        .innerJoin('repo_seq', 'repo_seq.id', 'outgoing_repo_seq.eventId')
         .select('seq')
         .limit(1)
         .orderBy('seq', 'desc')
@@ -231,7 +233,8 @@ describe('repo subscribe repos', () => {
 
   it('backfills only from provided cursor', async () => {
     const seqs = await db.db
-      .selectFrom('repo_seq')
+      .selectFrom('outgoing_repo_seq')
+      .innerJoin('repo_seq', 'repo_seq.id', 'outgoing_repo_seq.eventId')
       .selectAll()
       .orderBy('seq', 'asc')
       .execute()
