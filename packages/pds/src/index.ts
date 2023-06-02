@@ -52,7 +52,6 @@ export { makeAlgos } from './feed-gen'
 export class PDS {
   public ctx: AppContext
   public appViewIndexer: AppViewIndexer
-  public sequencerLeader: SequencerLeader
   public app: express.Application
   public server?: http.Server
   private terminator?: HttpTerminator
@@ -67,7 +66,6 @@ export class PDS {
     this.ctx = opts.ctx
     this.app = opts.app
     this.appViewIndexer = opts.appViewIndexer
-    this.sequencerLeader = opts.sequencerLeader
   }
 
   static create(opts: {
@@ -188,6 +186,7 @@ export class PDS {
       auth,
       messageDispatcher,
       sequencer,
+      sequencerLeader,
       labeler,
       services,
       mailer,
@@ -250,7 +249,7 @@ export class PDS {
       }, 10000)
     }
     this.appViewIndexer.start()
-    this.sequencerLeader.run()
+    this.ctx.sequencerLeader.run()
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()
     const server = this.app.listen(this.ctx.cfg.port)
@@ -263,7 +262,7 @@ export class PDS {
 
   async destroy(): Promise<void> {
     this.appViewIndexer.destroy()
-    await this.sequencerLeader.destroy()
+    await this.ctx.sequencerLeader.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()

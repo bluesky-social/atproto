@@ -116,7 +116,10 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       const evts = await this.requestSeqRange({
         earliestSeq: this.lastSeen,
       })
-      console.log(evts)
+      if (evts.length > 0) {
+        this.emit('events', evts)
+        this.lastSeen = evts.at(-1)?.seq ?? this.lastSeen
+      }
     } catch (err) {
       log.error({ err, lastSeen: this.lastSeen }, 'sequencer failed to poll db')
     } finally {

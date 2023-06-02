@@ -20,7 +20,6 @@ export class SequencerLeader {
       try {
         const { ran } = await this.leader.run(async ({ signal }) => {
           const seqListener = () => {
-            console.log('GOT EVT')
             if (this.polling) {
               this.queued = true
             } else {
@@ -77,7 +76,18 @@ export class SequencerLeader {
   }
 
   async sequenceOutgoing() {
-    const unsequenced = await this.db.db
+    const unsequenced = await this.getUnsequenced()
+    for (const row of unsequenced) {
+      await this.db.db
+        .insertInto('outgoing_repo_seq')
+        .values({ eventId: row.id })
+        .execute()
+      await this.db.notify('outgoing_repo_seq')
+    }
+  }
+
+  async getUnsequenced() {
+    return this.db.db
       .selectFrom('repo_seq')
       .whereNotExists((qb) =>
         qb
@@ -88,14 +98,11 @@ export class SequencerLeader {
       .select('id')
       .orderBy('id', 'asc')
       .execute()
+  }
 
-    for (const row of unsequenced) {
-      await this.db.db
-        .insertInto('outgoing_repo_seq')
-        .values({ eventId: row.id })
-        .execute()
-      await this.db.notify('outgoing_repo_seq')
-    }
+  async isCaughtUp(): Promise<boolean> {
+    const unsequenced = await this.getUnsequenced()
+    return unsequenced.length === 0
   }
 
   destroy() {

@@ -6,12 +6,12 @@ import Outbox, { StreamConsumerTooSlowError } from '../src/sequencer/outbox'
 import { Database } from '../src'
 import { SeedClient } from './seeds/client'
 import userSeed from './seeds/users'
-import { CloseFn, runTestServer } from './_util'
+import { TestServerInfo, runTestServer } from './_util'
 
 describe('sequencer', () => {
+  let server: TestServerInfo
   let db: Database
   let sequencer: Sequencer
-  let close: CloseFn
   let sc: SeedClient
   let alice: string
   let bob: string
@@ -20,10 +20,9 @@ describe('sequencer', () => {
   let lastSeen: number
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    server = await runTestServer({
       dbPostgresSchema: 'sequencer',
     })
-    close = server.close
     db = server.ctx.db
     sequencer = server.ctx.sequencer
     const agent = new AtpAgent({ service: server.url })
@@ -36,7 +35,7 @@ describe('sequencer', () => {
   })
 
   afterAll(async () => {
-    await close()
+    await server.close()
   })
 
   const randomPost = async (by: string) => sc.post(by, randomStr(8, 'base32'))
@@ -56,7 +55,14 @@ describe('sequencer', () => {
     return db.db
       .selectFrom('outgoing_repo_seq')
       .innerJoin('repo_seq', 'repo_seq.id', 'outgoing_repo_seq.eventId')
-      .selectAll()
+      .select([
+        'seq',
+        'did',
+        'eventType',
+        'event',
+        'invalidated',
+        'sequencedAt',
+      ])
       .where('seq', '>', lastSeen)
       .orderBy('seq', 'asc')
       .execute()
@@ -76,13 +82,15 @@ describe('sequencer', () => {
 
   const caughtUp = (outbox: Outbox): (() => Promise<boolean>) => {
     return async () => {
+      const leaderCaughtUp = await server.ctx.sequencerLeader.isCaughtUp()
+      if (!leaderCaughtUp) return false
       const lastEvt = await outbox.sequencer.curr()
       if (!lastEvt) return true
       return outbox.lastSeen >= lastEvt.seq
     }
   }
 
-  it.only('sends to outbox', async () => {
+  it('sends to outbox', async () => {
     const count = 20
     totalEvts += count
     await createPosts(count)
