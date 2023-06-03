@@ -4,6 +4,7 @@ import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/ge
 import { paginate } from '../db/pagination'
 import { AlgoHandler, AlgoResponse } from './types'
 import { FeedKeyset } from '../app-view/api/app/bsky/util/feed'
+import { valuesList } from '../db/util'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   '!no-promote',
@@ -37,7 +38,7 @@ const handler: AlgoHandler = async (
       qb
         .selectFrom('label')
         .selectAll()
-        .where('val', 'in', NO_WHATS_HOT_LABELS)
+        .whereRef('val', 'in', valuesList(NO_WHATS_HOT_LABELS))
         .where('neg', '=', 0)
         .where((clause) =>
           clause

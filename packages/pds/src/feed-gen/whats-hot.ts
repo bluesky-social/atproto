@@ -4,7 +4,7 @@ import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/ge
 import { AlgoHandler, AlgoResponse } from './types'
 import { GenericKeyset, paginate } from '../db/pagination'
 import AppContext from '../context'
-import { notSoftDeletedClause } from '../db/util'
+import { notSoftDeletedClause, valuesList } from '../db/util'
 import { sql } from 'kysely'
 import { FeedItemType } from '../app-view/services/feed'
 
@@ -47,7 +47,7 @@ const handler: AlgoHandler = async (
       qb
         .selectFrom('label')
         .selectAll()
-        .where('val', 'in', NO_WHATS_HOT_LABELS)
+        .whereRef('val', 'in', valuesList(NO_WHATS_HOT_LABELS))
         .where('neg', '=', 0)
         .where((clause) =>
           clause
