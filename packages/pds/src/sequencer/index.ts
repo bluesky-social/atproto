@@ -2,7 +2,7 @@ import EventEmitter from 'events'
 import TypedEmitter from 'typed-emitter'
 import Database from '../db'
 import { seqLogger as log } from '../logger'
-import { RepoSeqEntry } from '../db/tables/repo-seq'
+import { RepoEventEntry } from '../db/tables/repo-event'
 import { cborDecode, check, wait } from '@atproto/common'
 import { commitEvt, handleEvt, SeqEvt } from './events'
 
@@ -21,7 +21,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   async start() {
     const curr = await this.curr()
     if (curr) {
-      this.lastSeen = curr.seq
+      this.lastSeen = curr.id
     }
     this.db.channels.repo_seq.addListener('message', () => {
       if (this.polling) {
@@ -33,23 +33,23 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     })
   }
 
-  async curr(): Promise<RepoSeqEntry | null> {
+  async curr(): Promise<RepoEventEntry | null> {
     const got = await this.db.db
-      .selectFrom('repo_seq')
+      .selectFrom('repo_event')
       .selectAll()
-      .orderBy('seq', 'desc')
+      .orderBy('id', 'desc')
       .limit(1)
       .executeTakeFirst()
     return got || null
   }
 
-  async next(cursor: number): Promise<RepoSeqEntry | null> {
+  async next(cursor: number): Promise<RepoEventEntry | null> {
     const got = await this.db.db
-      .selectFrom('repo_seq')
+      .selectFrom('repo_event')
       .selectAll()
-      .where('seq', '>', cursor)
+      .where('id', '>', cursor)
       .limit(1)
-      .orderBy('seq', 'asc')
+      .orderBy('id', 'asc')
       .executeTakeFirst()
     return got || null
   }
@@ -63,15 +63,15 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     const { earliestSeq, latestSeq, earliestTime, limit } = opts
 
     let seqQb = this.db.db
-      .selectFrom('repo_seq')
+      .selectFrom('repo_event')
       .selectAll()
-      .orderBy('seq', 'asc')
+      .orderBy('id', 'asc')
       .where('invalidated', '=', 0)
     if (earliestSeq !== undefined) {
-      seqQb = seqQb.where('seq', '>', earliestSeq)
+      seqQb = seqQb.where('id', '>', earliestSeq)
     }
     if (latestSeq !== undefined) {
-      seqQb = seqQb.where('seq', '<=', latestSeq)
+      seqQb = seqQb.where('id', '<=', latestSeq)
     }
     if (earliestTime !== undefined) {
       seqQb = seqQb.where('sequencedAt', '>=', earliestTime)
@@ -91,14 +91,14 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       if (check.is(evt, commitEvt)) {
         seqEvts.push({
           type: 'commit',
-          seq: row.seq,
+          seq: row.id,
           time: row.sequencedAt,
           evt,
         })
       } else if (check.is(evt, handleEvt)) {
         seqEvts.push({
           type: 'handle',
-          seq: row.seq,
+          seq: row.id,
           time: row.sequencedAt,
           evt,
         })

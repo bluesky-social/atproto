@@ -13,7 +13,7 @@ export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
       db
         .selectFrom('repo_event')
         .select([
-          'seq as id',
+          'id as seq',
           'did',
           'eventType',
           'event',

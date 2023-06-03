@@ -60,8 +60,8 @@ export class TestNetwork extends TestNetworkNoAppView {
       if (!sub) return
       const state = await sub.getState()
       const { lastSeq } = await db
-        .selectFrom('repo_seq')
-        .select(db.fn.max('repo_seq.seq').as('lastSeq'))
+        .selectFrom('repo_event')
+        .select(db.fn.max('repo_event.id').as('lastSeq'))
         .executeTakeFirstOrThrow()
       if (state.cursor === lastSeq) return
     }

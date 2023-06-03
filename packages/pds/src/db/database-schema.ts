@@ -21,7 +21,7 @@ import * as moderation from './tables/moderation'
 import * as mute from './tables/mute'
 import * as listMute from './tables/list-mute'
 import * as label from './tables/label'
-import * as repoSeq from './tables/repo-seq'
+import * as repoEvent from './tables/repo-event'
 import * as appMigration from './tables/app-migration'
 import * as appView from '../app-view/db'
 
@@ -51,7 +51,7 @@ export type DatabaseSchemaType = appView.DatabaseSchemaType &
   mute.PartialDB &
   listMute.PartialDB &
   label.PartialDB &
-  repoSeq.PartialDB
+  repoEvent.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

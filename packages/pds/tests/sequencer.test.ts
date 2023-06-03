@@ -54,17 +54,17 @@ describe('sequencer', () => {
 
   const loadFromDb = (lastSeen: number) => {
     return db.db
-      .selectFrom('repo_seq')
+      .selectFrom('repo_event')
       .selectAll()
-      .where('repo_seq.seq', '>', lastSeen)
-      .orderBy('repo_seq.seq', 'asc')
+      .where('repo_event.id', '>', lastSeen)
+      .orderBy('repo_event.id', 'asc')
       .execute()
   }
 
   const evtToDbRow = (e: SeqEvt) => {
     const did = e.type === 'commit' ? e.evt.repo : e.evt.did
     return {
-      seq: e.seq,
+      id: e.seq,
       did,
       eventType: 'append',
       event: Buffer.from(cborEncode(e.evt)),
@@ -77,7 +77,7 @@ describe('sequencer', () => {
     return async () => {
       const lastEvt = await outbox.sequencer.curr()
       if (!lastEvt) return true
-      return outbox.lastSeen >= lastEvt.seq
+      return outbox.lastSeen >= lastEvt.id
     }
   }
 
@@ -179,7 +179,7 @@ describe('sequencer', () => {
     await expect(overloadBuffer).rejects.toThrow(StreamConsumerTooSlowError)
 
     const fromDb = await loadFromDb(lastSeen)
-    lastSeen = fromDb.at(-1)?.seq ?? lastSeen
+    lastSeen = fromDb.at(-1)?.id ?? lastSeen
   })
 
   it('handles many open connections', async () => {

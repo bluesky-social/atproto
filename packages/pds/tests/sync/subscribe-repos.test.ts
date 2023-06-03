@@ -162,12 +162,12 @@ describe('repo subscribe repos', () => {
       if (evt === undefined) return false
       if (evt instanceof ErrorFrame) return true
       const curr = await db.db
-        .selectFrom('repo_seq')
-        .select('seq')
+        .selectFrom('repo_event')
+        .select('id')
         .limit(1)
-        .orderBy('seq', 'desc')
+        .orderBy('id', 'desc')
         .executeTakeFirst()
-      return curr !== undefined && evt.body.seq === curr.seq
+      return curr !== undefined && evt.body.seq === curr.id
     }
 
     return readFromGenerator(gen, isDone, waitFor)
@@ -231,12 +231,12 @@ describe('repo subscribe repos', () => {
 
   it('backfills only from provided cursor', async () => {
     const seqs = await db.db
-      .selectFrom('repo_seq')
+      .selectFrom('repo_event')
       .selectAll()
-      .orderBy('seq', 'asc')
+      .orderBy('id', 'asc')
       .execute()
     const midPoint = Math.floor(seqs.length / 2)
-    const midPointSeq = seqs[midPoint].seq
+    const midPointSeq = seqs[midPoint].id
 
     const ws = new WebSocket(
       `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${midPointSeq}`,
@@ -337,7 +337,7 @@ describe('repo subscribe repos', () => {
     // then we create some new posts
     const overAnHourAgo = new Date(Date.now() - HOUR - MINUTE).toISOString()
     await db.db
-      .updateTable('repo_seq')
+      .updateTable('repo_event')
       .set({ sequencedAt: overAnHourAgo })
       .execute()
 
