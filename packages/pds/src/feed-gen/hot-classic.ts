@@ -20,6 +20,9 @@ const handler: AlgoHandler = async (
   params: SkeletonParams,
   requester: string,
 ): Promise<AlgoResponse> => {
+  return {
+    feedItems: [], // temporarily down
+  }
   const { limit = 50, cursor } = params
   const accountService = ctx.services.account(ctx.db)
   const feedService = ctx.services.appView.feed(ctx.db)
