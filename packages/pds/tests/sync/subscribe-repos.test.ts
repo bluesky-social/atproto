@@ -164,10 +164,10 @@ describe('repo subscribe repos', () => {
       await ctx.sequencerLeader.isCaughtUp()
       const curr = await db.db
         .selectFrom('outgoing_repo_seq')
-        .innerJoin('repo_seq', 'repo_seq.id', 'outgoing_repo_seq.eventId')
+        .innerJoin('repo_event', 'repo_event.id', 'outgoing_repo_seq.eventId')
         .select('seq')
         .limit(1)
-        .orderBy('seq', 'desc')
+        .orderBy('id', 'desc')
         .executeTakeFirst()
       return curr !== undefined && evt.body.seq === curr.seq
     }
@@ -234,9 +234,9 @@ describe('repo subscribe repos', () => {
   it('backfills only from provided cursor', async () => {
     const seqs = await db.db
       .selectFrom('outgoing_repo_seq')
-      .innerJoin('repo_seq', 'repo_seq.id', 'outgoing_repo_seq.eventId')
+      .innerJoin('repo_event', 'repo_event.id', 'outgoing_repo_seq.eventId')
       .selectAll()
-      .orderBy('seq', 'asc')
+      .orderBy('id', 'asc')
       .execute()
     const midPoint = Math.floor(seqs.length / 2)
     const midPointSeq = seqs[midPoint].seq
@@ -340,7 +340,7 @@ describe('repo subscribe repos', () => {
     // then we create some new posts
     const overAnHourAgo = new Date(Date.now() - HOUR - MINUTE).toISOString()
     await db.db
-      .updateTable('repo_seq')
+      .updateTable('repo_event')
       .set({ sequencedAt: overAnHourAgo })
       .execute()
 

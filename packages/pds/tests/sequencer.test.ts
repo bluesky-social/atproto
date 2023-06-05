@@ -54,7 +54,7 @@ describe('sequencer', () => {
   const loadFromDb = (lastSeen: number) => {
     return db.db
       .selectFrom('outgoing_repo_seq')
-      .innerJoin('repo_seq', 'repo_seq.id', 'outgoing_repo_seq.eventId')
+      .innerJoin('repo_event', 'repo_event.id', 'outgoing_repo_seq.eventId')
       .select([
         'seq',
         'did',
@@ -71,7 +71,7 @@ describe('sequencer', () => {
   const evtToDbRow = (e: SeqEvt) => {
     const did = e.type === 'commit' ? e.evt.repo : e.evt.did
     return {
-      seq: e.seq,
+      id: e.seq,
       did,
       eventType: 'append',
       event: Buffer.from(cborEncode(e.evt)),

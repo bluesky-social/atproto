@@ -88,11 +88,11 @@ export class SequencerLeader {
 
   async getUnsequenced() {
     return this.db.db
-      .selectFrom('repo_seq')
+      .selectFrom('repo_event')
       .whereNotExists((qb) =>
         qb
           .selectFrom('outgoing_repo_seq')
-          .whereRef('outgoing_repo_seq.eventId', '=', 'repo_seq.id')
+          .whereRef('outgoing_repo_seq.eventId', '=', 'repo_event.id')
           .selectAll(),
       )
       .select('id')

@@ -11,9 +11,9 @@ import {
 } from '@atproto/repo'
 import { PreparedWrite } from '../repo'
 import { CID } from 'multiformats/cid'
-import { EventType, RepoSeqInsert } from '../db/tables/repo-seq'
+import { EventType, RepoEventInsert } from '../db/tables/repo-event'
 
-export const sequenceEvt = async (dbTxn: Database, evt: RepoSeqInsert) => {
+export const sequenceEvt = async (dbTxn: Database, evt: RepoEventInsert) => {
   await dbTxn.notify('new_repo_event')
   if (evt.eventType === 'rebase') {
     await invalidatePrevRepoOps(dbTxn, evt.did)
@@ -22,7 +22,7 @@ export const sequenceEvt = async (dbTxn: Database, evt: RepoSeqInsert) => {
   }
 
   const res = await dbTxn.db
-    .insertInto('repo_seq')
+    .insertInto('repo_event')
     .values(evt)
     .returning('id')
     .executeTakeFirst()
@@ -35,7 +35,7 @@ export const formatSeqCommit = async (
   did: string,
   commitData: CommitData,
   writes: PreparedWrite[],
-): Promise<RepoSeqInsert> => {
+): Promise<RepoEventInsert> => {
   let tooBig: boolean
   const ops: CommitEvtOp[] = []
   const blobs = new CidSet()
@@ -86,7 +86,7 @@ export const formatSeqCommit = async (
 export const formatSeqRebase = async (
   did: string,
   rebaseData: RebaseData,
-): Promise<RepoSeqInsert> => {
+): Promise<RepoEventInsert> => {
   const carSlice = await blocksToCarFile(rebaseData.commit, rebaseData.blocks)
 
   const evt: CommitEvt = {
@@ -110,7 +110,7 @@ export const formatSeqRebase = async (
 export const formatSeqHandleUpdate = async (
   did: string,
   handle: string,
-): Promise<RepoSeqInsert> => {
+): Promise<RepoEventInsert> => {
   const evt: HandleEvt = {
     did,
     handle,
@@ -130,7 +130,7 @@ export const invalidatePrevSeqEvts = async (
 ) => {
   if (eventTypes.length < 1) return
   await db.db
-    .updateTable('repo_seq')
+    .updateTable('repo_event')
     .where('did', '=', did)
     .where('eventType', 'in', eventTypes)
     .where('invalidated', '=', 0)

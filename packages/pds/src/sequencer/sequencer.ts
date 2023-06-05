@@ -2,7 +2,7 @@ import EventEmitter from 'events'
 import TypedEmitter from 'typed-emitter'
 import Database from '../db'
 import { seqLogger as log } from '../logger'
-import { RepoSeqEntry } from '../db/tables/repo-seq'
+import { RepoEventEntry } from '../db/tables/repo-event'
 import { cborDecode, check } from '@atproto/common'
 import { commitEvt, handleEvt, SeqEvt } from './events'
 
@@ -36,7 +36,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   async curr(): Promise<SeqRow | null> {
     const got = await this.db.db
       .selectFrom('outgoing_repo_seq')
-      .innerJoin('repo_seq', 'repo_seq.id', 'outgoing_repo_seq.eventId')
+      .innerJoin('repo_event', 'repo_event.id', 'outgoing_repo_seq.eventId')
       .selectAll()
       .orderBy('seq', 'desc')
       .limit(1)
@@ -47,7 +47,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   async next(cursor: number): Promise<SeqRow | null> {
     const got = await this.db.db
       .selectFrom('outgoing_repo_seq')
-      .innerJoin('repo_seq', 'repo_seq.id', 'outgoing_repo_seq.eventId')
+      .innerJoin('repo_event', 'repo_event.id', 'outgoing_repo_seq.eventId')
       .selectAll()
       .where('seq', '>', cursor)
       .limit(1)
@@ -66,7 +66,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
     let seqQb = this.db.db
       .selectFrom('outgoing_repo_seq')
-      .innerJoin('repo_seq', 'repo_seq.id', 'outgoing_repo_seq.eventId')
+      .innerJoin('repo_event', 'repo_event.id', 'outgoing_repo_seq.eventId')
       .selectAll()
       .orderBy('seq', 'asc')
       .where('invalidated', '=', 0)
@@ -134,7 +134,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 }
 
-type SeqRow = RepoSeqEntry & { seq: number }
+type SeqRow = RepoEventEntry & { seq: number }
 
 type SequencerEvents = {
   events: (evts: SeqEvt[]) => void
