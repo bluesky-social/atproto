@@ -14,15 +14,13 @@ export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
     //   .addColumn('sequencedAt', 'varchar', (col) => col.notNull())
     //   .execute()
   } else {
-    await db.schema
-      .alterTable('repo_seq')
-      .addColumn('outgoingSeq', 'bigint')
-      .execute()
+    await db.schema.alterTable('repo_seq').renameColumn('seq', 'id').execute()
+    await db.schema.alterTable('repo_seq').addColumn('seq', 'bigint').execute()
 
     await db.schema
-      .createIndex('repo_seq_outgoing_seq_idx')
+      .createIndex('repo_seq_outgoing_idx')
       .on('repo_seq')
-      .column('outgoingSeq')
+      .column('seq')
       .execute()
   }
 }
@@ -34,6 +32,7 @@ export async function down(
   if (dialect === 'sqlite') {
     return
   }
-  await db.schema.dropIndex('repo_seq_outgoing_seq_idx').execute()
-  await db.schema.alterTable('repo_seq').dropColumn('outgoingSeq').execute()
+  await db.schema.dropIndex('repo_seq_outgoing_idx').execute()
+  await db.schema.alterTable('repo_seq').dropColumn('seq').execute()
+  await db.schema.alterTable('repo_seq').renameColumn('id', 'seq').execute()
 }
