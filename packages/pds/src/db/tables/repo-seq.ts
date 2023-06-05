@@ -4,6 +4,7 @@ export type EventType = 'append' | 'rebase' | 'handle' | 'migrate' | 'tombstone'
 
 export interface RepoSeq {
   seq: GeneratedAlways<number>
+  outgoingSeq: number | null
   did: string
   eventType: EventType
   event: Uint8Array
