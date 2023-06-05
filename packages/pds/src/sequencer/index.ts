@@ -19,18 +19,18 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async start() {
-    const curr = await this.curr()
-    if (curr) {
-      this.lastSeen = curr.seq
-    }
-    this.db.channels.repo_seq.addListener('message', () => {
-      if (this.polling) {
-        this.queued = true
-      } else {
-        this.polling = true
-        this.pollDb()
-      }
-    })
+    // const curr = await this.curr()
+    // if (curr) {
+    //   this.lastSeen = curr.seq
+    // }
+    // this.db.channels.repo_seq.addListener('message', () => {
+    //   if (this.polling) {
+    //     this.queued = true
+    //   } else {
+    //     this.polling = true
+    //     this.pollDb()
+    //   }
+    // })
   }
 
   async curr(): Promise<RepoSeqEntry | null> {
