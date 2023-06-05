@@ -46,7 +46,7 @@ export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
     .addForeignKeyConstraint(
       'outgoing_repo_seq_event_id_fkey',
       ['eventId'],
-      'repo_seq',
+      'repo_event',
       ['id'],
       (cb) => cb.onDelete('cascade'),
     )
