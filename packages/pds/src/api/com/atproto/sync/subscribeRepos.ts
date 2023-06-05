@@ -33,22 +33,21 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     for await (const evt of outbox.events(cursor, backfillTime, signal)) {
-      // temporarily disabled
-      // if (evt.type === 'commit') {
-      //   yield {
-      //     $type: '#commit',
-      //     seq: evt.seq,
-      //     time: evt.time,
-      //     ...evt.evt,
-      //   }
-      // } else if (evt.type === 'handle') {
-      //   yield {
-      //     $type: '#handle',
-      //     seq: evt.seq,
-      //     time: evt.time,
-      //     ...evt.evt,
-      //   }
-      // }
+      if (evt.type === 'commit') {
+        yield {
+          $type: '#commit',
+          seq: evt.seq,
+          time: evt.time,
+          ...evt.evt,
+        }
+      } else if (evt.type === 'handle') {
+        yield {
+          $type: '#handle',
+          seq: evt.seq,
+          time: evt.time,
+          ...evt.evt,
+        }
+      }
     }
   })
 }
