@@ -1,9 +1,11 @@
 import { Kysely } from 'kysely'
 import * as duplicateRecord from './tables/duplicate-record'
 import * as profile from './tables/profile'
+import * as profileAgg from './tables/profile-agg'
 import * as post from './tables/post'
 import * as postEmbed from './tables/post-embed'
 import * as postHierarchy from './tables/post-hierarchy'
+import * as postAgg from './tables/post-agg'
 import * as repost from './tables/repost'
 import * as feedItem from './tables/feed-item'
 import * as follow from './tables/follow'
@@ -19,9 +21,11 @@ import * as label from './tables/label'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
+  profileAgg.PartialDB &
   post.PartialDB &
   postEmbed.PartialDB &
   postHierarchy.PartialDB &
+  postAgg.PartialDB &
   repost.PartialDB &
   feedItem.PartialDB &
   follow.PartialDB &
