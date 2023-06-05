@@ -71,7 +71,7 @@ describe('sequencer', () => {
   const evtToDbRow = (e: SeqEvt) => {
     const did = e.type === 'commit' ? e.evt.repo : e.evt.did
     return {
-      id: e.seq,
+      seq: e.seq,
       did,
       eventType: 'append',
       event: Buffer.from(cborEncode(e.evt)),
