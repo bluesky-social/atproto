@@ -75,12 +75,17 @@ export class SequencerLeader {
     }
   }
 
+  getNextSeq(): number {
+    return 0
+  }
+
   async sequenceOutgoing() {
     const unsequenced = await this.getUnsequenced()
     for (const row of unsequenced) {
       await this.db.db
-        .insertInto('outgoing_repo_seq')
-        .values({ eventId: row.id })
+        .updateTable('repo_seq')
+        .set({ outgoingSeq: this.getNextSeq() })
+        .where('seq', '=', row.seq)
         .execute()
       await this.db.notify('outgoing_repo_seq')
     }
@@ -88,15 +93,10 @@ export class SequencerLeader {
 
   async getUnsequenced() {
     return this.db.db
-      .selectFrom('repo_event')
-      .whereNotExists((qb) =>
-        qb
-          .selectFrom('outgoing_repo_seq')
-          .whereRef('outgoing_repo_seq.eventId', '=', 'repo_event.id')
-          .selectAll(),
-      )
-      .select('id')
-      .orderBy('id', 'asc')
+      .selectFrom('repo_seq')
+      .where('outgoingSeq', 'is', null)
+      .select('seq')
+      .orderBy('seq', 'asc')
       .execute()
   }
 

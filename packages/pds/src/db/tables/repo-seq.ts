@@ -2,8 +2,9 @@ import { Generated, GeneratedAlways, Insertable, Selectable } from 'kysely'
 
 export type EventType = 'append' | 'rebase' | 'handle' | 'migrate' | 'tombstone'
 
-export interface RepoEvent {
-  id: GeneratedAlways<number>
+export interface RepoSeq {
+  seq: GeneratedAlways<number>
+  outgoingSeq: number | null
   did: string
   eventType: EventType
   event: Uint8Array
@@ -11,11 +12,11 @@ export interface RepoEvent {
   sequencedAt: string
 }
 
-export type RepoEventInsert = Insertable<RepoEvent>
-export type RepoEventEntry = Selectable<RepoEvent>
+export type RepoSeqInsert = Insertable<RepoSeq>
+export type RepoSeqEntry = Selectable<RepoSeq>
 
-export const tableName = 'repo_event'
+export const tableName = 'repo_seq'
 
 export type PartialDB = {
-  [tableName]: RepoEvent
+  [tableName]: RepoSeq
 }
