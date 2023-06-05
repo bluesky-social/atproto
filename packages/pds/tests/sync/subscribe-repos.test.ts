@@ -161,6 +161,7 @@ describe('repo subscribe repos', () => {
     const isDone = async (evt: any) => {
       if (evt === undefined) return false
       if (evt instanceof ErrorFrame) return true
+      await ctx.sequencerLeader.isCaughtUp()
       const curr = await db.db
         .selectFrom('repo_seq')
         .select('seq')
