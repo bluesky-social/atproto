@@ -194,8 +194,8 @@ async function processFullSequence(ctx: AppContext, sub: RepoSubscription) {
     await wait(50)
     const state = await sub.getState()
     const { lastSeq } = await db
-      .selectFrom('repo_seq')
-      .select(db.fn.max('repo_seq.seq').as('lastSeq'))
+      .selectFrom('repo_event')
+      .select(db.fn.max('repo_event.id').as('lastSeq'))
       .executeTakeFirstOrThrow()
     if (state.cursor === lastSeq) return
   }

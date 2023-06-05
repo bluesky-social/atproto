@@ -25,7 +25,7 @@ import {
 import { RepoCommitHistory } from '../src/db/tables/repo-commit-history'
 import { RepoCommitBlock } from '../src/db/tables/repo-commit-block'
 import { Record } from '../src/db/tables/record'
-import { RepoSeq } from '../src/db/tables/repo-seq'
+import { RepoEvent } from '../src/db/tables/repo-event'
 import { ACKNOWLEDGE } from '../src/lexicon/types/com/atproto/admin/defs'
 import { UserState } from '../src/db/tables/user-state'
 import { ActorBlock } from '../src/app-view/db/tables/actor-block'
@@ -171,8 +171,8 @@ describe('account deletion', () => {
     expect(updatedDbContents.blocks).toEqual(
       initialDbContents.blocks.filter((row) => row.creator !== carol.did),
     )
-    expect(updatedDbContents.seqs).toEqual(
-      initialDbContents.seqs.filter((row) => row.did !== carol.did),
+    expect(updatedDbContents.repoEvts).toEqual(
+      initialDbContents.repoEvts.filter((row) => row.did !== carol.did),
     )
     expect(updatedDbContents.commitBlocks).toEqual(
       initialDbContents.commitBlocks.filter((row) => row.creator !== carol.did),
@@ -290,10 +290,10 @@ describe('account deletion', () => {
 
 type DbContents = {
   roots: RepoRoot[]
-  users: UserAccount[]
+  users: Selectable<UserAccount>[]
   userState: UserState[]
   blocks: IpldBlock[]
-  seqs: Selectable<RepoSeq>[]
+  repoEvts: Selectable<RepoEvent>[]
   commitHistories: RepoCommitHistory[]
   commitBlocks: RepoCommitBlock[]
   records: Record[]
@@ -317,7 +317,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     users,
     userState,
     blocks,
-    seqs,
+    repoEvts,
     commitHistories,
     commitBlocks,
     records,
@@ -343,7 +343,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
       .orderBy('cid')
       .selectAll()
       .execute(),
-    db.db.selectFrom('repo_seq').orderBy('seq').selectAll().execute(),
+    db.db.selectFrom('repo_event').orderBy('id').selectAll().execute(),
     db.db
       .selectFrom('repo_commit_history')
       .orderBy('creator')
@@ -394,7 +394,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     users,
     userState,
     blocks,
-    seqs,
+    repoEvts,
     commitHistories,
     commitBlocks,
     records,
