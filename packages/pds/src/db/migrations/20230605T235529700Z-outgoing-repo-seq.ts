@@ -16,10 +16,6 @@ export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
       .execute()
   } else {
     await db.schema.alterTable('repo_seq').renameColumn('seq', 'id').execute()
-    const ref = db.dynamic.ref
-    await sql`ALTER TABLE ${ref('repo_seq')} RENAME CONSTRAINT ${ref(
-      'repo_seq_pkey',
-    )} TO ${ref('repo_id_pkey')}`.execute(db)
     await db.schema
       .alterTable('repo_seq')
       .addColumn('seq', 'bigint', (col) => col.unique())
