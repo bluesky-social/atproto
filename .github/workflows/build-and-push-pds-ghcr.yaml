@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - seq-migration
+      - outgoing-seq-migration
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
