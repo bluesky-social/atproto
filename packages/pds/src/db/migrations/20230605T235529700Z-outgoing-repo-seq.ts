@@ -16,6 +16,10 @@ export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
       .execute()
   } else {
     await db.schema.alterTable('repo_seq').renameColumn('seq', 'id').execute()
+    const ref = db.dynamic.ref
+    await sql`ALTER TABLE ${ref('repo_seq')} RENAME CONSTRAINT ${ref(
+      'repo_seq_pkey',
+    )} TO ${ref('repo_id_pkey')}`.execute(db)
     await db.schema
       .alterTable('repo_seq')
       .addColumn('seq', 'bigint', (col) => col.unique())
@@ -38,7 +42,8 @@ export async function down(
       .addColumn('invalidated', 'int2', (col) => col.notNull().defaultTo(0))
       .addColumn('sequencedAt', 'varchar', (col) => col.notNull())
       .execute()
+  } else {
+    await db.schema.alterTable('repo_seq').dropColumn('seq').execute()
+    await db.schema.alterTable('repo_seq').renameColumn('id', 'seq').execute()
   }
-  await db.schema.alterTable('repo_seq').dropColumn('seq').execute()
-  await db.schema.alterTable('repo_seq').renameColumn('id', 'seq').execute()
 }
