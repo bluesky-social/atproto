@@ -21,7 +21,20 @@ export const sequenceEvt = async (dbTxn: Database, evt: RepoSeqInsert) => {
     await invalidatePrevHandleOps(dbTxn, evt.did)
   }
 
-  await dbTxn.db.insertInto('repo_seq').values(evt).executeTakeFirst()
+  const res = await dbTxn.db
+    .insertInto('repo_seq')
+    .values(evt)
+    .returning('id')
+    .executeTakeFirst()
+
+  // since sqlite is serializable, sequence right after insert instead of relying on sequencer-leader
+  if (res && dbTxn.dialect === 'sqlite') {
+    await dbTxn.db
+      .updateTable('repo_seq')
+      .set({ seq: res.id })
+      .where('id', '=', res.id)
+      .execute()
+  }
 }
 
 export const formatSeqCommit = async (

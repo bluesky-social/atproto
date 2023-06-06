@@ -1,20 +1,24 @@
 import { DisconnectError } from '@atproto/xrpc-server'
+import { jitter, wait } from '@atproto/common'
 import { Leader } from '../db/leader'
 import { seqLogger as log } from '../logger'
 import Database from '../db'
-import { jitter, wait } from '@atproto/common'
 
-export const SQUENCER_LEADER_ID = 1100
+export const SEQUENCER_LEADER_ID = 1100
 
 export class SequencerLeader {
-  leader = new Leader(SQUENCER_LEADER_ID, this.db)
+  // leader = new Leader(SQUENCER_LEADER_ID, this.db)
+  leader: Leader
 
   destroyed = false
   polling = false
   queued = false
   lastSeq: number
 
-  constructor(public db: Database) {}
+  constructor(public db: Database) {
+    const lockId = this.db.getSchemaAdvisoryLockId(SEQUENCER_LEADER_ID)
+    this.leader = new Leader(lockId, this.db)
+  }
 
   nextSeqVal(): number {
     this.lastSeq++
@@ -22,6 +26,8 @@ export class SequencerLeader {
   }
 
   async run() {
+    if (this.db.dialect === 'sqlite') return
+
     const res = await this.db.db
       .selectFrom('repo_seq')
       .select('seq')
