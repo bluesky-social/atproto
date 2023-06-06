@@ -7,7 +7,6 @@ import Database from '../db'
 export const SEQUENCER_LEADER_ID = 1100
 
 export class SequencerLeader {
-  // leader = new Leader(SQUENCER_LEADER_ID, this.db)
   leader: Leader
 
   destroyed = false
