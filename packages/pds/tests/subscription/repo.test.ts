@@ -193,9 +193,11 @@ async function processFullSequence(ctx: AppContext, sub: RepoSubscription) {
   while (Date.now() - start < timeout) {
     await wait(50)
     const state = await sub.getState()
+    const caughtUp = await ctx.sequencerLeader.isCaughtUp()
+    if (!caughtUp) continue
     const { lastSeq } = await db
-      .selectFrom('outgoing_repo_seq')
-      .select(db.fn.max('outgoing_repo_seq.seq').as('lastSeq'))
+      .selectFrom('repo_seq')
+      .select(db.fn.max('repo_seq.seq').as('lastSeq'))
       .executeTakeFirstOrThrow()
     if (state.cursor === lastSeq) return
   }
