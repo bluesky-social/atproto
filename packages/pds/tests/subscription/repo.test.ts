@@ -197,6 +197,7 @@ async function processFullSequence(ctx: AppContext, sub: RepoSubscription) {
     if (!caughtUp) continue
     const { lastSeq } = await db
       .selectFrom('repo_seq')
+      .where('seq', 'is not', null)
       .select(db.fn.max('repo_seq.seq').as('lastSeq'))
       .executeTakeFirstOrThrow()
     if (state.cursor === lastSeq) return

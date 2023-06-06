@@ -165,6 +165,7 @@ describe('repo subscribe repos', () => {
       if (!caughtUp) return false
       const curr = await db.db
         .selectFrom('repo_seq')
+        .where('seq', 'is not', null)
         .select('seq')
         .limit(1)
         .orderBy('seq', 'desc')
@@ -234,6 +235,7 @@ describe('repo subscribe repos', () => {
   it('backfills only from provided cursor', async () => {
     const seqs = await db.db
       .selectFrom('repo_seq')
+      .where('seq', 'is not', null)
       .selectAll()
       .orderBy('seq', 'asc')
       .execute()

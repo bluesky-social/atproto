@@ -37,6 +37,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     const got = await this.db.db
       .selectFrom('repo_seq')
       .selectAll()
+      .where('seq', 'is not', null)
       .orderBy('seq', 'desc')
       .limit(1)
       .executeTakeFirst()
@@ -47,6 +48,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     const got = await this.db.db
       .selectFrom('repo_seq')
       .selectAll()
+      .where('seq', 'is not', null)
       .where('seq', '>', cursor)
       .limit(1)
       .orderBy('seq', 'asc')
