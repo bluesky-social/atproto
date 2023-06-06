@@ -14,8 +14,7 @@ export class SequencerLeader {
   queued = false
   lastSeq: number
 
-  constructor(public db: Database) {
-    const lockId = this.db.getSchemaAdvisoryLockId(SEQUENCER_LEADER_ID)
+  constructor(public db: Database, lockId = SEQUENCER_LEADER_ID) {
     this.leader = new Leader(lockId, this.db)
   }
 

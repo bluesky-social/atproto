@@ -101,7 +101,10 @@ export class PDS {
 
     const messageDispatcher = new MessageDispatcher()
     const sequencer = new Sequencer(db)
-    const sequencerLeader = new SequencerLeader(db)
+    const sequencerLeader = new SequencerLeader(
+      db,
+      config.sequencerLeaderLockId,
+    )
 
     const mailTransport =
       config.emailSmtpUrl !== undefined

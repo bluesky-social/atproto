@@ -33,3 +33,13 @@ export const mockNetworkUtilities = (pds: TestPds) => {
     }
   }
 }
+
+const usedLockIds = new Set()
+export const uniqueLockId = () => {
+  let lockId: number
+  do {
+    lockId = 1000 + Math.ceil(1000 * Math.random())
+  } while (usedLockIds.has(lockId))
+  usedLockIds.add(lockId)
+  return lockId
+}

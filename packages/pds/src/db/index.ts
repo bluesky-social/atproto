@@ -17,7 +17,6 @@ import { Pool as PgPool, Client as PgClient, types as pgTypes } from 'pg'
 import EventEmitter from 'events'
 import TypedEmitter from 'typed-emitter'
 import { wait } from '@atproto/common'
-import * as ui8 from 'uint8arrays'
 import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
 import { dummyDialect } from './util'
 import * as migrations from './migrations'
@@ -299,16 +298,6 @@ export class Database {
     await sql`refresh materialized view concurrently ${ref(view)}`.execute(
       this.db,
     )
-  }
-
-  // get a deterministic lock id for within a postgres schema
-  // baseLockId param is the 1-4 digit identifier for the lock
-  getSchemaAdvisoryLockId(baseLockId: number): number {
-    if (!this.schema) {
-      return baseLockId
-    }
-    const base10 = ui8.toString(ui8.fromString(this.schema, 'utf8'), 'base10')
-    return parseInt(base10.slice(0, 11), 10) * 10000 + baseLockId
   }
 }
 
