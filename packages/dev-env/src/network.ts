@@ -1,4 +1,5 @@
 import assert from 'assert'
+import * as uint8arrays from 'uint8arrays'
 import getPort from 'get-port'
 import { wait } from '@atproto/common-web'
 import { createServiceJwt } from '@atproto/xrpc-server'
@@ -8,6 +9,9 @@ import { TestPds } from './pds'
 import { TestBsky } from './bsky'
 import { mockNetworkUtilities } from './util'
 import { TestNetworkNoAppView } from './network-no-appview'
+
+const ADMIN_USERNAME = 'admin'
+const ADMIN_PASSWORD = 'admin-pass'
 
 export class TestNetwork extends TestNetworkNoAppView {
   constructor(public plc: TestPlc, public pds: TestPds, public bsky: TestBsky) {
@@ -75,6 +79,23 @@ export class TestNetwork extends TestNetworkNoAppView {
       keypair: this.pds.ctx.repoSigningKey,
     })
     return { authorization: `Bearer ${jwt}` }
+  }
+
+  async adminHeaders({
+    username = ADMIN_USERNAME,
+    password = ADMIN_PASSWORD,
+  }: {
+    username?: string
+    password?: string
+  }) {
+    return {
+      authorization:
+        'Basic ' +
+        uint8arrays.toString(
+          uint8arrays.fromString(`${username}:${password}`, 'utf8'),
+          'base64pad',
+        ),
+    }
   }
 
   async close() {
