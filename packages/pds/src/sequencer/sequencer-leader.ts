@@ -32,6 +32,7 @@ export class SequencerLeader {
           const res = await this.db.db
             .selectFrom('repo_seq')
             .select('seq')
+            .where('seq', 'is not', null)
             .orderBy('seq', 'desc')
             .limit(1)
             .executeTakeFirst()
