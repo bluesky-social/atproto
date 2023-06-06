@@ -15,13 +15,13 @@ id2.authority  // => 'example.com'
 id2.name       // => 'foo'
 id2.toString() // => 'com.example.foo'
 
-const id3 = NSID.create('example.com', '*')
+const id3 = NSID.create('example.com', 'someRecord')
 id3.authority  // => 'example.com'
-id3.name       // => '*'
-id3.toString() // => 'com.example.*'
+id3.name       // => 'someRecord'
+id3.toString() // => 'com.example.someRecord'
 
 NSID.isValid('com.example.foo') // => true
-NSID.isValid('com.example.*') // => true
+NSID.isValid('com.example.someRecord') // => true
 NSID.isValid('example.com/foo') // => false
 NSID.isValid('foo') // => false
 ```
