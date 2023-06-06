@@ -14,9 +14,7 @@ export class Outbox {
   outBuffer: AsyncBuffer<SeqEvt>
 
   constructor(public sequencer: Sequencer, opts: Partial<OutboxOpts> = {}) {
-    // @TODO turn back down
-    // const { maxBufferSize = 500 } = opts
-    const maxBufferSize = 50000
+    const { maxBufferSize = 500 } = opts
     this.cutoverBuffer = []
     this.outBuffer = new AsyncBuffer<SeqEvt>(maxBufferSize)
   }
