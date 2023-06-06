@@ -1,5 +1,6 @@
 import { AsyncBuffer, AsyncBufferFullError } from '@atproto/common'
 import { Sequencer, SeqEvt } from '.'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export type OutboxOpts = {
   maxBufferSize: number
@@ -13,7 +14,9 @@ export class Outbox {
   outBuffer: AsyncBuffer<SeqEvt>
 
   constructor(public sequencer: Sequencer, opts: Partial<OutboxOpts> = {}) {
-    const { maxBufferSize = 500 } = opts
+    // @TODO turn back down
+    // const { maxBufferSize = 500 } = opts
+    const maxBufferSize = 50000
     this.cutoverBuffer = []
     this.outBuffer = new AsyncBuffer<SeqEvt>(maxBufferSize)
   }
@@ -90,7 +93,10 @@ export class Outbox {
         }
       } catch (err) {
         if (err instanceof AsyncBufferFullError) {
-          throw new StreamConsumerTooSlowError(err)
+          throw new InvalidRequestError(
+            'Stream consumer too slow',
+            'ConsumerTooSlow',
+          )
         } else {
           throw err
         }
@@ -114,12 +120,6 @@ export class Outbox {
       if (seqCursor - this.lastSeen < 10) break
       if (evts.length < 1) break
     }
-  }
-}
-
-export class StreamConsumerTooSlowError extends Error {
-  constructor(bufferErr: AsyncBufferFullError) {
-    super(`Stream consumer too slow: ${bufferErr.message}`)
   }
 }
 

@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
           message: 'Requested cursor exceeded limit. Possibly missing events',
         }
       }
-      if (curr?.seq && cursor > curr.seq) {
+      if (!curr?.seq || cursor > curr.seq) {
         throw new InvalidRequestError('Cursor in the future.', 'FutureCursor')
       }
     }
