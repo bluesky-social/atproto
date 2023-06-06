@@ -26,17 +26,17 @@ export class SequencerLeader {
   async run() {
     if (this.db.dialect === 'sqlite') return
 
-    const res = await this.db.db
-      .selectFrom('repo_seq')
-      .select('seq')
-      .orderBy('seq', 'desc')
-      .limit(1)
-      .executeTakeFirst()
-    this.lastSeq = res?.seq ?? 0
-
     while (!this.destroyed) {
       try {
         const { ran } = await this.leader.run(async ({ signal }) => {
+          const res = await this.db.db
+            .selectFrom('repo_seq')
+            .select('seq')
+            .orderBy('seq', 'desc')
+            .limit(1)
+            .executeTakeFirst()
+          this.lastSeq = res?.seq ?? 0
+
           const seqListener = () => {
             if (this.polling) {
               this.queued = true
@@ -44,6 +44,9 @@ export class SequencerLeader {
               this.polling = true
               this.pollDb()
             }
+          }
+          if (signal.aborted) {
+            return
           }
           this.db.channels.new_repo_event.addListener('message', seqListener)
           await new Promise<void>((resolve) => {
