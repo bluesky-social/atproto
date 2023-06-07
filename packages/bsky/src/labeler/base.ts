@@ -1,5 +1,4 @@
 import stream from 'stream'
-import PQueue from 'p-queue'
 import { AtUri } from '@atproto/uri'
 import { cidForRecord } from '@atproto/repo'
 import { dedupe, getFieldsFromRecord } from './util'
