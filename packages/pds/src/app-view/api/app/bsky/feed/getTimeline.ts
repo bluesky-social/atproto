@@ -60,7 +60,9 @@ export default function (server: Server, ctx: AppContext) {
         limit,
         cursor,
         keyset,
+        tryIndex: true,
       })
+
       const feedItems: FeedRow[] = await feedItemsQb.execute()
       const feed = await feedService.hydrateFeed(feedItems, requester)
 
