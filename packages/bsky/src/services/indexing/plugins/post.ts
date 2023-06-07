@@ -16,6 +16,9 @@ import RecordProcessor from '../processor'
 import { PostHierarchy } from '../../../db/tables/post-hierarchy'
 import { Notification } from '../../../db/tables/notification'
 import { toSimplifiedISOSafe } from '../util'
+import Database from '../../../db'
+import { countAll, excluded } from '../../../db/util'
+import { BackgroundQueue } from '../../../background'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -359,16 +362,52 @@ const notifsForDelete = (
   }
 }
 
+const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
+  const replyCountQb = postIdx.post.replyParent
+    ? db
+        .insertInto('post_agg')
+        .values({
+          uri: postIdx.post.replyParent,
+          replyCount: db
+            .selectFrom('post')
+            .where('post.replyParent', '=', postIdx.post.replyParent)
+            .select(countAll.as('count')),
+        })
+        .onConflict((oc) =>
+          oc
+            .column('uri')
+            .doUpdateSet({ replyCount: excluded(db, 'replyCount') }),
+        )
+    : null
+  const postsCountQb = db
+    .insertInto('profile_agg')
+    .values({
+      did: postIdx.post.creator,
+      postsCount: db
+        .selectFrom('post')
+        .where('post.creator', '=', postIdx.post.creator)
+        .select(countAll.as('count')),
+    })
+    .onConflict((oc) =>
+      oc.column('did').doUpdateSet({ postsCount: excluded(db, 'postsCount') }),
+    )
+  await Promise.all([replyCountQb?.execute(), postsCountQb.execute()])
+}
+
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>
 
-export const makePlugin = (db: DatabaseSchema): PluginType => {
-  return new RecordProcessor(db, {
+export const makePlugin = (
+  db: Database,
+  backgroundQueue: BackgroundQueue,
+): PluginType => {
+  return new RecordProcessor(db, backgroundQueue, {
     lexId,
     insertFn,
     findDuplicate,
     deleteFn,
     notifsForInsert,
     notifsForDelete,
+    updateAggregates,
   })
 }
 
