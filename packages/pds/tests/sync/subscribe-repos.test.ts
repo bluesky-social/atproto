@@ -118,6 +118,10 @@ describe('repo subscribe repos', () => {
     if (!commits) {
       return expect(commits !== null)
     }
+    if (evts.length !== commits.length) {
+      console.log(evts.map((e) => e.commit.toString()))
+      console.log(commits.map((c) => c.commit.toString()))
+    }
     expect(evts.length).toBe(commits.length)
     expect(evts.length).toBe(writeLog.length)
     for (let i = 0; i < commits.length; i++) {
@@ -163,14 +167,8 @@ describe('repo subscribe repos', () => {
       if (evt instanceof ErrorFrame) return true
       const caughtUp = await ctx.sequencerLeader.isCaughtUp()
       if (!caughtUp) return false
-      const curr = await db.db
-        .selectFrom('repo_seq')
-        .where('seq', 'is not', null)
-        .select('seq')
-        .limit(1)
-        .orderBy('seq', 'desc')
-        .executeTakeFirst()
-      return curr !== undefined && evt.body.seq === curr.seq
+      const curr = await ctx.sequencerLeader.getLastSeq()
+      return evt.body.seq === curr
     }
 
     return readFromGenerator(gen, isDone, waitFor)
