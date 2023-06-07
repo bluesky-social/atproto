@@ -8,21 +8,23 @@ import { resolveBlob } from '../api/blob-resolver'
 import Database from '../db'
 import { IdResolver } from '@atproto/identity'
 import { ServerConfig } from '../config'
+import { BackgroundQueue } from '../background'
 
 export abstract class Labeler {
-  public processingQueue: PQueue | null // null during teardown
+  public backgroundQueue: BackgroundQueue
   constructor(
     protected ctx: {
       db: Database
       idResolver: IdResolver
       cfg: ServerConfig
+      backgroundQueue: BackgroundQueue
     },
   ) {
-    this.processingQueue = new PQueue()
+    this.backgroundQueue = ctx.backgroundQueue
   }
 
   processRecord(uri: AtUri, obj: unknown) {
-    this.processingQueue?.add(() =>
+    this.backgroundQueue.add(() =>
       this.createAndStoreLabels(uri, obj).catch((err) => {
         log.error(
           { err, uri: uri.toString(), record: obj },
@@ -68,14 +70,6 @@ export abstract class Labeler {
   abstract labelImg(img: stream.Readable): Promise<string[]>
 
   async processAll() {
-    await this.processingQueue?.onIdle()
-  }
-
-  async destroy() {
-    const pQueue = this.processingQueue
-    this.processingQueue = null
-    pQueue?.pause()
-    pQueue?.clear()
-    await pQueue?.onIdle()
+    await this.backgroundQueue.processAll()
   }
 }

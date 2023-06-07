@@ -23,6 +23,7 @@ import RecordProcessor from './processor'
 import { subLogger } from '../../logger'
 import { retryHttp } from '../../util/retry'
 import { Labeler } from '../../labeler'
+import { BackgroundQueue } from '../../background'
 
 export class IndexingService {
   records: {
@@ -37,18 +38,24 @@ export class IndexingService {
     public db: Database,
     public idResolver: IdResolver,
     public labeler: Labeler,
+    public backgroundQueue: BackgroundQueue,
   ) {
     this.records = {
-      post: Post.makePlugin(this.db.db),
-      like: Like.makePlugin(this.db.db),
-      repost: Repost.makePlugin(this.db.db),
-      follow: Follow.makePlugin(this.db.db),
-      profile: Profile.makePlugin(this.db.db),
+      post: Post.makePlugin(this.db, backgroundQueue),
+      like: Like.makePlugin(this.db, backgroundQueue),
+      repost: Repost.makePlugin(this.db, backgroundQueue),
+      follow: Follow.makePlugin(this.db, backgroundQueue),
+      profile: Profile.makePlugin(this.db, backgroundQueue),
     }
   }
 
-  static creator(idResolver: IdResolver, labeler: Labeler) {
-    return (db: Database) => new IndexingService(db, idResolver, labeler)
+  static creator(
+    idResolver: IdResolver,
+    labeler: Labeler,
+    backgroundQueue: BackgroundQueue,
+  ) {
+    return (db: Database) =>
+      new IndexingService(db, idResolver, labeler, backgroundQueue)
   }
 
   async indexRecord(

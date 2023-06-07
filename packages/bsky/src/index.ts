@@ -99,12 +99,14 @@ export class BskyAppView {
         db,
         cfg: config,
         idResolver,
+        backgroundQueue,
       })
     } else {
       labeler = new KeywordLabeler({
         db,
         cfg: config,
         idResolver,
+        backgroundQueue,
       })
     }
 
@@ -113,6 +115,7 @@ export class BskyAppView {
       imgInvalidator,
       idResolver,
       labeler,
+      backgroundQueue,
     })
 
     const ctx = new AppContext({
@@ -185,7 +188,6 @@ export class BskyAppView {
   async destroy(): Promise<void> {
     await this.ctx.didCache.destroy()
     await this.sub?.destroy()
-    await this.ctx.labeler.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()
