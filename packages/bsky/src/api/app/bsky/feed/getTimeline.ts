@@ -51,7 +51,9 @@ export default function (server: Server, ctx: AppContext) {
         limit,
         cursor,
         keyset,
+        tryIndex: true,
       })
+
       const feedItems = await feedItemsQb.execute()
       const feed = await composeFeed(
         feedService,
