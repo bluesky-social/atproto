@@ -23,7 +23,6 @@ Object {
         "cid": "cids(0)",
         "uri": "record(0)",
       },
-      "subjectRepoHandle": "alice.test",
     },
   ],
   "subject": Object {
@@ -94,7 +93,6 @@ Object {
         "cid": "cids(1)",
         "uri": "record(0)",
       },
-      "subjectRepoHandle": "alice.test",
     },
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -108,7 +106,6 @@ Object {
         "$type": "com.atproto.admin.defs#repoRef",
         "did": "user(0)",
       },
-      "subjectRepoHandle": "alice.test",
     },
   ],
   "reversal": Object {
