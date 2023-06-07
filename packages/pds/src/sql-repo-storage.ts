@@ -158,6 +158,7 @@ export class SqlRepoStorage extends RepoStorage {
           .selectFrom('repo_commit_block')
           .selectAll()
           .where('repo_commit_block.creator', '=', this.did)
+          .where('repo_commit_block.commit', '=', rebase.commit.toString())
           .whereRef('repo_commit_block.block', '=', 'ipld_block.cid'),
       )
       .execute()

@@ -152,7 +152,7 @@ async function skeletonFromFeedGen(
         .execute()
     : []
 
-  const orderedItems = getOrderedFeedItems(skeletonFeed, feedItems)
+  const orderedItems = getOrderedFeedItems(skeletonFeed, feedItems, params)
   return {
     ...rest,
     feedItems: orderedItems,
@@ -169,11 +169,16 @@ function getSkeleFeedItemUri(item: SkeletonFeedPost) {
 function getOrderedFeedItems(
   skeletonItems: SkeletonFeedPost[],
   feedItems: FeedRow[],
+  params: GetFeedParams,
 ) {
   const SKIP = []
   const feedItemsByUri = feedItems.reduce((acc, item) => {
     return Object.assign(acc, { [item.uri]: item })
   }, {} as Record<string, FeedRow>)
+  // enforce limit param in the case that the feedgen does not
+  if (skeletonItems.length > params.limit) {
+    skeletonItems = skeletonItems.slice(0, params.limit)
+  }
   return skeletonItems.flatMap((item) => {
     const uri = getSkeleFeedItemUri(item)
     const feedItem = feedItemsByUri[uri]

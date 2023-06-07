@@ -3306,6 +3306,9 @@ export const schemaDict = {
           {
             name: 'FutureCursor',
           },
+          {
+            name: 'ConsumerTooSlow',
+          },
         ],
       },
       commit: {

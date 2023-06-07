@@ -6,7 +6,7 @@ import { FeedRow } from '../../../services/feed'
 import { isPostView } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { NotEmptyArray } from '@atproto/common'
 import { isViewRecord } from '../../../../lexicon/types/app/bsky/embed/record'
-import { countAll } from '../../../../db/util'
+import { countAll, valuesList } from '../../../../db/util'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   '!no-promote',
@@ -43,7 +43,7 @@ export default function (server: Server, ctx: AppContext) {
           qb
             .selectFrom('label')
             .selectAll()
-            .where('val', 'in', labelsToFilter)
+            .whereRef('val', 'in', valuesList(labelsToFilter))
             .where('neg', '=', 0)
             .where((clause) =>
               clause

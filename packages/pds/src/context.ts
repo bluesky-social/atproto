@@ -9,7 +9,7 @@ import { BlobStore } from '@atproto/repo'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import { MessageDispatcher } from './event-stream/message-queue'
-import Sequencer from './sequencer'
+import { Sequencer, SequencerLeader } from './sequencer'
 import { Labeler } from './labeler'
 import { BackgroundQueue } from './event-stream/background-queue'
 import DidSqlCache from './did-cache'
@@ -31,6 +31,7 @@ export class AppContext {
       services: Services
       messageDispatcher: MessageDispatcher
       sequencer: Sequencer
+      sequencerLeader: SequencerLeader
       labeler: Labeler
       backgroundQueue: BackgroundQueue
       algos: MountedAlgos
@@ -103,6 +104,10 @@ export class AppContext {
 
   get sequencer(): Sequencer {
     return this.opts.sequencer
+  }
+
+  get sequencerLeader(): SequencerLeader {
+    return this.opts.sequencerLeader
   }
 
   get labeler(): Labeler {
