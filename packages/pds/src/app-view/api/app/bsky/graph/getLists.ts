@@ -24,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
         .getListsQb(requester)
         .where('list.creator', '=', creatorRes.did)
 
-      const keyset = new TimeCidKeyset(ref('list.indexedAt'), ref('list.cid'))
+      const keyset = new TimeCidKeyset(ref('list.createdAt'), ref('list.cid'))
       listsReq = paginate(listsReq, {
         limit,
         cursor,
