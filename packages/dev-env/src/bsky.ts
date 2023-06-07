@@ -5,6 +5,7 @@ import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { Client as PlcClient } from '@did-plc/lib'
 import { BskyConfig } from './types'
+import { uniqueLockId } from './util'
 
 export class TestBsky {
   constructor(
@@ -87,14 +88,4 @@ export class TestBsky {
   async close() {
     await this.server.destroy()
   }
-}
-
-const usedLockIds = new Set()
-const uniqueLockId = () => {
-  let lockId: number
-  do {
-    lockId = 1000 + Math.ceil(1000 * Math.random())
-  } while (usedLockIds.has(lockId))
-  usedLockIds.add(lockId)
-  return lockId
 }

@@ -63,8 +63,11 @@ export class TestNetwork extends TestNetworkNoAppView {
       await wait(50)
       if (!sub) return
       const state = await sub.getState()
+      const caughtUp = await this.pds.ctx.sequencerLeader.isCaughtUp()
+      if (!caughtUp) continue
       const { lastSeq } = await db
         .selectFrom('repo_seq')
+        .where('seq', 'is not', null)
         .select(db.fn.max('repo_seq.seq').as('lastSeq'))
         .executeTakeFirstOrThrow()
       if (state.cursor === lastSeq) return

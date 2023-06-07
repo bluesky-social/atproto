@@ -25,7 +25,7 @@ import { dbLogger as log } from '../logger'
 
 export class Database {
   txEvt = new EventEmitter() as TxnEmitter
-  txChannelMsgs: ChannelMsg[] = []
+  txChannelEvts: ChannelEvt[] = []
   channels: Channels
   migrator: Migrator
   destroyed = false
@@ -43,7 +43,8 @@ export class Database {
       provider: new CtxMigrationProvider(migrations, cfg.dialect),
     })
     this.channels = channels || {
-      repo_seq: new EventEmitter() as ChannelEmitter,
+      new_repo_event: new EventEmitter() as ChannelEmitter,
+      outgoing_repo_seq: new EventEmitter() as ChannelEmitter,
     }
   }
 
@@ -100,11 +101,9 @@ export class Database {
     if (this.channelClient) return
     this.channelClient = new PgClient(this.cfg.url)
     await this.channelClient.connect()
-    await this.channelClient.query(
-      `LISTEN ${this.getSchemaChannel('repo_seq')}`,
-    )
+    await this.channelClient.query(`LISTEN ${this.getSchemaChannel()}`)
     this.channelClient.on('notification', (msg) => {
-      const channel = this.channels[this.normalizeSchemaChannel(msg.channel)]
+      const channel = this.channels[msg.payload ?? '']
       if (channel) {
         channel.emit('message')
       }
@@ -116,21 +115,15 @@ export class Database {
     })
   }
 
-  async notify(channel: keyof Channels) {
-    if (channel !== 'repo_seq') {
-      throw new Error(`attempted sending on unavailable channel: ${channel}`)
-    }
-    // hardcoded b/c of type system & we only have one msg type
-    const message: ChannelMsg = 'repo_seq'
-
+  async notify(evt: ChannelEvt) {
     // if in a sqlite tx, we buffer the notification until the tx successfully commits
     if (this.isTransaction && this.dialect === 'sqlite') {
       // no duplicate notifies in a tx per Postgres semantics
-      if (!this.txChannelMsgs.includes(message)) {
-        this.txChannelMsgs.push(message)
+      if (!this.txChannelEvts.includes(evt)) {
+        this.txChannelEvts.push(evt)
       }
     } else {
-      await this.sendChannelMsg(message)
+      await this.sendChannelEvt(evt)
     }
   }
 
@@ -139,11 +132,12 @@ export class Database {
     this.txEvt.once('commit', fn)
   }
 
-  private getSchemaChannel(channel: string) {
+  private getSchemaChannel() {
+    const CHANNEL_NAME = 'pds_db_channel'
     if (this.cfg.dialect === 'pg' && this.cfg.schema) {
-      return this.cfg.schema + '_' + channel
+      return this.cfg.schema + '_' + CHANNEL_NAME
     } else {
-      return channel
+      return CHANNEL_NAME
     }
   }
 
@@ -160,12 +154,17 @@ export class Database {
     }
   }
 
-  private async sendChannelMsg(channel: ChannelMsg) {
+  private async sendChannelEvt(evt: ChannelEvt) {
     if (this.cfg.dialect === 'pg') {
       const { ref } = this.db.dynamic
-      await sql`NOTIFY ${ref(this.getSchemaChannel(channel))}`.execute(this.db)
+      if (evt !== 'new_repo_event' && evt !== 'outgoing_repo_seq') {
+        throw new Error(`Invalid evt: ${evt}`)
+      }
+      await sql`NOTIFY ${ref(this.getSchemaChannel())}, ${sql.literal(
+        evt,
+      )}`.execute(this.db)
     } else {
-      const emitter = this.channels[channel]
+      const emitter = this.channels[evt]
       if (emitter) {
         emitter.emit('message')
       }
@@ -173,7 +172,7 @@ export class Database {
   }
 
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
-    let txMsgs: ChannelMsg[] = []
+    let txEvts: ChannelEvt[] = []
     const leakyTxPlugin = new LeakyTxPlugin()
     const { dbTxn, txRes } = await this.db
       .withPlugin(leakyTxPlugin)
@@ -188,11 +187,11 @@ export class Database {
             throw err
           })
           .finally(() => leakyTxPlugin.endTx())
-        txMsgs = dbTxn.txChannelMsgs
+        txEvts = dbTxn.txChannelEvts
         return { txRes, dbTxn }
       })
     dbTxn?.txEvt.emit('commit')
-    txMsgs.forEach((msg) => this.sendChannelMsg(msg))
+    txEvts.forEach((evt) => this.sendChannelEvt(evt))
     return txRes
   }
 
@@ -337,16 +336,17 @@ type ChannelEvents = {
 
 type ChannelEmitter = TypedEmitter<ChannelEvents>
 
-type TxnEvents = {
-  commit: () => void
+type Channels = {
+  outgoing_repo_seq: ChannelEmitter
+  new_repo_event: ChannelEmitter
 }
+
+type ChannelEvt = keyof Channels
 
 type TxnEmitter = TypedEmitter<TxnEvents>
 
-type ChannelMsg = 'repo_seq'
-
-type Channels = {
-  repo_seq: ChannelEmitter
+type TxnEvents = {
+  commit: () => void
 }
 
 class LeakyTxPlugin implements KyselyPlugin {

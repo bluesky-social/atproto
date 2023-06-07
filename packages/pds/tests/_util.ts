@@ -102,6 +102,7 @@ export const runTestServer = async (
     feedGenDid: 'did:example:feedGen',
     maxSubscriptionBuffer: 200,
     repoBackfillLimitMs: HOUR,
+    sequencerLeaderLockId: uniqueLockId(),
     ...params,
   })
 
@@ -155,6 +156,16 @@ export const runTestServer = async (
       await plcServer.destroy()
     },
   }
+}
+
+const usedLockIds = new Set()
+const uniqueLockId = () => {
+  let lockId: number
+  do {
+    lockId = 1000 + Math.ceil(1000 * Math.random())
+  } while (usedLockIds.has(lockId))
+  usedLockIds.add(lockId)
+  return lockId
 }
 
 export const adminAuth = () => {
