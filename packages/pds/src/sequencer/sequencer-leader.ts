@@ -38,18 +38,9 @@ export class SequencerLeader {
             .executeTakeFirst()
           this.lastSeq = res?.seq ?? 0
 
-          // const seqListener = () => {
-          //   if (this.polling) {
-          //     this.queued = true
-          //   } else {
-          //     this.polling = true
-          //     this.pollDb()
-          //   }
-          // }
           if (signal.aborted) {
             return
           }
-          // this.db.channels.new_repo_event.addListener('message', seqListener)
           await new Promise<void>((resolve, reject) => {
             const pollDb = async () => {
               if (this.destroyed) {
@@ -92,28 +83,6 @@ export class SequencerLeader {
       }
     }
   }
-
-  // async pollDb() {
-  //   if (this.destroyed) {
-  //     this.polling = false
-  //     this.queued = false
-  //     return
-  //   }
-
-  //   try {
-  //     await this.sequenceOutgoing()
-  //   } catch (err) {
-  //     log.error({ err }, 'sequencer leader failed to sequence batch')
-  //   } finally {
-  //     // check if we should continue polling
-  //     if (this.queued === false) {
-  //       this.polling = false
-  //     } else {
-  //       this.queued = false
-  //       this.pollDb()
-  //     }
-  //   }
-  // }
 
   async sequenceOutgoing() {
     const unsequenced = await this.getUnsequenced()
