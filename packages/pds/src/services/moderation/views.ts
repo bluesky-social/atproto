@@ -21,7 +21,7 @@ import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import { ModerationAction } from '../../db/tables/moderation'
 import { AccountService } from '../account'
 import { RecordService } from '../record'
-import { ModerationReportRow, ModerationReportRowWithHandle } from '.'
+import { ModerationReportRowWithHandle } from '.'
 
 export class ModerationViews {
   constructor(private db: Database, private messageDispatcher: MessageQueue) {}
@@ -119,11 +119,6 @@ export class ModerationViews {
         .selectFrom('moderation_report')
         .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
         .where('subjectDid', '=', repo.did)
-        .innerJoin(
-          'did_handle',
-          'did_handle.did',
-          'moderation_report.subjectDid',
-        )
         .orderBy('id', 'desc')
         .selectAll()
         .execute(),
@@ -362,11 +357,6 @@ export class ModerationViews {
       ? await this.db.db
           .selectFrom('moderation_report')
           .where('id', 'in', action.resolvedReportIds)
-          .innerJoin(
-            'did_handle',
-            'did_handle.did',
-            'moderation_report.subjectDid',
-          )
           .orderBy('id', 'desc')
           .selectAll()
           .execute()

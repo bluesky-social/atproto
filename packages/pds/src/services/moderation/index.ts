@@ -88,7 +88,7 @@ export class ModerationService {
   async getReport(id: number): Promise<ModerationReportRow | undefined> {
     return await this.db.db
       .selectFrom('moderation_report')
-      .selectAll('moderation_report')
+      .selectAll()
       .where('id', '=', id)
       .executeTakeFirst()
   }
