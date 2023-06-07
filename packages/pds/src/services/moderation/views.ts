@@ -18,18 +18,13 @@ import {
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
-import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
+import { ModerationAction } from '../../db/tables/moderation'
 import { AccountService } from '../account'
 import { RecordService } from '../record'
-import { ModerationReportRowWithSubjectRepo } from '.'
-import { ImageUriBuilder } from '../../image/uri'
+import { ModerationReportRow, ModerationReportRowWithHandle } from '.'
 
 export class ModerationViews {
-  constructor(
-    private db: Database,
-    private messageDispatcher: MessageQueue,
-    private imgUriBuilder: ImageUriBuilder,
-  ) {}
+  constructor(private db: Database, private messageDispatcher: MessageQueue) {}
 
   services = {
     account: AccountService.creator(),
@@ -124,8 +119,7 @@ export class ModerationViews {
         .selectFrom('moderation_report')
         .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
         .where('subjectDid', '=', repo.did)
-        .leftJoin('profile', 'profile.creator', 'moderation_report.subjectDid')
-        .leftJoin(
+        .innerJoin(
           'did_handle',
           'did_handle.did',
           'moderation_report.subjectDid',
@@ -245,8 +239,7 @@ export class ModerationViews {
         .selectFrom('moderation_report')
         .where('subjectType', '=', 'com.atproto.repo.strongRef')
         .where('subjectUri', '=', result.uri)
-        .leftJoin('profile', 'profile.creator', 'moderation_report.subjectDid')
-        .leftJoin(
+        .innerJoin(
           'did_handle',
           'did_handle.did',
           'moderation_report.subjectDid',
@@ -369,12 +362,7 @@ export class ModerationViews {
       ? await this.db.db
           .selectFrom('moderation_report')
           .where('id', 'in', action.resolvedReportIds)
-          .leftJoin(
-            'profile',
-            'profile.creator',
-            'moderation_report.subjectDid',
-          )
-          .leftJoin(
+          .innerJoin(
             'did_handle',
             'did_handle.did',
             'moderation_report.subjectDid',
@@ -446,21 +434,7 @@ export class ModerationViews {
               cid: res.subjectCid,
             },
       resolvedByActionIds: actionIdsByReportId[res.id] ?? [],
-      subjectRepo: {
-        handle: res.handle,
-        creator: res.creator,
-        avatar: res.avatarCid
-          ? this.imgUriBuilder.getCommonSignedUri('avatar', res.avatarCid)
-          : null,
-        uri: res.uri,
-        cid: res.cid,
-        banner: res.bannerCid
-          ? this.imgUriBuilder.getCommonSignedUri('banner', res.bannerCid)
-          : null,
-        description: res.description,
-        indexedAt: res.indexedAt,
-        displayName: res.displayName,
-      },
+      subjectRepoHandle: res.handle,
     }))
 
     return Array.isArray(result) ? views : views[0]
@@ -619,7 +593,7 @@ type RepoResult = DidHandle & RepoRoot
 
 type ActionResult = Selectable<ModerationAction>
 
-type ReportResult = ModerationReportRowWithSubjectRepo
+type ReportResult = ModerationReportRowWithHandle
 
 type RecordResult = {
   uri: string

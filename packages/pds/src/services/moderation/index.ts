@@ -11,8 +11,6 @@ import { ModerationViews } from './views'
 import SqlRepoStorage from '../../sql-repo-storage'
 import { ImageInvalidator } from '../../image/invalidator'
 import { ImageUriBuilder } from '../../image/uri'
-import { Profile } from '../../app-view/db/tables/profile'
-import { DidHandle } from '../../db/tables/did-handle'
 
 export class ModerationService {
   constructor(
@@ -39,11 +37,7 @@ export class ModerationService {
       )
   }
 
-  views = new ModerationViews(
-    this.db,
-    this.messageDispatcher,
-    this.imgUriBuilder,
-  )
+  views = new ModerationViews(this.db, this.messageDispatcher)
 
   services = {
     record: RecordService.creator(this.messageDispatcher),
@@ -91,14 +85,10 @@ export class ModerationService {
       .execute()
   }
 
-  async getReport(
-    id: number,
-  ): Promise<ModerationReportRowWithSubjectRepo | undefined> {
+  async getReport(id: number): Promise<ModerationReportRow | undefined> {
     return await this.db.db
       .selectFrom('moderation_report')
-      .leftJoin('did_handle', 'did_handle.did', 'moderation_report.subjectDid')
-      .leftJoin('profile', 'profile.creator', 'moderation_report.subjectDid')
-      .selectAll(['moderation_report', 'profile', 'did_handle'])
+      .selectAll('moderation_report')
       .where('id', '=', id)
       .executeTakeFirst()
   }
@@ -111,7 +101,7 @@ export class ModerationService {
     cursor?: string
     ignoreSubjects?: string[]
     reverse?: boolean
-  }): Promise<ModerationReportRowWithSubjectRepo[]> {
+  }): Promise<ModerationReportRowWithHandle[]> {
     const {
       subject,
       resolved,
@@ -180,17 +170,14 @@ export class ModerationService {
     }
 
     return await builder
-      .leftJoin('profile', 'profile.creator', 'moderation_report.subjectDid')
-      .leftJoin('did_handle', 'did_handle.did', 'moderation_report.subjectDid')
-      .selectAll(['moderation_report', 'profile', 'did_handle'])
+      .innerJoin('did_handle', 'did_handle.did', 'moderation_report.subjectDid')
+      .selectAll(['moderation_report', 'did_handle'])
       .orderBy('id', reverse ? 'asc' : 'desc')
       .limit(limit)
       .execute()
   }
 
-  async getReportOrThrow(
-    id: number,
-  ): Promise<ModerationReportRowWithSubjectRepo> {
+  async getReportOrThrow(id: number): Promise<ModerationReportRow> {
     const report = await this.getReport(id)
     if (!report) throw new InvalidRequestError('Report not found')
     return report
@@ -500,7 +487,7 @@ export class ModerationService {
     subject: { did: string } | { uri: AtUri; cid?: CID }
     reportedBy: string
     createdAt?: Date
-  }): Promise<ModerationReportRowWithSubjectRepo | undefined> {
+  }): Promise<ModerationReportRow> {
     const {
       reasonType,
       reason,
@@ -533,7 +520,7 @@ export class ModerationService {
       }
     }
 
-    const insertedReport = await this.db.db
+    const report = await this.db.db
       .insertInto('moderation_report')
       .values({
         reasonType,
@@ -542,17 +529,8 @@ export class ModerationService {
         reportedByDid: reportedBy,
         ...subjectInfo,
       })
-      .returning('id')
+      .returningAll()
       .executeTakeFirstOrThrow()
-
-    const report = await this.db.db
-      .selectFrom('moderation_report')
-      .where('id', '=', insertedReport.id)
-      .leftJoin('did_handle', 'did_handle.did', 'moderation_report.subjectDid')
-      .leftJoin('profile', 'profile.creator', 'moderation_report.subjectDid')
-      .selectAll(['moderation_report', 'profile', 'did_handle'])
-      .limit(1)
-      .executeTakeFirst()
 
     return report
   }
@@ -561,10 +539,8 @@ export class ModerationService {
 export type ModerationActionRow = Selectable<ModerationAction>
 
 export type ModerationReportRow = Selectable<ModerationReport>
-export type ModerationReportRowWithSubjectRepo = ModerationReportRow & {
-  [K in keyof Profile]: Profile[K] | null
-} & {
-  [K in keyof DidHandle]: DidHandle[K] | null
+export type ModerationReportRowWithHandle = ModerationReportRow & {
+  handle?: string
 }
 
 export type SubjectInfo =

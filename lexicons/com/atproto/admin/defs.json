@@ -125,13 +125,10 @@
           "ref": "com.atproto.moderation.defs#reasonType"
         },
         "reason": { "type": "string" },
+        "subjectRepoHandle": { "type": "string" },
         "subject": {
           "type": "union",
           "refs": ["#repoRef", "com.atproto.repo.strongRef"]
-        },
-        "subjectRepo": {
-          "type": "ref",
-          "ref": "#subjectRepoView"
         },
         "reportedBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" },
@@ -196,31 +193,6 @@
           "ref": "com.atproto.server.defs#inviteCode"
         },
         "invitesDisabled": { "type": "boolean" }
-      }
-    },
-    "subjectRepoView": {
-      "type": "object",
-      "nullable": [
-        "creator",
-        "handle",
-        "indexedAt",
-        "displayName",
-        "cid",
-        "banner",
-        "avatar",
-        "uri",
-        "description"
-      ],
-      "properties": {
-        "creator": { "type": "string", "format": "did" },
-        "handle": { "type": "string", "format": "handle" },
-        "displayName": { "type": "string" },
-        "description": { "type": "string" },
-        "banner": { "type": "string" },
-        "avatar": { "type": "string" },
-        "uri": { "type": "string" },
-        "cid": { "type": "string", "format": "cid" },
-        "indexedAt": { "type": "string", "format": "datetime" }
       }
     },
     "repoViewDetail": {
