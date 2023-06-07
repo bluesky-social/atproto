@@ -10,6 +10,7 @@ export class SequencerLeader {
   leader: Leader
 
   destroyed = false
+  running = false
   polling = false
   queued = false
   lastSeq: number
@@ -23,48 +24,42 @@ export class SequencerLeader {
     return this.lastSeq
   }
 
+  async getLastSeq(): Promise<number> {
+    const res = await this.db.db
+      .selectFrom('repo_seq')
+      .select('seq')
+      .where('seq', 'is not', null)
+      .orderBy('seq', 'desc')
+      .limit(1)
+      .executeTakeFirst()
+    return res?.seq ?? 0
+  }
+
   async run() {
     if (this.db.dialect === 'sqlite') return
 
     while (!this.destroyed) {
       try {
         const { ran } = await this.leader.run(async ({ signal }) => {
-          const res = await this.db.db
-            .selectFrom('repo_seq')
-            .select('seq')
-            .where('seq', 'is not', null)
-            .orderBy('seq', 'desc')
-            .limit(1)
-            .executeTakeFirst()
-          this.lastSeq = res?.seq ?? 0
-
+          this.running = true
+          this.lastSeq = await this.getLastSeq()
           if (signal.aborted) {
             return
           }
-          await new Promise<void>((resolve, reject) => {
-            const pollDb = async () => {
-              if (this.destroyed) {
-                this.polling = false
-                this.queued = false
-                return
-              }
 
+          await new Promise<void>((resolve, reject) => {
+            const doPoll = async () => {
               try {
-                await this.sequenceOutgoing()
-                if (this.queued === false) {
-                  this.polling = false
-                } else {
-                  this.queued = false
-                  pollDb()
-                }
+                await this.pollDb()
               } catch (err) {
                 reject(err)
               }
             }
-            this.db.channels.new_repo_event.addListener('message', pollDb)
+
+            this.db.channels.new_repo_event.addListener('message', doPoll)
 
             signal.addEventListener('abort', () => {
-              this.db.channels.new_repo_event.removeListener('message', pollDb)
+              this.db.channels.new_repo_event.removeListener('message', doPoll)
               resolve()
             })
           })
@@ -75,12 +70,29 @@ export class SequencerLeader {
           )
         }
       } catch (err) {
+        this.running = false
         log.error({ err }, 'sequence leader errored')
       } finally {
         if (!this.destroyed) {
           await wait(1000 + jitter(500))
         }
       }
+    }
+  }
+
+  async pollDb() {
+    if (this.destroyed || !this.running) {
+      this.polling = false
+      this.queued = false
+      return
+    }
+
+    await this.sequenceOutgoing()
+    if (this.queued === false) {
+      this.polling = false
+    } else {
+      this.queued = false
+      return this.pollDb()
     }
   }
 
