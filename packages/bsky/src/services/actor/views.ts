@@ -5,7 +5,7 @@ import {
   ProfileViewBasic,
 } from '../../lexicon/types/app/bsky/actor/defs'
 import Database from '../../db'
-import { countAll, noMatch } from '../../db/util'
+import { noMatch } from '../../db/util'
 import { Actor } from '../../db/tables/actor'
 import { ImageUriBuilder } from '../../image/uri'
 import { LabelService } from '../label'
@@ -39,6 +39,7 @@ export class ActorViews {
       .selectFrom('actor')
       .where('actor.did', 'in', dids)
       .leftJoin('profile', 'profile.creator', 'actor.did')
+      .leftJoin('profile_agg', 'profile_agg.did', 'actor.did')
       .select([
         'actor.did as did',
         'profile.uri as profileUri',
@@ -47,21 +48,9 @@ export class ActorViews {
         'profile.avatarCid as avatarCid',
         'profile.bannerCid as bannerCid',
         'profile.indexedAt as indexedAt',
-        this.db.db
-          .selectFrom('follow')
-          .whereRef('creator', '=', ref('actor.did'))
-          .select(countAll.as('count'))
-          .as('followsCount'),
-        this.db.db
-          .selectFrom('follow')
-          .whereRef('subjectDid', '=', ref('actor.did'))
-          .select(countAll.as('count'))
-          .as('followersCount'),
-        this.db.db
-          .selectFrom('post')
-          .whereRef('creator', '=', ref('actor.did'))
-          .select(countAll.as('count'))
-          .as('postsCount'),
+        'profile_agg.followsCount as followsCount',
+        'profile_agg.followersCount as followersCount',
+        'profile_agg.postsCount as postsCount',
         this.db.db
           .selectFrom('follow')
           .if(!viewer, (q) => q.where(noMatch))
