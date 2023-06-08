@@ -8,6 +8,39 @@ import { def } from '@atproto/repo'
 
 const PAGINATION_SIZE = 1000
 
+const run = async (ctx: AppContext, pdsDb: PdsDatabase) => {
+  await indexStreamCursor(ctx, pdsDb)
+  await indexAccounts(ctx, pdsDb)
+  await indexRecords(ctx, pdsDb)
+  await indexModerationActions(ctx, pdsDb)
+  await indexModerationActionSubjectBlobs(ctx, pdsDb)
+  await indexModerationReports(ctx, pdsDb)
+  await indexModerationReportResolution(ctx, pdsDb)
+}
+
+const indexStreamCursor = async (ctx: AppContext, pdsDb: PdsDatabase) => {
+  const lastSeq = await pdsDb.db
+    .selectFrom('repo_seq')
+    .select('seq')
+    .where('seq', 'is not', null)
+    .orderBy('seq', 'desc')
+    .limit(1)
+    .executeTakeFirst()
+
+  if (!ctx.cfg.repoProvider || !lastSeq) {
+    throw new Error('could not index stream')
+  }
+
+  await ctx.db.db
+    .insertInto('subscription')
+    .values({
+      service: ctx.cfg.repoProvider,
+      method: 'com.atproto.sync.subscribeRepos',
+      state: JSON.stringify({ cursor: lastSeq }),
+    })
+    .execute()
+}
+
 const indexAccounts = async (ctx: AppContext, pdsDb: PdsDatabase) => {
   // @should we copy over user_account.createdAt for indexedAt time?
   const now = new Date().toISOString()
