@@ -20,6 +20,7 @@ describe('blob resolver', () => {
     const sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     await network.processAll()
+    await network.bsky.ctx.backgroundQueue.processAll()
     fileDid = sc.dids.carol
     fileCid = sc.posts[fileDid][0].images[0].image.ref
     client = axios.create({

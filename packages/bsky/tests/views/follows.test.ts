@@ -22,6 +22,7 @@ describe('pds follow views', () => {
     sc = new SeedClient(pdsAgent)
     await followsSeed(sc)
     await network.processAll()
+    await network.bsky.ctx.backgroundQueue.processAll()
     alice = sc.dids.alice
   })
 

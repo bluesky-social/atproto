@@ -7,6 +7,7 @@ import { Services } from './services'
 import * as auth from './auth'
 import DidSqlCache from './did-cache'
 import { Labeler } from './labeler'
+import { BackgroundQueue } from './background'
 
 export class AppContext {
   constructor(
@@ -18,6 +19,7 @@ export class AppContext {
       idResolver: IdResolver
       didCache: DidSqlCache
       labeler: Labeler
+      backgroundQueue: BackgroundQueue
     },
   ) {}
 
@@ -59,6 +61,10 @@ export class AppContext {
 
   get labeler(): Labeler {
     return this.opts.labeler
+  }
+
+  get backgroundQueue(): BackgroundQueue {
+    return this.opts.backgroundQueue
   }
 }
 

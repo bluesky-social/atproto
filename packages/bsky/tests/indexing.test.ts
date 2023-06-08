@@ -31,6 +31,7 @@ describe('indexing', () => {
     // Data in tests is not processed from subscription
     await network.processAll()
     await network.bsky.sub.destroy()
+    await network.bsky.ctx.backgroundQueue.processAll()
   })
 
   afterAll(async () => {
@@ -200,6 +201,7 @@ describe('indexing', () => {
       await basicSeed(sc, false)
       await network.processAll()
       await network.bsky.sub.destroy()
+      await network.bsky.ctx.backgroundQueue.processAll()
     })
 
     it('preserves indexes when no record changes.', async () => {

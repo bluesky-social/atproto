@@ -3,7 +3,7 @@ import { AtUri } from '@atproto/uri'
 import { jsonStringToLex } from '@atproto/lexicon'
 import { dedupeStrs } from '@atproto/common'
 import Database from '../../db'
-import { countAll, noMatch, notSoftDeletedClause } from '../../db/util'
+import { noMatch, notSoftDeletedClause } from '../../db/util'
 import { ImageUriBuilder } from '../../image/uri'
 import { isView as isViewImages } from '../../lexicon/types/app/bsky/embed/images'
 import { isView as isViewExternal } from '../../lexicon/types/app/bsky/embed/external'
@@ -146,6 +146,7 @@ export class FeedService {
       .where('post.uri', 'in', postUris)
       .innerJoin('actor', 'actor.did', 'post.creator')
       .innerJoin('record', 'record.uri', 'post.uri')
+      .leftJoin('post_agg', 'post_agg.uri', 'post.uri')
       .where(notSoftDeletedClause(ref('actor'))) // Ensures post reply parent/roots get omitted from views when taken down
       .where(notSoftDeletedClause(ref('record')))
       .select([
@@ -154,21 +155,9 @@ export class FeedService {
         'post.creator as creator',
         'post.indexedAt as indexedAt',
         'record.json as recordJson',
-        db
-          .selectFrom('like')
-          .whereRef('subject', '=', ref('post.uri'))
-          .select(countAll.as('count'))
-          .as('likeCount'),
-        db
-          .selectFrom('repost')
-          .whereRef('subject', '=', ref('post.uri'))
-          .select(countAll.as('count'))
-          .as('repostCount'),
-        db
-          .selectFrom('post as reply')
-          .whereRef('reply.replyParent', '=', ref('post.uri'))
-          .select(countAll.as('count'))
-          .as('replyCount'),
+        'post_agg.likeCount as likeCount',
+        'post_agg.repostCount as repostCount',
+        'post_agg.replyCount as replyCount',
         db
           .selectFrom('repost')
           .if(!viewer, (q) => q.where(noMatch))
@@ -355,9 +344,9 @@ export class FeedService {
       author: author,
       record: jsonStringToLex(post.recordJson) as Record<string, unknown>,
       embed: embeds[uri],
-      replyCount: post.replyCount,
-      repostCount: post.repostCount,
-      likeCount: post.likeCount,
+      replyCount: post.replyCount ?? 0,
+      repostCount: post.repostCount ?? 0,
+      likeCount: post.likeCount ?? 0,
       indexedAt: post.indexedAt,
       viewer: post.viewer
         ? {
