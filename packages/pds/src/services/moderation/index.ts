@@ -132,9 +132,7 @@ export class ModerationService {
     }
 
     if (reporters?.length) {
-      builder = builder.where((qb) => {
-        return qb.where('reportedByDid', 'in', reporters)
-      })
+      builder = builder.where('reportedByDid', 'in', reporters)
     }
 
     if (resolved !== undefined) {
