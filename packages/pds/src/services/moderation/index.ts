@@ -1,4 +1,4 @@
-import { Selectable, Selection, sql } from 'kysely'
+import { Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { BlobStore } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
