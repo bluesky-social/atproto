@@ -19,6 +19,7 @@ import * as Like from './plugins/like'
 import * as Repost from './plugins/repost'
 import * as Follow from './plugins/follow'
 import * as Profile from './plugins/profile'
+import * as FeedGenerator from './plugins/feed-generator'
 import RecordProcessor from './processor'
 import { subLogger } from '../../logger'
 import { retryHttp } from '../../util/retry'
@@ -32,6 +33,7 @@ export class IndexingService {
     repost: Repost.PluginType
     follow: Follow.PluginType
     profile: Profile.PluginType
+    feedGenerator: FeedGenerator.PluginType
   }
 
   constructor(
@@ -46,6 +48,7 @@ export class IndexingService {
       repost: Repost.makePlugin(this.db, backgroundQueue),
       follow: Follow.makePlugin(this.db, backgroundQueue),
       profile: Profile.makePlugin(this.db, backgroundQueue),
+      feedGenerator: FeedGenerator.makePlugin(this.db, backgroundQueue),
     }
   }
 
