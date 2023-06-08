@@ -8,6 +8,8 @@ import * as repost from './tables/repost'
 import * as feedItem from './tables/feed-item'
 import * as follow from './tables/follow'
 import * as like from './tables/like'
+import * as list from './tables/list'
+import * as listItem from './tables/list-item'
 import * as subscription from './tables/subscription'
 import * as actor from './tables/actor'
 import * as actorSync from './tables/actor-sync'
@@ -26,6 +28,8 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   feedItem.PartialDB &
   follow.PartialDB &
   like.PartialDB &
+  list.PartialDB &
+  listItem.PartialDB &
   subscription.PartialDB &
   actor.PartialDB &
   actorSync.PartialDB &
