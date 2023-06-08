@@ -120,15 +120,19 @@ const indexRecords = async (ctx: AppContext, pdsDb: PdsDatabase) => {
     const page = await builder.execute()
 
     await Promise.all(
-      page.map((record) =>
-        indexingSrvc.indexRecord(
-          new AtUri(record.uri),
-          CID.parse(record.cid),
-          cborToLexRecord(record.content),
-          WriteOpAction.Create,
-          record.indexedAt,
-        ),
-      ),
+      page.map(async (record) => {
+        try {
+          await indexingSrvc.indexRecord(
+            new AtUri(record.uri),
+            CID.parse(record.cid),
+            cborToLexRecord(record.content),
+            WriteOpAction.Create,
+            record.indexedAt,
+          )
+        } catch (err) {
+          console.error(`failed to index record: ${record.uri}, ${record.cid}`)
+        }
+      }),
     )
     lastDid = page.at(-1)?.did
     lastCid = page.at(-1)?.cid
