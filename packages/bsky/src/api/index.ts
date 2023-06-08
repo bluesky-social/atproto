@@ -14,6 +14,8 @@ import getList from './app/bsky/graph/getList'
 import getLists from './app/bsky/graph/getLists'
 import getListMutes from './app/bsky/graph/getListMutes'
 import getMutes from './app/bsky/graph/getMutes'
+import muteActor from './app/bsky/graph/muteActor'
+import unmuteActor from './app/bsky/graph/unmuteActor'
 import muteActorList from './app/bsky/graph/muteActorList'
 import unmuteActorList from './app/bsky/graph/unmuteActorList'
 import searchActors from './app/bsky/actor/searchActors'
@@ -54,6 +56,8 @@ export default function (server: Server, ctx: AppContext) {
   getLists(server, ctx)
   getListMutes(server, ctx)
   getMutes(server, ctx)
+  muteActor(server, ctx)
+  unmuteActor(server, ctx)
   muteActorList(server, ctx)
   unmuteActorList(server, ctx)
   searchActors(server, ctx)
