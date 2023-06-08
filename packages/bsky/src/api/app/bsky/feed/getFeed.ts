@@ -21,7 +21,7 @@ import { AlgoResponse } from '../../../../feed-gen/types'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeed({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifierAnyAudience,
     handler: async ({ params, auth, req }) => {
       const { feed } = params
       const viewer = auth.credentials.did
@@ -61,7 +61,7 @@ export default function (server: Server, ctx: AppContext) {
 async function skeletonFromFeedGen(
   ctx: AppContext,
   params: GetFeedParams,
-  requester: string,
+  viewer: string,
   authorization?: string,
 ): Promise<AlgoResponse> {
   const { feed } = params

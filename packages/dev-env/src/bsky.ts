@@ -45,6 +45,7 @@ export class TestBsky {
       adminPassword: 'admin-pass',
       labelerDid: 'did:example:labeler',
       labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
+      feedGenDid: 'did:example:feedGen',
     })
 
     const db = bsky.Database.postgres({
@@ -64,7 +65,7 @@ export class TestBsky {
     }
     await migrationDb.close()
 
-    const server = bsky.BskyAppView.create({ db, config })
+    const server = bsky.BskyAppView.create({ db, config, algos: cfg.algos })
     await server.start()
 
     return new TestBsky(url, port, server)

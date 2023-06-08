@@ -54,11 +54,17 @@ export class AppContext {
   }
 
   get authVerifier() {
-    return auth.authVerifier(this.cfg.serverDid, this.idResolver)
+    return auth.authVerifier(this.idResolver, { aud: this.cfg.serverDid })
+  }
+
+  get authVerifierAnyAudience() {
+    return auth.authVerifier(this.idResolver, { aud: null })
   }
 
   get authOptionalVerifier() {
-    return auth.authOptionalVerifier(this.cfg.serverDid, this.idResolver)
+    return auth.authOptionalVerifier(this.idResolver, {
+      aud: this.cfg.serverDid,
+    })
   }
 
   get labeler(): Labeler {

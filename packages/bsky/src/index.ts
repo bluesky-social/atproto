@@ -26,6 +26,7 @@ import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
 
 export type { ServerConfigValues } from './config'
+export type { MountedAlgos } from './feed-gen/types'
 export { ServerConfig } from './config'
 export { Database } from './db'
 export { ViewMaintainer } from './db/views'

@@ -75,10 +75,10 @@ export class TestNetwork extends TestNetworkNoAppView {
     throw new Error(`Sequence was not processed within ${timeout}ms`)
   }
 
-  async serviceHeaders(did: string) {
+  async serviceHeaders(did: string, aud?: string) {
     const jwt = await createServiceJwt({
       iss: did,
-      aud: this.bsky.ctx.cfg.serverDid,
+      aud: aud ?? this.bsky.ctx.cfg.serverDid,
       keypair: this.pds.ctx.repoSigningKey,
     })
     return { authorization: `Bearer ${jwt}` }
