@@ -170,7 +170,7 @@ export class ModerationService {
     }
 
     return await builder
-      .innerJoin('did_handle', 'did_handle.did', 'moderation_report.subjectDid')
+      .leftJoin('did_handle', 'did_handle.did', 'moderation_report.subjectDid')
       .selectAll(['moderation_report', 'did_handle'])
       .orderBy('id', reverse ? 'asc' : 'desc')
       .limit(limit)
@@ -540,7 +540,7 @@ export type ModerationActionRow = Selectable<ModerationAction>
 
 export type ModerationReportRow = Selectable<ModerationReport>
 export type ModerationReportRowWithHandle = ModerationReportRow & {
-  handle?: string
+  handle?: string | null
 }
 
 export type SubjectInfo =

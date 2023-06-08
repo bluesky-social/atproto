@@ -234,7 +234,7 @@ export class ModerationViews {
         .selectFrom('moderation_report')
         .where('subjectType', '=', 'com.atproto.repo.strongRef')
         .where('subjectUri', '=', result.uri)
-        .innerJoin(
+        .leftJoin(
           'did_handle',
           'did_handle.did',
           'moderation_report.subjectDid',
@@ -406,26 +406,33 @@ export class ModerationViews {
       return acc
     }, {} as Record<string, number[]>)
 
-    const views: ReportView[] = results.map((res) => ({
-      id: res.id,
-      createdAt: res.createdAt,
-      reasonType: res.reasonType,
-      reason: res.reason ?? undefined,
-      reportedBy: res.reportedByDid,
-      subject:
-        res.subjectType === 'com.atproto.admin.defs#repoRef'
-          ? {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: res.subjectDid,
-            }
-          : {
-              $type: 'com.atproto.repo.strongRef',
-              uri: res.subjectUri,
-              cid: res.subjectCid,
-            },
-      resolvedByActionIds: actionIdsByReportId[res.id] ?? [],
-      subjectRepoHandle: res.handle,
-    }))
+    const views: ReportView[] = results.map((res) => {
+      const decoratedView: ReportView = {
+        id: res.id,
+        createdAt: res.createdAt,
+        reasonType: res.reasonType,
+        reason: res.reason ?? undefined,
+        reportedBy: res.reportedByDid,
+        subject:
+          res.subjectType === 'com.atproto.admin.defs#repoRef'
+            ? {
+                $type: 'com.atproto.admin.defs#repoRef',
+                did: res.subjectDid,
+              }
+            : {
+                $type: 'com.atproto.repo.strongRef',
+                uri: res.subjectUri,
+                cid: res.subjectCid,
+              },
+        resolvedByActionIds: actionIdsByReportId[res.id] ?? [],
+      }
+
+      if (res.handle) {
+        decoratedView.subjectRepoHandle = res.handle
+      }
+
+      return decoratedView
+    })
 
     return Array.isArray(result) ? views : views[0]
   }
