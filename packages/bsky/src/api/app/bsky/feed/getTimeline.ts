@@ -25,6 +25,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const feedService = ctx.services.feed(ctx.db)
       const labelService = ctx.services.label(ctx.db)
+      const graphService = ctx.services.graph(ctx.db)
 
       const followingIdsSubquery = db
         .selectFrom('follow')
@@ -37,13 +38,19 @@ export default function (server: Server, ctx: AppContext) {
       )
       const sortFrom = keyset.unpack(cursor)?.primary
 
-      // @NOTE mutes applied on pds
       let feedItemsQb = feedService
         .selectFeedItemQb()
         .where((qb) =>
           qb
             .where('originatorDid', '=', requester)
             .orWhere('originatorDid', 'in', followingIdsSubquery),
+        )
+        .where((qb) =>
+          // Hide posts and reposts of or by muted actors
+          graphService.whereNotMuted(qb, requester, [
+            ref('post.creator'),
+            ref('originatorDid'),
+          ]),
         )
         .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom))
 

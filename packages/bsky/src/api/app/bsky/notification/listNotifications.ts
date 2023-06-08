@@ -12,6 +12,8 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const { seenAt } = params
 
+      const graphService = ctx.services.graph(ctx.db)
+
       const { ref } = ctx.db.db.dynamic
       let notifBuilder = ctx.db.db
         .selectFrom('notification as notif')
@@ -20,6 +22,9 @@ export default function (server: Server, ctx: AppContext) {
         .where(notSoftDeletedClause(ref('record')))
         .where(notSoftDeletedClause(ref('author')))
         .where('notif.did', '=', requester)
+        .where((qb) =>
+          graphService.whereNotMuted(qb, requester, [ref('notif.author')]),
+        )
         .where((clause) =>
           clause
             .where('reasonSubject', 'is', null)
