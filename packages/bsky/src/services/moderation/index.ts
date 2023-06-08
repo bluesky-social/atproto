@@ -83,7 +83,7 @@ export class ModerationService {
     cursor?: string
     ignoreSubjects?: string[]
     reverse?: boolean
-  }): Promise<ModerationReportRow[]> {
+  }): Promise<ModerationReportRowWithHandle[]> {
     const {
       subject,
       resolved,
@@ -149,7 +149,8 @@ export class ModerationService {
       builder = builder.where('id', reverse ? '>' : '<', cursorNumeric)
     }
     return await builder
-      .selectAll()
+      .leftJoin('actor', 'actor.did', 'moderation_report.subjectDid')
+      .selectAll(['moderation_report', 'actor'])
       .orderBy('id', reverse ? 'asc' : 'desc')
       .limit(limit)
       .execute()
@@ -476,6 +477,9 @@ export class ModerationService {
 export type ModerationActionRow = Selectable<ModerationAction>
 
 export type ModerationReportRow = Selectable<ModerationReport>
+export type ModerationReportRowWithHandle = ModerationReportRow & {
+  handle?: string | null
+}
 
 export type SubjectInfo =
   | {

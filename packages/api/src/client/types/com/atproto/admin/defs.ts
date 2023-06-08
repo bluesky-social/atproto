@@ -129,6 +129,7 @@ export interface ReportView {
   id: number
   reasonType: ComAtprotoModerationDefs.ReasonType
   reason?: string
+  subjectRepoHandle?: string
   subject:
     | RepoRef
     | ComAtprotoRepoStrongRef.Main
