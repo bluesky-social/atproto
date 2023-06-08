@@ -1,0 +1,55 @@
+import { Server } from '../../../../lexicon'
+import { paginate, TimeCidKeyset } from '../../../../db/pagination'
+import AppContext from '../../../../context'
+import { notSoftDeletedClause } from '../../../../db/util'
+
+export default function (server: Server, ctx: AppContext) {
+  server.app.bsky.graph.getMutes({
+    auth: ctx.authVerifier,
+    handler: async ({ params, auth }) => {
+      const { limit, cursor } = params
+      const requester = auth.credentials.did
+      const { services, db } = ctx
+      const { ref } = ctx.db.db.dynamic
+
+      let mutesReq = ctx.db.db
+        .selectFrom('mute')
+        .innerJoin('actor', 'actor.did', 'mute.subjectDid')
+        .where(notSoftDeletedClause(ref('actor')))
+        .where('mute.mutedByDid', '=', requester)
+        .selectAll('actor')
+        .select('mute.createdAt as createdAt')
+
+      const keyset = new CreatedAtDidKeyset(
+        ref('mute.createdAt'),
+        ref('mute.subjectDid'),
+      )
+      mutesReq = paginate(mutesReq, {
+        limit,
+        cursor,
+        keyset,
+      })
+
+      const mutesRes = await mutesReq.execute()
+
+      const actorService = services.actor(db)
+
+      return {
+        encoding: 'application/json',
+        body: {
+          cursor: keyset.packFromResult(mutesRes),
+          mutes: await actorService.views.profile(mutesRes, requester),
+        },
+      }
+    },
+  })
+}
+
+export class CreatedAtDidKeyset extends TimeCidKeyset<{
+  createdAt: string
+  did: string // dids are treated identically to cids in TimeCidKeyset
+}> {
+  labelResult(result: { createdAt: string; did: string }) {
+    return { primary: result.createdAt, secondary: result.did }
+  }
+}
