@@ -5,6 +5,7 @@ import { CID } from 'multiformats/cid'
 import { WriteOpAction, cborToLexRecord } from '@atproto/repo'
 import { cborDecode, chunkArray } from '@atproto/common'
 import { def } from '@atproto/repo'
+import { sql } from 'kysely'
 
 const PAGINATION_SIZE = 1000
 
@@ -94,6 +95,7 @@ const indexRecords = async (ctx: AppContext, pdsDb: PdsDatabase) => {
 
   let lastDid: string | undefined
   let lastCid: string | undefined
+  const ref = pdsDb.db.dynamic.ref
   /* eslint-disable */
   while (true) {
     let builder = pdsDb.db
@@ -109,13 +111,11 @@ const indexRecords = async (ctx: AppContext, pdsDb: PdsDatabase) => {
       .limit(PAGINATION_SIZE)
 
     if (lastDid && lastCid) {
-      builder = builder
-        .where('record.did', '>', lastDid)
-        .orWhere((clause) =>
-          clause
-            .where('record.did', '=', lastDid ?? '')
-            .where('record.cid', '>', lastCid ?? ''),
-        )
+      builder = builder.where(
+        sql`((${ref('record.did')}, ${ref(
+          'record.cid',
+        )}) > (${lastDid}, ${lastCid}))`,
+      )
     }
     const page = await builder.execute()
 
