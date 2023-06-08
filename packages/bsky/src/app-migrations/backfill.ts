@@ -3,10 +3,16 @@ import AppContext from '../context'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import { WriteOpAction, cborToLexRecord } from '@atproto/repo'
+import { cborDecode } from '@atproto/common'
+import { def } from '@atproto/repo'
+
+const PAGINATION_SIZE = 1000
 
 const indexAccounts = async (ctx: AppContext, pdsDb: PdsDatabase) => {
   // @should we copy over user_account.createdAt for indexedAt time?
   const now = new Date().toISOString()
+
+  // @TODO actor_sync table
 
   let lastDid: string | undefined
   /* eslint-disable */
@@ -14,22 +20,39 @@ const indexAccounts = async (ctx: AppContext, pdsDb: PdsDatabase) => {
     let builder = pdsDb.db
       .selectFrom('did_handle')
       .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .innerJoin('ipld_block', (join) =>
+        join
+          .onRef('ipld_block.creator', '=', 'repo_root.did')
+          .onRef('ipld_block.cid', '=', 'repo_root.root'),
+      )
       .selectAll()
       .orderBy('did_handle.did', 'asc')
-      .limit(100)
+      .limit(PAGINATION_SIZE)
     if (lastDid) {
       builder = builder.where('did', '>', lastDid)
     }
     const page = await builder.execute()
 
-    const vals = page.map((user) => ({
+    const actorVals = page.map((user) => ({
       did: user.did,
       handle: user.handle,
       indexedAt: now,
       takedownId: user.takedownId,
     }))
+    await ctx.db.db.insertInto('actor').values(actorVals).execute()
 
-    await ctx.db.db.insertInto('actor').values(vals).execute()
+    const actorSyncVals = page.map((user) => {
+      const root = def.commit.schema.parse(cborDecode(user.content))
+      return {
+        did: user.did,
+        commitCid: user.cid,
+        commitDataCid: root.data.toString(),
+        rebaseCount: 0,
+        tooBigCount: 0,
+      }
+    })
+    await ctx.db.db.insertInto('actor_sync').values(actorSyncVals).execute()
+
     lastDid = page.at(-1)?.did
     if (!lastDid) break
   }
@@ -52,7 +75,7 @@ const indexRecords = async (ctx: AppContext, pdsDb: PdsDatabase) => {
       .selectAll()
       .orderBy('record.did', 'asc')
       .orderBy('record.cid', 'asc')
-      .limit(100)
+      .limit(PAGINATION_SIZE)
 
     if (lastDid && lastCid) {
       builder = builder
