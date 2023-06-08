@@ -12,6 +12,8 @@ import getFollowers from './app/bsky/graph/getFollowers'
 import getFollows from './app/bsky/graph/getFollows'
 import getList from './app/bsky/graph/getList'
 import getLists from './app/bsky/graph/getLists'
+import muteActorList from './app/bsky/graph/muteActorList'
+import unmuteActorList from './app/bsky/graph/unmuteActorList'
 import searchActors from './app/bsky/actor/searchActors'
 import searchActorsTypeahead from './app/bsky/actor/searchActorsTypeahead'
 import getSuggestions from './app/bsky/actor/getSuggestions'
@@ -49,6 +51,8 @@ export default function (server: Server, ctx: AppContext) {
   getFollows(server, ctx)
   getList(server, ctx)
   getLists(server, ctx)
+  muteActorList(server, ctx)
+  unmuteActorList(server, ctx)
   searchActors(server, ctx)
   searchActorsTypeahead(server, ctx)
   getSuggestions(server, ctx)

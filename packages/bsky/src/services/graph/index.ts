@@ -11,6 +11,32 @@ export class GraphService {
     return (db: Database) => new GraphService(db, imgUriBuilder)
   }
 
+  async muteActorList(info: {
+    list: string
+    mutedByDid: string
+    createdAt?: Date
+  }) {
+    const { list, mutedByDid, createdAt = new Date() } = info
+    await this.db.db
+      .insertInto('list_mute')
+      .values({
+        listUri: list,
+        mutedByDid,
+        createdAt: createdAt.toISOString(),
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+  }
+
+  async unmuteActorList(info: { list: string; mutedByDid: string }) {
+    const { list, mutedByDid } = info
+    await this.db.db
+      .deleteFrom('list_mute')
+      .where('listUri', '=', list)
+      .where('mutedByDid', '=', mutedByDid)
+      .execute()
+  }
+
   getListsQb(viewer: string | null) {
     const { ref } = this.db.db.dynamic
     return this.db.db
