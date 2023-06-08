@@ -16,6 +16,7 @@ Array [
     "viewer": Object {
       "followedBy": "record(1)",
       "following": "record(0)",
+      "muted": false,
     },
   },
   Object {
@@ -29,7 +30,9 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "postsCount": 3,
-    "viewer": Object {},
+    "viewer": Object {
+      "muted": false,
+    },
   },
   Object {
     "did": "user(4)",
@@ -40,6 +43,7 @@ Array [
     "postsCount": 2,
     "viewer": Object {
       "following": "record(2)",
+      "muted": false,
     },
   },
   Object {
@@ -51,6 +55,7 @@ Array [
     "postsCount": 2,
     "viewer": Object {
       "followedBy": "record(3)",
+      "muted": false,
     },
   },
 ]
@@ -71,6 +76,7 @@ Object {
   "viewer": Object {
     "followedBy": "record(1)",
     "following": "record(0)",
+    "muted": false,
   },
 }
 `;
@@ -85,6 +91,7 @@ Object {
   "postsCount": 2,
   "viewer": Object {
     "followedBy": "record(0)",
+    "muted": false,
   },
 }
 `;
@@ -101,7 +108,9 @@ Object {
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "labels": Array [],
   "postsCount": 4,
-  "viewer": Object {},
+  "viewer": Object {
+    "muted": false,
+  },
 }
 `;
 
@@ -118,6 +127,8 @@ Object {
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "labels": Array [],
   "postsCount": 4,
-  "viewer": Object {},
+  "viewer": Object {
+    "muted": false,
+  },
 }
 `;
