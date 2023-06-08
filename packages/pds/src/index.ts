@@ -30,7 +30,7 @@ import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import AppContext from './context'
-import Sequencer from './sequencer'
+import { Sequencer, SequencerLeader } from './sequencer'
 import {
   ImageInvalidator,
   ImageProcessingServerInvalidator,
@@ -61,6 +61,7 @@ export class PDS {
     ctx: AppContext
     app: express.Application
     appViewIndexer: AppViewIndexer
+    sequencerLeader: SequencerLeader
   }) {
     this.ctx = opts.ctx
     this.app = opts.app
@@ -100,6 +101,10 @@ export class PDS {
 
     const messageDispatcher = new MessageDispatcher()
     const sequencer = new Sequencer(db)
+    const sequencerLeader = new SequencerLeader(
+      db,
+      config.sequencerLeaderLockId,
+    )
 
     const mailTransport =
       config.emailSmtpUrl !== undefined
@@ -184,6 +189,7 @@ export class PDS {
       auth,
       messageDispatcher,
       sequencer,
+      sequencerLeader,
       labeler,
       services,
       mailer,
@@ -219,6 +225,7 @@ export class PDS {
       ctx,
       app,
       appViewIndexer,
+      sequencerLeader,
     })
   }
 
@@ -245,6 +252,7 @@ export class PDS {
       }, 10000)
     }
     this.appViewIndexer.start()
+    this.ctx.sequencerLeader.run()
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()
     const server = this.app.listen(this.ctx.cfg.port)
@@ -257,6 +265,7 @@ export class PDS {
 
   async destroy(): Promise<void> {
     this.appViewIndexer.destroy()
+    await this.ctx.sequencerLeader.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()

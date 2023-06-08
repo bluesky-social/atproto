@@ -52,6 +52,7 @@ export interface ServerConfigValues {
 
   maxSubscriptionBuffer: number
   repoBackfillLimitMs: number
+  sequencerLeaderLockId?: number
 
   appViewRepoProvider?: string
 
@@ -160,6 +161,11 @@ export class ServerConfig {
       DAY,
     )
 
+    const sequencerLeaderLockId = parseIntWithFallback(
+      process.env.SEQUENCER_LEADER_LOCK_ID,
+      undefined,
+    )
+
     // E.g. ws://abc.com:4000
     const appViewRepoProvider = nonemptyString(
       process.env.APP_VIEW_REPO_PROVIDER,
@@ -207,6 +213,7 @@ export class ServerConfig {
       feedGenDid,
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
+      sequencerLeaderLockId,
       appViewRepoProvider,
       bskyAppViewEndpoint,
       bskyAppViewDid,
@@ -390,6 +397,10 @@ export class ServerConfig {
 
   get repoBackfillLimitMs() {
     return this.cfg.repoBackfillLimitMs
+  }
+
+  get sequencerLeaderLockId() {
+    return this.cfg.sequencerLeaderLockId
   }
 
   get appViewRepoProvider() {

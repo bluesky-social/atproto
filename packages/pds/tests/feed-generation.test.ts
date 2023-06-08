@@ -26,6 +26,7 @@ describe('feed generation', () => {
   let feedUriAllRef: RecordRef
   let feedUriEven: string
   let feedUriOdd: string // Unsupported by feed gen
+  let feedUriBadPagination: string
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -37,9 +38,15 @@ describe('feed generation', () => {
     await network.pds.ctx.backgroundQueue.processAll()
     alice = sc.dids.alice
     const allUri = AtUri.make(alice, 'app.bsky.feed.generator', 'all')
+    const feedUriBadPagination = AtUri.make(
+      alice,
+      'app.bsky.feed.generator',
+      'bad-pagination',
+    )
     const evenUri = AtUri.make(alice, 'app.bsky.feed.generator', 'even')
     gen = await network.createFeedGen({
       [allUri.toString()]: feedGenHandler('all'),
+      [feedUriBadPagination.toString()]: feedGenHandler('bad-pagination'),
       [evenUri.toString()]: feedGenHandler('even'),
     })
   })
@@ -85,10 +92,22 @@ describe('feed generation', () => {
       },
       sc.getHeaders(alice),
     )
+    const badPagination = await agent.api.app.bsky.feed.generator.create(
+      { repo: alice, rkey: 'bad-pagination' },
+      {
+        did: gen.did,
+        displayName: 'Bad Pagination',
+        description:
+          'Provides all feed candidates, blindly ignoring pagination limit',
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
     feedUriAll = all.uri
     feedUriAllRef = new RecordRef(all.uri, all.cid)
     feedUriEven = even.uri
     feedUriOdd = odd.uri
+    feedUriBadPagination = badPagination.uri
   })
 
   it('feed gen records can be updated', async () => {
@@ -124,10 +143,11 @@ describe('feed generation', () => {
 
     const paginatedAll: GeneratorView[] = results(await paginateAll(paginator))
 
-    expect(paginatedAll.length).toEqual(3)
+    expect(paginatedAll.length).toEqual(4)
     expect(paginatedAll[0].uri).toEqual(feedUriOdd)
-    expect(paginatedAll[1].uri).toEqual(feedUriEven)
-    expect(paginatedAll[2].uri).toEqual(feedUriAll)
+    expect(paginatedAll[1].uri).toEqual(feedUriBadPagination)
+    expect(paginatedAll[2].uri).toEqual(feedUriEven)
+    expect(paginatedAll[3].uri).toEqual(feedUriAll)
     expect(forSnapshot(paginatedAll)).toMatchSnapshot()
   })
 
@@ -227,7 +247,7 @@ describe('feed generation', () => {
           {},
           { headers: sc.getHeaders(sc.dids.bob) },
         )
-      expect(resEven.data.feeds.map((f) => f.likeCount)).toEqual([2, 0, 0])
+      expect(resEven.data.feeds.map((f) => f.likeCount)).toEqual([2, 0, 0, 0])
     })
   })
 
@@ -266,6 +286,21 @@ describe('feed generation', () => {
         sc.posts[sc.dids.dan][1].ref.uriStr,
       ])
       expect(forSnapshot(paginatedAll)).toMatchSnapshot()
+    })
+
+    it('paginates, handling feed not respecting limit.', async () => {
+      const res = await agent.api.app.bsky.feed.getFeed(
+        { feed: feedUriBadPagination, limit: 3 },
+        { headers: sc.getHeaders(alice) },
+      )
+      // refused to respect pagination limit, so it got cut short by appview but the cursor remains.
+      expect(res.data.feed.length).toBeLessThanOrEqual(3)
+      expect(parseInt(res.data.cursor || '', 10)).toBeGreaterThanOrEqual(3)
+      expect(res.data.feed.map((item) => item.post.uri)).toEqual([
+        sc.posts[sc.dids.alice][0].ref.uriStr,
+        sc.posts[sc.dids.bob][0].ref.uriStr,
+        sc.posts[sc.dids.carol][0].ref.uriStr,
+      ])
     })
 
     it('fails on unknown feed.', async () => {
@@ -315,7 +350,7 @@ describe('feed generation', () => {
   })
 
   const feedGenHandler =
-    (feedName: 'even' | 'all'): SkeletonHandler =>
+    (feedName: 'even' | 'all' | 'bad-pagination'): SkeletonHandler =>
     async ({ req, params }) => {
       const { limit, cursor } = params
       const candidates: SkeletonFeedPost[] = [
@@ -345,7 +380,10 @@ describe('feed generation', () => {
       const fullFeed = candidates.filter((_, i) =>
         feedName === 'even' ? i % 2 === 0 : true,
       )
-      const feedResults = fullFeed.slice(offset, offset + limit)
+      const feedResults =
+        feedName === 'bad-pagination'
+          ? fullFeed.slice(offset) // does not respect limit
+          : fullFeed.slice(offset, offset + limit)
       const lastResult = feedResults.at(-1)
       return {
         encoding: 'application/json',

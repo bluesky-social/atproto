@@ -1,7 +1,6 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { getReasonType, getSubject } from './util'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
@@ -19,10 +18,6 @@ export default function (server: Server, ctx: AppContext) {
         subject: getSubject(subject),
         reportedBy: requester,
       })
-
-      if (!report) {
-        throw new InvalidRequestError('Error creating report')
-      }
 
       return {
         encoding: 'application/json',
