@@ -104,6 +104,7 @@ describe('bsky views with mutes from mute lists', () => {
 
   it('does not show reposted content from a muted account in author feed', async () => {
     await sc.repost(alice, sc.posts[carol][0].ref)
+    await network.processAll()
 
     const res = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
