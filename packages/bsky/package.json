@@ -33,8 +33,8 @@
     "@atproto/api": "*",
     "@atproto/common": "*",
     "@atproto/crypto": "*",
-    "@atproto/identity": "*",
     "@atproto/identifier": "*",
+    "@atproto/identity": "*",
     "@atproto/lexicon": "*",
     "@atproto/repo": "*",
     "@atproto/uri": "*",
@@ -53,6 +53,7 @@
     "pino": "^8.6.1",
     "pino-http": "^8.2.1",
     "sharp": "^0.31.2",
+    "typed-emitter": "^2.1.0",
     "uint8arrays": "3.0.0"
   },
   "devDependencies": {

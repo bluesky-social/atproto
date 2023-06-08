@@ -11,6 +11,7 @@ import { TestNetwork } from '@atproto/dev-env'
 import { IdResolver } from '@atproto/identity'
 import { SeedClient } from '../seeds/client'
 import usersSeed from '../seeds/users'
+import { BackgroundQueue } from '../../src/background'
 
 describe('labeler', () => {
   let network: TestNetwork
@@ -180,9 +181,10 @@ class TestLabeler extends Labeler {
     db: Database
     idResolver: IdResolver
     cfg: ServerConfig
+    backgroundQueue: BackgroundQueue
   }) {
-    const { db, cfg, idResolver } = opts
-    super({ db, cfg, idResolver })
+    const { db, cfg, idResolver, backgroundQueue } = opts
+    super({ db, cfg, idResolver, backgroundQueue })
     this.keywords = cfg.labelerKeywords
   }
 

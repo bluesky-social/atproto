@@ -6,6 +6,9 @@ import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { toSimplifiedISOSafe } from '../util'
+import Database from '../../../db'
+import { countAll, excluded } from '../../../db/util'
+import { BackgroundQueue } from '../../../background'
 
 const lexId = lex.ids.AppBskyFeedRepost
 type IndexedRepost = Selectable<DatabaseSchemaType['repost']>
@@ -106,16 +109,38 @@ const notifsForDelete = (
   return { notifs: [], toDelete }
 }
 
+const updateAggregates = async (db: DatabaseSchema, repost: IndexedRepost) => {
+  const repostCountQb = db
+    .insertInto('post_agg')
+    .values({
+      uri: repost.subject,
+      repostCount: db
+        .selectFrom('repost')
+        .where('repost.subject', '=', repost.subject)
+        .select(countAll.as('count')),
+    })
+    .onConflict((oc) =>
+      oc
+        .column('uri')
+        .doUpdateSet({ repostCount: excluded(db, 'repostCount') }),
+    )
+  await repostCountQb.execute()
+}
+
 export type PluginType = RecordProcessor<Repost.Record, IndexedRepost>
 
-export const makePlugin = (db: DatabaseSchema): PluginType => {
-  return new RecordProcessor(db, {
+export const makePlugin = (
+  db: Database,
+  backgroundQueue: BackgroundQueue,
+): PluginType => {
+  return new RecordProcessor(db, backgroundQueue, {
     lexId,
     insertFn,
     findDuplicate,
     deleteFn,
     notifsForInsert,
     notifsForDelete,
+    updateAggregates,
   })
 }
 

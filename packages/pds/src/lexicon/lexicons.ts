@@ -228,6 +228,9 @@ export const schemaDict = {
           reason: {
             type: 'string',
           },
+          subjectRepoHandle: {
+            type: 'string',
+          },
           subject: {
             type: 'union',
             refs: [

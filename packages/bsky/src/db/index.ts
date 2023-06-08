@@ -1,4 +1,5 @@
 import assert from 'assert'
+import EventEmitter from 'events'
 import {
   Kysely,
   PostgresDialect,
@@ -11,12 +12,14 @@ import {
   UnknownRow,
 } from 'kysely'
 import { Pool as PgPool, types as pgTypes } from 'pg'
+import TypedEmitter from 'typed-emitter'
 import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
 
 export class Database {
   migrator: Migrator
+  txEvt = new EventEmitter() as TxnEmitter
   destroyed = false
 
   constructor(public db: DatabaseSchema, public cfg: PgConfig) {
@@ -57,7 +60,7 @@ export class Database {
 
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
     const leakyTxPlugin = new LeakyTxPlugin()
-    const res = await this.db
+    const { dbTxn, txRes } = await this.db
       .withPlugin(leakyTxPlugin)
       .transaction()
       .execute(async (txn) => {
@@ -66,13 +69,19 @@ export class Database {
           .catch(async (err) => {
             leakyTxPlugin.endTx()
             // ensure that all in-flight queries are flushed & the connection is open
-            await dbTxn.db.getExecutor().provideConnection(async () => {})
+            await dbTxn.db.getExecutor().provideConnection(noopAsync)
             throw err
           })
           .finally(() => leakyTxPlugin.endTx())
-        return txRes
+        return { dbTxn, txRes }
       })
-    return res
+    dbTxn?.txEvt.emit('commit')
+    return txRes
+  }
+
+  onCommit(fn: () => void) {
+    this.assertTransaction()
+    this.txEvt.once('commit', fn)
   }
 
   get schema(): string | undefined {
@@ -157,3 +166,11 @@ class LeakyTxPlugin implements KyselyPlugin {
     return args.result
   }
 }
+
+type TxnEmitter = TypedEmitter<TxnEvents>
+
+type TxnEvents = {
+  commit: () => void
+}
+
+const noopAsync = async () => {}

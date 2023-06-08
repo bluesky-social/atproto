@@ -228,6 +228,9 @@ export const schemaDict = {
           reason: {
             type: 'string',
           },
+          subjectRepoHandle: {
+            type: 'string',
+          },
           subject: {
             type: 'union',
             refs: [
@@ -975,6 +978,44 @@ export const schemaDict = {
         errors: [
           {
             name: 'RepoNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoAdminRebaseRepo: {
+    lexicon: 1,
+    id: 'com.atproto.admin.rebaseRepo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Administrative action to rebase an account's repo",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repo'],
+            properties: {
+              repo: {
+                type: 'string',
+                format: 'at-identifier',
+                description: 'The handle or DID of the repo.',
+              },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous commit by cid.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidSwap',
+          },
+          {
+            name: 'ConcurrentWrites',
           },
         ],
       },
@@ -2099,6 +2140,9 @@ export const schemaDict = {
         errors: [
           {
             name: 'InvalidSwap',
+          },
+          {
+            name: 'ConcurrentWrites',
           },
         ],
       },
@@ -3261,6 +3305,9 @@ export const schemaDict = {
         errors: [
           {
             name: 'FutureCursor',
+          },
+          {
+            name: 'ConsumerTooSlow',
           },
         ],
       },
@@ -6238,6 +6285,7 @@ export const ids = {
   ComAtprotoAdminGetModerationReports: 'com.atproto.admin.getModerationReports',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
+  ComAtprotoAdminRebaseRepo: 'com.atproto.admin.rebaseRepo',
   ComAtprotoAdminResolveModerationReports:
     'com.atproto.admin.resolveModerationReports',
   ComAtprotoAdminReverseModerationAction:

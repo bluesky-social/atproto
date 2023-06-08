@@ -8,7 +8,7 @@ import { IdResolver } from '@atproto/identity'
 import API, { health, blobResolver } from './api'
 import Database from './db'
 import * as error from './error'
-import { loggerMiddleware } from './logger'
+import { dbLogger, loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
 import { createServer } from './lexicon'
 import { ImageUriBuilder } from './image/uri'
@@ -22,6 +22,7 @@ import {
   ImageProcessingServerInvalidator,
 } from './image/invalidator'
 import { HiveLabeler, KeywordLabeler, Labeler } from './labeler'
+import { BackgroundQueue } from './background'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -34,6 +35,7 @@ export class BskyAppView {
   public sub?: RepoSubscription
   public server?: http.Server
   private terminator?: HttpTerminator
+  private dbStatsInterval: NodeJS.Timer
 
   constructor(opts: {
     ctx: AppContext
@@ -88,18 +90,23 @@ export class BskyAppView {
       throw new Error('Missing appview image invalidator')
     }
 
+    const backgroundQueue = new BackgroundQueue(db)
+
+    // @TODO background labeling tasks
     let labeler: Labeler
     if (config.hiveApiKey) {
       labeler = new HiveLabeler(config.hiveApiKey, {
         db,
         cfg: config,
         idResolver,
+        backgroundQueue,
       })
     } else {
       labeler = new KeywordLabeler({
         db,
         cfg: config,
         idResolver,
+        backgroundQueue,
       })
     }
 
@@ -108,6 +115,7 @@ export class BskyAppView {
       imgInvalidator,
       idResolver,
       labeler,
+      backgroundQueue,
     })
 
     const ctx = new AppContext({
@@ -118,6 +126,7 @@ export class BskyAppView {
       idResolver,
       didCache,
       labeler,
+      backgroundQueue,
     })
 
     let server = createServer({
@@ -147,6 +156,25 @@ export class BskyAppView {
   }
 
   async start(): Promise<http.Server> {
+    const { db, backgroundQueue } = this.ctx
+    const { pool } = db.cfg
+    this.dbStatsInterval = setInterval(() => {
+      dbLogger.info(
+        {
+          idleCount: pool.idleCount,
+          totalCount: pool.totalCount,
+          waitingCount: pool.waitingCount,
+        },
+        'db pool stats',
+      )
+      dbLogger.info(
+        {
+          runningCount: backgroundQueue.queue.pending,
+          waitingCount: backgroundQueue.queue.size,
+        },
+        'background queue stats',
+      )
+    }, 10000)
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     this.terminator = createHttpTerminator({ server })
@@ -160,9 +188,10 @@ export class BskyAppView {
   async destroy(): Promise<void> {
     await this.ctx.didCache.destroy()
     await this.sub?.destroy()
-    await this.ctx.labeler.destroy()
     await this.terminator?.terminate()
+    await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()
+    clearInterval(this.dbStatsInterval)
   }
 }
 
