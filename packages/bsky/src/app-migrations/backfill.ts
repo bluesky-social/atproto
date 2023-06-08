@@ -42,10 +42,8 @@ const indexStreamCursor = async (ctx: AppContext, pdsDb: PdsDatabase) => {
 }
 
 const indexAccounts = async (ctx: AppContext, pdsDb: PdsDatabase) => {
-  // @should we copy over user_account.createdAt for indexedAt time?
+  // @TODO should we copy over user_account.createdAt for indexedAt time?
   const now = new Date().toISOString()
-
-  // @TODO actor_sync table
 
   let lastDid: string | undefined
   /* eslint-disable */
@@ -158,7 +156,7 @@ const indexModerationActionSubjectBlobs = async (
     .selectAll()
     .execute()
 
-  // do we want to add recordUri to bsky table?
+  // @TODO do we want to add recordUri to bsky table?
   const vals = res.map(({ actionId, cid }) => ({ actionId, cid }))
 
   await ctx.db.db
