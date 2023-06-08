@@ -24,5 +24,5 @@ export type TestServerParams = {
   dbPostgresSchema: string
   pds: Partial<pds.ServerConfig>
   plc: Partial<pds.ServerConfig>
-  bsky: Partial<bsky.ServerConfig>
+  bsky: Partial<BskyConfig>
 }
