@@ -11,6 +11,32 @@ export class GraphService {
     return (db: Database) => new GraphService(db, imgUriBuilder)
   }
 
+  async muteActor(info: {
+    subjectDid: string
+    mutedByDid: string
+    createdAt?: Date
+  }) {
+    const { subjectDid, mutedByDid, createdAt = new Date() } = info
+    await this.db.db
+      .insertInto('mute')
+      .values({
+        subjectDid,
+        mutedByDid,
+        createdAt: createdAt.toISOString(),
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+  }
+
+  async unmuteActor(info: { subjectDid: string; mutedByDid: string }) {
+    const { subjectDid, mutedByDid } = info
+    await this.db.db
+      .deleteFrom('mute')
+      .where('subjectDid', '=', subjectDid)
+      .where('mutedByDid', '=', mutedByDid)
+      .execute()
+  }
+
   async muteActorList(info: {
     list: string
     mutedByDid: string

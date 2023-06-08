@@ -15,6 +15,14 @@ export class ActorService {
 
   views = new ActorViews(this.db, this.imgUriBuilder)
 
+  async getActorDid(handleOrDid: string): Promise<string | null> {
+    if (handleOrDid.startsWith('did:')) {
+      return handleOrDid
+    }
+    const subject = await this.getActor(handleOrDid, true)
+    return subject?.did ?? null
+  }
+
   async getActor(
     handleOrDid: string,
     includeSoftDeleted = false,
