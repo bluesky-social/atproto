@@ -47,7 +47,7 @@ const insertFn = async (
 
 const findDuplicate = async (
   db: DatabaseSchema,
-  uri: AtUri,
+  _uri: AtUri,
   obj: ListItem.Record,
 ): Promise<AtUri | null> => {
   const found = await db

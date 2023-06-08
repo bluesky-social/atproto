@@ -10,6 +10,8 @@ import getProfiles from './app/bsky/actor/getProfiles'
 import getRepostedBy from './app/bsky/feed/getRepostedBy'
 import getFollowers from './app/bsky/graph/getFollowers'
 import getFollows from './app/bsky/graph/getFollows'
+import getList from './app/bsky/graph/getList'
+import getLists from './app/bsky/graph/getLists'
 import searchActors from './app/bsky/actor/searchActors'
 import searchActorsTypeahead from './app/bsky/actor/searchActorsTypeahead'
 import getSuggestions from './app/bsky/actor/getSuggestions'
@@ -45,6 +47,8 @@ export default function (server: Server, ctx: AppContext) {
   getRepostedBy(server, ctx)
   getFollowers(server, ctx)
   getFollows(server, ctx)
+  getList(server, ctx)
+  getLists(server, ctx)
   searchActors(server, ctx)
   searchActorsTypeahead(server, ctx)
   getSuggestions(server, ctx)
