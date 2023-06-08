@@ -3,7 +3,7 @@ import AppContext from '../context'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import { WriteOpAction, cborToLexRecord } from '@atproto/repo'
-import { cborDecode } from '@atproto/common'
+import { cborDecode, chunkArray } from '@atproto/common'
 import { def } from '@atproto/repo'
 
 const PAGINATION_SIZE = 1000
@@ -144,7 +144,9 @@ const indexModerationActions = async (ctx: AppContext, pdsDb: PdsDatabase) => {
     .selectAll()
     .execute()
 
-  await ctx.db.db.insertInto('moderation_action').values(res).execute()
+  for (const chunk of chunkArray(res, 100)) {
+    await ctx.db.db.insertInto('moderation_action').values(chunk).execute()
+  }
 }
 
 const indexModerationActionSubjectBlobs = async (
@@ -159,10 +161,12 @@ const indexModerationActionSubjectBlobs = async (
   // @TODO do we want to add recordUri to bsky table?
   const vals = res.map(({ actionId, cid }) => ({ actionId, cid }))
 
-  await ctx.db.db
-    .insertInto('moderation_action_subject_blob')
-    .values(vals)
-    .execute()
+  for (const chunk of chunkArray(vals, 100)) {
+    await ctx.db.db
+      .insertInto('moderation_action_subject_blob')
+      .values(chunk)
+      .execute()
+  }
 }
 
 const indexModerationReports = async (ctx: AppContext, pdsDb: PdsDatabase) => {
@@ -171,7 +175,9 @@ const indexModerationReports = async (ctx: AppContext, pdsDb: PdsDatabase) => {
     .selectAll()
     .execute()
 
-  await ctx.db.db.insertInto('moderation_report').values(res).execute()
+  for (const chunk of chunkArray(res, 100)) {
+    await ctx.db.db.insertInto('moderation_report').values(chunk).execute()
+  }
 }
 
 const indexModerationReportResolution = async (
@@ -183,8 +189,10 @@ const indexModerationReportResolution = async (
     .selectAll()
     .execute()
 
-  await ctx.db.db
-    .insertInto('moderation_report_resolution')
-    .values(res)
-    .execute()
+  for (const chunk of chunkArray(res, 100)) {
+    await ctx.db.db
+      .insertInto('moderation_report_resolution')
+      .values(chunk)
+      .execute()
+  }
 }
