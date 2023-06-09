@@ -107,6 +107,7 @@ export class FeedService {
             .as('requesterFollowedBy'),
           this.db.db
             .selectFrom('mute')
+            .if(!viewer, (q) => q.where(noMatch))
             .whereRef('subjectDid', '=', ref('actor.did'))
             .where('mutedByDid', '=', viewer ?? '')
             .select('subjectDid')
