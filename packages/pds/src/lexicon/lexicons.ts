@@ -865,6 +865,13 @@ export const schemaDict = {
                 type: 'string',
               },
             },
+            reporters: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description: 'Filter reports made by one or more DIDs',
+            },
             resolved: {
               type: 'boolean',
             },

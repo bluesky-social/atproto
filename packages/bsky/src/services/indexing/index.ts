@@ -22,6 +22,7 @@ import * as Profile from './plugins/profile'
 import * as List from './plugins/list'
 import * as ListItem from './plugins/list-item'
 import * as Block from './plugins/block'
+import * as FeedGenerator from './plugins/feed-generator'
 import RecordProcessor from './processor'
 import { subLogger } from '../../logger'
 import { retryHttp } from '../../util/retry'
@@ -38,6 +39,7 @@ export class IndexingService {
     list: List.PluginType
     listItem: ListItem.PluginType
     block: Block.PluginType
+    feedGenerator: FeedGenerator.PluginType
   }
 
   constructor(
@@ -55,6 +57,7 @@ export class IndexingService {
       list: List.makePlugin(this.db, backgroundQueue),
       listItem: ListItem.makePlugin(this.db, backgroundQueue),
       block: Block.makePlugin(this.db, backgroundQueue),
+      feedGenerator: FeedGenerator.makePlugin(this.db, backgroundQueue),
     }
   }
 

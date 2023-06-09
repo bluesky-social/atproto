@@ -15,6 +15,7 @@ import * as listItem from './tables/list-item'
 import * as listMute from './tables/list-mute'
 import * as mute from './tables/mute'
 import * as actorBlock from './tables/actor-block'
+import * as feedGenerator from './tables/feed-generator'
 import * as subscription from './tables/subscription'
 import * as actor from './tables/actor'
 import * as actorSync from './tables/actor-sync'
@@ -23,6 +24,8 @@ import * as notification from './tables/notification'
 import * as didCache from './tables/did-cache'
 import * as moderation from './tables/moderation'
 import * as label from './tables/label'
+import * as algo from './tables/algo'
+import * as viewParam from './tables/view-param'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
@@ -40,6 +43,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   listMute.PartialDB &
   mute.PartialDB &
   actorBlock.PartialDB &
+  feedGenerator.PartialDB &
   subscription.PartialDB &
   actor.PartialDB &
   actorSync.PartialDB &
@@ -47,7 +51,9 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   notification.PartialDB &
   didCache.PartialDB &
   moderation.PartialDB &
-  label.PartialDB
+  label.PartialDB &
+  algo.PartialDB &
+  viewParam.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

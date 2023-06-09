@@ -1,20 +1,33 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/uri'
-import { jsonStringToLex } from '@atproto/lexicon'
 import { dedupeStrs } from '@atproto/common'
 import Database from '../../db'
-import { noMatch, notSoftDeletedClause } from '../../db/util'
+import { countAll, noMatch, notSoftDeletedClause } from '../../db/util'
 import { ImageUriBuilder } from '../../image/uri'
+import { ids } from '../../lexicon/lexicons'
 import { isView as isViewImages } from '../../lexicon/types/app/bsky/embed/images'
 import { isView as isViewExternal } from '../../lexicon/types/app/bsky/embed/external'
-import { View as ViewRecord } from '../../lexicon/types/app/bsky/embed/record'
-import { PostView } from '../../lexicon/types/app/bsky/feed/defs'
-import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from '../types'
-import { Labels, LabelService } from '../label'
+import {
+  ViewRecord,
+  View as RecordEmbedView,
+} from '../../lexicon/types/app/bsky/embed/record'
+import { FeedViewPost } from '../../lexicon/types/app/bsky/feed/defs'
+import {
+  ActorViewMap,
+  FeedEmbeds,
+  PostInfoMap,
+  FeedItemType,
+  FeedRow,
+} from '../types'
+import { LabelService } from '../label'
 import { ActorService } from '../actor'
+import { FeedViews } from './views'
+import { FeedGenInfoMap } from './types'
 
 export class FeedService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
+
+  views = new FeedViews(this.db, this.imgUriBuilder)
 
   services = {
     label: LabelService.creator()(this.db),
@@ -69,12 +82,35 @@ export class FeedService {
       ])
   }
 
+  selectFeedGeneratorQb(viewer?: string | null) {
+    return this.db.db
+      .selectFrom('feed_generator')
+      .innerJoin('actor', 'actor.did', 'feed_generator.creator')
+      .selectAll('feed_generator')
+      .select((qb) =>
+        qb
+          .selectFrom('like')
+          .whereRef('like.subject', '=', 'feed_generator.uri')
+          .select(countAll.as('count'))
+          .as('likeCount'),
+      )
+      .select((qb) =>
+        qb
+          .selectFrom('like')
+          .if(!viewer, (q) => q.where(noMatch))
+          .where('like.creator', '=', viewer ?? '')
+          .whereRef('like.subject', '=', 'feed_generator.uri')
+          .select('uri')
+          .as('viewerLike'),
+      )
+  }
+
   // @TODO just use actor service??
   // @NOTE keep in sync with actorService.views.profile()
   async getActorViews(
     dids: string[],
     viewer: string | null,
-    opts?: { skipLabels?: boolean }, // @NOTE used by composeFeed() to batch label hydration
+    opts?: { skipLabels?: boolean }, // @NOTE used by hydrateFeed() to batch label hydration
   ): Promise<ActorViewMap> {
     if (dids.length < 1) return {}
     const { ref } = this.db.db.dynamic
@@ -211,6 +247,20 @@ export class FeedService {
     )
   }
 
+  async getFeedGeneratorViews(generatorUris: string[], viewer: string | null) {
+    if (generatorUris.length < 1) return {}
+    const feedGens = await this.selectFeedGeneratorQb(viewer)
+      .where('uri', 'in', generatorUris)
+      .execute()
+    return feedGens.reduce(
+      (acc, cur) => ({
+        ...acc,
+        [cur.uri]: cur,
+      }),
+      {} as FeedGenInfoMap,
+    )
+  }
+
   async embedsForPosts(
     uris: string[],
     viewer: string | null,
@@ -248,15 +298,22 @@ export class FeedService {
     ])
     const nestedUris = dedupeStrs(records.map((p) => p.uri))
     const nestedDids = dedupeStrs(records.map((p) => p.did))
-    const [postViews, actorViews, deepEmbedViews, labelViews] =
+    const nestedPostUris = nestedUris.filter(
+      (uri) => new AtUri(uri).collection === ids.AppBskyFeedPost,
+    )
+    const nestedFeedGenUris = nestedUris.filter(
+      (uri) => new AtUri(uri).collection === ids.AppBskyFeedGenerator,
+    )
+    const [postViews, actorViews, deepEmbedViews, labelViews, feedGenViews] =
       await Promise.all([
-        this.getPostViews(nestedUris, viewer),
+        this.getPostViews(nestedPostUris, viewer),
         this.getActorViews(nestedDids, viewer, { skipLabels: true }),
         this.embedsForPosts(nestedUris, viewer, _depth + 1),
         this.services.label.getLabelsForSubjects([
           ...nestedUris,
           ...nestedDids,
         ]),
+        this.getFeedGeneratorViews(nestedFeedGenUris, viewer),
       ])
     let embeds = images.reduce((acc, cur) => {
       const embed = (acc[cur.postUri] ??= {
@@ -302,23 +359,37 @@ export class FeedService {
       return acc
     }, embeds)
     embeds = records.reduce((acc, cur) => {
-      const formatted = this.formatPostView(
-        cur.uri,
-        actorViews,
-        postViews,
-        deepEmbedViews,
-        labelViews,
-      )
-      let deepEmbeds: ViewRecord['embeds'] | undefined
-      if (_depth < 1) {
-        // Omit field entirely when too deep: e.g. don't include it on the embeds within a record embed.
-        // Otherwise list any embeds that appear within the record. A consumer may discover an embed
-        // within the raw record, then look within this array to find the presented view of it.
-        deepEmbeds = formatted?.embed ? [formatted.embed] : []
-      }
-      const recordEmbed = {
-        record: formatted
-          ? {
+      const collection = new AtUri(cur.uri).collection
+      let recordEmbed: RecordEmbedView
+      if (collection === ids.AppBskyFeedGenerator && feedGenViews[cur.uri]) {
+        recordEmbed = {
+          record: {
+            $type: 'app.bsky.feed.defs#generatorView',
+            ...this.views.formatFeedGeneratorView(
+              feedGenViews[cur.uri],
+              actorViews,
+              labelViews,
+            ),
+          },
+        }
+      } else if (collection === ids.AppBskyFeedPost && postViews[cur.uri]) {
+        const formatted = this.views.formatPostView(
+          cur.uri,
+          actorViews,
+          postViews,
+          deepEmbedViews,
+          labelViews,
+        )
+        let deepEmbeds: ViewRecord['embeds'] | undefined
+        if (_depth < 1) {
+          // Omit field entirely when too deep: e.g. don't include it on the embeds within a record embed.
+          // Otherwise list any embeds that appear within the record. A consumer may discover an embed
+          // within the raw record, then look within this array to find the presented view of it.
+          deepEmbeds = formatted?.embed ? [formatted.embed] : []
+        }
+        if (formatted) {
+          recordEmbed = {
+            record: {
               $type: 'app.bsky.embed.record#viewRecord',
               uri: formatted.uri,
               cid: formatted.cid,
@@ -327,11 +398,15 @@ export class FeedService {
               labels: formatted.labels,
               embeds: deepEmbeds,
               indexedAt: formatted.indexedAt,
-            }
-          : {
-              $type: 'app.bsky.embed.record#viewNotFound',
-              uri: cur.uri,
             },
+          }
+        }
+      }
+      recordEmbed ??= {
+        record: {
+          $type: 'app.bsky.embed.record#viewNotFound',
+          uri: cur.uri,
+        },
       }
       if (acc[cur.postUri]) {
         const mediaEmbed = acc[cur.postUri]
@@ -353,37 +428,45 @@ export class FeedService {
     return embeds
   }
 
-  formatPostView(
-    uri: string,
-    actors: ActorViewMap,
-    posts: PostInfoMap,
-    embeds: FeedEmbeds,
-    labels: Labels,
-  ): PostView | undefined {
-    const post = posts[uri]
-    const author = actors[post?.creator]
-    if (!post || !author) return undefined
-    // If the author labels are not hydrated yet, attempt to pull them
-    // from labels: e.g. compatible with composeFeed() batching label hydration.
-    author.labels ??= labels[author.did] ?? []
-    return {
-      $type: 'app.bsky.feed.defs#postView',
-      uri: post.uri,
-      cid: post.cid,
-      author: author,
-      record: jsonStringToLex(post.recordJson) as Record<string, unknown>,
-      embed: embeds[uri],
-      replyCount: post.replyCount ?? 0,
-      repostCount: post.repostCount ?? 0,
-      likeCount: post.likeCount ?? 0,
-      indexedAt: post.indexedAt,
-      viewer: post.viewer
-        ? {
-            repost: post.requesterRepost ?? undefined,
-            like: post.requesterLike ?? undefined,
-          }
-        : undefined,
-      labels: labels[uri] ?? [],
+  async hydrateFeed(
+    items: FeedRow[],
+    viewer: string | null,
+    // @TODO (deprecated) remove this once all clients support the blocked/not-found union on post views
+    usePostViewUnion?: boolean,
+  ): Promise<FeedViewPost[]> {
+    const actorDids = new Set<string>()
+    const postUris = new Set<string>()
+    for (const item of items) {
+      actorDids.add(item.postAuthorDid)
+      postUris.add(item.postUri)
+      if (item.postAuthorDid !== item.originatorDid) {
+        actorDids.add(item.originatorDid)
+      }
+      if (item.replyParent) {
+        postUris.add(item.replyParent)
+        actorDids.add(new AtUri(item.replyParent).hostname)
+      }
+      if (item.replyRoot) {
+        postUris.add(item.replyRoot)
+        actorDids.add(new AtUri(item.replyRoot).hostname)
+      }
     }
+    const [actors, posts, embeds, labels] = await Promise.all([
+      this.getActorViews(Array.from(actorDids), viewer, {
+        skipLabels: true,
+      }),
+      this.getPostViews(Array.from(postUris), viewer),
+      this.embedsForPosts(Array.from(postUris), viewer),
+      this.services.label.getLabelsForSubjects([...postUris, ...actorDids]),
+    ])
+
+    return this.views.formatFeed(
+      items,
+      actors,
+      posts,
+      embeds,
+      labels,
+      usePostViewUnion,
+    )
   }
 }

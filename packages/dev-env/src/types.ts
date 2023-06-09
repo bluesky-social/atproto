@@ -16,6 +16,7 @@ export type BskyConfig = Partial<bsky.ServerConfig> & {
   repoProvider: string
   dbPostgresUrl: string
   migration?: string
+  algos?: bsky.MountedAlgos
 }
 
 export type TestServerParams = {
@@ -23,5 +24,5 @@ export type TestServerParams = {
   dbPostgresSchema: string
   pds: Partial<pds.ServerConfig>
   plc: Partial<pds.ServerConfig>
-  bsky: Partial<bsky.ServerConfig>
+  bsky: Partial<BskyConfig>
 }
