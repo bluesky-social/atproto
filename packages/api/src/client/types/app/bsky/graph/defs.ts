@@ -10,6 +10,7 @@ import * as AppBskyRichtextFacet from '../richtext/facet'
 
 export interface ListViewBasic {
   uri: string
+  cid: string
   name: string
   purpose: ListPurpose
   avatar?: string
@@ -32,6 +33,7 @@ export function validateListViewBasic(v: unknown): ValidationResult {
 
 export interface ListView {
   uri: string
+  cid: string
   creator: AppBskyActorDefs.ProfileView
   name: string
   purpose: ListPurpose

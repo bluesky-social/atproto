@@ -66,6 +66,7 @@ export class GraphService {
   formatListView(list: ListInfo, profiles: Record<string, ProfileView>) {
     return {
       uri: list.uri,
+      cid: list.cid,
       creator: profiles[list.creator],
       name: list.name,
       purpose: list.purpose,

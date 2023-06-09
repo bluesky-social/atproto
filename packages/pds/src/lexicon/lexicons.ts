@@ -5351,11 +5351,15 @@ export const schemaDict = {
     defs: {
       listViewBasic: {
         type: 'object',
-        required: ['uri', 'name', 'purpose'],
+        required: ['uri', 'cid', 'name', 'purpose'],
         properties: {
           uri: {
             type: 'string',
             format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
           },
           name: {
             type: 'string',
@@ -5381,11 +5385,15 @@ export const schemaDict = {
       },
       listView: {
         type: 'object',
-        required: ['uri', 'creator', 'name', 'purpose', 'indexedAt'],
+        required: ['uri', 'cid', 'creator', 'name', 'purpose', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
             format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
           },
           creator: {
             type: 'ref',

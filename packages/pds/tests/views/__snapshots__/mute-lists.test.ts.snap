@@ -48,6 +48,7 @@ Object {
             "muted": true,
             "mutedByList": Object {
               "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+              "cid": "cids(2)",
               "indexedAt": "1970-01-01T00:00:00.000Z",
               "name": "alice mutes",
               "purpose": "app.bsky.graph.defs#modlist",
@@ -98,6 +99,7 @@ Object {
             "muted": true,
             "mutedByList": Object {
               "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+              "cid": "cids(2)",
               "indexedAt": "1970-01-01T00:00:00.000Z",
               "name": "alice mutes",
               "purpose": "app.bsky.graph.defs#modlist",
@@ -108,7 +110,7 @@ Object {
             },
           },
         },
-        "cid": "cids(2)",
+        "cid": "cids(3)",
         "embed": Object {
           "$type": "app.bsky.embed.images#view",
           "images": Array [
@@ -122,7 +124,7 @@ Object {
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [
           Object {
-            "cid": "cids(2)",
+            "cid": "cids(3)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
             "src": "did:example:labeler",
@@ -130,7 +132,7 @@ Object {
             "val": "test-label",
           },
           Object {
-            "cid": "cids(2)",
+            "cid": "cids(3)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
             "src": "did:example:labeler",
@@ -151,7 +153,7 @@ Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
                   "ref": Object {
-                    "$link": "cids(3)",
+                    "$link": "cids(4)",
                   },
                   "size": 4114,
                 },
@@ -185,6 +187,7 @@ Object {
   "cursor": "0000000000000::bafycid",
   "lists": Array [
     Object {
+      "cid": "cids(0)",
       "creator": Object {
         "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
         "description": "its me!",
@@ -210,6 +213,7 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "cid": "cids(1)",
       "creator": Object {
         "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
         "description": "its me!",
@@ -242,6 +246,7 @@ Object {
   "cursor": "0000000000000::bafycid",
   "lists": Array [
     Object {
+      "cid": "cids(0)",
       "creator": Object {
         "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
         "description": "its me!",
@@ -267,6 +272,7 @@ Object {
     },
     Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+      "cid": "cids(1)",
       "creator": Object {
         "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
         "description": "its me!",
@@ -309,6 +315,7 @@ Object {
           "muted": true,
           "mutedByList": Object {
             "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+            "cid": "cids(0)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "name": "alice mutes",
             "purpose": "app.bsky.graph.defs#modlist",
@@ -335,6 +342,7 @@ Object {
           "muted": true,
           "mutedByList": Object {
             "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+            "cid": "cids(0)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "name": "alice mutes",
             "purpose": "app.bsky.graph.defs#modlist",
@@ -349,6 +357,7 @@ Object {
   ],
   "list": Object {
     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+    "cid": "cids(0)",
     "creator": Object {
       "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
       "description": "its me!",
