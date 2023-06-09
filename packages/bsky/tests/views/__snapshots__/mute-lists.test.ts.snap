@@ -1,0 +1,163 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`pds views with mutes from mute lists returns a users own list mutes 1`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "lists": Array [
+    Object {
+      "creator": Object {
+        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+        "description": "its me!",
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "viewer": Object {
+          "followedBy": "record(1)",
+        },
+      },
+      "description": "blah blah",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "new list",
+      "purpose": "app.bsky.graph.defs#modlist",
+      "uri": "record(0)",
+      "viewer": Object {
+        "muted": true,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+      "creator": Object {
+        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+        "description": "its me!",
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "viewer": Object {
+          "followedBy": "record(1)",
+        },
+      },
+      "description": "big list of mutes",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "alice mutes",
+      "purpose": "app.bsky.graph.defs#modlist",
+      "uri": "record(2)",
+      "viewer": Object {
+        "muted": true,
+      },
+    },
+  ],
+}
+`;
+
+exports[`pds views with mutes from mute lists returns lists associated with a user 1`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "lists": Array [
+    Object {
+      "creator": Object {
+        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+        "description": "its me!",
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "viewer": Object {
+          "followedBy": "record(1)",
+        },
+      },
+      "description": "blah blah",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "new list",
+      "purpose": "app.bsky.graph.defs#modlist",
+      "uri": "record(0)",
+      "viewer": Object {
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+      "creator": Object {
+        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+        "description": "its me!",
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "viewer": Object {
+          "followedBy": "record(1)",
+        },
+      },
+      "description": "big list of mutes",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "alice mutes",
+      "purpose": "app.bsky.graph.defs#modlist",
+      "uri": "record(2)",
+      "viewer": Object {
+        "muted": true,
+      },
+    },
+  ],
+}
+`;
+
+exports[`pds views with mutes from mute lists returns the contents of a list 1`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "items": Array [
+    Object {
+      "subject": Object {
+        "did": "user(0)",
+        "handle": "carol.test",
+        "labels": Array [],
+        "viewer": Object {
+          "followedBy": "record(1)",
+          "following": "record(0)",
+        },
+      },
+    },
+    Object {
+      "subject": Object {
+        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(2)/cids(0)@jpeg",
+        "description": "hi im bob",
+        "did": "user(1)",
+        "displayName": "bobby",
+        "handle": "bob.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "viewer": Object {
+          "following": "record(2)",
+        },
+      },
+    },
+  ],
+  "list": Object {
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(0)@jpeg",
+    "creator": Object {
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(0)@jpeg",
+      "description": "its me!",
+      "did": "user(3)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "viewer": Object {
+        "followedBy": "record(4)",
+      },
+    },
+    "description": "big list of mutes",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "name": "alice mutes",
+    "purpose": "app.bsky.graph.defs#modlist",
+    "uri": "record(3)",
+    "viewer": Object {
+      "muted": true,
+    },
+  },
+}
+`;

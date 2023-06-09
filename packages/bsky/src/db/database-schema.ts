@@ -10,6 +10,9 @@ import * as repost from './tables/repost'
 import * as feedItem from './tables/feed-item'
 import * as follow from './tables/follow'
 import * as like from './tables/like'
+import * as list from './tables/list'
+import * as listItem from './tables/list-item'
+import * as listMute from './tables/list-mute'
 import * as feedGenerator from './tables/feed-generator'
 import * as subscription from './tables/subscription'
 import * as actor from './tables/actor'
@@ -31,6 +34,9 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   feedItem.PartialDB &
   follow.PartialDB &
   like.PartialDB &
+  list.PartialDB &
+  listItem.PartialDB &
+  listMute.PartialDB &
   feedGenerator.PartialDB &
   subscription.PartialDB &
   actor.PartialDB &

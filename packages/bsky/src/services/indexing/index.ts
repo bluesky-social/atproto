@@ -19,6 +19,8 @@ import * as Like from './plugins/like'
 import * as Repost from './plugins/repost'
 import * as Follow from './plugins/follow'
 import * as Profile from './plugins/profile'
+import * as List from './plugins/list'
+import * as ListItem from './plugins/list-item'
 import * as FeedGenerator from './plugins/feed-generator'
 import RecordProcessor from './processor'
 import { subLogger } from '../../logger'
@@ -33,6 +35,8 @@ export class IndexingService {
     repost: Repost.PluginType
     follow: Follow.PluginType
     profile: Profile.PluginType
+    list: List.PluginType
+    listItem: ListItem.PluginType
     feedGenerator: FeedGenerator.PluginType
   }
 
@@ -48,6 +52,8 @@ export class IndexingService {
       repost: Repost.makePlugin(this.db, backgroundQueue),
       follow: Follow.makePlugin(this.db, backgroundQueue),
       profile: Profile.makePlugin(this.db, backgroundQueue),
+      list: List.makePlugin(this.db, backgroundQueue),
+      listItem: ListItem.makePlugin(this.db, backgroundQueue),
       feedGenerator: FeedGenerator.makePlugin(this.db, backgroundQueue),
     }
   }
