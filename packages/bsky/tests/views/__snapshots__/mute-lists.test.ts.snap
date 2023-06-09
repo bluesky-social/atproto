@@ -12,6 +12,7 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(1)",
         "muted": false,
       },
@@ -43,6 +44,7 @@ Object {
           "handle": "carol.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(7)",
             "following": "record(6)",
             "muted": true,
@@ -94,6 +96,7 @@ Object {
           "handle": "bob.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "following": "record(9)",
             "muted": true,
             "mutedByList": Object {
@@ -194,6 +197,7 @@ Object {
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "followedBy": "record(1)",
           "muted": false,
         },
@@ -218,6 +222,7 @@ Object {
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "followedBy": "record(1)",
           "muted": false,
         },
@@ -249,6 +254,7 @@ Object {
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "followedBy": "record(1)",
           "muted": false,
         },
@@ -273,6 +279,7 @@ Object {
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "followedBy": "record(1)",
           "muted": false,
         },
@@ -300,6 +307,7 @@ Object {
         "handle": "carol.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "followedBy": "record(1)",
           "muted": true,
           "mutedByList": Object {
@@ -325,6 +333,7 @@ Object {
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "following": "record(2)",
           "muted": true,
           "mutedByList": Object {
@@ -352,6 +361,7 @@ Object {
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(3)",
         "muted": false,
       },
