@@ -176,7 +176,7 @@ export class FeedService {
         [cur.did]: {
           did: cur.did,
           handle: cur.handle,
-          displayName: cur.displayName || undefined,
+          displayName: truncateUtf8(cur.displayName, 64) || undefined,
           avatar: cur.avatarCid
             ? this.imgUriBuilder.getCommonSignedUri(
                 'avatar',
@@ -461,6 +461,18 @@ export class FeedService {
       usePostViewUnion,
     )
   }
+}
+
+function truncateUtf8(str: string | null | undefined, length: number) {
+  if (!str) return str
+  const encoder = new TextEncoder()
+  const utf8 = encoder.encode(str)
+  if (utf8.length > length) {
+    const decoder = new TextDecoder('utf-8', { fatal: false })
+    const truncated = utf8.slice(0, length)
+    return decoder.decode(truncated).replace(/\uFFFD$/, '')
+  }
+  return str
 }
 
 function getRecordEmbedView(
