@@ -64,7 +64,7 @@ const composeThread = (
   embeds: FeedEmbeds,
   labels: Labels,
 ) => {
-  const post = feedService.formatPostView(
+  const post = feedService.views.formatPostView(
     threadData.post.postUri,
     actors,
     posts,

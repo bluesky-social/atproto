@@ -10,12 +10,15 @@ import {
   RootOperationNode,
   QueryResult,
   UnknownRow,
+  sql,
 } from 'kysely'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import TypedEmitter from 'typed-emitter'
+import { wait } from '@atproto/common'
 import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
+import { dbLogger as log } from '../logger'
 
 export class Database {
   migrator: Migrator
@@ -32,7 +35,14 @@ export class Database {
 
   static postgres(opts: PgOptions): Database {
     const { schema, url } = opts
-    const pool = opts.pool ?? new PgPool({ connectionString: url })
+    const pool =
+      opts.pool ??
+      new PgPool({
+        connectionString: url,
+        max: opts.poolSize,
+        maxUses: opts.poolMaxUses,
+        idleTimeoutMillis: opts.poolIdleTimeoutMs,
+      })
 
     // Select count(*) and other pg bigints as js integer
     pgTypes.setTypeParser(pgTypes.builtins.INT8, (n) => parseInt(n, 10))
@@ -129,6 +139,46 @@ export class Database {
     }
     return results
   }
+
+  async maintainMaterializedViews(opts: {
+    views: string[]
+    intervalSec: number
+    signal: AbortSignal
+  }) {
+    const { views, intervalSec, signal } = opts
+    while (!signal.aborted) {
+      // super basic synchronization by agreeing when the intervals land relative to unix timestamp
+      const now = Date.now()
+      const intervalMs = 1000 * intervalSec
+      const nextIteration = Math.ceil(now / intervalMs)
+      const nextInMs = nextIteration * intervalMs - now
+      await wait(nextInMs)
+      if (signal.aborted) break
+      await Promise.all(
+        views.map(async (view) => {
+          try {
+            await this.refreshMaterializedView(view)
+            log.info(
+              { view, time: new Date().toISOString() },
+              'materialized view refreshed',
+            )
+          } catch (err) {
+            log.error(
+              { view, err, time: new Date().toISOString() },
+              'materialized view refresh failed',
+            )
+          }
+        }),
+      )
+    }
+  }
+
+  async refreshMaterializedView(view: string) {
+    const { ref } = this.db.dynamic
+    await sql`refresh materialized view concurrently ${ref(view)}`.execute(
+      this.db,
+    )
+  }
 }
 
 export default Database
@@ -144,6 +194,9 @@ type PgOptions = {
   url: string
   pool?: PgPool
   schema?: string
+  poolSize?: number
+  poolMaxUses?: number
+  poolIdleTimeoutMs?: number
 }
 
 class LeakyTxPlugin implements KyselyPlugin {
