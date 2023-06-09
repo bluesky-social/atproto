@@ -125,6 +125,8 @@ describe('mute views', () => {
     await sc.unfollow(alice, bob)
     await sc.unfollow(alice, carol)
 
+    await network.processAll()
+
     const res = await agent.api.app.bsky.actor.getSuggestions(
       {
         limit: 100,
