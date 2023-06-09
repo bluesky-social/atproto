@@ -106,6 +106,20 @@ export class FeedService {
             .select('uri')
             .as('requesterFollowedBy'),
           this.db.db
+            .selectFrom('actor_block')
+            .if(!viewer, (q) => q.where(noMatch))
+            .where('creator', '=', viewer ?? '')
+            .whereRef('subjectDid', '=', ref('actor.did'))
+            .select('uri')
+            .as('requesterBlocking'),
+          this.db.db
+            .selectFrom('actor_block')
+            .if(!viewer, (q) => q.where(noMatch))
+            .whereRef('creator', '=', ref('actor.did'))
+            .where('subjectDid', '=', viewer ?? '')
+            .select('uri')
+            .as('requesterBlockedBy'),
+          this.db.db
             .selectFrom('mute')
             .if(!viewer, (q) => q.where(noMatch))
             .whereRef('subjectDid', '=', ref('actor.did'))
@@ -136,6 +150,8 @@ export class FeedService {
             ? {
                 muted: !!cur?.requesterMuted || !!listMutes[cur.did],
                 mutedByList: listMutes[cur.did],
+                blockedBy: !!cur?.requesterBlockedBy,
+                blocking: cur?.requesterBlocking || undefined,
                 following: cur?.requesterFollowing || undefined,
                 followedBy: cur?.requesterFollowedBy || undefined,
               }
