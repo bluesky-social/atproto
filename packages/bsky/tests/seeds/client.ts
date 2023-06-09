@@ -76,7 +76,7 @@ export class SeedClient {
   reposts: Record<string, RecordRef[]>
   dids: Record<string, string>
 
-  constructor(public agent: AtpAgent) {
+  constructor(public agent: AtpAgent, public adminAuth?: string) {
     this.accounts = {}
     this.profiles = {}
     this.follows = {}
@@ -319,6 +319,9 @@ export class SeedClient {
     reason?: string
     createdBy?: string
   }) {
+    if (!this.adminAuth) {
+      throw new Error('No admin auth provided to seed client')
+    }
     const {
       action,
       subject,
@@ -329,7 +332,7 @@ export class SeedClient {
       { action, subject, createdBy, reason },
       {
         encoding: 'application/json',
-        headers: { authorization: adminAuth() },
+        headers: { authorization: this.adminAuth },
       },
     )
     return result.data
@@ -340,13 +343,17 @@ export class SeedClient {
     reason?: string
     createdBy?: string
   }) {
+    if (!this.adminAuth) {
+      throw new Error('No admin auth provided to seed client')
+    }
+
     const { id, reason = 'X', createdBy = 'did:example:admin' } = opts
     const result =
       await this.agent.api.com.atproto.admin.reverseModerationAction(
         { id, reason, createdBy },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: { authorization: this.adminAuth },
         },
       )
     return result.data
@@ -357,13 +364,17 @@ export class SeedClient {
     reportIds: number[]
     createdBy?: string
   }) {
+    if (!this.adminAuth) {
+      throw new Error('No admin auth provided to seed client')
+    }
+
     const { actionId, reportIds, createdBy = 'did:example:admin' } = opts
     const result =
       await this.agent.api.com.atproto.admin.resolveModerationReports(
         { actionId, createdBy, reportIds },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: { authorization: this.adminAuth },
         },
       )
     return result.data
@@ -393,9 +404,4 @@ export class SeedClient {
   static getHeaders(jwt: string) {
     return { authorization: `Bearer ${jwt}` }
   }
-}
-
-// @TODO use real admin auth
-const adminAuth = () => {
-  return ''
 }
