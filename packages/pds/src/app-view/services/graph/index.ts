@@ -58,45 +58,45 @@ export class GraphService {
       .select(['creator', 'subjectDid'])
   }
 
-  // async getBlocks(
-  //   requester: string,
-  //   subjectHandleOrDid: string,
-  // ): Promise<{ blocking: boolean; blockedBy: boolean }> {
-  //   let subjectDid
-  //   if (subjectHandleOrDid.startsWith('did:')) {
-  //     subjectDid = subjectHandleOrDid
-  //   } else {
-  //     const res = await this.db.db
-  //       .selectFrom('did_handle')
-  //       .where('handle', '=', subjectHandleOrDid)
-  //       .select('did')
-  //       .executeTakeFirst()
-  //     if (!res) {
-  //       return { blocking: false, blockedBy: false }
-  //     }
-  //     subjectDid = res.did
-  //   }
+  async getBlocks(
+    requester: string,
+    subjectHandleOrDid: string,
+  ): Promise<{ blocking: boolean; blockedBy: boolean }> {
+    let subjectDid
+    if (subjectHandleOrDid.startsWith('did:')) {
+      subjectDid = subjectHandleOrDid
+    } else {
+      const res = await this.db.db
+        .selectFrom('did_handle')
+        .where('handle', '=', subjectHandleOrDid)
+        .select('did')
+        .executeTakeFirst()
+      if (!res) {
+        return { blocking: false, blockedBy: false }
+      }
+      subjectDid = res.did
+    }
 
-  //   const accnts = [requester, subjectDid]
-  //   const blockRes = await this.db.db
-  //     .selectFrom('actor_block')
-  //     .where('creator', 'in', accnts)
-  //     .where('subjectDid', 'in', accnts)
-  //     .selectAll()
-  //     .execute()
+    const accnts = [requester, subjectDid]
+    const blockRes = await this.db.db
+      .selectFrom('actor_block')
+      .where('creator', 'in', accnts)
+      .where('subjectDid', 'in', accnts)
+      .selectAll()
+      .execute()
 
-  //   const blocking = blockRes.some(
-  //     (row) => row.creator === requester && row.subjectDid === subjectDid,
-  //   )
-  //   const blockedBy = blockRes.some(
-  //     (row) => row.creator === subjectDid && row.subjectDid === requester,
-  //   )
+    const blocking = blockRes.some(
+      (row) => row.creator === requester && row.subjectDid === subjectDid,
+    )
+    const blockedBy = blockRes.some(
+      (row) => row.creator === subjectDid && row.subjectDid === requester,
+    )
 
-  //   return {
-  //     blocking,
-  //     blockedBy,
-  //   }
-  // }
+    return {
+      blocking,
+      blockedBy,
+    }
+  }
 
   formatListView(list: ListInfo, profiles: Record<string, ProfileView>) {
     return {
