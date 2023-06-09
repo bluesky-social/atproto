@@ -1,6 +1,9 @@
 import { AtpAgent } from '@atproto/api'
 import { dedupeStrs } from '@atproto/common'
-import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import {
+  InvalidRequestError,
+  createServiceAuthHeaders,
+} from '@atproto/xrpc-server'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import {
@@ -23,10 +26,10 @@ export default function (server: Server, ctx: AppContext) {
 
   const agent = new AtpAgent({ service: appviewEndpoint })
 
-  const headers = async (did: string) => {
+  const headers = async (did: string, aud?: string) => {
     return createServiceAuthHeaders({
       iss: did,
-      aud: appviewDid,
+      aud: aud ?? appviewDid,
       keypair: ctx.repoSigningKey,
     })
   }
@@ -467,6 +470,29 @@ export default function (server: Server, ctx: AppContext) {
           cursor,
           notifications: filtered,
         },
+      }
+    },
+  })
+
+  server.app.bsky.feed.getFeed({
+    auth: ctx.accessVerifier,
+    handler: async ({ auth, params }) => {
+      const requester = auth.credentials.did
+      // @TODO cache the feedgen did lookup
+      const { data: feed } = await agent.api.app.bsky.feed.getFeedGenerator(
+        { feed: params.feed },
+        await headers(requester),
+      )
+      if (!feed.view.did) {
+        throw new InvalidRequestError('feed not found')
+      }
+      const res = await agent.api.app.bsky.feed.getFeed(
+        params,
+        await headers(requester, feed.view.did),
+      )
+      return {
+        encoding: 'application/json',
+        body: res.data,
       }
     },
   })

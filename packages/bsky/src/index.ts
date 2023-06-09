@@ -23,11 +23,15 @@ import {
 } from './image/invalidator'
 import { HiveLabeler, KeywordLabeler, Labeler } from './labeler'
 import { BackgroundQueue } from './background'
+import { MountedAlgos } from './feed-gen/types'
 
 export type { ServerConfigValues } from './config'
+export type { MountedAlgos } from './feed-gen/types'
 export { ServerConfig } from './config'
 export { Database } from './db'
+export { ViewMaintainer } from './db/views'
 export { AppContext } from './context'
+export { makeAlgos } from './feed-gen'
 
 export class BskyAppView {
   public ctx: AppContext
@@ -51,8 +55,9 @@ export class BskyAppView {
     db: Database
     config: ServerConfig
     imgInvalidator?: ImageInvalidator
+    algos?: MountedAlgos
   }): BskyAppView {
-    const { db, config } = opts
+    const { db, config, algos = {} } = opts
     let maybeImgInvalidator = opts.imgInvalidator
     const app = express()
     app.use(cors())
@@ -127,6 +132,7 @@ export class BskyAppView {
       didCache,
       labeler,
       backgroundQueue,
+      algos,
     })
 
     let server = createServer({

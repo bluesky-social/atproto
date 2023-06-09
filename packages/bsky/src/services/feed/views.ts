@@ -1,15 +1,116 @@
 import Database from '../../db'
-import { GeneratorView } from '../../lexicon/types/app/bsky/feed/defs'
+import {
+  FeedViewPost,
+  GeneratorView,
+  PostView,
+} from '../../lexicon/types/app/bsky/feed/defs'
 import { ProfileView } from '../../lexicon/types/app/bsky/actor/defs'
-import { FeedGenInfo } from './types'
+import { FeedGenInfo, MaybePostView } from './types'
 import { Labels } from '../label'
 import { ImageUriBuilder } from '../../image/uri'
+import { ActorViewMap, FeedEmbeds, FeedRow, PostInfoMap } from '../types'
+import { jsonStringToLex } from '@atproto/lexicon'
 
 export class FeedViews {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
 
   static creator(imgUriBuilder: ImageUriBuilder) {
     return (db: Database) => new FeedViews(db, imgUriBuilder)
+  }
+
+  formatPostView(
+    uri: string,
+    actors: ActorViewMap,
+    posts: PostInfoMap,
+    embeds: FeedEmbeds,
+    labels: Labels,
+  ): PostView | undefined {
+    const post = posts[uri]
+    const author = actors[post?.creator]
+    if (!post || !author) return undefined
+    // If the author labels are not hydrated yet, attempt to pull them
+    // from labels: e.g. compatible with hydrateFeed() batching label hydration.
+    author.labels ??= labels[author.did] ?? []
+    return {
+      $type: 'app.bsky.feed.defs#postView',
+      uri: post.uri,
+      cid: post.cid,
+      author: author,
+      record: jsonStringToLex(post.recordJson) as Record<string, unknown>,
+      embed: embeds[uri],
+      replyCount: post.replyCount ?? 0,
+      repostCount: post.repostCount ?? 0,
+      likeCount: post.likeCount ?? 0,
+      indexedAt: post.indexedAt,
+      viewer: post.viewer
+        ? {
+            repost: post.requesterRepost ?? undefined,
+            like: post.requesterLike ?? undefined,
+          }
+        : undefined,
+      labels: labels[uri] ?? [],
+    }
+  }
+
+  formatFeed(
+    items: FeedRow[],
+    actors: ActorViewMap,
+    posts: PostInfoMap,
+    embeds: FeedEmbeds,
+    labels: Labels,
+    usePostViewUnion?: boolean,
+  ): FeedViewPost[] {
+    const feed: FeedViewPost[] = []
+    for (const item of items) {
+      const post = this.formatPostView(
+        item.postUri,
+        actors,
+        posts,
+        embeds,
+        labels,
+      )
+      // skip over not found & blocked posts
+      if (!post) {
+        continue
+      }
+      const feedPost = { post }
+      if (item.type === 'repost') {
+        const originator = actors[item.originatorDid]
+        if (originator) {
+          feedPost['reason'] = {
+            $type: 'app.bsky.feed.defs#reasonRepost',
+            by: originator,
+            indexedAt: item.sortAt,
+          }
+        }
+      }
+      if (item.replyParent && item.replyRoot) {
+        const replyParent = this.formatMaybePostView(
+          item.replyParent,
+          actors,
+          posts,
+          embeds,
+          labels,
+          usePostViewUnion,
+        )
+        const replyRoot = this.formatMaybePostView(
+          item.replyRoot,
+          actors,
+          posts,
+          embeds,
+          labels,
+          usePostViewUnion,
+        )
+        if (replyRoot && replyParent) {
+          feedPost['reply'] = {
+            root: replyRoot,
+            parent: replyParent,
+          }
+        }
+      }
+      feed.push(feedPost)
+    }
+    return feed
   }
 
   formatFeedGeneratorView(
@@ -45,6 +146,34 @@ export class FeedViews {
         like: info.viewerLike ?? undefined,
       },
       indexedAt: info.indexedAt,
+    }
+  }
+
+  // @TODO present block here (w/ usePostViewUnion)
+  formatMaybePostView(
+    uri: string,
+    actors: ActorViewMap,
+    posts: PostInfoMap,
+    embeds: FeedEmbeds,
+    labels: Labels,
+    usePostViewUnion?: boolean,
+  ): MaybePostView | undefined {
+    const post = this.formatPostView(uri, actors, posts, embeds, labels)
+    if (!post) {
+      if (!usePostViewUnion) return
+      return this.notFoundPost(uri)
+    }
+    return {
+      $type: 'app.bsky.feed.defs#postView',
+      ...post,
+    }
+  }
+
+  notFoundPost(uri: string) {
+    return {
+      $type: 'app.bsky.feed.defs#notFoundPost',
+      uri: uri,
+      notFound: true as const,
     }
   }
 }

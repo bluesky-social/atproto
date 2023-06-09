@@ -1,6 +1,5 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/uri'
-import { jsonStringToLex } from '@atproto/lexicon'
 import { dedupeStrs } from '@atproto/common'
 import Database from '../../db'
 import { countAll, noMatch, notSoftDeletedClause } from '../../db/util'
@@ -12,9 +11,15 @@ import {
   ViewRecord,
   View as RecordEmbedView,
 } from '../../lexicon/types/app/bsky/embed/record'
-import { PostView } from '../../lexicon/types/app/bsky/feed/defs'
-import { ActorViewMap, FeedEmbeds, PostInfoMap, FeedItemType } from '../types'
-import { Labels, LabelService } from '../label'
+import { FeedViewPost } from '../../lexicon/types/app/bsky/feed/defs'
+import {
+  ActorViewMap,
+  FeedEmbeds,
+  PostInfoMap,
+  FeedItemType,
+  FeedRow,
+} from '../types'
+import { LabelService } from '../label'
 import { FeedViews } from './views'
 import { FeedGenInfoMap } from './types'
 
@@ -102,7 +107,7 @@ export class FeedService {
   async getActorViews(
     dids: string[],
     viewer: string | null,
-    opts?: { skipLabels?: boolean }, // @NOTE used by composeFeed() to batch label hydration
+    opts?: { skipLabels?: boolean }, // @NOTE used by hydrateFeed() to batch label hydration
   ): Promise<ActorViewMap> {
     if (dids.length < 1) return {}
     const { ref } = this.db.db.dynamic
@@ -339,7 +344,7 @@ export class FeedService {
           },
         }
       } else if (collection === ids.AppBskyFeedPost && postViews[cur.uri]) {
-        const formatted = this.formatPostView(
+        const formatted = this.views.formatPostView(
           cur.uri,
           actorViews,
           postViews,
@@ -394,37 +399,47 @@ export class FeedService {
     return embeds
   }
 
-  formatPostView(
-    uri: string,
-    actors: ActorViewMap,
-    posts: PostInfoMap,
-    embeds: FeedEmbeds,
-    labels: Labels,
-  ): PostView | undefined {
-    const post = posts[uri]
-    const author = actors[post?.creator]
-    if (!post || !author) return undefined
-    // If the author labels are not hydrated yet, attempt to pull them
-    // from labels: e.g. compatible with composeFeed() batching label hydration.
-    author.labels ??= labels[author.did] ?? []
-    return {
-      $type: 'app.bsky.feed.defs#postView',
-      uri: post.uri,
-      cid: post.cid,
-      author: author,
-      record: jsonStringToLex(post.recordJson) as Record<string, unknown>,
-      embed: embeds[uri],
-      replyCount: post.replyCount ?? 0,
-      repostCount: post.repostCount ?? 0,
-      likeCount: post.likeCount ?? 0,
-      indexedAt: post.indexedAt,
-      viewer: post.viewer
-        ? {
-            repost: post.requesterRepost ?? undefined,
-            like: post.requesterLike ?? undefined,
-          }
-        : undefined,
-      labels: labels[uri] ?? [],
+  async hydrateFeed(
+    items: FeedRow[],
+    viewer: string | null,
+    // @TODO (deprecated) remove this once all clients support the blocked/not-found union on post views
+    usePostViewUnion?: boolean,
+  ): Promise<FeedViewPost[]> {
+    const actorDids = new Set<string>()
+    const postUris = new Set<string>()
+    for (const item of items) {
+      actorDids.add(item.postAuthorDid)
+      postUris.add(item.postUri)
+      if (item.postAuthorDid !== item.originatorDid) {
+        actorDids.add(item.originatorDid)
+      }
+      if (item.replyParent) {
+        postUris.add(item.replyParent)
+        actorDids.add(new AtUri(item.replyParent).hostname)
+      }
+      if (item.replyRoot) {
+        postUris.add(item.replyRoot)
+        actorDids.add(new AtUri(item.replyRoot).hostname)
+      }
     }
+    const [actors, posts, embeds, labels] = await Promise.all([
+      this.getActorViews(Array.from(actorDids), viewer, {
+        skipLabels: true,
+      }),
+      this.getPostViews(Array.from(postUris), viewer),
+      this.embedsForPosts(Array.from(postUris), viewer),
+      this.services
+        .label(this.db)
+        .getLabelsForSubjects([...postUris, ...actorDids]),
+    ])
+
+    return this.views.formatFeed(
+      items,
+      actors,
+      posts,
+      embeds,
+      labels,
+      usePostViewUnion,
+    )
   }
 }

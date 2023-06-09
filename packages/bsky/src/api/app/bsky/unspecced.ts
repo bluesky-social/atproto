@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { Server } from '../../../lexicon'
-import { FeedKeyset, composeFeed } from './util/feed'
+import { FeedKeyset } from './util/feed'
 import { paginate } from '../../../db/pagination'
 import AppContext from '../../../context'
 import { FeedRow, FeedItemType } from '../../../services/types'
@@ -12,13 +12,13 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {
       const { limit, cursor } = params
-      const requester = auth.credentials.did
+      const viewer = auth.credentials.did
       const db = ctx.db.db
       const { ref } = db.dynamic
 
       const feedService = ctx.services.feed(ctx.db)
-      const labelService = ctx.services.label(ctx.db)
 
+      // @TODO sync-up with pds, apply mutes and blocks
       const postsQb = ctx.db.db
         .selectFrom('post')
         .leftJoin('repost', (join) =>
@@ -55,12 +55,7 @@ export default function (server: Server, ctx: AppContext) {
       feedQb = paginate(feedQb, { limit, cursor, keyset })
 
       const feedItems: FeedRow[] = await feedQb.execute()
-      const feed = await composeFeed(
-        feedService,
-        labelService,
-        feedItems,
-        requester,
-      )
+      const feed = await feedService.hydrateFeed(feedItems, viewer)
 
       return {
         encoding: 'application/json',
