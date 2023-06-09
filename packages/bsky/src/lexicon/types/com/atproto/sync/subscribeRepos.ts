@@ -20,7 +20,7 @@ export type OutputSchema =
   | Tombstone
   | Info
   | { $type: string; [k: string]: unknown }
-export type HandlerError = ErrorFrame<'FutureCursor'>
+export type HandlerError = ErrorFrame<'FutureCursor' | 'ConsumerTooSlow'>
 export type HandlerOutput = HandlerError | OutputSchema
 export type Handler<HA extends HandlerAuth = never> = (ctx: {
   auth: HA

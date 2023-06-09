@@ -10,6 +10,7 @@ import {
 import { BackgroundQueue } from '../../../../event-stream/background-queue'
 import RecordProcessor from '../processor'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { toSimplifiedISOSafe } from '../util'
 
 const lexId = lex.ids.AppBskyGraphListitem
 type IndexedListItem = DatabaseSchemaType['list_item']
@@ -35,7 +36,7 @@ const insertFn = async (
       creator: uri.host,
       subjectDid: obj.subject,
       listUri: obj.list,
-      createdAt: obj.createdAt,
+      createdAt: toSimplifiedISOSafe(obj.createdAt),
       indexedAt: timestamp,
     })
     .onConflict((oc) => oc.doNothing())
