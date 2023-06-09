@@ -70,8 +70,7 @@ Array [
     "handle": "carol.test",
     "labels": Array [],
     "viewer": Object {
-      "followedBy": "record(1)",
-      "following": "record(0)",
+      "followedBy": "record(0)",
       "muted": true,
     },
   },
@@ -84,7 +83,7 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "viewer": Object {
-      "followedBy": "record(2)",
+      "followedBy": "record(1)",
       "muted": true,
     },
   },
