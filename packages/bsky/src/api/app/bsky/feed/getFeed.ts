@@ -129,7 +129,9 @@ async function skeletonFromFeedGen(
   const { feed: skeletonFeed, ...rest } = skeleton
 
   // Hydrate feed skeleton
+  const { ref } = ctx.db.db.dynamic
   const feedService = ctx.services.feed(ctx.db)
+  const graphService = ctx.services.graph(ctx.db)
   const feedItemUris = skeletonFeed.map(getSkeleFeedItemUri)
 
   // @TODO apply mutes and blocks
@@ -137,6 +139,19 @@ async function skeletonFromFeedGen(
     ? await feedService
         .selectFeedItemQb()
         .where('feed_item.uri', 'in', feedItemUris)
+        .where((qb) =>
+          // Hide posts and reposts of or by muted actors
+          graphService.whereNotMuted(qb, viewer, [
+            ref('post.creator'),
+            ref('originatorDid'),
+          ]),
+        )
+        .whereNotExists(
+          graphService.blockQb(viewer, [
+            ref('post.creator'),
+            ref('originatorDid'),
+          ]),
+        )
         .execute()
     : []
 
