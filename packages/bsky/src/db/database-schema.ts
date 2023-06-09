@@ -22,6 +22,8 @@ import * as notification from './tables/notification'
 import * as didCache from './tables/did-cache'
 import * as moderation from './tables/moderation'
 import * as label from './tables/label'
+import * as algo from './tables/algo'
+import * as viewParam from './tables/view-param'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
@@ -45,7 +47,9 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   notification.PartialDB &
   didCache.PartialDB &
   moderation.PartialDB &
-  label.PartialDB
+  label.PartialDB &
+  algo.PartialDB &
+  viewParam.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

@@ -12,7 +12,13 @@ require('dd-trace/init') // Only works with commonjs
 // Tracer code above must come before anything else
 const path = require('path')
 const { CloudfrontInvalidator } = require('@atproto/aws')
-const { Database, ServerConfig, BskyAppView } = require('@atproto/bsky')
+const {
+  Database,
+  ServerConfig,
+  BskyAppView,
+  ViewMaintainer,
+  makeAlgos,
+} = require('@atproto/bsky')
 
 const main = async () => {
   const env = getEnv()
@@ -20,13 +26,16 @@ const main = async () => {
   const migrateDb = Database.postgres({
     url: env.dbMigratePostgresUrl,
     schema: env.dbPostgresSchema,
+    poolSize: 2,
   })
   await migrateDb.migrateToLatestOrThrow()
-  await migrateDb.close()
   // Use lower-credentialed user to run the app
   const db = Database.postgres({
     url: env.dbPostgresUrl,
     schema: env.dbSchema,
+    poolSize: env.dbPoolSize,
+    poolMaxUses: env.dbPoolMaxUses,
+    poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
   })
   const cfg = ServerConfig.readEnv({
     port: env.port,
@@ -47,15 +56,22 @@ const main = async () => {
         pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
       })
     : undefined
+  const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
   const bsky = BskyAppView.create({
     db,
     config: cfg,
     imgInvalidator: cfInvalidator,
+    algos,
   })
+  const viewMaintainer = new ViewMaintainer(migrateDb)
+  const viewMaintainerRunning = viewMaintainer.run()
   await bsky.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
     await bsky.destroy()
+    viewMaintainer.destroy()
+    await viewMaintainerRunning
+    await migrateDb.close()
   })
 }
 
@@ -67,6 +83,9 @@ const getEnv = () => ({
   dbMigratePostgresUrl:
     process.env.DB_MIGRATE_POSTGRES_URL || process.env.DB_POSTGRES_URL,
   dbPostgresSchema: process.env.DB_POSTGRES_SCHEMA || undefined,
+  dbPoolSize: maybeParseInt(process.env.DB_POOL_SIZE),
+  dbPoolMaxUses: maybeParseInt(process.env.DB_POOL_MAX_USES),
+  dbPoolIdleTimeoutMs: maybeParseInt(process.env.DB_POOL_IDLE_TIMEOUT_MS),
   publicUrl: process.env.PUBLIC_URL,
   didPlcUrl: process.env.DID_PLC_URL,
   imgUriSalt: process.env.IMG_URI_SALT,
@@ -74,7 +93,13 @@ const getEnv = () => ({
   imgUriEndpoint: process.env.IMG_URI_ENDPOINT,
   blobCacheLocation: process.env.BLOB_CACHE_LOC,
   cfDistributionId: process.env.CF_DISTRIBUTION_ID,
+  feedPublisherDid: process.env.FEED_PUBLISHER_DID,
 })
+
+const maybeParseInt = (str) => {
+  const parsed = parseInt(str)
+  return isNaN(parsed) ? undefined : parsed
+}
 
 const maintainXrpcResource = (span, req) => {
   // Show actual xrpc method as resource rather than the route pattern

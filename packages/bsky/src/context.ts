@@ -8,6 +8,7 @@ import * as auth from './auth'
 import DidSqlCache from './did-cache'
 import { Labeler } from './labeler'
 import { BackgroundQueue } from './background'
+import { MountedAlgos } from './feed-gen/types'
 
 export class AppContext {
   constructor(
@@ -20,6 +21,7 @@ export class AppContext {
       didCache: DidSqlCache
       labeler: Labeler
       backgroundQueue: BackgroundQueue
+      algos: MountedAlgos
     },
   ) {}
 
@@ -52,11 +54,17 @@ export class AppContext {
   }
 
   get authVerifier() {
-    return auth.authVerifier(this.cfg.serverDid, this.idResolver)
+    return auth.authVerifier(this.idResolver, { aud: this.cfg.serverDid })
+  }
+
+  get authVerifierAnyAudience() {
+    return auth.authVerifier(this.idResolver, { aud: null })
   }
 
   get authOptionalVerifier() {
-    return auth.authOptionalVerifier(this.cfg.serverDid, this.idResolver)
+    return auth.authOptionalVerifier(this.idResolver, {
+      aud: this.cfg.serverDid,
+    })
   }
 
   get labeler(): Labeler {
@@ -65,6 +73,10 @@ export class AppContext {
 
   get backgroundQueue(): BackgroundQueue {
     return this.opts.backgroundQueue
+  }
+
+  get algos(): MountedAlgos {
+    return this.opts.algos
   }
 }
 

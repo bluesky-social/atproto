@@ -1,8 +1,10 @@
 import { Server } from '../lexicon'
 import AppContext from '../context'
+import describeFeedGenerator from './app/bsky/feed/describeFeedGenerator'
 import getTimeline from './app/bsky/feed/getTimeline'
 import getActorFeeds from './app/bsky/feed/getActorFeeds'
 import getAuthorFeed from './app/bsky/feed/getAuthorFeed'
+import getFeed from './app/bsky/feed/getFeed'
 import getFeedGenerator from './app/bsky/feed/getFeedGenerator'
 import getFeedGenerators from './app/bsky/feed/getFeedGenerators'
 import getLikes from './app/bsky/feed/getLikes'
@@ -43,9 +45,11 @@ export * as blobResolver from './blob-resolver'
 
 export default function (server: Server, ctx: AppContext) {
   // app.bsky
+  describeFeedGenerator(server, ctx)
   getTimeline(server, ctx)
   getActorFeeds(server, ctx)
   getAuthorFeed(server, ctx)
+  getFeed(server, ctx)
   getFeedGenerator(server, ctx)
   getFeedGenerators(server, ctx)
   getLikes(server, ctx)
