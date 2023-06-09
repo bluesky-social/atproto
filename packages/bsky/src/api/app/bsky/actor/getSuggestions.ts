@@ -1,57 +1,49 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
-import { countAll, notSoftDeletedClause } from '../../../../db/util'
+import { notSoftDeletedClause } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 
-// @TODO switch to use profile_agg once that table is being materialized (see: pds)
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getSuggestions({
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {
       let { limit } = params
       const { cursor } = params
-      const requester = auth.credentials.did
+      const viewer = auth.credentials.did
       limit = Math.min(limit ?? 25, 100)
 
       const db = ctx.db.db
       const { services } = ctx
       const { ref } = db.dynamic
 
-      const suggestionsQb = db
+      let suggestionsQb = db
         .selectFrom('actor')
         .where(notSoftDeletedClause(ref('actor')))
-        .where('actor.did', '!=', requester ?? '')
+        .innerJoin('profile_agg', 'profile_agg.did', 'actor.did')
+        .where('actor.did', '!=', viewer ?? '')
         .whereNotExists((qb) =>
           qb
             .selectFrom('follow')
             .selectAll()
-            .where('creator', '=', requester ?? '')
+            .where('creator', '=', viewer ?? '')
             .whereRef('subjectDid', '=', ref('actor.did')),
         )
         .selectAll()
-        .select(
-          db
-            .selectFrom('post')
-            .whereRef('creator', '=', ref('actor.did'))
-            .select(countAll.as('count'))
-            .as('postCount'),
-        )
+        .select('profile_agg.postsCount as postsCount')
 
-      // PG doesn't let you do WHEREs on aliases, so we wrap it in a subquery
-      let suggestionsReq = db
-        .selectFrom(suggestionsQb.as('suggestions'))
-        .selectAll()
-
-      const keyset = new PostCountDidKeyset(ref('postCount'), ref('did'))
-      suggestionsReq = paginate(suggestionsReq, {
+      const keyset = new PostCountDidKeyset(
+        ref('profile_agg.postsCount'),
+        ref('actor.did'),
+      )
+      suggestionsQb = paginate(suggestionsQb, {
         limit,
         cursor,
         keyset,
         direction: 'desc',
       })
 
-      const suggestionsRes = await suggestionsReq.execute()
+      const suggestionsRes = await suggestionsQb.execute()
 
       return {
         encoding: 'application/json',
@@ -59,14 +51,14 @@ export default function (server: Server, ctx: AppContext) {
           cursor: keyset.packFromResult(suggestionsRes),
           actors: await services
             .actor(ctx.db)
-            .views.profile(suggestionsRes, requester),
+            .views.profile(suggestionsRes, viewer),
         },
       }
     },
   })
 }
 
-type PostCountDidResult = { postCount: number; did: string }
+type PostCountDidResult = { postsCount: number; did: string }
 type PostCountDidLabeledResult = { primary: number; secondary: string }
 
 export class PostCountDidKeyset extends GenericKeyset<
@@ -74,7 +66,7 @@ export class PostCountDidKeyset extends GenericKeyset<
   PostCountDidLabeledResult
 > {
   labelResult(result: PostCountDidResult): PostCountDidLabeledResult {
-    return { primary: result.postCount, secondary: result.did }
+    return { primary: result.postsCount, secondary: result.did }
   }
   labeledResultToCursor(labeled: PostCountDidLabeledResult) {
     return {
