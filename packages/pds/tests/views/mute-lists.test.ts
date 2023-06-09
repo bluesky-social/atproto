@@ -88,6 +88,27 @@ describe('pds views with mutes from mute lists', () => {
     )
   })
 
+  it('embeds list view in posts', async () => {
+    const res = await agent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.bob },
+      {
+        text: 'cool mute list!',
+        embed: {
+          $type: 'app.bsky.embed.record',
+          record: listUri,
+        },
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(sc.dids.bob),
+    )
+    const view = await agent.api.app.bsky.feed.getPosts(
+      { uris: [res.uri] },
+      { headers: sc.getHeaders(sc.dids.bob) },
+    )
+    expect(view.data.posts.length).toBe(1)
+    expect(forSnapshot(view.data.posts[0])).toMatchSnapshot()
+  })
+
   it('flags mutes in threads', async () => {
     const res = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
