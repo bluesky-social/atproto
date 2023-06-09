@@ -10,6 +10,7 @@ import * as repost from './tables/repost'
 import * as feedItem from './tables/feed-item'
 import * as follow from './tables/follow'
 import * as like from './tables/like'
+import * as feedGenerator from './tables/feed-generator'
 import * as subscription from './tables/subscription'
 import * as actor from './tables/actor'
 import * as actorSync from './tables/actor-sync'
@@ -30,6 +31,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   feedItem.PartialDB &
   follow.PartialDB &
   like.PartialDB &
+  feedGenerator.PartialDB &
   subscription.PartialDB &
   actor.PartialDB &
   actorSync.PartialDB &
