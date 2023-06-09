@@ -1,7 +1,10 @@
 import { Server } from '../lexicon'
 import AppContext from '../context'
 import getTimeline from './app/bsky/feed/getTimeline'
+import getActorFeeds from './app/bsky/feed/getActorFeeds'
 import getAuthorFeed from './app/bsky/feed/getAuthorFeed'
+import getFeedGenerator from './app/bsky/feed/getFeedGenerator'
+import getFeedGenerators from './app/bsky/feed/getFeedGenerators'
 import getLikes from './app/bsky/feed/getLikes'
 import getPostThread from './app/bsky/feed/getPostThread'
 import getPosts from './app/bsky/feed/getPosts'
@@ -23,6 +26,7 @@ import searchActorsTypeahead from './app/bsky/actor/searchActorsTypeahead'
 import getSuggestions from './app/bsky/actor/getSuggestions'
 import getUnreadCount from './app/bsky/notification/getUnreadCount'
 import listNotifications from './app/bsky/notification/listNotifications'
+import unspecced from './app/bsky/unspecced'
 import createReport from './com/atproto/moderation/createReport'
 import resolveModerationReports from './com/atproto/admin/resolveModerationReports'
 import reverseModerationAction from './com/atproto/admin/reverseModerationAction'
@@ -43,7 +47,10 @@ export * as blobResolver from './blob-resolver'
 export default function (server: Server, ctx: AppContext) {
   // app.bsky
   getTimeline(server, ctx)
+  getActorFeeds(server, ctx)
   getAuthorFeed(server, ctx)
+  getFeedGenerator(server, ctx)
+  getFeedGenerators(server, ctx)
   getLikes(server, ctx)
   getPostThread(server, ctx)
   getPosts(server, ctx)
@@ -65,6 +72,7 @@ export default function (server: Server, ctx: AppContext) {
   getSuggestions(server, ctx)
   getUnreadCount(server, ctx)
   listNotifications(server, ctx)
+  unspecced(server, ctx)
   // com.atproto
   createReport(server, ctx)
   resolveModerationReports(server, ctx)

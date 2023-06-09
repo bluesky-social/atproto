@@ -83,6 +83,7 @@ export class ModerationService {
     cursor?: string
     ignoreSubjects?: string[]
     reverse?: boolean
+    reporters?: string[]
   }): Promise<ModerationReportRowWithHandle[]> {
     const {
       subject,
@@ -92,6 +93,7 @@ export class ModerationService {
       cursor,
       ignoreSubjects,
       reverse = false,
+      reporters,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_report')
@@ -108,6 +110,10 @@ export class ModerationService {
           .where('subjectDid', 'not in', ignoreSubjects)
           .where('subjectUri', 'not in', ignoreSubjects)
       })
+    }
+
+    if (reporters?.length) {
+      builder = builder.where('reportedByDid', 'in', reporters)
     }
 
     if (resolved !== undefined) {
