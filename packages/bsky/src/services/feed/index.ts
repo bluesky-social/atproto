@@ -10,8 +10,10 @@ import { isView as isViewExternal } from '../../lexicon/types/app/bsky/embed/ext
 import {
   ViewRecord,
   View as RecordEmbedView,
+  ViewNotFound,
+  ViewBlocked,
 } from '../../lexicon/types/app/bsky/embed/record'
-import { FeedViewPost } from '../../lexicon/types/app/bsky/feed/defs'
+import { FeedViewPost, PostView } from '../../lexicon/types/app/bsky/feed/defs'
 import {
   ActorViewMap,
   FeedEmbeds,
@@ -387,26 +389,16 @@ export class FeedService {
           // within the raw record, then look within this array to find the presented view of it.
           deepEmbeds = formatted?.embed ? [formatted.embed] : []
         }
-        if (formatted) {
-          recordEmbed = {
-            record: {
-              $type: 'app.bsky.embed.record#viewRecord',
-              uri: formatted.uri,
-              cid: formatted.cid,
-              author: formatted.author,
-              value: formatted.record,
-              labels: formatted.labels,
-              embeds: deepEmbeds,
-              indexedAt: formatted.indexedAt,
-            },
-          }
+        recordEmbed = {
+          record: getRecordEmbedView(cur.uri, formatted, deepEmbeds),
         }
-      }
-      recordEmbed ??= {
-        record: {
-          $type: 'app.bsky.embed.record#viewNotFound',
-          uri: cur.uri,
-        },
+      } else {
+        recordEmbed = {
+          record: {
+            $type: 'app.bsky.embed.record#viewNotFound',
+            uri: cur.uri,
+          },
+        }
       }
       if (acc[cur.postUri]) {
         const mediaEmbed = acc[cur.postUri]
@@ -468,5 +460,34 @@ export class FeedService {
       labels,
       usePostViewUnion,
     )
+  }
+}
+
+function getRecordEmbedView(
+  uri: string,
+  post?: PostView,
+  embeds?: ViewRecord['embeds'],
+): (ViewRecord | ViewNotFound | ViewBlocked) & { $type: string } {
+  if (!post) {
+    return {
+      $type: 'app.bsky.embed.record#viewNotFound',
+      uri,
+    }
+  }
+  if (post.author.viewer?.blocking || post.author.viewer?.blockedBy) {
+    return {
+      $type: 'app.bsky.embed.record#viewBlocked',
+      uri,
+    }
+  }
+  return {
+    $type: 'app.bsky.embed.record#viewRecord',
+    uri: post.uri,
+    cid: post.cid,
+    author: post.author,
+    value: post.record,
+    labels: post.labels,
+    indexedAt: post.indexedAt,
+    embeds,
   }
 }

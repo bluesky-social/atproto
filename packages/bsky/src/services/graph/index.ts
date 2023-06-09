@@ -4,7 +4,7 @@ import { ProfileView } from '../../lexicon/types/app/bsky/actor/defs'
 import { List } from '../../db/tables/list'
 import { Selectable, WhereInterface, sql } from 'kysely'
 import { NotEmptyArray } from '@atproto/common'
-import { DbRef } from '../../db/util'
+import { DbRef, noMatch } from '../../db/util'
 
 export class GraphService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
@@ -112,20 +112,21 @@ export class GraphService {
       .select(['list_item.cid as cid', 'list_item.sortAt as sortAt'])
   }
 
-  blockQb(requester: string, refs: NotEmptyArray<DbRef>) {
+  blockQb(viewer: string | null, refs: NotEmptyArray<DbRef>) {
     const subjectRefs = sql.join(refs)
     return this.db.db
       .selectFrom('actor_block')
+      .if(!viewer, (q) => q.where(noMatch))
       .where((outer) =>
         outer
           .where((qb) =>
             qb
-              .where('actor_block.creator', '=', requester)
+              .where('actor_block.creator', '=', viewer ?? '')
               .whereRef('actor_block.subjectDid', 'in', sql`(${subjectRefs})`),
           )
           .orWhere((qb) =>
             qb
-              .where('actor_block.subjectDid', '=', requester)
+              .where('actor_block.subjectDid', '=', viewer ?? '')
               .whereRef('actor_block.creator', 'in', sql`(${subjectRefs})`),
           ),
       )

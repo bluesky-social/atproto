@@ -11,24 +11,26 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       let { limit } = params
       const { cursor } = params
-      const requester = auth.credentials.did
+      const viewer = auth.credentials.did
       limit = Math.min(limit ?? 25, 100)
 
-      const db = ctx.db.db
-      const { services } = ctx
-      const { ref } = db.dynamic
+      const actorService = ctx.services.actor(ctx.db)
+      const graphService = ctx.services.graph(ctx.db)
 
+      const db = ctx.db.db
+      const { ref } = db.dynamic
       const suggestionsQb = db
         .selectFrom('actor')
         .where(notSoftDeletedClause(ref('actor')))
-        .where('actor.did', '!=', requester ?? '')
+        .where('actor.did', '!=', viewer ?? '')
         .whereNotExists((qb) =>
           qb
             .selectFrom('follow')
             .selectAll()
-            .where('creator', '=', requester ?? '')
+            .where('creator', '=', viewer ?? '')
             .whereRef('subjectDid', '=', ref('actor.did')),
         )
+        .whereNotExists(graphService.blockQb(viewer, [ref('actor.did')]))
         .selectAll()
         .select(
           db
@@ -57,9 +59,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           cursor: keyset.packFromResult(suggestionsRes),
-          actors: await services
-            .actor(ctx.db)
-            .views.profile(suggestionsRes, requester),
+          actors: await actorService.views.profile(suggestionsRes, viewer),
         },
       }
     },
