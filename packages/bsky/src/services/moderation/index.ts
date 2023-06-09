@@ -83,7 +83,8 @@ export class ModerationService {
     cursor?: string
     ignoreSubjects?: string[]
     reverse?: boolean
-  }): Promise<ModerationReportRow[]> {
+    reporters?: string[]
+  }): Promise<ModerationReportRowWithHandle[]> {
     const {
       subject,
       resolved,
@@ -92,6 +93,7 @@ export class ModerationService {
       cursor,
       ignoreSubjects,
       reverse = false,
+      reporters,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_report')
@@ -108,6 +110,10 @@ export class ModerationService {
           .where('subjectDid', 'not in', ignoreSubjects)
           .where('subjectUri', 'not in', ignoreSubjects)
       })
+    }
+
+    if (reporters?.length) {
+      builder = builder.where('reportedByDid', 'in', reporters)
     }
 
     if (resolved !== undefined) {
@@ -149,7 +155,8 @@ export class ModerationService {
       builder = builder.where('id', reverse ? '>' : '<', cursorNumeric)
     }
     return await builder
-      .selectAll()
+      .leftJoin('actor', 'actor.did', 'moderation_report.subjectDid')
+      .selectAll(['moderation_report', 'actor'])
       .orderBy('id', reverse ? 'asc' : 'desc')
       .limit(limit)
       .execute()
@@ -476,6 +483,9 @@ export class ModerationService {
 export type ModerationActionRow = Selectable<ModerationAction>
 
 export type ModerationReportRow = Selectable<ModerationReport>
+export type ModerationReportRowWithHandle = ModerationReportRow & {
+  handle?: string | null
+}
 
 export type SubjectInfo =
   | {

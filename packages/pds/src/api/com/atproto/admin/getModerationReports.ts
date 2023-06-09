@@ -14,6 +14,7 @@ export default function (server: Server, ctx: AppContext) {
         cursor,
         ignoreSubjects = [],
         reverse = false,
+        reporters = [],
       } = params
       const moderationService = services.moderation(db)
       const results = await moderationService.getReports({
@@ -24,6 +25,7 @@ export default function (server: Server, ctx: AppContext) {
         cursor,
         ignoreSubjects,
         reverse,
+        reporters,
       })
       return {
         encoding: 'application/json',
