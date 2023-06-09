@@ -79,6 +79,7 @@ describe('bsky views with mutes from mute lists', () => {
       sc.getHeaders(alice),
     )
     await network.processAll()
+    await network.bsky.ctx.backgroundQueue.processAll()
   })
 
   it('uses a list for mutes', async () => {
@@ -162,6 +163,8 @@ describe('bsky views with mutes from mute lists', () => {
   it('flags muted accounts in get suggestions', async () => {
     // unfollow so they _would_ show up in suggestions if not for mute
     await sc.unfollow(dan, carol)
+    await network.processAll()
+    await network.bsky.ctx.backgroundQueue.processAll()
 
     const res = await agent.api.app.bsky.actor.getSuggestions(
       {
