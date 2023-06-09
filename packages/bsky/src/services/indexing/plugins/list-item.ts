@@ -1,19 +1,17 @@
+import { Selectable } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
-import * as ListItem from '../../../../lexicon/types/app/bsky/graph/listitem'
-import * as lex from '../../../../lexicon/lexicons'
-import Database from '../../../../db'
-import {
-  DatabaseSchema,
-  DatabaseSchemaType,
-} from '../../../../db/database-schema'
-import { BackgroundQueue } from '../../../../event-stream/background-queue'
+import * as ListItem from '../../../lexicon/types/app/bsky/graph/listitem'
+import * as lex from '../../../lexicon/lexicons'
+import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { toSimplifiedISOSafe } from '../util'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import Database from '../../../db'
+import { BackgroundQueue } from '../../../background'
 
 const lexId = lex.ids.AppBskyGraphListitem
-type IndexedListItem = DatabaseSchemaType['list_item']
+type IndexedListItem = Selectable<DatabaseSchemaType['list_item']>
 
 const insertFn = async (
   db: DatabaseSchema,
@@ -75,12 +73,8 @@ const deleteFn = async (
   return deleted || null
 }
 
-const notifsForDelete = (
-  deleted: IndexedListItem,
-  replacedBy: IndexedListItem | null,
-) => {
-  const toDelete = replacedBy ? [] : [deleted.uri]
-  return { notifs: [], toDelete }
+const notifsForDelete = () => {
+  return { notifs: [], toDelete: [] }
 }
 
 export type PluginType = RecordProcessor<ListItem.Record, IndexedListItem>
