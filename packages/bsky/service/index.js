@@ -17,6 +17,7 @@ const {
   ServerConfig,
   BskyAppView,
   ViewMaintainer,
+  makeAlgos,
 } = require('@atproto/bsky')
 
 const main = async () => {

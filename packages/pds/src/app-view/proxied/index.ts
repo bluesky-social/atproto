@@ -479,12 +479,10 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
       // @TODO cache the feedgen did lookup
-      const { data: feed } = await agent.api.app.bsky.feed
-        .getFeedGenerator({ feed: params.feed }, await headers(requester))
-        .catch((err) => {
-          console.log(err)
-          throw err
-        })
+      const { data: feed } = await agent.api.app.bsky.feed.getFeedGenerator(
+        { feed: params.feed },
+        await headers(requester),
+      )
       if (!feed.view.did) {
         throw new InvalidRequestError('feed not found')
       }
