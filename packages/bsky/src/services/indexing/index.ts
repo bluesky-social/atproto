@@ -219,52 +219,67 @@ export class IndexingService {
     this.db.assertTransaction()
     const doc = await this.idResolver.did.resolve(did, true)
     if (doc === null) {
-      await Promise.all([
-        this.unindexActor(did),
-        this.db.db.deleteFrom('actor').where('did', '=', did).execute(),
-      ])
+      await this.db.db.deleteFrom('actor').where('did', '=', did).execute()
+      await this.unindexActor(did)
+      await this.db.db
+        .deleteFrom('notification')
+        .where('did', '=', did)
+        .execute()
     }
   }
 
   async unindexActor(did: string) {
     this.db.assertTransaction()
-
+    // per-record-type indexes
+    await this.db.db.deleteFrom('profile').where('creator', '=', did).execute()
+    await this.db.db.deleteFrom('follow').where('creator', '=', did).execute()
+    await this.db.db.deleteFrom('repost').where('creator', '=', did).execute()
+    await this.db.db.deleteFrom('like').where('creator', '=', did).execute()
+    await this.db.db
+      .deleteFrom('feed_generator')
+      .where('creator', '=', did)
+      .execute()
+    // lists
+    await this.db.db
+      .deleteFrom('list_item')
+      .where('creator', '=', did)
+      .execute()
+    await this.db.db.deleteFrom('list').where('creator', '=', did).execute()
+    // posts
     const postByUser = (qb) =>
       qb
         .selectFrom('post')
         .where('post.creator', '=', did)
         .select('post.uri as uri')
-
-    await Promise.all([
-      this.db.db
-        .deleteFrom('post_embed_image')
-        .where('post_embed_image.postUri', 'in', postByUser)
-        .execute(),
-      this.db.db
-        .deleteFrom('post_embed_external')
-        .where('post_embed_external.postUri', 'in', postByUser)
-        .execute(),
-      this.db.db
-        .deleteFrom('post_embed_record')
-        .where('post_embed_record.postUri', 'in', postByUser)
-        .execute(),
-      this.db.db
-        .deleteFrom('duplicate_record')
-        .where('duplicate_record.duplicateOf', 'in', (qb) =>
-          qb
-            .selectFrom('record')
-            .where('record.did', '=', did)
-            .select('record.uri as uri'),
-        )
-        .execute(),
-    ])
-    await Promise.all([
-      this.db.db.deleteFrom('follow').where('creator', '=', did).execute(),
-      this.db.db.deleteFrom('post').where('creator', '=', did).execute(),
-      this.db.db.deleteFrom('profile').where('creator', '=', did).execute(),
-      this.db.db.deleteFrom('repost').where('creator', '=', did).execute(),
-      this.db.db.deleteFrom('like').where('creator', '=', did).execute(),
-    ])
+    await this.db.db
+      .deleteFrom('post_embed_image')
+      .where('post_embed_image.postUri', 'in', postByUser)
+      .execute()
+    await this.db.db
+      .deleteFrom('post_embed_external')
+      .where('post_embed_external.postUri', 'in', postByUser)
+      .execute()
+    await this.db.db
+      .deleteFrom('post_embed_record')
+      .where('post_embed_record.postUri', 'in', postByUser)
+      .execute()
+    await this.db.db.deleteFrom('post').where('creator', '=', did).execute()
+    // notifications
+    await this.db.db
+      .deleteFrom('notification')
+      .where('notification.author', '=', did)
+      .execute()
+    // generic record indexes
+    await this.db.db
+      .deleteFrom('duplicate_record')
+      .where('duplicate_record.duplicateOf', 'in', (qb) =>
+        qb
+          .selectFrom('record')
+          .where('record.did', '=', did)
+          .select('record.uri as uri'),
+      )
+      .execute()
+    await this.db.db.deleteFrom('record').where('did', '=', did).execute()
   }
 }
 
