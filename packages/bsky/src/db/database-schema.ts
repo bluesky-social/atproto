@@ -14,6 +14,7 @@ import * as list from './tables/list'
 import * as listItem from './tables/list-item'
 import * as listMute from './tables/list-mute'
 import * as mute from './tables/mute'
+import * as actorBlock from './tables/actor-block'
 import * as subscription from './tables/subscription'
 import * as actor from './tables/actor'
 import * as actorSync from './tables/actor-sync'
@@ -38,6 +39,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   listItem.PartialDB &
   listMute.PartialDB &
   mute.PartialDB &
+  actorBlock.PartialDB &
   subscription.PartialDB &
   actor.PartialDB &
   actorSync.PartialDB &
