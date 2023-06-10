@@ -13,6 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       const { ref } = db.dynamic
 
       const feedService = ctx.services.feed(ctx.db)
+      const graphService = ctx.services.graph(ctx.db)
 
       let did = ''
       if (actor.startsWith('did:')) {
@@ -28,10 +29,20 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      // @NOTE mutes applied on pds
       let feedItemsQb = feedService
         .selectFeedItemQb()
         .where('originatorDid', '=', did)
+
+      if (viewer !== null) {
+        feedItemsQb = feedItemsQb.where((qb) =>
+          // Hide reposts of muted content
+          qb
+            .where('type', '=', 'post')
+            .orWhere((qb) =>
+              graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
+            ),
+        )
+      }
 
       const keyset = new FeedKeyset(
         ref('feed_item.sortAt'),

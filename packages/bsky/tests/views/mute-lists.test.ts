@@ -4,7 +4,7 @@ import { forSnapshot } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
-describe('pds views with mutes from mute lists', () => {
+describe('bsky views with mutes from mute lists', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let pdsAgent: AtpAgent
@@ -79,6 +79,7 @@ describe('pds views with mutes from mute lists', () => {
       sc.getHeaders(alice),
     )
     await network.processAll()
+    await network.bsky.ctx.backgroundQueue.processAll()
   })
 
   it('uses a list for mutes', async () => {
@@ -94,113 +95,93 @@ describe('pds views with mutes from mute lists', () => {
     )
   })
 
-  // it('flags mutes in threads', async () => {
-  //   const res = await agent.api.app.bsky.feed.getPostThread(
-  //     { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
-  //     { headers: sc.getHeaders(dan) },
-  //   )
-  //   expect(forSnapshot(res.data.thread)).toMatchSnapshot()
-  // })
+  it('flags mutes in threads', async () => {
+    const res = await agent.api.app.bsky.feed.getPostThread(
+      { depth: 1, uri: sc.posts[alice][1].ref.uriStr },
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(forSnapshot(res.data.thread)).toMatchSnapshot()
+  })
 
-  // it('does not show reposted content from a muted account in author feed', async () => {
-  //   await sc.repost(alice, sc.posts[carol][0].ref)
+  it('does not show reposted content from a muted account in author feed', async () => {
+    await sc.repost(alice, sc.posts[carol][0].ref)
+    await network.processAll()
 
-  //   const res = await agent.api.app.bsky.feed.getAuthorFeed(
-  //     { actor: alice },
-  //     { headers: sc.getHeaders(dan) },
-  //   )
-  //   expect(
-  //     res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
-  //   ).toBe(false)
-  // })
+    const res = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: alice },
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(
+      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+    ).toBe(false)
+  })
 
-  // it('removes content from muted users on getTimeline', async () => {
-  //   const res = await agent.api.app.bsky.feed.getTimeline(
-  //     { limit: 100 },
-  //     { headers: sc.getHeaders(dan) },
-  //   )
-  //   expect(
-  //     res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
-  //   ).toBe(false)
-  // })
+  it('removes content from muted users on getTimeline', async () => {
+    const res = await agent.api.app.bsky.feed.getTimeline(
+      { limit: 100 },
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(
+      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+    ).toBe(false)
+  })
 
-  // it('flags muted users on getPopular', async () => {
-  //   for (let i = 0; i < 15; i++) {
-  //     const name = `user${i}`
-  //     await sc.createAccount(name, {
-  //       handle: `user${i}.test`,
-  //       email: `user${i}@test.com`,
-  //       password: 'password',
-  //     })
-  //     await sc.like(sc.dids[name], sc.posts[alice][0].ref)
-  //     await sc.like(sc.dids[name], sc.posts[bob][0].ref)
-  //     await sc.like(sc.dids[name], sc.posts[carol][0].ref)
-  //     await sc.like(sc.dids[name], sc.posts[dan][0].ref)
-  //   }
+  it('returns mute status on getProfile', async () => {
+    const res = await agent.api.app.bsky.actor.getProfile(
+      { actor: carol },
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(res.data.viewer?.muted).toBe(true)
+    expect(res.data.viewer?.mutedByList?.uri).toBe(listUri)
+  })
 
-  //   const res = await agent.api.app.bsky.unspecced.getPopular(
-  //     {},
-  //     { headers: sc.getHeaders(dan) },
-  //   )
-  //   expect(
-  //     res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
-  //   ).toBe(false)
-  // })
+  it('returns mute status on getProfiles', async () => {
+    const res = await agent.api.app.bsky.actor.getProfiles(
+      { actors: [alice, carol] },
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(res.data.profiles[0].viewer?.muted).toBe(false)
+    expect(res.data.profiles[0].viewer?.mutedByList).toBeUndefined()
+    expect(res.data.profiles[1].viewer?.muted).toBe(true)
+    expect(res.data.profiles[1].viewer?.mutedByList?.uri).toEqual(listUri)
+  })
 
-  // it('returns mute status on getProfile', async () => {
-  //   const res = await agent.api.app.bsky.actor.getProfile(
-  //     { actor: carol },
-  //     { headers: sc.getHeaders(dan) },
-  //   )
-  //   expect(res.data.viewer?.muted).toBe(true)
-  //   expect(res.data.viewer?.mutedByList?.uri).toBe(listUri)
-  // })
+  it('does not return notifs for muted accounts', async () => {
+    const res = await agent.api.app.bsky.notification.listNotifications(
+      {
+        limit: 100,
+      },
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(
+      res.data.notifications.some((notif) =>
+        [bob, carol].includes(notif.author.did),
+      ),
+    ).toBeFalsy()
+  })
 
-  // it('returns mute status on getProfiles', async () => {
-  //   const res = await agent.api.app.bsky.actor.getProfiles(
-  //     { actors: [alice, carol] },
-  //     { headers: sc.getHeaders(dan) },
-  //   )
-  //   expect(res.data.profiles[0].viewer?.muted).toBe(false)
-  //   expect(res.data.profiles[0].viewer?.mutedByList).toBeUndefined()
-  //   expect(res.data.profiles[1].viewer?.muted).toBe(true)
-  //   expect(res.data.profiles[1].viewer?.mutedByList?.uri).toEqual(listUri)
-  // })
+  it('flags muted accounts in get suggestions', async () => {
+    // unfollow so they _would_ show up in suggestions if not for mute
+    await sc.unfollow(dan, carol)
+    await network.processAll()
+    await network.bsky.ctx.backgroundQueue.processAll()
 
-  // it('does not return notifs for muted accounts', async () => {
-  //   const res = await agent.api.app.bsky.notification.listNotifications(
-  //     {
-  //       limit: 100,
-  //     },
-  //     { headers: sc.getHeaders(dan) },
-  //   )
-  //   expect(
-  //     res.data.notifications.some((notif) =>
-  //       [bob, carol].includes(notif.author.did),
-  //     ),
-  //   ).toBeFalsy()
-  // })
-
-  // it('flags muted accounts in in get suggestions', async () => {
-  //   // unfollow so they _would_ show up in suggestions if not for mute
-  //   await sc.unfollow(dan, carol)
-
-  //   const res = await agent.api.app.bsky.actor.getSuggestions(
-  //     {
-  //       limit: 100,
-  //     },
-  //     { headers: sc.getHeaders(dan) },
-  //   )
-  //   for (const actor of res.data.actors) {
-  //     if ([bob, carol].includes(actor.did)) {
-  //       expect(actor.viewer?.muted).toBe(true)
-  //       expect(actor.viewer?.mutedByList?.uri).toEqual(listUri)
-  //     } else {
-  //       expect(actor.viewer?.muted).toBe(false)
-  //       expect(actor.viewer?.mutedByList).toBeUndefined()
-  //     }
-  //   }
-  // })
+    const res = await agent.api.app.bsky.actor.getSuggestions(
+      {
+        limit: 100,
+      },
+      { headers: await network.serviceHeaders(dan) },
+    )
+    for (const actor of res.data.actors) {
+      if ([bob, carol].includes(actor.did)) {
+        expect(actor.viewer?.muted).toBe(true)
+        expect(actor.viewer?.mutedByList?.uri).toEqual(listUri)
+      } else {
+        expect(actor.viewer?.muted).toBe(false)
+        expect(actor.viewer?.mutedByList).toBeUndefined()
+      }
+    }
+  })
 
   it('returns the contents of a list', async () => {
     const res = await agent.api.app.bsky.graph.getList(

@@ -9,7 +9,9 @@ Object {
         "did": "user(0)",
         "handle": "eve.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "createdAt": "1970-01-01T00:00:00.000Z",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -21,6 +23,7 @@ Object {
         "labels": Array [],
         "viewer": Object {
           "following": "record(1)",
+          "muted": false,
         },
       },
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -34,6 +37,7 @@ Object {
         "viewer": Object {
           "followedBy": "record(3)",
           "following": "record(2)",
+          "muted": false,
         },
       },
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -51,6 +55,7 @@ Object {
         "viewer": Object {
           "followedBy": "record(5)",
           "following": "record(4)",
+          "muted": false,
         },
       },
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -73,6 +78,7 @@ Object {
         "viewer": Object {
           "followedBy": "record(2)",
           "following": "record(1)",
+          "muted": false,
         },
       },
       "createdAt": "1970-01-01T00:00:00.000Z",

@@ -11,7 +11,9 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "postsCount": 5,
-    "viewer": Object {},
+    "viewer": Object {
+      "muted": false,
+    },
   },
   Object {
     "cursor": "0000000000000::bafycid",
@@ -23,7 +25,9 @@ Array [
             "did": "user(0)",
             "handle": "alice.test",
             "labels": Array [],
-            "viewer": Object {},
+            "viewer": Object {
+              "muted": false,
+            },
           },
           "cid": "cids(0)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -47,7 +51,9 @@ Array [
             "did": "user(0)",
             "handle": "alice.test",
             "labels": Array [],
-            "viewer": Object {},
+            "viewer": Object {
+              "muted": false,
+            },
           },
           "cid": "cids(1)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -85,6 +91,7 @@ Array [
               "viewer": Object {
                 "followedBy": "record(5)",
                 "following": "record(4)",
+                "muted": false,
               },
             },
             "cid": "cids(3)",
@@ -160,7 +167,9 @@ Array [
               "did": "user(0)",
               "handle": "alice.test",
               "labels": Array [],
-              "viewer": Object {},
+              "viewer": Object {
+                "muted": false,
+              },
             },
             "cid": "cids(2)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -185,7 +194,9 @@ Array [
             "did": "user(0)",
             "handle": "alice.test",
             "labels": Array [],
-            "viewer": Object {},
+            "viewer": Object {
+              "muted": false,
+            },
           },
           "cid": "cids(6)",
           "embed": Object {
@@ -198,6 +209,7 @@ Array [
                 "labels": Array [],
                 "viewer": Object {
                   "following": "record(8)",
+                  "muted": false,
                 },
               },
               "cid": "cids(7)",
@@ -212,6 +224,7 @@ Array [
                       "labels": Array [],
                       "viewer": Object {
                         "followedBy": "record(10)",
+                        "muted": false,
                       },
                     },
                     "cid": "cids(8)",
@@ -330,7 +343,9 @@ Array [
             "did": "user(0)",
             "handle": "alice.test",
             "labels": Array [],
-            "viewer": Object {},
+            "viewer": Object {
+              "muted": false,
+            },
           },
           "cid": "cids(2)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -354,7 +369,9 @@ Array [
             "did": "user(0)",
             "handle": "alice.test",
             "labels": Array [],
-            "viewer": Object {},
+            "viewer": Object {
+              "muted": false,
+            },
           },
           "cid": "cids(11)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -382,6 +399,7 @@ Array [
         "labels": Array [],
         "viewer": Object {
           "following": "record(8)",
+          "muted": false,
         },
       },
       Object {
@@ -395,6 +413,7 @@ Array [
         "viewer": Object {
           "followedBy": "record(5)",
           "following": "record(4)",
+          "muted": false,
         },
       },
     ],
@@ -404,7 +423,9 @@ Array [
       "handle": "alice.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
-      "viewer": Object {},
+      "viewer": Object {
+        "muted": false,
+      },
     },
   },
 ]
@@ -422,7 +443,9 @@ Object {
         "displayName": "ali",
         "handle": "alice.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(0)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -469,7 +492,9 @@ Object {
         "displayName": "ali",
         "handle": "alice.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(0)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -544,7 +569,9 @@ Object {
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "labels": Array [],
   "postsCount": 0,
-  "viewer": Object {},
+  "viewer": Object {
+    "muted": false,
+  },
 }
 `;
 
@@ -558,7 +585,9 @@ Object {
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "labels": Array [],
   "postsCount": 0,
-  "viewer": Object {},
+  "viewer": Object {
+    "muted": false,
+  },
 }
 `;
 
@@ -570,6 +599,8 @@ Object {
   "handle": "dan.test",
   "labels": Array [],
   "postsCount": 0,
-  "viewer": Object {},
+  "viewer": Object {
+    "muted": false,
+  },
 }
 `;

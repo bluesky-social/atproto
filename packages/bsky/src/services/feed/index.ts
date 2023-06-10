@@ -11,7 +11,6 @@ import {
   ViewRecord,
   View as RecordEmbedView,
 } from '../../lexicon/types/app/bsky/embed/record'
-import { FeedViewPost } from '../../lexicon/types/app/bsky/feed/defs'
 import {
   ActorViewMap,
   FeedEmbeds,
@@ -20,8 +19,10 @@ import {
   FeedRow,
 } from '../types'
 import { LabelService } from '../label'
+import { ActorService } from '../actor'
 import { FeedViews } from './views'
 import { FeedGenInfoMap } from './types'
+import { FeedViewPost } from '../../lexicon/types/app/bsky/feed/defs'
 
 export class FeedService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
@@ -29,7 +30,8 @@ export class FeedService {
   views = new FeedViews(this.db, this.imgUriBuilder)
 
   services = {
-    label: LabelService.creator(),
+    label: LabelService.creator()(this.db),
+    actor: ActorService.creator(this.imgUriBuilder)(this.db),
   }
 
   static creator(imgUriBuilder: ImageUriBuilder) {
@@ -103,6 +105,7 @@ export class FeedService {
       )
   }
 
+  // @TODO just use actor service??
   // @NOTE keep in sync with actorService.views.profile()
   async getActorViews(
     dids: string[],
@@ -112,7 +115,7 @@ export class FeedService {
     if (dids.length < 1) return {}
     const { ref } = this.db.db.dynamic
     const { skipLabels } = opts ?? {}
-    const [actors, labels] = await Promise.all([
+    const [actors, labels, listMutes] = await Promise.all([
       this.db.db
         .selectFrom('actor')
         .where('actor.did', 'in', dids)
@@ -138,9 +141,17 @@ export class FeedService {
             .where('subjectDid', '=', viewer ?? '')
             .select('uri')
             .as('requesterFollowedBy'),
+          this.db.db
+            .selectFrom('mute')
+            .if(!viewer, (q) => q.where(noMatch))
+            .whereRef('subjectDid', '=', ref('actor.did'))
+            .where('mutedByDid', '=', viewer ?? '')
+            .select('subjectDid')
+            .as('requesterMuted'),
         ])
         .execute(),
-      this.services.label(this.db).getLabelsForSubjects(skipLabels ? [] : dids),
+      this.services.label.getLabelsForSubjects(skipLabels ? [] : dids),
+      this.services.actor.views.getListMutes(dids, viewer),
     ])
     return actors.reduce((acc, cur) => {
       const actorLabels = labels[cur.did] ?? []
@@ -159,9 +170,10 @@ export class FeedService {
             : undefined,
           viewer: viewer
             ? {
+                muted: !!cur?.requesterMuted || !!listMutes[cur.did],
+                mutedByList: listMutes[cur.did],
                 following: cur?.requesterFollowing || undefined,
                 followedBy: cur?.requesterFollowedBy || undefined,
-                // muted field hydrated on pds
               }
             : undefined,
           labels: skipLabels ? undefined : actorLabels,
@@ -281,9 +293,10 @@ export class FeedService {
         this.getPostViews(nestedPostUris, viewer),
         this.getActorViews(nestedDids, viewer, { skipLabels: true }),
         this.embedsForPosts(nestedUris, viewer, _depth + 1),
-        this.services
-          .label(this.db)
-          .getLabelsForSubjects([...nestedUris, ...nestedDids]),
+        this.services.label.getLabelsForSubjects([
+          ...nestedUris,
+          ...nestedDids,
+        ]),
         this.getFeedGeneratorViews(nestedFeedGenUris, viewer),
       ])
     let embeds = images.reduce((acc, cur) => {
@@ -428,9 +441,7 @@ export class FeedService {
       }),
       this.getPostViews(Array.from(postUris), viewer),
       this.embedsForPosts(Array.from(postUris), viewer),
-      this.services
-        .label(this.db)
-        .getLabelsForSubjects([...postUris, ...actorDids]),
+      this.services.label.getLabelsForSubjects([...postUris, ...actorDids]),
     ])
 
     return this.views.formatFeed(
