@@ -24,6 +24,7 @@ import * as moderation from './tables/moderation'
 import * as label from './tables/label'
 import * as algo from './tables/algo'
 import * as viewParam from './tables/view-param'
+import * as suggestedFollow from './tables/suggested-follow'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
@@ -49,7 +50,8 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   moderation.PartialDB &
   label.PartialDB &
   algo.PartialDB &
-  viewParam.PartialDB
+  viewParam.PartialDB &
+  suggestedFollow.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 
