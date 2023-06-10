@@ -18,6 +18,7 @@ Object {
           "viewer": Object {
             "followedBy": "record(2)",
             "following": "record(1)",
+            "muted": false,
           },
         },
         "cid": "cids(2)",
@@ -46,7 +47,9 @@ Object {
         "displayName": "bobby",
         "handle": "bob.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "muted": false,
+        },
       },
       "cid": "cids(3)",
       "embed": Object {
@@ -128,6 +131,7 @@ Object {
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -174,6 +178,7 @@ Object {
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -203,6 +208,7 @@ Object {
           "labels": Array [],
           "viewer": Object {
             "following": "record(5)",
+            "muted": false,
           },
         },
         "cid": "cids(2)",
@@ -241,7 +247,9 @@ Object {
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": Array [],
-          "viewer": Object {},
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(3)",
         "embed": Object {
@@ -324,6 +332,7 @@ Object {
               "viewer": Object {
                 "followedBy": "record(2)",
                 "following": "record(1)",
+                "muted": false,
               },
             },
             "cid": "cids(5)",
@@ -374,6 +383,7 @@ Object {
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -403,6 +413,7 @@ Object {
           "labels": Array [],
           "viewer": Object {
             "following": "record(5)",
+            "muted": false,
           },
         },
         "cid": "cids(2)",
@@ -440,7 +451,9 @@ Object {
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": Array [],
-          "viewer": Object {},
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(3)",
         "embed": Object {
@@ -528,6 +541,7 @@ Object {
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -555,7 +569,9 @@ Object {
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": Array [],
-          "viewer": Object {},
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(2)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -595,6 +611,7 @@ Object {
               "viewer": Object {
                 "followedBy": "record(2)",
                 "following": "record(1)",
+                "muted": false,
               },
             },
             "cid": "cids(3)",
@@ -643,6 +660,7 @@ Object {
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -682,6 +700,7 @@ Object {
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -731,6 +750,7 @@ Object {
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -782,6 +802,7 @@ Object {
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -828,6 +849,7 @@ Object {
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -857,7 +879,9 @@ Object {
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": Array [],
-          "viewer": Object {},
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(2)",
         "embed": Object {
@@ -940,6 +964,7 @@ Object {
               "viewer": Object {
                 "followedBy": "record(2)",
                 "following": "record(1)",
+                "muted": false,
               },
             },
             "cid": "cids(4)",
@@ -990,6 +1015,7 @@ Object {
       "viewer": Object {
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -1019,7 +1045,9 @@ Object {
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": Array [],
-          "viewer": Object {},
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(2)",
         "embed": Object {

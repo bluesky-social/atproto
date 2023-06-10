@@ -13,7 +13,9 @@ Object {
           "displayName": "ali",
           "handle": "alice.test",
           "labels": Array [],
-          "viewer": Object {},
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(0)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -60,6 +62,7 @@ Object {
             "viewer": Object {
               "followedBy": "record(4)",
               "following": "record(3)",
+              "muted": false,
             },
           },
           "cid": "cids(3)",
@@ -137,7 +140,9 @@ Object {
             "displayName": "ali",
             "handle": "alice.test",
             "labels": Array [],
-            "viewer": Object {},
+            "viewer": Object {
+              "muted": false,
+            },
           },
           "cid": "cids(2)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -165,6 +170,7 @@ Object {
           "viewer": Object {
             "followedBy": "record(8)",
             "following": "record(7)",
+            "muted": false,
           },
         },
         "cid": "cids(6)",
@@ -200,7 +206,9 @@ Object {
             "displayName": "ali",
             "handle": "alice.test",
             "labels": Array [],
-            "viewer": Object {},
+            "viewer": Object {
+              "muted": false,
+            },
           },
           "cid": "cids(2)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -224,7 +232,9 @@ Object {
             "displayName": "ali",
             "handle": "alice.test",
             "labels": Array [],
-            "viewer": Object {},
+            "viewer": Object {
+              "muted": false,
+            },
           },
           "cid": "cids(2)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -263,6 +273,7 @@ Object {
           "viewer": Object {
             "followedBy": "record(4)",
             "following": "record(3)",
+            "muted": false,
           },
         },
         "cid": "cids(3)",
@@ -341,7 +352,9 @@ Object {
             "displayName": "ali",
             "handle": "alice.test",
             "labels": Array [],
-            "viewer": Object {},
+            "viewer": Object {
+              "muted": false,
+            },
           },
           "cid": "cids(2)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -365,7 +378,9 @@ Object {
             "displayName": "ali",
             "handle": "alice.test",
             "labels": Array [],
-            "viewer": Object {},
+            "viewer": Object {
+              "muted": false,
+            },
           },
           "cid": "cids(2)",
           "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -392,7 +407,9 @@ Object {
           "displayName": "ali",
           "handle": "alice.test",
           "labels": Array [],
-          "viewer": Object {},
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(7)",
         "embed": Object {
@@ -405,6 +422,7 @@ Object {
               "labels": Array [],
               "viewer": Object {
                 "following": "record(11)",
+                "muted": false,
               },
             },
             "cid": "cids(8)",
@@ -420,6 +438,7 @@ Object {
                     "viewer": Object {
                       "followedBy": "record(8)",
                       "following": "record(7)",
+                      "muted": false,
                     },
                   },
                   "cid": "cids(9)",
@@ -552,6 +571,7 @@ Object {
           "viewer": Object {
             "followedBy": "record(4)",
             "following": "record(3)",
+            "muted": false,
           },
         },
         "cid": "cids(12)",
@@ -578,7 +598,9 @@ Object {
           "displayName": "ali",
           "handle": "alice.test",
           "labels": Array [],
-          "viewer": Object {},
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(2)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -605,6 +627,7 @@ Object {
           "viewer": Object {
             "followedBy": "record(8)",
             "following": "record(7)",
+            "muted": false,
           },
         },
         "cid": "cids(9)",
@@ -646,6 +669,7 @@ Object {
                 "viewer": Object {
                   "followedBy": "record(4)",
                   "following": "record(3)",
+                  "muted": false,
                 },
               },
               "cid": "cids(11)",
@@ -734,6 +758,7 @@ Object {
           "viewer": Object {
             "followedBy": "record(4)",
             "following": "record(3)",
+            "muted": false,
           },
         },
         "cid": "cids(11)",
@@ -760,7 +785,9 @@ Object {
           "displayName": "ali",
           "handle": "alice.test",
           "labels": Array [],
-          "viewer": Object {},
+          "viewer": Object {
+            "muted": false,
+          },
         },
         "cid": "cids(13)",
         "indexedAt": "1970-01-01T00:00:00.000Z",

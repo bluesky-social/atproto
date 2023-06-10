@@ -9,6 +9,7 @@ import { noMatch } from '../../db/util'
 import { Actor } from '../../db/tables/actor'
 import { ImageUriBuilder } from '../../image/uri'
 import { LabelService } from '../label'
+import { ListViewBasic } from '../../lexicon/types/app/bsky/graph/defs'
 
 export class ActorViews {
   constructor(private db: Database, private imgUriBuilder: ImageUriBuilder) {}
@@ -65,11 +66,19 @@ export class ActorViews {
           .where('subjectDid', '=', viewer ?? '')
           .select('uri')
           .as('requesterFollowedBy'),
+        this.db.db
+          .selectFrom('mute')
+          .if(!viewer, (q) => q.where(noMatch))
+          .whereRef('subjectDid', '=', ref('actor.did'))
+          .where('mutedByDid', '=', viewer ?? '')
+          .select('subjectDid')
+          .as('requesterMuted'),
       ])
 
-    const [profileInfos, labels] = await Promise.all([
+    const [profileInfos, labels, listMutes] = await Promise.all([
       profileInfosQb.execute(),
       this.services.label(this.db).getLabelsForSubjects(dids),
+      this.getListMutes(dids, viewer),
     ])
 
     const profileInfoByDid = profileInfos.reduce((acc, info) => {
@@ -107,7 +116,8 @@ export class ActorViews {
           ? {
               following: profileInfo?.requesterFollowing || undefined,
               followedBy: profileInfo?.requesterFollowedBy || undefined,
-              // muted field hydrated on pds
+              muted: !!profileInfo?.requesterMuted || !!listMutes[result.did],
+              mutedByList: listMutes[result.did],
             }
           : undefined,
         labels: labels[result.did] ?? [],
@@ -154,11 +164,19 @@ export class ActorViews {
           .where('subjectDid', '=', viewer ?? '')
           .select('uri')
           .as('requesterFollowedBy'),
+        this.db.db
+          .selectFrom('mute')
+          .if(!viewer, (q) => q.where(noMatch))
+          .whereRef('subjectDid', '=', ref('actor.did'))
+          .where('mutedByDid', '=', viewer ?? '')
+          .select('subjectDid')
+          .as('requesterMuted'),
       ])
 
-    const [profileInfos, labels] = await Promise.all([
+    const [profileInfos, labels, listMutes] = await Promise.all([
       profileInfosQb.execute(),
       this.services.label(this.db).getLabelsForSubjects(dids),
+      this.getListMutes(dids, viewer),
     ])
 
     const profileInfoByDid = profileInfos.reduce((acc, info) => {
@@ -183,6 +201,8 @@ export class ActorViews {
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: viewer
           ? {
+              muted: !!profileInfo?.requesterMuted || !!listMutes[result.did],
+              mutedByList: listMutes[result.did],
               following: profileInfo?.requesterFollowing || undefined,
               followedBy: profileInfo?.requesterFollowedBy || undefined,
               // muted field hydrated on pds
@@ -221,6 +241,45 @@ export class ActorViews {
     }))
 
     return Array.isArray(result) ? views : views[0]
+  }
+
+  async getListMutes(
+    subjects: string[],
+    mutedBy: string | null,
+  ): Promise<Record<string, ListViewBasic>> {
+    if (mutedBy === null) return {}
+    if (subjects.length < 1) return {}
+    const res = await this.db.db
+      .selectFrom('list_item')
+      .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
+      .innerJoin('list', 'list.uri', 'list_item.listUri')
+      .where('list_mute.mutedByDid', '=', mutedBy)
+      .where('list_item.subjectDid', 'in', subjects)
+      .selectAll('list')
+      .select('list_item.subjectDid as subjectDid')
+      .execute()
+    return res.reduce(
+      (acc, cur) => ({
+        ...acc,
+        [cur.subjectDid]: {
+          uri: cur.uri,
+          name: cur.name,
+          purpose: cur.purpose,
+          avatar: cur.avatarCid
+            ? this.imgUriBuilder.getCommonSignedUri(
+                'avatar',
+                cur.creator,
+                cur.avatarCid,
+              )
+            : undefined,
+          viewer: {
+            muted: true,
+          },
+          indexedAt: cur.indexedAt,
+        },
+      }),
+      {} as Record<string, ListViewBasic>,
+    )
   }
 }
 

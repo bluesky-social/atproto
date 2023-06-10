@@ -2,13 +2,41 @@ import Database from '../../db'
 import { ImageUriBuilder } from '../../image/uri'
 import { ProfileView } from '../../lexicon/types/app/bsky/actor/defs'
 import { List } from '../../db/tables/list'
-import { Selectable } from 'kysely'
+import { Selectable, WhereInterface, sql } from 'kysely'
+import { NotEmptyArray } from '@atproto/common'
+import { DbRef } from '../../db/util'
 
 export class GraphService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
 
   static creator(imgUriBuilder: ImageUriBuilder) {
     return (db: Database) => new GraphService(db, imgUriBuilder)
+  }
+
+  async muteActor(info: {
+    subjectDid: string
+    mutedByDid: string
+    createdAt?: Date
+  }) {
+    const { subjectDid, mutedByDid, createdAt = new Date() } = info
+    await this.db.db
+      .insertInto('mute')
+      .values({
+        subjectDid,
+        mutedByDid,
+        createdAt: createdAt.toISOString(),
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+  }
+
+  async unmuteActor(info: { subjectDid: string; mutedByDid: string }) {
+    const { subjectDid, mutedByDid } = info
+    await this.db.db
+      .deleteFrom('mute')
+      .where('subjectDid', '=', subjectDid)
+      .where('mutedByDid', '=', mutedByDid)
+      .execute()
   }
 
   async muteActorList(info: {
@@ -35,6 +63,27 @@ export class GraphService {
       .where('listUri', '=', list)
       .where('mutedByDid', '=', mutedByDid)
       .execute()
+  }
+
+  whereNotMuted<W extends WhereInterface<any, any>>(
+    qb: W,
+    requester: string,
+    refs: NotEmptyArray<DbRef>,
+  ) {
+    const subjectRefs = sql.join(refs)
+    const actorMute = this.db.db
+      .selectFrom('mute')
+      .where('mutedByDid', '=', requester)
+      .where('subjectDid', 'in', sql`(${subjectRefs})`)
+      .select('subjectDid as muted')
+    const listMute = this.db.db
+      .selectFrom('list_item')
+      .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
+      .where('list_mute.mutedByDid', '=', requester)
+      .whereRef('list_item.subjectDid', 'in', sql`(${subjectRefs})`)
+      .select('list_item.subjectDid as muted')
+    // Splitting the mute from list-mute checks seems to be more flexible for the query-planner and often quicker
+    return qb.whereNotExists(actorMute).whereNotExists(listMute)
   }
 
   getListsQb(viewer: string | null) {
