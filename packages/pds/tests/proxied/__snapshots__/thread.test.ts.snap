@@ -34,7 +34,7 @@ Object {
         "repostCount": 1,
         "uri": "record(3)",
         "viewer": Object {
-          "like": "record(7)",
+          "like": "record(6)",
         },
       },
       "replies": Array [],
@@ -46,16 +46,7 @@ Object {
         "did": "user(2)",
         "displayName": "bobby",
         "handle": "bob.test",
-        "labels": Array [
-          Object {
-            "cid": "cids(4)",
-            "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
-            "src": "did:example:labeler",
-            "uri": "record(6)",
-            "val": "test-label",
-          },
-        ],
+        "labels": Array [],
         "viewer": Object {
           "muted": false,
         },
@@ -66,8 +57,8 @@ Object {
         "images": Array [
           Object {
             "alt": "tests/image/fixtures/key-landscape-small.jpg",
-            "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(3)/cids(5)@jpeg",
-            "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(3)/cids(5)@jpeg",
+            "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(3)/cids(4)@jpeg",
+            "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(3)/cids(4)@jpeg",
           },
         ],
       },
@@ -103,7 +94,7 @@ Object {
                 "$type": "blob",
                 "mimeType": "image/jpeg",
                 "ref": Object {
-                  "$link": "cids(5)",
+                  "$link": "cids(4)",
                 },
                 "size": 4114,
               },
@@ -255,16 +246,7 @@ Object {
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
-          "labels": Array [
-            Object {
-              "cid": "cids(4)",
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "did:example:labeler",
-              "uri": "record(7)",
-              "val": "test-label",
-            },
-          ],
+          "labels": Array [],
           "viewer": Object {
             "muted": false,
           },
@@ -275,8 +257,8 @@ Object {
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(4)/cids(5)@jpeg",
-              "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(4)/cids(5)@jpeg",
+              "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(4)/cids(4)@jpeg",
+              "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(4)/cids(4)@jpeg",
             },
           ],
         },
@@ -312,7 +294,7 @@ Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
                   "ref": Object {
-                    "$link": "cids(5)",
+                    "$link": "cids(4)",
                   },
                   "size": 4114,
                 },
@@ -353,7 +335,7 @@ Object {
                 "muted": false,
               },
             },
-            "cid": "cids(6)",
+            "cid": "cids(5)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
             "likeCount": 0,
@@ -374,9 +356,9 @@ Object {
             },
             "replyCount": 0,
             "repostCount": 1,
-            "uri": "record(8)",
+            "uri": "record(7)",
             "viewer": Object {
-              "repost": "record(9)",
+              "repost": "record(8)",
             },
           },
           "replies": Array [],
@@ -468,16 +450,7 @@ Object {
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
-          "labels": Array [
-            Object {
-              "cid": "cids(4)",
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "did:example:labeler",
-              "uri": "record(7)",
-              "val": "test-label",
-            },
-          ],
+          "labels": Array [],
           "viewer": Object {
             "muted": false,
           },
@@ -488,8 +461,8 @@ Object {
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(4)/cids(5)@jpeg",
-              "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(4)/cids(5)@jpeg",
+              "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(4)/cids(4)@jpeg",
+              "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(4)/cids(4)@jpeg",
             },
           ],
         },
@@ -525,7 +498,7 @@ Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
                   "ref": Object {
-                    "$link": "cids(5)",
+                    "$link": "cids(4)",
                   },
                   "size": 4114,
                 },
@@ -595,16 +568,7 @@ Object {
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
-          "labels": Array [
-            Object {
-              "cid": "cids(3)",
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "did:example:labeler",
-              "uri": "record(4)",
-              "val": "test-label",
-            },
-          ],
+          "labels": Array [],
           "viewer": Object {
             "muted": false,
           },
@@ -650,7 +614,7 @@ Object {
                 "muted": false,
               },
             },
-            "cid": "cids(4)",
+            "cid": "cids(3)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
             "likeCount": 0,
@@ -671,7 +635,7 @@ Object {
             },
             "replyCount": 0,
             "repostCount": 0,
-            "uri": "record(5)",
+            "uri": "record(4)",
             "viewer": Object {},
           },
           "replies": Array [],
@@ -849,16 +813,7 @@ Object {
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
-          "labels": Array [
-            Object {
-              "cid": "cids(4)",
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "did:example:labeler",
-              "uri": "record(7)",
-              "val": "test-label",
-            },
-          ],
+          "labels": Array [],
           "viewer": Object {
             "muted": false,
           },
@@ -869,8 +824,8 @@ Object {
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(4)/cids(5)@jpeg",
-              "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(4)/cids(5)@jpeg",
+              "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(4)/cids(4)@jpeg",
+              "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(4)/cids(4)@jpeg",
             },
           ],
         },
@@ -906,7 +861,7 @@ Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
                   "ref": Object {
-                    "$link": "cids(5)",
+                    "$link": "cids(4)",
                   },
                   "size": 4114,
                 },
@@ -947,7 +902,7 @@ Object {
                 "muted": true,
               },
             },
-            "cid": "cids(6)",
+            "cid": "cids(5)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
             "likeCount": 0,
@@ -968,9 +923,9 @@ Object {
             },
             "replyCount": 0,
             "repostCount": 1,
-            "uri": "record(8)",
+            "uri": "record(7)",
             "viewer": Object {
-              "repost": "record(9)",
+              "repost": "record(8)",
             },
           },
           "replies": Array [],

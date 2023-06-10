@@ -47,16 +47,7 @@ Object {
             "did": "user(2)",
             "displayName": "bobby",
             "handle": "bob.test",
-            "labels": Array [
-              Object {
-                "cid": "cids(4)",
-                "cts": "1970-01-01T00:00:00.000Z",
-                "neg": false,
-                "src": "did:example:labeler",
-                "uri": "record(5)",
-                "val": "test-label",
-              },
-            ],
+            "labels": Array [],
             "viewer": Object {
               "followedBy": "record(4)",
               "following": "record(3)",
@@ -68,8 +59,8 @@ Object {
             "images": Array [
               Object {
                 "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(3)/cids(5)@jpeg",
-                "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(3)/cids(5)@jpeg",
+                "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(3)/cids(4)@jpeg",
+                "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(3)/cids(4)@jpeg",
               },
             ],
           },
@@ -105,7 +96,7 @@ Object {
                     "$type": "blob",
                     "mimeType": "image/jpeg",
                     "ref": Object {
-                      "$link": "cids(5)",
+                      "$link": "cids(4)",
                     },
                     "size": 4114,
                   },
@@ -163,11 +154,11 @@ Object {
           "handle": "carol.test",
           "labels": Array [],
           "viewer": Object {
-            "followedBy": "record(8)",
-            "following": "record(7)",
+            "followedBy": "record(7)",
+            "following": "record(6)",
           },
         },
-        "cid": "cids(6)",
+        "cid": "cids(5)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
         "likeCount": 0,
@@ -188,7 +179,7 @@ Object {
         },
         "replyCount": 0,
         "repostCount": 0,
-        "uri": "record(6)",
+        "uri": "record(5)",
         "viewer": Object {},
       },
       "reply": Object {
@@ -250,16 +241,7 @@ Object {
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
-          "labels": Array [
-            Object {
-              "cid": "cids(4)",
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "did:example:labeler",
-              "uri": "record(5)",
-              "val": "test-label",
-            },
-          ],
+          "labels": Array [],
           "viewer": Object {
             "followedBy": "record(4)",
             "following": "record(3)",
@@ -271,8 +253,8 @@ Object {
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(3)/cids(5)@jpeg",
-              "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(3)/cids(5)@jpeg",
+              "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(3)/cids(4)@jpeg",
+              "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(3)/cids(4)@jpeg",
             },
           ],
         },
@@ -308,7 +290,7 @@ Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
                   "ref": Object {
-                    "$link": "cids(5)",
+                    "$link": "cids(4)",
                   },
                   "size": 4114,
                 },
@@ -394,7 +376,7 @@ Object {
           "labels": Array [],
           "viewer": Object {},
         },
-        "cid": "cids(7)",
+        "cid": "cids(6)",
         "embed": Object {
           "$type": "app.bsky.embed.record#view",
           "record": Object {
@@ -404,10 +386,10 @@ Object {
               "handle": "dan.test",
               "labels": Array [],
               "viewer": Object {
-                "following": "record(11)",
+                "following": "record(10)",
               },
             },
-            "cid": "cids(8)",
+            "cid": "cids(7)",
             "embeds": Array [
               Object {
                 "$type": "app.bsky.embed.record#view",
@@ -418,14 +400,14 @@ Object {
                     "handle": "carol.test",
                     "labels": Array [],
                     "viewer": Object {
-                      "followedBy": "record(8)",
-                      "following": "record(7)",
+                      "followedBy": "record(7)",
+                      "following": "record(6)",
                     },
                   },
-                  "cid": "cids(9)",
+                  "cid": "cids(8)",
                   "indexedAt": "1970-01-01T00:00:00.000Z",
                   "labels": Array [],
-                  "uri": "record(12)",
+                  "uri": "record(11)",
                   "value": Object {
                     "$type": "app.bsky.feed.post",
                     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -440,7 +422,7 @@ Object {
                               "$type": "blob",
                               "mimeType": "image/jpeg",
                               "ref": Object {
-                                "$link": "cids(5)",
+                                "$link": "cids(4)",
                               },
                               "size": 4114,
                             },
@@ -451,7 +433,7 @@ Object {
                               "$type": "blob",
                               "mimeType": "image/jpeg",
                               "ref": Object {
-                                "$link": "cids(10)",
+                                "$link": "cids(9)",
                               },
                               "size": 12736,
                             },
@@ -460,8 +442,8 @@ Object {
                       },
                       "record": Object {
                         "record": Object {
-                          "cid": "cids(11)",
-                          "uri": "record(13)",
+                          "cid": "cids(10)",
+                          "uri": "record(12)",
                         },
                       },
                     },
@@ -472,15 +454,15 @@ Object {
             ],
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
-            "uri": "record(10)",
+            "uri": "record(9)",
             "value": Object {
               "$type": "app.bsky.feed.post",
               "createdAt": "1970-01-01T00:00:00.000Z",
               "embed": Object {
                 "$type": "app.bsky.embed.record",
                 "record": Object {
-                  "cid": "cids(9)",
-                  "uri": "record(12)",
+                  "cid": "cids(8)",
+                  "uri": "record(11)",
                 },
               },
               "facets": Array [
@@ -504,11 +486,11 @@ Object {
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [
           Object {
-            "cid": "cids(7)",
+            "cid": "cids(6)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
             "src": "did:example:labeler",
-            "uri": "record(9)",
+            "uri": "record(8)",
             "val": "test-label",
           },
         ],
@@ -519,15 +501,15 @@ Object {
           "embed": Object {
             "$type": "app.bsky.embed.record",
             "record": Object {
-              "cid": "cids(8)",
-              "uri": "record(10)",
+              "cid": "cids(7)",
+              "uri": "record(9)",
             },
           },
           "text": "yoohoo label_me",
         },
         "replyCount": 0,
         "repostCount": 0,
-        "uri": "record(9)",
+        "uri": "record(8)",
         "viewer": Object {},
       },
     },
@@ -539,22 +521,13 @@ Object {
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
-          "labels": Array [
-            Object {
-              "cid": "cids(4)",
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "did:example:labeler",
-              "uri": "record(5)",
-              "val": "test-label",
-            },
-          ],
+          "labels": Array [],
           "viewer": Object {
             "followedBy": "record(4)",
             "following": "record(3)",
           },
         },
-        "cid": "cids(12)",
+        "cid": "cids(11)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
         "likeCount": 0,
@@ -565,7 +538,7 @@ Object {
         },
         "replyCount": 0,
         "repostCount": 0,
-        "uri": "record(14)",
+        "uri": "record(13)",
         "viewer": Object {},
       },
     },
@@ -603,11 +576,11 @@ Object {
           "handle": "carol.test",
           "labels": Array [],
           "viewer": Object {
-            "followedBy": "record(8)",
-            "following": "record(7)",
+            "followedBy": "record(7)",
+            "following": "record(6)",
           },
         },
-        "cid": "cids(9)",
+        "cid": "cids(8)",
         "embed": Object {
           "$type": "app.bsky.embed.recordWithMedia#view",
           "media": Object {
@@ -615,13 +588,13 @@ Object {
             "images": Array [
               Object {
                 "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(6)/cids(5)@jpeg",
-                "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(6)/cids(5)@jpeg",
+                "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(6)/cids(4)@jpeg",
+                "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(6)/cids(4)@jpeg",
               },
               Object {
                 "alt": "tests/image/fixtures/key-alt.jpg",
-                "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(6)/cids(10)@jpeg",
-                "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(6)/cids(10)@jpeg",
+                "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(6)/cids(9)@jpeg",
+                "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(6)/cids(9)@jpeg",
               },
             ],
           },
@@ -633,26 +606,17 @@ Object {
                 "did": "user(2)",
                 "displayName": "bobby",
                 "handle": "bob.test",
-                "labels": Array [
-                  Object {
-                    "cid": "cids(4)",
-                    "cts": "1970-01-01T00:00:00.000Z",
-                    "neg": false,
-                    "src": "did:example:labeler",
-                    "uri": "record(5)",
-                    "val": "test-label",
-                  },
-                ],
+                "labels": Array [],
                 "viewer": Object {
                   "followedBy": "record(4)",
                   "following": "record(3)",
                 },
               },
-              "cid": "cids(11)",
+              "cid": "cids(10)",
               "embeds": Array [],
               "indexedAt": "1970-01-01T00:00:00.000Z",
               "labels": Array [],
-              "uri": "record(13)",
+              "uri": "record(12)",
               "value": Object {
                 "$type": "app.bsky.feed.post",
                 "createdAt": "1970-01-01T00:00:00.000Z",
@@ -678,7 +642,7 @@ Object {
                     "$type": "blob",
                     "mimeType": "image/jpeg",
                     "ref": Object {
-                      "$link": "cids(5)",
+                      "$link": "cids(4)",
                     },
                     "size": 4114,
                   },
@@ -689,7 +653,7 @@ Object {
                     "$type": "blob",
                     "mimeType": "image/jpeg",
                     "ref": Object {
-                      "$link": "cids(10)",
+                      "$link": "cids(9)",
                     },
                     "size": 12736,
                   },
@@ -698,8 +662,8 @@ Object {
             },
             "record": Object {
               "record": Object {
-                "cid": "cids(11)",
-                "uri": "record(13)",
+                "cid": "cids(10)",
+                "uri": "record(12)",
               },
             },
           },
@@ -707,9 +671,9 @@ Object {
         },
         "replyCount": 0,
         "repostCount": 0,
-        "uri": "record(12)",
+        "uri": "record(11)",
         "viewer": Object {
-          "like": "record(15)",
+          "like": "record(14)",
         },
       },
     },
@@ -721,22 +685,13 @@ Object {
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
-          "labels": Array [
-            Object {
-              "cid": "cids(4)",
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "did:example:labeler",
-              "uri": "record(5)",
-              "val": "test-label",
-            },
-          ],
+          "labels": Array [],
           "viewer": Object {
             "followedBy": "record(4)",
             "following": "record(3)",
           },
         },
-        "cid": "cids(11)",
+        "cid": "cids(10)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
         "likeCount": 0,
@@ -747,7 +702,7 @@ Object {
         },
         "replyCount": 0,
         "repostCount": 0,
-        "uri": "record(13)",
+        "uri": "record(12)",
         "viewer": Object {},
       },
     },
@@ -762,7 +717,7 @@ Object {
           "labels": Array [],
           "viewer": Object {},
         },
-        "cid": "cids(13)",
+        "cid": "cids(12)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
         "likeCount": 0,
@@ -773,7 +728,7 @@ Object {
         },
         "replyCount": 0,
         "repostCount": 0,
-        "uri": "record(16)",
+        "uri": "record(15)",
         "viewer": Object {},
       },
     },
