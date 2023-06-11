@@ -4,15 +4,23 @@ import axios, { AxiosError } from 'axios'
 import { TestNetwork } from '@atproto/dev-env'
 import { handler as errorHandler } from '../src/error'
 import { Database } from '../src'
+import { SeedClient } from './seeds/client'
+import basicSeed from './seeds/basic'
 
 describe('server', () => {
   let network: TestNetwork
   let db: Database
+  let alice: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_server',
     })
+    const pdsAgent = network.pds.getClient()
+    const sc = new SeedClient(pdsAgent)
+    await basicSeed(sc)
+    await network.processAll()
+    alice = sc.dids.alice
     db = network.bsky.ctx.db
   })
 
@@ -78,6 +86,28 @@ describe('server', () => {
       error: 'PayloadTooLargeError',
       message: 'request entity too large',
     })
+  })
+
+  it('compresses large json responses', async () => {
+    const res = await axios.get(
+      `${network.bsky.url}/xrpc/app.bsky.feed.getTimeline`,
+      {
+        decompress: false,
+        headers: {
+          ...(await network.serviceHeaders(alice)),
+          'accept-encoding': 'gzip',
+        },
+      },
+    )
+    expect(res.headers['content-encoding']).toEqual('gzip')
+  })
+
+  it('does not compress small payloads', async () => {
+    const res = await axios.get(`${network.bsky.url}/xrpc/_health`, {
+      decompress: false,
+      headers: { 'accept-encoding': 'gzip' },
+    })
+    expect(res.headers['content-encoding']).toBeUndefined()
   })
 
   it('healthcheck fails when database is unavailable.', async () => {

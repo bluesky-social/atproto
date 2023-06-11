@@ -4,6 +4,7 @@ import { AddressInfo } from 'net'
 import events from 'events'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import cors from 'cors'
+import compression from 'compression'
 import { IdResolver } from '@atproto/identity'
 import API, { health, blobResolver } from './api'
 import Database from './db'
@@ -62,6 +63,7 @@ export class BskyAppView {
     const app = express()
     app.use(cors())
     app.use(loggerMiddleware)
+    app.use(compression())
 
     const didCache = new DidSqlCache(
       db,
