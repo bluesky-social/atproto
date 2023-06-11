@@ -267,6 +267,9 @@ export class IndexingService {
       this.db.db.deleteFrom('profile').where('creator', '=', did).execute(),
       this.db.db.deleteFrom('repost').where('creator', '=', did).execute(),
       this.db.db.deleteFrom('like').where('creator', '=', did).execute(),
+      this.db.db.deleteFrom('list').where('creator', '=', did).execute(),
+      this.db.db.deleteFrom('list_item').where('creator', '=', did).execute(),
+      this.db.db.deleteFrom('actor_block').where('creator', '=', did).execute(),
     ])
   }
 }

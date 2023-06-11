@@ -135,48 +135,6 @@ describe('pds views with blocking', () => {
     ).toBeFalsy()
   })
 
-  // it('strips blocked users out of getPopular', async () => {
-  //   for (let i = 0; i < 15; i++) {
-  //     const name = `user${i}`
-  //     await sc.createAccount(name, {
-  //       handle: `user${i}.test`,
-  //       email: `user${i}@test.com`,
-  //       password: 'password',
-  //     })
-  //     await sc.like(sc.dids[name], sc.posts[alice][0].ref)
-  //     await sc.like(sc.dids[name], sc.posts[carol][0].ref)
-  //     await sc.like(sc.dids[name], sc.posts[dan][0].ref)
-  //   }
-
-  //   const resCarol = await agent.api.app.bsky.unspecced.getPopular(
-  //     {},
-  //     { headers: sc.getHeaders(carol) },
-  //   )
-  //   expect(
-  //     resCarol.data.feed.some((post) => post.post.author.did === alice),
-  //   ).toBeTruthy()
-  //   expect(
-  //     resCarol.data.feed.some((post) => post.post.author.did === carol),
-  //   ).toBeTruthy()
-  //   expect(
-  //     resCarol.data.feed.some((post) => post.post.author.did === dan),
-  //   ).toBeFalsy()
-
-  //   const resDan = await agent.api.app.bsky.unspecced.getPopular(
-  //     {},
-  //     { headers: sc.getHeaders(dan) },
-  //   )
-  //   expect(
-  //     resDan.data.feed.some((post) => post.post.author.did === alice),
-  //   ).toBeTruthy()
-  //   expect(
-  //     resDan.data.feed.some((post) => post.post.author.did === carol),
-  //   ).toBeFalsy()
-  //   expect(
-  //     resDan.data.feed.some((post) => post.post.author.did === dan),
-  //   ).toBeTruthy()
-  // })
-
   it('returns block status on getProfile', async () => {
     const resCarol = await agent.api.app.bsky.actor.getProfile(
       { actor: dan },
