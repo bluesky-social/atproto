@@ -10,7 +10,9 @@ Array [
       "displayName": "ali",
       "handle": "alice.test",
       "labels": Array [],
-      "viewer": Object {},
+      "viewer": Object {
+        "muted": false,
+      },
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -34,7 +36,9 @@ Array [
       "displayName": "ali",
       "handle": "alice.test",
       "labels": Array [],
-      "viewer": Object {},
+      "viewer": Object {
+        "muted": false,
+      },
     },
     "cid": "cids(2)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -61,6 +65,7 @@ Array [
       "viewer": Object {
         "followedBy": "record(4)",
         "following": "record(3)",
+        "muted": false,
       },
     },
     "cid": "cids(3)",
@@ -86,6 +91,7 @@ Array [
       "viewer": Object {
         "followedBy": "record(7)",
         "following": "record(6)",
+        "muted": false,
       },
     },
     "cid": "cids(4)",
@@ -118,6 +124,7 @@ Array [
             "viewer": Object {
               "followedBy": "record(4)",
               "following": "record(3)",
+              "muted": false,
             },
           },
           "cid": "cids(3)",
@@ -192,6 +199,7 @@ Array [
       "labels": Array [],
       "viewer": Object {
         "following": "record(10)",
+        "muted": false,
       },
     },
     "cid": "cids(7)",
@@ -206,6 +214,7 @@ Array [
           "viewer": Object {
             "followedBy": "record(7)",
             "following": "record(6)",
+            "muted": false,
           },
         },
         "cid": "cids(4)",
@@ -239,6 +248,7 @@ Array [
                   "viewer": Object {
                     "followedBy": "record(4)",
                     "following": "record(3)",
+                    "muted": false,
                   },
                 },
                 "cid": "cids(3)",
@@ -342,7 +352,9 @@ Array [
       "displayName": "ali",
       "handle": "alice.test",
       "labels": Array [],
-      "viewer": Object {},
+      "viewer": Object {
+        "muted": false,
+      },
     },
     "cid": "cids(8)",
     "indexedAt": "1970-01-01T00:00:00.000Z",

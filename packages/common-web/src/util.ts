@@ -9,6 +9,10 @@ export const noUndefinedVals = <T>(
   return obj
 }
 
+export const jitter = (maxMs: number) => {
+  return Math.round((Math.random() - 0.5) * maxMs * 2)
+}
+
 export const wait = (ms: number) => {
   return new Promise((res) => setTimeout(res, ms))
 }

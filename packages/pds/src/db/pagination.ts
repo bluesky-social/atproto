@@ -58,12 +58,23 @@ export abstract class GenericKeyset<R, LR extends LabeledResult> {
       secondary,
     }
   }
-  getSql(labeled?: LR, direction?: 'asc' | 'desc') {
+  getSql(labeled?: LR, direction?: 'asc' | 'desc', tryIndex?: boolean) {
     if (labeled === undefined) return
-    if (direction === 'asc') {
-      return sql`((${this.primary} > ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} > ${labeled.secondary}))`
+    if (tryIndex) {
+      // The tryIndex param will likely disappear and become the default implementation: here for now for gradual rollout query-by-query.
+      if (direction === 'asc') {
+        return sql`((${this.primary}, ${this.secondary}) > (${labeled.primary}, ${labeled.secondary}))`
+      } else {
+        return sql`((${this.primary}, ${this.secondary}) < (${labeled.primary}, ${labeled.secondary}))`
+      }
+    } else {
+      // @NOTE this implementation can struggle to use an index on (primary, secondary) for pagination due to the "or" usage.
+      if (direction === 'asc') {
+        return sql`((${this.primary} > ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} > ${labeled.secondary}))`
+      } else {
+        return sql`((${this.primary} < ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} < ${labeled.secondary}))`
+      }
     }
-    return sql`((${this.primary} < ${labeled.primary}) or (${this.primary} = ${labeled.primary} and ${this.secondary} < ${labeled.secondary}))`
   }
 }
 
@@ -105,10 +116,11 @@ export const paginate = <
     cursor?: string
     direction?: 'asc' | 'desc'
     keyset: K
+    tryIndex?: boolean
   },
 ): QB => {
-  const { limit, cursor, keyset, direction = 'desc' } = opts
-  const keysetSql = keyset.getSql(keyset.unpack(cursor), direction)
+  const { limit, cursor, keyset, direction = 'desc', tryIndex } = opts
+  const keysetSql = keyset.getSql(keyset.unpack(cursor), direction, tryIndex)
   return qb
     .if(!!limit, (q) => q.limit(limit as number))
     .orderBy(keyset.primary, direction)

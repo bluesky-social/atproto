@@ -18,6 +18,7 @@ describe('pds user search views', () => {
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     await network.processAll()
+    await network.bsky.ctx.backgroundQueue.processAll()
   })
 
   afterAll(async () => {

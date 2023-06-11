@@ -1,7 +1,12 @@
 import { Server } from '../lexicon'
 import AppContext from '../context'
+import describeFeedGenerator from './app/bsky/feed/describeFeedGenerator'
 import getTimeline from './app/bsky/feed/getTimeline'
+import getActorFeeds from './app/bsky/feed/getActorFeeds'
 import getAuthorFeed from './app/bsky/feed/getAuthorFeed'
+import getFeed from './app/bsky/feed/getFeed'
+import getFeedGenerator from './app/bsky/feed/getFeedGenerator'
+import getFeedGenerators from './app/bsky/feed/getFeedGenerators'
 import getLikes from './app/bsky/feed/getLikes'
 import getPostThread from './app/bsky/feed/getPostThread'
 import getPosts from './app/bsky/feed/getPosts'
@@ -10,6 +15,14 @@ import getProfiles from './app/bsky/actor/getProfiles'
 import getRepostedBy from './app/bsky/feed/getRepostedBy'
 import getFollowers from './app/bsky/graph/getFollowers'
 import getFollows from './app/bsky/graph/getFollows'
+import getList from './app/bsky/graph/getList'
+import getLists from './app/bsky/graph/getLists'
+import getListMutes from './app/bsky/graph/getListMutes'
+import getMutes from './app/bsky/graph/getMutes'
+import muteActor from './app/bsky/graph/muteActor'
+import unmuteActor from './app/bsky/graph/unmuteActor'
+import muteActorList from './app/bsky/graph/muteActorList'
+import unmuteActorList from './app/bsky/graph/unmuteActorList'
 import searchActors from './app/bsky/actor/searchActors'
 import searchActorsTypeahead from './app/bsky/actor/searchActorsTypeahead'
 import getSuggestions from './app/bsky/actor/getSuggestions'
@@ -35,8 +48,13 @@ export * as blobResolver from './blob-resolver'
 
 export default function (server: Server, ctx: AppContext) {
   // app.bsky
+  describeFeedGenerator(server, ctx)
   getTimeline(server, ctx)
+  getActorFeeds(server, ctx)
   getAuthorFeed(server, ctx)
+  getFeed(server, ctx)
+  getFeedGenerator(server, ctx)
+  getFeedGenerators(server, ctx)
   getLikes(server, ctx)
   getPostThread(server, ctx)
   getPosts(server, ctx)
@@ -45,6 +63,14 @@ export default function (server: Server, ctx: AppContext) {
   getRepostedBy(server, ctx)
   getFollowers(server, ctx)
   getFollows(server, ctx)
+  getList(server, ctx)
+  getLists(server, ctx)
+  getListMutes(server, ctx)
+  getMutes(server, ctx)
+  muteActor(server, ctx)
+  unmuteActor(server, ctx)
+  muteActorList(server, ctx)
+  unmuteActorList(server, ctx)
   searchActors(server, ctx)
   searchActorsTypeahead(server, ctx)
   getSuggestions(server, ctx)

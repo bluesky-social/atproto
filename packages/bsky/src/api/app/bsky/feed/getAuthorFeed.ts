@@ -1,5 +1,5 @@
 import { Server } from '../../../../lexicon'
-import { FeedKeyset, composeFeed } from '../util/feed'
+import { FeedKeyset } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 
@@ -8,12 +8,12 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {
       const { actor, limit, cursor } = params
-      const requester = auth.credentials.did
+      const viewer = auth.credentials.did
       const db = ctx.db.db
       const { ref } = db.dynamic
 
       const feedService = ctx.services.feed(ctx.db)
-      const labelService = ctx.services.label(ctx.db)
+      const graphService = ctx.services.graph(ctx.db)
 
       let did = ''
       if (actor.startsWith('did:')) {
@@ -29,10 +29,20 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      // @NOTE mutes applied on pds
       let feedItemsQb = feedService
         .selectFeedItemQb()
         .where('originatorDid', '=', did)
+
+      if (viewer !== null) {
+        feedItemsQb = feedItemsQb.where((qb) =>
+          // Hide reposts of muted content
+          qb
+            .where('type', '=', 'post')
+            .orWhere((qb) =>
+              graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
+            ),
+        )
+      }
 
       const keyset = new FeedKeyset(
         ref('feed_item.sortAt'),
@@ -46,12 +56,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const feedItems = await feedItemsQb.execute()
-      const feed = await composeFeed(
-        feedService,
-        labelService,
-        feedItems,
-        requester,
-      )
+      const feed = await feedService.hydrateFeed(feedItems, viewer)
 
       return {
         encoding: 'application/json',

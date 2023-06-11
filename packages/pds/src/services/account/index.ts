@@ -338,11 +338,23 @@ export class AccountService {
   }
 
   async search(opts: {
+    searchField?: 'did' | 'handle'
     term: string
     limit: number
     cursor?: string
     includeSoftDeleted?: boolean
   }): Promise<(RepoRoot & DidHandle & { distance: number })[]> {
+    if (opts.searchField === 'did') {
+      const didSearchBuilder = this.db.db
+        .selectFrom('did_handle')
+        .where('did_handle.did', '=', opts.term)
+        .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+        .selectAll(['did_handle', 'repo_root'])
+        .select(sql<number>`0`.as('distance'))
+
+      return await didSearchBuilder.execute()
+    }
+
     const builder =
       this.db.dialect === 'pg'
         ? getUserSearchQueryPg(this.db, opts)
@@ -356,6 +368,7 @@ export class AccountService {
             .selectAll('did_handle')
             .selectAll('repo_root')
             .select(sql<number>`0`.as('distance'))
+
     return await builder.execute()
   }
 

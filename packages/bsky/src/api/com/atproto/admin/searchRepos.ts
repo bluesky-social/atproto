@@ -16,9 +16,11 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('The invitedBy parameter is unsupported')
       }
 
+      const searchField = term.startsWith('did:') ? 'did' : 'handle'
+
       const { ref } = db.db.dynamic
       const keyset = new ListKeyset(ref('indexedAt'), ref('handle'))
-      let resultQb = services.actor(db).searchQb(term).selectAll()
+      let resultQb = services.actor(db).searchQb(searchField, term).selectAll()
       resultQb = paginate(resultQb, { keyset, cursor, limit })
 
       const results = await resultQb.execute()

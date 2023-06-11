@@ -7,6 +7,7 @@ import { AtpAgent } from '@atproto/api'
 import { Client as PlcClient } from '@did-plc/lib'
 import { DAY, HOUR } from '@atproto/common-web'
 import { PdsConfig } from './types'
+import { uniqueLockId } from './util'
 
 export class TestPds {
   constructor(
@@ -57,6 +58,7 @@ export class TestPds {
       dbPostgresUrl: cfg.dbPostgresUrl,
       maxSubscriptionBuffer: 200,
       repoBackfillLimitMs: 1000 * 60 * 60, // 1hr
+      sequencerLeaderLockId: uniqueLockId(),
       labelerDid: 'did:example:labeler',
       labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
       feedGenDid: 'did:example:feedGen',

@@ -18,9 +18,10 @@ import {
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
-import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
+import { ModerationAction } from '../../db/tables/moderation'
 import { AccountService } from '../account'
 import { RecordService } from '../record'
+import { ModerationReportRowWithHandle } from '.'
 
 export class ModerationViews {
   constructor(private db: Database, private messageDispatcher: MessageQueue) {}
@@ -233,6 +234,11 @@ export class ModerationViews {
         .selectFrom('moderation_report')
         .where('subjectType', '=', 'com.atproto.repo.strongRef')
         .where('subjectUri', '=', result.uri)
+        .leftJoin(
+          'did_handle',
+          'did_handle.did',
+          'moderation_report.subjectDid',
+        )
         .orderBy('id', 'desc')
         .selectAll()
         .execute(),
@@ -400,25 +406,33 @@ export class ModerationViews {
       return acc
     }, {} as Record<string, number[]>)
 
-    const views: ReportView[] = results.map((res) => ({
-      id: res.id,
-      createdAt: res.createdAt,
-      reasonType: res.reasonType,
-      reason: res.reason ?? undefined,
-      reportedBy: res.reportedByDid,
-      subject:
-        res.subjectType === 'com.atproto.admin.defs#repoRef'
-          ? {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: res.subjectDid,
-            }
-          : {
-              $type: 'com.atproto.repo.strongRef',
-              uri: res.subjectUri,
-              cid: res.subjectCid,
-            },
-      resolvedByActionIds: actionIdsByReportId[res.id] ?? [],
-    }))
+    const views: ReportView[] = results.map((res) => {
+      const decoratedView: ReportView = {
+        id: res.id,
+        createdAt: res.createdAt,
+        reasonType: res.reasonType,
+        reason: res.reason ?? undefined,
+        reportedBy: res.reportedByDid,
+        subject:
+          res.subjectType === 'com.atproto.admin.defs#repoRef'
+            ? {
+                $type: 'com.atproto.admin.defs#repoRef',
+                did: res.subjectDid,
+              }
+            : {
+                $type: 'com.atproto.repo.strongRef',
+                uri: res.subjectUri,
+                cid: res.subjectCid,
+              },
+        resolvedByActionIds: actionIdsByReportId[res.id] ?? [],
+      }
+
+      if (res.handle) {
+        decoratedView.subjectRepoHandle = res.handle
+      }
+
+      return decoratedView
+    })
 
     return Array.isArray(result) ? views : views[0]
   }
@@ -576,7 +590,7 @@ type RepoResult = DidHandle & RepoRoot
 
 type ActionResult = Selectable<ModerationAction>
 
-type ReportResult = Selectable<ModerationReport>
+type ReportResult = ModerationReportRowWithHandle
 
 type RecordResult = {
   uri: string
