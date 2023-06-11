@@ -13,15 +13,16 @@ import getPosts from './feed/getPosts'
 import getProfile from './actor/getProfile'
 import getProfiles from './actor/getProfiles'
 import getRepostedBy from './feed/getRepostedBy'
+import getBlocks from './graph/getBlocks'
 import getFollowers from './graph/getFollowers'
 import getFollows from './graph/getFollows'
 import getList from './graph/getList'
-import getLists from './graph/getLists'
-import getBlocks from './graph/getBlocks'
 import getListMutes from './graph/getListMutes'
+import getLists from './graph/getLists'
+import getMutes from './graph/getMutes'
 import muteActor from './graph/muteActor'
-import unmuteActor from './graph/unmuteActor'
 import muteActorList from './graph/muteActorList'
+import unmuteActor from './graph/unmuteActor'
 import unmuteActorList from './graph/unmuteActorList'
 import getUsersSearch from './actor/searchActors'
 import getUsersTypeahead from './actor/searchActorsTypeahead'
@@ -44,15 +45,16 @@ export default function (server: Server, ctx: AppContext) {
   getProfile(server, ctx)
   getProfiles(server, ctx)
   getRepostedBy(server, ctx)
+  getBlocks(server, ctx)
   getFollowers(server, ctx)
   getFollows(server, ctx)
   getList(server, ctx)
-  getLists(server, ctx)
-  getBlocks(server, ctx)
   getListMutes(server, ctx)
+  getLists(server, ctx)
+  getMutes(server, ctx)
   muteActor(server, ctx)
-  unmuteActor(server, ctx)
   muteActorList(server, ctx)
+  unmuteActor(server, ctx)
   unmuteActorList(server, ctx)
   getUsersSearch(server, ctx)
   getUsersTypeahead(server, ctx)
