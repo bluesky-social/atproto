@@ -19,7 +19,7 @@ import DidSqlCache from './did-cache'
 import { MountedAlgos } from './feed-gen/types'
 
 export class AppContext {
-  public appviewAgent: AtpAgent
+  private _appviewAgent: AtpAgent | null
 
   constructor(
     private opts: {
@@ -42,9 +42,11 @@ export class AppContext {
       algos: MountedAlgos
     },
   ) {
-    this.appviewAgent = new AtpAgent({
-      service: opts.cfg.bskyAppViewEndpoint ?? '',
-    })
+    this._appviewAgent = opts.cfg.bskyAppViewEndpoint
+      ? new AtpAgent({
+          service: opts.cfg.bskyAppViewEndpoint,
+        })
+      : null
   }
 
   get db(): Database {
@@ -153,6 +155,13 @@ export class AppContext {
       aud,
       keypair: this.repoSigningKey,
     })
+  }
+
+  get appviewAgent(): AtpAgent {
+    if (!this._appviewAgent) {
+      throw new Error('Could not find bsky appview endpoint')
+    }
+    return this._appviewAgent
   }
 
   canProxy(req: express.Request): boolean {
