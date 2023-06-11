@@ -5,7 +5,13 @@ import * as pdsRepo from '@atproto/pds/src/repo/prepare'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { Client } from '@did-plc/lib'
-import AtpAgent, { AppBskyActorProfile, AppBskyFeedPost } from '@atproto/api'
+import AtpAgent, {
+  AppBskyActorProfile,
+  AppBskyFeedPost,
+  AppBskyFeedLike,
+  AppBskyFeedRepost,
+  AppBskyGraphFollow,
+} from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { forSnapshot } from './_util'
 import { SeedClient } from './seeds/client'
@@ -195,6 +201,127 @@ describe('indexing', () => {
     expect(forSnapshot(getAfterDelete.data)).toMatchSnapshot()
   })
 
+  it('handles post aggregations out of order.', async () => {
+    const { db, services } = network.bsky.ctx
+    const createdAt = new Date().toISOString()
+    const originalPost = await prepareCreate({
+      did: sc.dids.alice,
+      collection: ids.AppBskyFeedPost,
+      record: {
+        $type: ids.AppBskyFeedPost,
+        text: 'original post',
+        createdAt,
+      } as AppBskyFeedPost.Record,
+    })
+    const originalPostRef = {
+      uri: originalPost[0].toString(),
+      cid: originalPost[1].toString(),
+    }
+    const reply = await prepareCreate({
+      did: sc.dids.bob,
+      collection: ids.AppBskyFeedPost,
+      record: {
+        $type: ids.AppBskyFeedPost,
+        text: 'reply post',
+        reply: {
+          root: originalPostRef,
+          parent: originalPostRef,
+        },
+        createdAt,
+      } as AppBskyFeedPost.Record,
+    })
+    const like = await prepareCreate({
+      did: sc.dids.bob,
+      collection: ids.AppBskyFeedLike,
+      record: {
+        $type: ids.AppBskyFeedLike,
+        subject: originalPostRef,
+        createdAt,
+      } as AppBskyFeedLike.Record,
+    })
+    const repost = await prepareCreate({
+      did: sc.dids.bob,
+      collection: ids.AppBskyFeedRepost,
+      record: {
+        $type: ids.AppBskyFeedRepost,
+        subject: originalPostRef,
+        createdAt,
+      } as AppBskyFeedRepost.Record,
+    })
+    await db.transaction(async (tx) => {
+      // reply, like, and repost indexed orior to the original post
+      await services.indexing(tx).indexRecord(...reply)
+      await services.indexing(tx).indexRecord(...like)
+      await services.indexing(tx).indexRecord(...repost)
+      await services.indexing(tx).indexRecord(...originalPost)
+    })
+    await network.bsky.ctx.backgroundQueue.processAll()
+    const agg = await db.db
+      .selectFrom('post_agg')
+      .selectAll()
+      .where('uri', '=', originalPostRef.uri)
+      .executeTakeFirst()
+    expect(agg).toEqual({
+      uri: originalPostRef.uri,
+      replyCount: 1,
+      repostCount: 1,
+      likeCount: 1,
+    })
+    // Cleanup
+    await db.transaction(async (tx) => {
+      const del = (uri: AtUri) => {
+        return prepareDelete({
+          did: uri.host,
+          collection: uri.collection,
+          rkey: uri.rkey,
+        })
+      }
+      await services.indexing(tx).deleteRecord(...del(reply[0]))
+      await services.indexing(tx).deleteRecord(...del(like[0]))
+      await services.indexing(tx).deleteRecord(...del(repost[0]))
+      await services.indexing(tx).deleteRecord(...del(originalPost[0]))
+    })
+  })
+
+  it('handles profile aggregations out of order.', async () => {
+    const { db, services } = network.bsky.ctx
+    const createdAt = new Date().toISOString()
+    const unknownDid = 'did:example:unknown'
+    const follow = await prepareCreate({
+      did: sc.dids.bob,
+      collection: ids.AppBskyGraphFollow,
+      record: {
+        $type: ids.AppBskyGraphFollow,
+        subject: unknownDid,
+        createdAt,
+      } as AppBskyGraphFollow.Record,
+    })
+    await db.transaction(async (tx) => {
+      await services.indexing(tx).indexRecord(...follow)
+    })
+    await network.bsky.ctx.backgroundQueue.processAll()
+    const agg = await db.db
+      .selectFrom('profile_agg')
+      .select(['did', 'followersCount'])
+      .where('did', '=', unknownDid)
+      .executeTakeFirst()
+    expect(agg).toEqual({
+      did: unknownDid,
+      followersCount: 1,
+    })
+    // Cleanup
+    await db.transaction(async (tx) => {
+      const del = (uri: AtUri) => {
+        return prepareDelete({
+          did: uri.host,
+          collection: uri.collection,
+          rkey: uri.rkey,
+        })
+      }
+      await services.indexing(tx).deleteRecord(...del(follow[0]))
+    })
+  })
+
   describe('indexRepo', () => {
     beforeAll(async () => {
       network.bsky.sub.resume()
@@ -379,6 +506,42 @@ describe('indexing', () => {
         services.indexing(tx).indexHandle(did, now, true),
       )
       await expect(getIndexedHandle(did)).resolves.toEqual('did2-updated.test')
+    })
+
+    it('handles profile aggregations out of order', async () => {
+      const { db, services } = network.bsky.ctx
+      const now = new Date().toISOString()
+      const sessionAgent = new AtpAgent({ service: network.pds.url })
+      const {
+        data: { did },
+      } = await sessionAgent.createAccount({
+        email: 'did3@test.com',
+        handle: 'did3.test',
+        password: 'password',
+      })
+      const follow = await prepareCreate({
+        did: sc.dids.bob,
+        collection: ids.AppBskyGraphFollow,
+        record: {
+          $type: ids.AppBskyGraphFollow,
+          subject: did,
+          createdAt: now,
+        } as AppBskyGraphFollow.Record,
+      })
+      await db.transaction(async (tx) => {
+        await services.indexing(tx).indexRecord(...follow)
+        await services.indexing(tx).indexHandle(did, now)
+      })
+      await network.bsky.ctx.backgroundQueue.processAll()
+      const agg = await db.db
+        .selectFrom('profile_agg')
+        .select(['did', 'followersCount'])
+        .where('did', '=', did)
+        .executeTakeFirst()
+      expect(agg).toEqual({
+        did,
+        followersCount: 1,
+      })
     })
   })
 
