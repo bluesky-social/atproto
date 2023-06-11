@@ -415,9 +415,6 @@ export default function (server: Server, ctx: AppContext) {
         { feed: hotClassicUri },
         await headers(requester),
       )
-      if (!feed.view.did) {
-        throw new InvalidRequestError('feed not found')
-      }
       const res = await agent.api.app.bsky.feed.getFeed(
         { ...params, feed: hotClassicUri },
         await headers(requester, feed.view.did),
@@ -506,9 +503,6 @@ export default function (server: Server, ctx: AppContext) {
         { feed: params.feed },
         await headers(requester),
       )
-      if (!feed.view.did) {
-        throw new InvalidRequestError('feed not found')
-      }
       const res = await agent.api.app.bsky.feed.getFeed(
         params,
         await headers(requester, feed.view.did),
