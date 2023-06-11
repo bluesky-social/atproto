@@ -5,21 +5,27 @@ import AppContext from '../../../../context'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.getUnreadCount({
     auth: ctx.authVerifier,
-    handler: async ({ auth, params }) => {
+    handler: async ({ auth }) => {
       const requester = auth.credentials.did
-      const { seenAt } = params
 
       const { ref } = ctx.db.db.dynamic
       const result = await ctx.db.db
         .selectFrom('notification')
         .select(countAll.as('count'))
         .innerJoin('actor', 'actor.did', 'notification.did')
+        .leftJoin('actor_state', 'actor_state.did', 'actor.did')
         .innerJoin('record', 'record.uri', 'notification.recordUri')
         .where(notSoftDeletedClause(ref('actor')))
         .where(notSoftDeletedClause(ref('record')))
         .where('notification.did', '=', requester)
-        .if(!!seenAt, (qb) =>
-          qb.where('notification.sortAt', '>', String(seenAt)),
+        .where((inner) =>
+          inner
+            .where('actor_state.lastSeenNotifs', 'is', null)
+            .orWhereRef(
+              'notification.sortAt',
+              '>',
+              'actor_state.lastSeenNotifs',
+            ),
         )
         .executeTakeFirst()
 

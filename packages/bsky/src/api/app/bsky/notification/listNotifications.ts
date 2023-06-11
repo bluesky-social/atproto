@@ -10,7 +10,6 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { limit, cursor } = params
       const requester = auth.credentials.did
-      const { seenAt } = params
 
       const graphService = ctx.services.graph(ctx.db)
 
@@ -58,7 +57,17 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
 
-      const notifs = await notifBuilder.execute()
+      const actorStateQuery = ctx.db.db
+        .selectFrom('actor_state')
+        .selectAll()
+        .where('did', '=', requester)
+
+      const [actorState, notifs] = await Promise.all([
+        actorStateQuery.executeTakeFirst(),
+        notifBuilder.execute(),
+      ])
+
+      const seenAt = actorState?.lastSeenNotifs
 
       const actorService = ctx.services.actor(ctx.db)
       const labelService = ctx.services.label(ctx.db)
