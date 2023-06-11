@@ -318,7 +318,7 @@ Object {
     Object {
       "subject": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
-        "description": "hi im bob",
+        "description": "hi im bob label_me",
         "did": "user(2)",
         "displayName": "bobby",
         "handle": "bob.test",

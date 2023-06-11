@@ -1,95 +1,62 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
-import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
-import { countAll, notSoftDeletedClause } from '../../../../db/util'
+import { notSoftDeletedClause } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 
-// @TODO switch to use profile_agg once that table is being materialized (see: pds)
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getSuggestions({
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {
-      let { limit } = params
-      const { cursor } = params
-      const requester = auth.credentials.did
-      limit = Math.min(limit ?? 25, 100)
+      const { limit, cursor } = params
+      const viewer = auth.credentials.did
 
       const db = ctx.db.db
       const { services } = ctx
       const { ref } = db.dynamic
 
-      const suggestionsQb = db
-        .selectFrom('actor')
+      let suggestionsQb = db
+        .selectFrom('suggested_follow')
+        .innerJoin('actor', 'actor.did', 'suggested_follow.did')
+        .innerJoin('profile_agg', 'profile_agg.did', 'actor.did')
         .where(notSoftDeletedClause(ref('actor')))
-        .where('actor.did', '!=', requester ?? '')
+        .where('suggested_follow.did', '!=', viewer ?? '')
         .whereNotExists((qb) =>
           qb
             .selectFrom('follow')
             .selectAll()
-            .where('creator', '=', requester ?? '')
+            .where('creator', '=', viewer ?? '')
             .whereRef('subjectDid', '=', ref('actor.did')),
         )
         .selectAll()
-        .select(
-          db
-            .selectFrom('post')
-            .whereRef('creator', '=', ref('actor.did'))
-            .select(countAll.as('count'))
-            .as('postCount'),
-        )
+        .select('profile_agg.postsCount as postsCount')
+        .limit(limit)
+        .orderBy('suggested_follow.order', 'asc')
 
-      // PG doesn't let you do WHEREs on aliases, so we wrap it in a subquery
-      let suggestionsReq = db
-        .selectFrom(suggestionsQb.as('suggestions'))
-        .selectAll()
+      if (cursor) {
+        const cursorRow = await db
+          .selectFrom('suggested_follow')
+          .where('did', '=', cursor)
+          .selectAll()
+          .executeTakeFirst()
+        if (cursorRow) {
+          suggestionsQb = suggestionsQb.where(
+            'suggested_follow.order',
+            '>',
+            cursorRow.order,
+          )
+        }
+      }
 
-      const keyset = new PostCountDidKeyset(ref('postCount'), ref('did'))
-      suggestionsReq = paginate(suggestionsReq, {
-        limit,
-        cursor,
-        keyset,
-        direction: 'desc',
-      })
-
-      const suggestionsRes = await suggestionsReq.execute()
+      const suggestionsRes = await suggestionsQb.execute()
 
       return {
         encoding: 'application/json',
         body: {
-          cursor: keyset.packFromResult(suggestionsRes),
+          cursor: suggestionsRes.at(-1)?.did,
           actors: await services
             .actor(ctx.db)
-            .views.profile(suggestionsRes, requester),
+            .views.profile(suggestionsRes, viewer),
         },
       }
     },
   })
-}
-
-type PostCountDidResult = { postCount: number; did: string }
-type PostCountDidLabeledResult = { primary: number; secondary: string }
-
-export class PostCountDidKeyset extends GenericKeyset<
-  PostCountDidResult,
-  PostCountDidLabeledResult
-> {
-  labelResult(result: PostCountDidResult): PostCountDidLabeledResult {
-    return { primary: result.postCount, secondary: result.did }
-  }
-  labeledResultToCursor(labeled: PostCountDidLabeledResult) {
-    return {
-      primary: labeled.primary.toString(),
-      secondary: labeled.secondary,
-    }
-  }
-  cursorToLabeledResult(cursor: Cursor) {
-    const parsed = parseInt(cursor.primary)
-    if (isNaN(parsed)) {
-      throw new InvalidRequestError('Malformed cursor')
-    }
-    return {
-      primary: parsed,
-      secondary: cursor.secondary,
-    }
-  }
 }

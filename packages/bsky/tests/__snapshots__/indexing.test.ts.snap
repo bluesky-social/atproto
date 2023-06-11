@@ -404,7 +404,7 @@ Array [
       },
       Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(2)/cids(4)@jpeg",
-        "description": "hi im bob",
+        "description": "hi im bob label_me",
         "did": "user(1)",
         "displayName": "bobby",
         "handle": "bob.test",

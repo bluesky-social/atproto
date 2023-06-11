@@ -12,3 +12,5 @@ export * as _20230607T211442112Z from './20230607T211442112Z-feed-generator-init
 export * as _20230608T155101190Z from './20230608T155101190Z-algo-whats-hot-view'
 export * as _20230608T201813132Z from './20230608T201813132Z-mute-lists'
 export * as _20230608T205147239Z from './20230608T205147239Z-mutes'
+export * as _20230609T232122649Z from './20230609T232122649Z-actor-deletion-indexes'
+export * as _20230610T203555962Z from './20230610T203555962Z-suggested-follows'
