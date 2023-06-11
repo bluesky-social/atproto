@@ -1,6 +1,6 @@
-import { Server } from '../../../../lexicon'
-import * as lex from '../../../../lexicon/lexicons'
-import AppContext from '../../../../context'
+import { Server } from '../../../../../lexicon'
+import * as lex from '../../../../../lexicon/lexicons'
+import AppContext from '../../../../../context'
 import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
@@ -21,6 +21,13 @@ export default function (server: Server, ctx: AppContext) {
         list,
         mutedByDid: requester,
       })
+
+      if (ctx.cfg.bskyAppViewEndpoint) {
+        await ctx.appviewAgent.api.app.bsky.graph.muteActorList(input.body, {
+          ...(await ctx.serviceAuthHeaders(requester)),
+          encoding: 'application/json',
+        })
+      }
     },
   })
 }

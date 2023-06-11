@@ -18,6 +18,11 @@ import getFollows from './graph/getFollows'
 import getList from './graph/getList'
 import getLists from './graph/getLists'
 import getBlocks from './graph/getBlocks'
+import getListMutes from './graph/getListMutes'
+import muteActor from './graph/muteActor'
+import unmuteActor from './graph/unmuteActor'
+import muteActorList from './graph/muteActorList'
+import unmuteActorList from './graph/unmuteActorList'
 import getUsersSearch from './actor/searchActors'
 import getUsersTypeahead from './actor/searchActorsTypeahead'
 import getSuggestions from './actor/getSuggestions'
@@ -44,6 +49,11 @@ export default function (server: Server, ctx: AppContext) {
   getList(server, ctx)
   getLists(server, ctx)
   getBlocks(server, ctx)
+  getListMutes(server, ctx)
+  muteActor(server, ctx)
+  unmuteActor(server, ctx)
+  muteActorList(server, ctx)
+  unmuteActorList(server, ctx)
   getUsersSearch(server, ctx)
   getUsersTypeahead(server, ctx)
   getSuggestions(server, ctx)
