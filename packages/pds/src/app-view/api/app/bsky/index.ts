@@ -29,6 +29,7 @@ import getUsersTypeahead from './actor/searchActorsTypeahead'
 import getSuggestions from './actor/getSuggestions'
 import listNotifications from './notification/listNotifications'
 import getUnreadCount from './notification/getUnreadCount'
+import updateSeen from './notification/updateSeen'
 import unspecced from './unspecced'
 
 export default function (server: Server, ctx: AppContext) {
@@ -61,5 +62,6 @@ export default function (server: Server, ctx: AppContext) {
   getSuggestions(server, ctx)
   listNotifications(server, ctx)
   getUnreadCount(server, ctx)
+  updateSeen(server, ctx)
   unspecced(server, ctx)
 }
