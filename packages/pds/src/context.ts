@@ -1,6 +1,9 @@
+import express from 'express'
 import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
+import { AtpAgent } from '@atproto/api'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { Database } from './db'
 import { ServerConfig } from './config'
 import * as auth from './auth'
@@ -16,6 +19,8 @@ import DidSqlCache from './did-cache'
 import { MountedAlgos } from './feed-gen/types'
 
 export class AppContext {
+  public appviewAgent: AtpAgent
+
   constructor(
     private opts: {
       db: Database
@@ -36,7 +41,11 @@ export class AppContext {
       backgroundQueue: BackgroundQueue
       algos: MountedAlgos
     },
-  ) {}
+  ) {
+    this.appviewAgent = new AtpAgent({
+      service: opts.cfg.bskyAppViewEndpoint ?? '',
+    })
+  }
 
   get db(): Database {
     return this.opts.db
@@ -132,6 +141,25 @@ export class AppContext {
 
   get algos(): MountedAlgos {
     return this.opts.algos
+  }
+
+  async serviceAuthHeaders(did: string, audience?: string) {
+    const aud = audience ?? this.cfg.bskyAppViewDid
+    if (!aud) {
+      throw new Error('Could not find bsky appview did')
+    }
+    return createServiceAuthHeaders({
+      iss: did,
+      aud,
+      keypair: this.repoSigningKey,
+    })
+  }
+
+  canProxy(req: express.Request): boolean {
+    return (
+      this.cfg.bskyAppViewEndpoint !== undefined &&
+      req.get('x-appview-proxy') !== undefined
+    )
   }
 }
 

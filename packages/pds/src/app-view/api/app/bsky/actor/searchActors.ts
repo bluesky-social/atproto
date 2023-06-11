@@ -14,11 +14,22 @@ import {
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActors({
     auth: ctx.accessVerifier,
-    handler: async ({ auth, params }) => {
+    handler: async ({ req, auth, params }) => {
+      const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const res = await ctx.appviewAgent.api.app.bsky.actor.searchActors(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
       const { services, db } = ctx
       let { term, limit } = params
       const { cursor } = params
-      const requester = auth.credentials.did
 
       term = cleanTerm(term || '')
       limit = Math.min(limit ?? 25, 100)
