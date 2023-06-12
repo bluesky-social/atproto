@@ -13,7 +13,6 @@ import { Services } from './services'
 import { Sequencer, SequencerLeader } from './sequencer'
 import { BackgroundQueue } from './background'
 import DidSqlCache from './did-cache'
-import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
 
 export class AppContext {
@@ -35,7 +34,6 @@ export class AppContext {
       sequencerLeader: SequencerLeader
       backgroundQueue: BackgroundQueue
       crawlers: Crawlers
-      algos: MountedAlgos
     },
   ) {
     this._appviewAgent = opts.cfg.bskyAppViewEndpoint
@@ -127,10 +125,6 @@ export class AppContext {
 
   get didCache(): DidSqlCache {
     return this.opts.didCache
-  }
-
-  get algos(): MountedAlgos {
-    return this.opts.algos
   }
 
   async serviceAuthHeaders(did: string, audience?: string) {

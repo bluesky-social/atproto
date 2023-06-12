@@ -28,7 +28,6 @@ import { Sequencer, SequencerLeader } from './sequencer'
 import { BackgroundQueue } from './background'
 import DidSqlCache from './did-cache'
 import { IdResolver } from '@atproto/identity'
-import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
 
 export type { ServerConfigValues } from './config'
@@ -37,7 +36,6 @@ export { Database } from './db'
 export { ViewMaintainer } from './db/views'
 export { DiskBlobStore, MemoryBlobStore } from './storage'
 export { AppContext } from './context'
-export { makeAlgos } from './feed-gen'
 
 export class PDS {
   public ctx: AppContext
@@ -60,17 +58,9 @@ export class PDS {
     blobstore: BlobStore
     repoSigningKey: crypto.Keypair
     plcRotationKey: crypto.Keypair
-    algos?: MountedAlgos
     config: ServerConfig
   }): PDS {
-    const {
-      db,
-      blobstore,
-      repoSigningKey,
-      plcRotationKey,
-      algos = {},
-      config,
-    } = opts
+    const { db, blobstore, repoSigningKey, plcRotationKey, config } = opts
     const auth = new ServerAuth({
       jwtSecret: config.jwtSecret,
       adminPass: config.adminPassword,
@@ -129,7 +119,6 @@ export class PDS {
       mailer,
       backgroundQueue,
       crawlers,
-      algos,
     })
 
     let server = createServer({
