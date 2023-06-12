@@ -67,6 +67,20 @@ export class ActorViews {
           .select('uri')
           .as('requesterFollowedBy'),
         this.db.db
+          .selectFrom('actor_block')
+          .if(!viewer, (q) => q.where(noMatch))
+          .where('creator', '=', viewer ?? '')
+          .whereRef('subjectDid', '=', ref('actor.did'))
+          .select('uri')
+          .as('requesterBlocking'),
+        this.db.db
+          .selectFrom('actor_block')
+          .if(!viewer, (q) => q.where(noMatch))
+          .whereRef('creator', '=', ref('actor.did'))
+          .where('subjectDid', '=', viewer ?? '')
+          .select('uri')
+          .as('requesterBlockedBy'),
+        this.db.db
           .selectFrom('mute')
           .if(!viewer, (q) => q.where(noMatch))
           .whereRef('subjectDid', '=', ref('actor.did'))
@@ -118,6 +132,8 @@ export class ActorViews {
               followedBy: profileInfo?.requesterFollowedBy || undefined,
               muted: !!profileInfo?.requesterMuted || !!listMutes[result.did],
               mutedByList: listMutes[result.did],
+              blockedBy: !!profileInfo.requesterBlockedBy,
+              blocking: profileInfo.requesterBlocking || undefined,
             }
           : undefined,
         labels: labels[result.did] ?? [],
@@ -165,6 +181,20 @@ export class ActorViews {
           .select('uri')
           .as('requesterFollowedBy'),
         this.db.db
+          .selectFrom('actor_block')
+          .if(!viewer, (q) => q.where(noMatch))
+          .where('creator', '=', viewer ?? '')
+          .whereRef('subjectDid', '=', ref('actor.did'))
+          .select('uri')
+          .as('requesterBlocking'),
+        this.db.db
+          .selectFrom('actor_block')
+          .if(!viewer, (q) => q.where(noMatch))
+          .whereRef('creator', '=', ref('actor.did'))
+          .where('subjectDid', '=', viewer ?? '')
+          .select('uri')
+          .as('requesterBlockedBy'),
+        this.db.db
           .selectFrom('mute')
           .if(!viewer, (q) => q.where(noMatch))
           .whereRef('subjectDid', '=', ref('actor.did'))
@@ -203,9 +233,10 @@ export class ActorViews {
           ? {
               muted: !!profileInfo?.requesterMuted || !!listMutes[result.did],
               mutedByList: listMutes[result.did],
+              blockedBy: !!profileInfo.requesterBlockedBy,
+              blocking: profileInfo.requesterBlocking || undefined,
               following: profileInfo?.requesterFollowing || undefined,
               followedBy: profileInfo?.requesterFollowedBy || undefined,
-              // muted field hydrated on pds
             }
           : undefined,
         labels: labels[result.did] ?? [],

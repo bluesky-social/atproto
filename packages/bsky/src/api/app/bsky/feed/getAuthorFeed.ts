@@ -2,6 +2,7 @@ import { Server } from '../../../../lexicon'
 import { FeedKeyset } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
@@ -11,6 +12,22 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.did
       const db = ctx.db.db
       const { ref } = db.dynamic
+
+      // first verify there is not a block between requester & subject
+      if (viewer !== null) {
+        const blocks = await ctx.services.graph(ctx.db).getBlocks(viewer, actor)
+        if (blocks.blocking) {
+          throw new InvalidRequestError(
+            `Requester has blocked actor: ${actor}`,
+            'BlockedActor',
+          )
+        } else if (blocks.blockedBy) {
+          throw new InvalidRequestError(
+            `Requester is blocked by actor: $${actor}`,
+            'BlockedByActor',
+          )
+        }
+      }
 
       const feedService = ctx.services.feed(ctx.db)
       const graphService = ctx.services.graph(ctx.db)

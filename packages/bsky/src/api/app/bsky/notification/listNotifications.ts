@@ -25,6 +25,7 @@ export default function (server: Server, ctx: AppContext) {
         .where((qb) =>
           graphService.whereNotMuted(qb, requester, [ref('notif.author')]),
         )
+        .whereNotExists(graphService.blockQb(requester, [ref('notif.author')]))
         .where((clause) =>
           clause
             .where('reasonSubject', 'is', null)
