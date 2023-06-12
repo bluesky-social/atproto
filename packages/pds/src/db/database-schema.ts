@@ -23,10 +23,8 @@ import * as listMute from './tables/list-mute'
 import * as label from './tables/label'
 import * as repoSeq from './tables/repo-seq'
 import * as appMigration from './tables/app-migration'
-import * as appView from '../app-view/db'
 
-export type DatabaseSchemaType = appView.DatabaseSchemaType &
-  appMigration.PartialDB &
+export type DatabaseSchemaType = appMigration.PartialDB &
   userAccount.PartialDB &
   userState.PartialDB &
   userPref.PartialDB &
