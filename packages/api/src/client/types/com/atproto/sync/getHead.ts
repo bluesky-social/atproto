@@ -29,8 +29,15 @@ export interface Response {
   data: OutputSchema
 }
 
+export class HeadNotFoundError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
+    if (e.error === 'HeadNotFound') return new HeadNotFoundError(e)
   }
   return e
 }
