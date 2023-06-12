@@ -771,27 +771,3 @@ Object {
   ],
 }
 `;
-
-exports[`feedgen proxy view proxies getFeedGenerator 1`] = `
-Object {
-  "isOnline": true,
-  "isValid": true,
-  "view": Object {
-    "cid": "cids(0)",
-    "creator": Object {
-      "did": "user(0)",
-      "handle": "alice.test",
-    },
-    "did": "did:example:feedGen",
-    "displayName": "Mutuals",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "uri": "record(0)",
-  },
-}
-`;
-
-exports[`feedgen proxy view proxies getFeedGenerator 2`] = `
-Object {
-  "feeds": Array [],
-}
-`;

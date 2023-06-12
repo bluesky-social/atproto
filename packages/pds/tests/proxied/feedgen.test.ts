@@ -75,24 +75,4 @@ describe('feedgen proxy view', () => {
     )
     expect(forSnapshot(feed)).toMatchSnapshot()
   })
-
-  it('proxies getFeedGenerator', async () => {
-    const res = await agent.api.app.bsky.feed.getFeedGenerator(
-      { feed: feedUri.toString() },
-      {
-        headers: { ...sc.getHeaders(sc.dids.alice), 'x-appview-proxy': 'true' },
-      },
-    )
-    expect(forSnapshot(res.data)).toMatchSnapshot()
-  })
-
-  it('proxies getFeedGenerator', async () => {
-    const res = await agent.api.app.bsky.feed.getFeedGenerators(
-      { feeds: [feedUri.toString()] },
-      {
-        headers: { ...sc.getHeaders(sc.dids.alice), 'x-appview-proxy': 'true' },
-      },
-    )
-    expect(forSnapshot(res.data)).toMatchSnapshot()
-  })
 })

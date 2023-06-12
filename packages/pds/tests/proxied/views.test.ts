@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import AtpAgent, { AtUri } from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -274,7 +274,50 @@ describe('proxies view requests', () => {
     expect([...pt1.data.feed, ...pt2.data.feed]).toEqual(res.data.feed)
   })
 
-  // @TODO add a block here to test
+  let feedUri: string
+  it('feed.getFeedGenerator', async () => {
+    feedUri = AtUri.make(
+      sc.dids.alice,
+      'app.bsky.feed.generator',
+      'my-feed',
+    ).toString()
+    const gen = await network.createFeedGen({
+      [feedUri]: async () => {
+        return {
+          encoding: 'application/json',
+          body: { feed: [] },
+        }
+      },
+    })
+    await agent.api.app.bsky.feed.generator.create(
+      { repo: sc.dids.alice, rkey: 'my-feed' },
+      {
+        did: gen.did,
+        displayName: 'MyFeed',
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(sc.dids.alice),
+    )
+    await network.processAll()
+    const res = await agent.api.app.bsky.feed.getFeedGenerator(
+      { feed: feedUri },
+      {
+        headers: { ...sc.getHeaders(sc.dids.alice), 'x-appview-proxy': 'true' },
+      },
+    )
+    expect(forSnapshot(res.data)).toMatchSnapshot()
+  })
+
+  it('feed.getFeedGenerators', async () => {
+    const res = await agent.api.app.bsky.feed.getFeedGenerators(
+      { feeds: [feedUri.toString()] },
+      {
+        headers: { ...sc.getHeaders(sc.dids.alice), 'x-appview-proxy': 'true' },
+      },
+    )
+    expect(forSnapshot(res.data)).toMatchSnapshot()
+  })
+
   it('graph.getBlocks', async () => {
     await sc.block(alice, bob)
     await sc.block(alice, carol)

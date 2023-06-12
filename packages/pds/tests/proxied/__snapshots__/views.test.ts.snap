@@ -405,6 +405,60 @@ Object {
 }
 `;
 
+exports[`proxies view requests feed.getFeedGenerator 1`] = `
+Object {
+  "isOnline": true,
+  "isValid": true,
+  "view": Object {
+    "cid": "cids(0)",
+    "creator": Object {
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(2)/cids(1)@jpeg",
+      "did": "user(1)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
+    "did": "user(0)",
+    "displayName": "MyFeed",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "likeCount": 0,
+    "uri": "record(0)",
+    "viewer": Object {},
+  },
+}
+`;
+
+exports[`proxies view requests feed.getFeedGenerators 1`] = `
+Object {
+  "feeds": Array [
+    Object {
+      "cid": "cids(0)",
+      "creator": Object {
+        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(2)/cids(1)@jpeg",
+        "did": "user(1)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
+      },
+      "did": "user(0)",
+      "displayName": "MyFeed",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "likeCount": 0,
+      "uri": "record(0)",
+      "viewer": Object {},
+    },
+  ],
+}
+`;
+
 exports[`proxies view requests feed.getLikes 1`] = `
 Object {
   "cursor": "0000000000000::bafycid",

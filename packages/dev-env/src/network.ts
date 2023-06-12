@@ -109,6 +109,7 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async close() {
+    await Promise.all(this.feedGens.map((fg) => fg.close()))
     await this.bsky.close()
     await this.pds.close()
     await this.plc.close()
