@@ -3059,6 +3059,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'HeadNotFound',
+          },
+        ],
       },
     },
   },

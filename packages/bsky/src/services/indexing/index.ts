@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import AtpAgent from '@atproto/api'
+import AtpAgent, { ComAtprotoSyncGetHead } from '@atproto/api'
 import {
   MemoryBlockstore,
   readCarWithRoot,
@@ -10,7 +10,7 @@ import {
   Commit,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
-import { IdResolver } from '@atproto/identity'
+import { IdResolver, getPds } from '@atproto/identity'
 import { chunkArray } from '@atproto/common'
 import { ValidationError } from '@atproto/lexicon'
 import Database from '../../db'
@@ -61,6 +61,16 @@ export class IndexingService {
     }
   }
 
+  transact(txn: Database) {
+    txn.assertTransaction()
+    return new IndexingService(
+      txn,
+      this.idResolver,
+      this.labeler,
+      this.backgroundQueue,
+    )
+  }
+
   static creator(
     idResolver: IdResolver,
     labeler: Labeler,
@@ -77,25 +87,32 @@ export class IndexingService {
     action: WriteOpAction.Create | WriteOpAction.Update,
     timestamp: string,
   ) {
-    this.db.assertTransaction()
-    const indexer = this.findIndexerForCollection(uri.collection)
-    if (!indexer) return
-    if (action === WriteOpAction.Create) {
-      await indexer.insertRecord(uri, cid, obj, timestamp)
-    } else {
-      await indexer.updateRecord(uri, cid, obj, timestamp)
-    }
+    this.db.assertNotTransaction()
+    await this.db.transaction(async (txn) => {
+      const indexingTx = this.transact(txn)
+      const indexer = indexingTx.findIndexerForCollection(uri.collection)
+      if (!indexer) return
+      if (action === WriteOpAction.Create) {
+        await indexer.insertRecord(uri, cid, obj, timestamp)
+      } else {
+        await indexer.updateRecord(uri, cid, obj, timestamp)
+      }
+    })
     this.labeler.processRecord(uri, obj)
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {
-    this.db.assertTransaction()
-    const indexer = this.findIndexerForCollection(uri.collection)
-    if (!indexer) return
-    await indexer.deleteRecord(uri, cascading)
+    this.db.assertNotTransaction()
+    await this.db.transaction(async (txn) => {
+      const indexingTx = this.transact(txn)
+      const indexer = indexingTx.findIndexerForCollection(uri.collection)
+      if (!indexer) return
+      await indexer.deleteRecord(uri, cascading)
+    })
   }
 
   async indexHandle(did: string, timestamp: string, force = false) {
+    this.db.assertNotTransaction()
     const actor = await this.db.db
       .selectFrom('actor')
       .where('did', '=', did)
@@ -126,7 +143,7 @@ export class IndexingService {
   }
 
   async indexRepo(did: string, commit: string) {
-    this.db.assertTransaction()
+    this.db.assertNotTransaction()
     const now = new Date().toISOString()
     const { pds, signingKey } = await this.idResolver.did.resolveAtprotoData(
       did,
@@ -219,9 +236,9 @@ export class IndexingService {
   }
 
   async tombstoneActor(did: string) {
-    this.db.assertTransaction()
-    const doc = await this.idResolver.did.resolve(did, true)
-    if (doc === null) {
+    this.db.assertNotTransaction()
+    const actorIsHosted = await this.getActorIsHosted(did)
+    if (actorIsHosted === false) {
       await this.db.db.deleteFrom('actor').where('did', '=', did).execute()
       await this.unindexActor(did)
       await this.db.db
@@ -231,8 +248,24 @@ export class IndexingService {
     }
   }
 
+  private async getActorIsHosted(did: string) {
+    const doc = await this.idResolver.did.resolve(did, true)
+    const pds = doc && getPds(doc)
+    if (!pds) return false
+    const { api } = new AtpAgent({ service: pds })
+    try {
+      await retryHttp(() => api.com.atproto.sync.getHead({ did }))
+      return true
+    } catch (err) {
+      if (err instanceof ComAtprotoSyncGetHead.HeadNotFoundError) {
+        return false
+      }
+      return null
+    }
+  }
+
   async unindexActor(did: string) {
-    this.db.assertTransaction()
+    this.db.assertNotTransaction()
     // per-record-type indexes
     await this.db.db.deleteFrom('profile').where('creator', '=', did).execute()
     await this.db.db.deleteFrom('follow').where('creator', '=', did).execute()

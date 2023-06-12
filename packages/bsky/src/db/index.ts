@@ -106,6 +106,10 @@ export class Database {
     assert(this.isTransaction, 'Transaction required')
   }
 
+  assertNotTransaction() {
+    assert(!this.isTransaction, 'Cannot be in a transaction')
+  }
+
   async close(): Promise<void> {
     if (this.destroyed) return
     await this.db.destroy()
