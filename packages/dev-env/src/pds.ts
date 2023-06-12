@@ -74,10 +74,11 @@ export class TestPds {
       : pds.Database.memory()
     await db.migrateToLatestOrThrow()
 
-    if (config.bskyAppViewEndpoint) {
-      // Disable communication to app view within pds
-      MessageDispatcher.prototype.send = async () => {}
-    }
+    // @TODO re-enable eventually
+    // if (config.bskyAppViewEndpoint) {
+    //   // Disable communication to app view within pds
+    //   MessageDispatcher.prototype.send = async () => {}
+    // }
 
     const server = pds.PDS.create({
       db,

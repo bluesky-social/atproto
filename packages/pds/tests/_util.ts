@@ -188,7 +188,7 @@ const basicAuth = (username: string, password: string) => {
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
-export const forSnapshot = (obj: unknown) => {
+export const forSnapshot = (obj: unknown, collapseImgUris?: boolean) => {
   const records = { [kTake]: 'record' }
   const collections = { [kTake]: 'collection' }
   const users = { [kTake]: 'user' }
@@ -228,6 +228,9 @@ export const forSnapshot = (obj: unknown) => {
     }
     if (str.match(/^\d+::bafy/)) {
       return constantKeysetCursor
+    }
+    if (collapseImgUris && str.includes('/image/')) {
+      return 'IMAGE_URL'
     }
     if (str.match(/\/image\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
       // Match image urls

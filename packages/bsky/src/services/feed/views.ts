@@ -32,7 +32,6 @@ export class FeedViews {
     // from labels: e.g. compatible with hydrateFeed() batching label hydration.
     author.labels ??= labels[author.did] ?? []
     return {
-      $type: 'app.bsky.feed.defs#postView',
       uri: post.uri,
       cid: post.cid,
       author: author,
