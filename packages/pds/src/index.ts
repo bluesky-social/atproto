@@ -11,7 +11,7 @@ import events from 'events'
 import { createTransport } from 'nodemailer'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
-import { AppViewIndexer } from './app-view/indexer'
+import * as appviewConsumers from './app-view/event-stream/consumers'
 import inProcessAppView from './app-view/api'
 import proxiedAppView from './app-view/proxied'
 import API from './api'
@@ -52,7 +52,6 @@ export { makeAlgos } from './feed-gen'
 
 export class PDS {
   public ctx: AppContext
-  public appViewIndexer: AppViewIndexer
   public app: express.Application
   public server?: http.Server
   private terminator?: HttpTerminator
@@ -61,12 +60,10 @@ export class PDS {
   constructor(opts: {
     ctx: AppContext
     app: express.Application
-    appViewIndexer: AppViewIndexer
     sequencerLeader: SequencerLeader
   }) {
     this.ctx = opts.ctx
     this.app = opts.app
-    this.appViewIndexer = opts.appViewIndexer
   }
 
   static create(opts: {
@@ -205,8 +202,6 @@ export class PDS {
       algos,
     })
 
-    const appViewIndexer = new AppViewIndexer(ctx)
-
     let server = createServer({
       validateResponse: config.debugMode,
       payload: {
@@ -231,7 +226,6 @@ export class PDS {
     return new PDS({
       ctx,
       app,
-      appViewIndexer,
       sequencerLeader,
     })
   }
@@ -258,7 +252,7 @@ export class PDS {
         )
       }, 10000)
     }
-    this.appViewIndexer.start()
+    appviewConsumers.listen(this.ctx)
     this.ctx.sequencerLeader.run()
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()
@@ -271,7 +265,6 @@ export class PDS {
   }
 
   async destroy(): Promise<void> {
-    this.appViewIndexer.destroy()
     await this.ctx.sequencerLeader.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
