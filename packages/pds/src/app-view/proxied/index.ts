@@ -396,27 +396,47 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
+  // @NOTE currently relies on the hot-classic feed being configured on the pds
   server.app.bsky.unspecced.getPopular({
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {
+      const hotClassicUri = Object.keys(ctx.algos).find((uri) =>
+        uri.endsWith('/hot-classic'),
+      )
+      if (!hotClassicUri) {
+        return {
+          encoding: 'application/json',
+          body: { feed: [] },
+        }
+      }
       const requester = auth.credentials.did
-      const res = await agent.api.app.bsky.unspecced.getPopular(
+      // @TODO cache the feedgen did lookup
+      const { data: feed } = await agent.api.app.bsky.feed.getFeedGenerator(
+        { feed: hotClassicUri },
+        await headers(requester),
+      )
+      const res = await agent.api.app.bsky.feed.getFeed(
+        { ...params, feed: hotClassicUri },
+        await headers(requester, feed.view.did),
+      )
+      return {
+        encoding: 'application/json',
+        body: res.data,
+      }
+    },
+  })
+
+  server.app.bsky.unspecced.getPopularFeedGenerators({
+    auth: ctx.accessVerifier,
+    handler: async ({ auth, params }) => {
+      const requester = auth.credentials.did
+      const res = await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
         params,
         await headers(requester),
       )
-      const { cursor, feed } = res.data
-      const dids = didsForFeedViewPosts(feed)
-      const mutes = await ctx.services.account(ctx.db).getMutes(requester, dids)
-      const hydrated = processFeedViewPostMutes(feed, mutes, (post) => {
-        return mutes[post.post.author.did] === true
-      })
-
       return {
         encoding: 'application/json',
-        body: {
-          cursor,
-          feed: hydrated,
-        },
+        body: res.data,
       }
     },
   })
@@ -483,9 +503,6 @@ export default function (server: Server, ctx: AppContext) {
         { feed: params.feed },
         await headers(requester),
       )
-      if (!feed.view.did) {
-        throw new InvalidRequestError('feed not found')
-      }
       const res = await agent.api.app.bsky.feed.getFeed(
         params,
         await headers(requester, feed.view.did),
