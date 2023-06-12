@@ -49,13 +49,7 @@ export class RepoService {
     crawlers: Crawlers,
   ) {
     return (db: Database) =>
-      new RepoService(
-        db,
-        keypair,
-        blobstore,
-        backgroundQueue,
-        crawlers,
-      )
+      new RepoService(db, keypair, blobstore, backgroundQueue, crawlers)
   }
 
   services = {

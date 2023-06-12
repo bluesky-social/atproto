@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { ArrayEl, cborBytesToRecord } from '@atproto/common'
+import { ArrayEl } from '@atproto/common'
 import { AtUri } from '@atproto/uri'
 import Database from '../../db'
 import { DidHandle } from '../../db/tables/did-handle'
@@ -42,12 +42,6 @@ export class ModerationViews {
       await this.db.db
         .selectFrom('did_handle')
         .leftJoin('user_account', 'user_account.did', 'did_handle.did')
-        .leftJoin('profile', 'profile.creator', 'did_handle.did')
-        .leftJoin('ipld_block as profile_block', (join) =>
-          join
-            .onRef('profile_block.cid', '=', 'profile.cid')
-            .onRef('profile_block.creator', '=', 'did_handle.did'),
-        )
         .where(
           'did_handle.did',
           'in',
@@ -57,7 +51,6 @@ export class ModerationViews {
           'did_handle.did as did',
           'user_account.email as email',
           'user_account.invitesDisabled as invitesDisabled',
-          'profile_block.content as profileBytes',
         ])
         .execute(),
       this.db.db
@@ -86,17 +79,13 @@ export class ModerationViews {
     )
 
     const views = results.map((r) => {
-      const { email, invitesDisabled, profileBytes } = infoByDid[r.did] ?? {}
+      const { email, invitesDisabled } = infoByDid[r.did] ?? {}
       const action = actionByDid[r.did]
-      const relatedRecords: object[] = []
-      if (profileBytes) {
-        relatedRecords.push(cborBytesToRecord(profileBytes))
-      }
       return {
         did: r.did,
         handle: r.handle,
         email: email ?? undefined,
-        relatedRecords,
+        relatedRecords: [],
         indexedAt: r.indexedAt,
         moderation: {
           currentAction: action

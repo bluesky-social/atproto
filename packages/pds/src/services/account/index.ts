@@ -256,7 +256,6 @@ export class AccountService {
             .selectAll('repo_root')
             .select('results.distance as distance')
         : getUserSearchQuerySqlite(this.db, opts)
-            .leftJoin('profile', 'profile.creator', 'did_handle.did') // @TODO leaky, for getUserSearchQuerySqlite()
             .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
             .selectAll('did_handle')
             .selectAll('repo_root')

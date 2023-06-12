@@ -41,25 +41,6 @@ export const getUserSearchQueryPg = (
     keyset: new SearchKeyset(distanceAccount, ref('handle')),
   })
 
-  // Matching profiles based on display name
-  const distanceProfile = distance(term, ref('displayName'))
-  let profilesQb = db.db
-    .selectFrom('profile')
-    .innerJoin('did_handle', 'did_handle.did', 'profile.creator')
-    .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
-    .if(!includeSoftDeleted, (qb) =>
-      qb.where(notSoftDeletedClause(ref('repo_root'))),
-    )
-    .where(similar(term, ref('displayName'))) // Coarse filter engaging trigram index
-    .where(distanceProfile, '<', threshold) // Refines results from trigram index
-    .select(['did_handle.did as did', distanceProfile.as('distance')])
-  profilesQb = paginate(profilesQb, {
-    limit,
-    cursor,
-    direction: 'asc',
-    keyset: new SearchKeyset(distanceProfile, ref('handle')),
-  })
-
   // Combine user account and profile results, taking best matches from each
   const emptyQb = db.db
     .selectFrom('user_account')
@@ -69,7 +50,6 @@ export const getUserSearchQueryPg = (
     .selectFrom(
       emptyQb
         .unionAll(sql`${accountsQb}`) // The sql`` is adding parens
-        .unionAll(sql`${profilesQb}`)
         .as('accounts_and_profiles'),
     )
     .selectAll()
