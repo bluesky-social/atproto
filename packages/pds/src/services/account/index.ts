@@ -1,4 +1,4 @@
-import { SelectQueryBuilder, WhereInterface, sql } from 'kysely'
+import { WhereInterface, sql } from 'kysely'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import * as scrypt from '../../db/scrypt'
@@ -314,27 +314,6 @@ export class AccountService {
       .where('listUri', '=', list)
       .where('mutedByDid', '=', mutedByDid)
       .execute()
-  }
-
-  whereNotMuted<W extends WhereInterface<any, any>>(
-    qb: W,
-    requester: string,
-    refs: NotEmptyArray<DbRef>,
-  ) {
-    const subjectRefs = sql.join(refs)
-    const actorMute = this.db.db
-      .selectFrom('mute')
-      .where('mutedByDid', '=', requester)
-      .where('did', 'in', sql`(${subjectRefs})`)
-      .select('did as muted')
-    const listMute = this.db.db
-      .selectFrom('list_item')
-      .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
-      .where('list_mute.mutedByDid', '=', requester)
-      .whereRef('list_item.subjectDid', 'in', sql`(${subjectRefs})`)
-      .select('list_item.subjectDid as muted')
-    // Splitting the mute from list-mute checks seems to be more flexible for the query-planner and often quicker
-    return qb.whereNotExists(actorMute).whereNotExists(listMute)
   }
 
   async search(opts: {

@@ -2,7 +2,6 @@ import { Selectable } from 'kysely'
 import { ArrayEl, cborBytesToRecord } from '@atproto/common'
 import { AtUri } from '@atproto/uri'
 import Database from '../../db'
-import { MessageQueue } from '../../event-stream/types'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
 import {
@@ -24,11 +23,11 @@ import { RecordService } from '../record'
 import { ModerationReportRowWithHandle } from '.'
 
 export class ModerationViews {
-  constructor(private db: Database, private messageDispatcher: MessageQueue) {}
+  constructor(private db: Database) {}
 
   services = {
     account: AccountService.creator(),
-    record: RecordService.creator(this.messageDispatcher),
+    record: RecordService.creator(),
   }
 
   repo(result: RepoResult): Promise<RepoView>

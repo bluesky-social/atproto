@@ -4,7 +4,6 @@ import { BlobStore } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
-import { MessageQueue } from '../../event-stream/types'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { RecordService } from '../record'
 import { ModerationViews } from './views'
@@ -15,32 +14,24 @@ import { ImageUriBuilder } from '../../image/uri'
 export class ModerationService {
   constructor(
     public db: Database,
-    public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
     public imgUriBuilder: ImageUriBuilder,
     public imgInvalidator: ImageInvalidator,
   ) {}
 
   static creator(
-    messageDispatcher: MessageQueue,
     blobstore: BlobStore,
     imgUriBuilder: ImageUriBuilder,
     imgInvalidator: ImageInvalidator,
   ) {
     return (db: Database) =>
-      new ModerationService(
-        db,
-        messageDispatcher,
-        blobstore,
-        imgUriBuilder,
-        imgInvalidator,
-      )
+      new ModerationService(db, blobstore, imgUriBuilder, imgInvalidator)
   }
 
-  views = new ModerationViews(this.db, this.messageDispatcher)
+  views = new ModerationViews(this.db)
 
   services = {
-    record: RecordService.creator(this.messageDispatcher),
+    record: RecordService.creator(),
   }
 
   async getAction(id: number): Promise<ModerationActionRow | undefined> {

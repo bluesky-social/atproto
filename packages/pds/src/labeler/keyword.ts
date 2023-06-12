@@ -2,7 +2,7 @@ import { BlobStore } from '@atproto/repo'
 import Database from '../db'
 import { Labeler } from './base'
 import { keywordLabeling } from './util'
-import { BackgroundQueue } from '../event-stream/background-queue'
+import { BackgroundQueue } from '../background'
 
 export class KeywordLabeler extends Labeler {
   keywords: Record<string, string>

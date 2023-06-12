@@ -13,7 +13,6 @@ import * as repo from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
-import { MessageQueue } from '../../event-stream/types'
 import SqlRepoStorage from '../../sql-repo-storage'
 import {
   BadCommitSwapError,
@@ -27,7 +26,7 @@ import { RecordService } from '../record'
 import * as sequencer from '../../sequencer'
 import { Labeler } from '../../labeler'
 import { wait } from '@atproto/common'
-import { BackgroundQueue } from '../../event-stream/background-queue'
+import { BackgroundQueue } from '../../background'
 import { countAll } from '../../db/util'
 import { Crawlers } from '../../crawlers'
 
@@ -37,7 +36,6 @@ export class RepoService {
   constructor(
     public db: Database,
     public repoSigningKey: crypto.Keypair,
-    public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
     public crawlers: Crawlers,
@@ -48,7 +46,6 @@ export class RepoService {
 
   static creator(
     keypair: crypto.Keypair,
-    messageDispatcher: MessageQueue,
     blobstore: BlobStore,
     backgroundQueue: BackgroundQueue,
     crawlers: Crawlers,
@@ -58,7 +55,6 @@ export class RepoService {
       new RepoService(
         db,
         keypair,
-        messageDispatcher,
         blobstore,
         backgroundQueue,
         crawlers,
@@ -67,7 +63,7 @@ export class RepoService {
   }
 
   services = {
-    record: RecordService.creator(this.messageDispatcher),
+    record: RecordService.creator(),
   }
 
   private async serviceTx<T>(
@@ -78,7 +74,6 @@ export class RepoService {
       const srvc = new RepoService(
         dbTxn,
         this.repoSigningKey,
-        this.messageDispatcher,
         this.blobstore,
         this.backgroundQueue,
         this.crawlers,

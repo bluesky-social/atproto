@@ -4,7 +4,7 @@ import { BlobStore, cidForRecord } from '@atproto/repo'
 import { dedupe, getFieldsFromRecord } from './util'
 import { AtUri } from '@atproto/uri'
 import { labelerLogger as log } from '../logger'
-import { BackgroundQueue } from '../event-stream/background-queue'
+import { BackgroundQueue } from '../background'
 
 export abstract class Labeler {
   public db: Database

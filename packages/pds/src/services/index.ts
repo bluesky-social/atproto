@@ -1,7 +1,6 @@
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import Database from '../db'
-import { MessageDispatcher } from '../event-stream/message-queue'
 import { ImageUriBuilder } from '../image/uri'
 import { ImageInvalidator } from '../image/invalidator'
 import { AccountService } from './account'
@@ -11,12 +10,11 @@ import { RepoService } from './repo'
 import { ModerationService } from './moderation'
 import { LabelService } from './label'
 import { Labeler } from '../labeler'
-import { BackgroundQueue } from '../event-stream/background-queue'
+import { BackgroundQueue } from '../background'
 import { Crawlers } from '../crawlers'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
-  messageDispatcher: MessageDispatcher
   blobstore: BlobStore
   imgUriBuilder: ImageUriBuilder
   imgInvalidator: ImageInvalidator
@@ -26,7 +24,6 @@ export function createServices(resources: {
 }): Services {
   const {
     repoSigningKey,
-    messageDispatcher,
     blobstore,
     imgUriBuilder,
     imgInvalidator,
@@ -37,17 +34,15 @@ export function createServices(resources: {
   return {
     account: AccountService.creator(),
     auth: AuthService.creator(),
-    record: RecordService.creator(messageDispatcher),
+    record: RecordService.creator(),
     repo: RepoService.creator(
       repoSigningKey,
-      messageDispatcher,
       blobstore,
       backgroundQueue,
       crawlers,
       labeler,
     ),
     moderation: ModerationService.creator(
-      messageDispatcher,
       blobstore,
       imgUriBuilder,
       imgInvalidator,

@@ -5,7 +5,7 @@ import { Labeler } from './base'
 import Database from '../db'
 import { BlobStore } from '@atproto/repo'
 import { keywordLabeling } from './util'
-import { BackgroundQueue } from '../event-stream/background-queue'
+import { BackgroundQueue } from '../background'
 
 const HIVE_ENDPOINT = 'https://api.thehive.ai/api/v2/task/sync'
 
