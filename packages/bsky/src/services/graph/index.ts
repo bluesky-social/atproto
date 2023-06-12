@@ -4,7 +4,7 @@ import { ProfileView } from '../../lexicon/types/app/bsky/actor/defs'
 import { List } from '../../db/tables/list'
 import { Selectable, WhereInterface, sql } from 'kysely'
 import { NotEmptyArray } from '@atproto/common'
-import { DbRef } from '../../db/util'
+import { DbRef, noMatch } from '../../db/util'
 
 export class GraphService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
@@ -110,6 +110,67 @@ export class GraphService {
       .innerJoin('actor as subject', 'subject.did', 'list_item.subjectDid')
       .selectAll('subject')
       .select(['list_item.cid as cid', 'list_item.sortAt as sortAt'])
+  }
+
+  blockQb(viewer: string | null, refs: NotEmptyArray<DbRef>) {
+    const subjectRefs = sql.join(refs)
+    return this.db.db
+      .selectFrom('actor_block')
+      .if(!viewer, (q) => q.where(noMatch))
+      .where((outer) =>
+        outer
+          .where((qb) =>
+            qb
+              .where('actor_block.creator', '=', viewer ?? '')
+              .whereRef('actor_block.subjectDid', 'in', sql`(${subjectRefs})`),
+          )
+          .orWhere((qb) =>
+            qb
+              .where('actor_block.subjectDid', '=', viewer ?? '')
+              .whereRef('actor_block.creator', 'in', sql`(${subjectRefs})`),
+          ),
+      )
+      .select(['creator', 'subjectDid'])
+  }
+
+  async getBlocks(
+    requester: string,
+    subjectHandleOrDid: string,
+  ): Promise<{ blocking: boolean; blockedBy: boolean }> {
+    let subjectDid
+    if (subjectHandleOrDid.startsWith('did:')) {
+      subjectDid = subjectHandleOrDid
+    } else {
+      const res = await this.db.db
+        .selectFrom('actor')
+        .where('handle', '=', subjectHandleOrDid)
+        .select('did')
+        .executeTakeFirst()
+      if (!res) {
+        return { blocking: false, blockedBy: false }
+      }
+      subjectDid = res.did
+    }
+
+    const accnts = [requester, subjectDid]
+    const blockRes = await this.db.db
+      .selectFrom('actor_block')
+      .where('creator', 'in', accnts)
+      .where('subjectDid', 'in', accnts)
+      .selectAll()
+      .execute()
+
+    const blocking = blockRes.some(
+      (row) => row.creator === requester && row.subjectDid === subjectDid,
+    )
+    const blockedBy = blockRes.some(
+      (row) => row.creator === subjectDid && row.subjectDid === requester,
+    )
+
+    return {
+      blocking,
+      blockedBy,
+    }
   }
 
   formatListView(list: ListInfo, profiles: Record<string, ProfileView>) {

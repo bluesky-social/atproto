@@ -53,7 +53,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     return new TestNetwork(plc, pds, bsky)
   }
 
-  async processAll(timeout = 5000) {
+  async processFullSubscription(timeout = 5000) {
     if (!this.bsky) return
     const sub = this.bsky.sub
     if (!sub) return
@@ -73,6 +73,13 @@ export class TestNetwork extends TestNetworkNoAppView {
       if (state.cursor === lastSeq) return
     }
     throw new Error(`Sequence was not processed within ${timeout}ms`)
+  }
+
+  async processAll(timeout?: number) {
+    await this.pds.ctx.backgroundQueue.processAll()
+    if (!this.bsky) return
+    await this.processFullSubscription(timeout)
+    await this.bsky.ctx.backgroundQueue.processAll()
   }
 
   async serviceHeaders(did: string, aud?: string) {

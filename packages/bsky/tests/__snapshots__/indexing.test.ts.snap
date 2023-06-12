@@ -12,6 +12,7 @@ Array [
     "labels": Array [],
     "postsCount": 5,
     "viewer": Object {
+      "blockedBy": false,
       "muted": false,
     },
   },
@@ -26,6 +27,7 @@ Array [
             "handle": "alice.test",
             "labels": Array [],
             "viewer": Object {
+              "blockedBy": false,
               "muted": false,
             },
           },
@@ -52,6 +54,7 @@ Array [
             "handle": "alice.test",
             "labels": Array [],
             "viewer": Object {
+              "blockedBy": false,
               "muted": false,
             },
           },
@@ -89,6 +92,7 @@ Array [
               "handle": "bob.test",
               "labels": Array [],
               "viewer": Object {
+                "blockedBy": false,
                 "followedBy": "record(5)",
                 "following": "record(4)",
                 "muted": false,
@@ -168,6 +172,7 @@ Array [
               "handle": "alice.test",
               "labels": Array [],
               "viewer": Object {
+                "blockedBy": false,
                 "muted": false,
               },
             },
@@ -195,6 +200,7 @@ Array [
             "handle": "alice.test",
             "labels": Array [],
             "viewer": Object {
+              "blockedBy": false,
               "muted": false,
             },
           },
@@ -208,6 +214,7 @@ Array [
                 "handle": "dan.test",
                 "labels": Array [],
                 "viewer": Object {
+                  "blockedBy": false,
                   "following": "record(8)",
                   "muted": false,
                 },
@@ -223,6 +230,7 @@ Array [
                       "handle": "carol.test",
                       "labels": Array [],
                       "viewer": Object {
+                        "blockedBy": false,
                         "followedBy": "record(10)",
                         "muted": false,
                       },
@@ -344,6 +352,7 @@ Array [
             "handle": "alice.test",
             "labels": Array [],
             "viewer": Object {
+              "blockedBy": false,
               "muted": false,
             },
           },
@@ -370,6 +379,7 @@ Array [
             "handle": "alice.test",
             "labels": Array [],
             "viewer": Object {
+              "blockedBy": false,
               "muted": false,
             },
           },
@@ -398,6 +408,7 @@ Array [
         "handle": "dan.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "following": "record(8)",
           "muted": false,
         },
@@ -411,6 +422,7 @@ Array [
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "followedBy": "record(5)",
           "following": "record(4)",
           "muted": false,
@@ -424,6 +436,7 @@ Array [
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "muted": false,
       },
     },
@@ -444,6 +457,7 @@ Object {
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "muted": false,
         },
       },
@@ -493,6 +507,7 @@ Object {
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "muted": false,
         },
       },
@@ -570,6 +585,7 @@ Object {
   "labels": Array [],
   "postsCount": 0,
   "viewer": Object {
+    "blockedBy": false,
     "muted": false,
   },
 }
@@ -586,6 +602,7 @@ Object {
   "labels": Array [],
   "postsCount": 0,
   "viewer": Object {
+    "blockedBy": false,
     "muted": false,
   },
 }
@@ -600,6 +617,7 @@ Object {
   "labels": Array [],
   "postsCount": 0,
   "viewer": Object {
+    "blockedBy": false,
     "muted": false,
   },
 }

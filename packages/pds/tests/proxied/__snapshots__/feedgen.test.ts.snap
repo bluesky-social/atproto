@@ -14,6 +14,7 @@ Object {
           "handle": "alice.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "muted": false,
           },
         },
@@ -51,6 +52,7 @@ Object {
             "handle": "bob.test",
             "labels": Array [],
             "viewer": Object {
+              "blockedBy": false,
               "followedBy": "record(4)",
               "following": "record(3)",
               "muted": false,
@@ -132,6 +134,7 @@ Object {
             "handle": "alice.test",
             "labels": Array [],
             "viewer": Object {
+              "blockedBy": false,
               "muted": false,
             },
           },
@@ -159,6 +162,7 @@ Object {
           "handle": "carol.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(7)",
             "following": "record(6)",
             "muted": false,
@@ -198,6 +202,7 @@ Object {
             "handle": "alice.test",
             "labels": Array [],
             "viewer": Object {
+              "blockedBy": false,
               "muted": false,
             },
           },
@@ -224,6 +229,7 @@ Object {
             "handle": "alice.test",
             "labels": Array [],
             "viewer": Object {
+              "blockedBy": false,
               "muted": false,
             },
           },
@@ -253,6 +259,7 @@ Object {
           "handle": "bob.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(4)",
             "following": "record(3)",
             "muted": false,
@@ -335,6 +342,7 @@ Object {
             "handle": "alice.test",
             "labels": Array [],
             "viewer": Object {
+              "blockedBy": false,
               "muted": false,
             },
           },
@@ -361,6 +369,7 @@ Object {
             "handle": "alice.test",
             "labels": Array [],
             "viewer": Object {
+              "blockedBy": false,
               "muted": false,
             },
           },
@@ -390,6 +399,7 @@ Object {
           "handle": "alice.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "muted": false,
           },
         },
@@ -403,6 +413,7 @@ Object {
               "handle": "dan.test",
               "labels": Array [],
               "viewer": Object {
+                "blockedBy": false,
                 "following": "record(10)",
                 "muted": false,
               },
@@ -418,6 +429,7 @@ Object {
                     "handle": "carol.test",
                     "labels": Array [],
                     "viewer": Object {
+                      "blockedBy": false,
                       "followedBy": "record(7)",
                       "following": "record(6)",
                       "muted": false,
@@ -542,6 +554,7 @@ Object {
           "handle": "bob.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(4)",
             "following": "record(3)",
             "muted": false,
@@ -572,6 +585,7 @@ Object {
           "handle": "alice.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "muted": false,
           },
         },
@@ -598,6 +612,7 @@ Object {
           "handle": "carol.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(7)",
             "following": "record(6)",
             "muted": false,
@@ -631,6 +646,7 @@ Object {
                 "handle": "bob.test",
                 "labels": Array [],
                 "viewer": Object {
+                  "blockedBy": false,
                   "followedBy": "record(4)",
                   "following": "record(3)",
                   "muted": false,
@@ -711,6 +727,7 @@ Object {
           "handle": "bob.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(4)",
             "following": "record(3)",
             "muted": false,
@@ -741,6 +758,7 @@ Object {
           "handle": "alice.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "muted": false,
           },
         },

@@ -9,8 +9,10 @@ export default function (server: Server, ctx: AppContext) {
       const { limit, cursor } = params
       const viewer = auth.credentials.did
 
+      const actorService = ctx.services.actor(ctx.db)
+      const graphService = ctx.services.graph(ctx.db)
+
       const db = ctx.db.db
-      const { services } = ctx
       const { ref } = db.dynamic
 
       let suggestionsQb = db
@@ -26,6 +28,7 @@ export default function (server: Server, ctx: AppContext) {
             .where('creator', '=', viewer ?? '')
             .whereRef('subjectDid', '=', ref('actor.did')),
         )
+        .whereNotExists(graphService.blockQb(viewer, [ref('actor.did')]))
         .selectAll()
         .select('profile_agg.postsCount as postsCount')
         .limit(limit)
@@ -52,9 +55,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           cursor: suggestionsRes.at(-1)?.did,
-          actors: await services
-            .actor(ctx.db)
-            .views.profile(suggestionsRes, viewer),
+          actors: await actorService.views.profile(suggestionsRes, viewer),
         },
       }
     },

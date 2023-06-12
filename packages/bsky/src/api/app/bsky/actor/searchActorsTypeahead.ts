@@ -17,12 +17,18 @@ export default function (server: Server, ctx: AppContext) {
             .execute()
         : []
 
+      const actors = await services
+        .actor(db)
+        .views.profileBasic(results, requester)
+
+      const filtered = actors.filter(
+        (actor) => !actor.viewer?.blocking && !actor.viewer?.blockedBy,
+      )
+
       return {
         encoding: 'application/json',
         body: {
-          actors: await services
-            .actor(db)
-            .views.profileBasic(results, requester),
+          actors: filtered,
         },
       }
     },
