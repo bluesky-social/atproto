@@ -54,8 +54,6 @@ export interface ServerConfigValues {
   repoBackfillLimitMs: number
   sequencerLeaderLockId?: number
 
-  appViewRepoProvider?: string
-
   bskyAppViewEndpoint?: string
   bskyAppViewDid?: string
 }
@@ -166,10 +164,6 @@ export class ServerConfig {
       undefined,
     )
 
-    // E.g. ws://abc.com:4000
-    const appViewRepoProvider = nonemptyString(
-      process.env.APP_VIEW_REPO_PROVIDER,
-    )
     const bskyAppViewEndpoint = nonemptyString(
       process.env.BSKY_APP_VIEW_ENDPOINT,
     )
@@ -214,7 +208,6 @@ export class ServerConfig {
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
       sequencerLeaderLockId,
-      appViewRepoProvider,
       bskyAppViewEndpoint,
       bskyAppViewDid,
       ...overrides,
@@ -401,10 +394,6 @@ export class ServerConfig {
 
   get sequencerLeaderLockId() {
     return this.cfg.sequencerLeaderLockId
-  }
-
-  get appViewRepoProvider() {
-    return this.cfg.appViewRepoProvider
   }
 
   get bskyAppViewEndpoint() {
