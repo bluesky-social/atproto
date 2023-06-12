@@ -4,7 +4,7 @@ import Database from '../../db'
 import { notSoftDeletedClause, DbRef } from '../../db/util'
 import { GenericKeyset, paginate } from '../../db/pagination'
 
-// @TODO utilized in both pds and app-view
+// @TODO Come back and clean this up since removing profiles
 export const getUserSearchQueryPg = (
   db: Database,
   opts: {
@@ -98,9 +98,7 @@ export const getUserSearchQuerySqlite = (
 
   // We'll ensure there's a space before each word in both textForMatch and in safeWords,
   // so that we can reliably match word prefixes using LIKE operator.
-  const textForMatch = sql`lower(' ' || ${ref(
-    'did_handle.handle',
-  )} || ' ' || coalesce(${ref('profile.displayName')}, ''))`
+  const textForMatch = sql`lower(${ref('did_handle.handle')})`
 
   const keyset = new SearchKeyset(sql``, sql``)
   const unpackedCursor = keyset.unpackCursor(cursor)
