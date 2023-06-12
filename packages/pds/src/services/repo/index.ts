@@ -226,7 +226,9 @@ export class RepoService {
     writes: PreparedWrite[],
   ) {
     this.db.onCommit(() => {
-      this.crawlers.notifyOfUpdate()
+      this.backgroundQueue.add(async () => {
+        await this.crawlers.notifyOfUpdate()
+      })
     })
 
     const seqEvt = await sequencer.formatSeqCommit(did, commitData, writes)
