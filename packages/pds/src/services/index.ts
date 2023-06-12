@@ -6,7 +6,6 @@ import { AuthService } from './auth'
 import { RecordService } from './record'
 import { RepoService } from './repo'
 import { ModerationService } from './moderation'
-import { LabelService } from './label'
 import { BackgroundQueue } from '../background'
 import { Crawlers } from '../crawlers'
 
@@ -28,7 +27,6 @@ export function createServices(resources: {
       crawlers,
     ),
     moderation: ModerationService.creator(blobstore),
-    label: LabelService.creator(),
   }
 }
 
@@ -38,7 +36,6 @@ export type Services = {
   record: FromDb<RecordService>
   repo: FromDb<RepoService>
   moderation: FromDb<ModerationService>
-  label: FromDb<LabelService>
 }
 
 type FromDb<T> = (db: Database) => T

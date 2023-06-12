@@ -33,7 +33,6 @@ import { Crawlers } from './crawlers'
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './db'
-export { ViewMaintainer } from './db/views'
 export { DiskBlobStore, MemoryBlobStore } from './storage'
 export { AppContext } from './context'
 
