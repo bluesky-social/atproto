@@ -229,9 +229,6 @@ export const forSnapshot = (obj: unknown, collapseImgUris?: boolean) => {
     if (str.match(/^\d+::bafy/)) {
       return constantKeysetCursor
     }
-    if (collapseImgUris && str.includes('/image/')) {
-      return 'IMAGE_URL'
-    }
     if (str.match(/\/image\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
       // Match image urls
       const match = str.match(

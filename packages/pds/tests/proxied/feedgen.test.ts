@@ -48,7 +48,7 @@ describe('feedgen proxy view', () => {
             view: {
               cid: feed.cid,
               uri: feed.uri,
-              did: network.bsky.ctx.cfg.feedGenDid,
+              did: network.bsky.ctx.cfg.feedGenDid ?? '',
               creator: { did: sc.dids.alice, handle: 'alice.test' },
               displayName: 'Mutuals',
               indexedAt: new Date().toISOString(),
