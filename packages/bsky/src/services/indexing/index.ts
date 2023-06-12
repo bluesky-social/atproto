@@ -58,6 +58,16 @@ export class IndexingService {
     }
   }
 
+  transact(txn: Database) {
+    txn.assertTransaction()
+    return new IndexingService(
+      txn,
+      this.idResolver,
+      this.labeler,
+      this.backgroundQueue,
+    )
+  }
+
   static creator(
     idResolver: IdResolver,
     labeler: Labeler,
@@ -74,25 +84,32 @@ export class IndexingService {
     action: WriteOpAction.Create | WriteOpAction.Update,
     timestamp: string,
   ) {
-    this.db.assertTransaction()
-    const indexer = this.findIndexerForCollection(uri.collection)
-    if (!indexer) return
-    if (action === WriteOpAction.Create) {
-      await indexer.insertRecord(uri, cid, obj, timestamp)
-    } else {
-      await indexer.updateRecord(uri, cid, obj, timestamp)
-    }
+    this.db.assertNotTransaction()
+    await this.db.transaction(async (txn) => {
+      const indexingTx = this.transact(txn)
+      const indexer = indexingTx.findIndexerForCollection(uri.collection)
+      if (!indexer) return
+      if (action === WriteOpAction.Create) {
+        await indexer.insertRecord(uri, cid, obj, timestamp)
+      } else {
+        await indexer.updateRecord(uri, cid, obj, timestamp)
+      }
+    })
     this.labeler.processRecord(uri, obj)
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {
-    this.db.assertTransaction()
-    const indexer = this.findIndexerForCollection(uri.collection)
-    if (!indexer) return
-    await indexer.deleteRecord(uri, cascading)
+    this.db.assertNotTransaction()
+    await this.db.transaction(async (txn) => {
+      const indexingTx = this.transact(txn)
+      const indexer = indexingTx.findIndexerForCollection(uri.collection)
+      if (!indexer) return
+      await indexer.deleteRecord(uri, cascading)
+    })
   }
 
   async indexHandle(did: string, timestamp: string, force = false) {
+    this.db.assertNotTransaction()
     const actor = await this.db.db
       .selectFrom('actor')
       .where('did', '=', did)
@@ -123,7 +140,7 @@ export class IndexingService {
   }
 
   async indexRepo(did: string, commit: string) {
-    this.db.assertTransaction()
+    this.db.assertNotTransaction()
     const now = new Date().toISOString()
     const { pds, signingKey } = await this.idResolver.did.resolveAtprotoData(
       did,
@@ -216,7 +233,7 @@ export class IndexingService {
   }
 
   async tombstoneActor(did: string) {
-    this.db.assertTransaction()
+    this.db.assertNotTransaction()
     const doc = await this.idResolver.did.resolve(did, true)
     if (doc === null) {
       await this.db.db.deleteFrom('actor').where('did', '=', did).execute()
@@ -229,7 +246,7 @@ export class IndexingService {
   }
 
   async unindexActor(did: string) {
-    this.db.assertTransaction()
+    this.db.assertNotTransaction()
     // per-record-type indexes
     await this.db.db.deleteFrom('profile').where('creator', '=', did).execute()
     await this.db.db.deleteFrom('follow').where('creator', '=', did).execute()
