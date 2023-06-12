@@ -367,4 +367,105 @@ describe('proxies view requests', () => {
       res.data.followers,
     )
   })
+
+  let listUri: string
+
+  it('graph.getList', async () => {
+    const bobList = await agent.api.app.bsky.graph.list.create(
+      { repo: bob },
+      {
+        name: 'bob mutes',
+        purpose: 'app.bsky.graph.defs#modlist',
+        description: "bob's list of mutes",
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(bob),
+    )
+    listUri = bobList.uri.toString()
+    await agent.api.app.bsky.graph.list.create(
+      { repo: bob },
+      {
+        name: 'another list',
+        purpose: 'app.bsky.graph.defs#modlist',
+        description: 'a second list',
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(bob),
+    )
+    await agent.api.app.bsky.graph.listitem.create(
+      { repo: bob },
+      {
+        subject: alice,
+        list: listUri,
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(bob),
+    )
+    await agent.api.app.bsky.graph.listitem.create(
+      { repo: bob },
+      {
+        subject: carol,
+        list: listUri,
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(bob),
+    )
+    await network.processAll()
+
+    const res = await agent.api.app.bsky.graph.getList(
+      { list: listUri },
+      {
+        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+      },
+    )
+    expect(forSnapshot(res.data)).toMatchSnapshot()
+    const pt1 = await agent.api.app.bsky.graph.getList(
+      {
+        list: listUri,
+        limit: 1,
+      },
+      {
+        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+      },
+    )
+    const pt2 = await agent.api.app.bsky.graph.getList(
+      {
+        list: listUri,
+        cursor: pt1.data.cursor,
+      },
+      {
+        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+      },
+    )
+    expect([...pt1.data.items, ...pt2.data.items]).toEqual(res.data.items)
+  })
+
+  it('graph.getLists', async () => {
+    const res = await agent.api.app.bsky.graph.getLists(
+      { actor: bob },
+      {
+        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+      },
+    )
+    expect(forSnapshot(res.data)).toMatchSnapshot()
+    const pt1 = await agent.api.app.bsky.graph.getLists(
+      {
+        actor: bob,
+        limit: 1,
+      },
+      {
+        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+      },
+    )
+    const pt2 = await agent.api.app.bsky.graph.getLists(
+      {
+        actor: bob,
+        cursor: pt1.data.cursor,
+      },
+      {
+        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+      },
+    )
+    expect([...pt1.data.lists, ...pt2.data.lists]).toEqual(res.data.lists)
+  })
 })
