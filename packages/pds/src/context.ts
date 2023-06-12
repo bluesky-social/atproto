@@ -14,6 +14,7 @@ import { Labeler } from './labeler'
 import { BackgroundQueue } from './event-stream/background-queue'
 import DidSqlCache from './did-cache'
 import { MountedAlgos } from './feed-gen/types'
+import { Crawlers } from './crawlers'
 
 export class AppContext {
   constructor(
@@ -34,6 +35,7 @@ export class AppContext {
       sequencerLeader: SequencerLeader
       labeler: Labeler
       backgroundQueue: BackgroundQueue
+      crawlers: Crawlers
       algos: MountedAlgos
     },
   ) {}
@@ -116,6 +118,10 @@ export class AppContext {
 
   get backgroundQueue(): BackgroundQueue {
     return this.opts.backgroundQueue
+  }
+
+  get crawlers(): Crawlers {
+    return this.opts.crawlers
   }
 
   get plcClient(): plc.Client {

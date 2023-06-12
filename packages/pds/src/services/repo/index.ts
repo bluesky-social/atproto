@@ -29,6 +29,7 @@ import { Labeler } from '../../labeler'
 import { wait } from '@atproto/common'
 import { BackgroundQueue } from '../../event-stream/background-queue'
 import { countAll } from '../../db/util'
+import { Crawlers } from '../../crawlers'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -39,6 +40,7 @@ export class RepoService {
     public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
+    public crawlers: Crawlers,
     public labeler: Labeler,
   ) {
     this.blobs = new RepoBlobs(db, blobstore, backgroundQueue)
@@ -49,6 +51,7 @@ export class RepoService {
     messageDispatcher: MessageQueue,
     blobstore: BlobStore,
     backgroundQueue: BackgroundQueue,
+    crawlers: Crawlers,
     labeler: Labeler,
   ) {
     return (db: Database) =>
@@ -58,6 +61,7 @@ export class RepoService {
         messageDispatcher,
         blobstore,
         backgroundQueue,
+        crawlers,
         labeler,
       )
   }
@@ -77,6 +81,7 @@ export class RepoService {
         this.messageDispatcher,
         this.blobstore,
         this.backgroundQueue,
+        this.crawlers,
         this.labeler,
       )
       return fn(srvc)
@@ -220,6 +225,12 @@ export class RepoService {
     commitData: CommitData,
     writes: PreparedWrite[],
   ) {
+    this.db.onCommit(() => {
+      this.backgroundQueue.add(async () => {
+        await this.crawlers.notifyOfUpdate()
+      })
+    })
+
     const seqEvt = await sequencer.formatSeqCommit(did, commitData, writes)
     await sequencer.sequenceEvt(this.db, seqEvt)
 

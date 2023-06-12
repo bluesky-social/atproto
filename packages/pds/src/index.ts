@@ -40,6 +40,7 @@ import { BackgroundQueue } from './event-stream/background-queue'
 import DidSqlCache from './did-cache'
 import { IdResolver } from '@atproto/identity'
 import { MountedAlgos } from './feed-gen/types'
+import { Crawlers } from './crawlers'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -147,6 +148,10 @@ export class PDS {
     )
 
     const backgroundQueue = new BackgroundQueue(db)
+    const crawlers = new Crawlers(
+      config.hostname,
+      config.crawlersToNotify ?? [],
+    )
 
     let labeler: Labeler
     if (config.hiveApiKey) {
@@ -176,6 +181,7 @@ export class PDS {
       imgInvalidator,
       labeler,
       backgroundQueue,
+      crawlers,
     })
 
     const ctx = new AppContext({
@@ -195,6 +201,7 @@ export class PDS {
       mailer,
       imgUriBuilder,
       backgroundQueue,
+      crawlers,
       algos,
     })
 

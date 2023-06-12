@@ -58,6 +58,8 @@ export interface ServerConfigValues {
 
   bskyAppViewEndpoint?: string
   bskyAppViewDid?: string
+
+  crawlersToNotify?: string[]
 }
 
 export class ServerConfig {
@@ -175,6 +177,10 @@ export class ServerConfig {
     )
     const bskyAppViewDid = nonemptyString(process.env.BSKY_APP_VIEW_DID)
 
+    const crawlersEnv = process.env.CRAWLERS_TO_NOTIFY
+    const crawlersToNotify =
+      crawlersEnv && crawlersEnv.length > 0 ? crawlersEnv.split(',') : []
+
     return new ServerConfig({
       debugMode,
       version,
@@ -217,6 +223,7 @@ export class ServerConfig {
       appViewRepoProvider,
       bskyAppViewEndpoint,
       bskyAppViewDid,
+      crawlersToNotify,
       ...overrides,
     })
   }
@@ -413,6 +420,10 @@ export class ServerConfig {
 
   get bskyAppViewDid() {
     return this.cfg.bskyAppViewDid
+  }
+
+  get crawlersToNotify() {
+    return this.cfg.crawlersToNotify
   }
 }
 
