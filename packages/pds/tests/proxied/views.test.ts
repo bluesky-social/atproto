@@ -4,7 +4,7 @@ import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { forSnapshot } from '../_util'
 
-describe('proxies requests', () => {
+describe('proxies view requests', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
@@ -69,7 +69,7 @@ describe('proxies requests', () => {
     const res = await agent.api.app.bsky.actor.getSuggestions(
       {},
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(carol), 'x-appview-proxy': 'true' },
       },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
@@ -78,7 +78,7 @@ describe('proxies requests', () => {
         limit: 1,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(carol), 'x-appview-proxy': 'true' },
       },
     )
     const pt2 = await agent.api.app.bsky.actor.getSuggestions(
@@ -86,7 +86,7 @@ describe('proxies requests', () => {
         cursor: pt1.data.cursor,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(carol), 'x-appview-proxy': 'true' },
       },
     )
     expect([...pt1.data.actors, ...pt2.data.actors]).toEqual(res.data.actors)
