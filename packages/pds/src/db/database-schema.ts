@@ -16,6 +16,7 @@ import * as blob from './tables/blob'
 import * as repoBlob from './tables/repo-blob'
 import * as deleteAccountToken from './tables/delete-account-token'
 import * as moderation from './tables/moderation'
+import * as label from './tables/label'
 import * as repoSeq from './tables/repo-seq'
 import * as appMigration from './tables/app-migration'
 
@@ -39,6 +40,7 @@ export type DatabaseSchemaType = appMigration.PartialDB &
   repoBlob.PartialDB &
   deleteAccountToken.PartialDB &
   moderation.PartialDB &
+  label.PartialDB &
   repoSeq.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>

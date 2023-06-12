@@ -212,12 +212,7 @@ export class RecordService {
   async deleteForActor(did: string) {
     // Not done in transaction because it would be too long, prone to contention.
     // Also, this can safely be run multiple times if it fails.
-    await this.messageDispatcher.send(this.db, deleteRepo(did)) // Needs record table
     await this.db.db.deleteFrom('record').where('did', '=', did).execute()
-    await this.db.db
-      .deleteFrom('user_notification')
-      .where('author', '=', did)
-      .execute()
   }
 
   async removeBacklinksByUri(uri: AtUri) {

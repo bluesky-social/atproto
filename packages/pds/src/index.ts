@@ -11,8 +11,6 @@ import events from 'events'
 import { createTransport } from 'nodemailer'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
-import * as appviewConsumers from './app-view/event-stream/consumers'
-import inProcessAppView from './app-view/api'
 import API from './api'
 import * as basicRoutes from './basic-routes'
 import * as wellKnown from './well-known'
@@ -23,7 +21,6 @@ import { dbLogger, loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
 import { createServer } from './lexicon'
-import { MessageDispatcher } from './event-stream/message-queue'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
@@ -35,7 +32,7 @@ import {
   ImageProcessingServerInvalidator,
 } from './image/invalidator'
 import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
-import { BackgroundQueue } from './event-stream/background-queue'
+import { BackgroundQueue } from './background'
 import DidSqlCache from './did-cache'
 import { IdResolver } from '@atproto/identity'
 import { MountedAlgos } from './feed-gen/types'
@@ -96,7 +93,6 @@ export class PDS {
     )
     const idResolver = new IdResolver({ plcUrl: config.didPlcUrl, didCache })
 
-    const messageDispatcher = new MessageDispatcher()
     const sequencer = new Sequencer(db)
     const sequencerLeader = new SequencerLeader(
       db,
@@ -171,7 +167,6 @@ export class PDS {
 
     const services = createServices({
       repoSigningKey,
-      messageDispatcher,
       blobstore,
       imgUriBuilder,
       imgInvalidator,
@@ -189,7 +184,6 @@ export class PDS {
       didCache,
       cfg: config,
       auth,
-      messageDispatcher,
       sequencer,
       sequencerLeader,
       labeler,
@@ -211,7 +205,6 @@ export class PDS {
     })
 
     server = API(server, ctx)
-    server = inProcessAppView(server, ctx)
 
     app.use(basicRoutes.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
@@ -247,7 +240,6 @@ export class PDS {
         )
       }, 10000)
     }
-    appviewConsumers.listen(this.ctx)
     this.ctx.sequencerLeader.run()
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()

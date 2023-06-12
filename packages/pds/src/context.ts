@@ -11,10 +11,9 @@ import { ServerMailer } from './mailer'
 import { BlobStore } from '@atproto/repo'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
-import { MessageDispatcher } from './event-stream/message-queue'
 import { Sequencer, SequencerLeader } from './sequencer'
 import { Labeler } from './labeler'
-import { BackgroundQueue } from './event-stream/background-queue'
+import { BackgroundQueue } from './background'
 import DidSqlCache from './did-cache'
 import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
@@ -35,7 +34,6 @@ export class AppContext {
       cfg: ServerConfig
       mailer: ServerMailer
       services: Services
-      messageDispatcher: MessageDispatcher
       sequencer: Sequencer
       sequencerLeader: SequencerLeader
       labeler: Labeler
@@ -109,10 +107,6 @@ export class AppContext {
 
   get services(): Services {
     return this.opts.services
-  }
-
-  get messageDispatcher(): MessageDispatcher {
-    return this.opts.messageDispatcher
   }
 
   get sequencer(): Sequencer {
