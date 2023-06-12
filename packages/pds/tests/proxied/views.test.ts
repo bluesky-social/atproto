@@ -12,6 +12,7 @@ describe('proxies view requests', () => {
   let alice: string
   let bob: string
   let carol: string
+  let dan: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -24,6 +25,7 @@ describe('proxies view requests', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
+    dan = sc.dids.dan
   })
 
   afterAll(async () => {
@@ -167,7 +169,7 @@ describe('proxies view requests', () => {
   })
 
   it('feed.getLikes', async () => {
-    const postUri = sc.posts[bob][0].ref.uriStr
+    const postUri = sc.posts[carol][0].ref.uriStr
     const res = await agent.api.app.bsky.feed.getLikes(
       {
         uri: postUri,
@@ -199,7 +201,7 @@ describe('proxies view requests', () => {
   })
 
   it('feed.getRepostedBy', async () => {
-    const postUri = sc.posts[bob][0].ref.uriStr
+    const postUri = sc.posts[dan][1].ref.uriStr
     const res = await agent.api.app.bsky.feed.getRepostedBy(
       {
         uri: postUri,
