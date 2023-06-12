@@ -11,26 +11,13 @@ import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { RepoRoot } from '../src/db/tables/repo-root'
 import { UserAccount } from '../src/db/tables/user-account'
 import { IpldBlock } from '../src/db/tables/ipld-block'
-import { Post } from '../src/app-view/db/tables/post'
-import { Like } from '../src/app-view/db/tables/like'
-import { Repost } from '../src/app-view/db/tables/repost'
-import { Follow } from '../src/app-view/db/tables/follow'
 import { RepoBlob } from '../src/db/tables/repo-blob'
 import { Blob } from '../src/db/tables/blob'
-import {
-  PostEmbedImage,
-  PostEmbedExternal,
-  PostEmbedRecord,
-} from '../src/app-view/db/tables/post-embed'
 import { RepoCommitHistory } from '../src/db/tables/repo-commit-history'
 import { RepoCommitBlock } from '../src/db/tables/repo-commit-block'
 import { Record } from '../src/db/tables/record'
 import { RepoSeq } from '../src/db/tables/repo-seq'
 import { ACKNOWLEDGE } from '../src/lexicon/types/com/atproto/admin/defs'
-import { UserState } from '../src/db/tables/user-state'
-import { ActorBlock } from '../src/app-view/db/tables/actor-block'
-import { List } from '../src/app-view/db/tables/list'
-import { ListItem } from '../src/app-view/db/tables/list-item'
 
 describe('account deletion', () => {
   let server: util.TestServerInfo
@@ -165,9 +152,6 @@ describe('account deletion', () => {
     expect(updatedDbContents.users).toEqual(
       initialDbContents.users.filter((row) => row.did !== carol.did),
     )
-    expect(updatedDbContents.userState).toEqual(
-      initialDbContents.userState.filter((row) => row.did !== carol.did),
-    )
     expect(updatedDbContents.blocks).toEqual(
       initialDbContents.blocks.filter((row) => row.creator !== carol.did),
     )
@@ -182,42 +166,8 @@ describe('account deletion', () => {
         (row) => row.creator !== carol.did,
       ),
     )
-  })
-
-  it('no longer stores indexed records from the user', async () => {
     expect(updatedDbContents.records).toEqual(
       initialDbContents.records.filter((row) => row.did !== carol.did),
-    )
-    expect(updatedDbContents.posts).toEqual(
-      initialDbContents.posts.filter((row) => row.creator !== carol.did),
-    )
-    expect(updatedDbContents.likes).toEqual(
-      initialDbContents.likes.filter((row) => row.creator !== carol.did),
-    )
-    expect(updatedDbContents.actorBlocks).toEqual(
-      initialDbContents.actorBlocks.filter((row) => row.creator !== carol.did),
-    )
-    expect(updatedDbContents.lists).toEqual(
-      initialDbContents.lists.filter((row) => row.creator !== carol.did),
-    )
-    expect(updatedDbContents.listItems).toEqual(
-      initialDbContents.listItems.filter((row) => row.creator !== carol.did),
-    )
-    expect(updatedDbContents.reposts).toEqual(
-      initialDbContents.reposts.filter((row) => row.creator !== carol.did),
-    )
-    expect(updatedDbContents.follows).toEqual(
-      initialDbContents.follows.filter((row) => row.creator !== carol.did),
-    )
-    expect(updatedDbContents.postImages).toEqual(
-      initialDbContents.postImages.filter(
-        (row) => !row.postUri.includes(carol.did),
-      ),
-    )
-    expect(updatedDbContents.postExternals).toEqual(
-      initialDbContents.postExternals.filter(
-        (row) => !row.postUri.includes(carol.did),
-      ),
     )
   })
 
@@ -291,22 +241,11 @@ describe('account deletion', () => {
 type DbContents = {
   roots: RepoRoot[]
   users: Selectable<UserAccount>[]
-  userState: UserState[]
   blocks: IpldBlock[]
   seqs: Selectable<RepoSeq>[]
   commitHistories: RepoCommitHistory[]
   commitBlocks: RepoCommitBlock[]
   records: Record[]
-  posts: Post[]
-  postImages: PostEmbedImage[]
-  postExternals: PostEmbedExternal[]
-  postRecords: PostEmbedRecord[]
-  likes: Like[]
-  reposts: Repost[]
-  follows: Follow[]
-  actorBlocks: ActorBlock[]
-  lists: List[]
-  listItems: ListItem[]
   repoBlobs: RepoBlob[]
   blobs: Blob[]
 }
@@ -315,28 +254,16 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
   const [
     roots,
     users,
-    userState,
     blocks,
     seqs,
     commitHistories,
     commitBlocks,
     records,
-    posts,
-    postImages,
-    postExternals,
-    postRecords,
-    likes,
-    reposts,
-    follows,
-    actorBlocks,
-    lists,
-    listItems,
     repoBlobs,
     blobs,
   ] = await Promise.all([
     db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
     db.db.selectFrom('user_account').orderBy('did').selectAll().execute(),
-    db.db.selectFrom('user_state').orderBy('did').selectAll().execute(),
     db.db
       .selectFrom('ipld_block')
       .orderBy('creator')
@@ -358,28 +285,6 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
       .selectAll()
       .execute(),
     db.db.selectFrom('record').orderBy('uri').selectAll().execute(),
-    db.db.selectFrom('post').orderBy('uri').selectAll().execute(),
-    db.db
-      .selectFrom('post_embed_image')
-      .orderBy('postUri')
-      .selectAll()
-      .execute(),
-    db.db
-      .selectFrom('post_embed_external')
-      .orderBy('postUri')
-      .selectAll()
-      .execute(),
-    db.db
-      .selectFrom('post_embed_record')
-      .orderBy('postUri')
-      .selectAll()
-      .execute(),
-    db.db.selectFrom('like').orderBy('uri').selectAll().execute(),
-    db.db.selectFrom('repost').orderBy('uri').selectAll().execute(),
-    db.db.selectFrom('follow').orderBy('uri').selectAll().execute(),
-    db.db.selectFrom('actor_block').orderBy('uri').selectAll().execute(),
-    db.db.selectFrom('list').orderBy('uri').selectAll().execute(),
-    db.db.selectFrom('list_item').orderBy('uri').selectAll().execute(),
     db.db
       .selectFrom('repo_blob')
       .orderBy('did')
@@ -392,22 +297,11 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
   return {
     roots,
     users,
-    userState,
     blocks,
     seqs,
     commitHistories,
     commitBlocks,
     records,
-    posts,
-    postImages,
-    postExternals,
-    postRecords,
-    likes,
-    reposts,
-    follows,
-    actorBlocks,
-    lists,
-    listItems,
     repoBlobs,
     blobs,
   }
