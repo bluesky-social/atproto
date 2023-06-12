@@ -16,6 +16,7 @@ import { IndexingService } from '../app-view/services/indexing'
 import { Labeler } from '../labeler'
 import { LabelService } from '../app-view/services/label'
 import { BackgroundQueue } from '../event-stream/background-queue'
+import { Crawlers } from '../crawlers'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
@@ -25,6 +26,7 @@ export function createServices(resources: {
   imgInvalidator: ImageInvalidator
   labeler: Labeler
   backgroundQueue: BackgroundQueue
+  crawlers: Crawlers
 }): Services {
   const {
     repoSigningKey,
@@ -34,6 +36,7 @@ export function createServices(resources: {
     imgInvalidator,
     labeler,
     backgroundQueue,
+    crawlers,
   } = resources
   return {
     account: AccountService.creator(),
@@ -44,6 +47,7 @@ export function createServices(resources: {
       messageDispatcher,
       blobstore,
       backgroundQueue,
+      crawlers,
       labeler,
     ),
     moderation: ModerationService.creator(
