@@ -24,7 +24,6 @@ import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { RecordService } from '../record'
 import * as sequencer from '../../sequencer'
-import { Labeler } from '../../labeler'
 import { wait } from '@atproto/common'
 import { BackgroundQueue } from '../../background'
 import { countAll } from '../../db/util'
@@ -39,7 +38,6 @@ export class RepoService {
     public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
     public crawlers: Crawlers,
-    public labeler: Labeler,
   ) {
     this.blobs = new RepoBlobs(db, blobstore, backgroundQueue)
   }
@@ -49,7 +47,6 @@ export class RepoService {
     blobstore: BlobStore,
     backgroundQueue: BackgroundQueue,
     crawlers: Crawlers,
-    labeler: Labeler,
   ) {
     return (db: Database) =>
       new RepoService(
@@ -58,7 +55,6 @@ export class RepoService {
         blobstore,
         backgroundQueue,
         crawlers,
-        labeler,
       )
   }
 
@@ -77,7 +73,6 @@ export class RepoService {
         this.blobstore,
         this.backgroundQueue,
         this.crawlers,
-        this.labeler,
       )
       return fn(srvc)
     })
@@ -228,16 +223,6 @@ export class RepoService {
 
     const seqEvt = await sequencer.formatSeqCommit(did, commitData, writes)
     await sequencer.sequenceEvt(this.db, seqEvt)
-
-    // @TODO move to appview
-    writes.forEach((write) => {
-      if (
-        write.action === WriteOpAction.Create ||
-        write.action === WriteOpAction.Update
-      ) {
-        this.labeler.processRecord(write.uri, write.record)
-      }
-    })
   }
 
   async rebaseRepo(did: string, swapCommit?: CID) {

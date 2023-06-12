@@ -9,10 +9,8 @@ import { ServerConfig } from './config'
 import * as auth from './auth'
 import { ServerMailer } from './mailer'
 import { BlobStore } from '@atproto/repo'
-import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import { Sequencer, SequencerLeader } from './sequencer'
-import { Labeler } from './labeler'
 import { BackgroundQueue } from './background'
 import DidSqlCache from './did-cache'
 import { MountedAlgos } from './feed-gen/types'
@@ -30,13 +28,11 @@ export class AppContext {
       idResolver: IdResolver
       didCache: DidSqlCache
       auth: auth.ServerAuth
-      imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       mailer: ServerMailer
       services: Services
       sequencer: Sequencer
       sequencerLeader: SequencerLeader
-      labeler: Labeler
       backgroundQueue: BackgroundQueue
       crawlers: Crawlers
       algos: MountedAlgos
@@ -93,10 +89,6 @@ export class AppContext {
     return auth.moderatorVerifier(this.auth)
   }
 
-  get imgUriBuilder(): ImageUriBuilder {
-    return this.opts.imgUriBuilder
-  }
-
   get cfg(): ServerConfig {
     return this.opts.cfg
   }
@@ -115,10 +107,6 @@ export class AppContext {
 
   get sequencerLeader(): SequencerLeader {
     return this.opts.sequencerLeader
-  }
-
-  get labeler(): Labeler {
-    return this.opts.labeler
   }
 
   get backgroundQueue(): BackgroundQueue {

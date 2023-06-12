@@ -21,17 +21,10 @@ import { dbLogger, loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
 import { createServer } from './lexicon'
-import { ImageUriBuilder } from './image/uri'
-import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import AppContext from './context'
 import { Sequencer, SequencerLeader } from './sequencer'
-import {
-  ImageInvalidator,
-  ImageProcessingServerInvalidator,
-} from './image/invalidator'
-import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
 import { BackgroundQueue } from './background'
 import DidSqlCache from './did-cache'
 import { IdResolver } from '@atproto/identity'
@@ -65,7 +58,6 @@ export class PDS {
   static create(opts: {
     db: Database
     blobstore: BlobStore
-    imgInvalidator?: ImageInvalidator
     repoSigningKey: crypto.Keypair
     plcRotationKey: crypto.Keypair
     algos?: MountedAlgos
@@ -79,7 +71,6 @@ export class PDS {
       algos = {},
       config,
     } = opts
-    let maybeImgInvalidator = opts.imgInvalidator
     const auth = new ServerAuth({
       jwtSecret: config.jwtSecret,
       adminPass: config.adminPassword,
@@ -110,67 +101,15 @@ export class PDS {
     app.use(cors())
     app.use(loggerMiddleware)
 
-    let imgUriEndpoint = config.imgUriEndpoint
-    if (!imgUriEndpoint) {
-      const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
-      const imgProcessingServer = new ImageProcessingServer(
-        config.imgUriSalt,
-        config.imgUriKey,
-        blobstore,
-        imgProcessingCache,
-      )
-      maybeImgInvalidator ??= new ImageProcessingServerInvalidator(
-        imgProcessingCache,
-      )
-      app.use('/image', imgProcessingServer.app)
-      imgUriEndpoint = `${config.publicUrl}/image`
-    }
-
-    let imgInvalidator: ImageInvalidator
-    if (maybeImgInvalidator) {
-      imgInvalidator = maybeImgInvalidator
-    } else {
-      throw new Error('Missing PDS image invalidator')
-    }
-
-    const imgUriBuilder = new ImageUriBuilder(
-      imgUriEndpoint,
-      config.imgUriSalt,
-      config.imgUriKey,
-    )
-
     const backgroundQueue = new BackgroundQueue(db)
     const crawlers = new Crawlers(
       config.hostname,
       config.crawlersToNotify ?? [],
     )
 
-    let labeler: Labeler
-    if (config.hiveApiKey) {
-      labeler = new HiveLabeler({
-        db,
-        blobstore,
-        backgroundQueue,
-        labelerDid: config.labelerDid,
-        hiveApiKey: config.hiveApiKey,
-        keywords: config.labelerKeywords,
-      })
-    } else {
-      labeler = new KeywordLabeler({
-        db,
-        blobstore,
-        backgroundQueue,
-        labelerDid: config.labelerDid,
-        keywords: config.labelerKeywords,
-      })
-    }
-
     const services = createServices({
       repoSigningKey,
       blobstore,
-      imgUriBuilder,
-      imgInvalidator,
-      labeler,
       backgroundQueue,
       crawlers,
     })
@@ -186,10 +125,8 @@ export class PDS {
       auth,
       sequencer,
       sequencerLeader,
-      labeler,
       services,
       mailer,
-      imgUriBuilder,
       backgroundQueue,
       crawlers,
       algos,
