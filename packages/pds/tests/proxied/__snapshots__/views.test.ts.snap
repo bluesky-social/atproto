@@ -62,6 +62,12 @@ Object {
 }
 `;
 
+exports[`proxies requests actor.getSuggestions 1`] = `
+Object {
+  "actors": Array [],
+}
+`;
+
 exports[`proxies requests actor.searchActor 1`] = `
 Object {
   "actors": Array [
@@ -1700,5 +1706,104 @@ Object {
       },
     },
   ],
+}
+`;
+
+exports[`proxies requests graph.getBlocks 1`] = `
+Object {
+  "blocks": Array [],
+}
+`;
+
+exports[`proxies requests graph.getFollowers 1`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "followers": Array [
+    Object {
+      "did": "user(2)",
+      "handle": "dan.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(0)@jpeg",
+      "description": "its me!",
+      "did": "user(3)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "description": "hi im bob label_me",
+    "did": "user(0)",
+    "displayName": "bobby",
+    "handle": "bob.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "viewer": Object {
+      "blockedBy": false,
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
+}
+`;
+
+exports[`proxies requests graph.getFollows 1`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "follows": Array [
+    Object {
+      "did": "user(2)",
+      "handle": "carol.test",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "followedBy": "record(3)",
+        "following": "record(2)",
+        "muted": false,
+      },
+    },
+    Object {
+      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(0)@jpeg",
+      "description": "its me!",
+      "did": "user(3)",
+      "displayName": "ali",
+      "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
+  ],
+  "subject": Object {
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "description": "hi im bob label_me",
+    "did": "user(0)",
+    "displayName": "bobby",
+    "handle": "bob.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "viewer": Object {
+      "blockedBy": false,
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
+    },
+  },
 }
 `;
