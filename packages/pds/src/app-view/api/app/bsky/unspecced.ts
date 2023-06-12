@@ -16,13 +16,39 @@ const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
 
 const NSFW_LABELS = ['porn', 'sexual', 'nudity', 'underwear']
 
+// @NOTE currently relies on the hot-classic feed being configured on the pds
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getPopular({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
-      const { limit, cursor, includeNsfw } = params
+    handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const hotClassicUri = Object.keys(ctx.algos).find((uri) =>
+          uri.endsWith('/hot-classic'),
+        )
+        if (!hotClassicUri) {
+          return {
+            encoding: 'application/json',
+            body: { feed: [] },
+          }
+        }
+        const { data: feed } =
+          await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerator(
+            { feed: hotClassicUri },
+            await ctx.serviceAuthHeaders(requester),
+          )
+        const res = await ctx.appviewAgent.api.app.bsky.feed.getFeed(
+          { ...params, feed: hotClassicUri },
+          await ctx.serviceAuthHeaders(requester, feed.view.did),
+        )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
+      const { limit, cursor, includeNsfw } = params
       const db = ctx.db.db
       const { ref } = db.dynamic
 

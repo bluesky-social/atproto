@@ -1,5 +1,5 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
+import { Server } from '../../../../../lexicon'
+import AppContext from '../../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.unmuteActorList({
@@ -12,6 +12,13 @@ export default function (server: Server, ctx: AppContext) {
         list,
         mutedByDid: requester,
       })
+
+      if (ctx.cfg.bskyAppViewEndpoint) {
+        await ctx.appviewAgent.api.app.bsky.graph.unmuteActorList(input.body, {
+          ...(await ctx.serviceAuthHeaders(requester)),
+          encoding: 'application/json',
+        })
+      }
     },
   })
 }

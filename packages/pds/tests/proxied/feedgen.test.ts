@@ -48,7 +48,7 @@ describe('feedgen proxy view', () => {
             view: {
               cid: feed.cid,
               uri: feed.uri,
-              did: network.bsky.ctx.cfg.feedGenDid,
+              did: network.bsky.ctx.cfg.feedGenDid ?? '',
               creator: { did: sc.dids.alice, handle: 'alice.test' },
               displayName: 'Mutuals',
               indexedAt: new Date().toISOString(),
@@ -69,7 +69,9 @@ describe('feedgen proxy view', () => {
   it('performs basic proxy of getFeed', async () => {
     const { data: feed } = await agent.api.app.bsky.feed.getFeed(
       { feed: feedUri.toString() },
-      { headers: sc.getHeaders(sc.dids.alice) },
+      {
+        headers: { ...sc.getHeaders(sc.dids.alice), 'x-appview-proxy': 'true' },
+      },
     )
     expect(forSnapshot(feed)).toMatchSnapshot()
   })

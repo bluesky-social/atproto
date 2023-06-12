@@ -8,11 +8,22 @@ import { FeedRow } from '../../../../services/feed'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
+    handler: async ({ req, params, auth }) => {
+      const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const res = await ctx.appviewAgent.api.app.bsky.feed.getTimeline(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
       const { algorithm, limit, cursor } = params
       const db = ctx.db.db
       const { ref } = db.dynamic
-      const requester = auth.credentials.did
 
       if (algorithm && algorithm !== FeedAlgorithm.ReverseChronological) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)

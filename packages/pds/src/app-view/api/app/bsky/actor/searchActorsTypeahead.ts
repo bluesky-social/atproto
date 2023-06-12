@@ -12,10 +12,22 @@ import { DidHandle } from '../../../../../db/tables/did-handle'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActorsTypeahead({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
+    handler: async ({ req, params, auth }) => {
+      const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const res =
+          await ctx.appviewAgent.api.app.bsky.actor.searchActorsTypeahead(
+            params,
+            await ctx.serviceAuthHeaders(requester),
+          )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
       const { services, db } = ctx
       let { term, limit } = params
-      const requester = auth.credentials.did
 
       term = cleanTerm(term || '')
       limit = Math.min(limit ?? 25, 100)

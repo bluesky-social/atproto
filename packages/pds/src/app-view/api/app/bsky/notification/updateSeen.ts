@@ -1,6 +1,6 @@
-import { Server } from '../../../../lexicon'
+import { Server } from '../../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import AppContext from '../../../../context'
+import AppContext from '../../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.updateSeen({
@@ -26,6 +26,16 @@ export default function (server: Server, ctx: AppContext) {
         .set({ lastSeenNotifs: parsed })
         .where('did', '=', user.did)
         .executeTakeFirst()
+
+      if (ctx.cfg.bskyAppViewEndpoint) {
+        await ctx.appviewAgent.api.app.bsky.notification.updateSeen(
+          input.body,
+          {
+            ...(await ctx.serviceAuthHeaders(requester)),
+            encoding: 'application/json',
+          },
+        )
+      }
     },
   })
 }

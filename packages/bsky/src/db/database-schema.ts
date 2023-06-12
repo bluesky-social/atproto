@@ -18,6 +18,7 @@ import * as actorBlock from './tables/actor-block'
 import * as feedGenerator from './tables/feed-generator'
 import * as subscription from './tables/subscription'
 import * as actor from './tables/actor'
+import * as actorState from './tables/actor-state'
 import * as actorSync from './tables/actor-sync'
 import * as record from './tables/record'
 import * as notification from './tables/notification'
@@ -47,6 +48,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   feedGenerator.PartialDB &
   subscription.PartialDB &
   actor.PartialDB &
+  actorState.PartialDB &
   actorSync.PartialDB &
   record.PartialDB &
   notification.PartialDB &

@@ -13,7 +13,6 @@ import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import * as appviewConsumers from './app-view/event-stream/consumers'
 import inProcessAppView from './app-view/api'
-import proxiedAppView from './app-view/proxied'
 import API from './api'
 import * as basicRoutes from './basic-routes'
 import * as wellKnown from './well-known'
@@ -212,11 +211,7 @@ export class PDS {
     })
 
     server = API(server, ctx)
-    if (ctx.cfg.bskyAppViewEndpoint && ctx.cfg.bskyAppViewDid) {
-      server = proxiedAppView(server, ctx)
-    } else {
-      server = inProcessAppView(server, ctx)
-    }
+    server = inProcessAppView(server, ctx)
 
     app.use(basicRoutes.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))

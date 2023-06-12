@@ -85,7 +85,10 @@ export class FeedViews {
         if (originator) {
           feedPost['reason'] = {
             $type: 'app.bsky.feed.defs#reasonRepost',
-            by: originator,
+            by: {
+              ...originator,
+              labels: labels[item.originatorDid] ?? [],
+            },
             indexedAt: item.sortAt,
           }
         }

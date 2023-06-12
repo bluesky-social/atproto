@@ -29,6 +29,7 @@ import searchActorsTypeahead from './app/bsky/actor/searchActorsTypeahead'
 import getSuggestions from './app/bsky/actor/getSuggestions'
 import getUnreadCount from './app/bsky/notification/getUnreadCount'
 import listNotifications from './app/bsky/notification/listNotifications'
+import updateSeen from './app/bsky/notification/updateSeen'
 import unspecced from './app/bsky/unspecced'
 import createReport from './com/atproto/moderation/createReport'
 import resolveModerationReports from './com/atproto/admin/resolveModerationReports'
@@ -78,6 +79,7 @@ export default function (server: Server, ctx: AppContext) {
   getSuggestions(server, ctx)
   getUnreadCount(server, ctx)
   listNotifications(server, ctx)
+  updateSeen(server, ctx)
   unspecced(server, ctx)
   // com.atproto
   createReport(server, ctx)

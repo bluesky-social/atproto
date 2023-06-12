@@ -6,9 +6,21 @@ import AppContext from '../../../../../context'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.getUnreadCount({
     auth: ctx.accessVerifier,
-    handler: async ({ auth, params }) => {
-      const { seenAt } = params
+    handler: async ({ req, auth, params }) => {
       const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const res =
+          await ctx.appviewAgent.api.app.bsky.notification.getUnreadCount(
+            params,
+            await ctx.serviceAuthHeaders(requester),
+          )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
+      const { seenAt } = params
       const { ref } = ctx.db.db.dynamic
       if (seenAt) {
         throw new InvalidRequestError('The seenAt parameter is unsupported')

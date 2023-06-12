@@ -152,10 +152,11 @@ export const stripViewer = <T extends { viewer?: Record<string, unknown> }>(
 }
 
 // @NOTE mutates
-export const stripViewerFromPost = (post: unknown): PostView => {
-  if (!isPostView(post)) {
+export const stripViewerFromPost = (postUnknown: unknown): PostView => {
+  if (postUnknown?.['$type'] && !isPostView(postUnknown)) {
     throw new Error('Expected post view')
   }
+  const post = postUnknown as PostView
   post.author = stripViewer(post.author)
   const recordEmbed =
     post.embed && isViewRecord(post.embed.record)

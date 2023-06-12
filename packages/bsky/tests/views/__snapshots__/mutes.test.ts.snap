@@ -102,7 +102,6 @@ exports[`mute views flags mutes in threads 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -132,7 +131,6 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "did": "user(2)",
           "handle": "carol.test",
@@ -172,7 +170,6 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(1)@jpeg",
           "did": "user(3)",

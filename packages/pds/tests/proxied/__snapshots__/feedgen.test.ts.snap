@@ -6,7 +6,6 @@ Object {
   "feed": Array [
     Object {
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
           "did": "user(0)",
@@ -156,7 +155,6 @@ Object {
     },
     Object {
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "did": "user(4)",
           "handle": "carol.test",
@@ -251,7 +249,6 @@ Object {
     },
     Object {
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
           "did": "user(2)",
@@ -391,7 +388,6 @@ Object {
     },
     Object {
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
           "did": "user(0)",
@@ -546,7 +542,6 @@ Object {
     },
     Object {
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
           "did": "user(2)",
@@ -577,7 +572,6 @@ Object {
     },
     Object {
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
           "did": "user(0)",
@@ -606,7 +600,6 @@ Object {
     },
     Object {
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "did": "user(4)",
           "handle": "carol.test",
@@ -719,7 +712,6 @@ Object {
     },
     Object {
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
           "did": "user(2)",
@@ -750,7 +742,6 @@ Object {
     },
     Object {
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
           "did": "user(0)",

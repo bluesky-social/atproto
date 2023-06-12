@@ -1,14 +1,25 @@
-import { Server } from '../../../../lexicon'
-import { paginate, TimeCidKeyset } from '../../../../db/pagination'
-import AppContext from '../../../../context'
-import { notSoftDeletedClause } from '../../../../db/util'
+import { Server } from '../../../../../lexicon'
+import { paginate, TimeCidKeyset } from '../../../../../db/pagination'
+import AppContext from '../../../../../context'
+import { notSoftDeletedClause } from '../../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getMutes({
     auth: ctx.accessVerifier,
-    handler: async ({ auth, params }) => {
-      const { limit, cursor } = params
+    handler: async ({ req, auth, params }) => {
       const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const res = await ctx.appviewAgent.api.app.bsky.graph.getMutes(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
+      const { limit, cursor } = params
       const { services, db } = ctx
       const { ref } = ctx.db.db.dynamic
 
