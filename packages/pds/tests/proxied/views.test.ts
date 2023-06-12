@@ -274,6 +274,7 @@ describe('proxies view requests', () => {
     expect([...pt1.data.feed, ...pt2.data.feed]).toEqual(res.data.feed)
   })
 
+  // @TODO add a block here to test
   it('graph.getBlocks', async () => {
     const res = await agent.api.app.bsky.graph.getBlocks(
       {},
