@@ -177,9 +177,9 @@ export class ServerConfig {
     )
     const bskyAppViewDid = nonemptyString(process.env.BSKY_APP_VIEW_DID)
 
-    const crawlersToNotify = process.env.CRAWLERS_TO_NOTIFY
-      ? process.env.CRAWLERS_TO_NOTIFY.split(',')
-      : []
+    const crawlersEnv = process.env.CRAWLERS_TO_NOTIFY
+    const crawlersToNotify =
+      crawlersEnv && crawlersEnv.length > 0 ? crawlersEnv.split(',') : []
 
     return new ServerConfig({
       debugMode,
