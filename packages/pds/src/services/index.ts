@@ -9,12 +9,8 @@ import { AuthService } from './auth'
 import { RecordService } from './record'
 import { RepoService } from './repo'
 import { ModerationService } from './moderation'
-import { ActorService } from '../app-view/services/actor'
-import { GraphService } from '../app-view/services/graph'
-import { FeedService } from '../app-view/services/feed'
-import { IndexingService } from '../app-view/services/indexing'
+import { LabelService } from './label'
 import { Labeler } from '../labeler'
-import { LabelService } from '../app-view/services/label'
 import { BackgroundQueue } from '../event-stream/background-queue'
 import { Crawlers } from '../crawlers'
 
@@ -56,13 +52,7 @@ export function createServices(resources: {
       imgUriBuilder,
       imgInvalidator,
     ),
-    appView: {
-      actor: ActorService.creator(imgUriBuilder),
-      graph: GraphService.creator(imgUriBuilder),
-      feed: FeedService.creator(imgUriBuilder),
-      indexing: IndexingService.creator(backgroundQueue),
-      label: LabelService.creator(),
-    },
+    label: LabelService.creator(),
   }
 }
 
@@ -72,13 +62,7 @@ export type Services = {
   record: FromDb<RecordService>
   repo: FromDb<RepoService>
   moderation: FromDb<ModerationService>
-  appView: {
-    feed: FromDb<FeedService>
-    indexing: FromDb<IndexingService>
-    actor: FromDb<ActorService>
-    graph: FromDb<GraphService>
-    label: FromDb<LabelService>
-  }
+  label: FromDb<LabelService>
 }
 
 type FromDb<T> = (db: Database) => T

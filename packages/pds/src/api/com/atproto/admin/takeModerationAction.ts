@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
       const moderationAction = await db.transaction(async (dbTxn) => {
         const authTxn = services.auth(dbTxn)
         const moderationTxn = services.moderation(dbTxn)
-        const labelTxn = services.appView.label(dbTxn)
+        const labelTxn = services.label(dbTxn)
 
         const result = await moderationTxn.logAction({
           action: getAction(action),
