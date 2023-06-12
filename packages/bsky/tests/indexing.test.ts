@@ -516,7 +516,7 @@ describe('indexing', () => {
   })
 
   describe('tombstoneActor', () => {
-    it('does not unindex actor when their did is not tombstoned', async () => {
+    it('does not unindex actor when they are still being hosted by their pds', async () => {
       const { db, services } = network.bsky.ctx
       const { data: profileBefore } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
@@ -531,20 +531,33 @@ describe('indexing', () => {
       expect(profileAfter).toEqual(profileBefore)
     })
 
-    it('unindexes actor when their did is tombstoned', async () => {
+    it('unindexes actor when they are no longer hosted by their pds', async () => {
       const { db, services } = network.bsky.ctx
+      const { alice } = sc.dids
       const getProfileBefore = agent.api.app.bsky.actor.getProfile(
-        { actor: sc.dids.alice },
+        { actor: alice },
         { headers: await network.serviceHeaders(sc.dids.bob) },
       )
       await expect(getProfileBefore).resolves.toBeDefined()
-      // Tombstone alice's did
-      const plcClient = new Client(network.plc.url)
-      await plcClient.tombstone(sc.dids.alice, network.pds.ctx.plcRotationKey)
+      // Delete account on pds
+      await pdsAgent.api.com.atproto.server.requestAccountDelete(undefined, {
+        headers: sc.getHeaders(alice),
+      })
+      const { token } = await network.pds.ctx.db.db
+        .selectFrom('delete_account_token')
+        .selectAll()
+        .where('did', '=', alice)
+        .executeTakeFirstOrThrow()
+      await pdsAgent.api.com.atproto.server.deleteAccount({
+        token,
+        did: alice,
+        password: sc.accounts[alice].password,
+      })
+      await network.pds.ctx.backgroundQueue.processAll()
       // Index tombstone
-      await services.indexing(db).tombstoneActor(sc.dids.alice)
+      await services.indexing(db).tombstoneActor(alice)
       const getProfileAfter = agent.api.app.bsky.actor.getProfile(
-        { actor: sc.dids.alice },
+        { actor: alice },
         { headers: await network.serviceHeaders(sc.dids.bob) },
       )
       await expect(getProfileAfter).rejects.toThrow('Profile not found')

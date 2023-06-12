@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import AtpAgent from '@atproto/api'
+import AtpAgent, { ComAtprotoSyncGetHead } from '@atproto/api'
 import {
   MemoryBlockstore,
   readCarWithRoot,
@@ -10,7 +10,7 @@ import {
   Commit,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
-import { IdResolver } from '@atproto/identity'
+import { IdResolver, getPds } from '@atproto/identity'
 import { chunkArray } from '@atproto/common'
 import { ValidationError } from '@atproto/lexicon'
 import Database from '../../db'
@@ -234,14 +234,30 @@ export class IndexingService {
 
   async tombstoneActor(did: string) {
     this.db.assertNotTransaction()
-    const doc = await this.idResolver.did.resolve(did, true)
-    if (doc === null) {
+    const actorIsHosted = await this.getActorIsHosted(did)
+    if (actorIsHosted === false) {
       await this.db.db.deleteFrom('actor').where('did', '=', did).execute()
       await this.unindexActor(did)
       await this.db.db
         .deleteFrom('notification')
         .where('did', '=', did)
         .execute()
+    }
+  }
+
+  private async getActorIsHosted(did: string) {
+    const doc = await this.idResolver.did.resolve(did, true)
+    const pds = doc && getPds(doc)
+    if (!pds) return false
+    const { api } = new AtpAgent({ service: pds })
+    try {
+      await retryHttp(() => api.com.atproto.sync.getHead({ did }))
+      return true
+    } catch (err) {
+      if (err instanceof ComAtprotoSyncGetHead.HeadNotFoundError) {
+        return false
+      }
+      return null
     }
   }
 
