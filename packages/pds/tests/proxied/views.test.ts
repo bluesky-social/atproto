@@ -276,6 +276,9 @@ describe('proxies view requests', () => {
 
   // @TODO add a block here to test
   it('graph.getBlocks', async () => {
+    await sc.block(alice, bob)
+    await sc.block(alice, carol)
+    await network.processAll()
     const res = await agent.api.app.bsky.graph.getBlocks(
       {},
       {
@@ -300,6 +303,9 @@ describe('proxies view requests', () => {
       },
     )
     expect([...pt1.data.blocks, ...pt2.data.blocks]).toEqual(res.data.blocks)
+    await sc.unblock(alice, bob)
+    await sc.unblock(alice, carol)
+    await network.processAll()
   })
 
   it('graph.getFollows', async () => {
