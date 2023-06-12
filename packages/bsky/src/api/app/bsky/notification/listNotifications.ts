@@ -1,3 +1,4 @@
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { jsonStringToLex } from '@atproto/lexicon'
 import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
@@ -10,6 +11,9 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { limit, cursor } = params
       const requester = auth.credentials.did
+      if (params.seenAt) {
+        throw new InvalidRequestError('The seenAt parameter is unsupported')
+      }
 
       const graphService = ctx.services.graph(ctx.db)
 

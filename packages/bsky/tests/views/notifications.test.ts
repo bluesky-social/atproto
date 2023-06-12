@@ -172,8 +172,15 @@ describe('notification views', () => {
       { headers: await network.serviceHeaders(alice) },
     )
     const seenAt = full.data.notifications[3].indexedAt
-    const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
+    await agent.api.app.bsky.notification.updateSeen(
       { seenAt },
+      {
+        headers: await network.serviceHeaders(alice),
+        encoding: 'application/json',
+      },
+    )
+    const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
+      {},
       { headers: await network.serviceHeaders(alice) },
     )
 
@@ -181,6 +188,15 @@ describe('notification views', () => {
       full.data.notifications.filter((n) => n.indexedAt > seenAt).length,
     )
     expect(notifCount.data.count).toBeGreaterThan(0)
+
+    // reset last-seen
+    await agent.api.app.bsky.notification.updateSeen(
+      { seenAt: new Date(0).toISOString() },
+      {
+        headers: await network.serviceHeaders(alice),
+        encoding: 'application/json',
+      },
+    )
   })
 
   it('fetches notifications with a last-seen', async () => {
@@ -189,8 +205,15 @@ describe('notification views', () => {
       { headers: await network.serviceHeaders(alice) },
     )
     const seenAt = full.data.notifications[3].indexedAt
-    const notifRes = await agent.api.app.bsky.notification.listNotifications(
+    await agent.api.app.bsky.notification.updateSeen(
       { seenAt },
+      {
+        headers: await network.serviceHeaders(alice),
+        encoding: 'application/json',
+      },
+    )
+    const notifRes = await agent.api.app.bsky.notification.listNotifications(
+      {},
       { headers: await network.serviceHeaders(alice) },
     )
 
@@ -199,6 +222,14 @@ describe('notification views', () => {
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map((n) => n.indexedAt <= seenAt))
+    // reset last-seen
+    await agent.api.app.bsky.notification.updateSeen(
+      { seenAt: new Date(0).toISOString() },
+      {
+        headers: await network.serviceHeaders(alice),
+        encoding: 'application/json',
+      },
+    )
   })
 
   it('fetches notifications omitting mentions and replies for taken-down posts', async () => {
