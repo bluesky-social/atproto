@@ -22,17 +22,17 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getPopular({
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
-      const hotClassicUri = Object.keys(ctx.algos).find((uri) =>
-        uri.endsWith('/hot-classic'),
-      )
-      if (!hotClassicUri) {
-        return {
-          encoding: 'application/json',
-          body: { feed: [] },
-        }
-      }
       const requester = auth.credentials.did
       if (ctx.canProxy(req)) {
+        const hotClassicUri = Object.keys(ctx.algos).find((uri) =>
+          uri.endsWith('/hot-classic'),
+        )
+        if (!hotClassicUri) {
+          return {
+            encoding: 'application/json',
+            body: { feed: [] },
+          }
+        }
         const { data: feed } =
           await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerator(
             { feed: hotClassicUri },
