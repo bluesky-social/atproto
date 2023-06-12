@@ -1,6 +1,5 @@
 import { Kysely } from 'kysely'
 import * as userAccount from './tables/user-account'
-import * as userState from './tables/user-state'
 import * as userPref from './tables/user-pref'
 import * as didHandle from './tables/did-handle'
 import * as repoRoot from './tables/repo-root'
@@ -13,20 +12,15 @@ import * as repoCommitBlock from './tables/repo-commit-block'
 import * as repoCommitHistory from './tables/repo-commit-history'
 import * as ipldBlock from './tables/ipld-block'
 import * as inviteCode from './tables/invite-code'
-import * as notification from './tables/user-notification'
 import * as blob from './tables/blob'
 import * as repoBlob from './tables/repo-blob'
 import * as deleteAccountToken from './tables/delete-account-token'
 import * as moderation from './tables/moderation'
-import * as mute from './tables/mute'
-import * as listMute from './tables/list-mute'
-import * as label from './tables/label'
 import * as repoSeq from './tables/repo-seq'
 import * as appMigration from './tables/app-migration'
 
 export type DatabaseSchemaType = appMigration.PartialDB &
   userAccount.PartialDB &
-  userState.PartialDB &
   userPref.PartialDB &
   didHandle.PartialDB &
   refreshToken.PartialDB &
@@ -41,14 +35,10 @@ export type DatabaseSchemaType = appMigration.PartialDB &
   repoCommitBlock.PartialDB &
   repoCommitHistory.PartialDB &
   inviteCode.PartialDB &
-  notification.PartialDB &
   blob.PartialDB &
   repoBlob.PartialDB &
   deleteAccountToken.PartialDB &
   moderation.PartialDB &
-  mute.PartialDB &
-  listMute.PartialDB &
-  label.PartialDB &
   repoSeq.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
