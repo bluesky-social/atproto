@@ -11,75 +11,35 @@ require('dd-trace/init') // Only works with commonjs
 
 // Tracer code above must come before anything else
 const path = require('path')
-const { KmsKeypair, S3BlobStore } = require('@atproto/aws')
-const { Database, ServerConfig, PDS, DiskBlobStore } = require('@atproto/pds')
-const { Secp256k1Keypair } = require('@atproto/crypto')
+const {
+  PDS,
+  Database,
+  envToCfg,
+  envToSecrets,
+  readEnv,
+} = require('@atproto/pds')
 
 const main = async () => {
-  const env = ServerConfig.getEnv()
-  const config = new ServerConfig(env)
-
-  // Migrate using credentialed user
-  const migrateDb = getMigrationDb(config)
-  await migrateDb.migrateToLatestOrThrow()
-  await migrateDb.close()
-
-  // @TODO config for keys
-  const repoSigningKey = await Secp256k1Keypair.import(env.repoSigningKey)
-  const plcRotationKey = await KmsKeypair.load({
-    keyId: env.plcRotationKeyId,
-  })
-
-  const pds = PDS.create({
-    config,
-    db: getDb(config),
-    blobstore: getBlobstore(config),
-    repoSigningKey,
-    plcRotationKey,
-  })
-  
+  const env = readEnv()
+  const cfg = envToCfg(env)
+  const secrets = envToSecrets(env)
+  const pds = await PDS.create(cfg, secrets)
+  if (cfg.db.dialect === 'pg') {
+    // Migrate using credentialed user
+    const migrateDb = Database.postgres({
+      url: cfg.db.migrationUrl,
+      schema: cfg.db.schema,
+    })
+    await migrateDb.migrateToLatestOrThrow()
+    await migrateDb.close()
+  } else {
+    await pds.ctx.db.migrateToLatestOrThrow()
+  }
   await pds.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
     await pds.destroy()
   })
-}
-
-const getDb = (config) => {
-  if (config.db.dialect === 'pg') {
-    return Database.postgres({
-      url: config.db.url,
-      schema: config.db.schema,
-      poolSize: config.db.poolSize,
-      poolMaxUses: config.db.poolMaxUses,
-      poolIdleTimeoutMs: config.db.poolIdleTimeoutMs,
-    })
-  } else {
-    return Database.sqlite(config.db.location)
-  }
-}
-
-const getMigrationDb = (config) => {
-  if (config.db.dialect === 'pg') {
-    return Database.postgres({
-      url: config.db.migrationUrl,
-      schema: config.db.schema,
-    })
-  } else {
-    return Database.sqlite(config.db.location)
-  }
-}
-
-const getBlobstore = (config) => {
-  if (config.blobstore.provider === 's3') {
-    return new S3BlobStore({ bucket: config.blobstore.bucket })
-  } else {
-    return new DiskBlobStore(
-      config.blobstore.location,
-      config.blobstore.tempLocation,
-      config.blobstore.quarantineLocation
-    )
-  }
 }
 
 const maintainXrpcResource = (span, req) => {
