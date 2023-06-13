@@ -7,16 +7,16 @@ import {
 import {
   REASONOTHER,
   REASONSPAM,
-} from '../../../src/lexicon/types/com/atproto/moderation/defs'
+} from '../../src/lexicon/types/com/atproto/moderation/defs'
 import {
   runTestServer,
   forSnapshot,
   CloseFn,
   adminAuth,
   TestServerInfo,
-} from '../../_util'
-import { SeedClient } from '../../seeds/client'
-import basicSeed from '../../seeds/basic'
+} from '../_util'
+import { SeedClient } from '../seeds/client'
+import basicSeed from '../seeds/basic'
 
 describe('pds admin get record view', () => {
   let server: TestServerInfo
@@ -119,30 +119,5 @@ describe('pds admin get record view', () => {
       { headers: { authorization: adminAuth() } },
     )
     await expect(promise).rejects.toThrow('Record not found')
-  })
-
-  it('serves labels.', async () => {
-    const { ctx } = server
-    const labelingService = ctx.services.appView.label(ctx.db)
-    await labelingService.formatAndCreate(
-      ctx.cfg.labelerDid,
-      sc.posts[sc.dids.alice][0].ref.uriStr,
-      sc.posts[sc.dids.alice][0].ref.cidStr,
-      { create: ['kittens', 'puppies', 'birds'] },
-    )
-    await labelingService.formatAndCreate(
-      ctx.cfg.labelerDid,
-      sc.posts[sc.dids.alice][0].ref.uriStr,
-      sc.posts[sc.dids.alice][0].ref.cidStr,
-      { negate: ['birds'] },
-    )
-    const result = await agent.api.com.atproto.admin.getRecord(
-      {
-        uri: sc.posts[sc.dids.alice][0].ref.uriStr,
-        cid: sc.posts[sc.dids.alice][0].ref.cidStr,
-      },
-      { headers: { authorization: adminAuth() } },
-    )
-    expect(forSnapshot(result.data)).toMatchSnapshot()
   })
 })

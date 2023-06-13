@@ -6,10 +6,10 @@ import {
 import {
   REASONOTHER,
   REASONSPAM,
-} from '../../../src/lexicon/types/com/atproto/moderation/defs'
-import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../../_util'
-import { SeedClient } from '../../seeds/client'
-import basicSeed from '../../seeds/basic'
+} from '../../src/lexicon/types/com/atproto/moderation/defs'
+import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
+import { SeedClient } from '../seeds/client'
+import basicSeed from '../seeds/basic'
 
 describe('pds admin get moderation action view', () => {
   let agent: AtpAgent

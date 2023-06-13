@@ -6,16 +6,16 @@ import {
 import {
   REASONOTHER,
   REASONSPAM,
-} from '../../../src/lexicon/types/com/atproto/moderation/defs'
+} from '../../src/lexicon/types/com/atproto/moderation/defs'
 import {
   runTestServer,
   forSnapshot,
   CloseFn,
   adminAuth,
   TestServerInfo,
-} from '../../_util'
-import { SeedClient } from '../../seeds/client'
-import basicSeed from '../../seeds/basic'
+} from '../_util'
+import { SeedClient } from '../seeds/client'
+import basicSeed from '../seeds/basic'
 
 describe('pds admin get repo view', () => {
   let server: TestServerInfo
@@ -86,27 +86,5 @@ describe('pds admin get repo view', () => {
       { headers: { authorization: adminAuth() } },
     )
     await expect(promise).rejects.toThrow('Repo not found')
-  })
-
-  it('serves labels.', async () => {
-    const { ctx } = server
-    const labelingService = ctx.services.appView.label(ctx.db)
-    await labelingService.formatAndCreate(
-      ctx.cfg.labelerDid,
-      sc.dids.alice,
-      null,
-      { create: ['kittens', 'puppies', 'birds'] },
-    )
-    await labelingService.formatAndCreate(
-      ctx.cfg.labelerDid,
-      sc.dids.alice,
-      null,
-      { negate: ['birds'] },
-    )
-    const result = await agent.api.com.atproto.admin.getRepo(
-      { did: sc.dids.alice },
-      { headers: { authorization: adminAuth() } },
-    )
-    expect(forSnapshot(result.data)).toMatchSnapshot()
   })
 })

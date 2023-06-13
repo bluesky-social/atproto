@@ -4,9 +4,9 @@ import {
   adminAuth,
   moderatorAuth,
   TestServerInfo,
-} from '../../_util'
+} from '../_util'
 import { randomStr } from '@atproto/crypto'
-import { SeedClient } from '../../seeds/client'
+import { SeedClient } from '../seeds/client'
 
 describe('pds admin invite views', () => {
   let agent: AtpAgent

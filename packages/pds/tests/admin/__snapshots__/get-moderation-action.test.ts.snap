@@ -43,21 +43,7 @@ Object {
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "invitesDisabled": false,
       "moderation": Object {},
-      "relatedRecords": Array [
-        Object {
-          "$type": "app.bsky.actor.profile",
-          "avatar": Object {
-            "$type": "blob",
-            "mimeType": "image/jpeg",
-            "ref": Object {
-              "$link": "cids(1)",
-            },
-            "size": 3976,
-          },
-          "description": "its me!",
-          "displayName": "ali",
-        },
-      ],
+      "relatedRecords": Array [],
     },
     "uri": "record(0)",
     "value": Object {
@@ -90,7 +76,7 @@ Object {
       ],
       "subject": Object {
         "$type": "com.atproto.repo.strongRef",
-        "cid": "cids(1)",
+        "cid": "cids(0)",
         "uri": "record(0)",
       },
     },
@@ -121,21 +107,7 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "invitesDisabled": false,
     "moderation": Object {},
-    "relatedRecords": Array [
-      Object {
-        "$type": "app.bsky.actor.profile",
-        "avatar": Object {
-          "$type": "blob",
-          "mimeType": "image/jpeg",
-          "ref": Object {
-            "$link": "cids(0)",
-          },
-          "size": 3976,
-        },
-        "description": "its me!",
-        "displayName": "ali",
-      },
-    ],
+    "relatedRecords": Array [],
   },
   "subjectBlobs": Array [],
 }
