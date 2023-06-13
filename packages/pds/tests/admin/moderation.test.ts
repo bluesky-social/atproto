@@ -7,18 +7,18 @@ import {
   moderatorAuth,
   runTestServer,
   TestServerInfo,
-} from './_util'
-import { ImageRef, RecordRef, SeedClient } from './seeds/client'
-import basicSeed from './seeds/basic'
+} from '../_util'
+import { ImageRef, RecordRef, SeedClient } from '../seeds/client'
+import basicSeed from '../seeds/basic'
 import {
   ACKNOWLEDGE,
   FLAG,
   TAKEDOWN,
-} from '../src/lexicon/types/com/atproto/admin/defs'
+} from '../../src/lexicon/types/com/atproto/admin/defs'
 import {
   REASONOTHER,
   REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
+} from '../../src/lexicon/types/com/atproto/moderation/defs'
 import { BlobNotFoundError } from '@atproto/repo'
 
 describe('moderation', () => {
