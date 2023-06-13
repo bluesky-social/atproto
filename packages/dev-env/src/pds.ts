@@ -17,38 +17,48 @@ export class TestPds {
     public server: pds.PDS,
   ) {}
 
-  static async create(cfg: PdsConfig): Promise<TestPds> {
+  static async create(config: PdsConfig): Promise<TestPds> {
     const repoSigningKey = await Secp256k1Keypair.create({ exportable: true })
     const repoSigningPriv = ui8.toString(await repoSigningKey.export(), 'hex')
     const plcRotationKey = await Secp256k1Keypair.create({ exportable: true })
     const plcRotationPriv = ui8.toString(await plcRotationKey.export(), 'hex')
     const recoveryKey = (await Secp256k1Keypair.create()).did()
 
-    const port = cfg.port || (await getPort())
+    const port = config.port || (await getPort())
     const url = `http://localhost:${port}`
 
     const blobstoreLoc = path.join(os.tmpdir(), randomStr(8, 'base32'))
 
-    const env = pds.envToCfg({
+    const env: pds.ServerEnvironment = {
       port,
       blobstoreDiskLocation: blobstoreLoc,
       recoveryDidKey: recoveryKey,
       adminPassword: ADMIN_PASSWORD,
-      didPlcUrl: cfg.plcUrl,
       jwtSecret: 'jwt-secret',
       handleDomains: ['.test'],
       sequencerLeaderLockId: uniqueLockId(),
       repoSigningKeyK256PrivateKeyHex: repoSigningPriv,
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
-      ...cfg,
-    })
+      ...config,
+    }
+    const cfg = pds.envToCfg(env)
+    const secrets = pds.envToSecrets(env)
 
-    const server = await pds.PDS.create(
-      pds.envToCfg(env),
-      pds.envToSecrets(env),
-    )
+    const server = await pds.PDS.create(cfg, secrets)
 
-    await server.ctx.db.migrateToLatestOrThrow()
+    // Separate migration db on postgres in case migration changes some
+    // connection state that we need in the tests, e.g. "alter database ... set ..."
+    const migrationDb =
+      cfg.db.dialect === 'pg'
+        ? pds.Database.postgres({
+            url: cfg.db.url,
+            schema: cfg.db.schema,
+          })
+        : server.ctx.db
+    await migrationDb.migrateToLatestOrThrow()
+    if (migrationDb !== server.ctx.db) {
+      await migrationDb.close()
+    }
 
     await server.start()
     return new TestPds(url, port, server)

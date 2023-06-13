@@ -7,7 +7,7 @@ export type PlcConfig = {
 }
 
 export type PdsConfig = Partial<pds.ServerEnvironment> & {
-  plcUrl: string
+  didPlcUrl: string
   migration?: string
 }
 

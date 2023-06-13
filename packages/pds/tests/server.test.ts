@@ -19,6 +19,7 @@ describe('server', () => {
   beforeAll(async () => {
     server = await runTestServer({
       dbPostgresSchema: 'server',
+      version: '0.0.0',
     })
     close = server.close
     db = server.ctx.db
