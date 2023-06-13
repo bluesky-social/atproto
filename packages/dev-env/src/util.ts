@@ -19,8 +19,8 @@ export const mockNetworkUtilities = (pds: TestPds) => {
   }
 
   HandleResolver.prototype.resolve = async function (handle: string) {
-    const isPdsHandle = pds.ctx.cfg.identity.handleDomains.some((domain) =>
-      handle.endsWith(domain),
+    const isPdsHandle = pds.ctx.cfg.identity.serviceHandleDomains.some(
+      (domain) => handle.endsWith(domain),
     )
     if (!isPdsHandle) return undefined
 

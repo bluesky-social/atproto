@@ -66,17 +66,17 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     throw new Error('Must configure either S3 or disk blobstore')
   }
 
-  let handleDomains: string[]
-  if (env.handleDomains && env.handleDomains.length > 0) {
-    handleDomains = env.handleDomains
+  let serviceHandleDomains: string[]
+  if (env.serviceHandleDomains && env.serviceHandleDomains.length > 0) {
+    serviceHandleDomains = env.serviceHandleDomains
   } else {
     if (hostname === 'localhost') {
-      handleDomains = ['.test']
+      serviceHandleDomains = ['.test']
     } else {
-      handleDomains = [`.${hostname}`]
+      serviceHandleDomains = [`.${hostname}`]
     }
   }
-  const invalidDomain = handleDomains.find(
+  const invalidDomain = serviceHandleDomains.find(
     (domain) => domain.length < 1 || !domain.startsWith('.'),
   )
   if (invalidDomain) {
@@ -89,7 +89,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     cacheStaleTTL: env.didCacheStaleTTL || HOUR,
     resolverTimeout: env.resolverTimeout || 3 * SECOND,
     recoveryDidKey: env.recoveryDidKey ?? null,
-    handleDomains,
+    serviceHandleDomains,
   }
 
   const invitesCfg: ServerConfig['invites'] = env.inviteRequired
@@ -198,7 +198,7 @@ export type IdentityConfig = {
   cacheStaleTTL: number
   cacheMaxTTL: number
   recoveryDidKey: string | null
-  handleDomains: string[]
+  serviceHandleDomains: string[]
 }
 
 export type InvitesConfig =

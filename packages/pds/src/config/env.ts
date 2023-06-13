@@ -38,7 +38,7 @@ export const readEnv = (): ServerEnvironment => {
     didCacheMaxTTL: envInt(process.env.PDS_DID_CACHE_MAX_TTL),
     resolverTimeout: envInt(process.env.PDS_ID_RESOLVER_TIMEOUT),
     recoveryDidKey: envStr(process.env.PDS_RECOVERY_DID_KEY),
-    handleDomains: envList(process.env.PDS_HANDLE_DOMAINS),
+    serviceHandleDomains: envList(process.env.PDS_SERVICE_HANDLE_DOMAINS),
 
     // invites
     inviteRequired: envBool(process.env.PDS_INVITE_REQUIRED),
@@ -110,7 +110,7 @@ export type ServerEnvironment = {
   didCacheMaxTTL?: number
   resolverTimeout?: number
   recoveryDidKey?: string
-  handleDomains?: string[] // public hostname by default
+  serviceHandleDomains?: string[] // public hostname by default
 
   // invites
   inviteRequired?: boolean

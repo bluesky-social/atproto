@@ -35,7 +35,7 @@ export class TestPds {
       recoveryDidKey: recoveryKey,
       adminPassword: ADMIN_PASSWORD,
       jwtSecret: 'jwt-secret',
-      handleDomains: ['.test'],
+      serviceHandleDomains: ['.test'],
       sequencerLeaderLockId: uniqueLockId(),
       repoSigningKeyK256PrivateKeyHex: repoSigningPriv,
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,

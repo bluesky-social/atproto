@@ -145,7 +145,10 @@ const ensureValidHandle = async (
 ): Promise<string> => {
   try {
     const handle = ident.normalizeAndEnsureValidHandle(input.handle)
-    ident.ensureHandleServiceConstraints(handle, ctx.cfg.identity.handleDomains)
+    ident.ensureHandleServiceConstraints(
+      handle,
+      ctx.cfg.identity.serviceHandleDomains,
+    )
     return handle
   } catch (err) {
     if (err instanceof ident.InvalidHandleError) {

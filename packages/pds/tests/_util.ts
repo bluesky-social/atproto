@@ -71,7 +71,7 @@ export const runTestServer = async (
     blobstoreDiskLocation: blobstoreLoc,
     recoveryDidKey: recoveryKey,
     didPlcUrl: plcUrl,
-    handleDomains: ['.test'],
+    serviceHandleDomains: ['.test'],
     sequencerLeaderLockId: uniqueLockId(),
     repoSigningKeyK256PrivateKeyHex: repoSigningPriv,
     plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
