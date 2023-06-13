@@ -8,30 +8,16 @@ import express from 'express'
 import cors from 'cors'
 import http from 'http'
 import events from 'events'
-import { createTransport } from 'nodemailer'
-import * as crypto from '@atproto/crypto'
-import { BlobStore } from '@atproto/repo'
 import API from './api'
 import * as basicRoutes from './basic-routes'
 import * as wellKnown from './well-known'
-import Database from './db'
-import { ServerAuth } from './auth'
 import * as error from './error'
 import { dbLogger, loggerMiddleware } from './logger'
-import { ServerConfig } from './config'
-import { ServerMailer } from './mailer'
+import { ServerConfig, ServerSecrets } from './config'
 import { createServer } from './lexicon'
-import { createServices } from './services'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
-import AppContext from './context'
-import { Sequencer, SequencerLeader } from './sequencer'
-import { BackgroundQueue } from './background'
-import DidSqlCache from './did-cache'
-import { IdResolver } from '@atproto/identity'
-import { Crawlers } from './crawlers'
+import AppContext, { AppContextOptions } from './context'
 
-// export type { ServerConfigValues } from './config'
-export { ServerConfig } from './config'
 export { Database } from './db'
 export { DiskBlobStore, MemoryBlobStore } from './storage'
 export { AppContext } from './context'
@@ -43,82 +29,25 @@ export class PDS {
   private terminator?: HttpTerminator
   private dbStatsInterval?: NodeJS.Timer
 
-  constructor(opts: {
-    ctx: AppContext
-    app: express.Application
-    sequencerLeader: SequencerLeader
-  }) {
+  constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
     this.app = opts.app
   }
 
-  static create(opts: {
-    db: Database
-    blobstore: BlobStore
-    repoSigningKey: crypto.Keypair
-    plcRotationKey: crypto.Keypair
-    config: ServerConfig
-  }): PDS {
-    const { db, blobstore, repoSigningKey, plcRotationKey, config } = opts
-    const auth = new ServerAuth({
-      jwtSecret: config.jwtSecret,
-      adminPass: config.adminPassword,
-      moderatorPass: config.moderatorPassword,
-    })
-
-    const didCache = new DidSqlCache(
-      db,
-      config.didCacheStaleTTL,
-      config.didCacheMaxTTL,
-    )
-    const idResolver = new IdResolver({ plcUrl: config.didPlcUrl, didCache })
-
-    const sequencer = new Sequencer(db)
-    const sequencerLeader = new SequencerLeader(
-      db,
-      config.sequencerLeaderLockId,
-    )
-
-    const mailTransport =
-      config.emailSmtpUrl !== undefined
-        ? createTransport(config.emailSmtpUrl)
-        : createTransport({ jsonTransport: true })
-
-    const mailer = new ServerMailer(mailTransport, config)
-
+  static async create(opts: {
+    cfg: ServerConfig
+    secrets: ServerSecrets
+    overrides?: Partial<AppContextOptions>
+  }): Promise<PDS> {
     const app = express()
     app.use(cors())
     app.use(loggerMiddleware)
 
-    const backgroundQueue = new BackgroundQueue(db)
-    const crawlers = new Crawlers(
-      config.publicHostname,
-      config.crawlersToNotify ?? [],
+    const ctx = await AppContext.fromConfig(
+      opts.cfg,
+      opts.secrets,
+      opts.overrides,
     )
-
-    const services = createServices({
-      repoSigningKey,
-      blobstore,
-      backgroundQueue,
-      crawlers,
-    })
-
-    const ctx = new AppContext({
-      db,
-      blobstore,
-      repoSigningKey,
-      plcRotationKey,
-      idResolver,
-      didCache,
-      cfg: config,
-      auth,
-      sequencer,
-      sequencerLeader,
-      services,
-      mailer,
-      backgroundQueue,
-      crawlers,
-    })
 
     let server = createServer({
       validateResponse: false,
@@ -139,7 +68,6 @@ export class PDS {
     return new PDS({
       ctx,
       app,
-      sequencerLeader,
     })
   }
 
@@ -168,7 +96,7 @@ export class PDS {
     this.ctx.sequencerLeader.run()
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()
-    const server = this.app.listen(this.ctx.cfg.port)
+    const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
     this.server.keepAliveTimeout = 90000
     this.terminator = createHttpTerminator({ server })

@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "@atproto/api": "*",
+    "@atproto/aws": "*",
     "@atproto/common": "*",
     "@atproto/crypto": "*",
     "@atproto/identifier": "*",
