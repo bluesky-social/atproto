@@ -6,7 +6,7 @@ export type PlcConfig = {
   version?: string
 }
 
-export type PdsConfig = Partial<pds.ServerConfig> & {
+export type PdsConfig = Partial<pds.ServerEnvironment> & {
   plcUrl: string
   migration?: string
 }
@@ -22,7 +22,7 @@ export type BskyConfig = Partial<bsky.ServerConfig> & {
 export type TestServerParams = {
   dbPostgresUrl: string
   dbPostgresSchema: string
-  pds: Partial<pds.ServerConfig>
-  plc: Partial<pds.ServerConfig>
+  pds: Partial<pds.ServerEnvironment>
+  plc: Partial<PlcConfig>
   bsky: Partial<BskyConfig>
 }

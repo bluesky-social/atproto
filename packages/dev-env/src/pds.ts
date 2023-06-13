@@ -1,12 +1,14 @@
+import path from 'node:path'
+import os from 'node:os'
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as pds from '@atproto/pds'
-import { Secp256k1Keypair } from '@atproto/crypto'
+import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { AtpAgent } from '@atproto/api'
-import { Client as PlcClient } from '@did-plc/lib'
-import { DAY, HOUR } from '@atproto/common-web'
 import { PdsConfig } from './types'
 import { uniqueLockId } from './util'
+
+const ADMIN_PASSWORD = 'admin-pass'
 
 export class TestPds {
   constructor(
@@ -16,64 +18,37 @@ export class TestPds {
   ) {}
 
   static async create(cfg: PdsConfig): Promise<TestPds> {
-    const repoSigningKey = await Secp256k1Keypair.create()
-    const plcRotationKey = await Secp256k1Keypair.create()
-    const recoveryKey = await Secp256k1Keypair.create()
+    const repoSigningKey = await Secp256k1Keypair.create({ exportable: true })
+    const repoSigningPriv = ui8.toString(await repoSigningKey.export(), 'hex')
+    const plcRotationKey = await Secp256k1Keypair.create({ exportable: true })
+    const plcRotationPriv = ui8.toString(await plcRotationKey.export(), 'hex')
+    const recoveryKey = (await Secp256k1Keypair.create()).did()
 
     const port = cfg.port || (await getPort())
     const url = `http://localhost:${port}`
-    const plcClient = new PlcClient(cfg.plcUrl)
 
-    const serverDid = await plcClient.createDid({
-      signingKey: repoSigningKey.did(),
-      rotationKeys: [recoveryKey.did(), plcRotationKey.did()],
-      handle: 'pds.test',
-      pds: `http://localhost:${port}`,
-      signer: plcRotationKey,
-    })
+    const blobstoreLoc = path.join(os.tmpdir(), randomStr(8, 'base32'))
 
-    const config = new pds.ServerConfig({
-      debugMode: true,
-      version: '0.0.0',
-      scheme: 'http',
+    const env = pds.envToCfg({
       port,
-      hostname: 'localhost',
-      serverDid,
-      recoveryKey: recoveryKey.did(),
-      adminPassword: 'admin-pass',
-      inviteRequired: false,
-      userInviteInterval: null,
+      blobstoreDiskLocation: blobstoreLoc,
+      recoveryDidKey: recoveryKey,
+      adminPassword: ADMIN_PASSWORD,
       didPlcUrl: cfg.plcUrl,
-      didCacheMaxTTL: DAY,
-      didCacheStaleTTL: HOUR,
       jwtSecret: 'jwt-secret',
-      availableUserDomains: ['.test'],
-      appUrlPasswordReset: 'app://forgot-password',
-      emailNoReplyAddress: 'noreply@blueskyweb.xyz',
-      publicUrl: 'https://pds.public.url',
-      dbPostgresUrl: cfg.dbPostgresUrl,
-      maxSubscriptionBuffer: 200,
-      repoBackfillLimitMs: 1000 * 60 * 60, // 1hr
+      handleDomains: ['.test'],
       sequencerLeaderLockId: uniqueLockId(),
+      repoSigningKeyK256PrivateKeyHex: repoSigningPriv,
+      plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
       ...cfg,
     })
 
-    const blobstore = new pds.MemoryBlobStore()
-    const db = config.dbPostgresUrl
-      ? pds.Database.postgres({
-          url: config.dbPostgresUrl,
-          schema: config.dbPostgresSchema,
-        })
-      : pds.Database.memory()
-    await db.migrateToLatestOrThrow()
+    const server = await pds.PDS.create(
+      pds.envToCfg(env),
+      pds.envToSecrets(env),
+    )
 
-    const server = pds.PDS.create({
-      db,
-      blobstore,
-      repoSigningKey,
-      plcRotationKey,
-      config,
-    })
+    await server.ctx.db.migrateToLatestOrThrow()
 
     await server.start()
     return new TestPds(url, port, server)
@@ -91,7 +66,7 @@ export class TestPds {
     return (
       'Basic ' +
       ui8.toString(
-        ui8.fromString(`admin:${this.ctx.cfg.adminPassword}`, 'utf8'),
+        ui8.fromString(`admin:${ADMIN_PASSWORD}`, 'utf8'),
         'base64pad',
       )
     )

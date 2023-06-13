@@ -18,7 +18,7 @@ import { createServer } from './lexicon'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import AppContext, { AppContextOptions } from './context'
 
-export type { ServerConfig, ServerSecrets } from './config'
+export * from './config'
 export { Database } from './db'
 export { DiskBlobStore, MemoryBlobStore } from './storage'
 export { AppContext } from './context'
