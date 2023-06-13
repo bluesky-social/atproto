@@ -245,13 +245,15 @@ export class AccountService {
         qb.where(notSoftDeletedClause(ref('repo_root'))),
       )
       .where((qb) => {
+        // sqlite doesn't support "ilike", but performs "like" case-insensitively
+        const likeOp = this.db.dialect === 'pg' ? 'ilike' : 'like'
         if (term.includes('@')) {
-          return qb.where('user_account.email', 'ilike', `%${term}%`)
+          return qb.where('user_account.email', likeOp, `%${term}%`)
         }
         if (term.startsWith('did:')) {
           return qb.where('did_handle.did', '=', term)
         }
-        return qb.where('did_handle.handle', 'ilike', `${term}%`)
+        return qb.where('did_handle.handle', likeOp, `${term}%`)
       })
       .selectAll(['did_handle', 'repo_root'])
 
