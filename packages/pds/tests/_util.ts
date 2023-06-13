@@ -67,6 +67,7 @@ export const runTestServer = async (
   const env: ServerEnvironment = {
     port,
     dbPostgresUrl: dbPostgresUrl,
+    dbSqliteLocation: dbPostgresUrl ? undefined : ':memory:',
     blobstoreDiskLocation: blobstoreLoc,
     recoveryDidKey: recoveryKey,
     didPlcUrl: plcUrl,
