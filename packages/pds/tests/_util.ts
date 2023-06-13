@@ -1,6 +1,7 @@
 import { AddressInfo } from 'net'
 import os from 'os'
 import path from 'path'
+import getPort from 'get-port'
 import * as crypto from '@atproto/crypto'
 import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
 import { AtUri } from '@atproto/uri'
@@ -61,7 +62,10 @@ export const runTestServer = async (
 
   const blobstoreLoc = path.join(os.tmpdir(), randomStr(5, 'base32'))
 
+  const port = await getPort()
+
   const env: ServerEnvironment = {
+    port,
     dbPostgresUrl: dbPostgresUrl,
     blobstoreDiskLocation: blobstoreLoc,
     recoveryDidKey: recoveryKey,

@@ -38,7 +38,7 @@ describe('handles', () => {
       dbPostgresSchema: 'handles',
     })
     ctx = server.ctx
-    idResolver = new IdResolver({ plcUrl: ctx.cfg.didPlcUrl })
+    idResolver = ctx.idResolver
     close = server.close
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)

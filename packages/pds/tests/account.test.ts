@@ -46,10 +46,11 @@ describe('account', () => {
 
   beforeAll(async () => {
     const server = await util.runTestServer({
+      hostname: 'pds.public.url',
       inviteRequired: true,
-      userInviteInterval: DAY,
+      inviteInterval: DAY,
       termsOfServiceUrl: 'https://example.com/tos',
-      privacyPolicyUrl: '/privacy-policy',
+      privacyPolicyUrl: 'https://example.com/privacy-policy',
       dbPostgresSchema: 'account',
     })
     close = server.close
@@ -58,7 +59,7 @@ describe('account', () => {
     ctx = server.ctx
     serverUrl = server.url
     repoSigningKey = server.ctx.repoSigningKey.did()
-    idResolver = new IdResolver({ plcUrl: ctx.cfg.didPlcUrl })
+    idResolver = server.ctx.idResolver
     agent = new AtpAgent({ service: serverUrl })
 
     // Catch emails for use in tests
@@ -94,7 +95,7 @@ describe('account', () => {
     expect(res.data.availableUserDomains[0]).toBe('.test')
     expect(typeof res.data.inviteCodeRequired).toBe('boolean')
     expect(res.data.links?.privacyPolicy).toBe(
-      'https://pds.public.url/privacy-policy',
+      'https://example.com/privacy-policy',
     )
     expect(res.data.links?.termsOfService).toBe('https://example.com/tos')
   })
@@ -163,7 +164,7 @@ describe('account', () => {
 
     expect(didData.rotationKeys).toEqual([
       recoveryKey,
-      ctx.cfg.recoveryKey,
+      ctx.cfg.identity.recoveryDidKey,
       ctx.plcRotationKey.did(),
     ])
   })
@@ -177,10 +178,10 @@ describe('account', () => {
       handle,
       rotationKeys: [
         userKey.did(),
-        ctx.cfg.recoveryKey,
+        ctx.cfg.identity.recoveryDidKey ?? '',
         ctx.plcRotationKey.did(),
       ],
-      pds: ctx.cfg.publicUrl,
+      pds: ctx.cfg.service.publicUrl,
       signer: userKey,
     })
 
@@ -204,10 +205,10 @@ describe('account', () => {
       handle: 'byo-did.test',
       rotationKeys: [
         userKey.did(),
-        ctx.cfg.recoveryKey,
+        ctx.cfg.identity.recoveryDidKey ?? '',
         ctx.plcRotationKey.did(),
       ],
-      pds: ctx.cfg.publicUrl,
+      pds: ctx.cfg.service.publicUrl,
       signer: userKey,
     }
     const baseAccntInfo = {
