@@ -17,13 +17,23 @@ export class HandleResolver {
     const httpPromise = this.resolveHttp(handle, httpAbort.signal).catch(
       () => undefined,
     )
+    const ensAbort = new AbortController()
+    const ensPromise = this.resolveEns(handle, ensAbort.signal).catch(
+      () => undefined,
+    )
 
     const dnsRes = await dnsPromise
     if (dnsRes) {
       httpAbort.abort()
+      ensAbort.abort()
       return dnsRes
     }
-    return httpPromise
+    const httpRes = await httpPromise
+    if (httpRes) {
+      ensAbort.abort()
+      return httpRes
+    }
+    return ensPromise
   }
 
   async resolveDns(handle: string): Promise<string | undefined> {
@@ -56,5 +66,15 @@ export class HandleResolver {
     } catch (err) {
       return undefined
     }
+  }
+
+  async resolveEns(
+    handle: string,
+    signal?: AbortSignal,
+  ): Promise<string | undefined> {
+    if (handle.endsWith('.eth')) {
+      return this.resolveHttp(`${handle}.limo`)
+    }
+    return undefined
   }
 }
