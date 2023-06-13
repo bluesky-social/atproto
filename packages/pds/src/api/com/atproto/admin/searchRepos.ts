@@ -1,7 +1,6 @@
+import { sql } from 'kysely'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { SearchKeyset } from '../../../../services/util/search'
-import { sql } from 'kysely'
 import { ListKeyset } from '../../../../services/account'
 
 export default function (server: Server, ctx: AppContext) {
@@ -10,14 +9,15 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params }) => {
       const { db, services } = ctx
       const moderationService = services.moderation(db)
-      const { term = '', limit = 50, cursor, invitedBy } = params
+      const { limit, cursor, invitedBy } = params
+      const term = params.term?.trim() ?? ''
+
+      const keyset = new ListKeyset(sql``, sql``)
 
       if (!term) {
         const results = await services
           .account(db)
           .list({ limit, cursor, includeSoftDeleted: true, invitedBy })
-        const keyset = new ListKeyset(sql``, sql``)
-
         return {
           encoding: 'application/json',
           body: {
@@ -27,19 +27,14 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const searchField = term.startsWith('did:') ? 'did' : 'handle'
-
       const results = await services
         .account(db)
-        .search({ searchField, term, limit, cursor, includeSoftDeleted: true })
-      const keyset = new SearchKeyset(sql``, sql``)
+        .search({ term, limit, cursor, includeSoftDeleted: true })
 
       return {
         encoding: 'application/json',
         body: {
-          // For did search, we can only find 1 or no match, cursors can be ignored entirely
-          cursor:
-            searchField === 'did' ? undefined : keyset.packFromResult(results),
+          cursor: keyset.packFromResult(results),
           repos: await moderationService.views.repo(results),
         },
       }

@@ -1,4 +1,5 @@
-import { sql } from 'kysely'
+import { randomStr } from '@atproto/crypto'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import * as scrypt from '../../db/scrypt'
@@ -6,12 +7,9 @@ import { UserAccountEntry } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
 import { countAll, notSoftDeletedClause, nullToZero } from '../../db/util'
-import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
-import { randomStr } from '@atproto/crypto'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export class AccountService {
   constructor(public db: Database) {}
@@ -231,37 +229,42 @@ export class AccountService {
   }
 
   async search(opts: {
-    searchField?: 'did' | 'handle'
     term: string
     limit: number
     cursor?: string
     includeSoftDeleted?: boolean
-  }): Promise<(RepoRoot & DidHandle & { distance: number })[]> {
-    if (opts.searchField === 'did') {
-      const didSearchBuilder = this.db.db
-        .selectFrom('did_handle')
-        .where('did_handle.did', '=', opts.term)
-        .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
-        .selectAll(['did_handle', 'repo_root'])
-        .select(sql<number>`0`.as('distance'))
+  }): Promise<(RepoRoot & DidHandle)[]> {
+    const { term, limit, cursor, includeSoftDeleted } = opts
+    const { ref } = this.db.db.dynamic
 
-      return await didSearchBuilder.execute()
-    }
+    const builder = this.db.db
+      .selectFrom('did_handle')
+      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .innerJoin('user_account', 'user_account.did', 'did_handle.did')
+      .if(!includeSoftDeleted, (qb) =>
+        qb.where(notSoftDeletedClause(ref('repo_root'))),
+      )
+      .where((qb) => {
+        if (term.includes('@')) {
+          return qb.where('user_account.email', 'ilike', `%${term}%`)
+        }
+        if (term.startsWith('did:')) {
+          return qb.where('did_handle.did', '=', term)
+        }
+        return qb.where('did_handle.handle', 'ilike', `${term}%`)
+      })
+      .selectAll(['did_handle', 'repo_root'])
 
-    const builder =
-      this.db.dialect === 'pg'
-        ? getUserSearchQueryPg(this.db, opts)
-            .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
-            .selectAll('did_handle')
-            .selectAll('repo_root')
-            .select('results.distance as distance')
-        : getUserSearchQuerySqlite(this.db, opts)
-            .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
-            .selectAll('did_handle')
-            .selectAll('repo_root')
-            .select(sql<number>`0`.as('distance'))
+    const keyset = new ListKeyset(
+      ref('repo_root.indexedAt'),
+      ref('did_handle.handle'),
+    )
 
-    return await builder.execute()
+    return await paginate(builder, {
+      limit,
+      cursor,
+      keyset,
+    }).execute()
   }
 
   async list(opts: {
