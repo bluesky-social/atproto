@@ -22,7 +22,6 @@ export const lexInteger = z
     default: z.number().int().optional(),
     minimum: z.number().int().optional(),
     maximum: z.number().int().optional(),
-    enum: z.number().int().array().optional(),
     const: z.number().int().optional(),
   })
   .strict()
@@ -50,7 +49,6 @@ export const lexString = z
     maxLength: z.number().int().optional(),
     minGraphemes: z.number().int().optional(),
     maxGraphemes: z.number().int().optional(),
-    enum: z.string().array().optional(),
     const: z.string().optional(),
     knownValues: z.string().array().optional(),
   })

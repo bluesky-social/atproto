@@ -532,19 +532,6 @@ describe('Record validation', () => {
     ).toThrow('Record/integer can not be greater than 4')
   })
 
-  it('Applies integer enum constraint', () => {
-    lex.assertValidRecord('com.example.integerEnum', {
-      $type: 'com.example.integerEnum',
-      integer: 2,
-    })
-    expect(() =>
-      lex.assertValidRecord('com.example.integerEnum', {
-        $type: 'com.example.integerEnum',
-        integer: 0,
-      }),
-    ).toThrow('Record/integer must be one of (1|2)')
-  })
-
   it('Applies integer const constraint', () => {
     lex.assertValidRecord('com.example.integerConst', {
       $type: 'com.example.integerConst',
@@ -611,14 +598,14 @@ describe('Record validation', () => {
     ).toThrow('Record/string must not be longer than 4 graphemes')
   })
 
-  it('Applies string enum constraint', () => {
-    lex.assertValidRecord('com.example.stringEnum', {
-      $type: 'com.example.stringEnum',
+  it('Applies string knownValues constraint', () => {
+    lex.assertValidRecord('com.example.stringKnownValues', {
+      $type: 'com.example.stringKnownValues',
       string: 'a',
     })
     expect(() =>
-      lex.assertValidRecord('com.example.stringEnum', {
-        $type: 'com.example.stringEnum',
+      lex.assertValidRecord('com.example.stringKnownValues', {
+        $type: 'com.example.stringKnownValues',
         string: 'c',
       }),
     ).toThrow('Record/string must be one of (a|b)')

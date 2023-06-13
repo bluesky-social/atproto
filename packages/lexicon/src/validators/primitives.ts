@@ -112,18 +112,6 @@ export function integer(
     }
   }
 
-  // enum
-  if (Array.isArray(def.enum)) {
-    if (!def.enum.includes(value as number)) {
-      return {
-        success: false,
-        error: new ValidationError(
-          `${path} must be one of (${def.enum.join('|')})`,
-        ),
-      }
-    }
-  }
-
   // maximum
   if (typeof def.maximum === 'number') {
     if ((value as number) > def.maximum) {
@@ -181,18 +169,6 @@ export function string(
       return {
         success: false,
         error: new ValidationError(`${path} must be ${def.const}`),
-      }
-    }
-  }
-
-  // enum
-  if (Array.isArray(def.enum)) {
-    if (!def.enum.includes(value as string)) {
-      return {
-        success: false,
-        error: new ValidationError(
-          `${path} must be one of (${def.enum.join('|')})`,
-        ),
       }
     }
   }

@@ -258,24 +258,6 @@ export default [
   },
   {
     lexicon: 1,
-    id: 'com.example.integerEnum',
-    defs: {
-      main: {
-        type: 'record',
-        record: {
-          type: 'object',
-          properties: {
-            integer: {
-              type: 'integer',
-              enum: [1, 2],
-            },
-          },
-        },
-      },
-    },
-  },
-  {
-    lexicon: 1,
     id: 'com.example.integerConst',
     defs: {
       main: {
@@ -332,7 +314,7 @@ export default [
   },
   {
     lexicon: 1,
-    id: 'com.example.stringEnum',
+    id: 'com.example.stringKnownValues',
     defs: {
       main: {
         type: 'record',
@@ -341,7 +323,7 @@ export default [
           properties: {
             string: {
               type: 'string',
-              enum: ['a', 'b'],
+              knownValues: ['a', 'b'],
             },
           },
         },
