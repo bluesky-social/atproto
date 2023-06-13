@@ -17,7 +17,7 @@ describe('pds admin invite views', () => {
     server = await runTestServer({
       dbPostgresSchema: 'views_admin_invites',
       inviteRequired: true,
-      userInviteInterval: 1,
+      inviteInterval: 1,
     })
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
