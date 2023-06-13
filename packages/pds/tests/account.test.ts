@@ -791,20 +791,3 @@ describe('account', () => {
     }
   })
 })
-
-// describe('invite epochs', () => {
-//   let agent: AtpAgent
-//   let sc: SeedClient
-//   let server: TestServerInfo
-
-//   beforeAll(async () => {
-//     server = await runTestServer({
-//       dbPostgresSchema: 'invite_epochs',
-//       inviteRequired: true,
-//       userInviteInterval: 1,
-//       userInviteEpoch: Date.now(),
-//     })
-//     agent = new AtpAgent({ service: server.url })
-//     sc = new SeedClient(agent)
-//   })
-// })
