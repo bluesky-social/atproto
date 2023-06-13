@@ -3,78 +3,80 @@ import { envInt, envStr, envBool, envList } from './util'
 export const readEnv = (): ServerEnvironment => {
   return {
     // service
-    port: envInt(process.env.PORT),
-    hostname: envStr(process.env.HOSTNAME),
-    serviceDid: envStr(process.env.SERVICE_DID),
+    port: envInt(process.env.PDS_PORT),
+    hostname: envStr(process.env.PDS_HOSTNAME),
+    serviceDid: envStr(process.env.PDS_SERVICE_DID),
     version: envStr(process.env.PDS_VERSION),
-    privacyPolicyUrl: envStr(process.env.PRIVACY_POLICY_URL),
-    termsOfServiceUrl: envStr(process.env.TERMS_OF_SERVICE_URL),
+    privacyPolicyUrl: envStr(process.env.PDS_PRIVACY_POLICY_URL),
+    termsOfServiceUrl: envStr(process.env.PDS_TERMS_OF_SERVICE_URL),
 
     // db: one required
     // sqlite
-    dbSqliteLocation: envStr(process.env.DB_SQLITE_LOCATION),
+    dbSqliteLocation: envStr(process.env.PDS_DB_SQLITE_LOCATION),
     // postgres
-    dbPostgresUrl: envStr(process.env.DB_POSTGRES_URL),
-    dbPostgresMigrationUrl: envStr(process.env.DB_POSTGRES_MIGRATION_URL),
-    dbPostgresSchema: envStr(process.env.DB_POSTGRES_SCHEMA),
-    dbPostgresPoolSize: envInt(process.env.DB_POSTGRES_POOL_SIZE),
-    dbPostgresPoolMaxUses: envInt(process.env.DB_POSTGRES_POOL_MAX_USES),
+    dbPostgresUrl: envStr(process.env.PDS_DB_POSTGRES_URL),
+    dbPostgresMigrationUrl: envStr(process.env.PDS_DB_POSTGRES_MIGRATION_URL),
+    dbPostgresSchema: envStr(process.env.PDS_DB_POSTGRES_SCHEMA),
+    dbPostgresPoolSize: envInt(process.env.PDS_DB_POSTGRES_POOL_SIZE),
+    dbPostgresPoolMaxUses: envInt(process.env.PDS_DB_POSTGRES_POOL_MAX_USES),
     dbPostgresPoolIdleTimeoutMs: envInt(
-      process.env.DB_POSTGRES_POOL_IDLE_TIMEOUT_MS,
+      process.env.PDS_DB_POSTGRES_POOL_IDLE_TIMEOUT_MS,
     ),
 
     // blobstore: one required
     // s3
-    blobstoreS3Bucket: envStr(process.env.BLOBSTORE_S3_BUCKET),
+    blobstoreS3Bucket: envStr(process.env.PDS_BLOBSTORE_S3_BUCKET),
     // disk
-    blobstoreDiskLocation: envStr(process.env.BLOBSTORE_DISK_LOCATION),
-    blobstoreDiskTmpLocation: envStr(process.env.BLOBSTORE_DISK_TMP_LOCATION),
+    blobstoreDiskLocation: envStr(process.env.PDS_BLOBSTORE_DISK_LOCATION),
+    blobstoreDiskTmpLocation: envStr(
+      process.env.PDS_BLOBSTORE_DISK_TMP_LOCATION,
+    ),
 
     // identity
-    didPlcUrl: envStr(process.env.DID_PLC_URL),
-    didCacheStaleTTL: envInt(process.env.DID_CACHE_STALE_TTL),
-    didCacheMaxTTL: envInt(process.env.DID_CACHE_MAX_TTL),
-    resolverTimeout: envInt(process.env.ID_RESOLVER_TIMEOUT),
-    recoveryDidKey: envStr(process.env.RECOVERY_DID_KEY),
-    handleDomains: envList(process.env.HANDLE_DOMAINS),
+    didPlcUrl: envStr(process.env.PDS_DID_PLC_URL),
+    didCacheStaleTTL: envInt(process.env.PDS_DID_CACHE_STALE_TTL),
+    didCacheMaxTTL: envInt(process.env.PDS_DID_CACHE_MAX_TTL),
+    resolverTimeout: envInt(process.env.PDS_ID_RESOLVER_TIMEOUT),
+    recoveryDidKey: envStr(process.env.PDS_RECOVERY_DID_KEY),
+    handleDomains: envList(process.env.PDS_HANDLE_DOMAINS),
 
     // invites
-    inviteRequired: envBool(process.env.INVITE_REQUIRED),
-    inviteInterval: envInt(process.env.INVITE_INTERVAL),
+    inviteRequired: envBool(process.env.PDS_INVITE_REQUIRED),
+    inviteInterval: envInt(process.env.PDS_INVITE_INTERVAL),
 
     // email
-    emailSmtpUrl: envStr(process.env.EMAIL_SMTP_URL),
-    emailFromAddress: envStr(process.env.EMAIL_FROM_ADDRESS),
+    emailSmtpUrl: envStr(process.env.PDS_EMAIL_SMTP_URL),
+    emailFromAddress: envStr(process.env.PDS_EMAIL_FROM_ADDRESS),
 
     // subscription
-    maxSubscriptionBuffer: envInt(process.env.MAX_SUBSCRIPTION_BUFFER),
-    repoBackfillLimitMs: envInt(process.env.REPO_BACKFILL_LIMIT_MS),
-    sequencerLeaderLockId: envInt(process.env.SEQUENCER_LEADER_LOCK_ID),
+    maxSubscriptionBuffer: envInt(process.env.PDS_MAX_SUBSCRIPTION_BUFFER),
+    repoBackfillLimitMs: envInt(process.env.PDS_REPO_BACKFILL_LIMIT_MS),
+    sequencerLeaderLockId: envInt(process.env.PDS_SEQUENCER_LEADER_LOCK_ID),
 
     // appview
-    bskyAppViewEndpoint: envStr(process.env.BSKY_APP_VIEW_ENDPOINT),
-    bskyAppViewDid: envStr(process.env.BSKY_APP_VIEW_DID),
+    bskyAppViewEndpoint: envStr(process.env.PDS_BSKY_APP_VIEW_ENDPOINT),
+    bskyAppViewDid: envStr(process.env.PDS_BSKY_APP_VIEW_DID),
 
     // crawlers
-    crawlers: envList(process.env.CRAWLERS),
+    crawlers: envList(process.env.PDS_CRAWLERS),
 
     // secrets
-    jwtSecret: envStr(process.env.JWT_SECRET),
-    adminPassword: envStr(process.env.ADMIN_PASSWORD),
-    moderatorPassword: envStr(process.env.MODERATOR_PASSWORD),
+    jwtSecret: envStr(process.env.PDS_JWT_SECRET),
+    adminPassword: envStr(process.env.PDS_ADMIN_PASSWORD),
+    moderatorPassword: envStr(process.env.PDS_MODERATOR_PASSWORD),
 
     // keys: only one of each required
     // kms
-    repoSigningKeyKmsKeyId: envStr(process.env.REPO_SIGNING_KEY_KMS_KEY_ID),
+    repoSigningKeyKmsKeyId: envStr(process.env.PDS_REPO_SIGNING_KEY_KMS_KEY_ID),
     // memory
     repoSigningKeyK256PrivateKeyHex: envStr(
-      process.env.REPO_SIGNING_KEY_K256_PRIVATE_KEY_HEX,
+      process.env.PDS_REPO_SIGNING_KEY_K256_PRIVATE_KEY_HEX,
     ),
     // kms
-    plcRotationKeyKmsKeyId: envStr(process.env.PLC_ROTATION_KEY_KMS_KEY_ID),
+    plcRotationKeyKmsKeyId: envStr(process.env.PDS_PLC_ROTATION_KEY_KMS_KEY_ID),
     // memory
     plcRotationKeyK256PrivateKeyHex: envStr(
-      process.env.PLC_ROTATION_KEY_K256_PRIVATE_KEY_HEX,
+      process.env.PDS_PLC_ROTATION_KEY_K256_PRIVATE_KEY_HEX,
     ),
   }
 }
