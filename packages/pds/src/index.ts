@@ -18,6 +18,7 @@ import { createServer } from './lexicon'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import AppContext, { AppContextOptions } from './context'
 
+export type { ServerConfig, ServerSecrets } from './config'
 export { Database } from './db'
 export { DiskBlobStore, MemoryBlobStore } from './storage'
 export { AppContext } from './context'
@@ -34,20 +35,16 @@ export class PDS {
     this.app = opts.app
   }
 
-  static async create(opts: {
-    cfg: ServerConfig
-    secrets: ServerSecrets
-    overrides?: Partial<AppContextOptions>
-  }): Promise<PDS> {
+  static async create(
+    cfg: ServerConfig,
+    secrets: ServerSecrets,
+    overrides?: Partial<AppContextOptions>,
+  ): Promise<PDS> {
     const app = express()
     app.use(cors())
     app.use(loggerMiddleware)
 
-    const ctx = await AppContext.fromConfig(
-      opts.cfg,
-      opts.secrets,
-      opts.overrides,
-    )
+    const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
 
     let server = createServer({
       validateResponse: false,

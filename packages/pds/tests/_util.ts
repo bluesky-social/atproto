@@ -2,18 +2,16 @@ import { AddressInfo } from 'net'
 import os from 'os'
 import path from 'path'
 import * as crypto from '@atproto/crypto'
-import * as plc from '@did-plc/lib'
 import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
 import { AtUri } from '@atproto/uri'
 import { randomStr } from '@atproto/crypto'
 import { CID } from 'multiformats/cid'
-import * as uint8arrays from 'uint8arrays'
-import { PDS, ServerConfig, Database, MemoryBlobStore } from '../src/index'
+import * as ui8 from 'uint8arrays'
+import { PDS, Database } from '../src'
 import { FeedViewPost } from '../src/lexicon/types/app/bsky/feed/defs'
-import DiskBlobStore from '../src/storage/disk-blobstore'
 import AppContext from '../src/context'
-import { DAY, HOUR } from '@atproto/common'
 import { lexToJson } from '@atproto/lexicon'
+import { ServerEnvironment, envToCfg, envToSecrets } from '../src/config'
 
 const ADMIN_PASSWORD = 'admin-pass'
 const MODERATOR_PASSWORD = 'moderator-pass'
@@ -30,110 +28,77 @@ export type TestServerOpts = {
 }
 
 export const runTestServer = async (
-  params: Partial<ServerConfig> = {},
+  params: Partial<ServerEnvironment> = {},
   opts: TestServerOpts = {},
 ): Promise<TestServerInfo> => {
-  const repoSigningKey = await crypto.Secp256k1Keypair.create()
-  const plcRotationKey = await crypto.Secp256k1Keypair.create()
-
   const dbPostgresUrl = params.dbPostgresUrl || process.env.DB_POSTGRES_URL
-  const dbPostgresSchema =
-    params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
-  // run plc server
 
+  // run plc server
   let plcDb
   if (dbPostgresUrl !== undefined) {
     plcDb = PlcDatabase.postgres({
       url: dbPostgresUrl,
-      schema: `plc_test_${dbPostgresSchema}`,
+      schema: `plc_test_${params.dbPostgresSchema}`,
     })
     await plcDb.migrateToLatestOrThrow()
   } else {
     plcDb = PlcDatabase.mock()
   }
-
   const plcServer = PlcServer.create({ db: plcDb })
   const plcListener = await plcServer.start()
   const plcPort = (plcListener.address() as AddressInfo).port
   const plcUrl = `http://localhost:${plcPort}`
 
-  const recoveryKey = (await crypto.Secp256k1Keypair.create()).did()
-
-  const plcClient = new plc.Client(plcUrl)
-  const serverDid = await plcClient.createDid({
-    signingKey: repoSigningKey.did(),
-    rotationKeys: [recoveryKey, plcRotationKey.did()],
-    handle: 'localhost',
-    pds: 'https://pds.public.url',
-    signer: plcRotationKey,
+  const repoSigningKey = await crypto.Secp256k1Keypair.create({
+    exportable: true,
   })
+  const repoSigningPriv = ui8.toString(await repoSigningKey.export(), 'hex')
+  const plcRotationKey = await crypto.Secp256k1Keypair.create({
+    exportable: true,
+  })
+  const plcRotationPriv = ui8.toString(await plcRotationKey.export(), 'hex')
+  const recoveryKey = (await crypto.Secp256k1Keypair.create()).did()
 
   const blobstoreLoc = path.join(os.tmpdir(), randomStr(5, 'base32'))
 
-  const cfg = new ServerConfig({
-    version: '0.0.0',
-    hostname: 'localhost',
-    serverDid,
-    recoveryKey,
+  const env: ServerEnvironment = {
+    dbPostgresUrl: dbPostgresUrl,
+    blobstoreDiskLocation: blobstoreLoc,
+    recoveryDidKey: recoveryKey,
+    didPlcUrl: plcUrl,
+    handleDomains: ['.test'],
+    sequencerLeaderLockId: uniqueLockId(),
+    repoSigningKeyK256PrivateKeyHex: repoSigningPriv,
+    plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
     adminPassword: ADMIN_PASSWORD,
     moderatorPassword: MODERATOR_PASSWORD,
-    inviteRequired: false,
-    userInviteInterval: null,
-    didPlcUrl: plcUrl,
-    didCacheMaxTTL: DAY,
-    didCacheStaleTTL: HOUR,
     jwtSecret: 'jwt-secret',
-    availableUserDomains: ['.test'],
-    appUrlPasswordReset: 'app://forgot-password',
-    emailNoReplyAddress: 'noreply@blueskyweb.xyz',
-    publicUrl: 'https://pds.public.url',
-    dbPostgresUrl: process.env.DB_POSTGRES_URL,
-    blobstoreLocation: `${blobstoreLoc}/blobs`,
-    blobstoreTmp: `${blobstoreLoc}/tmp`,
-    maxSubscriptionBuffer: 200,
-    repoBackfillLimitMs: HOUR,
-    sequencerLeaderLockId: uniqueLockId(),
     ...params,
-  })
+  }
 
-  const db =
-    cfg.dbPostgresUrl !== undefined
-      ? Database.postgres({
-          url: cfg.dbPostgresUrl,
-          schema: cfg.dbPostgresSchema,
-        })
-      : Database.memory()
+  const cfg = envToCfg(env)
+  const secrets = envToSecrets(env)
+
+  const pds = await PDS.create(cfg, secrets)
 
   // Separate migration db on postgres in case migration changes some
   // connection state that we need in the tests, e.g. "alter database ... set ..."
   const migrationDb =
-    cfg.dbPostgresUrl !== undefined
+    cfg.db.dialect === 'pg'
       ? Database.postgres({
-          url: cfg.dbPostgresUrl,
-          schema: cfg.dbPostgresSchema,
+          url: cfg.db.url,
+          schema: cfg.db.schema,
         })
-      : db
+      : pds.ctx.db
   if (opts.migration) {
     await migrationDb.migrateToOrThrow(opts.migration)
   } else {
     await migrationDb.migrateToLatestOrThrow()
   }
-  if (migrationDb !== db) {
+  if (migrationDb !== pds.ctx.db) {
     await migrationDb.close()
   }
 
-  const blobstore =
-    cfg.blobstoreLocation !== undefined
-      ? await DiskBlobStore.create(cfg.blobstoreLocation, cfg.blobstoreTmp)
-      : new MemoryBlobStore()
-
-  const pds = PDS.create({
-    db,
-    blobstore,
-    repoSigningKey,
-    plcRotationKey,
-    config: cfg,
-  })
   const pdsServer = await pds.start()
   const pdsPort = (pdsServer.address() as AddressInfo).port
 
@@ -168,10 +133,7 @@ export const moderatorAuth = () => {
 const basicAuth = (username: string, password: string) => {
   return (
     'Basic ' +
-    uint8arrays.toString(
-      uint8arrays.fromString(`${username}:${password}`, 'utf8'),
-      'base64pad',
-    )
+    ui8.toString(ui8.fromString(`${username}:${password}`, 'utf8'), 'base64pad')
   )
 }
 
