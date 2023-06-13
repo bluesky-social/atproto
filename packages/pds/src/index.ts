@@ -30,7 +30,7 @@ import DidSqlCache from './did-cache'
 import { IdResolver } from '@atproto/identity'
 import { Crawlers } from './crawlers'
 
-export type { ServerConfigValues } from './config'
+// export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './db'
 export { DiskBlobStore, MemoryBlobStore } from './storage'
