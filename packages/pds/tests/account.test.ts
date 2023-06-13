@@ -675,7 +675,15 @@ describe('account', () => {
       .where('did', '=', did)
       .execute()
 
-    // and we pad their account with some additional used codes from the past
+    // we have a 3 day epoch so should still get 1 code
+    const res = await agent.api.com.atproto.server.getAccountInviteCodes({
+      includeUsed: false,
+    })
+    expect(res.data.codes.length).toBe(1)
+    const res2 = await agent.api.com.atproto.server.getAccountInviteCodes()
+    expect(res2.data.codes.length).toBe(3)
+
+    // we pad their account with some additional used codes from the past which should not change anything
     const inviteRows = genInvCodes(ctx.cfg, 10).map((code) => ({
       code: code,
       availableUses: 1,
@@ -696,18 +704,10 @@ describe('account', () => {
       )
       .execute()
 
-    // we have a 3 day epoch so should still get 1 code
-    const res = await agent.api.com.atproto.server.getAccountInviteCodes({
-      includeUsed: false,
-      createAvailable: false,
-    })
-    expect(res.data.codes.length).toBe(0)
-    const res2 = await agent.api.com.atproto.server.getAccountInviteCodes({
+    const res3 = await agent.api.com.atproto.server.getAccountInviteCodes({
       includeUsed: false,
     })
-    expect(res2.data.codes.length).toBe(1)
-    const res3 = await agent.api.com.atproto.server.getAccountInviteCodes()
-    expect(res3.data.codes.length).toBe(13)
+    expect(res3.data.codes.length).toBe(1)
   })
 
   it('prevents use of disabled codes', async () => {
