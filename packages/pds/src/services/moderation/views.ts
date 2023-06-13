@@ -565,7 +565,7 @@ type RecordResult = {
   cid: string
   value: object
   indexedAt: string
-  takedownId: number | null
+  takedownId: string | null
 }
 
 type SubjectResult = Pick<

@@ -46,7 +46,6 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .columns(['path', 'linkToDid'])
     .execute()
 
-  // @NOTE renamed pkey constraint
   await db.schema
     .createTable('blob')
     .addColumn('creator', 'varchar', (col) => col.notNull())
@@ -74,7 +73,6 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('updatedAt', 'bigint', (col) => col.notNull())
     .execute()
 
-  // @NOTE dropped handle trigram index
   await db.schema
     .createTable('did_handle')
     .addColumn('did', 'varchar', (col) => col.primaryKey())
@@ -105,7 +103,6 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addPrimaryKeyConstraint(`invite_code_use_pkey`, ['code', 'usedBy'])
     .execute()
 
-  // @NOTE renamed pkey
   await db.schema
     .createTable('ipld_block')
     .addColumn('creator', 'varchar', (col) => col.notNull())
@@ -193,7 +190,6 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .column('actionId')
     .execute()
 
-  // @NOTE renamed indexes for consistency
   await db.schema
     .createTable('record')
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
@@ -202,9 +198,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('collection', 'varchar', (col) => col.notNull())
     .addColumn('rkey', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .addColumn('takedownId', 'integer', (col) =>
-      col.references('moderation_action.id'),
-    )
+    .addColumn('takedownId', 'varchar')
     .execute()
   await db.schema
     .createIndex('record_did_cid_idx')
@@ -237,9 +231,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('recordUri', 'varchar', (col) => col.notNull())
     .addColumn('commit', 'varchar', (col) => col.notNull())
     .addColumn('did', 'varchar', (col) => col.notNull())
-    .addColumn('takedownId', 'integer', (col) =>
-      col.references('moderation_action.id'),
-    )
+    .addColumn('takedownId', 'varchar')
     .addPrimaryKeyConstraint(`repo_blob_pkey`, ['cid', 'recordUri'])
     .execute()
   await db.schema // supports rebase
@@ -273,9 +265,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('did', 'varchar', (col) => col.primaryKey())
     .addColumn('root', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .addColumn('takedownId', 'integer', (col) =>
-      col.references('moderation_action.id'),
-    )
+    .addColumn('takedownId', 'varchar')
     .execute()
 
   // @TODO renamed indexes for consistency
@@ -315,7 +305,6 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .column('sequencedAt')
     .execute()
 
-  // @NOTE removed unique constraint on email, since we have one on lower(email)
   await db.schema
     .createTable('user_account')
     .addColumn('did', 'varchar', (col) => col.primaryKey())

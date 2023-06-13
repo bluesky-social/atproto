@@ -342,7 +342,7 @@ export class ModerationService {
   async takedownRepo(info: { takedownId: number; did: string }) {
     await this.db.db
       .updateTable('repo_root')
-      .set({ takedownId: info.takedownId })
+      .set({ takedownId: String(info.takedownId) })
       .where('did', '=', info.did)
       .where('takedownId', 'is', null)
       .executeTakeFirst()
@@ -364,14 +364,14 @@ export class ModerationService {
     this.db.assertTransaction()
     await this.db.db
       .updateTable('record')
-      .set({ takedownId: info.takedownId })
+      .set({ takedownId: String(info.takedownId) })
       .where('uri', '=', info.uri.toString())
       .where('takedownId', 'is', null)
       .executeTakeFirst()
     if (info.blobCids?.length) {
       await this.db.db
         .updateTable('repo_blob')
-        .set({ takedownId: info.takedownId })
+        .set({ takedownId: String(info.takedownId) })
         .where('recordUri', '=', info.uri.toString())
         .where(
           'cid',

@@ -6,7 +6,8 @@ export interface Record {
   collection: string
   rkey: string
   indexedAt: string
-  takedownId: number | null
+  // opaque identifier, though currently tends to reference a moderation_action
+  takedownId: string | null
 }
 
 export const tableName = 'record'

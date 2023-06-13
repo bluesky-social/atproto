@@ -3,7 +3,8 @@ export interface RepoBlob {
   recordUri: string
   commit: string
   did: string
-  takedownId: number | null
+  // opaque identifier, though currently tends to reference a moderation_action
+  takedownId: string | null
 }
 
 export const tableName = 'repo_blob'
