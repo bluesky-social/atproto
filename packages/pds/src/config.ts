@@ -35,20 +35,9 @@ export interface ServerConfigValues {
 
   availableUserDomains: string[]
 
-  imgUriSalt: string
-  imgUriKey: string
-  imgUriEndpoint?: string
-  blobCacheLocation?: string
-
   appUrlPasswordReset: string
   emailSmtpUrl?: string
   emailNoReplyAddress: string
-
-  hiveApiKey?: string
-  labelerDid: string
-  labelerKeywords: Record<string, string>
-
-  feedGenDid?: string
 
   maxSubscriptionBuffer: number
   repoBackfillLimitMs: number
@@ -126,14 +115,6 @@ export class ServerConfig {
       ? process.env.AVAILABLE_USER_DOMAINS.split(',')
       : []
 
-    const imgUriSalt =
-      process.env.IMG_URI_SALT || '9dd04221f5755bce5f55f47464c27e1e'
-    const imgUriKey =
-      process.env.IMG_URI_KEY ||
-      'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8'
-    const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
-    const blobCacheLocation = process.env.BLOB_CACHE_LOC
-
     const appUrlPasswordReset =
       process.env.APP_URL_PASSWORD_RESET || 'app://password-reset'
 
@@ -141,12 +122,6 @@ export class ServerConfig {
 
     const emailNoReplyAddress =
       process.env.EMAIL_NO_REPLY_ADDRESS || 'noreply@blueskyweb.xyz'
-
-    const hiveApiKey = process.env.HIVE_API_KEY || undefined
-    const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
-    const labelerKeywords = {}
-
-    const feedGenDid = process.env.FEED_GEN_DID
 
     const dbPostgresUrl = process.env.DB_POSTGRES_URL
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
@@ -200,17 +175,9 @@ export class ServerConfig {
       termsOfServiceUrl,
       databaseLocation,
       availableUserDomains,
-      imgUriSalt,
-      imgUriKey,
-      imgUriEndpoint,
-      blobCacheLocation,
       appUrlPasswordReset,
       emailSmtpUrl,
       emailNoReplyAddress,
-      hiveApiKey,
-      labelerDid,
-      labelerKeywords,
-      feedGenDid,
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
       sequencerLeaderLockId,
@@ -347,22 +314,6 @@ export class ServerConfig {
     return this.cfg.availableUserDomains
   }
 
-  get imgUriSalt() {
-    return this.cfg.imgUriSalt
-  }
-
-  get imgUriKey() {
-    return this.cfg.imgUriKey
-  }
-
-  get imgUriEndpoint() {
-    return this.cfg.imgUriEndpoint
-  }
-
-  get blobCacheLocation() {
-    return this.cfg.blobCacheLocation
-  }
-
   get appUrlPasswordReset() {
     return this.cfg.appUrlPasswordReset
   }
@@ -373,22 +324,6 @@ export class ServerConfig {
 
   get emailNoReplyAddress() {
     return this.cfg.emailNoReplyAddress
-  }
-
-  get hiveApiKey() {
-    return this.cfg.hiveApiKey
-  }
-
-  get labelerDid() {
-    return this.cfg.labelerDid
-  }
-
-  get labelerKeywords() {
-    return this.cfg.labelerKeywords
-  }
-
-  get feedGenDid() {
-    return this.cfg.feedGenDid
   }
 
   get maxSubscriptionBuffer() {

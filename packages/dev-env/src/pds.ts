@@ -51,16 +51,10 @@ export class TestPds {
       appUrlPasswordReset: 'app://forgot-password',
       emailNoReplyAddress: 'noreply@blueskyweb.xyz',
       publicUrl: 'https://pds.public.url',
-      imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
-      imgUriKey:
-        'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
       dbPostgresUrl: cfg.dbPostgresUrl,
       maxSubscriptionBuffer: 200,
       repoBackfillLimitMs: 1000 * 60 * 60, // 1hr
       sequencerLeaderLockId: uniqueLockId(),
-      labelerDid: 'did:example:labeler',
-      labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
-      feedGenDid: 'did:example:feedGen',
       ...cfg,
     })
 

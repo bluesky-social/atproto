@@ -14,7 +14,6 @@ import DiskBlobStore from '../src/storage/disk-blobstore'
 import AppContext from '../src/context'
 import { DAY, HOUR } from '@atproto/common'
 import { lexToJson } from '@atproto/lexicon'
-import { MountedAlgos } from '../src/feed-gen/types'
 
 const ADMIN_PASSWORD = 'admin-pass'
 const MODERATOR_PASSWORD = 'moderator-pass'
@@ -28,7 +27,6 @@ export type TestServerInfo = {
 
 export type TestServerOpts = {
   migration?: string
-  algos?: MountedAlgos
 }
 
 export const runTestServer = async (
@@ -91,15 +89,9 @@ export const runTestServer = async (
     appUrlPasswordReset: 'app://forgot-password',
     emailNoReplyAddress: 'noreply@blueskyweb.xyz',
     publicUrl: 'https://pds.public.url',
-    imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
-    imgUriKey:
-      'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
     dbPostgresUrl: process.env.DB_POSTGRES_URL,
     blobstoreLocation: `${blobstoreLoc}/blobs`,
     blobstoreTmp: `${blobstoreLoc}/tmp`,
-    labelerDid: 'did:example:labeler',
-    labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
-    feedGenDid: 'did:example:feedGen',
     maxSubscriptionBuffer: 200,
     repoBackfillLimitMs: HOUR,
     sequencerLeaderLockId: uniqueLockId(),
@@ -143,7 +135,6 @@ export const runTestServer = async (
     repoSigningKey,
     plcRotationKey,
     config: cfg,
-    algos: opts.algos,
   })
   const pdsServer = await pds.start()
   const pdsPort = (pdsServer.address() as AddressInfo).port
