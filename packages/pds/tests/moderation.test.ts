@@ -1,4 +1,4 @@
-import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { AtUri } from '@atproto/uri'
 import {
   adminAuth,
@@ -824,164 +824,6 @@ describe('moderation', () => {
       )
     })
 
-    it('negates an existing label and reverses.', async () => {
-      const { ctx } = server
-      const post = sc.posts[sc.dids.bob][0].ref
-      const labelingService = ctx.services.appView.label(ctx.db)
-      await labelingService.formatAndCreate(
-        ctx.cfg.labelerDid,
-        post.uriStr,
-        post.cidStr,
-        { create: ['kittens'] },
-      )
-      const action = await actionWithLabels({
-        negateLabelVals: ['kittens'],
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.uriStr,
-          cid: post.cidStr,
-        },
-      })
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
-      await reverse(action.id)
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['kittens'])
-      // Cleanup
-      await labelingService.formatAndCreate(
-        ctx.cfg.labelerDid,
-        post.uriStr,
-        post.cidStr,
-        { negate: ['kittens'] },
-      )
-    })
-
-    it('no-ops when negating an already-negated label and reverses.', async () => {
-      const { ctx } = server
-      const post = sc.posts[sc.dids.bob][0].ref
-      const labelingService = ctx.services.appView.label(ctx.db)
-      const action = await actionWithLabels({
-        negateLabelVals: ['bears'],
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.uriStr,
-          cid: post.cidStr,
-        },
-      })
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
-      await reverse(action.id)
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['bears'])
-      // Cleanup
-      await labelingService.formatAndCreate(
-        ctx.cfg.labelerDid,
-        post.uriStr,
-        post.cidStr,
-        { negate: ['bears'] },
-      )
-    })
-
-    it('creates non-existing labels and reverses.', async () => {
-      const post = sc.posts[sc.dids.bob][0].ref
-      const action = await actionWithLabels({
-        createLabelVals: ['puppies', 'doggies'],
-        negateLabelVals: [],
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.uriStr,
-          cid: post.cidStr,
-        },
-      })
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual([
-        'puppies',
-        'doggies',
-      ])
-      await reverse(action.id)
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
-    })
-
-    it('no-ops when creating an existing label and reverses.', async () => {
-      const { ctx } = server
-      const post = sc.posts[sc.dids.bob][0].ref
-      const labelingService = ctx.services.appView.label(ctx.db)
-      await labelingService.formatAndCreate(
-        ctx.cfg.labelerDid,
-        post.uriStr,
-        post.cidStr,
-        { create: ['birds'] },
-      )
-      const action = await actionWithLabels({
-        createLabelVals: ['birds'],
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.uriStr,
-          cid: post.cidStr,
-        },
-      })
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['birds'])
-      await reverse(action.id)
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
-    })
-
-    it('creates labels on a repo and reverses.', async () => {
-      const action = await actionWithLabels({
-        createLabelVals: ['puppies', 'doggies'],
-        negateLabelVals: [],
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.bob,
-        },
-      })
-      await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual([
-        'puppies',
-        'doggies',
-      ])
-      await reverse(action.id)
-      await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual([])
-    })
-
-    it('creates and negates labels on a repo and reverses.', async () => {
-      const { ctx } = server
-      const labelingService = ctx.services.appView.label(ctx.db)
-      await labelingService.formatAndCreate(
-        ctx.cfg.labelerDid,
-        sc.dids.bob,
-        null,
-        { create: ['kittens'] },
-      )
-      const action = await actionWithLabels({
-        createLabelVals: ['puppies'],
-        negateLabelVals: ['kittens'],
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.bob,
-        },
-      })
-      await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual(['puppies'])
-      await reverse(action.id)
-      await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual(['kittens'])
-    })
-
-    it('does not allow non-admin moderators to label.', async () => {
-      const attemptLabel = agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: ACKNOWLEDGE,
-          createdBy: 'did:example:moderator',
-          reason: 'Y',
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: sc.dids.bob,
-          },
-          negateLabelVals: ['a'],
-          createLabelVals: ['b', 'c'],
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: moderatorAuth() },
-        },
-      )
-      await expect(attemptLabel).rejects.toThrow(
-        'Must be an admin to takedown or label content',
-      )
-    })
-
     it('does not allow non-admin moderators to takedown.', async () => {
       const attemptTakedown = agent.api.com.atproto.admin.takeModerationAction(
         {
@@ -1002,75 +844,15 @@ describe('moderation', () => {
         'Must be an admin to takedown or label content',
       )
     })
-
-    async function actionWithLabels(
-      opts: Partial<ComAtprotoAdminTakeModerationAction.InputSchema> & {
-        subject: ComAtprotoAdminTakeModerationAction.InputSchema['subject']
-      },
-    ) {
-      const result = await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: FLAG,
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-          ...opts,
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
-      return result.data
-    }
-
-    async function reverse(actionId: number) {
-      await agent.api.com.atproto.admin.reverseModerationAction(
-        {
-          id: actionId,
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
-    }
-
-    async function getRecordLabels(uri: string) {
-      const result = await agent.api.com.atproto.admin.getRecord(
-        { uri },
-        { headers: { authorization: adminAuth() } },
-      )
-      const labels = result.data.labels ?? []
-      return labels.map((l) => l.val)
-    }
-
-    async function getRepoLabels(did: string) {
-      const result = await agent.api.com.atproto.admin.getRepo(
-        { did },
-        { headers: { authorization: adminAuth() } },
-      )
-      const labels = result.data.labels ?? []
-      return labels.map((l) => l.val)
-    }
   })
 
   describe('blob takedown', () => {
     let post: { ref: RecordRef; images: ImageRef[] }
     let blob: ImageRef
-    let imageUri: string
     let actionId: number
     beforeAll(async () => {
       post = sc.posts[sc.dids.carol][0]
       blob = post.images[1]
-      imageUri = server.ctx.imgUriBuilder
-        .getCommonSignedUri('feed_thumbnail', blob.image.ref.toString())
-        .replace(server.ctx.cfg.publicUrl, server.url)
-      // Warm image server cache
-      await fetch(imageUri)
-      const cached = await fetch(imageUri)
-      expect(cached.headers.get('x-cache')).toEqual('hit')
       const takeAction = await agent.api.com.atproto.admin.takeModerationAction(
         {
           action: TAKEDOWN,
@@ -1099,7 +881,7 @@ describe('moderation', () => {
     it('prevents blob from being referenced again.', async () => {
       const uploaded = await sc.uploadFile(
         sc.dids.alice,
-        'tests/image/fixtures/key-alt.jpg',
+        'tests/sample-img/key-alt.jpg',
         'image/jpeg',
       )
       expect(uploaded.image.ref.equals(blob.image.ref)).toBeTruthy()
@@ -1108,9 +890,11 @@ describe('moderation', () => {
     })
 
     it('prevents image blob from being served, even when cached.', async () => {
-      const fetchImage = await fetch(imageUri)
-      expect(fetchImage.status).toEqual(404)
-      expect(await fetchImage.json()).toEqual({ message: 'Image not found' })
+      const attempt = agent.api.com.atproto.sync.getBlob({
+        did: sc.dids.carol,
+        cid: blob.image.ref.toString(),
+      })
+      await expect(attempt).rejects.toThrow('Blob not found')
     })
 
     it('restores blob when action is reversed.', async () => {
@@ -1131,10 +915,12 @@ describe('moderation', () => {
       expect(post.images[0].image.ref.equals(blob.image.ref)).toBeTruthy()
 
       // Can fetch through image server
-      const fetchImage = await fetch(imageUri)
-      expect(fetchImage.status).toEqual(200)
-      const size = Number(fetchImage.headers.get('content-length'))
-      expect(size).toBeGreaterThan(9000)
+      const res = await agent.api.com.atproto.sync.getBlob({
+        did: sc.dids.carol,
+        cid: blob.image.ref.toString(),
+      })
+
+      expect(res.data.byteLength).toBeGreaterThan(9000)
     })
   })
 })

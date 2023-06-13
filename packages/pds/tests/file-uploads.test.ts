@@ -5,8 +5,6 @@ import { CloseFn, runTestServer, TestServerInfo } from './_util'
 import { Database, ServerConfig } from '../src'
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import * as uint8arrays from 'uint8arrays'
-import * as image from '../src/image'
-import axios from 'axios'
 import { randomBytes } from '@atproto/crypto'
 import { BlobRef } from '@atproto/lexicon'
 import { ids } from '../src/lexicon/lexicons'
@@ -94,7 +92,7 @@ describe('file uploads', () => {
   })
 
   it('uploads files', async () => {
-    smallFile = await fs.readFile('tests/image/fixtures/key-portrait-small.jpg')
+    smallFile = await fs.readFile('tests/sample-img/key-portrait-small.jpg')
     const res = await aliceAgent.api.com.atproto.repo.uploadBlob(smallFile, {
       encoding: 'image/jpeg',
     })
@@ -147,29 +145,11 @@ describe('file uploads', () => {
     expect(uint8arrays.equals(smallFile, new Uint8Array(data))).toBeTruthy()
   })
 
-  it('serves the referenced blob', async () => {
-    const profile = await aliceAgent.api.app.bsky.actor.getProfile({
-      actor: 'alice.test',
-    })
-    const avatar = profile.data.avatar as string
-    expect(typeof avatar).toBe('string')
-    const url = avatar.replace(cfg.publicUrl, serverUrl)
-    const res = await axios.get(url, { responseType: 'stream' })
-    expect(res.headers['content-type']).toBe('image/jpeg')
-    const info = await image.getInfo(res.data)
-    expect(info).toEqual(
-      expect.objectContaining({
-        height: 1000,
-        width: 1000,
-      }),
-    )
-  })
-
   let largeBlob: BlobRef
   let largeFile: Uint8Array
 
   it('does not allow referencing a file that is outside blob constraints', async () => {
-    largeFile = await fs.readFile('tests/image/fixtures/hd-key.jpg')
+    largeFile = await fs.readFile('tests/sample-img/hd-key.jpg')
     const res = await aliceAgent.api.com.atproto.repo.uploadBlob(largeFile, {
       encoding: 'image/jpeg',
     })
@@ -195,9 +175,7 @@ describe('file uploads', () => {
   })
 
   it('permits duplicate uploads of the same file', async () => {
-    const file = await fs.readFile(
-      'tests/image/fixtures/key-landscape-small.jpg',
-    )
+    const file = await fs.readFile('tests/sample-img/key-landscape-small.jpg')
     const { data: uploadA } = await aliceAgent.api.com.atproto.repo.uploadBlob(
       file,
       {
@@ -257,9 +235,7 @@ describe('file uploads', () => {
   })
 
   it('corrects a bad mimetype', async () => {
-    const file = await fs.readFile(
-      'tests/image/fixtures/key-landscape-large.jpg',
-    )
+    const file = await fs.readFile('tests/sample-img/key-landscape-large.jpg')
     const res = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
       encoding: 'video/mp4',
     } as any)
@@ -276,7 +252,7 @@ describe('file uploads', () => {
   })
 
   it('handles pngs', async () => {
-    const file = await fs.readFile('tests/image/fixtures/at.png')
+    const file = await fs.readFile('tests/sample-img/at.png')
     const res = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
       encoding: 'image/png',
     })

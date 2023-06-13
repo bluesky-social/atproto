@@ -29,12 +29,12 @@ export default async (sc: SeedClient) => {
   await sc.post(bob, posts.bob[0])
   const img1 = await sc.uploadFile(
     carol,
-    'tests/image/fixtures/key-landscape-small.jpg',
+    'tests/sample-img/key-landscape-small.jpg',
     'image/jpeg',
   )
   const img2 = await sc.uploadFile(
     carol,
-    'tests/image/fixtures/key-alt.jpg',
+    'tests/sample-img/key-alt.jpg',
     'image/jpeg',
   )
   await sc.post(
@@ -95,7 +95,7 @@ export default async (sc: SeedClient) => {
 
   const replyImg = await sc.uploadFile(
     bob,
-    'tests/image/fixtures/key-landscape-small.jpg',
+    'tests/sample-img/key-landscape-small.jpg',
     'image/jpeg',
   )
   await sc.reply(

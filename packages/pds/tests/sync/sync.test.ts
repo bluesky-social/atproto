@@ -267,12 +267,12 @@ describe('repo sync', () => {
   it('syncs images', async () => {
     const img1 = await sc.uploadFile(
       did,
-      'tests/image/fixtures/key-landscape-small.jpg',
+      'tests/sample-img/key-landscape-small.jpg',
       'image/jpeg',
     )
     const img2 = await sc.uploadFile(
       did,
-      'tests/image/fixtures/key-portrait-small.jpg',
+      'tests/sample-img/key-portrait-small.jpg',
       'image/jpeg',
     )
     await sc.post(did, 'blah', undefined, [img1])

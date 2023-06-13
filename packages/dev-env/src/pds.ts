@@ -2,7 +2,6 @@ import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as pds from '@atproto/pds'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { MessageDispatcher } from '@atproto/pds/src/event-stream/message-queue'
 import { AtpAgent } from '@atproto/api'
 import { Client as PlcClient } from '@did-plc/lib'
 import { DAY, HOUR } from '@atproto/common-web'
@@ -73,11 +72,6 @@ export class TestPds {
         })
       : pds.Database.memory()
     await db.migrateToLatestOrThrow()
-
-    if (config.bskyAppViewEndpoint) {
-      // Disable communication to app view within pds
-      MessageDispatcher.prototype.send = async () => {}
-    }
 
     const server = pds.PDS.create({
       db,
