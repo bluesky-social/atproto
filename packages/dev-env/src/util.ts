@@ -11,7 +11,7 @@ export const mockNetworkUtilities = (pds: TestPds) => {
     const service = result?.service?.find((svc) => svc.id === '#atproto_pds')
     if (typeof service?.serviceEndpoint === 'string') {
       service.serviceEndpoint = service.serviceEndpoint.replace(
-        pds.ctx.cfg.publicUrl,
+        pds.ctx.cfg.service.publicUrl,
         `http://localhost:${pds.port}`,
       )
     }
@@ -19,7 +19,7 @@ export const mockNetworkUtilities = (pds: TestPds) => {
   }
 
   HandleResolver.prototype.resolve = async function (handle: string) {
-    const isPdsHandle = pds.ctx.cfg.availableUserDomains.some((domain) =>
+    const isPdsHandle = pds.ctx.cfg.identity.handleDomains.some((domain) =>
       handle.endsWith(domain),
     )
     if (!isPdsHandle) return undefined

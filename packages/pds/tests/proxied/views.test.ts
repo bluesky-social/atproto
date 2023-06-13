@@ -32,7 +32,7 @@ describe('proxies view requests', () => {
     await network.close()
   })
 
-  it.only('actor.getProfile', async () => {
+  it('actor.getProfile', async () => {
     const res = await agent.api.app.bsky.actor.getProfile(
       {
         actor: bob,
