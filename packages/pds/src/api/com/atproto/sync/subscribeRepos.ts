@@ -8,12 +8,12 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.subscribeRepos(async function* ({ params, signal }) {
     const { cursor } = params
     const outbox = new Outbox(ctx.sequencer, {
-      maxBufferSize: ctx.cfg.maxSubscriptionBuffer,
+      maxBufferSize: ctx.cfg.subscription.maxBuffer,
     })
     httpLogger.info({ cursor }, 'request to com.atproto.sync.subscribeRepos')
 
     const backfillTime = new Date(
-      Date.now() - ctx.cfg.repoBackfillLimitMs,
+      Date.now() - ctx.cfg.subscription.repoBackfillLimitMs,
     ).toISOString()
     if (cursor !== undefined) {
       const [next, curr] = await Promise.all([

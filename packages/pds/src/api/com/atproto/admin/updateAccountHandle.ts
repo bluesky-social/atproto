@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       try {
         ident.ensureHandleServiceConstraints(
           handle,
-          ctx.cfg.availableUserDomains,
+          ctx.cfg.identity.handleDomains,
         )
       } catch (err) {
         if (err instanceof ident.UnsupportedDomainError) {

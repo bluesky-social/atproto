@@ -9,10 +9,15 @@ import { ServerEnvironment } from './env'
 export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const port = env.port ?? 2583
   const hostname = env.hostname ?? 'localhost'
+  const publicUrl =
+    hostname === 'localhost'
+      ? `http://localhost:${port}`
+      : `https://${hostname}`
   const did = env.serviceDid ?? `did:web:${hostname}`
   const serviceCfg: ServerConfig['service'] = {
     port,
     hostname,
+    publicUrl,
     did,
     version: env.version, // default?
     privacyPolicyUrl: env.privacyPolicyUrl,
@@ -150,6 +155,7 @@ export type ServerConfig = {
 export type ServiceConfig = {
   port: number
   hostname: string
+  publicUrl: string
   did: string
   version?: string
   privacyPolicyUrl?: string

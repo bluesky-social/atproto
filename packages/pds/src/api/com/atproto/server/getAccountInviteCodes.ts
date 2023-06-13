@@ -31,10 +31,14 @@ export default function (server: Server, ctx: AppContext) {
       // we allow a max of 5 open codes at a given time
       // note: even if a user is disabled from future invites, we still create the invites for bookkeeping, we just immediately disable them as well
       const now = new Date().toISOString()
-      if (createAvailable && ctx.cfg.userInviteInterval !== null) {
+      if (
+        createAvailable &&
+        ctx.cfg.invites.required &&
+        ctx.cfg.invites.interval !== null
+      ) {
         const accountLifespan = Date.now() - new Date(user.createdAt).getTime()
         const couldCreate = Math.floor(
-          accountLifespan / ctx.cfg.userInviteInterval,
+          accountLifespan / ctx.cfg.invites.interval,
         )
         const toCreate = Math.min(
           5 - unusedCodes.length,

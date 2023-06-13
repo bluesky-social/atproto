@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount(async ({ input, req }) => {
     const { email, password, inviteCode } = input.body
 
-    if (ctx.cfg.inviteRequired && !inviteCode) {
+    if (ctx.cfg.invites.required && !inviteCode) {
       throw new InvalidRequestError(
         'No invite code provided',
         'InvalidInviteCode',
@@ -25,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
     const handle = await ensureValidHandle(ctx, input.body)
 
     // check that the invite code still has uses
-    if (ctx.cfg.inviteRequired && inviteCode) {
+    if (ctx.cfg.invites.required && inviteCode) {
       await ensureCodeIsAvailable(ctx.db, inviteCode)
     }
 
@@ -43,7 +43,7 @@ export default function (server: Server, ctx: AppContext) {
       // it's a bit goofy that we run this logic twice,
       // but we run it once for a sanity check before doing scrypt & plc ops
       // & a second time for locking + integrity check
-      if (ctx.cfg.inviteRequired && inviteCode) {
+      if (ctx.cfg.invites.required && inviteCode) {
         await ensureCodeIsAvailable(dbTxn, inviteCode, true)
       }
 
@@ -76,7 +76,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // insert invite code use
-      if (ctx.cfg.inviteRequired && inviteCode) {
+      if (ctx.cfg.invites.required && inviteCode) {
         await dbTxn.db
           .insertInto('invite_code_use')
           .values({
@@ -145,7 +145,7 @@ const ensureValidHandle = async (
 ): Promise<string> => {
   try {
     const handle = ident.normalizeAndEnsureValidHandle(input.handle)
-    ident.ensureHandleServiceConstraints(handle, ctx.cfg.availableUserDomains)
+    ident.ensureHandleServiceConstraints(handle, ctx.cfg.identity.handleDomains)
     return handle
   } catch (err) {
     if (err instanceof ident.InvalidHandleError) {
@@ -178,7 +178,10 @@ const getDidAndPlcOp = async (
   // if the user is not bringing a DID, then we format a create op for PLC
   // but we don't send until we ensure the username & email are available
   if (!input.did) {
-    const rotationKeys = [ctx.cfg.recoveryKey, ctx.plcRotationKey.did()]
+    const rotationKeys = [ctx.plcRotationKey.did()]
+    if (ctx.cfg.identity.recoveryDidKey) {
+      rotationKeys.unshift(ctx.cfg.identity.recoveryDidKey)
+    }
     if (input.recoveryKey) {
       rotationKeys.unshift(input.recoveryKey)
     }
@@ -186,7 +189,7 @@ const getDidAndPlcOp = async (
       signingKey: ctx.repoSigningKey.did(),
       rotationKeys,
       handle,
-      pds: ctx.cfg.publicUrl,
+      pds: ctx.cfg.service.publicUrl,
       signer: ctx.plcRotationKey,
     })
     return {
@@ -212,7 +215,7 @@ const getDidAndPlcOp = async (
       'provided handle does not match DID document handle',
       'IncompatibleDidDoc',
     )
-  } else if (atpData.pds !== ctx.cfg.publicUrl) {
+  } else if (atpData.pds !== ctx.cfg.service.publicUrl) {
     throw new InvalidRequestError(
       'DID document pds endpoint does not match service endpoint',
       'IncompatibleDidDoc',

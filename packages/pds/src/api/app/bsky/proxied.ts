@@ -6,7 +6,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.actor.getProfile(
+      const res = await ctx.appViewAgent.api.app.bsky.actor.getProfile(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.actor.getProfiles(
+      const res = await ctx.appViewAgent.api.app.bsky.actor.getProfiles(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -36,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.actor.getSuggestions(
+      const res = await ctx.appViewAgent.api.app.bsky.actor.getSuggestions(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -51,7 +51,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.actor.searchActors(
+      const res = await ctx.appViewAgent.api.app.bsky.actor.searchActors(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -67,7 +67,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
       const res =
-        await ctx.appviewAgent.api.app.bsky.actor.searchActorsTypeahead(
+        await ctx.appViewAgent.api.app.bsky.actor.searchActorsTypeahead(
           params,
           await ctx.serviceAuthHeaders(requester),
         )
@@ -82,7 +82,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getActorFeeds(
+      const res = await ctx.appViewAgent.api.app.bsky.feed.getActorFeeds(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -97,7 +97,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getAuthorFeed(
+      const res = await ctx.appViewAgent.api.app.bsky.feed.getAuthorFeed(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -113,11 +113,11 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
       const { data: feed } =
-        await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerator(
+        await ctx.appViewAgent.api.app.bsky.feed.getFeedGenerator(
           { feed: params.feed },
           await ctx.serviceAuthHeaders(requester),
         )
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getFeed(
+      const res = await ctx.appViewAgent.api.app.bsky.feed.getFeed(
         params,
         await ctx.serviceAuthHeaders(requester, feed.view.did),
       )
@@ -132,7 +132,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerator(
+      const res = await ctx.appViewAgent.api.app.bsky.feed.getFeedGenerator(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -147,7 +147,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerators(
+      const res = await ctx.appViewAgent.api.app.bsky.feed.getFeedGenerators(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -162,7 +162,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getPosts(
+      const res = await ctx.appViewAgent.api.app.bsky.feed.getPosts(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -177,7 +177,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getPostThread(
+      const res = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -192,7 +192,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getLikes(
+      const res = await ctx.appViewAgent.api.app.bsky.feed.getLikes(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -207,7 +207,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getRepostedBy(
+      const res = await ctx.appViewAgent.api.app.bsky.feed.getRepostedBy(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -222,7 +222,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getTimeline(
+      const res = await ctx.appViewAgent.api.app.bsky.feed.getTimeline(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -237,7 +237,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.graph.getBlocks(
+      const res = await ctx.appViewAgent.api.app.bsky.graph.getBlocks(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -252,7 +252,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.graph.getFollowers(
+      const res = await ctx.appViewAgent.api.app.bsky.graph.getFollowers(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -267,7 +267,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.graph.getFollows(
+      const res = await ctx.appViewAgent.api.app.bsky.graph.getFollows(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -282,7 +282,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.graph.getList(
+      const res = await ctx.appViewAgent.api.app.bsky.graph.getList(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -297,7 +297,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.graph.getListMutes(
+      const res = await ctx.appViewAgent.api.app.bsky.graph.getListMutes(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -312,7 +312,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.graph.getLists(
+      const res = await ctx.appViewAgent.api.app.bsky.graph.getLists(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -327,7 +327,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.graph.getMutes(
+      const res = await ctx.appViewAgent.api.app.bsky.graph.getMutes(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -342,7 +342,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ input, auth }) => {
       const requester = auth.credentials.did
-      await ctx.appviewAgent.api.app.bsky.graph.muteActor(input.body, {
+      await ctx.appViewAgent.api.app.bsky.graph.muteActor(input.body, {
         ...(await ctx.serviceAuthHeaders(requester)),
         encoding: 'application/json',
       })
@@ -353,7 +353,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ input, auth }) => {
       const requester = auth.credentials.did
-      await ctx.appviewAgent.api.app.bsky.graph.muteActorList(input.body, {
+      await ctx.appViewAgent.api.app.bsky.graph.muteActorList(input.body, {
         ...(await ctx.serviceAuthHeaders(requester)),
         encoding: 'application/json',
       })
@@ -364,7 +364,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ input, auth }) => {
       const requester = auth.credentials.did
-      await ctx.appviewAgent.api.app.bsky.graph.unmuteActor(input.body, {
+      await ctx.appViewAgent.api.app.bsky.graph.unmuteActor(input.body, {
         ...(await ctx.serviceAuthHeaders(requester)),
         encoding: 'application/json',
       })
@@ -375,7 +375,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ input, auth }) => {
       const requester = auth.credentials.did
-      await ctx.appviewAgent.api.app.bsky.graph.unmuteActorList(input.body, {
+      await ctx.appViewAgent.api.app.bsky.graph.unmuteActorList(input.body, {
         ...(await ctx.serviceAuthHeaders(requester)),
         encoding: 'application/json',
       })
@@ -387,7 +387,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
       const res =
-        await ctx.appviewAgent.api.app.bsky.notification.getUnreadCount(
+        await ctx.appViewAgent.api.app.bsky.notification.getUnreadCount(
           params,
           await ctx.serviceAuthHeaders(requester),
         )
@@ -403,7 +403,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
       const res =
-        await ctx.appviewAgent.api.app.bsky.notification.listNotifications(
+        await ctx.appViewAgent.api.app.bsky.notification.listNotifications(
           params,
           await ctx.serviceAuthHeaders(requester),
         )
@@ -418,7 +418,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ input, auth }) => {
       const requester = auth.credentials.did
-      await ctx.appviewAgent.api.app.bsky.notification.updateSeen(input.body, {
+      await ctx.appViewAgent.api.app.bsky.notification.updateSeen(input.body, {
         ...(await ctx.serviceAuthHeaders(requester)),
         encoding: 'application/json',
       })
