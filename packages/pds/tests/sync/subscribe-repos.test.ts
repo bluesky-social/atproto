@@ -44,6 +44,7 @@ describe('repo subscribe repos', () => {
   beforeAll(async () => {
     const server = await runTestServer({
       dbPostgresSchema: 'repo_subscribe_repos',
+      repoBackfillLimitMs: HOUR,
     })
     serverHost = server.url.replace('http://', '')
     ctx = server.ctx
