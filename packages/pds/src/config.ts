@@ -1,52 +1,63 @@
 import { parseIntWithFallback, DAY, HOUR } from '@atproto/common'
 
-export interface ServerConfigValues {
-  debugMode?: boolean
-  version: string
+// off-config but still from env:
+// repo signing key (two flavors?), recovery key
+// logging: LOG_LEVEL, LOG_SYSTEMS, LOG_ENABLED, LOG_DESTINATION
 
-  publicUrl?: string
-  scheme: string
+export interface ServerEnvironment {
+  // infra
   port?: number
   hostname: string
+  version?: string
+  privacyPolicyUrl?: string
+  termsOfServiceUrl?: string
+  serverDid?: string
 
+  // db: one required
+  dbSqliteLocation?: string
   dbPostgresUrl?: string
+  dbPostgresMigrationUrl?: string
   dbPostgresSchema?: string
+  dbPostgresPoolSize?: number
+  dbPostgresPoolMaxUses?: number
+  dbPostgresPoolIdleTimeoutMs?: number
 
-  blobstoreLocation?: string
-  blobstoreTmp?: string
+  // blobstore: one required
+  blobstoreS3Bucket?: string
+  blobstoreDiskLocation?: string
+  blobstoreDiskTmpLocation?: string
 
+  // secrets
   jwtSecret: string
-
-  didPlcUrl: string
-  didCacheStaleTTL: number
-  didCacheMaxTTL: number
-
-  serverDid: string
-  recoveryKey: string
   adminPassword: string
   moderatorPassword?: string
 
-  inviteRequired: boolean
-  userInviteInterval: number | null
-  privacyPolicyUrl?: string
-  termsOfServiceUrl?: string
+  // plc
+  didPlcUrl?: string
+  didCacheStaleTTL?: number
+  didCacheMaxTTL?: number
 
-  databaseLocation?: string
+  // accounts
+  recoveryDidKey: string
+  inviteRequired?: boolean
+  inviteInterval?: number | null
+  handleDomains?: string[] // public hostname by default
 
-  availableUserDomains: string[]
-
-  appUrlPasswordReset: string
+  // email
   emailSmtpUrl?: string
-  emailNoReplyAddress: string
+  emailFromAddress?: string
 
-  maxSubscriptionBuffer: number
-  repoBackfillLimitMs: number
+  // subscription
+  maxSubscriptionBuffer?: number
+  repoBackfillLimitMs?: number
   sequencerLeaderLockId?: number
 
+  // appview
   bskyAppViewEndpoint?: string
   bskyAppViewDid?: string
 
-  crawlersToNotify?: string[]
+  // crawler
+  crawlers?: string[]
 }
 
 export class ServerConfig {
@@ -60,20 +71,12 @@ export class ServerConfig {
   }
 
   static readEnv(overrides?: Partial<ServerConfigValues>) {
-    const debugMode = process.env.DEBUG_MODE === '1'
-    const version = process.env.PDS_VERSION || '0.0.0'
+    const version = nonemptyString(process.env.PDS_VERSION)
 
-    const publicUrl = process.env.PUBLIC_URL || undefined
-    const hostname = process.env.HOSTNAME || 'localhost'
-    let scheme
-    if ('TLS' in process.env) {
-      scheme = process.env.TLS === '1' ? 'https' : 'http'
-    } else {
-      scheme = hostname === 'localhost' ? 'http' : 'https'
-    }
+    const publicUrl = nonemptyString(process.env.PUBLIC_URL)
     const port = parseIntWithFallback(process.env.PORT, 2583)
 
-    const jwtSecret = process.env.JWT_SECRET || 'jwt_secret'
+    const jwtSecret = nonemptyString(process.env.JWT_SECRET)
 
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
     const didCacheStaleTTL = parseIntWithFallback(
@@ -85,11 +88,6 @@ export class ServerConfig {
       DAY,
     )
 
-    const serverDid = overrides?.serverDid || process.env.SERVER_DID
-    if (typeof serverDid !== 'string') {
-      throw new Error('No value provided for process.env.SERVER_DID')
-    }
-
     const recoveryKey = overrides?.recoveryKey || process.env.RECOVERY_KEY
     if (typeof recoveryKey !== 'string') {
       throw new Error('No value provided for process.env.RECOVERY_KEY')
@@ -98,33 +96,26 @@ export class ServerConfig {
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
     const moderatorPassword = process.env.MODERATOR_PASSWORD || undefined
 
-    const inviteRequired = process.env.INVITE_REQUIRED === 'true' ? true : false
+    const inviteRequired = bool(process.env.INVITE_REQUIRED)
     const userInviteInterval = parseIntWithFallback(
       process.env.USER_INVITE_INTERVAL,
       null,
     )
-    const privacyPolicyUrl = process.env.PRIVACY_POLICY_URL
-    const termsOfServiceUrl = process.env.TERMS_OF_SERVICE_URL
+    const privacyPolicyUrl = nonemptyString(process.env.PRIVACY_POLICY_URL)
+    const termsOfServiceUrl = nonemptyString(process.env.TERMS_OF_SERVICE_URL)
 
-    const databaseLocation = process.env.DATABASE_LOC
+    const blobstoreS3Bucket = nonemptyString(process.env.BLOBSTORE_S3_BUCKET)
+    const blobstoreDiskLocation = nonemptyString(
+      process.env.BLOBSTORE_DISK_LOCATION,
+    )
 
-    const blobstoreLocation = process.env.BLOBSTORE_LOC
-    const blobstoreTmp = process.env.BLOBSTORE_TMP
+    const availableUserDomains = commaList(process.env.AVAILABLE_USER_DOMAINS)
 
-    const availableUserDomains = process.env.AVAILABLE_USER_DOMAINS
-      ? process.env.AVAILABLE_USER_DOMAINS.split(',')
-      : []
-
-    const appUrlPasswordReset =
-      process.env.APP_URL_PASSWORD_RESET || 'app://password-reset'
-
-    const emailSmtpUrl = process.env.EMAIL_SMTP_URL || undefined
-
-    const emailNoReplyAddress =
-      process.env.EMAIL_NO_REPLY_ADDRESS || 'noreply@blueskyweb.xyz'
-
-    const dbPostgresUrl = process.env.DB_POSTGRES_URL
-    const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
+    const emailSmtpUrl = nonemptyString(process.env.EMAIL_SMTP_URL)
+    const emailFromAddress = nonemptyString(process.env.EMAIL_FROM_ADDRESS)
+    const dbSqliteLocation = nonemptyString(process.env.DB_SQLITE_LOCATION)
+    const dbPostgresUrl = nonemptyString(process.env.DB_POSTGRES_URL)
+    const dbPostgresSchema = nonemptyString(process.env.DB_POSTGRES_SCHEMA)
 
     const maxSubscriptionBuffer = parseIntWithFallback(
       process.env.MAX_SUBSCRIPTION_BUFFER,
@@ -146,16 +137,11 @@ export class ServerConfig {
     )
     const bskyAppViewDid = nonemptyString(process.env.BSKY_APP_VIEW_DID)
 
-    const crawlersEnv = process.env.CRAWLERS_TO_NOTIFY
-    const crawlersToNotify =
-      crawlersEnv && crawlersEnv.length > 0 ? crawlersEnv.split(',') : []
+    const crawlersToNotify = commaList(process.env.CRAWLERS_TO_NOTIFY)
 
     return new ServerConfig({
-      debugMode,
       version,
       publicUrl,
-      scheme,
-      hostname,
       port,
       dbPostgresUrl,
       dbPostgresSchema,
@@ -166,7 +152,6 @@ export class ServerConfig {
       didPlcUrl,
       didCacheStaleTTL,
       didCacheMaxTTL,
-      serverDid,
       adminPassword,
       moderatorPassword,
       inviteRequired,
@@ -188,37 +173,16 @@ export class ServerConfig {
     })
   }
 
-  get debugMode() {
-    return !!this.cfg.debugMode
-  }
-
   get version() {
     return this.cfg.version
-  }
-
-  get scheme() {
-    return this.cfg.scheme
   }
 
   get port() {
     return this.cfg.port
   }
 
-  get hostname() {
-    return this.cfg.hostname
-  }
-
-  get internalUrl() {
-    return `${this.scheme}://${this.hostname}:${this.port}`
-  }
-
-  get origin() {
-    const u = new URL(this.internalUrl)
-    return u.origin
-  }
-
   get publicUrl() {
-    return this.cfg.publicUrl || this.internalUrl
+    return this.cfg.publicUrl
   }
 
   get publicHostname() {
@@ -302,20 +266,8 @@ export class ServerConfig {
     return this.cfg.termsOfServiceUrl
   }
 
-  get databaseLocation() {
-    return this.cfg.databaseLocation
-  }
-
-  get useMemoryDatabase() {
-    return !this.databaseLocation
-  }
-
   get availableUserDomains() {
     return this.cfg.availableUserDomains
-  }
-
-  get appUrlPasswordReset() {
-    return this.cfg.appUrlPasswordReset
   }
 
   get emailSmtpUrl() {
@@ -354,4 +306,13 @@ export class ServerConfig {
 const nonemptyString = (str: string | undefined): string | undefined => {
   if (str === undefined || str.length === 0) return undefined
   return str
+}
+
+const bool = (str: string | undefined): boolean => {
+  return str === 'true' || str === '1'
+}
+
+const commaList = (str: string | undefined): string[] => {
+  if (str === undefined || str.length === 0) return []
+  return str.split(',')
 }

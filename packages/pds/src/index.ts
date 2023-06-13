@@ -92,7 +92,7 @@ export class PDS {
 
     const backgroundQueue = new BackgroundQueue(db)
     const crawlers = new Crawlers(
-      config.hostname,
+      config.publicHostname,
       config.crawlersToNotify ?? [],
     )
 
@@ -121,7 +121,7 @@ export class PDS {
     })
 
     let server = createServer({
-      validateResponse: config.debugMode,
+      validateResponse: false,
       payload: {
         jsonLimit: 100 * 1024, // 100kb
         textLimit: 100 * 1024, // 100kb

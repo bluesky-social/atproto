@@ -16,7 +16,7 @@ const { Database, ServerConfig, PDS } = require('@atproto/pds')
 const { Secp256k1Keypair } = require('@atproto/crypto')
 
 const main = async () => {
-  const env = getEnv()
+  const env = ServerConfig.getEnv()
   // Migrate using credentialed user
   const migrateDb = Database.postgres({
     url: pgUrl(env.dbMigrateCreds),
@@ -105,11 +105,7 @@ const getEnv = () => ({
   dbPoolMaxUses: maybeParseInt(process.env.DB_POOL_MAX_USES),
   dbPoolIdleTimeoutMs: maybeParseInt(process.env.DB_POOL_IDLE_TIMEOUT_MS),
   smtpHost: process.env.SMTP_HOST,
-  smtpUsername: process.env.SMTP_USERNAME,
-  smtpPassword: process.env.SMTP_PASSWORD,
   s3Bucket: process.env.S3_BUCKET_NAME,
-  cfDistributionId: process.env.CF_DISTRIBUTION_ID,
-  feedPublisherDid: process.env.FEED_PUBLISHER_DID,
 })
 
 const maintainXrpcResource = (span, req) => {

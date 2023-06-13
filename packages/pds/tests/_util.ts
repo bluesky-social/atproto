@@ -71,9 +71,7 @@ export const runTestServer = async (
   const blobstoreLoc = path.join(os.tmpdir(), randomStr(5, 'base32'))
 
   const cfg = new ServerConfig({
-    debugMode: true,
     version: '0.0.0',
-    scheme: 'http',
     hostname: 'localhost',
     serverDid,
     recoveryKey,
