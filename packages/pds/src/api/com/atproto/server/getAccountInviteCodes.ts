@@ -28,17 +28,24 @@ export default function (server: Server, ctx: AppContext) {
 
       // if the user wishes to create available codes & the server allows that,
       // we determine the number to create by dividing their account lifetime by the interval at which they can create codes
+      // if an invite epoch is provided, we only calculate available invites since that epoch
       // we allow a max of 5 open codes at a given time
       // note: even if a user is disabled from future invites, we still create the invites for bookkeeping, we just immediately disable them as well
       const now = new Date().toISOString()
       if (createAvailable && ctx.cfg.userInviteInterval !== null) {
-        const accountLifespan = Date.now() - new Date(user.createdAt).getTime()
+        const userCreatedAt = new Date(user.createdAt).getTime()
+        const epochLifespan =
+          Date.now() - Math.max(userCreatedAt, ctx.cfg.userInviteEpoch)
         const couldCreate = Math.floor(
-          accountLifespan / ctx.cfg.userInviteInterval,
+          epochLifespan / ctx.cfg.userInviteInterval,
+        )
+        const epochCodes = userCodes.filter(
+          (code) =>
+            new Date(code.createdAt).getTime() > ctx.cfg.userInviteEpoch,
         )
         const toCreate = Math.min(
           5 - unusedCodes.length,
-          couldCreate - userCodes.length,
+          couldCreate - epochCodes.length,
         )
         if (toCreate > 0) {
           created = genInvCodes(ctx.cfg, toCreate)

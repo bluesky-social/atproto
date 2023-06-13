@@ -28,6 +28,7 @@ export interface ServerConfigValues {
 
   inviteRequired: boolean
   userInviteInterval: number | null
+  userInviteEpoch: number
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
 
@@ -114,6 +115,11 @@ export class ServerConfig {
       process.env.USER_INVITE_INTERVAL,
       null,
     )
+    const userInviteEpoch = parseIntWithFallback(
+      process.env.USER_INVITE_INTERVAL,
+      0,
+    )
+
     const privacyPolicyUrl = process.env.PRIVACY_POLICY_URL
     const termsOfServiceUrl = process.env.TERMS_OF_SERVICE_URL
 
@@ -196,6 +202,7 @@ export class ServerConfig {
       moderatorPassword,
       inviteRequired,
       userInviteInterval,
+      userInviteEpoch,
       privacyPolicyUrl,
       termsOfServiceUrl,
       databaseLocation,
@@ -313,6 +320,10 @@ export class ServerConfig {
 
   get userInviteInterval() {
     return this.cfg.userInviteInterval
+  }
+
+  get userInviteEpoch() {
+    return this.cfg.userInviteEpoch
   }
 
   get privacyPolicyUrl() {
