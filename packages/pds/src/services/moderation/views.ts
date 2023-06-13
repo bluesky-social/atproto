@@ -16,7 +16,6 @@ import {
   BlobView,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
-import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import { ModerationAction } from '../../db/tables/moderation'
 import { AccountService } from '../account'
 import { RecordService } from '../record'
@@ -119,10 +118,9 @@ export class ModerationViews {
         .execute(),
       this.services.account(this.db).getAccountInviteCodes(repo.did),
     ])
-    const [reports, actions, labels] = await Promise.all([
+    const [reports, actions] = await Promise.all([
       this.report(reportResults),
       this.action(actionResults),
-      this.labels(repo.did),
     ])
     return {
       ...repo,
@@ -132,7 +130,6 @@ export class ModerationViews {
         actions,
       },
       invites: inviteCodes,
-      labels,
     }
   }
 
@@ -238,11 +235,10 @@ export class ModerationViews {
         .selectAll()
         .execute(),
     ])
-    const [reports, actions, blobs, labels] = await Promise.all([
+    const [reports, actions, blobs] = await Promise.all([
       this.report(reportResults),
       this.action(actionResults),
       this.blob(record.blobCids),
-      this.labels(record.uri),
     ])
     return {
       ...record,
@@ -252,7 +248,6 @@ export class ModerationViews {
         reports,
         actions,
       },
-      labels,
     }
   }
 
@@ -556,21 +551,6 @@ export class ModerationViews {
         },
       }
     })
-  }
-
-  // @TODO: call into label service instead on AppView
-  async labels(subject: string, includeNeg?: boolean): Promise<Label[]> {
-    const res = await this.db.db
-      .selectFrom('label')
-      .where('label.uri', '=', subject)
-      .if(!includeNeg, (qb) => qb.where('neg', '=', 0))
-      .selectAll()
-      .execute()
-    return res.map((l) => ({
-      ...l,
-      cid: l.cid === '' ? undefined : l.cid,
-      neg: l.neg === 1,
-    }))
   }
 }
 
