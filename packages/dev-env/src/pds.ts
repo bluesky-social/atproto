@@ -44,6 +44,7 @@ export class TestPds {
       adminPassword: 'admin-pass',
       inviteRequired: false,
       userInviteInterval: null,
+      userInviteEpoch: 0,
       didPlcUrl: cfg.plcUrl,
       didCacheMaxTTL: DAY,
       didCacheStaleTTL: HOUR,
