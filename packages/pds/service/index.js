@@ -11,18 +11,8 @@ require('dd-trace/init') // Only works with commonjs
 
 // Tracer code above must come before anything else
 const path = require('path')
-const {
-  KmsKeypair,
-  S3BlobStore,
-  CloudfrontInvalidator,
-} = require('@atproto/aws')
-const {
-  Database,
-  ServerConfig,
-  PDS,
-  ViewMaintainer,
-  makeAlgos,
-} = require('@atproto/pds')
+const { KmsKeypair, S3BlobStore } = require('@atproto/aws')
+const { Database, ServerConfig, PDS } = require('@atproto/pds')
 const { Secp256k1Keypair } = require('@atproto/crypto')
 
 const main = async () => {
@@ -31,11 +21,9 @@ const main = async () => {
   const migrateDb = Database.postgres({
     url: pgUrl(env.dbMigrateCreds),
     schema: env.dbSchema,
-    // We need one connection for the
-    // view-maintainer lock then one for anything else.
-    poolSize: 2,
   })
   await migrateDb.migrateToLatestOrThrow()
+  await migrateDb.close()
   // Use lower-credentialed user to run the app
   const db = Database.postgres({
     url: pgUrl(env.dbCreds),
@@ -67,29 +55,17 @@ const main = async () => {
       password: env.smtpPassword,
     }),
   })
-  const cfInvalidator = new CloudfrontInvalidator({
-    distributionId: env.cfDistributionId,
-    pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
-  })
-  const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
   const pds = PDS.create({
     db,
     blobstore: s3Blobstore,
     repoSigningKey,
     plcRotationKey,
     config: cfg,
-    imgInvalidator: cfInvalidator,
-    algos,
   })
-  const viewMaintainer = new ViewMaintainer(migrateDb)
-  const viewMaintainerRunning = viewMaintainer.run()
   await pds.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
     await pds.destroy()
-    viewMaintainer.destroy()
-    await viewMaintainerRunning
-    await migrateDb.close()
   })
 }
 
