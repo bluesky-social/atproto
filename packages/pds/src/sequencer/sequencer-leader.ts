@@ -119,6 +119,9 @@ export class SequencerLeader {
   }
 
   async isCaughtUp(): Promise<boolean> {
+    if (this.db.dialect === 'sqlite') {
+      return true
+    }
     const unsequenced = await this.getUnsequenced()
     return unsequenced.length === 0
   }
