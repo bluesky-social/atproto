@@ -116,7 +116,7 @@ export class ServerConfig {
       null,
     )
     const userInviteEpoch = parseIntWithFallback(
-      process.env.USER_INVITE_INTERVAL,
+      process.env.USER_INVITE_EPOCH,
       0,
     )
 
