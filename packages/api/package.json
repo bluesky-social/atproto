@@ -29,6 +29,6 @@
   },
   "devDependencies": {
     "@atproto/lex-cli": "*",
-    "@atproto/pds": "*"
+    "@atproto/pds": "* | >=0.2.0-beta.0"
   }
 }

@@ -25,7 +25,7 @@
     "@atproto/bsky": "*",
     "@atproto/crypto": "*",
     "@atproto/identity": "*",
-    "@atproto/pds": "*",
+    "@atproto/pds": "* | >=0.2.0-beta.0",
     "@atproto/uri": "*",
     "@atproto/xrpc-server": "*",
     "@did-plc/lib": "^0.0.1",

@@ -60,7 +60,7 @@
     "@atproto/api": "*",
     "@atproto/dev-env": "*",
     "@atproto/lex-cli": "*",
-    "@atproto/pds": "*",
+    "@atproto/pds": "* | >=0.2.0-beta.0",
     "@atproto/xrpc": "*",
     "@did-plc/server": "^0.0.1",
     "@types/cors": "^2.8.12",
