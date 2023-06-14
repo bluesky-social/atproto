@@ -121,7 +121,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   }
 
   const bskyAppViewCfg: ServerConfig['bskyAppView'] = {
-    endpoint: env.bskyAppViewEndpoint ?? 'https://api.bsky-sandbox.dev',
+    url: env.bskyAppViewUrl ?? 'https://api.bsky-sandbox.dev',
     did: env.bskyAppViewDid ?? 'did:plc:abc', // get real did
   }
 
@@ -222,6 +222,6 @@ export type SubscriptionConfig = {
 }
 
 export type BksyAppViewConfig = {
-  endpoint: string
+  url: string
   did: string
 }

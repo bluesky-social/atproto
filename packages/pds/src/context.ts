@@ -125,7 +125,7 @@ export class AppContext {
     const backgroundQueue = new BackgroundQueue(db)
     const crawlers = new Crawlers(cfg.service.hostname, cfg.crawlers)
 
-    const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.endpoint })
+    const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
 
     const auth = new ServerAuth({
       jwtSecret: secrets.jwtSecret,

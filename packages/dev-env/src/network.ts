@@ -43,7 +43,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       dbPostgresUrl,
       dbPostgresSchema,
       didPlcUrl: plc.url,
-      bskyAppViewEndpoint: bsky.url,
+      bskyAppViewUrl: bsky.url,
       bskyAppViewDid: bsky.ctx.cfg.serverDid,
       ...params.pds,
     })

@@ -54,7 +54,7 @@ export const readEnv = (): ServerEnvironment => {
     sequencerLeaderLockId: envInt(process.env.PDS_SEQUENCER_LEADER_LOCK_ID),
 
     // appview
-    bskyAppViewEndpoint: envStr(process.env.PDS_BSKY_APP_VIEW_ENDPOINT),
+    bskyAppViewUrl: envStr(process.env.PDS_BSKY_APP_VIEW_URL),
     bskyAppViewDid: envStr(process.env.PDS_BSKY_APP_VIEW_DID),
 
     // crawlers
@@ -126,7 +126,7 @@ export type ServerEnvironment = {
   sequencerLeaderLockId?: number
 
   // appview
-  bskyAppViewEndpoint?: string
+  bskyAppViewUrl?: string
   bskyAppViewDid?: string
 
   // crawler
