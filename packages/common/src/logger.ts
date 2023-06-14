@@ -7,7 +7,7 @@ const enabledSystems = (process.env.LOG_SYSTEMS || '')
 
 const enabledEnv = process.env.LOG_ENABLED
 const enabled =
-  enabledEnv === 'true' || enabledEnv === 't' || enabledEnv === '1'
+  enabledEnv !== 'false' && enabledEnv !== 'f' && enabledEnv !== '0'
 
 const level = process.env.LOG_LEVEL || 'info'
 
