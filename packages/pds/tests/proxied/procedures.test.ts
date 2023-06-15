@@ -93,6 +93,8 @@ describe('proxies appview procedures', () => {
       },
       sc.getHeaders(carol),
     )
+    await network.processAll()
+
     // mute lists
     await agent.api.app.bsky.graph.muteActorList(
       { list: bobList.uri },
