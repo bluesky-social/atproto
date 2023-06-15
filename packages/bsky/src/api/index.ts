@@ -36,13 +36,14 @@ import resolveModerationReports from './com/atproto/admin/resolveModerationRepor
 import reverseModerationAction from './com/atproto/admin/reverseModerationAction'
 import takeModerationAction from './com/atproto/admin/takeModerationAction'
 import searchRepos from './com/atproto/admin/searchRepos'
-import getRecord from './com/atproto/admin/getRecord'
+import adminGetRecord from './com/atproto/admin/getRecord'
 import getRepo from './com/atproto/admin/getRepo'
 import getModerationAction from './com/atproto/admin/getModerationAction'
 import getModerationActions from './com/atproto/admin/getModerationActions'
 import getModerationReport from './com/atproto/admin/getModerationReport'
 import getModerationReports from './com/atproto/admin/getModerationReports'
 import resolveHandle from './com/atproto/identity/resolveHandle'
+import getRecord from './com/atproto/repo/getRecord'
 
 export * as health from './health'
 
@@ -87,12 +88,13 @@ export default function (server: Server, ctx: AppContext) {
   reverseModerationAction(server, ctx)
   takeModerationAction(server, ctx)
   searchRepos(server, ctx)
-  getRecord(server, ctx)
+  adminGetRecord(server, ctx)
   getRepo(server, ctx)
   getModerationAction(server, ctx)
   getModerationActions(server, ctx)
   getModerationReport(server, ctx)
   getModerationReports(server, ctx)
   resolveHandle(server, ctx)
+  getRecord(server, ctx)
   return server
 }
