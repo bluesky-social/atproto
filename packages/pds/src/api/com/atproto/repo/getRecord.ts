@@ -1,4 +1,3 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/uri'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
@@ -8,23 +7,28 @@ export default function (server: Server, ctx: AppContext) {
     const { repo, collection, rkey, cid } = params
     const did = await ctx.services.account(ctx.db).getDidForActor(repo)
 
-    if (!did) {
-      throw new InvalidRequestError(`Could not find repo: ${repo}`)
+    // fetch from pds if available, if not then fetch from appview
+    if (did) {
+      const uri = AtUri.make(did, collection, rkey)
+      const record = await ctx.services
+        .record(ctx.db)
+        .getRecord(uri, cid || null)
+      if (record) {
+        return {
+          encoding: 'application/json',
+          body: {
+            uri: record.uri,
+            cid: record.cid,
+            value: record.value,
+          },
+        }
+      }
     }
 
-    const uri = AtUri.make(did, collection, rkey)
-
-    const record = await ctx.services.record(ctx.db).getRecord(uri, cid || null)
-    if (!record) {
-      throw new InvalidRequestError(`Could not locate record: ${uri}`)
-    }
+    const res = await ctx.appViewAgent.api.com.atproto.repo.getRecord(params)
     return {
       encoding: 'application/json',
-      body: {
-        uri: record.uri,
-        cid: record.cid,
-        value: record.value,
-      },
+      body: res.data,
     }
   })
 }

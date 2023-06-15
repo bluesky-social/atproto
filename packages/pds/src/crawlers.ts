@@ -21,7 +21,7 @@ export class Crawlers {
     await Promise.all(
       this.agents.map(async (agent) => {
         try {
-          await agent.api.com.atproto.sync.notifyOfUpdate({
+          await agent.api.com.atproto.sync.requestCrawl({
             hostname: this.hostname,
           })
         } catch (err) {
