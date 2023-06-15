@@ -92,13 +92,13 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     serviceHandleDomains,
   }
 
-  const invitesCfg: ServerConfig['invites'] = env.inviteRequired
+  const invitesCfg: ServerConfig['invites'] = !env.inviteRequired
     ? {
-        required: true,
-        interval: env.inviteInterval ?? null,
+        required: false,
       }
     : {
-        required: false,
+        required: true,
+        interval: env.inviteInterval ?? null,
       }
 
   let emailCfg: ServerConfig['email']

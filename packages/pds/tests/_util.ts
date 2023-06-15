@@ -78,6 +78,7 @@ export const runTestServer = async (
     adminPassword: ADMIN_PASSWORD,
     moderatorPassword: MODERATOR_PASSWORD,
     jwtSecret: 'jwt-secret',
+    inviteRequired: false,
     ...params,
   }
 

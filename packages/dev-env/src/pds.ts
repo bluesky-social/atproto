@@ -39,6 +39,7 @@ export class TestPds {
       sequencerLeaderLockId: uniqueLockId(),
       repoSigningKeyK256PrivateKeyHex: repoSigningPriv,
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
+      inviteRequired: false,
       ...config,
     }
     const cfg = pds.envToCfg(env)
