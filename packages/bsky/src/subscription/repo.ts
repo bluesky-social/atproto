@@ -18,7 +18,6 @@ import AppContext from '../context'
 import { Leader } from '../db/leader'
 import { subLogger } from '../logger'
 import { ConsecutiveList, LatestQueue, PartitionedQueue } from './util'
-import { IndexingService } from '../services/indexing'
 import { ValidationError } from '@atproto/lexicon'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
@@ -131,9 +130,9 @@ export class RepoSubscription {
 
   private async handleCommit(msg: message.Commit) {
     const { db, services } = this.ctx
-    const { root, rootCid, ops } = await getOps(msg)
     const indexingService = services.indexing(db)
     const indexRecords = async () => {
+      const { root, rootCid, ops } = await getOps(msg)
       if (msg.tooBig) {
         return await indexingService.indexRepo(msg.repo, rootCid.toString())
       }
@@ -173,12 +172,13 @@ export class RepoSubscription {
           }
         }
       }
+      await indexingService.setCommitLastSeen(root, msg)
     }
-    await Promise.all([
+    const results = await Promise.allSettled([
       indexRecords(),
       indexingService.indexHandle(msg.repo, msg.time),
     ])
-    await indexingService.setCommitLastSeen(root, msg)
+    handleAllSettledErrors(results)
   }
 
   private async handleUpdateHandle(msg: message.Handle) {
@@ -399,4 +399,24 @@ function getMessageDetails(msg: Message):
     return { info: msg }
   }
   return { info: null }
+}
+
+function handleAllSettledErrors(results: PromiseSettledResult<unknown>[]) {
+  const errors = results.filter(isRejected).map((res) => res.reason)
+  if (errors.length === 0) {
+    return
+  }
+  if (errors.length === 1) {
+    throw errors[0]
+  }
+  throw new AggregateError(
+    errors,
+    'Multiple errors: ' + errors.map((err) => err?.message).join('\n'),
+  )
+}
+
+function isRejected(
+  result: PromiseSettledResult<unknown>,
+): result is PromiseRejectedResult {
+  return result.status === 'rejected'
 }

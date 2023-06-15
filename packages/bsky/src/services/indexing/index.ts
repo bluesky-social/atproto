@@ -11,7 +11,7 @@ import {
 } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { IdResolver, getPds } from '@atproto/identity'
-import { chunkArray } from '@atproto/common'
+import { DAY, chunkArray } from '@atproto/common'
 import { ValidationError } from '@atproto/lexicon'
 import Database from '../../db'
 import * as Post from './plugins/post'
@@ -118,7 +118,13 @@ export class IndexingService {
       .where('did', '=', did)
       .selectAll()
       .executeTakeFirst()
-    if (actor && !force) {
+    const timestampAt = new Date(timestamp)
+    const lastIndexedAt = actor && new Date(actor.indexedAt)
+    const needsReindex =
+      force ||
+      !lastIndexedAt ||
+      timestampAt.getTime() - lastIndexedAt.getTime() > DAY
+    if (!needsReindex) {
       return
     }
     const { handle } = await this.idResolver.did.resolveAtprotoData(did, true)
