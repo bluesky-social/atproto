@@ -14,9 +14,9 @@ export type PostInfo = {
   creator: string
   recordJson: string
   indexedAt: string
-  likeCount: number
-  repostCount: number
-  replyCount: number
+  likeCount: number | null
+  repostCount: number | null
+  replyCount: number | null
   requesterRepost: string | null
   requesterLike: string | null
   viewer: string | null

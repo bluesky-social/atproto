@@ -10,5 +10,5 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropIndex('user_notification_record_idx').execute()
+  await db.schema.dropIndex('notification_record_idx').execute()
 }

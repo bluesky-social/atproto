@@ -7,8 +7,18 @@ import { PostView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPosts({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
+    handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const res = await ctx.appviewAgent.api.app.bsky.feed.getPosts(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
 
       const feedService = ctx.services.appView.feed(ctx.db)
       const labelService = ctx.services.appView.label(ctx.db)
@@ -19,10 +29,10 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       const [actors, postViews, embeds, labels] = await Promise.all([
-        feedService.getActorViews(Array.from(dids), requester),
-        feedService.getPostViews(Array.from(uris), requester),
-        feedService.embedsForPosts(Array.from(uris), requester),
-        labelService.getLabelsForUris(Array.from(uris)),
+        feedService.getActorViews(dids, requester, { skipLabels: true }),
+        feedService.getPostViews(uris, requester),
+        feedService.embedsForPosts(uris, requester),
+        labelService.getLabelsForSubjects([...uris, ...dids]),
       ])
 
       const posts: PostView[] = []

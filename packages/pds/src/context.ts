@@ -1,6 +1,9 @@
+import express from 'express'
 import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
+import { AtpAgent } from '@atproto/api'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { Database } from './db'
 import { ServerConfig } from './config'
 import * as auth from './auth'
@@ -9,13 +12,16 @@ import { BlobStore } from '@atproto/repo'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import { MessageDispatcher } from './event-stream/message-queue'
-import Sequencer from './sequencer'
+import { Sequencer, SequencerLeader } from './sequencer'
 import { Labeler } from './labeler'
 import { BackgroundQueue } from './event-stream/background-queue'
 import DidSqlCache from './did-cache'
 import { MountedAlgos } from './feed-gen/types'
+import { Crawlers } from './crawlers'
 
 export class AppContext {
+  private _appviewAgent: AtpAgent | null
+
   constructor(
     private opts: {
       db: Database
@@ -31,11 +37,19 @@ export class AppContext {
       services: Services
       messageDispatcher: MessageDispatcher
       sequencer: Sequencer
+      sequencerLeader: SequencerLeader
       labeler: Labeler
       backgroundQueue: BackgroundQueue
+      crawlers: Crawlers
       algos: MountedAlgos
     },
-  ) {}
+  ) {
+    this._appviewAgent = opts.cfg.bskyAppViewEndpoint
+      ? new AtpAgent({
+          service: opts.cfg.bskyAppViewEndpoint,
+        })
+      : null
+  }
 
   get db(): Database {
     return this.opts.db
@@ -105,12 +119,20 @@ export class AppContext {
     return this.opts.sequencer
   }
 
+  get sequencerLeader(): SequencerLeader {
+    return this.opts.sequencerLeader
+  }
+
   get labeler(): Labeler {
     return this.opts.labeler
   }
 
   get backgroundQueue(): BackgroundQueue {
     return this.opts.backgroundQueue
+  }
+
+  get crawlers(): Crawlers {
+    return this.opts.crawlers
   }
 
   get plcClient(): plc.Client {
@@ -127,6 +149,32 @@ export class AppContext {
 
   get algos(): MountedAlgos {
     return this.opts.algos
+  }
+
+  async serviceAuthHeaders(did: string, audience?: string) {
+    const aud = audience ?? this.cfg.bskyAppViewDid
+    if (!aud) {
+      throw new Error('Could not find bsky appview did')
+    }
+    return createServiceAuthHeaders({
+      iss: did,
+      aud,
+      keypair: this.repoSigningKey,
+    })
+  }
+
+  get appviewAgent(): AtpAgent {
+    if (!this._appviewAgent) {
+      throw new Error('Could not find bsky appview endpoint')
+    }
+    return this._appviewAgent
+  }
+
+  canProxy(req: express.Request): boolean {
+    return (
+      this.cfg.bskyAppViewEndpoint !== undefined &&
+      req.get('x-appview-proxy') !== undefined
+    )
   }
 }
 

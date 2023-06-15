@@ -19,6 +19,7 @@ import { WebSocket } from 'ws'
 import {
   Commit as CommitEvt,
   Handle as HandleEvt,
+  Tombstone as TombstoneEvt,
 } from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
 import { AppContext, Database } from '../../src'
 import { SeedClient } from '../seeds/client'
@@ -84,7 +85,7 @@ describe('repo subscribe repos', () => {
     return evts
   }
 
-  const getTombstoneEvts = (frames: Frame[]): HandleEvt[] => {
+  const getTombstoneEvts = (frames: Frame[]): TombstoneEvt[] => {
     const evts: TombstoneEvt[] = []
     for (const frame of frames) {
       if (frame instanceof MessageFrame && frame.header.t === '#tombstone') {
@@ -94,17 +95,17 @@ describe('repo subscribe repos', () => {
     return evts
   }
 
-  const verifyHandleEvent = (evt: HandleEvt, did: string, handle: string) => {
-    expect(evt.did).toBe(did)
-    expect(evt.handle).toBe(handle)
-    expect(typeof evt.time).toBe('string')
-    expect(typeof evt.seq).toBe('number')
+  const verifyHandleEvent = (evt: unknown, did: string, handle: string) => {
+    expect(evt?.['did']).toBe(did)
+    expect(evt?.['handle']).toBe(handle)
+    expect(typeof evt?.['time']).toBe('string')
+    expect(typeof evt?.['seq']).toBe('number')
   }
 
-  const verifyTombstoneEvent = (evt: TombstoneEvt, did: string) => {
-    expect(evt.did).toBe(did)
-    expect(typeof evt.time).toBe('string')
-    expect(typeof evt.seq).toBe('number')
+  const verifyTombstoneEvent = (evt: unknown, did: string) => {
+    expect(evt?.['did']).toBe(did)
+    expect(typeof evt?.['time']).toBe('string')
+    expect(typeof evt?.['seq']).toBe('number')
   }
 
   const getCommitEvents = (userDid: string, frames: Frame[]) => {
@@ -121,7 +122,7 @@ describe('repo subscribe repos', () => {
   }
 
   const getAllEvents = (userDid: string, frames: Frame[]) => {
-    const types = []
+    const types: unknown[] = []
     for (const frame of frames) {
       if (frame instanceof MessageFrame) {
         if (
@@ -196,8 +197,11 @@ describe('repo subscribe repos', () => {
     const isDone = async (evt: any) => {
       if (evt === undefined) return false
       if (evt instanceof ErrorFrame) return true
+      const caughtUp = await ctx.sequencerLeader.isCaughtUp()
+      if (!caughtUp) return false
       const curr = await db.db
         .selectFrom('repo_seq')
+        .where('seq', 'is not', null)
         .select('seq')
         .limit(1)
         .orderBy('seq', 'desc')
@@ -267,6 +271,7 @@ describe('repo subscribe repos', () => {
   it('backfills only from provided cursor', async () => {
     const seqs = await db.db
       .selectFrom('repo_seq')
+      .where('seq', 'is not', null)
       .selectAll()
       .orderBy('seq', 'asc')
       .execute()
@@ -314,8 +319,6 @@ describe('repo subscribe repos', () => {
         email: 'baddie1@test.com',
         handle: 'baddie1.test',
         password: 'baddie1-pass',
-        displayName: undefined,
-        description: undefined,
       })
     ).did
     const baddie2 = (
@@ -323,8 +326,6 @@ describe('repo subscribe repos', () => {
         email: 'baddie2@test.com',
         handle: 'baddie2.test',
         password: 'baddie2-pass',
-        displayName: undefined,
-        description: undefined,
       })
     ).did
 
@@ -353,8 +354,6 @@ describe('repo subscribe repos', () => {
         email: 'baddie3@test.com',
         handle: 'baddie3.test',
         password: 'baddie3-pass',
-        displayName: undefined,
-        description: undefined,
       })
     ).did
 

@@ -36,15 +36,16 @@ const handler: AlgoHandler = async (
 
   let feedQb = feedService
     .selectFeedItemQb()
+    .where('feed_item.type', '=', 'post') // ensures originatorDid is post.creator
     .where((qb) =>
       qb
-        .where('post.creator', '=', requester)
-        .orWhere('post.creator', 'in', mutualsSubquery),
+        .where('originatorDid', '=', requester)
+        .orWhere('originatorDid', 'in', mutualsSubquery),
     )
     .where((qb) =>
-      accountService.whereNotMuted(qb, requester, [ref('post.creator')]),
+      accountService.whereNotMuted(qb, requester, [ref('originatorDid')]),
     )
-    .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
+    .whereNotExists(graphService.blockQb(requester, [ref('originatorDid')]))
     .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom))
 
   feedQb = paginate(feedQb, { limit, cursor, keyset })

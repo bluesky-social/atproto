@@ -15,6 +15,14 @@ export class ActorService {
 
   views = new ActorViews(this.db, this.imgUriBuilder)
 
+  async getActorDid(handleOrDid: string): Promise<string | null> {
+    if (handleOrDid.startsWith('did:')) {
+      return handleOrDid
+    }
+    const subject = await this.getActor(handleOrDid, true)
+    return subject?.did ?? null
+  }
+
   async getActor(
     handleOrDid: string,
     includeSoftDeleted = false,
@@ -64,9 +72,16 @@ export class ActorService {
     })
   }
 
-  searchQb(term?: string) {
+  searchQb(searchField: 'did' | 'handle' = 'handle', term?: string) {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('actor')
+
+    // When searchField === 'did', the term will always be a valid string because
+    // searchField is set to 'did' after checking that the term is a valid did
+    if (searchField === 'did' && term) {
+      return builder.where('actor.did', '=', term)
+    }
+
     if (term) {
       builder = builder.where((qb) => {
         // Performing matching by word using "strict word similarity" operator.

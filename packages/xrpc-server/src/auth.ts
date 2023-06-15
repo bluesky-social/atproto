@@ -44,7 +44,7 @@ const jsonToB64Url = (json: Record<string, unknown>): string => {
 
 export const verifyJwt = async (
   jwtStr: string,
-  ownDid: string,
+  ownDid: string | null, // null indicates to skip the audience check
   getSigningKey: (did: string) => Promise<string>,
 ): Promise<string> => {
   const parts = jwtStr.split('.')
@@ -57,7 +57,7 @@ export const verifyJwt = async (
   if (Date.now() / 1000 > payload.exp) {
     throw new AuthRequiredError('jwt expired', 'JwtExpired')
   }
-  if (payload.aud !== ownDid) {
+  if (ownDid !== null && payload.aud !== ownDid) {
     throw new AuthRequiredError(
       'jwt audience does not match service did',
       'BadJwtAudience',

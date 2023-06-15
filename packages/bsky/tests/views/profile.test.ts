@@ -27,6 +27,7 @@ describe('pds profile views', () => {
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     await network.processAll()
+    await network.bsky.ctx.backgroundQueue.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan

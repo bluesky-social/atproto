@@ -25,9 +25,20 @@ export type PostThread = {
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
-      const { uri, depth, parentHeight } = params
+    handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const res = await ctx.appviewAgent.api.app.bsky.feed.getPostThread(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
+      const { uri, depth, parentHeight } = params
 
       const feedService = ctx.services.appView.feed(ctx.db)
       const labelService = ctx.services.appView.label(ctx.db)
@@ -43,7 +54,9 @@ export default function (server: Server, ctx: AppContext) {
       }
       const relevant = getRelevantIds(threadData)
       const [actors, posts, embeds, labels] = await Promise.all([
-        feedService.getActorViews(Array.from(relevant.dids), requester, true),
+        feedService.getActorViews(Array.from(relevant.dids), requester, {
+          skipLabels: true,
+        }),
         feedService.getPostViews(Array.from(relevant.uris), requester),
         feedService.embedsForPosts(Array.from(relevant.uris), requester),
         labelService.getLabelsForSubjects([...relevant.uris, ...relevant.dids]),

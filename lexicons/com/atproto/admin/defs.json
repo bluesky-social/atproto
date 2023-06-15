@@ -4,33 +4,48 @@
   "defs": {
     "actionView": {
       "type": "object",
-      "required": ["id", "action", "subject", "subjectBlobCids", "reason", "createdBy", "createdAt", "resolvedReportIds"],
+      "required": [
+        "id",
+        "action",
+        "subject",
+        "subjectBlobCids",
+        "reason",
+        "createdBy",
+        "createdAt",
+        "resolvedReportIds"
+      ],
       "properties": {
-        "id": {"type": "integer"},
-        "action": {"type": "ref", "ref": "#actionType"},
+        "id": { "type": "integer" },
+        "action": { "type": "ref", "ref": "#actionType" },
         "subject": {
           "type": "union",
-          "refs": [
-            "#repoRef",
-            "com.atproto.repo.strongRef"
-          ]
+          "refs": ["#repoRef", "com.atproto.repo.strongRef"]
         },
-        "subjectBlobCids": {"type": "array", "items": {"type": "string"}},
-        "createLabelVals": {"type": "array", "items": {"type": "string"}},
-        "negateLabelVals": {"type": "array", "items": {"type": "string"}},
-        "reason": {"type": "string"},
-        "createdBy": {"type": "string", "format": "did"},
-        "createdAt": {"type": "string", "format": "datetime"},
-        "reversal": {"type": "ref", "ref": "#actionReversal"},
-        "resolvedReportIds": {"type": "array", "items": {"type": "integer"}}
+        "subjectBlobCids": { "type": "array", "items": { "type": "string" } },
+        "createLabelVals": { "type": "array", "items": { "type": "string" } },
+        "negateLabelVals": { "type": "array", "items": { "type": "string" } },
+        "reason": { "type": "string" },
+        "createdBy": { "type": "string", "format": "did" },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "reversal": { "type": "ref", "ref": "#actionReversal" },
+        "resolvedReportIds": { "type": "array", "items": { "type": "integer" } }
       }
     },
     "actionViewDetail": {
       "type": "object",
-      "required": ["id", "action", "subject", "subjectBlobs", "reason", "createdBy", "createdAt", "resolvedReports"],
+      "required": [
+        "id",
+        "action",
+        "subject",
+        "subjectBlobs",
+        "reason",
+        "createdBy",
+        "createdAt",
+        "resolvedReports"
+      ],
       "properties": {
-        "id": {"type": "integer"},
-        "action": {"type": "ref", "ref": "#actionType"},
+        "id": { "type": "integer" },
+        "action": { "type": "ref", "ref": "#actionType" },
         "subject": {
           "type": "union",
           "refs": [
@@ -40,41 +55,42 @@
             "#recordViewNotFound"
           ]
         },
-        "subjectBlobs": {"type": "array", "items": {"type": "ref", "ref": "#blobView"}},
-        "createLabelVals": {"type": "array", "items": {"type": "string"}},
-        "negateLabelVals": {"type": "array", "items": {"type": "string"}},
-        "reason": {"type": "string"},
-        "createdBy": {"type": "string", "format": "did"},
-        "createdAt": {"type": "string", "format": "datetime"},
-        "reversal": {"type": "ref", "ref": "#actionReversal"},
-        "resolvedReports": {"type": "array", "items": {"type": "ref", "ref": "#reportView"}}
+        "subjectBlobs": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#blobView" }
+        },
+        "createLabelVals": { "type": "array", "items": { "type": "string" } },
+        "negateLabelVals": { "type": "array", "items": { "type": "string" } },
+        "reason": { "type": "string" },
+        "createdBy": { "type": "string", "format": "did" },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "reversal": { "type": "ref", "ref": "#actionReversal" },
+        "resolvedReports": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#reportView" }
+        }
       }
     },
     "actionViewCurrent": {
       "type": "object",
       "required": ["id", "action"],
       "properties": {
-        "id": {"type": "integer"},
-        "action": {"type": "ref", "ref": "#actionType"}
+        "id": { "type": "integer" },
+        "action": { "type": "ref", "ref": "#actionType" }
       }
     },
     "actionReversal": {
       "type": "object",
       "required": ["reason", "createdBy", "createdAt"],
       "properties": {
-        "reason": {"type": "string"},
-        "createdBy": {"type": "string", "format": "did"},
-        "createdAt": {"type": "string", "format": "datetime"}
+        "reason": { "type": "string" },
+        "createdBy": { "type": "string", "format": "did" },
+        "createdAt": { "type": "string", "format": "datetime" }
       }
     },
     "actionType": {
       "type": "string",
-      "knownValues": [
-        "#takedown",
-        "#flag",
-        "#acknowledge",
-        "#escalate"
-      ]
+      "knownValues": ["#takedown", "#flag", "#acknowledge", "#escalate"]
     },
     "takedown": {
       "type": "token",
@@ -94,30 +110,51 @@
     },
     "reportView": {
       "type": "object",
-      "required": ["id", "reasonType", "subject", "reportedBy", "createdAt", "resolvedByActionIds"],
+      "required": [
+        "id",
+        "reasonType",
+        "subject",
+        "reportedBy",
+        "createdAt",
+        "resolvedByActionIds"
+      ],
       "properties": {
-        "id": {"type": "integer"},
-        "reasonType": {"type": "ref", "ref": "com.atproto.moderation.defs#reasonType"},
-        "reason": {"type": "string"},
+        "id": { "type": "integer" },
+        "reasonType": {
+          "type": "ref",
+          "ref": "com.atproto.moderation.defs#reasonType"
+        },
+        "reason": { "type": "string" },
+        "subjectRepoHandle": { "type": "string" },
         "subject": {
           "type": "union",
-          "refs": [
-            "#repoRef",
-            "com.atproto.repo.strongRef"
-          ]
+          "refs": ["#repoRef", "com.atproto.repo.strongRef"]
         },
-        "reportedBy": {"type": "string", "format": "did"},
-        "createdAt": {"type": "string", "format": "datetime"},
-        "resolvedByActionIds": {"type": "array", "items": {"type": "integer"}}
+        "reportedBy": { "type": "string", "format": "did" },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "resolvedByActionIds": {
+          "type": "array",
+          "items": { "type": "integer" }
+        }
       }
     },
     "reportViewDetail": {
       "type": "object",
-      "required": ["id", "reasonType", "subject", "reportedBy", "createdAt", "resolvedByActions"],
+      "required": [
+        "id",
+        "reasonType",
+        "subject",
+        "reportedBy",
+        "createdAt",
+        "resolvedByActions"
+      ],
       "properties": {
-        "id": {"type": "integer"},
-        "reasonType": {"type": "ref", "ref": "com.atproto.moderation.defs#reasonType"},
-        "reason": {"type": "string"},
+        "id": { "type": "integer" },
+        "reasonType": {
+          "type": "ref",
+          "ref": "com.atproto.moderation.defs#reasonType"
+        },
+        "reason": { "type": "string" },
         "subject": {
           "type": "union",
           "refs": [
@@ -127,144 +164,196 @@
             "#recordViewNotFound"
           ]
         },
-        "reportedBy": {"type": "string", "format": "did"},
-        "createdAt": {"type": "string", "format": "datetime"},
-        "resolvedByActions": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.defs#actionView"}}
+        "reportedBy": { "type": "string", "format": "did" },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "resolvedByActions": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.admin.defs#actionView" }
+        }
       }
     },
     "repoView": {
       "type": "object",
-      "required": ["did", "handle", "relatedRecords", "indexedAt", "moderation"],
+      "required": [
+        "did",
+        "handle",
+        "relatedRecords",
+        "indexedAt",
+        "moderation"
+      ],
       "properties": {
-        "did": {"type": "string", "format": "did"},
-        "handle": {"type": "string", "format": "handle"},
-        "email": {"type": "string"},
-        "relatedRecords": {"type": "array", "items": {"type": "unknown"}},
-        "indexedAt": {"type": "string", "format": "datetime"},
-        "moderation": {"type": "ref", "ref": "#moderation"},
-        "invitedBy": {"type": "ref", "ref": "com.atproto.server.defs#inviteCode"},
-        "invitesDisabled": {"type": "boolean"}
+        "did": { "type": "string", "format": "did" },
+        "handle": { "type": "string", "format": "handle" },
+        "email": { "type": "string" },
+        "relatedRecords": { "type": "array", "items": { "type": "unknown" } },
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "moderation": { "type": "ref", "ref": "#moderation" },
+        "invitedBy": {
+          "type": "ref",
+          "ref": "com.atproto.server.defs#inviteCode"
+        },
+        "invitesDisabled": { "type": "boolean" }
       }
     },
     "repoViewDetail": {
       "type": "object",
-      "required": ["did", "handle", "relatedRecords", "indexedAt", "moderation"],
+      "required": [
+        "did",
+        "handle",
+        "relatedRecords",
+        "indexedAt",
+        "moderation"
+      ],
       "properties": {
-        "did": {"type": "string", "format": "did"},
-        "handle": {"type": "string", "format": "handle"},
-        "email": {"type": "string"},
-        "relatedRecords": {"type": "array", "items": {"type": "unknown"}},
-        "indexedAt": {"type": "string", "format": "datetime"},
-        "moderation": {"type": "ref", "ref": "#moderationDetail"},
+        "did": { "type": "string", "format": "did" },
+        "handle": { "type": "string", "format": "handle" },
+        "email": { "type": "string" },
+        "relatedRecords": { "type": "array", "items": { "type": "unknown" } },
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "moderation": { "type": "ref", "ref": "#moderationDetail" },
         "labels": {
           "type": "array",
-          "items": {"type": "ref", "ref": "com.atproto.label.defs#label"}
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         },
-        "invitedBy": {"type": "ref", "ref": "com.atproto.server.defs#inviteCode"},
+        "invitedBy": {
+          "type": "ref",
+          "ref": "com.atproto.server.defs#inviteCode"
+        },
         "invites": {
           "type": "array",
-          "items": {"type": "ref", "ref": "com.atproto.server.defs#inviteCode"}
+          "items": {
+            "type": "ref",
+            "ref": "com.atproto.server.defs#inviteCode"
+          }
         },
-        "invitesDisabled": {"type": "boolean"}
+        "invitesDisabled": { "type": "boolean" }
       }
     },
     "repoViewNotFound": {
       "type": "object",
       "required": ["did"],
       "properties": {
-        "did": {"type": "string", "format": "did"}
+        "did": { "type": "string", "format": "did" }
       }
     },
     "repoRef": {
       "type": "object",
       "required": ["did"],
       "properties": {
-        "did": {"type": "string", "format": "did"}
+        "did": { "type": "string", "format": "did" }
       }
     },
     "recordView": {
       "type": "object",
-      "required": ["uri", "cid", "value", "blobCids", "indexedAt", "moderation", "repo"],
+      "required": [
+        "uri",
+        "cid",
+        "value",
+        "blobCids",
+        "indexedAt",
+        "moderation",
+        "repo"
+      ],
       "properties": {
-        "uri": {"type": "string", "format": "at-uri"},
-        "cid": {"type": "string", "format": "cid"},
-        "value": {"type": "unknown"},
-        "blobCids": {"type": "array", "items": {"type": "string", "format": "cid"}},
-        "indexedAt": {"type": "string", "format": "datetime"},
-        "moderation": {"type": "ref", "ref": "#moderation"},
-        "repo": {"type": "ref", "ref": "#repoView"}
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "value": { "type": "unknown" },
+        "blobCids": {
+          "type": "array",
+          "items": { "type": "string", "format": "cid" }
+        },
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "moderation": { "type": "ref", "ref": "#moderation" },
+        "repo": { "type": "ref", "ref": "#repoView" }
       }
     },
     "recordViewDetail": {
       "type": "object",
-      "required": ["uri", "cid", "value", "blobs", "indexedAt", "moderation", "repo"],
+      "required": [
+        "uri",
+        "cid",
+        "value",
+        "blobs",
+        "indexedAt",
+        "moderation",
+        "repo"
+      ],
       "properties": {
-        "uri": {"type": "string", "format": "at-uri"},
-        "cid": {"type": "string", "format": "cid"},
-        "value": {"type": "unknown"},
-        "blobs": {"type": "array", "items": {"type": "ref", "ref": "#blobView"}},
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "value": { "type": "unknown" },
+        "blobs": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#blobView" }
+        },
         "labels": {
           "type": "array",
-          "items": {"type": "ref", "ref": "com.atproto.label.defs#label"}
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         },
-        "indexedAt": {"type": "string", "format": "datetime"},
-        "moderation": {"type": "ref", "ref": "#moderationDetail"},
-        "repo": {"type": "ref", "ref": "#repoView"}
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "moderation": { "type": "ref", "ref": "#moderationDetail" },
+        "repo": { "type": "ref", "ref": "#repoView" }
       }
     },
     "recordViewNotFound": {
       "type": "object",
       "required": ["uri"],
       "properties": {
-        "uri": {"type": "string", "format": "at-uri"}
+        "uri": { "type": "string", "format": "at-uri" }
       }
     },
     "moderation": {
       "type": "object",
       "required": [],
       "properties": {
-        "currentAction": {"type": "ref", "ref": "#actionViewCurrent"}
+        "currentAction": { "type": "ref", "ref": "#actionViewCurrent" }
       }
     },
     "moderationDetail": {
       "type": "object",
       "required": ["actions", "reports"],
       "properties": {
-        "currentAction": {"type": "ref", "ref": "#actionViewCurrent"},
-        "actions": {"type": "array", "items": {"type": "ref", "ref": "#actionView"}},
-        "reports": {"type": "array", "items": {"type": "ref", "ref": "#reportView"}}
+        "currentAction": { "type": "ref", "ref": "#actionViewCurrent" },
+        "actions": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#actionView" }
+        },
+        "reports": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#reportView" }
+        }
       }
     },
     "blobView": {
       "type": "object",
       "required": ["cid", "mimeType", "size", "createdAt"],
       "properties": {
-        "cid": {"type": "string", "format": "cid"},
-        "mimeType": {"type": "string"},
-        "size": {"type": "integer"},
-        "createdAt": {"type": "string", "format": "datetime"},
+        "cid": { "type": "string", "format": "cid" },
+        "mimeType": { "type": "string" },
+        "size": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "datetime" },
         "details": {
           "type": "union",
           "refs": ["#imageDetails", "#videoDetails"]
         },
-        "moderation": {"type": "ref", "ref": "#moderation"}
+        "moderation": { "type": "ref", "ref": "#moderation" }
       }
     },
     "imageDetails": {
       "type": "object",
       "required": ["width", "height"],
       "properties": {
-        "width": {"type": "integer"},
-        "height": {"type": "integer"}
+        "width": { "type": "integer" },
+        "height": { "type": "integer" }
       }
     },
     "videoDetails": {
       "type": "object",
       "required": ["width", "height", "length"],
       "properties": {
-        "width": {"type": "integer"},
-        "height": {"type": "integer"},
-        "length": {"type": "integer"}
+        "width": { "type": "integer" },
+        "height": { "type": "integer" },
+        "length": { "type": "integer" }
       }
     }
   }

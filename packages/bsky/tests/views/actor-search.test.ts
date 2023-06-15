@@ -42,6 +42,7 @@ describe('pds actor search views', () => {
     // Process remaining profiles
     network.bsky.sub?.resume()
     await network.processAll(50000)
+    await network.bsky.ctx.backgroundQueue.processAll()
     headers = await network.serviceHeaders(Object.values(sc.dids)[0])
   })
 

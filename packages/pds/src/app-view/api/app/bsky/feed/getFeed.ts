@@ -23,9 +23,25 @@ import { AlgoResponse } from '../../../../../feed-gen/types'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeed({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
-      const { feed } = params
+    handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const { data: feed } =
+          await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerator(
+            { feed: params.feed },
+            await ctx.serviceAuthHeaders(requester),
+          )
+        const res = await ctx.appviewAgent.api.app.bsky.feed.getFeed(
+          params,
+          await ctx.serviceAuthHeaders(requester, feed.view.did),
+        )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
+      const { feed } = params
       const feedService = ctx.services.appView.feed(ctx.db)
       const localAlgo = ctx.algos[feed]
 
@@ -152,7 +168,7 @@ async function skeletonFromFeedGen(
         .execute()
     : []
 
-  const orderedItems = getOrderedFeedItems(skeletonFeed, feedItems)
+  const orderedItems = getOrderedFeedItems(skeletonFeed, feedItems, params)
   return {
     ...rest,
     feedItems: orderedItems,
@@ -169,11 +185,16 @@ function getSkeleFeedItemUri(item: SkeletonFeedPost) {
 function getOrderedFeedItems(
   skeletonItems: SkeletonFeedPost[],
   feedItems: FeedRow[],
+  params: GetFeedParams,
 ) {
   const SKIP = []
   const feedItemsByUri = feedItems.reduce((acc, item) => {
     return Object.assign(acc, { [item.uri]: item })
   }, {} as Record<string, FeedRow>)
+  // enforce limit param in the case that the feedgen does not
+  if (skeletonItems.length > params.limit) {
+    skeletonItems = skeletonItems.slice(0, params.limit)
+  }
   return skeletonItems.flatMap((item) => {
     const uri = getSkeleFeedItemUri(item)
     const feedItem = feedItemsByUri[uri]

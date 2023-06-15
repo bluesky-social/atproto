@@ -18,7 +18,7 @@ import AppContext from '../context'
 import { Leader } from '../db/leader'
 import { subLogger } from '../logger'
 import { ConsecutiveList, LatestQueue, PartitionedQueue } from './util'
-import { IndexingService } from '../services/indexing'
+import { ValidationError } from '@atproto/lexicon'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
 export const REPO_SUB_ID = 1000
@@ -130,55 +130,65 @@ export class RepoSubscription {
 
   private async handleCommit(msg: message.Commit) {
     const { db, services } = this.ctx
-    const { root, rootCid, ops } = await getOps(msg)
-    const indexRecords = async (indexingTx: IndexingService) => {
+    const indexingService = services.indexing(db)
+    const indexRecords = async () => {
+      const { root, rootCid, ops } = await getOps(msg)
       if (msg.tooBig) {
-        return await indexingTx.indexRepo(msg.repo, rootCid.toString())
+        return await indexingService.indexRepo(msg.repo, rootCid.toString())
       }
       if (msg.rebase) {
-        const needsReindex = await indexingTx.checkCommitNeedsIndexing(root)
+        const needsReindex = await indexingService.checkCommitNeedsIndexing(
+          root,
+        )
         if (!needsReindex) return
-        return await indexingTx.indexRepo(msg.repo, rootCid.toString())
+        return await indexingService.indexRepo(msg.repo, rootCid.toString())
       }
       for (const op of ops) {
         if (op.action === WriteOpAction.Delete) {
-          await indexingTx.deleteRecord(op.uri)
+          await indexingService.deleteRecord(op.uri)
         } else {
-          // @TODO skip-and-log records that don't validate
-          await indexingTx.indexRecord(
-            op.uri,
-            op.cid,
-            op.record,
-            op.action, // create or update
-            msg.time,
-          )
+          try {
+            await indexingService.indexRecord(
+              op.uri,
+              op.cid,
+              op.record,
+              op.action, // create or update
+              msg.time,
+            )
+          } catch (err) {
+            if (err instanceof ValidationError) {
+              subLogger.warn(
+                {
+                  did: msg.repo,
+                  commit: msg.commit.toString(),
+                  uri: op.uri.toString(),
+                  cid: op.cid.toString(),
+                },
+                'skipping indexing of invalid record',
+              )
+            } else {
+              throw err
+            }
+          }
         }
       }
+      await indexingService.setCommitLastSeen(root, msg)
     }
-    await db.transaction(async (tx) => {
-      const indexingTx = services.indexing(tx)
-      await Promise.all([
-        indexRecords(indexingTx),
-        indexingTx.indexHandle(msg.repo, msg.time),
-      ])
-      await indexingTx.setCommitLastSeen(root, msg)
-    })
+    const results = await Promise.allSettled([
+      indexRecords(),
+      indexingService.indexHandle(msg.repo, msg.time),
+    ])
+    handleAllSettledErrors(results)
   }
 
   private async handleUpdateHandle(msg: message.Handle) {
     const { db, services } = this.ctx
-    await db.transaction(async (tx) => {
-      const indexingTx = services.indexing(tx)
-      await indexingTx.indexHandle(msg.did, msg.time, true)
-    })
+    await services.indexing(db).indexHandle(msg.did, msg.time, true)
   }
 
   private async handleTombstone(msg: message.Tombstone) {
     const { db, services } = this.ctx
-    await db.transaction(async (tx) => {
-      const indexingTx = services.indexing(tx)
-      await indexingTx.tombstoneActor(msg.did)
-    })
+    await services.indexing(db).tombstoneActor(msg.did)
   }
 
   private async handleCursor(msg: ProcessableMessage) {
@@ -389,4 +399,24 @@ function getMessageDetails(msg: Message):
     return { info: msg }
   }
   return { info: null }
+}
+
+function handleAllSettledErrors(results: PromiseSettledResult<unknown>[]) {
+  const errors = results.filter(isRejected).map((res) => res.reason)
+  if (errors.length === 0) {
+    return
+  }
+  if (errors.length === 1) {
+    throw errors[0]
+  }
+  throw new AggregateError(
+    errors,
+    'Multiple errors: ' + errors.map((err) => err?.message).join('\n'),
+  )
+}
+
+function isRejected(
+  result: PromiseSettledResult<unknown>,
+): result is PromiseRejectedResult {
+  return result.status === 'rejected'
 }

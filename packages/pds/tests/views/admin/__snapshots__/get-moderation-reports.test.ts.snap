@@ -15,6 +15,7 @@ Array [
       "cid": "cids(0)",
       "uri": "record(0)",
     },
+    "subjectRepoHandle": "bob.test",
   },
 ]
 `;
@@ -34,6 +35,7 @@ Array [
       "cid": "cids(0)",
       "uri": "record(0)",
     },
+    "subjectRepoHandle": "alice.test",
   },
 ]
 `;
@@ -52,6 +54,7 @@ Array [
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
     },
+    "subjectRepoHandle": "alice.test",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -64,6 +67,7 @@ Array [
       "cid": "cids(0)",
       "uri": "record(0)",
     },
+    "subjectRepoHandle": "alice.test",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -78,6 +82,7 @@ Array [
       "cid": "cids(1)",
       "uri": "record(1)",
     },
+    "subjectRepoHandle": "alice.test",
   },
 ]
 `;
@@ -94,6 +99,7 @@ Array [
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
     },
+    "subjectRepoHandle": "carol.test",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -107,6 +113,7 @@ Array [
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(1)",
     },
+    "subjectRepoHandle": "alice.test",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -119,6 +126,7 @@ Array [
       "cid": "cids(0)",
       "uri": "record(0)",
     },
+    "subjectRepoHandle": "dan.test",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -133,6 +141,7 @@ Array [
       "cid": "cids(1)",
       "uri": "record(1)",
     },
+    "subjectRepoHandle": "bob.test",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -145,6 +154,7 @@ Array [
       "cid": "cids(2)",
       "uri": "record(2)",
     },
+    "subjectRepoHandle": "alice.test",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -159,6 +169,7 @@ Array [
       "cid": "cids(3)",
       "uri": "record(3)",
     },
+    "subjectRepoHandle": "alice.test",
   },
 ]
 `;
@@ -177,6 +188,7 @@ Array [
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
     },
+    "subjectRepoHandle": "alice.test",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -191,6 +203,7 @@ Array [
       "cid": "cids(0)",
       "uri": "record(0)",
     },
+    "subjectRepoHandle": "bob.test",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -205,6 +218,7 @@ Array [
       "cid": "cids(1)",
       "uri": "record(1)",
     },
+    "subjectRepoHandle": "alice.test",
   },
 ]
 `;
@@ -221,6 +235,7 @@ Array [
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
     },
+    "subjectRepoHandle": "carol.test",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -233,6 +248,7 @@ Array [
       "cid": "cids(0)",
       "uri": "record(0)",
     },
+    "subjectRepoHandle": "dan.test",
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -245,6 +261,7 @@ Array [
       "cid": "cids(1)",
       "uri": "record(1)",
     },
+    "subjectRepoHandle": "alice.test",
   },
 ]
 `;

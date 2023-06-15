@@ -55,6 +55,15 @@ describe('handle validation', () => {
   it('allows punycode handles', () => {
     expectValid('xn--ls8h.test') // 💩.test
     expectValid('xn--bcher-kva.tld') // bücher.tld
+    expectValid('xn--3jk.com')
+    expectValid('xn--w3d.com')
+    expectValid('xn--vqb.com')
+    expectValid('xn--ppd.com')
+    expectValid('xn--cs9a.com')
+    expectValid('xn--8r9a.com')
+    expectValid('xn--cfd.com')
+    expectValid('xn--5jk.com')
+    expectValid('xn--2lb.com')
   })
 
   it('allows onion (Tor) handles', () => {

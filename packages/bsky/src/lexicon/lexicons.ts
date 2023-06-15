@@ -228,6 +228,9 @@ export const schemaDict = {
           reason: {
             type: 'string',
           },
+          subjectRepoHandle: {
+            type: 'string',
+          },
           subject: {
             type: 'union',
             refs: [
@@ -862,6 +865,13 @@ export const schemaDict = {
                 type: 'string',
               },
             },
+            reporters: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description: 'Filter reports made by one or more DIDs',
+            },
             resolved: {
               type: 'boolean',
             },
@@ -975,6 +985,44 @@ export const schemaDict = {
         errors: [
           {
             name: 'RepoNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoAdminRebaseRepo: {
+    lexicon: 1,
+    id: 'com.atproto.admin.rebaseRepo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Administrative action to rebase an account's repo",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repo'],
+            properties: {
+              repo: {
+                type: 'string',
+                format: 'at-identifier',
+                description: 'The handle or DID of the repo.',
+              },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous commit by cid.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidSwap',
+          },
+          {
+            name: 'ConcurrentWrites',
           },
         ],
       },
@@ -2100,6 +2148,9 @@ export const schemaDict = {
           {
             name: 'InvalidSwap',
           },
+          {
+            name: 'ConcurrentWrites',
+          },
         ],
       },
     },
@@ -3008,6 +3059,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'HeadNotFound',
+          },
+        ],
       },
     },
   },
@@ -3261,6 +3317,9 @@ export const schemaDict = {
         errors: [
           {
             name: 'FutureCursor',
+          },
+          {
+            name: 'ConsumerTooSlow',
           },
         ],
       },
@@ -4364,7 +4423,7 @@ export const schemaDict = {
       },
       generatorView: {
         type: 'object',
-        required: ['uri', 'cid', 'creator', 'displayName', 'indexedAt'],
+        required: ['uri', 'cid', 'did', 'creator', 'displayName', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
@@ -6238,6 +6297,7 @@ export const ids = {
   ComAtprotoAdminGetModerationReports: 'com.atproto.admin.getModerationReports',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
+  ComAtprotoAdminRebaseRepo: 'com.atproto.admin.rebaseRepo',
   ComAtprotoAdminResolveModerationReports:
     'com.atproto.admin.resolveModerationReports',
   ComAtprotoAdminReverseModerationAction:

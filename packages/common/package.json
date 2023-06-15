@@ -10,8 +10,8 @@
   },
   "scripts": {
     "test": "jest",
-    "prettier": "prettier --check src/",
-    "prettier:fix": "prettier --write src/",
+    "prettier": "prettier --check src/ tests/",
+    "prettier:fix": "prettier --write src/ tests/",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "yarn lint --fix",
     "verify": "run-p prettier lint",

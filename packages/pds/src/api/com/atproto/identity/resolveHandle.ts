@@ -1,3 +1,4 @@
+import { AtpAgent } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as ident from '@atproto/identifier'
 import { Server } from '../../../../lexicon'
@@ -18,6 +19,7 @@ export default function (server: Server, ctx: AppContext) {
 
     let did: string | undefined
     const user = await ctx.services.account(ctx.db).getAccount(handle, true)
+
     if (user) {
       did = user.did
     } else {
@@ -28,10 +30,18 @@ export default function (server: Server, ctx: AppContext) {
       if (supportedHandle) {
         throw new InvalidRequestError('Unable to resolve handle')
       }
+    }
 
-      // this is not someone on our server, but we help with resolving anyway
+    // this is not someone on our server, but we help with resolving anyway
+
+    if (!did && ctx.cfg.bskyAppViewEndpoint) {
+      did = await tryResolveFromAppview(ctx.appviewAgent, handle)
+    }
+
+    if (!did) {
       did = await ctx.idResolver.handle.resolve(handle)
     }
+
     if (!did) {
       throw new InvalidRequestError('Unable to resolve handle')
     }
@@ -41,4 +51,15 @@ export default function (server: Server, ctx: AppContext) {
       body: { did },
     }
   })
+}
+
+async function tryResolveFromAppview(agent: AtpAgent, handle: string) {
+  try {
+    const result = await agent.api.com.atproto.identity.resolveHandle({
+      handle,
+    })
+    return result.data.did
+  } catch (_err) {
+    return
+  }
 }

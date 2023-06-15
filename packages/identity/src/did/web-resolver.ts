@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios'
 import BaseResolver from './base-resolver'
 import { DidCache } from '../types'
-import { PoorlyFormattedDidError } from '../errors'
+import { PoorlyFormattedDidError, UnsupportedDidWebPathError } from '../errors'
 
 export const DOC_PATH = '/.well-known/did.json'
 
@@ -19,7 +19,9 @@ export class DidWebResolver extends BaseResolver {
     } else if (parts.length === 1) {
       path = parts[0] + DOC_PATH
     } else {
-      path = parts.join('/') + '/did.json'
+      // how we *would* resolve a did:web with path, if atproto supported it
+      //path = parts.join('/') + '/did.json'
+      throw new UnsupportedDidWebPathError(did)
     }
 
     const url = new URL(`https://${path}`)

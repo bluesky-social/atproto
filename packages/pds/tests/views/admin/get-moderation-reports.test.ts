@@ -262,4 +262,18 @@ describe('pds admin get moderation reports view', () => {
     expect(defaultList[0].id).toEqual(reverseList[reverseList.length - 1].id)
     expect(defaultList[defaultList.length - 1].id).toEqual(reverseList[0].id)
   })
+
+  it('filters reports by reporter DID.', async () => {
+    const result = await agent.api.com.atproto.admin.getModerationReports(
+      { reporters: [sc.dids.alice] },
+      { headers: { authorization: adminAuth() } },
+    )
+
+    const reporterDidsFromReports = [
+      ...new Set(result.data.reports.map(({ reportedBy }) => reportedBy)),
+    ]
+
+    expect(reporterDidsFromReports.length).toEqual(1)
+    expect(reporterDidsFromReports[0]).toEqual(sc.dids.alice)
+  })
 })

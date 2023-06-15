@@ -228,6 +228,9 @@ export const schemaDict = {
           reason: {
             type: 'string',
           },
+          subjectRepoHandle: {
+            type: 'string',
+          },
           subject: {
             type: 'union',
             refs: [
@@ -861,6 +864,13 @@ export const schemaDict = {
               items: {
                 type: 'string',
               },
+            },
+            reporters: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description: 'Filter reports made by one or more DIDs',
             },
             resolved: {
               type: 'boolean',
@@ -3049,6 +3059,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'HeadNotFound',
+          },
+        ],
       },
     },
   },
@@ -3302,6 +3317,9 @@ export const schemaDict = {
         errors: [
           {
             name: 'FutureCursor',
+          },
+          {
+            name: 'ConsumerTooSlow',
           },
         ],
       },
@@ -4405,7 +4423,7 @@ export const schemaDict = {
       },
       generatorView: {
         type: 'object',
-        required: ['uri', 'cid', 'creator', 'displayName', 'indexedAt'],
+        required: ['uri', 'cid', 'did', 'creator', 'displayName', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
