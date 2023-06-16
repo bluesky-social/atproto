@@ -42,6 +42,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       port: pdsPort,
       dbPostgresUrl,
       dbPostgresSchema,
+      dbPostgresPoolSize: 5,
       didPlcUrl: plc.url,
       bskyAppViewUrl: bsky.url,
       bskyAppViewDid: bsky.ctx.cfg.serverDid,
