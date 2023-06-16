@@ -4,9 +4,10 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { TAKEDOWN } from '../../../../lexicon/types/com/atproto/admin/defs'
 
+// @TODO apply action rules
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.reverseModerationAction({
-    auth: ctx.adminVerifier,
+    auth: ctx.triageVerifier,
     handler: async ({ input }) => {
       const { db, services } = ctx
       const moderationService = services.moderation(db)

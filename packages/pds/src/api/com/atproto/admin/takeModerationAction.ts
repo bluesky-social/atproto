@@ -6,9 +6,10 @@ import { TAKEDOWN } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { getSubject, getAction } from '../moderation/util'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 
+// @TODO apply action rules
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
-    auth: ctx.moderatorVerifier,
+    auth: ctx.triageVerifier,
     handler: async ({ input, auth }) => {
       const { db, services } = ctx
       const moderationService = services.moderation(db)
