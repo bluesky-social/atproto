@@ -1,11 +1,17 @@
 import AtpAgent from '@atproto/api'
-import basicSeed from '../seeds/basic'
-import { SeedClient } from '../seeds/client'
+
 import { TestNetwork } from '@atproto/dev-env'
-import { forSnapshot } from '../_util'
-import { AppContext, Database } from '../../src'
+import { CommitData } from '@atproto/repo'
+import { RepoService } from '@atproto/pds/src/services/repo'
+import { PreparedWrite } from '@atproto/pds/src/repo'
+import * as sequencer from '@atproto/pds/src/sequencer'
+import { cborDecode, cborEncode } from '@atproto/common'
 import { DatabaseSchemaType } from '../../src/db/database-schema'
 import { ids } from '../../src/lexicon/lexicons'
+import { forSnapshot } from '../_util'
+import { AppContext, Database } from '../../src'
+import basicSeed from '../seeds/basic'
+import { SeedClient } from '../seeds/client'
 
 describe('sync', () => {
   let network: TestNetwork
@@ -69,6 +75,34 @@ describe('sync', () => {
     expect(forSnapshot(await getTableDump())).toEqual(
       forSnapshot(originalTableDump),
     )
+  })
+
+  it('indexes actor when commit is unprocessable.', async () => {
+    // mock sequencing to create an unprocessable commit event
+    const afterWriteProcessingOriginal =
+      RepoService.prototype.afterWriteProcessing
+    RepoService.prototype.afterWriteProcessing = async function (
+      did: string,
+      commitData: CommitData,
+      writes: PreparedWrite[],
+    ) {
+      const seqEvt = await sequencer.formatSeqCommit(did, commitData, writes)
+      const evt = cborDecode(seqEvt.event) as sequencer.CommitEvt
+      evt.blocks = new Uint8Array() // bad blocks
+      seqEvt.event = cborEncode(evt)
+      await sequencer.sequenceEvt(this.db, seqEvt)
+    }
+    // create account and index the initial commit event
+    await sc.createAccount('jack', {
+      handle: 'jack.test',
+      email: 'jack@test.com',
+      password: 'password',
+    })
+    await network.processAll()
+    // confirm jack was indexed as an actor despite the bad event
+    const actors = await dumpTable(ctx.db, 'actor', ['did'])
+    expect(actors.map((a) => a.handle)).toContain('jack.test')
+    RepoService.prototype.afterWriteProcessing = afterWriteProcessingOriginal
   })
 
   async function updateProfile(

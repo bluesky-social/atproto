@@ -99,6 +99,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     : {
         required: true,
         interval: env.inviteInterval ?? null,
+        epoch: env.inviteEpoch ?? 0,
       }
 
   let emailCfg: ServerConfig['email']
@@ -205,6 +206,7 @@ export type InvitesConfig =
   | {
       required: true
       interval: number | null
+      epoch: number
     }
   | {
       required: false

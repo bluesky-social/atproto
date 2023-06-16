@@ -43,6 +43,7 @@ export const readEnv = (): ServerEnvironment => {
     // invites
     inviteRequired: envBool(process.env.PDS_INVITE_REQUIRED),
     inviteInterval: envInt(process.env.PDS_INVITE_INTERVAL),
+    inviteEpoch: envInt(process.env.PDS_INVITE_EPOCH),
 
     // email
     emailSmtpUrl: envStr(process.env.PDS_EMAIL_SMTP_URL),
@@ -115,6 +116,7 @@ export type ServerEnvironment = {
   // invites
   inviteRequired?: boolean
   inviteInterval?: number
+  inviteEpoch?: number
 
   // email
   emailSmtpUrl?: string

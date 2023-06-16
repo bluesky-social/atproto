@@ -141,19 +141,6 @@ export class Database {
     }
   }
 
-  private normalizeSchemaChannel(schemaChannel: string): string {
-    if (this.cfg.dialect === 'pg' && this.cfg.schema) {
-      const prefix = this.cfg.schema + '_'
-      if (schemaChannel.startsWith(prefix)) {
-        return schemaChannel.slice(prefix.length)
-      } else {
-        return schemaChannel
-      }
-    } else {
-      return schemaChannel
-    }
-  }
-
   private async sendChannelEvt(evt: ChannelEvt) {
     if (this.cfg.dialect === 'pg') {
       const { ref } = this.db.dynamic
