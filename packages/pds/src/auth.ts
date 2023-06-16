@@ -13,6 +13,7 @@ export type ServerAuthOpts = {
   jwtSecret: string
   adminPass: string
   moderatorPass?: string
+  triagePass?: string
 }
 
 // @TODO sync-up with current method names, consider backwards compat.
@@ -34,11 +35,13 @@ export class ServerAuth {
   private _secret: string
   private _adminPass: string
   private _moderatorPass?: string
+  private _triagePass?: string
 
   constructor(opts: ServerAuthOpts) {
     this._secret = opts.jwtSecret
     this._adminPass = opts.adminPass
     this._moderatorPass = opts.moderatorPass
+    this._triagePass = opts.triagePass
   }
 
   createAccessToken(opts: {
@@ -112,16 +115,17 @@ export class ServerAuth {
 
   verifyAdmin(req: express.Request) {
     const parsed = parseBasicAuth(req.headers.authorization || '')
-    if (!parsed) {
-      return { admin: false, moderator: false }
+    const { username, password } = parsed ?? {}
+    if (username === 'triage' && password === this._triagePass) {
+      return { valid: true, admin: false, moderator: false, triage: true }
     }
-    const { username, password } = parsed
-    if (username !== 'admin') {
-      return { admin: false, moderator: false }
+    if (username === 'moderator' && password === this._moderatorPass) {
+      return { valid: true, admin: false, moderator: true, triage: true }
     }
-    const admin = password === this._adminPass
-    const moderator = admin || password === this._moderatorPass
-    return { admin, moderator }
+    if (username === 'admin' && password === this._adminPass) {
+      return { valid: true, admin: true, moderator: true, triage: true }
+    }
+    return { valid: false, admin: false, moderator: false, triage: false }
   }
 
   getToken(req: express.Request) {
@@ -234,7 +238,9 @@ export const adminVerifier =
   async (ctx: { req: express.Request; res: express.Response }) => {
     const credentials = auth.verifyAdmin(ctx.req)
     if (!credentials.admin) {
-      throw new AuthRequiredError()
+      throw new AuthRequiredError(
+        credentials.valid ? 'Insufficient privileges' : undefined,
+      )
     }
     return { credentials }
   }
@@ -244,7 +250,21 @@ export const moderatorVerifier =
   async (ctx: { req: express.Request; res: express.Response }) => {
     const credentials = auth.verifyAdmin(ctx.req)
     if (!credentials.moderator) {
-      throw new AuthRequiredError()
+      throw new AuthRequiredError(
+        credentials.valid ? 'Insufficient privileges' : undefined,
+      )
+    }
+    return { credentials }
+  }
+
+export const triageVerifier =
+  (auth: ServerAuth) =>
+  async (ctx: { req: express.Request; res: express.Response }) => {
+    const credentials = auth.verifyAdmin(ctx.req)
+    if (!credentials.triage) {
+      throw new AuthRequiredError(
+        credentials.valid ? 'Insufficient privileges' : undefined,
+      )
     }
     return { credentials }
   }

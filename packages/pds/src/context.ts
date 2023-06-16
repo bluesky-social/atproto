@@ -95,6 +95,10 @@ export class AppContext {
     return auth.moderatorVerifier(this.auth)
   }
 
+  get triageVerifier() {
+    return auth.triageVerifier(this.auth)
+  }
+
   get imgUriBuilder(): ImageUriBuilder {
     return this.opts.imgUriBuilder
   }
