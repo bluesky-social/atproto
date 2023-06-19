@@ -252,7 +252,6 @@ export const lexXrpcSubscription = z
     description: z.string().optional(),
     parameters: lexXrpcParameters.optional(),
     message: lexXrpcSubscriptionMessage.optional(),
-    infos: lexXrpcError.array().optional(),
     errors: lexXrpcError.array().optional(),
   })
   .strict()
