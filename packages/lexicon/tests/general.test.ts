@@ -816,7 +816,7 @@ describe('Record validation', () => {
         $type: 'com.example.language',
         language: 'not-a-language-',
       }),
-    ).toThrow('Record/language must be a bcp47 language')
+    ).toThrow('Record/language must be a well-formed BCP 47 language tag')
   })
 
   it('Applies bytes length constraints', () => {

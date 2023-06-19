@@ -1,4 +1,4 @@
-import { graphemeLen, parseLanguage, utf8Len } from '../src'
+import { graphemeLen, parseLanguage, utf8Len, validateLanguage } from '../src'
 
 describe('string', () => {
   it('calculates utf8 string length', () => {
@@ -28,8 +28,31 @@ describe('string', () => {
     expect(graphemeLen('a~öñ©⽘☎𓋓😀👨‍👩‍👧‍👧')).toBe(10)
   })
 
-  describe('language tags', () => {
+  describe('languages', () => {
+    it('validates BCP47', () => {
+      // valid
+      expect(validateLanguage('de')).toEqual(true)
+      expect(validateLanguage('de-CH')).toEqual(true)
+      expect(validateLanguage('de-DE-1901')).toEqual(true)
+      expect(validateLanguage('es-419')).toEqual(true)
+      expect(validateLanguage('sl-IT-nedis')).toEqual(true)
+      expect(validateLanguage('mn-Cyrl-MN')).toEqual(true)
+      expect(validateLanguage('x-fr-CH')).toEqual(true)
+      expect(
+        validateLanguage('en-GB-boont-r-extended-sequence-x-private'),
+      ).toEqual(true)
+      expect(validateLanguage('sr-Cyrl')).toEqual(true)
+      expect(validateLanguage('hy-Latn-IT-arevela')).toEqual(true)
+      expect(validateLanguage('i-klingon')).toEqual(true)
+      // invalid
+      expect(validateLanguage('')).toEqual(false)
+      expect(validateLanguage('x')).toEqual(false)
+      expect(validateLanguage('de-CH-')).toEqual(false)
+      expect(validateLanguage('i-bad-grandfathered')).toEqual(false)
+    })
+
     it('parses BCP47', () => {
+      // valid
       expect(parseLanguage('de')).toEqual({
         language: 'de',
       })
@@ -78,6 +101,14 @@ describe('string', () => {
         region: 'IT',
         variant: 'arevela',
       })
+      expect(parseLanguage('i-klingon')).toEqual({
+        grandfathered: 'i-klingon',
+      })
+      // invalid
+      expect(parseLanguage('')).toEqual(null)
+      expect(parseLanguage('x')).toEqual(null)
+      expect(parseLanguage('de-CH-')).toEqual(null)
+      expect(parseLanguage('i-bad-grandfathered')).toEqual(null)
     })
   })
 })
