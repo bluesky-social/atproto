@@ -5244,6 +5244,13 @@ export const schemaDict = {
                 'lex:app.bsky.embed.recordWithMedia',
               ],
             },
+            language: {
+              type: 'array',
+              maxLength: 3,
+              items: {
+                type: 'string',
+              },
+            },
             createdAt: {
               type: 'string',
               format: 'datetime',
