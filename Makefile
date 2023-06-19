@@ -32,9 +32,11 @@ run-dev-bsky: ## Run appview ('bsky') locally
 	if [ ! -f "packages/bsky/.dev.env" ]; then cp packages/bsky/example.dev.env packages/bsky/.dev.env; fi
 	cd packages/bsky; ENV=dev yarn run start | yarn exec pino-pretty
 
-.PHONY: codegen-api
-codegen-api: ## Re-generate the API package from lexicon/ files
+.PHONY: codegen
+codegen: ## Re-generate packages from lexicon/ files
 	cd packages/api; yarn run codegen
+	cd packages/pds; yarn run codegen
+	cd packages/bsky; yarn run codegen
 
 .PHONY: lint
 lint: ## Run style checks and verify syntax
