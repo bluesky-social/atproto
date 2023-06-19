@@ -3,7 +3,6 @@ import * as ident from '@atproto/identifier'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { UserAlreadyExistsError } from '../../../../services/account'
-import { resolveExternalHandle } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({
@@ -29,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       } catch (err) {
         if (err instanceof ident.UnsupportedDomainError) {
-          const did = await resolveExternalHandle(ctx.cfg.scheme, handle)
+          const did = await ctx.idResolver.handle.resolve(handle)
           if (did !== requester) {
             throw new InvalidRequestError(
               'External handle did not resolve to DID',

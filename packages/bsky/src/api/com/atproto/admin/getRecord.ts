@@ -15,7 +15,9 @@ export default function (server: Server, ctx: AppContext) {
         .where('uri', '=', uri)
         .if(!!cid, (qb) => qb.where('cid', '=', cid ?? ''))
         .executeTakeFirst()
-      if (!result) throw new InvalidRequestError('Record not found')
+      if (!result) {
+        throw new InvalidRequestError('Record not found', 'RecordNotFound')
+      }
       return {
         encoding: 'application/json',
         body: await services.moderation(db).views.recordDetail(result),

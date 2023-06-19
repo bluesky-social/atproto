@@ -75,6 +75,15 @@ describe('pds thread views', () => {
     expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
   })
 
+  it('fetches shallow ancestors', async () => {
+    const thread = await agent.api.app.bsky.feed.getPostThread(
+      { depth: 1, parentHeight: 1, uri: sc.replies[alice][0].ref.uriStr },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
+  })
+
   it('fails for an unknown post', async () => {
     const promise = agent.api.app.bsky.feed.getPostThread(
       { uri: 'at://did:example:fake/does.not.exist/self' },

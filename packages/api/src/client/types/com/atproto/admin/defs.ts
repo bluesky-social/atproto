@@ -43,7 +43,12 @@ export function validateActionView(v: unknown): ValidationResult {
 export interface ActionViewDetail {
   id: number
   action: ActionType
-  subject: RepoView | RecordView | { $type: string; [k: string]: unknown }
+  subject:
+    | RepoView
+    | RepoViewNotFound
+    | RecordView
+    | RecordViewNotFound
+    | { $type: string; [k: string]: unknown }
   subjectBlobs: BlobView[]
   createLabelVals?: string[]
   negateLabelVals?: string[]
@@ -108,6 +113,7 @@ export type ActionType =
   | 'lex:com.atproto.admin.defs#takedown'
   | 'lex:com.atproto.admin.defs#flag'
   | 'lex:com.atproto.admin.defs#acknowledge'
+  | 'lex:com.atproto.admin.defs#escalate'
   | (string & {})
 
 /** Moderation action type: Takedown. Indicates that content should not be served by the PDS. */
@@ -116,11 +122,14 @@ export const TAKEDOWN = 'com.atproto.admin.defs#takedown'
 export const FLAG = 'com.atproto.admin.defs#flag'
 /** Moderation action type: Acknowledge. Indicates that the content was reviewed and not considered to violate PDS rules. */
 export const ACKNOWLEDGE = 'com.atproto.admin.defs#acknowledge'
+/** Moderation action type: Escalate. Indicates that the content has been flagged for additional review. */
+export const ESCALATE = 'com.atproto.admin.defs#escalate'
 
 export interface ReportView {
   id: number
   reasonType: ComAtprotoModerationDefs.ReasonType
   reason?: string
+  subjectRepoHandle?: string
   subject:
     | RepoRef
     | ComAtprotoRepoStrongRef.Main
@@ -147,7 +156,12 @@ export interface ReportViewDetail {
   id: number
   reasonType: ComAtprotoModerationDefs.ReasonType
   reason?: string
-  subject: RepoView | RecordView | { $type: string; [k: string]: unknown }
+  subject:
+    | RepoView
+    | RepoViewNotFound
+    | RecordView
+    | RecordViewNotFound
+    | { $type: string; [k: string]: unknown }
   reportedBy: string
   createdAt: string
   resolvedByActions: ActionView[]
@@ -174,6 +188,7 @@ export interface RepoView {
   indexedAt: string
   moderation: Moderation
   invitedBy?: ComAtprotoServerDefs.InviteCode
+  invitesDisabled?: boolean
   [k: string]: unknown
 }
 
@@ -199,6 +214,7 @@ export interface RepoViewDetail {
   labels?: ComAtprotoLabelDefs.Label[]
   invitedBy?: ComAtprotoServerDefs.InviteCode
   invites?: ComAtprotoServerDefs.InviteCode[]
+  invitesDisabled?: boolean
   [k: string]: unknown
 }
 
@@ -212,6 +228,23 @@ export function isRepoViewDetail(v: unknown): v is RepoViewDetail {
 
 export function validateRepoViewDetail(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#repoViewDetail', v)
+}
+
+export interface RepoViewNotFound {
+  did: string
+  [k: string]: unknown
+}
+
+export function isRepoViewNotFound(v: unknown): v is RepoViewNotFound {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#repoViewNotFound'
+  )
+}
+
+export function validateRepoViewNotFound(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#repoViewNotFound', v)
 }
 
 export interface RepoRef {
@@ -276,6 +309,23 @@ export function isRecordViewDetail(v: unknown): v is RecordViewDetail {
 
 export function validateRecordViewDetail(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#recordViewDetail', v)
+}
+
+export interface RecordViewNotFound {
+  uri: string
+  [k: string]: unknown
+}
+
+export function isRecordViewNotFound(v: unknown): v is RecordViewNotFound {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#recordViewNotFound'
+  )
+}
+
+export function validateRecordViewNotFound(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#recordViewNotFound', v)
 }
 
 export interface Moderation {

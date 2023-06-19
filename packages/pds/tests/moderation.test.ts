@@ -239,6 +239,132 @@ describe('moderation', () => {
       )
     })
 
+    it('resolves reports on missing repos and records.', async () => {
+      // Create fresh user
+      const deleteme = await sc.createAccount('deleteme', {
+        email: 'deleteme.test@bsky.app',
+        handle: 'deleteme.test',
+        password: 'password',
+      })
+      const post = await sc.post(deleteme.did, 'delete this post')
+      // Report user and post
+      const { data: reportA } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONSPAM,
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: deleteme.did,
+            },
+          },
+          {
+            headers: sc.getHeaders(sc.dids.alice),
+            encoding: 'application/json',
+          },
+        )
+      const { data: reportB } =
+        await agent.api.com.atproto.moderation.createReport(
+          {
+            reasonType: REASONOTHER,
+            reason: 'defamation',
+            subject: {
+              $type: 'com.atproto.repo.strongRef',
+              uri: post.ref.uriStr,
+              cid: post.ref.cidStr,
+            },
+          },
+          {
+            headers: sc.getHeaders(sc.dids.carol),
+            encoding: 'application/json',
+          },
+        )
+      // Delete full user account
+      await agent.api.com.atproto.server.requestAccountDelete(undefined, {
+        headers: sc.getHeaders(deleteme.did),
+      })
+      const { token: deletionToken } = await server.ctx.db.db
+        .selectFrom('delete_account_token')
+        .where('did', '=', deleteme.did)
+        .selectAll()
+        .executeTakeFirstOrThrow()
+      await agent.api.com.atproto.server.deleteAccount({
+        did: deleteme.did,
+        password: 'password',
+        token: deletionToken,
+      })
+      await server.ctx.backgroundQueue.processAll()
+      // Take action on deleted content
+      const { data: action } =
+        await agent.api.com.atproto.admin.takeModerationAction(
+          {
+            action: FLAG,
+            subject: {
+              $type: 'com.atproto.repo.strongRef',
+              uri: post.ref.uriStr,
+              cid: post.ref.cidStr,
+            },
+            createdBy: 'did:example:admin',
+            reason: 'Y',
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: adminAuth() },
+          },
+        )
+      await agent.api.com.atproto.admin.resolveModerationReports(
+        {
+          actionId: action.id,
+          reportIds: [reportB.id, reportA.id],
+          createdBy: 'did:example:admin',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+      // Check report and action details
+      const { data: repoDeletionActionDetail } =
+        await agent.api.com.atproto.admin.getModerationAction(
+          { id: action.id - 1 },
+          { headers: { authorization: adminAuth() } },
+        )
+      const { data: recordActionDetail } =
+        await agent.api.com.atproto.admin.getModerationAction(
+          { id: action.id },
+          { headers: { authorization: adminAuth() } },
+        )
+      const { data: reportADetail } =
+        await agent.api.com.atproto.admin.getModerationReport(
+          { id: reportA.id },
+          { headers: { authorization: adminAuth() } },
+        )
+      const { data: reportBDetail } =
+        await agent.api.com.atproto.admin.getModerationReport(
+          { id: reportB.id },
+          { headers: { authorization: adminAuth() } },
+        )
+      expect(
+        forSnapshot({
+          repoDeletionActionDetail,
+          recordActionDetail,
+          reportADetail,
+          reportBDetail,
+        }),
+      ).toMatchSnapshot()
+      // Cleanup
+      await agent.api.com.atproto.admin.reverseModerationAction(
+        {
+          id: action.id,
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+    })
+
     it('does not resolve report for mismatching repo.', async () => {
       const { data: report } =
         await agent.api.com.atproto.moderation.createReport(
@@ -284,7 +410,7 @@ describe('moderation', () => {
       )
 
       await expect(promise).rejects.toThrow(
-        'Report 7 cannot be resolved by action',
+        'Report 9 cannot be resolved by action',
       )
 
       // Cleanup
@@ -350,7 +476,7 @@ describe('moderation', () => {
       )
 
       await expect(promise).rejects.toThrow(
-        'Report 8 cannot be resolved by action',
+        'Report 10 cannot be resolved by action',
       )
 
       // Cleanup

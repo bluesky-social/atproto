@@ -6,13 +6,24 @@ import { notSoftDeletedClause } from '../../../../../db/util'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getLikes({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
-      const { uri, limit, cursor, cid } = params
+    handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const res = await ctx.appviewAgent.api.app.bsky.feed.getLikes(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
+      const { uri, limit, cursor, cid } = params
       const { services, db } = ctx
       const { ref } = db.db.dynamic
 
-      const actorService = ctx.services.appView.actor(ctx.db)
+      const graphService = ctx.services.appView.graph(ctx.db)
 
       let builder = db.db
         .selectFrom('like')
@@ -24,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
           'like.creator',
         )
         .where(notSoftDeletedClause(ref('creator_repo')))
-        .whereNotExists(actorService.blockQb(requester, [ref('like.creator')]))
+        .whereNotExists(graphService.blockQb(requester, [ref('like.creator')]))
         .selectAll('creator')
         .select([
           'like.cid as cid',

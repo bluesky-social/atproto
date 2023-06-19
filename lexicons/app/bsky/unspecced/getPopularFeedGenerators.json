@@ -1,0 +1,23 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.unspecced.getPopularFeedGenerators",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "An unspecced view of globally popular feed generators",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["feeds"],
+          "properties": {
+            "feeds": {
+              "type": "array",
+              "items": {"type": "ref", "ref": "app.bsky.feed.defs#generatorView"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

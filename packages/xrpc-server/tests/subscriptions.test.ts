@@ -14,7 +14,7 @@ import * as xrpcServer from '../src'
 const LEXICONS = [
   {
     lexicon: 1,
-    id: 'io.example.stream1',
+    id: 'io.example.streamOne',
     defs: {
       main: {
         type: 'subscription',
@@ -37,7 +37,7 @@ const LEXICONS = [
   },
   {
     lexicon: 1,
-    id: 'io.example.stream2',
+    id: 'io.example.streamTwo',
     defs: {
       main: {
         type: 'subscription',
@@ -84,7 +84,7 @@ describe('Subscriptions', () => {
   const server = xrpcServer.createServer(LEXICONS)
   const lex = server.lex
 
-  server.streamMethod('io.example.stream1', async function* ({ params }) {
+  server.streamMethod('io.example.streamOne', async function* ({ params }) {
     const countdown = Number(params.countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
       await wait(0)
@@ -92,11 +92,11 @@ describe('Subscriptions', () => {
     }
   })
 
-  server.streamMethod('io.example.stream2', async function* ({ params }) {
+  server.streamMethod('io.example.streamTwo', async function* ({ params }) {
     const countdown = Number(params.countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
       yield {
-        $type: i % 2 === 0 ? '#even' : 'io.example.stream2#odd',
+        $type: i % 2 === 0 ? '#even' : 'io.example.streamTwo#odd',
         count: i,
       }
     }
@@ -124,7 +124,7 @@ describe('Subscriptions', () => {
 
   it('streams messages', async () => {
     const ws = new WebSocket(
-      `ws://localhost:${port}/xrpc/io.example.stream1?countdown=5`,
+      `ws://localhost:${port}/xrpc/io.example.streamOne?countdown=5`,
     )
 
     const frames: Frame[] = []
@@ -144,7 +144,7 @@ describe('Subscriptions', () => {
 
   it('streams messages in a union', async () => {
     const ws = new WebSocket(
-      `ws://localhost:${port}/xrpc/io.example.stream2?countdown=5`,
+      `ws://localhost:${port}/xrpc/io.example.streamTwo?countdown=5`,
     )
 
     const frames: Frame[] = []
@@ -192,7 +192,7 @@ describe('Subscriptions', () => {
   })
 
   it('errors immediately on bad parameter', async () => {
-    const ws = new WebSocket(`ws://localhost:${port}/xrpc/io.example.stream1`)
+    const ws = new WebSocket(`ws://localhost:${port}/xrpc/io.example.streamOne`)
 
     const frames: Frame[] = []
     for await (const frame of byFrame(ws)) {
@@ -245,11 +245,11 @@ describe('Subscriptions', () => {
     it('receives messages w/ skips', async () => {
       const sub = new Subscription({
         service: `ws://localhost:${port}`,
-        method: 'io.example.stream1',
+        method: 'io.example.streamOne',
         getParams: () => ({ countdown: 5 }),
         validate: (obj) => {
           const result = lex.assertValidXrpcMessage<{ count: number }>(
-            'io.example.stream1',
+            'io.example.streamOne',
             obj,
           )
           if (!result.count || result.count % 2) {
@@ -276,12 +276,12 @@ describe('Subscriptions', () => {
       let reconnects = 0
       const sub = new Subscription({
         service: `ws://localhost:${port}`,
-        method: 'io.example.stream1',
+        method: 'io.example.streamOne',
         onReconnectError: () => reconnects++,
         getParams: () => ({ countdown }),
         validate: (obj) => {
           return lex.assertValidXrpcMessage<{ count: number }>(
-            'io.example.stream1',
+            'io.example.streamOne',
             obj,
           )
         },
@@ -307,12 +307,12 @@ describe('Subscriptions', () => {
       const abortController = new AbortController()
       const sub = new Subscription({
         service: `ws://localhost:${port}`,
-        method: 'io.example.stream1',
+        method: 'io.example.streamOne',
         signal: abortController.signal,
         getParams: () => ({ countdown: 10 }),
         validate: (obj) => {
           const result = lex.assertValidXrpcMessage<{ count: number }>(
-            'io.example.stream1',
+            'io.example.streamOne',
             obj,
           )
           return result

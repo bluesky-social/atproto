@@ -22,6 +22,7 @@ export type HandlerInput = undefined
 export interface HandlerSuccess {
   encoding: 'application/vnd.ipld.car'
   body: Uint8Array | stream.Readable
+  headers?: { [key: string]: string }
 }
 
 export interface HandlerError {

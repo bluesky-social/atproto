@@ -17,6 +17,16 @@ describe('pds user search views', () => {
     sc = new SeedClient(agent)
     await basicSeed(sc)
     await server.ctx.backgroundQueue.processAll()
+
+    const suggestions = [
+      { did: sc.dids.bob, order: 1 },
+      { did: sc.dids.carol, order: 2 },
+      { did: sc.dids.dan, order: 3 },
+    ]
+    await server.ctx.db.db
+      .insertInto('suggested_follow')
+      .values(suggestions)
+      .execute()
   })
 
   afterAll(async () => {
@@ -25,29 +35,21 @@ describe('pds user search views', () => {
 
   it('actor suggestion gives users', async () => {
     const result = await agent.api.app.bsky.actor.getSuggestions(
-      { limit: 3 },
+      {},
       { headers: sc.getHeaders(sc.dids.carol) },
     )
 
-    const handles = result.data.actors.map((u) => u.handle)
-    const displayNames = result.data.actors.map((u) => u.displayName)
-
-    const shouldContain: { handle: string; displayName: string | null }[] = [
-      { handle: 'bob.test', displayName: 'bobby' },
-      { handle: 'dan.test', displayName: null },
-    ]
-
-    shouldContain.forEach((actor) => {
-      expect(handles).toContain(actor.handle)
-      if (actor.displayName) {
-        expect(displayNames).toContain(actor.displayName)
-      }
-    })
+    // does not include carol, because she is requesting
+    expect(result.data.actors.length).toBe(2)
+    expect(result.data.actors[0].handle).toEqual('bob.test')
+    expect(result.data.actors[0].displayName).toEqual('bobby')
+    expect(result.data.actors[1].handle).toEqual('dan.test')
+    expect(result.data.actors[1].displayName).toBeUndefined()
   })
 
   it('does not suggest followed users', async () => {
     const result = await agent.api.app.bsky.actor.getSuggestions(
-      { limit: 3 },
+      {},
       { headers: sc.getHeaders(sc.dids.alice) },
     )
 
@@ -67,10 +69,7 @@ describe('pds user search views', () => {
 
     expect(result1.data.actors.length).toBe(1)
     expect(result1.data.actors[0].handle).toEqual('bob.test')
-    expect(result1.data.actors[0].displayName).toEqual('bobby')
-
     expect(result2.data.actors.length).toBe(1)
     expect(result2.data.actors[0].handle).toEqual('dan.test')
-    expect(result2.data.actors[0].displayName).toBeUndefined()
   })
 })

@@ -74,7 +74,7 @@ async function fetchHandler(
     } else if (resMimeType.startsWith('text/')) {
       resBody = await res.text()
     } else {
-      throw new Error('TODO: non-textual response body')
+      resBody = await res.blob()
     }
   }
 

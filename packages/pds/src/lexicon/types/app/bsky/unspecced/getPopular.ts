@@ -10,6 +10,7 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyFeedDefs from '../feed/defs'
 
 export interface QueryParams {
+  includeNsfw: boolean
   limit: number
   cursor?: string
 }
@@ -27,6 +28,7 @@ export type HandlerInput = undefined
 export interface HandlerSuccess {
   encoding: 'application/json'
   body: OutputSchema
+  headers?: { [key: string]: string }
 }
 
 export interface HandlerError {

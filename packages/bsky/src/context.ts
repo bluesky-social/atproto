@@ -1,5 +1,5 @@
 import * as plc from '@did-plc/lib'
-import { DidResolver } from '@atproto/did-resolver'
+import { IdResolver } from '@atproto/identity'
 import { Database } from './db'
 import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
@@ -7,6 +7,8 @@ import { Services } from './services'
 import * as auth from './auth'
 import DidSqlCache from './did-cache'
 import { Labeler } from './labeler'
+import { BackgroundQueue } from './background'
+import { MountedAlgos } from './feed-gen/types'
 
 export class AppContext {
   constructor(
@@ -15,9 +17,11 @@ export class AppContext {
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       services: Services
-      didResolver: DidResolver
+      idResolver: IdResolver
       didCache: DidSqlCache
       labeler: Labeler
+      backgroundQueue: BackgroundQueue
+      algos: MountedAlgos
     },
   ) {}
 
@@ -41,8 +45,8 @@ export class AppContext {
     return new plc.Client(this.cfg.didPlcUrl)
   }
 
-  get didResolver(): DidResolver {
-    return this.opts.didResolver
+  get idResolver(): IdResolver {
+    return this.opts.idResolver
   }
 
   get didCache(): DidSqlCache {
@@ -50,15 +54,29 @@ export class AppContext {
   }
 
   get authVerifier() {
-    return auth.authVerifier(this.didResolver)
+    return auth.authVerifier(this.idResolver, { aud: this.cfg.serverDid })
+  }
+
+  get authVerifierAnyAudience() {
+    return auth.authVerifier(this.idResolver, { aud: null })
   }
 
   get authOptionalVerifier() {
-    return auth.authOptionalVerifier(this.didResolver)
+    return auth.authOptionalVerifier(this.idResolver, {
+      aud: this.cfg.serverDid,
+    })
   }
 
   get labeler(): Labeler {
     return this.opts.labeler
+  }
+
+  get backgroundQueue(): BackgroundQueue {
+    return this.opts.backgroundQueue
+  }
+
+  get algos(): MountedAlgos {
+    return this.opts.algos
   }
 }
 

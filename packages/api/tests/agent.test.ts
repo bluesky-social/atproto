@@ -398,4 +398,67 @@ describe('agent', () => {
     expect(sessions.length).toEqual(1)
     expect(sessions[0]?.accessJwt).toEqual(origAccessJwt)
   })
+
+  describe('setPersistSessionHandler', () => {
+    it('sets persist session handler', async () => {
+      let originalHandlerCallCount = 0
+      let newHandlerCallCount = 0
+
+      const persistSession = () => {
+        originalHandlerCallCount++
+      }
+      const newPersistSession = () => {
+        newHandlerCallCount++
+      }
+
+      const agent = new AtpAgent({ service: server.url, persistSession })
+
+      await agent.createAccount({
+        handle: 'user7.test',
+        email: 'user7@test.com',
+        password: 'password',
+      })
+
+      expect(originalHandlerCallCount).toEqual(1)
+
+      agent.setPersistSessionHandler(newPersistSession)
+
+      await agent.createAccount({
+        handle: 'user8.test',
+        email: 'user8@test.com',
+        password: 'password',
+      })
+
+      expect(originalHandlerCallCount).toEqual(1)
+      expect(newHandlerCallCount).toEqual(1)
+    })
+  })
+
+  describe('createAccount', () => {
+    it('persists an empty session on failure', async () => {
+      const events: string[] = []
+      const sessions: (AtpSessionData | undefined)[] = []
+      const persistSession = (evt: AtpSessionEvent, sess?: AtpSessionData) => {
+        events.push(evt)
+        sessions.push(sess)
+      }
+
+      const agent = new AtpAgent({ service: server.url, persistSession })
+
+      await expect(
+        agent.createAccount({
+          handle: '',
+          email: '',
+          password: 'password',
+        }),
+      ).rejects.toThrow()
+
+      expect(agent.hasSession).toEqual(false)
+      expect(agent.session).toEqual(undefined)
+      expect(events.length).toEqual(1)
+      expect(events[0]).toEqual('create-failed')
+      expect(sessions.length).toEqual(1)
+      expect(sessions[0]).toEqual(undefined)
+    })
+  })
 })

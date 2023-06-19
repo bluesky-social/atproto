@@ -1,3 +1,4 @@
+import assert from 'assert'
 import { Readable, Transform } from 'stream'
 import { createDeflate, createGunzip } from 'zlib'
 import express from 'express'
@@ -265,4 +266,36 @@ function decodeBodyStream(
   }
 
   return stream
+}
+
+export function serverTimingHeader(timings: ServerTiming[]) {
+  return timings
+    .map((timing) => {
+      let header = timing.name
+      if (timing.duration) header += `;dur=${timing.duration}`
+      if (timing.description) header += `;desc="${timing.description}"`
+      return header
+    })
+    .join(', ')
+}
+
+export class ServerTimer implements ServerTiming {
+  public duration?: number
+  private startMs?: number
+  constructor(public name: string, public description?: string) {}
+  start() {
+    this.startMs = Date.now()
+    return this
+  }
+  stop() {
+    assert(this.startMs, "timer hasn't been started")
+    this.duration = Date.now() - this.startMs
+    return this
+  }
+}
+
+export interface ServerTiming {
+  name: string
+  duration?: number
+  description?: string
 }

@@ -3,13 +3,14 @@ import AtpAgent, {
   ComAtprotoServerCreateAccount,
   ComAtprotoServerResetPassword,
 } from '@atproto/api'
-import { DidResolver } from '@atproto/did-resolver'
+import { IdResolver } from '@atproto/identity'
 import * as crypto from '@atproto/crypto'
 import Mail from 'nodemailer/lib/mailer'
 import { AppContext, Database } from '../src'
 import * as util from './_util'
 import { ServerMailer } from '../src/mailer'
 import { DAY } from '@atproto/common'
+import { genInvCodes } from '../src/api/com/atproto/server/util'
 
 const email = 'alice@test.com'
 const handle = 'alice.test'
@@ -40,7 +41,7 @@ describe('account', () => {
   let close: util.CloseFn
   let mailer: ServerMailer
   let db: Database
-  let didResolver: DidResolver
+  let idResolver: IdResolver
   const mailCatcher = new EventEmitter()
   let _origSendMail
 
@@ -48,6 +49,7 @@ describe('account', () => {
     const server = await util.runTestServer({
       inviteRequired: true,
       userInviteInterval: DAY,
+      userInviteEpoch: Date.now() - 3 * DAY,
       termsOfServiceUrl: 'https://example.com/tos',
       privacyPolicyUrl: '/privacy-policy',
       dbPostgresSchema: 'account',
@@ -58,7 +60,7 @@ describe('account', () => {
     ctx = server.ctx
     serverUrl = server.url
     repoSigningKey = server.ctx.repoSigningKey.did()
-    didResolver = new DidResolver({ plcUrl: ctx.cfg.didPlcUrl })
+    idResolver = new IdResolver({ plcUrl: ctx.cfg.didPlcUrl })
     agent = new AtpAgent({ service: serverUrl })
 
     // Catch emails for use in tests
@@ -140,7 +142,7 @@ describe('account', () => {
   })
 
   it('generates a properly formatted PLC DID', async () => {
-    const didData = await didResolver.resolveAtprotoData(did)
+    const didData = await idResolver.did.resolveAtprotoData(did)
 
     expect(didData.did).toBe(did)
     expect(didData.handle).toBe(handle)
@@ -166,6 +168,104 @@ describe('account', () => {
       ctx.cfg.recoveryKey,
       ctx.plcRotationKey.did(),
     ])
+  })
+
+  it('allows a user to bring their own DID', async () => {
+    const inviteCode = await createInviteCode(agent, 1)
+    const userKey = await crypto.Secp256k1Keypair.create()
+    const handle = 'byo-did.test'
+    const did = await ctx.plcClient.createDid({
+      signingKey: ctx.repoSigningKey.did(),
+      handle,
+      rotationKeys: [
+        userKey.did(),
+        ctx.cfg.recoveryKey,
+        ctx.plcRotationKey.did(),
+      ],
+      pds: ctx.cfg.publicUrl,
+      signer: userKey,
+    })
+
+    const res = await agent.api.com.atproto.server.createAccount({
+      email: 'byo-did@test.com',
+      handle,
+      did,
+      password: 'byo-did-pass',
+      inviteCode,
+    })
+
+    expect(res.data.handle).toEqual(handle)
+    expect(res.data.did).toEqual(did)
+  })
+
+  it('requires that the did a user brought be correctly set up for the server', async () => {
+    const inviteCode = await createInviteCode(agent, 1)
+    const userKey = await crypto.Secp256k1Keypair.create()
+    const baseDidInfo = {
+      signingKey: ctx.repoSigningKey.did(),
+      handle: 'byo-did.test',
+      rotationKeys: [
+        userKey.did(),
+        ctx.cfg.recoveryKey,
+        ctx.plcRotationKey.did(),
+      ],
+      pds: ctx.cfg.publicUrl,
+      signer: userKey,
+    }
+    const baseAccntInfo = {
+      email: 'byo-did@test.com',
+      handle: 'byo-did.test',
+      password: 'byo-did-pass',
+      inviteCode,
+    }
+
+    const did1 = await ctx.plcClient.createDid({
+      ...baseDidInfo,
+      handle: 'different-handle.test',
+    })
+    const attempt1 = agent.api.com.atproto.server.createAccount({
+      ...baseAccntInfo,
+      did: did1,
+    })
+    await expect(attempt1).rejects.toThrow(
+      'provided handle does not match DID document handle',
+    )
+
+    const did2 = await ctx.plcClient.createDid({
+      ...baseDidInfo,
+      pds: 'https://other-pds.com',
+    })
+    const attempt2 = agent.api.com.atproto.server.createAccount({
+      ...baseAccntInfo,
+      did: did2,
+    })
+    await expect(attempt2).rejects.toThrow(
+      'DID document pds endpoint does not match service endpoint',
+    )
+
+    const did3 = await ctx.plcClient.createDid({
+      ...baseDidInfo,
+      rotationKeys: [userKey.did()],
+    })
+    const attempt3 = agent.api.com.atproto.server.createAccount({
+      ...baseAccntInfo,
+      did: did3,
+    })
+    await expect(attempt3).rejects.toThrow(
+      'PLC DID does not include service rotation key',
+    )
+
+    const did4 = await ctx.plcClient.createDid({
+      ...baseDidInfo,
+      signingKey: userKey.did(),
+    })
+    const attempt4 = agent.api.com.atproto.server.createAccount({
+      ...baseAccntInfo,
+      did: did4,
+    })
+    await expect(attempt4).rejects.toThrow(
+      'DID document signing key does not match service signing key',
+    )
   })
 
   it('allows administrative email updates', async () => {
@@ -564,8 +664,10 @@ describe('account', () => {
       .execute()
     const res2 = await agent.api.com.atproto.server.getAccountInviteCodes()
     expect(res2.data.codes.length).toBe(2)
+  })
 
-    // now pretend it was made 10 days ago
+  it('creates invites based on epoch', async () => {
+    // pretend account was made 10 days ago
     const tenDaysAgo = new Date(Date.now() - 10 * DAY).toISOString()
     await ctx.db.db
       .updateTable('user_account')
@@ -573,17 +675,39 @@ describe('account', () => {
       .where('did', '=', did)
       .execute()
 
+    // we have a 3 day epoch so should still get 1 code
+    const res = await agent.api.com.atproto.server.getAccountInviteCodes({
+      includeUsed: false,
+    })
+    expect(res.data.codes.length).toBe(1)
+    const res2 = await agent.api.com.atproto.server.getAccountInviteCodes()
+    expect(res2.data.codes.length).toBe(3)
+
+    // we pad their account with some additional used codes from the past which should not change anything
+    const inviteRows = genInvCodes(ctx.cfg, 10).map((code) => ({
+      code: code,
+      availableUses: 1,
+      disabled: 0 as const,
+      forUser: did,
+      createdBy: did,
+      createdAt: new Date(Date.now() - 5 * DAY).toISOString(),
+    }))
+    await ctx.db.db.insertInto('invite_code').values(inviteRows).execute()
+    await ctx.db.db
+      .insertInto('invite_code_use')
+      .values(
+        inviteRows.map((row) => ({
+          code: row.code,
+          usedBy: 'did:example:test',
+          usedAt: new Date().toISOString(),
+        })),
+      )
+      .execute()
+
     const res3 = await agent.api.com.atproto.server.getAccountInviteCodes({
       includeUsed: false,
-      createAvailable: false,
     })
-    expect(res3.data.codes.length).toBe(0)
-    const res4 = await agent.api.com.atproto.server.getAccountInviteCodes()
-    expect(res4.data.codes.length).toBe(7)
-    const res5 = await agent.api.com.atproto.server.getAccountInviteCodes({
-      includeUsed: false,
-    })
-    expect(res5.data.codes.length).toBe(5)
+    expect(res3.data.codes.length).toBe(1)
   })
 
   it('prevents use of disabled codes', async () => {

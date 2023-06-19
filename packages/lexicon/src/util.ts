@@ -7,8 +7,13 @@ import {
   ValidationResult,
   isDiscriminatedObject,
 } from './types'
+import { z } from 'zod'
 
 export function toLexUri(str: string, baseUri?: string): string {
+  if (str.split('#').length > 2) {
+    throw new Error('Uri can only have one hash segment')
+  }
+
   if (str.startsWith('lex:')) {
     return str
   }
@@ -40,7 +45,7 @@ export function validateOneOf(
         ),
       }
     }
-    if (!def.refs.includes(toLexUri(value.$type))) {
+    if (!refsContainType(def.refs, value.$type)) {
       if (def.closed) {
         return {
           success: false,
@@ -102,5 +107,60 @@ export function toConcreteTypes(
     return def.refs.map((ref) => lexicons.getDefOrThrow(ref)).flat()
   } else {
     return [def]
+  }
+}
+
+export function requiredPropertiesRefinement<
+  ObjectType extends {
+    required?: string[]
+    properties?: Record<string, unknown>
+  },
+>(object: ObjectType, ctx: z.RefinementCtx) {
+  // Required fields check
+  if (object.required === undefined) {
+    return
+  }
+
+  if (!Array.isArray(object.required)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.invalid_type,
+      received: typeof object.required,
+      expected: 'array',
+    })
+    return
+  }
+
+  if (object.properties === undefined) {
+    if (object.required.length > 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Required fields defined but no properties defined`,
+      })
+    }
+    return
+  }
+
+  for (const field of object.required) {
+    if (object.properties[field] === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Required field "${field}" not defined`,
+      })
+    }
+  }
+}
+
+// to avoid bugs like #0189 this needs to handle both
+// explicit and implicit #main
+const refsContainType = (refs: string[], type: string) => {
+  const lexUri = toLexUri(type)
+  if (refs.includes(lexUri)) {
+    return true
+  }
+
+  if (lexUri.endsWith('#main')) {
+    return refs.includes(lexUri.replace('#main', ''))
+  } else {
+    return refs.includes(lexUri + '#main')
   }
 }

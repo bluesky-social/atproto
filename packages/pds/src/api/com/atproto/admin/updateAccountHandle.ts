@@ -44,14 +44,6 @@ export default function (server: Server, ctx: AppContext) {
       if (!existingAccnt) {
         throw new InvalidRequestError(`Account not found: ${did}`)
       }
-      const isServiceDomain = ctx.cfg.availableUserDomains.find((domain) =>
-        existingAccnt.handle.endsWith(domain),
-      )
-      if (!isServiceDomain) {
-        throw new InvalidRequestError(
-          `Account not on an available service domain: ${existingAccnt.handle}`,
-        )
-      }
 
       await ctx.db.transaction(async (dbTxn) => {
         try {

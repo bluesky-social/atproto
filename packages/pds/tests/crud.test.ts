@@ -7,6 +7,7 @@ import * as deleteRecord from '@atproto/api/src/client/types/com/atproto/repo/de
 import * as applyWrites from '@atproto/api/src/client/types/com/atproto/repo/applyWrites'
 import { cidForCbor, TID } from '@atproto/common'
 import { BlobNotFoundError } from '@atproto/repo'
+import { defaultFetchHandler } from '@atproto/xrpc'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
 import { adminAuth, CloseFn, paginateAll, runTestServer } from './_util'
 import AppContext from '../src/context'
@@ -443,7 +444,7 @@ describe('crud operations', () => {
         },
       })
       await expect(put).rejects.toThrow(
-        'Temporarily only accepting puts for app.bsky.actor.profile/self',
+        'Temporarily only accepting puts for collections: app.bsky.actor.profile, app.bsky.graph.list',
       )
     })
 
@@ -829,6 +830,30 @@ describe('crud operations', () => {
         applyWrites.InvalidSwapError,
       )
     })
+
+    it("writes fail on values that can't reliably transform between cbor to lex", async () => {
+      const passthroughBody = (data: unknown) =>
+        typedArrayToBuffer(new TextEncoder().encode(JSON.stringify(data)))
+      const result = await defaultFetchHandler(
+        aliceAgent.service.origin + `/xrpc/com.atproto.repo.createRecord`,
+        'post',
+        { ...aliceAgent.api.xrpc.headers, 'Content-Type': 'application/json' },
+        passthroughBody({
+          repo: alice.did,
+          collection: 'app.bsky.feed.post',
+          record: {
+            text: 'x',
+            createdAt: new Date().toISOString(),
+            deepObject: createDeepObject(4000),
+          },
+        }),
+      )
+      expect(result.status).toEqual(400)
+      expect(result.body).toEqual({
+        error: 'InvalidRequest',
+        message: 'Bad record',
+      })
+    })
   })
 
   it('prevents duplicate likes', async () => {
@@ -954,6 +979,68 @@ describe('crud operations', () => {
     await expect(getRepost3).resolves.toBeDefined()
   })
 
+  it('prevents duplicate blocks', async () => {
+    const now = new Date().toISOString()
+
+    const { data: block1 } = await aliceAgent.api.com.atproto.repo.createRecord(
+      {
+        repo: alice.did,
+        collection: 'app.bsky.graph.block',
+        record: {
+          $type: 'app.bsky.graph.block',
+          subject: bob.did,
+          createdAt: now,
+        },
+      },
+    )
+
+    const { data: block2 } = await bobAgent.api.com.atproto.repo.createRecord({
+      repo: bob.did,
+      collection: 'app.bsky.graph.block',
+      record: {
+        $type: 'app.bsky.graph.block',
+        subject: alice.did,
+        createdAt: now,
+      },
+    })
+
+    const { data: block3 } = await aliceAgent.api.com.atproto.repo.createRecord(
+      {
+        repo: alice.did,
+        collection: 'app.bsky.graph.block',
+        record: {
+          $type: 'app.bsky.graph.block',
+          subject: bob.did,
+          createdAt: now,
+        },
+      },
+    )
+
+    const getBlock1 = aliceAgent.api.com.atproto.repo.getRecord({
+      repo: alice.did,
+      collection: 'app.bsky.graph.block',
+      rkey: new AtUri(block1.uri).rkey,
+    })
+
+    await expect(getBlock1).rejects.toThrow('Could not locate record:')
+
+    const getBlock2 = aliceAgent.api.com.atproto.repo.getRecord({
+      repo: bob.did,
+      collection: 'app.bsky.graph.block',
+      rkey: new AtUri(block2.uri).rkey,
+    })
+
+    await expect(getBlock2).resolves.toBeDefined()
+
+    const getBlock3 = aliceAgent.api.com.atproto.repo.getRecord({
+      repo: alice.did,
+      collection: 'app.bsky.graph.block',
+      rkey: new AtUri(block3.uri).rkey,
+    })
+
+    await expect(getBlock3).resolves.toBeDefined()
+  })
+
   it('prevents duplicate follows', async () => {
     const now = new Date().toISOString()
 
@@ -1074,3 +1161,20 @@ describe('crud operations', () => {
     )
   })
 })
+
+function createDeepObject(depth: number) {
+  const obj: any = {}
+  let iter = obj
+  for (let i = 0; i < depth; ++i) {
+    iter.x = {}
+    iter = iter.x
+  }
+  return obj
+}
+
+function typedArrayToBuffer(array: Uint8Array): ArrayBuffer {
+  return array.buffer.slice(
+    array.byteOffset,
+    array.byteLength + array.byteOffset,
+  )
+}

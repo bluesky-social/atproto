@@ -1,28 +1,28 @@
 import AtpAgent from '@atproto/api'
 import { SeedClient } from '../seeds/client'
-import { runTestEnv, TestEnvInfo } from '@atproto/dev-env'
-import { forSnapshot, processAll } from '../_util'
+import { TestNetwork } from '@atproto/dev-env'
+import { forSnapshot } from '../_util'
 import usersBulk from '../seeds/users-bulk'
 import { chunkArray, DAY, wait } from '@atproto/common'
 import { ids } from '@atproto/api/src/client/lexicons'
 
 describe('repo subscription backfill', () => {
-  let testEnv: TestEnvInfo
+  let network: TestNetwork
   let agent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
   let dids: string[]
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'subscription_backfill',
       bsky: { repoSubBackfillConcurrency: 9 },
     })
-    agent = new AtpAgent({ service: testEnv.bsky.url })
-    pdsAgent = new AtpAgent({ service: testEnv.pds.url })
+    agent = network.bsky.getClient()
+    pdsAgent = network.pds.getClient()
     sc = new SeedClient(pdsAgent)
     await wait(100) // allow pending sub to be established
-    await testEnv.bsky.sub.destroy()
+    await network.bsky.sub.destroy()
     await usersBulk(sc, 50)
 
     // For consistent ordering
@@ -31,7 +31,7 @@ describe('repo subscription backfill', () => {
       .map((handle) => sc.dids[handle])
 
     // Place all events out of the backfill period...
-    await testEnv.pds.ctx.db.db
+    await network.pds.ctx.db.db
       .updateTable('repo_seq')
       .set({
         sequencedAt: new Date(Date.now() - 2 * DAY).toISOString(),
@@ -42,7 +42,7 @@ describe('repo subscription backfill', () => {
   })
 
   afterAll(async () => {
-    await testEnv.close()
+    await network.close()
   })
 
   it('ingests all repos via backfill.', async () => {
@@ -51,8 +51,8 @@ describe('repo subscription backfill', () => {
     expect(profilesBefore).toEqual([])
 
     // Process backfill
-    testEnv.bsky.sub.resume()
-    await processAll(testEnv, 60000)
+    network.bsky.sub.resume()
+    await network.processAll(60000)
 
     // Check all backfilled profiles
     const profilesAfter = await getAllProfiles(agent, dids)
@@ -62,7 +62,7 @@ describe('repo subscription backfill', () => {
 
   it('continues processing after backfill.', async () => {
     await updateProfile(pdsAgent, dids[0], { displayName: 'updated' })
-    await processAll(testEnv)
+    await network.processAll()
     const { data: profile } = await agent.api.app.bsky.actor.getProfile({
       actor: dids[0],
     })

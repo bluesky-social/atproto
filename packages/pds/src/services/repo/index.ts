@@ -2,11 +2,15 @@ import { CID } from 'multiformats/cid'
 import * as crypto from '@atproto/crypto'
 import {
   BlobStore,
+  MemoryBlockstore,
+  BlockMap,
   CommitData,
   RebaseData,
   Repo,
   WriteOpAction,
 } from '@atproto/repo'
+import * as repo from '@atproto/repo'
+import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
@@ -20,9 +24,12 @@ import {
 import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { RecordService } from '../record'
-import { sequenceCommit, sequenceRebase } from '../../sequencer'
+import * as sequencer from '../../sequencer'
 import { Labeler } from '../../labeler'
 import { wait } from '@atproto/common'
+import { BackgroundQueue } from '../../event-stream/background-queue'
+import { countAll } from '../../db/util'
+import { Crawlers } from '../../crawlers'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -32,19 +39,31 @@ export class RepoService {
     public repoSigningKey: crypto.Keypair,
     public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
+    public backgroundQueue: BackgroundQueue,
+    public crawlers: Crawlers,
     public labeler: Labeler,
   ) {
-    this.blobs = new RepoBlobs(db, blobstore)
+    this.blobs = new RepoBlobs(db, blobstore, backgroundQueue)
   }
 
   static creator(
     keypair: crypto.Keypair,
     messageDispatcher: MessageQueue,
     blobstore: BlobStore,
+    backgroundQueue: BackgroundQueue,
+    crawlers: Crawlers,
     labeler: Labeler,
   ) {
     return (db: Database) =>
-      new RepoService(db, keypair, messageDispatcher, blobstore, labeler)
+      new RepoService(
+        db,
+        keypair,
+        messageDispatcher,
+        blobstore,
+        backgroundQueue,
+        crawlers,
+        labeler,
+      )
   }
 
   services = {
@@ -61,6 +80,8 @@ export class RepoService {
         this.repoSigningKey,
         this.messageDispatcher,
         this.blobstore,
+        this.backgroundQueue,
+        this.crawlers,
         this.labeler,
       )
       return fn(srvc)
@@ -77,11 +98,12 @@ export class RepoService {
       this.repoSigningKey,
       writeOps,
     )
-    await storage.applyCommit(commit)
     await Promise.all([
+      storage.applyCommit(commit),
       this.indexWrites(writes, now),
-      this.afterWriteProcessing(did, commit, writes),
+      this.blobs.processWriteBlobs(did, commit.commit, writes),
     ])
+    await this.afterWriteProcessing(did, commit, writes)
   }
 
   async processCommit(
@@ -101,9 +123,11 @@ export class RepoService {
       storage.applyCommit(commitData),
       // & send to indexing
       this.indexWrites(writes, now),
+      // process blobs
+      this.blobs.processWriteBlobs(did, commitData.commit, writes),
       // do any other processing needed after write
-      this.afterWriteProcessing(did, commitData, writes),
     ])
+    await this.afterWriteProcessing(did, commitData, writes)
   }
 
   async processWrites(
@@ -116,14 +140,9 @@ export class RepoService {
     const storage = new SqlRepoStorage(this.db, did)
     const commit = await this.formatCommit(storage, did, writes, swapCommitCid)
     try {
-      await this.serviceTx(async (srvcTx) => {
-        await srvcTx.processCommit(
-          did,
-          writes,
-          commit,
-          new Date().toISOString(),
-        )
-      })
+      await this.serviceTx(async (srvcTx) =>
+        srvcTx.processCommit(did, writes, commit, new Date().toISOString()),
+      )
     } catch (err) {
       if (err instanceof ConcurrentWriteError) {
         if (times <= 1) {
@@ -206,13 +225,17 @@ export class RepoService {
     commitData: CommitData,
     writes: PreparedWrite[],
   ) {
-    await Promise.all([
-      this.blobs.processWriteBlobs(did, commitData.commit, writes),
-      sequenceCommit(this.db, did, commitData, writes),
-    ])
+    this.db.onCommit(() => {
+      this.backgroundQueue.add(async () => {
+        await this.crawlers.notifyOfUpdate()
+      })
+    })
+
+    const seqEvt = await sequencer.formatSeqCommit(did, commitData, writes)
+    await sequencer.sequenceEvt(this.db, seqEvt)
 
     // @TODO move to appview
-    writes.map((write) => {
+    writes.forEach((write) => {
       if (
         write.action === WriteOpAction.Create ||
         write.action === WriteOpAction.Update
@@ -222,48 +245,124 @@ export class RepoService {
     })
   }
 
-  async rebaseRepo(did: string, now: string, swapCommit?: CID) {
-    this.db.assertTransaction()
-    const storage = new SqlRepoStorage(this.db, did, now)
-    const currRoot = await storage.lockHead()
+  async rebaseRepo(did: string, swapCommit?: CID) {
+    this.db.assertNotTransaction()
+    const rebaseData = await this.formatRebase(did, swapCommit)
+
+    // rebases are expensive & should be done rarely, we don't try to re-process on concurrent writes
+    await this.serviceTx(async (srvcTx) =>
+      srvcTx.processRebase(did, rebaseData),
+    )
+  }
+
+  async formatRebase(did: string, swapCommit?: CID): Promise<RebaseData> {
+    const storage = new SqlRepoStorage(this.db, did, new Date().toISOString())
+    const currRoot = await storage.getHead()
     if (!currRoot) {
-      throw new ConcurrentWriteError()
+      throw new InvalidRequestError(
+        `${did} is not a registered repo on this server`,
+      )
     }
     if (swapCommit && !currRoot.equals(swapCommit)) {
       throw new BadCommitSwapError(currRoot)
     }
-    const repo = await Repo.load(storage, currRoot)
-    const rebaseData = await repo.formatRebase(this.repoSigningKey)
+
+    const records = await this.db.db
+      .selectFrom('record')
+      .where('did', '=', did)
+      .select(['uri', 'cid'])
+      .execute()
+    const memoryStore = new MemoryBlockstore()
+    let data = await repo.MST.create(memoryStore)
+    for (const record of records) {
+      const uri = new AtUri(record.uri)
+      const cid = CID.parse(record.cid)
+      const dataKey = repo.formatDataKey(uri.collection, uri.rkey)
+      data = await data.add(dataKey, cid)
+    }
+    const commit = await repo.signCommit(
+      {
+        did,
+        version: 2,
+        prev: null,
+        data: await data.getPointer(),
+      },
+      this.repoSigningKey,
+    )
+    const currCids = await data.allCids()
+    const newBlocks = new BlockMap()
+    const commitCid = await newBlocks.add(commit)
+    return {
+      commit: commitCid,
+      rebased: currRoot,
+      blocks: newBlocks,
+      preservedCids: currCids.toList(),
+    }
+  }
+
+  async processRebase(did: string, rebaseData: RebaseData) {
+    this.db.assertTransaction()
+    const storage = new SqlRepoStorage(this.db, did)
+    const lockedHead = await storage.lockHead()
+    if (!rebaseData.rebased.equals(lockedHead)) {
+      throw new ConcurrentWriteError()
+    }
+
+    const recordCountBefore = await this.countRecordBlocks(did)
     await Promise.all([
       storage.applyRebase(rebaseData),
-      this.afterRebaseProcessing(did, rebaseData),
+      this.blobs.processRebaseBlobs(did, rebaseData.commit),
     ])
+    const recordCountAfter = await this.countRecordBlocks(did)
+    // This is purely a dummy check on a very sensitive operation
+    if (recordCountBefore !== recordCountAfter) {
+      throw new Error(
+        `Record blocks deleted during rebase. Rolling back: ${did}`,
+      )
+    }
+
+    await this.afterRebaseProcessing(did, rebaseData)
   }
 
   async afterRebaseProcessing(did: string, rebaseData: RebaseData) {
-    await Promise.all([
-      this.blobs.processRebaseBlobs(did, rebaseData.commit),
-      sequenceRebase(this.db, did, rebaseData),
-    ])
+    const seqEvt = await sequencer.formatSeqRebase(did, rebaseData)
+    await sequencer.sequenceEvt(this.db, seqEvt)
+  }
+
+  // used for integrity check
+  private async countRecordBlocks(did: string): Promise<number> {
+    const res = await this.db.db
+      .selectFrom('record')
+      .where('record.did', '=', did)
+      .innerJoin('ipld_block', (join) =>
+        join
+          .onRef('ipld_block.creator', '=', 'record.did')
+          .onRef('ipld_block.cid', '=', 'record.cid'),
+      )
+      .select(countAll.as('count'))
+      .executeTakeFirst()
+    return res?.count ?? 0
   }
 
   async deleteRepo(did: string) {
-    this.db.assertTransaction()
+    // Not done in transaction because it would be too long, prone to contention.
+    // Also, this can safely be run multiple times if it fails.
     // delete all blocks from this did & no other did
-    await Promise.all([
-      this.db.db.deleteFrom('ipld_block').where('creator', '=', did).execute(),
-      this.db.db
-        .deleteFrom('repo_commit_block')
-        .where('creator', '=', did)
-        .execute(),
-      this.db.db
-        .deleteFrom('repo_commit_history')
-        .where('creator', '=', did)
-        .execute(),
-      this.db.db.deleteFrom('repo_root').where('did', '=', did).execute(),
-      this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute(),
-      this.blobs.deleteForUser(did),
-    ])
+    await this.db.db.deleteFrom('repo_root').where('did', '=', did).execute()
+    await this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute()
+    await this.db.db
+      .deleteFrom('repo_commit_block')
+      .where('creator', '=', did)
+      .execute()
+    await this.db.db
+      .deleteFrom('repo_commit_history')
+      .where('creator', '=', did)
+      .execute()
+    await this.db.db
+      .deleteFrom('ipld_block')
+      .where('creator', '=', did)
+      .execute()
+    await this.blobs.deleteForUser(did)
   }
 }
 

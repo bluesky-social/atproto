@@ -20,11 +20,13 @@ export type HandlerInput = undefined
 export interface HandlerSuccess {
   encoding: 'application/json'
   body: OutputSchema
+  headers?: { [key: string]: string }
 }
 
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'RepoNotFound'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

@@ -176,7 +176,7 @@ const res1 = await agent.com.atproto.repo.createRecord(
     record: {
       $type: 'app.bsky.feed.post',
       text: 'Hello, world!',
-      createdAt: (new Date()).toISOString()
+      createdAt: new Date().toISOString()
     }
   }
 )
@@ -184,7 +184,7 @@ const res2 = await agent.com.atproto.repo.listRecords({repo: alice.did, collecti
 
 const res3 = await agent.app.bsky.feed.post.create({repo: alice.did}, {
   text: 'Hello, world!',
-  createdAt: (new Date()).toISOString()
+  createdAt: new Date().toISOString()
 })
 const res4 = await agent.app.bsky.feed.post.list({repo: alice.did})
 ```

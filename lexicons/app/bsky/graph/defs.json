@@ -1,0 +1,59 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.defs",
+  "defs": {
+    "listViewBasic": {
+      "type": "object",
+      "required": ["uri", "name", "purpose"],
+      "properties": {
+        "uri": {"type": "string", "format": "at-uri"},
+        "name": {"type": "string", "maxLength": 64, "minLength": 1},
+        "purpose": {"type": "ref", "ref": "#listPurpose"},
+        "avatar": {"type": "string"},
+        "viewer": {"type": "ref", "ref": "#listViewerState"},
+        "indexedAt": {"type": "string", "format": "datetime"}
+      }
+    },
+    "listView": {
+      "type": "object",
+      "required": ["uri", "creator", "name", "purpose", "indexedAt"],
+      "properties": {
+        "uri": {"type": "string", "format": "at-uri"},
+        "creator": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
+        "name": {"type": "string", "maxLength": 64, "minLength": 1},
+        "purpose": {"type": "ref", "ref": "#listPurpose"},
+        "description": {"type": "string", "maxGraphemes": 300, "maxLength": 3000},
+        "descriptionFacets": {
+          "type": "array",
+          "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
+        },
+        "avatar": {"type": "string"},
+        "viewer": {"type": "ref", "ref": "#listViewerState"},
+        "indexedAt": {"type": "string", "format": "datetime"}
+      }
+    },
+    "listItemView": {
+      "type": "object",
+      "required": ["subject"],
+      "properties": {
+        "subject": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"}
+      }
+    },
+    "listPurpose": {
+      "type": "string",
+      "knownValues": [
+        "app.bsky.graph.defs#modlist"
+      ]
+    },
+    "modlist": {
+      "type": "token",
+      "description": "A list of actors to apply an aggregate moderation action (mute/block) on"
+    },
+    "listViewerState": {
+      "type": "object",
+      "properties": {
+        "muted": {"type": "boolean"}
+      }
+    }
+  }
+}

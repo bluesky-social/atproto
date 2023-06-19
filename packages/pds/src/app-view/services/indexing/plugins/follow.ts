@@ -10,6 +10,7 @@ import {
 import { countAll, excluded } from '../../../../db/util'
 import { BackgroundQueue } from '../../../../event-stream/background-queue'
 import RecordProcessor from '../processor'
+import { toSimplifiedISOSafe } from '../util'
 
 const lexId = lex.ids.AppBskyGraphFollow
 type IndexedFollow = DatabaseSchemaType['follow']
@@ -28,7 +29,7 @@ const insertFn = async (
       cid: cid.toString(),
       creator: uri.host,
       subjectDid: obj.subject,
-      createdAt: obj.createdAt,
+      createdAt: toSimplifiedISOSafe(obj.createdAt),
       indexedAt: timestamp,
     })
     .onConflict((oc) => oc.doNothing())

@@ -1,8 +1,9 @@
 import Database from '../db'
 import { Labeler } from './base'
 import { keywordLabeling } from './util'
-import { DidResolver } from '@atproto/did-resolver'
+import { IdResolver } from '@atproto/identity'
 import { ServerConfig } from '../config'
+import { BackgroundQueue } from '../background'
 
 export class KeywordLabeler extends Labeler {
   keywords: Record<string, string>
@@ -10,8 +11,9 @@ export class KeywordLabeler extends Labeler {
   constructor(
     protected ctx: {
       db: Database
-      didResolver: DidResolver
+      idResolver: IdResolver
       cfg: ServerConfig
+      backgroundQueue: BackgroundQueue
     },
   ) {
     super(ctx)

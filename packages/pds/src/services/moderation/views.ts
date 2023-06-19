@@ -18,9 +18,10 @@ import {
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
-import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
+import { ModerationAction } from '../../db/tables/moderation'
 import { AccountService } from '../account'
 import { RecordService } from '../record'
+import { ModerationReportRowWithHandle } from '.'
 
 export class ModerationViews {
   constructor(private db: Database, private messageDispatcher: MessageQueue) {}
@@ -56,6 +57,7 @@ export class ModerationViews {
         .select([
           'did_handle.did as did',
           'user_account.email as email',
+          'user_account.invitesDisabled as invitesDisabled',
           'profile_block.content as profileBytes',
         ])
         .execute(),
@@ -85,7 +87,7 @@ export class ModerationViews {
     )
 
     const views = results.map((r) => {
-      const { email, profileBytes } = infoByDid[r.did] ?? {}
+      const { email, invitesDisabled, profileBytes } = infoByDid[r.did] ?? {}
       const action = actionByDid[r.did]
       const relatedRecords: object[] = []
       if (profileBytes) {
@@ -94,7 +96,7 @@ export class ModerationViews {
       return {
         did: r.did,
         handle: r.handle,
-        account: email ? { email } : undefined,
+        email: email ?? undefined,
         relatedRecords,
         indexedAt: r.indexedAt,
         moderation: {
@@ -103,6 +105,7 @@ export class ModerationViews {
             : undefined,
         },
         invitedBy: invitedBy[r.did],
+        invitesDisabled: invitesDisabled === 1,
       }
     })
 
@@ -231,6 +234,11 @@ export class ModerationViews {
         .selectFrom('moderation_report')
         .where('subjectType', '=', 'com.atproto.repo.strongRef')
         .where('subjectUri', '=', result.uri)
+        .leftJoin(
+          'did_handle',
+          'did_handle.did',
+          'moderation_report.subjectDid',
+        )
         .orderBy('id', 'desc')
         .selectAll()
         .execute(),
@@ -398,25 +406,33 @@ export class ModerationViews {
       return acc
     }, {} as Record<string, number[]>)
 
-    const views: ReportView[] = results.map((res) => ({
-      id: res.id,
-      createdAt: res.createdAt,
-      reasonType: res.reasonType,
-      reason: res.reason ?? undefined,
-      reportedBy: res.reportedByDid,
-      subject:
-        res.subjectType === 'com.atproto.admin.defs#repoRef'
-          ? {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: res.subjectDid,
-            }
-          : {
-              $type: 'com.atproto.repo.strongRef',
-              uri: res.subjectUri,
-              cid: res.subjectCid,
-            },
-      resolvedByActionIds: actionIdsByReportId[res.id] ?? [],
-    }))
+    const views: ReportView[] = results.map((res) => {
+      const decoratedView: ReportView = {
+        id: res.id,
+        createdAt: res.createdAt,
+        reasonType: res.reasonType,
+        reason: res.reason ?? undefined,
+        reportedBy: res.reportedByDid,
+        subject:
+          res.subjectType === 'com.atproto.admin.defs#repoRef'
+            ? {
+                $type: 'com.atproto.admin.defs#repoRef',
+                did: res.subjectDid,
+              }
+            : {
+                $type: 'com.atproto.repo.strongRef',
+                uri: res.subjectUri,
+                cid: res.subjectCid,
+              },
+        resolvedByActionIds: actionIdsByReportId[res.id] ?? [],
+      }
+
+      if (res.handle) {
+        decoratedView.subjectRepoHandle = res.handle
+      }
+
+      return decoratedView
+    })
 
     return Array.isArray(result) ? views : views[0]
   }
@@ -475,13 +491,13 @@ export class ModerationViews {
       const repoResult = await this.services
         .account(this.db)
         .getAccount(result.subjectDid, true)
-      if (!repoResult) {
-        throw new Error(
-          `Subject is missing: (${result.id}) ${result.subjectDid}`,
-        )
+      if (repoResult) {
+        subject = await this.repo(repoResult)
+        subject.$type = 'com.atproto.admin.defs#repoView'
+      } else {
+        subject = { did: result.subjectDid }
+        subject.$type = 'com.atproto.admin.defs#repoViewNotFound'
       }
-      subject = await this.repo(repoResult)
-      subject.$type = 'com.atproto.admin.defs#repoView'
     } else if (
       result.subjectType === 'com.atproto.repo.strongRef' &&
       result.subjectUri !== null
@@ -489,13 +505,13 @@ export class ModerationViews {
       const recordResult = await this.services
         .record(this.db)
         .getRecord(new AtUri(result.subjectUri), null, true)
-      if (!recordResult) {
-        throw new Error(
-          `Subject is missing: (${result.id}) ${result.subjectUri}`,
-        )
+      if (recordResult) {
+        subject = await this.record(recordResult)
+        subject.$type = 'com.atproto.admin.defs#recordView'
+      } else {
+        subject = { uri: result.subjectUri }
+        subject.$type = 'com.atproto.admin.defs#recordViewNotFound'
       }
-      subject = await this.record(recordResult)
-      subject.$type = 'com.atproto.admin.defs#recordView'
     } else {
       throw new Error(`Bad subject data: (${result.id}) ${result.subjectType}`)
     }
@@ -574,7 +590,7 @@ type RepoResult = DidHandle & RepoRoot
 
 type ActionResult = Selectable<ModerationAction>
 
-type ReportResult = Selectable<ModerationReport>
+type ReportResult = ModerationReportRowWithHandle
 
 type RecordResult = {
   uri: string

@@ -7,6 +7,7 @@ import describeRepo from './describeRepo'
 import getRecord from './getRecord'
 import listRecords from './listRecords'
 import putRecord from './putRecord'
+import rebaseRepo from './rebaseRepo'
 import uploadBlob from './uploadBlob'
 
 export default function (server: Server, ctx: AppContext) {
@@ -17,5 +18,6 @@ export default function (server: Server, ctx: AppContext) {
   getRecord(server, ctx)
   listRecords(server, ctx)
   putRecord(server, ctx)
+  rebaseRepo(server, ctx)
   uploadBlob(server, ctx)
 }

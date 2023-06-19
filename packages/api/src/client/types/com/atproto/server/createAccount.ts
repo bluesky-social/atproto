@@ -12,6 +12,7 @@ export interface QueryParams {}
 export interface InputSchema {
   email: string
   handle: string
+  did?: string
   inviteCode?: string
   password: string
   recoveryKey?: string
@@ -68,6 +69,18 @@ export class UnsupportedDomainError extends XRPCError {
   }
 }
 
+export class UnresolvableDidError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
+export class IncompatibleDidDocError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'InvalidHandle') return new InvalidHandleError(e)
@@ -75,6 +88,8 @@ export function toKnownErr(e: any) {
     if (e.error === 'InvalidInviteCode') return new InvalidInviteCodeError(e)
     if (e.error === 'HandleNotAvailable') return new HandleNotAvailableError(e)
     if (e.error === 'UnsupportedDomain') return new UnsupportedDomainError(e)
+    if (e.error === 'UnresolvableDid') return new UnresolvableDidError(e)
+    if (e.error === 'IncompatibleDidDoc') return new IncompatibleDidDocError(e)
   }
   return e
 }

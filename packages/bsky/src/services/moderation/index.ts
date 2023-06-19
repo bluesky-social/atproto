@@ -1,4 +1,4 @@
-import { Selectable } from 'kysely'
+import { Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -78,10 +78,23 @@ export class ModerationService {
   async getReports(opts: {
     subject?: string
     resolved?: boolean
+    actionType?: string
     limit: number
     cursor?: string
-  }): Promise<ModerationReportRow[]> {
-    const { subject, resolved, limit, cursor } = opts
+    ignoreSubjects?: string[]
+    reverse?: boolean
+    reporters?: string[]
+  }): Promise<ModerationReportRowWithHandle[]> {
+    const {
+      subject,
+      resolved,
+      actionType,
+      limit,
+      cursor,
+      ignoreSubjects,
+      reverse = false,
+      reporters,
+    } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_report')
     if (subject) {
@@ -91,6 +104,18 @@ export class ModerationService {
           .orWhere('subjectUri', '=', subject)
       })
     }
+    if (ignoreSubjects?.length) {
+      builder = builder.where((qb) => {
+        return qb
+          .where('subjectDid', 'not in', ignoreSubjects)
+          .where('subjectUri', 'not in', ignoreSubjects)
+      })
+    }
+
+    if (reporters?.length) {
+      builder = builder.where('reportedByDid', 'in', reporters)
+    }
+
     if (resolved !== undefined) {
       const resolutionsQuery = this.db.db
         .selectFrom('moderation_report_resolution')
@@ -104,16 +129,35 @@ export class ModerationService {
         ? builder.whereExists(resolutionsQuery)
         : builder.whereNotExists(resolutionsQuery)
     }
+    if (actionType !== undefined) {
+      const resolutionActionsQuery = this.db.db
+        .selectFrom('moderation_report_resolution')
+        .innerJoin(
+          'moderation_action',
+          'moderation_action.id',
+          'moderation_report_resolution.actionId',
+        )
+        .whereRef(
+          'moderation_report_resolution.reportId',
+          '=',
+          ref('moderation_report.id'),
+        )
+        .where('moderation_action.action', '=', sql`${actionType}`)
+        .where('moderation_action.reversedAt', 'is', null)
+        .selectAll()
+      builder = builder.whereExists(resolutionActionsQuery)
+    }
     if (cursor) {
       const cursorNumeric = parseInt(cursor, 10)
       if (isNaN(cursorNumeric)) {
         throw new InvalidRequestError('Malformed cursor')
       }
-      builder = builder.where('id', '<', cursorNumeric)
+      builder = builder.where('id', reverse ? '>' : '<', cursorNumeric)
     }
     return await builder
-      .selectAll()
-      .orderBy('id', 'desc')
+      .leftJoin('actor', 'actor.did', 'moderation_report.subjectDid')
+      .selectAll(['moderation_report', 'actor'])
+      .orderBy('id', reverse ? 'asc' : 'desc')
       .limit(limit)
       .execute()
   }
@@ -439,6 +483,9 @@ export class ModerationService {
 export type ModerationActionRow = Selectable<ModerationAction>
 
 export type ModerationReportRow = Selectable<ModerationReport>
+export type ModerationReportRowWithHandle = ModerationReportRow & {
+  handle?: string | null
+}
 
 export type SubjectInfo =
   | {

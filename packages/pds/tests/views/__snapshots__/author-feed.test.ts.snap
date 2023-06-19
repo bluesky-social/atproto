@@ -41,6 +41,7 @@ Array [
     },
     "reply": Object {
       "parent": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "did": "user(1)",
@@ -122,6 +123,7 @@ Array [
         "viewer": Object {},
       },
       "root": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "did": "user(0)",
@@ -139,7 +141,7 @@ Array [
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
+          "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
         "replyCount": 2,
@@ -330,7 +332,7 @@ Array [
       "likeCount": 3,
       "record": Object {
         "$type": "app.bsky.feed.post",
-        "createdAt": "1970-01-01T00:00:00.000Z",
+        "createdAt": "1970-01-01T00:00:00.000000Z",
         "text": "again",
       },
       "replyCount": 2,
@@ -454,6 +456,7 @@ Array [
     },
     "reply": Object {
       "parent": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "did": "user(1)",
@@ -473,7 +476,7 @@ Array [
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
+          "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
         "replyCount": 2,
@@ -484,6 +487,7 @@ Array [
         },
       },
       "root": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "did": "user(1)",
@@ -503,7 +507,7 @@ Array [
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
+          "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
         "replyCount": 2,
@@ -534,7 +538,7 @@ Array [
       "likeCount": 0,
       "record": Object {
         "$type": "app.bsky.feed.post",
-        "createdAt": "1970-01-01T00:00:00.000Z",
+        "createdAt": "1970-01-01T00:00:00.000+00:00",
         "text": "bobby boy here",
       },
       "replyCount": 0,
@@ -789,6 +793,7 @@ Array [
     },
     "reply": Object {
       "parent": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "did": "user(1)",
@@ -808,7 +813,7 @@ Array [
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
+          "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
         "replyCount": 2,
@@ -819,6 +824,7 @@ Array [
         },
       },
       "root": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "did": "user(1)",
@@ -838,7 +844,7 @@ Array [
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
+          "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
         "replyCount": 2,
@@ -982,7 +988,7 @@ Array [
       "likeCount": 3,
       "record": Object {
         "$type": "app.bsky.feed.post",
-        "createdAt": "1970-01-01T00:00:00.000Z",
+        "createdAt": "1970-01-01T00:00:00.000000Z",
         "text": "again",
       },
       "replyCount": 2,
@@ -1458,6 +1464,7 @@ Array [
     },
     "reply": Object {
       "parent": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "did": "user(1)",
@@ -1538,6 +1545,7 @@ Array [
         "viewer": Object {},
       },
       "root": Object {
+        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
           "did": "user(0)",
@@ -1557,7 +1565,7 @@ Array [
         "likeCount": 3,
         "record": Object {
           "$type": "app.bsky.feed.post",
-          "createdAt": "1970-01-01T00:00:00.000Z",
+          "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
         "replyCount": 2,
@@ -1753,7 +1761,7 @@ Array [
       "likeCount": 3,
       "record": Object {
         "$type": "app.bsky.feed.post",
-        "createdAt": "1970-01-01T00:00:00.000Z",
+        "createdAt": "1970-01-01T00:00:00.000000Z",
         "text": "again",
       },
       "replyCount": 2,

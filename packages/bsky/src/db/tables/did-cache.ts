@@ -1,4 +1,4 @@
-import { DidDocument } from '@atproto/did-resolver'
+import { DidDocument } from '@atproto/identity'
 
 export interface DidCache {
   did: string

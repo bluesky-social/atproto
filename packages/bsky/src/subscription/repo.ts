@@ -12,6 +12,7 @@ import {
   def,
   Commit,
 } from '@atproto/repo'
+import { ValidationError } from '@atproto/lexicon'
 import { OutputSchema as Message } from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import * as message from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import { ids, lexicons } from '../lexicon/lexicons'
@@ -150,9 +151,9 @@ export class RepoSubscription {
 
   private async handleCommit(msg: message.Commit) {
     const { db, services } = this.ctx
-    const { root, rootCid, ops } = await getOps(msg)
     const indexingSvc = services.indexing(db)
     const indexRecords = async () => {
+      const { root, rootCid, ops } = await getOps(msg)
       if (msg.tooBig) {
         return await indexingSvc.indexRepo(msg.repo, rootCid.toString())
       }
@@ -162,43 +163,52 @@ export class RepoSubscription {
         return await indexingSvc.indexRepo(msg.repo, rootCid.toString())
       }
       for (const op of ops) {
-        await db.transaction(async (tx) => {
-          if (op.action === WriteOpAction.Delete) {
-            await indexingSvc.transact(tx).deleteRecord(op.uri)
-          } else {
+        if (op.action === WriteOpAction.Delete) {
+          await indexingSvc.deleteRecord(op.uri)
+        } else {
+          try {
             // @TODO skip-and-log records that don't validate
-            await indexingSvc.transact(tx).indexRecord(
+            await indexingSvc.indexRecord(
               op.uri,
               op.cid,
               op.record,
               op.action, // create or update
               msg.time,
             )
+          } catch (err) {
+            if (err instanceof ValidationError) {
+              subLogger.warn(
+                {
+                  did: msg.repo,
+                  commit: msg.commit.toString(),
+                  uri: op.uri.toString(),
+                  cid: op.cid?.toString(),
+                },
+                'skipping indexing of invalid record',
+              )
+            } else {
+              throw err
+            }
           }
-        })
+        }
       }
+      await indexingSvc.setCommitLastSeen(root, msg)
     }
-    await Promise.all([
+    const results = await Promise.allSettled([
       indexRecords(),
       indexingSvc.indexHandle(msg.repo, msg.time),
     ])
-    await indexingSvc.setCommitLastSeen(root, msg)
+    handleAllSettledErrors(results)
   }
 
   private async handleUpdateHandle(msg: message.Handle) {
     const { db, services } = this.ctx
-    await db.transaction(async (tx) => {
-      const indexingTx = services.indexing(tx)
-      await indexingTx.indexHandle(msg.did, msg.time, true)
-    })
+    await services.indexing(db).indexHandle(msg.did, msg.time, true)
   }
 
   private async handleTombstone(msg: message.Tombstone) {
     const { db, services } = this.ctx
-    await db.transaction(async (tx) => {
-      const indexingTx = services.indexing(tx)
-      await indexingTx.tombstoneActor(msg.did)
-    })
+    await services.indexing(db).tombstoneActor(msg.did)
   }
 
   private async handleCursor(msg: ProcessableMessage) {
@@ -480,4 +490,24 @@ function rethrowAllSettled(result: PromiseSettledResult<unknown>[]) {
       throw item.reason
     }
   }
+}
+
+function handleAllSettledErrors(results: PromiseSettledResult<unknown>[]) {
+  const errors = results.filter(isRejected).map((res) => res.reason)
+  if (errors.length === 0) {
+    return
+  }
+  if (errors.length === 1) {
+    throw errors[0]
+  }
+  throw new AggregateError(
+    errors,
+    'Multiple errors: ' + errors.map((err) => err?.message).join('\n'),
+  )
+}
+
+function isRejected(
+  result: PromiseSettledResult<unknown>,
+): result is PromiseRejectedResult {
+  return result.status === 'rejected'
 }

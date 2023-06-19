@@ -16,7 +16,13 @@ const {
   S3BlobStore,
   CloudfrontInvalidator,
 } = require('@atproto/aws')
-const { Database, ServerConfig, PDS } = require('@atproto/pds')
+const {
+  Database,
+  ServerConfig,
+  PDS,
+  ViewMaintainer,
+  makeAlgos,
+} = require('@atproto/pds')
 const { Secp256k1Keypair } = require('@atproto/crypto')
 
 const main = async () => {
@@ -25,9 +31,11 @@ const main = async () => {
   const migrateDb = Database.postgres({
     url: pgUrl(env.dbMigrateCreds),
     schema: env.dbSchema,
+    // We need one connection for the
+    // view-maintainer lock then one for anything else.
+    poolSize: 2,
   })
   await migrateDb.migrateToLatestOrThrow()
-  await migrateDb.close()
   // Use lower-credentialed user to run the app
   const db = Database.postgres({
     url: pgUrl(env.dbCreds),
@@ -63,6 +71,7 @@ const main = async () => {
     distributionId: env.cfDistributionId,
     pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
   })
+  const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
   const pds = PDS.create({
     db,
     blobstore: s3Blobstore,
@@ -70,17 +79,32 @@ const main = async () => {
     plcRotationKey,
     config: cfg,
     imgInvalidator: cfInvalidator,
+    algos,
   })
+  const viewMaintainer = new ViewMaintainer(migrateDb)
+  const viewMaintainerRunning = viewMaintainer.run()
   await pds.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
     await pds.destroy()
+    viewMaintainer.destroy()
+    await viewMaintainerRunning
+    await migrateDb.close()
   })
 }
 
-const pgUrl = ({ username, password, host, port }) => {
+const pgUrl = ({
+  username = 'postgres',
+  password = 'postgres',
+  host = '0.0.0.0',
+  port = '5432',
+  database = 'postgres',
+  sslmode,
+}) => {
   const enc = encodeURIComponent
-  return `postgresql://${username}:${enc(password)}@${host}:${port}/postgres`
+  return `postgresql://${username}:${enc(
+    password,
+  )}@${host}:${port}/${database}${sslmode ? `?sslmode=${enc(sslmode)}` : ''}`
 }
 
 const smtpUrl = ({ username, password, host }) => {
@@ -109,6 +133,7 @@ const getEnv = () => ({
   smtpPassword: process.env.SMTP_PASSWORD,
   s3Bucket: process.env.S3_BUCKET_NAME,
   cfDistributionId: process.env.CF_DISTRIBUTION_ID,
+  feedPublisherDid: process.env.FEED_PUBLISHER_DID,
 })
 
 const maintainXrpcResource = (span, req) => {

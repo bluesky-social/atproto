@@ -37,6 +37,7 @@ export type HandlerAuth = zod.infer<typeof handlerAuth>
 export const handlerSuccess = zod.object({
   encoding: zod.string(),
   body: zod.any(),
+  headers: zod.record(zod.string()).optional(),
 })
 export type HandlerSuccess = zod.infer<typeof handlerSuccess>
 

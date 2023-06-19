@@ -8,7 +8,9 @@ Array [
       "handle": "dan.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -33,7 +35,9 @@ Array [
       "handle": "dan.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(2)",
@@ -58,8 +62,10 @@ Array [
       "handle": "carol.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(4)",
         "following": "record(5)",
+        "muted": false,
       },
     },
     "cid": "cids(3)",
@@ -80,8 +86,10 @@ Array [
       "handle": "carol.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(4)",
         "following": "record(5)",
+        "muted": false,
       },
     },
     "cid": "cids(4)",
@@ -113,8 +121,10 @@ Array [
       "handle": "carol.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(4)",
         "following": "record(5)",
+        "muted": false,
       },
     },
     "cid": "cids(6)",
@@ -139,8 +149,10 @@ Array [
       "handle": "carol.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(4)",
         "following": "record(5)",
+        "muted": false,
       },
     },
     "cid": "cids(8)",
@@ -162,15 +174,17 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(10)@jpeg",
-      "description": "hi im bob",
+      "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(11)",
         "following": "record(12)",
+        "muted": false,
       },
     },
     "cid": "cids(9)",
@@ -188,15 +202,17 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(10)@jpeg",
-      "description": "hi im bob",
+      "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(11)",
         "following": "record(12)",
+        "muted": false,
       },
     },
     "cid": "cids(11)",
@@ -258,15 +274,17 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(10)@jpeg",
-      "description": "hi im bob",
+      "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(11)",
         "following": "record(12)",
+        "muted": false,
       },
     },
     "cid": "cids(13)",
@@ -288,15 +306,17 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(10)@jpeg",
-      "description": "hi im bob",
+      "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(11)",
         "following": "record(12)",
+        "muted": false,
       },
     },
     "cid": "cids(14)",
@@ -326,7 +346,9 @@ Array [
       "handle": "dan.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -351,7 +373,9 @@ Array [
       "handle": "dan.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(2)",
@@ -393,7 +417,9 @@ Array [
       "handle": "dan.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(4)",
@@ -418,8 +444,10 @@ Array [
       "handle": "carol.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(6)",
         "following": "record(7)",
+        "muted": false,
       },
     },
     "cid": "cids(5)",
@@ -440,8 +468,10 @@ Array [
       "handle": "carol.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(6)",
         "following": "record(7)",
+        "muted": false,
       },
     },
     "cid": "cids(6)",
@@ -473,8 +503,10 @@ Array [
       "handle": "carol.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(6)",
         "following": "record(7)",
+        "muted": false,
       },
     },
     "cid": "cids(8)",
@@ -506,8 +538,10 @@ Array [
       "handle": "carol.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(6)",
         "following": "record(7)",
+        "muted": false,
       },
     },
     "cid": "cids(9)",
@@ -532,8 +566,10 @@ Array [
       "handle": "carol.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(6)",
         "following": "record(7)",
+        "muted": false,
       },
     },
     "cid": "cids(11)",
@@ -555,15 +591,17 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(13)@jpeg",
-      "description": "hi im bob",
+      "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(14)",
         "following": "record(15)",
+        "muted": false,
       },
     },
     "cid": "cids(12)",
@@ -581,15 +619,17 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(13)@jpeg",
-      "description": "hi im bob",
+      "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(14)",
         "following": "record(15)",
+        "muted": false,
       },
     },
     "cid": "cids(14)",
@@ -651,15 +691,17 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(13)@jpeg",
-      "description": "hi im bob",
+      "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(14)",
         "following": "record(15)",
+        "muted": false,
       },
     },
     "cid": "cids(16)",
@@ -681,15 +723,17 @@ Array [
   Object {
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(13)@jpeg",
-      "description": "hi im bob",
+      "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
       "handle": "bob.test",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(14)",
         "following": "record(15)",
+        "muted": false,
       },
     },
     "cid": "cids(17)",
@@ -718,7 +762,10 @@ Array [
       "did": "user(0)",
       "handle": "carol.test",
       "labels": Array [],
-      "viewer": Object {},
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
     },
     "cid": "cids(0)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -746,7 +793,9 @@ Array [
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
+        "muted": false,
       },
     },
     "cid": "cids(2)",
@@ -771,7 +820,9 @@ Array [
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
+        "muted": false,
       },
     },
     "cid": "cids(4)",

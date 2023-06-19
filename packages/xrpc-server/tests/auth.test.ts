@@ -82,7 +82,7 @@ describe('Auth', () => {
       )
       throw new Error('Didnt throw')
     } catch (e: any) {
-      expect(e instanceof XRPCError).toBeTruthy()
+      expect(e).toBeInstanceOf(XRPCError)
       expect(e.success).toBeFalsy()
       expect(e.error).toBe('AuthenticationRequired')
       expect(e.message).toBe('Authentication Required')
@@ -105,7 +105,7 @@ describe('Auth', () => {
       )
       throw new Error('Didnt throw')
     } catch (e: any) {
-      expect(e instanceof XRPCError).toBeTruthy()
+      expect(e).toBeInstanceOf(XRPCError)
       expect(e.success).toBeFalsy()
       expect(e.error).toBe('InvalidRequest')
       expect(e.message).toBe('Input/present must be true')

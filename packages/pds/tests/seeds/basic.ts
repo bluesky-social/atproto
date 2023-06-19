@@ -11,14 +11,20 @@ export default async (sc: SeedClient) => {
   const bob = sc.dids.bob
   const carol = sc.dids.carol
   const dan = sc.dids.dan
+  const createdAtMicroseconds = () => ({
+    createdAt: new Date().toISOString().replace('Z', '000Z'), // microseconds
+  })
+  const createdAtTimezone = () => ({
+    createdAt: new Date().toISOString().replace('Z', '+00:00'), // iso timezone format
+  })
 
   await sc.follow(alice, bob)
   await sc.follow(alice, carol)
   await sc.follow(alice, dan)
   await sc.follow(carol, alice)
   await sc.follow(bob, alice)
-  await sc.follow(bob, carol)
-  await sc.follow(dan, bob)
+  await sc.follow(bob, carol, createdAtMicroseconds())
+  await sc.follow(dan, bob, createdAtTimezone())
   await sc.post(alice, posts.alice[0])
   await sc.post(bob, posts.bob[0])
   const img1 = await sc.uploadFile(
@@ -56,8 +62,22 @@ export default async (sc: SeedClient) => {
     undefined,
     sc.posts[carol][0].ref, // This post contains an images embed
   )
-  await sc.post(alice, posts.alice[1])
-  await sc.post(bob, posts.bob[1])
+  await sc.post(
+    alice,
+    posts.alice[1],
+    undefined,
+    undefined,
+    undefined,
+    createdAtMicroseconds(),
+  )
+  await sc.post(
+    bob,
+    posts.bob[1],
+    undefined,
+    undefined,
+    undefined,
+    createdAtTimezone(),
+  )
   await sc.post(
     alice,
     posts.alice[2],
@@ -70,8 +90,8 @@ export default async (sc: SeedClient) => {
   await sc.like(carol, sc.posts[alice][1].ref)
   await sc.like(carol, sc.posts[alice][2].ref)
   await sc.like(dan, sc.posts[alice][1].ref)
-  await sc.like(alice, sc.posts[carol][0].ref)
-  await sc.like(bob, sc.posts[carol][0].ref)
+  await sc.like(alice, sc.posts[carol][0].ref, createdAtMicroseconds())
+  await sc.like(bob, sc.posts[carol][0].ref, createdAtTimezone())
 
   const replyImg = await sc.uploadFile(
     bob,

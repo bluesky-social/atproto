@@ -4,8 +4,9 @@ import FormData from 'form-data'
 import { Labeler } from './base'
 import { keywordLabeling } from './util'
 import { ServerConfig } from '../config'
-import { DidResolver } from '@atproto/did-resolver'
+import { IdResolver } from '@atproto/identity'
 import Database from '../db'
+import { BackgroundQueue } from '../background'
 
 const HIVE_ENDPOINT = 'https://api.thehive.ai/api/v2/task/sync'
 
@@ -17,8 +18,9 @@ export class HiveLabeler extends Labeler {
     hiveApiKey: string,
     protected ctx: {
       db: Database
-      didResolver: DidResolver
+      idResolver: IdResolver
       cfg: ServerConfig
+      backgroundQueue: BackgroundQueue
     },
   ) {
     super(ctx)

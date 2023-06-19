@@ -1,11 +1,11 @@
 {
   "name": "@atproto/xrpc-server",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "src/index.ts",
   "scripts": {
     "test": "jest",
-    "prettier": "prettier --check src/",
-    "prettier:fix": "prettier --write src/",
+    "prettier": "prettier --check src/ tests/",
+    "prettier:fix": "prettier --write src/ tests/",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "yarn lint --fix",
     "verify": "run-p prettier lint",
@@ -18,8 +18,14 @@
     "postpublish": "npm run update-main-to-src"
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto.git",
+    "directory": "packages/xrpc-server"
+  },
   "dependencies": {
     "@atproto/common": "*",
+    "@atproto/crypto": "*",
     "@atproto/lexicon": "*",
     "cbor-x": "^1.5.1",
     "express": "^4.17.2",
@@ -27,7 +33,7 @@
     "mime-types": "^2.1.35",
     "uint8arrays": "3.0.0",
     "ws": "^8.12.0",
-    "zod": "^3.14.2"
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@atproto/crypto": "*",

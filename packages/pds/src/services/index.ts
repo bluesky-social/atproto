@@ -10,11 +10,13 @@ import { RecordService } from './record'
 import { RepoService } from './repo'
 import { ModerationService } from './moderation'
 import { ActorService } from '../app-view/services/actor'
+import { GraphService } from '../app-view/services/graph'
 import { FeedService } from '../app-view/services/feed'
 import { IndexingService } from '../app-view/services/indexing'
 import { Labeler } from '../labeler'
 import { LabelService } from '../app-view/services/label'
 import { BackgroundQueue } from '../event-stream/background-queue'
+import { Crawlers } from '../crawlers'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
@@ -24,6 +26,7 @@ export function createServices(resources: {
   imgInvalidator: ImageInvalidator
   labeler: Labeler
   backgroundQueue: BackgroundQueue
+  crawlers: Crawlers
 }): Services {
   const {
     repoSigningKey,
@@ -33,6 +36,7 @@ export function createServices(resources: {
     imgInvalidator,
     labeler,
     backgroundQueue,
+    crawlers,
   } = resources
   return {
     account: AccountService.creator(),
@@ -42,6 +46,8 @@ export function createServices(resources: {
       repoSigningKey,
       messageDispatcher,
       blobstore,
+      backgroundQueue,
+      crawlers,
       labeler,
     ),
     moderation: ModerationService.creator(
@@ -52,6 +58,7 @@ export function createServices(resources: {
     ),
     appView: {
       actor: ActorService.creator(imgUriBuilder),
+      graph: GraphService.creator(imgUriBuilder),
       feed: FeedService.creator(imgUriBuilder),
       indexing: IndexingService.creator(backgroundQueue),
       label: LabelService.creator(),
@@ -69,6 +76,7 @@ export type Services = {
     feed: FromDb<FeedService>
     indexing: FromDb<IndexingService>
     actor: FromDb<ActorService>
+    graph: FromDb<GraphService>
     label: FromDb<LabelService>
   }
 }

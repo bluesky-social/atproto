@@ -3,6 +3,7 @@ import {
   ACKNOWLEDGE,
   FLAG,
   TAKEDOWN,
+  ESCALATE,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import {
   REASONOTHER,
@@ -20,7 +21,7 @@ export const reportResolutionTableName = 'moderation_report_resolution'
 
 export interface ModerationAction {
   id: Generated<number>
-  action: typeof TAKEDOWN | typeof FLAG | typeof ACKNOWLEDGE
+  action: typeof TAKEDOWN | typeof FLAG | typeof ACKNOWLEDGE | typeof ESCALATE
   subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
   subjectDid: string
   subjectUri: string | null

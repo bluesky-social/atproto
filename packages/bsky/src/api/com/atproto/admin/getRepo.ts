@@ -10,7 +10,9 @@ export default function (server: Server, ctx: AppContext) {
       const { db, services } = ctx
       const { did } = params
       const result = await services.actor(db).getActor(did, true)
-      if (!result) throw new InvalidRequestError('Repo not found')
+      if (!result) {
+        throw new InvalidRequestError('Repo not found', 'RepoNotFound')
+      }
       return {
         encoding: 'application/json',
         body: await services.moderation(db).views.repoDetail(result),

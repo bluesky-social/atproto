@@ -10,8 +10,8 @@ COPY ./packages/aws ./packages/aws
 COPY ./packages/common ./packages/common
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/crypto ./packages/crypto
-COPY ./packages/did-resolver ./packages/did-resolver
 COPY ./packages/identifier ./packages/identifier
+COPY ./packages/identity ./packages/identity
 COPY ./packages/lex-cli ./packages/lex-cli
 COPY ./packages/lexicon ./packages/lexicon
 COPY ./packages/nsid ./packages/nsid
@@ -46,7 +46,7 @@ ENV NODE_ENV=production
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--enable-source-maps", "index.js"]
+CMD ["node", "--heapsnapshot-signal=SIGUSR2", "--enable-source-maps", "index.js"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="ATP Personal Data Server (PDS)"

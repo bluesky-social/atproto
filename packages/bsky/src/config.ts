@@ -6,6 +6,8 @@ export interface ServerConfigValues {
   debugMode?: boolean
   port?: number
   publicUrl?: string
+  serverDid: string
+  feedGenDid?: string
   dbPostgresUrl: string
   dbPostgresSchema?: string
   didPlcUrl: string
@@ -32,6 +34,8 @@ export class ServerConfig {
     const version = process.env.BSKY_VERSION || '0.0.0'
     const debugMode = process.env.NODE_ENV !== 'production'
     const publicUrl = process.env.PUBLIC_URL || undefined
+    const serverDid = process.env.SERVER_DID || 'did:example:test'
+    const feedGenDid = process.env.FEED_GEN_DID
     const envPort = parseInt(process.env.PORT || '', 10)
     const port = isNaN(envPort) ? 2584 : envPort
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
@@ -64,6 +68,8 @@ export class ServerConfig {
       debugMode,
       port,
       publicUrl,
+      serverDid,
+      feedGenDid,
       dbPostgresUrl,
       dbPostgresSchema,
       didPlcUrl,
@@ -109,6 +115,14 @@ export class ServerConfig {
 
   get publicUrl() {
     return this.cfg.publicUrl
+  }
+
+  get serverDid() {
+    return this.cfg.serverDid
+  }
+
+  get feedGenDid() {
+    return this.cfg.feedGenDid
   }
 
   get dbPostgresUrl() {

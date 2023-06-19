@@ -1,30 +1,36 @@
 import AtpAgent from '@atproto/api'
-import basicSeed from '../seeds/basic'
-import { SeedClient } from '../seeds/client'
-import { runTestEnv, TestEnvInfo } from '@atproto/dev-env'
-import { forSnapshot, processAll } from '../_util'
-import { AppContext, Database } from '../../src'
+
+import { TestNetwork } from '@atproto/dev-env'
+import { CommitData } from '@atproto/repo'
+import { RepoService } from '@atproto/pds/src/services/repo'
+import { PreparedWrite } from '@atproto/pds/src/repo'
+import * as sequencer from '@atproto/pds/src/sequencer'
+import { cborDecode, cborEncode } from '@atproto/common'
 import { DatabaseSchemaType } from '../../src/db/database-schema'
 import { ids } from '../../src/lexicon/lexicons'
+import { forSnapshot } from '../_util'
+import { AppContext, Database } from '../../src'
+import basicSeed from '../seeds/basic'
+import { SeedClient } from '../seeds/client'
 
-describe('repo subscription', () => {
-  let testEnv: TestEnvInfo
+describe('sync', () => {
+  let network: TestNetwork
   let ctx: AppContext
   let pdsAgent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
-    testEnv = await runTestEnv({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_subscription_repo',
     })
-    ctx = testEnv.bsky.ctx
-    pdsAgent = new AtpAgent({ service: testEnv.pds.url })
+    ctx = network.bsky.ctx
+    pdsAgent = network.pds.getClient()
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
   })
 
   afterAll(async () => {
-    await testEnv.close()
+    await network.close()
   })
 
   it('indexes permit history being replayed.', async () => {
@@ -41,7 +47,7 @@ describe('repo subscription', () => {
     await updateProfile(pdsAgent, alice, { displayName: 'ali!' })
     await updateProfile(pdsAgent, bob, { displayName: 'robert!' })
 
-    await processAll(testEnv)
+    await network.processAll()
 
     // Table comparator
     const getTableDump = async () => {
@@ -60,15 +66,43 @@ describe('repo subscription', () => {
     const originalTableDump = await getTableDump()
 
     // Reprocess repos via sync subscription, on top of existing indices
-    await testEnv.bsky.sub?.destroy()
-    await testEnv.bsky.sub?.resetState()
-    testEnv.bsky.sub?.resume()
-    await processAll(testEnv)
+    await network.bsky.sub?.destroy()
+    await network.bsky.sub?.resetState()
+    network.bsky.sub?.resume()
+    await network.processAll()
 
     // Permissive of indexedAt times changing
     expect(forSnapshot(await getTableDump())).toEqual(
       forSnapshot(originalTableDump),
     )
+  })
+
+  it('indexes actor when commit is unprocessable.', async () => {
+    // mock sequencing to create an unprocessable commit event
+    const afterWriteProcessingOriginal =
+      RepoService.prototype.afterWriteProcessing
+    RepoService.prototype.afterWriteProcessing = async function (
+      did: string,
+      commitData: CommitData,
+      writes: PreparedWrite[],
+    ) {
+      const seqEvt = await sequencer.formatSeqCommit(did, commitData, writes)
+      const evt = cborDecode(seqEvt.event) as sequencer.CommitEvt
+      evt.blocks = new Uint8Array() // bad blocks
+      seqEvt.event = cborEncode(evt)
+      await sequencer.sequenceEvt(this.db, seqEvt)
+    }
+    // create account and index the initial commit event
+    await sc.createAccount('jack', {
+      handle: 'jack.test',
+      email: 'jack@test.com',
+      password: 'password',
+    })
+    await network.processAll()
+    // confirm jack was indexed as an actor despite the bad event
+    const actors = await dumpTable(ctx.db, 'actor', ['did'])
+    expect(actors.map((a) => a.handle)).toContain('jack.test')
+    RepoService.prototype.afterWriteProcessing = afterWriteProcessingOriginal
   })
 
   async function updateProfile(

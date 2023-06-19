@@ -5,7 +5,7 @@ import { BlobRef, jsonStringToLex } from '@atproto/lexicon'
 import Database from '../../db'
 import { Actor } from '../../db/tables/actor'
 import { Record as RecordRow } from '../../db/tables/record'
-import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
+import { ModerationAction } from '../../db/tables/moderation'
 import {
   RepoView,
   RepoViewDetail,
@@ -19,6 +19,7 @@ import {
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
+import { ModerationReportRowWithHandle } from '.'
 
 export class ModerationViews {
   constructor(private db: Database) {}
@@ -372,25 +373,33 @@ export class ModerationViews {
       return acc
     }, {} as Record<string, number[]>)
 
-    const views: ReportView[] = results.map((res) => ({
-      id: res.id,
-      createdAt: res.createdAt,
-      reasonType: res.reasonType,
-      reason: res.reason ?? undefined,
-      reportedBy: res.reportedByDid,
-      subject:
-        res.subjectType === 'com.atproto.admin.defs#repoRef'
-          ? {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: res.subjectDid,
-            }
-          : {
-              $type: 'com.atproto.repo.strongRef',
-              uri: res.subjectUri,
-              cid: res.subjectCid,
-            },
-      resolvedByActionIds: actionIdsByReportId[res.id] ?? [],
-    }))
+    const views: ReportView[] = results.map((res) => {
+      const decoratedView: ReportView = {
+        id: res.id,
+        createdAt: res.createdAt,
+        reasonType: res.reasonType,
+        reason: res.reason ?? undefined,
+        reportedBy: res.reportedByDid,
+        subject:
+          res.subjectType === 'com.atproto.admin.defs#repoRef'
+            ? {
+                $type: 'com.atproto.admin.defs#repoRef',
+                did: res.subjectDid,
+              }
+            : {
+                $type: 'com.atproto.repo.strongRef',
+                uri: res.subjectUri,
+                cid: res.subjectCid,
+              },
+        resolvedByActionIds: actionIdsByReportId[res.id] ?? [],
+      }
+
+      if (res.handle) {
+        decoratedView.subjectRepoHandle = res.handle
+      }
+
+      return decoratedView
+    })
 
     return Array.isArray(result) ? views : views[0]
   }
@@ -451,13 +460,13 @@ export class ModerationViews {
         .selectAll()
         .where('did', '=', result.subjectDid)
         .executeTakeFirst()
-      if (!repoResult) {
-        throw new Error(
-          `Subject is missing: (${result.id}) ${result.subjectDid}`,
-        )
+      if (repoResult) {
+        subject = await this.repo(repoResult)
+        subject.$type = 'com.atproto.admin.defs#repoView'
+      } else {
+        subject = { did: result.subjectDid }
+        subject.$type = 'com.atproto.admin.defs#repoViewNotFound'
       }
-      subject = await this.repo(repoResult)
-      subject.$type = 'com.atproto.admin.defs#repoView'
     } else if (
       result.subjectType === 'com.atproto.repo.strongRef' &&
       result.subjectUri !== null
@@ -467,13 +476,13 @@ export class ModerationViews {
         .selectAll()
         .where('uri', '=', result.subjectUri)
         .executeTakeFirst()
-      if (!recordResult) {
-        throw new Error(
-          `Subject is missing: (${result.id}) ${result.subjectUri}`,
-        )
+      if (recordResult) {
+        subject = await this.record(recordResult)
+        subject.$type = 'com.atproto.admin.defs#recordView'
+      } else {
+        subject = { uri: result.subjectUri }
+        subject.$type = 'com.atproto.admin.defs#recordViewNotFound'
       }
-      subject = await this.record(recordResult)
-      subject.$type = 'com.atproto.admin.defs#recordView'
     } else {
       throw new Error(`Bad subject data: (${result.id}) ${result.subjectType}`)
     }
@@ -542,7 +551,7 @@ type RepoResult = Actor
 
 type ActionResult = Selectable<ModerationAction>
 
-type ReportResult = Selectable<ModerationReport>
+type ReportResult = ModerationReportRowWithHandle
 
 type RecordResult = RecordRow
 

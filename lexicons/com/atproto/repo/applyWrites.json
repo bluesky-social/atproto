@@ -39,17 +39,17 @@
     "create": {
       "type": "object",
       "description": "Create a new record.",
-      "required": ["action", "collection", "value"],
+      "required": ["collection", "value"],
       "properties": {
         "collection": {"type": "string", "format": "nsid"},
-        "rkey": {"type": "string"},
+        "rkey": {"type": "string", "maxLength": 15},
         "value": {"type": "unknown"}
       }
     },
     "update": {
       "type": "object",
       "description": "Update an existing record.",
-      "required": ["action", "collection", "rkey", "value"],
+      "required": ["collection", "rkey", "value"],
       "properties": {
         "collection": {"type": "string", "format": "nsid"},
         "rkey": {"type": "string"},
@@ -59,7 +59,7 @@
     "delete": {
       "type": "object",
       "description": "Delete an existing record.",
-      "required": ["action", "collection", "rkey"],
+      "required": ["collection", "rkey"],
       "properties": {
         "collection": {"type": "string", "format": "nsid"},
         "rkey": {"type": "string"}

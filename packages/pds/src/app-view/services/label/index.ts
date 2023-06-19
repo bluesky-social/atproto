@@ -60,7 +60,7 @@ export class LabelService {
       .execute()
   }
 
-  async getLabelsForSubjects(
+  async getLabelsForUris(
     subjects: string[],
     includeNeg?: boolean,
   ): Promise<Labels> {
@@ -82,28 +82,42 @@ export class LabelService {
     }, {} as Labels)
   }
 
-  // gets labels for both did & profile record
-  async getLabelsForProfiles(
-    dids: string[],
+  // gets labels for any record. when did is present, combine labels for both did & profile record.
+  async getLabelsForSubjects(
+    subjects: string[],
     includeNeg?: boolean,
   ): Promise<Labels> {
-    if (dids.length < 1) return {}
-    const profileUris = dids.map((did) =>
-      AtUri.make(did, ids.AppBskyActorProfile, 'self').toString(),
-    )
-    const subjects = [...dids, ...profileUris]
-    const labels = await this.getLabelsForSubjects(subjects, includeNeg)
-    // combine labels for profile + did
+    if (subjects.length < 1) return {}
+    const expandedSubjects = subjects.flatMap((subject) => {
+      if (subject.startsWith('did:')) {
+        return [
+          subject,
+          AtUri.make(subject, ids.AppBskyActorProfile, 'self').toString(),
+        ]
+      }
+      return subject
+    })
+    const labels = await this.getLabelsForUris(expandedSubjects, includeNeg)
     return Object.keys(labels).reduce((acc, cur) => {
-      const did = cur.startsWith('at://') ? new AtUri(cur).hostname : cur
-      acc[did] ??= []
-      acc[did] = [...acc[did], ...labels[cur]]
+      const uri = cur.startsWith('at://') ? new AtUri(cur) : null
+      if (
+        uri &&
+        uri.collection === ids.AppBskyActorProfile &&
+        uri.rkey === 'self'
+      ) {
+        // combine labels for profile + did
+        const did = uri.hostname
+        acc[did] ??= []
+        acc[did].push(...labels[cur])
+      }
+      acc[cur] ??= []
+      acc[cur].push(...labels[cur])
       return acc
     }, {} as Labels)
   }
 
   async getLabels(subject: string, includeNeg?: boolean): Promise<Label[]> {
-    const labels = await this.getLabelsForSubjects([subject], includeNeg)
+    const labels = await this.getLabelsForUris([subject], includeNeg)
     return labels[subject] ?? []
   }
 
@@ -111,7 +125,7 @@ export class LabelService {
     did: string,
     includeNeg?: boolean,
   ): Promise<Label[]> {
-    const labels = await this.getLabelsForProfiles([did], includeNeg)
+    const labels = await this.getLabelsForSubjects([did], includeNeg)
     return labels[did] ?? []
   }
 }

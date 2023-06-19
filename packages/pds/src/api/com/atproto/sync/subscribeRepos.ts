@@ -1,7 +1,8 @@
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import Outbox from '../../../../sequencer/outbox'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { httpLogger } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.subscribeRepos(async function* ({ params, signal }) {
@@ -9,6 +10,7 @@ export default function (server: Server, ctx: AppContext) {
     const outbox = new Outbox(ctx.sequencer, {
       maxBufferSize: ctx.cfg.maxSubscriptionBuffer,
     })
+    httpLogger.info({ cursor }, 'request to com.atproto.sync.subscribeRepos')
 
     const backfillTime = new Date(
       Date.now() - ctx.cfg.repoBackfillLimitMs,
@@ -25,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
           message: 'Requested cursor exceeded limit. Possibly missing events',
         }
       }
-      if (curr && cursor > curr.seq) {
+      if (cursor > (curr?.seq ?? 0)) {
         throw new InvalidRequestError('Cursor in the future.', 'FutureCursor')
       }
     }

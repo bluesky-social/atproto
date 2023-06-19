@@ -10,6 +10,7 @@ import {
 import { countAll, excluded } from '../../../../db/util'
 import { BackgroundQueue } from '../../../../event-stream/background-queue'
 import RecordProcessor from '../processor'
+import { toSimplifiedISOSafe } from '../util'
 
 const lexId = lex.ids.AppBskyFeedLike
 type IndexedLike = DatabaseSchemaType['like']
@@ -29,7 +30,7 @@ const insertFn = async (
       creator: uri.host,
       subject: obj.subject.uri,
       subjectCid: obj.subject.cid,
-      createdAt: obj.createdAt,
+      createdAt: toSimplifiedISOSafe(obj.createdAt),
       indexedAt: timestamp,
     })
     .onConflict((oc) => oc.doNothing())

@@ -4,8 +4,8 @@
   "main": "src/index.ts",
   "scripts": {
     "test": "jest",
-    "prettier": "prettier --check src/",
-    "prettier:fix": "prettier --write src/",
+    "prettier": "prettier --check src/ tests/",
+    "prettier:fix": "prettier --write src/ tests/",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "yarn lint --fix",
     "verify": "run-p prettier lint",
@@ -18,6 +18,11 @@
     "postpublish": "npm run update-main-to-src"
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto.git",
+    "directory": "packages/lexicon"
+  },
   "dependencies": {
     "@atproto/common-web": "*",
     "@atproto/identifier": "*",
@@ -25,6 +30,6 @@
     "@atproto/uri": "*",
     "iso-datestring-validator": "^2.2.2",
     "multiformats": "^9.6.4",
-    "zod": "^3.14.2"
+    "zod": "^3.21.4"
   }
 }

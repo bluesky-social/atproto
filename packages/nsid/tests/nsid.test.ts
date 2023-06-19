@@ -10,9 +10,6 @@ describe('NSID parsing & creation', () => {
     expect(NSID.parse('com.example.foo').authority).toBe('example.com')
     expect(NSID.parse('com.example.foo').name).toBe('foo')
     expect(NSID.parse('com.example.foo').toString()).toBe('com.example.foo')
-    expect(NSID.parse('com.example.*').authority).toBe('example.com')
-    expect(NSID.parse('com.example.*').name).toBe('*')
-    expect(NSID.parse('com.example.*').toString()).toBe('com.example.*')
     expect(NSID.parse('com.long-thing1.cool.fooBarBaz').authority).toBe(
       'cool.long-thing1.com',
     )
@@ -26,9 +23,6 @@ describe('NSID parsing & creation', () => {
     expect(NSID.create('example.com', 'foo').authority).toBe('example.com')
     expect(NSID.create('example.com', 'foo').name).toBe('foo')
     expect(NSID.create('example.com', 'foo').toString()).toBe('com.example.foo')
-    expect(NSID.create('example.com', '*').authority).toBe('example.com')
-    expect(NSID.create('example.com', '*').name).toBe('*')
-    expect(NSID.create('example.com', '*').toString()).toBe('com.example.*')
     expect(NSID.create('cool.long-thing1.com', 'fooBarBaz').authority).toBe(
       'cool.long-thing1.com',
     )
@@ -59,29 +53,47 @@ describe('NSID validation', () => {
     const tooLongNsid = 'com.' + 'o'.repeat(64) + '.foo'
     expectInvalid(tooLongNsid)
 
-    const longEnd = 'com.example.' + 'o'.repeat(128)
+    const longEnd = 'com.example.' + 'o'.repeat(63)
     expectValid(longEnd)
 
-    const tooLongEnd = 'com.example.' + 'o'.repeat(129)
+    const tooLongEnd = 'com.example.' + 'o'.repeat(64)
     expectInvalid(tooLongEnd)
 
-    const longOverall = 'com.' + 'middle.'.repeat(50) + 'foo'
-    expect(longOverall.length).toBe(357)
+    const longOverall = 'com.' + 'middle.'.repeat(40) + 'foo'
+    expect(longOverall.length).toBe(287)
     expectValid(longOverall)
 
-    const tooLongOverall = 'com.' + 'middle.'.repeat(100) + 'foo'
-    expect(tooLongOverall.length).toBe(707)
+    const tooLongOverall = 'com.' + 'middle.'.repeat(50) + 'foo'
+    expect(tooLongOverall.length).toBe(357)
     expectInvalid(tooLongOverall)
 
+    expectValid('com.example.fooBar')
+    expectValid('net.users.bob.ping')
     expectValid('a.b.c')
-    expectValid('a0.b1.c3')
-    expectValid('a-0.b-1.c-3')
     expectValid('m.xn--masekowski-d0b.pl')
     expectValid('one.two.three')
+    expectValid('one.two.three.four-and.FiVe')
+    expectValid('one.2.three')
+    expectValid('a-0.b-1.c')
+    expectValid('a0.b1.cc')
+    expectValid('cn.8.lex.stuff')
+    expectValid('test.12345.record')
+    expectValid('a01.thing.record')
+    expectValid('a.0.c')
+    expectValid('xn--fiqs8s.xn--fiqa61au8b7zsevnm8ak20mc4a87e.record.two')
 
+    expectInvalid('com.example.foo.*')
+    expectInvalid('com.example.foo.blah*')
+    expectInvalid('com.example.foo.*blah')
+    expectInvalid('com.example.f00')
+    expectInvalid('com.exa💩ple.thing')
+    expectInvalid('a-0.b-1.c-3')
+    expectInvalid('a-0.b-1.c-o')
+    expectInvalid('a0.b1.c3')
+    expectInvalid('1.0.0.127.record')
+    expectInvalid('0two.example.foo')
     expectInvalid('example.com')
     expectInvalid('com.example')
-    expectInvalid('a.0.c')
     expectInvalid('a.')
     expectInvalid('.one.two.three')
     expectInvalid('one.two.three ')
@@ -104,10 +116,10 @@ describe('NSID validation', () => {
     )
   })
 
-  it('blocks starting-with-numeric segments (differently from domains)', () => {
-    expectInvalid('org.4chan.lex.getThing')
-    expectInvalid('cn.8.lex.stuff')
-    expectInvalid(
+  it('allows starting-with-numeric segments (same as domains)', () => {
+    expectValid('org.4chan.lex.getThing')
+    expectValid('cn.8.lex.stuff')
+    expectValid(
       'onion.2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.lex.deleteThing',
     )
   })

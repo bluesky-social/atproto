@@ -6,13 +6,27 @@ import AppContext from '../../../../../context'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.getUnreadCount({
     auth: ctx.accessVerifier,
-    handler: async ({ auth, params }) => {
-      const { seenAt } = params
+    handler: async ({ req, auth, params }) => {
       const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const res =
+          await ctx.appviewAgent.api.app.bsky.notification.getUnreadCount(
+            params,
+            await ctx.serviceAuthHeaders(requester),
+          )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
+      const { seenAt } = params
       const { ref } = ctx.db.db.dynamic
       if (seenAt) {
         throw new InvalidRequestError('The seenAt parameter is unsupported')
       }
+
+      const accountService = ctx.services.account(ctx.db)
 
       const result = await ctx.db.db
         .selectFrom('user_notification as notif')
@@ -28,12 +42,8 @@ export default function (server: Server, ctx: AppContext) {
         .where(notSoftDeletedClause(ref('author_repo')))
         .where(notSoftDeletedClause(ref('record')))
         .where('notif.userDid', '=', requester)
-        .whereNotExists(
-          ctx.db.db // Omit mentions and replies by muted actors
-            .selectFrom('mute')
-            .selectAll()
-            .whereRef('did', '=', ref('notif.author'))
-            .where('mutedByDid', '=', requester),
+        .where((qb) =>
+          accountService.whereNotMuted(qb, requester, [ref('notif.author')]),
         )
         .whereRef('notif.indexedAt', '>', 'user_state.lastSeenNotifs')
         .executeTakeFirst()

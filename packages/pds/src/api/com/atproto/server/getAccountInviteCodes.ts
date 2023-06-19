@@ -16,35 +16,43 @@ export default function (server: Server, ctx: AppContext) {
         ctx.db.db
           .selectFrom('user_account')
           .where('did', '=', requester)
-          .select('createdAt')
+          .select(['invitesDisabled', 'createdAt'])
           .executeTakeFirstOrThrow(),
         accntSrvc.getAccountInviteCodes(requester),
       ])
       const unusedCodes = userCodes.filter(
-        (row) => row.available > row.uses.length,
+        (row) => !row.disabled && row.available > row.uses.length,
       )
 
       let created: string[] = []
 
       // if the user wishes to create available codes & the server allows that,
       // we determine the number to create by dividing their account lifetime by the interval at which they can create codes
+      // if an invite epoch is provided, we only calculate available invites since that epoch
       // we allow a max of 5 open codes at a given time
+      // note: even if a user is disabled from future invites, we still create the invites for bookkeeping, we just immediately disable them as well
       const now = new Date().toISOString()
       if (createAvailable && ctx.cfg.userInviteInterval !== null) {
-        const accountLifespan = Date.now() - new Date(user.createdAt).getTime()
+        const userCreatedAt = new Date(user.createdAt).getTime()
+        const epochLifespan =
+          Date.now() - Math.max(userCreatedAt, ctx.cfg.userInviteEpoch)
         const couldCreate = Math.floor(
-          accountLifespan / ctx.cfg.userInviteInterval,
+          epochLifespan / ctx.cfg.userInviteInterval,
+        )
+        const epochCodes = userCodes.filter(
+          (code) =>
+            new Date(code.createdAt).getTime() > ctx.cfg.userInviteEpoch,
         )
         const toCreate = Math.min(
           5 - unusedCodes.length,
-          couldCreate - userCodes.length,
+          couldCreate - epochCodes.length,
         )
         if (toCreate > 0) {
           created = genInvCodes(ctx.cfg, toCreate)
           const rows = created.map((code) => ({
             code: code,
             availableUses: 1,
-            disabled: 0 as const,
+            disabled: user.invitesDisabled,
             forUser: requester,
             createdBy: requester,
             createdAt: now,
@@ -68,12 +76,12 @@ export default function (server: Server, ctx: AppContext) {
 
       const preexisting = includeUsed ? userCodes : unusedCodes
 
-      const toReturn = [
+      const allCodes = [
         ...preexisting,
         ...created.map((code) => ({
           code: code,
           available: 1,
-          disabled: false,
+          disabled: user.invitesDisabled === 1 ? true : false,
           forAccount: requester,
           createdBy: requester,
           createdAt: now,
@@ -81,10 +89,12 @@ export default function (server: Server, ctx: AppContext) {
         })),
       ]
 
+      const filtered = allCodes.filter((code) => !code.disabled)
+
       return {
         encoding: 'application/json',
         body: {
-          codes: toReturn,
+          codes: filtered,
         },
       }
     },

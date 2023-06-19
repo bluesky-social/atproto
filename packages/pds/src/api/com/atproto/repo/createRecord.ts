@@ -96,7 +96,8 @@ async function getBacklinkDeletions(
     prepareDelete({ did, collection, rkey })
 
   if (
-    collection === ids.AppBskyGraphFollow &&
+    (collection === ids.AppBskyGraphFollow ||
+      collection === ids.AppBskyGraphBlock) &&
     typeof record['subject'] === 'string'
   ) {
     const backlinks = await recordTxn.getRecordBacklinks({

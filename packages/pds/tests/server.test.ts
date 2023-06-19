@@ -92,6 +92,9 @@ describe('server', () => {
   })
 
   it('healthcheck fails when database is unavailable.', async () => {
+    // destroy to release lock & allow db to close
+    await server.ctx.sequencerLeader.destroy()
+
     await db.close()
     let error: AxiosError
     try {

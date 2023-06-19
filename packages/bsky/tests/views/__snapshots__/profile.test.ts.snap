@@ -14,13 +14,15 @@ Array [
     "labels": Array [],
     "postsCount": 4,
     "viewer": Object {
+      "blockedBy": false,
       "followedBy": "record(1)",
       "following": "record(0)",
+      "muted": false,
     },
   },
   Object {
     "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
-    "description": "hi im bob",
+    "description": "hi im bob label_me",
     "did": "user(2)",
     "displayName": "bobby",
     "followersCount": 2,
@@ -29,7 +31,10 @@ Array [
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "postsCount": 3,
-    "viewer": Object {},
+    "viewer": Object {
+      "blockedBy": false,
+      "muted": false,
+    },
   },
   Object {
     "did": "user(4)",
@@ -39,7 +44,9 @@ Array [
     "labels": Array [],
     "postsCount": 2,
     "viewer": Object {
+      "blockedBy": false,
       "following": "record(2)",
+      "muted": false,
     },
   },
   Object {
@@ -50,7 +57,9 @@ Array [
     "labels": Array [],
     "postsCount": 2,
     "viewer": Object {
+      "blockedBy": false,
       "followedBy": "record(3)",
+      "muted": false,
     },
   },
 ]
@@ -69,8 +78,10 @@ Object {
   "labels": Array [],
   "postsCount": 4,
   "viewer": Object {
+    "blockedBy": false,
     "followedBy": "record(1)",
     "following": "record(0)",
+    "muted": false,
   },
 }
 `;
@@ -84,7 +95,9 @@ Object {
   "labels": Array [],
   "postsCount": 2,
   "viewer": Object {
+    "blockedBy": false,
     "followedBy": "record(0)",
+    "muted": false,
   },
 }
 `;
@@ -101,7 +114,10 @@ Object {
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "labels": Array [],
   "postsCount": 4,
-  "viewer": Object {},
+  "viewer": Object {
+    "blockedBy": false,
+    "muted": false,
+  },
 }
 `;
 
@@ -118,6 +134,9 @@ Object {
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "labels": Array [],
   "postsCount": 4,
-  "viewer": Object {},
+  "viewer": Object {
+    "blockedBy": false,
+    "muted": false,
+  },
 }
 `;

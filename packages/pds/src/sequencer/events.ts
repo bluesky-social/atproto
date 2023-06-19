@@ -11,13 +11,37 @@ import {
 } from '@atproto/repo'
 import { PreparedWrite } from '../repo'
 import { CID } from 'multiformats/cid'
+import { EventType, RepoSeqInsert } from '../db/tables/repo-seq'
 
-export const sequenceCommit = async (
-  dbTxn: Database,
+export const sequenceEvt = async (dbTxn: Database, evt: RepoSeqInsert) => {
+  await dbTxn.notify('new_repo_event')
+  if (evt.eventType === 'rebase') {
+    await invalidatePrevRepoOps(dbTxn, evt.did)
+  } else if (evt.eventType === 'handle') {
+    await invalidatePrevHandleOps(dbTxn, evt.did)
+  }
+
+  const res = await dbTxn.db
+    .insertInto('repo_seq')
+    .values(evt)
+    .returning('id')
+    .executeTakeFirst()
+
+  // since sqlite is serializable, sequence right after insert instead of relying on sequencer-leader
+  if (res && dbTxn.dialect === 'sqlite') {
+    await dbTxn.db
+      .updateTable('repo_seq')
+      .set({ seq: res.id })
+      .where('id', '=', res.id)
+      .execute()
+  }
+}
+
+export const formatSeqCommit = async (
   did: string,
   commitData: CommitData,
   writes: PreparedWrite[],
-) => {
+): Promise<RepoSeqInsert> => {
   let tooBig: boolean
   const ops: CommitEvtOp[] = []
   const blobs = new CidSet()
@@ -57,23 +81,18 @@ export const sequenceCommit = async (
     blocks: carSlice,
     blobs: blobs.toList(),
   }
-  await dbTxn.db
-    .insertInto('repo_seq')
-    .values({
-      did,
-      eventType: 'append',
-      event: cborEncode(evt),
-      sequencedAt: new Date().toISOString(),
-    })
-    .execute()
-  await dbTxn.notify('repo_seq')
+  return {
+    did,
+    eventType: 'append' as const,
+    event: cborEncode(evt),
+    sequencedAt: new Date().toISOString(),
+  }
 }
 
-export const sequenceRebase = async (
-  dbTxn: Database,
+export const formatSeqRebase = async (
   did: string,
   rebaseData: RebaseData,
-) => {
+): Promise<RepoSeqInsert> => {
   const carSlice = await blocksToCarFile(rebaseData.commit, rebaseData.blocks)
 
   const evt: CommitEvt = {
@@ -86,53 +105,51 @@ export const sequenceRebase = async (
     blocks: carSlice,
     blobs: [],
   }
-  const res = await dbTxn.db
-    .insertInto('repo_seq')
-    .values({
-      did,
-      eventType: 'rebase',
-      event: cborEncode(evt),
-      sequencedAt: new Date().toISOString(),
-    })
-    .returningAll()
-    .executeTakeFirstOrThrow()
-  await dbTxn.db
-    .updateTable('repo_seq')
-    .where('did', '=', did)
-    .where('eventType', 'in', ['append', 'rebase'])
-    .where('seq', '!=', res.seq)
-    .set({ invalidatedBy: res.seq })
-    .execute()
-  await dbTxn.notify('repo_seq')
+  return {
+    did,
+    eventType: 'rebase',
+    event: cborEncode(evt),
+    sequencedAt: new Date().toISOString(),
+  }
 }
 
-export const sequenceHandleUpdate = async (
-  dbTxn: Database,
+export const formatSeqHandleUpdate = async (
   did: string,
   handle: string,
-) => {
+): Promise<RepoSeqInsert> => {
   const evt: HandleEvt = {
     did,
     handle,
   }
-  const res = await dbTxn.db
-    .insertInto('repo_seq')
-    .values({
-      did,
-      eventType: 'handle',
-      event: cborEncode(evt),
-      sequencedAt: new Date().toISOString(),
-    })
-    .returningAll()
-    .executeTakeFirstOrThrow()
-  await dbTxn.db
+  return {
+    did,
+    eventType: 'handle',
+    event: cborEncode(evt),
+    sequencedAt: new Date().toISOString(),
+  }
+}
+
+export const invalidatePrevSeqEvts = async (
+  db: Database,
+  did: string,
+  eventTypes: EventType[],
+) => {
+  if (eventTypes.length < 1) return
+  await db.db
     .updateTable('repo_seq')
-    .where('eventType', '=', 'handle')
     .where('did', '=', did)
-    .where('seq', '!=', res.seq)
-    .set({ invalidatedBy: res.seq })
+    .where('eventType', 'in', eventTypes)
+    .where('invalidated', '=', 0)
+    .set({ invalidated: 1 })
     .execute()
-  await dbTxn.notify('repo_seq')
+}
+
+export const invalidatePrevRepoOps = async (db: Database, did: string) => {
+  return invalidatePrevSeqEvts(db, did, ['append', 'rebase'])
+}
+
+export const invalidatePrevHandleOps = async (db: Database, did: string) => {
+  return invalidatePrevSeqEvts(db, did, ['handle'])
 }
 
 export const commitEvtOp = z.object({

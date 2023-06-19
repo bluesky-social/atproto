@@ -43,7 +43,7 @@ const LEXICONS = [
   },
   {
     lexicon: 1,
-    id: 'io.example.validationTest2',
+    id: 'io.example.validationTestTwo',
     defs: {
       main: {
         type: 'query',
@@ -101,7 +101,7 @@ describe('Bodies', () => {
       body: ctx.input?.body,
     }),
   )
-  server.method('io.example.validationTest2', () => ({
+  server.method('io.example.validationTestTwo', () => ({
     encoding: 'json',
     body: { wrong: 'data' },
   }))
@@ -175,7 +175,7 @@ describe('Bodies', () => {
       return logger.error(obj, ...args)
     }
 
-    await expect(client.call('io.example.validationTest2')).rejects.toThrow(
+    await expect(client.call('io.example.validationTestTwo')).rejects.toThrow(
       'Internal Server Error',
     )
     expect(error).toEqual(`Output must have the property "foo"`)
