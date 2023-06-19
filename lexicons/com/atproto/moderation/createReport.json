@@ -43,7 +43,7 @@
               "type": "ref",
               "ref": "com.atproto.moderation.defs#reasonType"
             },
-            "reason": { "type": "string", "maxGraphemes": 500, "maxLength": 5000 },
+            "reason": { "type": "string", "maxGraphemes": 1000, "maxLength": 10000 },
             "subject": {
               "type": "union",
               "refs": [
