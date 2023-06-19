@@ -5,11 +5,10 @@ import AppContext from '../../../../context'
 import { TAKEDOWN } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { getSubject, getAction } from '../moderation/util'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { adminVerifier } from '../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
-    auth: adminVerifier(ctx.cfg.adminPassword),
+    auth: ctx.adminVerifier,
     handler: async ({ input }) => {
       const { db, services } = ctx
       const moderationService = services.moderation(db)

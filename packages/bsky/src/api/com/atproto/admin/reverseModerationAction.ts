@@ -3,11 +3,10 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { TAKEDOWN } from '../../../../lexicon/types/com/atproto/admin/defs'
-import { adminVerifier } from '../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.reverseModerationAction({
-    auth: adminVerifier(ctx.cfg.adminPassword),
+    auth: ctx.adminVerifier,
     handler: async ({ input }) => {
       const { db, services } = ctx
       const moderationService = services.moderation(db)
