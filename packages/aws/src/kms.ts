@@ -1,5 +1,6 @@
 import * as aws from '@aws-sdk/client-kms'
-import * as secp from '@noble/secp256k1'
+import { secp256k1 as noble } from '@noble/curves/secp256k1'
+import * as ui8 from 'uint8arrays'
 import * as crypto from '@atproto/crypto'
 import KeyEncoder from 'key-encoder'
 
@@ -35,7 +36,7 @@ export class KmsKeypair implements crypto.Keypair {
       'der',
       'raw',
     )
-    const publicKey = secp.utils.hexToBytes(rawPublicKeyHex)
+    const publicKey = ui8.fromString(rawPublicKeyHex, 'hex')
     return new KmsKeypair(client, keyId, publicKey)
   }
 
@@ -57,7 +58,7 @@ export class KmsKeypair implements crypto.Keypair {
     // we also normalize s as no more than 1/2 prime order to pass strict verification
     // (prevents duplicating a signature)
     // more: https://github.com/bitcoin-core/secp256k1/blob/a1102b12196ea27f44d6201de4d25926a2ae9640/include/secp256k1.h#L530-L534
-    const sig = secp.Signature.fromDER(res.Signature)
+    const sig = noble.Signature.fromDER(res.Signature)
     const normalized = sig.normalizeS()
     return normalized.toCompactRawBytes()
   }
