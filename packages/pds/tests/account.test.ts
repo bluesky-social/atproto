@@ -152,7 +152,7 @@ describe('account', () => {
 
   it('allows a custom set recovery key', async () => {
     const inviteCode = await createInviteCode(agent, 1)
-    const recoveryKey = (await crypto.EcdsaKeypair.create()).did()
+    const recoveryKey = (await crypto.P256Keypair.create()).did()
     const res = await agent.api.com.atproto.server.createAccount({
       email: 'custom-recovery@test.com',
       handle: 'custom-recovery.test',
