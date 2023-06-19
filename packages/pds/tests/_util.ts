@@ -82,6 +82,7 @@ export const runTestServer = async (
     recoveryKey,
     adminPassword: ADMIN_PASSWORD,
     moderatorPassword: MODERATOR_PASSWORD,
+    triagePassword: TRIAGE_PASSWORD,
     inviteRequired: false,
     userInviteInterval: null,
     userInviteEpoch: Date.now(),

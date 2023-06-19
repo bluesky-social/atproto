@@ -29,12 +29,11 @@ export default function (server: Server, ctx: AppContext) {
 
       // apply access rules
 
-      // if less than moderator access then can not apply labels
-      if (
-        !access.moderator &&
-        (createLabelVals?.length || negateLabelVals?.length)
-      ) {
-        throw new AuthRequiredError('Must be a full moderator to label content')
+      // if less than admin access then can not takedown an account
+      if (!access.admin && action === TAKEDOWN && 'did' in subject) {
+        throw new AuthRequiredError(
+          'Must be an admin to perform an account takedown',
+        )
       }
       // if less than moderator access then can only take ack and escalation actions
       if (!access.moderator && ![ACKNOWLEDGE, ESCALATE].includes(action)) {
@@ -42,11 +41,12 @@ export default function (server: Server, ctx: AppContext) {
           'Must be a full moderator to take this type of action',
         )
       }
-      // if less than admin access then can not takedown an account
-      if (!access.admin && action === TAKEDOWN && 'did' in subject) {
-        throw new AuthRequiredError(
-          'Must be an admin to perform an account takedown',
-        )
+      // if less than moderator access then can not apply labels
+      if (
+        !access.moderator &&
+        (createLabelVals?.length || negateLabelVals?.length)
+      ) {
+        throw new AuthRequiredError('Must be a full moderator to label content')
       }
 
       validateLabels([...(createLabelVals ?? []), ...(negateLabelVals ?? [])])
