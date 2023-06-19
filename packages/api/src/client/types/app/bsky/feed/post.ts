@@ -24,7 +24,7 @@ export interface Record {
     | AppBskyEmbedRecord.Main
     | AppBskyEmbedRecordWithMedia.Main
     | { $type: string; [k: string]: unknown }
-  language?: string[]
+  langs?: string[]
   createdAt: string
   [k: string]: unknown
 }

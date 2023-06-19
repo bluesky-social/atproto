@@ -5244,11 +5244,12 @@ export const schemaDict = {
                 'lex:app.bsky.embed.recordWithMedia',
               ],
             },
-            language: {
+            langs: {
               type: 'array',
               maxLength: 3,
               items: {
                 type: 'string',
+                format: 'language',
               },
             },
             createdAt: {
