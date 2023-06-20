@@ -87,16 +87,8 @@ export class AppContext {
     return auth.refreshVerifier(this.auth)
   }
 
-  get adminVerifier() {
-    return auth.adminVerifier(this.auth)
-  }
-
-  get moderatorVerifier() {
-    return auth.moderatorVerifier(this.auth)
-  }
-
-  get triageVerifier() {
-    return auth.triageVerifier(this.auth)
+  get roleVerifier() {
+    return auth.roleVerifier(this.auth)
   }
 
   get imgUriBuilder(): ImageUriBuilder {

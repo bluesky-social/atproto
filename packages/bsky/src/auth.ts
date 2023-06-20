@@ -30,20 +30,17 @@ export const authOptionalVerifier =
     return authVerifier(idResolver, opts)(reqCtx)
   }
 
-export const adminVerifier =
+export const roleVerifier =
   (cfg: ServerConfig) =>
   async (reqCtx: { req: express.Request; res: express.Response }) => {
-    const credentials = getAdminCredentials(cfg, reqCtx.req)
+    const credentials = getRoleCredentials(cfg, reqCtx.req)
     if (!credentials.valid) {
       throw new AuthRequiredError()
     }
     return { credentials }
   }
 
-export const getAdminCredentials = (
-  cfg: ServerConfig,
-  req: express.Request,
-) => {
+export const getRoleCredentials = (cfg: ServerConfig, req: express.Request) => {
   const parsed = parseBasicAuth(req.headers.authorization || '')
   const { username, password } = parsed ?? {}
   if (username === 'triage' && password === cfg.triagePassword) {

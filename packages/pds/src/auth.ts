@@ -113,7 +113,7 @@ export class ServerAuth {
     return authorized !== null && authorized.did === did
   }
 
-  verifyAdmin(req: express.Request) {
+  verifyRole(req: express.Request) {
     const parsed = parseBasicAuth(req.headers.authorization || '')
     const { username, password } = parsed ?? {}
     if (username === 'triage' && password === this._triagePass) {
@@ -233,38 +233,12 @@ export const refreshVerifier =
     }
   }
 
-export const adminVerifier =
+export const roleVerifier =
   (auth: ServerAuth) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
-    const credentials = auth.verifyAdmin(ctx.req)
-    if (!credentials.admin) {
-      throw new AuthRequiredError(
-        credentials.valid ? 'Insufficient privileges' : undefined,
-      )
-    }
-    return { credentials }
-  }
-
-export const moderatorVerifier =
-  (auth: ServerAuth) =>
-  async (ctx: { req: express.Request; res: express.Response }) => {
-    const credentials = auth.verifyAdmin(ctx.req)
-    if (!credentials.moderator) {
-      throw new AuthRequiredError(
-        credentials.valid ? 'Insufficient privileges' : undefined,
-      )
-    }
-    return { credentials }
-  }
-
-export const triageVerifier =
-  (auth: ServerAuth) =>
-  async (ctx: { req: express.Request; res: express.Response }) => {
-    const credentials = auth.verifyAdmin(ctx.req)
-    if (!credentials.triage) {
-      throw new AuthRequiredError(
-        credentials.valid ? 'Insufficient privileges' : undefined,
-      )
+    const credentials = auth.verifyRole(ctx.req)
+    if (!credentials.valid) {
+      throw new AuthRequiredError()
     }
     return { credentials }
   }

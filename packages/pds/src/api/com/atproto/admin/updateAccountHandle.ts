@@ -1,4 +1,4 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import * as ident from '@atproto/identifier'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
@@ -6,8 +6,11 @@ import { UserAlreadyExistsError } from '../../../../services/account'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateAccountHandle({
-    auth: ctx.adminVerifier,
-    handler: async ({ input, req }) => {
+    auth: ctx.roleVerifier,
+    handler: async ({ input, req, auth }) => {
+      if (!auth.credentials.admin) {
+        throw new AuthRequiredError('Insufficient privileges')
+      }
       const { did } = input.body
       let handle: string
       try {

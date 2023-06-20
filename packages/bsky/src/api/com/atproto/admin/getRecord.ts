@@ -4,7 +4,7 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRecord({
-    auth: ctx.adminVerifier,
+    auth: ctx.roleVerifier,
     handler: async ({ params }) => {
       const { db, services } = ctx
       const { uri, cid } = params

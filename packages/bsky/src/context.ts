@@ -67,8 +67,8 @@ export class AppContext {
     })
   }
 
-  get adminVerifier() {
-    return auth.adminVerifier(this.cfg)
+  get roleVerifier() {
+    return auth.roleVerifier(this.cfg)
   }
 
   get labeler(): Labeler {

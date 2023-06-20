@@ -6,7 +6,7 @@ import { ListKeyset } from '../../../../services/actor'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
-    auth: ctx.adminVerifier,
+    auth: ctx.roleVerifier,
     handler: async ({ params }) => {
       const { db, services } = ctx
       const moderationService = services.moderation(db)
