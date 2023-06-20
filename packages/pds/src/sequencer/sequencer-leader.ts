@@ -50,13 +50,18 @@ export class SequencerLeader {
             return
           }
           this.db.channels.new_repo_event.addListener('message', seqListener)
-          await new Promise<void>((resolve) => {
+          await new Promise<void>((resolve, reject) => {
             signal.addEventListener('abort', () => {
               this.db.channels.new_repo_event.removeListener(
                 'message',
                 seqListener,
               )
-              resolve()
+              const err = signal.reason
+              if (!err || err instanceof DisconnectError) {
+                resolve()
+              } else {
+                reject(err)
+              }
             })
           })
         })
