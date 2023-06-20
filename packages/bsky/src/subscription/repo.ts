@@ -1,8 +1,6 @@
 import assert from 'node:assert'
-import PQueue from 'p-queue'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import { AtpAgent } from '@atproto/api'
 import { cborDecode, wait } from '@atproto/common'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
 import {
@@ -21,7 +19,6 @@ import AppContext from '../context'
 import { Leader } from '../db/leader'
 import { subLogger } from '../logger'
 import { ConsecutiveList, LatestQueue, PartitionedQueue } from './util'
-import { retryHttp } from '../util/retry'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
 export const REPO_SUB_ID = 1000
@@ -36,16 +33,13 @@ export class RepoSubscription {
   constructor(
     public ctx: AppContext,
     public service: string,
-    public backfillConcurrency?: number,
     public subLockId = REPO_SUB_ID,
   ) {}
 
   async run() {
     while (!this.destroyed) {
-      let needsBackfill: boolean | number = false
       try {
         const { ran } = await this.leader.run(async ({ signal }) => {
-          needsBackfill = false
           const sub = this.getSubscription({ signal })
           for await (const msg of sub) {
             const details = getMessageDetails(msg)
@@ -57,19 +51,7 @@ export class RepoSubscription {
                   details.info ? 'info' : 'unknown'
                 } message`,
               )
-              if (
-                details.info?.name === 'OutdatedCursor' &&
-                this.backfillConcurrency // Supports backfill
-              ) {
-                // On next message with a seq number, we'll note that seq and stop processing messages while backfill completes.
-                needsBackfill = true
-              }
               continue
-            }
-            if (needsBackfill === true) {
-              // Note the seq number: we'll come back to this sequence number after backfill completes.
-              needsBackfill = details.seq
-              break
             }
             const item = this.consecutive.push(details.message)
             this.repoQueue
@@ -100,11 +82,8 @@ export class RepoSubscription {
                   })
               })
           }
-          if (typeof needsBackfill === 'number') {
-            await this.backfillFrom(needsBackfill)
-          }
         })
-        if (ran && !this.destroyed && !needsBackfill) {
+        if (ran && !this.destroyed) {
           throw new Error('Repo sub completed, but should be persistent')
         }
       } catch (err) {
@@ -113,7 +92,7 @@ export class RepoSubscription {
           'repo subscription error',
         )
       }
-      if (!this.destroyed && !needsBackfill) {
+      if (!this.destroyed) {
         await wait(5000 + jitter(1000)) // wait then try to become leader
       }
     }
@@ -215,62 +194,6 @@ export class RepoSubscription {
     const { db } = this.ctx
     await db.transaction(async (tx) => {
       await this.setState(tx, { cursor: msg.seq })
-    })
-  }
-
-  private async backfillFrom(seq: number) {
-    const concurrency = this.backfillConcurrency
-    if (!concurrency) {
-      throw new Error('Repo subscription does not support backfill')
-    }
-
-    const { services, db } = this.ctx
-    const agent = new AtpAgent({ service: wsToHttp(this.service) })
-    const queue = new PQueue({ concurrency })
-    const reposSeen = new Set()
-
-    // Paginate through all repos and queue them for processing.
-    // Fetch next page once all items on the queue are in progress.
-    let cursor: string | undefined
-    do {
-      const { data: page } = await retryHttp(() =>
-        agent.api.com.atproto.sync.listRepos({
-          cursor,
-          limit: Math.min(2 * concurrency, 1000),
-        }),
-      )
-      page.repos.forEach((repo) => {
-        if (reposSeen.has(repo.did)) {
-          // If a host has a bug that appears to cause a loop or duplicate work, we can bail.
-          throw new Error(
-            `Backfill from ${this.service} failed because repo for ${repo.did} was seen twice`,
-          )
-        }
-        reposSeen.add(repo.did)
-        queue
-          .add(async () => {
-            const now = new Date().toISOString()
-            const result = await Promise.allSettled([
-              services.indexing(db).indexHandle(repo.did, now),
-              services.indexing(db).indexRepo(repo.did, repo.head),
-            ])
-            rethrowAllSettled(result)
-          })
-          .catch((err) => {
-            subLogger.error(
-              { err, provider: this.service, repo },
-              'repo subscription backfill failed on a repository',
-            )
-          })
-      })
-      cursor = page.cursor
-      await queue.onEmpty() // Remaining items are in progress
-    } while (cursor)
-
-    // Wait until final batch finishes processing then update cursor.
-    await queue.onIdle()
-    await db.transaction(async (tx) => {
-      await this.setState(tx, { cursor: seq - 1 })
     })
   }
 
@@ -476,22 +399,6 @@ function getMessageDetails(msg: Message):
   }
   return { info: null }
 }
-
-function wsToHttp(url: string) {
-  if (!url.startsWith('ws://') && !url.startsWith('wss://')) {
-    return url
-  }
-  return url.replace('ws', 'http')
-}
-
-function rethrowAllSettled(result: PromiseSettledResult<unknown>[]) {
-  for (const item of result) {
-    if (item.status === 'rejected') {
-      throw item.reason
-    }
-  }
-}
-
 function handleAllSettledErrors(results: PromiseSettledResult<unknown>[]) {
   const errors = results.filter(isRejected).map((res) => res.reason)
   if (errors.length === 0) {
