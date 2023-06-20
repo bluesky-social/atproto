@@ -3,7 +3,7 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getModerationAction({
-    auth: ctx.triageVerifier,
+    auth: ctx.roleVerifier,
     handler: async ({ params, auth }) => {
       const access = auth.credentials
       const { db, services } = ctx

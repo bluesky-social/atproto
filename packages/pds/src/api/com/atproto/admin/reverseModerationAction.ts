@@ -10,7 +10,7 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.reverseModerationAction({
-    auth: ctx.triageVerifier,
+    auth: ctx.roleVerifier,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
       const { db, services } = ctx

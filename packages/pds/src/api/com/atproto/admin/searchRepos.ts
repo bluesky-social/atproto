@@ -6,7 +6,7 @@ import { ListKeyset } from '../../../../services/account'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
-    auth: ctx.triageVerifier,
+    auth: ctx.roleVerifier,
     handler: async ({ params, auth }) => {
       const access = auth.credentials
       const { db, services } = ctx

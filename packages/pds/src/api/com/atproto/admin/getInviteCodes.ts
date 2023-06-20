@@ -10,7 +10,7 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getInviteCodes({
-    auth: ctx.triageVerifier,
+    auth: ctx.roleVerifier,
     handler: async ({ params }) => {
       const { sort, limit, cursor } = params
       const ref = ctx.db.db.dynamic.ref
