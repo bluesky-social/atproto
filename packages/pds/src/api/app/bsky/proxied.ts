@@ -233,6 +233,22 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
+  server.app.bsky.unspecced.getPopularFeedGenerators({
+    auth: ctx.accessVerifier,
+    handler: async ({ params, auth }) => {
+      const requester = auth.credentials.did
+      const res =
+        await ctx.appViewAgent.api.app.bsky.unspecced.getPopularFeedGenerators(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        )
+      return {
+        encoding: 'application/json',
+        body: res.data,
+      }
+    },
+  })
+
   server.app.bsky.graph.getBlocks({
     auth: ctx.accessVerifier,
     handler: async ({ params, auth }) => {

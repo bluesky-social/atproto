@@ -2086,3 +2086,31 @@ Object {
   ],
 }
 `;
+
+exports[`proxies view requests unspecced.getPopularFeedGenerators 1`] = `
+Object {
+  "feeds": Array [
+    Object {
+      "cid": "cids(0)",
+      "creator": Object {
+        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
+      },
+      "description": "Provides all feed candidates",
+      "did": "did:example:feedgen",
+      "displayName": "All",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "likeCount": 0,
+      "uri": "record(0)",
+      "viewer": Object {},
+    },
+  ],
+}
+`;
