@@ -9,6 +9,8 @@ export interface Post {
   replyRootCid: string | null
   replyParent: string | null
   replyParentCid: string | null
+  // string is a json-serialized array for sqlite, string[] is jsonb for postgres, null is empty
+  langs: string | string[] | null
   createdAt: string
   indexedAt: string
 }
