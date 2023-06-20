@@ -7,15 +7,18 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 
-export interface QueryParams {
+export interface QueryParams {}
+
+export interface InputSchema {
   /** Hostname of the service that is requesting to be crawled. */
   hostname: string
+  [k: string]: unknown
 }
-
-export type InputSchema = undefined
 
 export interface CallOptions {
   headers?: Headers
+  qp?: QueryParams
+  encoding: 'application/json'
 }
 
 export interface Response {
