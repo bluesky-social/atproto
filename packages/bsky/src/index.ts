@@ -27,6 +27,7 @@ import { MountedAlgos } from './feed-gen/types'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
+export { backfillRepos } from './subscription/backfill'
 export { ServerConfig } from './config'
 export { Database } from './db'
 export { ViewMaintainer } from './db/views'
@@ -155,12 +156,7 @@ export class BskyAppView {
     app.use(error.handler)
 
     const sub = config.repoProvider
-      ? new RepoSubscription(
-          ctx,
-          config.repoProvider,
-          config.repoSubBackfillConcurrency,
-          config.repoSubLockId,
-        )
+      ? new RepoSubscription(ctx, config.repoProvider, config.repoSubLockId)
       : undefined
 
     return new BskyAppView({ ctx, app, sub })
@@ -192,7 +188,7 @@ export class BskyAppView {
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.cfg.assignPort(port)
-    this.sub?.run() // Don't await, backgrounded
+    if (this.sub) this.sub?.run() // Don't await, backgrounded
     return server
   }
 

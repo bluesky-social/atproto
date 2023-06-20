@@ -9,18 +9,22 @@ import { retryHttp } from '../util/retry'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
 
-export const doBackfill = async (ctx: AppContext) => {
+export const backfillRepos = async (ctx: AppContext, concurrency: number) => {
   if (!ctx.cfg.repoProvider) {
     throw new Error('No repo provider for backfill')
   }
   // first, peek the stream to find the last event
-  const cursor = await peekStream(ctx.cfg.repoProvider)
-  const state = JSON.stringify({ cursor })
+  const cursor = await peekStream(ctx)
+  if (cursor === null) {
+    subLogger.info('already caught up, skipping backfill')
+    return
+  }
 
   // then run backfill
-  await backfillRepos(ctx)
+  await doBackfill(ctx, concurrency)
 
   // finally update our subscription state to reflect the fact that we're caught up with the previously peeked cursor
+  const state = JSON.stringify({ cursor })
   await ctx.db.db
     .insertInto('subscription')
     .values({
@@ -34,31 +38,46 @@ export const doBackfill = async (ctx: AppContext) => {
     .execute()
 }
 
-export const peekStream = async (
-  repoProvider: string,
-): Promise<number | null> => {
+export const peekStream = async (ctx: AppContext): Promise<number | null> => {
+  const repoProvider = ctx.cfg.repoProvider
+  if (!repoProvider) {
+    throw new Error('No repo provider for backfill')
+  }
+
   const sub = new Subscription({
     service: repoProvider,
     method: METHOD,
     validate: (val) => {
       return lexicons.assertValidXrpcMessage<Message>(METHOD, val)
     },
+    getParams: async () => {
+      const lastSeenCursor = await ctx.db.db
+        .selectFrom('subscription')
+        .where('service', '=', repoProvider)
+        .where('method', '=', METHOD)
+        .selectAll()
+        .executeTakeFirst()
+      return lastSeenCursor ? JSON.parse(lastSeenCursor.state) : { cursor: 0 }
+    },
   })
-  let seq: number | undefined
-  for await (const msg of sub) {
-    if (msg.seq && typeof msg.seq === 'number') {
-      seq = msg.seq
-      break
-    }
+  const first = await sub[Symbol.asyncIterator]().next()
+  // first message should be an OutdatedCursor info msg
+  if (
+    first.done ||
+    first.value.$type !== '#info' ||
+    first.value.name !== 'OutdatedCursor'
+  ) {
+    return null
   }
-  if (!seq) {
-    throw new Error()
+  // second message should be an event with a sequence number
+  const second = await sub[Symbol.asyncIterator]().next()
+  if (second.done || typeof second.value.seq !== 'number') {
+    throw new Error('Unexpected second event on stream', second.value)
   }
-  return seq
+  return second.value.seq
 }
 
-export const backfillRepos = async (ctx: AppContext) => {
-  const concurrency = ctx.cfg.repoSubBackfillConcurrency
+export const doBackfill = async (ctx: AppContext, concurrency: number) => {
   const repoProvider = ctx.cfg.repoProvider
   if (!concurrency || !repoProvider) {
     throw new Error('Repo subscription does not support backfill')
@@ -116,9 +135,6 @@ export const backfillRepos = async (ctx: AppContext) => {
 
   // Wait until final batch finishes processing then update cursor.
   await queue.onIdle()
-  // await db.transaction(async (tx) => {
-  //   await this.setState(tx, { cursor: seq - 1 })
-  // })
 }
 
 function wsToHttp(url: string) {
