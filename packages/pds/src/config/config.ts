@@ -92,15 +92,17 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     serviceHandleDomains,
   }
 
-  const invitesCfg: ServerConfig['invites'] = !env.inviteRequired
-    ? {
-        required: false,
-      }
-    : {
-        required: true,
-        interval: env.inviteInterval ?? null,
-        epoch: env.inviteEpoch ?? 0,
-      }
+  // default to being required if left undefined
+  const invitesCfg: ServerConfig['invites'] =
+    env.inviteRequired === false
+      ? {
+          required: false,
+        }
+      : {
+          required: true,
+          interval: env.inviteInterval ?? null,
+          epoch: env.inviteEpoch ?? 0,
+        }
 
   let emailCfg: ServerConfig['email']
   if (!env.emailFromAddress && !env.emailSmtpUrl) {

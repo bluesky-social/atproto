@@ -9,8 +9,10 @@ export const envStr = (str: string | undefined): string | undefined => {
   return str
 }
 
-export const envBool = (str: string | undefined): boolean => {
-  return str === 'true' || str === '1'
+export const envBool = (str: string | undefined): boolean | undefined => {
+  if (str === 'true' || str === '1') return true
+  if (str === 'false' || str === '0') return false
+  return undefined
 }
 
 export const envList = (str: string | undefined): string[] => {
