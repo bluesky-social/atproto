@@ -26,9 +26,9 @@ import {
   FeedGenInfoMap,
 } from './types'
 import { LabelService } from '../label'
-import { FeedViews } from './views'
 import { ActorService } from '../actor'
 import { GraphService } from '../graph'
+import { FeedViews } from './views'
 
 export * from './types'
 
