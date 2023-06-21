@@ -89,6 +89,8 @@ export const doBackfill = async (ctx: AppContext, concurrency: number) => {
   // Paginate through all repos and queue them for processing.
   // Fetch next page once all items on the queue are in progress.
   let cursor: string | undefined
+  let count: 0
+  const start = Date.now()
   do {
     const { data: page } = await retryHttp(() =>
       agent.api.com.atproto.sync.listRepos({
@@ -119,6 +121,8 @@ export const doBackfill = async (ctx: AppContext, concurrency: number) => {
               )
             }
           }
+          count++
+          subLogger.info({ did: repo.did, count }, 'backfilled repo')
         })
         .catch((err) => {
           subLogger.error(
@@ -133,6 +137,8 @@ export const doBackfill = async (ctx: AppContext, concurrency: number) => {
 
   // Wait until final batch finishes processing then update cursor.
   await queue.onIdle()
+
+  subLogger.info({ duration: Date.now() - start }, 'backfill finished')
 }
 
 function wsToHttp(url: string) {
