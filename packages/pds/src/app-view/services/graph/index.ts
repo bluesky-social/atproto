@@ -98,6 +98,20 @@ export class GraphService {
     }
   }
 
+  async getListViews(listUris: string[], requester: string) {
+    if (listUris.length < 1) return {}
+    const lists = await this.getListsQb(requester)
+      .where('list.uri', 'in', listUris)
+      .execute()
+    return lists.reduce(
+      (acc, cur) => ({
+        ...acc,
+        [cur.uri]: cur,
+      }),
+      {},
+    )
+  }
+
   formatListView(list: ListInfo, profiles: Record<string, ProfileView>) {
     return {
       uri: list.uri,
