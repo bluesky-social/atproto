@@ -61,10 +61,10 @@ export class IndexingService {
     }
   }
 
-  transact(tx: Database) {
-    tx.assertTransaction()
+  transact(txn: Database) {
+    txn.assertTransaction()
     return new IndexingService(
-      tx,
+      txn,
       this.idResolver,
       this.labeler,
       this.backgroundQueue,

@@ -148,7 +148,6 @@ export class RepoSubscription {
           await indexingService.deleteRecord(op.uri)
         } else {
           try {
-            // @TODO skip-and-log records that don't validate
             await indexingService.indexRecord(
               op.uri,
               op.cid,
@@ -163,7 +162,7 @@ export class RepoSubscription {
                   did: msg.repo,
                   commit: msg.commit.toString(),
                   uri: op.uri.toString(),
-                  cid: op.cid?.toString(),
+                  cid: op.cid.toString(),
                 },
                 'skipping indexing of invalid record',
               )
