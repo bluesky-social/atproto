@@ -41,7 +41,6 @@ const main = async () => {
     port: env.port,
     version: env.version,
     repoProvider: env.repoProvider,
-    repoSubBackfillConcurrency: env.repoSubBackfillConcurrency,
     dbPostgresUrl: env.dbPostgresUrl,
     dbPostgresSchema: env.dbPostgresSchema,
     publicUrl: env.publicUrl,
