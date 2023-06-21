@@ -188,7 +188,7 @@ export class BskyAppView {
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.cfg.assignPort(port)
-    if (this.sub) this.sub?.run() // Don't await, backgrounded
+    this.sub?.run() // Don't await, backgrounded
     return server
   }
 

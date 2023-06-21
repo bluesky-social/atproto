@@ -130,24 +130,26 @@ export class RepoSubscription {
 
   private async handleCommit(msg: message.Commit) {
     const { db, services } = this.ctx
-    const indexingSvc = services.indexing(db)
+    const indexingService = services.indexing(db)
     const indexRecords = async () => {
       const { root, rootCid, ops } = await getOps(msg)
       if (msg.tooBig) {
-        return await indexingSvc.indexRepo(msg.repo, rootCid.toString())
+        return await indexingService.indexRepo(msg.repo, rootCid.toString())
       }
       if (msg.rebase) {
-        const needsReindex = await indexingSvc.checkCommitNeedsIndexing(root)
+        const needsReindex = await indexingService.checkCommitNeedsIndexing(
+          root,
+        )
         if (!needsReindex) return
-        return await indexingSvc.indexRepo(msg.repo, rootCid.toString())
+        return await indexingService.indexRepo(msg.repo, rootCid.toString())
       }
       for (const op of ops) {
         if (op.action === WriteOpAction.Delete) {
-          await indexingSvc.deleteRecord(op.uri)
+          await indexingService.deleteRecord(op.uri)
         } else {
           try {
             // @TODO skip-and-log records that don't validate
-            await indexingSvc.indexRecord(
+            await indexingService.indexRecord(
               op.uri,
               op.cid,
               op.record,
@@ -171,11 +173,11 @@ export class RepoSubscription {
           }
         }
       }
-      await indexingSvc.setCommitLastSeen(root, msg)
+      await indexingService.setCommitLastSeen(root, msg)
     }
     const results = await Promise.allSettled([
       indexRecords(),
-      indexingSvc.indexHandle(msg.repo, msg.time),
+      indexingService.indexHandle(msg.repo, msg.time),
     ])
     handleAllSettledErrors(results)
   }

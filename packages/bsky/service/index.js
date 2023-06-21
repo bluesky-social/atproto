@@ -80,8 +80,6 @@ const getEnv = () => ({
   port: parseInt(process.env.PORT),
   version: process.env.BSKY_VERSION,
   repoProvider: process.env.REPO_PROVIDER,
-  repoSubBackfillConcurrency:
-    maybeParseInt(process.env.REPO_SUB_BACKFILL_CONCURRENCY) || undefined,
   dbPostgresUrl: process.env.DB_POSTGRES_URL,
   dbMigratePostgresUrl:
     process.env.DB_MIGRATE_POSTGRES_URL || process.env.DB_POSTGRES_URL,

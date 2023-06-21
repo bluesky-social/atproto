@@ -61,15 +61,6 @@ export class IndexingService {
     }
   }
 
-  static creator(
-    idResolver: IdResolver,
-    labeler: Labeler,
-    backgroundQueue: BackgroundQueue,
-  ) {
-    return (db: Database) =>
-      new IndexingService(db, idResolver, labeler, backgroundQueue)
-  }
-
   transact(tx: Database) {
     tx.assertTransaction()
     return new IndexingService(
@@ -78,6 +69,15 @@ export class IndexingService {
       this.labeler,
       this.backgroundQueue,
     )
+  }
+
+  static creator(
+    idResolver: IdResolver,
+    labeler: Labeler,
+    backgroundQueue: BackgroundQueue,
+  ) {
+    return (db: Database) =>
+      new IndexingService(db, idResolver, labeler, backgroundQueue)
   }
 
   async indexRecord(
