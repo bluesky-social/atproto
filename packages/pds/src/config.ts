@@ -56,6 +56,7 @@ export interface ServerConfigValues {
   sequencerLeaderLockId?: number
 
   bskyAppViewEndpoint?: string
+  bskyAppViewModeration?: boolean
   bskyAppViewDid?: string
 
   crawlersToNotify?: string[]
@@ -175,6 +176,8 @@ export class ServerConfig {
     const bskyAppViewEndpoint = nonemptyString(
       process.env.BSKY_APP_VIEW_ENDPOINT,
     )
+    const bskyAppViewModeration =
+      process.env.BSKY_APP_VIEW_MODERATION === 'true' ? true : false
     const bskyAppViewDid = nonemptyString(process.env.BSKY_APP_VIEW_DID)
 
     const crawlersEnv = process.env.CRAWLERS_TO_NOTIFY
@@ -222,6 +225,7 @@ export class ServerConfig {
       repoBackfillLimitMs,
       sequencerLeaderLockId,
       bskyAppViewEndpoint,
+      bskyAppViewModeration,
       bskyAppViewDid,
       crawlersToNotify,
       ...overrides,
@@ -416,6 +420,10 @@ export class ServerConfig {
 
   get bskyAppViewEndpoint() {
     return this.cfg.bskyAppViewEndpoint
+  }
+
+  get bskyAppViewModeration() {
+    return this.cfg.bskyAppViewModeration
   }
 
   get bskyAppViewDid() {

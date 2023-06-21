@@ -176,6 +176,13 @@ export class AppContext {
       req.get('x-appview-proxy') !== undefined
     )
   }
+
+  shouldProxyModeration(): boolean {
+    return (
+      this.cfg.bskyAppViewEndpoint !== undefined &&
+      this.cfg.bskyAppViewModeration === true
+    )
+  }
 }
 
 export default AppContext

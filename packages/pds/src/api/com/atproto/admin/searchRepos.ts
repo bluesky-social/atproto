@@ -3,11 +3,24 @@ import AppContext from '../../../../context'
 import { SearchKeyset } from '../../../../services/util/search'
 import { sql } from 'kysely'
 import { ListKeyset } from '../../../../services/account'
+import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
     auth: ctx.moderatorVerifier,
-    handler: async ({ params }) => {
+    handler: async ({ req, params }) => {
+      if (ctx.shouldProxyModeration()) {
+        const { data: result } =
+          await ctx.appviewAgent.com.atproto.admin.searchRepos(
+            params,
+            authPassthru(req),
+          )
+        return {
+          encoding: 'application/json',
+          body: result,
+        }
+      }
+
       const { db, services } = ctx
       const moderationService = services.moderation(db)
       const { term = '', limit = 50, cursor, invitedBy } = params
