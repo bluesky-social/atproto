@@ -290,7 +290,7 @@ describe('account deletion', () => {
 
 type DbContents = {
   roots: RepoRoot[]
-  users: UserAccount[]
+  users: Selectable<UserAccount>[]
   userState: UserState[]
   blocks: IpldBlock[]
   seqs: Selectable<RepoSeq>[]
@@ -343,7 +343,7 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
       .orderBy('cid')
       .selectAll()
       .execute(),
-    db.db.selectFrom('repo_seq').orderBy('seq').selectAll().execute(),
+    db.db.selectFrom('repo_seq').orderBy('id').selectAll().execute(),
     db.db
       .selectFrom('repo_commit_history')
       .orderBy('creator')

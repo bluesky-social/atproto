@@ -15,13 +15,19 @@ export default function (server: Server, ctx: AppContext) {
           .account(ctx.db)
           .isRepoAvailable(did)
         if (!available) {
-          throw new InvalidRequestError(`Could not find root for DID: ${did}`)
+          throw new InvalidRequestError(
+            `Could not find root for DID: ${did}`,
+            'HeadNotFound',
+          )
         }
       }
       const storage = new SqlRepoStorage(ctx.db, did)
       const root = await storage.getHead()
       if (root === null) {
-        throw new InvalidRequestError(`Could not find root for DID: ${did}`)
+        throw new InvalidRequestError(
+          `Could not find root for DID: ${did}`,
+          'HeadNotFound',
+        )
       }
       return {
         encoding: 'application/json',

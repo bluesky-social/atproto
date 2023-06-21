@@ -5,6 +5,7 @@ import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { Client as PlcClient } from '@did-plc/lib'
 import { BskyConfig } from './types'
+import { uniqueLockId } from './util'
 
 export class TestBsky {
   constructor(
@@ -44,6 +45,7 @@ export class TestBsky {
       adminPassword: 'admin-pass',
       labelerDid: 'did:example:labeler',
       labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
+      feedGenDid: 'did:example:feedGen',
     })
 
     const db = bsky.Database.postgres({
@@ -63,7 +65,7 @@ export class TestBsky {
     }
     await migrationDb.close()
 
-    const server = bsky.BskyAppView.create({ db, config })
+    const server = bsky.BskyAppView.create({ db, config, algos: cfg.algos })
     await server.start()
 
     return new TestBsky(url, port, server)
@@ -87,14 +89,4 @@ export class TestBsky {
   async close() {
     await this.server.destroy()
   }
-}
-
-const usedLockIds = new Set()
-const uniqueLockId = () => {
-  let lockId: number
-  do {
-    lockId = 1000 + Math.ceil(1000 * Math.random())
-  } while (usedLockIds.has(lockId))
-  usedLockIds.add(lockId)
-  return lockId
 }

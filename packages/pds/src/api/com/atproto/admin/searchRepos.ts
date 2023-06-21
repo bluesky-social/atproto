@@ -27,15 +27,19 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
+      const searchField = term.startsWith('did:') ? 'did' : 'handle'
+
       const results = await services
         .account(db)
-        .search({ term, limit, cursor, includeSoftDeleted: true })
+        .search({ searchField, term, limit, cursor, includeSoftDeleted: true })
       const keyset = new SearchKeyset(sql``, sql``)
 
       return {
         encoding: 'application/json',
         body: {
-          cursor: keyset.packFromResult(results),
+          // For did search, we can only find 1 or no match, cursors can be ignored entirely
+          cursor:
+            searchField === 'did' ? undefined : keyset.packFromResult(results),
           repos: await moderationService.views.repo(results),
         },
       }

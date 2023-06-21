@@ -88,6 +88,17 @@ describe('pds admin repo search view', () => {
     }
   })
 
+  it('finds repo by did', async () => {
+    const term = sc.dids['cara-wiegand69.test']
+    const res = await agent.api.com.atproto.admin.searchRepos(
+      { term, limit: 1 },
+      { headers },
+    )
+
+    expect(res.data.repos.length).toEqual(1)
+    expect(res.data.repos[0].did).toEqual(term)
+  })
+
   it('paginates with term', async () => {
     const results = (results) => results.flatMap((res) => res.users)
     const paginator = async (cursor?: string) => {

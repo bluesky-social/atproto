@@ -6,9 +6,20 @@ import AppContext from '../../../../../context'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getLists({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
-      const { actor, limit, cursor } = params
+    handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const res = await ctx.appviewAgent.api.app.bsky.graph.getLists(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
+      const { actor, limit, cursor } = params
       const { services, db } = ctx
       const { ref } = db.db.dynamic
 
@@ -24,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
         .getListsQb(requester)
         .where('list.creator', '=', creatorRes.did)
 
-      const keyset = new TimeCidKeyset(ref('list.indexedAt'), ref('list.cid'))
+      const keyset = new TimeCidKeyset(ref('list.createdAt'), ref('list.cid'))
       listsReq = paginate(listsReq, {
         limit,
         cursor,

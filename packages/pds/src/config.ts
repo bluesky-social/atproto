@@ -28,6 +28,7 @@ export interface ServerConfigValues {
 
   inviteRequired: boolean
   userInviteInterval: number | null
+  userInviteEpoch: number
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
 
@@ -52,11 +53,12 @@ export interface ServerConfigValues {
 
   maxSubscriptionBuffer: number
   repoBackfillLimitMs: number
-
-  appViewRepoProvider?: string
+  sequencerLeaderLockId?: number
 
   bskyAppViewEndpoint?: string
   bskyAppViewDid?: string
+
+  crawlersToNotify?: string[]
 }
 
 export class ServerConfig {
@@ -113,6 +115,11 @@ export class ServerConfig {
       process.env.USER_INVITE_INTERVAL,
       null,
     )
+    const userInviteEpoch = parseIntWithFallback(
+      process.env.USER_INVITE_EPOCH,
+      0,
+    )
+
     const privacyPolicyUrl = process.env.PRIVACY_POLICY_URL
     const termsOfServiceUrl = process.env.TERMS_OF_SERVICE_URL
 
@@ -160,14 +167,19 @@ export class ServerConfig {
       DAY,
     )
 
-    // E.g. ws://abc.com:4000
-    const appViewRepoProvider = nonemptyString(
-      process.env.APP_VIEW_REPO_PROVIDER,
+    const sequencerLeaderLockId = parseIntWithFallback(
+      process.env.SEQUENCER_LEADER_LOCK_ID,
+      undefined,
     )
+
     const bskyAppViewEndpoint = nonemptyString(
       process.env.BSKY_APP_VIEW_ENDPOINT,
     )
     const bskyAppViewDid = nonemptyString(process.env.BSKY_APP_VIEW_DID)
+
+    const crawlersEnv = process.env.CRAWLERS_TO_NOTIFY
+    const crawlersToNotify =
+      crawlersEnv && crawlersEnv.length > 0 ? crawlersEnv.split(',') : []
 
     return new ServerConfig({
       debugMode,
@@ -190,6 +202,7 @@ export class ServerConfig {
       moderatorPassword,
       inviteRequired,
       userInviteInterval,
+      userInviteEpoch,
       privacyPolicyUrl,
       termsOfServiceUrl,
       databaseLocation,
@@ -207,9 +220,10 @@ export class ServerConfig {
       feedGenDid,
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
-      appViewRepoProvider,
+      sequencerLeaderLockId,
       bskyAppViewEndpoint,
       bskyAppViewDid,
+      crawlersToNotify,
       ...overrides,
     })
   }
@@ -308,6 +322,10 @@ export class ServerConfig {
     return this.cfg.userInviteInterval
   }
 
+  get userInviteEpoch() {
+    return this.cfg.userInviteEpoch
+  }
+
   get privacyPolicyUrl() {
     if (
       this.cfg.privacyPolicyUrl &&
@@ -392,8 +410,8 @@ export class ServerConfig {
     return this.cfg.repoBackfillLimitMs
   }
 
-  get appViewRepoProvider() {
-    return this.cfg.appViewRepoProvider
+  get sequencerLeaderLockId() {
+    return this.cfg.sequencerLeaderLockId
   }
 
   get bskyAppViewEndpoint() {
@@ -402,6 +420,10 @@ export class ServerConfig {
 
   get bskyAppViewDid() {
     return this.cfg.bskyAppViewDid
+  }
+
+  get crawlersToNotify() {
+    return this.cfg.crawlersToNotify
   }
 }
 

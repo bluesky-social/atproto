@@ -7,9 +7,20 @@ import { notSoftDeletedClause } from '../../../../../db/util'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollows({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
-      const { actor, limit, cursor } = params
+    handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const res = await ctx.appviewAgent.api.app.bsky.graph.getFollows(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
+      const { actor, limit, cursor } = params
       const { services, db } = ctx
       const { ref } = db.db.dynamic
 

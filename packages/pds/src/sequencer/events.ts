@@ -13,11 +13,8 @@ import { PreparedWrite } from '../repo'
 import { CID } from 'multiformats/cid'
 import { EventType, RepoSeqInsert } from '../db/tables/repo-seq'
 
-export const sequenceEvt = async (
-  dbTxn: Database,
-  evt: RepoSeqInsert,
-): Promise<number> => {
-  await dbTxn.notify('repo_seq')
+export const sequenceEvt = async (dbTxn: Database, evt: RepoSeqInsert) => {
+  await dbTxn.notify('new_repo_event')
   if (evt.eventType === 'rebase') {
     await invalidatePrevRepoOps(dbTxn, evt.did)
   } else if (evt.eventType === 'handle') {
@@ -27,13 +24,17 @@ export const sequenceEvt = async (
   const res = await dbTxn.db
     .insertInto('repo_seq')
     .values(evt)
-    .returning('seq')
+    .returning('id')
     .executeTakeFirst()
-  if (!res) {
-    throw new Error(`Failed to sequence evt: ${evt}`)
-  }
 
-  return res.seq
+  // since sqlite is serializable, sequence right after insert instead of relying on sequencer-leader
+  if (res && dbTxn.dialect === 'sqlite') {
+    await dbTxn.db
+      .updateTable('repo_seq')
+      .set({ seq: res.id })
+      .where('id', '=', res.id)
+      .execute()
+  }
 }
 
 export const formatSeqCommit = async (

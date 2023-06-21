@@ -228,6 +228,9 @@ export const schemaDict = {
           reason: {
             type: 'string',
           },
+          subjectRepoHandle: {
+            type: 'string',
+          },
           subject: {
             type: 'union',
             refs: [
@@ -861,6 +864,13 @@ export const schemaDict = {
               items: {
                 type: 'string',
               },
+            },
+            reporters: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description: 'Filter reports made by one or more DIDs',
             },
             resolved: {
               type: 'boolean',
@@ -3049,6 +3059,11 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'HeadNotFound',
+          },
+        ],
       },
     },
   },
@@ -3233,17 +3248,20 @@ export const schemaDict = {
     id: 'com.atproto.sync.notifyOfUpdate',
     defs: {
       main: {
-        type: 'query',
+        type: 'procedure',
         description:
           'Notify a crawling service of a recent update. Often when a long break between updates causes the connection with the crawling service to break.',
-        parameters: {
-          type: 'params',
-          required: ['hostname'],
-          properties: {
-            hostname: {
-              type: 'string',
-              description:
-                'Hostname of the service that is notifying of update.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['hostname'],
+            properties: {
+              hostname: {
+                type: 'string',
+                description:
+                  'Hostname of the service that is notifying of update.',
+              },
             },
           },
         },
@@ -3255,16 +3273,19 @@ export const schemaDict = {
     id: 'com.atproto.sync.requestCrawl',
     defs: {
       main: {
-        type: 'query',
+        type: 'procedure',
         description: 'Request a service to persistently crawl hosted repos.',
-        parameters: {
-          type: 'params',
-          required: ['hostname'],
-          properties: {
-            hostname: {
-              type: 'string',
-              description:
-                'Hostname of the service that is requesting to be crawled.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['hostname'],
+            properties: {
+              hostname: {
+                type: 'string',
+                description:
+                  'Hostname of the service that is requesting to be crawled.',
+              },
             },
           },
         },
@@ -3302,6 +3323,9 @@ export const schemaDict = {
         errors: [
           {
             name: 'FutureCursor',
+          },
+          {
+            name: 'ConsumerTooSlow',
           },
         ],
       },
@@ -4405,7 +4429,7 @@ export const schemaDict = {
       },
       generatorView: {
         type: 'object',
-        required: ['uri', 'cid', 'creator', 'displayName', 'indexedAt'],
+        required: ['uri', 'cid', 'did', 'creator', 'displayName', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
