@@ -52,7 +52,6 @@ describe('repo subscription backfill', () => {
     expect(profilesBefore).toEqual([])
 
     await backfillRepos(network.bsky.ctx, 9)
-    return
     // Process backfill
     network.bsky.sub.resume()
     await network.processAll(60000)
@@ -62,7 +61,6 @@ describe('repo subscription backfill', () => {
     expect(dids).toEqual(profilesAfter.map((p) => p.did))
     expect(forSnapshot(profilesAfter)).toMatchSnapshot()
   })
-  return
 
   it('continues processing after backfill.', async () => {
     await updateProfile(pdsAgent, dids[0], { displayName: 'updated' })

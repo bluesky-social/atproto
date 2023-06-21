@@ -17,6 +17,7 @@ export const backfillRepos = async (ctx: AppContext, concurrency: number) => {
   const cursor = await peekStream(ctx)
   if (cursor === null) {
     subLogger.info('already caught up, skipping backfill')
+    console.log('SKIPPING backfill')
     return
   }
 
@@ -60,17 +61,14 @@ export const peekStream = async (ctx: AppContext): Promise<number | null> => {
       return lastSeenCursor ? JSON.parse(lastSeenCursor.state) : { cursor: 0 }
     },
   })
-  const first = await sub[Symbol.asyncIterator]().next()
+  const evts = sub[Symbol.asyncIterator]()
+  const first = await evts.next()
   // first message should be an OutdatedCursor info msg
-  if (
-    first.done ||
-    first.value.$type !== '#info' ||
-    first.value.name !== 'OutdatedCursor'
-  ) {
+  if (first.done || first.value.name !== 'OutdatedCursor') {
     return null
   }
   // second message should be an event with a sequence number
-  const second = await sub[Symbol.asyncIterator]().next()
+  const second = await evts.next()
   if (second.done || typeof second.value.seq !== 'number') {
     throw new Error('Unexpected second event on stream', second.value)
   }
