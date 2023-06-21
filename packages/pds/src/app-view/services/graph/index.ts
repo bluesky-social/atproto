@@ -99,7 +99,6 @@ export class GraphService {
   }
 
   async hasAFollow(user: string): Promise<boolean> {
-    // const { ref } = this.db.db.dynamic
     const res = await this.db.db
       .selectFrom('follow')
       .selectAll()
