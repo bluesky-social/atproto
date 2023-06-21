@@ -93,10 +93,19 @@ export class FeedService {
   }
 
   selectFeedGeneratorQb(requester: string) {
+    const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('feed_generator')
       .innerJoin('did_handle', 'did_handle.did', 'feed_generator.creator')
+      .innerJoin(
+        'repo_root as creator_repo',
+        'creator_repo.did',
+        'feed_generator.creator',
+      )
+      .innerJoin('record', 'record.uri', 'feed_generator.uri')
       .selectAll()
+      .where(notSoftDeletedClause(ref('creator_repo')))
+      .where(notSoftDeletedClause(ref('record')))
       .select((qb) =>
         qb
           .selectFrom('like')
@@ -250,7 +259,7 @@ export class FeedService {
   async getFeedGeneratorViews(generatorUris: string[], requester: string) {
     if (generatorUris.length < 1) return {}
     const feedGens = await this.selectFeedGeneratorQb(requester)
-      .where('uri', 'in', generatorUris)
+      .where('feed_generator.uri', 'in', generatorUris)
       .execute()
     return feedGens.reduce(
       (acc, cur) => ({

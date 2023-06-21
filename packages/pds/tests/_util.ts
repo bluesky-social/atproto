@@ -83,6 +83,7 @@ export const runTestServer = async (
     moderatorPassword: MODERATOR_PASSWORD,
     inviteRequired: false,
     userInviteInterval: null,
+    userInviteEpoch: Date.now(),
     didPlcUrl: plcUrl,
     didCacheMaxTTL: DAY,
     didCacheStaleTTL: HOUR,

@@ -9,6 +9,12 @@ import {
 } from '../../../../services/types'
 import { FeedService } from '../../../../services/feed'
 import { Labels } from '../../../../services/label'
+import {
+  BlockedPost,
+  NotFoundPost,
+  ThreadViewPost,
+  isNotFoundPost,
+} from '../../../../lexicon/types/app/bsky/feed/defs'
 
 export type PostThread = {
   post: FeedRow
@@ -20,13 +26,18 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {
-      const { uri, depth = 6 } = params
+      const { uri, depth, parentHeight } = params
       const requester = auth.credentials.did
 
       const feedService = ctx.services.feed(ctx.db)
       const labelService = ctx.services.label(ctx.db)
 
-      const threadData = await getThreadData(feedService, uri, depth)
+      const threadData = await getThreadData(
+        feedService,
+        uri,
+        depth,
+        parentHeight,
+      )
       if (!threadData) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
@@ -48,6 +59,12 @@ export default function (server: Server, ctx: AppContext) {
         embeds,
         labels,
       )
+
+      if (isNotFoundPost(thread)) {
+        // @TODO technically this could be returned as a NotFoundPost based on lexicon
+        throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
+      }
+
       return {
         encoding: 'application/json',
         body: { thread },
@@ -72,6 +89,22 @@ const composeThread = (
     labels,
   )
 
+  if (!post) {
+    return {
+      $type: 'app.bsky.feed.defs#notFoundPost',
+      uri: threadData.post.postUri,
+      notFound: true,
+    }
+  }
+
+  if (post.author.viewer?.blocking || post.author.viewer?.blockedBy) {
+    return {
+      $type: 'app.bsky.feed.defs#blockedPost',
+      uri: threadData.post.postUri,
+      blocked: true,
+    }
+  }
+
   let parent
   if (threadData.parent) {
     if (threadData.parent instanceof ParentNotFoundError) {
@@ -92,7 +125,7 @@ const composeThread = (
     }
   }
 
-  let replies
+  let replies: (ThreadViewPost | NotFoundPost | BlockedPost)[] | undefined
   if (threadData.replies) {
     replies = threadData.replies.map((reply) =>
       composeThread(reply, feedService, posts, actors, embeds, labels),
@@ -133,6 +166,7 @@ const getThreadData = async (
   feedService: FeedService,
   uri: string,
   depth: number,
+  parentHeight: number,
 ): Promise<PostThread | null> => {
   const [parents, children] = await Promise.all([
     feedService
@@ -163,7 +197,7 @@ const getThreadData = async (
   return {
     post,
     parent: post.replyParent
-      ? getParentData(parentsByUri, post.replyParent)
+      ? getParentData(parentsByUri, post.replyParent, parentHeight)
       : undefined,
     replies: getChildrenData(childrenByParentUri, uri, depth),
   }
@@ -172,13 +206,14 @@ const getThreadData = async (
 const getParentData = (
   postsByUri: Record<string, FeedRow>,
   uri: string,
-): PostThread | ParentNotFoundError => {
+  depth: number,
+): PostThread | ParentNotFoundError | undefined => {
   const post = postsByUri[uri]
   if (!post) return new ParentNotFoundError(uri)
   return {
     post,
     parent: post.replyParent
-      ? getParentData(postsByUri, post.replyParent)
+      ? getParentData(postsByUri, post.replyParent, depth - 1)
       : undefined,
     replies: [],
   }

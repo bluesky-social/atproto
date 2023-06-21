@@ -6,14 +6,19 @@ Array [
     "did": "user(0)",
     "handle": "eve.test",
     "labels": Array [],
-    "viewer": Object {},
+    "viewer": Object {
+      "blockedBy": false,
+      "muted": false,
+    },
   },
   Object {
     "did": "user(1)",
     "handle": "dan.test",
     "labels": Array [],
     "viewer": Object {
+      "blockedBy": false,
       "following": "record(0)",
+      "muted": false,
     },
   },
   Object {
@@ -21,21 +26,25 @@ Array [
     "handle": "carol.test",
     "labels": Array [],
     "viewer": Object {
+      "blockedBy": false,
       "followedBy": "record(2)",
       "following": "record(1)",
+      "muted": false,
     },
   },
   Object {
     "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(0)@jpeg",
-    "description": "hi im bob",
+    "description": "hi im bob label_me",
     "did": "user(3)",
     "displayName": "bobby",
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "labels": Array [],
     "viewer": Object {
+      "blockedBy": false,
       "followedBy": "record(4)",
       "following": "record(3)",
+      "muted": false,
     },
   },
 ]
@@ -47,14 +56,19 @@ Array [
     "did": "user(0)",
     "handle": "eve.test",
     "labels": Array [],
-    "viewer": Object {},
+    "viewer": Object {
+      "blockedBy": false,
+      "muted": false,
+    },
   },
   Object {
     "did": "user(1)",
     "handle": "dan.test",
     "labels": Array [],
     "viewer": Object {
+      "blockedBy": false,
       "following": "record(0)",
+      "muted": false,
     },
   },
 ]

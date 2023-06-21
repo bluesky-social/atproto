@@ -8,7 +8,6 @@ Object {
     "parent": Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
           "did": "user(0)",
@@ -16,8 +15,10 @@ Object {
           "handle": "alice.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(2)",
             "following": "record(1)",
+            "muted": false,
           },
         },
         "cid": "cids(2)",
@@ -39,14 +40,16 @@ Object {
       "replies": Array [],
     },
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
         "did": "user(2)",
         "displayName": "bobby",
         "handle": "bob.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
       },
       "cid": "cids(3)",
       "embed": Object {
@@ -118,7 +121,6 @@ Object {
     "replies": Array [],
   },
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -126,8 +128,10 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -164,7 +168,6 @@ exports[`pds thread views fetches deep post thread 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -172,8 +175,10 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -196,13 +201,14 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "did": "user(2)",
           "handle": "carol.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "following": "record(5)",
+            "muted": false,
           },
         },
         "cid": "cids(2)",
@@ -234,14 +240,16 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(1)@jpeg",
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": Array [],
-          "viewer": Object {},
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
         },
         "cid": "cids(3)",
         "embed": Object {
@@ -314,7 +322,6 @@ Object {
         Object {
           "$type": "app.bsky.feed.defs#threadViewPost",
           "post": Object {
-            "$type": "app.bsky.feed.defs#postView",
             "author": Object {
               "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
               "did": "user(0)",
@@ -322,8 +329,10 @@ Object {
               "handle": "alice.test",
               "labels": Array [],
               "viewer": Object {
+                "blockedBy": false,
                 "followedBy": "record(2)",
                 "following": "record(1)",
+                "muted": false,
               },
             },
             "cid": "cids(5)",
@@ -364,7 +373,6 @@ exports[`pds thread views fetches shallow post thread 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -372,8 +380,10 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -396,13 +406,14 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "did": "user(2)",
           "handle": "carol.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "following": "record(5)",
+            "muted": false,
           },
         },
         "cid": "cids(2)",
@@ -433,14 +444,16 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(1)@jpeg",
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": Array [],
-          "viewer": Object {},
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
         },
         "cid": "cids(3)",
         "embed": Object {
@@ -518,7 +531,6 @@ exports[`pds thread views handles deleted posts correctly 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -526,8 +538,10 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -548,14 +562,16 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": Array [],
-          "viewer": Object {},
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
         },
         "cid": "cids(2)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -585,7 +601,6 @@ Object {
         Object {
           "$type": "app.bsky.feed.defs#threadViewPost",
           "post": Object {
-            "$type": "app.bsky.feed.defs#postView",
             "author": Object {
               "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
               "did": "user(0)",
@@ -593,8 +608,10 @@ Object {
               "handle": "alice.test",
               "labels": Array [],
               "viewer": Object {
+                "blockedBy": false,
                 "followedBy": "record(2)",
                 "following": "record(1)",
+                "muted": false,
               },
             },
             "cid": "cids(3)",
@@ -633,7 +650,6 @@ exports[`pds thread views handles deleted posts correctly 2`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -641,8 +657,10 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -672,7 +690,6 @@ Object {
     "uri": "record(4)",
   },
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -680,8 +697,10 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -721,7 +740,6 @@ Object {
     "uri": "record(4)",
   },
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -729,8 +747,10 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -772,7 +792,6 @@ Object {
     "uri": "record(4)",
   },
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -780,8 +799,10 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -818,7 +839,6 @@ exports[`pds thread views takedown blocks replies by actor 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -826,8 +846,10 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -850,14 +872,16 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": Array [],
-          "viewer": Object {},
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
         },
         "cid": "cids(2)",
         "embed": Object {
@@ -930,7 +954,6 @@ Object {
         Object {
           "$type": "app.bsky.feed.defs#threadViewPost",
           "post": Object {
-            "$type": "app.bsky.feed.defs#postView",
             "author": Object {
               "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
               "did": "user(0)",
@@ -938,8 +961,10 @@ Object {
               "handle": "alice.test",
               "labels": Array [],
               "viewer": Object {
+                "blockedBy": false,
                 "followedBy": "record(2)",
                 "following": "record(1)",
+                "muted": false,
               },
             },
             "cid": "cids(4)",
@@ -980,7 +1005,6 @@ exports[`pds thread views takedown blocks replies by record 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -988,8 +1012,10 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
+        "muted": false,
       },
     },
     "cid": "cids(0)",
@@ -1012,14 +1038,16 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
           "did": "user(2)",
           "displayName": "bobby",
           "handle": "bob.test",
           "labels": Array [],
-          "viewer": Object {},
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
         },
         "cid": "cids(2)",
         "embed": Object {

@@ -8,9 +8,20 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
-      const { actor, limit, cursor } = params
+    handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const res = await ctx.appviewAgent.api.app.bsky.feed.getAuthorFeed(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
+      const { actor, limit, cursor } = params
       const db = ctx.db.db
       const { ref } = db.dynamic
 

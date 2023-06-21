@@ -23,9 +23,25 @@ import { AlgoResponse } from '../../../../../feed-gen/types'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeed({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
-      const { feed } = params
+    handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const { data: feed } =
+          await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerator(
+            { feed: params.feed },
+            await ctx.serviceAuthHeaders(requester),
+          )
+        const res = await ctx.appviewAgent.api.app.bsky.feed.getFeed(
+          params,
+          await ctx.serviceAuthHeaders(requester, feed.view.did),
+        )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
+      const { feed } = params
       const feedService = ctx.services.appView.feed(ctx.db)
       const localAlgo = ctx.algos[feed]
 

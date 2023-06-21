@@ -28,6 +28,7 @@ export interface ServerConfigValues {
 
   inviteRequired: boolean
   userInviteInterval: number | null
+  userInviteEpoch: number
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
 
@@ -54,10 +55,10 @@ export interface ServerConfigValues {
   repoBackfillLimitMs: number
   sequencerLeaderLockId?: number
 
-  appViewRepoProvider?: string
-
   bskyAppViewEndpoint?: string
   bskyAppViewDid?: string
+
+  crawlersToNotify?: string[]
 }
 
 export class ServerConfig {
@@ -114,6 +115,11 @@ export class ServerConfig {
       process.env.USER_INVITE_INTERVAL,
       null,
     )
+    const userInviteEpoch = parseIntWithFallback(
+      process.env.USER_INVITE_EPOCH,
+      0,
+    )
+
     const privacyPolicyUrl = process.env.PRIVACY_POLICY_URL
     const termsOfServiceUrl = process.env.TERMS_OF_SERVICE_URL
 
@@ -166,14 +172,14 @@ export class ServerConfig {
       undefined,
     )
 
-    // E.g. ws://abc.com:4000
-    const appViewRepoProvider = nonemptyString(
-      process.env.APP_VIEW_REPO_PROVIDER,
-    )
     const bskyAppViewEndpoint = nonemptyString(
       process.env.BSKY_APP_VIEW_ENDPOINT,
     )
     const bskyAppViewDid = nonemptyString(process.env.BSKY_APP_VIEW_DID)
+
+    const crawlersEnv = process.env.CRAWLERS_TO_NOTIFY
+    const crawlersToNotify =
+      crawlersEnv && crawlersEnv.length > 0 ? crawlersEnv.split(',') : []
 
     return new ServerConfig({
       debugMode,
@@ -196,6 +202,7 @@ export class ServerConfig {
       moderatorPassword,
       inviteRequired,
       userInviteInterval,
+      userInviteEpoch,
       privacyPolicyUrl,
       termsOfServiceUrl,
       databaseLocation,
@@ -214,9 +221,9 @@ export class ServerConfig {
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
       sequencerLeaderLockId,
-      appViewRepoProvider,
       bskyAppViewEndpoint,
       bskyAppViewDid,
+      crawlersToNotify,
       ...overrides,
     })
   }
@@ -315,6 +322,10 @@ export class ServerConfig {
     return this.cfg.userInviteInterval
   }
 
+  get userInviteEpoch() {
+    return this.cfg.userInviteEpoch
+  }
+
   get privacyPolicyUrl() {
     if (
       this.cfg.privacyPolicyUrl &&
@@ -403,16 +414,16 @@ export class ServerConfig {
     return this.cfg.sequencerLeaderLockId
   }
 
-  get appViewRepoProvider() {
-    return this.cfg.appViewRepoProvider
-  }
-
   get bskyAppViewEndpoint() {
     return this.cfg.bskyAppViewEndpoint
   }
 
   get bskyAppViewDid() {
     return this.cfg.bskyAppViewDid
+  }
+
+  get crawlersToNotify() {
+    return this.cfg.crawlersToNotify
   }
 }
 

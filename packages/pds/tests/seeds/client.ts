@@ -68,6 +68,7 @@ export class SeedClient {
     }
   >
   follows: Record<string, Record<string, RecordRef>>
+  blocks: Record<string, Record<string, RecordRef>>
   posts: Record<
     string,
     { text: string; ref: RecordRef; images: ImageRef[]; quote?: RecordRef }[]
@@ -81,6 +82,7 @@ export class SeedClient {
     this.accounts = {}
     this.profiles = {}
     this.follows = {}
+    this.blocks = {}
     this.posts = {}
     this.likes = {}
     this.replies = {}
@@ -179,6 +181,33 @@ export class SeedClient {
       this.getHeaders(from),
     )
     delete this.follows[from][to]
+  }
+
+  async block(from: string, to: string, overrides?: Partial<FollowRecord>) {
+    const res = await this.agent.api.app.bsky.graph.block.create(
+      { repo: from },
+      {
+        subject: to,
+        createdAt: new Date().toISOString(),
+        ...overrides,
+      },
+      this.getHeaders(from),
+    )
+    this.blocks[from] ??= {}
+    this.blocks[from][to] = new RecordRef(res.uri, res.cid)
+    return this.blocks[from][to]
+  }
+
+  async unblock(from: string, to: string) {
+    const block = this.blocks[from][to]
+    if (!block) {
+      throw new Error('block does not exist')
+    }
+    await this.agent.api.app.bsky.graph.block.delete(
+      { repo: from, rkey: block.uri.rkey },
+      this.getHeaders(from),
+    )
+    delete this.blocks[from][to]
   }
 
   async post(

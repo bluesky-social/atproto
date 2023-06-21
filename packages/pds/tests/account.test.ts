@@ -10,6 +10,7 @@ import { AppContext, Database } from '../src'
 import * as util from './_util'
 import { ServerMailer } from '../src/mailer'
 import { DAY } from '@atproto/common'
+import { genInvCodes } from '../src/api/com/atproto/server/util'
 
 const email = 'alice@test.com'
 const handle = 'alice.test'
@@ -48,6 +49,7 @@ describe('account', () => {
     const server = await util.runTestServer({
       inviteRequired: true,
       userInviteInterval: DAY,
+      userInviteEpoch: Date.now() - 3 * DAY,
       termsOfServiceUrl: 'https://example.com/tos',
       privacyPolicyUrl: '/privacy-policy',
       dbPostgresSchema: 'account',
@@ -662,8 +664,10 @@ describe('account', () => {
       .execute()
     const res2 = await agent.api.com.atproto.server.getAccountInviteCodes()
     expect(res2.data.codes.length).toBe(2)
+  })
 
-    // now pretend it was made 10 days ago
+  it('creates invites based on epoch', async () => {
+    // pretend account was made 10 days ago
     const tenDaysAgo = new Date(Date.now() - 10 * DAY).toISOString()
     await ctx.db.db
       .updateTable('user_account')
@@ -671,17 +675,39 @@ describe('account', () => {
       .where('did', '=', did)
       .execute()
 
+    // we have a 3 day epoch so should still get 1 code
+    const res = await agent.api.com.atproto.server.getAccountInviteCodes({
+      includeUsed: false,
+    })
+    expect(res.data.codes.length).toBe(1)
+    const res2 = await agent.api.com.atproto.server.getAccountInviteCodes()
+    expect(res2.data.codes.length).toBe(3)
+
+    // we pad their account with some additional used codes from the past which should not change anything
+    const inviteRows = genInvCodes(ctx.cfg, 10).map((code) => ({
+      code: code,
+      availableUses: 1,
+      disabled: 0 as const,
+      forUser: did,
+      createdBy: did,
+      createdAt: new Date(Date.now() - 5 * DAY).toISOString(),
+    }))
+    await ctx.db.db.insertInto('invite_code').values(inviteRows).execute()
+    await ctx.db.db
+      .insertInto('invite_code_use')
+      .values(
+        inviteRows.map((row) => ({
+          code: row.code,
+          usedBy: 'did:example:test',
+          usedAt: new Date().toISOString(),
+        })),
+      )
+      .execute()
+
     const res3 = await agent.api.com.atproto.server.getAccountInviteCodes({
       includeUsed: false,
-      createAvailable: false,
     })
-    expect(res3.data.codes.length).toBe(0)
-    const res4 = await agent.api.com.atproto.server.getAccountInviteCodes()
-    expect(res4.data.codes.length).toBe(7)
-    const res5 = await agent.api.com.atproto.server.getAccountInviteCodes({
-      includeUsed: false,
-    })
-    expect(res5.data.codes.length).toBe(5)
+    expect(res3.data.codes.length).toBe(1)
   })
 
   it('prevents use of disabled codes', async () => {
