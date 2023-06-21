@@ -8,13 +8,18 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
-export interface QueryParams {
+export interface QueryParams {}
+
+export interface InputSchema {
   /** Hostname of the service that is notifying of update. */
   hostname: string
+  [k: string]: unknown
 }
 
-export type InputSchema = undefined
-export type HandlerInput = undefined
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
 
 export interface HandlerError {
   status: number
