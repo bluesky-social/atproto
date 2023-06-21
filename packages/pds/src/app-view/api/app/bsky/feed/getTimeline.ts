@@ -33,6 +33,16 @@ export default function (server: Server, ctx: AppContext) {
       const feedService = ctx.services.appView.feed(ctx.db)
       const graphService = ctx.services.appView.graph(ctx.db)
 
+      const hasAFollow = await graphService.hasAFollow(requester)
+      if (!hasAFollow) {
+        return {
+          encoding: 'application/json',
+          body: {
+            feed: [],
+          },
+        }
+      }
+
       const followingIdsSubquery = db
         .selectFrom('follow')
         .select('follow.subjectDid')

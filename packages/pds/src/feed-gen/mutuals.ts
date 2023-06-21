@@ -19,6 +19,13 @@ const handler: AlgoHandler = async (
 
   const { ref } = ctx.db.db.dynamic
 
+  const hasAFollow = await graphService.hasAFollow(requester)
+  if (!hasAFollow) {
+    return {
+      feedItems: [],
+    }
+  }
+
   const mutualsSubquery = ctx.db.db
     .selectFrom('follow')
     .where('follow.creator', '=', requester)

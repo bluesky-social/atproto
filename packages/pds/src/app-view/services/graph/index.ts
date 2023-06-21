@@ -98,6 +98,17 @@ export class GraphService {
     }
   }
 
+  async hasAFollow(user: string): Promise<boolean> {
+    // const { ref } = this.db.db.dynamic
+    const res = await this.db.db
+      .selectFrom('follow')
+      .selectAll()
+      .where('creator', '=', user)
+      .limit(1)
+      .executeTakeFirst()
+    return !!res
+  }
+
   formatListView(list: ListInfo, profiles: Record<string, ProfileView>) {
     return {
       uri: list.uri,

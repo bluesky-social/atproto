@@ -14,6 +14,13 @@ const handler: AlgoHandler = async (
   const feedService = ctx.services.appView.feed(ctx.db)
   const graphService = ctx.services.appView.graph(ctx.db)
 
+  const hasAFollow = await graphService.hasAFollow(requester)
+  if (!hasAFollow) {
+    return {
+      feedItems: [],
+    }
+  }
+
   const { ref } = ctx.db.db.dynamic
 
   // @NOTE use of getFeedDateThreshold() not currently beneficial to this feed
