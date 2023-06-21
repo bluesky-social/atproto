@@ -2,6 +2,7 @@ import AtpAgent, { AtUri } from '@atproto/api'
 import { runTestServer, CloseFn, TestServerInfo, forSnapshot } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
+import { RecordRef } from '../seeds/client'
 
 describe('pds views with mutes from mute lists', () => {
   let server: TestServerInfo
@@ -37,6 +38,7 @@ describe('pds views with mutes from mute lists', () => {
   })
 
   let listUri: string
+  let listCid: string
 
   it('creates a list with some items', async () => {
     const avatar = await sc.uploadFile(
@@ -57,6 +59,7 @@ describe('pds views with mutes from mute lists', () => {
       sc.getHeaders(alice),
     )
     listUri = list.uri
+    listCid = list.cid
     await agent.api.app.bsky.graph.listitem.create(
       { repo: alice },
       {
@@ -86,27 +89,6 @@ describe('pds views with mutes from mute lists', () => {
       },
       { encoding: 'application/json', headers: sc.getHeaders(dan) },
     )
-  })
-
-  it('embeds list view in posts', async () => {
-    const res = await agent.api.app.bsky.feed.post.create(
-      { repo: sc.dids.bob },
-      {
-        text: 'cool mute list!',
-        embed: {
-          $type: 'app.bsky.embed.record',
-          record: listUri,
-        },
-        createdAt: new Date().toISOString(),
-      },
-      sc.getHeaders(sc.dids.bob),
-    )
-    const view = await agent.api.app.bsky.feed.getPosts(
-      { uris: [res.uri] },
-      { headers: sc.getHeaders(sc.dids.bob) },
-    )
-    expect(view.data.posts.length).toBe(1)
-    expect(forSnapshot(view.data.posts[0])).toMatchSnapshot()
   })
 
   it('flags mutes in threads', async () => {
@@ -353,5 +335,21 @@ describe('pds views with mutes from mute lists', () => {
     expect(got.data.list.description).toBe('new descript')
     expect(got.data.list.avatar).toBeUndefined()
     expect(got.data.items.length).toBe(2)
+  })
+
+  it('embeds lists in posts', async () => {
+    const postRef = await sc.post(
+      alice,
+      'list embed!',
+      undefined,
+      undefined,
+      new RecordRef(listUri, listCid),
+    )
+    const res = await agent.api.app.bsky.feed.getPosts(
+      { uris: [postRef.ref.uriStr] },
+      { headers: sc.getHeaders(alice) },
+    )
+    expect(res.data.posts.length).toBe(1)
+    expect(forSnapshot(res.data.posts[0])).toMatchSnapshot()
   })
 })
