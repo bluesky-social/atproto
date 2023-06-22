@@ -10,6 +10,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.moderatorVerifier,
     handler: async ({ req, params }) => {
       if (ctx.shouldProxyModeration()) {
+        // @TODO merge invite details to this list view yet
         const { data: result } =
           await ctx.appviewAgent.com.atproto.admin.searchRepos(
             params,

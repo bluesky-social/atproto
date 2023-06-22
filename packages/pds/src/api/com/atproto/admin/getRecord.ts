@@ -3,7 +3,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { RecordNotFoundError } from '@atproto/api/src/client/types/com/atproto/admin/getRecord'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru } from './util'
+import { authPassthru, mergeRepoViewPdsDetails } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRecord({
@@ -24,10 +24,12 @@ export default function (server: Server, ctx: AppContext) {
               params,
               authPassthru(req),
             )
-          recordDetailAppview.repo.email ??= recordDetail?.repo.email
-          recordDetailAppview.repo.invitedBy ??= recordDetail?.repo.invitedBy
-          recordDetailAppview.repo.invitesDisabled ??=
-            recordDetail?.repo.invitesDisabled
+          if (recordDetail) {
+            recordDetailAppview.repo = mergeRepoViewPdsDetails(
+              recordDetailAppview.repo,
+              recordDetail.repo,
+            )
+          }
           return {
             encoding: 'application/json',
             body: recordDetailAppview,

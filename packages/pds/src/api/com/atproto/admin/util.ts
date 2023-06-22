@@ -33,9 +33,9 @@ export function mergeRepoViewPdsDetails<T extends RepoView | RepoViewDetail>(
   other: T,
   pds: T,
 ) {
-  other.email ??= pds?.email
-  other.invites ??= pds?.invites
-  other.invitedBy ??= pds?.invitedBy
-  other.invitesDisabled ??= pds?.invitesDisabled
+  other.email ??= pds.email
+  other.invites ??= pds.invites
+  other.invitedBy ??= pds.invitedBy
+  other.invitesDisabled ??= pds.invitesDisabled
   return other
 }
