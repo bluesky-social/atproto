@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import AppContext from '../context'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { paginate } from '../db/pagination'
@@ -7,6 +8,8 @@ import {
   getFeedDateThreshold,
 } from '../app-view/api/app/bsky/util/feed'
 import { FollowCountLevel } from '../app-view/services/graph'
+import { FeedItemType } from '../app-view/services/feed'
+import { notSoftDeletedClause } from '../db/util'
 
 const handler: AlgoHandler = async (
   ctx: AppContext,
@@ -15,7 +18,6 @@ const handler: AlgoHandler = async (
 ): Promise<AlgoResponse> => {
   const { cursor, limit = 50 } = params
   const accountService = ctx.services.account(ctx.db)
-  const feedService = ctx.services.appView.feed(ctx.db)
   const graphService = ctx.services.appView.graph(ctx.db)
 
   const followCountLevel = await graphService.followCountLevel(requester)
@@ -28,28 +30,43 @@ const handler: AlgoHandler = async (
   const { ref } = ctx.db.db.dynamic
 
   // @NOTE use of getFeedDateThreshold() not currently beneficial to this feed
-  const keyset = new FeedKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))
+  const keyset = new FeedKeyset(ref('post.indexedAt'), ref('post.cid'))
   const sortFrom = keyset.unpack(cursor)?.primary
 
-  let postsQb = feedService
-    .selectFeedItemQb()
-    .innerJoin('post_agg', 'post_agg.uri', 'feed_item.uri')
-    .where('feed_item.type', '=', 'post')
+  // @NOTE inlined selectPostQb() to have control over join order
+  let postsQb = ctx.db.db
+    .selectFrom('post')
+    .innerJoin('post_agg', 'post_agg.uri', 'post.uri') // @NOTE careful adjusting join order due to perf
+    .innerJoin('repo_root as author_repo', 'author_repo.did', 'post.creator')
+    .innerJoin('record', 'record.uri', 'post.uri')
     .where('post_agg.likeCount', '>=', 5)
+    .where(notSoftDeletedClause(ref('author_repo')))
+    .where(notSoftDeletedClause(ref('record')))
     .whereExists((qb) =>
       qb
         .selectFrom('follow')
         .where('follow.creator', '=', requester)
-        .whereRef('follow.subjectDid', '=', 'originatorDid'),
+        .whereRef('follow.subjectDid', '=', 'post.creator'),
     )
     .where((qb) =>
       accountService.whereNotMuted(qb, requester, [ref('post.creator')]),
     )
     .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
+    .select([
+      sql<FeedItemType>`${'post'}`.as('type'),
+      'post.uri as uri',
+      'post.cid as cid',
+      'post.uri as postUri',
+      'post.creator as originatorDid',
+      'post.creator as postAuthorDid',
+      'post.replyParent as replyParent',
+      'post.replyRoot as replyRoot',
+      'post.indexedAt as sortAt',
+    ])
 
   if (followCountLevel === FollowCountLevel.Low) {
     postsQb = postsQb.where(
-      'feed_item.sortAt',
+      'post.indexedAt',
       '>',
       getFeedDateThreshold(sortFrom),
     )
