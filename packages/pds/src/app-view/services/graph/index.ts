@@ -100,14 +100,13 @@ export class GraphService {
 
   async followCountLevel(user: string): Promise<FollowCountLevel> {
     const res = await this.db.db
-      .selectFrom('follow')
-      .select('subjectDid')
-      .where('creator', '=', user)
-      .limit(6)
-      .execute()
-    if (res.length === 0) {
+      .selectFrom('profile_agg')
+      .where('did', '=', user)
+      .select('followsCount')
+      .executeTakeFirst()
+    if (!res || res.followsCount === 0) {
       return FollowCountLevel.None
-    } else if (res.length <= 5) {
+    } else if (res.followsCount <= 30) {
       return FollowCountLevel.Low
     } else {
       return FollowCountLevel.High
