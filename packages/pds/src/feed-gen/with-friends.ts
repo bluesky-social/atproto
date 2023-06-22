@@ -9,7 +9,6 @@ import {
 } from '../app-view/api/app/bsky/util/feed'
 import { FollowCountLevel } from '../app-view/services/graph'
 import { FeedItemType } from '../app-view/services/feed'
-import { notSoftDeletedClause } from '../db/util'
 
 const handler: AlgoHandler = async (
   ctx: AppContext,
@@ -37,11 +36,7 @@ const handler: AlgoHandler = async (
   let postsQb = ctx.db.db
     .selectFrom('post')
     .innerJoin('post_agg', 'post_agg.uri', 'post.uri') // @NOTE careful adjusting join order due to perf
-    .innerJoin('repo_root as author_repo', 'author_repo.did', 'post.creator')
-    .innerJoin('record', 'record.uri', 'post.uri')
     .where('post_agg.likeCount', '>=', 5)
-    .where(notSoftDeletedClause(ref('author_repo')))
-    .where(notSoftDeletedClause(ref('record')))
     .whereExists((qb) =>
       qb
         .selectFrom('follow')
