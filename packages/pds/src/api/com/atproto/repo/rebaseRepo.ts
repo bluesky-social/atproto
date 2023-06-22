@@ -23,6 +23,7 @@ export default function (server: Server, ctx: AppContext) {
       try {
         await ctx.services.repo(ctx.db).rebaseRepo(repo, swapCommitCid)
       } catch (err) {
+        console.log('ERR: ', err)
         if (err instanceof BadCommitSwapError) {
           throw new InvalidRequestError(err.message, 'InvalidSwap')
         } else if (err instanceof ConcurrentWriteError) {
