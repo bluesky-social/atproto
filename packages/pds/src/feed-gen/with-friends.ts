@@ -7,6 +7,7 @@ import {
   getFeedDateThreshold,
 } from '../app-view/api/app/bsky/util/feed'
 import { FollowCountLevel } from '../app-view/services/graph'
+import { FeedRow } from '../app-view/services/feed'
 
 const handler: AlgoHandler = async (
   ctx: AppContext,
@@ -27,37 +28,45 @@ const handler: AlgoHandler = async (
 
   const { ref } = ctx.db.db.dynamic
 
-  // @NOTE use of getFeedDateThreshold() not currently beneficial to this feed
+  const followingIdsSubquery = ctx.db.db
+    .selectFrom('follow')
+    .select('follow.subjectDid')
+    .where('follow.creator', '=', requester)
+
   const keyset = new FeedKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))
   const sortFrom = keyset.unpack(cursor)?.primary
 
-  let postsQb = feedService
+  let feedItemsQb = feedService
     .selectFeedItemQb()
-    .innerJoin('post_agg', 'post_agg.uri', 'feed_item.uri')
-    .where('feed_item.type', '=', 'post')
-    .where('post_agg.likeCount', '>=', 5)
-    .whereExists((qb) =>
+    .where((qb) =>
       qb
-        .selectFrom('follow')
-        .where('follow.creator', '=', requester)
-        .whereRef('follow.subjectDid', '=', 'originatorDid'),
+        .where('originatorDid', '=', requester)
+        .orWhere('originatorDid', 'in', followingIdsSubquery),
     )
     .where((qb) =>
-      accountService.whereNotMuted(qb, requester, [ref('post.creator')]),
+      // Hide posts and reposts of or by muted actors
+      accountService.whereNotMuted(qb, requester, [
+        ref('post.creator'),
+        ref('originatorDid'),
+      ]),
     )
-    .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
-
-  if (followCountLevel === FollowCountLevel.Low) {
-    postsQb = postsQb.where(
-      'feed_item.sortAt',
-      '>',
-      getFeedDateThreshold(sortFrom),
+    .whereNotExists(
+      graphService.blockQb(requester, [
+        ref('post.creator'),
+        ref('originatorDid'),
+      ]),
     )
-  }
+    .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom))
 
-  postsQb = paginate(postsQb, { limit, cursor, keyset })
+  feedItemsQb = paginate(feedItemsQb, {
+    limit,
+    cursor,
+    keyset,
+    tryIndex: true,
+  })
 
-  const feedItems = await postsQb.execute()
+  const feedItems: FeedRow[] = await feedItemsQb.execute()
+
   return {
     feedItems,
     cursor: keyset.packFromResult(feedItems),
