@@ -1,10 +1,8 @@
-import { sql } from 'kysely'
 import AppContext from '../context'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { paginate } from '../db/pagination'
 import { AlgoHandler, AlgoResponse } from './types'
 import { FeedKeyset } from '../app-view/api/app/bsky/util/feed'
-import { FeedItemType } from '../app-view/services/feed'
 
 const handler: AlgoHandler = async (
   ctx: AppContext,
@@ -13,6 +11,7 @@ const handler: AlgoHandler = async (
 ): Promise<AlgoResponse> => {
   const { cursor, limit = 50 } = params
   const accountService = ctx.services.account(ctx.db)
+  const feedService = ctx.services.appView.feed(ctx.db)
   const graphService = ctx.services.appView.graph(ctx.db)
 
   const { ref } = ctx.db.db.dynamic
@@ -20,10 +19,9 @@ const handler: AlgoHandler = async (
   const keyset = new FeedKeyset(ref('post.indexedAt'), ref('post.cid'))
 
   // @NOTE use of getFeedDateThreshold() not currently beneficial to this feed
-  // @NOTE inlined selectPostQb() to have control over join order
-  let postsQb = ctx.db.db
-    .selectFrom('post')
-    .innerJoin('post_agg', 'post_agg.uri', 'post.uri') // @NOTE careful adjusting join order due to perf
+  let postsQb = feedService
+    .selectPostQb()
+    .innerJoin('post_agg', 'post_agg.uri', 'post.uri')
     .where('post_agg.likeCount', '>=', 5)
     .whereExists((qb) =>
       qb
@@ -35,17 +33,6 @@ const handler: AlgoHandler = async (
       accountService.whereNotMuted(qb, requester, [ref('post.creator')]),
     )
     .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
-    .select([
-      sql<FeedItemType>`${'post'}`.as('type'),
-      'post.uri as uri',
-      'post.cid as cid',
-      'post.uri as postUri',
-      'post.creator as originatorDid',
-      'post.creator as postAuthorDid',
-      'post.replyParent as replyParent',
-      'post.replyRoot as replyRoot',
-      'post.indexedAt as sortAt',
-    ])
 
   postsQb = paginate(postsQb, { limit, cursor, keyset })
 
