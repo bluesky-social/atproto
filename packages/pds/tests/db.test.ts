@@ -169,6 +169,10 @@ describe('db', () => {
   })
 
   describe('transaction advisory locks', () => {
+    if (db.dialect !== 'pg') {
+      return
+    }
+
     it('allows locks in txs to run sequentially', async () => {
       for (let i = 0; i < 100; i++) {
         await db.transaction(async (dbTxn) => {
