@@ -32,7 +32,7 @@ export class SqlRepoStorage extends RepoStorage {
       .selectAll()
       .where('did', '=', this.did)
     if (this.db.dialect !== 'sqlite') {
-      builder = builder.forUpdate().skipLocked()
+      builder = builder.forNoKeyUpdate().skipLocked()
     }
     const res = await builder.executeTakeFirst()
     if (!res) return null
