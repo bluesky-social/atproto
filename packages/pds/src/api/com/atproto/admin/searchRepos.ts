@@ -10,7 +10,8 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.moderatorVerifier,
     handler: async ({ req, params }) => {
       if (ctx.shouldProxyModeration()) {
-        // @TODO merge invite details to this list view yet
+        // @TODO merge invite details to this list view. could also add
+        // support for invitedBy param, which is not supported by appview.
         const { data: result } =
           await ctx.appviewAgent.com.atproto.admin.searchRepos(
             params,

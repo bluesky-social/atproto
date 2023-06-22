@@ -6,7 +6,8 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getModerationAction({
     auth: ctx.moderatorVerifier,
     handler: async ({ req, params }) => {
-      if (ctx.canProxyModeration()) {
+      if (ctx.shouldProxyModeration()) {
+        // @TODO merge invite details into action subject
         const { data: result } =
           await ctx.appviewAgent.com.atproto.admin.getModerationAction(
             params,
