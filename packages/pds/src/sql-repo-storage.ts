@@ -28,6 +28,15 @@ export class SqlRepoStorage extends RepoStorage {
 
   // note this method will return null if the repo has a lock on it currently
   async lockRepo(): Promise<boolean> {
+    const res = await this.db.db
+      .selectFrom('repo_root')
+      .selectAll()
+      .where('did', '=', this.did)
+      .executeTakeFirst()
+    if (res === null) {
+      return false
+    }
+
     const didHash = await sha256(this.did)
     const lockId = Buffer.from(didHash).readUintBE(0, 6)
     return this.db.txAdvisoryLock(lockId)
