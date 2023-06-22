@@ -103,7 +103,7 @@ export class GraphService {
       .selectFrom('follow')
       .select('subjectDid')
       .where('creator', '=', user)
-      .limit(5)
+      .limit(6)
       .execute()
     if (res.length === 0) {
       return FollowCountLevel.None
