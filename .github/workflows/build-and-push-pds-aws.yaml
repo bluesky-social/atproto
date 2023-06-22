@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - repo-update-advisory-lock-cutover
 env:
   REGISTRY: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_REGISTRY }}
   USERNAME: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_USERNAME }}
