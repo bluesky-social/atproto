@@ -3,11 +3,7 @@ import AppContext from '../context'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { paginate } from '../db/pagination'
 import { AlgoHandler, AlgoResponse } from './types'
-import {
-  FeedKeyset,
-  getFeedDateThreshold,
-} from '../app-view/api/app/bsky/util/feed'
-import { FollowCountLevel } from '../app-view/services/graph'
+import { FeedKeyset } from '../app-view/api/app/bsky/util/feed'
 import { FeedItemType } from '../app-view/services/feed'
 
 const handler: AlgoHandler = async (
@@ -19,19 +15,11 @@ const handler: AlgoHandler = async (
   const accountService = ctx.services.account(ctx.db)
   const graphService = ctx.services.appView.graph(ctx.db)
 
-  const followCountLevel = await graphService.followCountLevel(requester)
-  if (followCountLevel === FollowCountLevel.None) {
-    return {
-      feedItems: [],
-    }
-  }
-
   const { ref } = ctx.db.db.dynamic
 
-  // @NOTE use of getFeedDateThreshold() not currently beneficial to this feed
   const keyset = new FeedKeyset(ref('post.indexedAt'), ref('post.cid'))
-  const sortFrom = keyset.unpack(cursor)?.primary
 
+  // @NOTE use of getFeedDateThreshold() not currently beneficial to this feed
   // @NOTE inlined selectPostQb() to have control over join order
   let postsQb = ctx.db.db
     .selectFrom('post')
@@ -58,14 +46,6 @@ const handler: AlgoHandler = async (
       'post.replyRoot as replyRoot',
       'post.indexedAt as sortAt',
     ])
-
-  if (followCountLevel === FollowCountLevel.Low) {
-    postsQb = postsQb.where(
-      'post.indexedAt',
-      '>',
-      getFeedDateThreshold(sortFrom),
-    )
-  }
 
   postsQb = paginate(postsQb, { limit, cursor, keyset })
 

@@ -4,7 +4,6 @@ import { FeedAlgorithm, FeedKeyset, getFeedDateThreshold } from '../util/feed'
 import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
-import { FollowCountLevel } from '../../../../services/graph'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
@@ -33,16 +32,6 @@ export default function (server: Server, ctx: AppContext) {
       const accountService = ctx.services.account(ctx.db)
       const feedService = ctx.services.appView.feed(ctx.db)
       const graphService = ctx.services.appView.graph(ctx.db)
-
-      const followCountLevel = await graphService.followCountLevel(requester)
-      if (followCountLevel === FollowCountLevel.None) {
-        return {
-          encoding: 'application/json',
-          body: {
-            feed: [],
-          },
-        }
-      }
 
       const followingIdsSubquery = db
         .selectFrom('follow')

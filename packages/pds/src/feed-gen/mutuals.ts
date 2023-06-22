@@ -6,7 +6,6 @@ import {
   FeedKeyset,
   getFeedDateThreshold,
 } from '../app-view/api/app/bsky/util/feed'
-import { FollowCountLevel } from '../app-view/services/graph'
 
 const handler: AlgoHandler = async (
   ctx: AppContext,
@@ -19,13 +18,6 @@ const handler: AlgoHandler = async (
   const graphService = ctx.services.appView.graph(ctx.db)
 
   const { ref } = ctx.db.db.dynamic
-
-  const followCountLevel = await graphService.followCountLevel(requester)
-  if (followCountLevel === FollowCountLevel.None) {
-    return {
-      feedItems: [],
-    }
-  }
 
   const mutualsSubquery = ctx.db.db
     .selectFrom('follow')

@@ -3,7 +3,6 @@ import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/ge
 import { AlgoHandler, AlgoResponse } from './types'
 import { GenericKeyset, paginate } from '../db/pagination'
 import AppContext from '../context'
-import { FollowCountLevel } from '../app-view/services/graph'
 
 const handler: AlgoHandler = async (
   ctx: AppContext,
@@ -18,13 +17,6 @@ const handler: AlgoHandler = async (
   const accountService = ctx.services.account(ctx.db)
   const feedService = ctx.services.appView.feed(ctx.db)
   const graphService = ctx.services.appView.graph(ctx.db)
-
-  const followCountLevel = await graphService.followCountLevel(requester)
-  if (followCountLevel === FollowCountLevel.None) {
-    return {
-      feedItems: [],
-    }
-  }
 
   const { ref } = ctx.db.db.dynamic
 
