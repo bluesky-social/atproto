@@ -247,24 +247,21 @@ export class RepoService {
 
   async rebaseRepo(did: string, swapCommit?: CID) {
     this.db.assertNotTransaction()
-    const rebaseData = await this.formatRebase(did, swapCommit)
+    const rebaseData = await this.formatRebase(did)
 
     // rebases are expensive & should be done rarely, we don't try to re-process on concurrent writes
     await this.serviceTx(async (srvcTx) =>
-      srvcTx.processRebase(did, rebaseData),
+      srvcTx.processRebase(did, rebaseData, swapCommit),
     )
   }
 
-  async formatRebase(did: string, swapCommit?: CID): Promise<RebaseData> {
+  async formatRebase(did: string): Promise<RebaseData> {
     const storage = new SqlRepoStorage(this.db, did, new Date().toISOString())
     const currRoot = await storage.getHead()
     if (!currRoot) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
       )
-    }
-    if (swapCommit && !currRoot.equals(swapCommit)) {
-      throw new BadCommitSwapError(currRoot)
     }
 
     const records = await this.db.db
@@ -300,8 +297,12 @@ export class RepoService {
     }
   }
 
-  async processRebase(did: string, rebaseData: RebaseData) {
+  async processRebase(did: string, rebaseData: RebaseData, swapCommit?: CID) {
     this.db.assertTransaction()
+    if (swapCommit && !rebaseData.rebased.equals(swapCommit)) {
+      throw new BadCommitSwapError(rebaseData.rebased)
+    }
+
     const storage = new SqlRepoStorage(this.db, did)
     const locked = await storage.lockRepo()
     if (!locked) {
