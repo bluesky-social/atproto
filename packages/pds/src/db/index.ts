@@ -182,6 +182,16 @@ export class Database {
     return txRes
   }
 
+  async txAdvisoryLock(id: number): Promise<boolean> {
+    this.assertTransaction()
+    assert(this.dialect === 'pg', 'Postgres required')
+    assert(typeof id === 'number' && id > 0, 'Invalid lock id')
+    const res = (await sql`SELECT pg_try_advisory_xact_lock(${sql.literal(
+      id,
+    )}) as acquired`.execute(this.db)) as TxLockRes
+    return res.rows[0]?.acquired === true
+  }
+
   get schema(): string | undefined {
     return this.cfg.dialect === 'pg' ? this.cfg.schema : undefined
   }
@@ -355,4 +365,8 @@ class LeakyTxPlugin implements KyselyPlugin {
   ): Promise<QueryResult<UnknownRow>> {
     return args.result
   }
+}
+
+type TxLockRes = {
+  rows: { acquired: true | false }[]
 }

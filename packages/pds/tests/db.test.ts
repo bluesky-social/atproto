@@ -168,6 +168,38 @@ describe('db', () => {
     })
   })
 
+  describe('transaction advisory locks', () => {
+    it('allows locks in txs to run sequentially', async () => {
+      for (let i = 0; i < 100; i++) {
+        await db.transaction(async (dbTxn) => {
+          const locked = await dbTxn.txAdvisoryLock(1234)
+          expect(locked).toBe(true)
+        })
+      }
+    })
+
+    it('locks block between txns', async () => {
+      let resolve: () => void
+      const promise = new Promise<void>((res) => (resolve = res))
+      const tx1 = db.transaction(async (dbTxn) => {
+        const locked = await dbTxn.txAdvisoryLock(1234)
+        expect(locked).toBe(true)
+        await promise
+      })
+      // give it just a second to get the lock
+      await wait(10)
+      const tx2 = db.transaction(async (dbTxn) => {
+        const locked = await dbTxn.txAdvisoryLock(1234)
+        expect(locked).toBe(false)
+        resolve()
+        await tx1
+        const locked2 = await dbTxn.txAdvisoryLock(1234)
+        expect(locked2).toBe(true)
+      })
+      await tx2
+    })
+  })
+
   describe('Leader', () => {
     it('allows leaders to run sequentially.', async () => {
       const task = async () => {

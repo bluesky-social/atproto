@@ -114,8 +114,8 @@ export class RepoService {
   ) {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
-    const locked = await storage.lockHead()
-    if (!locked || !locked.equals(commitData.prev)) {
+    const locked = await storage.lockRepo()
+    if (!locked) {
       throw new ConcurrentWriteError()
     }
     await Promise.all([
@@ -303,8 +303,8 @@ export class RepoService {
   async processRebase(did: string, rebaseData: RebaseData) {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did)
-    const lockedHead = await storage.lockHead()
-    if (!rebaseData.rebased.equals(lockedHead)) {
+    const locked = await storage.lockRepo()
+    if (!locked) {
       throw new ConcurrentWriteError()
     }
 
