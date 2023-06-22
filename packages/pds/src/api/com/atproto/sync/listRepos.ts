@@ -10,8 +10,9 @@ export default function (server: Server, ctx: AppContext) {
     const { ref } = ctx.db.db.dynamic
     const innerBuilder = ctx.db.db
       .selectFrom('repo_root')
+      .innerJoin('did_handle', 'did_handle.did', 'repo_root.did')
       .innerJoin('user_account', 'user_account.did', 'repo_root.did')
-      .where(notSoftDeletedClause(ref('repo_root')))
+      .where(notSoftDeletedClause(ref('did_handle')))
       .select([
         'repo_root.did as did',
         'repo_root.root as head',

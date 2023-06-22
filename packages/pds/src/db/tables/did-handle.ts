@@ -2,6 +2,7 @@
 export interface DidHandle {
   did: string
   handle: string
+  takedownId: number | null
 }
 
 export const tableName = 'did_handle'

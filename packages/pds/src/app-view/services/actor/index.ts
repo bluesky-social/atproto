@@ -40,9 +40,8 @@ export class ActorService {
     })
     const results = await this.db.db
       .selectFrom('did_handle')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('did_handle'))),
       )
       .where((qb) => {
         if (dids.length) {

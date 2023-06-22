@@ -4,7 +4,6 @@ import {
   ProfileView,
   ProfileViewBasic,
 } from '../../../lexicon/types/app/bsky/actor/defs'
-import { DidHandle } from '../../../db/tables/did-handle'
 import Database from '../../../db'
 import { ImageUriBuilder } from '../../../image/uri'
 import { LabelService } from '../label'
@@ -281,7 +280,7 @@ export class ActorViews {
   }
 }
 
-type ActorResult = DidHandle
+type ActorResult = { did: string; handle: string }
 
 function truncateUtf8(str: string | null | undefined, length: number) {
   if (!str) return str

@@ -26,8 +26,7 @@ export default function (server: Server, ctx: AppContext) {
       let mutesReq = ctx.db.db
         .selectFrom('mute')
         .innerJoin('did_handle as actor', 'actor.did', 'mute.did')
-        .innerJoin('repo_root', 'repo_root.did', 'mute.did')
-        .where(notSoftDeletedClause(ref('repo_root')))
+        .where(notSoftDeletedClause(ref('actor')))
         .where('mute.mutedByDid', '=', requester)
         .selectAll('actor')
         .select('mute.createdAt as createdAt')

@@ -36,12 +36,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('follow')
         .where('follow.subjectDid', '=', subjectRes.did)
         .innerJoin('did_handle as creator', 'creator.did', 'follow.creator')
-        .innerJoin(
-          'repo_root as creator_repo',
-          'creator_repo.did',
-          'follow.creator',
-        )
-        .where(notSoftDeletedClause(ref('creator_repo')))
+        .where(notSoftDeletedClause(ref('creator')))
         .whereNotExists(
           graphService.blockQb(requester, [ref('follow.subjectDid')]),
         )

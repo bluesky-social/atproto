@@ -29,9 +29,8 @@ export default function (server: Server, ctx: AppContext) {
       let suggestionsQb = db
         .selectFrom('suggested_follow')
         .innerJoin('did_handle', 'suggested_follow.did', 'did_handle.did')
-        .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
         .innerJoin('profile_agg', 'profile_agg.did', 'did_handle.did')
-        .where(notSoftDeletedClause(ref('repo_root')))
+        .where(notSoftDeletedClause(ref('did_handle')))
         .where('did_handle.did', '!=', requester)
         .whereNotExists((qb) =>
           qb

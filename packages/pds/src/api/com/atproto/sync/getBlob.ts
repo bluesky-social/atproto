@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       const found = await ctx.db.db
         .selectFrom('blob')
         .selectAll()
-        .innerJoin('repo_root', 'repo_root.did', 'blob.creator')
+        .innerJoin('did_handle', 'did_handle.did', 'blob.creator')
         .innerJoin('repo_blob', (join) =>
           join
             .onRef('repo_blob.cid', '=', 'blob.cid')
@@ -24,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
         .where(notSoftDeletedClause(ref('repo_blob')))
         .if(!isUserOrAdmin(auth, params.did), (qb) =>
           // takedown check for anyone other than an admin or the user
-          qb.where(notSoftDeletedClause(ref('repo_root'))),
+          qb.where(notSoftDeletedClause(ref('did_handle'))),
         )
         .executeTakeFirst()
       if (!found) {

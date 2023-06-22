@@ -29,12 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('repost')
         .where('repost.subject', '=', uri)
         .innerJoin('did_handle as creator', 'creator.did', 'repost.creator')
-        .innerJoin(
-          'repo_root as creator_repo',
-          'creator_repo.did',
-          'repost.creator',
-        )
-        .where(notSoftDeletedClause(ref('creator_repo')))
+        .where(notSoftDeletedClause(ref('creator')))
         .whereNotExists(
           graphService.blockQb(requester, [ref('repost.creator')]),
         )

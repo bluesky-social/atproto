@@ -362,7 +362,7 @@ export class ModerationService {
 
   async takedownRepo(info: { takedownId: number; did: string }) {
     await this.db.db
-      .updateTable('repo_root')
+      .updateTable('did_handle')
       .set({ takedownId: info.takedownId })
       .where('did', '=', info.did)
       .where('takedownId', 'is', null)
@@ -371,7 +371,7 @@ export class ModerationService {
 
   async reverseTakedownRepo(info: { did: string }) {
     await this.db.db
-      .updateTable('repo_root')
+      .updateTable('did_handle')
       .set({ takedownId: null })
       .where('did', '=', info.did)
       .execute()

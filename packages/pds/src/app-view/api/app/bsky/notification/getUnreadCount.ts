@@ -33,13 +33,9 @@ export default function (server: Server, ctx: AppContext) {
         .select(countAll.as('count'))
         .innerJoin('user_account', 'user_account.did', 'notif.userDid')
         .innerJoin('user_state', 'user_state.did', 'user_account.did')
-        .innerJoin(
-          'repo_root as author_repo',
-          'author_repo.did',
-          'notif.author',
-        )
+        .innerJoin('did_handle as author', 'author.did', 'notif.author')
         .innerJoin('record', 'record.uri', 'notif.recordUri')
-        .where(notSoftDeletedClause(ref('author_repo')))
+        .where(notSoftDeletedClause(ref('author')))
         .where(notSoftDeletedClause(ref('record')))
         .where('notif.userDid', '=', requester)
         .where((qb) =>

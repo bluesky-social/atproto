@@ -29,12 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('like')
         .where('like.subject', '=', uri)
         .innerJoin('did_handle as creator', 'creator.did', 'like.creator')
-        .innerJoin(
-          'repo_root as creator_repo',
-          'creator_repo.did',
-          'like.creator',
-        )
-        .where(notSoftDeletedClause(ref('creator_repo')))
+        .where(notSoftDeletedClause(ref('creator')))
         .whereNotExists(graphService.blockQb(requester, [ref('like.creator')]))
         .selectAll('creator')
         .select([

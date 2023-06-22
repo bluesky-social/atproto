@@ -27,9 +27,8 @@ export const getUserSearchQueryPg = (
   const distanceAccount = distance(term, ref('handle'))
   let accountsQb = db.db
     .selectFrom('did_handle')
-    .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
     .if(!includeSoftDeleted, (qb) =>
-      qb.where(notSoftDeletedClause(ref('repo_root'))),
+      qb.where(notSoftDeletedClause(ref('did_handle'))),
     )
     .where(similar(term, ref('handle'))) // Coarse filter engaging trigram index
     .where(distanceAccount, '<', threshold) // Refines results from trigram index
@@ -46,9 +45,8 @@ export const getUserSearchQueryPg = (
   let profilesQb = db.db
     .selectFrom('profile')
     .innerJoin('did_handle', 'did_handle.did', 'profile.creator')
-    .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
     .if(!includeSoftDeleted, (qb) =>
-      qb.where(notSoftDeletedClause(ref('repo_root'))),
+      qb.where(notSoftDeletedClause(ref('did_handle'))),
     )
     .where(similar(term, ref('displayName'))) // Coarse filter engaging trigram index
     .where(distanceProfile, '<', threshold) // Refines results from trigram index
@@ -127,9 +125,8 @@ export const getUserSearchQuerySqlite = (
 
   return db.db
     .selectFrom('did_handle')
-    .innerJoin('repo_root as _repo_root', '_repo_root.did', 'did_handle.did')
     .if(!includeSoftDeleted, (qb) =>
-      qb.where(notSoftDeletedClause(ref('_repo_root'))),
+      qb.where(notSoftDeletedClause(ref('did_handle'))),
     )
     .where((q) => {
       safeWords.forEach((word) => {

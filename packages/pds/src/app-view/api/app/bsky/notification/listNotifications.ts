@@ -35,13 +35,8 @@ export default function (server: Server, ctx: AppContext) {
       let notifBuilder = ctx.db.db
         .selectFrom('user_notification as notif')
         .innerJoin('did_handle as author', 'author.did', 'notif.author')
-        .innerJoin(
-          'repo_root as author_repo',
-          'author_repo.did',
-          'notif.author',
-        )
         .innerJoin('record', 'record.uri', 'notif.recordUri')
-        .where(notSoftDeletedClause(ref('author_repo')))
+        .where(notSoftDeletedClause(ref('author')))
         .where(notSoftDeletedClause(ref('record')))
         .where('notif.userDid', '=', requester)
         .where((qb) =>

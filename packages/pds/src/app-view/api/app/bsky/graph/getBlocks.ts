@@ -31,12 +31,7 @@ export default function (server: Server, ctx: AppContext) {
           'subject.did',
           'actor_block.subjectDid',
         )
-        .innerJoin(
-          'repo_root as subject_repo',
-          'subject_repo.did',
-          'actor_block.subjectDid',
-        )
-        .where(notSoftDeletedClause(ref('subject_repo')))
+        .where(notSoftDeletedClause(ref('subject')))
         .selectAll('subject')
         .select([
           'actor_block.cid as cid',

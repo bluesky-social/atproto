@@ -77,14 +77,9 @@ export class FeedService {
     return this.db.db
       .selectFrom('feed_generator')
       .innerJoin('did_handle', 'did_handle.did', 'feed_generator.creator')
-      .innerJoin(
-        'repo_root as creator_repo',
-        'creator_repo.did',
-        'feed_generator.creator',
-      )
       .innerJoin('record', 'record.uri', 'feed_generator.uri')
       .selectAll()
-      .where(notSoftDeletedClause(ref('creator_repo')))
+      .where(notSoftDeletedClause(ref('did_handle')))
       .where(notSoftDeletedClause(ref('record')))
       .select((qb) =>
         qb
@@ -116,13 +111,14 @@ export class FeedService {
       this.db.db
         .selectFrom('did_handle')
         .where('did_handle.did', 'in', dids)
-        .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
         .leftJoin('profile', 'profile.creator', 'did_handle.did')
         .selectAll('did_handle')
         .if(!includeSoftDeleted, (qb) =>
-          qb.where(notSoftDeletedClause(ref('repo_root'))),
+          qb.where(notSoftDeletedClause(ref('did_handle'))),
         )
         .select([
+          'did_handle.did as did',
+          'did_handle.handle as handle',
           'profile.uri as profileUri',
           'profile.displayName as displayName',
           'profile.description as description',
@@ -204,9 +200,9 @@ export class FeedService {
           .onRef('ipld_block.cid', '=', 'post.cid')
           .onRef('ipld_block.creator', '=', 'post.creator'),
       )
-      .innerJoin('repo_root', 'repo_root.did', 'post.creator')
+      .innerJoin('did_handle', 'did_handle.did', 'post.creator')
       .innerJoin('record', 'record.uri', 'post.uri')
-      .where(notSoftDeletedClause(ref('repo_root'))) // Ensures post reply parent/roots get omitted from views when taken down
+      .where(notSoftDeletedClause(ref('did_handle'))) // Ensures post reply parent/roots get omitted from views when taken down
       .where(notSoftDeletedClause(ref('record')))
       .select([
         'post.uri as uri',
