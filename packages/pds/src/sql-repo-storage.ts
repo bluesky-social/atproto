@@ -40,7 +40,7 @@ export class SqlRepoStorage extends RepoStorage {
       return false
     }
 
-    const didHash = await sha256(this.did)
+    const didHash = await sha256(this.did + this.db.schema ?? '')
     const lockId = Buffer.from(didHash).readUintBE(0, 6)
     return this.db.txAdvisoryLock(lockId)
   }
