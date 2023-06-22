@@ -202,17 +202,10 @@ export class Database {
   }
 
   private async calcLockId(name: string): Promise<number> {
-    const hashToLockId = (hash: Uint8Array): number =>
-      Buffer.from(hash).readUintBE(0, 6)
-    let hash = await sha256(name + this.txLockNonce ?? '')
-    let lockId = hashToLockId(hash)
+    const hash = await sha256(name + this.txLockNonce ?? '')
+    const lockId = Buffer.from(hash).readUintBE(0, 6)
     // any lock id < 10k is reserved for session locks
-    // is <10k, rehash
-    while (lockId < 10000) {
-      hash = await sha256(hash)
-      lockId = hashToLockId(hash)
-    }
-    return lockId
+    return lockId + 10000
   }
 
   get schema(): string | undefined {
