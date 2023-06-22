@@ -1,7 +1,7 @@
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as pds from '@atproto/pds'
-import { Secp256k1Keypair } from '@atproto/crypto'
+import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { MessageDispatcher } from '@atproto/pds/src/event-stream/message-queue'
 import { AtpAgent } from '@atproto/api'
 import { Client as PlcClient } from '@did-plc/lib'
@@ -63,6 +63,7 @@ export class TestPds {
       labelerDid: 'did:example:labeler',
       labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
       feedGenDid: 'did:example:feedGen',
+      dbTxLockNonce: await randomStr(32, 'base32'),
       ...cfg,
     })
 
@@ -71,6 +72,7 @@ export class TestPds {
       ? pds.Database.postgres({
           url: config.dbPostgresUrl,
           schema: config.dbPostgresSchema,
+          txLockNonce: config.dbTxLockNonce,
         })
       : pds.Database.memory()
     await db.migrateToLatestOrThrow()

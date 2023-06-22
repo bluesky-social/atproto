@@ -13,7 +13,6 @@ import { valuesList } from './db/util'
 import { IpldBlock } from './db/tables/ipld-block'
 import { RepoCommitBlock } from './db/tables/repo-commit-block'
 import { RepoCommitHistory } from './db/tables/repo-commit-history'
-import { sha256 } from '@atproto/crypto'
 
 export class SqlRepoStorage extends RepoStorage {
   cache: BlockMap = new BlockMap()
@@ -39,10 +38,7 @@ export class SqlRepoStorage extends RepoStorage {
     if (res === null) {
       return false
     }
-
-    const didHash = await sha256(this.did + this.db.schema ?? '')
-    const lockId = Buffer.from(didHash).readUintBE(0, 6)
-    return this.db.txAdvisoryLock(lockId)
+    return this.db.txAdvisoryLock(this.did)
   }
 
   async getHead(): Promise<CID | null> {
