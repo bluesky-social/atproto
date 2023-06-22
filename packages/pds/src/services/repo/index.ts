@@ -247,12 +247,12 @@ export class RepoService {
 
   async rebaseRepo(did: string, swapCommit?: CID) {
     this.db.assertNotTransaction()
-    const rebaseData = await this.formatRebase(did, swapCommit)
 
     // rebases are expensive & should be done rarely, we don't try to re-process on concurrent writes
-    await this.serviceTx(async (srvcTx) =>
-      srvcTx.processRebase(did, rebaseData),
-    )
+    await this.serviceTx(async (srvcTx) => {
+      const rebaseData = await srvcTx.formatRebase(did, swapCommit)
+      await srvcTx.processRebase(did, rebaseData)
+    })
   }
 
   async formatRebase(did: string, swapCommit?: CID): Promise<RebaseData> {
