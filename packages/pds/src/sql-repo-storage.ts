@@ -28,14 +28,14 @@ export class SqlRepoStorage extends RepoStorage {
 
   // note this method will return null if the repo has a lock on it currently
   async lockRepo(): Promise<boolean> {
-    let builder = this.db.db
+    if (this.db.dialect === 'sqlite') return true
+    const res = await this.db.db
       .selectFrom('repo_root')
       .selectAll()
       .where('did', '=', this.did)
-    if (this.db.dialect !== 'sqlite') {
-      builder = builder.forUpdate().skipLocked()
-    }
-    const res = await builder.executeTakeFirst()
+      .forUpdate()
+      .skipLocked()
+      .executeTakeFirst()
     if (res === null) {
       return false
     }
