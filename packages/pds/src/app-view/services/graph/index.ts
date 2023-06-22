@@ -98,14 +98,20 @@ export class GraphService {
     }
   }
 
-  async hasAFollow(user: string): Promise<boolean> {
+  async followCountLevel(user: string): Promise<FollowCountLevel> {
     const res = await this.db.db
       .selectFrom('follow')
-      .selectAll()
+      .select('subjectDid')
       .where('creator', '=', user)
-      .limit(1)
-      .executeTakeFirst()
-    return !!res
+      .limit(5)
+      .execute()
+    if (res.length === 0) {
+      return FollowCountLevel.None
+    } else if (res.length <= 5) {
+      return FollowCountLevel.Low
+    } else {
+      return FollowCountLevel.High
+    }
   }
 
   formatListView(list: ListInfo, profiles: Record<string, ProfileView>) {
@@ -127,6 +133,12 @@ export class GraphService {
       },
     }
   }
+}
+
+export enum FollowCountLevel {
+  None = 'none',
+  Low = 'low',
+  High = 'high',
 }
 
 type ListInfo = List & {
