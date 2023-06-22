@@ -169,11 +169,8 @@ describe('db', () => {
   })
 
   describe('transaction advisory locks', () => {
-    if (db.dialect !== 'pg') {
-      return
-    }
-
     it('allows locks in txs to run sequentially', async () => {
+      if (db.dialect !== 'pg') return
       for (let i = 0; i < 100; i++) {
         await db.transaction(async (dbTxn) => {
           const locked = await dbTxn.txAdvisoryLock(1234)
@@ -183,6 +180,7 @@ describe('db', () => {
     })
 
     it('locks block between txns', async () => {
+      if (db.dialect !== 'pg') return
       let resolve: () => void
       const promise = new Promise<void>((res) => (resolve = res))
       const tx1 = db.transaction(async (dbTxn) => {
