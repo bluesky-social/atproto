@@ -28,6 +28,7 @@ export class SqlRepoStorage extends RepoStorage {
 
   // note this method will return null if the repo has a lock on it currently
   async lockRepo(): Promise<boolean> {
+    if (this.db.dialect === 'sqlite') return true
     const didHash = await sha256(this.did + this.db.schema ?? '')
     const lockId = Buffer.from(didHash).readUintBE(0, 6)
     return this.db.txAdvisoryLock(lockId)
