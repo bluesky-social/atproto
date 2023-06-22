@@ -257,13 +257,17 @@ export class RepoService {
 
   async formatRebase(did: string, swapCommit?: CID): Promise<RebaseData> {
     const storage = new SqlRepoStorage(this.db, did, new Date().toISOString())
+    const locked = await storage.lockRepo()
+    if (!locked) {
+      throw new ConcurrentWriteError()
+    }
+
     const currRoot = await storage.getHead()
     if (!currRoot) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
       )
-    }
-    if (swapCommit && !currRoot.equals(swapCommit)) {
+    } else if (swapCommit && !currRoot.equals(swapCommit)) {
       throw new BadCommitSwapError(currRoot)
     }
 
@@ -302,11 +306,8 @@ export class RepoService {
 
   async processRebase(did: string, rebaseData: RebaseData) {
     this.db.assertTransaction()
+
     const storage = new SqlRepoStorage(this.db, did)
-    const locked = await storage.lockRepo()
-    if (!locked) {
-      throw new ConcurrentWriteError()
-    }
 
     const recordCountBefore = await this.countRecordBlocks(did)
     await Promise.all([
