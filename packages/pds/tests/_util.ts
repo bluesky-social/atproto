@@ -104,6 +104,7 @@ export const runTestServer = async (
     maxSubscriptionBuffer: 200,
     repoBackfillLimitMs: HOUR,
     sequencerLeaderLockId: uniqueLockId(),
+    dbTxLockNonce: await randomStr(32, 'base32'),
     ...params,
   })
 
@@ -112,6 +113,7 @@ export const runTestServer = async (
       ? Database.postgres({
           url: cfg.dbPostgresUrl,
           schema: cfg.dbPostgresSchema,
+          txLockNonce: cfg.dbTxLockNonce,
         })
       : Database.memory()
 
@@ -122,6 +124,7 @@ export const runTestServer = async (
       ? Database.postgres({
           url: cfg.dbPostgresUrl,
           schema: cfg.dbPostgresSchema,
+          txLockNonce: cfg.dbTxLockNonce,
         })
       : db
   if (opts.migration) {

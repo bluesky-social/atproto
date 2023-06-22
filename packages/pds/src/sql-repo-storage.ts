@@ -13,7 +13,6 @@ import { valuesList } from './db/util'
 import { IpldBlock } from './db/tables/ipld-block'
 import { RepoCommitBlock } from './db/tables/repo-commit-block'
 import { RepoCommitHistory } from './db/tables/repo-commit-history'
-import { sha256 } from '@atproto/crypto'
 
 export class SqlRepoStorage extends RepoStorage {
   cache: BlockMap = new BlockMap()
@@ -29,9 +28,7 @@ export class SqlRepoStorage extends RepoStorage {
   // note this method will return null if the repo has a lock on it currently
   async lockRepo(): Promise<boolean> {
     if (this.db.dialect === 'sqlite') return true
-    const didHash = await sha256(this.did + this.db.schema ?? '')
-    const lockId = Buffer.from(didHash).readUintBE(0, 6)
-    return this.db.txAdvisoryLock(lockId)
+    return this.db.txAdvisoryLock(this.did)
   }
 
   async getHead(): Promise<CID | null> {
