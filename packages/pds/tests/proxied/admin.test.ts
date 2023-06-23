@@ -10,6 +10,7 @@ import { forSnapshot } from '../_util'
 import {
   ACKNOWLEDGE,
   FLAG,
+  TAKEDOWN,
 } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 
 describe('proxies admin requests', () => {
@@ -240,6 +241,142 @@ describe('proxies admin requests', () => {
       { headers: network.pds.adminAuthHeaders() },
     )
     await expect(tryGetRecord).rejects.toThrow('Record not found')
+  })
+
+  it('takesdown and labels repos, and reverts.', async () => {
+    const { db, services } = network.pds.ctx
+    // takedown repo
+    const { data: action } =
+      await agent.api.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.alice,
+          },
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+          createLabelVals: ['dogs'],
+          negateLabelVals: ['cats'],
+        },
+        {
+          headers: network.pds.adminAuthHeaders(),
+          encoding: 'application/json',
+        },
+      )
+    // check profile and labels
+    const tryGetProfilePds = agent.api.app.bsky.actor.getProfile(
+      { actor: sc.dids.alice },
+      { headers: sc.getHeaders(sc.dids.carol) },
+    )
+    const tryGetProfileAppview = agent.api.app.bsky.actor.getProfile(
+      { actor: sc.dids.alice },
+      {
+        headers: { ...sc.getHeaders(sc.dids.carol), 'x-appview-proxy': 'true' },
+      },
+    )
+    await expect(tryGetProfilePds).rejects.toThrow(
+      'Account has been taken down',
+    )
+    await expect(tryGetProfileAppview).rejects.toThrow(
+      'Account has been taken down',
+    )
+    const labelsA = await services.appView.label(db).getLabels(sc.dids.alice)
+    expect(labelsA.map((l) => l.val)).toEqual(['dogs'])
+    // reverse action
+    await agent.api.com.atproto.admin.reverseModerationAction(
+      { id: action.id, createdBy: 'did:example:admin', reason: 'X' },
+      {
+        headers: network.pds.adminAuthHeaders(),
+        encoding: 'application/json',
+      },
+    )
+    // check profile and labels
+    const { data: profilePds } = await agent.api.app.bsky.actor.getProfile(
+      { actor: sc.dids.alice },
+      { headers: sc.getHeaders(sc.dids.carol) },
+    )
+    const { data: profileAppview } = await agent.api.app.bsky.actor.getProfile(
+      { actor: sc.dids.alice },
+      {
+        headers: { ...sc.getHeaders(sc.dids.carol), 'x-appview-proxy': 'true' },
+      },
+    )
+    expect(profilePds).toEqual(
+      expect.objectContaining({ did: sc.dids.alice, handle: 'alice.test' }),
+    )
+    expect(profileAppview).toEqual(
+      expect.objectContaining({ did: sc.dids.alice, handle: 'alice.test' }),
+    )
+    const labelsB = await services.appView.label(db).getLabels(sc.dids.alice)
+    expect(labelsB.map((l) => l.val)).toEqual(['cats'])
+  })
+
+  it('takesdown and labels records, and reverts.', async () => {
+    const { db, services } = network.pds.ctx
+    const post = sc.posts[sc.dids.alice][0]
+    // takedown post
+    const { data: action } =
+      await agent.api.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.repo.strongRef',
+            uri: post.ref.uriStr,
+            cid: post.ref.cidStr,
+          },
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+          createLabelVals: ['dogs'],
+          negateLabelVals: ['cats'],
+        },
+        {
+          headers: network.pds.adminAuthHeaders(),
+          encoding: 'application/json',
+        },
+      )
+    // check thread and labels
+    const tryGetPostPds = agent.api.app.bsky.feed.getPostThread(
+      { uri: post.ref.uriStr, depth: 0 },
+      { headers: sc.getHeaders(sc.dids.carol) },
+    )
+    const tryGetPostAppview = agent.api.app.bsky.feed.getPostThread(
+      { uri: post.ref.uriStr, depth: 0 },
+      {
+        headers: { ...sc.getHeaders(sc.dids.carol), 'x-appview-proxy': 'true' },
+      },
+    )
+    await expect(tryGetPostPds).rejects.toThrow(/Post not found/)
+    await expect(tryGetPostAppview).rejects.toThrow(/Post not found/)
+    const labelsA = await services.appView.label(db).getLabels(post.ref.uriStr)
+    expect(labelsA.map((l) => l.val)).toEqual(['dogs'])
+    // reverse action
+    await agent.api.com.atproto.admin.reverseModerationAction(
+      { id: action.id, createdBy: 'did:example:admin', reason: 'X' },
+      {
+        headers: network.pds.adminAuthHeaders(),
+        encoding: 'application/json',
+      },
+    )
+    // check thread and labels
+    const { data: threadPds } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: post.ref.uriStr, depth: 0 },
+      { headers: sc.getHeaders(sc.dids.carol) },
+    )
+    const { data: threadAppview } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: post.ref.uriStr, depth: 0 },
+      {
+        headers: { ...sc.getHeaders(sc.dids.carol), 'x-appview-proxy': 'true' },
+      },
+    )
+    expect(threadPds.thread.post).toEqual(
+      expect.objectContaining({ uri: post.ref.uriStr, cid: post.ref.cidStr }),
+    )
+    expect(threadAppview.thread.post).toEqual(
+      expect.objectContaining({ uri: post.ref.uriStr, cid: post.ref.cidStr }),
+    )
+    const labelsB = await services.appView.label(db).getLabels(sc.dids.alice)
+    expect(labelsB.map((l) => l.val)).toEqual(['cats'])
   })
 
   it('does not persist actions and reports on pds.', async () => {
