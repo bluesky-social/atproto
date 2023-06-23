@@ -45,13 +45,8 @@ export class FeedService {
   }
 
   selectPostQb() {
-    const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('post')
-      .innerJoin('repo_root as author_repo', 'author_repo.did', 'post.creator')
-      .innerJoin('record', 'record.uri', 'post.uri')
-      .where(notSoftDeletedClause(ref('author_repo')))
-      .where(notSoftDeletedClause(ref('record')))
       .select([
         sql<FeedItemType>`${'post'}`.as('type'),
         'post.uri as uri',
@@ -66,24 +61,9 @@ export class FeedService {
   }
 
   selectFeedItemQb() {
-    const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('feed_item')
       .innerJoin('post', 'post.uri', 'feed_item.postUri')
-      .innerJoin('repo_root as author_repo', 'author_repo.did', 'post.creator')
-      .innerJoin(
-        'repo_root as originator_repo',
-        'originator_repo.did',
-        'feed_item.originatorDid',
-      )
-      .innerJoin(
-        'record as post_record',
-        'post_record.uri',
-        'feed_item.postUri',
-      )
-      .where(notSoftDeletedClause(ref('author_repo')))
-      .where(notSoftDeletedClause(ref('originator_repo')))
-      .where(notSoftDeletedClause(ref('post_record')))
       .selectAll('feed_item')
       .select([
         'post.replyRoot',
@@ -127,17 +107,21 @@ export class FeedService {
   async getActorViews(
     dids: string[],
     requester: string,
-    opts?: { skipLabels?: boolean }, // @NOTE used by hydrateFeed() to batch label hydration
+    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean }, // @NOTE used by hydrateFeed() to batch label hydration
   ): Promise<ActorViewMap> {
     if (dids.length < 1) return {}
     const { ref } = this.db.db.dynamic
-    const { skipLabels } = opts ?? {}
+    const { skipLabels = false, includeSoftDeleted = false } = opts ?? {}
     const [actors, labels, listMutes] = await Promise.all([
       this.db.db
         .selectFrom('did_handle')
         .where('did_handle.did', 'in', dids)
+        .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
         .leftJoin('profile', 'profile.creator', 'did_handle.did')
         .selectAll('did_handle')
+        .if(!includeSoftDeleted, (qb) =>
+          qb.where(notSoftDeletedClause(ref('repo_root'))),
+        )
         .select([
           'profile.uri as profileUri',
           'profile.displayName as displayName',

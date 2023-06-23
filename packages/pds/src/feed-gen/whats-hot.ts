@@ -4,7 +4,7 @@ import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/ge
 import { AlgoHandler, AlgoResponse } from './types'
 import { GenericKeyset, paginate } from '../db/pagination'
 import AppContext from '../context'
-import { notSoftDeletedClause, valuesList } from '../db/util'
+import { valuesList } from '../db/util'
 import { sql } from 'kysely'
 import { FeedItemType } from '../app-view/services/feed'
 
@@ -38,11 +38,7 @@ const handler: AlgoHandler = async (
   let builder = ctx.db.db
     .selectFrom('algo_whats_hot_view as candidate')
     .innerJoin('post', 'post.uri', 'candidate.uri')
-    .innerJoin('repo_root as author_repo', 'author_repo.did', 'post.creator')
-    .innerJoin('record', 'record.uri', 'post.uri')
     .leftJoin('post_embed_record', 'post_embed_record.postUri', 'candidate.uri')
-    .where(notSoftDeletedClause(ref('author_repo')))
-    .where(notSoftDeletedClause(ref('record')))
     .whereNotExists((qb) =>
       qb
         .selectFrom('label')
