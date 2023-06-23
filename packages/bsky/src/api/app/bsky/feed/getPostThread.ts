@@ -208,6 +208,7 @@ const getParentData = (
   uri: string,
   depth: number,
 ): PostThread | ParentNotFoundError | undefined => {
+  if (depth < 1) return undefined
   const post = postsByUri[uri]
   if (!post) return new ParentNotFoundError(uri)
   return {
