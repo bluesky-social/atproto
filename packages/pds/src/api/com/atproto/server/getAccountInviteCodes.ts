@@ -66,13 +66,16 @@ export default function (server: Server, ctx: AppContext) {
           }))
           await ctx.db.transaction(async (dbTxn) => {
             await dbTxn.db.insertInto('invite_code').values(rows).execute()
-            const forUser = await dbTxn.db
+            const finalRoutineInviteCodes = await dbTxn.db
               .selectFrom('invite_code')
               .where('forUser', '=', requester)
               .where('createdBy', '!=', 'admin') // dont count admin-gifted codes aginast the user
               .selectAll()
               .execute()
-            if (forUser.length > routineCodes.length + toCreate) {
+            if (
+              finalRoutineInviteCodes.length >
+              routineCodes.length + toCreate
+            ) {
               throw new InvalidRequestError(
                 'attempted to create additional codes in another request',
                 'DuplicateCreate',
