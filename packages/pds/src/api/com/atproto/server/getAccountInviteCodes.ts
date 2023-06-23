@@ -69,6 +69,7 @@ export default function (server: Server, ctx: AppContext) {
             const forUser = await dbTxn.db
               .selectFrom('invite_code')
               .where('forUser', '=', requester)
+              .where('createdBy', '!=', 'admin') // dont count admin-gifted codes aginast the user
               .selectAll()
               .execute()
             if (forUser.length > routineCodes.length + toCreate) {
