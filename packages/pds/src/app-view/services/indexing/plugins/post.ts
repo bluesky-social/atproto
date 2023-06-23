@@ -53,7 +53,6 @@ const insertFn = async (
     replyRootCid: obj.reply?.root?.cid || null,
     replyParent: obj.reply?.parent?.uri || null,
     replyParentCid: obj.reply?.parent?.cid || null,
-    langs: obj.langs?.length ? JSON.stringify(obj.langs) : null,
     indexedAt: timestamp,
   }
   const [insertedPost] = await Promise.all([

@@ -29,7 +29,7 @@ describe('string', () => {
   })
 
   describe('languages', () => {
-    it('validates BCP47', () => {
+    it('validates BCP 47', () => {
       // valid
       expect(validateLanguage('de')).toEqual(true)
       expect(validateLanguage('de-CH')).toEqual(true)
@@ -51,7 +51,7 @@ describe('string', () => {
       expect(validateLanguage('i-bad-grandfathered')).toEqual(false)
     })
 
-    it('parses BCP47', () => {
+    it('parses BCP 47', () => {
       // valid
       expect(parseLanguage('de')).toEqual({
         language: 'de',
