@@ -33,18 +33,25 @@ export default function (server: Server, ctx: AppContext) {
       // note: even if a user is disabled from future invites, we still create the invites for bookkeeping, we just immediately disable them as well
       const now = new Date().toISOString()
       if (createAvailable && ctx.cfg.userInviteInterval !== null) {
+        // for the sake of generating routine interval codes, we do not count explicitly gifted admin codes
+        const routineCodes = userCodes.filter(
+          (code) => code.createdBy !== 'admin',
+        )
+        const unusedRoutineCodes = unusedCodes.filter(
+          (code) => code.createdBy !== 'admin',
+        )
         const userCreatedAt = new Date(user.createdAt).getTime()
         const epochLifespan =
           Date.now() - Math.max(userCreatedAt, ctx.cfg.userInviteEpoch)
         const couldCreate = Math.floor(
           epochLifespan / ctx.cfg.userInviteInterval,
         )
-        const epochCodes = userCodes.filter(
+        const epochCodes = routineCodes.filter(
           (code) =>
             new Date(code.createdAt).getTime() > ctx.cfg.userInviteEpoch,
         )
         const toCreate = Math.min(
-          5 - unusedCodes.length,
+          5 - unusedRoutineCodes.length,
           couldCreate - epochCodes.length,
         )
         if (toCreate > 0) {
@@ -64,7 +71,7 @@ export default function (server: Server, ctx: AppContext) {
               .where('forUser', '=', requester)
               .selectAll()
               .execute()
-            if (forUser.length > userCodes.length + toCreate) {
+            if (forUser.length > routineCodes.length + toCreate) {
               throw new InvalidRequestError(
                 'attempted to create additional codes in another request',
                 'DuplicateCreate',
