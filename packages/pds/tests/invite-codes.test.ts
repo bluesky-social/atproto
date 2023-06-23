@@ -151,7 +151,7 @@ describe('account', () => {
       await account.agent.api.com.atproto.server.getAccountInviteCodes()
     expect(res1.data.codes.length).toBe(2)
 
-    // then pretend account was made 15 days ago
+    // then pretend account was made 10 days ago
     const tenDaysAgo = new Date(Date.now() - 10 * DAY).toISOString()
     await ctx.db.db
       .updateTable('user_account')
