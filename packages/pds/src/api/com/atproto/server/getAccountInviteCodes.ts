@@ -2,6 +2,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { genInvCodes } from './util'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { CodeDetail } from '../../../../services/account'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getAccountInviteCodes({
@@ -20,40 +21,18 @@ export default function (server: Server, ctx: AppContext) {
           .executeTakeFirstOrThrow(),
         accntSrvc.getAccountInviteCodes(requester),
       ])
-      const unusedCodes = userCodes.filter(
-        (row) => !row.disabled && row.available > row.uses.length,
-      )
 
       let created: string[] = []
 
-      // if the user wishes to create available codes & the server allows that,
-      // we determine the number to create by dividing their account lifetime by the interval at which they can create codes
-      // if an invite epoch is provided, we only calculate available invites since that epoch
-      // we allow a max of 5 open codes at a given time
-      // note: even if a user is disabled from future invites, we still create the invites for bookkeeping, we just immediately disable them as well
       const now = new Date().toISOString()
       if (createAvailable && ctx.cfg.userInviteInterval !== null) {
-        // for the sake of generating routine interval codes, we do not count explicitly gifted admin codes
-        const routineCodes = userCodes.filter(
-          (code) => code.createdBy !== 'admin',
-        )
-        const unusedRoutineCodes = unusedCodes.filter(
-          (code) => code.createdBy !== 'admin',
-        )
-        const userCreatedAt = new Date(user.createdAt).getTime()
-        const epochLifespan =
-          Date.now() - Math.max(userCreatedAt, ctx.cfg.userInviteEpoch)
-        const couldCreate = Math.floor(
-          epochLifespan / ctx.cfg.userInviteInterval,
-        )
-        const epochCodes = routineCodes.filter(
-          (code) =>
-            new Date(code.createdAt).getTime() > ctx.cfg.userInviteEpoch,
-        )
-        const toCreate = Math.min(
-          5 - unusedRoutineCodes.length,
-          couldCreate - epochCodes.length,
-        )
+        const { toCreate, total } = await calculateCodesToCreate({
+          did: requester,
+          userCreatedAt: new Date(user.createdAt).getTime(),
+          codes: userCodes,
+          epoch: ctx.cfg.userInviteEpoch,
+          interval: ctx.cfg.userInviteInterval,
+        })
         if (toCreate > 0) {
           created = genInvCodes(ctx.cfg, toCreate)
           const rows = created.map((code) => ({
@@ -72,10 +51,7 @@ export default function (server: Server, ctx: AppContext) {
               .where('createdBy', '!=', 'admin') // dont count admin-gifted codes aginast the user
               .selectAll()
               .execute()
-            if (
-              finalRoutineInviteCodes.length >
-              routineCodes.length + toCreate
-            ) {
+            if (finalRoutineInviteCodes.length > total) {
               throw new InvalidRequestError(
                 'attempted to create additional codes in another request',
                 'DuplicateCreate',
@@ -85,10 +61,8 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const preexisting = includeUsed ? userCodes : unusedCodes
-
       const allCodes = [
-        ...preexisting,
+        ...userCodes,
         ...created.map((code) => ({
           code: code,
           available: 1,
@@ -100,7 +74,11 @@ export default function (server: Server, ctx: AppContext) {
         })),
       ]
 
-      const filtered = allCodes.filter((code) => !code.disabled)
+      const filtered = allCodes.filter((code) => {
+        if (code.disabled) return false
+        if (!includeUsed && code.uses.length >= code.available) return false
+        return true
+      })
 
       return {
         encoding: 'application/json',
@@ -110,4 +88,42 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+// if the user wishes to create available codes & the server allows that,
+// we determine the number to create by dividing their account lifetime by the interval at which they can create codes
+// if an invite epoch is provided, we only calculate available invites since that epoch
+// we allow a max of 5 open codes at a given time
+// note: even if a user is disabled from future invites, we still create the invites for bookkeeping, we just immediately disable them as well
+const calculateCodesToCreate = async (opts: {
+  did: string
+  userCreatedAt: number
+  codes: CodeDetail[]
+  epoch: number
+  interval: number
+}): Promise<{ toCreate: number; total: number }> => {
+  // for the sake of generating routine interval codes, we do not count explicitly gifted admin codes
+  const routineCodes = opts.codes.filter((code) => code.createdBy !== 'admin')
+  const unusedRoutineCodes = routineCodes.filter(
+    (row) => !row.disabled && row.available > row.uses.length,
+  )
+  const userLifespan = Date.now() - opts.userCreatedAt
+  const couldCreateTotal = userLifespan / opts.interval
+  const userTimeBeforeEpoch = opts.epoch - opts.userCreatedAt
+  const couldCreateBeforeEpoch = Math.max(
+    userTimeBeforeEpoch / opts.interval,
+    0,
+  )
+  const couldCreate = Math.floor(couldCreateTotal - couldCreateBeforeEpoch)
+  const epochCodes = routineCodes.filter(
+    (code) => new Date(code.createdAt).getTime() > opts.epoch,
+  )
+  const toCreate = Math.min(
+    5 - unusedRoutineCodes.length,
+    couldCreate - epochCodes.length,
+  )
+  return {
+    toCreate,
+    total: routineCodes.length + toCreate,
+  }
 }
