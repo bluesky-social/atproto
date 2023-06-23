@@ -68,6 +68,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const subject = {
         uri: listRes.uri,
+        cid: listRes.cid,
         creator,
         name: listRes.name,
         purpose: listRes.purpose,
