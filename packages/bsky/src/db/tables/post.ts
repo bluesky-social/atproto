@@ -11,6 +11,7 @@ export interface Post {
   replyRootCid: string | null
   replyParent: string | null
   replyParentCid: string | null
+  langs: string[] | null
   createdAt: string
   indexedAt: string
   sortAt: GeneratedAlways<string>

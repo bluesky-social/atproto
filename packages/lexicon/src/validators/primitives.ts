@@ -263,6 +263,8 @@ export function string(
         return formats.nsid(path, value)
       case 'cid':
         return formats.cid(path, value)
+      case 'language':
+        return formats.language(path, value)
     }
   }
 
