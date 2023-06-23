@@ -37,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
             await moderationTxn.takedownRecord({
               takedownId: result.id,
               uri: new AtUri(result.subject.uri),
-              blobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
+              blobCids: result.subjectBlobCids.map((cid) => CID.parse(cid)),
             })
           }
           // apply label creation & negations
