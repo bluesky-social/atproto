@@ -90,11 +90,14 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-// if the user wishes to create available codes & the server allows that,
-// we determine the number to create by dividing their account lifetime by the interval at which they can create codes
-// if an invite epoch is provided, we only calculate available invites since that epoch
-// we allow a max of 5 open codes at a given time
-// note: even if a user is disabled from future invites, we still create the invites for bookkeeping, we just immediately disable them as well
+/**
+ * WARNING: TRICKY SUBTLE MATH - DONT MESS WITH THIS FUNCTION UNLESS YOUR'RE VERY CONFIDENT
+ * if the user wishes to create available codes & the server allows that,
+ * we determine the number to create by dividing their account lifetime by the interval at which they can create codes
+ * if an invite epoch is provided, we only calculate available invites since that epoch
+ * we allow a max of 5 open codes at a given time
+ * note: even if a user is disabled from future invites, we still create the invites for bookkeeping, we just immediately disable them as well
+ */
 const calculateCodesToCreate = async (opts: {
   did: string
   userCreatedAt: number
@@ -107,17 +110,32 @@ const calculateCodesToCreate = async (opts: {
   const unusedRoutineCodes = routineCodes.filter(
     (row) => !row.disabled && row.available > row.uses.length,
   )
+
   const userLifespan = Date.now() - opts.userCreatedAt
-  const couldCreateTotal = userLifespan / opts.interval
-  const userTimeBeforeEpoch = opts.epoch - opts.userCreatedAt
-  const couldCreateBeforeEpoch = Math.max(
-    userTimeBeforeEpoch / opts.interval,
-    0,
-  )
-  const couldCreate = Math.floor(couldCreateTotal - couldCreateBeforeEpoch)
+
+  // how many codes a user could create within the current epoch if they have 0
+  let couldCreate: number
+
+  if (opts.userCreatedAt >= opts.epoch) {
+    // if the user was created after the epoch, then they can create a code for each interval since the epoch
+    couldCreate = Math.floor(userLifespan / opts.interval)
+  } else {
+    // if the user was created before the epoch, we:
+    // - calculate the total intervals since account creation
+    // - calculate the total intervals before the epoch
+    // - subtract the two
+    const couldCreateTotal = Math.floor(userLifespan / opts.interval)
+    const userPreEpochLifespan = opts.epoch - opts.userCreatedAt
+    const couldCreateBeforeEpoch = Math.floor(
+      userPreEpochLifespan / opts.interval,
+    )
+    couldCreate = couldCreateTotal - couldCreateBeforeEpoch
+  }
+  // we count the codes that the user has created within the current epoch
   const epochCodes = routineCodes.filter(
     (code) => new Date(code.createdAt).getTime() > opts.epoch,
   )
+  // finally we the number of codes they currently have from the number that they could create, and take a max of 5
   const toCreate = Math.min(
     5 - unusedRoutineCodes.length,
     couldCreate - epochCodes.length,
