@@ -484,7 +484,7 @@ export class AccountService {
     return uses
   }
 
-  async getAccountInviteCodes(did: string) {
+  async getAccountInviteCodes(did: string): Promise<CodeDetail[]> {
     const res = await this.selectInviteCodesQb()
       .where('forAccount', '=', did)
       .execute()
@@ -593,7 +593,7 @@ export class AccountService {
 
 export type UserPreference = Record<string, unknown> & { $type: string }
 
-type CodeDetail = {
+export type CodeDetail = {
   code: string
   available: number
   disabled: boolean
