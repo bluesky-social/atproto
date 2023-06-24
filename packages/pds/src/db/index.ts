@@ -22,7 +22,7 @@ import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
 import { dbLogger as log } from '../logger'
-import { sha256 } from '@atproto/crypto'
+import { randomIntFromSeed } from '@atproto/crypto'
 
 export class Database {
   txEvt = new EventEmitter() as TxnEmitter
@@ -194,18 +194,12 @@ export class Database {
   async txAdvisoryLock(name: string): Promise<boolean> {
     this.assertTransaction()
     assert(this.dialect === 'pg', 'Postgres required')
-    const id = await this.calcLockId(name)
+    // any lock id < 10k is reserved for session locks
+    const id = await randomIntFromSeed(name, Number.MAX_SAFE_INTEGER, 10000)
     const res = (await sql`SELECT pg_try_advisory_xact_lock(${sql.literal(
       id,
     )}) as acquired`.execute(this.db)) as TxLockRes
     return res.rows[0]?.acquired === true
-  }
-
-  private async calcLockId(name: string): Promise<number> {
-    const hash = await sha256(name + this.txLockNonce ?? '')
-    const lockId = Buffer.from(hash).readUintBE(0, 6)
-    // any lock id < 10k is reserved for session locks
-    return lockId + 10000
   }
 
   get schema(): string | undefined {
