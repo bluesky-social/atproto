@@ -24,12 +24,12 @@ const handler: AlgoHandler = async (
   viewer: string,
 ): Promise<AlgoResponse> => {
   const { limit, cursor } = params
+  const graphService = ctx.services.graph(ctx.db)
 
   const { ref } = ctx.db.db.dynamic
 
   // candidates are ranked within a materialized view by like count, depreciated over time.
 
-  // @TODO apply blocks and mutes
   let builder = ctx.db.db
     .selectFrom('algo_whats_hot_view as candidate')
     .innerJoin('post', 'post.uri', 'candidate.uri')
@@ -47,6 +47,10 @@ const handler: AlgoHandler = async (
             .orWhereRef('label.uri', '=', ref('post_embed_record.embedUri')),
         ),
     )
+    .where((qb) =>
+      graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
+    )
+    .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
     .select([
       sql<FeedItemType>`${'post'}`.as('type'),
       'post.uri as uri',
