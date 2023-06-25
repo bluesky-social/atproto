@@ -1,6 +1,6 @@
-import { SelectQueryBuilder, sql } from 'kysely'
+import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { DbRef } from './util'
+import { AnyQb, DbRef } from './util'
 
 export type Cursor = { primary: string; secondary: string }
 export type LabeledResult = {
@@ -107,7 +107,7 @@ export class TimeCidKeyset<
 }
 
 export const paginate = <
-  QB extends SelectQueryBuilder<any, any, any>,
+  QB extends AnyQb,
   K extends GenericKeyset<unknown, any>,
 >(
   qb: QB,
