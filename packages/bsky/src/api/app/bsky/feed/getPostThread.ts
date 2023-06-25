@@ -127,9 +127,19 @@ const composeThread = (
 
   let replies: (ThreadViewPost | NotFoundPost | BlockedPost)[] | undefined
   if (threadData.replies) {
-    replies = threadData.replies.map((reply) =>
-      composeThread(reply, feedService, posts, actors, embeds, labels),
-    )
+    replies = threadData.replies.flatMap((reply) => {
+      const thread = composeThread(
+        reply,
+        feedService,
+        posts,
+        actors,
+        embeds,
+        labels,
+      )
+      // e.g. don't bother including #postNotFound reply placeholders for takedowns. either way matches api contract.
+      const skip = []
+      return isNotFoundPost(thread) ? skip : thread
+    })
   }
 
   return {

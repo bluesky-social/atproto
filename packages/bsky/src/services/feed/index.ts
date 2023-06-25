@@ -43,13 +43,8 @@ export class FeedService {
   }
 
   selectPostQb() {
-    const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('post')
-      .innerJoin('actor as author', 'author.did', 'post.creator')
-      .innerJoin('record', 'record.uri', 'post.uri')
-      .where(notSoftDeletedClause(ref('author')))
-      .where(notSoftDeletedClause(ref('record')))
       .select([
         sql<FeedItemType>`${'post'}`.as('type'),
         'post.uri as uri',
@@ -64,20 +59,9 @@ export class FeedService {
   }
 
   selectFeedItemQb() {
-    const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('feed_item')
       .innerJoin('post', 'post.uri', 'feed_item.postUri')
-      .innerJoin('actor as author', 'author.did', 'post.creator')
-      .innerJoin(
-        'actor as originator',
-        'originator.did',
-        'feed_item.originatorDid',
-      )
-      .innerJoin('record as post_record', 'post_record.uri', 'post.uri')
-      .where(notSoftDeletedClause(ref('author')))
-      .where(notSoftDeletedClause(ref('originator')))
-      .where(notSoftDeletedClause(ref('post_record')))
       .selectAll('feed_item')
       .select([
         'post.replyRoot',
@@ -126,8 +110,9 @@ export class FeedService {
     const [actors, labels, listMutes] = await Promise.all([
       this.db.db
         .selectFrom('actor')
-        .where('actor.did', 'in', dids)
         .leftJoin('profile', 'profile.creator', 'actor.did')
+        .where('actor.did', 'in', dids)
+        .where(notSoftDeletedClause(ref('actor')))
         .selectAll('actor')
         .select([
           'profile.uri as profileUri',
