@@ -5,12 +5,7 @@ import * as scrypt from '../../db/scrypt'
 import { UserAccountEntry } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
-import {
-  DbRef,
-  countAll,
-  notSoftDeletedClause,
-  nullToZero,
-} from '../../db/util'
+import { DbRef, countAll, notSoftDeletedClause } from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
