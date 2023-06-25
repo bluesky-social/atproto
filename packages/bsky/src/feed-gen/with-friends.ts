@@ -34,7 +34,7 @@ const handler: AlgoHandler = async (
     .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
     .where('post.indexedAt', '>', getFeedDateThreshold(sortFrom))
 
-  postsQb = paginate(postsQb, { limit, cursor, keyset })
+  postsQb = paginate(postsQb, { limit, cursor, keyset, tryIndex: true })
 
   const feedItems = await postsQb.execute()
   return {
