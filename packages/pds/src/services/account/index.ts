@@ -445,14 +445,7 @@ export class AccountService {
   selectInviteCodesQb() {
     const ref = this.db.db.dynamic.ref
     const builder = this.db.db
-      .with('use_count', (qb) =>
-        qb
-          .selectFrom('invite_code_use')
-          .groupBy('code')
-          .select(['code', countAll.as('uses')]),
-      )
       .selectFrom('invite_code')
-      .leftJoin('use_count', 'invite_code.code', 'use_count.code')
       .select([
         'invite_code.code as code',
         'invite_code.availableUses as available',
@@ -460,7 +453,11 @@ export class AccountService {
         'invite_code.forUser as forAccount',
         'invite_code.createdBy as createdBy',
         'invite_code.createdAt as createdAt',
-        nullToZero(ref('use_count.uses')).as('uses'),
+        this.db.db
+          .selectFrom('invite_code_use')
+          .select(countAll.as('count'))
+          .whereRef('invite_code_use.code', '=', ref('invite_code.code'))
+          .as('uses'),
       ])
     return this.db.db.selectFrom(builder.as('codes')).selectAll()
   }
