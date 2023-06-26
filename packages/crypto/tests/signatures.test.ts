@@ -1,5 +1,7 @@
 import fs from 'node:fs'
 import * as uint8arrays from 'uint8arrays'
+import { secp256k1 as nobleK256 } from '@noble/curves/secp256k1'
+import { p256 as nobleP256 } from '@noble/curves/p256'
 import EcdsaKeypair from '../src/p256/keypair'
 import Secp256k1Keypair from '../src/secp256k1/keypair'
 import * as p256 from '../src/p256/operations'
@@ -11,6 +13,7 @@ import {
   parseDidKey,
   P256_JWT_ALG,
   SECP256K1_JWT_ALG,
+  sha256,
 } from '../src'
 
 describe('signatures', () => {
@@ -41,14 +44,14 @@ describe('signatures', () => {
           messageBytes,
           signatureBytes,
         )
-        expect(verified).toEqual(true)
+        expect(verified).toEqual(vector.validSignature)
       } else if (vector.algorithm === SECP256K1_JWT_ALG) {
         const verified = await secp.verifySig(
           keyBytes,
           messageBytes,
           signatureBytes,
         )
-        expect(verified).toEqual(true)
+        expect(verified).toEqual(vector.validSignature)
       } else {
         throw new Error('Unsupported test vector')
       }
@@ -57,8 +60,8 @@ describe('signatures', () => {
 })
 
 async function generateTestVectors(): Promise<TestVector[]> {
-  const p256Key = await EcdsaKeypair.create()
-  const secpKey = await Secp256k1Keypair.create()
+  const p256Key = await EcdsaKeypair.create({ exportable: true })
+  const secpKey = await Secp256k1Keypair.create({ exportable: true })
   const messageBytes = cborEncode({ hello: 'world' })
   const messageBase64 = uint8arrays.toString(messageBytes, 'base64')
   return [
@@ -74,6 +77,7 @@ async function generateTestVectors(): Promise<TestVector[]> {
         await p256Key.sign(messageBytes),
         'base64',
       ),
+      validSignature: true,
     },
     {
       messageBase64,
@@ -87,8 +91,64 @@ async function generateTestVectors(): Promise<TestVector[]> {
         await secpKey.sign(messageBytes),
         'base64',
       ),
+      validSignature: true,
+    },
+    // these vectors test to ensure we don't allow high-s signatures
+    {
+      messageBase64,
+      algorithm: P256_JWT_ALG, // "ES256" / ecdsa p-256
+      publicKeyDid: p256Key.did(),
+      publicKeyMultibase: bytesToMultibase(
+        p256Key.publicKeyBytes(),
+        'base58btc',
+      ),
+      signatureBase64: await makeHighSSig(
+        messageBytes,
+        await p256Key.export(),
+        P256_JWT_ALG,
+      ),
+      validSignature: false,
+    },
+    {
+      messageBase64,
+      algorithm: SECP256K1_JWT_ALG, // "ES256K" / secp256k
+      publicKeyDid: secpKey.did(),
+      publicKeyMultibase: bytesToMultibase(
+        secpKey.publicKeyBytes(),
+        'base58btc',
+      ),
+      signatureBase64: await makeHighSSig(
+        messageBytes,
+        await secpKey.export(),
+        SECP256K1_JWT_ALG,
+      ),
+      validSignature: false,
     },
   ]
+}
+
+async function makeHighSSig(
+  msgBytes: Uint8Array,
+  keyBytes: Uint8Array,
+  alg: string,
+): Promise<string> {
+  const hash = await sha256(msgBytes)
+
+  let sig: string | undefined
+  do {
+    if (alg === SECP256K1_JWT_ALG) {
+      const attempt = await nobleK256.sign(hash, keyBytes, { lowS: false })
+      if (attempt.hasHighS()) {
+        sig = uint8arrays.toString(attempt.toCompactRawBytes(), 'base64')
+      }
+    } else {
+      const attempt = await nobleP256.sign(hash, keyBytes, { lowS: false })
+      if (attempt.hasHighS()) {
+        sig = uint8arrays.toString(attempt.toCompactRawBytes(), 'base64')
+      }
+    }
+  } while (sig === undefined)
+  return sig
 }
 
 type TestVector = {
@@ -97,4 +157,5 @@ type TestVector = {
   publicKeyMultibase: string
   messageBase64: string
   signatureBase64: string
+  validSignature: boolean
 }
