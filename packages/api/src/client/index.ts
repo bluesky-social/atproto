@@ -982,22 +982,22 @@ export class SyncNS {
   }
 
   notifyOfUpdate(
-    params?: ComAtprotoSyncNotifyOfUpdate.QueryParams,
+    data?: ComAtprotoSyncNotifyOfUpdate.InputSchema,
     opts?: ComAtprotoSyncNotifyOfUpdate.CallOptions,
   ): Promise<ComAtprotoSyncNotifyOfUpdate.Response> {
     return this._service.xrpc
-      .call('com.atproto.sync.notifyOfUpdate', params, undefined, opts)
+      .call('com.atproto.sync.notifyOfUpdate', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoSyncNotifyOfUpdate.toKnownErr(e)
       })
   }
 
   requestCrawl(
-    params?: ComAtprotoSyncRequestCrawl.QueryParams,
+    data?: ComAtprotoSyncRequestCrawl.InputSchema,
     opts?: ComAtprotoSyncRequestCrawl.CallOptions,
   ): Promise<ComAtprotoSyncRequestCrawl.Response> {
     return this._service.xrpc
-      .call('com.atproto.sync.requestCrawl', params, undefined, opts)
+      .call('com.atproto.sync.requestCrawl', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoSyncRequestCrawl.toKnownErr(e)
       })

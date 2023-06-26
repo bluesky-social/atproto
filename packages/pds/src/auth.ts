@@ -103,7 +103,7 @@ export class ServerAuth {
   ): { did: string; scope: AuthScope } {
     const creds = this.getCredentials(req, scopes)
     if (creds === null) {
-      throw new AuthRequiredError()
+      throw new AuthRequiredError(undefined, 'AuthMissing')
     }
     return creds
   }
@@ -115,17 +115,21 @@ export class ServerAuth {
 
   verifyRole(req: express.Request) {
     const parsed = parseBasicAuth(req.headers.authorization || '')
-    const { username, password } = parsed ?? {}
+    const { Missing, Valid, Invalid } = AuthStatus
+    if (!parsed) {
+      return { status: Missing, admin: false, moderator: false, triage: false }
+    }
+    const { username, password } = parsed
     if (username === 'triage' && password === this._triagePass) {
-      return { valid: true, admin: false, moderator: false, triage: true }
+      return { status: Valid, admin: false, moderator: false, triage: true }
     }
     if (username === 'moderator' && password === this._moderatorPass) {
-      return { valid: true, admin: false, moderator: true, triage: true }
+      return { status: Valid, admin: false, moderator: true, triage: true }
     }
     if (username === 'admin' && password === this._adminPass) {
-      return { valid: true, admin: true, moderator: true, triage: true }
+      return { status: Valid, admin: true, moderator: true, triage: true }
     }
-    return { valid: false, admin: false, moderator: false, triage: false }
+    return { status: Invalid, admin: false, moderator: false, triage: false }
   }
 
   getToken(req: express.Request) {
@@ -223,6 +227,47 @@ export const accessVerifierCheckTakedown =
     }
   }
 
+export const optionalAccessOrAdminVerifier = (auth: ServerAuth) => {
+  const verifyAccess = accessVerifier(auth)
+  return async (ctx: { req: express.Request; res: express.Response }) => {
+    try {
+      return await verifyAccess(ctx)
+    } catch (err) {
+      if (
+        err instanceof AuthRequiredError &&
+        err.customErrorName === 'AuthMissing'
+      ) {
+        // Missing access bearer, move onto admin basic auth
+        const credentials = auth.verifyRole(ctx.req)
+        if (credentials.status === AuthStatus.Missing) {
+          // If both are missing, passthrough: this auth scheme is optional
+          return { credentials: null }
+        } else if (credentials.admin) {
+          return { credentials }
+        } else {
+          throw new AuthRequiredError()
+        }
+      }
+      throw err
+    }
+  }
+}
+
+export const isUserOrAdmin = (
+  auth: {
+    credentials: null | { admin: boolean } | { did: string }
+  },
+  did: string,
+) => {
+  if (!auth.credentials) {
+    return false
+  }
+  if ('did' in auth.credentials) {
+    return auth.credentials.did === did
+  }
+  return auth.credentials.admin
+}
+
 export const refreshVerifier =
   (auth: ServerAuth) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
@@ -237,7 +282,7 @@ export const roleVerifier =
   (auth: ServerAuth) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
     const credentials = auth.verifyRole(ctx.req)
-    if (!credentials.valid) {
+    if (credentials.status !== AuthStatus.Valid) {
       throw new AuthRequiredError()
     }
     return { credentials }
@@ -245,4 +290,10 @@ export const roleVerifier =
 
 export const getRefreshTokenId = () => {
   return ui8.toString(crypto.randomBytes(32), 'base64')
+}
+
+export enum AuthStatus {
+  Valid,
+  Invalid,
+  Missing,
 }

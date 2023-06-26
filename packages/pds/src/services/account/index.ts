@@ -1,4 +1,4 @@
-import { SelectQueryBuilder, WhereInterface, sql } from 'kysely'
+import { WhereInterface, sql } from 'kysely'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import * as scrypt from '../../db/scrypt'
@@ -50,6 +50,17 @@ export class AccountService {
       .selectAll('repo_root')
       .executeTakeFirst()
     return result || null
+  }
+
+  // Repo exists and is not taken-down
+  async isRepoAvailable(did: string) {
+    const found = await this.db.db
+      .selectFrom('repo_root')
+      .where('did', '=', did)
+      .where('takedownId', 'is', null)
+      .select('did')
+      .executeTakeFirst()
+    return found !== undefined
   }
 
   async getAccountByEmail(
@@ -473,7 +484,7 @@ export class AccountService {
     return uses
   }
 
-  async getAccountInviteCodes(did: string) {
+  async getAccountInviteCodes(did: string): Promise<CodeDetail[]> {
     const res = await this.selectInviteCodesQb()
       .where('forAccount', '=', did)
       .execute()
@@ -582,7 +593,7 @@ export class AccountService {
 
 export type UserPreference = Record<string, unknown> & { $type: string }
 
-type CodeDetail = {
+export type CodeDetail = {
   code: string
   available: number
   disabled: boolean

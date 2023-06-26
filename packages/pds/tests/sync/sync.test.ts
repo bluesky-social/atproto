@@ -1,12 +1,14 @@
+import assert from 'assert'
 import AtpAgent from '@atproto/api'
-import { TID } from '@atproto/common'
+import { cidForCbor, TID } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import * as repo from '@atproto/repo'
 import { collapseWriteLog, MemoryBlockstore, readCar } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { CID } from 'multiformats/cid'
 import { AppContext } from '../../src'
-import { CloseFn, runTestServer } from '../_util'
+import { adminAuth, CloseFn, runTestServer } from '../_util'
 import { SeedClient } from '../seeds/client'
 
 describe('repo sync', () => {
@@ -310,6 +312,90 @@ describe('repo sync', () => {
     expect(blobsForThird.data.cids).toEqual([cid2])
     expect(blobsForRange.data.cids.sort()).toEqual([cid1, cid2].sort())
     expect(blobsForRepo.data.cids.sort()).toEqual([cid1, cid2].sort())
+  })
+
+  describe('repo takedown', () => {
+    beforeAll(async () => {
+      await sc.takeModerationAction({
+        action: TAKEDOWN,
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did,
+        },
+      })
+      agent.api.xrpc.unsetHeader('authorization')
+    })
+
+    it('does not sync repo unauthed', async () => {
+      const tryGetRepo = agent.api.com.atproto.sync.getRepo({ did })
+      await expect(tryGetRepo).rejects.toThrow(/Could not find repo for DID/)
+    })
+
+    it('syncs repo to owner or admin', async () => {
+      const tryGetRepoOwner = agent.api.com.atproto.sync.getRepo(
+        { did },
+        { headers: { authorization: `Bearer ${sc.accounts[did].accessJwt}` } },
+      )
+      await expect(tryGetRepoOwner).resolves.toBeDefined()
+      const tryGetRepoAdmin = agent.api.com.atproto.sync.getRepo(
+        { did },
+        { headers: { authorization: adminAuth() } },
+      )
+      await expect(tryGetRepoAdmin).resolves.toBeDefined()
+    })
+
+    it('does not sync current root unauthed', async () => {
+      const tryGetHead = agent.api.com.atproto.sync.getHead({ did })
+      await expect(tryGetHead).rejects.toThrow(/Could not find root for DID/)
+    })
+
+    it('does not sync commit path unauthed', async () => {
+      const tryGetCommitPath = agent.api.com.atproto.sync.getCommitPath({ did })
+      await expect(tryGetCommitPath).rejects.toThrow(
+        /Could not find root for DID/,
+      )
+    })
+
+    it('does not sync a repo checkout unauthed', async () => {
+      const tryGetCheckout = agent.api.com.atproto.sync.getCheckout({ did })
+      await expect(tryGetCheckout).rejects.toThrow(
+        /Could not find root for DID/,
+      )
+    })
+
+    it('does not sync a record proof unauthed', async () => {
+      const collection = Object.keys(repoData)[0]
+      const rkey = Object.keys(repoData[collection])[0]
+      const tryGetRecord = agent.api.com.atproto.sync.getRecord({
+        did,
+        collection,
+        rkey,
+      })
+      await expect(tryGetRecord).rejects.toThrow(/Could not find repo for DID/)
+    })
+
+    it('does not sync blocks unauthed', async () => {
+      const cid = await cidForCbor({})
+      const tryGetBlocks = agent.api.com.atproto.sync.getBlocks({
+        did,
+        cids: [cid.toString()],
+      })
+      await expect(tryGetBlocks).rejects.toThrow(/Could not find repo for DID/)
+    })
+
+    it('does not sync images unauthed', async () => {
+      // list blobs
+      const tryListBlobs = agent.api.com.atproto.sync.listBlobs({ did })
+      await expect(tryListBlobs).rejects.toThrow(/Could not find root for DID/)
+      // get blob
+      const imageCid = sc.posts[did].at(-1)?.images[0].image.ref.toString()
+      assert(imageCid)
+      const tryGetBlob = agent.api.com.atproto.sync.getBlob({
+        did,
+        cid: imageCid,
+      })
+      await expect(tryGetBlob).rejects.toThrow(/blob not found/)
+    })
   })
 })
 

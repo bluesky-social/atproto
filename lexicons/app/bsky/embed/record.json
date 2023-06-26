@@ -20,7 +20,8 @@
             "#viewRecord",
             "#viewNotFound",
             "#viewBlocked",
-            "app.bsky.feed.defs#generatorView"
+            "app.bsky.feed.defs#generatorView",
+            "app.bsky.graph.defs#listView"
           ]
         }
       }
