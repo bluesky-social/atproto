@@ -1,4 +1,4 @@
-import EcdsaKeypair from '../src/p256/keypair'
+import P256Keypair from '../src/p256/keypair'
 import Secp256k1Keypair from '../src/secp256k1/keypair'
 import * as p256 from '../src/p256/operations'
 import * as secp from '../src/secp256k1/operations'
@@ -38,13 +38,13 @@ describe('keypairs', () => {
   })
 
   describe('P-256', () => {
-    let keypair: EcdsaKeypair
-    let imported: EcdsaKeypair
+    let keypair: P256Keypair
+    let imported: P256Keypair
 
     it('has the same DID on import', async () => {
-      keypair = await EcdsaKeypair.create({ exportable: true })
+      keypair = await P256Keypair.create({ exportable: true })
       const exported = await keypair.export()
-      imported = await EcdsaKeypair.import(exported, { exportable: true })
+      imported = await P256Keypair.import(exported, { exportable: true })
 
       expect(keypair.did()).toBe(imported.did())
     })

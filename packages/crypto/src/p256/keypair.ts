@@ -1,54 +1,41 @@
-import { webcrypto } from 'one-webcrypto'
+import { p256 } from '@noble/curves/p256'
+import { sha256 } from '@noble/hashes/sha256'
 import * as uint8arrays from 'uint8arrays'
 import { SupportedEncodings } from 'uint8arrays/util/bases'
 import * as did from '../did'
-import * as operations from './operations'
 import { P256_JWT_ALG } from '../const'
 import { Keypair } from '../types'
 
-export type EcdsaKeypairOptions = {
+export type P256KeypairOptions = {
   exportable: boolean
 }
 
-export class EcdsaKeypair implements Keypair {
+export class P256Keypair implements Keypair {
   jwtAlg = P256_JWT_ALG
   private publicKey: Uint8Array
-  private keypair: CryptoKeyPair
-  private exportable: boolean
 
-  constructor(
-    keypair: CryptoKeyPair,
-    publicKey: Uint8Array,
-    exportable: boolean,
-  ) {
-    this.keypair = keypair
-    this.publicKey = publicKey
-    this.exportable = exportable
+  constructor(private privateKey: Uint8Array, private exportable: boolean) {
+    this.publicKey = p256.getPublicKey(privateKey)
   }
 
   static async create(
-    opts?: Partial<EcdsaKeypairOptions>,
-  ): Promise<EcdsaKeypair> {
+    opts?: Partial<P256KeypairOptions>,
+  ): Promise<P256Keypair> {
     const { exportable = false } = opts || {}
-    const keypair = await webcrypto.subtle.generateKey(
-      { name: 'ECDSA', namedCurve: 'P-256' },
-      exportable,
-      ['sign', 'verify'],
-    )
-    const pubkeyBuf = await webcrypto.subtle.exportKey('raw', keypair.publicKey)
-    const pubkeyBytes = new Uint8Array(pubkeyBuf)
-    return new EcdsaKeypair(keypair, pubkeyBytes, exportable)
+    const privKey = p256.utils.randomPrivateKey()
+    return new P256Keypair(privKey, exportable)
   }
 
   static async import(
-    jwk: JsonWebKey,
-    opts?: Partial<EcdsaKeypairOptions>,
-  ): Promise<EcdsaKeypair> {
+    privKey: Uint8Array | string,
+    opts?: Partial<P256KeypairOptions>,
+  ): Promise<P256Keypair> {
     const { exportable = false } = opts || {}
-    const keypair = await operations.importKeypairJwk(jwk, exportable)
-    const pubkeyBuf = await webcrypto.subtle.exportKey('raw', keypair.publicKey)
-    const pubkeyBytes = new Uint8Array(pubkeyBuf)
-    return new EcdsaKeypair(keypair, pubkeyBytes, exportable)
+    const privKeyBytes =
+      typeof privKey === 'string'
+        ? uint8arrays.fromString(privKey, 'hex')
+        : privKey
+    return new P256Keypair(privKeyBytes, exportable)
   }
 
   publicKeyBytes(): Uint8Array {
@@ -64,21 +51,18 @@ export class EcdsaKeypair implements Keypair {
   }
 
   async sign(msg: Uint8Array): Promise<Uint8Array> {
-    const buf = await webcrypto.subtle.sign(
-      { name: 'ECDSA', hash: { name: 'SHA-256' } },
-      this.keypair.privateKey,
-      new Uint8Array(msg),
-    )
-    return new Uint8Array(buf)
+    const msgHash = await sha256(msg)
+    // return raw 64 byte sig not DER-encoded
+    const sig = await p256.sign(msgHash, this.privateKey, { lowS: true })
+    return sig.toCompactRawBytes()
   }
 
-  async export(): Promise<JsonWebKey> {
+  async export(): Promise<Uint8Array> {
     if (!this.exportable) {
       throw new Error('Private key is not exportable')
     }
-    const jwk = await webcrypto.subtle.exportKey('jwk', this.keypair.privateKey)
-    return jwk
+    return this.privateKey
   }
 }
 
-export default EcdsaKeypair
+export default P256Keypair
