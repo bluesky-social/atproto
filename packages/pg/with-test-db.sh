@@ -6,6 +6,7 @@
 dir=$(dirname $0)
 compose_file="$dir/docker-compose.yaml"
 
+# whether this particular script started the container or if it was running beforehand
 started_container=false
 
 trap on_sigint INT
@@ -18,8 +19,8 @@ on_sigint() {
 }
 
 if [ -z `docker ps -q --no-trunc | grep $(docker-compose -f $compose_file ps -q db_test)` ]; then
-  started_container=true
   docker compose -f $compose_file up --wait --force-recreate db_test
+  started_container=true
   echo # newline
 else
   echo "db_test already running"
