@@ -25,7 +25,6 @@ const handler: AlgoHandler = async (
   let builder = feedService
     .selectPostQb()
     .innerJoin('algo_whats_hot_view as candidate', 'candidate.uri', 'post.uri')
-    .leftJoin('post_embed_record', 'post_embed_record.postUri', 'post.uri')
     .where((qb) =>
       qb
         .where('post.creator', '=', requester)

@@ -4136,6 +4136,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.record#viewNotFound',
               'lex:app.bsky.embed.record#viewBlocked',
               'lex:app.bsky.feed.defs#generatorView',
+              'lex:app.bsky.graph.defs#listView',
             ],
           },
         },
@@ -5250,6 +5251,14 @@ export const schemaDict = {
                 'lex:app.bsky.embed.recordWithMedia',
               ],
             },
+            langs: {
+              type: 'array',
+              maxLength: 3,
+              items: {
+                type: 'string',
+                format: 'language',
+              },
+            },
             createdAt: {
               type: 'string',
               format: 'datetime',
@@ -5362,11 +5371,15 @@ export const schemaDict = {
     defs: {
       listViewBasic: {
         type: 'object',
-        required: ['uri', 'name', 'purpose'],
+        required: ['uri', 'cid', 'name', 'purpose'],
         properties: {
           uri: {
             type: 'string',
             format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
           },
           name: {
             type: 'string',
@@ -5392,11 +5405,15 @@ export const schemaDict = {
       },
       listView: {
         type: 'object',
-        required: ['uri', 'creator', 'name', 'purpose', 'indexedAt'],
+        required: ['uri', 'cid', 'creator', 'name', 'purpose', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
             format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
           },
           creator: {
             type: 'ref',
