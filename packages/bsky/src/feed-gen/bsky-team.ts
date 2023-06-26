@@ -27,13 +27,17 @@ const handler: AlgoHandler = async (
 ): Promise<AlgoResponse> => {
   const { limit = 50, cursor } = params
   const feedService = ctx.services.feed(ctx.db)
+  const graphService = ctx.services.graph(ctx.db)
 
   const { ref } = ctx.db.db.dynamic
 
-  // @TODO apply blocks and mutes
   const postsQb = feedService
     .selectPostQb()
     .where('post.creator', 'in', BSKY_TEAM)
+    .where((qb) =>
+      graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
+    )
+    .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
 
   const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))
 
