@@ -12,6 +12,7 @@ import {
   FLAG,
   TAKEDOWN,
 } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { NotFoundError } from '@atproto/api/src/client/types/app/bsky/feed/getPostThread'
 
 describe('proxies admin requests', () => {
   let network: TestNetwork
@@ -346,8 +347,8 @@ describe('proxies admin requests', () => {
         headers: { ...sc.getHeaders(sc.dids.carol), 'x-appview-proxy': 'true' },
       },
     )
-    await expect(tryGetPostPds).rejects.toThrow(/Post not found/)
-    await expect(tryGetPostAppview).rejects.toThrow(/Post not found/)
+    await expect(tryGetPostPds).rejects.toThrow(NotFoundError)
+    await expect(tryGetPostAppview).rejects.toThrow(NotFoundError)
     const labelsA = await services.appView.label(db).getLabels(post.ref.uriStr)
     expect(labelsA.map((l) => l.val)).toEqual(['dogs'])
     // reverse action
