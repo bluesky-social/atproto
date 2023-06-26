@@ -36,14 +36,14 @@ describe('signatures', () => {
       const didKey = parseDidKey(vector.publicKeyDid)
       expect(uint8arrays.equals(keyBytes, didKey.keyBytes))
       if (vector.algorithm === P256_JWT_ALG) {
-        const verified = await p256.verify(
+        const verified = await p256.verifySig(
           keyBytes,
           messageBytes,
           signatureBytes,
         )
         expect(verified).toEqual(true)
       } else if (vector.algorithm === SECP256K1_JWT_ALG) {
-        const verified = await secp.verify(
+        const verified = await secp.verifySig(
           keyBytes,
           messageBytes,
           signatureBytes,

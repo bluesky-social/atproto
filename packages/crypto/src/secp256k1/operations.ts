@@ -12,15 +12,14 @@ export const verifyDidSig = async (
   if (jwtAlg !== SECP256K1_JWT_ALG) {
     throw new Error(`Not a secp256k1 did:key: ${did}`)
   }
-  const msgHash = await sha256(data)
-  return k256.verify(sig, msgHash, keyBytes, { lowS: true })
+  return verifySig(keyBytes, data, sig)
 }
 
-export const verify = async (
+export const verifySig = async (
   publicKey: Uint8Array,
   data: Uint8Array,
   sig: Uint8Array,
 ): Promise<boolean> => {
-  const msgHash = await secp.utils.sha256(data)
-  return secp.verify(sig, msgHash, publicKey)
+  const msgHash = await sha256(data)
+  return k256.verify(sig, msgHash, publicKey, { lowS: true })
 }
