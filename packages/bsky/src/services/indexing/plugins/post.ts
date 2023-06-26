@@ -270,10 +270,8 @@ const notifsForInsert = (obj: IndexedPost) => {
   const ancestors = (obj.ancestors ?? [])
     .filter((a) => a.depth > 0) // no need to notify self
     .sort((a, b) => a.depth - b.depth)
-  const BLESSED_HELL_THREAD =
-    'at://did:plc:wgaezxqi2spqm3mhrb5xvkzi/app.bsky.feed.post/3juzlwllznd24'
   for (const relation of ancestors) {
-    if (relation.depth < 5 || obj.post.replyRoot === BLESSED_HELL_THREAD) {
+    if (relation.depth < 5) {
       const ancestorUri = new AtUri(relation.ancestorUri)
       maybeNotify({
         did: ancestorUri.host,
