@@ -7,6 +7,7 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 import * as AppBskyFeedDefs from '../feed/defs'
+import * as AppBskyGraphDefs from '../graph/defs'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as AppBskyEmbedImages from './images'
@@ -37,6 +38,7 @@ export interface View {
     | ViewNotFound
     | ViewBlocked
     | AppBskyFeedDefs.GeneratorView
+    | AppBskyGraphDefs.ListView
     | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }

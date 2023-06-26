@@ -806,6 +806,19 @@ describe('Record validation', () => {
     ).toThrow('Record/cid must be a cid string')
   })
 
+  it('Applies language formatting constraint', () => {
+    lex.assertValidRecord('com.example.language', {
+      $type: 'com.example.language',
+      language: 'en-US-boont',
+    })
+    expect(() =>
+      lex.assertValidRecord('com.example.language', {
+        $type: 'com.example.language',
+        language: 'not-a-language-',
+      }),
+    ).toThrow('Record/language must be a well-formed BCP 47 language tag')
+  })
+
   it('Applies bytes length constraints', () => {
     lex.assertValidRecord('com.example.byteLength', {
       $type: 'com.example.byteLength',

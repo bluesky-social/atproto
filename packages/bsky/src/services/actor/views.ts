@@ -294,6 +294,7 @@ export class ActorViews {
         ...acc,
         [cur.subjectDid]: {
           uri: cur.uri,
+          cid: cur.cid,
           name: cur.name,
           purpose: cur.purpose,
           avatar: cur.avatarCid

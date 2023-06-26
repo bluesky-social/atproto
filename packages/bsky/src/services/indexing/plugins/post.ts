@@ -52,6 +52,9 @@ const insertFn = async (
     replyRootCid: obj.reply?.root?.cid || null,
     replyParent: obj.reply?.parent?.uri || null,
     replyParentCid: obj.reply?.parent?.cid || null,
+    langs: obj.langs?.length
+      ? sql<string[]>`${JSON.stringify(obj.langs)}` // sidesteps kysely's array serialization, which is non-jsonb
+      : null,
     indexedAt: timestamp,
   }
   const [insertedPost] = await Promise.all([

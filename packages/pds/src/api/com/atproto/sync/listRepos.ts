@@ -2,15 +2,16 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
+import { notSoftDeletedClause } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.listRepos(async ({ params }) => {
     const { limit, cursor } = params
-    const ref = ctx.db.db.dynamic.ref
+    const { ref } = ctx.db.db.dynamic
     const innerBuilder = ctx.db.db
       .selectFrom('repo_root')
       .innerJoin('user_account', 'user_account.did', 'repo_root.did')
-      .where('repo_root.takedownId', 'is', null)
+      .where(notSoftDeletedClause(ref('repo_root')))
       .select([
         'repo_root.did as did',
         'repo_root.root as head',

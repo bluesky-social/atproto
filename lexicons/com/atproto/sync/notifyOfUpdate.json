@@ -3,13 +3,16 @@
   "id": "com.atproto.sync.notifyOfUpdate",
   "defs": {
     "main": {
-      "type": "query",
+      "type": "procedure",
       "description": "Notify a crawling service of a recent update. Often when a long break between updates causes the connection with the crawling service to break.",
-      "parameters": {
-        "type": "params",
-        "required": ["hostname"],
-        "properties": {
-          "hostname": {"type": "string", "description": "Hostname of the service that is notifying of update."}
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["hostname"],
+          "properties": {
+            "hostname": {"type": "string", "description": "Hostname of the service that is notifying of update."}
+          }
         }
       }
     }
