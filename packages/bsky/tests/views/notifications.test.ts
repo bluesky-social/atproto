@@ -23,7 +23,7 @@ describe('notification views', () => {
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     await network.processAll()
-    await network.bsky.ctx.labeler.processAll()
+    await network.bsky.ctx.backgroundQueue.processAll()
     alice = sc.dids.alice
   })
 
@@ -76,6 +76,7 @@ describe('notification views', () => {
       'indeed',
     )
     await network.processAll()
+    await network.bsky.ctx.backgroundQueue.processAll()
 
     const notifCountAlice =
       await agent.api.app.bsky.notification.getUnreadCount(
@@ -99,6 +100,7 @@ describe('notification views', () => {
     await sc.deletePost(sc.dids.alice, root.ref.uri)
     const second = await sc.reply(sc.dids.carol, root.ref, first.ref, 'second')
     await network.processAll()
+    await network.bsky.ctx.backgroundQueue.processAll()
 
     const notifsAlice = await agent.api.app.bsky.notification.listNotifications(
       {},
@@ -170,8 +172,15 @@ describe('notification views', () => {
       { headers: await network.serviceHeaders(alice) },
     )
     const seenAt = full.data.notifications[3].indexedAt
-    const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
+    await agent.api.app.bsky.notification.updateSeen(
       { seenAt },
+      {
+        headers: await network.serviceHeaders(alice),
+        encoding: 'application/json',
+      },
+    )
+    const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
+      {},
       { headers: await network.serviceHeaders(alice) },
     )
 
@@ -179,6 +188,15 @@ describe('notification views', () => {
       full.data.notifications.filter((n) => n.indexedAt > seenAt).length,
     )
     expect(notifCount.data.count).toBeGreaterThan(0)
+
+    // reset last-seen
+    await agent.api.app.bsky.notification.updateSeen(
+      { seenAt: new Date(0).toISOString() },
+      {
+        headers: await network.serviceHeaders(alice),
+        encoding: 'application/json',
+      },
+    )
   })
 
   it('fetches notifications with a last-seen', async () => {
@@ -187,8 +205,15 @@ describe('notification views', () => {
       { headers: await network.serviceHeaders(alice) },
     )
     const seenAt = full.data.notifications[3].indexedAt
-    const notifRes = await agent.api.app.bsky.notification.listNotifications(
+    await agent.api.app.bsky.notification.updateSeen(
       { seenAt },
+      {
+        headers: await network.serviceHeaders(alice),
+        encoding: 'application/json',
+      },
+    )
+    const notifRes = await agent.api.app.bsky.notification.listNotifications(
+      {},
       { headers: await network.serviceHeaders(alice) },
     )
 
@@ -197,6 +222,14 @@ describe('notification views', () => {
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map((n) => n.indexedAt <= seenAt))
+    // reset last-seen
+    await agent.api.app.bsky.notification.updateSeen(
+      { seenAt: new Date(0).toISOString() },
+      {
+        headers: await network.serviceHeaders(alice),
+        encoding: 'application/json',
+      },
+    )
   })
 
   it('fetches notifications omitting mentions and replies for taken-down posts', async () => {

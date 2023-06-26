@@ -26,8 +26,9 @@ import {
   FeedGenInfoMap,
 } from './types'
 import { LabelService } from '../label'
-import { FeedViews } from './views'
 import { ActorService } from '../actor'
+import { GraphService } from '../graph'
+import { FeedViews } from './views'
 
 export * from './types'
 
@@ -42,16 +43,12 @@ export class FeedService {
   services = {
     label: LabelService.creator()(this.db),
     actor: ActorService.creator(this.imgUriBuilder)(this.db),
+    graph: GraphService.creator(this.imgUriBuilder)(this.db),
   }
 
   selectPostQb() {
-    const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('post')
-      .innerJoin('repo_root as author_repo', 'author_repo.did', 'post.creator')
-      .innerJoin('record', 'record.uri', 'post.uri')
-      .where(notSoftDeletedClause(ref('author_repo')))
-      .where(notSoftDeletedClause(ref('record')))
       .select([
         sql<FeedItemType>`${'post'}`.as('type'),
         'post.uri as uri',
@@ -66,24 +63,9 @@ export class FeedService {
   }
 
   selectFeedItemQb() {
-    const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('feed_item')
       .innerJoin('post', 'post.uri', 'feed_item.postUri')
-      .innerJoin('repo_root as author_repo', 'author_repo.did', 'post.creator')
-      .innerJoin(
-        'repo_root as originator_repo',
-        'originator_repo.did',
-        'feed_item.originatorDid',
-      )
-      .innerJoin(
-        'record as post_record',
-        'post_record.uri',
-        'feed_item.postUri',
-      )
-      .where(notSoftDeletedClause(ref('author_repo')))
-      .where(notSoftDeletedClause(ref('originator_repo')))
-      .where(notSoftDeletedClause(ref('post_record')))
       .selectAll('feed_item')
       .select([
         'post.replyRoot',
@@ -93,10 +75,19 @@ export class FeedService {
   }
 
   selectFeedGeneratorQb(requester: string) {
+    const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('feed_generator')
       .innerJoin('did_handle', 'did_handle.did', 'feed_generator.creator')
+      .innerJoin(
+        'repo_root as creator_repo',
+        'creator_repo.did',
+        'feed_generator.creator',
+      )
+      .innerJoin('record', 'record.uri', 'feed_generator.uri')
       .selectAll()
+      .where(notSoftDeletedClause(ref('creator_repo')))
+      .where(notSoftDeletedClause(ref('record')))
       .select((qb) =>
         qb
           .selectFrom('like')
@@ -118,17 +109,21 @@ export class FeedService {
   async getActorViews(
     dids: string[],
     requester: string,
-    opts?: { skipLabels?: boolean }, // @NOTE used by hydrateFeed() to batch label hydration
+    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean }, // @NOTE used by hydrateFeed() to batch label hydration
   ): Promise<ActorViewMap> {
     if (dids.length < 1) return {}
     const { ref } = this.db.db.dynamic
-    const { skipLabels } = opts ?? {}
+    const { skipLabels = false, includeSoftDeleted = false } = opts ?? {}
     const [actors, labels, listMutes] = await Promise.all([
       this.db.db
         .selectFrom('did_handle')
         .where('did_handle.did', 'in', dids)
+        .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
         .leftJoin('profile', 'profile.creator', 'did_handle.did')
         .selectAll('did_handle')
+        .if(!includeSoftDeleted, (qb) =>
+          qb.where(notSoftDeletedClause(ref('repo_root'))),
+        )
         .select([
           'profile.uri as profileUri',
           'profile.displayName as displayName',
@@ -250,7 +245,7 @@ export class FeedService {
   async getFeedGeneratorViews(generatorUris: string[], requester: string) {
     if (generatorUris.length < 1) return {}
     const feedGens = await this.selectFeedGeneratorQb(requester)
-      .where('uri', 'in', generatorUris)
+      .where('feed_generator.uri', 'in', generatorUris)
       .execute()
     return feedGens.reduce(
       (acc, cur) => ({
@@ -304,17 +299,27 @@ export class FeedService {
     const nestedFeedGenUris = nestedUris.filter(
       (uri) => new AtUri(uri).collection === ids.AppBskyFeedGenerator,
     )
-    const [postViews, actorViews, deepEmbedViews, labelViews, feedGenViews] =
-      await Promise.all([
-        this.getPostViews(nestedPostUris, requester),
-        this.getActorViews(nestedDids, requester, { skipLabels: true }),
-        this.embedsForPosts(nestedPostUris, requester, _depth + 1),
-        this.services.label.getLabelsForSubjects([
-          ...nestedPostUris,
-          ...nestedDids,
-        ]),
-        this.getFeedGeneratorViews(nestedFeedGenUris, requester),
-      ])
+    const nestedListUris = nestedUris.filter(
+      (uri) => new AtUri(uri).collection === ids.AppBskyGraphList,
+    )
+    const [
+      postViews,
+      actorViews,
+      deepEmbedViews,
+      labelViews,
+      feedGenViews,
+      listViews,
+    ] = await Promise.all([
+      this.getPostViews(nestedPostUris, requester),
+      this.getActorViews(nestedDids, requester, { skipLabels: true }),
+      this.embedsForPosts(nestedPostUris, requester, _depth + 1),
+      this.services.label.getLabelsForSubjects([
+        ...nestedPostUris,
+        ...nestedDids,
+      ]),
+      this.getFeedGeneratorViews(nestedFeedGenUris, requester),
+      this.services.graph.getListViews(nestedListUris, requester),
+    ])
     let embeds = images.reduce((acc, cur) => {
       const embed = (acc[cur.postUri] ??= {
         $type: 'app.bsky.embed.images#view',
@@ -364,6 +369,16 @@ export class FeedService {
               feedGenViews[cur.uri],
               actorViews,
               labelViews,
+            ),
+          },
+        }
+      } else if (collection === ids.AppBskyGraphList && listViews[cur.uri]) {
+        recordEmbed = {
+          record: {
+            $type: 'app.bsky.graph.defs#listView',
+            ...this.services.graph.formatListView(
+              listViews[cur.uri],
+              actorViews,
             ),
           },
         }

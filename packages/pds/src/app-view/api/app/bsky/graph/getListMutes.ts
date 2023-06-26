@@ -1,14 +1,25 @@
-import { Server } from '../../../../lexicon'
-import { paginate, TimeCidKeyset } from '../../../../db/pagination'
-import AppContext from '../../../../context'
-import { ProfileView } from '../../../../lexicon/types/app/bsky/actor/defs'
+import { Server } from '../../../../../lexicon'
+import { paginate, TimeCidKeyset } from '../../../../../db/pagination'
+import AppContext from '../../../../../context'
+import { ProfileView } from '../../../../../lexicon/types/app/bsky/actor/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getListMutes({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
-      const { limit, cursor } = params
+    handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const res = await ctx.appviewAgent.api.app.bsky.graph.getListMutes(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
+      const { limit, cursor } = params
       const { db } = ctx
       const { ref } = db.db.dynamic
 

@@ -3,7 +3,6 @@
 exports[`pds posts views fetches posts 1`] = `
 Array [
   Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -11,6 +10,7 @@ Array [
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "muted": false,
       },
     },
@@ -29,7 +29,6 @@ Array [
     "viewer": Object {},
   },
   Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -37,6 +36,7 @@ Array [
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "muted": false,
       },
     },
@@ -55,7 +55,6 @@ Array [
     "viewer": Object {},
   },
   Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
       "did": "user(2)",
@@ -63,6 +62,7 @@ Array [
       "handle": "bob.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(4)",
         "following": "record(3)",
         "muted": false,
@@ -75,6 +75,10 @@ Array [
     "record": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "langs": Array [
+        "en-US",
+        "i-klingon",
+      ],
       "text": "bob back at it again!",
     },
     "replyCount": 0,
@@ -83,12 +87,12 @@ Array [
     "viewer": Object {},
   },
   Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "did": "user(4)",
       "handle": "carol.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(7)",
         "following": "record(6)",
         "muted": false,
@@ -122,6 +126,7 @@ Array [
             "handle": "bob.test",
             "labels": Array [],
             "viewer": Object {
+              "blockedBy": false,
               "followedBy": "record(4)",
               "following": "record(3)",
               "muted": false,
@@ -135,6 +140,10 @@ Array [
           "value": Object {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
+            "langs": Array [
+              "en-US",
+              "i-klingon",
+            ],
             "text": "bob back at it again!",
           },
         },
@@ -192,12 +201,12 @@ Array [
     },
   },
   Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "did": "user(6)",
       "handle": "dan.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "following": "record(10)",
         "muted": false,
       },
@@ -212,6 +221,7 @@ Array [
           "handle": "carol.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(7)",
             "following": "record(6)",
             "muted": false,
@@ -246,6 +256,7 @@ Array [
                   "handle": "bob.test",
                   "labels": Array [],
                   "viewer": Object {
+                    "blockedBy": false,
                     "followedBy": "record(4)",
                     "following": "record(3)",
                     "muted": false,
@@ -258,6 +269,10 @@ Array [
                 "value": Object {
                   "$type": "app.bsky.feed.post",
                   "createdAt": "1970-01-01T00:00:00.000Z",
+                  "langs": Array [
+                    "en-US",
+                    "i-klingon",
+                  ],
                   "text": "bob back at it again!",
                 },
               },
@@ -345,7 +360,6 @@ Array [
     "viewer": Object {},
   },
   Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -353,6 +367,7 @@ Array [
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "muted": false,
       },
     },

@@ -52,6 +52,9 @@ const insertFn = async (
     replyRootCid: obj.reply?.root?.cid || null,
     replyParent: obj.reply?.parent?.uri || null,
     replyParentCid: obj.reply?.parent?.cid || null,
+    langs: obj.langs?.length
+      ? sql<string[]>`${JSON.stringify(obj.langs)}` // sidesteps kysely's array serialization, which is non-jsonb
+      : null,
     indexedAt: timestamp,
   }
   const [insertedPost] = await Promise.all([
@@ -267,17 +270,21 @@ const notifsForInsert = (obj: IndexedPost) => {
   const ancestors = (obj.ancestors ?? [])
     .filter((a) => a.depth > 0) // no need to notify self
     .sort((a, b) => a.depth - b.depth)
+  const BLESSED_HELL_THREAD =
+    'at://did:plc:wgaezxqi2spqm3mhrb5xvkzi/app.bsky.feed.post/3juzlwllznd24'
   for (const relation of ancestors) {
-    const ancestorUri = new AtUri(relation.ancestorUri)
-    maybeNotify({
-      did: ancestorUri.host,
-      reason: 'reply',
-      reasonSubject: ancestorUri.toString(),
-      author: obj.post.creator,
-      recordUri: obj.post.uri,
-      recordCid: obj.post.cid,
-      sortAt: obj.post.indexedAt,
-    })
+    if (relation.depth < 5 || obj.post.replyRoot === BLESSED_HELL_THREAD) {
+      const ancestorUri = new AtUri(relation.ancestorUri)
+      maybeNotify({
+        did: ancestorUri.host,
+        reason: 'reply',
+        reasonSubject: ancestorUri.toString(),
+        author: obj.post.creator,
+        recordUri: obj.post.uri,
+        recordCid: obj.post.cid,
+        sortAt: obj.post.indexedAt,
+      })
+    }
   }
 
   if (obj.descendents) {

@@ -171,9 +171,16 @@ describe('account deletion', () => {
     expect(updatedDbContents.blocks).toEqual(
       initialDbContents.blocks.filter((row) => row.creator !== carol.did),
     )
-    expect(updatedDbContents.seqs).toEqual(
-      initialDbContents.seqs.filter((row) => row.did !== carol.did),
-    )
+    // check all seqs for this did are gone, except for the tombstone
+    expect(
+      updatedDbContents.seqs.filter((row) => row.eventType !== 'tombstone'),
+    ).toEqual(initialDbContents.seqs.filter((row) => row.did !== carol.did))
+    // check we do have a tombstone for this did
+    expect(
+      updatedDbContents.seqs.filter(
+        (row) => row.did === carol.did && row.eventType === 'tombstone',
+      ).length,
+    ).toEqual(1)
     expect(updatedDbContents.commitBlocks).toEqual(
       initialDbContents.commitBlocks.filter((row) => row.creator !== carol.did),
     )

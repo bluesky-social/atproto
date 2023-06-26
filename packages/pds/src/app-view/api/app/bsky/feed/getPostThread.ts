@@ -25,9 +25,20 @@ export type PostThread = {
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
-      const { uri, depth, parentHeight } = params
+    handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const res = await ctx.appviewAgent.api.app.bsky.feed.getPostThread(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
+      const { uri, depth, parentHeight } = params
 
       const feedService = ctx.services.appView.feed(ctx.db)
       const labelService = ctx.services.appView.label(ctx.db)
@@ -127,9 +138,19 @@ const composeThread = (
 
   let replies: (ThreadViewPost | NotFoundPost | BlockedPost)[] | undefined
   if (threadData.replies) {
-    replies = threadData.replies.map((reply) =>
-      composeThread(reply, feedService, posts, actors, embeds, labels),
-    )
+    replies = threadData.replies.flatMap((reply) => {
+      const thread = composeThread(
+        reply,
+        feedService,
+        posts,
+        actors,
+        embeds,
+        labels,
+      )
+      // e.g. don't bother including #postNotFound reply placeholders for takedowns. either way matches api contract.
+      const skip = []
+      return isNotFoundPost(thread) ? skip : thread
+    })
   }
 
   return {

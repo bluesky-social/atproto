@@ -4,7 +4,6 @@ exports[`pds author feed views fetches full author feeds for self (sorted, minim
 Array [
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -12,6 +11,7 @@ Array [
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "muted": false,
         },
       },
@@ -49,6 +49,7 @@ Array [
           "handle": "bob.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(4)",
             "following": "record(3)",
             "muted": false,
@@ -130,6 +131,7 @@ Array [
           "handle": "alice.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "muted": false,
           },
         },
@@ -151,7 +153,6 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -159,6 +160,7 @@ Array [
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "muted": false,
         },
       },
@@ -172,6 +174,7 @@ Array [
             "handle": "dan.test",
             "labels": Array [],
             "viewer": Object {
+              "blockedBy": false,
               "following": "record(7)",
               "muted": false,
             },
@@ -187,6 +190,7 @@ Array [
                   "handle": "carol.test",
                   "labels": Array [],
                   "viewer": Object {
+                    "blockedBy": false,
                     "followedBy": "record(10)",
                     "following": "record(9)",
                     "muted": false,
@@ -303,7 +307,6 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -311,6 +314,7 @@ Array [
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "muted": false,
         },
       },
@@ -331,7 +335,6 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -339,6 +342,7 @@ Array [
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "muted": false,
         },
       },
@@ -364,7 +368,6 @@ exports[`pds author feed views fetches full author feeds for self (sorted, minim
 Array [
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -372,6 +375,7 @@ Array [
         "handle": "bob.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "muted": false,
         },
       },
@@ -452,6 +456,7 @@ Array [
           "handle": "alice.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(3)",
             "following": "record(2)",
             "muted": false,
@@ -482,6 +487,7 @@ Array [
           "handle": "alice.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(3)",
             "following": "record(2)",
             "muted": false,
@@ -507,7 +513,6 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -515,6 +520,7 @@ Array [
         "handle": "bob.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "muted": false,
         },
       },
@@ -535,7 +541,6 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -543,6 +548,7 @@ Array [
         "handle": "bob.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "muted": false,
         },
       },
@@ -553,6 +559,10 @@ Array [
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
+        "langs": Array [
+          "en-US",
+          "i-klingon",
+        ],
         "text": "bob back at it again!",
       },
       "replyCount": 0,
@@ -568,12 +578,12 @@ exports[`pds author feed views fetches full author feeds for self (sorted, minim
 Array [
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "did": "user(0)",
         "handle": "dan.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "muted": false,
         },
       },
@@ -587,6 +597,7 @@ Array [
             "handle": "carol.test",
             "labels": Array [],
             "viewer": Object {
+              "blockedBy": false,
               "muted": false,
             },
           },
@@ -619,6 +630,7 @@ Array [
                     "handle": "bob.test",
                     "labels": Array [],
                     "viewer": Object {
+                      "blockedBy": false,
                       "followedBy": "record(3)",
                       "muted": false,
                     },
@@ -630,6 +642,10 @@ Array [
                   "value": Object {
                     "$type": "app.bsky.feed.post",
                     "createdAt": "1970-01-01T00:00:00.000Z",
+                    "langs": Array [
+                      "en-US",
+                      "i-klingon",
+                    ],
                     "text": "bob back at it again!",
                   },
                 },
@@ -725,6 +741,7 @@ Array [
         "handle": "carol.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "muted": false,
         },
       },
@@ -733,12 +750,12 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "did": "user(2)",
         "handle": "carol.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "muted": false,
         },
       },
@@ -776,6 +793,7 @@ Array [
           "handle": "alice.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(8)",
             "following": "record(7)",
             "muted": false,
@@ -806,6 +824,7 @@ Array [
           "handle": "alice.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(8)",
             "following": "record(7)",
             "muted": false,
@@ -831,12 +850,12 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "did": "user(2)",
         "handle": "carol.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "muted": false,
         },
       },
@@ -868,6 +887,7 @@ Array [
               "handle": "bob.test",
               "labels": Array [],
               "viewer": Object {
+                "blockedBy": false,
                 "followedBy": "record(3)",
                 "muted": false,
               },
@@ -880,6 +900,10 @@ Array [
             "value": Object {
               "$type": "app.bsky.feed.post",
               "createdAt": "1970-01-01T00:00:00.000Z",
+              "langs": Array [
+                "en-US",
+                "i-klingon",
+              ],
               "text": "bob back at it again!",
             },
           },
@@ -942,7 +966,6 @@ exports[`pds author feed views fetches full author feeds for self (sorted, minim
 Array [
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -950,6 +973,7 @@ Array [
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "followedBy": "record(1)",
           "muted": false,
         },
@@ -978,6 +1002,7 @@ Array [
         "handle": "dan.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "muted": false,
         },
       },
@@ -986,12 +1011,12 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "muted": false,
         },
       },
@@ -1005,6 +1030,7 @@ Array [
             "handle": "carol.test",
             "labels": Array [],
             "viewer": Object {
+              "blockedBy": false,
               "muted": false,
             },
           },
@@ -1037,6 +1063,7 @@ Array [
                     "handle": "bob.test",
                     "labels": Array [],
                     "viewer": Object {
+                      "blockedBy": false,
                       "following": "record(7)",
                       "muted": false,
                     },
@@ -1048,6 +1075,10 @@ Array [
                   "value": Object {
                     "$type": "app.bsky.feed.post",
                     "createdAt": "1970-01-01T00:00:00.000Z",
+                    "langs": Array [
+                      "en-US",
+                      "i-klingon",
+                    ],
                     "text": "bob back at it again!",
                   },
                 },
@@ -1137,12 +1168,12 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "muted": false,
         },
       },
@@ -1168,7 +1199,6 @@ exports[`pds author feed views reflects fetching user's state in the feed. 1`] =
 Array [
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -1176,6 +1206,7 @@ Array [
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "followedBy": "record(2)",
           "following": "record(1)",
           "muted": false,
@@ -1215,6 +1246,7 @@ Array [
           "handle": "bob.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(6)",
             "muted": false,
           },
@@ -1295,6 +1327,7 @@ Array [
           "handle": "alice.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(2)",
             "following": "record(1)",
             "muted": false,
@@ -1320,7 +1353,6 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -1328,6 +1360,7 @@ Array [
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "followedBy": "record(2)",
           "following": "record(1)",
           "muted": false,
@@ -1343,6 +1376,7 @@ Array [
             "handle": "dan.test",
             "labels": Array [],
             "viewer": Object {
+              "blockedBy": false,
               "muted": false,
             },
           },
@@ -1357,6 +1391,7 @@ Array [
                   "handle": "carol.test",
                   "labels": Array [],
                   "viewer": Object {
+                    "blockedBy": false,
                     "muted": false,
                   },
                 },
@@ -1473,7 +1508,6 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -1481,6 +1515,7 @@ Array [
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "followedBy": "record(2)",
           "following": "record(1)",
           "muted": false,
@@ -1505,7 +1540,6 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -1513,6 +1547,7 @@ Array [
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "followedBy": "record(2)",
           "following": "record(1)",
           "muted": false,

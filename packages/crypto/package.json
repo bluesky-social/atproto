@@ -24,10 +24,8 @@
     "postpublish": "npm run update-main-to-src"
   },
   "dependencies": {
-    "@noble/secp256k1": "^1.7.0",
-    "big-integer": "^1.6.51",
-    "multiformats": "^9.6.4",
-    "one-webcrypto": "^1.0.3",
+    "@noble/curves": "^1.1.0",
+    "@noble/hashes": "^1.3.1",
     "uint8arrays": "3.0.0"
   }
 }

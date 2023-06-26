@@ -32,7 +32,6 @@ export class FeedViews {
     // from labels: e.g. compatible with hydrateFeed() batching label hydration.
     author.labels ??= labels[author.did] ?? []
     return {
-      $type: 'app.bsky.feed.defs#postView',
       uri: post.uri,
       cid: post.cid,
       author: author,
@@ -76,10 +75,16 @@ export class FeedViews {
       const feedPost = { post }
       if (item.type === 'repost') {
         const originator = actors[item.originatorDid]
-        if (originator) {
+        // skip over reposts where we don't have reposter profile
+        if (!originator) {
+          continue
+        } else {
           feedPost['reason'] = {
             $type: 'app.bsky.feed.defs#reasonRepost',
-            by: originator,
+            by: {
+              ...originator,
+              labels: labels[item.originatorDid] ?? [],
+            },
             indexedAt: item.sortAt,
           }
         }
@@ -163,9 +168,21 @@ export class FeedViews {
       if (!usePostViewUnion) return
       return this.notFoundPost(uri)
     }
+    if (post.author.viewer?.blockedBy || post.author.viewer?.blocking) {
+      if (!usePostViewUnion) return
+      return this.blockedPost(uri)
+    }
     return {
       $type: 'app.bsky.feed.defs#postView',
       ...post,
+    }
+  }
+
+  blockedPost(uri: string) {
+    return {
+      $type: 'app.bsky.feed.defs#blockedPost',
+      uri: uri,
+      blocked: true as const,
     }
   }
 

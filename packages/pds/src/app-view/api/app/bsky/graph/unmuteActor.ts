@@ -1,6 +1,6 @@
-import { Server } from '../../../../lexicon'
+import { Server } from '../../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import AppContext from '../../../../context'
+import AppContext from '../../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.unmuteActor({
@@ -19,6 +19,13 @@ export default function (server: Server, ctx: AppContext) {
         did: subject.did,
         mutedByDid: requester,
       })
+
+      if (ctx.cfg.bskyAppViewEndpoint) {
+        await ctx.appviewAgent.api.app.bsky.graph.unmuteActor(input.body, {
+          ...(await ctx.serviceAuthHeaders(requester)),
+          encoding: 'application/json',
+        })
+      }
     },
   })
 }

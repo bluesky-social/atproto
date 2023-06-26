@@ -4,7 +4,6 @@ import { FeedAlgorithm, FeedKeyset, getFeedDateThreshold } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 
-// @TODO getTimeline() will be replaced by composeTimeline() in the app-view
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
     auth: ctx.authVerifier,
@@ -42,6 +41,12 @@ export default function (server: Server, ctx: AppContext) {
         .where((qb) =>
           // Hide posts and reposts of or by muted actors
           graphService.whereNotMuted(qb, viewer, [
+            ref('post.creator'),
+            ref('originatorDid'),
+          ]),
+        )
+        .whereNotExists(
+          graphService.blockQb(viewer, [
             ref('post.creator'),
             ref('originatorDid'),
           ]),

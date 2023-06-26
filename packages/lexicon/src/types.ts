@@ -37,6 +37,7 @@ export const lexStringFormat = z.enum([
   'at-identifier',
   'nsid',
   'cid',
+  'language',
 ])
 export type LexStringFormat = z.infer<typeof lexStringFormat>
 
@@ -252,7 +253,6 @@ export const lexXrpcSubscription = z
     description: z.string().optional(),
     parameters: lexXrpcParameters.optional(),
     message: lexXrpcSubscriptionMessage.optional(),
-    infos: lexXrpcError.array().optional(),
     errors: lexXrpcError.array().optional(),
   })
   .strict()

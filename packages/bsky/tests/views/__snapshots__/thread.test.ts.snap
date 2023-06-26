@@ -8,7 +8,6 @@ Object {
     "parent": Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
           "did": "user(0)",
@@ -16,6 +15,7 @@ Object {
           "handle": "alice.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(2)",
             "following": "record(1)",
             "muted": false,
@@ -40,7 +40,6 @@ Object {
       "replies": Array [],
     },
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
         "did": "user(2)",
@@ -48,6 +47,7 @@ Object {
         "handle": "bob.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "muted": false,
         },
       },
@@ -121,7 +121,6 @@ Object {
     "replies": Array [],
   },
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -129,6 +128,7 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -168,7 +168,6 @@ exports[`pds thread views fetches deep post thread 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -176,6 +175,7 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -201,12 +201,12 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "did": "user(2)",
           "handle": "carol.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "following": "record(5)",
             "muted": false,
           },
@@ -240,7 +240,6 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(1)@jpeg",
           "did": "user(3)",
@@ -248,6 +247,7 @@ Object {
           "handle": "bob.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "muted": false,
           },
         },
@@ -322,7 +322,6 @@ Object {
         Object {
           "$type": "app.bsky.feed.defs#threadViewPost",
           "post": Object {
-            "$type": "app.bsky.feed.defs#postView",
             "author": Object {
               "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
               "did": "user(0)",
@@ -330,6 +329,7 @@ Object {
               "handle": "alice.test",
               "labels": Array [],
               "viewer": Object {
+                "blockedBy": false,
                 "followedBy": "record(2)",
                 "following": "record(1)",
                 "muted": false,
@@ -373,7 +373,6 @@ exports[`pds thread views fetches shallow post thread 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -381,6 +380,7 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -406,12 +406,12 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "did": "user(2)",
           "handle": "carol.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "following": "record(5)",
             "muted": false,
           },
@@ -444,7 +444,6 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(1)@jpeg",
           "did": "user(3)",
@@ -452,6 +451,7 @@ Object {
           "handle": "bob.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "muted": false,
           },
         },
@@ -531,7 +531,6 @@ exports[`pds thread views handles deleted posts correctly 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -539,6 +538,7 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -562,7 +562,6 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
           "did": "user(2)",
@@ -570,6 +569,7 @@ Object {
           "handle": "bob.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "muted": false,
           },
         },
@@ -601,7 +601,6 @@ Object {
         Object {
           "$type": "app.bsky.feed.defs#threadViewPost",
           "post": Object {
-            "$type": "app.bsky.feed.defs#postView",
             "author": Object {
               "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
               "did": "user(0)",
@@ -609,6 +608,7 @@ Object {
               "handle": "alice.test",
               "labels": Array [],
               "viewer": Object {
+                "blockedBy": false,
                 "followedBy": "record(2)",
                 "following": "record(1)",
                 "muted": false,
@@ -650,7 +650,6 @@ exports[`pds thread views handles deleted posts correctly 2`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -658,6 +657,7 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -690,7 +690,6 @@ Object {
     "uri": "record(4)",
   },
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -698,6 +697,7 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -740,7 +740,6 @@ Object {
     "uri": "record(4)",
   },
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -748,6 +747,7 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -792,7 +792,6 @@ Object {
     "uri": "record(4)",
   },
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -800,6 +799,7 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -839,7 +839,6 @@ exports[`pds thread views takedown blocks replies by actor 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -847,6 +846,7 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -872,7 +872,6 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
           "did": "user(2)",
@@ -880,6 +879,7 @@ Object {
           "handle": "bob.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "muted": false,
           },
         },
@@ -954,7 +954,6 @@ Object {
         Object {
           "$type": "app.bsky.feed.defs#threadViewPost",
           "post": Object {
-            "$type": "app.bsky.feed.defs#postView",
             "author": Object {
               "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
               "did": "user(0)",
@@ -962,6 +961,7 @@ Object {
               "handle": "alice.test",
               "labels": Array [],
               "viewer": Object {
+                "blockedBy": false,
                 "followedBy": "record(2)",
                 "following": "record(1)",
                 "muted": false,
@@ -1005,7 +1005,6 @@ exports[`pds thread views takedown blocks replies by record 1`] = `
 Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
-    "$type": "app.bsky.feed.defs#postView",
     "author": Object {
       "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
@@ -1013,6 +1012,7 @@ Object {
       "handle": "alice.test",
       "labels": Array [],
       "viewer": Object {
+        "blockedBy": false,
         "followedBy": "record(2)",
         "following": "record(1)",
         "muted": false,
@@ -1038,7 +1038,6 @@ Object {
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
-        "$type": "app.bsky.feed.defs#postView",
         "author": Object {
           "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
           "did": "user(2)",
@@ -1046,6 +1045,7 @@ Object {
           "handle": "bob.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "muted": false,
           },
         },

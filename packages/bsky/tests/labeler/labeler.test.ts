@@ -127,26 +127,7 @@ describe('labeler', () => {
     )
   })
 
-  it('labels text & imgs in profiles', async () => {
-    const profile = {
-      $type: 'app.bsky.actor.profile',
-      displayName: 'label_me',
-      description: 'label_me_2',
-      avatar: badBlob1,
-      banner: badBlob2,
-      createdAt: new Date().toISOString(),
-    }
-    const uri = profileUri()
-    labeler.processRecord(uri, profile)
-    await labeler.processAll()
-    const dbLabels = await labelSrvc.getLabels(uri.toString())
-    const labels = dbLabels.map((row) => row.val).sort()
-    expect(labels).toEqual(
-      ['test-label', 'test-label-2', 'img-label', 'other-img-label'].sort(),
-    )
-  })
-
-  it('retrieves both profile & repo labels on profile views', async () => {
+  it('retrieves repo labels on profile views', async () => {
     await ctx.db.db
       .insertInto('label')
       .values({
@@ -160,11 +141,9 @@ describe('labeler', () => {
       .execute()
 
     const labels = await labelSrvc.getLabelsForProfile(alice)
-    // 4 from earlier & then just added one
-    expect(labels.length).toBe(5)
 
-    const repoLabel = labels.find((l) => l.uri.startsWith('did:'))
-    expect(repoLabel).toMatchObject({
+    expect(labels.length).toBe(1)
+    expect(labels[0]).toMatchObject({
       src: labelerDid,
       uri: alice,
       val: 'repo-label',

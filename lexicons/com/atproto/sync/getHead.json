@@ -25,7 +25,10 @@
             "root": {"type": "string", "format": "cid"}
           }
         }
-      }
+      },
+      "errors": [
+        {"name": "HeadNotFound"}
+      ]
     }
   }
 }

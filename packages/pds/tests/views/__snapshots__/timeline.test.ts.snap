@@ -746,6 +746,10 @@ Array [
             "value": Object {
               "$type": "app.bsky.feed.post",
               "createdAt": "1970-01-01T00:00:00.000Z",
+              "langs": Array [
+                "en-US",
+                "i-klingon",
+              ],
               "text": "bob back at it again!",
             },
           },
@@ -843,6 +847,10 @@ Array [
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
+        "langs": Array [
+          "en-US",
+          "i-klingon",
+        ],
         "text": "bob back at it again!",
       },
       "replyCount": 0,
@@ -1021,6 +1029,10 @@ Array [
                   "value": Object {
                     "$type": "app.bsky.feed.post",
                     "createdAt": "1970-01-01T00:00:00.000Z",
+                    "langs": Array [
+                      "en-US",
+                      "i-klingon",
+                    ],
                     "text": "bob back at it again!",
                   },
                 },
@@ -1830,6 +1842,10 @@ Array [
                   "value": Object {
                     "$type": "app.bsky.feed.post",
                     "createdAt": "1970-01-01T00:00:00.000Z",
+                    "langs": Array [
+                      "en-US",
+                      "i-klingon",
+                    ],
                     "text": "bob back at it again!",
                   },
                 },
@@ -2025,6 +2041,10 @@ Array [
             "value": Object {
               "$type": "app.bsky.feed.post",
               "createdAt": "1970-01-01T00:00:00.000Z",
+              "langs": Array [
+                "en-US",
+                "i-klingon",
+              ],
               "text": "bob back at it again!",
             },
           },
@@ -2122,6 +2142,10 @@ Array [
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
+        "langs": Array [
+          "en-US",
+          "i-klingon",
+        ],
         "text": "bob back at it again!",
       },
       "replyCount": 0,
@@ -2247,6 +2271,10 @@ Array [
                   "value": Object {
                     "$type": "app.bsky.feed.post",
                     "createdAt": "1970-01-01T00:00:00.000Z",
+                    "langs": Array [
+                      "en-US",
+                      "i-klingon",
+                    ],
                     "text": "bob back at it again!",
                   },
                 },
@@ -3051,6 +3079,10 @@ Array [
             "value": Object {
               "$type": "app.bsky.feed.post",
               "createdAt": "1970-01-01T00:00:00.000Z",
+              "langs": Array [
+                "en-US",
+                "i-klingon",
+              ],
               "text": "bob back at it again!",
             },
           },
@@ -3146,6 +3178,10 @@ Array [
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
+        "langs": Array [
+          "en-US",
+          "i-klingon",
+        ],
         "text": "bob back at it again!",
       },
       "replyCount": 0,
@@ -3272,6 +3308,10 @@ Array [
                   "value": Object {
                     "$type": "app.bsky.feed.post",
                     "createdAt": "1970-01-01T00:00:00.000Z",
+                    "langs": Array [
+                      "en-US",
+                      "i-klingon",
+                    ],
                     "text": "bob back at it again!",
                   },
                 },
@@ -3902,6 +3942,10 @@ Array [
             "value": Object {
               "$type": "app.bsky.feed.post",
               "createdAt": "1970-01-01T00:00:00.000Z",
+              "langs": Array [
+                "en-US",
+                "i-klingon",
+              ],
               "text": "bob back at it again!",
             },
           },
@@ -4312,6 +4356,10 @@ Array [
                   "value": Object {
                     "$type": "app.bsky.feed.post",
                     "createdAt": "1970-01-01T00:00:00.000Z",
+                    "langs": Array [
+                      "en-US",
+                      "i-klingon",
+                    ],
                     "text": "bob back at it again!",
                   },
                 },
@@ -4472,6 +4520,10 @@ Array [
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
+        "langs": Array [
+          "en-US",
+          "i-klingon",
+        ],
         "text": "bob back at it again!",
       },
       "replyCount": 0,
@@ -4970,6 +5022,10 @@ Array [
                   "value": Object {
                     "$type": "app.bsky.feed.post",
                     "createdAt": "1970-01-01T00:00:00.000Z",
+                    "langs": Array [
+                      "en-US",
+                      "i-klingon",
+                    ],
                     "text": "bob back at it again!",
                   },
                 },
