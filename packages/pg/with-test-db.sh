@@ -6,15 +6,24 @@
 dir=$(dirname $0)
 compose_file="$dir/docker-compose.yaml"
 
-docker compose -f $compose_file up --wait --force-recreate db_test
-echo # newline
+started_container=false
 
 trap on_sigint INT
 on_sigint() { 
   echo # newline
-  docker compose -f $compose_file rm -f --stop --volumes db_test
+  if $started_container; then
+    docker compose -f $compose_file rm -f --stop --volumes db_test
+  fi
   exit $?
 }
+
+if [ -z `docker ps -q --no-trunc | grep $(docker-compose -f $compose_file ps -q db_test)` ]; then
+  started_container=true
+  docker compose -f $compose_file up --wait --force-recreate db_test
+  echo # newline
+else
+  echo "db_test already running"
+fi
 
 # Based on creds in compose.yaml
 export PGPORT=5433
@@ -27,6 +36,8 @@ export DB_POSTGRES_URL="postgresql://pg:password@localhost:5433/postgres"
 code=$?
 
 echo # newline
-docker compose -f $compose_file rm -f --stop --volumes db_test
+if $started_container; then
+  docker compose -f $compose_file rm -f --stop --volumes db_test
+fi
 
 exit $code
