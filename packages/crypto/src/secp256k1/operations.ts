@@ -15,3 +15,12 @@ export const verifyDidSig = async (
   const msgHash = await sha256(data)
   return k256.verify(sig, msgHash, keyBytes, { lowS: true })
 }
+
+export const verify = async (
+  publicKey: Uint8Array,
+  data: Uint8Array,
+  sig: Uint8Array,
+): Promise<boolean> => {
+  const msgHash = await secp.utils.sha256(data)
+  return secp.verify(sig, msgHash, publicKey)
+}
