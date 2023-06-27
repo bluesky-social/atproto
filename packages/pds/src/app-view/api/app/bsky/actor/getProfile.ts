@@ -9,7 +9,6 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ req, auth, params }) => {
       const requester = auth.credentials.did
       if (ctx.canProxy(req)) {
-        console.log('HERE')
         const res = await ctx.appviewAgent.api.app.bsky.actor.getProfile(
           params,
           await ctx.serviceAuthHeaders(requester),
@@ -19,7 +18,6 @@ export default function (server: Server, ctx: AppContext) {
           body: res.data,
         }
       }
-      console.log('NO PROXY')
 
       const { actor } = params
       const { db, services } = ctx
