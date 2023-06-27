@@ -1,0 +1,34 @@
+[
+  {
+    "messageBase64": "oWVoZWxsb2V3b3JsZA",
+    "algorithm": "ES256",
+    "publicKeyDid": "did:key:zDnaembgSGUhZULN2Caob4HLJPaxBh92N7rtH21TErzqf8HQo",
+    "publicKeyMultibase": "zxdM8dSstjrpZaRUwBmDvjGXweKuEMVN95A9oJBFjkWMh",
+    "signatureBase64": "2vZNsG3UKvvO/CDlrdvyZRISOFylinBh0Jupc6KcWoJWExHptCfduPleDbG3rko3YZnn9Lw0IjpixVmexJDegg",
+    "validSignature": true
+  },
+  {
+    "messageBase64": "oWVoZWxsb2V3b3JsZA",
+    "algorithm": "ES256K",
+    "publicKeyDid": "did:key:zQ3shqwJEJyMBsBXCWyCBpUBMqxcon9oHB7mCvx4sSpMdLJwc",
+    "publicKeyMultibase": "z25z9DTpsiYYJKGsWmSPJK2NFN8PcJtZig12K59UgW7q5t",
+    "signatureBase64": "5WpdIuEUUfVUYaozsi8G0B3cWO09cgZbIIwg1t2YKdUn/FEznOndsz/qgiYb89zwxYCbB71f7yQK5Lr7NasfoA",
+    "validSignature": true
+  },
+  {
+    "messageBase64": "oWVoZWxsb2V3b3JsZA",
+    "algorithm": "ES256",
+    "publicKeyDid": "did:key:zDnaembgSGUhZULN2Caob4HLJPaxBh92N7rtH21TErzqf8HQo",
+    "publicKeyMultibase": "zxdM8dSstjrpZaRUwBmDvjGXweKuEMVN95A9oJBFjkWMh",
+    "signatureBase64": "2vZNsG3UKvvO/CDlrdvyZRISOFylinBh0Jupc6KcWoKp7O4VS9giSAah8k5IUbXIW00SuOrjfEqQ9HEkN9JGzw",
+    "validSignature": false
+  },
+  {
+    "messageBase64": "oWVoZWxsb2V3b3JsZA",
+    "algorithm": "ES256K",
+    "publicKeyDid": "did:key:zQ3shqwJEJyMBsBXCWyCBpUBMqxcon9oHB7mCvx4sSpMdLJwc",
+    "publicKeyMultibase": "z25z9DTpsiYYJKGsWmSPJK2NFN8PcJtZig12K59UgW7q5t",
+    "signatureBase64": "5WpdIuEUUfVUYaozsi8G0B3cWO09cgZbIIwg1t2YKdXYA67MYxYiTMAVfdnkDCMN9S5B3vHosRe07aORmoshoQ",
+    "validSignature": false
+  }
+]

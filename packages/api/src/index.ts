@@ -6,6 +6,7 @@ export {
   jsonToLex,
   jsonStringToLex,
 } from '@atproto/lexicon'
+export { parseLanguage } from '@atproto/common-web'
 export * from './types'
 export * from './client'
 export * from './agent'
