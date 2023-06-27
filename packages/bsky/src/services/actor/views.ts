@@ -1,4 +1,5 @@
 import { ArrayEl } from '@atproto/common'
+import { INVALID_HANDLE } from '@atproto/identifier'
 import {
   ProfileViewDetailed,
   ProfileView,
@@ -117,7 +118,7 @@ export class ActorViews {
         : undefined
       return {
         did: result.did,
-        handle: result.handle,
+        handle: result.handle ?? INVALID_HANDLE,
         displayName: profileInfo?.displayName || undefined,
         description: profileInfo?.description || undefined,
         avatar,
@@ -224,7 +225,7 @@ export class ActorViews {
         : undefined
       return {
         did: result.did,
-        handle: result.handle,
+        handle: result.handle ?? INVALID_HANDLE,
         displayName: profileInfo?.displayName || undefined,
         description: profileInfo?.description || undefined,
         avatar,

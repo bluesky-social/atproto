@@ -28,6 +28,7 @@ export const getUserSearchQuery = (
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('actor'))),
     )
+    .where('actor.handle', 'is not', null)
     .where(similar(term, ref('handle'))) // Coarse filter engaging trigram index
     .where(distanceAccount, '<', threshold) // Refines results from trigram index
     .select(['actor.did as did', distanceAccount.as('distance')])
@@ -46,6 +47,7 @@ export const getUserSearchQuery = (
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('actor'))),
     )
+    .where('actor.handle', 'is not', null)
     .where(similar(term, ref('displayName'))) // Coarse filter engaging trigram index
     .where(distanceProfile, '<', threshold) // Refines results from trigram index
     .select(['actor.did as did', distanceProfile.as('distance')])
@@ -81,7 +83,7 @@ export const getUserSearchQuery = (
     limit,
     cursor,
     direction: 'asc',
-    keyset: new SearchKeyset(ref('distance'), ref('handle')),
+    keyset: new SearchKeyset(ref('distance'), ref('actor.did')),
   })
 }
 
@@ -95,13 +97,13 @@ const distance = (term: string, ref: DbRef) =>
 // Can utilize trigram index to match on strict word similarity
 const similar = (term: string, ref: DbRef) => sql<boolean>`(${term} <<% ${ref})`
 
-type Result = { distance: number; handle: string }
+type Result = { distance: number; did: string }
 type LabeledResult = { primary: number; secondary: string }
 export class SearchKeyset extends GenericKeyset<Result, LabeledResult> {
   labelResult(result: Result) {
     return {
       primary: result.distance,
-      secondary: result.handle,
+      secondary: result.did,
     }
   }
   labeledResultToCursor(labeled: LabeledResult) {
