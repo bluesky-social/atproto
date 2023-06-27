@@ -27,6 +27,6 @@
     "@noble/curves": "^1.1.0",
     "key-encoder": "^2.0.3",
     "multiformats": "^9.6.4",
-    "uint8arrays": "^4.0.4"
+    "uint8arrays": "3.0.0"
   }
 }
