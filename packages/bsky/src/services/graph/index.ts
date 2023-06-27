@@ -205,7 +205,7 @@ export class GraphService {
             list.avatarCid,
           )
         : undefined,
-      indexedAt: list.indexedAt,
+      indexedAt: list.sortAt,
       viewer: {
         muted: !!list.viewerMuted,
       },

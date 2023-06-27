@@ -210,7 +210,7 @@ export class FeedService {
         'post.uri as uri',
         'post.cid as cid',
         'post.creator as creator',
-        'post.indexedAt as indexedAt',
+        'post.sortAt as indexedAt',
         'record.json as recordJson',
         'post_agg.likeCount as likeCount',
         'post_agg.repostCount as repostCount',

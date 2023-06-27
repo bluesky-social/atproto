@@ -150,7 +150,7 @@ export class FeedViews {
       viewer: {
         like: info.viewerLike ?? undefined,
       },
-      indexedAt: info.indexedAt,
+      indexedAt: info.sortAt,
     }
   }
 
