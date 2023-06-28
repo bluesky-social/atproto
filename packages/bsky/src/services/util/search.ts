@@ -22,7 +22,7 @@ export const getUserSearchQuery = (
     limit,
     cursor,
     direction: 'asc',
-    keyset: new SearchKeyset(distanceAccount, ref('handle')),
+    keyset: new SearchKeyset(distanceAccount, ref('actor.did')),
   })
   // Matching profiles based on display name
   const distanceProfile = distance(term, ref('displayName'))
@@ -31,14 +31,14 @@ export const getUserSearchQuery = (
     limit,
     cursor,
     direction: 'asc',
-    keyset: new SearchKeyset(distanceProfile, ref('handle')),
+    keyset: new SearchKeyset(distanceProfile, ref('actor.did')),
   })
   // Combine and paginate result set
   return paginate(combineAccountsAndProfilesQb(db, accountsQb, profilesQb), {
     limit,
     cursor,
     direction: 'asc',
-    keyset: new SearchKeyset(ref('distance'), ref('handle')),
+    keyset: new SearchKeyset(ref('distance'), ref('actor.did')),
   })
 }
 
@@ -64,7 +64,7 @@ export const getUserSearchQuerySimple = (
   return paginate(combineAccountsAndProfilesQb(db, accountsQb, profilesQb), {
     limit,
     direction: 'asc',
-    keyset: new SearchKeyset(ref('distance'), ref('handle')),
+    keyset: new SearchKeyset(ref('distance'), ref('actor.did')),
   })
 }
 
