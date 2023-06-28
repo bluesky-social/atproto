@@ -407,7 +407,7 @@ export class AccountService {
         .where('invite_code.forUser', '=', invitedBy)
     }
 
-    const keyset = new ListKeyset(ref('indexedAt'), ref('handle'))
+    const keyset = new ListKeyset(ref('indexedAt'), ref('did_handle.did'))
 
     return await paginate(builder, {
       limit,
@@ -608,7 +608,7 @@ export class UserAlreadyExistsError extends Error {}
 
 export class ListKeyset extends TimeCidKeyset<{
   indexedAt: string
-  did: string // handles are treated identically to cids in TimeCidKeyset
+  did: string // dids are treated identically to cids in TimeCidKeyset
 }> {
   labelResult(result: { indexedAt: string; did: string }) {
     return { primary: result.indexedAt, secondary: result.did }

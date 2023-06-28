@@ -24,26 +24,23 @@ export const getUserSearchQueryPg = (
     limit,
     cursor,
     direction: 'asc',
-    keyset: new SearchKeyset(distanceAccount, ref('handle')),
+    keyset: new SearchKeyset(distanceAccount, ref('did_handle.did')),
   })
   // Matching profiles based on display name
   const distanceProfile = distance(term, ref('displayName'))
   let profilesQb = getMatchingProfilesQb(db, { term, includeSoftDeleted })
-  profilesQb = paginate(
-    profilesQb.innerJoin('did_handle', 'did_handle.did', 'profile.creator'), // for handle pagination
-    {
-      limit,
-      cursor,
-      direction: 'asc',
-      keyset: new SearchKeyset(distanceProfile, ref('handle')),
-    },
-  )
+  profilesQb = paginate(profilesQb, {
+    limit,
+    cursor,
+    direction: 'asc',
+    keyset: new SearchKeyset(distanceProfile, ref('did_handle.did')),
+  })
   // Combine and paginate result set
   return paginate(combineAccountsAndProfilesQb(db, accountsQb, profilesQb), {
     limit,
     cursor,
     direction: 'asc',
-    keyset: new SearchKeyset(ref('distance'), ref('handle')),
+    keyset: new SearchKeyset(ref('distance'), ref('did_handle.did')),
   })
 }
 
@@ -69,7 +66,7 @@ export const getUserSearchQuerySimplePg = (
   return paginate(combineAccountsAndProfilesQb(db, accountsQb, profilesQb), {
     limit,
     direction: 'asc',
-    keyset: new SearchKeyset(ref('distance'), ref('handle')),
+    keyset: new SearchKeyset(ref('distance'), ref('did_handle.did')),
   })
 }
 
@@ -192,7 +189,9 @@ export const getUserSearchQuerySqlite = (
       return q
     })
     .if(!!unpackedCursor, (qb) =>
-      unpackedCursor ? qb.where('handle', '>', unpackedCursor.secondary) : qb,
+      unpackedCursor
+        ? qb.where('did_handle.did', '>', unpackedCursor.secondary)
+        : qb,
     )
     .orderBy('handle')
     .limit(limit)
