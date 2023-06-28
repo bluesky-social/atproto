@@ -6,6 +6,7 @@ import * as plc from '@did-plc/lib'
 import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
 import { AtUri } from '@atproto/uri'
 import { randomStr } from '@atproto/crypto'
+import { uniqueLockId } from '@atproto/dev-env'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import { PDS, ServerConfig, Database, MemoryBlobStore } from '../src/index'
@@ -157,16 +158,6 @@ export const runTestServer = async (
       await plcServer.destroy()
     },
   }
-}
-
-const usedLockIds = new Set()
-const uniqueLockId = () => {
-  let lockId: number
-  do {
-    lockId = 1000 + Math.ceil(1000 * Math.random())
-  } while (usedLockIds.has(lockId))
-  usedLockIds.add(lockId)
-  return lockId
 }
 
 export const adminAuth = () => {
