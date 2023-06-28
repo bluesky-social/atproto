@@ -87,6 +87,7 @@ const getMatchingAccountsQb = (
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('repo_root'))),
     )
+    .where('did_handle.handle', 'is not', null)
     .where(similar(term, ref('handle'))) // Coarse filter engaging trigram index
     .where(distanceAccount, '<', getMatchThreshold(term)) // Refines results from trigram index
     .select(['did_handle.did as did', distanceAccount.as('distance')])
@@ -103,9 +104,11 @@ const getMatchingProfilesQb = (
   return db.db
     .selectFrom('profile')
     .innerJoin('repo_root', 'repo_root.did', 'profile.creator')
+    .innerJoin('did_handle', 'did_handle.did', 'profile.creator')
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('repo_root'))),
     )
+    .where('did_handle.handle', 'is not', null)
     .where(similar(term, ref('displayName'))) // Coarse filter engaging trigram index
     .where(distanceProfile, '<', getMatchThreshold(term)) // Refines results from trigram index
     .select(['profile.creator as did', distanceProfile.as('distance')])
@@ -180,6 +183,7 @@ export const getUserSearchQuerySqlite = (
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('_repo_root'))),
     )
+    .where('did_handle.handle', 'is not', null)
     .where((q) => {
       safeWords.forEach((word) => {
         // Match word prefixes against contents of handle and displayName
@@ -211,13 +215,13 @@ const getMatchThreshold = (term: string) => {
   return term.length < 3 ? 0.9 : 0.8
 }
 
-type Result = { distance: number; handle: string }
+type Result = { distance: number; did: string }
 type LabeledResult = { primary: number; secondary: string }
 export class SearchKeyset extends GenericKeyset<Result, LabeledResult> {
   labelResult(result: Result) {
     return {
       primary: result.distance,
-      secondary: result.handle,
+      secondary: result.did,
     }
   }
   labeledResultToCursor(labeled: LabeledResult) {

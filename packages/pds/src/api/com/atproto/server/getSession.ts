@@ -1,4 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { INVALID_HANDLE } from '@atproto/identifier'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 
@@ -15,7 +16,11 @@ export default function (server: Server, ctx: AppContext) {
       }
       return {
         encoding: 'application/json',
-        body: { handle: user.handle, did: user.did, email: user.email },
+        body: {
+          handle: user.handle ?? INVALID_HANDLE,
+          did: user.did,
+          email: user.email,
+        },
       }
     },
   })

@@ -1,6 +1,7 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { dedupeStrs } from '@atproto/common'
+import { INVALID_HANDLE } from '@atproto/identifier'
 import Database from '../../../db'
 import { countAll, notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
@@ -171,7 +172,7 @@ export class FeedService {
         ...acc,
         [cur.did]: {
           did: cur.did,
-          handle: cur.handle,
+          handle: cur.handle ?? INVALID_HANDLE,
           displayName: truncateUtf8(cur.displayName, 64) || undefined,
           avatar: cur.avatarCid
             ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)

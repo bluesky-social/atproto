@@ -608,10 +608,10 @@ export class UserAlreadyExistsError extends Error {}
 
 export class ListKeyset extends TimeCidKeyset<{
   indexedAt: string
-  handle: string // handles are treated identically to cids in TimeCidKeyset
+  did: string // handles are treated identically to cids in TimeCidKeyset
 }> {
-  labelResult(result: { indexedAt: string; handle: string }) {
-    return { primary: result.indexedAt, secondary: result.handle }
+  labelResult(result: { indexedAt: string; did: string }) {
+    return { primary: result.indexedAt, secondary: result.did }
   }
 }
 

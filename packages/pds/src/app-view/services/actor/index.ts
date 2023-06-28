@@ -58,8 +58,8 @@ export class ActorService {
       .execute()
 
     return results.sort((a, b) => {
-      const orderA = order[a.did] ?? order[a.handle.toLowerCase()]
-      const orderB = order[b.did] ?? order[b.handle.toLowerCase()]
+      const orderA = order[a.did] ?? order[a.handle?.toLowerCase() ?? '']
+      const orderB = order[b.did] ?? order[b.handle?.toLowerCase() ?? '']
       return orderA - orderB
     })
   }

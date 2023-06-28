@@ -1,5 +1,6 @@
 import { Selectable } from 'kysely'
 import { ArrayEl, cborBytesToRecord } from '@atproto/common'
+import { INVALID_HANDLE } from '@atproto/identifier'
 import { AtUri } from '@atproto/uri'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
@@ -95,7 +96,7 @@ export class ModerationViews {
       }
       return {
         did: r.did,
-        handle: r.handle,
+        handle: r.handle ?? INVALID_HANDLE,
         email: email ?? undefined,
         relatedRecords,
         indexedAt: r.indexedAt,

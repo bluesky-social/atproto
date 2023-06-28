@@ -1,3 +1,4 @@
+import { INVALID_HANDLE } from '@atproto/identifier'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { getRandomToken } from './util'
@@ -20,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
         })
         .execute()
       await ctx.mailer.sendResetPassword(
-        { handle: user.handle, token },
+        { handle: user.handle ?? INVALID_HANDLE, token },
         { to: user.email },
       )
     }

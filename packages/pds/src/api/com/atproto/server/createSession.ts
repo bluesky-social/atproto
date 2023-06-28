@@ -1,4 +1,5 @@
 import { AuthRequiredError } from '@atproto/xrpc-server'
+import { INVALID_HANDLE } from '@atproto/identifier'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
@@ -49,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
       encoding: 'application/json',
       body: {
         did: user.did,
-        handle: user.handle,
+        handle: user.handle ?? INVALID_HANDLE,
         email: user.email,
         accessJwt: access.jwt,
         refreshJwt: refresh.jwt,
