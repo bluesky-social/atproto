@@ -162,6 +162,14 @@ export class AccountService {
     await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
+  async invalidateHandle(handle: string) {
+    await this.db.db
+      .updateTable('did_handle')
+      .set({ handle: null })
+      .where('handle', '=', handle)
+      .execute()
+  }
+
   async updateEmail(did: string, email: string) {
     await this.db.db
       .updateTable('user_account')

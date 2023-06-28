@@ -54,12 +54,22 @@ export default function (server: Server, ctx: AppContext) {
         if (err instanceof UserAlreadyExistsError) {
           const got = await actorTxn.getAccount(handle, true)
           if (got) {
-            throw new InvalidRequestError(`Handle already taken: ${handle}`)
+            if (
+              ctx.cfg.availableUserDomains.some((domain) =>
+                handle.endsWith(domain),
+              )
+            ) {
+              throw new InvalidRequestError(`Handle already taken: ${handle}`)
+            } else {
+              await actorTxn.invalidateHandle(handle)
+              await actorTxn.updateHandle(did, handle)
+            }
           } else {
             throw new InvalidRequestError(`Email already taken: ${email}`)
           }
+        } else {
+          throw err
         }
-        throw err
       }
 
       // Generate a real did with PLC

@@ -46,13 +46,24 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       await ctx.db.transaction(async (dbTxn) => {
+        const accountTxn = ctx.services.account(dbTxn)
         try {
-          await ctx.services.account(dbTxn).updateHandle(did, handle)
+          await accountTxn.updateHandle(did, handle)
         } catch (err) {
           if (err instanceof UserAlreadyExistsError) {
-            throw new InvalidRequestError(`Handle already taken: ${handle}`)
+            if (
+              ctx.cfg.availableUserDomains.some((domain) =>
+                handle.endsWith(domain),
+              )
+            ) {
+              throw new InvalidRequestError(`Handle already taken: ${handle}`)
+            } else {
+              await accountTxn.invalidateHandle(handle)
+              await accountTxn.updateHandle(did, handle)
+            }
+          } else {
+            throw err
           }
-          throw err
         }
         await ctx.plcClient.updateHandle(did, ctx.plcRotationKey, handle)
       })
