@@ -101,4 +101,11 @@ describe('handle invalidation', () => {
     })
     await expect(attempt).rejects.toThrow('Invalid identifier or password')
   })
+
+  it('still allows a user to login with an email', async () => {
+    await agent.api.com.atproto.server.createSession({
+      identifier: sc.accounts[alice].email,
+      password: sc.accounts[alice].password,
+    })
+  })
 })
