@@ -1,5 +1,4 @@
 import { DAY } from '@atproto/common'
-import { HandleResolver } from '@atproto/identity'
 import { TestNetwork } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
 import { SeedClient } from './seeds/client'
@@ -28,9 +27,8 @@ describe('handle invalidation', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
 
-    // mock handle resolution
-    const origResolve = HandleResolver.prototype.resolve
-    HandleResolver.prototype.resolve = async function (handle: string) {
+    const origResolve = network.bsky.ctx.idResolver.handle.resolve
+    network.bsky.ctx.idResolver.handle.resolve = async (handle: string) => {
       if (mockHandles[handle] === null) {
         return undefined
       } else if (mockHandles[handle]) {
