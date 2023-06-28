@@ -19,7 +19,8 @@ on_sigint() {
 }
 
 # check if the container is already running
-if [[ -z `docker compose -f $compose_file ps --format json --status running | grep db_test` ]]; then
+container_id=$(docker compose -f $compose_file ps --format json --status running | jq  --raw-output '.[0]."ID"')
+if [ -z $container_id ] || [ -z `docker ps -q --no-trunc | grep $container_id` ]; then
   docker compose -f $compose_file up --wait --force-recreate db_test
   started_container=true
   echo # newline
