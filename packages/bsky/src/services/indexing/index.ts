@@ -130,7 +130,8 @@ export class IndexingService {
     const atpData = await this.idResolver.did.resolveAtprotoData(did, true)
     const handleToDid = await this.idResolver.handle.resolve(atpData.handle)
 
-    const handle: string | null = did === handleToDid ? atpData.handle : null
+    const handle: string | null =
+      did === handleToDid ? atpData.handle.toLowerCase() : null
 
     if (actor && actor.handle !== handle) {
       const actorWithHandle =

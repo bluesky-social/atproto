@@ -6,6 +6,7 @@ import * as plc from '@did-plc/lib'
 import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
 import { AtUri } from '@atproto/uri'
 import { randomStr } from '@atproto/crypto'
+import { uniqueLockId } from '@atproto/dev-env'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import { PDS, ServerConfig, Database, MemoryBlobStore } from '../src/index'
@@ -159,16 +160,6 @@ export const runTestServer = async (
   }
 }
 
-const usedLockIds = new Set()
-const uniqueLockId = () => {
-  let lockId: number
-  do {
-    lockId = 1000 + Math.ceil(1000 * Math.random())
-  } while (usedLockIds.has(lockId))
-  usedLockIds.add(lockId)
-  return lockId
-}
-
 export const adminAuth = () => {
   return basicAuth('admin', ADMIN_PASSWORD)
 }
@@ -229,6 +220,10 @@ export const forSnapshot = (obj: unknown) => {
     }
     if (str.match(/^\d+::bafy/)) {
       return constantKeysetCursor
+    }
+
+    if (str.match(/^\d+::did:plc/)) {
+      return constantDidCursor
     }
     if (str.match(/\/image\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
       // Match image urls
@@ -298,6 +293,7 @@ export function take(
 
 export const constantDate = new Date(0).toISOString()
 export const constantKeysetCursor = '0000000000000::bafycid'
+export const constantDidCursor = '0000000000000::did'
 
 const mapLeafValues = (obj: unknown, fn: (val: unknown) => unknown) => {
   if (Array.isArray(obj)) {
