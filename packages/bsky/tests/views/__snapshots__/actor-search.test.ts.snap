@@ -12,7 +12,7 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(2)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0).jpeg",
     "did": "user(1)",
     "displayName": "Carol Littel",
     "handle": "eudora-dietrich4.test",
@@ -24,7 +24,7 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(0).jpeg",
     "did": "user(3)",
     "displayName": "Sadie Carter",
     "handle": "shane-torphy52.test",
@@ -36,7 +36,7 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(6)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(6)/cids(0).jpeg",
     "did": "user(5)",
     "displayName": "Carlton Abernathy IV",
     "handle": "aliya-hodkiewicz.test",
@@ -57,7 +57,7 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(9)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(9)/cids(0).jpeg",
     "did": "user(8)",
     "displayName": "Latoya Windler",
     "handle": "carolina-mcdermott77.test",
@@ -69,7 +69,7 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(11)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(11)/cids(0).jpeg",
     "did": "user(10)",
     "displayName": "Rachel Kshlerin",
     "handle": "cayla-marquardt39.test",
@@ -94,7 +94,7 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(2)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0).jpeg",
     "did": "user(1)",
     "displayName": "Carol Littel",
     "handle": "eudora-dietrich4.test",
@@ -104,7 +104,7 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(0).jpeg",
     "did": "user(3)",
     "displayName": "Sadie Carter",
     "handle": "shane-torphy52.test",
@@ -114,7 +114,7 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(6)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(6)/cids(0).jpeg",
     "did": "user(5)",
     "displayName": "Carlton Abernathy IV",
     "handle": "aliya-hodkiewicz.test",
@@ -132,7 +132,7 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(9)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(9)/cids(0).jpeg",
     "did": "user(8)",
     "displayName": "Latoya Windler",
     "handle": "carolina-mcdermott77.test",
@@ -142,7 +142,7 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(11)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(11)/cids(0).jpeg",
     "did": "user(10)",
     "displayName": "Rachel Kshlerin",
     "handle": "cayla-marquardt39.test",
