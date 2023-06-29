@@ -13,6 +13,7 @@ import { valuesList } from './db/util'
 import { IpldBlock } from './db/tables/ipld-block'
 import { RepoCommitBlock } from './db/tables/repo-commit-block'
 import { RepoCommitHistory } from './db/tables/repo-commit-history'
+import { ConcurrentWriteError } from './services/repo'
 
 export class SqlRepoStorage extends RepoStorage {
   cache: BlockMap = new BlockMap()
@@ -236,7 +237,7 @@ export class SqlRepoStorage extends RepoStorage {
         .where('root', '=', prev.toString())
         .executeTakeFirst()
       if (res.numUpdatedRows < 1) {
-        throw new Error('failed to update repo root: misordered')
+        throw new ConcurrentWriteError()
       }
     }
   }
