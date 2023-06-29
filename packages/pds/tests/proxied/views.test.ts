@@ -28,6 +28,20 @@ describe('proxies view requests', () => {
     dan = sc.dids.dan
   })
 
+  beforeAll(async () => {
+    await agent.api.app.bsky.feed.generator.create(
+      { repo: alice, rkey: 'all' },
+      {
+        did: 'did:example:feedgen',
+        displayName: 'All',
+        description: 'Provides all feed candidates',
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
+    await network.processAll()
+  })
+
   afterAll(async () => {
     await network.close()
   })
@@ -272,6 +286,16 @@ describe('proxies view requests', () => {
       },
     )
     expect([...pt1.data.feed, ...pt2.data.feed]).toEqual(res.data.feed)
+  })
+
+  it('unspecced.getPopularFeedGenerators', async () => {
+    const res = await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+      {},
+      {
+        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+      },
+    )
+    expect(forSnapshot(res.data)).toMatchSnapshot()
   })
 
   let feedUri: string
