@@ -140,7 +140,7 @@ export class FeedViews {
         ? JSON.parse(info.descriptionFacets)
         : undefined,
       avatar: info.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
+        ? this.imgUriBuilder.getPresetUri(
             'avatar',
             info.creator,
             info.avatarCid,

@@ -169,11 +169,7 @@ export class FeedService {
           handle: cur.handle,
           displayName: cur.displayName ?? undefined,
           avatar: cur.avatarCid
-            ? this.imgUriBuilder.getCommonSignedUri(
-                'avatar',
-                cur.did,
-                cur.avatarCid,
-              )
+            ? this.imgUriBuilder.getPresetUri('avatar', cur.did, cur.avatarCid)
             : undefined,
           viewer: viewer
             ? {
@@ -323,12 +319,12 @@ export class FeedService {
       if (!isViewImages(embed)) return acc
       const postUri = new AtUri(cur.postUri)
       embed.images.push({
-        thumb: this.imgUriBuilder.getCommonSignedUri(
+        thumb: this.imgUriBuilder.getPresetUri(
           'feed_thumbnail',
           postUri.host,
           cur.imageCid,
         ),
-        fullsize: this.imgUriBuilder.getCommonSignedUri(
+        fullsize: this.imgUriBuilder.getPresetUri(
           'feed_fullsize',
           postUri.host,
           cur.imageCid,
@@ -347,7 +343,7 @@ export class FeedService {
             title: cur.title,
             description: cur.description,
             thumb: cur.thumbCid
-              ? this.imgUriBuilder.getCommonSignedUri(
+              ? this.imgUriBuilder.getPresetUri(
                   'feed_thumbnail',
                   postUri.host,
                   cur.thumbCid,

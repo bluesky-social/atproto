@@ -199,7 +199,7 @@ export class GraphService {
         ? JSON.parse(list.descriptionFacets)
         : undefined,
       avatar: list.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
+        ? this.imgUriBuilder.getPresetUri(
             'avatar',
             list.creator,
             list.avatarCid,

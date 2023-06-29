@@ -102,14 +102,14 @@ export class ActorViews {
     const views = results.map((result) => {
       const profileInfo = profileInfoByDid[result.did]
       const avatar = profileInfo?.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
+        ? this.imgUriBuilder.getPresetUri(
             'avatar',
             profileInfo.did,
             profileInfo.avatarCid,
           )
         : undefined
       const banner = profileInfo?.bannerCid
-        ? this.imgUriBuilder.getCommonSignedUri(
+        ? this.imgUriBuilder.getPresetUri(
             'banner',
             profileInfo.did,
             profileInfo.bannerCid,
@@ -216,7 +216,7 @@ export class ActorViews {
     const views = results.map((result) => {
       const profileInfo = profileInfoByDid[result.did]
       const avatar = profileInfo?.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
+        ? this.imgUriBuilder.getPresetUri(
             'avatar',
             profileInfo.did,
             profileInfo.avatarCid,
@@ -298,7 +298,7 @@ export class ActorViews {
           name: cur.name,
           purpose: cur.purpose,
           avatar: cur.avatarCid
-            ? this.imgUriBuilder.getCommonSignedUri(
+            ? this.imgUriBuilder.getPresetUri(
                 'avatar',
                 cur.creator,
                 cur.avatarCid,
