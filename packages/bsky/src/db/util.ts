@@ -2,6 +2,7 @@ import {
   DummyDriver,
   DynamicModule,
   RawBuilder,
+  SelectQueryBuilder,
   sql,
   SqliteAdapter,
   SqliteIntrospector,
@@ -56,3 +57,5 @@ export const dummyDialect = {
 }
 
 export type DbRef = RawBuilder | ReturnType<DynamicModule['ref']>
+
+export type AnyQb = SelectQueryBuilder<any, any, any>

@@ -75,7 +75,10 @@ export class FeedViews {
       const feedPost = { post }
       if (item.type === 'repost') {
         const originator = actors[item.originatorDid]
-        if (originator) {
+        // skip over reposts where we don't have reposter profile
+        if (!originator) {
+          continue
+        } else {
           feedPost['reason'] = {
             $type: 'app.bsky.feed.defs#reasonRepost',
             by: {
@@ -147,7 +150,7 @@ export class FeedViews {
       viewer: {
         like: info.viewerLike ?? undefined,
       },
-      indexedAt: info.indexedAt,
+      indexedAt: info.sortAt,
     }
   }
 

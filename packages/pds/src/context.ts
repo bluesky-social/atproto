@@ -203,6 +203,10 @@ export class AppContext {
     return auth.moderatorVerifier(this.auth)
   }
 
+  get optionalAccessOrAdminVerifier() {
+    return auth.optionalAccessOrAdminVerifier(this.auth)
+  }
+
   async serviceAuthHeaders(did: string, audience?: string) {
     const aud = audience ?? this.cfg.bskyAppView.did
     if (!aud) {

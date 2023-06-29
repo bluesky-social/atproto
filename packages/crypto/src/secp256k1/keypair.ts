@@ -1,4 +1,5 @@
-import * as secp from '@noble/secp256k1'
+import { secp256k1 as k256 } from '@noble/curves/secp256k1'
+import { sha256 } from '@noble/hashes/sha256'
 import * as uint8arrays from 'uint8arrays'
 import { SupportedEncodings } from 'uint8arrays/util/bases'
 import * as did from '../did'
@@ -14,14 +15,14 @@ export class Secp256k1Keypair implements Keypair {
   private publicKey: Uint8Array
 
   constructor(private privateKey: Uint8Array, private exportable: boolean) {
-    this.publicKey = secp.getPublicKey(privateKey)
+    this.publicKey = k256.getPublicKey(privateKey)
   }
 
   static async create(
     opts?: Partial<Secp256k1KeypairOptions>,
   ): Promise<Secp256k1Keypair> {
     const { exportable = false } = opts || {}
-    const privKey = secp.utils.randomPrivateKey()
+    const privKey = k256.utils.randomPrivateKey()
     return new Secp256k1Keypair(privKey, exportable)
   }
 
@@ -50,9 +51,10 @@ export class Secp256k1Keypair implements Keypair {
   }
 
   async sign(msg: Uint8Array): Promise<Uint8Array> {
-    const msgHash = await secp.utils.sha256(msg)
+    const msgHash = await sha256(msg)
     // return raw 64 byte sig not DER-encoded
-    return secp.sign(msgHash, this.privateKey, { der: false })
+    const sig = await k256.sign(msgHash, this.privateKey, { lowS: true })
+    return sig.toCompactRawBytes()
   }
 
   async export(): Promise<Uint8Array> {

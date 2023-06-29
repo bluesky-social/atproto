@@ -14,6 +14,7 @@ import { CID } from 'multiformats/cid'
 import { EventType, RepoSeqInsert } from '../db/tables/repo-seq'
 
 export const sequenceEvt = async (dbTxn: Database, evt: RepoSeqInsert) => {
+  dbTxn.assertTransaction()
   await dbTxn.notify('new_repo_event')
   if (evt.eventType === 'rebase') {
     await invalidatePrevRepoOps(dbTxn, evt.did)
@@ -130,6 +131,20 @@ export const formatSeqHandleUpdate = async (
   }
 }
 
+export const formatSeqTombstone = async (
+  did: string,
+): Promise<RepoSeqInsert> => {
+  const evt: TombstoneEvt = {
+    did,
+  }
+  return {
+    did,
+    eventType: 'tombstone',
+    event: cborEncode(evt),
+    sequencedAt: new Date().toISOString(),
+  }
+}
+
 export const invalidatePrevSeqEvts = async (
   db: Database,
   did: string,
@@ -182,6 +197,11 @@ export const handleEvt = z.object({
 })
 export type HandleEvt = z.infer<typeof handleEvt>
 
+export const tombstoneEvt = z.object({
+  did: z.string(),
+})
+export type TombstoneEvt = z.infer<typeof tombstoneEvt>
+
 type TypedCommitEvt = {
   type: 'commit'
   seq: number
@@ -194,4 +214,10 @@ type TypedHandleEvt = {
   time: string
   evt: HandleEvt
 }
-export type SeqEvt = TypedCommitEvt | TypedHandleEvt
+type TypedTombstoneEvt = {
+  type: 'tombstone'
+  seq: number
+  time: string
+  evt: TombstoneEvt
+}
+export type SeqEvt = TypedCommitEvt | TypedHandleEvt | TypedTombstoneEvt
