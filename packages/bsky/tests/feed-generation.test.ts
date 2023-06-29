@@ -34,7 +34,7 @@ describe('feed generation', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'feed_generation',
+      dbPostgresSchema: 'bsky_feed_generation',
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()

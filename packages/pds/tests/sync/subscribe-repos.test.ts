@@ -19,6 +19,7 @@ import { WebSocket } from 'ws'
 import {
   Commit as CommitEvt,
   Handle as HandleEvt,
+  Tombstone as TombstoneEvt,
 } from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
 import { AppContext, Database } from '../../src'
 import { SeedClient } from '../seeds/client'
@@ -84,11 +85,27 @@ describe('repo subscribe repos', () => {
     return evts
   }
 
-  const verifyHandleEvent = (evt: HandleEvt, did: string, handle: string) => {
-    expect(evt.did).toBe(did)
-    expect(evt.handle).toBe(handle)
-    expect(typeof evt.time).toBe('string')
-    expect(typeof evt.seq).toBe('number')
+  const getTombstoneEvts = (frames: Frame[]): TombstoneEvt[] => {
+    const evts: TombstoneEvt[] = []
+    for (const frame of frames) {
+      if (frame instanceof MessageFrame && frame.header.t === '#tombstone') {
+        evts.push(frame.body)
+      }
+    }
+    return evts
+  }
+
+  const verifyHandleEvent = (evt: unknown, did: string, handle: string) => {
+    expect(evt?.['did']).toBe(did)
+    expect(evt?.['handle']).toBe(handle)
+    expect(typeof evt?.['time']).toBe('string')
+    expect(typeof evt?.['seq']).toBe('number')
+  }
+
+  const verifyTombstoneEvent = (evt: unknown, did: string) => {
+    expect(evt?.['did']).toBe(did)
+    expect(typeof evt?.['time']).toBe('string')
+    expect(typeof evt?.['seq']).toBe('number')
   }
 
   const getCommitEvents = (userDid: string, frames: Frame[]) => {
@@ -102,6 +119,25 @@ describe('repo subscribe repos', () => {
       }
     }
     return evts
+  }
+
+  const getAllEvents = (userDid: string, frames: Frame[]) => {
+    const types: unknown[] = []
+    for (const frame of frames) {
+      if (frame instanceof MessageFrame) {
+        if (
+          (frame.header.t === '#commit' &&
+            (frame.body as CommitEvt).repo === userDid) ||
+          (frame.header.t === '#handle' &&
+            (frame.body as HandleEvt).did === userDid) ||
+          (frame.header.t === '#tombstone' &&
+            (frame.body as TombstoneEvt).did === userDid)
+        ) {
+          types.push(frame.body)
+        }
+      }
+    }
+    return types
   }
 
   const verifyCommitEvents = async (frames: Frame[]) => {
@@ -275,6 +311,70 @@ describe('repo subscribe repos', () => {
     const handleEvts = getHandleEvts(evts.slice(-2))
     verifyHandleEvent(handleEvts[0], alice, 'alice2.test')
     verifyHandleEvent(handleEvts[1], bob, 'bob2.test')
+  })
+
+  it('syncs tombstones', async () => {
+    const baddie1 = (
+      await sc.createAccount('baddie1.test', {
+        email: 'baddie1@test.com',
+        handle: 'baddie1.test',
+        password: 'baddie1-pass',
+      })
+    ).did
+    const baddie2 = (
+      await sc.createAccount('baddie2.test', {
+        email: 'baddie2@test.com',
+        handle: 'baddie2.test',
+        password: 'baddie2-pass',
+      })
+    ).did
+
+    for (const did of [baddie1, baddie2]) {
+      await ctx.services.record(db).deleteForActor(did)
+      await ctx.services.repo(db).deleteRepo(did)
+      await ctx.services.account(db).deleteAccount(did)
+    }
+
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
+    )
+
+    const gen = byFrame(ws)
+    const evts = await readTillCaughtUp(gen)
+    ws.terminate()
+
+    const tombstoneEvts = getTombstoneEvts(evts.slice(-2))
+    verifyTombstoneEvent(tombstoneEvts[0], baddie1)
+    verifyTombstoneEvent(tombstoneEvts[1], baddie2)
+  })
+
+  it('account deletions invalidate all seq ops', async () => {
+    const baddie3 = (
+      await sc.createAccount('baddie3.test', {
+        email: 'baddie3@test.com',
+        handle: 'baddie3.test',
+        password: 'baddie3-pass',
+      })
+    ).did
+
+    await randomPost(baddie3)
+    await sc.updateHandle(baddie3, 'baddie3-update.test')
+
+    await ctx.services.record(db).deleteForActor(baddie3)
+    await ctx.services.repo(db).deleteRepo(baddie3)
+    await ctx.services.account(db).deleteAccount(baddie3)
+
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
+    )
+
+    const gen = byFrame(ws)
+    const evts = await readTillCaughtUp(gen)
+    ws.terminate()
+
+    const didEvts = getAllEvents(baddie3, evts)
+    expect(didEvts.length).toBe(1)
+    verifyTombstoneEvent(didEvts[0], baddie3)
   })
 
   it('does not return invalidated events', async () => {

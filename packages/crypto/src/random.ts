@@ -1,15 +1,9 @@
+import * as noble from '@noble/hashes/utils'
 import * as uint8arrays from 'uint8arrays'
-import { webcrypto } from 'one-webcrypto'
 import { SupportedEncodings } from 'uint8arrays/to-string'
 import { sha256 } from './sha'
 
-export const randomBytes = (length: number): Uint8Array => {
-  return webcrypto.getRandomValues(new Uint8Array(length))
-}
-
-export const randomIV = (): Uint8Array => {
-  return randomBytes(12)
-}
+export const randomBytes = noble.randomBytes
 
 export const randomStr = (
   byteLength: number,

@@ -26,8 +26,9 @@ import {
   FeedGenInfoMap,
 } from './types'
 import { LabelService } from '../label'
-import { FeedViews } from './views'
 import { ActorService } from '../actor'
+import { GraphService } from '../graph'
+import { FeedViews } from './views'
 
 export * from './types'
 
@@ -42,6 +43,7 @@ export class FeedService {
   services = {
     label: LabelService.creator()(this.db),
     actor: ActorService.creator(this.imgUriBuilder)(this.db),
+    graph: GraphService.creator(this.imgUriBuilder)(this.db),
   }
 
   selectPostQb() {
@@ -297,17 +299,27 @@ export class FeedService {
     const nestedFeedGenUris = nestedUris.filter(
       (uri) => new AtUri(uri).collection === ids.AppBskyFeedGenerator,
     )
-    const [postViews, actorViews, deepEmbedViews, labelViews, feedGenViews] =
-      await Promise.all([
-        this.getPostViews(nestedPostUris, requester),
-        this.getActorViews(nestedDids, requester, { skipLabels: true }),
-        this.embedsForPosts(nestedPostUris, requester, _depth + 1),
-        this.services.label.getLabelsForSubjects([
-          ...nestedPostUris,
-          ...nestedDids,
-        ]),
-        this.getFeedGeneratorViews(nestedFeedGenUris, requester),
-      ])
+    const nestedListUris = nestedUris.filter(
+      (uri) => new AtUri(uri).collection === ids.AppBskyGraphList,
+    )
+    const [
+      postViews,
+      actorViews,
+      deepEmbedViews,
+      labelViews,
+      feedGenViews,
+      listViews,
+    ] = await Promise.all([
+      this.getPostViews(nestedPostUris, requester),
+      this.getActorViews(nestedDids, requester, { skipLabels: true }),
+      this.embedsForPosts(nestedPostUris, requester, _depth + 1),
+      this.services.label.getLabelsForSubjects([
+        ...nestedPostUris,
+        ...nestedDids,
+      ]),
+      this.getFeedGeneratorViews(nestedFeedGenUris, requester),
+      this.services.graph.getListViews(nestedListUris, requester),
+    ])
     let embeds = images.reduce((acc, cur) => {
       const embed = (acc[cur.postUri] ??= {
         $type: 'app.bsky.embed.images#view',
@@ -357,6 +369,16 @@ export class FeedService {
               feedGenViews[cur.uri],
               actorViews,
               labelViews,
+            ),
+          },
+        }
+      } else if (collection === ids.AppBskyGraphList && listViews[cur.uri]) {
+        recordEmbed = {
+          record: {
+            $type: 'app.bsky.graph.defs#listView',
+            ...this.services.graph.formatListView(
+              listViews[cur.uri],
+              actorViews,
             ),
           },
         }
