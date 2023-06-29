@@ -13,7 +13,6 @@ import {
 import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
-import { PostHierarchy } from '../../../db/tables/post-hierarchy'
 import { Notification } from '../../../db/tables/notification'
 import { toSimplifiedISOSafe } from '../util'
 import Database from '../../../db'
@@ -25,6 +24,11 @@ type Post = Selectable<DatabaseSchemaType['post']>
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
 type PostEmbedExternal = DatabaseSchemaType['post_embed_external']
 type PostEmbedRecord = DatabaseSchemaType['post_embed_record']
+type PostHierarchy = {
+  uri: string
+  ancestorUri: string
+  depth: number
+}
 type IndexedPost = {
   post: Post
   facets?: { type: 'mention' | 'link'; value: string }[]
@@ -162,67 +166,13 @@ const insertFn = async (
       depth: 1,
     })
   }
-  const ancestors = await db
-    .insertInto('post_hierarchy')
-    .values(minimalPostHierarchy)
-    .onConflict((oc) => oc.doNothing())
-    .returningAll()
-    .execute()
-
-  // Copy all the parent's relations down to the post.
-  // It's possible that the parent hasn't been indexed yet and this will no-op.
-  if (post.replyParent) {
-    const deepAncestors = await db
-      .insertInto('post_hierarchy')
-      .columns(['uri', 'ancestorUri', 'depth'])
-      .expression(
-        db
-          .selectFrom('post_hierarchy as parent_hierarchy')
-          .where('parent_hierarchy.uri', '=', post.replyParent)
-          .select([
-            sql`${post.uri}`.as('uri'),
-            'ancestorUri',
-            sql`depth + 1`.as('depth'),
-          ]),
-      )
-      .onConflict((oc) => oc.doNothing())
-      .returningAll()
-      .execute()
-    ancestors.push(...deepAncestors)
-  }
-
-  // Copy all post's relations down to its descendents. This ensures
-  // that out-of-order indexing (i.e. descendent before parent) is resolved.
-  const descendents = await db
-    .insertInto('post_hierarchy')
-    .columns(['uri', 'ancestorUri', 'depth'])
-    .expression(
-      db
-        .selectFrom('post_hierarchy as target')
-        .innerJoin(
-          'post_hierarchy as source',
-          'source.ancestorUri',
-          'target.uri',
-        )
-        .where('target.uri', '=', post.uri)
-        .select([
-          'source.uri as uri',
-          'target.ancestorUri as ancestorUri',
-          sql`source.depth + target.depth`.as('depth'),
-        ]),
-    )
-    .onConflict((oc) => oc.doNothing())
-    .returningAll()
-    .execute()
-
   return {
     post: insertedPost,
     facets,
     embeds,
-    ancestors,
-    descendents: await collateDescendents(db, descendents),
+    ancestors: [], // @TODO(post_hierarchy)
+    descendents: [], // @TODO(post_hierarchy)
   }
-  // return { post: insertedPost, facets, embeds, ancestors }
 }
 
 const findDuplicate = async (): Promise<AtUri | null> => {
@@ -341,19 +291,12 @@ const deleteFn = async (
   if (deletedPosts) {
     deletedEmbeds.push(deletedPosts)
   }
-  // Do not delete, maintain thread hierarchy even if post no longer exists
-  const ancestors = await db
-    .selectFrom('post_hierarchy')
-    .where('uri', '=', uriStr)
-    .where('depth', '>', 0)
-    .selectAll()
-    .execute()
   return deleted
     ? {
         post: deleted,
         facets: [], // Not used
         embeds: deletedEmbeds,
-        ancestors,
+        ancestors: [], // @TODO(post_hierarchy)
       }
     : null
 }
@@ -430,6 +373,7 @@ function separateEmbeds(embed: PostRecord['embed']) {
   return [embed]
 }
 
+// @TODO(post_hierarchy)
 async function collateDescendents(
   db: DatabaseSchema,
   descendents: PostHierarchy[],
