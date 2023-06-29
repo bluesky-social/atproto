@@ -24,7 +24,7 @@ export class ImageProcessingServer {
   uriBuilder: ImageUriBuilder
 
   constructor(public cfg: ServerConfig, public cache: BlobCache) {
-    this.uriBuilder = new ImageUriBuilder('', cfg.imgUriSalt, cfg.imgUriKey)
+    this.uriBuilder = new ImageUriBuilder('')
     this.app.get('*', this.handler.bind(this))
     this.app.use(errorMiddleware)
   }
@@ -36,12 +36,17 @@ export class ImageProcessingServer {
   ) {
     try {
       const path = req.path
-      const options = this.uriBuilder.getVerifiedOptions(path)
+      const options = ImageUriBuilder.getOptions(path)
+      const cacheKey = [
+        options.did,
+        options.cid.toString(),
+        options.preset,
+      ].join('::')
 
       // Cached flow
 
       try {
-        const cachedImage = await this.cache.get(options.signature)
+        const cachedImage = await this.cache.get(cacheKey)
         res.statusCode = 200
         res.setHeader('x-cache', 'hit')
         res.setHeader('content-type', getMime(options.format))
@@ -69,7 +74,7 @@ export class ImageProcessingServer {
 
       // Cache in the background
       this.cache
-        .put(options.signature, cloneStream(processedImage))
+        .put(cacheKey, cloneStream(processedImage))
         .catch((err) => log.error(err, 'failed to cache image'))
       // Respond
       res.statusCode = 200
