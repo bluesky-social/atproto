@@ -37,7 +37,7 @@ export class AppContext {
       services: Services
       messageDispatcher: MessageDispatcher
       sequencer: Sequencer
-      sequencerLeader: SequencerLeader
+      sequencerLeader: SequencerLeader | null
       labeler: Labeler
       backgroundQueue: BackgroundQueue
       crawlers: Crawlers
@@ -123,7 +123,7 @@ export class AppContext {
     return this.opts.sequencer
   }
 
-  get sequencerLeader(): SequencerLeader {
+  get sequencerLeader(): SequencerLeader | null {
     return this.opts.sequencerLeader
   }
 

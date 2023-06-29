@@ -54,6 +54,7 @@ export interface ServerConfigValues {
   maxSubscriptionBuffer: number
   repoBackfillLimitMs: number
   sequencerLeaderLockId?: number
+  sequencerLeaderEnabled?: boolean
 
   bskyAppViewEndpoint?: string
   bskyAppViewDid?: string
@@ -172,6 +173,12 @@ export class ServerConfig {
       undefined,
     )
 
+    // by default each instance is a potential sequencer leader, but may be configured off
+    const sequencerLeaderEnabled = process.env.SEQUENCER_LEADER_ENABLED
+      ? process.env.SEQUENCER_LEADER_ENABLED !== '0' &&
+        process.env.SEQUENCER_LEADER_ENABLED !== 'false'
+      : undefined
+
     const bskyAppViewEndpoint = nonemptyString(
       process.env.BSKY_APP_VIEW_ENDPOINT,
     )
@@ -221,6 +228,7 @@ export class ServerConfig {
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
       sequencerLeaderLockId,
+      sequencerLeaderEnabled,
       bskyAppViewEndpoint,
       bskyAppViewDid,
       crawlersToNotify,
@@ -412,6 +420,10 @@ export class ServerConfig {
 
   get sequencerLeaderLockId() {
     return this.cfg.sequencerLeaderLockId
+  }
+
+  get sequencerLeaderEnabled() {
+    return this.cfg.sequencerLeaderEnabled !== false
   }
 
   get bskyAppViewEndpoint() {
