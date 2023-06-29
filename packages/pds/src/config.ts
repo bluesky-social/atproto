@@ -55,6 +55,9 @@ export interface ServerConfigValues {
   repoBackfillLimitMs: number
   sequencerLeaderLockId?: number
 
+  // this is really only used in test environments
+  dbTxLockNonce?: string
+
   bskyAppViewEndpoint?: string
   bskyAppViewDid?: string
 
@@ -172,6 +175,8 @@ export class ServerConfig {
       undefined,
     )
 
+    const dbTxLockNonce = nonemptyString(process.env.DB_TX_LOCK_NONCE)
+
     const bskyAppViewEndpoint = nonemptyString(
       process.env.BSKY_APP_VIEW_ENDPOINT,
     )
@@ -221,6 +226,7 @@ export class ServerConfig {
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
       sequencerLeaderLockId,
+      dbTxLockNonce,
       bskyAppViewEndpoint,
       bskyAppViewDid,
       crawlersToNotify,
@@ -412,6 +418,10 @@ export class ServerConfig {
 
   get sequencerLeaderLockId() {
     return this.cfg.sequencerLeaderLockId
+  }
+
+  get dbTxLockNonce() {
+    return this.cfg.dbTxLockNonce
   }
 
   get bskyAppViewEndpoint() {

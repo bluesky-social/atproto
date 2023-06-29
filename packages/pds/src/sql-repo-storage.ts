@@ -26,17 +26,9 @@ export class SqlRepoStorage extends RepoStorage {
   }
 
   // note this method will return null if the repo has a lock on it currently
-  async lockHead(): Promise<CID | null> {
-    let builder = this.db.db
-      .selectFrom('repo_root')
-      .selectAll()
-      .where('did', '=', this.did)
-    if (this.db.dialect !== 'sqlite') {
-      builder = builder.forUpdate().skipLocked()
-    }
-    const res = await builder.executeTakeFirst()
-    if (!res) return null
-    return CID.parse(res.root)
+  async lockRepo(): Promise<boolean> {
+    if (this.db.dialect === 'sqlite') return true
+    return this.db.txAdvisoryLock(this.did)
   }
 
   async getHead(): Promise<CID | null> {
