@@ -2,8 +2,6 @@ import { CID } from 'multiformats/cid'
 import * as crypto from '@atproto/crypto'
 import {
   BlobStore,
-  MemoryBlockstore,
-  BlockMap,
   CommitData,
   RebaseData,
   Repo,
@@ -272,25 +270,28 @@ export class RepoService {
       .where('did', '=', did)
       .select(['uri', 'cid'])
       .execute()
-    const memoryStore = new MemoryBlockstore()
-    let data = await repo.MST.create(memoryStore)
+    // this will do everything in memory & shouldn't touch storage until we do .getUnstoredBlocks
+    let data = await repo.MST.create(storage)
     for (const record of records) {
       const uri = new AtUri(record.uri)
       const cid = CID.parse(record.cid)
       const dataKey = repo.formatDataKey(uri.collection, uri.rkey)
       data = await data.add(dataKey, cid)
     }
+    // this looks for unstored blocks recursively & bails when it encounters a block it has
+    // in most cases, there should be no unstored blocks, but this allows for recovery of repos in a broken state
+    const unstoredData = await data.getUnstoredBlocks()
     const commit = await repo.signCommit(
       {
         did,
         version: 2,
         prev: null,
-        data: await data.getPointer(),
+        data: unstoredData.root,
       },
       this.repoSigningKey,
     )
+    const newBlocks = unstoredData.blocks
     const currCids = await data.allCids()
-    const newBlocks = new BlockMap()
     const commitCid = await newBlocks.add(commit)
     return {
       commit: commitCid,
