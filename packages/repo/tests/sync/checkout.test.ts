@@ -22,7 +22,6 @@ describe('Checkout Sync', () => {
     repo = await Repo.create(storage, repoDid, keypair)
     syncStorage = new MemoryBlockstore()
     const filled = await util.fillRepo(repo, keypair, 20)
-    // const filled = await util.fillRepo(repo, keypair, 2)
     repo = filled.repo
     repoData = filled.data
   })
