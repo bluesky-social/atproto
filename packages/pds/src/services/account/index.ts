@@ -6,7 +6,7 @@ import * as scrypt from '../../db/scrypt'
 import { UserAccountEntry } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
-import { countAll, notSoftDeletedClause, nullToZero } from '../../db/util'
+import { countAll, notSoftDeletedClause } from '../../db/util'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
@@ -42,6 +42,17 @@ export class AccountService {
       .selectAll('repo_root')
       .executeTakeFirst()
     return result || null
+  }
+
+  // Repo exists and is not taken-down
+  async isRepoAvailable(did: string) {
+    const found = await this.db.db
+      .selectFrom('repo_root')
+      .where('did', '=', did)
+      .where('takedownId', 'is', null)
+      .select('did')
+      .executeTakeFirst()
+    return found !== undefined
   }
 
   async getAccountByEmail(
@@ -322,19 +333,16 @@ export class AccountService {
       .deleteFrom('did_handle')
       .where('did_handle.did', '=', did)
       .execute()
+    const seqEvt = await sequencer.formatSeqTombstone(did)
+    await this.db.transaction(async (txn) => {
+      await sequencer.sequenceEvt(txn, seqEvt)
+    })
   }
 
   selectInviteCodesQb() {
     const ref = this.db.db.dynamic.ref
     const builder = this.db.db
-      .with('use_count', (qb) =>
-        qb
-          .selectFrom('invite_code_use')
-          .groupBy('code')
-          .select(['code', countAll.as('uses')]),
-      )
       .selectFrom('invite_code')
-      .leftJoin('use_count', 'invite_code.code', 'use_count.code')
       .select([
         'invite_code.code as code',
         'invite_code.availableUses as available',
@@ -342,7 +350,11 @@ export class AccountService {
         'invite_code.forUser as forAccount',
         'invite_code.createdBy as createdBy',
         'invite_code.createdAt as createdAt',
-        nullToZero(ref('use_count.uses')).as('uses'),
+        this.db.db
+          .selectFrom('invite_code_use')
+          .select(countAll.as('count'))
+          .whereRef('invite_code_use.code', '=', ref('invite_code.code'))
+          .as('uses'),
       ])
     return this.db.db.selectFrom(builder.as('codes')).selectAll()
   }
@@ -366,7 +378,7 @@ export class AccountService {
     return uses
   }
 
-  async getAccountInviteCodes(did: string) {
+  async getAccountInviteCodes(did: string): Promise<CodeDetail[]> {
     const res = await this.selectInviteCodesQb()
       .where('forAccount', '=', did)
       .execute()
@@ -466,7 +478,7 @@ export class AccountService {
 
 export type UserPreference = Record<string, unknown> & { $type: string }
 
-type CodeDetail = {
+export type CodeDetail = {
   code: string
   available: number
   disabled: boolean

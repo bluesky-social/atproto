@@ -23,6 +23,7 @@ import {
 } from '../types'
 import { LabelService } from '../label'
 import { ActorService } from '../actor'
+import { GraphService } from '../graph'
 import { FeedViews } from './views'
 import { FeedGenInfoMap } from './types'
 
@@ -34,6 +35,7 @@ export class FeedService {
   services = {
     label: LabelService.creator()(this.db),
     actor: ActorService.creator(this.imgUriBuilder)(this.db),
+    graph: GraphService.creator(this.imgUriBuilder)(this.db),
   }
 
   static creator(imgUriBuilder: ImageUriBuilder) {
@@ -41,13 +43,8 @@ export class FeedService {
   }
 
   selectPostQb() {
-    const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('post')
-      .innerJoin('actor as author', 'author.did', 'post.creator')
-      .innerJoin('record', 'record.uri', 'post.uri')
-      .where(notSoftDeletedClause(ref('author')))
-      .where(notSoftDeletedClause(ref('record')))
       .select([
         sql<FeedItemType>`${'post'}`.as('type'),
         'post.uri as uri',
@@ -62,20 +59,9 @@ export class FeedService {
   }
 
   selectFeedItemQb() {
-    const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('feed_item')
       .innerJoin('post', 'post.uri', 'feed_item.postUri')
-      .innerJoin('actor as author', 'author.did', 'post.creator')
-      .innerJoin(
-        'actor as originator',
-        'originator.did',
-        'feed_item.originatorDid',
-      )
-      .innerJoin('record as post_record', 'post_record.uri', 'post.uri')
-      .where(notSoftDeletedClause(ref('author')))
-      .where(notSoftDeletedClause(ref('originator')))
-      .where(notSoftDeletedClause(ref('post_record')))
       .selectAll('feed_item')
       .select([
         'post.replyRoot',
@@ -85,10 +71,14 @@ export class FeedService {
   }
 
   selectFeedGeneratorQb(viewer?: string | null) {
+    const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('feed_generator')
       .innerJoin('actor', 'actor.did', 'feed_generator.creator')
+      .innerJoin('record', 'record.uri', 'feed_generator.uri')
       .selectAll('feed_generator')
+      .where(notSoftDeletedClause(ref('actor')))
+      .where(notSoftDeletedClause(ref('record')))
       .select((qb) =>
         qb
           .selectFrom('like')
@@ -120,8 +110,9 @@ export class FeedService {
     const [actors, labels, listMutes] = await Promise.all([
       this.db.db
         .selectFrom('actor')
-        .where('actor.did', 'in', dids)
         .leftJoin('profile', 'profile.creator', 'actor.did')
+        .where('actor.did', 'in', dids)
+        .where(notSoftDeletedClause(ref('actor')))
         .selectAll('actor')
         .select([
           'profile.uri as profileUri',
@@ -219,7 +210,7 @@ export class FeedService {
         'post.uri as uri',
         'post.cid as cid',
         'post.creator as creator',
-        'post.indexedAt as indexedAt',
+        'post.sortAt as indexedAt',
         'record.json as recordJson',
         'post_agg.likeCount as likeCount',
         'post_agg.repostCount as repostCount',
@@ -252,7 +243,7 @@ export class FeedService {
   async getFeedGeneratorViews(generatorUris: string[], viewer: string | null) {
     if (generatorUris.length < 1) return {}
     const feedGens = await this.selectFeedGeneratorQb(viewer)
-      .where('uri', 'in', generatorUris)
+      .where('feed_generator.uri', 'in', generatorUris)
       .execute()
     return feedGens.reduce(
       (acc, cur) => ({
@@ -306,17 +297,24 @@ export class FeedService {
     const nestedFeedGenUris = nestedUris.filter(
       (uri) => new AtUri(uri).collection === ids.AppBskyFeedGenerator,
     )
-    const [postViews, actorViews, deepEmbedViews, labelViews, feedGenViews] =
-      await Promise.all([
-        this.getPostViews(nestedPostUris, viewer),
-        this.getActorViews(nestedDids, viewer, { skipLabels: true }),
-        this.embedsForPosts(nestedUris, viewer, _depth + 1),
-        this.services.label.getLabelsForSubjects([
-          ...nestedUris,
-          ...nestedDids,
-        ]),
-        this.getFeedGeneratorViews(nestedFeedGenUris, viewer),
-      ])
+    const nestedListUris = nestedUris.filter(
+      (uri) => new AtUri(uri).collection === ids.AppBskyGraphList,
+    )
+    const [
+      postViews,
+      actorViews,
+      deepEmbedViews,
+      labelViews,
+      feedGenViews,
+      listViews,
+    ] = await Promise.all([
+      this.getPostViews(nestedPostUris, viewer),
+      this.getActorViews(nestedDids, viewer, { skipLabels: true }),
+      this.embedsForPosts(nestedUris, viewer, _depth + 1),
+      this.services.label.getLabelsForSubjects([...nestedUris, ...nestedDids]),
+      this.getFeedGeneratorViews(nestedFeedGenUris, viewer),
+      this.services.graph.getListViews(nestedListUris, viewer),
+    ])
     let embeds = images.reduce((acc, cur) => {
       const embed = (acc[cur.postUri] ??= {
         $type: 'app.bsky.embed.images#view',
@@ -371,6 +369,16 @@ export class FeedService {
               feedGenViews[cur.uri],
               actorViews,
               labelViews,
+            ),
+          },
+        }
+      } else if (collection === ids.AppBskyGraphList && listViews[cur.uri]) {
+        recordEmbed = {
+          record: {
+            $type: 'app.bsky.graph.defs#listView',
+            ...this.services.graph.formatListView(
+              listViews[cur.uri],
+              actorViews,
             ),
           },
         }
