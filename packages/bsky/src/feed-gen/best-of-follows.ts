@@ -7,30 +7,33 @@ import AppContext from '../context'
 const handler: AlgoHandler = async (
   ctx: AppContext,
   params: SkeletonParams,
-  requester: string,
+  viewer: string,
 ): Promise<AlgoResponse> => {
   const { limit, cursor } = params
   const feedService = ctx.services.feed(ctx.db)
+  const graphService = ctx.services.graph(ctx.db)
 
   const { ref } = ctx.db.db.dynamic
 
   // candidates are ranked within a materialized view by like count, depreciated over time.
 
-  // @TODO apply blocks and mutes
   let builder = feedService
     .selectPostQb()
     .innerJoin('algo_whats_hot_view as candidate', 'candidate.uri', 'post.uri')
-    .leftJoin('post_embed_record', 'post_embed_record.postUri', 'post.uri')
     .where((qb) =>
       qb
-        .where('post.creator', '=', requester)
+        .where('post.creator', '=', viewer)
         .orWhereExists((inner) =>
           inner
             .selectFrom('follow')
-            .where('follow.creator', '=', requester)
+            .where('follow.creator', '=', viewer)
             .whereRef('follow.subjectDid', '=', 'post.creator'),
         ),
     )
+    .where((qb) =>
+      graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
+    )
+    .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
     .select('candidate.score')
     .select('candidate.cid')
 

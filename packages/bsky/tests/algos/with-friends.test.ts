@@ -24,7 +24,7 @@ describe.skip('algo with friends', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'algo_with_friends',
+      dbPostgresSchema: 'bsky_algo_with_friends',
       bsky: { algos: makeAlgos(feedPublisherDid) },
     })
     agent = new AtpAgent({ service: network.bsky.url })

@@ -4,6 +4,7 @@ import { CID } from 'multiformats/cid'
 import { ValidationResult, ValidationError } from '../types'
 import { ensureValidDid, ensureValidHandle } from '@atproto/identifier'
 import { ensureValidNsid } from '@atproto/nsid'
+import { validateLanguage } from '@atproto/common-web'
 
 export function datetime(path: string, value: string): ValidationResult {
   try {
@@ -104,4 +105,17 @@ export function cid(path: string, value: string): ValidationResult {
     }
   }
   return { success: true, value }
+}
+
+// The language format validates well-formed BCP 47 language tags: https://www.rfc-editor.org/info/bcp47
+export function language(path: string, value: string): ValidationResult {
+  if (validateLanguage(value)) {
+    return { success: true, value }
+  }
+  return {
+    success: false,
+    error: new ValidationError(
+      `${path} must be a well-formed BCP 47 language tag`,
+    ),
+  }
 }

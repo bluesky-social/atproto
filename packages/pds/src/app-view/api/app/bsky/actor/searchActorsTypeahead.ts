@@ -4,7 +4,7 @@ import { Server } from '../../../../../lexicon'
 import * as Method from '../../../../../lexicon/types/app/bsky/actor/searchActorsTypeahead'
 import {
   cleanTerm,
-  getUserSearchQueryPg,
+  getUserSearchQuerySimplePg,
   getUserSearchQuerySqlite,
 } from '../../../../../services/util/search'
 import { DidHandle } from '../../../../../db/tables/did-handle'
@@ -65,7 +65,7 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 const getResultsPg: GetResultsFn = async (db, { term, limit }) => {
-  return await getUserSearchQueryPg(db, { term: term || '', limit })
+  return await getUserSearchQuerySimplePg(db, { term: term || '', limit })
     .selectAll('did_handle')
     .execute()
 }

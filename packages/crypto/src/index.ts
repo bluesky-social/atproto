@@ -1,4 +1,3 @@
-export * from './aes'
 export * from './const'
 export * from './did'
 export * from './multibase'

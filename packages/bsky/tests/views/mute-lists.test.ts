@@ -1,7 +1,7 @@
 import AtpAgent, { AtUri } from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
-import { SeedClient } from '../seeds/client'
+import { RecordRef, SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('bsky views with mutes from mute lists', () => {
@@ -38,6 +38,7 @@ describe('bsky views with mutes from mute lists', () => {
   })
 
   let listUri: string
+  let listCid: string
 
   it('creates a list with some items', async () => {
     const avatar = await sc.uploadFile(
@@ -58,6 +59,7 @@ describe('bsky views with mutes from mute lists', () => {
       sc.getHeaders(alice),
     )
     listUri = list.uri
+    listCid = list.cid
     await pdsAgent.api.app.bsky.graph.listitem.create(
       { repo: alice },
       {
@@ -329,5 +331,22 @@ describe('bsky views with mutes from mute lists', () => {
     expect(got.data.list.description).toBe('new descript')
     expect(got.data.list.avatar).toBeUndefined()
     expect(got.data.items.length).toBe(2)
+  })
+
+  it('embeds lists in posts', async () => {
+    const postRef = await sc.post(
+      alice,
+      'list embed!',
+      undefined,
+      undefined,
+      new RecordRef(listUri, listCid),
+    )
+    await network.processAll()
+    const res = await agent.api.app.bsky.feed.getPosts(
+      { uris: [postRef.ref.uriStr] },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(res.data.posts.length).toBe(1)
+    expect(forSnapshot(res.data.posts[0])).toMatchSnapshot()
   })
 })

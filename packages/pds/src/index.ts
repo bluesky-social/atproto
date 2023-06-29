@@ -11,6 +11,7 @@ import events from 'events'
 import { createTransport } from 'nodemailer'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
+import { IdResolver } from '@atproto/identity'
 import * as appviewConsumers from './app-view/event-stream/consumers'
 import inProcessAppView from './app-view/api'
 import API from './api'
@@ -19,6 +20,7 @@ import * as wellKnown from './well-known'
 import Database from './db'
 import { ServerAuth } from './auth'
 import * as error from './error'
+import compression from './util/compression'
 import { dbLogger, loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
@@ -37,7 +39,6 @@ import {
 import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
 import { BackgroundQueue } from './event-stream/background-queue'
 import DidSqlCache from './did-cache'
-import { IdResolver } from '@atproto/identity'
 import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
 
@@ -113,6 +114,7 @@ export class PDS {
     const app = express()
     app.use(cors())
     app.use(loggerMiddleware)
+    app.use(compression())
 
     let imgUriEndpoint = config.imgUriEndpoint
     if (!imgUriEndpoint) {

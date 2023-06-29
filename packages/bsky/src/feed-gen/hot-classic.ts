@@ -23,10 +23,10 @@ const handler: AlgoHandler = async (
 ): Promise<AlgoResponse> => {
   const { limit = 50, cursor } = params
   const feedService = ctx.services.feed(ctx.db)
+  const graphService = ctx.services.graph(ctx.db)
 
   const { ref } = ctx.db.db.dynamic
 
-  // @TODO apply blocks and mutes
   const postsQb = feedService
     .selectPostQb()
     .leftJoin('post_agg', 'post_agg.uri', 'post.uri')
@@ -46,6 +46,10 @@ const handler: AlgoHandler = async (
             .orWhereRef('label.uri', '=', ref('post_embed_record.embedUri')),
         ),
     )
+    .where((qb) =>
+      graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
+    )
+    .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
 
   const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))
 

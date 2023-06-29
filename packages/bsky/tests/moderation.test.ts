@@ -22,7 +22,7 @@ describe('moderation', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'moderation',
+      dbPostgresSchema: 'bsky_moderation',
     })
     agent = network.bsky.getClient()
     const pdsAgent = network.pds.getClient()
