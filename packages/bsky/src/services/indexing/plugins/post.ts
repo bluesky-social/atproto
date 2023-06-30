@@ -46,6 +46,10 @@ type IndexedPost = {
 
 const lexId = lex.ids.AppBskyFeedPost
 
+const REPLY_NOTIF_DEPTH = 5
+const BLESSED_HELL_THREAD =
+  'at://did:plc:wgaezxqi2spqm3mhrb5xvkzi/app.bsky.feed.post/3juzlwllznd24'
+
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
@@ -149,14 +153,15 @@ const insertFn = async (
 
   const ancestors = await getAncestorsAndSelfQb(db, {
     uri: post.uri,
-    parentHeight: Infinity,
+    parentHeight:
+      post.replyRoot === BLESSED_HELL_THREAD ? 100 : REPLY_NOTIF_DEPTH,
   })
     .selectFrom('ancestor')
     .selectAll()
     .execute()
   const descendents = await getDescendentsQb(db, {
     uri: post.uri,
-    depth: Infinity,
+    depth: post.replyRoot === BLESSED_HELL_THREAD ? 100 : REPLY_NOTIF_DEPTH,
   })
     .selectFrom('descendent')
     .innerJoin('post', 'post.uri', 'descendent.uri')
@@ -214,11 +219,12 @@ const notifsForInsert = (obj: IndexedPost) => {
     }
   }
 
-  const BLESSED_HELL_THREAD =
-    'at://did:plc:wgaezxqi2spqm3mhrb5xvkzi/app.bsky.feed.post/3juzlwllznd24'
   for (const ancestor of obj.ancestors ?? []) {
     if (ancestor.uri === obj.post.uri) continue // no need to notify for own post
-    if (ancestor.height < 5 || obj.post.replyRoot === BLESSED_HELL_THREAD) {
+    if (
+      ancestor.height < REPLY_NOTIF_DEPTH ||
+      obj.post.replyRoot === BLESSED_HELL_THREAD
+    ) {
       const ancestorUri = new AtUri(ancestor.uri)
       maybeNotify({
         did: ancestorUri.host,
@@ -237,7 +243,10 @@ const notifsForInsert = (obj: IndexedPost) => {
   for (const descendent of obj.descendents ?? []) {
     for (const ancestor of obj.ancestors ?? []) {
       const totalHeight = descendent.depth + ancestor.height
-      if (totalHeight < 5 || obj.post.replyRoot === BLESSED_HELL_THREAD) {
+      if (
+        totalHeight < REPLY_NOTIF_DEPTH ||
+        obj.post.replyRoot === BLESSED_HELL_THREAD
+      ) {
         const ancestorUri = new AtUri(ancestor.uri)
         maybeNotify({
           did: ancestorUri.host,

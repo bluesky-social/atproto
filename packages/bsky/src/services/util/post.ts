@@ -5,7 +5,7 @@ export const getDescendentsQb = (
   db: DatabaseSchema,
   opts: {
     uri: string
-    depth: number
+    depth: number // required, protects against cycles
   },
 ) => {
   const { uri, depth } = opts
@@ -33,7 +33,7 @@ export const getAncestorsAndSelfQb = (
   db: DatabaseSchema,
   opts: {
     uri: string
-    parentHeight: number
+    parentHeight: number // required, protects against cycles
   },
 ) => {
   const { uri, parentHeight } = opts
