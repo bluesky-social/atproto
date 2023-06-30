@@ -264,22 +264,6 @@ describe('handles', () => {
     expect(profile.data.handle).toBe('dril.test')
   })
 
-  it('disallows admin overrules of off-service domains', async () => {
-    const attempt = agent.api.com.atproto.admin.updateAccountHandle(
-      {
-        did: alice,
-        handle: 'alice-alt.test',
-      },
-      {
-        headers: { authorization: util.adminAuth() },
-        encoding: 'application/json',
-      },
-    )
-    await expect(attempt).rejects.toThrow(
-      'Account not on an available service domain: alice.external',
-    )
-  })
-
   it('disallows setting handle to an off-service domain', async () => {
     const attempt = agent.api.com.atproto.admin.updateAccountHandle(
       {

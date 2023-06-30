@@ -7,9 +7,20 @@ import { ProfileView } from '../../../../../lexicon/types/app/bsky/actor/defs'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getList({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
-      const { list, limit, cursor } = params
+    handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const res = await ctx.appviewAgent.api.app.bsky.graph.getList(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
+      const { list, limit, cursor } = params
       const { services, db } = ctx
       const { ref } = db.db.dynamic
 
@@ -57,6 +68,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const subject = {
         uri: listRes.uri,
+        cid: listRes.cid,
         creator,
         name: listRes.name,
         purpose: listRes.purpose,

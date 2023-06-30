@@ -9,6 +9,7 @@ import {
 } from '../../../../db/database-schema'
 import { BackgroundQueue } from '../../../../event-stream/background-queue'
 import RecordProcessor from '../processor'
+import { toSimplifiedISOSafe } from '../util'
 
 const lexId = lex.ids.AppBskyGraphList
 type IndexedList = DatabaseSchemaType['list']
@@ -33,7 +34,7 @@ const insertFn = async (
         ? JSON.stringify(obj.descriptionFacets)
         : undefined,
       avatarCid: obj.avatar?.ref.toString(),
-      createdAt: obj.createdAt,
+      createdAt: toSimplifiedISOSafe(obj.createdAt),
       indexedAt: timestamp,
     })
     .onConflict((oc) => oc.doNothing())

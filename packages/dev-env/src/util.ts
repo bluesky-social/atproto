@@ -1,13 +1,22 @@
-import { DidResolver, HandleResolver } from '@atproto/identity'
+import { DidResolver, HandleResolver, IdResolver } from '@atproto/identity'
 import { TestPds } from './pds'
+import { TestBsky } from './bsky'
 
-export const mockNetworkUtilities = (pds: TestPds) => {
+export const mockNetworkUtilities = async (pds: TestPds, bsky?: TestBsky) => {
+  await mockResolvers(pds.ctx.idResolver, pds)
+  if (bsky) {
+    await mockResolvers(bsky.ctx.idResolver, pds)
+  }
+}
+
+export const mockResolvers = (idResolver: IdResolver, pds: TestPds) => {
   // Map pds public url to its local url when resolving from plc
-  const origResolveDid = DidResolver.prototype.resolveNoCache
-  DidResolver.prototype.resolveNoCache = async function (did) {
-    const result = await (origResolveDid.call(this, did) as ReturnType<
-      typeof origResolveDid
-    >)
+  const origResolveDid = idResolver.did.resolveNoCache
+  idResolver.did.resolveNoCache = async (did: string) => {
+    const result = await (origResolveDid.call(
+      idResolver.did,
+      did,
+    ) as ReturnType<typeof origResolveDid>)
     const service = result?.service?.find((svc) => svc.id === '#atproto_pds')
     if (typeof service?.serviceEndpoint === 'string') {
       service.serviceEndpoint = service.serviceEndpoint.replace(
@@ -18,7 +27,7 @@ export const mockNetworkUtilities = (pds: TestPds) => {
     return result
   }
 
-  HandleResolver.prototype.resolve = async function (handle: string) {
+  idResolver.handle.resolve = async (handle: string) => {
     const isPdsHandle = pds.ctx.cfg.availableUserDomains.some((domain) =>
       handle.endsWith(domain),
     )

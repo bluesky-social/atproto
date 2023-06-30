@@ -16,6 +16,9 @@ import RecordProcessor from '../processor'
 import { PostHierarchy } from '../../../db/tables/post-hierarchy'
 import { Notification } from '../../../db/tables/notification'
 import { toSimplifiedISOSafe } from '../util'
+import Database from '../../../db'
+import { countAll, excluded } from '../../../db/util'
+import { BackgroundQueue } from '../../../background'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -49,6 +52,9 @@ const insertFn = async (
     replyRootCid: obj.reply?.root?.cid || null,
     replyParent: obj.reply?.parent?.uri || null,
     replyParentCid: obj.reply?.parent?.cid || null,
+    langs: obj.langs?.length
+      ? sql<string[]>`${JSON.stringify(obj.langs)}` // sidesteps kysely's array serialization, which is non-jsonb
+      : null,
     indexedAt: timestamp,
   }
   const [insertedPost] = await Promise.all([
@@ -264,17 +270,21 @@ const notifsForInsert = (obj: IndexedPost) => {
   const ancestors = (obj.ancestors ?? [])
     .filter((a) => a.depth > 0) // no need to notify self
     .sort((a, b) => a.depth - b.depth)
+  const BLESSED_HELL_THREAD =
+    'at://did:plc:wgaezxqi2spqm3mhrb5xvkzi/app.bsky.feed.post/3juzlwllznd24'
   for (const relation of ancestors) {
-    const ancestorUri = new AtUri(relation.ancestorUri)
-    maybeNotify({
-      did: ancestorUri.host,
-      reason: 'reply',
-      reasonSubject: ancestorUri.toString(),
-      author: obj.post.creator,
-      recordUri: obj.post.uri,
-      recordCid: obj.post.cid,
-      sortAt: obj.post.indexedAt,
-    })
+    if (relation.depth < 5 || obj.post.replyRoot === BLESSED_HELL_THREAD) {
+      const ancestorUri = new AtUri(relation.ancestorUri)
+      maybeNotify({
+        did: ancestorUri.host,
+        reason: 'reply',
+        reasonSubject: ancestorUri.toString(),
+        author: obj.post.creator,
+        recordUri: obj.post.uri,
+        recordCid: obj.post.cid,
+        sortAt: obj.post.indexedAt,
+      })
+    }
   }
 
   if (obj.descendents) {
@@ -359,16 +369,52 @@ const notifsForDelete = (
   }
 }
 
+const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
+  const replyCountQb = postIdx.post.replyParent
+    ? db
+        .insertInto('post_agg')
+        .values({
+          uri: postIdx.post.replyParent,
+          replyCount: db
+            .selectFrom('post')
+            .where('post.replyParent', '=', postIdx.post.replyParent)
+            .select(countAll.as('count')),
+        })
+        .onConflict((oc) =>
+          oc
+            .column('uri')
+            .doUpdateSet({ replyCount: excluded(db, 'replyCount') }),
+        )
+    : null
+  const postsCountQb = db
+    .insertInto('profile_agg')
+    .values({
+      did: postIdx.post.creator,
+      postsCount: db
+        .selectFrom('post')
+        .where('post.creator', '=', postIdx.post.creator)
+        .select(countAll.as('count')),
+    })
+    .onConflict((oc) =>
+      oc.column('did').doUpdateSet({ postsCount: excluded(db, 'postsCount') }),
+    )
+  await Promise.all([replyCountQb?.execute(), postsCountQb.execute()])
+}
+
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>
 
-export const makePlugin = (db: DatabaseSchema): PluginType => {
-  return new RecordProcessor(db, {
+export const makePlugin = (
+  db: Database,
+  backgroundQueue: BackgroundQueue,
+): PluginType => {
+  return new RecordProcessor(db, backgroundQueue, {
     lexId,
     insertFn,
     findDuplicate,
     deleteFn,
     notifsForInsert,
     notifsForDelete,
+    updateAggregates,
   })
 }
 

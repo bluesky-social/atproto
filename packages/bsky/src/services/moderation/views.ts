@@ -1,11 +1,12 @@
 import { Selectable } from 'kysely'
 import { ArrayEl } from '@atproto/common'
 import { AtUri } from '@atproto/uri'
+import { INVALID_HANDLE } from '@atproto/identifier'
 import { BlobRef, jsonStringToLex } from '@atproto/lexicon'
 import Database from '../../db'
 import { Actor } from '../../db/tables/actor'
 import { Record as RecordRow } from '../../db/tables/record'
-import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
+import { ModerationAction } from '../../db/tables/moderation'
 import {
   RepoView,
   RepoViewDetail,
@@ -19,6 +20,7 @@ import {
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
+import { ModerationReportRowWithHandle } from '.'
 
 export class ModerationViews {
   constructor(private db: Database) {}
@@ -81,7 +83,7 @@ export class ModerationViews {
       return {
         // No email or invite info on appview
         did: r.did,
-        handle: r.handle,
+        handle: r.handle ?? INVALID_HANDLE,
         relatedRecords,
         indexedAt: r.indexedAt,
         moderation: {
@@ -372,25 +374,33 @@ export class ModerationViews {
       return acc
     }, {} as Record<string, number[]>)
 
-    const views: ReportView[] = results.map((res) => ({
-      id: res.id,
-      createdAt: res.createdAt,
-      reasonType: res.reasonType,
-      reason: res.reason ?? undefined,
-      reportedBy: res.reportedByDid,
-      subject:
-        res.subjectType === 'com.atproto.admin.defs#repoRef'
-          ? {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: res.subjectDid,
-            }
-          : {
-              $type: 'com.atproto.repo.strongRef',
-              uri: res.subjectUri,
-              cid: res.subjectCid,
-            },
-      resolvedByActionIds: actionIdsByReportId[res.id] ?? [],
-    }))
+    const views: ReportView[] = results.map((res) => {
+      const decoratedView: ReportView = {
+        id: res.id,
+        createdAt: res.createdAt,
+        reasonType: res.reasonType,
+        reason: res.reason ?? undefined,
+        reportedBy: res.reportedByDid,
+        subject:
+          res.subjectType === 'com.atproto.admin.defs#repoRef'
+            ? {
+                $type: 'com.atproto.admin.defs#repoRef',
+                did: res.subjectDid,
+              }
+            : {
+                $type: 'com.atproto.repo.strongRef',
+                uri: res.subjectUri,
+                cid: res.subjectCid,
+              },
+        resolvedByActionIds: actionIdsByReportId[res.id] ?? [],
+      }
+
+      if (res.handle) {
+        decoratedView.subjectRepoHandle = res.handle
+      }
+
+      return decoratedView
+    })
 
     return Array.isArray(result) ? views : views[0]
   }
@@ -542,7 +552,7 @@ type RepoResult = Actor
 
 type ActionResult = Selectable<ModerationAction>
 
-type ReportResult = Selectable<ModerationReport>
+type ReportResult = ModerationReportRowWithHandle
 
 type RecordResult = RecordRow
 

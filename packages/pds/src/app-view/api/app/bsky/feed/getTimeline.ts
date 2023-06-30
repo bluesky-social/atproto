@@ -5,15 +5,25 @@ import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
 
-// @TODO getTimeline() will be replaced by composeTimeline() in the app-view
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
+    handler: async ({ req, params, auth }) => {
+      const requester = auth.credentials.did
+      if (ctx.canProxy(req)) {
+        const res = await ctx.appviewAgent.api.app.bsky.feed.getTimeline(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
       const { algorithm, limit, cursor } = params
       const db = ctx.db.db
       const { ref } = db.dynamic
-      const requester = auth.credentials.did
 
       if (algorithm && algorithm !== FeedAlgorithm.ReverseChronological) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
@@ -60,7 +70,9 @@ export default function (server: Server, ctx: AppContext) {
         limit,
         cursor,
         keyset,
+        tryIndex: true,
       })
+
       const feedItems: FeedRow[] = await feedItemsQb.execute()
       const feed = await feedService.hydrateFeed(feedItems, requester)
 

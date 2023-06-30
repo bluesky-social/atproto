@@ -1,6 +1,9 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { cleanTerm, getUserSearchQuery } from '../../../../services/util/search'
+import {
+  cleanTerm,
+  getUserSearchQuerySimple,
+} from '../../../../services/util/search'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActorsTypeahead({
@@ -12,17 +15,23 @@ export default function (server: Server, ctx: AppContext) {
       const term = cleanTerm(rawTerm || '')
 
       const results = term
-        ? await getUserSearchQuery(db, { term, limit })
+        ? await getUserSearchQuerySimple(db, { term, limit })
             .selectAll('actor')
             .execute()
         : []
 
+      const actors = await services
+        .actor(db)
+        .views.profileBasic(results, requester)
+
+      const filtered = actors.filter(
+        (actor) => !actor.viewer?.blocking && !actor.viewer?.blockedBy,
+      )
+
       return {
         encoding: 'application/json',
         body: {
-          actors: await services
-            .actor(db)
-            .views.profileBasic(results, requester),
+          actors: filtered,
         },
       }
     },

@@ -90,7 +90,12 @@ export class SequencerLeader {
                 )
                 this.channelCb = null
               }
-              resolve()
+              const err = signal.reason
+              if (!err || err instanceof DisconnectError) {
+                resolve()
+              } else {
+                reject(err)
+              }
             })
           })
         })

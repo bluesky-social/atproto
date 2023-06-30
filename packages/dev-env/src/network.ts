@@ -48,12 +48,12 @@ export class TestNetwork extends TestNetworkNoAppView {
       ...params.pds,
     })
 
-    mockNetworkUtilities(pds)
+    mockNetworkUtilities(pds, bsky)
 
     return new TestNetwork(plc, pds, bsky)
   }
 
-  async processAll(timeout = 5000) {
+  async processFullSubscription(timeout = 5000) {
     if (!this.bsky) return
     const sub = this.bsky.sub
     if (!sub) return
@@ -75,10 +75,17 @@ export class TestNetwork extends TestNetworkNoAppView {
     throw new Error(`Sequence was not processed within ${timeout}ms`)
   }
 
-  async serviceHeaders(did: string) {
+  async processAll(timeout?: number) {
+    await this.pds.ctx.backgroundQueue.processAll()
+    if (!this.bsky) return
+    await this.processFullSubscription(timeout)
+    await this.bsky.ctx.backgroundQueue.processAll()
+  }
+
+  async serviceHeaders(did: string, aud?: string) {
     const jwt = await createServiceJwt({
       iss: did,
-      aud: this.bsky.ctx.cfg.serverDid,
+      aud: aud ?? this.bsky.ctx.cfg.serverDid,
       keypair: this.pds.ctx.repoSigningKey,
     })
     return { authorization: `Bearer ${jwt}` }
@@ -102,6 +109,7 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async close() {
+    await Promise.all(this.feedGens.map((fg) => fg.close()))
     await this.bsky.close()
     await this.pds.close()
     await this.plc.close()

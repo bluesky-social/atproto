@@ -11,6 +11,8 @@ import * as ComAtprotoAdminDefs from './defs'
 export interface QueryParams {
   subject?: string
   ignoreSubjects?: string[]
+  /** Filter reports made by one or more DIDs */
+  reporters?: string[]
   resolved?: boolean
   actionType?:
     | 'com.atproto.admin.defs#takedown'

@@ -488,6 +488,21 @@ export default [
   },
   {
     lexicon: 1,
+    id: 'com.example.language',
+    defs: {
+      main: {
+        type: 'record',
+        record: {
+          type: 'object',
+          properties: {
+            language: { type: 'string', format: 'language' },
+          },
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'com.example.byteLength',
     defs: {
       main: {

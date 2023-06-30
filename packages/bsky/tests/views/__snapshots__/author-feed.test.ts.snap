@@ -4,14 +4,16 @@ exports[`pds author feed views fetches full author feeds for self (sorted, minim
 Array [
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
       },
       "cid": "cids(0)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -47,8 +49,10 @@ Array [
           "handle": "bob.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(4)",
             "following": "record(3)",
+            "muted": false,
           },
         },
         "cid": "cids(3)",
@@ -126,7 +130,10 @@ Array [
           "displayName": "ali",
           "handle": "alice.test",
           "labels": Array [],
-          "viewer": Object {},
+          "viewer": Object {
+            "blockedBy": false,
+            "muted": false,
+          },
         },
         "cid": "cids(2)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -146,14 +153,16 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
       },
       "cid": "cids(5)",
       "embed": Object {
@@ -165,7 +174,9 @@ Array [
             "handle": "dan.test",
             "labels": Array [],
             "viewer": Object {
+              "blockedBy": false,
               "following": "record(7)",
+              "muted": false,
             },
           },
           "cid": "cids(6)",
@@ -179,8 +190,10 @@ Array [
                   "handle": "carol.test",
                   "labels": Array [],
                   "viewer": Object {
+                    "blockedBy": false,
                     "followedBy": "record(10)",
                     "following": "record(9)",
+                    "muted": false,
                   },
                 },
                 "cid": "cids(7)",
@@ -294,14 +307,16 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
       },
       "cid": "cids(2)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -320,14 +335,16 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
       },
       "cid": "cids(10)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -351,14 +368,16 @@ exports[`pds author feed views fetches full author feeds for self (sorted, minim
 Array [
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
         "displayName": "bobby",
         "handle": "bob.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
       },
       "cid": "cids(0)",
       "embed": Object {
@@ -437,8 +456,10 @@ Array [
           "handle": "alice.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(3)",
             "following": "record(2)",
+            "muted": false,
           },
         },
         "cid": "cids(3)",
@@ -466,8 +487,10 @@ Array [
           "handle": "alice.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(3)",
             "following": "record(2)",
+            "muted": false,
           },
         },
         "cid": "cids(3)",
@@ -490,14 +513,16 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
         "displayName": "bobby",
         "handle": "bob.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
       },
       "cid": "cids(4)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -516,14 +541,16 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
         "displayName": "bobby",
         "handle": "bob.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
       },
       "cid": "cids(5)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -532,6 +559,10 @@ Array [
       "record": Object {
         "$type": "app.bsky.feed.post",
         "createdAt": "1970-01-01T00:00:00.000Z",
+        "langs": Array [
+          "en-US",
+          "i-klingon",
+        ],
         "text": "bob back at it again!",
       },
       "replyCount": 0,
@@ -547,12 +578,14 @@ exports[`pds author feed views fetches full author feeds for self (sorted, minim
 Array [
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "did": "user(0)",
         "handle": "dan.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
       },
       "cid": "cids(0)",
       "embed": Object {
@@ -563,7 +596,10 @@ Array [
             "did": "user(2)",
             "handle": "carol.test",
             "labels": Array [],
-            "viewer": Object {},
+            "viewer": Object {
+              "blockedBy": false,
+              "muted": false,
+            },
           },
           "cid": "cids(1)",
           "embeds": Array [
@@ -594,7 +630,9 @@ Array [
                     "handle": "bob.test",
                     "labels": Array [],
                     "viewer": Object {
+                      "blockedBy": false,
                       "followedBy": "record(3)",
+                      "muted": false,
                     },
                   },
                   "cid": "cids(4)",
@@ -604,6 +642,10 @@ Array [
                   "value": Object {
                     "$type": "app.bsky.feed.post",
                     "createdAt": "1970-01-01T00:00:00.000Z",
+                    "langs": Array [
+                      "en-US",
+                      "i-klingon",
+                    ],
                     "text": "bob back at it again!",
                   },
                 },
@@ -698,19 +740,24 @@ Array [
         "did": "user(2)",
         "handle": "carol.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "did": "user(2)",
         "handle": "carol.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
       },
       "cid": "cids(6)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -746,8 +793,10 @@ Array [
           "handle": "alice.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(8)",
             "following": "record(7)",
+            "muted": false,
           },
         },
         "cid": "cids(7)",
@@ -775,8 +824,10 @@ Array [
           "handle": "alice.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(8)",
             "following": "record(7)",
+            "muted": false,
           },
         },
         "cid": "cids(7)",
@@ -799,12 +850,14 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "did": "user(2)",
         "handle": "carol.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
       },
       "cid": "cids(1)",
       "embed": Object {
@@ -834,7 +887,9 @@ Array [
               "handle": "bob.test",
               "labels": Array [],
               "viewer": Object {
+                "blockedBy": false,
                 "followedBy": "record(3)",
+                "muted": false,
               },
             },
             "cid": "cids(4)",
@@ -845,6 +900,10 @@ Array [
             "value": Object {
               "$type": "app.bsky.feed.post",
               "createdAt": "1970-01-01T00:00:00.000Z",
+              "langs": Array [
+                "en-US",
+                "i-klingon",
+              ],
               "text": "bob back at it again!",
             },
           },
@@ -907,7 +966,6 @@ exports[`pds author feed views fetches full author feeds for self (sorted, minim
 Array [
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -915,7 +973,9 @@ Array [
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "followedBy": "record(1)",
+          "muted": false,
         },
       },
       "cid": "cids(0)",
@@ -941,19 +1001,24 @@ Array [
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
       },
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
       },
       "cid": "cids(2)",
       "embed": Object {
@@ -964,7 +1029,10 @@ Array [
             "did": "user(3)",
             "handle": "carol.test",
             "labels": Array [],
-            "viewer": Object {},
+            "viewer": Object {
+              "blockedBy": false,
+              "muted": false,
+            },
           },
           "cid": "cids(3)",
           "embeds": Array [
@@ -995,7 +1063,9 @@ Array [
                     "handle": "bob.test",
                     "labels": Array [],
                     "viewer": Object {
+                      "blockedBy": false,
                       "following": "record(7)",
+                      "muted": false,
                     },
                   },
                   "cid": "cids(6)",
@@ -1005,6 +1075,10 @@ Array [
                   "value": Object {
                     "$type": "app.bsky.feed.post",
                     "createdAt": "1970-01-01T00:00:00.000Z",
+                    "langs": Array [
+                      "en-US",
+                      "i-klingon",
+                    ],
                     "text": "bob back at it again!",
                   },
                 },
@@ -1094,12 +1168,14 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "did": "user(2)",
         "handle": "dan.test",
         "labels": Array [],
-        "viewer": Object {},
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
       },
       "cid": "cids(7)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1123,7 +1199,6 @@ exports[`pds author feed views reflects fetching user's state in the feed. 1`] =
 Array [
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -1131,8 +1206,10 @@ Array [
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "followedBy": "record(2)",
           "following": "record(1)",
+          "muted": false,
         },
       },
       "cid": "cids(0)",
@@ -1169,7 +1246,9 @@ Array [
           "handle": "bob.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(6)",
+            "muted": false,
           },
         },
         "cid": "cids(3)",
@@ -1248,8 +1327,10 @@ Array [
           "handle": "alice.test",
           "labels": Array [],
           "viewer": Object {
+            "blockedBy": false,
             "followedBy": "record(2)",
             "following": "record(1)",
+            "muted": false,
           },
         },
         "cid": "cids(2)",
@@ -1272,7 +1353,6 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -1280,8 +1360,10 @@ Array [
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "followedBy": "record(2)",
           "following": "record(1)",
+          "muted": false,
         },
       },
       "cid": "cids(5)",
@@ -1293,7 +1375,10 @@ Array [
             "did": "user(4)",
             "handle": "dan.test",
             "labels": Array [],
-            "viewer": Object {},
+            "viewer": Object {
+              "blockedBy": false,
+              "muted": false,
+            },
           },
           "cid": "cids(6)",
           "embeds": Array [
@@ -1305,7 +1390,10 @@ Array [
                   "did": "user(5)",
                   "handle": "carol.test",
                   "labels": Array [],
-                  "viewer": Object {},
+                  "viewer": Object {
+                    "blockedBy": false,
+                    "muted": false,
+                  },
                 },
                 "cid": "cids(7)",
                 "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1420,7 +1508,6 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -1428,8 +1515,10 @@ Array [
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "followedBy": "record(2)",
           "following": "record(1)",
+          "muted": false,
         },
       },
       "cid": "cids(2)",
@@ -1451,7 +1540,6 @@ Array [
   },
   Object {
     "post": Object {
-      "$type": "app.bsky.feed.defs#postView",
       "author": Object {
         "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
@@ -1459,8 +1547,10 @@ Array [
         "handle": "alice.test",
         "labels": Array [],
         "viewer": Object {
+          "blockedBy": false,
           "followedBy": "record(2)",
           "following": "record(1)",
+          "muted": false,
         },
       },
       "cid": "cids(10)",

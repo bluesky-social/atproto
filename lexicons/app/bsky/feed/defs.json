@@ -92,7 +92,7 @@
     },
     "generatorView": {
       "type": "object",
-      "required": ["uri", "cid", "creator", "displayName", "indexedAt"],
+      "required": ["uri", "cid", "did", "creator", "displayName", "indexedAt"],
       "properties": {
         "uri": {"type": "string", "format": "at-uri"},
         "cid": {"type": "string", "format": "cid"},

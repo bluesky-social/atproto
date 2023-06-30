@@ -5,7 +5,13 @@ import * as pdsRepo from '@atproto/pds/src/repo/prepare'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { Client } from '@did-plc/lib'
-import AtpAgent, { AppBskyActorProfile, AppBskyFeedPost } from '@atproto/api'
+import AtpAgent, {
+  AppBskyActorProfile,
+  AppBskyFeedPost,
+  AppBskyFeedLike,
+  AppBskyFeedRepost,
+  AppBskyGraphFollow,
+} from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { forSnapshot } from './_util'
 import { SeedClient } from './seeds/client'
@@ -31,6 +37,7 @@ describe('indexing', () => {
     // Data in tests is not processed from subscription
     await network.processAll()
     await network.bsky.sub.destroy()
+    await network.bsky.ctx.backgroundQueue.processAll()
   })
 
   afterAll(async () => {
@@ -89,9 +96,7 @@ describe('indexing', () => {
     })
 
     // Create
-    await db.transaction(async (tx) => {
-      return await services.indexing(tx).indexRecord(...createRecord)
-    })
+    await services.indexing(db).indexRecord(...createRecord)
 
     const getAfterCreate = await agent.api.app.bsky.feed.getPostThread(
       { uri: uri.toString() },
@@ -101,9 +106,7 @@ describe('indexing', () => {
     const createNotifications = await getNotifications(db, uri)
 
     // Update
-    await db.transaction(async (tx) => {
-      return await services.indexing(tx).indexRecord(...updateRecord)
-    })
+    await services.indexing(db).indexRecord(...updateRecord)
 
     const getAfterUpdate = await agent.api.app.bsky.feed.getPostThread(
       { uri: uri.toString() },
@@ -113,9 +116,7 @@ describe('indexing', () => {
     const updateNotifications = await getNotifications(db, uri)
 
     // Delete
-    await db.transaction(async (tx) => {
-      return await services.indexing(tx).deleteRecord(...deleteRecord)
-    })
+    await services.indexing(db).deleteRecord(...deleteRecord)
 
     const getAfterDelete = agent.api.app.bsky.feed.getPostThread(
       { uri: uri.toString() },
@@ -161,9 +162,7 @@ describe('indexing', () => {
     })
 
     // Create
-    await db.transaction(async (tx) => {
-      return await services.indexing(tx).indexRecord(...createRecord)
-    })
+    await services.indexing(db).indexRecord(...createRecord)
 
     const getAfterCreate = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.dan },
@@ -172,9 +171,7 @@ describe('indexing', () => {
     expect(forSnapshot(getAfterCreate.data)).toMatchSnapshot()
 
     // Update
-    await db.transaction(async (tx) => {
-      return await services.indexing(tx).indexRecord(...updateRecord)
-    })
+    await services.indexing(db).indexRecord(...updateRecord)
 
     const getAfterUpdate = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.dan },
@@ -183,9 +180,7 @@ describe('indexing', () => {
     expect(forSnapshot(getAfterUpdate.data)).toMatchSnapshot()
 
     // Delete
-    await db.transaction(async (tx) => {
-      return await services.indexing(tx).deleteRecord(...deleteRecord)
-    })
+    await services.indexing(db).deleteRecord(...deleteRecord)
 
     const getAfterDelete = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.dan },
@@ -194,12 +189,126 @@ describe('indexing', () => {
     expect(forSnapshot(getAfterDelete.data)).toMatchSnapshot()
   })
 
+  it('handles post aggregations out of order.', async () => {
+    const { db, services } = network.bsky.ctx
+    const createdAt = new Date().toISOString()
+    const originalPost = await prepareCreate({
+      did: sc.dids.alice,
+      collection: ids.AppBskyFeedPost,
+      record: {
+        $type: ids.AppBskyFeedPost,
+        text: 'original post',
+        createdAt,
+      } as AppBskyFeedPost.Record,
+    })
+    const originalPostRef = {
+      uri: originalPost[0].toString(),
+      cid: originalPost[1].toString(),
+    }
+    const reply = await prepareCreate({
+      did: sc.dids.bob,
+      collection: ids.AppBskyFeedPost,
+      record: {
+        $type: ids.AppBskyFeedPost,
+        text: 'reply post',
+        reply: {
+          root: originalPostRef,
+          parent: originalPostRef,
+        },
+        createdAt,
+      } as AppBskyFeedPost.Record,
+    })
+    const like = await prepareCreate({
+      did: sc.dids.bob,
+      collection: ids.AppBskyFeedLike,
+      record: {
+        $type: ids.AppBskyFeedLike,
+        subject: originalPostRef,
+        createdAt,
+      } as AppBskyFeedLike.Record,
+    })
+    const repost = await prepareCreate({
+      did: sc.dids.bob,
+      collection: ids.AppBskyFeedRepost,
+      record: {
+        $type: ids.AppBskyFeedRepost,
+        subject: originalPostRef,
+        createdAt,
+      } as AppBskyFeedRepost.Record,
+    })
+    // reply, like, and repost indexed orior to the original post
+    await services.indexing(db).indexRecord(...reply)
+    await services.indexing(db).indexRecord(...like)
+    await services.indexing(db).indexRecord(...repost)
+    await services.indexing(db).indexRecord(...originalPost)
+    await network.bsky.ctx.backgroundQueue.processAll()
+    const agg = await db.db
+      .selectFrom('post_agg')
+      .selectAll()
+      .where('uri', '=', originalPostRef.uri)
+      .executeTakeFirst()
+    expect(agg).toEqual({
+      uri: originalPostRef.uri,
+      replyCount: 1,
+      repostCount: 1,
+      likeCount: 1,
+    })
+    // Cleanup
+    const del = (uri: AtUri) => {
+      return prepareDelete({
+        did: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+    }
+    await services.indexing(db).deleteRecord(...del(reply[0]))
+    await services.indexing(db).deleteRecord(...del(like[0]))
+    await services.indexing(db).deleteRecord(...del(repost[0]))
+    await services.indexing(db).deleteRecord(...del(originalPost[0]))
+  })
+
+  it('handles profile aggregations out of order.', async () => {
+    const { db, services } = network.bsky.ctx
+    const createdAt = new Date().toISOString()
+    const unknownDid = 'did:example:unknown'
+    const follow = await prepareCreate({
+      did: sc.dids.bob,
+      collection: ids.AppBskyGraphFollow,
+      record: {
+        $type: ids.AppBskyGraphFollow,
+        subject: unknownDid,
+        createdAt,
+      } as AppBskyGraphFollow.Record,
+    })
+    await services.indexing(db).indexRecord(...follow)
+    await network.bsky.ctx.backgroundQueue.processAll()
+    const agg = await db.db
+      .selectFrom('profile_agg')
+      .select(['did', 'followersCount'])
+      .where('did', '=', unknownDid)
+      .executeTakeFirst()
+    expect(agg).toEqual({
+      did: unknownDid,
+      followersCount: 1,
+    })
+    // Cleanup
+    const del = (uri: AtUri) => {
+      return prepareDelete({
+        did: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+    }
+    await services.indexing(db).deleteRecord(...del(follow[0]))
+  })
+
   describe('indexRepo', () => {
     beforeAll(async () => {
       network.bsky.sub.resume()
       await basicSeed(sc, false)
       await network.processAll()
       await network.bsky.sub.destroy()
+      await network.bsky.ctx.backgroundQueue.processAll()
     })
 
     it('preserves indexes when no record changes.', async () => {
@@ -221,9 +330,7 @@ describe('indexing', () => {
       const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
         did: sc.dids.alice,
       })
-      await db.transaction((tx) =>
-        services.indexing(tx).indexRepo(sc.dids.alice, head.root),
-      )
+      await services.indexing(db).indexRepo(sc.dids.alice, head.root)
       // Check
       const { data: profile } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
@@ -266,9 +373,7 @@ describe('indexing', () => {
       const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
         did: sc.dids.alice,
       })
-      await db.transaction((tx) =>
-        services.indexing(tx).indexRepo(sc.dids.alice, head.root),
-      )
+      await services.indexing(db).indexRepo(sc.dids.alice, head.root)
       // Check
       const { data: profile } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
@@ -313,9 +418,7 @@ describe('indexing', () => {
       const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
         did: sc.dids.alice,
       })
-      await db.transaction((tx) =>
-        services.indexing(tx).indexRepo(sc.dids.alice, head.root),
-      )
+      await services.indexing(db).indexRepo(sc.dids.alice, head.root)
       // Check
       const getGoodPost = agent.api.app.bsky.feed.getPostThread(
         { uri: writes[0].uri.toString(), depth: 0 },
@@ -351,7 +454,7 @@ describe('indexing', () => {
         password: 'password',
       })
       await expect(getIndexedHandle(did)).rejects.toThrow('Profile not found')
-      await db.transaction((tx) => services.indexing(tx).indexHandle(did, now))
+      await services.indexing(db).indexHandle(did, now)
       await expect(getIndexedHandle(did)).resolves.toEqual('did1.test')
     })
 
@@ -366,31 +469,61 @@ describe('indexing', () => {
         handle: 'did2.test',
         password: 'password',
       })
-      await db.transaction((tx) => services.indexing(tx).indexHandle(did, now))
+      await services.indexing(db).indexHandle(did, now)
       await expect(getIndexedHandle(did)).resolves.toEqual('did2.test')
       await sessionAgent.com.atproto.identity.updateHandle({
         handle: 'did2-updated.test',
       })
-      await db.transaction((tx) => services.indexing(tx).indexHandle(did, now))
+      await services.indexing(db).indexHandle(did, now)
       await expect(getIndexedHandle(did)).resolves.toEqual('did2.test') // Didn't update, not forced
-      await db.transaction((tx) =>
-        services.indexing(tx).indexHandle(did, now, true),
-      )
+      await services.indexing(db).indexHandle(did, now, true)
       await expect(getIndexedHandle(did)).resolves.toEqual('did2-updated.test')
+    })
+
+    it('handles profile aggregations out of order', async () => {
+      const { db, services } = network.bsky.ctx
+      const now = new Date().toISOString()
+      const sessionAgent = new AtpAgent({ service: network.pds.url })
+      const {
+        data: { did },
+      } = await sessionAgent.createAccount({
+        email: 'did3@test.com',
+        handle: 'did3.test',
+        password: 'password',
+      })
+      const follow = await prepareCreate({
+        did: sc.dids.bob,
+        collection: ids.AppBskyGraphFollow,
+        record: {
+          $type: ids.AppBskyGraphFollow,
+          subject: did,
+          createdAt: now,
+        } as AppBskyGraphFollow.Record,
+      })
+      await services.indexing(db).indexRecord(...follow)
+      await services.indexing(db).indexHandle(did, now)
+      await network.bsky.ctx.backgroundQueue.processAll()
+      const agg = await db.db
+        .selectFrom('profile_agg')
+        .select(['did', 'followersCount'])
+        .where('did', '=', did)
+        .executeTakeFirst()
+      expect(agg).toEqual({
+        did,
+        followersCount: 1,
+      })
     })
   })
 
   describe('tombstoneActor', () => {
-    it('does not unindex actor when their did is not tombstoned', async () => {
+    it('does not unindex actor when they are still being hosted by their pds', async () => {
       const { db, services } = network.bsky.ctx
       const { data: profileBefore } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
         { headers: await network.serviceHeaders(sc.dids.bob) },
       )
       // Attempt indexing tombstone
-      await db.transaction((tx) =>
-        services.indexing(tx).tombstoneActor(sc.dids.alice),
-      )
+      await services.indexing(db).tombstoneActor(sc.dids.alice)
       const { data: profileAfter } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
         { headers: await network.serviceHeaders(sc.dids.bob) },
@@ -398,22 +531,33 @@ describe('indexing', () => {
       expect(profileAfter).toEqual(profileBefore)
     })
 
-    it('unindexes actor when their did is tombstoned', async () => {
+    it('unindexes actor when they are no longer hosted by their pds', async () => {
       const { db, services } = network.bsky.ctx
+      const { alice } = sc.dids
       const getProfileBefore = agent.api.app.bsky.actor.getProfile(
-        { actor: sc.dids.alice },
+        { actor: alice },
         { headers: await network.serviceHeaders(sc.dids.bob) },
       )
       await expect(getProfileBefore).resolves.toBeDefined()
-      // Tombstone alice's did
-      const plcClient = new Client(network.plc.url)
-      await plcClient.tombstone(sc.dids.alice, network.pds.ctx.plcRotationKey)
+      // Delete account on pds
+      await pdsAgent.api.com.atproto.server.requestAccountDelete(undefined, {
+        headers: sc.getHeaders(alice),
+      })
+      const { token } = await network.pds.ctx.db.db
+        .selectFrom('delete_account_token')
+        .selectAll()
+        .where('did', '=', alice)
+        .executeTakeFirstOrThrow()
+      await pdsAgent.api.com.atproto.server.deleteAccount({
+        token,
+        did: alice,
+        password: sc.accounts[alice].password,
+      })
+      await network.pds.ctx.backgroundQueue.processAll()
       // Index tombstone
-      await db.transaction((tx) =>
-        services.indexing(tx).tombstoneActor(sc.dids.alice),
-      )
+      await services.indexing(db).tombstoneActor(alice)
       const getProfileAfter = agent.api.app.bsky.actor.getProfile(
-        { actor: sc.dids.alice },
+        { actor: alice },
         { headers: await network.serviceHeaders(sc.dids.bob) },
       )
       await expect(getProfileAfter).rejects.toThrow('Profile not found')

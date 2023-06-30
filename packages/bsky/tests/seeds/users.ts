@@ -33,7 +33,7 @@ const users = {
     handle: 'bob.test',
     password: 'bob-pass',
     displayName: 'bobby',
-    description: 'hi im bob',
+    description: 'hi im bob label_me',
   },
   carol: {
     email: 'carol@test.com',

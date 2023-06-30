@@ -17,24 +17,13 @@ export class HandleResolver {
     const httpPromise = this.resolveHttp(handle, httpAbort.signal).catch(
       () => undefined,
     )
-    const httpLegacyAbort = new AbortController()
-    const httpPromiseLegacy = this.resolveHttpLegacy(
-      handle,
-      httpLegacyAbort.signal,
-    ).catch(() => undefined)
 
     const dnsRes = await dnsPromise
     if (dnsRes) {
       httpAbort.abort()
-      httpLegacyAbort.abort()
       return dnsRes
     }
-    const httpRes = await httpPromise
-    if (httpRes) {
-      httpLegacyAbort.abort()
-      return httpRes
-    }
-    return httpPromiseLegacy
+    return httpPromise
   }
 
   async resolveDns(handle: string): Promise<string | undefined> {
@@ -64,25 +53,6 @@ export class HandleResolver {
         return did
       }
       return undefined
-    } catch (err) {
-      return undefined
-    }
-  }
-
-  // DEPRECATED
-  // @TODO remove
-  async resolveHttpLegacy(
-    handle: string,
-    signal?: AbortSignal,
-  ): Promise<string | undefined> {
-    const url = new URL(
-      `/xrpc/com.atproto.identity.resolveHandle?handle=${handle}`,
-      `https://${handle}`,
-    )
-    try {
-      const res = await fetch(url, { signal })
-      const data = await res.json()
-      return typeof data?.did === 'string' ? data.did : undefined
     } catch (err) {
       return undefined
     }

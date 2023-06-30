@@ -2,8 +2,6 @@ import { CID } from 'multiformats/cid'
 import * as crypto from '@atproto/crypto'
 import {
   BlobStore,
-  MemoryBlockstore,
-  BlockMap,
   CommitData,
   RebaseData,
   Repo,
@@ -29,6 +27,7 @@ import { Labeler } from '../../labeler'
 import { wait } from '@atproto/common'
 import { BackgroundQueue } from '../../event-stream/background-queue'
 import { countAll } from '../../db/util'
+import { Crawlers } from '../../crawlers'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -39,6 +38,7 @@ export class RepoService {
     public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
+    public crawlers: Crawlers,
     public labeler: Labeler,
   ) {
     this.blobs = new RepoBlobs(db, blobstore, backgroundQueue)
@@ -49,6 +49,7 @@ export class RepoService {
     messageDispatcher: MessageQueue,
     blobstore: BlobStore,
     backgroundQueue: BackgroundQueue,
+    crawlers: Crawlers,
     labeler: Labeler,
   ) {
     return (db: Database) =>
@@ -58,6 +59,7 @@ export class RepoService {
         messageDispatcher,
         blobstore,
         backgroundQueue,
+        crawlers,
         labeler,
       )
   }
@@ -77,6 +79,7 @@ export class RepoService {
         this.messageDispatcher,
         this.blobstore,
         this.backgroundQueue,
+        this.crawlers,
         this.labeler,
       )
       return fn(srvc)
@@ -109,8 +112,8 @@ export class RepoService {
   ) {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
-    const locked = await storage.lockHead()
-    if (!locked || !locked.equals(commitData.prev)) {
+    const locked = await storage.lockRepo()
+    if (!locked) {
       throw new ConcurrentWriteError()
     }
     await Promise.all([
@@ -220,6 +223,12 @@ export class RepoService {
     commitData: CommitData,
     writes: PreparedWrite[],
   ) {
+    this.db.onCommit(() => {
+      this.backgroundQueue.add(async () => {
+        await this.crawlers.notifyOfUpdate()
+      })
+    })
+
     const seqEvt = await sequencer.formatSeqCommit(did, commitData, writes)
     await sequencer.sequenceEvt(this.db, seqEvt)
 
@@ -236,23 +245,27 @@ export class RepoService {
 
   async rebaseRepo(did: string, swapCommit?: CID) {
     this.db.assertNotTransaction()
-    const rebaseData = await this.formatRebase(did, swapCommit)
 
     // rebases are expensive & should be done rarely, we don't try to re-process on concurrent writes
-    await this.serviceTx(async (srvcTx) =>
-      srvcTx.processRebase(did, rebaseData),
-    )
+    await this.serviceTx(async (srvcTx) => {
+      const rebaseData = await srvcTx.formatRebase(did, swapCommit)
+      await srvcTx.processRebase(did, rebaseData)
+    })
   }
 
   async formatRebase(did: string, swapCommit?: CID): Promise<RebaseData> {
     const storage = new SqlRepoStorage(this.db, did, new Date().toISOString())
+    const locked = await storage.lockRepo()
+    if (!locked) {
+      throw new ConcurrentWriteError()
+    }
+
     const currRoot = await storage.getHead()
     if (!currRoot) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
       )
-    }
-    if (swapCommit && !currRoot.equals(swapCommit)) {
+    } else if (swapCommit && !currRoot.equals(swapCommit)) {
       throw new BadCommitSwapError(currRoot)
     }
 
@@ -261,25 +274,28 @@ export class RepoService {
       .where('did', '=', did)
       .select(['uri', 'cid'])
       .execute()
-    const memoryStore = new MemoryBlockstore()
-    let data = await repo.MST.create(memoryStore)
+    // this will do everything in memory & shouldn't touch storage until we do .getUnstoredBlocks
+    let data = await repo.MST.create(storage)
     for (const record of records) {
       const uri = new AtUri(record.uri)
       const cid = CID.parse(record.cid)
       const dataKey = repo.formatDataKey(uri.collection, uri.rkey)
       data = await data.add(dataKey, cid)
     }
+    // this looks for unstored blocks recursively & bails when it encounters a block it has
+    // in most cases, there should be no unstored blocks, but this allows for recovery of repos in a broken state
+    const unstoredData = await data.getUnstoredBlocks()
     const commit = await repo.signCommit(
       {
         did,
         version: 2,
         prev: null,
-        data: await data.getPointer(),
+        data: unstoredData.root,
       },
       this.repoSigningKey,
     )
+    const newBlocks = unstoredData.blocks
     const currCids = await data.allCids()
-    const newBlocks = new BlockMap()
     const commitCid = await newBlocks.add(commit)
     return {
       commit: commitCid,
@@ -291,11 +307,8 @@ export class RepoService {
 
   async processRebase(did: string, rebaseData: RebaseData) {
     this.db.assertTransaction()
+
     const storage = new SqlRepoStorage(this.db, did)
-    const lockedHead = await storage.lockHead()
-    if (!rebaseData.rebased.equals(lockedHead)) {
-      throw new ConcurrentWriteError()
-    }
 
     const recordCountBefore = await this.countRecordBlocks(did)
     await Promise.all([

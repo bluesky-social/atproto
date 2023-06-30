@@ -1,6 +1,6 @@
 import { Database } from '../../src'
 import { MemoryBlockstore, Repo, WriteOpAction } from '@atproto/repo'
-import { EcdsaKeypair, Keypair, randomStr } from '@atproto/crypto'
+import { P256Keypair, Keypair, randomStr } from '@atproto/crypto'
 import { TID } from '@atproto/common'
 import { Kysely } from 'kysely'
 import { CID } from 'multiformats/cid'
@@ -27,7 +27,7 @@ describe('repo sync data migration', () => {
     await db.migrateToOrThrow('_20230127T215753149Z')
     rawDb = db.db
     memoryStore = new MemoryBlockstore()
-    keypair = await EcdsaKeypair.create()
+    keypair = await P256Keypair.create()
     repo = await Repo.create(memoryStore, keypair.did(), keypair)
   })
 

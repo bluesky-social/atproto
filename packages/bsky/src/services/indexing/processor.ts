@@ -6,6 +6,8 @@ import DatabaseSchema from '../../db/database-schema'
 import { lexicons } from '../../lexicon/lexicons'
 import { Notification } from '../../db/tables/notification'
 import { chunkArray } from '@atproto/common'
+import Database from '../../db'
+import { BackgroundQueue } from '../../background'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
 // (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).
@@ -29,16 +31,20 @@ type RecordProcessorParams<T, S> = {
     prev: S,
     replacedBy: S | null,
   ) => { notifs: Notif[]; toDelete: string[] }
+  updateAggregates?: (db: DatabaseSchema, obj: S) => Promise<void>
 }
 
 type Notif = Insertable<Notification>
 
 export class RecordProcessor<T, S> {
   collection: string
+  db: DatabaseSchema
   constructor(
-    private db: DatabaseSchema,
+    private appDb: Database,
+    private backgroundQueue: BackgroundQueue,
     private params: RecordProcessorParams<T, S>,
   ) {
+    this.db = appDb.db
     this.collection = this.params.lexId
   }
 
@@ -75,9 +81,10 @@ export class RecordProcessor<T, S> {
       obj,
       timestamp,
     )
-    // if this was a new record, return events
     if (inserted) {
-      return this.handleNotifs({ inserted })
+      this.aggregateOnCommit(inserted)
+      await this.handleNotifs({ inserted })
+      return
     }
     // if duplicate, insert into duplicates table with no events
     const found = await this.params.findDuplicate(this.db, uri, obj)
@@ -134,6 +141,7 @@ export class RecordProcessor<T, S> {
       // If a record was updated but hadn't been indexed yet, treat it like a plain insert.
       return this.insertRecord(uri, cid, obj, timestamp)
     }
+    this.aggregateOnCommit(deleted)
     const inserted = await this.params.insertFn(
       this.db,
       uri,
@@ -146,6 +154,7 @@ export class RecordProcessor<T, S> {
         'Record update failed: removed from index but could not be replaced',
       )
     }
+    this.aggregateOnCommit(inserted)
     await this.handleNotifs({ inserted, deleted })
   }
 
@@ -160,6 +169,7 @@ export class RecordProcessor<T, S> {
       .execute()
     const deleted = await this.params.deleteFn(this.db, uri)
     if (!deleted) return
+    this.aggregateOnCommit(deleted)
     if (cascading) {
       await this.db
         .deleteFrom('duplicate_record')
@@ -190,31 +200,58 @@ export class RecordProcessor<T, S> {
         record,
         found.indexedAt,
       )
+      if (inserted) {
+        this.aggregateOnCommit(inserted)
+      }
       await this.handleNotifs({ deleted, inserted: inserted ?? undefined })
     }
   }
 
-  // @TODO background notification creation and deletion
   async handleNotifs(op: { deleted?: S; inserted?: S }) {
     let notifs: Notif[] = []
+    const runOnCommit: ((db: Database) => Promise<void>)[] = []
     if (op.deleted) {
       const forDelete = this.params.notifsForDelete(
         op.deleted,
         op.inserted ?? null,
       )
       if (forDelete.toDelete.length > 0) {
-        await this.db
-          .deleteFrom('notification')
-          .where('recordUri', 'in', forDelete.toDelete)
-          .execute()
+        // Notifs can be deleted in background: they are expensive to delete and
+        // listNotifications already excludes notifs with missing records.
+        runOnCommit.push(async (db) => {
+          await db.db
+            .deleteFrom('notification')
+            .where('recordUri', 'in', forDelete.toDelete)
+            .execute()
+        })
       }
       notifs = forDelete.notifs
     } else if (op.inserted) {
       notifs = this.params.notifsForInsert(op.inserted)
     }
     for (const chunk of chunkArray(notifs, 500)) {
-      await this.db.insertInto('notification').values(chunk).execute()
+      runOnCommit.push(async (db) => {
+        await db.db.insertInto('notification').values(chunk).execute()
+      })
     }
+    if (runOnCommit.length) {
+      // Need to ensure notif deletion always happens before creation, otherwise delete may clobber in a race.
+      this.appDb.onCommit(() => {
+        this.backgroundQueue.add(async (db) => {
+          for (const fn of runOnCommit) {
+            await fn(db)
+          }
+        })
+      })
+    }
+  }
+
+  aggregateOnCommit(indexed: S) {
+    const { updateAggregates } = this.params
+    if (!updateAggregates) return
+    this.appDb.onCommit(() => {
+      this.backgroundQueue.add((db) => updateAggregates(db.db, indexed))
+    })
   }
 }
 
