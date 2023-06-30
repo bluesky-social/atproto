@@ -103,7 +103,11 @@ describe('proxies view requests', () => {
         headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
       },
     )
-    expect(forSnapshot(res.data)).toMatchSnapshot()
+    // sort because pagination is done off of did
+    const sortedFull = res.data.actors.sort((a, b) =>
+      a.handle > b.handle ? 1 : -1,
+    )
+    expect(forSnapshot(sortedFull)).toMatchSnapshot()
     const pt1 = await agent.api.app.bsky.actor.searchActors(
       {
         term: '.test',
@@ -122,7 +126,10 @@ describe('proxies view requests', () => {
         headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
       },
     )
-    expect([...pt1.data.actors, ...pt2.data.actors]).toEqual(res.data.actors)
+    const sortedPaginated = [...pt1.data.actors, ...pt2.data.actors].sort(
+      (a, b) => (a.handle > b.handle ? 1 : -1),
+    )
+    expect(sortedPaginated).toEqual(sortedFull)
   })
 
   it('actor.searchActorTypeahead', async () => {
@@ -134,7 +141,10 @@ describe('proxies view requests', () => {
         headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
       },
     )
-    expect(forSnapshot(res.data)).toMatchSnapshot()
+    const sorted = res.data.actors.sort((a, b) =>
+      a.handle > b.handle ? 1 : -1,
+    )
+    expect(forSnapshot(sorted)).toMatchSnapshot()
   })
 
   it('feed.getAuthorFeed', async () => {
