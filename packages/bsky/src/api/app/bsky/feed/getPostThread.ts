@@ -15,6 +15,11 @@ import {
   ThreadViewPost,
   isNotFoundPost,
 } from '../../../../lexicon/types/app/bsky/feed/defs'
+import {
+  getAncestorsAndSelfQb,
+  getDescendentsQb,
+} from '../../../../services/util/post'
+import Database from '../../../../db'
 
 export type PostThread = {
   post: FeedRow
@@ -33,6 +38,7 @@ export default function (server: Server, ctx: AppContext) {
       const labelService = ctx.services.label(ctx.db)
 
       const threadData = await getThreadData(
+        ctx.db,
         feedService,
         uri,
         depth,
@@ -173,24 +179,31 @@ const getRelevantIds = (
 }
 
 const getThreadData = async (
+  db: Database,
   feedService: FeedService,
   uri: string,
   depth: number,
   parentHeight: number,
 ): Promise<PostThread | null> => {
   const [parents, children] = await Promise.all([
-    feedService
-      .selectPostQb()
-      .innerJoin('post_hierarchy', 'post_hierarchy.ancestorUri', 'post.uri')
-      .where('post_hierarchy.uri', '=', uri)
+    getAncestorsAndSelfQb(db, { uri, parentHeight })
+      .selectFrom('ancestor')
+      .innerJoin(
+        feedService.selectPostQb().as('post'),
+        'post.uri',
+        'ancestor.uri',
+      )
+      .selectAll('post')
       .execute(),
-    feedService
-      .selectPostQb()
-      .innerJoin('post_hierarchy', 'post_hierarchy.uri', 'post.uri')
-      .where('post_hierarchy.uri', '!=', uri)
-      .where('post_hierarchy.ancestorUri', '=', uri)
-      .where('depth', '<=', depth)
-      .orderBy('post.createdAt', 'desc')
+    getDescendentsQb(db, { uri, depth })
+      .selectFrom('descendent')
+      .innerJoin(
+        feedService.selectPostQb().as('post'),
+        'post.uri',
+        'descendent.uri',
+      )
+      .selectAll('post')
+      .orderBy('sortAt', 'desc')
       .execute(),
   ])
   const parentsByUri = parents.reduce((acc, parent) => {
