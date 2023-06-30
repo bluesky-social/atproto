@@ -154,10 +154,6 @@ describe('repo subscribe repos', () => {
     if (!commits) {
       return expect(commits !== null)
     }
-    if (evts.length !== commits.length) {
-      console.log(evts.map((e) => e.commit.toString()))
-      console.log(commits.map((c) => c.commit.toString()))
-    }
     expect(evts.length).toBe(commits.length)
     expect(evts.length).toBe(writeLog.length)
     for (let i = 0; i < commits.length; i++) {
