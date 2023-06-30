@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
       const searchField = term.startsWith('did:') ? 'did' : 'handle'
 
       const { ref } = db.db.dynamic
-      const keyset = new ListKeyset(ref('indexedAt'), ref('handle'))
+      const keyset = new ListKeyset(ref('indexedAt'), ref('did'))
       let resultQb = services.actor(db).searchQb(searchField, term).selectAll()
       resultQb = paginate(resultQb, { keyset, cursor, limit })
 

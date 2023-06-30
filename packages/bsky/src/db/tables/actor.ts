@@ -1,6 +1,6 @@
 export interface Actor {
   did: string
-  handle: string
+  handle: string | null
   indexedAt: string
   takedownId: number | null // @TODO(bsky)
 }
