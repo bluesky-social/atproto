@@ -19,7 +19,6 @@ import {
   getAncestorsAndSelfQb,
   getDescendentsQb,
 } from '../../../../services/util/post'
-import Database from '../../../../db'
 
 export type PostThread = {
   post: FeedRow
@@ -37,13 +36,7 @@ export default function (server: Server, ctx: AppContext) {
       const feedService = ctx.services.feed(ctx.db)
       const labelService = ctx.services.label(ctx.db)
 
-      const threadData = await getThreadData(
-        ctx.db,
-        feedService,
-        uri,
-        depth,
-        parentHeight,
-      )
+      const threadData = await getThreadData(ctx, uri, depth, parentHeight)
       if (!threadData) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
@@ -179,14 +172,14 @@ const getRelevantIds = (
 }
 
 const getThreadData = async (
-  db: Database,
-  feedService: FeedService,
+  ctx: AppContext,
   uri: string,
   depth: number,
   parentHeight: number,
 ): Promise<PostThread | null> => {
+  const feedService = ctx.services.feed(ctx.db)
   const [parents, children] = await Promise.all([
-    getAncestorsAndSelfQb(db, { uri, parentHeight })
+    getAncestorsAndSelfQb(ctx.db.db, { uri, parentHeight })
       .selectFrom('ancestor')
       .innerJoin(
         feedService.selectPostQb().as('post'),
@@ -195,7 +188,7 @@ const getThreadData = async (
       )
       .selectAll('post')
       .execute(),
-    getDescendentsQb(db, { uri, depth })
+    getDescendentsQb(ctx.db.db, { uri, depth })
       .selectFrom('descendent')
       .innerJoin(
         feedService.selectPostQb().as('post'),

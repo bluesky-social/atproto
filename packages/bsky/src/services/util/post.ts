@@ -1,15 +1,15 @@
 import { sql } from 'kysely'
-import Database from '../../db'
+import DatabaseSchema from '../../db/database-schema'
 
 export const getDescendentsQb = (
-  db: Database,
+  db: DatabaseSchema,
   opts: {
     uri: string
     depth: number
   },
 ) => {
   const { uri, depth } = opts
-  const query = db.db.withRecursive('descendent(uri, depth)', (cte) => {
+  const query = db.withRecursive('descendent(uri, depth)', (cte) => {
     return cte
       .selectFrom('post')
       .select(['post.uri as uri', sql<number>`1`.as('depth')])
@@ -30,14 +30,14 @@ export const getDescendentsQb = (
 }
 
 export const getAncestorsAndSelfQb = (
-  db: Database,
+  db: DatabaseSchema,
   opts: {
     uri: string
     parentHeight: number
   },
 ) => {
   const { uri, parentHeight } = opts
-  const query = db.db.withRecursive(
+  const query = db.withRecursive(
     'ancestor(uri, ancestorUri, height)',
     (cte) => {
       return cte
