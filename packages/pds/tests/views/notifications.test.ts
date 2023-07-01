@@ -34,6 +34,7 @@ describe('pds notification views', () => {
     await basicSeed(sc)
     alice = sc.dids.alice
     await server.ctx.backgroundQueue.processAll()
+    await server.ctx.labelCache.catchUp()
   })
 
   afterAll(async () => {
@@ -76,6 +77,7 @@ describe('pds notification views', () => {
       'indeed',
     )
     await server.ctx.backgroundQueue.processAll()
+    await server.ctx.labelCache.catchUp()
 
     const notifCountAlice =
       await agent.api.app.bsky.notification.getUnreadCount(

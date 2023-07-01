@@ -33,6 +33,7 @@ describe('mute views', () => {
       )
     }
     await server.ctx.backgroundQueue.processAll()
+    await server.ctx.labelCache.catchUp()
   })
 
   afterAll(async () => {

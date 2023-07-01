@@ -33,6 +33,7 @@ describe('pds thread views', () => {
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
     await basicSeed(sc)
+    await server.ctx.labelCache.catchUp()
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol

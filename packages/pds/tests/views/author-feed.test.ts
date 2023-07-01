@@ -34,6 +34,7 @@ describe('pds author feed views', () => {
     carol = sc.dids.carol
     dan = sc.dids.dan
     await server.ctx.backgroundQueue.processAll()
+    await server.ctx.labelCache.catchUp()
   })
 
   afterAll(async () => {

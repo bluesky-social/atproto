@@ -17,6 +17,7 @@ describe('pds user search views', () => {
     sc = new SeedClient(agent)
     await basicSeed(sc)
     await server.ctx.backgroundQueue.processAll()
+    await server.ctx.labelCache.catchUp()
 
     const suggestions = [
       { did: sc.dids.bob, order: 1 },

@@ -28,6 +28,7 @@ describe('pds follow views', () => {
     await followsSeed(sc)
     alice = sc.dids.alice
     await server.ctx.backgroundQueue.processAll()
+    await server.ctx.labelCache.catchUp()
   })
 
   afterAll(async () => {

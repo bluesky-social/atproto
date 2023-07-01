@@ -18,6 +18,7 @@ import { BackgroundQueue } from './event-stream/background-queue'
 import DidSqlCache from './did-cache'
 import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
+import { LabelCache } from './label-cache'
 
 export class AppContext {
   private _appviewAgent: AtpAgent | null
@@ -39,6 +40,7 @@ export class AppContext {
       sequencer: Sequencer
       sequencerLeader: SequencerLeader
       labeler: Labeler
+      labelCache: LabelCache
       backgroundQueue: BackgroundQueue
       crawlers: Crawlers
       algos: MountedAlgos
@@ -129,6 +131,10 @@ export class AppContext {
 
   get labeler(): Labeler {
     return this.opts.labeler
+  }
+
+  get labelCache(): LabelCache {
+    return this.opts.labelCache
   }
 
   get backgroundQueue(): BackgroundQueue {

@@ -16,6 +16,7 @@ describe('pds posts views', () => {
     sc = new SeedClient(agent)
     await basicSeed(sc)
     await server.ctx.labeler.processAll()
+    await server.ctx.labelCache.catchUp()
   })
 
   afterAll(async () => {

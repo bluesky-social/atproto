@@ -41,6 +41,7 @@ import { BackgroundQueue } from './event-stream/background-queue'
 import DidSqlCache from './did-cache'
 import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
+import { LabelCache } from './label-cache'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -171,6 +172,8 @@ export class PDS {
       })
     }
 
+    const labelCache = new LabelCache(db)
+
     const services = createServices({
       repoSigningKey,
       messageDispatcher,
@@ -178,6 +181,7 @@ export class PDS {
       imgUriBuilder,
       imgInvalidator,
       labeler,
+      labelCache,
       backgroundQueue,
       crawlers,
     })
@@ -195,6 +199,7 @@ export class PDS {
       sequencer,
       sequencerLeader,
       labeler,
+      labelCache,
       services,
       mailer,
       imgUriBuilder,
@@ -253,6 +258,7 @@ export class PDS {
     this.ctx.sequencerLeader.run()
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()
+    await this.ctx.labelCache.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     this.server.keepAliveTimeout = 90000
@@ -262,6 +268,7 @@ export class PDS {
   }
 
   async destroy(): Promise<void> {
+    this.ctx.labelCache.stop()
     await this.ctx.sequencerLeader.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()

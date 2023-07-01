@@ -55,6 +55,7 @@ describe('popular views', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
     await server.ctx.backgroundQueue.processAll()
+    await server.ctx.labelCache.catchUp()
   })
 
   afterAll(async () => {

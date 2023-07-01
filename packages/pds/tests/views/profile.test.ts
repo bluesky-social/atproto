@@ -28,6 +28,7 @@ describe('pds profile views', () => {
     bob = sc.dids.bob
     dan = sc.dids.dan
     await server.ctx.backgroundQueue.processAll()
+    await server.ctx.labelCache.catchUp()
   })
 
   afterAll(async () => {

@@ -56,6 +56,7 @@ describe('timeline views', () => {
         { create: ['kind'] },
       )
     await server.ctx.backgroundQueue.processAll()
+    await server.ctx.labelCache.catchUp()
   })
 
   afterAll(async () => {
