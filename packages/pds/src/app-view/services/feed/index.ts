@@ -68,15 +68,27 @@ export class FeedService {
   }
 
   selectFeedItemQb() {
-    return this.db.db
-      .selectFrom('feed_item')
-      .innerJoin('post', 'post.uri', 'feed_item.postUri')
-      .selectAll('feed_item')
-      .select([
-        'post.replyRoot',
-        'post.replyParent',
-        'post.creator as postAuthorDid',
-      ])
+    if (this.db.dialect === 'sqlite') {
+      return this.db.db
+        .selectFrom('feed_item')
+        .innerJoin('post', 'post.uri', 'feed_item.postUri')
+        .selectAll('feed_item')
+        .select([
+          'post.replyRoot',
+          'post.replyParent',
+          'post.creator as postAuthorDid',
+        ])
+    } else {
+      return this.db.db
+        .selectFrom('recent_feed_items_view as feed_item')
+        .innerJoin('post', 'post.uri', 'feed_item.postUri')
+        .selectAll('feed_item')
+        .select([
+          'post.replyRoot',
+          'post.replyParent',
+          'post.creator as postAuthorDid',
+        ])
+    }
   }
 
   selectFeedGeneratorQb(requester: string) {

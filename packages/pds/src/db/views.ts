@@ -5,7 +5,7 @@ import { dbLogger } from '../logger'
 import Database from '.'
 
 export const VIEW_MAINTAINER_ID = 1010
-const VIEWS = ['algo_whats_hot_view']
+const VIEWS = ['algo_whats_hot_view', 'recent_feed_items_view']
 
 export class ViewMaintainer {
   leader = new Leader(VIEW_MAINTAINER_ID, this.db)
