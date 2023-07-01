@@ -13,7 +13,20 @@ const handler: AlgoHandler = async (
   requester: string,
 ): Promise<AlgoResponse> => {
   return {
-    feedItems: [],
+    feedItems: [
+      {
+        type: 'post',
+        uri: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post/3jzinucnmbi2c',
+        cid: 'bafyreifmtn55tubbv7tefrq277nzfy4zu7ioithky276aho5ehb6w3nu6q',
+        postUri:
+          'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post/3jzinucnmbi2c',
+        postAuthorDid: 'did:plc:z72i7hdynmk6r22z27h6tvur',
+        originatorDid: 'did:plc:z72i7hdynmk6r22z27h6tvur',
+        replyParent: null,
+        replyRoot: null,
+        sortAt: '2023-07-01T23:04:27.853Z',
+      },
+    ],
   }
   // const { cursor, limit = 50 } = params
   // const accountService = ctx.services.account(ctx.db)
