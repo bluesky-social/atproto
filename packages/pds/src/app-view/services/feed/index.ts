@@ -114,7 +114,7 @@ export class FeedService {
     if (dids.length < 1) return {}
     const { ref } = this.db.db.dynamic
     const { skipLabels = false, includeSoftDeleted = false } = opts ?? {}
-    const [actors, labels, listMutes] = await Promise.all([
+    const [actors, labels] = await Promise.all([
       this.db.db
         .selectFrom('did_handle')
         .where('did_handle.did', 'in', dids)
@@ -160,11 +160,24 @@ export class FeedService {
             .where('mutedByDid', '=', requester)
             .select('did')
             .as('requesterMuted'),
+          this.db.db
+            .selectFrom('list_item')
+            .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
+            .where('list_mute.mutedByDid', '=', requester)
+            .whereRef('list_item.subjectDid', '=', ref('did_handle.did'))
+            .select('list_item.listUri')
+            .as('requesterMutedByList'),
         ])
         .execute(),
       this.services.label.getLabelsForSubjects(skipLabels ? [] : dids),
-      this.services.actor.views.getListMutes(dids, requester),
     ])
+    const listUris: string[] = actors
+      .map((a) => a.requesterMutedByList)
+      .filter((list) => !!list)
+    const listViews = await this.services.graph.getListViews(
+      listUris,
+      requester,
+    )
     return actors.reduce((acc, cur) => {
       const actorLabels = labels[cur.did] ?? []
       return {
@@ -177,8 +190,12 @@ export class FeedService {
             ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
             : undefined,
           viewer: {
-            muted: !!cur?.requesterMuted || !!listMutes[cur.did],
-            mutedByList: listMutes[cur.did],
+            muted: !!cur?.requesterMuted || !!cur?.requesterMutedByList,
+            mutedByList: cur.requesterMutedByList
+              ? this.services.graph.formatListViewBasic(
+                  listViews[cur.requesterMutedByList],
+                )
+              : undefined,
             blockedBy: !!cur?.requesterBlockedBy,
             blocking: cur?.requesterBlocking || undefined,
             following: cur?.requesterFollowing || undefined,
