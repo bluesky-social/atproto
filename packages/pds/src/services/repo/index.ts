@@ -132,10 +132,12 @@ export class RepoService {
     toWrite: { did: string; writes: PreparedWrite[]; swapCommitCid?: CID },
     times: number,
     timeout = 100,
+    prevStorage?: SqlRepoStorage,
   ) {
     this.db.assertNotTransaction()
     const { did, writes, swapCommitCid } = toWrite
-    const storage = new SqlRepoStorage(this.db, did)
+    // we may have some useful cached blocks in the storage, so re-use the previous instance
+    const storage = prevStorage ?? new SqlRepoStorage(this.db, did)
     const commit = await this.formatCommit(storage, did, writes, swapCommitCid)
     try {
       await this.serviceTx(async (srvcTx) =>
@@ -147,7 +149,7 @@ export class RepoService {
           throw err
         }
         await wait(timeout)
-        return this.processWrites(toWrite, times - 1, timeout)
+        return this.processWrites(toWrite, times - 1, timeout, storage)
       } else {
         throw err
       }
@@ -169,6 +171,8 @@ export class RepoService {
     if (swapCommit && !currRoot.equals(swapCommit)) {
       throw new BadCommitSwapError(currRoot)
     }
+    // cache last commit since there's likely overlap
+    await storage.cacheCommit(currRoot)
     const recordTxn = this.services.record(this.db)
     for (const write of writes) {
       const { action, uri, swapCid } = write
