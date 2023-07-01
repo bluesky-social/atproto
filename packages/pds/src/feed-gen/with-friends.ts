@@ -24,8 +24,8 @@ const handler: AlgoHandler = async (
 
   let postsQb = feedService
     .selectPostQb()
-    .innerJoin('post_agg', 'post_agg.uri', 'post.uri')
-    .where('post_agg.likeCount', '>=', 6)
+    // .innerJoin('post_agg', 'post_agg.uri', 'post.uri')
+    // .where('post_agg.likeCount', '>=', 6)
     .whereExists((qb) =>
       qb
         .selectFrom('follow')
