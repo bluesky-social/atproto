@@ -211,9 +211,10 @@ export async function backfillReposByDid(
         }
         if (err) {
           failed++
-          console.log(did) // output dids that need to be reprocessed
+          console.log(JSON.stringify({ succeeded: false, did })) // dids that need to be reprocessed
         } else {
           success++
+          console.log(JSON.stringify({ succeeded: true, did })) // dids that do not need to be reprocessed
           console.warn('backfilled repo', { did, success, failed, total })
         }
       })
