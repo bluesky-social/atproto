@@ -6,8 +6,8 @@ import {
   PostView,
 } from '../../../lexicon/types/app/bsky/feed/defs'
 import {
-  ActorViewMap,
-  FeedEmbeds,
+  ActorInfoMap,
+  PostEmbedViews,
   FeedGenInfo,
   FeedRow,
   MaybePostView,
@@ -60,9 +60,9 @@ export class FeedViews {
 
   formatFeed(
     items: FeedRow[],
-    actors: ActorViewMap,
+    actors: ActorInfoMap,
     posts: PostInfoMap,
-    embeds: FeedEmbeds,
+    embeds: PostEmbedViews,
     labels: Labels,
     usePostViewUnion?: boolean,
   ): FeedViewPost[] {
@@ -127,9 +127,9 @@ export class FeedViews {
 
   formatPostView(
     uri: string,
-    actors: ActorViewMap,
+    actors: ActorInfoMap,
     posts: PostInfoMap,
-    embeds: FeedEmbeds,
+    embeds: PostEmbedViews,
     labels: Labels,
   ): PostView | undefined {
     const post = posts[uri]
@@ -158,9 +158,9 @@ export class FeedViews {
 
   formatMaybePostView(
     uri: string,
-    actors: ActorViewMap,
+    actors: ActorInfoMap,
     posts: PostInfoMap,
-    embeds: FeedEmbeds,
+    embeds: PostEmbedViews,
     labels: Labels,
     usePostViewUnion?: boolean,
   ): MaybePostView | undefined {

@@ -11,7 +11,10 @@ import {
   ViewRecord,
   View as RecordEmbedView,
 } from '../../../lexicon/types/app/bsky/embed/record'
-import { Record as PostRecord } from '../../../lexicon/types/app/bsky/feed/post'
+import {
+  Record as PostRecord,
+  isRecord as isPostRecord,
+} from '../../../lexicon/types/app/bsky/feed/post'
 import {
   Main as EmbedImages,
   isMain as isEmbedImages,
@@ -22,14 +25,8 @@ import {
   isMain as isEmbedExternal,
   View as EmbedExternalView,
 } from '../../../lexicon/types/app/bsky/embed/external'
-import {
-  Main as EmbedRecord,
-  isMain as isEmbedRecord,
-} from '../../../lexicon/types/app/bsky/embed/record'
-import {
-  Main as EmbedRecordWithMedia,
-  isMain as isEmbedRecordWithMedia,
-} from '../../../lexicon/types/app/bsky/embed/recordWithMedia'
+import { isMain as isEmbedRecord } from '../../../lexicon/types/app/bsky/embed/record'
+import { isMain as isEmbedRecordWithMedia } from '../../../lexicon/types/app/bsky/embed/recordWithMedia'
 import {
   FeedViewPost,
   PostView,
@@ -40,7 +37,6 @@ import {
   FeedItemType,
   FeedRow,
   FeedGenInfoMap,
-  PostEmbedView,
   PostViews,
   PostEmbedViews,
 } from './types'
@@ -378,24 +374,20 @@ export class FeedService {
       }
     }
     const nestedDids = [...nestedDidsSet]
-    const [
-      postInfos,
-      actorInfos,
-      // deepEmbedViews,
-      labelViews,
-      feedGenInfos,
-      listViews,
-    ] = await Promise.all([
-      this.getPostInfos(nestedPostUris, requester),
-      this.getActorInfos(nestedDids, requester, { skipLabels: true }),
-      // this.embedsForPosts(nestedPostUris, requester, _depth + 1),
-      this.services.label.getLabelsForSubjects([
-        ...nestedPostUris,
-        ...nestedDids,
-      ]),
-      this.getFeedGeneratorInfos(nestedFeedGenUris, requester),
-      this.services.graph.getListViews(nestedListUris, requester),
-    ])
+    const [postInfos, actorInfos, labelViews, feedGenInfos, listViews] =
+      await Promise.all([
+        this.getPostInfos(nestedPostUris, requester),
+        this.getActorInfos(nestedDids, requester, { skipLabels: true }),
+        this.services.label.getLabelsForSubjects([
+          ...nestedPostUris,
+          ...nestedDids,
+        ]),
+        this.getFeedGeneratorInfos(nestedFeedGenUris, requester),
+        this.services.graph.getListViews(nestedListUris, requester),
+      ])
+    const deepEmbedViews = await this.embedsForPosts(postInfos, requester, {
+      excludeNested: true,
+    })
     const recordEmbedViews: { [uri: string]: RecordEmbedView } = {}
     for (const uri of nestedUris) {
       const collection = new AtUri(uri).collection
@@ -419,7 +411,6 @@ export class FeedService {
         }
       } else if (collection === ids.AppBskyFeedPost && postInfos[uri]) {
         // @TODo
-        const deepEmbedViews = {} as any
         const formatted = this.views.formatPostView(
           uri,
           actorInfos,
@@ -427,6 +418,9 @@ export class FeedService {
           deepEmbedViews,
           labelViews,
         )
+        recordEmbedViews[uri] = {
+          record: getRecordEmbedView(uri, formatted),
+        }
       } else {
         recordEmbedViews[uri] = {
           record: {
@@ -440,7 +434,14 @@ export class FeedService {
   }
 
   postRecordsFromInfos(infos: PostInfoMap): { [uri: string]: PostRecord } {
-    return {} as any
+    const records: { [uri: string]: PostRecord } = {}
+    for (const [uri, info] of Object.entries(infos)) {
+      const record = cborToLexRecord(info.recordBytes)
+      if (isPostRecord(record)) {
+        records[uri] = record
+      }
+    }
+    return records
   }
 
   async embedsForPosts(
@@ -544,7 +545,7 @@ function truncateUtf8(str: string | null | undefined, length: number) {
 function getRecordEmbedView(
   uri: string,
   post?: PostView,
-  embeds?: ViewRecord['embeds'],
+  // embeds?: ViewRecord['embeds'],
 ): (ViewRecord | ViewNotFound | ViewBlocked) & { $type: string } {
   if (!post) {
     return {
@@ -566,7 +567,7 @@ function getRecordEmbedView(
     value: post.record,
     labels: post.labels,
     indexedAt: post.indexedAt,
-    embeds,
+    embeds: post.embed ? [post.embed] : [],
   }
 }
 
