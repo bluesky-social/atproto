@@ -67,7 +67,7 @@ const main = async () => {
   const viewMaintainer = new ViewMaintainer(migrateDb)
   const viewMaintainerRunning = viewMaintainer.run()
   if(bsky.ctx.cfg.repoProvider) {
-    await backfillRepos(bsky.ctx, 9)
+    await backfillRepos(bsky.ctx, 25)
   }
   await bsky.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
