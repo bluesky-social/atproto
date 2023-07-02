@@ -10,9 +10,15 @@ import {
 import { Label } from '../../../lexicon/types/com/atproto/label/defs'
 import { FeedGenerator } from '../../db/tables/feed-generator'
 
-export type FeedEmbeds = {
-  [uri: string]: ViewImages | ViewExternal | ViewRecord | ViewRecordWithMedia
+export type FeedEmbedViews = {
+  [uri: string]: FeedEmbedView
 }
+
+export type FeedEmbedView =
+  | ViewImages
+  | ViewExternal
+  | ViewRecord
+  | ViewRecordWithMedia
 
 export type PostInfo = {
   uri: string

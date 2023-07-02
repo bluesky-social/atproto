@@ -13,17 +13,28 @@ import {
   ViewRecord,
   View as RecordEmbedView,
 } from '../../../lexicon/types/app/bsky/embed/record'
+import { Record as PostRecord } from '../../../lexicon/types/app/bsky/feed/post'
+import { Main as EmbedImages } from '../../../lexicon/types/app/bsky/embed/images'
+import { Main as EmbedExternal } from '../../../lexicon/types/app/bsky/embed/external'
+import {
+  Main as EmbedRecord,
+  isMain as isEmbedRecord,
+} from '../../../lexicon/types/app/bsky/embed/record'
+import {
+  Main as EmbedRecordWithMedia,
+  isMain as isEmbedRecordWithMedia,
+} from '../../../lexicon/types/app/bsky/embed/recordWithMedia'
 import {
   FeedViewPost,
   PostView,
 } from '../../../lexicon/types/app/bsky/feed/defs'
 import {
   ActorViewMap,
-  FeedEmbeds,
   PostInfoMap,
   FeedItemType,
   FeedRow,
   FeedGenInfoMap,
+  FeedEmbedView,
 } from './types'
 import { LabelService } from '../label'
 import { ActorService } from '../actor'
@@ -254,6 +265,93 @@ export class FeedService {
       }),
       {} as FeedGenInfoMap,
     )
+  }
+
+  // async embedView(
+  //   uri: string,
+  //   post: PostRecord,
+  // ): Promise<FeedEmbedView | undefined> {
+  //   if (!post.embed) return
+  //   if(post.embed)
+  // }
+
+  imageEmbedView(embed: EmbedImages) {
+    const imgViews = embed.images.map((img) => ({
+      thumb: this.imgUriBuilder.getCommonSignedUri(
+        'feed_thumbnail',
+        img.image.ref,
+      ),
+      fullsize: this.imgUriBuilder.getCommonSignedUri(
+        'feed_fullsize',
+        img.image.ref,
+      ),
+      alt: img.alt,
+    }))
+    return {
+      $type: 'app.bsky.embed.images#view',
+      images: imgViews,
+    }
+  }
+
+  externalEmbedView(embed: EmbedExternal) {
+    const { uri, title, description, thumb } = embed.external
+    return {
+      $type: 'app.bsky.embed.external#view',
+      external: {
+        uri,
+        title,
+        description,
+        thumb: thumb
+          ? this.imgUriBuilder.getCommonSignedUri('feed_thumbnail', thumb.ref)
+          : undefined,
+      },
+    }
+  }
+
+  async nestedRecordViews(posts: PostRecord[]) {
+    const nestedUris = new Set<string>()
+    const nestedDids = new Set<string>()
+    for (const post of posts) {
+      if (
+        post.embed &&
+        (isEmbedRecord(post.embed) || isEmbedRecordWithMedia(post.embed))
+      ) {
+        const uri = new AtUri(post.embed.record.uri)
+        nestedUris.push(uri.toString())
+      }
+    }
+  }
+
+  recordEmbedView(embed: EmbedRecord) {
+    const nestedUris = dedupeStrs(records.map((p) => p.uri))
+    const nestedDids = dedupeStrs(records.map((p) => p.did))
+    const nestedPostUris = nestedUris.filter(
+      (uri) => new AtUri(uri).collection === ids.AppBskyFeedPost,
+    )
+    const nestedFeedGenUris = nestedUris.filter(
+      (uri) => new AtUri(uri).collection === ids.AppBskyFeedGenerator,
+    )
+    const nestedListUris = nestedUris.filter(
+      (uri) => new AtUri(uri).collection === ids.AppBskyGraphList,
+    )
+    const [
+      postViews,
+      actorViews,
+      deepEmbedViews,
+      labelViews,
+      feedGenViews,
+      listViews,
+    ] = await Promise.all([
+      this.getPostViews(nestedPostUris, requester),
+      this.getActorViews(nestedDids, requester, { skipLabels: true }),
+      this.embedsForPosts(nestedPostUris, requester, _depth + 1),
+      this.services.label.getLabelsForSubjects([
+        ...nestedPostUris,
+        ...nestedDids,
+      ]),
+      this.getFeedGeneratorViews(nestedFeedGenUris, requester),
+      this.services.graph.getListViews(nestedListUris, requester),
+    ])
   }
 
   async embedsForPosts(
