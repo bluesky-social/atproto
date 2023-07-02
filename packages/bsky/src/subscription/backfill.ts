@@ -180,6 +180,52 @@ export const doBackfill = async (
   subLogger.info({ duration: Date.now() - start }, 'backfill finished')
 }
 
+export async function backfillReposByDid(
+  ctx: AppContext,
+  opts: { concurrency: number; dids: string[] },
+) {
+  const { concurrency, dids } = opts
+  const { services, db } = ctx
+  const queue = new PQueue({ concurrency })
+  const indexingService = services.indexing(db)
+  let success = 0
+  let failed = 0
+  const total = dids.length
+  for (const did of dids) {
+    queue
+      .add(async () => {
+        const now = new Date().toISOString()
+        const result = await Promise.allSettled([
+          indexingService.indexHandle(did, now),
+          indexingService.indexRepo(did),
+        ])
+        let err
+        for (const item of result) {
+          if (item.status === 'rejected') {
+            err = item.reason
+            console.warn('backfill failed on a repository', {
+              err,
+              did,
+            })
+          }
+        }
+        if (err) {
+          failed++
+          console.log(did) // output dids that need to be reprocessed
+        } else {
+          success++
+          console.warn('backfilled repo', { did, success, failed, total })
+        }
+      })
+      .catch((err) => {
+        // just to avoid a crash: the queue items should never throw
+        console.error('unexpected error', { err, did })
+      })
+  }
+  await queue.onIdle()
+  console.warn('complete', { success, failed, total })
+}
+
 function wsToHttp(url: string) {
   if (!url.startsWith('ws://') && !url.startsWith('wss://')) {
     return url

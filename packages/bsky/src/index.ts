@@ -28,7 +28,7 @@ import { MountedAlgos } from './feed-gen/types'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
-export { backfillRepos } from './subscription/backfill'
+export { backfillRepos, backfillReposByDid } from './subscription/backfill'
 export { ServerConfig } from './config'
 export { Database } from './db'
 export { ViewMaintainer } from './db/views'

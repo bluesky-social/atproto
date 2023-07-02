@@ -19,6 +19,7 @@ const {
   ViewMaintainer,
   backfillRepos,
   makeAlgos,
+  backfillReposByDid,
 } = require('@atproto/bsky')
 const fs = require('fs/promises')
 
@@ -67,10 +68,17 @@ const main = async () => {
   })
   const viewMaintainer = new ViewMaintainer(migrateDb)
   const viewMaintainerRunning = viewMaintainer.run()
-  if(env.didFile && bsky.ctx.cfg.repoProvider) {
+  if (env.didFile && bsky.ctx.cfg.repoProvider) {
     const didsContent = await fs.readFile(env.didFile)
-    const dids = didsContent.toString().split('\n').map(did => did.trim())
-    await backfillRepos(bsky.ctx, dids)
+    const dids = didsContent
+      .toString()
+      .split('\n')
+      .map((did) => did.trim())
+      .filter(Boolean)
+    await backfillReposByDid(bsky.ctx, {
+      dids,
+      concurrency: env.backfillConcurrency || 500,
+    })
   }
   // await bsky.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
@@ -101,7 +109,8 @@ const getEnv = () => ({
   blobCacheLocation: process.env.BLOB_CACHE_LOC,
   cfDistributionId: process.env.CF_DISTRIBUTION_ID,
   feedPublisherDid: process.env.FEED_PUBLISHER_DID,
-  didFile: process.env.DID_FILE
+  didFile: process.env.DID_FILE,
+  backfillConcurrency: maybeParseInt(process.env.BACKFILL_CONCURRENCY),
 })
 
 const maybeParseInt = (str) => {
