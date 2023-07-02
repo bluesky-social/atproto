@@ -104,14 +104,18 @@ export class SequencerLeader {
 
   async sequenceOutgoing() {
     const unsequenced = await this.getUnsequenced()
-    for (const row of unsequenced) {
-      await this.db.db
-        .updateTable('repo_seq')
-        .set({ seq: this.nextSeqVal() })
-        .where('id', '=', row.id)
-        .execute()
-      await this.db.notify('outgoing_repo_seq')
-    }
+    await this.db.transaction((dbTxn) =>
+      Promise.all(
+        unsequenced.map((row) =>
+          dbTxn.db
+            .updateTable('repo_seq')
+            .set({ seq: this.nextSeqVal() })
+            .where('id', '=', row.id)
+            .execute(),
+        ),
+      ),
+    )
+    await this.db.notify('outgoing_repo_seq')
   }
 
   async getUnsequenced() {
@@ -120,6 +124,7 @@ export class SequencerLeader {
       .where('seq', 'is', null)
       .select('id')
       .orderBy('id', 'asc')
+      .limit(1000)
       .execute()
   }
 
