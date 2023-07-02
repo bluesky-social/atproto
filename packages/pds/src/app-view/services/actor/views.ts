@@ -94,6 +94,7 @@ export class ActorViews {
           .where('list_mute.mutedByDid', '=', viewer)
           .whereRef('list_item.subjectDid', '=', ref('did_handle.did'))
           .select('list_item.listUri')
+          .limit(1)
           .as('requesterMutedByList'),
       ])
 
@@ -210,6 +211,7 @@ export class ActorViews {
           .where('list_mute.mutedByDid', '=', viewer)
           .whereRef('list_item.subjectDid', '=', ref('did_handle.did'))
           .select('list_item.listUri')
+          .limit(1)
           .as('requesterMutedByList'),
       ])
 
