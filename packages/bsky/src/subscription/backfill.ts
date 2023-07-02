@@ -124,7 +124,7 @@ export const doBackfill = async (
   // Paginate through all repos and queue them for processing.
   // Fetch next page once all items on the queue are in progress.
   let cursor = backfillCursor
-  let count: 0
+  let count = 0
   const start = Date.now()
   do {
     const { data: page } = await retryHttp(() =>
