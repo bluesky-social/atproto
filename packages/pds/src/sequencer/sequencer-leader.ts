@@ -1,5 +1,5 @@
 import { DisconnectError } from '@atproto/xrpc-server'
-import { jitter, wait } from '@atproto/common'
+import { chunkArray, jitter, wait } from '@atproto/common'
 import { Leader } from '../db/leader'
 import { seqLogger as log } from '../logger'
 import Database from '../db'
@@ -104,17 +104,20 @@ export class SequencerLeader {
 
   async sequenceOutgoing() {
     const unsequenced = await this.getUnsequenced()
-    await this.db.transaction((dbTxn) =>
-      Promise.all(
-        unsequenced.map((row) =>
-          dbTxn.db
-            .updateTable('repo_seq')
-            .set({ seq: this.nextSeqVal() })
-            .where('id', '=', row.id)
-            .execute(),
+    const chunks = chunkArray(unsequenced, 2000)
+    for (const chunk of chunks) {
+      await this.db.transaction((dbTxn) =>
+        Promise.all(
+          chunk.map((row) =>
+            dbTxn.db
+              .updateTable('repo_seq')
+              .set({ seq: this.nextSeqVal() })
+              .where('id', '=', row.id)
+              .execute(),
+          ),
         ),
-      ),
-    )
+      )
+    }
     await this.db.notify('outgoing_repo_seq')
   }
 
@@ -124,7 +127,6 @@ export class SequencerLeader {
       .where('seq', 'is', null)
       .select('id')
       .orderBy('id', 'asc')
-      .limit(1000)
       .execute()
   }
 
