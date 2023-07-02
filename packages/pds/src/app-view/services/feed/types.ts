@@ -10,15 +10,17 @@ import {
 import { Label } from '../../../lexicon/types/com/atproto/label/defs'
 import { FeedGenerator } from '../../db/tables/feed-generator'
 
-export type FeedEmbedViews = {
-  [uri: string]: FeedEmbedView
+export type PostEmbedViews = {
+  [uri: string]: PostEmbedView
 }
 
-export type FeedEmbedView =
+export type PostEmbedView =
   | ViewImages
   | ViewExternal
   | ViewRecord
   | ViewRecordWithMedia
+
+export type PostViews = { [uri: string]: PostView }
 
 export type PostInfo = {
   uri: string
@@ -35,7 +37,7 @@ export type PostInfo = {
 
 export type PostInfoMap = { [uri: string]: PostInfo }
 
-export type ActorView = {
+export type ActorInfo = {
   did: string
   handle: string
   displayName?: string
@@ -49,7 +51,7 @@ export type ActorView = {
   }
   labels?: Label[]
 }
-export type ActorViewMap = { [did: string]: ActorView }
+export type ActorInfoMap = { [did: string]: ActorInfo }
 
 export type FeedGenInfo = FeedGenerator & {
   likeCount: number
