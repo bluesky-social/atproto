@@ -126,9 +126,10 @@ export default function (server: Server, ctx: AppContext) {
 
   server.app.bsky.unspecced.getPopularFeedGenerators({
     auth: ctx.accessVerifier,
-    handler: async ({ auth }) => {
+    handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
       const db = ctx.db.db
+      const { page } = params
       const { ref } = db.dynamic
       const feedService = ctx.services.appView.feed(ctx.db)
 
@@ -144,7 +145,7 @@ export default function (server: Server, ctx: AppContext) {
         ])
         .orderBy('likeCount', 'desc')
         .orderBy('cid', 'desc')
-        .limit(50)
+        .limit(50 * page)
         .execute()
 
       const genViews = await feedService.getFeedGeneratorViews(

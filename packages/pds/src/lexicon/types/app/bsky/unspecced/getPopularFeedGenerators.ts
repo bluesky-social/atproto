@@ -9,7 +9,9 @@ import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyFeedDefs from '../feed/defs'
 
-export interface QueryParams {}
+export interface QueryParams {
+  page: number
+}
 
 export type InputSchema = undefined
 

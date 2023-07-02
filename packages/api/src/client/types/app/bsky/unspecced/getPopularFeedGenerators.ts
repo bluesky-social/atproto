@@ -8,7 +8,9 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 import * as AppBskyFeedDefs from '../feed/defs'
 
-export interface QueryParams {}
+export interface QueryParams {
+  page?: number
+}
 
 export type InputSchema = undefined
 
