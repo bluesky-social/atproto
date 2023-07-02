@@ -6,27 +6,43 @@ export class LabelCache {
   bySubject: Record<string, Label[]> = {}
   latestLabel = ''
   defer = createDeferrable()
+  refreshes = 0
 
   destroyed = false
 
   constructor(public db: Database) {}
 
   async start() {
-    const allLabels = await this.db.db.selectFrom('label').selectAll().execute()
-    this.processLabels(allLabels)
+    await this.fullRefresh()
     this.poll()
   }
 
-  async poll() {
-    if (this.destroyed) return
+  async fullRefresh() {
+    const allLabels = await this.db.db.selectFrom('label').selectAll().execute()
+    this.wipeCache()
+    this.processLabels(allLabels)
+  }
+
+  async partialRefresh() {
     const labels = await this.db.db
       .selectFrom('label')
       .selectAll()
       .where('cts', '>', this.latestLabel)
       .execute()
     this.processLabels(labels)
+  }
+
+  async poll() {
+    if (this.destroyed) return
+    if (this.refreshes >= 60) {
+      await this.fullRefresh()
+      this.refreshes = 0
+    } else {
+      await this.partialRefresh()
+      this.refreshes++
+    }
     this.defer = createDeferrable()
-    await wait(500)
+    await wait(1000)
     this.poll()
   }
 
@@ -43,6 +59,10 @@ export class LabelCache {
       this.bySubject[label.uri].push(label)
     }
     this.defer.resolve()
+  }
+
+  wipeCache() {
+    this.bySubject = {}
   }
 
   stop() {
