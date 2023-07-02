@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const feedService = ctx.services.appView.feed(ctx.db)
 
-      const got = await feedService.getFeedGeneratorViews([feed], requester)
+      const got = await feedService.getFeedGeneratorInfos([feed], requester)
       const feedInfo = got[feed]
       if (!feedInfo) {
         throw new InvalidRequestError('could not find feed')
@@ -56,7 +56,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const profiles = await feedService.getActorViews(
+      const profiles = await feedService.getActorInfos(
         [feedInfo.creator],
         requester,
       )
