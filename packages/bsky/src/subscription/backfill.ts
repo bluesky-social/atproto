@@ -13,16 +13,36 @@ export const backfillRepos = async (ctx: AppContext, concurrency: number) => {
   if (!ctx.cfg.repoProvider) {
     throw new Error('No repo provider for backfill')
   }
-  // first, peek the stream to find the last event
-  const cursor = await peekStream(ctx)
-  if (cursor === null) {
-    subLogger.info('already caught up, skipping backfill')
-    console.log('SKIPPING backfill')
-    return
+  const res = await ctx.db.db
+    .selectFrom('subscription')
+    .where('service', '=', ctx.cfg.repoProvider)
+    .where('method', '=', METHOD)
+    .selectAll()
+    .executeTakeFirst()
+  const prevState = res ? JSON.parse(res.state) : undefined
+
+  let cursor: number
+  if (typeof prevState['peekedCursor'] === 'number') {
+    cursor = prevState['peekedCursor']
+  } else {
+    // first, peek the stream to find the last event
+    const peeked = await peekStream(ctx)
+    if (peeked === null) {
+      subLogger.info('already caught up, skipping backfill')
+      console.log('SKIPPING backfill')
+      return
+    } else {
+      cursor = peeked
+    }
   }
 
+  const backfillCursor =
+    typeof prevState['backfillCursor'] === 'string'
+      ? prevState['backfillCursor']
+      : undefined
+
   // then run backfill
-  await doBackfill(ctx, concurrency, cursor)
+  await doBackfill(ctx, concurrency, cursor, backfillCursor)
 
   // finally update our subscription state to reflect the fact that we're caught up with the previously peeked cursor
   await setSubscriptionState(ctx, { cursor })
@@ -53,17 +73,6 @@ export const peekStream = async (ctx: AppContext): Promise<number | null> => {
   const repoProvider = ctx.cfg.repoProvider
   if (!repoProvider) {
     throw new Error('No repo provider for backfill')
-  }
-
-  const res = await ctx.db.db
-    .selectFrom('subscription')
-    .where('service', '=', ctx.cfg.repoProvider)
-    .where('method', '=', METHOD)
-    .selectAll()
-    .executeTakeFirst()
-  const prevState = res ? JSON.parse(res.state) : undefined
-  if (prevState && typeof prevState['peekedCursor'] === 'number') {
-    return prevState['peekedCursor']
   }
 
   const sub = new Subscription({
@@ -100,6 +109,7 @@ export const doBackfill = async (
   ctx: AppContext,
   concurrency: number,
   peekedCursor: number,
+  backfillCursor?: string,
 ) => {
   const repoProvider = ctx.cfg.repoProvider
   if (!concurrency || !repoProvider) {
@@ -113,7 +123,7 @@ export const doBackfill = async (
 
   // Paginate through all repos and queue them for processing.
   // Fetch next page once all items on the queue are in progress.
-  let cursor: string | undefined
+  let cursor = backfillCursor
   let count: 0
   const start = Date.now()
   do {
