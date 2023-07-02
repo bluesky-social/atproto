@@ -22,7 +22,7 @@ describe('algo hot-classic', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'algo_hot_classic',
+      dbPostgresSchema: 'bsky_algo_hot_classic',
       bsky: { algos: makeAlgos(feedPublisherDid) },
     })
     agent = new AtpAgent({ service: network.bsky.url })

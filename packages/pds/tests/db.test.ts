@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { once } from 'events'
-import { wait } from '@atproto/common'
+import { createDeferrable, wait } from '@atproto/common'
 import { Database } from '../src'
 import { Leader, appMigration } from '../src/db/leader'
 import { runTestServer, CloseFn } from './_util'
@@ -165,6 +165,39 @@ describe('db', () => {
         .where('did', 'in', names)
         .execute()
       expect(res.length).toBe(0)
+    })
+  })
+
+  describe('transaction advisory locks', () => {
+    it('allows locks in txs to run sequentially', async () => {
+      if (db.dialect !== 'pg') return
+      for (let i = 0; i < 100; i++) {
+        await db.transaction(async (dbTxn) => {
+          const locked = await dbTxn.txAdvisoryLock('asfd')
+          expect(locked).toBe(true)
+        })
+      }
+    })
+
+    it('locks block between txns', async () => {
+      if (db.dialect !== 'pg') return
+      const deferable = createDeferrable()
+      const tx1 = db.transaction(async (dbTxn) => {
+        const locked = await dbTxn.txAdvisoryLock('asdf')
+        expect(locked).toBe(true)
+        await deferable.complete
+      })
+      // give it just a second to ensure it gets the lock
+      await wait(10)
+      const tx2 = db.transaction(async (dbTxn) => {
+        const locked = await dbTxn.txAdvisoryLock('asdf')
+        expect(locked).toBe(false)
+        deferable.resolve()
+        await tx1
+        const locked2 = await dbTxn.txAdvisoryLock('asdf')
+        expect(locked2).toBe(true)
+      })
+      await tx2
     })
   })
 

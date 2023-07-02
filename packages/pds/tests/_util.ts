@@ -6,6 +6,7 @@ import * as plc from '@did-plc/lib'
 import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
 import { AtUri } from '@atproto/uri'
 import { randomStr } from '@atproto/crypto'
+import { uniqueLockId } from '@atproto/dev-env'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import { PDS, ServerConfig, Database, MemoryBlobStore } from '../src/index'
@@ -104,6 +105,7 @@ export const runTestServer = async (
     maxSubscriptionBuffer: 200,
     repoBackfillLimitMs: HOUR,
     sequencerLeaderLockId: uniqueLockId(),
+    dbTxLockNonce: await randomStr(32, 'base32'),
     ...params,
   })
 
@@ -112,6 +114,7 @@ export const runTestServer = async (
       ? Database.postgres({
           url: cfg.dbPostgresUrl,
           schema: cfg.dbPostgresSchema,
+          txLockNonce: cfg.dbTxLockNonce,
         })
       : Database.memory()
 
@@ -122,6 +125,7 @@ export const runTestServer = async (
       ? Database.postgres({
           url: cfg.dbPostgresUrl,
           schema: cfg.dbPostgresSchema,
+          txLockNonce: cfg.dbTxLockNonce,
         })
       : db
   if (opts.migration) {
@@ -157,16 +161,6 @@ export const runTestServer = async (
       await plcServer.destroy()
     },
   }
-}
-
-const usedLockIds = new Set()
-const uniqueLockId = () => {
-  let lockId: number
-  do {
-    lockId = 1000 + Math.ceil(1000 * Math.random())
-  } while (usedLockIds.has(lockId))
-  usedLockIds.add(lockId)
-  return lockId
 }
 
 export const adminAuth = () => {
@@ -229,6 +223,10 @@ export const forSnapshot = (obj: unknown) => {
     }
     if (str.match(/^\d+::bafy/)) {
       return constantKeysetCursor
+    }
+
+    if (str.match(/^\d+::did:plc/)) {
+      return constantDidCursor
     }
     if (str.match(/\/image\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
       // Match image urls
@@ -298,6 +296,7 @@ export function take(
 
 export const constantDate = new Date(0).toISOString()
 export const constantKeysetCursor = '0000000000000::bafycid'
+export const constantDidCursor = '0000000000000::did'
 
 const mapLeafValues = (obj: unknown, fn: (val: unknown) => unknown) => {
   if (Array.isArray(obj)) {

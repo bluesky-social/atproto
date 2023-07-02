@@ -22,7 +22,7 @@ export const getUserSearchQuery = (
     limit,
     cursor,
     direction: 'asc',
-    keyset: new SearchKeyset(distanceAccount, ref('handle')),
+    keyset: new SearchKeyset(distanceAccount, ref('actor.did')),
   })
   // Matching profiles based on display name
   const distanceProfile = distance(term, ref('displayName'))
@@ -31,14 +31,14 @@ export const getUserSearchQuery = (
     limit,
     cursor,
     direction: 'asc',
-    keyset: new SearchKeyset(distanceProfile, ref('handle')),
+    keyset: new SearchKeyset(distanceProfile, ref('actor.did')),
   })
   // Combine and paginate result set
   return paginate(combineAccountsAndProfilesQb(db, accountsQb, profilesQb), {
     limit,
     cursor,
     direction: 'asc',
-    keyset: new SearchKeyset(ref('distance'), ref('handle')),
+    keyset: new SearchKeyset(ref('distance'), ref('actor.did')),
   })
 }
 
@@ -64,7 +64,7 @@ export const getUserSearchQuerySimple = (
   return paginate(combineAccountsAndProfilesQb(db, accountsQb, profilesQb), {
     limit,
     direction: 'asc',
-    keyset: new SearchKeyset(ref('distance'), ref('handle')),
+    keyset: new SearchKeyset(ref('distance'), ref('actor.did')),
   })
 }
 
@@ -81,6 +81,7 @@ const getMatchingAccountsQb = (
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('actor'))),
     )
+    .where('actor.handle', 'is not', null)
     .where(similar(term, ref('handle'))) // Coarse filter engaging trigram index
     .where(distanceAccount, '<', getMatchThreshold(term)) // Refines results from trigram index
     .select(['actor.did as did', distanceAccount.as('distance')])
@@ -100,6 +101,7 @@ const getMatchingProfilesQb = (
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('actor'))),
     )
+    .where('actor.handle', 'is not', null)
     .where(similar(term, ref('displayName'))) // Coarse filter engaging trigram index
     .where(distanceProfile, '<', getMatchThreshold(term)) // Refines results from trigram index
     .select(['profile.creator as did', distanceProfile.as('distance')])
@@ -149,13 +151,13 @@ const getMatchThreshold = (term: string) => {
   return term.length < 3 ? 0.9 : 0.8
 }
 
-type Result = { distance: number; handle: string }
+type Result = { distance: number; did: string }
 type LabeledResult = { primary: number; secondary: string }
 export class SearchKeyset extends GenericKeyset<Result, LabeledResult> {
   labelResult(result: Result) {
     return {
       primary: result.distance,
-      secondary: result.handle,
+      secondary: result.did,
     }
   }
   labeledResultToCursor(labeled: LabeledResult) {
