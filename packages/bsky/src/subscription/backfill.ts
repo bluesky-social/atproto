@@ -22,10 +22,20 @@ export const backfillRepos = async (ctx: AppContext, concurrency: number) => {
   }
 
   // then run backfill
-  await doBackfill(ctx, concurrency)
+  await doBackfill(ctx, concurrency, cursor)
 
   // finally update our subscription state to reflect the fact that we're caught up with the previously peeked cursor
-  const state = JSON.stringify({ cursor })
+  await setSubscriptionState(ctx, { cursor })
+}
+
+const setSubscriptionState = async (
+  ctx: AppContext,
+  subState: { cursor?: number; peekedCursor?: number; backfillCursor?: string },
+) => {
+  if (!ctx.cfg.repoProvider) {
+    return
+  }
+  const state = JSON.stringify(subState)
   await ctx.db.db
     .insertInto('subscription')
     .values({
@@ -43,6 +53,17 @@ export const peekStream = async (ctx: AppContext): Promise<number | null> => {
   const repoProvider = ctx.cfg.repoProvider
   if (!repoProvider) {
     throw new Error('No repo provider for backfill')
+  }
+
+  const res = await ctx.db.db
+    .selectFrom('subscription')
+    .where('service', '=', ctx.cfg.repoProvider)
+    .where('method', '=', METHOD)
+    .selectAll()
+    .executeTakeFirst()
+  const prevState = res ? JSON.parse(res.state) : undefined
+  if (prevState && typeof prevState['peekedCursor'] === 'number') {
+    return prevState['peekedCursor']
   }
 
   const sub = new Subscription({
@@ -75,7 +96,11 @@ export const peekStream = async (ctx: AppContext): Promise<number | null> => {
   return second.value.seq
 }
 
-export const doBackfill = async (ctx: AppContext, concurrency: number) => {
+export const doBackfill = async (
+  ctx: AppContext,
+  concurrency: number,
+  peekedCursor: number,
+) => {
   const repoProvider = ctx.cfg.repoProvider
   if (!concurrency || !repoProvider) {
     throw new Error('Repo subscription does not support backfill')
@@ -133,6 +158,10 @@ export const doBackfill = async (ctx: AppContext, concurrency: number) => {
     })
     cursor = page.cursor
     await queue.onEmpty() // Remaining items are in progress
+    await setSubscriptionState(ctx, {
+      peekedCursor,
+      backfillCursor: cursor,
+    })
   } while (cursor)
 
   // Wait until final batch finishes processing then update cursor.
