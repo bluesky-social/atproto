@@ -106,7 +106,7 @@ export class SequencerLeader {
     const unsequenced = await this.getUnsequenced()
     const chunks = chunkArray(unsequenced, 2000)
     for (const chunk of chunks) {
-      await this.db.transaction((dbTxn) => {
+      await this.db.transaction(async (dbTxn) => {
         await Promise.all(
           chunk.map((row) =>
             dbTxn.db
@@ -115,8 +115,8 @@ export class SequencerLeader {
               .where('id', '=', row.id)
               .execute(),
           ),
-        ),
-          await this.db.notify('outgoing_repo_seq')
+        )
+        await this.db.notify('outgoing_repo_seq')
       })
     }
   }
