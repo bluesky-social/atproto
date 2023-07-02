@@ -20,6 +20,7 @@ const {
   backfillRepos,
   makeAlgos,
 } = require('@atproto/bsky')
+const fs = require('fs/promises')
 
 const main = async () => {
   const env = getEnv()
@@ -66,10 +67,12 @@ const main = async () => {
   })
   const viewMaintainer = new ViewMaintainer(migrateDb)
   const viewMaintainerRunning = viewMaintainer.run()
-  if(bsky.ctx.cfg.repoProvider) {
-    await backfillRepos(bsky.ctx, 3000)
+  if(env.didFile && bsky.ctx.cfg.repoProvider) {
+    const didsContent = await fs.readFile(env.didFile)
+    const dids = didsContent.toString().split('\n').map(did => did.trim())
+    await backfillRepos(bsky.ctx, dids)
   }
-  await bsky.start()
+  // await bsky.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
     await bsky.destroy()
@@ -98,6 +101,7 @@ const getEnv = () => ({
   blobCacheLocation: process.env.BLOB_CACHE_LOC,
   cfDistributionId: process.env.CF_DISTRIBUTION_ID,
   feedPublisherDid: process.env.FEED_PUBLISHER_DID,
+  didFile: process.env.DID_FILE
 })
 
 const maybeParseInt = (str) => {
