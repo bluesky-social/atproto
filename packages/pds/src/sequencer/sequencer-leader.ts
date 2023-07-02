@@ -104,7 +104,7 @@ export class SequencerLeader {
 
   async sequenceOutgoing() {
     const unsequenced = await this.getUnsequenced()
-    const chunks = chunkArray(unsequenced, 5000)
+    const chunks = chunkArray(unsequenced, 10000)
     for (const chunk of chunks) {
       await this.db.transaction((dbTxn) =>
         Promise.all(
