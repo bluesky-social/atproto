@@ -108,16 +108,17 @@ export class SequencerLeader {
     for (const chunk of chunks) {
       await this.db.transaction(async (dbTxn) => {
         await Promise.all(
-          chunk.map((row) =>
-            dbTxn.db
+          chunk.map(async (row) => {
+            await dbTxn.db
               .updateTable('repo_seq')
               .set({ seq: this.nextSeqVal() })
               .where('id', '=', row.id)
-              .execute(),
-          ),
+              .execute()
+            await this.db.notify('outgoing_repo_seq')
+          }),
         )
-        await this.db.notify('outgoing_repo_seq')
       })
+      await this.db.notify('outgoing_repo_seq')
     }
   }
 
