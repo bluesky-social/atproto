@@ -171,7 +171,16 @@ export class RepoSubscription {
                 'skipping indexing of invalid record',
               )
             } else {
-              throw err
+              subLogger.warn(
+                {
+                  err,
+                  did: msg.repo,
+                  commit: msg.commit.toString(),
+                  uri: op.uri.toString(),
+                  cid: op.cid.toString(),
+                },
+                'skipping indexing due to error processing record',
+              )
             }
           }
         }
