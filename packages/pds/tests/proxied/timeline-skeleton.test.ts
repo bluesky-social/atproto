@@ -15,7 +15,7 @@ describe('proxies timeline skeleton', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_timeline_skeleton',
       pds: {
-        enableAppView: true,
+        enableInProcessAppView: true,
       },
     })
     agent = network.pds.getClient()

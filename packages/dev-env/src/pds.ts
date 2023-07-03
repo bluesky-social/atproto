@@ -81,7 +81,7 @@ export class TestPds {
     if (
       config.bskyAppViewEndpoint &&
       config.bskyAppViewProxy &&
-      !cfg.enableAppView
+      !cfg.enableInProcessAppView
     ) {
       // Disable communication to app view within pds
       MessageDispatcher.prototype.send = async () => {}
