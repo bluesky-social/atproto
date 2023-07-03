@@ -141,10 +141,11 @@ export class RepoSubscription {
         return await indexingService.indexRepo(msg.repo, rootCid.toString())
       }
       if (msg.rebase) {
-        const needsReindex = await indexingService.checkCommitNeedsIndexing(
-          root,
-        )
-        if (!needsReindex) return
+        // temporarily disable check, full reindex on rabase
+        // const needsReindex = await indexingService.checkCommitNeedsIndexing(
+        //   root,
+        // )
+        // if (!needsReindex) return
         return await indexingService.indexRepo(msg.repo, rootCid.toString())
       }
       for (const op of ops) {
@@ -171,7 +172,7 @@ export class RepoSubscription {
                 'skipping indexing of invalid record',
               )
             } else {
-              subLogger.warn(
+              subLogger.error(
                 {
                   err,
                   did: msg.repo,
