@@ -140,6 +140,19 @@ async function getFeedItemsLowFollow(
   let myFeedItemsQb = feedService
     .selectFeedItemQb()
     .where('originatorDid', '=', requester)
+    .where((qb) =>
+      // Hide posts and reposts of or by muted actors
+      accountService.whereNotMuted(qb, requester, [
+        ref('post.creator'),
+        ref('originatorDid'),
+      ]),
+    )
+    .whereNotExists(
+      graphService.blockQb(requester, [
+        ref('post.creator'),
+        ref('originatorDid'),
+      ]),
+    )
 
   myFeedItemsQb = paginate(myFeedItemsQb, {
     limit,
