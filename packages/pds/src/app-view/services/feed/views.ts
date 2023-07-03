@@ -6,12 +6,29 @@ import {
   PostView,
 } from '../../../lexicon/types/app/bsky/feed/defs'
 import {
-  ActorViewMap,
-  FeedEmbeds,
+  Main as EmbedImages,
+  isMain as isEmbedImages,
+  View as EmbedImagesView,
+} from '../../../lexicon/types/app/bsky/embed/images'
+import {
+  Main as EmbedExternal,
+  isMain as isEmbedExternal,
+  View as EmbedExternalView,
+} from '../../../lexicon/types/app/bsky/embed/external'
+import { Main as EmbedRecordWithMedia } from '../../../lexicon/types/app/bsky/embed/recordWithMedia'
+import {
+  ViewBlocked,
+  ViewNotFound,
+  ViewRecord,
+} from '../../../lexicon/types/app/bsky/embed/record'
+import {
+  ActorInfoMap,
+  PostEmbedViews,
   FeedGenInfo,
   FeedRow,
   MaybePostView,
   PostInfoMap,
+  RecordEmbedViewRecord,
 } from './types'
 import { Labels } from '../label'
 import { ProfileView } from '../../../lexicon/types/app/bsky/actor/defs'
@@ -60,9 +77,9 @@ export class FeedViews {
 
   formatFeed(
     items: FeedRow[],
-    actors: ActorViewMap,
+    actors: ActorInfoMap,
     posts: PostInfoMap,
-    embeds: FeedEmbeds,
+    embeds: PostEmbedViews,
     labels: Labels,
     usePostViewUnion?: boolean,
   ): FeedViewPost[] {
@@ -127,9 +144,9 @@ export class FeedViews {
 
   formatPostView(
     uri: string,
-    actors: ActorViewMap,
+    actors: ActorInfoMap,
     posts: PostInfoMap,
-    embeds: FeedEmbeds,
+    embeds: PostEmbedViews,
     labels: Labels,
   ): PostView | undefined {
     const post = posts[uri]
@@ -158,9 +175,9 @@ export class FeedViews {
 
   formatMaybePostView(
     uri: string,
-    actors: ActorViewMap,
+    actors: ActorInfoMap,
     posts: PostInfoMap,
-    embeds: FeedEmbeds,
+    embeds: PostEmbedViews,
     labels: Labels,
     usePostViewUnion?: boolean,
   ): MaybePostView | undefined {
@@ -192,6 +209,89 @@ export class FeedViews {
       $type: 'app.bsky.feed.defs#notFoundPost',
       uri: uri,
       notFound: true as const,
+    }
+  }
+
+  imagesEmbedView(embed: EmbedImages) {
+    const imgViews = embed.images.map((img) => ({
+      thumb: this.imgUriBuilder.getCommonSignedUri(
+        'feed_thumbnail',
+        img.image.ref,
+      ),
+      fullsize: this.imgUriBuilder.getCommonSignedUri(
+        'feed_fullsize',
+        img.image.ref,
+      ),
+      alt: img.alt,
+    }))
+    return {
+      $type: 'app.bsky.embed.images#view',
+      images: imgViews,
+    }
+  }
+
+  externalEmbedView(embed: EmbedExternal) {
+    const { uri, title, description, thumb } = embed.external
+    return {
+      $type: 'app.bsky.embed.external#view',
+      external: {
+        uri,
+        title,
+        description,
+        thumb: thumb
+          ? this.imgUriBuilder.getCommonSignedUri('feed_thumbnail', thumb.ref)
+          : undefined,
+      },
+    }
+  }
+
+  getRecordEmbedView(
+    uri: string,
+    post?: PostView,
+    omitEmbeds = false,
+  ): (ViewRecord | ViewNotFound | ViewBlocked) & { $type: string } {
+    if (!post) {
+      return {
+        $type: 'app.bsky.embed.record#viewNotFound',
+        uri,
+      }
+    }
+    if (post.author.viewer?.blocking || post.author.viewer?.blockedBy) {
+      return {
+        $type: 'app.bsky.embed.record#viewBlocked',
+        uri,
+      }
+    }
+    return {
+      $type: 'app.bsky.embed.record#viewRecord',
+      uri: post.uri,
+      cid: post.cid,
+      author: post.author,
+      value: post.record,
+      labels: post.labels,
+      indexedAt: post.indexedAt,
+      embeds: omitEmbeds ? undefined : post.embed ? [post.embed] : [],
+    }
+  }
+
+  getRecordWithMediaEmbedView(
+    embed: EmbedRecordWithMedia,
+    embedRecordView: RecordEmbedViewRecord,
+  ) {
+    let mediaEmbed: EmbedImagesView | EmbedExternalView
+    if (isEmbedImages(embed.media)) {
+      mediaEmbed = this.imagesEmbedView(embed.media)
+    } else if (isEmbedExternal(embed.media)) {
+      mediaEmbed = this.externalEmbedView(embed.media)
+    } else {
+      return
+    }
+    return {
+      $type: 'app.bsky.embed.recordWithMedia#view',
+      record: {
+        record: embedRecordView,
+      },
+      media: mediaEmbed,
     }
   }
 }

@@ -147,14 +147,14 @@ export default function (server: Server, ctx: AppContext) {
         .limit(50)
         .execute()
 
-      const genViews = await feedService.getFeedGeneratorViews(
+      const genViews = await feedService.getFeedGeneratorInfos(
         mostPopularFeeds.map((feed) => feed.uri),
         requester,
       )
 
       const genList = Object.values(genViews)
       const creators = genList.map((gen) => gen.creator)
-      const profiles = await feedService.getActorViews(creators, requester)
+      const profiles = await feedService.getActorInfos(creators, requester)
 
       const feedViews = genList.map((gen) =>
         feedService.views.formatFeedGeneratorView(gen, profiles),
