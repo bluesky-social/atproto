@@ -9,7 +9,7 @@ export type PlcConfig = {
 export type PdsConfig = Partial<pds.ServerConfig> & {
   plcUrl: string
   migration?: string
-  enableAppView?: boolean
+  enableInProcessAppView?: boolean
 }
 
 export type BskyConfig = Partial<bsky.ServerConfig> & {
