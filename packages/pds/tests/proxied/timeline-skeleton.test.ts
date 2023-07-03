@@ -16,6 +16,7 @@ describe('proxies timeline skeleton', () => {
       dbPostgresSchema: 'proxy_timeline_skeleton',
       pds: {
         enableInProcessAppView: true,
+        bskyAppViewProxy: false,
       },
     })
     agent = network.pds.getClient()
