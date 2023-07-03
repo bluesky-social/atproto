@@ -6,31 +6,14 @@ import { countAll, notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
 import { ids } from '../../../lexicon/lexicons'
 import {
-  ViewBlocked,
-  ViewNotFound,
-  ViewRecord,
-  View as RecordEmbedView,
-} from '../../../lexicon/types/app/bsky/embed/record'
-import {
   Record as PostRecord,
   isRecord as isPostRecord,
 } from '../../../lexicon/types/app/bsky/feed/post'
-import {
-  Main as EmbedImages,
-  isMain as isEmbedImages,
-  View as EmbedImagesView,
-} from '../../../lexicon/types/app/bsky/embed/images'
-import {
-  Main as EmbedExternal,
-  isMain as isEmbedExternal,
-  View as EmbedExternalView,
-} from '../../../lexicon/types/app/bsky/embed/external'
+import { isMain as isEmbedImages } from '../../../lexicon/types/app/bsky/embed/images'
+import { isMain as isEmbedExternal } from '../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecord } from '../../../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../../../lexicon/types/app/bsky/embed/recordWithMedia'
-import {
-  FeedViewPost,
-  PostView,
-} from '../../../lexicon/types/app/bsky/feed/defs'
+import { FeedViewPost } from '../../../lexicon/types/app/bsky/feed/defs'
 import {
   ActorInfoMap,
   PostInfoMap,
@@ -39,6 +22,7 @@ import {
   FeedGenInfoMap,
   PostViews,
   PostEmbedViews,
+  RecordEmbedViewRecordMap,
 } from './types'
 import { LabelService, Labels } from '../label'
 import { ActorService } from '../actor'
@@ -304,190 +288,6 @@ export class FeedService {
     }, {} as PostViews)
   }
 
-  imagesEmbedView(embed: EmbedImages) {
-    const imgViews = embed.images.map((img) => ({
-      thumb: this.imgUriBuilder.getCommonSignedUri(
-        'feed_thumbnail',
-        img.image.ref,
-      ),
-      fullsize: this.imgUriBuilder.getCommonSignedUri(
-        'feed_fullsize',
-        img.image.ref,
-      ),
-      alt: img.alt,
-    }))
-    return {
-      $type: 'app.bsky.embed.images#view',
-      images: imgViews,
-    }
-  }
-
-  externalEmbedView(embed: EmbedExternal) {
-    const { uri, title, description, thumb } = embed.external
-    return {
-      $type: 'app.bsky.embed.external#view',
-      external: {
-        uri,
-        title,
-        description,
-        thumb: thumb
-          ? this.imgUriBuilder.getCommonSignedUri('feed_thumbnail', thumb.ref)
-          : undefined,
-      },
-    }
-  }
-
-  nestedRecordUris(posts: PostRecord[]): string[] {
-    const uris: string[] = []
-    for (const post of posts) {
-      if (!post.embed) continue
-      if (isEmbedRecord(post.embed)) {
-        uris.push(post.embed.record.uri)
-      } else if (isEmbedRecordWithMedia(post.embed)) {
-        uris.push(post.embed.record.record.uri)
-      } else {
-        continue
-      }
-    }
-    return uris
-  }
-
-  async nestedRecordViews(
-    posts: PostRecord[],
-    requester: string,
-    depth: number,
-  ): Promise<{ [uri: string]: RecordEmbedView }> {
-    const nestedUris = this.nestedRecordUris(posts)
-    if (nestedUris.length < 1) return {}
-    const nestedPostUris: string[] = []
-    const nestedFeedGenUris: string[] = []
-    const nestedListUris: string[] = []
-    const nestedDidsSet = new Set<string>()
-    for (const uri of nestedUris) {
-      const parsed = new AtUri(uri)
-      nestedDidsSet.add(parsed.hostname)
-      if (parsed.collection === ids.AppBskyFeedPost) {
-        nestedPostUris.push(uri)
-      } else if (parsed.collection === ids.AppBskyFeedGenerator) {
-        nestedFeedGenUris.push(uri)
-      } else if (parsed.collection === ids.AppBskyGraphList) {
-        nestedListUris.push(uri)
-      }
-    }
-    const nestedDids = [...nestedDidsSet]
-    const [postInfos, actorInfos, labelViews, feedGenInfos, listViews] =
-      await Promise.all([
-        this.getPostInfos(nestedPostUris, requester),
-        this.getActorInfos(nestedDids, requester, { skipLabels: true }),
-        this.services.label.getLabelsForSubjects([
-          ...nestedPostUris,
-          ...nestedDids,
-        ]),
-        this.getFeedGeneratorInfos(nestedFeedGenUris, requester),
-        this.services.graph.getListViews(nestedListUris, requester),
-      ])
-    const deepEmbedViews = await this.embedsForPosts(
-      postInfos,
-      requester,
-      depth + 1,
-    )
-    const recordEmbedViews: { [uri: string]: RecordEmbedView } = {}
-    for (const uri of nestedUris) {
-      const collection = new AtUri(uri).collection
-      if (collection === ids.AppBskyFeedGenerator && feedGenInfos[uri]) {
-        recordEmbedViews[uri] = {
-          record: {
-            $type: 'app.bsky.feed.defs#generatorView',
-            ...this.views.formatFeedGeneratorView(
-              feedGenInfos[uri],
-              actorInfos,
-              labelViews,
-            ),
-          },
-        }
-      } else if (collection === ids.AppBskyGraphList && listViews[uri]) {
-        recordEmbedViews[uri] = {
-          record: {
-            $type: 'app.bsky.graph.defs#listView',
-            ...this.services.graph.formatListView(listViews[uri], actorInfos),
-          },
-        }
-      } else if (collection === ids.AppBskyFeedPost && postInfos[uri]) {
-        const formatted = this.views.formatPostView(
-          uri,
-          actorInfos,
-          postInfos,
-          deepEmbedViews,
-          labelViews,
-        )
-        recordEmbedViews[uri] = {
-          record: getRecordEmbedView(uri, formatted, depth > 0),
-        }
-      } else {
-        recordEmbedViews[uri] = {
-          record: {
-            $type: 'app.bsky.embed.record#viewNotFound',
-            uri,
-          },
-        }
-      }
-    }
-    return recordEmbedViews
-  }
-
-  postRecordsFromInfos(infos: PostInfoMap): { [uri: string]: PostRecord } {
-    const records: { [uri: string]: PostRecord } = {}
-    for (const [uri, info] of Object.entries(infos)) {
-      const record = cborToLexRecord(info.recordBytes)
-      if (isPostRecord(record)) {
-        records[uri] = record
-      }
-    }
-    return records
-  }
-
-  async embedsForPosts(postInfos: PostInfoMap, requester: string, depth = 0) {
-    const postMap = this.postRecordsFromInfos(postInfos)
-    const posts = Object.values(postMap)
-    if (posts.length < 1) {
-      return {}
-    }
-    const recordEmbedViews =
-      depth > 1 ? {} : await this.nestedRecordViews(posts, requester, depth)
-
-    const postEmbedViews: PostEmbedViews = {}
-    for (const [uri, post] of Object.entries(postMap)) {
-      if (!post.embed) continue
-      if (isEmbedImages(post.embed)) {
-        postEmbedViews[uri] = this.imagesEmbedView(post.embed)
-      } else if (isEmbedExternal(post.embed)) {
-        postEmbedViews[uri] = this.externalEmbedView(post.embed)
-      } else if (isEmbedRecord(post.embed)) {
-        if (!recordEmbedViews[post.embed.record.uri]) continue
-        postEmbedViews[uri] = {
-          $type: 'app.bsky.embed.record#view',
-          ...recordEmbedViews[post.embed.record.uri],
-        }
-      } else if (isEmbedRecordWithMedia(post.embed)) {
-        if (!recordEmbedViews[post.embed.record.record.uri]) continue
-        let mediaEmbed: EmbedImagesView | EmbedExternalView
-        if (isEmbedImages(post.embed.media)) {
-          mediaEmbed = this.imagesEmbedView(post.embed.media)
-        } else if (isEmbedExternal(post.embed.media)) {
-          mediaEmbed = this.externalEmbedView(post.embed.media)
-        } else {
-          continue
-        }
-        postEmbedViews[uri] = {
-          $type: 'app.bsky.embed.recordWithMedia#view',
-          record: recordEmbedViews[post.embed.record.record.uri],
-          media: mediaEmbed,
-        }
-      }
-    }
-    return postEmbedViews
-  }
-
   async hydrateFeed(
     items: FeedRow[],
     requester: string,
@@ -529,6 +329,122 @@ export class FeedService {
       usePostViewUnion,
     )
   }
+
+  async embedsForPosts(postInfos: PostInfoMap, requester: string, depth = 0) {
+    const postMap = postRecordsFromInfos(postInfos)
+    const posts = Object.values(postMap)
+    if (posts.length < 1) {
+      return {}
+    }
+    const recordEmbedViews =
+      depth > 1 ? {} : await this.nestedRecordViews(posts, requester, depth)
+
+    const postEmbedViews: PostEmbedViews = {}
+    for (const [uri, post] of Object.entries(postMap)) {
+      if (!post.embed) continue
+      if (isEmbedImages(post.embed)) {
+        postEmbedViews[uri] = this.views.imagesEmbedView(post.embed)
+      } else if (isEmbedExternal(post.embed)) {
+        postEmbedViews[uri] = this.views.externalEmbedView(post.embed)
+      } else if (isEmbedRecord(post.embed)) {
+        if (!recordEmbedViews[post.embed.record.uri]) continue
+        postEmbedViews[uri] = {
+          $type: 'app.bsky.embed.record#view',
+          record: recordEmbedViews[post.embed.record.uri],
+        }
+      } else if (isEmbedRecordWithMedia(post.embed)) {
+        const embedRecordView = recordEmbedViews[post.embed.record.record.uri]
+        if (!embedRecordView) continue
+        const formatted = this.views.getRecordWithMediaEmbedView(
+          post.embed,
+          embedRecordView,
+        )
+        if (formatted) {
+          postEmbedViews[uri] = formatted
+        }
+      }
+    }
+    return postEmbedViews
+  }
+
+  async nestedRecordViews(
+    posts: PostRecord[],
+    requester: string,
+    depth: number,
+  ): Promise<RecordEmbedViewRecordMap> {
+    const nestedUris = nestedRecordUris(posts)
+    if (nestedUris.length < 1) return {}
+    const nestedPostUris: string[] = []
+    const nestedFeedGenUris: string[] = []
+    const nestedListUris: string[] = []
+    const nestedDidsSet = new Set<string>()
+    for (const uri of nestedUris) {
+      const parsed = new AtUri(uri)
+      nestedDidsSet.add(parsed.hostname)
+      if (parsed.collection === ids.AppBskyFeedPost) {
+        nestedPostUris.push(uri)
+      } else if (parsed.collection === ids.AppBskyFeedGenerator) {
+        nestedFeedGenUris.push(uri)
+      } else if (parsed.collection === ids.AppBskyGraphList) {
+        nestedListUris.push(uri)
+      }
+    }
+    const nestedDids = [...nestedDidsSet]
+    const [postInfos, actorInfos, labelViews, feedGenInfos, listViews] =
+      await Promise.all([
+        this.getPostInfos(nestedPostUris, requester),
+        this.getActorInfos(nestedDids, requester, { skipLabels: true }),
+        this.services.label.getLabelsForSubjects([
+          ...nestedPostUris,
+          ...nestedDids,
+        ]),
+        this.getFeedGeneratorInfos(nestedFeedGenUris, requester),
+        this.services.graph.getListViews(nestedListUris, requester),
+      ])
+    const deepEmbedViews = await this.embedsForPosts(
+      postInfos,
+      requester,
+      depth + 1,
+    )
+    const recordEmbedViews: RecordEmbedViewRecordMap = {}
+    for (const uri of nestedUris) {
+      const collection = new AtUri(uri).collection
+      if (collection === ids.AppBskyFeedGenerator && feedGenInfos[uri]) {
+        recordEmbedViews[uri] = {
+          $type: 'app.bsky.feed.defs#generatorView',
+          ...this.views.formatFeedGeneratorView(
+            feedGenInfos[uri],
+            actorInfos,
+            labelViews,
+          ),
+        }
+      } else if (collection === ids.AppBskyGraphList && listViews[uri]) {
+        recordEmbedViews[uri] = {
+          $type: 'app.bsky.graph.defs#listView',
+          ...this.services.graph.formatListView(listViews[uri], actorInfos),
+        }
+      } else if (collection === ids.AppBskyFeedPost && postInfos[uri]) {
+        const formatted = this.views.formatPostView(
+          uri,
+          actorInfos,
+          postInfos,
+          deepEmbedViews,
+          labelViews,
+        )
+        recordEmbedViews[uri] = this.views.getRecordEmbedView(
+          uri,
+          formatted,
+          depth > 0,
+        )
+      } else {
+        recordEmbedViews[uri] = {
+          $type: 'app.bsky.embed.record#viewNotFound',
+          uri,
+        }
+      }
+    }
+    return recordEmbedViews
+  }
 }
 
 function truncateUtf8(str: string | null | undefined, length: number) {
@@ -543,31 +459,30 @@ function truncateUtf8(str: string | null | undefined, length: number) {
   return str
 }
 
-function getRecordEmbedView(
-  uri: string,
-  post?: PostView,
-  omitEmbeds = false,
-): (ViewRecord | ViewNotFound | ViewBlocked) & { $type: string } {
-  if (!post) {
-    return {
-      $type: 'app.bsky.embed.record#viewNotFound',
-      uri,
+const postRecordsFromInfos = (
+  infos: PostInfoMap,
+): { [uri: string]: PostRecord } => {
+  const records: { [uri: string]: PostRecord } = {}
+  for (const [uri, info] of Object.entries(infos)) {
+    const record = cborToLexRecord(info.recordBytes)
+    if (isPostRecord(record)) {
+      records[uri] = record
     }
   }
-  if (post.author.viewer?.blocking || post.author.viewer?.blockedBy) {
-    return {
-      $type: 'app.bsky.embed.record#viewBlocked',
-      uri,
+  return records
+}
+
+const nestedRecordUris = (posts: PostRecord[]): string[] => {
+  const uris: string[] = []
+  for (const post of posts) {
+    if (!post.embed) continue
+    if (isEmbedRecord(post.embed)) {
+      uris.push(post.embed.record.uri)
+    } else if (isEmbedRecordWithMedia(post.embed)) {
+      uris.push(post.embed.record.record.uri)
+    } else {
+      continue
     }
   }
-  return {
-    $type: 'app.bsky.embed.record#viewRecord',
-    uri: post.uri,
-    cid: post.cid,
-    author: post.author,
-    value: post.record,
-    labels: post.labels,
-    indexedAt: post.indexedAt,
-    embeds: omitEmbeds ? undefined : post.embed ? [post.embed] : [],
-  }
+  return uris
 }

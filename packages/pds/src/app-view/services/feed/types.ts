@@ -1,24 +1,31 @@
-import { View as ViewImages } from '../../../lexicon/types/app/bsky/embed/images'
-import { View as ViewExternal } from '../../../lexicon/types/app/bsky/embed/external'
-import { View as ViewRecord } from '../../../lexicon/types/app/bsky/embed/record'
-import { View as ViewRecordWithMedia } from '../../../lexicon/types/app/bsky/embed/recordWithMedia'
+import { View as ImagesEmbedView } from '../../../lexicon/types/app/bsky/embed/images'
+import { View as ExternalEmbedView } from '../../../lexicon/types/app/bsky/embed/external'
+import {
+  ViewBlocked,
+  ViewNotFound,
+  ViewRecord,
+  View as RecordEmbedView,
+} from '../../../lexicon/types/app/bsky/embed/record'
+import { View as RecordWithMediaEmbedView } from '../../../lexicon/types/app/bsky/embed/recordWithMedia'
 import {
   BlockedPost,
+  GeneratorView,
   NotFoundPost,
   PostView,
 } from '../../../lexicon/types/app/bsky/feed/defs'
 import { Label } from '../../../lexicon/types/com/atproto/label/defs'
 import { FeedGenerator } from '../../db/tables/feed-generator'
+import { ListView } from '../../../lexicon/types/app/bsky/graph/defs'
 
 export type PostEmbedViews = {
   [uri: string]: PostEmbedView
 }
 
 export type PostEmbedView =
-  | ViewImages
-  | ViewExternal
-  | ViewRecord
-  | ViewRecordWithMedia
+  | ImagesEmbedView
+  | ExternalEmbedView
+  | RecordEmbedView
+  | RecordWithMediaEmbedView
 
 export type PostViews = { [uri: string]: PostView }
 
@@ -75,3 +82,12 @@ export type FeedRow = {
 }
 
 export type MaybePostView = PostView | NotFoundPost | BlockedPost
+
+export type RecordEmbedViewRecord =
+  | ViewRecord
+  | ViewNotFound
+  | ViewBlocked
+  | GeneratorView
+  | ListView
+
+export type RecordEmbedViewRecordMap = { [uri: string]: RecordEmbedViewRecord }
