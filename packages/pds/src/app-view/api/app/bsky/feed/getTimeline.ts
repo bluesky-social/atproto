@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.canProxy(req)) {
         const res =
           await ctx.appviewAgent.api.app.bsky.unspecced.getTimelineSkeleton(
-            params,
+            { limit, cursor },
             await ctx.serviceAuthHeaders(requester),
           )
         const filtered = await filterMutesAndBlocks(
