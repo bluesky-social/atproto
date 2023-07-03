@@ -136,15 +136,40 @@ describe('pds admin get moderation reports view', () => {
 
     const ignoreSubjects = getDids(allReports).slice(0, 2)
 
-    const filteredReports =
+    const filteredReportsByDid =
       await agent.api.com.atproto.admin.getModerationReports(
         { ignoreSubjects },
         { headers: { authorization: adminAuth() } },
       )
 
-    getDids(filteredReports).forEach((resultDid) =>
+    // Validate that when ignored by DID, all reports for that DID is ignored
+    getDids(filteredReportsByDid).forEach((resultDid) =>
       expect(ignoreSubjects).not.toContain(resultDid),
     )
+
+    const ignoredAtUriSubjects: string[] = [
+      `${
+        allReports.data.reports.find(({ subject }) => !!subject.uri)?.subject
+          ?.uri
+      }`,
+    ]
+    const filteredReportsByAtUri =
+      await agent.api.com.atproto.admin.getModerationReports(
+        {
+          ignoreSubjects: ignoredAtUriSubjects,
+        },
+        { headers: { authorization: adminAuth() } },
+      )
+
+    // Validate that when ignored by at uri, only the reports for that at uri is ignored
+    expect(filteredReportsByAtUri.data.reports.length).toEqual(
+      allReports.data.reports.length - 1,
+    )
+    expect(
+      filteredReportsByAtUri.data.reports
+        .map(({ subject }) => subject.uri)
+        .filter(Boolean),
+    ).not.toContain(ignoredAtUriSubjects[0])
   })
 
   it('gets all moderation reports.', async () => {
