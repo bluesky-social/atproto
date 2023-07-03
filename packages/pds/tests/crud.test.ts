@@ -1160,6 +1160,46 @@ describe('crud operations', () => {
       },
     )
   })
+
+  it("doesn't serve taken-down actor", async () => {
+    const posts = await agent.api.app.bsky.feed.post.list({ repo: alice.did })
+    expect(posts.records.length).toBeGreaterThan(0)
+
+    const { data: action } =
+      await agent.api.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: alice.did,
+          },
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: adminAuth() },
+        },
+      )
+
+    const tryListPosts = agent.api.app.bsky.feed.post.list({
+      repo: alice.did,
+    })
+    await expect(tryListPosts).rejects.toThrow(/Could not find repo/)
+
+    // Cleanup
+    await agent.api.com.atproto.admin.reverseModerationAction(
+      {
+        id: action.id,
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+  })
 })
 
 function createDeepObject(depth: number) {

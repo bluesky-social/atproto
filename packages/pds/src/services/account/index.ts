@@ -82,7 +82,13 @@ export class AccountService {
     handleOrDid: string,
     includeSoftDeleted = false,
   ): Promise<string | null> {
-    if (handleOrDid.startsWith('did:')) return handleOrDid
+    if (handleOrDid.startsWith('did:')) {
+      if (includeSoftDeleted) {
+        return handleOrDid
+      }
+      const available = await this.isRepoAvailable(handleOrDid)
+      return available ? handleOrDid : null
+    }
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('did_handle')
