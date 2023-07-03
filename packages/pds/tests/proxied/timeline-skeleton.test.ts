@@ -19,7 +19,8 @@ describe('proxies timeline skeleton', () => {
       dbPostgresSchema: 'proxy_timeline_skeleton',
       pds: {
         feedGenDid,
-        enableAppView: true,
+        enableInProcessAppView: true,
+        bskyAppViewProxy: false,
       },
       bsky: {
         feedGenDid,

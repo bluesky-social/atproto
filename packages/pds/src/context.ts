@@ -174,10 +174,24 @@ export class AppContext {
     return this._appviewAgent
   }
 
-  canProxy(req: express.Request): boolean {
+  canProxyRead(req: express.Request): boolean {
+    return (
+      this.cfg.bskyAppViewProxy &&
+      this.cfg.bskyAppViewEndpoint !== undefined &&
+      req.get('x-appview-proxy') !== undefined
+    )
+  }
+
+  canProxyFeedConstruction(req: express.Request): boolean {
     return (
       this.cfg.bskyAppViewEndpoint !== undefined &&
       req.get('x-appview-proxy') !== undefined
+    )
+  }
+
+  canProxyWrite(): boolean {
+    return (
+      this.cfg.bskyAppViewProxy && this.cfg.bskyAppViewEndpoint !== undefined
     )
   }
 }

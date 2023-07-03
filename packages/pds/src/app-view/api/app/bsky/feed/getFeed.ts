@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
       const feedUri = new AtUri(params.feed)
       const isOwnFeedGen = feedUri.hostname === ctx.cfg.feedGenDid
 
-      if (ctx.canProxy(req) && !isOwnFeedGen) {
+      if (ctx.canProxyRead(req) && !isOwnFeedGen) {
         const { data: feed } =
           await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerator(
             { feed: params.feed },
@@ -46,7 +46,7 @@ export default function (server: Server, ctx: AppContext) {
       let algoRes: AlgoResponse
       const timerSkele = new ServerTimer('skele').start()
 
-      if (ctx.canProxy(req) && isOwnFeedGen) {
+      if (ctx.canProxyFeedConstruction(req) && isOwnFeedGen) {
         // this is a temporary solution to smart proxy bsky feeds to the appview
         const res = await ctx.appviewAgent.api.app.bsky.feed.getFeedSkeleton(
           params,
