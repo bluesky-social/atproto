@@ -288,7 +288,9 @@ export class FeedViews {
     }
     return {
       $type: 'app.bsky.embed.recordWithMedia#view',
-      record: embedRecordView,
+      record: {
+        record: embedRecordView,
+      },
       media: mediaEmbed,
     }
   }
