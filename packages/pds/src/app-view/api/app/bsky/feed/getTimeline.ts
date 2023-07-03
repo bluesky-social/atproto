@@ -5,27 +5,40 @@ import { FeedAlgorithm, FeedKeyset, getFeedDateThreshold } from '../util/feed'
 import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
+import { filterMutesAndBlocks } from './getFeed'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxy(req)) {
-        const res = await ctx.appviewAgent.api.app.bsky.feed.getTimeline(
-          params,
-          await ctx.serviceAuthHeaders(requester),
-        )
-        return {
-          encoding: 'application/json',
-          body: res.data,
-        }
-      }
-
       const { algorithm, limit, cursor } = params
-
       if (algorithm && algorithm !== FeedAlgorithm.ReverseChronological) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
+      }
+
+      if (ctx.canProxy(req)) {
+        const res =
+          await ctx.appviewAgent.api.app.bsky.unspecced.getTimelineSkeleton(
+            { limit, cursor },
+            await ctx.serviceAuthHeaders(requester),
+          )
+        const filtered = await filterMutesAndBlocks(
+          ctx,
+          res.data,
+          limit,
+          requester,
+        )
+        const hydrated = await ctx.services.appView
+          .feed(ctx.db)
+          .hydrateFeed(filtered.feedItems, requester)
+        return {
+          encoding: 'application/json',
+          body: {
+            cursor: filtered.cursor,
+            feed: hydrated,
+          },
+        }
       }
 
       const feedService = ctx.services.appView.feed(ctx.db)
