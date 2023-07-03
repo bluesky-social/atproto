@@ -11,10 +11,7 @@ export default function (server: Server, ctx: AppContext) {
       const localAlgo = ctx.algos[feed]
 
       if (!localAlgo) {
-        throw new InvalidRequestError(
-          'Unsupported algorithm',
-          'UnsupportedAlgorithm',
-        )
+        throw new InvalidRequestError('Unknown feed', 'UnknownFeed')
       }
 
       const { cursor, feedItems } = await localAlgo(ctx, params, viewer)
