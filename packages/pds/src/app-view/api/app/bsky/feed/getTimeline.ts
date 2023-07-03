@@ -26,7 +26,8 @@ export default function (server: Server, ctx: AppContext) {
           body: res.data,
         }
       }
-      if (ctx.canProxyFeedConstruction(req)) {
+
+      if (ctx.cfg.bskyAppViewEndpoint) {
         const res =
           await ctx.appviewAgent.api.app.bsky.unspecced.getTimelineSkeleton(
             { limit, cursor },
