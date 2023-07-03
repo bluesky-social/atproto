@@ -25,7 +25,7 @@ export const REPO_SUB_ID = 1000
 
 export class RepoSubscription {
   leader = new Leader(this.subLockId, this.ctx.db)
-  repoQueue = new PartitionedQueue()
+  repoQueue: PartitionedQueue
   cursorQueue = new LatestQueue()
   consecutive = new ConsecutiveList<ProcessableMessage>()
   destroyed = false
@@ -34,7 +34,10 @@ export class RepoSubscription {
     public ctx: AppContext,
     public service: string,
     public subLockId = REPO_SUB_ID,
-  ) {}
+    public concurrency = Infinity,
+  ) {
+    this.repoQueue = new PartitionedQueue({ concurrency })
+  }
 
   async run() {
     while (!this.destroyed) {
@@ -81,6 +84,7 @@ export class RepoSubscription {
                     )
                   })
               })
+            await this.repoQueue.main.onEmpty() // backpressure
           }
         })
         if (ran && !this.destroyed) {
@@ -107,7 +111,7 @@ export class RepoSubscription {
 
   async resume() {
     this.destroyed = false
-    this.repoQueue = new PartitionedQueue()
+    this.repoQueue = new PartitionedQueue({ concurrency: this.concurrency })
     this.cursorQueue = new LatestQueue()
     this.consecutive = new ConsecutiveList<ProcessableMessage>()
     await this.run()
