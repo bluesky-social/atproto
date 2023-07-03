@@ -60,6 +60,7 @@ export interface ServerConfigValues {
 
   bskyAppViewEndpoint?: string
   bskyAppViewDid?: string
+  bskyAppViewProxy: boolean
 
   crawlersToNotify?: string[]
 }
@@ -181,6 +182,8 @@ export class ServerConfig {
       process.env.BSKY_APP_VIEW_ENDPOINT,
     )
     const bskyAppViewDid = nonemptyString(process.env.BSKY_APP_VIEW_DID)
+    const bskyAppViewProxy =
+      process.env.BSKY_APP_VIEW_PROXY === 'true' ? true : false
 
     const crawlersEnv = process.env.CRAWLERS_TO_NOTIFY
     const crawlersToNotify =
@@ -229,6 +232,7 @@ export class ServerConfig {
       dbTxLockNonce,
       bskyAppViewEndpoint,
       bskyAppViewDid,
+      bskyAppViewProxy,
       crawlersToNotify,
       ...overrides,
     })
@@ -430,6 +434,10 @@ export class ServerConfig {
 
   get bskyAppViewDid() {
     return this.cfg.bskyAppViewDid
+  }
+
+  get bskyAppViewProxy() {
+    return this.cfg.bskyAppViewProxy
   }
 
   get crawlersToNotify() {

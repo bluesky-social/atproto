@@ -106,6 +106,7 @@ export const runTestServer = async (
     repoBackfillLimitMs: HOUR,
     sequencerLeaderLockId: uniqueLockId(),
     dbTxLockNonce: await randomStr(32, 'base32'),
+    bskyAppViewProxy: false,
     ...params,
   })
 

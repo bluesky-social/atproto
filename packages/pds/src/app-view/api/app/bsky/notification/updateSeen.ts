@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
         .where('did', '=', user.did)
         .executeTakeFirst()
 
-      if (ctx.cfg.bskyAppViewEndpoint) {
+      if (ctx.canProxyWrite()) {
         await ctx.appviewAgent.api.app.bsky.notification.updateSeen(
           input.body,
           {

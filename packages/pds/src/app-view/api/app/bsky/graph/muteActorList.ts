@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
         mutedByDid: requester,
       })
 
-      if (ctx.cfg.bskyAppViewEndpoint) {
+      if (ctx.canProxyWrite()) {
         await ctx.appviewAgent.api.app.bsky.graph.muteActorList(input.body, {
           ...(await ctx.serviceAuthHeaders(requester)),
           encoding: 'application/json',
