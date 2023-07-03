@@ -138,7 +138,9 @@ export class RepoSubscription {
     const indexRecords = async () => {
       const { root, rootCid, ops } = await getOps(msg)
       if (msg.tooBig) {
-        return await indexingService.indexRepo(msg.repo, rootCid.toString())
+        await indexingService.indexRepo(msg.repo, rootCid.toString())
+        await indexingService.setCommitLastSeen(root, msg)
+        return
       }
       if (msg.rebase) {
         // temporarily disable check, full reindex on rabase
@@ -146,7 +148,9 @@ export class RepoSubscription {
         //   root,
         // )
         // if (!needsReindex) return
-        return await indexingService.indexRepo(msg.repo, rootCid.toString())
+        await indexingService.indexRepo(msg.repo, rootCid.toString())
+        await indexingService.setCommitLastSeen(root, msg)
+        return
       }
       for (const op of ops) {
         if (op.action === WriteOpAction.Delete) {
