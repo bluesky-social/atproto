@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
 import { FeedAlgorithm, FeedKeyset, getFeedDateThreshold } from '../util/feed'
@@ -33,24 +34,34 @@ export default function (server: Server, ctx: AppContext) {
       const feedService = ctx.services.appView.feed(ctx.db)
       const graphService = ctx.services.appView.graph(ctx.db)
 
+      const subKeyset = new FeedKeyset(
+        ref('feed_item.sortAt'),
+        ref('feed_item.cid'),
+      )
+      const mainKeyset = new FeedKeyset(ref('sortAt'), ref('cid'))
+      const sortFrom = mainKeyset.unpack(cursor)?.primary
+
+      // my feed items
+      let myFeedItemsQb = feedService
+        .selectFeedItemQb()
+        .where('originatorDid', '=', requester)
+
+      myFeedItemsQb = paginate(myFeedItemsQb, {
+        limit,
+        cursor,
+        keyset: subKeyset,
+        tryIndex: true,
+      })
+
+      // follows feed items
       const followingIdsSubquery = db
         .selectFrom('follow')
         .select('follow.subjectDid')
         .where('follow.creator', '=', requester)
 
-      const keyset = new FeedKeyset(
-        ref('feed_item.sortAt'),
-        ref('feed_item.cid'),
-      )
-      const sortFrom = keyset.unpack(cursor)?.primary
-
-      let feedItemsQb = feedService
+      let followFeedItemsQb = feedService
         .selectFeedItemQb()
-        .where((qb) =>
-          qb
-            .where('originatorDid', '=', requester)
-            .orWhere('originatorDid', 'in', followingIdsSubquery),
-        )
+        .where('originatorDid', 'in', followingIdsSubquery)
         .where((qb) =>
           // Hide posts and reposts of or by muted actors
           accountService.whereNotMuted(qb, requester, [
@@ -66,21 +77,39 @@ export default function (server: Server, ctx: AppContext) {
         )
         .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom))
 
-      feedItemsQb = paginate(feedItemsQb, {
+      followFeedItemsQb = paginate(followFeedItemsQb, {
         limit,
         cursor,
-        keyset,
+        keyset: subKeyset,
         tryIndex: true,
       })
 
-      const feedItems: FeedRow[] = await feedItemsQb.execute()
+      // combine my and follow feed items
+      const emptyQb = feedService.selectFeedItemQb().where(sql`1 = 0`)
+
+      let allFeedItemsQb = db
+        .selectFrom(
+          emptyQb
+            .unionAll(sql`${myFeedItemsQb}`)
+            .unionAll(sql`${followFeedItemsQb}`)
+            .as('final_items'),
+        )
+        .selectAll()
+      allFeedItemsQb = paginate(allFeedItemsQb, {
+        limit,
+        cursor,
+        keyset: mainKeyset,
+        tryIndex: true,
+      })
+
+      const feedItems: FeedRow[] = await allFeedItemsQb.execute()
       const feed = await feedService.hydrateFeed(feedItems, requester)
 
       return {
         encoding: 'application/json',
         body: {
           feed,
-          cursor: keyset.packFromResult(feedItems),
+          cursor: mainKeyset.packFromResult(feedItems),
         },
       }
     },
