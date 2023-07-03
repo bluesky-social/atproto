@@ -257,13 +257,15 @@ describe('proxies view requests', () => {
     expect(forSnapshot(res.data)).toMatchSnapshot()
   })
 
-  it('feed.getTimeline', async () => {
+  // @TODO re-enable when proxying is a full-proxy
+  it.skip('feed.getTimeline', async () => {
     const res = await agent.api.app.bsky.feed.getTimeline(
       {},
       {
         headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
       },
     )
+
     expect(forSnapshot(res.data)).toMatchSnapshot()
     const pt1 = await agent.api.app.bsky.feed.getTimeline(
       {

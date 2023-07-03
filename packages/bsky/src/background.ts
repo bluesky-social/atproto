@@ -5,7 +5,7 @@ import { dbLogger } from './logger'
 // A simple queue for in-process, out-of-band/backgrounded work
 
 export class BackgroundQueue {
-  queue = new PQueue({ concurrency: 10 })
+  queue = new PQueue({ concurrency: 20 })
   destroyed = false
   constructor(public db: Database) {}
 
