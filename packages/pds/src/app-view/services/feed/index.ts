@@ -355,6 +355,7 @@ export class FeedService {
   async nestedRecordViews(
     posts: PostRecord[],
     requester: string,
+    depth: number,
   ): Promise<{ [uri: string]: RecordEmbedView }> {
     const nestedUris = this.nestedRecordUris(posts)
     if (nestedUris.length < 1) return {}
@@ -385,9 +386,11 @@ export class FeedService {
         this.getFeedGeneratorInfos(nestedFeedGenUris, requester),
         this.services.graph.getListViews(nestedListUris, requester),
       ])
-    const deepEmbedViews = await this.embedsForPosts(postInfos, requester, {
-      excludeNested: true,
-    })
+    const deepEmbedViews = await this.embedsForPosts(
+      postInfos,
+      requester,
+      depth + 1,
+    )
     const recordEmbedViews: { [uri: string]: RecordEmbedView } = {}
     for (const uri of nestedUris) {
       const collection = new AtUri(uri).collection
@@ -410,7 +413,6 @@ export class FeedService {
           },
         }
       } else if (collection === ids.AppBskyFeedPost && postInfos[uri]) {
-        // @TODo
         const formatted = this.views.formatPostView(
           uri,
           actorInfos,
@@ -419,7 +421,7 @@ export class FeedService {
           labelViews,
         )
         recordEmbedViews[uri] = {
-          record: getRecordEmbedView(uri, formatted),
+          record: getRecordEmbedView(uri, formatted, depth > 0),
         }
       } else {
         recordEmbedViews[uri] = {
@@ -444,19 +446,14 @@ export class FeedService {
     return records
   }
 
-  async embedsForPosts(
-    postInfos: PostInfoMap,
-    requester: string,
-    opts?: { excludeNested?: boolean },
-  ) {
+  async embedsForPosts(postInfos: PostInfoMap, requester: string, depth = 0) {
     const postMap = this.postRecordsFromInfos(postInfos)
     const posts = Object.values(postMap)
     if (posts.length < 1) {
       return {}
     }
-    const recordEmbedViews = opts?.excludeNested
-      ? {}
-      : await this.nestedRecordViews(posts, requester)
+    const recordEmbedViews =
+      depth > 1 ? {} : await this.nestedRecordViews(posts, requester, depth)
 
     const postEmbedViews: PostEmbedViews = {}
     for (const [uri, post] of Object.entries(postMap)) {
@@ -466,8 +463,13 @@ export class FeedService {
       } else if (isEmbedExternal(post.embed)) {
         postEmbedViews[uri] = this.externalEmbedView(post.embed)
       } else if (isEmbedRecord(post.embed)) {
-        postEmbedViews[uri] = recordEmbedViews[post.embed.record.uri]
+        if (!recordEmbedViews[post.embed.record.uri]) continue
+        postEmbedViews[uri] = {
+          $type: 'app.bsky.embed.record#view',
+          ...recordEmbedViews[post.embed.record.uri],
+        }
       } else if (isEmbedRecordWithMedia(post.embed)) {
+        if (!recordEmbedViews[post.embed.record.record.uri]) continue
         let mediaEmbed: EmbedImagesView | EmbedExternalView
         if (isEmbedImages(post.embed.media)) {
           mediaEmbed = this.imagesEmbedView(post.embed.media)
@@ -541,11 +543,10 @@ function truncateUtf8(str: string | null | undefined, length: number) {
   return str
 }
 
-// @TODO deep embeds?!
 function getRecordEmbedView(
   uri: string,
   post?: PostView,
-  // embeds?: ViewRecord['embeds'],
+  omitEmbeds = false,
 ): (ViewRecord | ViewNotFound | ViewBlocked) & { $type: string } {
   if (!post) {
     return {
@@ -567,174 +568,6 @@ function getRecordEmbedView(
     value: post.record,
     labels: post.labels,
     indexedAt: post.indexedAt,
-    embeds: post.embed ? [post.embed] : [],
+    embeds: omitEmbeds ? undefined : post.embed ? [post.embed] : [],
   }
 }
-
-// async embedsForPostsOld(uris: string[], requester: string, _depth = 0) {
-//   if (uris.length < 1 || _depth > 1) {
-//     // If a post has a record embed which contains additional embeds, the depth check
-//     // above ensures that we don't recurse indefinitely into those additional embeds.
-//     // In short, you receive up to two layers of embeds for the post: this allows us to
-//     // handle the case that a post has a record embed, which in turn has images embedded in it.
-//     return {}
-//   }
-//   const imgPromise = this.db.db
-//     .selectFrom('post_embed_image')
-//     .selectAll()
-//     .where('postUri', 'in', uris)
-//     .orderBy('postUri')
-//     .orderBy('position')
-//     .execute()
-//   const extPromise = this.db.db
-//     .selectFrom('post_embed_external')
-//     .selectAll()
-//     .where('postUri', 'in', uris)
-//     .execute()
-//   const recordPromise = this.db.db
-//     .selectFrom('post_embed_record')
-//     .innerJoin('record as embed', 'embed.uri', 'embedUri')
-//     .where('postUri', 'in', uris)
-//     .select(['postUri', 'embed.uri as uri', 'embed.did as did'])
-//     .execute()
-//   const [images, externals, records] = await Promise.all([
-//     imgPromise,
-//     extPromise,
-//     recordPromise,
-//   ])
-//   const nestedUris = dedupeStrs(records.map((p) => p.uri))
-//   const nestedDids = dedupeStrs(records.map((p) => p.did))
-//   const nestedPostUris = nestedUris.filter(
-//     (uri) => new AtUri(uri).collection === ids.AppBskyFeedPost,
-//   )
-//   const nestedFeedGenUris = nestedUris.filter(
-//     (uri) => new AtUri(uri).collection === ids.AppBskyFeedGenerator,
-//   )
-//   const nestedListUris = nestedUris.filter(
-//     (uri) => new AtUri(uri).collection === ids.AppBskyGraphList,
-//   )
-//   const [
-//     postViews,
-//     actorViews,
-//     deepEmbedViews,
-//     labelViews,
-//     feedGenViews,
-//     listViews,
-//   ] = await Promise.all([
-//     this.getPostViews(nestedPostUris, requester),
-//     this.getActorViews(nestedDids, requester, { skipLabels: true }),
-//     this.embedsForPosts(nestedPostUris, requester, _depth + 1),
-//     this.services.label.getLabelsForSubjects([
-//       ...nestedPostUris,
-//       ...nestedDids,
-//     ]),
-//     this.getFeedGeneratorViews(nestedFeedGenUris, requester),
-//     this.services.graph.getListViews(nestedListUris, requester),
-//   ])
-//   let embeds = images.reduce((acc, cur) => {
-//     const embed = (acc[cur.postUri] ??= {
-//       $type: 'app.bsky.embed.images#view',
-//       images: [],
-//     })
-//     if (!isViewImages(embed)) return acc
-//     embed.images.push({
-//       thumb: this.imgUriBuilder.getCommonSignedUri(
-//         'feed_thumbnail',
-//         cur.imageCid,
-//       ),
-//       fullsize: this.imgUriBuilder.getCommonSignedUri(
-//         'feed_fullsize',
-//         cur.imageCid,
-//       ),
-//       alt: cur.alt,
-//     })
-//     return acc
-//   }, {} as FeedEmbeds)
-//   embeds = externals.reduce((acc, cur) => {
-//     if (!acc[cur.postUri]) {
-//       acc[cur.postUri] = {
-//         $type: 'app.bsky.embed.external#view',
-//         external: {
-//           uri: cur.uri,
-//           title: cur.title,
-//           description: cur.description,
-//           thumb: cur.thumbCid
-//             ? this.imgUriBuilder.getCommonSignedUri(
-//                 'feed_thumbnail',
-//                 cur.thumbCid,
-//               )
-//             : undefined,
-//         },
-//       }
-//     }
-//     return acc
-//   }, embeds)
-//   embeds = records.reduce((acc, cur) => {
-//     const collection = new AtUri(cur.uri).collection
-//     let recordEmbed: RecordEmbedView
-//     if (collection === ids.AppBskyFeedGenerator && feedGenViews[cur.uri]) {
-//       recordEmbed = {
-//         record: {
-//           $type: 'app.bsky.feed.defs#generatorView',
-//           ...this.views.formatFeedGeneratorView(
-//             feedGenViews[cur.uri],
-//             actorViews,
-//             labelViews,
-//           ),
-//         },
-//       }
-//     } else if (collection === ids.AppBskyGraphList && listViews[cur.uri]) {
-//       recordEmbed = {
-//         record: {
-//           $type: 'app.bsky.graph.defs#listView',
-//           ...this.services.graph.formatListView(
-//             listViews[cur.uri],
-//             actorViews,
-//           ),
-//         },
-//       }
-//     } else if (collection === ids.AppBskyFeedPost && postViews[cur.uri]) {
-//       const formatted = this.views.formatPostView(
-//         cur.uri,
-//         actorViews,
-//         postViews,
-//         deepEmbedViews,
-//         labelViews,
-//       )
-//       let deepEmbeds: ViewRecord['embeds'] | undefined
-//       if (_depth < 1) {
-//         // Omit field entirely when too deep: e.g. don't include it on the embeds within a record embed.
-//         // Otherwise list any embeds that appear within the record. A consumer may discover an embed
-//         // within the raw record, then look within this array to find the presented view of it.
-//         deepEmbeds = formatted?.embed ? [formatted.embed] : []
-//       }
-//       recordEmbed = {
-//         record: getRecordEmbedView(cur.uri, formatted, deepEmbeds),
-//       }
-//     } else {
-//       recordEmbed = {
-//         record: {
-//           $type: 'app.bsky.embed.record#viewNotFound',
-//           uri: cur.uri,
-//         },
-//       }
-//     }
-//     if (acc[cur.postUri]) {
-//       const mediaEmbed = acc[cur.postUri]
-//       if (isViewImages(mediaEmbed) || isViewExternal(mediaEmbed)) {
-//         acc[cur.postUri] = {
-//           $type: 'app.bsky.embed.recordWithMedia#view',
-//           record: recordEmbed,
-//           media: mediaEmbed,
-//         }
-//       }
-//     } else {
-//       acc[cur.postUri] = {
-//         $type: 'app.bsky.embed.record#view',
-//         ...recordEmbed,
-//       }
-//     }
-//     return acc
-//   }, embeds)
-//   return embeds
-// }
