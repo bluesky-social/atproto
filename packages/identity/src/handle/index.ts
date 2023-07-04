@@ -61,12 +61,12 @@ export class HandleResolver {
   }
 
   async resolveDnsBackup(handle: string): Promise<string | undefined> {
-    const backupIps = await this.getBackupNameserverIps()
-    if (!backupIps || backupIps.length < 1) return undefined
-    const resolver = new dns.Resolver()
-    resolver.setServers(backupIps)
     let chunkedResults: string[][]
     try {
+      const backupIps = await this.getBackupNameserverIps()
+      if (!backupIps || backupIps.length < 1) return undefined
+      const resolver = new dns.Resolver()
+      resolver.setServers(backupIps)
       chunkedResults = await resolver.resolveTxt(`${SUBDOMAIN}.${handle}`)
     } catch (err) {
       return undefined
@@ -87,10 +87,15 @@ export class HandleResolver {
     if (!this.backupNameservers) {
       return undefined
     } else if (!this.backupNameserverIps) {
-      const res = await Promise.all(
+      const responses = await Promise.allSettled(
         this.backupNameservers.map((h) => dns.lookup(h)),
       )
-      this.backupNameserverIps = res.map((r) => r.address)
+      for (const res of responses) {
+        if (res.status === 'fulfilled') {
+          this.backupNameserverIps ??= []
+          this.backupNameserverIps.push(res.value.address)
+        }
+      }
     }
     return this.backupNameserverIps
   }
