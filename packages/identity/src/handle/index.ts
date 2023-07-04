@@ -61,9 +61,9 @@ export class HandleResolver {
   }
 
   async resolveDnsBackup(handle: string): Promise<string | undefined> {
-    const resolver = new dns.Resolver()
     const backupIps = await this.getBackupNameserverIps()
     if (!backupIps || backupIps.length < 1) return undefined
+    const resolver = new dns.Resolver()
     resolver.setServers(backupIps)
     let chunkedResults: string[][]
     try {
