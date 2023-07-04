@@ -12,7 +12,7 @@ export class SequencerLeader {
   destroyed = false
   polling = false
   queued = false
-  lastSeq: number
+  private lastSeq: number
 
   constructor(public db: Database, lockId = SEQUENCER_LEADER_ID) {
     this.leader = new Leader(lockId, this.db)
@@ -21,6 +21,14 @@ export class SequencerLeader {
   nextSeqVal(): number {
     this.lastSeq++
     return this.lastSeq
+  }
+
+  peekSeqVal(): number | undefined {
+    return this.lastSeq
+  }
+
+  get isLeader() {
+    return !!this.leader.session
   }
 
   async run() {
