@@ -29,6 +29,8 @@ export class RepoSubscription {
   cursorQueue = new LatestQueue()
   consecutive = new ConsecutiveList<ProcessableMessage>()
   destroyed = false
+  lastSeq: number | undefined
+  lastCursor: number | undefined
 
   constructor(
     public ctx: AppContext,
@@ -56,6 +58,7 @@ export class RepoSubscription {
               )
               continue
             }
+            this.lastSeq = details.seq
             const item = this.consecutive.push(details.message)
             this.repoQueue
               .add(details.repo, () => this.handleMessage(details.message))
@@ -223,7 +226,9 @@ export class RepoSubscription {
       .where('service', '=', this.service)
       .where('method', '=', METHOD)
       .executeTakeFirst()
-    return sub ? (JSON.parse(sub.state) as State) : { cursor: 0 }
+    const state = sub ? (JSON.parse(sub.state) as State) : { cursor: 0 }
+    this.lastCursor = state.cursor
+    return state
   }
 
   async resetState(): Promise<void> {
@@ -236,6 +241,9 @@ export class RepoSubscription {
 
   private async setState(tx: Database, state: State): Promise<void> {
     tx.assertTransaction()
+    tx.onCommit(() => {
+      this.lastCursor = state.cursor
+    })
     const res = await tx.db
       .updateTable('subscription')
       .where('service', '=', this.service)
