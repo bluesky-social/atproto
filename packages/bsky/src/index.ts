@@ -195,6 +195,8 @@ export class BskyAppView {
           {
             seq: this.sub?.lastSeq,
             cursor: this.sub?.lastCursor,
+            runningCount: this.sub?.repoQueue.main.pending,
+            waitingCount: this.sub?.repoQueue.main.size,
           },
           'repo subscription stats',
         )
