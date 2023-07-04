@@ -1,4 +1,5 @@
 import dns from 'dns/promises'
+import { Resolver as DnsResolver } from 'dns/promises'
 import { HandleResolverOpts } from '../types'
 
 const SUBDOMAIN = '_atproto'
@@ -6,9 +7,20 @@ const PREFIX = 'did='
 
 export class HandleResolver {
   public timeout: number
+  public dnsResolver: DnsResolver
 
   constructor(opts: HandleResolverOpts = {}) {
     this.timeout = opts.timeout ?? 3000
+    this.dnsResolver = new DnsResolver()
+  }
+
+  async addDnsServers(hostnames: string[]) {
+    if (hostnames.length < 1) return
+    const res = await Promise.all(hostnames.map((h) => dns.lookup(h)))
+    this.dnsResolver.setServers([
+      ...res.map((r) => r.address),
+      ...this.dnsResolver.getServers(),
+    ])
   }
 
   async resolve(handle: string): Promise<string | undefined> {

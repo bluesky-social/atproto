@@ -35,6 +35,7 @@ export interface ServerConfigValues {
   databaseLocation?: string
 
   availableUserDomains: string[]
+  explicitDnsServers?: string[]
 
   imgUriSalt: string
   imgUriKey: string
@@ -136,6 +137,10 @@ export class ServerConfig {
       ? process.env.AVAILABLE_USER_DOMAINS.split(',')
       : []
 
+    const explicitDnsServers = process.env.EXPLICIT_DNS_SERVERS
+      ? process.env.EXPLICIT_DNS_SERVERS.split(',')
+      : []
+
     const imgUriSalt =
       process.env.IMG_URI_SALT || '9dd04221f5755bce5f55f47464c27e1e'
     const imgUriKey =
@@ -215,6 +220,7 @@ export class ServerConfig {
       termsOfServiceUrl,
       databaseLocation,
       availableUserDomains,
+      explicitDnsServers,
       imgUriSalt,
       imgUriKey,
       imgUriEndpoint,
@@ -366,6 +372,10 @@ export class ServerConfig {
 
   get availableUserDomains() {
     return this.cfg.availableUserDomains
+  }
+
+  get explicitDnsServers() {
+    return this.cfg.explicitDnsServers
   }
 
   get imgUriSalt() {
