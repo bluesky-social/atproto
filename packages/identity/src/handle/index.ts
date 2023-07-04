@@ -1,5 +1,4 @@
 import dns from 'dns/promises'
-import { Resolver as DnsResolver } from 'dns/promises'
 import { HandleResolverOpts } from '../types'
 
 const SUBDOMAIN = '_atproto'
@@ -62,7 +61,7 @@ export class HandleResolver {
   }
 
   async resolveDnsBackup(handle: string): Promise<string | undefined> {
-    const resolver = new DnsResolver()
+    const resolver = new dns.Resolver()
     const backupIps = await this.getBackupNameserverIps()
     if (!backupIps || backupIps.length < 1) return undefined
     resolver.setServers(backupIps)
