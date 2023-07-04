@@ -21,7 +21,7 @@ import Database from './db'
 import { ServerAuth } from './auth'
 import * as error from './error'
 import compression from './util/compression'
-import { httpLogger, dbLogger, loggerMiddleware, seqLogger } from './logger'
+import { dbLogger, loggerMiddleware, seqLogger } from './logger'
 import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
 import { createServer } from './lexicon'
@@ -96,17 +96,11 @@ export class PDS {
       config.didCacheStaleTTL,
       config.didCacheMaxTTL,
     )
-    const idResolver = new IdResolver({ plcUrl: config.didPlcUrl, didCache })
-    if (config.explicitDnsServers) {
-      idResolver.handle
-        .addDnsServers(config.explicitDnsServers)
-        .catch((err) =>
-          httpLogger.error(
-            { err, nameservers: config.explicitDnsServers },
-            'failed to set up explicit dns nameservers',
-          ),
-        )
-    }
+    const idResolver = new IdResolver({
+      plcUrl: config.didPlcUrl,
+      didCache,
+      backupNameservers: config.handleResolveNameservers,
+    })
 
     const messageDispatcher = new MessageDispatcher()
     const sequencer = new Sequencer(db)

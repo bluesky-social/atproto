@@ -7,20 +7,12 @@ const PREFIX = 'did='
 
 export class HandleResolver {
   public timeout: number
-  public dnsResolver: DnsResolver
+  private backupNameservers: string[] | undefined
+  private backupNameserverIps: string[] | undefined
 
   constructor(opts: HandleResolverOpts = {}) {
     this.timeout = opts.timeout ?? 3000
-    this.dnsResolver = new DnsResolver()
-  }
-
-  async addDnsServers(hostnames: string[]) {
-    if (hostnames.length < 1) return
-    const res = await Promise.all(hostnames.map((h) => dns.lookup(h)))
-    this.dnsResolver.setServers([
-      ...res.map((r) => r.address),
-      ...this.dnsResolver.getServers(),
-    ])
+    this.backupNameservers = opts.backupNameservers
   }
 
   async resolve(handle: string): Promise<string | undefined> {
@@ -35,7 +27,11 @@ export class HandleResolver {
       httpAbort.abort()
       return dnsRes
     }
-    return httpPromise
+    const res = await httpPromise
+    if (res) {
+      return res
+    }
+    return this.resolveDnsBackup(handle)
   }
 
   async resolveDns(handle: string): Promise<string | undefined> {
@@ -45,12 +41,7 @@ export class HandleResolver {
     } catch (err) {
       return undefined
     }
-    const results = chunkedResults.map((chunks) => chunks.join(''))
-    const found = results.filter((i) => i.startsWith(PREFIX))
-    if (found.length !== 1) {
-      return undefined
-    }
-    return found[0].slice(PREFIX.length)
+    return this.parseDnsResult(chunkedResults)
   }
 
   async resolveHttp(
@@ -68,5 +59,40 @@ export class HandleResolver {
     } catch (err) {
       return undefined
     }
+  }
+
+  async resolveDnsBackup(handle: string): Promise<string | undefined> {
+    const resolver = new DnsResolver()
+    const backupIps = await this.getBackupNameserverIps()
+    if (!backupIps || backupIps.length < 1) return undefined
+    resolver.setServers(backupIps)
+    let chunkedResults: string[][]
+    try {
+      chunkedResults = await resolver.resolveTxt(`${SUBDOMAIN}.${handle}`)
+    } catch (err) {
+      return undefined
+    }
+    return this.parseDnsResult(chunkedResults)
+  }
+
+  parseDnsResult(chunkedResults: string[][]): string | undefined {
+    const results = chunkedResults.map((chunks) => chunks.join(''))
+    const found = results.filter((i) => i.startsWith(PREFIX))
+    if (found.length !== 1) {
+      return undefined
+    }
+    return found[0].slice(PREFIX.length)
+  }
+
+  private async getBackupNameserverIps(): Promise<string[] | undefined> {
+    if (!this.backupNameservers) {
+      return undefined
+    } else if (!this.backupNameserverIps) {
+      const res = await Promise.all(
+        this.backupNameservers.map((h) => dns.lookup(h)),
+      )
+      this.backupNameserverIps = res.map((r) => r.address)
+    }
+    return this.backupNameserverIps
   }
 }
