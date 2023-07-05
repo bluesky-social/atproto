@@ -233,7 +233,7 @@ describe('pds admin get moderation reports view', () => {
     expect(defaultList[defaultList.length - 1].id).toEqual(reverseList[0].id)
   })
 
-  it.only('gets all moderation reports by active resolution action type.', async () => {
+  it('gets all moderation reports by active resolution action type.', async () => {
     const reportsWithTakedown =
       await agent.api.com.atproto.admin.getModerationReports(
         { actionType: TAKEDOWN },
@@ -242,7 +242,7 @@ describe('pds admin get moderation reports view', () => {
     expect(forSnapshot(reportsWithTakedown.data.reports)).toMatchSnapshot()
   })
 
-  it.only('gets all moderation reports actioned by a certain moderator.', async () => {
+  it('gets all moderation reports actioned by a certain moderator.', async () => {
     const [actionedByAdminOne, actionedByAdminTwo] = await Promise.all([
       agent.api.com.atproto.admin.getModerationReports(
         { actionedBy: 'did:example:admin0' },
