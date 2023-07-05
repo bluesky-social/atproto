@@ -16,8 +16,7 @@ describe('pds user search views', () => {
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
     await basicSeed(sc)
-    await server.ctx.backgroundQueue.processAll()
-    await server.ctx.labelCache.catchUp()
+    await server.processAll()
 
     const suggestions = [
       { did: sc.dids.bob, order: 1 },

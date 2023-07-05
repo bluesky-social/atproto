@@ -34,7 +34,7 @@ export class LabelCache {
 
   async poll() {
     if (this.destroyed) return
-    if (this.refreshes >= 60) {
+    if (this.refreshes >= 120) {
       await this.fullRefresh()
       this.refreshes = 0
     } else {
@@ -42,7 +42,7 @@ export class LabelCache {
       this.refreshes++
     }
     this.defer = createDeferrable()
-    await wait(1000)
+    await wait(500)
     this.poll()
   }
 
@@ -76,9 +76,14 @@ export class LabelCache {
 
   forSubjects(subjects: string[], includeNeg?: boolean): Label[] {
     let labels: Label[] = []
+    const alreadyAdded = new Set<string>()
     for (const subject of subjects) {
+      if (alreadyAdded.has(subject)) {
+        continue
+      }
       const subLabels = this.forSubject(subject, includeNeg)
       labels = [...labels, ...subLabels]
+      alreadyAdded.add(subject)
     }
     return labels
   }

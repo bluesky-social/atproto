@@ -28,8 +28,7 @@ describe('pds user search views', () => {
     sc = new SeedClient(agent)
     await usersBulkSeed(sc)
     headers = sc.getHeaders(Object.values(sc.dids)[0])
-    await server.ctx.backgroundQueue.processAll()
-    await server.ctx.labelCache.catchUp()
+    await server.processAll()
   })
 
   afterAll(async () => {

@@ -292,7 +292,7 @@ describe('moderation', () => {
         password: 'password',
         token: deletionToken,
       })
-      await server.ctx.backgroundQueue.processAll()
+      await server.processAll()
       // Take action on deleted content
       const { data: action } =
         await agent.api.com.atproto.admin.takeModerationAction(

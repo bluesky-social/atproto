@@ -43,8 +43,7 @@ describe('pds views with blocking', () => {
       sc.posts[dan][0].ref,
       'alice replies to dan',
     )
-    await server.ctx.backgroundQueue.processAll()
-    await server.ctx.labelCache.catchUp()
+    await server.processAll()
   })
 
   afterAll(async () => {

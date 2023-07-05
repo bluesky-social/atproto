@@ -64,7 +64,7 @@ describe('labeler', () => {
     const uri = postUri()
     labeler.processRecord(uri, post)
     await labeler.processAll()
-    await server.ctx.labelCache.catchUp()
+    await server.processAll()
     const labels = await labelSrvc.getLabels(uri.toString())
     expect(labels.length).toBe(1)
     expect(labels[0]).toMatchObject({
@@ -102,7 +102,7 @@ describe('labeler', () => {
     const uri = postUri()
     labeler.processRecord(uri, post)
     await labeler.processAll()
-    await server.ctx.labelCache.catchUp()
+    await server.processAll()
     const dbLabels = await labelSrvc.getLabels(uri.toString())
     const labels = dbLabels.map((row) => row.val).sort()
     expect(labels).toEqual(
@@ -122,7 +122,7 @@ describe('labeler', () => {
         cts: new Date().toISOString(),
       })
       .execute()
-    await server.ctx.labelCache.catchUp()
+    await server.processAll()
 
     const labels = await labelSrvc.getLabelsForProfile('did:example:alice')
     // 4 from earlier & then just added one

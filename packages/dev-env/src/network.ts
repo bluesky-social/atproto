@@ -54,7 +54,6 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async processFullSubscription(timeout = 5000) {
-    if (!this.bsky) return
     const sub = this.bsky.sub
     if (!sub) return
     const { db } = this.pds.ctx.db
@@ -76,10 +75,9 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async processAll(timeout?: number) {
-    await this.pds.ctx.backgroundQueue.processAll()
-    if (!this.bsky) return
+    await this.pds.processAll()
     await this.processFullSubscription(timeout)
-    await this.bsky.ctx.backgroundQueue.processAll()
+    await this.bsky.processAll()
   }
 
   async serviceHeaders(did: string, aud?: string) {

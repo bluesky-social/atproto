@@ -30,8 +30,7 @@ describe('pds views with mutes from mute lists', () => {
     // add follows to ensure mutes work even w follows
     await sc.follow(carol, dan)
     await sc.follow(dan, carol)
-    await server.ctx.backgroundQueue.processAll()
-    await server.ctx.labelCache.catchUp()
+    await server.processAll()
   })
 
   afterAll(async () => {
