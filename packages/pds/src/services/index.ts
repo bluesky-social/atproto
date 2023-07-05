@@ -17,6 +17,7 @@ import { Labeler } from '../labeler'
 import { LabelService } from '../app-view/services/label'
 import { BackgroundQueue } from '../event-stream/background-queue'
 import { Crawlers } from '../crawlers'
+import { LabelCache } from '../label-cache'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
@@ -25,6 +26,7 @@ export function createServices(resources: {
   imgUriBuilder: ImageUriBuilder
   imgInvalidator: ImageInvalidator
   labeler: Labeler
+  labelCache: LabelCache
   backgroundQueue: BackgroundQueue
   crawlers: Crawlers
 }): Services {
@@ -35,6 +37,7 @@ export function createServices(resources: {
     imgUriBuilder,
     imgInvalidator,
     labeler,
+    labelCache,
     backgroundQueue,
     crawlers,
   } = resources
@@ -57,11 +60,11 @@ export function createServices(resources: {
       imgInvalidator,
     ),
     appView: {
-      actor: ActorService.creator(imgUriBuilder),
+      actor: ActorService.creator(imgUriBuilder, labelCache),
       graph: GraphService.creator(imgUriBuilder),
-      feed: FeedService.creator(imgUriBuilder),
+      feed: FeedService.creator(imgUriBuilder, labelCache),
       indexing: IndexingService.creator(backgroundQueue),
-      label: LabelService.creator(),
+      label: LabelService.creator(labelCache),
     },
   }
 }

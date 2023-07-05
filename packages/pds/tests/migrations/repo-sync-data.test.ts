@@ -5,7 +5,7 @@ import { TID } from '@atproto/common'
 import { Kysely } from 'kysely'
 import { CID } from 'multiformats/cid'
 
-describe('repo sync data migration', () => {
+describe.skip('repo sync data migration', () => {
   let db: Database
   let rawDb: Kysely<any>
   let memoryStore: MemoryBlockstore

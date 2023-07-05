@@ -96,6 +96,9 @@ export class TestPds {
     })
 
     await server.start()
+
+    // we refresh label cache by hand in `processAll` instead of on a timer
+    server.ctx.labelCache.stop()
     return new TestPds(url, port, server)
   }
 
@@ -121,6 +124,11 @@ export class TestPds {
     return {
       authorization: this.adminAuth(),
     }
+  }
+
+  async processAll() {
+    await this.ctx.backgroundQueue.processAll()
+    await this.ctx.labelCache.fullRefresh()
   }
 
   async close() {
