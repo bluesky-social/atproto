@@ -25,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxy(req)) {
+      if (ctx.canProxyRead(req)) {
         const { data: feed } =
           await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerator(
             { feed: params.feed },
@@ -139,9 +139,17 @@ async function skeletonFromFeedGen(
     throw err
   }
 
+  return filterMutesAndBlocks(ctx, skeleton, params.limit, requester)
+}
+
+export async function filterMutesAndBlocks(
+  ctx: AppContext,
+  skeleton: SkeletonOutput,
+  limit: number,
+  requester: string,
+) {
   const { feed: skeletonFeed, ...rest } = skeleton
 
-  // Hydrate feed skeleton
   const { ref } = ctx.db.db.dynamic
   const feedService = ctx.services.appView.feed(ctx.db)
   const graphService = ctx.services.appView.graph(ctx.db)
@@ -168,7 +176,7 @@ async function skeletonFromFeedGen(
         .execute()
     : []
 
-  const orderedItems = getOrderedFeedItems(skeletonFeed, feedItems, params)
+  const orderedItems = getOrderedFeedItems(skeletonFeed, feedItems, limit)
   return {
     ...rest,
     feedItems: orderedItems,
@@ -185,15 +193,15 @@ function getSkeleFeedItemUri(item: SkeletonFeedPost) {
 function getOrderedFeedItems(
   skeletonItems: SkeletonFeedPost[],
   feedItems: FeedRow[],
-  params: GetFeedParams,
+  limit: number,
 ) {
   const SKIP = []
   const feedItemsByUri = feedItems.reduce((acc, item) => {
     return Object.assign(acc, { [item.uri]: item })
   }, {} as Record<string, FeedRow>)
   // enforce limit param in the case that the feedgen does not
-  if (skeletonItems.length > params.limit) {
-    skeletonItems = skeletonItems.slice(0, params.limit)
+  if (skeletonItems.length > limit) {
+    skeletonItems = skeletonItems.slice(0, limit)
   }
   return skeletonItems.flatMap((item) => {
     const uri = getSkeleFeedItemUri(item)

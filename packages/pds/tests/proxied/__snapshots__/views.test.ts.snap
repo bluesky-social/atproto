@@ -94,108 +94,103 @@ Object {
 `;
 
 exports[`proxies view requests actor.searchActor 1`] = `
-Object {
-  "actors": Array [
-    Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
-      "description": "its me!",
-      "did": "user(0)",
-      "displayName": "ali",
-      "handle": "alice.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
-        "blockedBy": false,
-        "muted": false,
-      },
+Array [
+  Object {
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "description": "its me!",
+    "did": "user(0)",
+    "displayName": "ali",
+    "handle": "alice.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "viewer": Object {
+      "blockedBy": false,
+      "muted": false,
     },
-    Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
-      "description": "hi im bob label_me",
-      "did": "user(2)",
-      "displayName": "bobby",
-      "handle": "bob.test",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "viewer": Object {
-        "blockedBy": false,
-        "followedBy": "record(1)",
-        "following": "record(0)",
-        "muted": false,
-      },
+  },
+  Object {
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+    "description": "hi im bob label_me",
+    "did": "user(2)",
+    "displayName": "bobby",
+    "handle": "bob.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "labels": Array [],
+    "viewer": Object {
+      "blockedBy": false,
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
     },
-    Object {
-      "did": "user(4)",
-      "handle": "carol.test",
-      "labels": Array [],
-      "viewer": Object {
-        "blockedBy": false,
-        "followedBy": "record(3)",
-        "following": "record(2)",
-        "muted": false,
-      },
+  },
+  Object {
+    "did": "user(4)",
+    "handle": "carol.test",
+    "labels": Array [],
+    "viewer": Object {
+      "blockedBy": false,
+      "followedBy": "record(3)",
+      "following": "record(2)",
+      "muted": false,
     },
-    Object {
-      "did": "user(5)",
-      "handle": "dan.test",
-      "labels": Array [],
-      "viewer": Object {
-        "blockedBy": false,
-        "following": "record(4)",
-        "muted": false,
-      },
+  },
+  Object {
+    "did": "user(5)",
+    "handle": "dan.test",
+    "labels": Array [],
+    "viewer": Object {
+      "blockedBy": false,
+      "following": "record(4)",
+      "muted": false,
     },
-  ],
-  "cursor": "0::dan.test",
-}
+  },
+]
 `;
 
 exports[`proxies view requests actor.searchActorTypeahead 1`] = `
-Object {
-  "actors": Array [
-    Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
-      "did": "user(0)",
-      "displayName": "ali",
-      "handle": "alice.test",
-      "viewer": Object {
-        "blockedBy": false,
-        "muted": false,
-      },
+Array [
+  Object {
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "did": "user(0)",
+    "displayName": "ali",
+    "handle": "alice.test",
+    "viewer": Object {
+      "blockedBy": false,
+      "muted": false,
     },
-    Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
-      "did": "user(2)",
-      "displayName": "bobby",
-      "handle": "bob.test",
-      "viewer": Object {
-        "blockedBy": false,
-        "followedBy": "record(1)",
-        "following": "record(0)",
-        "muted": false,
-      },
+  },
+  Object {
+    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+    "did": "user(2)",
+    "displayName": "bobby",
+    "handle": "bob.test",
+    "viewer": Object {
+      "blockedBy": false,
+      "followedBy": "record(1)",
+      "following": "record(0)",
+      "muted": false,
     },
-    Object {
-      "did": "user(4)",
-      "handle": "carol.test",
-      "viewer": Object {
-        "blockedBy": false,
-        "followedBy": "record(3)",
-        "following": "record(2)",
-        "muted": false,
-      },
+  },
+  Object {
+    "did": "user(4)",
+    "handle": "carol.test",
+    "viewer": Object {
+      "blockedBy": false,
+      "followedBy": "record(3)",
+      "following": "record(2)",
+      "muted": false,
     },
-    Object {
-      "did": "user(5)",
-      "handle": "dan.test",
-      "viewer": Object {
-        "blockedBy": false,
-        "following": "record(4)",
-        "muted": false,
-      },
+  },
+  Object {
+    "did": "user(5)",
+    "handle": "dan.test",
+    "viewer": Object {
+      "blockedBy": false,
+      "following": "record(4)",
+      "muted": false,
     },
-  ],
-}
+  },
+]
 `;
 
 exports[`proxies view requests feed.getAuthorFeed 1`] = `

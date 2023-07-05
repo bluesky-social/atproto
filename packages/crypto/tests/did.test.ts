@@ -1,4 +1,4 @@
-import { EcdsaKeypair, Secp256k1Keypair } from '../src'
+import { P256Keypair, Secp256k1Keypair } from '../src'
 import * as did from '../src/did'
 import * as uint8arrays from 'uint8arrays'
 
@@ -23,10 +23,11 @@ describe('secp256k1 did:key', () => {
   })
 })
 
-describe('ecdsa did:key', () => {
+describe('P-256 did:key', () => {
   it('derives the correct DID from the JWK', async () => {
     for (const vector of p256TestVectors) {
-      const keypair = await EcdsaKeypair.import(vector.jwk)
+      const bytes = uint8arrays.fromString(vector.privateKeyBase58, 'base58btc')
+      const keypair = await P256Keypair.import(bytes)
       const did = keypair.did()
       expect(did).toEqual(vector.id)
     }
@@ -34,7 +35,8 @@ describe('ecdsa did:key', () => {
 
   it('converts between bytes and did', async () => {
     for (const vector of p256TestVectors) {
-      const keypair = await EcdsaKeypair.import(vector.jwk)
+      const bytes = uint8arrays.fromString(vector.privateKeyBase58, 'base58btc')
+      const keypair = await P256Keypair.import(bytes)
       const didKey = did.formatDidKey('ES256', keypair.publicKeyBytes())
       expect(didKey).toEqual(vector.id)
       const { jwtAlg, keyBytes } = did.parseDidKey(didKey)
@@ -73,23 +75,7 @@ const secpTestVectors = [
 // https://github.com/w3c-ccg/did-method-key/blob/main/test-vectors/nist-curves.json
 const p256TestVectors = [
   {
-    id: 'did:key:zDnaerx9CtbPJ1q36T5Ln5wYt3MQYeGRG5ehnPAmxcf5mDZpv',
-    jwk: {
-      kty: 'EC',
-      crv: 'P-256',
-      x: 'igrFmi0whuihKnj9R3Om1SoMph72wUGeFaBbzG2vzns',
-      y: 'efsX5b10x8yjyrj4ny3pGfLcY7Xby1KzgqOdqnsrJIM',
-      d: 'gPh-VvVS8MbvKQ9LSVVmfnxnKjHn4Tqj0bmbpehRlpc',
-    },
-  },
-  {
-    id: 'did:key:zDnaerDaTF5BXEavCrfRZEk316dpbLsfPDZ3WJ5hRTPFU2169',
-    jwk: {
-      kty: 'EC',
-      crv: 'P-256',
-      x: 'fyNYMN0976ci7xqiSdag3buk-ZCwgXU4kz9XNkBlNUI',
-      y: 'hW2ojTNfH7Jbi8--CJUo3OCbH3y5n91g-IMA9MLMbTU',
-      d: 'YjRs6vNvw4sYrzVVY8ipkEpDAD9PFqw1sUnvPRMA-WI',
-    },
+    privateKeyBase58: '9p4VRzdmhsnq869vQjVCTrRry7u4TtfRxhvBFJTGU2Cp',
+    id: 'did:key:zDnaeTiq1PdzvZXUaMdezchcMJQpBdH2VN4pgrrEhMCCbmwSb',
   },
 ]

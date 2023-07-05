@@ -1,4 +1,4 @@
-import EcdsaKeypair from '../src/p256/keypair'
+import P256Keypair from '../src/p256/keypair'
 import Secp256k1Keypair from '../src/secp256k1/keypair'
 import * as secpEncoding from '../src/secp256k1/encoding'
 import * as p256Encoding from '../src/p256/encoding'
@@ -41,7 +41,7 @@ describe('public key compression', () => {
     let compressed: Uint8Array
 
     it('compresses a key to the correct length', async () => {
-      const keypair = await EcdsaKeypair.create()
+      const keypair = await P256Keypair.create()
       const parsed = did.parseDidKey(keypair.did())
       keyBytes = parsed.keyBytes
       compressed = p256Encoding.compressPubkey(keyBytes)
@@ -57,7 +57,7 @@ describe('public key compression', () => {
     it('works consistently', async () => {
       const pubkeys: Uint8Array[] = []
       for (let i = 0; i < 100; i++) {
-        const key = await EcdsaKeypair.create()
+        const key = await P256Keypair.create()
         const parsed = did.parseDidKey(key.did())
         pubkeys.push(parsed.keyBytes)
       }

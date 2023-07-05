@@ -1,6 +1,6 @@
-import { Server } from '../../../lexicon'
-import AppContext from '../../../context'
-import { countAll } from '../../../db/util'
+import { Server } from '../../../../lexicon'
+import AppContext from '../../../../context'
+import { countAll } from '../../../../db/util'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {

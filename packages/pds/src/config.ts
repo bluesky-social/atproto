@@ -36,6 +36,7 @@ export interface ServerConfigValues {
   databaseLocation?: string
 
   availableUserDomains: string[]
+  handleResolveNameservers?: string[]
 
   imgUriSalt: string
   imgUriKey: string
@@ -56,8 +57,12 @@ export interface ServerConfigValues {
   repoBackfillLimitMs: number
   sequencerLeaderLockId?: number
 
+  // this is really only used in test environments
+  dbTxLockNonce?: string
+
   bskyAppViewEndpoint?: string
   bskyAppViewDid?: string
+  bskyAppViewProxy: boolean
 
   crawlersToNotify?: string[]
 }
@@ -134,6 +139,10 @@ export class ServerConfig {
       ? process.env.AVAILABLE_USER_DOMAINS.split(',')
       : []
 
+    const handleResolveNameservers = process.env.HANDLE_RESOLVE_NAMESERVERS
+      ? process.env.HANDLE_RESOLVE_NAMESERVERS.split(',')
+      : []
+
     const imgUriSalt =
       process.env.IMG_URI_SALT || '9dd04221f5755bce5f55f47464c27e1e'
     const imgUriKey =
@@ -174,10 +183,14 @@ export class ServerConfig {
       undefined,
     )
 
+    const dbTxLockNonce = nonemptyString(process.env.DB_TX_LOCK_NONCE)
+
     const bskyAppViewEndpoint = nonemptyString(
       process.env.BSKY_APP_VIEW_ENDPOINT,
     )
     const bskyAppViewDid = nonemptyString(process.env.BSKY_APP_VIEW_DID)
+    const bskyAppViewProxy =
+      process.env.BSKY_APP_VIEW_PROXY === 'true' ? true : false
 
     const crawlersEnv = process.env.CRAWLERS_TO_NOTIFY
     const crawlersToNotify =
@@ -210,6 +223,7 @@ export class ServerConfig {
       termsOfServiceUrl,
       databaseLocation,
       availableUserDomains,
+      handleResolveNameservers,
       imgUriSalt,
       imgUriKey,
       imgUriEndpoint,
@@ -224,8 +238,10 @@ export class ServerConfig {
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
       sequencerLeaderLockId,
+      dbTxLockNonce,
       bskyAppViewEndpoint,
       bskyAppViewDid,
+      bskyAppViewProxy,
       crawlersToNotify,
       ...overrides,
     })
@@ -365,6 +381,10 @@ export class ServerConfig {
     return this.cfg.availableUserDomains
   }
 
+  get handleResolveNameservers() {
+    return this.cfg.handleResolveNameservers
+  }
+
   get imgUriSalt() {
     return this.cfg.imgUriSalt
   }
@@ -421,12 +441,20 @@ export class ServerConfig {
     return this.cfg.sequencerLeaderLockId
   }
 
+  get dbTxLockNonce() {
+    return this.cfg.dbTxLockNonce
+  }
+
   get bskyAppViewEndpoint() {
     return this.cfg.bskyAppViewEndpoint
   }
 
   get bskyAppViewDid() {
     return this.cfg.bskyAppViewDid
+  }
+
+  get bskyAppViewProxy() {
+    return this.cfg.bskyAppViewProxy
   }
 
   get crawlersToNotify() {

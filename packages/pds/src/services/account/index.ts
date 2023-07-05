@@ -5,12 +5,7 @@ import * as scrypt from '../../db/scrypt'
 import { UserAccountEntry } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
-import {
-  DbRef,
-  countAll,
-  notSoftDeletedClause,
-  nullToZero,
-} from '../../db/util'
+import { DbRef, countAll, notSoftDeletedClause } from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
@@ -87,7 +82,13 @@ export class AccountService {
     handleOrDid: string,
     includeSoftDeleted = false,
   ): Promise<string | null> {
-    if (handleOrDid.startsWith('did:')) return handleOrDid
+    if (handleOrDid.startsWith('did:')) {
+      if (includeSoftDeleted) {
+        return handleOrDid
+      }
+      const available = await this.isRepoAvailable(handleOrDid)
+      return available ? handleOrDid : null
+    }
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('did_handle')
@@ -440,19 +441,16 @@ export class AccountService {
       .deleteFrom('did_handle')
       .where('did_handle.did', '=', did)
       .execute()
+    const seqEvt = await sequencer.formatSeqTombstone(did)
+    await this.db.transaction(async (txn) => {
+      await sequencer.sequenceEvt(txn, seqEvt)
+    })
   }
 
   selectInviteCodesQb() {
     const ref = this.db.db.dynamic.ref
     const builder = this.db.db
-      .with('use_count', (qb) =>
-        qb
-          .selectFrom('invite_code_use')
-          .groupBy('code')
-          .select(['code', countAll.as('uses')]),
-      )
       .selectFrom('invite_code')
-      .leftJoin('use_count', 'invite_code.code', 'use_count.code')
       .select([
         'invite_code.code as code',
         'invite_code.availableUses as available',
@@ -460,7 +458,11 @@ export class AccountService {
         'invite_code.forUser as forAccount',
         'invite_code.createdBy as createdBy',
         'invite_code.createdAt as createdAt',
-        nullToZero(ref('use_count.uses')).as('uses'),
+        this.db.db
+          .selectFrom('invite_code_use')
+          .select(countAll.as('count'))
+          .whereRef('invite_code_use.code', '=', ref('invite_code.code'))
+          .as('uses'),
       ])
     return this.db.db.selectFrom(builder.as('codes')).selectAll()
   }

@@ -13,8 +13,8 @@
     "verify": "lerna run verify --stream",
     "prettier": "lerna run prettier",
     "build": "lerna run build",
-    "test": "NODE_ENV=development lerna run test --stream",
-    "test:withFlags": "NODE_ENV=development lerna run test --stream --"
+    "test": "LOG_ENABLED=false NODE_ENV=development ./packages/pg/with-test-db.sh lerna run test --stream",
+    "test:withFlags": "LOG_ENABLED=false NODE_ENV=development ./packages/pg/with-test-db.sh lerna run test --stream --"
   },
   "devDependencies": {
     "@babel/core": "^7.18.6",

@@ -28,7 +28,7 @@ describe('labeler', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'labeler',
+      dbPostgresSchema: 'bsky_labeler',
     })
     ctx = network.bsky.ctx
     const pdsCtx = network.pds.ctx

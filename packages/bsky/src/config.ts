@@ -25,6 +25,7 @@ export interface ServerConfigValues {
   moderatorPassword?: string
   triagePassword?: string
   labelerKeywords: Record<string, string>
+  indexerConcurrency?: number
 }
 
 export class ServerConfig {
@@ -65,6 +66,7 @@ export class ServerConfig {
     const triagePassword = process.env.TRIAGE_PASSWORD || undefined
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
+    const indexerConcurrency = maybeParseInt(process.env.INDEXER_CONCURRENCY)
     const labelerKeywords = {}
     return new ServerConfig({
       version,
@@ -89,6 +91,7 @@ export class ServerConfig {
       moderatorPassword,
       triagePassword,
       labelerKeywords,
+      indexerConcurrency,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -197,6 +200,10 @@ export class ServerConfig {
   get triagePassword() {
     return this.cfg.triagePassword
   }
+
+  get indexerConcurrency() {
+    return this.cfg.indexerConcurrency
+  }
 }
 
 function stripUndefineds(
@@ -209,4 +216,9 @@ function stripUndefineds(
     }
   })
   return result
+}
+
+function maybeParseInt(str) {
+  const parsed = parseInt(str)
+  return isNaN(parsed) ? undefined : parsed
 }

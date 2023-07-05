@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
-import { notSoftDeletedClause, DbRef } from '../../db/util'
+import { notSoftDeletedClause, DbRef, AnyQb } from '../../db/util'
 import { GenericKeyset, paginate } from '../../db/pagination'
 
 // @TODO utilized in both pds and app-view
@@ -17,49 +17,106 @@ export const getUserSearchQueryPg = (
 ) => {
   const { ref } = db.db.dynamic
   const { term, limit, cursor, includeSoftDeleted } = opts
-
-  // Performing matching by word using "strict word similarity" operator.
-  // The more characters the user gives us, the more we can ratchet down
-  // the distance threshold for matching.
-  const threshold = term.length < 3 ? 0.9 : 0.8
-
   // Matching user accounts based on handle
   const distanceAccount = distance(term, ref('handle'))
-  let accountsQb = db.db
-    .selectFrom('did_handle')
-    .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
-    .if(!includeSoftDeleted, (qb) =>
-      qb.where(notSoftDeletedClause(ref('repo_root'))),
-    )
-    .where(similar(term, ref('handle'))) // Coarse filter engaging trigram index
-    .where(distanceAccount, '<', threshold) // Refines results from trigram index
-    .select(['did_handle.did as did', distanceAccount.as('distance')])
+  let accountsQb = getMatchingAccountsQb(db, { term, includeSoftDeleted })
   accountsQb = paginate(accountsQb, {
     limit,
     cursor,
     direction: 'asc',
     keyset: new SearchKeyset(distanceAccount, ref('handle')),
   })
-
   // Matching profiles based on display name
   const distanceProfile = distance(term, ref('displayName'))
-  let profilesQb = db.db
-    .selectFrom('profile')
-    .innerJoin('did_handle', 'did_handle.did', 'profile.creator')
+  let profilesQb = getMatchingProfilesQb(db, { term, includeSoftDeleted })
+  profilesQb = paginate(
+    profilesQb.innerJoin('did_handle', 'did_handle.did', 'profile.creator'), // for handle pagination
+    {
+      limit,
+      cursor,
+      direction: 'asc',
+      keyset: new SearchKeyset(distanceProfile, ref('handle')),
+    },
+  )
+  // Combine and paginate result set
+  return paginate(combineAccountsAndProfilesQb(db, accountsQb, profilesQb), {
+    limit,
+    cursor,
+    direction: 'asc',
+    keyset: new SearchKeyset(ref('distance'), ref('handle')),
+  })
+}
+
+// Takes maximal advantage of trigram index at the expense of ability to paginate.
+export const getUserSearchQuerySimplePg = (
+  db: Database,
+  opts: {
+    term: string
+    limit: number
+  },
+) => {
+  const { ref } = db.db.dynamic
+  const { term, limit } = opts
+  // Matching user accounts based on handle
+  const accountsQb = getMatchingAccountsQb(db, { term })
+    .orderBy('distance', 'asc')
+    .limit(limit)
+  // Matching profiles based on display name
+  const profilesQb = getMatchingProfilesQb(db, { term })
+    .orderBy('distance', 'asc')
+    .limit(limit)
+  // Combine and paginate result set
+  return paginate(combineAccountsAndProfilesQb(db, accountsQb, profilesQb), {
+    limit,
+    direction: 'asc',
+    keyset: new SearchKeyset(ref('distance'), ref('handle')),
+  })
+}
+
+// Matching user accounts based on handle
+const getMatchingAccountsQb = (
+  db: Database,
+  opts: { term: string; includeSoftDeleted?: boolean },
+) => {
+  const { ref } = db.db.dynamic
+  const { term, includeSoftDeleted } = opts
+  const distanceAccount = distance(term, ref('handle'))
+  return db.db
+    .selectFrom('did_handle')
     .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('repo_root'))),
     )
-    .where(similar(term, ref('displayName'))) // Coarse filter engaging trigram index
-    .where(distanceProfile, '<', threshold) // Refines results from trigram index
-    .select(['did_handle.did as did', distanceProfile.as('distance')])
-  profilesQb = paginate(profilesQb, {
-    limit,
-    cursor,
-    direction: 'asc',
-    keyset: new SearchKeyset(distanceProfile, ref('handle')),
-  })
+    .where(similar(term, ref('handle'))) // Coarse filter engaging trigram index
+    .where(distanceAccount, '<', getMatchThreshold(term)) // Refines results from trigram index
+    .select(['did_handle.did as did', distanceAccount.as('distance')])
+}
 
+// Matching profiles based on display name
+const getMatchingProfilesQb = (
+  db: Database,
+  opts: { term: string; includeSoftDeleted?: boolean },
+) => {
+  const { ref } = db.db.dynamic
+  const { term, includeSoftDeleted } = opts
+  const distanceProfile = distance(term, ref('displayName'))
+  return db.db
+    .selectFrom('profile')
+    .innerJoin('repo_root', 'repo_root.did', 'profile.creator')
+    .if(!includeSoftDeleted, (qb) =>
+      qb.where(notSoftDeletedClause(ref('repo_root'))),
+    )
+    .where(similar(term, ref('displayName'))) // Coarse filter engaging trigram index
+    .where(distanceProfile, '<', getMatchThreshold(term)) // Refines results from trigram index
+    .select(['profile.creator as did', distanceProfile.as('distance')])
+}
+
+// Combine profile and account result sets
+const combineAccountsAndProfilesQb = (
+  db: Database,
+  accountsQb: AnyQb,
+  profilesQb: AnyQb,
+) => {
   // Combine user account and profile results, taking best matches from each
   const emptyQb = db.db
     .selectFrom('user_account')
@@ -76,17 +133,9 @@ export const getUserSearchQueryPg = (
     .distinctOn('did') // Per did, take whichever of account and profile distance is best
     .orderBy('did')
     .orderBy('distance')
-
-  // Sort and paginate all user results
-  const allQb = db.db
+  return db.db
     .selectFrom(resultsQb.as('results'))
     .innerJoin('did_handle', 'did_handle.did', 'results.did')
-  return paginate(allQb, {
-    limit,
-    cursor,
-    direction: 'asc',
-    keyset: new SearchKeyset(ref('distance'), ref('handle')),
-  })
 }
 
 export const getUserSearchQuerySqlite = (
@@ -154,6 +203,13 @@ const distance = (term: string, ref: DbRef) =>
 
 // Can utilize trigram index to match on strict word similarity
 const similar = (term: string, ref: DbRef) => sql<boolean>`(${term} <<% ${ref})`
+
+const getMatchThreshold = (term: string) => {
+  // Performing matching by word using "strict word similarity" operator.
+  // The more characters the user gives us, the more we can ratchet down
+  // the distance threshold for matching.
+  return term.length < 3 ? 0.9 : 0.8
+}
 
 type Result = { distance: number; handle: string }
 type LabeledResult = { primary: number; secondary: string }
