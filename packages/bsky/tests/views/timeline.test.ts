@@ -156,6 +156,28 @@ describe('timeline views', () => {
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
+  it('paginates reverse-chronological feed skeleton', async () => {
+    const paginator = async (cursor?: string) => {
+      const res = await agent.api.app.bsky.unspecced.getTimelineSkeleton(
+        { cursor, limit: 4 },
+        { headers: await network.serviceHeaders(carol) },
+      )
+      return res.data
+    }
+
+    const paginatedAll = await paginateAll(paginator)
+    paginatedAll.forEach((res) =>
+      expect(res.feed.length).toBeLessThanOrEqual(4),
+    )
+
+    const full = await agent.api.app.bsky.unspecced.getTimelineSkeleton(
+      {},
+      { headers: await network.serviceHeaders(carol) },
+    )
+
+    expect(full.data.feed.length).toEqual(7)
+  })
+
   it('paginates reverse-chronological feed w/ high follower count', async () => {
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getTimeline(
@@ -185,6 +207,28 @@ describe('timeline views', () => {
     )
 
     const full = await agent.api.app.bsky.feed.getTimeline(
+      {},
+      { headers: await network.serviceHeaders(carol) },
+    )
+
+    expect(full.data.feed.length).toEqual(7)
+  })
+
+  it('paginates reverse-chronological feed skeleton w/ high follower count', async () => {
+    const paginator = async (cursor?: string) => {
+      const res = await agent.api.app.bsky.unspecced.getTimelineSkeleton(
+        { cursor, limit: 4 },
+        { headers: await network.serviceHeaders(carol) },
+      )
+      return res.data
+    }
+
+    const paginatedAll = await paginateAll(paginator)
+    paginatedAll.forEach((res) =>
+      expect(res.feed.length).toBeLessThanOrEqual(4),
+    )
+
+    const full = await agent.api.app.bsky.unspecced.getTimelineSkeleton(
       {},
       { headers: await network.serviceHeaders(carol) },
     )
