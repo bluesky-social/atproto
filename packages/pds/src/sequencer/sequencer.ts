@@ -126,7 +126,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     try {
       const evts = await this.requestSeqRange({
         earliestSeq: this.lastSeen,
-        limit: 10,
+        limit: 50,
       })
       if (evts.length > 0) {
         this.emit('events', evts)

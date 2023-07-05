@@ -25,6 +25,7 @@ export type TestServerInfo = {
   url: string
   ctx: AppContext
   close: CloseFn
+  processAll: () => Promise<void>
 }
 
 export type TestServerOpts = {
@@ -154,12 +155,19 @@ export const runTestServer = async (
   const pdsServer = await pds.start()
   const pdsPort = (pdsServer.address() as AddressInfo).port
 
+  // we refresh label cache by hand in `processAll` instead of on a timer
+  pds.ctx.labelCache.stop()
+
   return {
     url: `http://localhost:${pdsPort}`,
     ctx: pds.ctx,
     close: async () => {
       await pds.destroy()
       await plcServer.destroy()
+    },
+    processAll: async () => {
+      await pds.ctx.backgroundQueue.processAll()
+      await pds.ctx.labelCache.fullRefresh()
     },
   }
 }

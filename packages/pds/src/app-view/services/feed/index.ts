@@ -1,6 +1,7 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { dedupeStrs } from '@atproto/common'
+import { cborToLexRecord } from '@atproto/repo'
 import Database from '../../../db'
 import { countAll, notSoftDeletedClause } from '../../../db/util'
 import { ImageUriBuilder } from '../../../image/uri'
@@ -28,21 +29,25 @@ import { LabelService, Labels } from '../label'
 import { ActorService } from '../actor'
 import { GraphService } from '../graph'
 import { FeedViews } from './views'
-import { cborToLexRecord } from '@atproto/repo'
+import { LabelCache } from '../../../label-cache'
 
 export * from './types'
 
 export class FeedService {
-  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    public db: Database,
+    public imgUriBuilder: ImageUriBuilder,
+    public labelCache: LabelCache,
+  ) {}
 
-  static creator(imgUriBuilder: ImageUriBuilder) {
-    return (db: Database) => new FeedService(db, imgUriBuilder)
+  static creator(imgUriBuilder: ImageUriBuilder, labelCache: LabelCache) {
+    return (db: Database) => new FeedService(db, imgUriBuilder, labelCache)
   }
 
   views = new FeedViews(this.db, this.imgUriBuilder)
   services = {
-    label: LabelService.creator()(this.db),
-    actor: ActorService.creator(this.imgUriBuilder)(this.db),
+    label: LabelService.creator(this.labelCache)(this.db),
+    actor: ActorService.creator(this.imgUriBuilder, this.labelCache)(this.db),
     graph: GraphService.creator(this.imgUriBuilder)(this.db),
   }
 
@@ -114,7 +119,7 @@ export class FeedService {
     if (dids.length < 1) return {}
     const { ref } = this.db.db.dynamic
     const { skipLabels = false, includeSoftDeleted = false } = opts ?? {}
-    const [actors, labels, listMutes] = await Promise.all([
+    const [actors, labels] = await Promise.all([
       this.db.db
         .selectFrom('did_handle')
         .where('did_handle.did', 'in', dids)
@@ -160,11 +165,25 @@ export class FeedService {
             .where('mutedByDid', '=', requester)
             .select('did')
             .as('requesterMuted'),
+          this.db.db
+            .selectFrom('list_item')
+            .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
+            .where('list_mute.mutedByDid', '=', requester)
+            .whereRef('list_item.subjectDid', '=', ref('did_handle.did'))
+            .select('list_item.listUri')
+            .limit(1)
+            .as('requesterMutedByList'),
         ])
         .execute(),
       this.services.label.getLabelsForSubjects(skipLabels ? [] : dids),
-      this.services.actor.views.getListMutes(dids, requester),
     ])
+    const listUris: string[] = actors
+      .map((a) => a.requesterMutedByList)
+      .filter((list) => !!list)
+    const listViews = await this.services.graph.getListViews(
+      listUris,
+      requester,
+    )
     return actors.reduce((acc, cur) => {
       const actorLabels = labels[cur.did] ?? []
       return {
@@ -177,8 +196,12 @@ export class FeedService {
             ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
             : undefined,
           viewer: {
-            muted: !!cur?.requesterMuted || !!listMutes[cur.did],
-            mutedByList: listMutes[cur.did],
+            muted: !!cur?.requesterMuted || !!cur?.requesterMutedByList,
+            mutedByList: cur.requesterMutedByList
+              ? this.services.graph.formatListViewBasic(
+                  listViews[cur.requesterMutedByList],
+                )
+              : undefined,
             blockedBy: !!cur?.requesterBlockedBy,
             blocking: cur?.requesterBlocking || undefined,
             following: cur?.requesterFollowing || undefined,
