@@ -271,7 +271,7 @@ export class PDS {
     this.ctx.sequencerLeader.run()
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()
-    await this.ctx.labelCache.start()
+    this.ctx.labelCache.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     this.server.keepAliveTimeout = 90000

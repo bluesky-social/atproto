@@ -1,6 +1,7 @@
 import { wait } from '@atproto/common'
 import Database from './db'
 import { Label } from './db/tables/label'
+import { labelerLogger as log } from './logger'
 
 export class LabelCache {
   bySubject: Record<string, Label[]> = {}
@@ -11,8 +12,7 @@ export class LabelCache {
 
   constructor(public db: Database) {}
 
-  async start() {
-    await this.fullRefresh()
+  start() {
     this.poll()
   }
 
@@ -32,13 +32,20 @@ export class LabelCache {
   }
 
   async poll() {
-    if (this.destroyed) return
-    if (this.refreshes >= 120) {
-      await this.fullRefresh()
-      this.refreshes = 0
-    } else {
-      await this.partialRefresh()
-      this.refreshes++
+    try {
+      if (this.destroyed) return
+      if (this.refreshes >= 120) {
+        await this.fullRefresh()
+        this.refreshes = 0
+      } else {
+        await this.partialRefresh()
+        this.refreshes++
+      }
+    } catch (err) {
+      log.error(
+        { err, latestLabel: this.latestLabel, refreshes: this.refreshes },
+        'label cache failed to refresh',
+      )
     }
     await wait(500)
     this.poll()
