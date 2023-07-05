@@ -27,7 +27,7 @@ export class RepoSubscription {
   leader = new Leader(this.subLockId, this.ctx.db)
   repoQueue: PartitionedQueue
   cursorQueue = new LatestQueue()
-  consecutive = new ConsecutiveList<ProcessableMessage>()
+  consecutive = new ConsecutiveList<number>()
   destroyed = false
   lastSeq: number | undefined
   lastCursor: number | undefined
@@ -59,7 +59,7 @@ export class RepoSubscription {
               continue
             }
             this.lastSeq = details.seq
-            const item = this.consecutive.push(details.message)
+            const item = this.consecutive.push(details.seq)
             this.repoQueue
               .add(details.repo, () => this.handleMessage(details.message))
               .catch((err) => {
@@ -116,7 +116,7 @@ export class RepoSubscription {
     this.destroyed = false
     this.repoQueue = new PartitionedQueue({ concurrency: this.concurrency })
     this.cursorQueue = new LatestQueue()
-    this.consecutive = new ConsecutiveList<ProcessableMessage>()
+    this.consecutive = new ConsecutiveList<number>()
     await this.run()
   }
 
@@ -212,10 +212,10 @@ export class RepoSubscription {
     await services.indexing(db).tombstoneActor(msg.did)
   }
 
-  private async handleCursor(msg: ProcessableMessage) {
+  private async handleCursor(seq: number) {
     const { db } = this.ctx
     await db.transaction(async (tx) => {
-      await this.setState(tx, { cursor: msg.seq })
+      await this.setState(tx, { cursor: seq })
     })
   }
 
