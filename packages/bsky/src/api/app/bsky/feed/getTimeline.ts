@@ -43,7 +43,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-async function getFeedItemsHighFollow(
+export async function getFeedItemsHighFollow(
   ctx: AppContext,
   opts: { viewer: string; cursor?: string; limit: number },
 ): Promise<FeedRow[]> {
@@ -89,7 +89,7 @@ async function getFeedItemsHighFollow(
   return await feedItemsQb.execute()
 }
 
-async function getFeedItemsLowFollow(
+export async function getFeedItemsLowFollow(
   ctx: AppContext,
   opts: { viewer: string; cursor?: string; limit: number },
 ): Promise<FeedRow[]> {
