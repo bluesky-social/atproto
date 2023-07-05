@@ -12,6 +12,7 @@ const handler: AlgoHandler = async (
   params: SkeletonParams,
   requester: string,
 ): Promise<AlgoResponse> => {
+  // Temporary change to only return a post notifying users that the feed is down
   return {
     feedItems: [
       {
