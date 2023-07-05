@@ -146,12 +146,12 @@ export class RepoSubscription {
         return
       }
       if (msg.rebase) {
-        // temporarily disable check, full reindex on rabase
-        // const needsReindex = await indexingService.checkCommitNeedsIndexing(
-        //   root,
-        // )
-        // if (!needsReindex) return
-        await indexingService.indexRepo(msg.repo, rootCid.toString())
+        const needsReindex = await indexingService.checkCommitNeedsIndexing(
+          root,
+        )
+        if (needsReindex) {
+          await indexingService.indexRepo(msg.repo, rootCid.toString())
+        }
         await indexingService.setCommitLastSeen(root, msg)
         return
       }
