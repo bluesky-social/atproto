@@ -85,6 +85,7 @@ describe('pds admin get moderation reports view', () => {
           uri: report.subject.uri,
           cid: report.subject.cid,
         },
+        createdBy: `did:example:admin${i}`,
       })
       if (ab) {
         await sc.resolveReports({
@@ -232,13 +233,29 @@ describe('pds admin get moderation reports view', () => {
     expect(defaultList[defaultList.length - 1].id).toEqual(reverseList[0].id)
   })
 
-  it('gets all moderation reports by active resolution action type.', async () => {
+  it.only('gets all moderation reports by active resolution action type.', async () => {
     const reportsWithTakedown =
       await agent.api.com.atproto.admin.getModerationReports(
         { actionType: TAKEDOWN },
         { headers: { authorization: adminAuth() } },
       )
     expect(forSnapshot(reportsWithTakedown.data.reports)).toMatchSnapshot()
+  })
+
+  it.only('gets all moderation reports actioned by a certain moderator.', async () => {
+    const [actionedByAdminOne, actionedByAdminTwo] = await Promise.all([
+      agent.api.com.atproto.admin.getModerationReports(
+        { actionedBy: 'did:example:admin0' },
+        { headers: { authorization: adminAuth() } },
+      ),
+      agent.api.com.atproto.admin.getModerationReports(
+        { actionedBy: 'did:example:admin2' },
+        { headers: { authorization: adminAuth() } },
+      ),
+    ])
+
+    expect(forSnapshot(actionedByAdminOne.data.reports)).toMatchSnapshot()
+    expect(forSnapshot(actionedByAdminTwo.data.reports)).toMatchSnapshot()
   })
 
   it('paginates.', async () => {

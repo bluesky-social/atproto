@@ -16,6 +16,7 @@ export default function (server: Server, ctx: AppContext) {
         ignoreSubjects,
         reverse = false,
         reporters = [],
+        actionedBy,
       } = params
       const moderationService = services.moderation(db)
       const results = await moderationService.getReports({
@@ -27,6 +28,7 @@ export default function (server: Server, ctx: AppContext) {
         ignoreSubjects,
         reverse,
         reporters,
+        actionedBy,
       })
       return {
         encoding: 'application/json',
