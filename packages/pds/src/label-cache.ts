@@ -1,11 +1,10 @@
-import { createDeferrable, wait } from '@atproto/common'
+import { wait } from '@atproto/common'
 import Database from './db'
 import { Label } from './db/tables/label'
 
 export class LabelCache {
   bySubject: Record<string, Label[]> = {}
   latestLabel = ''
-  defer = createDeferrable()
   refreshes = 0
 
   destroyed = false
@@ -41,13 +40,8 @@ export class LabelCache {
       await this.partialRefresh()
       this.refreshes++
     }
-    this.defer = createDeferrable()
     await wait(500)
     this.poll()
-  }
-
-  async catchUp() {
-    await this.defer.complete
   }
 
   processLabels(labels: Label[]) {
@@ -58,7 +52,6 @@ export class LabelCache {
       this.bySubject[label.uri] ??= []
       this.bySubject[label.uri].push(label)
     }
-    this.defer.resolve()
   }
 
   wipeCache() {

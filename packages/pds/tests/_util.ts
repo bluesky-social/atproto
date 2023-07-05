@@ -168,7 +168,6 @@ export const runTestServer = async (
     processAll: async () => {
       await pds.ctx.backgroundQueue.processAll()
       await pds.ctx.labelCache.fullRefresh()
-      await pds.ctx.labelCache.catchUp()
     },
   }
 }

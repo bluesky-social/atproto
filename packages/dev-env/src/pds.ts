@@ -129,7 +129,6 @@ export class TestPds {
   async processAll() {
     await this.ctx.backgroundQueue.processAll()
     await this.ctx.labelCache.fullRefresh()
-    await this.ctx.labelCache.catchUp()
   }
 
   async close() {
