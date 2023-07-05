@@ -86,6 +86,10 @@ export class TestBsky {
     return new AtpAgent({ service: this.url })
   }
 
+  async processAll() {
+    await this.ctx.backgroundQueue.processAll()
+  }
+
   async close() {
     await this.server.destroy()
   }

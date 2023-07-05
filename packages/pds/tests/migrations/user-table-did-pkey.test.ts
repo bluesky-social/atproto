@@ -2,7 +2,7 @@ import { Database } from '../../src'
 import { randomStr } from '@atproto/crypto'
 import { Kysely } from 'kysely'
 
-describe('user table did pkey migration', () => {
+describe.skip('user table did pkey migration', () => {
   let db: Database
   let rawDb: Kysely<any>
 

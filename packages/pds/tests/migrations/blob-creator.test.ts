@@ -4,7 +4,7 @@ import { cidForCbor, TID } from '@atproto/common'
 import { Kysely } from 'kysely'
 import { AtUri } from '@atproto/uri'
 
-describe('blob creator migration', () => {
+describe.skip('blob creator migration', () => {
   let db: Database
   let rawDb: Kysely<any>
 

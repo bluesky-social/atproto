@@ -108,14 +108,14 @@ export class Outbox {
       const evts = await this.sequencer.requestSeqRange({
         earliestTime: backfillTime,
         earliestSeq: this.lastSeen > -1 ? this.lastSeen : backfillCursor,
-        limit: 10,
+        limit: 100,
       })
       for (const evt of evts) {
         yield evt
       }
       // if we're within 50 of the sequencer, we call it good & switch to cutover
       const seqCursor = this.sequencer.lastSeen ?? -1
-      if (seqCursor - this.lastSeen < 10) break
+      if (seqCursor - this.lastSeen < 100) break
       if (evts.length < 1) break
     }
   }
