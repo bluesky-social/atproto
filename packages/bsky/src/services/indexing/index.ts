@@ -203,7 +203,10 @@ export class IndexingService {
               'skipping indexing of invalid record',
             )
           } else {
-            throw err
+            subLogger.error(
+              { err, did, commit, uri: uri.toString(), cid: cid.toString() },
+              'skipping indexing due to error processing record',
+            )
           }
         }
       })
