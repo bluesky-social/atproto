@@ -156,6 +156,42 @@ describe('timeline views', () => {
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
+  it('paginates reverse-chronological feed w/ high follower count', async () => {
+    const paginator = async (cursor?: string) => {
+      const res = await agent.api.app.bsky.feed.getTimeline(
+        {
+          cursor,
+          limit: 4,
+        },
+        { headers: await network.serviceHeaders(carol) },
+      )
+      return res.data
+    }
+
+    // follow 5 additional accounts
+    for (let i = 0; i < 5; ++i) {
+      const acct = await sc.createAccount(`carolfollow${i}.test`, {
+        email: `carolfollow${i}@test.com`,
+        handle: `carolfollow${i}.test`,
+        password: `carolfollow${i}-pass`,
+      })
+      await sc.follow(carol, acct.did)
+    }
+    await network.processAll()
+
+    const paginatedAll = await paginateAll(paginator)
+    paginatedAll.forEach((res) =>
+      expect(res.feed.length).toBeLessThanOrEqual(4),
+    )
+
+    const full = await agent.api.app.bsky.feed.getTimeline(
+      {},
+      { headers: await network.serviceHeaders(carol) },
+    )
+
+    expect(full.data.feed.length).toEqual(7)
+  })
+
   it('blocks posts, reposts, replies by actor takedown', async () => {
     const actionResults = await Promise.all(
       [bob, carol].map((did) =>

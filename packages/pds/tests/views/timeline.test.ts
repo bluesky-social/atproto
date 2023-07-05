@@ -189,11 +189,7 @@ describe('timeline views', () => {
   it('paginates reverse-chronological feed w/ high follower count', async () => {
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getTimeline(
-        {
-          algorithm: FeedAlgorithm.ReverseChronological,
-          cursor,
-          limit: 4,
-        },
+        { cursor, limit: 4 },
         { headers: sc.getHeaders(carol) },
       )
       return res.data
