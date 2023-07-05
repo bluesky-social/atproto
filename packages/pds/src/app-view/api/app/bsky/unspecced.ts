@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxy(req)) {
+      if (ctx.canProxyRead(req)) {
         const hotClassicUri = Object.keys(ctx.algos).find((uri) =>
           uri.endsWith('/hot-classic'),
         )

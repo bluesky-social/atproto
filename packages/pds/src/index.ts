@@ -21,7 +21,7 @@ import Database from './db'
 import { ServerAuth } from './auth'
 import * as error from './error'
 import compression from './util/compression'
-import { dbLogger, loggerMiddleware } from './logger'
+import { dbLogger, loggerMiddleware, seqLogger } from './logger'
 import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
 import { createServer } from './lexicon'
@@ -56,6 +56,7 @@ export class PDS {
   public server?: http.Server
   private terminator?: HttpTerminator
   private dbStatsInterval?: NodeJS.Timer
+  private sequencerStatsInterval?: NodeJS.Timer
 
   constructor(opts: {
     ctx: AppContext
@@ -95,7 +96,11 @@ export class PDS {
       config.didCacheStaleTTL,
       config.didCacheMaxTTL,
     )
-    const idResolver = new IdResolver({ plcUrl: config.didPlcUrl, didCache })
+    const idResolver = new IdResolver({
+      plcUrl: config.didPlcUrl,
+      didCache,
+      backupNameservers: config.handleResolveNameservers,
+    })
 
     const messageDispatcher = new MessageDispatcher()
     const sequencer = new Sequencer(db)
@@ -249,6 +254,14 @@ export class PDS {
         )
       }, 10000)
     }
+    this.sequencerStatsInterval = setInterval(() => {
+      if (this.ctx.sequencerLeader.isLeader) {
+        seqLogger.info(
+          { seq: this.ctx.sequencerLeader.peekSeqVal() },
+          'sequencer leader stats',
+        )
+      }
+    }, 500)
     appviewConsumers.listen(this.ctx)
     this.ctx.sequencerLeader.run()
     await this.ctx.sequencer.start()
@@ -267,6 +280,7 @@ export class PDS {
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
+    clearInterval(this.sequencerStatsInterval)
   }
 }
 
