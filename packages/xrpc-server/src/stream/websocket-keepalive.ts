@@ -53,6 +53,7 @@ export class WebSocketKeepAlive {
         this.clearHeartbeatInterval()
       })
 
+      // send a ping on an interval and check to ensure that a pong has come back in that time
       this.clearHeartbeatInterval() // clean up any previous interval that's stuck around
       this.isAlive = true
       // send a ping every x seconds
