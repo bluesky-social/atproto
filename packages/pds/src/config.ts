@@ -25,6 +25,7 @@ export interface ServerConfigValues {
   recoveryKey: string
   adminPassword: string
   moderatorPassword?: string
+  triagePassword?: string
 
   inviteRequired: boolean
   userInviteInterval: number | null
@@ -114,6 +115,7 @@ export class ServerConfig {
 
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
     const moderatorPassword = process.env.MODERATOR_PASSWORD || undefined
+    const triagePassword = process.env.TRIAGE_PASSWORD || undefined
 
     const inviteRequired = process.env.INVITE_REQUIRED === 'true' ? true : false
     const userInviteInterval = parseIntWithFallback(
@@ -213,6 +215,7 @@ export class ServerConfig {
       serverDid,
       adminPassword,
       moderatorPassword,
+      triagePassword,
       inviteRequired,
       userInviteInterval,
       userInviteEpoch,
@@ -328,6 +331,10 @@ export class ServerConfig {
 
   get moderatorPassword() {
     return this.cfg.moderatorPassword
+  }
+
+  get triagePassword() {
+    return this.cfg.triagePassword
   }
 
   get inviteRequired() {

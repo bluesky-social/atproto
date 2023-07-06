@@ -1,13 +1,12 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { adminVerifier } from '../../../auth'
 import { paginate } from '../../../../db/pagination'
 import { ListKeyset } from '../../../../services/actor'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
-    auth: adminVerifier(ctx.cfg.adminPassword),
+    auth: ctx.roleVerifier,
     handler: async ({ params }) => {
       const { db, services } = ctx
       const moderationService = services.moderation(db)
