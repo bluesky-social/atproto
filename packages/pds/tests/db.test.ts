@@ -211,11 +211,11 @@ describe('db', () => {
       const leader2 = new Leader(777, db)
       const leader3 = new Leader(777, db)
       const result1 = await leader1.run(task)
-      await wait(1) // Short grace period for pg to close session
+      await wait(5) // Short grace period for pg to close session
       const result2 = await leader2.run(task)
-      await wait(1)
+      await wait(5)
       const result3 = await leader3.run(task)
-      await wait(1)
+      await wait(5)
       const result4 = await leader3.run(task)
       expect([result1, result2, result3, result4]).toEqual([
         { ran: true, result: 'complete' },
@@ -226,7 +226,7 @@ describe('db', () => {
     })
 
     it('only allows one leader at a time.', async () => {
-      await wait(1)
+      await wait(5)
       const task = async () => {
         await wait(25)
         return 'complete'
@@ -245,7 +245,7 @@ describe('db', () => {
     })
 
     it('leaders with different ids do not conflict.', async () => {
-      await wait(1)
+      await wait(5)
       const task = async () => {
         await wait(25)
         return 'complete'
