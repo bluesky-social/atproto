@@ -42,6 +42,24 @@ export class SqlRepoStorage extends RepoStorage {
     return CID.parse(res.root)
   }
 
+  // proactively cache all blocks from a particular commit (to prevent multiple roundtrips)
+  async cacheCommit(cid: CID): Promise<void> {
+    const res = await this.db.db
+      .selectFrom('repo_commit_block')
+      .innerJoin('ipld_block', (join) =>
+        join
+          .onRef('ipld_block.cid', '=', 'repo_commit_block.block')
+          .onRef('ipld_block.creator', '=', 'repo_commit_block.creator'),
+      )
+      .where('repo_commit_block.creator', '=', this.did)
+      .where('repo_commit_block.commit', '=', cid.toString())
+      .select(['ipld_block.cid', 'ipld_block.content'])
+      .execute()
+    for (const row of res) {
+      this.cache.set(CID.parse(row.cid), row.content)
+    }
+  }
+
   async getBytes(cid: CID): Promise<Uint8Array | null> {
     const cached = this.cache.get(cid)
     if (cached) return cached

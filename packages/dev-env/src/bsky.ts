@@ -108,6 +108,10 @@ export class TestBsky {
     }
   }
 
+  async processAll() {
+    await this.ctx.backgroundQueue.processAll()
+  }
+
   async close() {
     await this.server.destroy()
   }

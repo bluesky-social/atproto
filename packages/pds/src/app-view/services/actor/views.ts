@@ -8,13 +8,19 @@ import { DidHandle } from '../../../db/tables/did-handle'
 import Database from '../../../db'
 import { ImageUriBuilder } from '../../../image/uri'
 import { LabelService } from '../label'
-import { ListViewBasic } from '../../../lexicon/types/app/bsky/graph/defs'
+import { GraphService } from '../graph'
+import { LabelCache } from '../../../label-cache'
 
 export class ActorViews {
-  constructor(private db: Database, private imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    private db: Database,
+    private imgUriBuilder: ImageUriBuilder,
+    private labelCache: LabelCache,
+  ) {}
 
   services = {
-    label: LabelService.creator(),
+    label: LabelService.creator(this.labelCache)(this.db),
+    graph: GraphService.creator(this.imgUriBuilder)(this.db),
   }
 
   profileDetailed(
@@ -82,17 +88,29 @@ export class ActorViews {
           .where('mutedByDid', '=', viewer)
           .select('did')
           .as('requesterMuted'),
+        this.db.db
+          .selectFrom('list_item')
+          .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
+          .where('list_mute.mutedByDid', '=', viewer)
+          .whereRef('list_item.subjectDid', '=', ref('did_handle.did'))
+          .select('list_item.listUri')
+          .limit(1)
+          .as('requesterMutedByList'),
       ])
 
-    const [profileInfos, labels, listMutes] = await Promise.all([
+    const [profileInfos, labels] = await Promise.all([
       profileInfosQb.execute(),
-      this.services.label(this.db).getLabelsForSubjects(dids),
-      this.getListMutes(dids, viewer),
+      this.services.label.getLabelsForSubjects(dids),
     ])
 
     const profileInfoByDid = profileInfos.reduce((acc, info) => {
       return Object.assign(acc, { [info.did]: info })
     }, {} as Record<string, ArrayEl<typeof profileInfos>>)
+
+    const listUris: string[] = profileInfos
+      .map((a) => a.requesterMutedByList)
+      .filter((list) => !!list)
+    const listViews = await this.services.graph.getListViews(listUris, viewer)
 
     const views = results.map((result) => {
       const profileInfo = profileInfoByDid[result.did]
@@ -114,8 +132,14 @@ export class ActorViews {
         postsCount: profileInfo?.postsCount || 0,
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: {
-          muted: !!profileInfo?.requesterMuted || !!listMutes[result.did],
-          mutedByList: listMutes[result.did],
+          muted:
+            !!profileInfo?.requesterMuted ||
+            !!profileInfo?.requesterMutedByList,
+          mutedByList: profileInfo.requesterMutedByList
+            ? this.services.graph.formatListViewBasic(
+                listViews[profileInfo.requesterMutedByList],
+              )
+            : undefined,
           blockedBy: !!profileInfo.requesterBlockedBy,
           blocking: profileInfo.requesterBlocking || undefined,
           following: profileInfo?.requesterFollowing || undefined,
@@ -181,17 +205,29 @@ export class ActorViews {
           .where('mutedByDid', '=', viewer)
           .select('did')
           .as('requesterMuted'),
+        this.db.db
+          .selectFrom('list_item')
+          .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
+          .where('list_mute.mutedByDid', '=', viewer)
+          .whereRef('list_item.subjectDid', '=', ref('did_handle.did'))
+          .select('list_item.listUri')
+          .limit(1)
+          .as('requesterMutedByList'),
       ])
 
-    const [profileInfos, labels, listMutes] = await Promise.all([
+    const [profileInfos, labels] = await Promise.all([
       profileInfosQb.execute(),
-      this.services.label(this.db).getLabelsForSubjects(dids),
-      this.getListMutes(dids, viewer),
+      this.services.label.getLabelsForSubjects(dids),
     ])
 
     const profileInfoByDid = profileInfos.reduce((acc, info) => {
       return Object.assign(acc, { [info.did]: info })
     }, {} as Record<string, ArrayEl<typeof profileInfos>>)
+
+    const listUris: string[] = profileInfos
+      .map((a) => a.requesterMutedByList)
+      .filter((list) => !!list)
+    const listViews = await this.services.graph.getListViews(listUris, viewer)
 
     const views = results.map((result) => {
       const profileInfo = profileInfoByDid[result.did]
@@ -206,8 +242,14 @@ export class ActorViews {
         avatar,
         indexedAt: profileInfo?.indexedAt || undefined,
         viewer: {
-          muted: !!profileInfo?.requesterMuted || !!listMutes[result.did],
-          mutedByList: listMutes[result.did],
+          muted:
+            !!profileInfo?.requesterMuted ||
+            !!profileInfo?.requesterMutedByList,
+          mutedByList: profileInfo.requesterMutedByList
+            ? this.services.graph.formatListViewBasic(
+                listViews[profileInfo.requesterMutedByList],
+              )
+            : undefined,
           blockedBy: !!profileInfo.requesterBlockedBy,
           blocking: profileInfo.requesterBlocking || undefined,
           following: profileInfo?.requesterFollowing || undefined,
@@ -244,41 +286,6 @@ export class ActorViews {
     }))
 
     return Array.isArray(result) ? views : views[0]
-  }
-
-  async getListMutes(
-    subjects: string[],
-    mutedBy: string,
-  ): Promise<Record<string, ListViewBasic>> {
-    if (subjects.length < 1) return {}
-    const res = await this.db.db
-      .selectFrom('list_item')
-      .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
-      .innerJoin('list', 'list.uri', 'list_item.listUri')
-      .where('list_mute.mutedByDid', '=', mutedBy)
-      .where('list_item.subjectDid', 'in', subjects)
-      .selectAll('list')
-      .select('list_item.subjectDid as subjectDid')
-      .execute()
-    return res.reduce(
-      (acc, cur) => ({
-        ...acc,
-        [cur.subjectDid]: {
-          uri: cur.uri,
-          cid: cur.cid,
-          name: cur.name,
-          purpose: cur.purpose,
-          avatar: cur.avatarCid
-            ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
-            : undefined,
-          viewer: {
-            muted: true,
-          },
-          indexedAt: cur.indexedAt,
-        },
-      }),
-      {} as Record<string, ListViewBasic>,
-    )
   }
 }
 

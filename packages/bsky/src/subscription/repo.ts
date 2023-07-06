@@ -27,8 +27,10 @@ export class RepoSubscription {
   leader = new Leader(this.subLockId, this.ctx.db)
   repoQueue: PartitionedQueue
   cursorQueue = new LatestQueue()
-  consecutive = new ConsecutiveList<ProcessableMessage>()
+  consecutive = new ConsecutiveList<number>()
   destroyed = false
+  lastSeq: number | undefined
+  lastCursor: number | undefined
 
   constructor(
     public ctx: AppContext,
@@ -56,7 +58,8 @@ export class RepoSubscription {
               )
               continue
             }
-            const item = this.consecutive.push(details.message)
+            this.lastSeq = details.seq
+            const item = this.consecutive.push(details.seq)
             this.repoQueue
               .add(details.repo, () => this.handleMessage(details.message))
               .catch((err) => {
@@ -113,7 +116,7 @@ export class RepoSubscription {
     this.destroyed = false
     this.repoQueue = new PartitionedQueue({ concurrency: this.concurrency })
     this.cursorQueue = new LatestQueue()
-    this.consecutive = new ConsecutiveList<ProcessableMessage>()
+    this.consecutive = new ConsecutiveList<number>()
     await this.run()
   }
 
@@ -138,14 +141,19 @@ export class RepoSubscription {
     const indexRecords = async () => {
       const { root, rootCid, ops } = await getOps(msg)
       if (msg.tooBig) {
-        return await indexingService.indexRepo(msg.repo, rootCid.toString())
+        await indexingService.indexRepo(msg.repo, rootCid.toString())
+        await indexingService.setCommitLastSeen(root, msg)
+        return
       }
       if (msg.rebase) {
         const needsReindex = await indexingService.checkCommitNeedsIndexing(
           root,
         )
-        if (!needsReindex) return
-        return await indexingService.indexRepo(msg.repo, rootCid.toString())
+        if (needsReindex) {
+          await indexingService.indexRepo(msg.repo, rootCid.toString())
+        }
+        await indexingService.setCommitLastSeen(root, msg)
+        return
       }
       for (const op of ops) {
         if (op.action === WriteOpAction.Delete) {
@@ -171,7 +179,16 @@ export class RepoSubscription {
                 'skipping indexing of invalid record',
               )
             } else {
-              throw err
+              subLogger.error(
+                {
+                  err,
+                  did: msg.repo,
+                  commit: msg.commit.toString(),
+                  uri: op.uri.toString(),
+                  cid: op.cid.toString(),
+                },
+                'skipping indexing due to error processing record',
+              )
             }
           }
         }
@@ -195,10 +212,10 @@ export class RepoSubscription {
     await services.indexing(db).tombstoneActor(msg.did)
   }
 
-  private async handleCursor(msg: ProcessableMessage) {
+  private async handleCursor(seq: number) {
     const { db } = this.ctx
     await db.transaction(async (tx) => {
-      await this.setState(tx, { cursor: msg.seq })
+      await this.setState(tx, { cursor: seq })
     })
   }
 
@@ -209,7 +226,9 @@ export class RepoSubscription {
       .where('service', '=', this.service)
       .where('method', '=', METHOD)
       .executeTakeFirst()
-    return sub ? (JSON.parse(sub.state) as State) : { cursor: 0 }
+    const state = sub ? (JSON.parse(sub.state) as State) : { cursor: 0 }
+    this.lastCursor = state.cursor
+    return state
   }
 
   async resetState(): Promise<void> {
@@ -222,6 +241,9 @@ export class RepoSubscription {
 
   private async setState(tx: Database, state: State): Promise<void> {
     tx.assertTransaction()
+    tx.onCommit(() => {
+      this.lastCursor = state.cursor
+    })
     const res = await tx.db
       .updateTable('subscription')
       .where('service', '=', this.service)

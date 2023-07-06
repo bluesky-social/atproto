@@ -6,15 +6,7 @@ import { AlgoHandler, AlgoResponse } from './types'
 import { FeedKeyset } from '../api/app/bsky/util/feed'
 import { valuesList } from '../db/util'
 
-const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
-  '!no-promote',
-  'corpse',
-  'self-harm',
-  'porn',
-  'sexual',
-  'nudity',
-  'underwear',
-]
+const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = ['!no-promote']
 
 const handler: AlgoHandler = async (
   ctx: AppContext,

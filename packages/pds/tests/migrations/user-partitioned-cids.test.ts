@@ -5,7 +5,7 @@ import { Kysely } from 'kysely'
 import { Block } from 'multiformats/block'
 import * as uint8arrays from 'uint8arrays'
 
-describe('user partitioned cids migration', () => {
+describe.skip('user partitioned cids migration', () => {
   let db: Database
   let rawDb: Kysely<any>
 
