@@ -346,7 +346,7 @@ describe('Subscriptions', () => {
     })
   })
 
-  it.only('uses a heartbeat to reconnect if a connection is dropped', async () => {
+  it('uses a heartbeat to reconnect if a connection is dropped', async () => {
     // we run a server that, on first connection, pauses for longer than the heartbeat interval (doesn't return "pong"s)
     // on second connection, it returns a message frame and then closes
     const port = await getPort()
