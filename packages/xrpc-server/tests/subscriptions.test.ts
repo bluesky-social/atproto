@@ -164,61 +164,6 @@ describe('Subscriptions', () => {
     ])
   })
 
-  it.only('uses a heartbeat to reconnect if a connection is dropped', async () => {
-    // we run a server that, on first connection, pauses for longer than the heartbeat interval (doesn't return "pong"s)
-    // on second connection, it returns a message frame and then closes
-    const port = await getPort()
-    const server = new WebSocketServer({ port })
-    let firstConnection = true
-    let firstWasClosed = false
-    server.on('connection', async (socket) => {
-      if (firstConnection === true) {
-        firstConnection = false
-        socket.pause()
-        await wait(600)
-        // shouldn't send this message because the socket would be closed
-        const frame = new ErrorFrame({
-          error: 'AuthenticationRequired',
-          message: 'Authentication Required',
-        })
-        socket.send(frame.toBytes(), { binary: true }, (err) => {
-          if (err) throw err
-          socket.close(xrpcServer.CloseCode.Normal)
-        })
-        socket.on('close', () => {
-          firstWasClosed = true
-        })
-      } else {
-        const frame = new MessageFrame({ count: 1 })
-        socket.send(frame.toBytes(), { binary: true }, (err) => {
-          if (err) throw err
-          socket.close(xrpcServer.CloseCode.Normal)
-        })
-      }
-    })
-
-    const subscription = new Subscription({
-      service: `ws://localhost:${port}`,
-      method: '',
-      heartbeatInterval: 500,
-      validate: (obj) => {
-        return lex.assertValidXrpcMessage<{ count: number }>(
-          'io.example.streamOne',
-          obj,
-        )
-      },
-    })
-
-    const messages: { count: number }[] = []
-    for await (const msg of subscription) {
-      messages.push(msg)
-    }
-
-    expect(messages).toEqual([{ count: 1 }])
-    expect(firstWasClosed).toBe(true)
-    server.close()
-  })
-
   it('resolves auth into handler', async () => {
     const ws = new WebSocket(
       `ws://localhost:${port}/xrpc/io.example.streamAuth`,
@@ -399,5 +344,60 @@ describe('Subscriptions', () => {
         { count: 6 },
       ])
     })
+  })
+
+  it('uses a heartbeat to reconnect if a connection is dropped', async () => {
+    // we run a server that, on first connection, pauses for longer than the heartbeat interval (doesn't return "pong"s)
+    // on second connection, it returns a message frame and then closes
+    const port = await getPort()
+    const server = new WebSocketServer({ port })
+    let firstConnection = true
+    let firstWasClosed = false
+    server.on('connection', async (socket) => {
+      if (firstConnection === true) {
+        firstConnection = false
+        socket.pause()
+        await wait(600)
+        // shouldn't send this message because the socket would be closed
+        const frame = new ErrorFrame({
+          error: 'AuthenticationRequired',
+          message: 'Authentication Required',
+        })
+        socket.send(frame.toBytes(), { binary: true }, (err) => {
+          if (err) throw err
+          socket.close(xrpcServer.CloseCode.Normal)
+        })
+        socket.on('close', () => {
+          firstWasClosed = true
+        })
+      } else {
+        const frame = new MessageFrame({ count: 1 })
+        socket.send(frame.toBytes(), { binary: true }, (err) => {
+          if (err) throw err
+          socket.close(xrpcServer.CloseCode.Normal)
+        })
+      }
+    })
+
+    const subscription = new Subscription({
+      service: `ws://localhost:${port}`,
+      method: '',
+      heartbeatInterval: 500,
+      validate: (obj) => {
+        return lex.assertValidXrpcMessage<{ count: number }>(
+          'io.example.streamOne',
+          obj,
+        )
+      },
+    })
+
+    const messages: { count: number }[] = []
+    for await (const msg of subscription) {
+      messages.push(msg)
+    }
+
+    expect(messages).toEqual([{ count: 1 }])
+    expect(firstWasClosed).toBe(true)
+    server.close()
   })
 })
