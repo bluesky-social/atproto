@@ -7,8 +7,6 @@ export class WebSocketKeepAlive {
   public ws: WebSocket | null = null
   public initialSetup = true
   public reconnects: number | null = null
-  public isAlive = false
-  public heartbeatInterval: NodeJS.Timer | null = null
 
   constructor(
     public opts: ClientOptions & {
@@ -42,7 +40,9 @@ export class WebSocketKeepAlive {
       this.ws.once('open', () => {
         this.initialSetup = false
         this.reconnects = 0
-        this.startHeartbeat()
+        if (this.ws) {
+          this.startHeartbeat(this.ws)
+        }
       })
       this.ws.once('close', (code, reason) => {
         if (code === CloseCode.Abnormal) {
@@ -51,7 +51,6 @@ export class WebSocketKeepAlive {
             new AbnormalCloseError(`Abnormal ws close: ${reason.toString()}`),
           )
         }
-        this.clearHeartbeatInterval()
       })
 
       try {
@@ -79,32 +78,31 @@ export class WebSocketKeepAlive {
     }
   }
 
-  startHeartbeat() {
+  startHeartbeat(ws: WebSocket) {
+    let isAlive = true
+    let heartbeatInterval: NodeJS.Timer | null = null
+
     const checkAlive = () => {
-      if (!this.isAlive) {
-        return this.ws?.terminate()
+      if (!isAlive) {
+        ws?.terminate()
+        if (heartbeatInterval) {
+          clearInterval(heartbeatInterval)
+          heartbeatInterval = null
+        }
       }
-      this.isAlive = false // expect websocket to no longer be alive unless we receive a "pong" within the interval
+      isAlive = false // expect websocket to no longer be alive unless we receive a "pong" within the interval
       this.ws?.ping()
     }
 
-    this.clearHeartbeatInterval() // clean up any previous interval that's stuck around
-    this.ws?.on('pong', () => {
-      this.isAlive = true
-    })
-
-    this.isAlive = true
     checkAlive()
-    this.heartbeatInterval = setInterval(
+    heartbeatInterval = setInterval(
       checkAlive,
       this.opts.heartbeatIntervalMs ?? 10 * SECOND,
     )
-  }
 
-  clearHeartbeatInterval() {
-    if (this.heartbeatInterval === null) return
-    clearInterval(this.heartbeatInterval)
-    this.heartbeatInterval = null
+    ws.on('pong', () => {
+      isAlive = true
+    })
   }
 }
 

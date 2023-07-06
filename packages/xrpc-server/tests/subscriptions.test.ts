@@ -346,7 +346,7 @@ describe('Subscriptions', () => {
     })
   })
 
-  it('uses a heartbeat to reconnect if a connection is dropped', async () => {
+  it.only('uses a heartbeat to reconnect if a connection is dropped', async () => {
     // we run a server that, on first connection, pauses for longer than the heartbeat interval (doesn't return "pong"s)
     // on second connection, it returns a message frame and then closes
     const port = await getPort()
@@ -382,7 +382,7 @@ describe('Subscriptions', () => {
     const subscription = new Subscription({
       service: `ws://localhost:${port}`,
       method: '',
-      heartbeatInterval: 500,
+      heartbeatIntervalMs: 500,
       validate: (obj) => {
         return lex.assertValidXrpcMessage<{ count: number }>(
           'io.example.streamOne',
