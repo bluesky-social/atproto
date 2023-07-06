@@ -42,6 +42,7 @@ export class WebSocketKeepAlive {
       this.ws.once('open', () => {
         this.initialSetup = false
         this.reconnects = 0
+        this.startHeartbeat()
       })
       this.ws.once('close', (code, reason) => {
         if (code === CloseCode.Abnormal) {
@@ -53,27 +54,9 @@ export class WebSocketKeepAlive {
         this.clearHeartbeatInterval()
       })
 
-      // send a ping on an interval and check to ensure that a pong has come back in that time
-      this.clearHeartbeatInterval() // clean up any previous interval that's stuck around
-      this.isAlive = true
-      // send a ping every x seconds
-      this.heartbeatInterval = setInterval(() => {
-        if (!this.isAlive) {
-          this.ws?.terminate()
-        }
-        this.isAlive = false
-        this.ws?.ping()
-      }, this.opts.heartbeatInterval ?? 10 * SECOND)
-
-      // add a heartbeat
-      this.ws.on('pong', () => {
-        this.isAlive = true
-      })
-
       try {
         const wsStream = streamByteChunks(this.ws, { signal: ac.signal })
         for await (const chunk of wsStream) {
-          // @TODO asdf
           yield chunk
         }
       } catch (_err) {
@@ -94,6 +77,28 @@ export class WebSocketKeepAlive {
       }
       break // Other side cleanly ended stream and disconnected
     }
+  }
+
+  startHeartbeat() {
+    const checkAlive = () => {
+      if (!this.isAlive) {
+        this.ws?.terminate()
+      }
+      this.isAlive = false // expect websocket to no longer be alive unless we receive a "pong" within the interval
+      this.ws?.ping()
+    }
+
+    this.clearHeartbeatInterval() // clean up any previous interval that's stuck around
+    this.ws?.on('pong', () => {
+      this.isAlive = true
+    })
+
+    this.isAlive = true
+    checkAlive()
+    this.heartbeatInterval = setInterval(
+      checkAlive,
+      this.opts.heartbeatInterval ?? 10 * SECOND,
+    )
   }
 
   clearHeartbeatInterval() {

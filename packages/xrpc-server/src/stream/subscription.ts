@@ -8,6 +8,7 @@ export class Subscription<T = unknown> {
       service: string
       method: string
       maxReconnectSeconds?: number
+      heartbeatInterval?: number
       signal?: AbortSignal
       validate: (obj: unknown) => T | undefined
       onReconnectError?: (
