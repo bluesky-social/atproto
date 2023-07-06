@@ -84,11 +84,7 @@ export class WebSocketKeepAlive {
 
     const checkAlive = () => {
       if (!isAlive) {
-        ws.terminate()
-        if (heartbeatInterval) {
-          clearInterval(heartbeatInterval)
-          heartbeatInterval = null
-        }
+        return ws.terminate()
       }
       isAlive = false // expect websocket to no longer be alive unless we receive a "pong" within the interval
       ws.ping()
@@ -102,6 +98,12 @@ export class WebSocketKeepAlive {
 
     ws.on('pong', () => {
       isAlive = true
+    })
+    ws.once('close', () => {
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval)
+        heartbeatInterval = null
+      }
     })
   }
 }
