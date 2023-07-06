@@ -8,14 +8,14 @@ export class WebSocketKeepAlive {
   public initialSetup = true
   public reconnects: number | null = null
   public isAlive = false
-  public heartbeatInterval: NodeJS.Timer | null
+  public heartbeatInterval: NodeJS.Timer | null = null
 
   constructor(
     public opts: ClientOptions & {
       getUrl: () => Promise<string>
       maxReconnectSeconds?: number
       signal?: AbortSignal
-      heartbeatInterval?: number
+      heartbeatIntervalMs?: number
       onReconnectError?: (
         error: unknown,
         n: number,
@@ -82,7 +82,7 @@ export class WebSocketKeepAlive {
   startHeartbeat() {
     const checkAlive = () => {
       if (!this.isAlive) {
-        this.ws?.terminate()
+        return this.ws?.terminate()
       }
       this.isAlive = false // expect websocket to no longer be alive unless we receive a "pong" within the interval
       this.ws?.ping()
@@ -97,7 +97,7 @@ export class WebSocketKeepAlive {
     checkAlive()
     this.heartbeatInterval = setInterval(
       checkAlive,
-      this.opts.heartbeatInterval ?? 10 * SECOND,
+      this.opts.heartbeatIntervalMs ?? 10 * SECOND,
     )
   }
 
