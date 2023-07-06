@@ -90,6 +90,7 @@ export class PDS {
       jwtSecret: config.jwtSecret,
       adminPass: config.adminPassword,
       moderatorPass: config.moderatorPassword,
+      triagePass: config.triagePassword,
     })
 
     const didCache = new DidSqlCache(

@@ -67,6 +67,10 @@ export class AppContext {
     })
   }
 
+  get roleVerifier() {
+    return auth.roleVerifier(this.cfg)
+  }
+
   get labeler(): Labeler {
     return this.opts.labeler
   }

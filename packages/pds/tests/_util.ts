@@ -19,6 +19,7 @@ import { MountedAlgos } from '../src/feed-gen/types'
 
 const ADMIN_PASSWORD = 'admin-pass'
 const MODERATOR_PASSWORD = 'moderator-pass'
+const TRIAGE_PASSWORD = 'triage-pass'
 
 export type CloseFn = () => Promise<void>
 export type TestServerInfo = {
@@ -83,6 +84,7 @@ export const runTestServer = async (
     recoveryKey,
     adminPassword: ADMIN_PASSWORD,
     moderatorPassword: MODERATOR_PASSWORD,
+    triagePassword: TRIAGE_PASSWORD,
     inviteRequired: false,
     userInviteInterval: null,
     userInviteEpoch: Date.now(),
@@ -178,6 +180,10 @@ export const adminAuth = () => {
 
 export const moderatorAuth = () => {
   return basicAuth('admin', MODERATOR_PASSWORD)
+}
+
+export const triageAuth = () => {
+  return basicAuth('admin', TRIAGE_PASSWORD)
 }
 
 const basicAuth = (username: string, password: string) => {
