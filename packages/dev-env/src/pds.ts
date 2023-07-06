@@ -121,7 +121,7 @@ export class TestPds {
         : this.ctx.cfg.adminPassword
     return (
       'Basic ' +
-      ui8.toString(ui8.fromString(`${role}:${password}`, 'utf8'), 'base64pad')
+      ui8.toString(ui8.fromString(`admin:${password}`, 'utf8'), 'base64pad')
     )
   }
 

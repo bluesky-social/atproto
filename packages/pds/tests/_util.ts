@@ -179,11 +179,11 @@ export const adminAuth = () => {
 }
 
 export const moderatorAuth = () => {
-  return basicAuth('moderator', MODERATOR_PASSWORD)
+  return basicAuth('admin', MODERATOR_PASSWORD)
 }
 
 export const triageAuth = () => {
-  return basicAuth('triage', TRIAGE_PASSWORD)
+  return basicAuth('admin', TRIAGE_PASSWORD)
 }
 
 const basicAuth = (username: string, password: string) => {

@@ -120,10 +120,10 @@ export class ServerAuth {
       return { status: Missing, admin: false, moderator: false, triage: false }
     }
     const { username, password } = parsed
-    if (username === 'triage' && password === this._triagePass) {
+    if (username === 'admin' && password === this._triagePass) {
       return { status: Valid, admin: false, moderator: false, triage: true }
     }
-    if (username === 'moderator' && password === this._moderatorPass) {
+    if (username === 'admin' && password === this._moderatorPass) {
       return { status: Valid, admin: false, moderator: true, triage: true }
     }
     if (username === 'admin' && password === this._adminPass) {

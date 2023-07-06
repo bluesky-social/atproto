@@ -43,10 +43,10 @@ export const roleVerifier =
 export const getRoleCredentials = (cfg: ServerConfig, req: express.Request) => {
   const parsed = parseBasicAuth(req.headers.authorization || '')
   const { username, password } = parsed ?? {}
-  if (username === 'triage' && password === cfg.triagePassword) {
+  if (username === 'admin' && password === cfg.triagePassword) {
     return { valid: true, admin: false, moderator: false, triage: true }
   }
-  if (username === 'moderator' && password === cfg.moderatorPassword) {
+  if (username === 'admin' && password === cfg.moderatorPassword) {
     return { valid: true, admin: false, moderator: true, triage: true }
   }
   if (username === 'admin' && password === cfg.adminPassword) {
