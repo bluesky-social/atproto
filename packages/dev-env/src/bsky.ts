@@ -1,4 +1,5 @@
 import getPort from 'get-port'
+import * as ui8 from 'uint8arrays'
 import * as bsky from '@atproto/bsky'
 import { DAY, HOUR } from '@atproto/common-web'
 import { AtpAgent } from '@atproto/api'
@@ -43,6 +44,8 @@ export class TestBsky {
       // Each test suite gets its own lock id for the repo subscription
       repoSubLockId: uniqueLockId(),
       adminPassword: 'admin-pass',
+      moderatorPassword: 'moderator-pass',
+      triagePassword: 'triage-pass',
       labelerDid: 'did:example:labeler',
       labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
       feedGenDid: 'did:example:feedGen',
@@ -84,6 +87,25 @@ export class TestBsky {
 
   getClient() {
     return new AtpAgent({ service: this.url })
+  }
+
+  adminAuth(role: 'admin' | 'moderator' | 'triage' = 'admin'): string {
+    const password =
+      role === 'triage'
+        ? this.ctx.cfg.triagePassword
+        : role === 'moderator'
+        ? this.ctx.cfg.moderatorPassword
+        : this.ctx.cfg.adminPassword
+    return (
+      'Basic ' +
+      ui8.toString(ui8.fromString(`admin:${password}`, 'utf8'), 'base64pad')
+    )
+  }
+
+  adminAuthHeaders(role?: 'admin' | 'moderator' | 'triage') {
+    return {
+      authorization: this.adminAuth(role),
+    }
   }
 
   async processAll() {

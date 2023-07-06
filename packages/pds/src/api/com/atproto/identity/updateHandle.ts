@@ -2,7 +2,11 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as ident from '@atproto/identifier'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { UserAlreadyExistsError } from '../../../../services/account'
+import {
+  HandleSequenceToken,
+  UserAlreadyExistsError,
+} from '../../../../services/account'
+import { httpLogger } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({
@@ -43,9 +47,12 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      await ctx.db.transaction(async (dbTxn) => {
+      const seqHandleTok = await ctx.db.transaction(async (dbTxn) => {
+        let tok: HandleSequenceToken
         try {
-          await ctx.services.account(dbTxn).updateHandle(requester, handle)
+          tok = await ctx.services
+            .account(dbTxn)
+            .updateHandle(requester, handle)
         } catch (err) {
           if (err instanceof UserAlreadyExistsError) {
             throw new InvalidRequestError(`Handle already taken: ${handle}`)
@@ -53,7 +60,19 @@ export default function (server: Server, ctx: AppContext) {
           throw err
         }
         await ctx.plcClient.updateHandle(requester, ctx.plcRotationKey, handle)
+        return tok
       })
+
+      try {
+        await ctx.db.transaction(async (dbTxn) => {
+          await ctx.services.account(dbTxn).sequenceHandle(seqHandleTok)
+        })
+      } catch (err) {
+        httpLogger.error(
+          { err, did: requester, handle },
+          'failed to sequence handle update',
+        )
+      }
     },
   })
 }

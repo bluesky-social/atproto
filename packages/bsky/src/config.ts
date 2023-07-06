@@ -22,6 +22,8 @@ export interface ServerConfigValues {
   labelerDid: string
   hiveApiKey?: string
   adminPassword: string
+  moderatorPassword?: string
+  triagePassword?: string
   labelerKeywords: Record<string, string>
   indexerConcurrency?: number
 }
@@ -60,6 +62,8 @@ export class ServerConfig {
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
     const repoProvider = process.env.REPO_PROVIDER // E.g. ws://abc.com:4000
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
+    const moderatorPassword = process.env.MODERATOR_PASSWORD || undefined
+    const triagePassword = process.env.TRIAGE_PASSWORD || undefined
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
     const indexerConcurrency = maybeParseInt(process.env.INDEXER_CONCURRENCY)
@@ -84,6 +88,8 @@ export class ServerConfig {
       labelerDid,
       hiveApiKey,
       adminPassword,
+      moderatorPassword,
+      triagePassword,
       labelerKeywords,
       indexerConcurrency,
       ...stripUndefineds(overrides ?? {}),
@@ -185,6 +191,14 @@ export class ServerConfig {
 
   get adminPassword() {
     return this.cfg.adminPassword
+  }
+
+  get moderatorPassword() {
+    return this.cfg.moderatorPassword
+  }
+
+  get triagePassword() {
+    return this.cfg.triagePassword
   }
 
   get indexerConcurrency() {

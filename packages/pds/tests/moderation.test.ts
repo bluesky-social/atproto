@@ -1,5 +1,6 @@
 import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
 import { AtUri } from '@atproto/uri'
+import { BlobNotFoundError } from '@atproto/repo'
 import {
   adminAuth,
   CloseFn,
@@ -7,6 +8,7 @@ import {
   moderatorAuth,
   runTestServer,
   TestServerInfo,
+  triageAuth,
 } from './_util'
 import { ImageRef, RecordRef, SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
@@ -14,12 +16,12 @@ import {
   ACKNOWLEDGE,
   FLAG,
   TAKEDOWN,
+  ESCALATE,
 } from '../src/lexicon/types/com/atproto/admin/defs'
 import {
   REASONOTHER,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
-import { BlobNotFoundError } from '@atproto/repo'
 
 describe('moderation', () => {
   let server: TestServerInfo
@@ -493,13 +495,13 @@ describe('moderation', () => {
       )
     })
 
-    it('supports flagging and acknowledging.', async () => {
+    it('supports escalating and acknowledging for triage.', async () => {
       const postRef1 = sc.posts[sc.dids.alice][0].ref
       const postRef2 = sc.posts[sc.dids.bob][0].ref
       const { data: action1 } =
         await agent.api.com.atproto.admin.takeModerationAction(
           {
-            action: FLAG,
+            action: ESCALATE,
             subject: {
               $type: 'com.atproto.repo.strongRef',
               uri: postRef1.uri.toString(),
@@ -510,12 +512,12 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: moderatorAuth() }, // As moderator
+            headers: { authorization: triageAuth() },
           },
         )
       expect(action1).toEqual(
         expect.objectContaining({
-          action: FLAG,
+          action: ESCALATE,
           subject: {
             $type: 'com.atproto.repo.strongRef',
             uri: postRef1.uriStr,
@@ -537,7 +539,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: { authorization: adminAuth() },
+            headers: { authorization: triageAuth() },
           },
         )
       expect(action2).toEqual(
@@ -559,7 +561,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: { authorization: triageAuth() },
         },
       )
       await agent.api.com.atproto.admin.reverseModerationAction(
@@ -570,7 +572,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: { authorization: triageAuth() },
         },
       )
     })
@@ -959,7 +961,7 @@ describe('moderation', () => {
       await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual(['kittens'])
     })
 
-    it('does not allow non-admin moderators to label.', async () => {
+    it('does not allow triage moderators to label.', async () => {
       const attemptLabel = agent.api.com.atproto.admin.takeModerationAction(
         {
           action: ACKNOWLEDGE,
@@ -974,32 +976,52 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: moderatorAuth() },
+          headers: { authorization: triageAuth() },
         },
       )
       await expect(attemptLabel).rejects.toThrow(
-        'Must be an admin to takedown or label content',
+        'Must be a full moderator to label content',
       )
     })
 
     it('does not allow non-admin moderators to takedown.', async () => {
-      const attemptTakedown = agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          createdBy: 'did:example:moderator',
-          reason: 'Y',
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: sc.dids.bob,
+      const attemptTakedownMod =
+        agent.api.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            createdBy: 'did:example:moderator',
+            reason: 'Y',
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: sc.dids.bob,
+            },
           },
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: moderatorAuth() },
-        },
+          {
+            encoding: 'application/json',
+            headers: { authorization: moderatorAuth() },
+          },
+        )
+      await expect(attemptTakedownMod).rejects.toThrow(
+        'Must be an admin to perform an account takedown',
       )
-      await expect(attemptTakedown).rejects.toThrow(
-        'Must be an admin to takedown or label content',
+      const attemptTakedownTriage =
+        agent.api.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            createdBy: 'did:example:moderator',
+            reason: 'Y',
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: sc.dids.bob,
+            },
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: triageAuth() },
+          },
+        )
+      await expect(attemptTakedownTriage).rejects.toThrow(
+        'Must be an admin to perform an account takedown',
       )
     })
 

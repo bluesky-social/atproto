@@ -4,8 +4,9 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRepo({
-    auth: ctx.moderatorVerifier,
-    handler: async ({ params }) => {
+    auth: ctx.roleVerifier,
+    handler: async ({ params, auth }) => {
+      const access = auth.credentials
       const { db, services } = ctx
       const { did } = params
       const result = await services.account(db).getAccount(did, true)
@@ -14,7 +15,9 @@ export default function (server: Server, ctx: AppContext) {
       }
       return {
         encoding: 'application/json',
-        body: await services.moderation(db).views.repoDetail(result),
+        body: await services.moderation(db).views.repoDetail(result, {
+          includeEmails: access.moderator,
+        }),
       }
     },
   })

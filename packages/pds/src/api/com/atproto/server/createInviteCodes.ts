@@ -1,14 +1,18 @@
+import { chunkArray } from '@atproto/common'
+import { AuthRequiredError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { genInvCodes } from './util'
 import { InviteCode } from '../../../../db/tables/invite-code'
 import { AccountCodes } from '../../../../lexicon/types/com/atproto/server/createInviteCodes'
-import { chunkArray } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createInviteCodes({
-    auth: ctx.adminVerifier,
-    handler: async ({ input, req }) => {
+    auth: ctx.roleVerifier,
+    handler: async ({ input, req, auth }) => {
+      if (!auth.credentials.admin) {
+        throw new AuthRequiredError('Insufficient privileges')
+      }
       const { codeCount, useCount } = input.body
 
       const forAccounts = input.body.forAccounts ?? ['admin']
