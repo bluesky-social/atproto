@@ -32,7 +32,7 @@ describe('mute views', () => {
         { headers: sc.getHeaders(silas), encoding: 'application/json' },
       )
     }
-    await server.ctx.backgroundQueue.processAll()
+    await server.processAll()
   })
 
   afterAll(async () => {

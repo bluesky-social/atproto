@@ -125,13 +125,20 @@ export const ensureCodeIsAvailable = async (
     .if(withLock && db.dialect === 'pg', (qb) => qb.forUpdate().skipLocked())
     .executeTakeFirst()
 
+  if (!invite || invite.disabled) {
+    throw new InvalidRequestError(
+      'Provided invite code not available',
+      'InvalidInviteCode',
+    )
+  }
+
   const uses = await db.db
     .selectFrom('invite_code_use')
     .select(countAll.as('count'))
     .where('code', '=', inviteCode)
     .executeTakeFirstOrThrow()
 
-  if (!invite || invite.disabled || invite.availableUses <= uses.count) {
+  if (invite.availableUses <= uses.count) {
     throw new InvalidRequestError(
       'Provided invite code not available',
       'InvalidInviteCode',

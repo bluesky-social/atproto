@@ -124,11 +124,29 @@ export class ModerationService {
     }
 
     if (ignoreSubjects?.length) {
-      builder = builder.where((qb) => {
-        return qb
-          .where('subjectDid', 'not in', ignoreSubjects)
-          .where('subjectUri', 'not in', ignoreSubjects)
+      const ignoreUris: string[] = []
+      const ignoreDids: string[] = []
+
+      ignoreSubjects.forEach((subject) => {
+        if (subject.startsWith('at://')) {
+          ignoreUris.push(subject)
+        } else if (subject.startsWith('did:')) {
+          ignoreDids.push(subject)
+        }
       })
+
+      if (ignoreDids.length) {
+        builder = builder.where('subjectDid', 'not in', ignoreDids)
+      }
+      if (ignoreUris.length) {
+        builder = builder.where((qb) => {
+          // Without the null condition, postgres will ignore all reports where `subjectUri` is null
+          // which will make all the account reports be ignored as well
+          return qb
+            .where('subjectUri', 'not in', ignoreUris)
+            .orWhere('subjectUri', 'is', null)
+        })
+      }
     }
 
     if (reporters?.length) {

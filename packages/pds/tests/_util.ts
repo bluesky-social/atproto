@@ -19,12 +19,14 @@ import { MountedAlgos } from '../src/feed-gen/types'
 
 const ADMIN_PASSWORD = 'admin-pass'
 const MODERATOR_PASSWORD = 'moderator-pass'
+const TRIAGE_PASSWORD = 'triage-pass'
 
 export type CloseFn = () => Promise<void>
 export type TestServerInfo = {
   url: string
   ctx: AppContext
   close: CloseFn
+  processAll: () => Promise<void>
 }
 
 export type TestServerOpts = {
@@ -82,6 +84,7 @@ export const runTestServer = async (
     recoveryKey,
     adminPassword: ADMIN_PASSWORD,
     moderatorPassword: MODERATOR_PASSWORD,
+    triagePassword: TRIAGE_PASSWORD,
     inviteRequired: false,
     userInviteInterval: null,
     userInviteEpoch: Date.now(),
@@ -154,12 +157,19 @@ export const runTestServer = async (
   const pdsServer = await pds.start()
   const pdsPort = (pdsServer.address() as AddressInfo).port
 
+  // we refresh label cache by hand in `processAll` instead of on a timer
+  pds.ctx.labelCache.stop()
+
   return {
     url: `http://localhost:${pdsPort}`,
     ctx: pds.ctx,
     close: async () => {
       await pds.destroy()
       await plcServer.destroy()
+    },
+    processAll: async () => {
+      await pds.ctx.backgroundQueue.processAll()
+      await pds.ctx.labelCache.fullRefresh()
     },
   }
 }
@@ -170,6 +180,10 @@ export const adminAuth = () => {
 
 export const moderatorAuth = () => {
   return basicAuth('admin', MODERATOR_PASSWORD)
+}
+
+export const triageAuth = () => {
+  return basicAuth('admin', TRIAGE_PASSWORD)
 }
 
 const basicAuth = (username: string, password: string) => {

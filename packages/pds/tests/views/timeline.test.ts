@@ -55,7 +55,7 @@ describe('timeline views', () => {
         labelPostB.cidStr,
         { create: ['kind'] },
       )
-    await server.ctx.backgroundQueue.processAll()
+    await server.processAll()
   })
 
   afterAll(async () => {

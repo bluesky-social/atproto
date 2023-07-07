@@ -25,6 +25,7 @@ export interface ServerConfigValues {
   recoveryKey: string
   adminPassword: string
   moderatorPassword?: string
+  triagePassword?: string
 
   inviteRequired: boolean
   userInviteInterval: number | null
@@ -35,6 +36,7 @@ export interface ServerConfigValues {
   databaseLocation?: string
 
   availableUserDomains: string[]
+  handleResolveNameservers?: string[]
 
   imgUriSalt: string
   imgUriKey: string
@@ -113,6 +115,7 @@ export class ServerConfig {
 
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
     const moderatorPassword = process.env.MODERATOR_PASSWORD || undefined
+    const triagePassword = process.env.TRIAGE_PASSWORD || undefined
 
     const inviteRequired = process.env.INVITE_REQUIRED === 'true' ? true : false
     const userInviteInterval = parseIntWithFallback(
@@ -134,6 +137,10 @@ export class ServerConfig {
 
     const availableUserDomains = process.env.AVAILABLE_USER_DOMAINS
       ? process.env.AVAILABLE_USER_DOMAINS.split(',')
+      : []
+
+    const handleResolveNameservers = process.env.HANDLE_RESOLVE_NAMESERVERS
+      ? process.env.HANDLE_RESOLVE_NAMESERVERS.split(',')
       : []
 
     const imgUriSalt =
@@ -208,6 +215,7 @@ export class ServerConfig {
       serverDid,
       adminPassword,
       moderatorPassword,
+      triagePassword,
       inviteRequired,
       userInviteInterval,
       userInviteEpoch,
@@ -215,6 +223,7 @@ export class ServerConfig {
       termsOfServiceUrl,
       databaseLocation,
       availableUserDomains,
+      handleResolveNameservers,
       imgUriSalt,
       imgUriKey,
       imgUriEndpoint,
@@ -324,6 +333,10 @@ export class ServerConfig {
     return this.cfg.moderatorPassword
   }
 
+  get triagePassword() {
+    return this.cfg.triagePassword
+  }
+
   get inviteRequired() {
     return this.cfg.inviteRequired
   }
@@ -366,6 +379,10 @@ export class ServerConfig {
 
   get availableUserDomains() {
     return this.cfg.availableUserDomains
+  }
+
+  get handleResolveNameservers() {
+    return this.cfg.handleResolveNameservers
   }
 
   get imgUriSalt() {
