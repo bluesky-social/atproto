@@ -3,6 +3,8 @@ import { chunkArray, jitter, wait } from '@atproto/common'
 import { Leader } from '../db/leader'
 import { seqLogger as log } from '../logger'
 import Database from '../db'
+import { sql } from 'kysely'
+import { valuesList } from '../db/util'
 
 export const SEQUENCER_LEADER_ID = 1100
 
@@ -115,16 +117,17 @@ export class SequencerLeader {
     const chunks = chunkArray(unsequenced, 2000)
     for (const chunk of chunks) {
       await this.db.transaction(async (dbTxn) => {
-        await Promise.all(
-          chunk.map(async (row) => {
-            await dbTxn.db
-              .updateTable('repo_seq')
-              .set({ seq: this.nextSeqVal() })
-              .where('id', '=', row.id)
-              .execute()
-            await this.db.notify('outgoing_repo_seq')
-          }),
-        )
+        await dbTxn.db
+          .updateTable('repo_seq')
+          .set({ seq: sql`update_seq::bigint` })
+          .from(
+            valuesList(
+              chunk.map((row) => sql.join([row.id, this.nextSeqVal()])),
+            ).as(sql`vals (update_id, update_seq)`),
+          )
+          .whereRef('id', '=', sql`update_id::bigint`)
+          .execute()
+        await Promise.all(chunk.map(() => this.db.notify('outgoing_repo_seq')))
       })
       await this.db.notify('outgoing_repo_seq')
     }
