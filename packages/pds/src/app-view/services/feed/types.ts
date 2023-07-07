@@ -80,6 +80,9 @@ export type FeedRow = {
   replyRoot: string | null
   sortAt: string
 }
+export type FeedHydrationOptions = {
+  includeSoftDeleted?: boolean
+}
 
 export type MaybePostView = PostView | NotFoundPost | BlockedPost
 

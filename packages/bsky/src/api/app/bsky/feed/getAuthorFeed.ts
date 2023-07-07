@@ -73,7 +73,9 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const feedItems = await feedItemsQb.execute()
-      const feed = await feedService.hydrateFeed(feedItems, viewer)
+      const feed = await feedService.hydrateFeed(feedItems, viewer, {
+        includeSoftDeleted: true,
+      })
 
       return {
         encoding: 'application/json',
