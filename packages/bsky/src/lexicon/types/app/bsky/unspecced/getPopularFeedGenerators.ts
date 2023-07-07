@@ -10,12 +10,14 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyFeedDefs from '../feed/defs'
 
 export interface QueryParams {
-  page: number
+  limit: number
+  cursor?: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
+  cursor?: string
   feeds: AppBskyFeedDefs.GeneratorView[]
   [k: string]: unknown
 }

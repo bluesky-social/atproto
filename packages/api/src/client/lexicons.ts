@@ -6288,11 +6288,14 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            page: {
+            limit: {
               type: 'integer',
               minimum: 1,
               maximum: 100,
               default: 1,
+            },
+            cursor: {
+              type: 'string',
             },
           },
         },
@@ -6302,6 +6305,9 @@ export const schemaDict = {
             type: 'object',
             required: ['feeds'],
             properties: {
+              cursor: {
+                type: 'string',
+              },
               feeds: {
                 type: 'array',
                 items: {

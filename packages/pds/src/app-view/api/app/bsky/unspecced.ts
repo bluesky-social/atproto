@@ -1,12 +1,13 @@
 import { Server } from '../../../../lexicon'
 import { FeedKeyset } from './util/feed'
-import { paginate } from '../../../../db/pagination'
+import { GenericKeyset, paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow } from '../../../services/feed'
 import { isPostView } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { NotEmptyArray } from '@atproto/common'
 import { isViewRecord } from '../../../../lexicon/types/app/bsky/embed/record'
 import { countAll, valuesList } from '../../../../db/util'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   '!no-promote',
@@ -129,11 +130,11 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
       const db = ctx.db.db
-      const { page } = params
+      const { limit, cursor } = params
       const { ref } = db.dynamic
       const feedService = ctx.services.appView.feed(ctx.db)
 
-      const mostPopularFeeds = await ctx.db.db
+      let builder = ctx.db.db
         .selectFrom('feed_generator')
         .select([
           'uri',
@@ -145,11 +146,14 @@ export default function (server: Server, ctx: AppContext) {
         ])
         .orderBy('likeCount', 'desc')
         .orderBy('cid', 'desc')
-        .limit(50 * page)
-        .execute()
+
+      const keyset = new LikeCountKeyset(ref('likeCount'), ref('cid'))
+      builder = paginate(builder, { limit, cursor, keyset })
+
+      const res = await builder.execute()
 
       const genViews = await feedService.getFeedGeneratorViews(
-        mostPopularFeeds.map((feed) => feed.uri),
+        res.map((feed) => feed.uri),
         requester,
       )
 
@@ -175,4 +179,31 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+type Result = { likes: number; cid: string }
+type LabeledResult = { primary: number; secondary: string }
+export class LikeCountKeyset extends GenericKeyset<Result, LabeledResult> {
+  labelResult(result: Result) {
+    return {
+      primary: result.likes,
+      secondary: result.cid,
+    }
+  }
+  labeledResultToCursor(labeled: LabeledResult) {
+    return {
+      primary: Math.round(labeled.primary).toString(),
+      secondary: labeled.secondary,
+    }
+  }
+  cursorToLabeledResult(cursor: { primary: string; secondary: string }) {
+    const likes = parseInt(cursor.primary, 10)
+    if (isNaN(likes)) {
+      throw new InvalidRequestError('Malformed cursor')
+    }
+    return {
+      primary: likes,
+      secondary: cursor.secondary,
+    }
+  }
 }
