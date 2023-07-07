@@ -6285,12 +6285,29 @@ export const schemaDict = {
       main: {
         type: 'query',
         description: 'An unspecced view of globally popular feed generators',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
         output: {
           encoding: 'application/json',
           schema: {
             type: 'object',
             required: ['feeds'],
             properties: {
+              cursor: {
+                type: 'string',
+              },
               feeds: {
                 type: 'array',
                 items: {
