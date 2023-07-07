@@ -307,13 +307,34 @@ describe('feed generation', () => {
 
   describe('getPopularFeedGenerators', () => {
     it('gets popular feed generators', async () => {
-      const resEven =
+      const res = await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+        {},
+        { headers: sc.getHeaders(sc.dids.bob) },
+      )
+      expect(res.data.feeds.map((f) => f.likeCount)).toEqual([2, 0, 0, 0])
+      expect(res.data.feeds.map((f) => f.uri)).not.toContain(feedUriPrime) // taken-down
+    })
+
+    it('paginates', async () => {
+      const resFull =
         await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
           {},
           { headers: sc.getHeaders(sc.dids.bob) },
         )
-      expect(resEven.data.feeds.map((f) => f.likeCount)).toEqual([2, 0, 0, 0])
-      expect(resEven.data.feeds.map((f) => f.uri)).not.toContain(feedUriPrime) // taken-down
+
+      const resOne =
+        await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+          { limit: 2 },
+          { headers: sc.getHeaders(sc.dids.bob) },
+        )
+      const resTwo =
+        await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+          { cursor: resOne.data.cursor },
+          { headers: sc.getHeaders(sc.dids.bob) },
+        )
+      expect([...resOne.data.feeds, ...resTwo.data.feeds]).toEqual(
+        resFull.data.feeds,
+      )
     })
   })
 

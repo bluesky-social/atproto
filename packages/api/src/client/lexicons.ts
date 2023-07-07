@@ -6292,7 +6292,7 @@ export const schemaDict = {
               type: 'integer',
               minimum: 1,
               maximum: 100,
-              default: 1,
+              default: 50,
             },
             cursor: {
               type: 'string',
