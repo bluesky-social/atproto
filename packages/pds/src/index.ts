@@ -43,6 +43,7 @@ import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
 
+export type { MountedAlgos } from './feed-gen/types'
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './db'

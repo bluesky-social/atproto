@@ -95,6 +95,7 @@ export class TestPds {
       repoSigningKey,
       plcRotationKey,
       config,
+      algos: cfg.algos,
     })
 
     await server.start()
