@@ -10,16 +10,16 @@ import {
   def,
   Commit,
 } from '@atproto/repo'
+import { ValidationError } from '@atproto/lexicon'
 import { OutputSchema as Message } from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import * as message from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import { ids, lexicons } from '../lexicon/lexicons'
 import Database from '../db'
 import AppContext from '../context'
 import { Leader } from '../db/leader'
+import { IndexingService } from '../services/indexing'
 import { subLogger } from '../logger'
 import { ConsecutiveList, LatestQueue, PartitionedQueue } from './util'
-import { ValidationError } from '@atproto/lexicon'
-import { IndexingService } from '../services/indexing'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
 export const REPO_SUB_ID = 1000
