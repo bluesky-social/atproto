@@ -42,6 +42,8 @@ export class TestPds {
       serverDid,
       recoveryKey: recoveryKey.did(),
       adminPassword: 'admin-pass',
+      moderatorPassword: 'moderator-pass',
+      triagePassword: 'triage-pass',
       inviteRequired: false,
       userInviteInterval: null,
       userInviteEpoch: 0,
@@ -110,19 +112,22 @@ export class TestPds {
     return new AtpAgent({ service: `http://localhost:${this.port}` })
   }
 
-  adminAuth(): string {
+  adminAuth(role: 'admin' | 'moderator' | 'triage' = 'admin'): string {
+    const password =
+      role === 'triage'
+        ? this.ctx.cfg.triagePassword
+        : role === 'moderator'
+        ? this.ctx.cfg.moderatorPassword
+        : this.ctx.cfg.adminPassword
     return (
       'Basic ' +
-      ui8.toString(
-        ui8.fromString(`admin:${this.ctx.cfg.adminPassword}`, 'utf8'),
-        'base64pad',
-      )
+      ui8.toString(ui8.fromString(`admin:${password}`, 'utf8'), 'base64pad')
     )
   }
 
-  adminAuthHeaders() {
+  adminAuthHeaders(role?: 'admin' | 'moderator' | 'triage') {
     return {
-      authorization: this.adminAuth(),
+      authorization: this.adminAuth(role),
     }
   }
 

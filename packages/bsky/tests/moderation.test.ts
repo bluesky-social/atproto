@@ -1,4 +1,5 @@
 import { TestNetwork } from '@atproto/dev-env'
+import { TID, cidForCbor } from '@atproto/common'
 import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
 import { AtUri } from '@atproto/uri'
 import { forSnapshot } from './_util'
@@ -6,6 +7,7 @@ import { ImageRef, RecordRef, SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import {
   ACKNOWLEDGE,
+  ESCALATE,
   FLAG,
   TAKEDOWN,
 } from '../src/lexicon/types/com/atproto/admin/defs'
@@ -13,7 +15,6 @@ import {
   REASONOTHER,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
-import { TID, cidForCbor } from '@atproto/common'
 
 describe('moderation', () => {
   let network: TestNetwork
@@ -210,7 +211,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
       const { data: actionResolvedReports } =
@@ -222,7 +223,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
 
@@ -237,7 +238,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
@@ -292,7 +293,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
       await agent.api.com.atproto.admin.resolveModerationReports(
@@ -303,24 +304,24 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       // Check report and action details
       const { data: recordActionDetail } =
         await agent.api.com.atproto.admin.getModerationAction(
           { id: action.id },
-          { headers: network.pds.adminAuthHeaders() },
+          { headers: network.bsky.adminAuthHeaders() },
         )
       const { data: reportADetail } =
         await agent.api.com.atproto.admin.getModerationReport(
           { id: reportA.id },
-          { headers: network.pds.adminAuthHeaders() },
+          { headers: network.bsky.adminAuthHeaders() },
         )
       const { data: reportBDetail } =
         await agent.api.com.atproto.admin.getModerationReport(
           { id: reportB.id },
-          { headers: network.pds.adminAuthHeaders() },
+          { headers: network.bsky.adminAuthHeaders() },
         )
       expect(
         forSnapshot({
@@ -338,7 +339,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
@@ -371,7 +372,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
 
@@ -383,7 +384,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
 
@@ -400,7 +401,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
@@ -437,7 +438,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
 
@@ -449,7 +450,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
 
@@ -466,18 +467,18 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
 
-    it('supports flagging and acknowledging.', async () => {
+    it('supports escalating and acknowledging for triage.', async () => {
       const postRef1 = sc.posts[sc.dids.alice][0].ref
       const postRef2 = sc.posts[sc.dids.bob][0].ref
       const { data: action1 } =
         await agent.api.com.atproto.admin.takeModerationAction(
           {
-            action: FLAG,
+            action: ESCALATE,
             subject: {
               $type: 'com.atproto.repo.strongRef',
               uri: postRef1.uri.toString(),
@@ -488,12 +489,12 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders('triage'),
           },
         )
       expect(action1).toEqual(
         expect.objectContaining({
-          action: FLAG,
+          action: ESCALATE,
           subject: {
             $type: 'com.atproto.repo.strongRef',
             uri: postRef1.uriStr,
@@ -515,7 +516,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders('triage'),
           },
         )
       expect(action2).toEqual(
@@ -537,7 +538,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders('triage'),
         },
       )
       await agent.api.com.atproto.admin.reverseModerationAction(
@@ -548,7 +549,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders('triage'),
         },
       )
     })
@@ -569,7 +570,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
       const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
@@ -585,7 +586,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       await expect(flagPromise).rejects.toThrow(
@@ -601,7 +602,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       const { data: flag } =
@@ -618,7 +619,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
 
@@ -631,7 +632,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
@@ -650,7 +651,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
       const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
@@ -665,7 +666,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       await expect(flagPromise).rejects.toThrow(
@@ -681,7 +682,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       const { data: flag } =
@@ -697,7 +698,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
 
@@ -710,7 +711,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
@@ -734,7 +735,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
       const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
@@ -751,7 +752,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       await expect(flagPromise).rejects.toThrow(
@@ -766,7 +767,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       const { data: flag } =
@@ -784,7 +785,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
 
@@ -797,7 +798,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
@@ -937,6 +938,70 @@ describe('moderation', () => {
       await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual(['kittens'])
     })
 
+    it('does not allow triage moderators to label.', async () => {
+      const attemptLabel = agent.api.com.atproto.admin.takeModerationAction(
+        {
+          action: ACKNOWLEDGE,
+          createdBy: 'did:example:moderator',
+          reason: 'Y',
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.bob,
+          },
+          negateLabelVals: ['a'],
+          createLabelVals: ['b', 'c'],
+        },
+        {
+          encoding: 'application/json',
+          headers: network.bsky.adminAuthHeaders('triage'),
+        },
+      )
+      await expect(attemptLabel).rejects.toThrow(
+        'Must be a full moderator to label content',
+      )
+    })
+
+    it('does not allow non-admin moderators to takedown.', async () => {
+      const attemptTakedownMod =
+        agent.api.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            createdBy: 'did:example:moderator',
+            reason: 'Y',
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: sc.dids.bob,
+            },
+          },
+          {
+            encoding: 'application/json',
+            headers: network.bsky.adminAuthHeaders('moderator'),
+          },
+        )
+      await expect(attemptTakedownMod).rejects.toThrow(
+        'Must be an admin to perform an account takedown',
+      )
+      const attemptTakedownTriage =
+        agent.api.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            createdBy: 'did:example:moderator',
+            reason: 'Y',
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: sc.dids.bob,
+            },
+          },
+          {
+            encoding: 'application/json',
+            headers: network.bsky.adminAuthHeaders('triage'),
+          },
+        )
+      await expect(attemptTakedownTriage).rejects.toThrow(
+        'Must be an admin to perform an account takedown',
+      )
+    })
+
     async function actionWithLabels(
       opts: Partial<ComAtprotoAdminTakeModerationAction.InputSchema> & {
         subject: ComAtprotoAdminTakeModerationAction.InputSchema['subject']
@@ -951,7 +1016,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       return result.data
@@ -966,7 +1031,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     }
@@ -974,7 +1039,7 @@ describe('moderation', () => {
     async function getRecordLabels(uri: string) {
       const result = await agent.api.com.atproto.admin.getRecord(
         { uri },
-        { headers: network.pds.adminAuthHeaders() },
+        { headers: network.bsky.adminAuthHeaders() },
       )
       const labels = result.data.labels ?? []
       return labels.map((l) => l.val)
@@ -983,7 +1048,7 @@ describe('moderation', () => {
     async function getRepoLabels(did: string) {
       const result = await agent.api.com.atproto.admin.getRepo(
         { did },
-        { headers: network.pds.adminAuthHeaders() },
+        { headers: network.bsky.adminAuthHeaders() },
       )
       const labels = result.data.labels ?? []
       return labels.map((l) => l.val)
@@ -1024,7 +1089,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       actionId = takeAction.data.id
@@ -1055,7 +1120,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
 
