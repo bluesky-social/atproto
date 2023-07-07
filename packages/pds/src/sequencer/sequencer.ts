@@ -24,11 +24,10 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       this.lastSeen = curr.seq ?? 0
     }
     this.db.channels.outgoing_repo_seq.addListener('message', () => {
-      if (this.polling) {
-        this.queued = true
-      } else {
-        this.polling = true
+      if (!this.polling) {
         this.pollDb()
+      } else {
+        this.queued = true // poll again once current poll completes
       }
     })
   }
@@ -124,21 +123,22 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
   async pollDb() {
     try {
+      this.polling = true
       const evts = await this.requestSeqRange({
         earliestSeq: this.lastSeen,
         limit: 50,
       })
       if (evts.length > 0) {
+        this.queued = true // should poll again immediately
         this.emit('events', evts)
         this.lastSeen = evts.at(-1)?.seq ?? this.lastSeen
       }
     } catch (err) {
       log.error({ err, lastSeen: this.lastSeen }, 'sequencer failed to poll db')
     } finally {
-      // check if we should continue polling
-      if (this.queued === false) {
-        this.polling = false
-      } else {
+      this.polling = false
+      if (this.queued) {
+        // if queued, poll again
         this.queued = false
         this.pollDb()
       }

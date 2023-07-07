@@ -1,9 +1,9 @@
+import { sql } from 'kysely'
 import { DisconnectError } from '@atproto/xrpc-server'
 import { chunkArray, jitter, wait } from '@atproto/common'
 import { Leader } from '../db/leader'
 import { seqLogger as log } from '../logger'
 import Database from '../db'
-import { sql } from 'kysely'
 import { valuesList } from '../db/util'
 
 export const SEQUENCER_LEADER_ID = 1100
@@ -114,26 +114,28 @@ export class SequencerLeader {
 
   async sequenceOutgoing() {
     const unsequenced = await this.getUnsequenced()
-    const chunks = chunkArray(unsequenced, 2000)
+    const chunks = chunkArray(unsequenced, 500)
     for (const chunk of chunks) {
       await this.db.transaction(async (dbTxn) => {
         await dbTxn.db
           .updateTable('repo_seq')
-          .set({ seq: sql`update_seq::bigint` })
           .from(
             valuesList(
               chunk.map((row) => sql.join([row.id, this.nextSeqVal()])),
             ).as(sql`vals (update_id, update_seq)`),
           )
+          .set({ seq: sql`update_seq::bigint` })
           .whereRef('id', '=', sql`update_id::bigint`)
           .execute()
-        await Promise.all(chunk.map(() => this.db.notify('outgoing_repo_seq')))
+        await dbTxn.notify('outgoing_repo_seq') // @TODO consider rollout of this change
       })
-      await this.db.notify('outgoing_repo_seq')
     }
   }
 
   async getUnsequenced() {
+    // @TODO consider adding a high limit here, but also automatically
+    // repolling in case batch sizes are very large. also: it was reported
+    // that adding a limit can slow this down (?), which is worth a look.
     return this.db.db
       .selectFrom('repo_seq')
       .where('seq', 'is', null)
