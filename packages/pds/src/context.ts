@@ -18,6 +18,7 @@ import { BackgroundQueue } from './event-stream/background-queue'
 import DidSqlCache from './did-cache'
 import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
+import { LabelCache } from './label-cache'
 
 export class AppContext {
   private _appviewAgent: AtpAgent | null
@@ -39,6 +40,7 @@ export class AppContext {
       sequencer: Sequencer
       sequencerLeader: SequencerLeader
       labeler: Labeler
+      labelCache: LabelCache
       backgroundQueue: BackgroundQueue
       crawlers: Crawlers
       algos: MountedAlgos
@@ -87,12 +89,8 @@ export class AppContext {
     return auth.refreshVerifier(this.auth)
   }
 
-  get adminVerifier() {
-    return auth.adminVerifier(this.auth)
-  }
-
-  get moderatorVerifier() {
-    return auth.moderatorVerifier(this.auth)
+  get roleVerifier() {
+    return auth.roleVerifier(this.auth)
   }
 
   get optionalAccessOrAdminVerifier() {
@@ -129,6 +127,10 @@ export class AppContext {
 
   get labeler(): Labeler {
     return this.opts.labeler
+  }
+
+  get labelCache(): LabelCache {
+    return this.opts.labelCache
   }
 
   get backgroundQueue(): BackgroundQueue {
@@ -174,10 +176,24 @@ export class AppContext {
     return this._appviewAgent
   }
 
-  canProxy(req: express.Request): boolean {
+  canProxyRead(req: express.Request): boolean {
+    return (
+      this.cfg.bskyAppViewProxy &&
+      this.cfg.bskyAppViewEndpoint !== undefined &&
+      req.get('x-appview-proxy') !== undefined
+    )
+  }
+
+  canProxyFeedConstruction(req: express.Request): boolean {
     return (
       this.cfg.bskyAppViewEndpoint !== undefined &&
       req.get('x-appview-proxy') !== undefined
+    )
+  }
+
+  canProxyWrite(): boolean {
+    return (
+      this.cfg.bskyAppViewProxy && this.cfg.bskyAppViewEndpoint !== undefined
     )
   }
 }

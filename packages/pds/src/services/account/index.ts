@@ -82,7 +82,13 @@ export class AccountService {
     handleOrDid: string,
     includeSoftDeleted = false,
   ): Promise<string | null> {
-    if (handleOrDid.startsWith('did:')) return handleOrDid
+    if (handleOrDid.startsWith('did:')) {
+      if (includeSoftDeleted) {
+        return handleOrDid
+      }
+      const available = await this.isRepoAvailable(handleOrDid)
+      return available ? handleOrDid : null
+    }
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('did_handle')
@@ -143,7 +149,12 @@ export class AccountService {
     log.info({ handle, email, did }, 'registered user')
   }
 
-  async updateHandle(did: string, handle: string) {
+  // @NOTE should always be paired with a sequenceHandle().
+  // the token output from this method should be passed to sequenceHandle().
+  async updateHandle(
+    did: string,
+    handle: string,
+  ): Promise<HandleSequenceToken> {
     const res = await this.db.db
       .updateTable('did_handle')
       .set({ handle })
@@ -158,7 +169,12 @@ export class AccountService {
     if (res.numUpdatedRows < 1) {
       throw new UserAlreadyExistsError()
     }
-    const seqEvt = await sequencer.formatSeqHandleUpdate(did, handle)
+    return { did, handle }
+  }
+
+  async sequenceHandle(tok: HandleSequenceToken) {
+    this.db.assertTransaction()
+    const seqEvt = await sequencer.formatSeqHandleUpdate(tok.did, tok.handle)
     await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
@@ -618,3 +634,5 @@ export class ListKeyset extends TimeCidKeyset<{
 const matchNamespace = (namespace: string, fullname: string) => {
   return fullname === namespace || fullname.startsWith(`${namespace}.`)
 }
+
+export type HandleSequenceToken = { did: string; handle: string }

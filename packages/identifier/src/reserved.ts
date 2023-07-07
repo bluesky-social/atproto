@@ -864,6 +864,7 @@ const famousAccounts = [
   // reserving some large twitter accounts (top 100 by followers according to wikidata dump)
   '10ronaldinho',
   '3gerardpique',
+  'aclu',
   'adele',
   'akshaykumar',
   'aliaa08',

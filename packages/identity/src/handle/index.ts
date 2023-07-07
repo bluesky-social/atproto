@@ -6,9 +6,12 @@ const PREFIX = 'did='
 
 export class HandleResolver {
   public timeout: number
+  private backupNameservers: string[] | undefined
+  private backupNameserverIps: string[] | undefined
 
   constructor(opts: HandleResolverOpts = {}) {
     this.timeout = opts.timeout ?? 3000
+    this.backupNameservers = opts.backupNameservers
   }
 
   async resolve(handle: string): Promise<string | undefined> {
@@ -23,7 +26,11 @@ export class HandleResolver {
       httpAbort.abort()
       return dnsRes
     }
-    return httpPromise
+    const res = await httpPromise
+    if (res) {
+      return res
+    }
+    return this.resolveDnsBackup(handle)
   }
 
   async resolveDns(handle: string): Promise<string | undefined> {
@@ -33,12 +40,7 @@ export class HandleResolver {
     } catch (err) {
       return undefined
     }
-    const results = chunkedResults.map((chunks) => chunks.join(''))
-    const found = results.filter((i) => i.startsWith(PREFIX))
-    if (found.length !== 1) {
-      return undefined
-    }
-    return found[0].slice(PREFIX.length)
+    return this.parseDnsResult(chunkedResults)
   }
 
   async resolveHttp(
@@ -56,5 +58,45 @@ export class HandleResolver {
     } catch (err) {
       return undefined
     }
+  }
+
+  async resolveDnsBackup(handle: string): Promise<string | undefined> {
+    let chunkedResults: string[][]
+    try {
+      const backupIps = await this.getBackupNameserverIps()
+      if (!backupIps || backupIps.length < 1) return undefined
+      const resolver = new dns.Resolver()
+      resolver.setServers(backupIps)
+      chunkedResults = await resolver.resolveTxt(`${SUBDOMAIN}.${handle}`)
+    } catch (err) {
+      return undefined
+    }
+    return this.parseDnsResult(chunkedResults)
+  }
+
+  parseDnsResult(chunkedResults: string[][]): string | undefined {
+    const results = chunkedResults.map((chunks) => chunks.join(''))
+    const found = results.filter((i) => i.startsWith(PREFIX))
+    if (found.length !== 1) {
+      return undefined
+    }
+    return found[0].slice(PREFIX.length)
+  }
+
+  private async getBackupNameserverIps(): Promise<string[] | undefined> {
+    if (!this.backupNameservers) {
+      return undefined
+    } else if (!this.backupNameserverIps) {
+      const responses = await Promise.allSettled(
+        this.backupNameservers.map((h) => dns.lookup(h)),
+      )
+      for (const res of responses) {
+        if (res.status === 'fulfilled') {
+          this.backupNameserverIps ??= []
+          this.backupNameserverIps.push(res.value.address)
+        }
+      }
+    }
+    return this.backupNameserverIps
   }
 }

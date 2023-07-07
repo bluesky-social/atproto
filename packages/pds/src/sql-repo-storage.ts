@@ -13,6 +13,7 @@ import { valuesList } from './db/util'
 import { IpldBlock } from './db/tables/ipld-block'
 import { RepoCommitBlock } from './db/tables/repo-commit-block'
 import { RepoCommitHistory } from './db/tables/repo-commit-history'
+import { ConcurrentWriteError } from './services/repo'
 
 export class SqlRepoStorage extends RepoStorage {
   cache: BlockMap = new BlockMap()
@@ -26,17 +27,9 @@ export class SqlRepoStorage extends RepoStorage {
   }
 
   // note this method will return null if the repo has a lock on it currently
-  async lockHead(): Promise<CID | null> {
-    let builder = this.db.db
-      .selectFrom('repo_root')
-      .selectAll()
-      .where('did', '=', this.did)
-    if (this.db.dialect !== 'sqlite') {
-      builder = builder.forUpdate().skipLocked()
-    }
-    const res = await builder.executeTakeFirst()
-    if (!res) return null
-    return CID.parse(res.root)
+  async lockRepo(): Promise<boolean> {
+    if (this.db.dialect === 'sqlite') return true
+    return this.db.txAdvisoryLock(this.did)
   }
 
   async getHead(): Promise<CID | null> {
@@ -47,6 +40,24 @@ export class SqlRepoStorage extends RepoStorage {
       .executeTakeFirst()
     if (!res) return null
     return CID.parse(res.root)
+  }
+
+  // proactively cache all blocks from a particular commit (to prevent multiple roundtrips)
+  async cacheCommit(cid: CID): Promise<void> {
+    const res = await this.db.db
+      .selectFrom('repo_commit_block')
+      .innerJoin('ipld_block', (join) =>
+        join
+          .onRef('ipld_block.cid', '=', 'repo_commit_block.block')
+          .onRef('ipld_block.creator', '=', 'repo_commit_block.creator'),
+      )
+      .where('repo_commit_block.creator', '=', this.did)
+      .where('repo_commit_block.commit', '=', cid.toString())
+      .select(['ipld_block.cid', 'ipld_block.content'])
+      .execute()
+    for (const row of res) {
+      this.cache.set(CID.parse(row.cid), row.content)
+    }
   }
 
   async getBytes(cid: CID): Promise<Uint8Array | null> {
@@ -244,7 +255,7 @@ export class SqlRepoStorage extends RepoStorage {
         .where('root', '=', prev.toString())
         .executeTakeFirst()
       if (res.numUpdatedRows < 1) {
-        throw new Error('failed to update repo root: misordered')
+        throw new ConcurrentWriteError()
       }
     }
   }

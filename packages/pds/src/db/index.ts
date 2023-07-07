@@ -22,10 +22,12 @@ import { dummyDialect } from './util'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
 import { dbLogger as log } from '../logger'
+import { randomIntFromSeed } from '@atproto/crypto'
 
 export class Database {
   txEvt = new EventEmitter() as TxnEmitter
   txChannelEvts: ChannelEvt[] = []
+  txLockNonce: string | undefined
   channels: Channels
   migrator: Migrator
   destroyed = false
@@ -46,6 +48,7 @@ export class Database {
       new_repo_event: new EventEmitter() as ChannelEmitter,
       outgoing_repo_seq: new EventEmitter() as ChannelEmitter,
     }
+    this.txLockNonce = cfg.dialect === 'pg' ? cfg.txLockNonce : undefined
   }
 
   static sqlite(location: string): Database {
@@ -58,7 +61,7 @@ export class Database {
   }
 
   static postgres(opts: PgOptions): Database {
-    const { schema, url } = opts
+    const { schema, url, txLockNonce } = opts
     const pool =
       opts.pool ??
       new PgPool({
@@ -89,7 +92,13 @@ export class Database {
       dialect: new PostgresDialect({ pool }),
     })
 
-    return new Database(db, { dialect: 'pg', pool, schema, url })
+    return new Database(db, {
+      dialect: 'pg',
+      pool,
+      schema,
+      url,
+      txLockNonce,
+    })
   }
 
   static memory(): Database {
@@ -180,6 +189,17 @@ export class Database {
     dbTxn?.txEvt.emit('commit')
     txEvts.forEach((evt) => this.sendChannelEvt(evt))
     return txRes
+  }
+
+  async txAdvisoryLock(name: string): Promise<boolean> {
+    this.assertTransaction()
+    assert(this.dialect === 'pg', 'Postgres required')
+    // any lock id < 10k is reserved for session locks
+    const id = await randomIntFromSeed(name, Number.MAX_SAFE_INTEGER, 10000)
+    const res = (await sql`SELECT pg_try_advisory_xact_lock(${sql.literal(
+      id,
+    )}) as acquired`.execute(this.db)) as TxLockRes
+    return res.rows[0]?.acquired === true
   }
 
   get schema(): string | undefined {
@@ -299,6 +319,7 @@ export type PgConfig = {
   pool: PgPool
   url: string
   schema?: string
+  txLockNonce?: string
 }
 
 export type SqliteConfig = {
@@ -315,6 +336,7 @@ type PgOptions = {
   poolSize?: number
   poolMaxUses?: number
   poolIdleTimeoutMs?: number
+  txLockNonce?: string
 }
 
 type ChannelEvents = {
@@ -355,4 +377,8 @@ class LeakyTxPlugin implements KyselyPlugin {
   ): Promise<QueryResult<UnknownRow>> {
     return args.result
   }
+}
+
+type TxLockRes = {
+  rows: { acquired: true | false }[]
 }

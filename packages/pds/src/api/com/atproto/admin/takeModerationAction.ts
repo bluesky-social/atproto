@@ -1,15 +1,20 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { TAKEDOWN } from '../../../../lexicon/types/com/atproto/admin/defs'
+import {
+  ACKNOWLEDGE,
+  ESCALATE,
+  TAKEDOWN,
+} from '../../../../lexicon/types/com/atproto/admin/defs'
 import { getSubject, getAction } from '../moderation/util'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
-    auth: ctx.moderatorVerifier,
+    auth: ctx.roleVerifier,
     handler: async ({ input, auth }) => {
+      const access = auth.credentials
       const { db, services } = ctx
       const moderationService = services.moderation(db)
       const {
@@ -22,15 +27,26 @@ export default function (server: Server, ctx: AppContext) {
         subjectBlobCids,
       } = input.body
 
-      if (
-        !auth.credentials.admin &&
-        (createLabelVals?.length ||
-          negateLabelVals?.length ||
-          action === TAKEDOWN)
-      ) {
+      // apply access rules
+
+      // if less than admin access then can not takedown an account
+      if (!access.admin && action === TAKEDOWN && 'did' in subject) {
         throw new AuthRequiredError(
-          'Must be an admin to takedown or label content',
+          'Must be an admin to perform an account takedown',
         )
+      }
+      // if less than moderator access then can only take ack and escalation actions
+      if (!access.moderator && ![ACKNOWLEDGE, ESCALATE].includes(action)) {
+        throw new AuthRequiredError(
+          'Must be a full moderator to take this type of action',
+        )
+      }
+      // if less than moderator access then can not apply labels
+      if (
+        !access.moderator &&
+        (createLabelVals?.length || negateLabelVals?.length)
+      ) {
+        throw new AuthRequiredError('Must be a full moderator to label content')
       }
 
       validateLabels([...(createLabelVals ?? []), ...(negateLabelVals ?? [])])

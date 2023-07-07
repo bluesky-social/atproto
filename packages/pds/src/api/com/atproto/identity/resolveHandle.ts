@@ -5,7 +5,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.identity.resolveHandle(async ({ params }) => {
+  server.com.atproto.identity.resolveHandle(async ({ params, req }) => {
     let handle: string
     try {
       handle = ident.normalizeAndEnsureValidHandle(params.handle)
@@ -34,7 +34,7 @@ export default function (server: Server, ctx: AppContext) {
 
     // this is not someone on our server, but we help with resolving anyway
 
-    if (!did && ctx.cfg.bskyAppViewEndpoint) {
+    if (!did && ctx.canProxyRead(req)) {
       did = await tryResolveFromAppview(ctx.appviewAgent, handle)
     }
 

@@ -25,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxy(req)) {
+      if (ctx.canProxyRead(req)) {
         const hotClassicUri = Object.keys(ctx.algos).find((uri) =>
           uri.endsWith('/hot-classic'),
         )
@@ -154,13 +154,13 @@ export default function (server: Server, ctx: AppContext) {
 
       const res = await builder.execute()
 
-      const genInfos = await feedService.getFeedGeneratorViews(
+      const genInfos = await feedService.getFeedGeneratorInfos(
         res.map((feed) => feed.uri),
         requester,
       )
 
       const creators = Object.values(genInfos).map((gen) => gen.creator)
-      const profiles = await feedService.getActorViews(creators, requester)
+      const profiles = await feedService.getActorInfos(creators, requester)
 
       const genViews: GeneratorView[] = []
       for (const row of res) {

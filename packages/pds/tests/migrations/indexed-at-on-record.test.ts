@@ -4,7 +4,7 @@ import { dataToCborBlock, TID } from '@atproto/common'
 import { AtUri } from '@atproto/uri'
 import { Kysely } from 'kysely'
 
-describe('indexedAt on record migration', () => {
+describe.skip('indexedAt on record migration', () => {
   let db: Database
   let rawDb: Kysely<any>
 

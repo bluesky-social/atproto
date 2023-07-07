@@ -38,7 +38,7 @@ describe('feed generation', () => {
     agent = network.pds.getClient()
     sc = new SeedClient(agent)
     await basicSeed(sc)
-    await network.pds.ctx.backgroundQueue.processAll()
+    await network.processAll()
     alice = sc.dids.alice
     const allUri = AtUri.make(alice, 'app.bsky.feed.generator', 'all')
     const feedUriBadPagination = AtUri.make(
