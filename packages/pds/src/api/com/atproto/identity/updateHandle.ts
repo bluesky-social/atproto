@@ -47,6 +47,14 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
+      // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
+      const available = await ctx.services
+        .account(ctx.db)
+        .isHandleAvailable(handle)
+      if (!available) {
+        throw new InvalidRequestError(`Handle already taken: ${handle}`)
+      }
+
       const seqHandleTok = await ctx.db.transaction(async (dbTxn) => {
         let tok: HandleSequenceToken
         try {

@@ -160,6 +160,7 @@ export class AccountService {
       .set({ handle })
       .where('did', '=', did)
       .whereNotExists(
+        // @NOTE see also condition in isHandleAvailable()
         this.db.db
           .selectFrom('did_handle')
           .where('handle', '=', handle)
@@ -176,6 +177,16 @@ export class AccountService {
     this.db.assertTransaction()
     const seqEvt = await sequencer.formatSeqHandleUpdate(tok.did, tok.handle)
     await sequencer.sequenceEvt(this.db, seqEvt)
+  }
+
+  async isHandleAvailable(handle: string) {
+    // @NOTE see also condition in updateHandle()
+    const found = await this.db.db
+      .selectFrom('did_handle')
+      .where('handle', '=', handle)
+      .select('handle')
+      .executeTakeFirst()
+    return !found
   }
 
   async updateEmail(did: string, email: string) {
