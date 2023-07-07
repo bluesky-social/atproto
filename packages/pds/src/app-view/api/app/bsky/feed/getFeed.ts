@@ -32,8 +32,7 @@ const PROXYABLE_FEEDS = [
 export default function (server: Server, ctx: AppContext) {
   const isProxyableFeed = (feed: string): boolean => {
     const uri = new AtUri(feed)
-    if (uri.hostname !== ctx.cfg.feedGenDid) return false
-    return PROXYABLE_FEEDS.includes(uri.rkey)
+    return feed in ctx.algos && PROXYABLE_FEEDS.includes(uri.rkey)
   }
 
   server.app.bsky.feed.getFeed({
