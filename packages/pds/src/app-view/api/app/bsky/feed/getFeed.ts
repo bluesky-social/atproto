@@ -20,15 +20,28 @@ import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
 import { AlgoResponse } from '../../../../../feed-gen/types'
 
+// temp hardcoded feeds that we can proxy to appview
+const PROXYABLE_FEEDS = [
+  'with-friends',
+  // 'bsky-team',
+  // 'hot-classic',
+  // 'best-of-follows',
+  'mutuals',
+]
+
 export default function (server: Server, ctx: AppContext) {
+  const isProxyableFeed = (feed: string): boolean => {
+    const uri = new AtUri(feed)
+    if (uri.hostname !== ctx.cfg.feedGenDid) return false
+    return PROXYABLE_FEEDS.includes(uri.rkey)
+  }
+
   server.app.bsky.feed.getFeed({
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
-      const feedUri = new AtUri(params.feed)
-      const isOwnFeedGen = feedUri.hostname === ctx.cfg.feedGenDid
 
-      if (ctx.canProxyRead(req) && !isOwnFeedGen) {
+      if (ctx.canProxyRead(req)) {
         const { data: feed } =
           await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerator(
             { feed: params.feed },
@@ -46,7 +59,7 @@ export default function (server: Server, ctx: AppContext) {
       let algoRes: AlgoResponse
       const timerSkele = new ServerTimer('skele').start()
 
-      if (ctx.canProxyFeedConstruction(req) && isOwnFeedGen) {
+      if (ctx.canProxyFeedConstruction(req) && isProxyableFeed(params.feed)) {
         // this is a temporary solution to smart proxy bsky feeds to the appview
         const res = await ctx.appviewAgent.api.app.bsky.feed.getFeedSkeleton(
           params,
