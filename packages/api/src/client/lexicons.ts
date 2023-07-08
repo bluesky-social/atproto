@@ -4076,6 +4076,26 @@ export const schemaDict = {
           alt: {
             type: 'string',
           },
+          aspectRatio: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.images#aspectRatio',
+          },
+        },
+      },
+      aspectRatio: {
+        type: 'object',
+        description:
+          'width:height represents an aspect ratio. It may be approximate, and may not correspond to absolute dimensions in any given unit.',
+        required: ['width', 'height'],
+        properties: {
+          width: {
+            type: 'integer',
+            minimum: 1,
+          },
+          height: {
+            type: 'integer',
+            minimum: 1,
+          },
         },
       },
       view: {
@@ -4104,6 +4124,10 @@ export const schemaDict = {
           },
           alt: {
             type: 'string',
+          },
+          aspectRatio: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.images#aspectRatio',
           },
         },
       },
@@ -6327,7 +6351,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'A skeleton of a timeline',
+        description: 'A skeleton of a timeline - UNSPECCED & WILL GO AWAY SOON',
         parameters: {
           type: 'params',
           properties: {
