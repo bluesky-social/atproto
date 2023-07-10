@@ -23,6 +23,7 @@ import * as ComAtprotoAdminRebaseRepo from './types/com/atproto/admin/rebaseRepo
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
+import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
@@ -300,6 +301,13 @@ export class AdminNS {
     cfg: ConfigOf<AV, ComAtprotoAdminSearchRepos.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.admin.searchRepos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendEmail<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoAdminSendEmail.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.admin.sendEmail' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

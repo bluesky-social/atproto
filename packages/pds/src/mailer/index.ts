@@ -51,6 +51,19 @@ export class ServerMailer {
     })
   }
 
+  // TODO: Implement gmail sending here?
+  async sendModerationCommunication(
+    { content }: { content: string },
+    mailOpts: Mail.Options,
+  ) {
+    const res = await this.transporter.sendMail({
+      ...mailOpts,
+      html: content,
+      from: mailOpts.from ?? this.config.emailNoReplyAddress,
+    })
+    return res
+  }
+
   private async sendTemplate(templateName, params, mailOpts: Mail.Options) {
     const html = this.templates[templateName]({
       ...params,

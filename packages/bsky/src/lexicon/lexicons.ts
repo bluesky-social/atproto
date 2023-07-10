@@ -1152,6 +1152,50 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminSendEmail: {
+    lexicon: 1,
+    id: 'com.atproto.admin.sendEmail',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Send email to a user's primary email address",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['recipientDid', 'content'],
+            properties: {
+              recipientDid: {
+                type: 'string',
+                format: 'did',
+              },
+              content: {
+                type: 'string',
+              },
+              subject: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['sent'],
+            properties: {
+              sent: {
+                type: 'boolean',
+              },
+              message: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminTakeModerationAction: {
     lexicon: 1,
     id: 'com.atproto.admin.takeModerationAction',
@@ -6327,7 +6371,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'A skeleton of a timeline',
+        description: 'A skeleton of a timeline - UNSPECCED & WILL GO AWAY SOON',
         parameters: {
           type: 'params',
           properties: {
@@ -6391,6 +6435,7 @@ export const ids = {
   ComAtprotoAdminReverseModerationAction:
     'com.atproto.admin.reverseModerationAction',
   ComAtprotoAdminSearchRepos: 'com.atproto.admin.searchRepos',
+  ComAtprotoAdminSendEmail: 'com.atproto.admin.sendEmail',
   ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
   ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',

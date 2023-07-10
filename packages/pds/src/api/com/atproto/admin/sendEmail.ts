@@ -1,0 +1,42 @@
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { Server } from '../../../../lexicon'
+import AppContext from '../../../../context'
+
+export default function (server: Server, ctx: AppContext) {
+  server.com.atproto.admin.sendEmail({
+    auth: ctx.roleVerifier,
+    handler: async ({ input, auth }) => {
+      if (!auth.credentials.admin && !auth.credentials.moderator) {
+        throw new AuthRequiredError('Insufficient privileges')
+      }
+
+      try {
+        const { content, recipientDid, subject } = input.body
+        const userInfo = await ctx.db.db
+          .selectFrom('user_account')
+          .where('did', '=', recipientDid)
+          .select('email')
+          .executeTakeFirst()
+
+        if (!userInfo) {
+          throw new InvalidRequestError('Recipient not found')
+        }
+
+        await ctx.mailer.sendModerationCommunication(
+          { content },
+          { subject, to: userInfo.email },
+        )
+        return {
+          encoding: 'application/json',
+          body: { sent: true },
+        }
+      } catch (err) {
+        return {
+          encoding: 'application/json',
+          // TODO: add more details about the error via message?
+          body: { sent: false },
+        }
+      }
+    },
+  })
+}
