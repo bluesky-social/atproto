@@ -243,19 +243,37 @@ describe('pds admin get moderation reports view', () => {
   })
 
   it('gets all moderation reports actioned by a certain moderator.', async () => {
+    const adminDidOne = 'did:example:admin0'
+    const adminDidTwo = 'did:example:admin2'
     const [actionedByAdminOne, actionedByAdminTwo] = await Promise.all([
       agent.api.com.atproto.admin.getModerationReports(
-        { actionedBy: 'did:example:admin0' },
+        { actionedBy: adminDidOne },
         { headers: { authorization: adminAuth() } },
       ),
       agent.api.com.atproto.admin.getModerationReports(
-        { actionedBy: 'did:example:admin2' },
+        { actionedBy: adminDidTwo },
+        { headers: { authorization: adminAuth() } },
+      ),
+    ])
+    const [fullReportOne, fullReportTwo] = await Promise.all([
+      agent.api.com.atproto.admin.getModerationReport(
+        { id: actionedByAdminOne.data.reports[0].id },
+        { headers: { authorization: adminAuth() } },
+      ),
+      agent.api.com.atproto.admin.getModerationReport(
+        { id: actionedByAdminTwo.data.reports[0].id },
         { headers: { authorization: adminAuth() } },
       ),
     ])
 
     expect(forSnapshot(actionedByAdminOne.data.reports)).toMatchSnapshot()
+    expect(fullReportOne.data.resolvedByActions[0].createdBy).toEqual(
+      adminDidOne,
+    )
     expect(forSnapshot(actionedByAdminTwo.data.reports)).toMatchSnapshot()
+    expect(fullReportTwo.data.resolvedByActions[0].createdBy).toEqual(
+      adminDidTwo,
+    )
   })
 
   it('paginates.', async () => {
