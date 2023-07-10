@@ -62,34 +62,9 @@ export class RepoSubscription {
               continue
             }
             this.lastSeq = details.seq
-            const item = this.consecutive.push(details.seq)
-            this.repoQueue
-              .add(details.repo, () => this.handleMessage(details.message))
-              .catch((err) => {
-                // We log messages we can't process and move on. Barring a
-                // durable queue this is the best we can do for now: otherwise
-                // the cursor would get stuck on a poison message.
-                subLogger.error(
-                  {
-                    err,
-                    provider: this.service,
-                    message: loggableMessage(msg),
-                  },
-                  'repo subscription message processing error',
-                )
-              })
-              .finally(() => {
-                const latest = item.complete().at(-1)
-                if (!latest) return
-                this.cursorQueue
-                  .add(() => this.handleCursor(latest))
-                  .catch((err) => {
-                    subLogger.error(
-                      { err, provider: this.service },
-                      'repo subscription cursor error',
-                    )
-                  })
-              })
+            this.repoQueue.add(details.repo, () =>
+              this.handleMessage(details.seq, details.message),
+            )
             await this.repoQueue.main.onEmpty() // backpressure
           }
         })
@@ -123,18 +98,45 @@ export class RepoSubscription {
     await this.run()
   }
 
-  private async handleMessage(msg: ProcessableMessage) {
-    if (message.isCommit(msg)) {
-      await this.handleCommit(msg)
-    } else if (message.isHandle(msg)) {
-      await this.handleUpdateHandle(msg)
-    } else if (message.isTombstone(msg)) {
-      await this.handleTombstone(msg)
-    } else if (message.isMigrate(msg)) {
-      // Ignore migrations
-    } else {
-      const exhaustiveCheck: never = msg
-      throw new Error(`Unhandled message type: ${exhaustiveCheck['$type']}`)
+  private async handleMessage(seq: number, msg: ProcessableMessage) {
+    const item = this.consecutive.push(seq)
+    try {
+      if (message.isCommit(msg)) {
+        await this.handleCommit(msg)
+      } else if (message.isHandle(msg)) {
+        await this.handleUpdateHandle(msg)
+      } else if (message.isTombstone(msg)) {
+        await this.handleTombstone(msg)
+      } else if (message.isMigrate(msg)) {
+        // Ignore migrations
+      } else {
+        const exhaustiveCheck: never = msg
+        throw new Error(`Unhandled message type: ${exhaustiveCheck['$type']}`)
+      }
+    } catch (err) {
+      // We log messages we can't process and move on. Barring a
+      // durable queue this is the best we can do for now: otherwise
+      // the cursor would get stuck on a poison message.
+      subLogger.error(
+        {
+          err,
+          provider: this.service,
+          message: loggableMessage(msg),
+        },
+        'repo subscription message processing error',
+      )
+    } finally {
+      const latest = item.complete().at(-1)
+      if (latest) {
+        this.cursorQueue
+          .add(() => this.handleCursor(latest))
+          .catch((err) => {
+            subLogger.error(
+              { err, provider: this.service },
+              'repo subscription cursor error',
+            )
+          })
+      }
     }
   }
 
