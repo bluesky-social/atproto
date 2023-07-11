@@ -238,6 +238,8 @@ export class FeedService {
       postsQb = postsQb
         .where(notSoftDeletedClause(ref('repo_root'))) // Ensures post reply parent/roots get omitted from views when taken down
         .where(notSoftDeletedClause(ref('record')))
+    } else {
+      postsQb = postsQb.select('record.takedownId as takedownId')
     }
 
     const posts = await postsQb

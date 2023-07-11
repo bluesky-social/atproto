@@ -35,6 +35,7 @@ export type PostInfo = {
   creator: string
   recordBytes: Uint8Array
   indexedAt: string
+  takedownId?: number | null
   likeCount: number | null
   repostCount: number | null
   replyCount: number | null

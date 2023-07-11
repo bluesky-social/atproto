@@ -159,6 +159,7 @@ export class FeedViews {
       uri: post.uri,
       cid: post.cid,
       author: author,
+      takedownId: post.takedownId ?? undefined,
       record: cborToLexRecord(post.recordBytes),
       embed: embeds[uri],
       replyCount: post.replyCount ?? 0,

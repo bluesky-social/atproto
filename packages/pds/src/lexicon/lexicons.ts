@@ -4269,6 +4269,9 @@ export const schemaDict = {
           record: {
             type: 'unknown',
           },
+          takedownId: {
+            type: 'integer',
+          },
           embed: {
             type: 'union',
             refs: [
@@ -6310,7 +6313,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'A skeleton of a timeline',
+        description: 'A skeleton of a timeline - UNSPECCED & WILL GO AWAY SOON',
         parameters: {
           type: 'params',
           properties: {
