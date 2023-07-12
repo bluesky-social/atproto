@@ -11,7 +11,11 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       try {
-        const { content, recipientDid, subject } = input.body
+        const {
+          content,
+          recipientDid,
+          subject = 'Message from Bluesky moderator',
+        } = input.body
         const userInfo = await ctx.db.db
           .selectFrom('user_account')
           .where('did', '=', recipientDid)
@@ -22,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
           throw new InvalidRequestError('Recipient not found')
         }
 
-        await ctx.mailer.sendModerationCommunication(
+        await ctx.moderationMailer.send(
           { content },
           { subject, to: userInfo.email },
         )

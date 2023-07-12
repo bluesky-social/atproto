@@ -24,6 +24,7 @@ import compression from './util/compression'
 import { dbLogger, loggerMiddleware, seqLogger } from './logger'
 import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
+import { ModerationMailer } from './mailer/moderation'
 import { createServer } from './lexicon'
 import { MessageDispatcher } from './event-stream/message-queue'
 import { ImageUriBuilder } from './image/uri'
@@ -111,12 +112,28 @@ export class PDS {
       config.sequencerLeaderLockId,
     )
 
-    const mailTransport =
+    const serverMailTransport =
       config.emailSmtpUrl !== undefined
         ? createTransport(config.emailSmtpUrl)
         : createTransport({ jsonTransport: true })
 
-    const mailer = new ServerMailer(mailTransport, config)
+    const moderationMailTransport =
+      config.moderationEmailUser !== undefined &&
+      config.moderationEmailPassword !== undefined
+        ? createTransport({
+            service: 'gmail',
+            auth: {
+              user: config.moderationEmailUser,
+              pass: config.moderationEmailPassword,
+            },
+          })
+        : createTransport({ jsonTransport: true })
+
+    const mailer = new ServerMailer(serverMailTransport, config)
+    const moderationMailer = new ModerationMailer(
+      moderationMailTransport,
+      config,
+    )
 
     const app = express()
     app.use(cors())
@@ -208,6 +225,7 @@ export class PDS {
       labelCache,
       services,
       mailer,
+      moderationMailer,
       imgUriBuilder,
       backgroundQueue,
       crawlers,
