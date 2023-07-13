@@ -1,4 +1,5 @@
 import { reservedSubdomains } from './reserved'
+import { bannedSubdomains } from './banned'
 
 export const INVALID_HANDLE = 'handle.invalid'
 
@@ -113,6 +114,7 @@ export const ensureHandleServiceConstraints = (
   handle: string,
   availableUserDomains: string[],
   reserved = reservedSubdomains,
+  banned = bannedSubdomains,
 ): void => {
   const disallowedTld = DISALLOWED_TLDS.find((domain) =>
     handle.endsWith(domain),
@@ -139,15 +141,23 @@ export const ensureHandleServiceConstraints = (
   if (reserved[front]) {
     throw new ReservedHandleError('Reserved handle')
   }
+  
+  for (const bannedWord of banned) {
+    const regex = new RegExp(`.*${bannedWord}.*`)
+    if (regex.test(front)) {
+      throw new ReservedHandleError('Banned handle')
+    }
+  }
 }
 
 export const fulfillsHandleServiceConstraints = (
   handle: string,
   availableUserDomains: string[],
   reserved = reservedSubdomains,
+  banned = bannedSubdomains,
 ): boolean => {
   try {
-    ensureHandleServiceConstraints(handle, availableUserDomains, reserved)
+    ensureHandleServiceConstraints(handle, availableUserDomains, reserved, banned)
   } catch (err) {
     if (
       err instanceof InvalidHandleError ||
