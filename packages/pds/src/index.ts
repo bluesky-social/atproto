@@ -101,7 +101,7 @@ export class PDS {
     const idResolver = new IdResolver({
       plcUrl: config.didPlcUrl,
       didCache,
-      backupNameservers: config.handleResolveNameservers,
+      backupResolverHost: config.backupHandleResolverHost,
     })
 
     const messageDispatcher = new MessageDispatcher()

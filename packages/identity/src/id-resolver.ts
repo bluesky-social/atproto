@@ -10,7 +10,7 @@ export class IdResolver {
     const { timeout = 3000, plcUrl, didCache } = opts
     this.handle = new HandleResolver({
       timeout,
-      backupNameservers: opts.backupNameservers,
+      backupResolverHost: opts.backupResolverHost,
     })
     this.did = new DidResolver({ timeout, plcUrl, didCache })
   }

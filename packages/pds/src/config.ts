@@ -36,7 +36,7 @@ export interface ServerConfigValues {
   databaseLocation?: string
 
   availableUserDomains: string[]
-  handleResolveNameservers?: string[]
+  backupHandleResolverHost?: string
 
   imgUriSalt: string
   imgUriKey: string
@@ -139,9 +139,8 @@ export class ServerConfig {
       ? process.env.AVAILABLE_USER_DOMAINS.split(',')
       : []
 
-    const handleResolveNameservers = process.env.HANDLE_RESOLVE_NAMESERVERS
-      ? process.env.HANDLE_RESOLVE_NAMESERVERS.split(',')
-      : []
+    const backupHandleResolverHost =
+      process.env.BACKUP_HANDLE_RESOLVER_HOST || undefined
 
     const imgUriSalt =
       process.env.IMG_URI_SALT || '9dd04221f5755bce5f55f47464c27e1e'
@@ -223,7 +222,7 @@ export class ServerConfig {
       termsOfServiceUrl,
       databaseLocation,
       availableUserDomains,
-      handleResolveNameservers,
+      backupHandleResolverHost,
       imgUriSalt,
       imgUriKey,
       imgUriEndpoint,
@@ -381,8 +380,8 @@ export class ServerConfig {
     return this.cfg.availableUserDomains
   }
 
-  get handleResolveNameservers() {
-    return this.cfg.handleResolveNameservers
+  get backupHandleResolverHost() {
+    return this.cfg.backupHandleResolverHost
   }
 
   get imgUriSalt() {
