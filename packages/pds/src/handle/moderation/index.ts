@@ -1,5 +1,7 @@
-import AppContext from '../context'
-import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
+import AppContext from '../../context'
+import { REASONOTHER } from '../../lexicon/types/com/atproto/moderation/defs'
+import { falsePositives, unacceptableWords } from './unacceptable'
+import { UnacceptableHandleValidator } from './validator'
 
 // regexes taken from: https://github.com/Blank-Cheque/Slurs
 /* eslint-disable no-misleading-character-class */
@@ -16,9 +18,10 @@ export const hasExplicitSlur = (handle: string): boolean => {
   return explicitSlurRegexes.some((reg) => reg.test(handle))
 }
 
-export const identifyPossibleSlurs = (handle: string): string[] => {
-  return []
-}
+const validator = new UnacceptableHandleValidator(
+  unacceptableWords,
+  falsePositives,
+)
 
 export const backgroundHandleCheckForFlag = (opts: {
   ctx: AppContext
@@ -26,7 +29,7 @@ export const backgroundHandleCheckForFlag = (opts: {
   did: string
 }) => {
   const { ctx, handle, did } = opts
-  const possibleSlurs = identifyPossibleSlurs(handle)
+  const possibleSlurs = validator.getMatches(handle)
   if (possibleSlurs.length < 1) {
     return
   }

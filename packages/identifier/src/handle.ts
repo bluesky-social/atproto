@@ -104,6 +104,7 @@ export const isValidHandle = (handle: string): boolean => {
     }
     throw err
   }
+
   return true
 }
 
