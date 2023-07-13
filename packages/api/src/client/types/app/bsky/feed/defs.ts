@@ -18,7 +18,6 @@ export interface PostView {
   cid: string
   author: AppBskyActorDefs.ProfileViewBasic
   record: {}
-  takedownId?: number
   embed?:
     | AppBskyEmbedImages.View
     | AppBskyEmbedExternal.View

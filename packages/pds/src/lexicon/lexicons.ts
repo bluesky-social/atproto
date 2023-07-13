@@ -4269,9 +4269,6 @@ export const schemaDict = {
           record: {
             type: 'unknown',
           },
-          takedownId: {
-            type: 'integer',
-          },
           embed: {
             type: 'union',
             refs: [
