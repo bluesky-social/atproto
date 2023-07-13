@@ -1049,7 +1049,6 @@ const famousAccounts = [
 
 // Needs additional work to add more words that should be cought and regex added to catch common variations
 const slurs = [
-  [
     "chinaman",
     "chinamen",
     "chink",
