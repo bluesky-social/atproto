@@ -55,7 +55,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      if (ctx.cfg.flagUnacceptableHandles) {
+      if (ctx.cfg.unacceptableHandleWordsB64) {
         backgroundHandleCheckForFlag({ ctx, handle, did: requester })
       }
     },

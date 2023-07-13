@@ -1,6 +1,6 @@
+import * as ui8 from 'uint8arrays'
 import AppContext from '../../context'
 import { REASONOTHER } from '../../lexicon/types/com/atproto/moderation/defs'
-import { falsePositives, unacceptableWords } from './unacceptable'
 import { UnacceptableHandleValidator } from './validator'
 
 // regexes taken from: https://github.com/Blank-Cheque/Slurs
@@ -18,10 +18,23 @@ export const hasExplicitSlur = (handle: string): boolean => {
   return explicitSlurRegexes.some((reg) => reg.test(handle))
 }
 
-const validator = new UnacceptableHandleValidator(
-  unacceptableWords,
-  falsePositives,
-)
+const decode = (encoded: string): string[] => {
+  return ui8.toString(ui8.fromString(encoded, 'base64'), 'utf8').split(',')
+}
+
+let _validator: UnacceptableHandleValidator | undefined = undefined
+const getValidator = (
+  unacceptable: string,
+  falsePositives?: string,
+): UnacceptableHandleValidator => {
+  if (!_validator) {
+    _validator = new UnacceptableHandleValidator(
+      decode(unacceptable),
+      falsePositives ? decode(falsePositives) : undefined,
+    )
+  }
+  return _validator
+}
 
 export const backgroundHandleCheckForFlag = (opts: {
   ctx: AppContext
@@ -29,6 +42,13 @@ export const backgroundHandleCheckForFlag = (opts: {
   did: string
 }) => {
   const { ctx, handle, did } = opts
+  if (!ctx.cfg.unacceptableHandleWordsB64) {
+    return
+  }
+  const validator = getValidator(
+    ctx.cfg.unacceptableHandleWordsB64,
+    ctx.cfg.falsePositiveHandleWordsB64,
+  )
   const possibleSlurs = validator.getMatches(handle)
   if (possibleSlurs.length < 1) {
     return
