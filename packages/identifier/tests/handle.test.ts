@@ -4,6 +4,7 @@ import {
   normalizeAndEnsureValidHandle,
   ensureValidHandleRegex,
   InvalidHandleError,
+  UnacceptableHandleValidator,
 } from '../src'
 
 describe('handle validation', () => {
@@ -226,5 +227,28 @@ describe('service constraints & normalization', () => {
     expect(() => normalizeAndEnsureValidHandle('JoH!n.TeST')).toThrow(
       InvalidHandleError,
     )
+  })
+})
+
+describe('offensive handle identification', () => {
+  const validator = new UnacceptableHandleValidator(
+    ['evil', 'mean', 'bad'],
+    ['baddie'],
+  )
+
+  it('identifies offensive handles', () => {
+    expect(validator.getMatches('evil.john.test')).toMatchObject(['evil'])
+    expect(validator.getMatches('john.evil.test')).toMatchObject(['evil'])
+    expect(validator.getMatches('john.test.evil')).toMatchObject(['evil'])
+    expect(validator.getMatches('ev1l.test.john')).toMatchObject(['evil'])
+    expect(validator.getMatches('ev-1l.test.john')).toMatchObject(['evil'])
+    expect(validator.getMatches('ev-11.test.john')).toMatchObject(['evil'])
+    expect(validator.getMatches('ev.-1.l-test.john')).toMatchObject(['evil'])
+  })
+
+  it('identifies non-offensive handles', () => {
+    expect(validator.getMatches('john.test')).toHaveLength(0)
+    expect(validator.getMatches('good.john.test')).toHaveLength(0)
+    expect(validator.getMatches('john.baddie.test')).toHaveLength(0)
   })
 })

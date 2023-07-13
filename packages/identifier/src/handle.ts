@@ -1,4 +1,6 @@
 import { reservedSubdomains } from './reserved'
+import { unacceptableWords } from './unacceptable'
+import { UnacceptableHandleValidator } from './validator'
 
 export const INVALID_HANDLE = 'handle.invalid'
 
@@ -17,6 +19,8 @@ const DISALLOWED_TLDS = [
   // NOTE: .test is allowed in testing and devopment. In practical terms
   // "should" "never" actually resolve and get registered in production
 ]
+
+const validator = new UnacceptableHandleValidator(unacceptableWords)
 
 // Handle constraints, in English:
 //  - must be a possible domain name
@@ -106,6 +110,11 @@ export const isValidHandle = (handle: string): boolean => {
     }
     throw err
   }
+
+  if (!validator.getMatches(handle)) {
+    return false
+  }
+
   return true
 }
 
