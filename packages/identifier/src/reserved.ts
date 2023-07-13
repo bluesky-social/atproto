@@ -1109,7 +1109,7 @@ const slurs_template = [
 ]
 
 function hexspeak_permutate(words: string[]): string[] {
-    const hex_dict: { [key: string]: string } = { 'o': '0', 'i': '1', 'z': '2', 'e': '3', 'a': '4', 's': '5', 'g': '9' };
+    const hex_dict: { [key: string]: string } = {'a': '4', 'b': '6', 'e': '3', 'g': '9', 'i': '1', 'l': '1', 'o': '0', 's': '5', 't': '7', 'z': '2'};
     let hex_words: string[] = [];
 
     for (let word of words) {
@@ -1122,34 +1122,28 @@ function hexspeak_permutate(words: string[]): string[] {
             }
         }
 
-        let permutations = cartesianProduct(hex_chars);
-        for (let perm of permutations) {
-            let hex_word = perm.join('');
+        let permutations: string[][] = cartesian(hex_chars);
+        for (let item of permutations) {
+            let hex_word = item.join('');
             hex_words.push(hex_word);
-            if (hex_word != word) {
-                hex_words.push(hex_word + 's');
-                hex_words.push(hex_word + '5');
-            }
-        }
-
-        // Add additional permutation with 's' or '5' at the end of the original word
-        if (!word.endsWith('s') && !word.endsWith('5')) {
-            hex_words.push(word + 's');
-            hex_words.push(word + '5');
+            hex_words.push(hex_word + 's');
+            hex_words.push(hex_word + '5');
         }
     }
 
     return hex_words;
 }
 
-function cartesianProduct(arr: string[][]): string[][] {
-  return arr.reduce(function(a,b){
-    return a.map(function(x){
-      return b.map(function(y){
-        return x.concat(y);
-      })
-    }).reduce(function(a,b){ return a.concat(b) },[])
-  }, [[]])
+function cartesian(arr: any): any {
+    return arr.reduce((a: any, b: any) => {
+        return a.map((x: any) => {
+            return b.map((y: any) => {
+                return x.concat(y);
+            })
+        }).reduce((a: any, b: any) => {
+            return a.concat(b);
+        }, [])
+    }, [[]]);
 }
 
 const slurs = hexspeak_permutate(slurs_template);
