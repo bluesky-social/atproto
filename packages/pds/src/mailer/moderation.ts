@@ -19,12 +19,12 @@ export class ModerationMailer {
   async send({ content }: { content: string }, mailOpts: Mail.Options) {
     const res = await this.transporter.sendMail({
       ...mailOpts,
-      html: content,
+      text: content,
       from:
         mailOpts.from ??
         (this.config.moderationEmailUser || this.config.emailNoReplyAddress),
     })
-    
+
     if (!this.config.moderationEmailUser || !this.config.moderationEmailUser) {
       mailerLogger.debug(
         'Moderation email auth is not configured. Intended to send email:\n' +
