@@ -1130,6 +1130,8 @@ const slurs = [
   'wetbacks',
   'yid',
   'yids',
+  'khokhol',
+  'hohol',
 ]
 
 export const reservedSubdomains: Record<string, boolean> = [
