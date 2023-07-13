@@ -2,7 +2,7 @@ import { isValidTld } from '@atproto/identifier'
 import { ensureHandleServiceConstraints } from '../src/handle'
 import { UnacceptableHandleValidator } from '../src/handle/moderation/validator'
 
-describe('handle validation', async () => {
+describe('handle validation', () => {
   it('validates service constraints', () => {
     const domains = ['.bsky.app', '.test']
     const expectThrow = (handle: string, err: string) => {

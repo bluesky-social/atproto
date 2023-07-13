@@ -50,6 +50,7 @@ export interface ServerConfigValues {
   hiveApiKey?: string
   labelerDid: string
   labelerKeywords: Record<string, string>
+  flagUnacceptableHandles: boolean
 
   feedGenDid?: string
 
@@ -162,6 +163,8 @@ export class ServerConfig {
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const labelerKeywords = {}
+    const flagUnacceptableHandles =
+      process.env.FLAG_UNACCEPTABLE_HANDLES === 'true'
 
     const feedGenDid = process.env.FEED_GEN_DID
 
@@ -234,6 +237,7 @@ export class ServerConfig {
       hiveApiKey,
       labelerDid,
       labelerKeywords,
+      flagUnacceptableHandles,
       feedGenDid,
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
@@ -423,6 +427,10 @@ export class ServerConfig {
 
   get labelerKeywords() {
     return this.cfg.labelerKeywords
+  }
+
+  get flagUnacceptableHandles() {
+    return this.cfg.flagUnacceptableHandles
   }
 
   get feedGenDid() {

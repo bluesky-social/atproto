@@ -106,7 +106,9 @@ export default function (server: Server, ctx: AppContext) {
       }
     })
 
-    backgroundHandleCheckForFlag({ ctx, handle, did: result.did })
+    if (ctx.cfg.flagUnacceptableHandles) {
+      backgroundHandleCheckForFlag({ ctx, handle, did: result.did })
+    }
 
     return {
       encoding: 'application/json',
