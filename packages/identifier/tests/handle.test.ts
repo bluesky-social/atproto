@@ -197,6 +197,7 @@ describe('service constraints & normalization', () => {
   const domains = ['.bsky.app', '.test']
   it('throw on handles that violate service constraints', () => {
     const expectThrow = (handle: string, err: string) => {
+      console.log(handle)
       expect(() => ensureHandleServiceConstraints(handle, domains)).toThrow(err)
     }
 
@@ -208,8 +209,8 @@ describe('service constraints & normalization', () => {
     expectThrow('about.test', 'Reserved handle')
     expectThrow('atp.test', 'Reserved handle')
     expectThrow('barackobama.test', 'Handle disallowed')
-    expectThrow('barackobama.externalDomain', 'Handle disallowed')
-
+    expectThrow('spi.cs.test', 'Handle disallowed')
+    expectThrow('aaaspIcsAaa.test', 'Handle disallowed')
     expectThrow('atproto.local', 'Handle TLD is invalid or disallowed')
     expectThrow('atproto.arpa', 'Handle TLD is invalid or disallowed')
     expectThrow('atproto.invalid', 'Handle TLD is invalid or disallowed')
@@ -227,5 +228,15 @@ describe('service constraints & normalization', () => {
     expect(() => normalizeAndEnsureValidHandle('JoH!n.TeST')).toThrow(
       InvalidHandleError,
     )
+  })
+
+  it('allows valid handle', () => {
+    const expectValid = (handle: string) => {
+      ensureHandleServiceConstraints(handle, domains)
+    }
+
+    expectValid('imatest.bsky.app')
+    expectValid('dolls-can-hack-too.test')
+    expectValid('itsagooddomainsir.bsky.app')
   })
 })

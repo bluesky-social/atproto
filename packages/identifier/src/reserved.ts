@@ -1045,6 +1045,12 @@ const famousAccounts = [
   'portalr7',
   'rede_globo',
   'zerohora',
+
+  // 3 letter slurs included here so they don't go into include but direct comparision
+  'kkk',
+  'yid',
+  'gyp',
+  'nig',
 ]
 
 // naive, incomplete list of slurs and unacceptable words
@@ -1061,7 +1067,6 @@ const slurs = [
   'golliwogs',
   'gook',
   'gooks',
-  'gyp',
   'gyps',
   'half-breed',
   'halfbreed',
@@ -1080,7 +1085,6 @@ const slurs = [
   'kafirs',
   'kike',
   'kikes',
-  'kkk',
   'klukluxklan',
   'muzzie',
   'n1gga',
@@ -1088,7 +1092,6 @@ const slurs = [
   'nazi ',
   'negorid',
   'negress',
-  'nig',
   'nigg3r',
   'nigg4h',
   'nigga',
@@ -1128,7 +1131,6 @@ const slurs = [
   'squaws',
   'wetback',
   'wetbacks',
-  'yid',
   'yids',
 ]
 
@@ -1142,12 +1144,37 @@ export const reservedSubdomains: Record<string, boolean> = [
   }
 }, {})
 
-export const dangerousUnallowedSubdomains: Record<string, boolean> = [
-  ...famousAccounts,
-  ...slurs,
-].reduce((acc, cur) => {
-  return {
-    ...acc,
-    [cur]: true,
-  }
-}, {})
+export const dangerousUnallowedSubdomains = {
+  lowCheck: famousAccounts,
+  highCheck: slurs,
+}
+
+const weakCheck = (
+  input: string,
+  unallowedSubdomains = dangerousUnallowedSubdomains,
+): boolean => {
+  const handleParts = input.toLowerCase().split('.')
+
+  return (
+    !!unallowedSubdomains.lowCheck.find((unallowedString) =>
+      handleParts.includes(unallowedString)
+    ) )
+}
+
+const strictCheck = (
+  input: string,
+  unallowedSubdomains = dangerousUnallowedSubdomains,
+): boolean => {
+  const normalizedInput = input.toLowerCase().replace('.', '')
+
+  return (
+    !!unallowedSubdomains.highCheck.find((unallowedString) =>
+      normalizedInput.toLowerCase().includes(unallowedString),
+    )
+  )
+}
+
+export const checkIfStringContainsSlurs = (
+  input: string,
+  unallowedSubdomains = dangerousUnallowedSubdomains,
+): boolean => weakCheck(input, unallowedSubdomains) || strictCheck(input, unallowedSubdomains)

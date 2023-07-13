@@ -1,4 +1,8 @@
-import { reservedSubdomains, dangerousUnallowedSubdomains } from './reserved'
+import {
+  reservedSubdomains,
+  dangerousUnallowedSubdomains,
+  checkIfStringContainsSlurs,
+} from './reserved'
 
 export const INVALID_HANDLE = 'handle.invalid'
 
@@ -121,8 +125,7 @@ export const ensureHandleServiceConstraints = (
   if (disallowedTld) {
     throw new DisallowedDomainError('Handle TLD is invalid or disallowed')
   }
-  const handleParts = handle.split('.')
-  if (handleParts.find((handlePart) => dangerousUnallowed[handlePart])) {
+  if (checkIfStringContainsSlurs(handle, dangerousUnallowed)) {
     throw new DisallowedHandleError('Handle disallowed')
   }
   const supportedDomain = availableUserDomains.find((domain) =>
