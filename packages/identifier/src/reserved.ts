@@ -1047,53 +1047,42 @@ const famousAccounts = [
   'zerohora',
 ]
 
+
 // naive, incomplete list of slurs and unacceptable words
-const slurs = [
+const slurs_template = [
   'bluegum',
   'chink',
-  'chinks',
   'coolie',
-  'coolies',
   'coon',
-  'coons',
   'coont',
   'golliwog',
-  'golliwogs',
   'gook',
-  'gooks',
   'gyp',
-  'gyps',
   'half-breed',
   'halfbreed',
-  'half-breeds',
-  'halfbreeds',
   'heeb',
-  'heebs',
   'hitler',
+  'jeet',
   'kaffer',
-  'kaffers',
   'kaffir',
-  'kaffirs',
   'kaffre',
-  'kaffres',
   'kafir',
-  'kafirs',
   'kike',
-  'kikes',
   'kkk',
   'klukluxklan',
   'muzzie',
   'n1gga',
   'n1gger',
-  'nazi ',
+  'nazi',
   'negorid',
   'negress',
+  'negresses',
+  'nig-nog',
   'nig',
   'nigg3r',
   'nigg4h',
   'nigga',
   'niggah',
-  'niggas',
   'niggaz',
   'nigger',
   'niggerachi',
@@ -1101,36 +1090,69 @@ const slurs = [
   'niggerican',
   'niggerino',
   'niggeroid',
-  'niggers',
   'nigglet',
   'nigguh',
-  'nigguhs',
-  'nig-nog',
-  'nig-nogs',
-  'nigs',
+  'pajeet',
   'paki',
-  'pakis',
   'pedophile',
   'pickaninnie',
-  'pickaninnies',
   'pickaninny',
-  'pickaninnys',
   'raghead',
-  'ragheads',
   'redskin',
+  'retard',
   'sambo',
-  'sambos',
   'spade',
-  'spades',
   'spic',
-  'spics',
   'squaw',
-  'squaws',
   'wetback',
-  'wetbacks',
   'yid',
-  'yids',
 ]
+
+function hexspeak_permutate(words: string[]): string[] {
+    const hex_dict: { [key: string]: string } = { 'o': '0', 'i': '1', 'z': '2', 'e': '3', 'a': '4', 's': '5', 'g': '9' };
+    let hex_words: string[] = [];
+
+    for (let word of words) {
+        let hex_chars: string[][] = [];
+        for (let char of word) {
+            if (char in hex_dict) {
+                hex_chars.push([char, hex_dict[char]]);
+            } else {
+                hex_chars.push([char]);
+            }
+        }
+
+        let permutations = cartesianProduct(hex_chars);
+        for (let perm of permutations) {
+            let hex_word = perm.join('');
+            hex_words.push(hex_word);
+            if (hex_word != word) {
+                hex_words.push(hex_word + 's');
+                hex_words.push(hex_word + '5');
+            }
+        }
+
+        // Add additional permutation with 's' or '5' at the end of the original word
+        if (!word.endsWith('s') && !word.endsWith('5')) {
+            hex_words.push(word + 's');
+            hex_words.push(word + '5');
+        }
+    }
+
+    return hex_words;
+}
+
+function cartesianProduct(arr: string[][]): string[][] {
+  return arr.reduce(function(a,b){
+    return a.map(function(x){
+      return b.map(function(y){
+        return x.concat(y);
+      })
+    }).reduce(function(a,b){ return a.concat(b) },[])
+  }, [[]])
+}
+
+const slurs = hexspeak_permutate(slurs_template);
 
 export const reservedSubdomains: Record<string, boolean> = [
   ...atpSpecific,
