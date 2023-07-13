@@ -28,9 +28,9 @@ export default function (server: Server, ctx: AppContext) {
       } = input.body
 
       // apply access rules
-
+      const canActorTakedown = access.admin || access.moderator
       // if less than admin access then can not takedown an account
-      if (!access.admin && action === TAKEDOWN && 'did' in subject) {
+      if (!canActorTakedown && action === TAKEDOWN && 'did' in subject) {
         throw new AuthRequiredError(
           'Must be an admin to perform an account takedown',
         )
