@@ -21,7 +21,6 @@ import {
   PostInfoMap,
   FeedItemType,
   FeedRow,
-  FeedHydrationOptions,
 } from '../types'
 import { LabelService } from '../label'
 import { ActorService } from '../actor'
@@ -433,7 +432,6 @@ export class FeedService {
   async hydrateFeed(
     items: FeedRow[],
     viewer: string | null,
-    options?: FeedHydrationOptions,
   ): Promise<FeedViewPost[]> {
     const actorDids = new Set<string>()
     const postUris = new Set<string>()

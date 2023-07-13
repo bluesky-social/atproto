@@ -7,7 +7,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
-    auth: ctx.optionalAccessOrAdminVerifier,
+    auth: ctx.accessOrAdminVerifier,
     handler: async ({ req, params, auth }) => {
       const requester =
         auth.credentials && 'did' in auth.credentials
