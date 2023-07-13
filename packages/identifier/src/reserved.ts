@@ -1047,7 +1047,7 @@ const famousAccounts = [
   'zerohora',
 ]
 
-// Needs additional work to add more words that should be cought and regex added to catch common variations
+// Needs additional work to add more words that should be caught and regex added to catch common variations
 const slurs = [
   'chinaman',
   'chinamen',
