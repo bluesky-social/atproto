@@ -1,94 +1,16 @@
+import * as ui8 from 'uint8arrays'
 // naive, incomplete list of slurs and unacceptable words
-export const unacceptableWords = [
-  'bluegum',
-  'chink',
-  'chinks',
-  'coolie',
-  'coolies',
-  'coon',
-  'coons',
-  'coont',
-  'golliwog',
-  'golliwogs',
-  'gook',
-  'gooks',
-  'gyp',
-  'gyps',
-  'half-breed',
-  'halfbreed',
-  'half-breeds',
-  'halfbreeds',
-  'heeb',
-  'heebs',
-  'hitler',
-  'kaffer',
-  'kaffers',
-  'kaffir',
-  'kaffirs',
-  'kaffre',
-  'kaffres',
-  'kafir',
-  'kafirs',
-  'kike',
-  'kikes',
-  'kkk',
-  'klukluxklan',
-  'muzzie',
-  'n1gga',
-  'n1gger',
-  'nazi ',
-  'negorid',
-  'negress',
-  'nigg3r',
-  'nigg4h',
-  'nigga',
-  'niggah',
-  'niggas',
-  'niggaz',
-  'nigger',
-  'niggerachi',
-  'niggerette',
-  'niggerican',
-  'niggerino',
-  'niggeroid',
-  'niggers',
-  'nigglet',
-  'nigguh',
-  'nigguhs',
-  'nig-nog',
-  'nig-nogs',
-  'nigs',
-  'paki',
-  'pakis',
-  'pedophile',
-  'pickaninnie',
-  'pickaninnies',
-  'pickaninny',
-  'pickaninnys',
-  'raghead',
-  'ragheads',
-  'redskin',
-  'sambo',
-  'sambos',
-  'spade',
-  'spades',
-  'spic',
-  'spics',
-  'squaw',
-  'squaws',
-  'wetback',
-  'wetbacks',
-  'yid',
-  'yids',
-]
 
-export const falsePositives = [
-  'pakistan',
-  'spicy',
-  'spice',
-  'raccoon',
-  'raccoons',
-  'pheeb',
-  'picture',
-  'egypt',
-]
+const decode = (encoded: string): string[] => {
+  return ui8.toString(ui8.fromString(encoded, 'base64'), 'utf8').split(',')
+}
+
+const unacceptableWordsEncoded =
+  'Ymx1ZWd1bSxjaGluayxjaGlua3MsY29vbGllLGNvb2xpZXMsY29vbixjb29ucyxjb29udCxnb2xsaXdvZyxnb2xsaXdvZ3MsZ29vayxnb29rcyxneXAsZ3lwcyxoYWxmLWJyZWVkLGhhbGZicmVlZCxoYWxmLWJyZWVkcyxoYWxmYnJlZWRzLGhlZWIsaGVlYnMsaGl0bGVyLGthZmZlcixrYWZmZXJzLGthZmZpcixrYWZmaXJzLGthZmZyZSxrYWZmcmVzLGthZmlyLGthZmlycyxraWtlLGtpa2VzLGtrayxrbHVrbHV4a2xhbixtdXp6aWUsbjFnZ2EsbjFnZ2VyLG5hemnCoCxuZWdvcmlkLG5lZ3Jlc3MsbmlnZzNyLG5pZ2c0aCxuaWdnYSxuaWdnYWgsbmlnZ2FzLG5pZ2dheixuaWdnZXIsbmlnZ2VyYWNoaSxuaWdnZXJldHRlLG5pZ2dlcmljYW4sbmlnZ2VyaW5vLG5pZ2dlcm9pZCxuaWdnZXJzLG5pZ2dsZXQsbmlnZ3VoLG5pZ2d1aHMsbmlnLW5vZyxuaWctbm9ncyxuaWdzLHBha2kscGFraXMscGVkb3BoaWxlLHBpY2thbmlubmllLHBpY2thbmlubmllcyxwaWNrYW5pbm55LHBpY2thbmlubnlzLHJhZ2hlYWQscmFnaGVhZHMscmVkc2tpbixzYW1ibyxzYW1ib3Msc3BhZGUsc3BhZGVzLHNwaWMsc3BpY3Msc3F1YXcsc3F1YXdzLHdldGJhY2ssd2V0YmFja3MseWlkLHlpZHM'
+
+export const unacceptableWords = decode(unacceptableWordsEncoded)
+
+const falsePositivesEncoded =
+  'cGFraXN0YW4sc3BpY3ksc3BpY2UscmFjY29vbixyYWNjb29ucyxwaGVlYixwaWN0dXJlLGVneXB0'
+
+export const falsePositives = decode(falsePositivesEncoded)
