@@ -77,7 +77,7 @@ export const ensureHandleServiceConstraints = (
   const supportedDomain =
     availableUserDomains.find((domain) => handle.endsWith(domain)) ?? ''
   const front = handle.slice(0, handle.length - supportedDomain.length)
-  if (front.indexOf('.') > -1) {
+  if (front.includes('.')) {
     throw new InvalidRequestError(
       'Invalid characters in handle',
       'InvalidHandle',
