@@ -19,7 +19,12 @@ import AppContext from '../context'
 import { Leader } from '../db/leader'
 import { IndexingService } from '../services/indexing'
 import { subLogger } from '../logger'
-import { ConsecutiveList, LatestQueue, PartitionedQueue } from './util'
+import {
+  ConsecutiveItem,
+  ConsecutiveList,
+  LatestQueue,
+  PartitionedQueue,
+} from './util'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
 export const REPO_SUB_ID = 1000
@@ -62,8 +67,9 @@ export class RepoSubscription {
               continue
             }
             this.lastSeq = details.seq
+            const item = this.consecutive.push(details.seq)
             this.repoQueue.add(details.repo, () =>
-              this.handleMessage(details.seq, details.message),
+              this.handleMessage(item, details.message),
             )
             await this.repoQueue.main.onEmpty() // backpressure
           }
@@ -98,8 +104,10 @@ export class RepoSubscription {
     await this.run()
   }
 
-  private async handleMessage(seq: number, msg: ProcessableMessage) {
-    const item = this.consecutive.push(seq)
+  private async handleMessage(
+    item: ConsecutiveItem<number>,
+    msg: ProcessableMessage,
+  ) {
     try {
       if (message.isCommit(msg)) {
         await this.handleCommit(msg)
