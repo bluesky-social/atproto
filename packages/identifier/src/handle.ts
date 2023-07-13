@@ -136,7 +136,8 @@ export const ensureHandleServiceConstraints = (
   if (handle.length > 30) {
     throw new InvalidHandleError('Handle too long')
   }
-  if (reserved[front]) {
+  if (reserved.keys().find(handle.contains(item))) {
+    // TODO: use a proper error
     throw new ReservedHandleError('Reserved handle')
   }
 }
