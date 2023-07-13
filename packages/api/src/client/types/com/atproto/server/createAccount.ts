@@ -63,6 +63,12 @@ export class HandleNotAvailableError extends XRPCError {
   }
 }
 
+export class DisallowedHandleError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export class UnsupportedDomainError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message)

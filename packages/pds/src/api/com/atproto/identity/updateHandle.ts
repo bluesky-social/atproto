@@ -24,6 +24,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // test against our service constraints
+      // test for unallowed domains go first to disallow bypass for custom domain handles
       // if not a supported domain, then we must check that the domain correctly links to the DID
       try {
         ident.ensureHandleServiceConstraints(
@@ -31,7 +32,9 @@ export default function (server: Server, ctx: AppContext) {
           ctx.cfg.availableUserDomains,
         )
       } catch (err) {
-        if (err instanceof ident.UnsupportedDomainError) {
+        if (err instanceof ident.DisallowedHandleError) {
+          throw new InvalidRequestError(err.message, 'HandleNotAvailable')
+        } else if (err instanceof ident.UnsupportedDomainError) {
           const did = await ctx.idResolver.handle.resolve(handle)
           if (did !== requester) {
             throw new InvalidRequestError(

@@ -1135,6 +1135,14 @@ const slurs = [
 export const reservedSubdomains: Record<string, boolean> = [
   ...atpSpecific,
   ...commonlyReserved,
+].reduce((acc, cur) => {
+  return {
+    ...acc,
+    [cur]: true,
+  }
+}, {})
+
+export const dangerousUnallowedSubdomains: Record<string, boolean> = [
   ...famousAccounts,
   ...slurs,
 ].reduce((acc, cur) => {

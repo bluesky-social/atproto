@@ -1,4 +1,4 @@
-import { reservedSubdomains } from './reserved'
+import { reservedSubdomains, dangerousUnallowedSubdomains } from './reserved'
 
 export const INVALID_HANDLE = 'handle.invalid'
 
@@ -113,12 +113,17 @@ export const ensureHandleServiceConstraints = (
   handle: string,
   availableUserDomains: string[],
   reserved = reservedSubdomains,
+  dangerousUnallowed = dangerousUnallowedSubdomains,
 ): void => {
   const disallowedTld = DISALLOWED_TLDS.find((domain) =>
     handle.endsWith(domain),
   )
   if (disallowedTld) {
     throw new DisallowedDomainError('Handle TLD is invalid or disallowed')
+  }
+  const handleParts = handle.split('.')
+  if (handleParts.find((handlePart) => dangerousUnallowed[handlePart])) {
+    throw new DisallowedHandleError('Handle disallowed')
   }
   const supportedDomain = availableUserDomains.find((domain) =>
     handle.endsWith(domain),
@@ -145,13 +150,20 @@ export const fulfillsHandleServiceConstraints = (
   handle: string,
   availableUserDomains: string[],
   reserved = reservedSubdomains,
+  dangerousUnallowed = dangerousUnallowedSubdomains,
 ): boolean => {
   try {
-    ensureHandleServiceConstraints(handle, availableUserDomains, reserved)
+    ensureHandleServiceConstraints(
+      handle,
+      availableUserDomains,
+      reserved,
+      dangerousUnallowed,
+    )
   } catch (err) {
     if (
       err instanceof InvalidHandleError ||
       err instanceof ReservedHandleError ||
+      err instanceof DisallowedHandleError ||
       err instanceof UnsupportedDomainError ||
       err instanceof DisallowedDomainError
     ) {
@@ -164,5 +176,6 @@ export const fulfillsHandleServiceConstraints = (
 
 export class InvalidHandleError extends Error {}
 export class ReservedHandleError extends Error {}
+export class DisallowedHandleError extends Error {}
 export class UnsupportedDomainError extends Error {}
 export class DisallowedDomainError extends Error {}

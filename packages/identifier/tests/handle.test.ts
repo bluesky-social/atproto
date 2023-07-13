@@ -207,7 +207,8 @@ describe('service constraints & normalization', () => {
     expectThrow('john.test.bsky.app', 'Invalid characters in handle')
     expectThrow('about.test', 'Reserved handle')
     expectThrow('atp.test', 'Reserved handle')
-    expectThrow('barackobama.test', 'Reserved handle')
+    expectThrow('barackobama.test', 'Handle disallowed')
+    expectThrow('barackobama.externalDomain', 'Handle disallowed')
 
     expectThrow('atproto.local', 'Handle TLD is invalid or disallowed')
     expectThrow('atproto.arpa', 'Handle TLD is invalid or disallowed')

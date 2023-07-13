@@ -157,7 +157,10 @@ const ensureValidHandle = async (
   } catch (err) {
     if (err instanceof ident.InvalidHandleError) {
       throw new InvalidRequestError(err.message, 'InvalidHandle')
-    } else if (err instanceof ident.ReservedHandleError) {
+    } else if (
+      err instanceof ident.ReservedHandleError ||
+      err instanceof ident.DisallowedHandleError
+    ) {
       throw new InvalidRequestError(err.message, 'HandleNotAvailable')
     } else if (err instanceof ident.UnsupportedDomainError) {
       if (input.did === undefined) {

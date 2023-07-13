@@ -37,7 +37,10 @@ export default function (server: Server, ctx: AppContext) {
             'Unsupported domain',
             'UnsupportedDomain',
           )
-        } else if (err instanceof ident.ReservedHandleError) {
+        } else if (
+          err instanceof ident.ReservedHandleError ||
+          err instanceof ident.DisallowedHandleError
+        ) {
           // we allow this
           req.log.info(
             { did, handle: input.body },

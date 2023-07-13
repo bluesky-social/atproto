@@ -338,6 +338,9 @@ describe('account', () => {
     await expect(tryHandle('jo/hn.test')).rejects.toThrow(
       'Input/handle must be a valid handle',
     )
+    await expect(tryHandle('taylorswift.test')).rejects.toThrow(
+      'Reserved handle',
+    )
     await expect(tryHandle('about.test')).rejects.toThrow('Reserved handle')
     await expect(tryHandle('atp.test')).rejects.toThrow('Reserved handle')
   })
