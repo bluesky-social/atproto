@@ -1051,6 +1051,8 @@ const famousAccounts = [
 const slurs = [
   'bluegum',
   'chink',
+  'chinaman',
+  'chinamen',
   'chinks',
   'coolie',
   'coolies',
