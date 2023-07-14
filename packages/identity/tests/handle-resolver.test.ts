@@ -2,7 +2,7 @@ import { HandleResolver } from '../src'
 
 jest.mock('dns/promises', () => {
   return {
-    resolveTxt: (handle: string) => {
+    resolveTxt: (handle: string): string[][] => {
       if (handle === '_atproto.simple.test') {
         return [['did=did:example:simpleDid']]
       }
@@ -32,6 +32,7 @@ jest.mock('dns/promises', () => {
       if (handle === '_atproto.multi.test') {
         return [['did=did:example:firstDid'], ['did=did:example:secondDid']]
       }
+      return []
     },
   }
 })

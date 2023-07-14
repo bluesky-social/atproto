@@ -67,7 +67,7 @@ export class HandleResolver {
     )
     url.searchParams.set('handle', handle)
     try {
-      const res = await fetch(url)
+      const res = await fetch(url, { signal: AbortSignal.timeout(1000) })
       const resp = await res.json()
       const did = resp?.did
       if (typeof did === 'string' && did.startsWith('did:')) {
