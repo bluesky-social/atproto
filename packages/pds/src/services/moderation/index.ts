@@ -102,6 +102,7 @@ export class ModerationService {
     ignoreSubjects?: string[]
     reverse?: boolean
     reporters?: string[]
+    actionedBy?: string
   }): Promise<ModerationReportRowWithHandle[]> {
     const {
       subject,
@@ -112,6 +113,7 @@ export class ModerationService {
       ignoreSubjects,
       reverse = false,
       reporters,
+      actionedBy,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_report')
@@ -166,8 +168,8 @@ export class ModerationService {
         ? builder.whereExists(resolutionsQuery)
         : builder.whereNotExists(resolutionsQuery)
     }
-    if (actionType !== undefined) {
-      const resolutionActionsQuery = this.db.db
+    if (actionType !== undefined || actionedBy !== undefined) {
+      let resolutionActionsQuery = this.db.db
         .selectFrom('moderation_report_resolution')
         .innerJoin(
           'moderation_action',
@@ -179,10 +181,22 @@ export class ModerationService {
           '=',
           ref('moderation_report.id'),
         )
-        .where('moderation_action.action', '=', sql`${actionType}`)
-        .where('moderation_action.reversedAt', 'is', null)
-        .selectAll()
-      builder = builder.whereExists(resolutionActionsQuery)
+
+      if (actionType) {
+        resolutionActionsQuery = resolutionActionsQuery
+          .where('moderation_action.action', '=', sql`${actionType}`)
+          .where('moderation_action.reversedAt', 'is', null)
+      }
+
+      if (actionedBy) {
+        resolutionActionsQuery = resolutionActionsQuery.where(
+          'moderation_action.createdBy',
+          '=',
+          actionedBy,
+        )
+      }
+
+      builder = builder.whereExists(resolutionActionsQuery.selectAll())
     }
 
     if (cursor) {

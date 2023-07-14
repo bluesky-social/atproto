@@ -12,6 +12,8 @@ import * as ComAtprotoAdminDefs from './defs'
 export interface QueryParams {
   subject?: string
   ignoreSubjects?: string[]
+  /** Get all reports that were actioned by a specific moderator */
+  actionedBy?: string
   /** Filter reports made by one or more DIDs */
   reporters?: string[]
   resolved?: boolean
