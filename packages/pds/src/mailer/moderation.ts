@@ -25,7 +25,10 @@ export class ModerationMailer {
         (this.config.moderationEmailUser || this.config.emailNoReplyAddress),
     })
 
-    if (!this.config.moderationEmailUser || !this.config.moderationEmailUser) {
+    if (
+      !this.config.moderationEmailUser ||
+      !this.config.moderationEmailPassword
+    ) {
       mailerLogger.debug(
         'Moderation email auth is not configured. Intended to send email:\n' +
           JSON.stringify(res, null, 2),

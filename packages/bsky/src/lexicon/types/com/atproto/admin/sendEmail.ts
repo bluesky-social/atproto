@@ -19,7 +19,6 @@ export interface InputSchema {
 
 export interface OutputSchema {
   sent: boolean
-  message?: string
   [k: string]: unknown
 }
 

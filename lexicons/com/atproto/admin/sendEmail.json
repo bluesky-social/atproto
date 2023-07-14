@@ -23,8 +23,7 @@
           "type": "object",
           "required": ["sent"],
           "properties": {
-            "sent": { "type": "boolean" },
-            "message": { "type": "string" }
+            "sent": { "type": "boolean" }
           }
         }
       }

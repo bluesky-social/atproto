@@ -1187,9 +1187,6 @@ export const schemaDict = {
               sent: {
                 type: 'boolean',
               },
-              message: {
-                type: 'string',
-              },
             },
           },
         },
