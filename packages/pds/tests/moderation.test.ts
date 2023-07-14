@@ -984,9 +984,9 @@ describe('moderation', () => {
       )
     })
 
-    it('does not allow non-admin moderators to takedown.', async () => {
-      const attemptTakedownMod =
-        agent.api.com.atproto.admin.takeModerationAction(
+    it('allows full moderators to takedown.', async () => {
+      const { data: action } =
+        await agent.api.com.atproto.admin.takeModerationAction(
           {
             action: TAKEDOWN,
             createdBy: 'did:example:moderator',
@@ -1001,9 +1001,11 @@ describe('moderation', () => {
             headers: { authorization: moderatorAuth() },
           },
         )
-      await expect(attemptTakedownMod).rejects.toThrow(
-        'Must be an admin to perform an account takedown',
-      )
+      // cleanup
+      await reverse(action.id)
+    })
+
+    it('does not allow non-full moderators to takedown.', async () => {
       const attemptTakedownTriage =
         agent.api.com.atproto.admin.takeModerationAction(
           {
@@ -1021,7 +1023,7 @@ describe('moderation', () => {
           },
         )
       await expect(attemptTakedownTriage).rejects.toThrow(
-        'Must be an admin to perform an account takedown',
+        'Must be a full moderator to perform an account takedown',
       )
     })
 
