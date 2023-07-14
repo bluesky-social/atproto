@@ -67,7 +67,10 @@ export class HandleResolver {
     )
     url.searchParams.set('handle', handle)
     try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(1000) })
+      const timeout = (
+        AbortSignal as unknown as AbortSignalWithTimeout
+      ).timeout(1000)
+      const res = await fetch(url, { signal: timeout })
       const resp = await res.json()
       const did = resp?.did
       if (typeof did === 'string' && did.startsWith('did:')) {
@@ -87,4 +90,8 @@ export class HandleResolver {
     }
     return found[0].slice(PREFIX.length)
   }
+}
+
+type AbortSignalWithTimeout = AbortSignal & {
+  timeout(ms: number): AbortSignal
 }
