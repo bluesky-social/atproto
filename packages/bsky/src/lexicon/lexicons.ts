@@ -865,6 +865,12 @@ export const schemaDict = {
                 type: 'string',
               },
             },
+            actionedBy: {
+              type: 'string',
+              format: 'did',
+              description:
+                'Get all reports that were actioned by a specific moderator',
+            },
             reporters: {
               type: 'array',
               items: {
@@ -6327,7 +6333,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'A skeleton of a timeline',
+        description: 'A skeleton of a timeline - UNSPECCED & WILL GO AWAY SOON',
         parameters: {
           type: 'params',
           properties: {
