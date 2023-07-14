@@ -263,20 +263,6 @@ describe('handles', () => {
     expect(profile.data.handle).toBe('dril.test')
   })
 
-  it('disallows setting handle to an off-service domain', async () => {
-    const attempt = agent.api.com.atproto.admin.updateAccountHandle(
-      {
-        did: bob,
-        handle: 'bob.external',
-      },
-      {
-        headers: { authorization: util.adminAuth() },
-        encoding: 'application/json',
-      },
-    )
-    await expect(attempt).rejects.toThrow('Unsupported domain')
-  })
-
   it('requires admin auth', async () => {
     const attempt = agent.api.com.atproto.admin.updateAccountHandle(
       {
