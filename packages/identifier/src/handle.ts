@@ -1,12 +1,10 @@
-import { reservedSubdomains } from './reserved'
-
 export const INVALID_HANDLE = 'handle.invalid'
 
 // Currently these are registration-time restrictions, not protocol-level
 // restrictions. We have a couple accounts in the wild that we need to clean up
 // before hard-disallow.
 // See also: https://en.wikipedia.org/wiki/Top-level_domain#Reserved_domains
-const DISALLOWED_TLDS = [
+export const DISALLOWED_TLDS = [
   '.local',
   '.arpa',
   '.invalid',
@@ -106,60 +104,12 @@ export const isValidHandle = (handle: string): boolean => {
     }
     throw err
   }
+
   return true
 }
 
-export const ensureHandleServiceConstraints = (
-  handle: string,
-  availableUserDomains: string[],
-  reserved = reservedSubdomains,
-): void => {
-  const disallowedTld = DISALLOWED_TLDS.find((domain) =>
-    handle.endsWith(domain),
-  )
-  if (disallowedTld) {
-    throw new DisallowedDomainError('Handle TLD is invalid or disallowed')
-  }
-  const supportedDomain = availableUserDomains.find((domain) =>
-    handle.endsWith(domain),
-  )
-  if (!supportedDomain) {
-    throw new UnsupportedDomainError('Not a supported handle domain')
-  }
-  const front = handle.slice(0, handle.length - supportedDomain.length)
-  if (front.indexOf('.') > -1) {
-    throw new InvalidHandleError('Invalid characters in handle')
-  }
-  if (front.length < 3) {
-    throw new InvalidHandleError('Handle too short')
-  }
-  if (handle.length > 30) {
-    throw new InvalidHandleError('Handle too long')
-  }
-  if (reserved[front]) {
-    throw new ReservedHandleError('Reserved handle')
-  }
-}
-
-export const fulfillsHandleServiceConstraints = (
-  handle: string,
-  availableUserDomains: string[],
-  reserved = reservedSubdomains,
-): boolean => {
-  try {
-    ensureHandleServiceConstraints(handle, availableUserDomains, reserved)
-  } catch (err) {
-    if (
-      err instanceof InvalidHandleError ||
-      err instanceof ReservedHandleError ||
-      err instanceof UnsupportedDomainError ||
-      err instanceof DisallowedDomainError
-    ) {
-      return false
-    }
-    throw err
-  }
-  return true
+export const isValidTld = (handle: string): boolean => {
+  return !DISALLOWED_TLDS.some((domain) => handle.endsWith(domain))
 }
 
 export class InvalidHandleError extends Error {}
