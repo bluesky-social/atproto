@@ -211,6 +211,26 @@ export class GraphService {
       },
     }
   }
+
+  formatListViewBasic(list: ListInfo) {
+    return {
+      uri: list.uri,
+      cid: list.cid,
+      name: list.name,
+      purpose: list.purpose,
+      avatar: list.avatarCid
+        ? this.imgUriBuilder.getCommonSignedUri(
+            'avatar',
+            list.creator,
+            list.avatarCid,
+          )
+        : undefined,
+      indexedAt: list.indexedAt,
+      viewer: {
+        muted: !!list.viewerMuted,
+      },
+    }
+  }
 }
 
 type ListInfo = Selectable<List> & {
