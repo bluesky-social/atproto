@@ -14,13 +14,14 @@ import {
 } from '../../../../repo'
 import AppContext from '../../../../context'
 import { ConcurrentWriteError } from '../../../../services/repo'
+import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.applyWrites({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ input, auth }) => {
       const tx = input.body
-      const { repo, validate, swapCommit } = tx
+      const { repo, validate, swapCommit, collection, rkey } = tx
       const did = await ctx.services.account(ctx.db).getDidForActor(repo)
 
       if (!did) {
@@ -73,6 +74,12 @@ export default function (server: Server, ctx: AppContext) {
           throw new InvalidRequestError(err.message)
         }
         throw err
+      }
+
+      if (collection === ids.AppBskyFeedPost && rkey) {
+        throw new InvalidRequestError(
+          'Custom rkeys for post records are not currently supported.',
+        )
       }
 
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
