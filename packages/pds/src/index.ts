@@ -121,7 +121,9 @@ export class PDS {
       config.moderationEmailUser !== undefined &&
       config.moderationEmailPassword !== undefined
         ? createTransport({
-            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
             auth: {
               user: config.moderationEmailUser,
               pass: config.moderationEmailPassword,
