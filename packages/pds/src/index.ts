@@ -42,6 +42,8 @@ import DidSqlCache from './did-cache'
 import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
+import { ContentReporter } from './content-reporter'
+import { ModerationService } from './services/moderation'
 
 export type { MountedAlgos } from './feed-gen/types'
 export type { ServerConfigValues } from './config'
@@ -176,6 +178,23 @@ export class PDS {
 
     const labelCache = new LabelCache(db)
 
+    let contentReporter: ContentReporter | undefined = undefined
+    if (config.unacceptableWordsB64) {
+      contentReporter = new ContentReporter({
+        backgroundQueue,
+        moderationService: new ModerationService(
+          db,
+          messageDispatcher,
+          blobstore,
+          imgUriBuilder,
+          imgInvalidator,
+        ),
+        reporterDid: config.labelerDid,
+        unacceptableB64: config.unacceptableWordsB64,
+        falsePositivesB64: config.falsePositiveWordsB64,
+      })
+    }
+
     const services = createServices({
       repoSigningKey,
       messageDispatcher,
@@ -184,6 +203,7 @@ export class PDS {
       imgInvalidator,
       labeler,
       labelCache,
+      contentReporter,
       backgroundQueue,
       crawlers,
     })
@@ -202,6 +222,7 @@ export class PDS {
       sequencerLeader,
       labeler,
       labelCache,
+      contentReporter,
       services,
       mailer,
       imgUriBuilder,

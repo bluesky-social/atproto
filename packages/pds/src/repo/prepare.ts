@@ -33,6 +33,7 @@ import {
 } from '../lexicon/types/app/bsky/feed/post'
 import { isRecord as isList } from '../lexicon/types/app/bsky/graph/list'
 import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
+import { hasExplicitSlur } from '../content-reporter/explicit-slurs'
 
 // @TODO do this dynamically off of schemas
 export const blobsForWrite = (record: unknown): PreparedBlobRef[] => {
@@ -154,6 +155,7 @@ export const prepareCreate = async (opts: {
     assertValidRecord(record)
   }
   const rkey = opts.rkey || TID.nextStr()
+  assertNoExplicitSlurs(rkey, record)
   return {
     action: WriteOpAction.Create,
     uri: AtUri.make(did, collection, rkey),
@@ -177,6 +179,7 @@ export const prepareUpdate = async (opts: {
   if (validate) {
     assertValidRecord(record)
   }
+  assertNoExplicitSlurs(rkey, record)
   return {
     action: WriteOpAction.Update,
     uri: AtUri.make(did, collection, rkey),
@@ -254,5 +257,19 @@ async function cidForSafeRecord(record: RepoRecord) {
     const badRecordErr = new InvalidRecordError('Bad record')
     badRecordErr.cause = err
     throw badRecordErr
+  }
+}
+
+function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
+  let toCheck = rkey
+  if (isProfile(record)) {
+    toCheck += ' ' + record.displayName
+  } else if (isList(record)) {
+    toCheck += ' ' + record.name
+  } else if (isFeedGenerator(record)) {
+    toCheck += ' ' + record.displayName
+  }
+  if (hasExplicitSlur(toCheck)) {
+    throw new InvalidRecordError('Unacceptable slur in record')
   }
 }

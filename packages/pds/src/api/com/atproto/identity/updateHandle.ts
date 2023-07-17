@@ -7,7 +7,6 @@ import {
   UserAlreadyExistsError,
 } from '../../../../services/account'
 import { httpLogger } from '../../../../logger'
-import { backgroundHandleCheckForFlag } from '../../../../handle/moderation'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({
@@ -55,9 +54,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      if (ctx.cfg.unacceptableHandleWordsB64) {
-        backgroundHandleCheckForFlag({ ctx, handle, did: requester })
-      }
+      ctx.contentReporter?.checkHandle({ handle, did: requester })
     },
   })
 }

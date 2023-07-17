@@ -50,8 +50,8 @@ export interface ServerConfigValues {
   hiveApiKey?: string
   labelerDid: string
   labelerKeywords: Record<string, string>
-  unacceptableHandleWordsB64?: string
-  falsePositiveHandleWordsB64?: string
+  unacceptableWordsB64?: string
+  falsePositiveWordsB64?: string
 
   feedGenDid?: string
 
@@ -166,11 +166,11 @@ export class ServerConfig {
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const labelerKeywords = {}
 
-    const unacceptableHandleWordsB64 = nonemptyString(
-      process.env.UNACCEPTABLE_HANDLE_WORDS_B64,
+    const unacceptableWordsB64 = nonemptyString(
+      process.env.UNACCEPTABLE_WORDS_B64,
     )
-    const falsePositiveHandleWordsB64 = nonemptyString(
-      process.env.FALSE_POSITIVE_HANDLE_WORDS_B64,
+    const falsePositiveWordsB64 = nonemptyString(
+      process.env.FALSE_POSITIVE_WORDS_B64,
     )
 
     const feedGenDid = process.env.FEED_GEN_DID
@@ -250,8 +250,8 @@ export class ServerConfig {
       hiveApiKey,
       labelerDid,
       labelerKeywords,
-      unacceptableHandleWordsB64,
-      falsePositiveHandleWordsB64,
+      unacceptableWordsB64,
+      falsePositiveWordsB64,
       feedGenDid,
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
@@ -444,12 +444,12 @@ export class ServerConfig {
     return this.cfg.labelerKeywords
   }
 
-  get unacceptableHandleWordsB64() {
-    return this.cfg.unacceptableHandleWordsB64
+  get unacceptableWordsB64() {
+    return this.cfg.unacceptableWordsB64
   }
 
-  get falsePositiveHandleWordsB64() {
-    return this.cfg.falsePositiveHandleWordsB64
+  get falsePositiveWordsB64() {
+    return this.cfg.falsePositiveWordsB64
   }
 
   get feedGenDid() {
