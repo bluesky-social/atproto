@@ -58,6 +58,7 @@ export interface ServerConfigValues {
   maxSubscriptionBuffer: number
   repoBackfillLimitMs: number
   sequencerLeaderLockId?: number
+  sequencerLeaderEnabled?: boolean
 
   // this is really only used in test environments
   dbTxLockNonce?: string
@@ -192,6 +193,12 @@ export class ServerConfig {
       undefined,
     )
 
+    // by default each instance is a potential sequencer leader, but may be configured off
+    const sequencerLeaderEnabled = process.env.SEQUENCER_LEADER_ENABLED
+      ? process.env.SEQUENCER_LEADER_ENABLED !== '0' &&
+        process.env.SEQUENCER_LEADER_ENABLED !== 'false'
+      : undefined
+
     const dbTxLockNonce = nonemptyString(process.env.DB_TX_LOCK_NONCE)
 
     const bskyAppViewEndpoint = nonemptyString(
@@ -249,6 +256,7 @@ export class ServerConfig {
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
       sequencerLeaderLockId,
+      sequencerLeaderEnabled,
       dbTxLockNonce,
       bskyAppViewEndpoint,
       bskyAppViewDid,
@@ -458,6 +466,10 @@ export class ServerConfig {
 
   get sequencerLeaderLockId() {
     return this.cfg.sequencerLeaderLockId
+  }
+
+  get sequencerLeaderEnabled() {
+    return this.cfg.sequencerLeaderEnabled !== false
   }
 
   get dbTxLockNonce() {

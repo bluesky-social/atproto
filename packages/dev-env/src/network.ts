@@ -62,6 +62,9 @@ export class TestNetwork extends TestNetworkNoAppView {
       await wait(50)
       if (!sub) return
       const state = await sub.getState()
+      if (!this.pds.ctx.sequencerLeader) {
+        throw new Error('Sequencer leader not configured on the pds')
+      }
       const caughtUp = await this.pds.ctx.sequencerLeader.isCaughtUp()
       if (!caughtUp) continue
       const { lastSeq } = await db

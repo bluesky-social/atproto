@@ -60,11 +60,7 @@ export class PDS {
   private dbStatsInterval?: NodeJS.Timer
   private sequencerStatsInterval?: NodeJS.Timer
 
-  constructor(opts: {
-    ctx: AppContext
-    app: express.Application
-    sequencerLeader: SequencerLeader
-  }) {
+  constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
     this.app = opts.app
   }
@@ -107,10 +103,9 @@ export class PDS {
 
     const messageDispatcher = new MessageDispatcher()
     const sequencer = new Sequencer(db)
-    const sequencerLeader = new SequencerLeader(
-      db,
-      config.sequencerLeaderLockId,
-    )
+    const sequencerLeader = config.sequencerLeaderEnabled
+      ? new SequencerLeader(db, config.sequencerLeaderLockId)
+      : null
 
     const mailTransport =
       config.emailSmtpUrl !== undefined
@@ -232,11 +227,7 @@ export class PDS {
     app.use(server.xrpc.router)
     app.use(error.handler)
 
-    return new PDS({
-      ctx,
-      app,
-      sequencerLeader,
-    })
+    return new PDS({ ctx, app })
   }
 
   async start(): Promise<http.Server> {
@@ -262,7 +253,7 @@ export class PDS {
       }, 10000)
     }
     this.sequencerStatsInterval = setInterval(() => {
-      if (this.ctx.sequencerLeader.isLeader) {
+      if (this.ctx.sequencerLeader?.isLeader) {
         seqLogger.info(
           { seq: this.ctx.sequencerLeader.peekSeqVal() },
           'sequencer leader stats',
@@ -270,7 +261,7 @@ export class PDS {
       }
     }, 500)
     appviewConsumers.listen(this.ctx)
-    this.ctx.sequencerLeader.run()
+    this.ctx.sequencerLeader?.run()
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()
     this.ctx.labelCache.start()
@@ -284,7 +275,7 @@ export class PDS {
 
   async destroy(): Promise<void> {
     this.ctx.labelCache.stop()
-    await this.ctx.sequencerLeader.destroy()
+    await this.ctx.sequencerLeader?.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()
