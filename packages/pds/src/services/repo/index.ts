@@ -28,6 +28,7 @@ import { wait } from '@atproto/common'
 import { BackgroundQueue } from '../../event-stream/background-queue'
 import { countAll } from '../../db/util'
 import { Crawlers } from '../../crawlers'
+import { ContentReporter } from '../../content-reporter'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -40,6 +41,7 @@ export class RepoService {
     public backgroundQueue: BackgroundQueue,
     public crawlers: Crawlers,
     public labeler: Labeler,
+    public contentReporter?: ContentReporter,
   ) {
     this.blobs = new RepoBlobs(db, blobstore, backgroundQueue)
   }
@@ -51,6 +53,7 @@ export class RepoService {
     backgroundQueue: BackgroundQueue,
     crawlers: Crawlers,
     labeler: Labeler,
+    contentReporter?: ContentReporter,
   ) {
     return (db: Database) =>
       new RepoService(
@@ -61,6 +64,7 @@ export class RepoService {
         backgroundQueue,
         crawlers,
         labeler,
+        contentReporter,
       )
   }
 
@@ -81,6 +85,7 @@ export class RepoService {
         this.backgroundQueue,
         this.crawlers,
         this.labeler,
+        this.contentReporter,
       )
       return fn(srvc)
     })
@@ -231,20 +236,20 @@ export class RepoService {
       this.backgroundQueue.add(async () => {
         await this.crawlers.notifyOfUpdate()
       })
+      writes.forEach((write) => {
+        if (
+          write.action === WriteOpAction.Create ||
+          write.action === WriteOpAction.Update
+        ) {
+          // @TODO move to appview
+          this.labeler.processRecord(write.uri, write.record)
+          this.contentReporter?.checkRecord(write)
+        }
+      })
     })
 
     const seqEvt = await sequencer.formatSeqCommit(did, commitData, writes)
     await sequencer.sequenceEvt(this.db, seqEvt)
-
-    // @TODO move to appview
-    writes.forEach((write) => {
-      if (
-        write.action === WriteOpAction.Create ||
-        write.action === WriteOpAction.Update
-      ) {
-        this.labeler.processRecord(write.uri, write.record)
-      }
-    })
   }
 
   async rebaseRepo(did: string, swapCommit?: CID) {

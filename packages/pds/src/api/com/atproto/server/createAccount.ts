@@ -9,7 +9,6 @@ import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
 import Database from '../../../../db'
 import { AtprotoData } from '@atproto/identity'
-import { backgroundHandleCheckForFlag } from '../../../../handle/moderation'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount(async ({ input, req }) => {
@@ -106,9 +105,7 @@ export default function (server: Server, ctx: AppContext) {
       }
     })
 
-    if (ctx.cfg.unacceptableHandleWordsB64) {
-      backgroundHandleCheckForFlag({ ctx, handle, did: result.did })
-    }
+    ctx.contentReporter?.checkHandle({ handle, did: result.did })
 
     return {
       encoding: 'application/json',

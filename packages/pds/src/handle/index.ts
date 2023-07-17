@@ -1,7 +1,7 @@
 import * as ident from '@atproto/identifier'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { reservedSubdomains } from './reserved'
-import { hasExplicitSlur } from './moderation'
+import { hasExplicitSlur } from '../content-reporter/explicit-slurs'
 import AppContext from '../context'
 
 export const normalizeAndValidateHandle = async (opts: {
@@ -20,7 +20,7 @@ export const normalizeAndValidateHandle = async (opts: {
       'InvalidHandle',
     )
   }
-  // slur check etc
+  // slur check
   if (hasExplicitSlur(handle)) {
     throw new InvalidRequestError(
       'Inappropriate language in handle',
