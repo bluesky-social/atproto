@@ -261,12 +261,13 @@ async function cidForSafeRecord(record: RepoRecord) {
 }
 
 function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
-  let toCheck = rkey
+  let toCheck = ''
   if (isProfile(record)) {
     toCheck += ' ' + record.displayName
   } else if (isList(record)) {
     toCheck += ' ' + record.name
   } else if (isFeedGenerator(record)) {
+    toCheck += ' ' + rkey
     toCheck += ' ' + record.displayName
   }
   if (hasExplicitSlur(toCheck)) {
