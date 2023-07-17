@@ -42,12 +42,13 @@ export class ContentReporter {
 
   checkRecord(opts: { record: RepoRecord; uri: AtUri; cid: CID }) {
     const { record, uri, cid } = opts
-    let content = uri.rkey
+    let content = ''
     if (isProfile(record)) {
       content += ' ' + record.displayName
     } else if (isList(record)) {
       content += ' ' + record.name
     } else if (isFeedGenerator(record)) {
+      content += ' ' + uri.rkey
       content += ' ' + record.displayName
     }
 
