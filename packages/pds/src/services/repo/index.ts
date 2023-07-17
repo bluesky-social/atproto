@@ -236,21 +236,20 @@ export class RepoService {
       this.backgroundQueue.add(async () => {
         await this.crawlers.notifyOfUpdate()
       })
+      writes.forEach((write) => {
+        if (
+          write.action === WriteOpAction.Create ||
+          write.action === WriteOpAction.Update
+        ) {
+          // @TODO move to appview
+          this.labeler.processRecord(write.uri, write.record)
+          this.contentReporter?.checkRecord(write)
+        }
+      })
     })
 
     const seqEvt = await sequencer.formatSeqCommit(did, commitData, writes)
     await sequencer.sequenceEvt(this.db, seqEvt)
-
-    // @TODO move to appview
-    writes.forEach((write) => {
-      if (
-        write.action === WriteOpAction.Create ||
-        write.action === WriteOpAction.Update
-      ) {
-        this.labeler.processRecord(write.uri, write.record)
-        this.contentReporter?.checkRecord(write)
-      }
-    })
   }
 
   async rebaseRepo(did: string, swapCommit?: CID) {

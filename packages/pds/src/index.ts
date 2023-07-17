@@ -178,7 +178,7 @@ export class PDS {
     const labelCache = new LabelCache(db)
 
     let contentReporter: ContentReporter | undefined = undefined
-    if (config.unacceptableHandleWordsB64) {
+    if (config.unacceptableWordsB64) {
       contentReporter = new ContentReporter({
         backgroundQueue,
         moderationService: new ModerationService(
@@ -189,8 +189,8 @@ export class PDS {
           imgInvalidator,
         ),
         reporterDid: config.labelerDid,
-        unacceptableB64: config.unacceptableHandleWordsB64,
-        falsePositivesB64: config.falsePositiveHandleWordsB64,
+        unacceptableB64: config.unacceptableWordsB64,
+        falsePositivesB64: config.falsePositiveWordsB64,
       })
     }
 

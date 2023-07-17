@@ -79,6 +79,10 @@ export class ContentReporter {
   }
 }
 
-const decode = (encoded: string): string[] => {
+export const decode = (encoded: string): string[] => {
   return ui8.toString(ui8.fromString(encoded, 'base64'), 'utf8').split(',')
+}
+
+export const encode = (words: string[]): string => {
+  return ui8.toString(ui8.fromString(words.join(','), 'utf8'), 'base64')
 }
