@@ -19,6 +19,7 @@ import DidSqlCache from './did-cache'
 import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
+import { ContentReporter } from './content-reporter'
 
 export class AppContext {
   private _appviewAgent: AtpAgent | null
@@ -41,6 +42,7 @@ export class AppContext {
       sequencerLeader: SequencerLeader | null
       labeler: Labeler
       labelCache: LabelCache
+      contentReporter?: ContentReporter
       backgroundQueue: BackgroundQueue
       crawlers: Crawlers
       algos: MountedAlgos
@@ -131,6 +133,10 @@ export class AppContext {
 
   get labelCache(): LabelCache {
     return this.opts.labelCache
+  }
+
+  get contentReporter(): ContentReporter | undefined {
+    return this.opts.contentReporter
   }
 
   get backgroundQueue(): BackgroundQueue {

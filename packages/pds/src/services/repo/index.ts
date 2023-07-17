@@ -28,6 +28,7 @@ import { wait } from '@atproto/common'
 import { BackgroundQueue } from '../../event-stream/background-queue'
 import { countAll } from '../../db/util'
 import { Crawlers } from '../../crawlers'
+import { ContentReporter } from '../../content-reporter'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -40,6 +41,7 @@ export class RepoService {
     public backgroundQueue: BackgroundQueue,
     public crawlers: Crawlers,
     public labeler: Labeler,
+    public contentReporter?: ContentReporter,
   ) {
     this.blobs = new RepoBlobs(db, blobstore, backgroundQueue)
   }
@@ -51,6 +53,7 @@ export class RepoService {
     backgroundQueue: BackgroundQueue,
     crawlers: Crawlers,
     labeler: Labeler,
+    contentReporter?: ContentReporter,
   ) {
     return (db: Database) =>
       new RepoService(
@@ -61,6 +64,7 @@ export class RepoService {
         backgroundQueue,
         crawlers,
         labeler,
+        contentReporter,
       )
   }
 
@@ -81,6 +85,7 @@ export class RepoService {
         this.backgroundQueue,
         this.crawlers,
         this.labeler,
+        this.contentReporter,
       )
       return fn(srvc)
     })
@@ -243,6 +248,7 @@ export class RepoService {
         write.action === WriteOpAction.Update
       ) {
         this.labeler.processRecord(write.uri, write.record)
+        this.contentReporter?.checkRecord(write)
       }
     })
   }

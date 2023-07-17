@@ -1,6 +1,6 @@
 import { dedupeStrs } from '@atproto/common'
 
-export class UnacceptableHandleValidator {
+export class UnacceptableWordValidator {
   private bannedWords: Set<string>
   private falsePositives: Set<string>
 
