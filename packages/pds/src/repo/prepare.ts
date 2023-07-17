@@ -260,7 +260,7 @@ async function cidForSafeRecord(record: RepoRecord) {
   }
 }
 
-async function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
+function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
   let toCheck = rkey
   if (isProfile(record)) {
     toCheck += ' ' + record.displayName

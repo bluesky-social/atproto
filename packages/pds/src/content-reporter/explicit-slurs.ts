@@ -12,6 +12,10 @@ const explicitSlurRegexes = [
 
 export const hasExplicitSlur = (handle: string): boolean => {
   return explicitSlurRegexes.some(
-    (reg) => reg.test(handle) || reg.test(handle.replaceAll('.', '')),
+    (reg) =>
+      reg.test(handle) ||
+      reg.test(
+        handle.replaceAll('.', '').replaceAll('-', '').replaceAll('_', ''),
+      ),
   )
 }
