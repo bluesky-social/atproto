@@ -10,6 +10,7 @@ import {
   check,
   schema,
   cidForCbor,
+  byteIterableToStream,
 } from '@atproto/common'
 import { ipldToLex, lexToIpld, LexValue, RepoRecord } from '@atproto/lexicon'
 
@@ -33,6 +34,7 @@ import BlockMap from './block-map'
 import { MissingBlocksError } from './error'
 import * as parse from './parse'
 import { Keypair } from '@atproto/crypto'
+import { Readable } from 'stream'
 
 export async function* verifyIncomingCarBlocks(
   car: AsyncIterable<CarBlock>,
@@ -43,16 +45,31 @@ export async function* verifyIncomingCarBlocks(
   }
 }
 
-export const writeCar = (
+// we have to turn the car writer output into a stream in order to properly handle errors
+export function writeCarStream(
   root: CID | null,
   fn: (car: BlockWriter) => Promise<void>,
-): AsyncIterable<Uint8Array> => {
+): Readable {
   const { writer, out } =
     root !== null ? CarWriter.create(root) : CarWriter.create()
 
-  fn(writer).finally(() => writer.close())
+  const stream = byteIterableToStream(out)
+  fn(writer)
+    .catch((err) => {
+      stream.destroy(err)
+    })
+    .finally(() => writer.close())
+  return stream
+}
 
-  return out
+export async function* writeCar(
+  root: CID | null,
+  fn: (car: BlockWriter) => Promise<void>,
+): AsyncIterable<Uint8Array> {
+  const stream = writeCarStream(root, fn)
+  for await (const chunk of stream) {
+    yield chunk
+  }
 }
 
 export const blocksToCarStream = (

@@ -1,10 +1,9 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { adminVerifier } from '../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getModerationActions({
-    auth: adminVerifier(ctx.cfg.adminPassword),
+    auth: ctx.roleVerifier,
     handler: async ({ params }) => {
       const { db, services } = ctx
       const { subject, limit = 50, cursor } = params

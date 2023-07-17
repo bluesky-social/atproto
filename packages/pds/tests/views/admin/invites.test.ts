@@ -203,7 +203,7 @@ describe('pds admin invite views', () => {
         },
       )
     await expect(attemptDisableInvites).rejects.toThrow(
-      'Authentication Required',
+      'Insufficient privileges',
     )
   })
 
@@ -215,7 +215,7 @@ describe('pds admin invite views', () => {
         headers: { authorization: moderatorAuth() },
       },
     )
-    await expect(attemptCreateInvite).rejects.toThrow('Authentication Required')
+    await expect(attemptCreateInvite).rejects.toThrow('Insufficient privileges')
   })
 
   it('disables an account from getting additional invite codes', async () => {
@@ -255,7 +255,7 @@ describe('pds admin invite views', () => {
         headers: { authorization: moderatorAuth() },
       },
     )
-    await expect(attempt).rejects.toThrow('Authentication Required')
+    await expect(attempt).rejects.toThrow('Insufficient privileges')
   })
 
   it('re-enables an accounts invites', async () => {
@@ -285,6 +285,6 @@ describe('pds admin invite views', () => {
         headers: { authorization: moderatorAuth() },
       },
     )
-    await expect(attempt).rejects.toThrow('Authentication Required')
+    await expect(attempt).rejects.toThrow('Insufficient privileges')
   })
 })

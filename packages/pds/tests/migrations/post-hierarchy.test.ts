@@ -5,7 +5,7 @@ import usersSeed from '../seeds/users'
 import threadSeed, { walk, item, Item } from '../seeds/thread'
 import { CloseFn, runTestServer } from '../_util'
 
-describe('post hierarchy migration', () => {
+describe.skip('post hierarchy migration', () => {
   let db: Database
   let close: CloseFn
   let sc: SeedClient

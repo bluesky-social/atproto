@@ -4,11 +4,12 @@ import { AddressInfo } from 'net'
 import events from 'events'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import cors from 'cors'
+import compression from 'compression'
 import { IdResolver } from '@atproto/identity'
 import API, { health, blobResolver } from './api'
 import Database from './db'
 import * as error from './error'
-import { dbLogger, loggerMiddleware } from './logger'
+import { dbLogger, loggerMiddleware, subLogger } from './logger'
 import { ServerConfig } from './config'
 import { createServer } from './lexicon'
 import { ImageUriBuilder } from './image/uri'
@@ -40,6 +41,7 @@ export class BskyAppView {
   public server?: http.Server
   private terminator?: HttpTerminator
   private dbStatsInterval: NodeJS.Timer
+  private subStatsInterval: NodeJS.Timer
 
   constructor(opts: {
     ctx: AppContext
@@ -62,6 +64,7 @@ export class BskyAppView {
     const app = express()
     app.use(cors())
     app.use(loggerMiddleware)
+    app.use(compression())
 
     const didCache = new DidSqlCache(
       db,
@@ -155,7 +158,12 @@ export class BskyAppView {
     app.use(error.handler)
 
     const sub = config.repoProvider
-      ? new RepoSubscription(ctx, config.repoProvider, config.repoSubLockId)
+      ? new RepoSubscription(
+          ctx,
+          config.repoProvider,
+          config.repoSubLockId,
+          config.indexerConcurrency,
+        )
       : undefined
 
     return new BskyAppView({ ctx, app, sub })
@@ -181,6 +189,19 @@ export class BskyAppView {
         'background queue stats',
       )
     }, 10000)
+    if (this.sub) {
+      this.subStatsInterval = setInterval(() => {
+        subLogger.info(
+          {
+            seq: this.sub?.lastSeq,
+            cursor: this.sub?.lastCursor,
+            runningCount: this.sub?.repoQueue.main.pending,
+            waitingCount: this.sub?.repoQueue.main.size,
+          },
+          'repo subscription stats',
+        )
+      }, 500)
+    }
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     this.terminator = createHttpTerminator({ server })
@@ -194,6 +215,7 @@ export class BskyAppView {
   async destroy(): Promise<void> {
     await this.ctx.didCache.destroy()
     await this.sub?.destroy()
+    clearInterval(this.subStatsInterval)
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()

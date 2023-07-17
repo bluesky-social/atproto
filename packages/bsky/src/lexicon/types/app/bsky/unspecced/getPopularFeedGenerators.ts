@@ -9,11 +9,15 @@ import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyFeedDefs from '../feed/defs'
 
-export interface QueryParams {}
+export interface QueryParams {
+  limit: number
+  cursor?: string
+}
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
+  cursor?: string
   feeds: AppBskyFeedDefs.GeneratorView[]
   [k: string]: unknown
 }

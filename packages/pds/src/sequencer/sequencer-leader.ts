@@ -1,5 +1,5 @@
 import { DisconnectError } from '@atproto/xrpc-server'
-import { jitter, wait } from '@atproto/common'
+import { chunkArray, jitter, wait } from '@atproto/common'
 import { Leader } from '../db/leader'
 import { seqLogger as log } from '../logger'
 import Database from '../db'
@@ -12,7 +12,7 @@ export class SequencerLeader {
   destroyed = false
   polling = false
   queued = false
-  lastSeq: number
+  private lastSeq: number
 
   constructor(public db: Database, lockId = SEQUENCER_LEADER_ID) {
     this.leader = new Leader(lockId, this.db)
@@ -21,6 +21,14 @@ export class SequencerLeader {
   nextSeqVal(): number {
     this.lastSeq++
     return this.lastSeq
+  }
+
+  peekSeqVal(): number | undefined {
+    return this.lastSeq
+  }
+
+  get isLeader() {
+    return !!this.leader.session
   }
 
   async run() {
@@ -104,12 +112,20 @@ export class SequencerLeader {
 
   async sequenceOutgoing() {
     const unsequenced = await this.getUnsequenced()
-    for (const row of unsequenced) {
-      await this.db.db
-        .updateTable('repo_seq')
-        .set({ seq: this.nextSeqVal() })
-        .where('id', '=', row.id)
-        .execute()
+    const chunks = chunkArray(unsequenced, 2000)
+    for (const chunk of chunks) {
+      await this.db.transaction(async (dbTxn) => {
+        await Promise.all(
+          chunk.map(async (row) => {
+            await dbTxn.db
+              .updateTable('repo_seq')
+              .set({ seq: this.nextSeqVal() })
+              .where('id', '=', row.id)
+              .execute()
+            await this.db.notify('outgoing_repo_seq')
+          }),
+        )
+      })
       await this.db.notify('outgoing_repo_seq')
     }
   }

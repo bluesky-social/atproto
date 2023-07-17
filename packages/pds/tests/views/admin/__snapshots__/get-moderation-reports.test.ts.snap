@@ -1,5 +1,45 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`pds admin get moderation reports view gets all moderation reports actioned by a certain moderator. 1`] = `
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "id": 1,
+    "reasonType": "com.atproto.moderation.defs#reasonOther",
+    "reportedBy": "user(0)",
+    "resolvedByActionIds": Array [
+      2,
+    ],
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(0)",
+      "uri": "record(0)",
+    },
+    "subjectRepoHandle": "alice.test",
+  },
+]
+`;
+
+exports[`pds admin get moderation reports view gets all moderation reports actioned by a certain moderator. 2`] = `
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "id": 3,
+    "reasonType": "com.atproto.moderation.defs#reasonOther",
+    "reportedBy": "user(0)",
+    "resolvedByActionIds": Array [
+      4,
+    ],
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(0)",
+      "uri": "record(0)",
+    },
+    "subjectRepoHandle": "bob.test",
+  },
+]
+`;
+
 exports[`pds admin get moderation reports view gets all moderation reports by active resolution action type. 1`] = `
 Array [
   Object {

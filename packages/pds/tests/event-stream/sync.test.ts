@@ -68,6 +68,7 @@ describe('sync', () => {
         services.repo(dbTxn).indexWrites(writes, now),
       )
     }
+    await server.processAll()
     // Check indexed timeline
     const aliceTL = await agent.api.app.bsky.feed.getTimeline(
       {},
