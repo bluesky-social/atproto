@@ -1,6 +1,6 @@
 import { isValidTld } from '@atproto/identifier'
 import { ensureHandleServiceConstraints } from '../src/handle'
-import { UnacceptableHandleValidator } from '../src/handle/moderation/validator'
+import { UnacceptableWordValidator } from '../src/content-reporter/validator'
 
 describe('handle validation', () => {
   it('validates service constraints', () => {
@@ -27,7 +27,7 @@ describe('handle validation', () => {
     expect(isValidTld('atproto.internal')).toBe(false)
   })
 
-  const validator = new UnacceptableHandleValidator(
+  const validator = new UnacceptableWordValidator(
     ['evil', 'mean', 'bad'],
     ['baddie'],
   )
