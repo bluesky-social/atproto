@@ -1,7 +1,11 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { ActorViewMap, FeedEmbeds, FeedRow } from '../../../../services/types'
+import {
+  FeedRow,
+  ActorInfoMap,
+  PostEmbedViews,
+} from '../../../../services/feed/types'
 import { FeedService, PostInfoMap } from '../../../../services/feed'
 import { Labels } from '../../../../services/label'
 import {
@@ -71,8 +75,8 @@ const composeThread = (
   threadData: PostThread,
   feedService: FeedService,
   posts: PostInfoMap,
-  actors: ActorViewMap,
-  embeds: FeedEmbeds,
+  actors: ActorInfoMap,
+  embeds: PostEmbedViews,
   labels: Labels,
 ) => {
   const post = feedService.views.formatPostView(

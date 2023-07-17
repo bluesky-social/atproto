@@ -16,7 +16,7 @@ import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky
 import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { FeedRow } from '../../../../services/types'
+import { FeedRow } from '../../../../services/feed/types'
 import { AlgoResponse } from '../../../../feed-gen/types'
 
 export default function (server: Server, ctx: AppContext) {
