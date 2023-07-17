@@ -8,6 +8,7 @@ import { Database } from './db'
 import { ServerConfig } from './config'
 import * as auth from './auth'
 import { ServerMailer } from './mailer'
+import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
@@ -36,6 +37,7 @@ export class AppContext {
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       mailer: ServerMailer
+      moderationMailer: ModerationMailer
       services: Services
       messageDispatcher: MessageDispatcher
       sequencer: Sequencer
@@ -109,6 +111,10 @@ export class AppContext {
 
   get mailer(): ServerMailer {
     return this.opts.mailer
+  }
+
+  get moderationMailer(): ModerationMailer {
+    return this.opts.moderationMailer
   }
 
   get services(): Services {

@@ -46,6 +46,8 @@ export interface ServerConfigValues {
   appUrlPasswordReset: string
   emailSmtpUrl?: string
   emailNoReplyAddress: string
+  moderationEmailAddress?: string
+  moderationEmailSmtpUrl?: string
 
   hiveApiKey?: string
   labelerDid: string
@@ -162,6 +164,11 @@ export class ServerConfig {
     const emailNoReplyAddress =
       process.env.EMAIL_NO_REPLY_ADDRESS || 'noreply@blueskyweb.xyz'
 
+    const moderationEmailAddress =
+      process.env.MODERATION_EMAIL_ADDRESS || undefined
+    const moderationEmailSmtpUrl =
+      process.env.MODERATION_EMAIL_SMTP_URL || undefined
+
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const labelerKeywords = {}
@@ -247,6 +254,8 @@ export class ServerConfig {
       appUrlPasswordReset,
       emailSmtpUrl,
       emailNoReplyAddress,
+      moderationEmailAddress,
+      moderationEmailSmtpUrl,
       hiveApiKey,
       labelerDid,
       labelerKeywords,
@@ -430,6 +439,14 @@ export class ServerConfig {
 
   get emailNoReplyAddress() {
     return this.cfg.emailNoReplyAddress
+  }
+
+  get moderationEmailAddress() {
+    return this.cfg.moderationEmailAddress
+  }
+
+  get moderationEmailSmtpUrl() {
+    return this.cfg.moderationEmailSmtpUrl
   }
 
   get hiveApiKey() {

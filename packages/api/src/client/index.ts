@@ -22,6 +22,7 @@ import * as ComAtprotoAdminRebaseRepo from './types/com/atproto/admin/rebaseRepo
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
+import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
@@ -140,6 +141,7 @@ export * as ComAtprotoAdminRebaseRepo from './types/com/atproto/admin/rebaseRepo
 export * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
+export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
@@ -481,6 +483,17 @@ export class AdminNS {
       .call('com.atproto.admin.searchRepos', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoAdminSearchRepos.toKnownErr(e)
+      })
+  }
+
+  sendEmail(
+    data?: ComAtprotoAdminSendEmail.InputSchema,
+    opts?: ComAtprotoAdminSendEmail.CallOptions,
+  ): Promise<ComAtprotoAdminSendEmail.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.sendEmail', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminSendEmail.toKnownErr(e)
       })
   }
 
