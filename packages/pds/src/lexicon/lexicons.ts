@@ -865,6 +865,12 @@ export const schemaDict = {
                 type: 'string',
               },
             },
+            actionedBy: {
+              type: 'string',
+              format: 'did',
+              description:
+                'Get all reports that were actioned by a specific moderator',
+            },
             reporters: {
               type: 'array',
               items: {
@@ -6285,12 +6291,29 @@ export const schemaDict = {
       main: {
         type: 'query',
         description: 'An unspecced view of globally popular feed generators',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
         output: {
           encoding: 'application/json',
           schema: {
             type: 'object',
             required: ['feeds'],
             properties: {
+              cursor: {
+                type: 'string',
+              },
               feeds: {
                 type: 'array',
                 items: {
@@ -6310,7 +6333,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'A skeleton of a timeline',
+        description: 'A skeleton of a timeline - UNSPECCED & WILL GO AWAY SOON',
         parameters: {
           type: 'params',
           properties: {

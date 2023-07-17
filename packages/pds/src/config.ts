@@ -25,6 +25,7 @@ export interface ServerConfigValues {
   recoveryKey: string
   adminPassword: string
   moderatorPassword?: string
+  triagePassword?: string
 
   inviteRequired: boolean
   userInviteInterval: number | null
@@ -49,12 +50,15 @@ export interface ServerConfigValues {
   hiveApiKey?: string
   labelerDid: string
   labelerKeywords: Record<string, string>
+  unacceptableHandleWordsB64?: string
+  falsePositiveHandleWordsB64?: string
 
   feedGenDid?: string
 
   maxSubscriptionBuffer: number
   repoBackfillLimitMs: number
   sequencerLeaderLockId?: number
+  sequencerLeaderEnabled?: boolean
 
   // this is really only used in test environments
   dbTxLockNonce?: string
@@ -114,6 +118,7 @@ export class ServerConfig {
 
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
     const moderatorPassword = process.env.MODERATOR_PASSWORD || undefined
+    const triagePassword = process.env.TRIAGE_PASSWORD || undefined
 
     const inviteRequired = process.env.INVITE_REQUIRED === 'true' ? true : false
     const userInviteInterval = parseIntWithFallback(
@@ -161,6 +166,13 @@ export class ServerConfig {
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const labelerKeywords = {}
 
+    const unacceptableHandleWordsB64 = nonemptyString(
+      process.env.UNACCEPTABLE_HANDLE_WORDS_B64,
+    )
+    const falsePositiveHandleWordsB64 = nonemptyString(
+      process.env.FALSE_POSITIVE_HANDLE_WORDS_B64,
+    )
+
     const feedGenDid = process.env.FEED_GEN_DID
 
     const dbPostgresUrl = process.env.DB_POSTGRES_URL
@@ -180,6 +192,12 @@ export class ServerConfig {
       process.env.SEQUENCER_LEADER_LOCK_ID,
       undefined,
     )
+
+    // by default each instance is a potential sequencer leader, but may be configured off
+    const sequencerLeaderEnabled = process.env.SEQUENCER_LEADER_ENABLED
+      ? process.env.SEQUENCER_LEADER_ENABLED !== '0' &&
+        process.env.SEQUENCER_LEADER_ENABLED !== 'false'
+      : undefined
 
     const dbTxLockNonce = nonemptyString(process.env.DB_TX_LOCK_NONCE)
 
@@ -213,6 +231,7 @@ export class ServerConfig {
       serverDid,
       adminPassword,
       moderatorPassword,
+      triagePassword,
       inviteRequired,
       userInviteInterval,
       userInviteEpoch,
@@ -231,10 +250,13 @@ export class ServerConfig {
       hiveApiKey,
       labelerDid,
       labelerKeywords,
+      unacceptableHandleWordsB64,
+      falsePositiveHandleWordsB64,
       feedGenDid,
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
       sequencerLeaderLockId,
+      sequencerLeaderEnabled,
       dbTxLockNonce,
       bskyAppViewEndpoint,
       bskyAppViewDid,
@@ -330,6 +352,10 @@ export class ServerConfig {
     return this.cfg.moderatorPassword
   }
 
+  get triagePassword() {
+    return this.cfg.triagePassword
+  }
+
   get inviteRequired() {
     return this.cfg.inviteRequired
   }
@@ -418,6 +444,14 @@ export class ServerConfig {
     return this.cfg.labelerKeywords
   }
 
+  get unacceptableHandleWordsB64() {
+    return this.cfg.unacceptableHandleWordsB64
+  }
+
+  get falsePositiveHandleWordsB64() {
+    return this.cfg.falsePositiveHandleWordsB64
+  }
+
   get feedGenDid() {
     return this.cfg.feedGenDid
   }
@@ -432,6 +466,10 @@ export class ServerConfig {
 
   get sequencerLeaderLockId() {
     return this.cfg.sequencerLeaderLockId
+  }
+
+  get sequencerLeaderEnabled() {
+    return this.cfg.sequencerLeaderEnabled !== false
   }
 
   get dbTxLockNonce() {

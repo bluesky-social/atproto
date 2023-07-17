@@ -330,6 +330,28 @@ describe('feed generation', () => {
       expect(resEven.data.feeds.map((f) => f.likeCount)).toEqual([2, 0, 0, 0])
       expect(resEven.data.feeds.map((f) => f.uri)).not.toContain(feedUriPrime) // taken-down
     })
+
+    it('paginates', async () => {
+      const resFull =
+        await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+          {},
+          { headers: await network.serviceHeaders(sc.dids.bob) },
+        )
+
+      const resOne =
+        await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+          { limit: 2 },
+          { headers: await network.serviceHeaders(sc.dids.bob) },
+        )
+      const resTwo =
+        await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+          { cursor: resOne.data.cursor },
+          { headers: await network.serviceHeaders(sc.dids.bob) },
+        )
+      expect([...resOne.data.feeds, ...resTwo.data.feeds]).toEqual(
+        resFull.data.feeds,
+      )
+    })
   })
 
   describe('getFeed', () => {

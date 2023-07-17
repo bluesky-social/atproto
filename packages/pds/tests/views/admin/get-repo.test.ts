@@ -13,6 +13,8 @@ import {
   CloseFn,
   adminAuth,
   TestServerInfo,
+  moderatorAuth,
+  triageAuth,
 } from '../../_util'
 import { SeedClient } from '../../seeds/client'
 import basicSeed from '../../seeds/basic'
@@ -78,6 +80,25 @@ describe('pds admin get repo view', () => {
       { headers: { authorization: adminAuth() } },
     )
     expect(forSnapshot(result.data)).toMatchSnapshot()
+  })
+
+  it('does not include account emails for triage mods.', async () => {
+    const { data: admin } = await agent.api.com.atproto.admin.getRepo(
+      { did: sc.dids.bob },
+      { headers: { authorization: adminAuth() } },
+    )
+    const { data: moderator } = await agent.api.com.atproto.admin.getRepo(
+      { did: sc.dids.bob },
+      { headers: { authorization: moderatorAuth() } },
+    )
+    const { data: triage } = await agent.api.com.atproto.admin.getRepo(
+      { did: sc.dids.bob },
+      { headers: { authorization: triageAuth() } },
+    )
+    expect(admin.email).toEqual('bob@test.com')
+    expect(moderator.email).toEqual('bob@test.com')
+    expect(triage.email).toBeUndefined()
+    expect(triage).toEqual({ ...admin, email: undefined })
   })
 
   it('fails when repo does not exist.', async () => {

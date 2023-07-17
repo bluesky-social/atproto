@@ -10,6 +10,11 @@
         "properties": {
           "subject": { "type": "string" },
           "ignoreSubjects": { "type": "array", "items": { "type": "string" } },
+          "actionedBy": {
+            "type": "string",
+            "format": "did",
+            "description": "Get all reports that were actioned by a specific moderator"
+          },
           "reporters": {
             "type": "array",
             "items": { "type": "string" },

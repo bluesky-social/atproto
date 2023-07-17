@@ -38,7 +38,7 @@ export class AppContext {
       services: Services
       messageDispatcher: MessageDispatcher
       sequencer: Sequencer
-      sequencerLeader: SequencerLeader
+      sequencerLeader: SequencerLeader | null
       labeler: Labeler
       labelCache: LabelCache
       backgroundQueue: BackgroundQueue
@@ -89,12 +89,8 @@ export class AppContext {
     return auth.refreshVerifier(this.auth)
   }
 
-  get adminVerifier() {
-    return auth.adminVerifier(this.auth)
-  }
-
-  get moderatorVerifier() {
-    return auth.moderatorVerifier(this.auth)
+  get roleVerifier() {
+    return auth.roleVerifier(this.auth)
   }
 
   get optionalAccessOrAdminVerifier() {
@@ -125,7 +121,7 @@ export class AppContext {
     return this.opts.sequencer
   }
 
-  get sequencerLeader(): SequencerLeader {
+  get sequencerLeader(): SequencerLeader | null {
     return this.opts.sequencerLeader
   }
 

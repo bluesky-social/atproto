@@ -1,6 +1,5 @@
 import {
   ensureValidHandle,
-  ensureHandleServiceConstraints,
   normalizeAndEnsureValidHandle,
   ensureValidHandleRegex,
   InvalidHandleError,
@@ -193,30 +192,7 @@ describe('handle validation', () => {
   })
 })
 
-describe('service constraints & normalization', () => {
-  const domains = ['.bsky.app', '.test']
-  it('throw on handles that violate service constraints', () => {
-    const expectThrow = (handle: string, err: string) => {
-      expect(() => ensureHandleServiceConstraints(handle, domains)).toThrow(err)
-    }
-
-    expectThrow('john.bsky.io', 'Not a supported handle domain')
-    expectThrow('john.com', 'Not a supported handle domain')
-    expectThrow('j.test', 'Handle too short')
-    expectThrow('uk.test', 'Handle too short')
-    expectThrow('john.test.bsky.app', 'Invalid characters in handle')
-    expectThrow('about.test', 'Reserved handle')
-    expectThrow('atp.test', 'Reserved handle')
-    expectThrow('barackobama.test', 'Reserved handle')
-
-    expectThrow('atproto.local', 'Handle TLD is invalid or disallowed')
-    expectThrow('atproto.arpa', 'Handle TLD is invalid or disallowed')
-    expectThrow('atproto.invalid', 'Handle TLD is invalid or disallowed')
-    expectThrow('atproto.localhost', 'Handle TLD is invalid or disallowed')
-    expectThrow('atproto.onion', 'Handle TLD is invalid or disallowed')
-    expectThrow('atproto.internal', 'Handle TLD is invalid or disallowed')
-  })
-
+describe('normalization', () => {
   it('normalizes handles', () => {
     const normalized = normalizeAndEnsureValidHandle('JoHn.TeST')
     expect(normalized).toBe('john.test')

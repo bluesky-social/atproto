@@ -5,8 +5,9 @@ import { AtUri } from '@atproto/uri'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRecord({
-    auth: ctx.moderatorVerifier,
-    handler: async ({ params }) => {
+    auth: ctx.roleVerifier,
+    handler: async ({ params, auth }) => {
+      const access = auth.credentials
       const { db, services } = ctx
       const { uri, cid } = params
       const result = await services
@@ -17,7 +18,9 @@ export default function (server: Server, ctx: AppContext) {
       }
       return {
         encoding: 'application/json',
-        body: await services.moderation(db).views.recordDetail(result),
+        body: await services.moderation(db).views.recordDetail(result, {
+          includeEmails: access.moderator,
+        }),
       }
     },
   })

@@ -10,15 +10,21 @@ import {
   def,
   Commit,
 } from '@atproto/repo'
+import { ValidationError } from '@atproto/lexicon'
 import { OutputSchema as Message } from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import * as message from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import { ids, lexicons } from '../lexicon/lexicons'
 import Database from '../db'
 import AppContext from '../context'
 import { Leader } from '../db/leader'
+import { IndexingService } from '../services/indexing'
 import { subLogger } from '../logger'
-import { ConsecutiveList, LatestQueue, PartitionedQueue } from './util'
-import { ValidationError } from '@atproto/lexicon'
+import {
+  ConsecutiveItem,
+  ConsecutiveList,
+  LatestQueue,
+  PartitionedQueue,
+} from './util'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
 export const REPO_SUB_ID = 1000
@@ -31,6 +37,7 @@ export class RepoSubscription {
   destroyed = false
   lastSeq: number | undefined
   lastCursor: number | undefined
+  indexingSvc: IndexingService
 
   constructor(
     public ctx: AppContext,
@@ -39,6 +46,7 @@ export class RepoSubscription {
     public concurrency = Infinity,
   ) {
     this.repoQueue = new PartitionedQueue({ concurrency })
+    this.indexingSvc = ctx.services.indexing(ctx.db)
   }
 
   async run() {
@@ -60,33 +68,9 @@ export class RepoSubscription {
             }
             this.lastSeq = details.seq
             const item = this.consecutive.push(details.seq)
-            this.repoQueue
-              .add(details.repo, () => this.handleMessage(details.message))
-              .catch((err) => {
-                // We log messages we can't process and move on. Barring a
-                // durable queue this is the best we can do for now: otherwise
-                // the cursor would get stuck on a poison message.
-                subLogger.error(
-                  {
-                    err,
-                    provider: this.service,
-                    message: loggableMessage(msg),
-                  },
-                  'repo subscription message processing error',
-                )
-              })
-              .finally(() => {
-                const latest = item.complete().at(-1)
-                if (!latest) return
-                this.cursorQueue
-                  .add(() => this.handleCursor(latest))
-                  .catch((err) => {
-                    subLogger.error(
-                      { err, provider: this.service },
-                      'repo subscription cursor error',
-                    )
-                  })
-              })
+            this.repoQueue.add(details.repo, () =>
+              this.handleMessage(item, details.message),
+            )
             await this.repoQueue.main.onEmpty() // backpressure
           }
         })
@@ -120,47 +104,74 @@ export class RepoSubscription {
     await this.run()
   }
 
-  private async handleMessage(msg: ProcessableMessage) {
-    if (message.isCommit(msg)) {
-      await this.handleCommit(msg)
-    } else if (message.isHandle(msg)) {
-      await this.handleUpdateHandle(msg)
-    } else if (message.isTombstone(msg)) {
-      await this.handleTombstone(msg)
-    } else if (message.isMigrate(msg)) {
-      // Ignore migrations
-    } else {
-      const exhaustiveCheck: never = msg
-      throw new Error(`Unhandled message type: ${exhaustiveCheck['$type']}`)
+  private async handleMessage(
+    item: ConsecutiveItem<number>,
+    msg: ProcessableMessage,
+  ) {
+    try {
+      if (message.isCommit(msg)) {
+        await this.handleCommit(msg)
+      } else if (message.isHandle(msg)) {
+        await this.handleUpdateHandle(msg)
+      } else if (message.isTombstone(msg)) {
+        await this.handleTombstone(msg)
+      } else if (message.isMigrate(msg)) {
+        // Ignore migrations
+      } else {
+        const exhaustiveCheck: never = msg
+        throw new Error(`Unhandled message type: ${exhaustiveCheck['$type']}`)
+      }
+    } catch (err) {
+      // We log messages we can't process and move on. Barring a
+      // durable queue this is the best we can do for now: otherwise
+      // the cursor would get stuck on a poison message.
+      subLogger.error(
+        {
+          err,
+          provider: this.service,
+          message: loggableMessage(msg),
+        },
+        'repo subscription message processing error',
+      )
+    } finally {
+      const latest = item.complete().at(-1)
+      if (latest) {
+        this.cursorQueue
+          .add(() => this.handleCursor(latest))
+          .catch((err) => {
+            subLogger.error(
+              { err, provider: this.service },
+              'repo subscription cursor error',
+            )
+          })
+      }
     }
   }
 
   private async handleCommit(msg: message.Commit) {
-    const { db, services } = this.ctx
-    const indexingService = services.indexing(db)
     const indexRecords = async () => {
       const { root, rootCid, ops } = await getOps(msg)
       if (msg.tooBig) {
-        await indexingService.indexRepo(msg.repo, rootCid.toString())
-        await indexingService.setCommitLastSeen(root, msg)
+        await this.indexingSvc.indexRepo(msg.repo, rootCid.toString())
+        await this.indexingSvc.setCommitLastSeen(root, msg)
         return
       }
       if (msg.rebase) {
-        const needsReindex = await indexingService.checkCommitNeedsIndexing(
+        const needsReindex = await this.indexingSvc.checkCommitNeedsIndexing(
           root,
         )
         if (needsReindex) {
-          await indexingService.indexRepo(msg.repo, rootCid.toString())
+          await this.indexingSvc.indexRepo(msg.repo, rootCid.toString())
         }
-        await indexingService.setCommitLastSeen(root, msg)
+        await this.indexingSvc.setCommitLastSeen(root, msg)
         return
       }
       for (const op of ops) {
         if (op.action === WriteOpAction.Delete) {
-          await indexingService.deleteRecord(op.uri)
+          await this.indexingSvc.deleteRecord(op.uri)
         } else {
           try {
-            await indexingService.indexRecord(
+            await this.indexingSvc.indexRecord(
               op.uri,
               op.cid,
               op.record,
@@ -193,23 +204,21 @@ export class RepoSubscription {
           }
         }
       }
-      await indexingService.setCommitLastSeen(root, msg)
+      await this.indexingSvc.setCommitLastSeen(root, msg)
     }
     const results = await Promise.allSettled([
       indexRecords(),
-      indexingService.indexHandle(msg.repo, msg.time),
+      this.indexingSvc.indexHandle(msg.repo, msg.time),
     ])
     handleAllSettledErrors(results)
   }
 
   private async handleUpdateHandle(msg: message.Handle) {
-    const { db, services } = this.ctx
-    await services.indexing(db).indexHandle(msg.did, msg.time, true)
+    await this.indexingSvc.indexHandle(msg.did, msg.time, true)
   }
 
   private async handleTombstone(msg: message.Tombstone) {
-    const { db, services } = this.ctx
-    await services.indexing(db).tombstoneActor(msg.did)
+    await this.indexingSvc.tombstoneActor(msg.did)
   }
 
   private async handleCursor(seq: number) {

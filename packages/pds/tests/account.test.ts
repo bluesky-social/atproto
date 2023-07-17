@@ -245,7 +245,7 @@ describe('account', () => {
   })
 
   it('disallows non-admin moderators to perform email updates', async () => {
-    const attemptUpdate = agent.api.com.atproto.admin.updateAccountEmail(
+    const attemptUpdateMod = agent.api.com.atproto.admin.updateAccountEmail(
       {
         account: handle,
         email: 'new@email.com',
@@ -255,7 +255,18 @@ describe('account', () => {
         headers: { authorization: util.moderatorAuth() },
       },
     )
-    await expect(attemptUpdate).rejects.toThrow('Authentication Required')
+    await expect(attemptUpdateMod).rejects.toThrow('Insufficient privileges')
+    const attemptUpdateTriage = agent.api.com.atproto.admin.updateAccountEmail(
+      {
+        account: handle,
+        email: 'new@email.com',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: util.triageAuth() },
+      },
+    )
+    await expect(attemptUpdateTriage).rejects.toThrow('Insufficient privileges')
   })
 
   it('disallows duplicate email addresses and handles', async () => {
