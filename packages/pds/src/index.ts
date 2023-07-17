@@ -118,17 +118,8 @@ export class PDS {
         : createTransport({ jsonTransport: true })
 
     const moderationMailTransport =
-      config.moderationEmailUser !== undefined &&
-      config.moderationEmailPassword !== undefined
-        ? createTransport({
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true,
-            auth: {
-              user: config.moderationEmailUser,
-              pass: config.moderationEmailPassword,
-            },
-          })
+      config.moderationEmailSmtpUrl !== undefined
+        ? createTransport(config.moderationEmailSmtpUrl)
         : createTransport({ jsonTransport: true })
 
     const mailer = new ServerMailer(serverMailTransport, config)
