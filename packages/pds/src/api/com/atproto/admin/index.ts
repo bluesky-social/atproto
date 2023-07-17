@@ -17,6 +17,7 @@ import getInviteCodes from './getInviteCodes'
 import updateAccountHandle from './updateAccountHandle'
 import updateAccountEmail from './updateAccountEmail'
 import rebaseRepo from './rebaseRepo'
+import sendEmail from './sendEmail'
 
 export default function (server: Server, ctx: AppContext) {
   resolveModerationReports(server, ctx)
@@ -36,4 +37,5 @@ export default function (server: Server, ctx: AppContext) {
   updateAccountHandle(server, ctx)
   updateAccountEmail(server, ctx)
   rebaseRepo(server, ctx)
+  sendEmail(server, ctx)
 }
