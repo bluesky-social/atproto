@@ -80,7 +80,7 @@ export class FeedService {
       ])
   }
 
-  selectFeedGeneratorQb(requester: string) {
+  selectFeedGeneratorQb(requester: string | null) {
     const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('feed_generator')
@@ -104,7 +104,7 @@ export class FeedService {
       .select((qb) =>
         qb
           .selectFrom('like')
-          .where('like.creator', '=', requester)
+          .where('like.creator', '=', requester ?? '')
           .whereRef('like.subject', '=', 'feed_generator.uri')
           .select('uri')
           .as('viewerLike'),
@@ -114,7 +114,7 @@ export class FeedService {
   // @NOTE keep in sync with actorService.views.profile()
   async getActorInfos(
     dids: string[],
-    requester: string,
+    requester: string | null,
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean }, // @NOTE used by hydrateFeed() to batch label hydration
   ): Promise<ActorInfoMap> {
     if (dids.length < 1) return {}
@@ -138,38 +138,38 @@ export class FeedService {
           'profile.indexedAt as indexedAt',
           this.db.db
             .selectFrom('follow')
-            .where('creator', '=', requester)
+            .where('creator', '=', requester ?? '')
             .whereRef('subjectDid', '=', ref('did_handle.did'))
             .select('uri')
             .as('requesterFollowing'),
           this.db.db
             .selectFrom('follow')
             .whereRef('creator', '=', ref('did_handle.did'))
-            .where('subjectDid', '=', requester)
+            .where('subjectDid', '=', requester ?? '')
             .select('uri')
             .as('requesterFollowedBy'),
           this.db.db
             .selectFrom('actor_block')
-            .where('creator', '=', requester)
+            .where('creator', '=', requester ?? '')
             .whereRef('subjectDid', '=', ref('did_handle.did'))
             .select('uri')
             .as('requesterBlocking'),
           this.db.db
             .selectFrom('actor_block')
             .whereRef('creator', '=', ref('did_handle.did'))
-            .where('subjectDid', '=', requester)
+            .where('subjectDid', '=', requester ?? '')
             .select('uri')
             .as('requesterBlockedBy'),
           this.db.db
             .selectFrom('mute')
             .whereRef('did', '=', ref('did_handle.did'))
-            .where('mutedByDid', '=', requester)
+            .where('mutedByDid', '=', requester ?? '')
             .select('did')
             .as('requesterMuted'),
           this.db.db
             .selectFrom('list_item')
             .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
-            .where('list_mute.mutedByDid', '=', requester)
+            .where('list_mute.mutedByDid', '=', requester ?? '')
             .whereRef('list_item.subjectDid', '=', ref('did_handle.did'))
             .select('list_item.listUri')
             .limit(1)
@@ -216,7 +216,7 @@ export class FeedService {
 
   async getPostInfos(
     postUris: string[],
-    requester: string,
+    requester: string | null,
     options?: Pick<FeedHydrationOptions, 'includeSoftDeleted'>,
   ): Promise<PostInfoMap> {
     if (postUris.length < 1) return {}
@@ -238,8 +238,6 @@ export class FeedService {
       postsQb = postsQb
         .where(notSoftDeletedClause(ref('repo_root'))) // Ensures post reply parent/roots get omitted from views when taken down
         .where(notSoftDeletedClause(ref('record')))
-    } else {
-      postsQb = postsQb.select('record.takedownId as takedownId')
     }
 
     const posts = await postsQb
@@ -252,15 +250,16 @@ export class FeedService {
         'post_agg.likeCount as likeCount',
         'post_agg.repostCount as repostCount',
         'post_agg.replyCount as replyCount',
+        'record.takedownId as takedownId',
         db
           .selectFrom('repost')
-          .where('creator', '=', requester)
+          .where('creator', '=', requester ?? '')
           .whereRef('subject', '=', ref('post.uri'))
           .select('uri')
           .as('requesterRepost'),
         db
           .selectFrom('like')
-          .where('creator', '=', requester)
+          .where('creator', '=', requester ?? '')
           .whereRef('subject', '=', ref('post.uri'))
           .select('uri')
           .as('requesterLike'),
@@ -275,7 +274,10 @@ export class FeedService {
     )
   }
 
-  async getFeedGeneratorInfos(generatorUris: string[], requester: string) {
+  async getFeedGeneratorInfos(
+    generatorUris: string[],
+    requester: string | null,
+  ) {
     if (generatorUris.length < 1) return {}
     const feedGens = await this.selectFeedGeneratorQb(requester)
       .where('feed_generator.uri', 'in', generatorUris)
@@ -323,7 +325,7 @@ export class FeedService {
 
   async hydrateFeed(
     items: FeedRow[],
-    requester: string,
+    requester: string | null,
     options?: FeedHydrationOptions,
   ): Promise<FeedViewPost[]> {
     const actorDids = new Set<string>()
@@ -353,10 +355,14 @@ export class FeedService {
     ])
     const embeds = await this.embedsForPosts(posts, requester)
 
-    return this.views.formatFeed(items, actors, posts, embeds, labels, false)
+    return this.views.formatFeed(items, actors, posts, embeds, labels, options)
   }
 
-  async embedsForPosts(postInfos: PostInfoMap, requester: string, depth = 0) {
+  async embedsForPosts(
+    postInfos: PostInfoMap,
+    requester: string | null,
+    depth = 0,
+  ) {
     const postMap = postRecordsFromInfos(postInfos)
     const posts = Object.values(postMap)
     if (posts.length < 1) {
@@ -395,7 +401,7 @@ export class FeedService {
 
   async nestedRecordViews(
     posts: PostRecord[],
-    requester: string,
+    requester: string | null,
     depth: number,
   ): Promise<RecordEmbedViewRecordMap> {
     const nestedUris = nestedRecordUris(posts)
