@@ -10,7 +10,7 @@ export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
     .orderBy('seq', 'desc')
     .limit(1)
     .executeTakeFirst()
-  const startAt = res?.seq ? res.seq + 10000 : 1
+  const startAt = res?.seq ? res.seq + 50000 : 1
   await sql`CREATE SEQUENCE repo_seq_sequence START ${sql.literal(
     startAt,
   )};`.execute(db)
