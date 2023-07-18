@@ -23,9 +23,9 @@ import { AlgoResponse } from '../../../../../feed-gen/types'
 // temp hardcoded feeds that we can proxy to appview
 const PROXYABLE_FEEDS = [
   'with-friends',
-  // 'bsky-team',
-  // 'hot-classic',
-  // 'best-of-follows',
+  'bsky-team',
+  'hot-classic',
+  'best-of-follows',
   'mutuals',
 ]
 
