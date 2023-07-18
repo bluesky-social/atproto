@@ -1,10 +1,11 @@
 import { sql } from 'kysely'
 import { DisconnectError } from '@atproto/xrpc-server'
-import { chunkArray, jitter, wait } from '@atproto/common'
+import { jitter, wait } from '@atproto/common'
 import { Leader } from '../db/leader'
 import { seqLogger as log } from '../logger'
 import Database from '../db'
-import { valuesList } from '../db/util'
+import { REPO_SEQ_SEQUENCE } from '../db/tables/repo-seq'
+import { countAll } from '../db/util'
 
 export const SEQUENCER_LEADER_ID = 1100
 
@@ -113,41 +114,42 @@ export class SequencerLeader {
   }
 
   async sequenceOutgoing() {
-    const unsequenced = await this.getUnsequenced()
-    const chunks = chunkArray(unsequenced, 500)
-    for (const chunk of chunks) {
-      await this.db.transaction(async (dbTxn) => {
-        await dbTxn.db
-          .updateTable('repo_seq')
-          .from(
-            valuesList(
-              chunk.map((row) => sql.join([row.id, this.nextSeqVal()])),
-            ).as(sql`vals (update_id, update_seq)`),
-          )
-          .set({ seq: sql`update_seq::bigint` })
-          .whereRef('id', '=', sql`update_id::bigint`)
-          .execute()
-        await dbTxn.notify('outgoing_repo_seq') // @TODO consider rollout of this change
-      })
-    }
+    await this.db.db
+      .updateTable('repo_seq')
+      .from((qb) =>
+        qb
+          .selectFrom('repo_seq')
+          .select([
+            'id as update_id',
+            sql<number>`nextval(${sql.literal(REPO_SEQ_SEQUENCE)})`.as(
+              'update_seq',
+            ),
+          ])
+          .where('seq', 'is', null)
+          .orderBy('id', 'asc')
+          .as('update'),
+      )
+      .set({ seq: sql`update_seq::bigint` })
+      .whereRef('id', '=', 'update_id')
+      .execute()
+
+    await this.db.notify('outgoing_repo_seq')
   }
 
-  async getUnsequenced() {
-    // @TODO consider adding a high limit here, but also automatically
-    // repolling in case batch sizes are very large. also: it was reported
-    // that adding a limit can slow this down (?), which is worth a look.
-    return this.db.db
+  async getUnsequencedCount() {
+    const res = await this.db.db
       .selectFrom('repo_seq')
       .where('seq', 'is', null)
-      .select('id')
-      .orderBy('id', 'asc')
-      .execute()
+      .select(countAll.as('count'))
+      .limit(1)
+      .executeTakeFirst()
+    return res?.count ?? 0
   }
 
   async isCaughtUp(): Promise<boolean> {
     if (this.db.dialect === 'sqlite') return true
-    const unsequenced = await this.getUnsequenced()
-    return unsequenced.length === 0
+    const count = await this.getUnsequencedCount()
+    return count === 0
   }
 
   destroy() {
