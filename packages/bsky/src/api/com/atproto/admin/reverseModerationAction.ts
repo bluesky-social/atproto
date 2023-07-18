@@ -43,14 +43,14 @@ export default function (server: Server, ctx: AppContext) {
             'Must be a full moderator to reverse this type of action',
           )
         }
-        // if less than admin access then can reverse takedown on an account
+        // if less than moderator access then cannot reverse takedown on an account
         if (
-          !access.admin &&
+          !access.moderator &&
           existing.action === TAKEDOWN &&
           existing.subjectType === 'com.atproto.admin.defs#repoRef'
         ) {
           throw new AuthRequiredError(
-            'Must be an admin to reverse an account takedown',
+            'Must be a full moderator to reverse an account takedown',
           )
         }
 

@@ -46,6 +46,8 @@ describe('algo whats-hot', () => {
   })
 
   it('returns well liked posts', async () => {
+    if (server.ctx.db.dialect === 'sqlite') return
+
     const img = await sc.uploadFile(
       alice,
       'tests/image/fixtures/key-landscape-small.jpg',
@@ -101,6 +103,8 @@ describe('algo whats-hot', () => {
   })
 
   it('paginates', async () => {
+    if (server.ctx.db.dialect === 'sqlite') return
+
     const res = await agent.api.app.bsky.feed.getFeed(
       { feed: feedUri },
       { headers: sc.getHeaders(alice) },

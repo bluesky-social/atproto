@@ -7,22 +7,25 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyFeedDefs from '../feed/defs'
 
-export interface QueryParams {
-  limit: number
-  cursor?: string
-}
+export interface QueryParams {}
 
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  cursor?: string
-  feeds: AppBskyFeedDefs.GeneratorView[]
+export interface InputSchema {
+  recipientDid: string
+  content: string
+  subject?: string
   [k: string]: unknown
 }
 
-export type HandlerInput = undefined
+export interface OutputSchema {
+  sent: boolean
+  [k: string]: unknown
+}
+
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
 
 export interface HandlerSuccess {
   encoding: 'application/json'

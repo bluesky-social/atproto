@@ -8,6 +8,7 @@ import { Database } from './db'
 import { ServerConfig } from './config'
 import * as auth from './auth'
 import { ServerMailer } from './mailer'
+import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
@@ -19,6 +20,7 @@ import DidSqlCache from './did-cache'
 import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
+import { ContentReporter } from './content-reporter'
 
 export class AppContext {
   private _appviewAgent: AtpAgent | null
@@ -35,12 +37,14 @@ export class AppContext {
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       mailer: ServerMailer
+      moderationMailer: ModerationMailer
       services: Services
       messageDispatcher: MessageDispatcher
       sequencer: Sequencer
-      sequencerLeader: SequencerLeader
+      sequencerLeader: SequencerLeader | null
       labeler: Labeler
       labelCache: LabelCache
+      contentReporter?: ContentReporter
       backgroundQueue: BackgroundQueue
       crawlers: Crawlers
       algos: MountedAlgos
@@ -109,6 +113,10 @@ export class AppContext {
     return this.opts.mailer
   }
 
+  get moderationMailer(): ModerationMailer {
+    return this.opts.moderationMailer
+  }
+
   get services(): Services {
     return this.opts.services
   }
@@ -121,7 +129,7 @@ export class AppContext {
     return this.opts.sequencer
   }
 
-  get sequencerLeader(): SequencerLeader {
+  get sequencerLeader(): SequencerLeader | null {
     return this.opts.sequencerLeader
   }
 
@@ -131,6 +139,10 @@ export class AppContext {
 
   get labelCache(): LabelCache {
     return this.opts.labelCache
+  }
+
+  get contentReporter(): ContentReporter | undefined {
+    return this.opts.contentReporter
   }
 
   get backgroundQueue(): BackgroundQueue {

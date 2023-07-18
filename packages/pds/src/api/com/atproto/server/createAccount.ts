@@ -1,5 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as ident from '@atproto/identifier'
+import { normalizeAndValidateHandle } from '../../../../handle'
 import * as plc from '@did-plc/lib'
 import * as scrypt from '../../../../db/scrypt'
 import { Server } from '../../../../lexicon'
@@ -22,7 +22,11 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     // normalize & ensure valid handle
-    const handle = await ensureValidHandle(ctx, input.body)
+    const handle = await normalizeAndValidateHandle({
+      ctx,
+      handle: input.body.handle,
+      did: input.body.did,
+    })
 
     // check that the invite code still has uses
     if (ctx.cfg.inviteRequired && inviteCode) {
@@ -101,6 +105,8 @@ export default function (server: Server, ctx: AppContext) {
       }
     })
 
+    ctx.contentReporter?.checkHandle({ handle, did: result.did })
+
     return {
       encoding: 'application/json',
       body: {
@@ -143,34 +149,6 @@ export const ensureCodeIsAvailable = async (
       'Provided invite code not available',
       'InvalidInviteCode',
     )
-  }
-}
-
-const ensureValidHandle = async (
-  ctx: AppContext,
-  input: CreateAccountInput,
-): Promise<string> => {
-  try {
-    const handle = ident.normalizeAndEnsureValidHandle(input.handle)
-    ident.ensureHandleServiceConstraints(handle, ctx.cfg.availableUserDomains)
-    return handle
-  } catch (err) {
-    if (err instanceof ident.InvalidHandleError) {
-      throw new InvalidRequestError(err.message, 'InvalidHandle')
-    } else if (err instanceof ident.ReservedHandleError) {
-      throw new InvalidRequestError(err.message, 'HandleNotAvailable')
-    } else if (err instanceof ident.UnsupportedDomainError) {
-      if (input.did === undefined) {
-        throw new InvalidRequestError(err.message, 'UnsupportedDomain')
-      }
-      const resolvedHandleDid = await ctx.idResolver.handle.resolve(
-        input.handle,
-      )
-      if (input.did !== resolvedHandleDid) {
-        throw new InvalidRequestError('External handle did not resolve to DID')
-      }
-    }
-    throw err
   }
 }
 

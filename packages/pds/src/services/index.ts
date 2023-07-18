@@ -18,6 +18,7 @@ import { LabelService } from '../app-view/services/label'
 import { BackgroundQueue } from '../event-stream/background-queue'
 import { Crawlers } from '../crawlers'
 import { LabelCache } from '../label-cache'
+import { ContentReporter } from '../content-reporter'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
@@ -27,6 +28,7 @@ export function createServices(resources: {
   imgInvalidator: ImageInvalidator
   labeler: Labeler
   labelCache: LabelCache
+  contentReporter?: ContentReporter
   backgroundQueue: BackgroundQueue
   crawlers: Crawlers
 }): Services {
@@ -38,6 +40,7 @@ export function createServices(resources: {
     imgInvalidator,
     labeler,
     labelCache,
+    contentReporter,
     backgroundQueue,
     crawlers,
   } = resources
@@ -52,6 +55,7 @@ export function createServices(resources: {
       backgroundQueue,
       crawlers,
       labeler,
+      contentReporter,
     ),
     moderation: ModerationService.creator(
       messageDispatcher,
