@@ -343,6 +343,9 @@ export const schemaDict = {
           invitesDisabled: {
             type: 'boolean',
           },
+          inviteNote: {
+            type: 'string',
+          },
         },
       },
       repoViewDetail: {
@@ -400,6 +403,9 @@ export const schemaDict = {
           },
           invitesDisabled: {
             type: 'boolean',
+          },
+          inviteNote: {
+            type: 'string',
           },
         },
       },
