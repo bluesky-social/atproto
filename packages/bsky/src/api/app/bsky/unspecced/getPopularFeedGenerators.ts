@@ -10,13 +10,13 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getPopularFeedGenerators({
     auth: ctx.authOptionalVerifier,
     handler: async ({ auth, params }) => {
-      const { limit, cursor } = params
+      const { limit, cursor, query } = params
       const requester = auth.credentials.did
       const db = ctx.db.db
       const { ref } = db.dynamic
       const feedService = ctx.services.feed(ctx.db)
 
-      const inner = ctx.db.db
+      let inner = ctx.db.db
         .selectFrom('feed_generator')
         .select([
           'uri',
@@ -27,6 +27,13 @@ export default function (server: Server, ctx: AppContext) {
             .select(countAll.as('count'))
             .as('likeCount'),
         ])
+
+      if (query) {
+        inner = inner.where(qb => qb
+          .where('feed_generator.displayName', 'ilike', `%${query}%`)
+          .orWhere('feed_generator.description', 'ilike', `%${query}%`)
+        )
+      }
 
       let builder = ctx.db.db.selectFrom(inner.as('feed_gens')).selectAll()
 

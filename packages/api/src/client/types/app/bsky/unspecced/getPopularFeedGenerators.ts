@@ -11,6 +11,7 @@ import * as AppBskyFeedDefs from '../feed/defs'
 export interface QueryParams {
   limit?: number
   cursor?: string
+  query?: string
 }
 
 export type InputSchema = undefined
