@@ -58,7 +58,7 @@ export default function (server: Server, ctx: AppContext) {
       let algoRes: AlgoResponse
       const timerSkele = new ServerTimer('skele').start()
 
-      if (ctx.canProxyFeedConstruction(req) && isProxyableFeed(params.feed)) {
+      if (ctx.cfg.bskyAppViewEndpoint && isProxyableFeed(params.feed)) {
         // this is a temporary solution to smart proxy bsky feeds to the appview
         const res = await ctx.appviewAgent.api.app.bsky.feed.getFeedSkeleton(
           params,
