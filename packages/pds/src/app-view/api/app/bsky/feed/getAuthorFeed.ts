@@ -7,9 +7,12 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
-    auth: ctx.accessVerifier,
+    auth: ctx.accessOrAdminVerifier,
     handler: async ({ req, params, auth }) => {
-      const requester = auth.credentials.did
+      const requester =
+        auth.credentials && 'did' in auth.credentials
+          ? auth.credentials.did
+          : ''
       if (ctx.canProxyRead(req)) {
         const res = await ctx.appviewAgent.api.app.bsky.feed.getAuthorFeed(
           params,
@@ -81,7 +84,14 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const feedItems: FeedRow[] = await feedItemsQb.execute()
-      const feed = await feedService.hydrateFeed(feedItems, requester)
+      const isRequesterAdmin = !!(
+        auth.credentials &&
+        'admin' in auth.credentials &&
+        (auth.credentials.admin || auth.credentials.moderator)
+      )
+      const feed = await feedService.hydrateFeed(feedItems, requester, {
+        includeSoftDeleted: isRequesterAdmin,
+      })
 
       return {
         encoding: 'application/json',

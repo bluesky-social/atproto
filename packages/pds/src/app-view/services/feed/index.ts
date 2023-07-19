@@ -24,6 +24,7 @@ import {
   PostViews,
   PostEmbedViews,
   RecordEmbedViewRecordMap,
+  FeedHydrationOptions,
 } from './types'
 import { LabelService, Labels } from '../label'
 import { ActorService } from '../actor'
@@ -216,11 +217,12 @@ export class FeedService {
   async getPostInfos(
     postUris: string[],
     requester: string,
+    options?: Pick<FeedHydrationOptions, 'includeSoftDeleted'>,
   ): Promise<PostInfoMap> {
     if (postUris.length < 1) return {}
     const db = this.db.db
     const { ref } = db.dynamic
-    const posts = await db
+    let postsQb = db
       .selectFrom('post')
       .where('post.uri', 'in', postUris)
       .leftJoin('post_agg', 'post_agg.uri', 'post.uri')
@@ -231,8 +233,16 @@ export class FeedService {
       )
       .innerJoin('repo_root', 'repo_root.did', 'post.creator')
       .innerJoin('record', 'record.uri', 'post.uri')
-      .where(notSoftDeletedClause(ref('repo_root'))) // Ensures post reply parent/roots get omitted from views when taken down
-      .where(notSoftDeletedClause(ref('record')))
+
+    if (!options?.includeSoftDeleted) {
+      postsQb = postsQb
+        .where(notSoftDeletedClause(ref('repo_root'))) // Ensures post reply parent/roots get omitted from views when taken down
+        .where(notSoftDeletedClause(ref('record')))
+    } else {
+      postsQb = postsQb.select('record.takedownId as takedownId')
+    }
+
+    const posts = await postsQb
       .select([
         'post.uri as uri',
         'post.cid as cid',
@@ -314,8 +324,7 @@ export class FeedService {
   async hydrateFeed(
     items: FeedRow[],
     requester: string,
-    // @TODO (deprecated) remove this once all clients support the blocked/not-found union on post views
-    usePostViewUnion?: boolean,
+    options?: FeedHydrationOptions,
   ): Promise<FeedViewPost[]> {
     const actorDids = new Set<string>()
     const postUris = new Set<string>()
@@ -334,23 +343,17 @@ export class FeedService {
         actorDids.add(new AtUri(item.replyRoot).hostname)
       }
     }
+
     const [actors, posts, labels] = await Promise.all([
       this.getActorInfos(Array.from(actorDids), requester, {
         skipLabels: true,
       }),
-      this.getPostInfos(Array.from(postUris), requester),
+      this.getPostInfos(Array.from(postUris), requester, options),
       this.services.label.getLabelsForSubjects([...postUris, ...actorDids]),
     ])
     const embeds = await this.embedsForPosts(posts, requester)
 
-    return this.views.formatFeed(
-      items,
-      actors,
-      posts,
-      embeds,
-      labels,
-      usePostViewUnion,
-    )
+    return this.views.formatFeed(items, actors, posts, embeds, labels, false)
   }
 
   async embedsForPosts(postInfos: PostInfoMap, requester: string, depth = 0) {

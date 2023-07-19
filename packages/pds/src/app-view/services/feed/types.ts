@@ -35,6 +35,7 @@ export type PostInfo = {
   creator: string
   recordBytes: Uint8Array
   indexedAt: string
+  takedownId?: number | null
   likeCount: number | null
   repostCount: number | null
   replyCount: number | null
@@ -79,6 +80,9 @@ export type FeedRow = {
   replyParent: string | null
   replyRoot: string | null
   sortAt: string
+}
+export type FeedHydrationOptions = {
+  includeSoftDeleted?: boolean
 }
 
 export type MaybePostView = PostView | NotFoundPost | BlockedPost
