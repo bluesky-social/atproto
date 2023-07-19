@@ -6297,6 +6297,9 @@ export const schemaDict = {
             cursor: {
               type: 'string',
             },
+            query: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -6327,7 +6330,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'A skeleton of a timeline',
+        description: 'A skeleton of a timeline - UNSPECCED & WILL GO AWAY SOON',
         parameters: {
           type: 'params',
           properties: {
