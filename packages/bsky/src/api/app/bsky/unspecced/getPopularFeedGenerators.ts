@@ -29,9 +29,10 @@ export default function (server: Server, ctx: AppContext) {
         ])
 
       if (query) {
-        inner = inner.where(qb => qb
-          .where('feed_generator.displayName', 'ilike', `%${query}%`)
-          .orWhere('feed_generator.description', 'ilike', `%${query}%`)
+        inner = inner.where((qb) =>
+          qb
+            .where('feed_generator.displayName', 'ilike', `%${query}%`)
+            .orWhere('feed_generator.description', 'ilike', `%${query}%`),
         )
       }
 
