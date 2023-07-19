@@ -149,9 +149,10 @@ export class AtpAgent {
   ): Promise<ComAtprotoServerGetSession.Response> {
     try {
       this.session = session
-      const res = await this.api.com.atproto.server.getSession()
+      let res = await this.api.com.atproto.server.getSession()
       if (!res.success && this.session.refreshJwt) {
         await this._refreshSession()
+        res = await this.api.com.atproto.server.getSession()
       }
       if (!res.success || res.data.did !== this.session.did) {
         throw new Error('Invalid session')
