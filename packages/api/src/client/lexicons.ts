@@ -640,6 +640,11 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
+              note: {
+                type: 'string',
+                description:
+                  'Additionally add a note describing why the invites were disabled',
+              },
             },
           },
         },
@@ -693,6 +698,11 @@ export const schemaDict = {
               account: {
                 type: 'string',
                 format: 'did',
+              },
+              note: {
+                type: 'string',
+                description:
+                  'Additionally add a note describing why the invites were disabled',
               },
             },
           },

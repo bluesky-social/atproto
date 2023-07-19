@@ -11,7 +11,11 @@
           "type": "object",
           "required": ["account"],
           "properties": {
-            "account": {"type": "string", "format": "did"}
+            "account": { "type": "string", "format": "did" },
+            "note": {
+              "type": "string",
+              "description": "Additionally add a note describing why the invites were disabled"
+            }
           }
         }
       }
