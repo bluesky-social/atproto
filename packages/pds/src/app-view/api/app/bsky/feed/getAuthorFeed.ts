@@ -1,22 +1,27 @@
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
 import { FeedKeyset } from '../util/feed'
 import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
-    auth: ctx.accessOrAdminVerifier,
+    auth: ctx.accessOrRoleVerifier,
     handler: async ({ req, params, auth }) => {
-      const requester =
-        auth.credentials && 'did' in auth.credentials
-          ? auth.credentials.did
-          : ''
+      const requester = 'did' in auth.credentials ? auth.credentials.did : null
+      const isRoleBasedAuth = !('did' in auth.credentials)
       if (ctx.canProxyRead(req)) {
         const res = await ctx.appviewAgent.api.app.bsky.feed.getAuthorFeed(
           params,
-          await ctx.serviceAuthHeaders(requester),
+          requester
+            ? await ctx.serviceAuthHeaders(requester)
+            : {
+                // @TODO use authPassthru() once it lands
+                headers: req.headers.authorization
+                  ? { authorization: req.headers.authorization }
+                  : {},
+              },
         )
         return {
           encoding: 'application/json',
@@ -29,19 +34,21 @@ export default function (server: Server, ctx: AppContext) {
       const { ref } = db.dynamic
 
       // first verify there is not a block between requester & subject
-      const blocks = await ctx.services.appView
-        .graph(ctx.db)
-        .getBlocks(requester, actor)
-      if (blocks.blocking) {
-        throw new InvalidRequestError(
-          `Requester has blocked actor: ${actor}`,
-          'BlockedActor',
-        )
-      } else if (blocks.blockedBy) {
-        throw new InvalidRequestError(
-          `Requester is blocked by actor: $${actor}`,
-          'BlockedByActor',
-        )
+      if (requester) {
+        const blocks = await ctx.services.appView
+          .graph(ctx.db)
+          .getBlocks(requester, actor)
+        if (blocks.blocking) {
+          throw new InvalidRequestError(
+            `Requester has blocked actor: ${actor}`,
+            'BlockedActor',
+          )
+        } else if (blocks.blockedBy) {
+          throw new InvalidRequestError(
+            `Requester is blocked by actor: $${actor}`,
+            'BlockedByActor',
+          )
+        }
       }
 
       const accountService = ctx.services.account(ctx.db)
@@ -60,17 +67,23 @@ export default function (server: Server, ctx: AppContext) {
       let feedItemsQb = feedService
         .selectFeedItemQb()
         .where('originatorDid', '=', actorDidQb)
-        .where((qb) =>
-          // Hide reposts of muted content
-          qb
-            .where('type', '=', 'post')
-            .orWhere((qb) =>
-              accountService.whereNotMuted(qb, requester, [
-                ref('post.creator'),
-              ]),
-            ),
-        )
-        .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
+
+      if (requester) {
+        feedItemsQb = feedItemsQb
+          .where((qb) =>
+            // Hide reposts of muted content
+            qb
+              .where('type', '=', 'post')
+              .orWhere((qb) =>
+                accountService.whereNotMuted(qb, requester, [
+                  ref('post.creator'),
+                ]),
+              ),
+          )
+          .whereNotExists(
+            graphService.blockQb(requester, [ref('post.creator')]),
+          )
+      }
 
       const keyset = new FeedKeyset(
         ref('feed_item.sortAt'),
@@ -84,13 +97,8 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const feedItems: FeedRow[] = await feedItemsQb.execute()
-      const isRequesterAdmin = !!(
-        auth.credentials &&
-        'admin' in auth.credentials &&
-        (auth.credentials.admin || auth.credentials.moderator)
-      )
       const feed = await feedService.hydrateFeed(feedItems, requester, {
-        includeSoftDeleted: isRequesterAdmin,
+        includeSoftDeleted: isRoleBasedAuth,
       })
 
       return {
