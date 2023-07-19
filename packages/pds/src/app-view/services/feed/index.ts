@@ -349,6 +349,7 @@ export class FeedService {
     const [actors, posts, labels] = await Promise.all([
       this.getActorInfos(Array.from(actorDids), requester, {
         skipLabels: true,
+        includeSoftDeleted: options?.includeSoftDeleted,
       }),
       this.getPostInfos(Array.from(postUris), requester, options),
       this.services.label.getLabelsForSubjects([...postUris, ...actorDids]),
