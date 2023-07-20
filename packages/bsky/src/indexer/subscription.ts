@@ -10,6 +10,7 @@ import {
   def,
   Commit,
 } from '@atproto/repo'
+import { ValidationError } from '@atproto/lexicon'
 import * as message from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import { Leader } from '../db/leader'
 import { IndexingService } from '../services/indexing'
@@ -20,6 +21,8 @@ import {
   LatestQueue,
   PartitionedQueue,
   PerfectMap,
+  ProcessableMessage,
+  jitter,
 } from '../subscription/util'
 import IndexerContext from './context'
 
@@ -61,12 +64,12 @@ export class IndexerSubscription {
         for (const [seqBuf, values] of messages) {
           if (done()) break
           const seq = strToInt(seqBuf.toString())
+          const envelope = getEnvelope(values)
           partition.cursor = seq
           const item = partition.consecutive.push(seq)
-          // @TODO use repo rather than partition name
-          this.repoQueue.add(partition.name, () =>
-            this.handleMessage(partition, item, values),
-          )
+          this.repoQueue.add(envelope.repo, async () => {
+            await this.handleMessage(partition, item, envelope)
+          })
         }
       }
       await this.repoQueue.main.onEmpty() // backpressure
@@ -120,39 +123,10 @@ export class IndexerSubscription {
   private async handleMessage(
     partition: Partition,
     item: ConsecutiveItem<number>,
-    msg: Buffer[],
+    envelope: Envelope,
   ) {
     try {
-      // @TODO
-      console.log('processing', partition.name, {
-        [msg[0].toString()]: msg[1].toString(),
-        [msg[2].toString()]: cborDecode(msg[3]),
-      })
-      await this.ctx.redis.xdel(partition.name, item.value) // @TODO could move to consumer group w/ xack
-    } catch (err) {
-      // We log messages we can't process and move on:
-      // otherwise the cursor would get stuck on a poison message.
-      subLogger.error({ err }, 'repo subscription message processing error') // @TODO add back { message: loggableMessage(msg) }
-    } finally {
-      const latest = item.complete().at(-1)
-      if (latest) {
-        partition.cursorQueue
-          .add(async () => {
-            await this.ctx.redis.set(cursorKey(partition.name), latest)
-          })
-          .catch((err) => {
-            subLogger.error({ err }, 'repo subscription cursor error')
-          })
-      }
-    }
-  }
-
-  /*
-  private async handleMessage(
-    item: ConsecutiveItem<number>,
-    msg: ProcessableMessage,
-  ) {
-    try {
+      const msg = envelope.event
       if (message.isCommit(msg)) {
         await this.handleCommit(msg)
       } else if (message.isHandle(msg)) {
@@ -165,22 +139,18 @@ export class IndexerSubscription {
         const exhaustiveCheck: never = msg
         throw new Error(`Unhandled message type: ${exhaustiveCheck['$type']}`)
       }
+      await this.ctx.redis.xdel(partition.name, item.value) // @NOTE failed messages will not end-up deleted
     } catch (err) {
-      // We log messages we can't process and move on. Barring a
-      // durable queue this is the best we can do for now: otherwise
-      // the cursor would get stuck on a poison message.
-      subLogger.error(
-        {
-          err,
-          message: loggableMessage(msg),
-        },
-        'repo subscription message processing error',
-      )
+      // We log messages we can't process and move on:
+      // otherwise the cursor would get stuck on a poison message.
+      subLogger.error({ err }, 'repo subscription message processing error') // @TODO add back { message: loggableMessage(msg) }
     } finally {
       const latest = item.complete().at(-1)
       if (latest) {
-        this.cursorQueue
-          .add(() => this.handleCursor(latest))
+        partition.cursorQueue
+          .add(async () => {
+            await this.ctx.redis.set(cursorKey(partition.name), latest)
+          })
           .catch((err) => {
             subLogger.error({ err }, 'repo subscription cursor error')
           })
@@ -260,25 +230,7 @@ export class IndexerSubscription {
   private async handleTombstone(msg: message.Tombstone) {
     await this.indexingSvc.tombstoneActor(msg.did)
   }
-
-  private async handleCursor(seq: number) {}
-
-  async getState(partition: string): Promise<State> {
-    return { cursor }
-  }
-
-  async resetState(): Promise<void> {}
-
-  private async setState(partition: string, state: State): Promise<void> {}
-  */
 }
-
-// These are the message types that have a sequence number and a repo
-type ProcessableMessage =
-  | message.Commit
-  | message.Handle
-  | message.Migrate
-  | message.Tombstone
 
 async function getOps(
   msg: message.Commit,
@@ -321,11 +273,30 @@ async function getOps(
   return { root, rootCid: car.root, ops }
 }
 
-function jitter(maxMs) {
-  return Math.round((Math.random() - 0.5) * maxMs * 2)
+function getEnvelope(raw: Buffer[]): Envelope {
+  const [repoKey, repoVal, eventKey, eventVal] = raw
+  assert(repoKey.toString() === 'repo')
+  assert(eventKey.toString() === 'event')
+  return {
+    repo: repoVal.toString(),
+    event: cborDecode(eventVal) as ProcessableMessage,
+  }
 }
 
-type State = { cursor: number }
+type Envelope = {
+  repo: string
+  event: ProcessableMessage
+}
+
+class Partition {
+  consecutive = new ConsecutiveList<number>()
+  cursorQueue = new LatestQueue()
+  constructor(public name: string, public cursor: number) {}
+}
+
+function cursorKey(pname: string) {
+  return `${pname}:cursor`
+}
 
 type PreparedCreate = {
   action: WriteOpAction.Create
@@ -368,16 +339,6 @@ function isRejected(
   result: PromiseSettledResult<unknown>,
 ): result is PromiseRejectedResult {
   return result.status === 'rejected'
-}
-
-class Partition {
-  consecutive = new ConsecutiveList<number>()
-  cursorQueue = new LatestQueue()
-  constructor(public name: string, public cursor: number) {}
-}
-
-function cursorKey(pname: string) {
-  return `${pname}:cursor`
 }
 
 function strToInt(str: string) {

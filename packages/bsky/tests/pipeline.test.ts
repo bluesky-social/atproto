@@ -8,6 +8,7 @@ import { IndexerConfig } from '../src/indexer/config'
 import BskyIngester from '../src/ingester'
 import BskyIndexer from '../src/indexer'
 import { wait } from '@atproto/common'
+import { countAll } from '../src/db/util'
 
 describe('server', () => {
   let network: TestNetworkNoAppView
@@ -25,6 +26,26 @@ describe('server', () => {
   })
 
   beforeAll(async () => {
+    // indexer
+    const indexerCfg = IndexerConfig.readEnv({
+      redisUrl: process.env.REDIS_URL,
+      dbPostgresUrl: process.env.DB_POSTGRES_URL,
+      dbPostgresSchema: 'appview_bsky_pipeline',
+      didPlcUrl: network.plc.url,
+      indexerPartitionNames: ['repo:0'],
+      indexerSubLockId: uniqueLockId(),
+    })
+    const indexerDb = Database.postgres({
+      url: indexerCfg.dbPostgresUrl,
+      schema: indexerCfg.dbPostgresSchema,
+    })
+    const indexerRedis = new Redis(indexerCfg.redisUrl)
+    indexer = BskyIndexer.create({
+      cfg: indexerCfg,
+      db: indexerDb,
+      redis: indexerRedis,
+    })
+    // ingester
     const ingesterCfg = IngesterConfig.readEnv({
       redisUrl: process.env.REDIS_URL,
       dbPostgresUrl: process.env.DB_POSTGRES_URL,
@@ -32,26 +53,18 @@ describe('server', () => {
       repoProvider: network.pds.url.replace('http://', 'ws://'),
       repoSubLockId: uniqueLockId(),
     })
-    const indexerCfg = IndexerConfig.readEnv({
-      redisUrl: process.env.REDIS_URL,
-      dbPostgresUrl: process.env.DB_POSTGRES_URL,
-      dbPostgresSchema: 'appview_bsky_pipeline',
-      indexerSubLockId: uniqueLockId(),
-      indexerPartitionNames: ['repo:0'],
-    })
-    const db = Database.postgres({
+    const ingesterDb = Database.postgres({
       url: ingesterCfg.dbPostgresUrl,
       schema: ingesterCfg.dbPostgresSchema,
     })
-    const redis = new Redis(ingesterCfg.redisUrl)
-    indexer = BskyIndexer.create({ cfg: indexerCfg, db, redis })
-    ingester = BskyIngester.create({ cfg: ingesterCfg, db, redis })
-    console.log(
-      'migrating',
-      ingesterCfg.dbPostgresUrl,
-      ingesterCfg.dbPostgresSchema,
-    )
-    await db.migrateToLatestOrThrow()
+    const ingesterRedis = new Redis(ingesterCfg.redisUrl)
+    ingester = BskyIngester.create({
+      cfg: ingesterCfg,
+      db: ingesterDb,
+      redis: ingesterRedis,
+    })
+    // startup
+    await indexerDb.migrateToLatestOrThrow()
     await indexer.start()
     await ingester.start()
   })
@@ -62,12 +75,15 @@ describe('server', () => {
 
   afterAll(async () => {
     await ingester.destroy()
-    await indexer.destroy()
+    await indexer.destroy() // @TODO times out when destroying repoQueue
   })
 
-  it('test', async () => {
-    while (Math.random() > 0) {
-      await wait(1000)
-    }
+  it('basic test.', async () => {
+    await wait(5000)
+    const actors = await indexer.ctx.db.db
+      .selectFrom('actor')
+      .select(countAll.as('count'))
+      .executeTakeFirstOrThrow()
+    expect(actors.count).toEqual(4)
   })
 })

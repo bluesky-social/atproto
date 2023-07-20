@@ -104,6 +104,13 @@ export class PerfectMap<K, V> extends Map<K, V> {
   }
 }
 
+// These are the message types that have a sequence number and a repo
+export type ProcessableMessage =
+  | message.Commit
+  | message.Handle
+  | message.Migrate
+  | message.Tombstone
+
 export function loggableMessage(msg: RepoMessage) {
   if (message.isCommit(msg)) {
     const { seq, rebase, prev, repo, commit, time, tooBig, blobs } = msg
@@ -128,4 +135,8 @@ export function loggableMessage(msg: RepoMessage) {
     return msg
   }
   return msg
+}
+
+export function jitter(maxMs) {
+  return Math.round((Math.random() - 0.5) * maxMs * 2)
 }

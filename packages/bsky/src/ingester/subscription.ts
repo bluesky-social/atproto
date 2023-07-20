@@ -5,7 +5,12 @@ import * as message from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import { ids, lexicons } from '../lexicon/lexicons'
 import { Leader } from '../db/leader'
 import { subLogger } from '../logger'
-import { LatestQueue, loggableMessage } from '../subscription/util'
+import {
+  LatestQueue,
+  ProcessableMessage,
+  loggableMessage,
+  jitter,
+} from '../subscription/util'
 import { IngesterContext } from './context'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
@@ -35,7 +40,7 @@ export class IngesterSubscription {
         )
         continue
       }
-      const { seq, repo } = details
+      const { seq, repo, message: processableMessage } = details
       this.lastSeq = seq
       await this.ctx.redis.xadd(
         getPartition(repo),
@@ -43,10 +48,10 @@ export class IngesterSubscription {
         'repo',
         repo,
         'event',
-        ui8ToBuffer(cborEncode(msg)),
+        ui8ToBuffer(cborEncode(processableMessage)),
       )
       this.cursorQueue.add(() => this.setState({ cursor: seq }))
-      // @TODO backpressure
+      // @TODO backpressure?
     }
   }
 
@@ -129,17 +134,6 @@ export class IngesterSubscription {
       },
     })
   }
-}
-
-// These are the message types that have a sequence number and a repo
-type ProcessableMessage =
-  | message.Commit
-  | message.Handle
-  | message.Migrate
-  | message.Tombstone
-
-function jitter(maxMs) {
-  return Math.round((Math.random() - 0.5) * maxMs * 2)
 }
 
 function ifString(val: unknown): string | undefined {

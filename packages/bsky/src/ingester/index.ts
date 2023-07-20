@@ -60,6 +60,7 @@ export class BskyIngester {
   async destroy(): Promise<void> {
     await this.sub.destroy()
     clearInterval(this.subStatsInterval)
+    await this.ctx.redis.quit()
     await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
   }
