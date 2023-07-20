@@ -139,7 +139,6 @@ export class IndexerSubscription {
         const exhaustiveCheck: never = msg
         throw new Error(`Unhandled message type: ${exhaustiveCheck['$type']}`)
       }
-      await this.ctx.redis.xdel(partition.name, item.value) // @NOTE failed messages will not end-up deleted
     } catch (err) {
       // We log messages we can't process and move on:
       // otherwise the cursor would get stuck on a poison message.
@@ -149,7 +148,11 @@ export class IndexerSubscription {
       if (latest) {
         partition.cursorQueue
           .add(async () => {
-            await this.ctx.redis.set(cursorKey(partition.name), latest)
+            await this.ctx.redis
+              .multi() // transactional
+              .set(cursorKey(partition.name), latest)
+              .xtrim(partition.name, 'MINID', latest)
+              .exec()
           })
           .catch((err) => {
             subLogger.error({ err }, 'repo subscription cursor error')
