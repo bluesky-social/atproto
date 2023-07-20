@@ -14,8 +14,6 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.db
       const { ref } = db.dynamic
 
-      const graphService = ctx.services.graph(ctx.db)
-
       const keyset = new FeedKeyset(
         ref('feed_item.sortAt'),
         ref('feed_item.cid'),
@@ -31,19 +29,6 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('feed_item')
         .where('originatorDid', 'in', followingIdsSubquery)
         .innerJoin('post', 'post.uri', 'feed_item.postUri')
-        .where((qb) =>
-          // Hide posts and reposts of or by muted actors
-          graphService.whereNotMuted(qb, viewer, [
-            ref('post.creator'),
-            ref('originatorDid'),
-          ]),
-        )
-        .whereNotExists(
-          graphService.blockQb(viewer, [
-            ref('post.creator'),
-            ref('originatorDid'),
-          ]),
-        )
         .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom))
         .selectAll('feed_item')
         .select([
@@ -63,19 +48,6 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('feed_item')
         .innerJoin('post', 'post.uri', 'feed_item.postUri')
         .where('feed_item.originatorDid', '=', viewer)
-        .where((qb) =>
-          // Hide posts and reposts of or by muted actors
-          graphService.whereNotMuted(qb, viewer, [
-            ref('post.creator'),
-            ref('originatorDid'),
-          ]),
-        )
-        .whereNotExists(
-          graphService.blockQb(viewer, [
-            ref('post.creator'),
-            ref('originatorDid'),
-          ]),
-        )
         .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom))
         .selectAll('feed_item')
         .select([
