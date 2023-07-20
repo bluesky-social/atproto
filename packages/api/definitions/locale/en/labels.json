@@ -281,15 +281,15 @@
   },
   "icon-intolerant": {
     "settings": {
-      "name": "Intolerant Imagery",
+      "name": "Intolerant Iconography",
       "description": "Visual imagery associated with a hate group, such as the KKK or Nazi, in any context (supportive, critical, documentary, etc)."
     },
     "account": {
-      "name": "Intolerant Imagery",
+      "name": "Intolerant Iconography",
       "description": "This account includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes."
     },
     "content": {
-      "name": "Intolerant Imagery",
+      "name": "Intolerant Iconography",
       "description": "This content includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes."
     }
   },

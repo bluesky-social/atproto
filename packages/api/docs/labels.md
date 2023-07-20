@@ -467,7 +467,6 @@ The kind of UI behavior used when a warning must be applied.
 <table>
 <tr>
 <th>ID</th>
-<th>Group</th>
 <th>Description</th>
 </tr>
 <tr>
@@ -633,9 +632,9 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
 <td>icon-intolerant</td>
 <td>
-<code>general</code><br><strong>Intolerant Imagery</strong><br>Visual imagery associated with a hate group, such as the KKK or Nazi, in any context (supportive, critical, documentary, etc).<br><br>
-<code>on an account</code><br><strong>Intolerant Imagery</strong><br>This account includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes.<br><br>
-<code>on content</code><br><strong>Intolerant Imagery</strong><br>This content includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes.<br><br>
+<code>general</code><br><strong>Intolerant Iconography</strong><br>Visual imagery associated with a hate group, such as the KKK or Nazi, in any context (supportive, critical, documentary, etc).<br><br>
+<code>on an account</code><br><strong>Intolerant Iconography</strong><br>This account includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes.<br><br>
+<code>on content</code><br><strong>Intolerant Iconography</strong><br>This content includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes.<br><br>
 </td>
 </tr>
 <tr>

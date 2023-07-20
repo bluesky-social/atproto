@@ -103,7 +103,6 @@ function doc() {
   <table>
     <tr>
       <th>ID</th>
-      <th>Group</th>
       <th>Description</th>
     </tr>
     ${labelsDesc()}
