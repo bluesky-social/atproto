@@ -22,11 +22,15 @@ export default function (server: Server, ctx: AppContext) {
       )
       const sortFrom = keyset.unpack(cursor)?.primary
 
-      let followQb = ctx.db.db
-        .selectFrom('feed_item')
-        .innerJoin('follow', 'follow.subjectDid', 'feed_item.originatorDid')
-        .innerJoin('post', 'post.uri', 'feed_item.postUri')
+      const followingIdsSubquery = db
+        .selectFrom('follow')
+        .select('follow.subjectDid')
         .where('follow.creator', '=', viewer)
+
+      let followQb = db
+        .selectFrom('feed_item')
+        .where('originatorDid', 'in', followingIdsSubquery)
+        .innerJoin('post', 'post.uri', 'feed_item.postUri')
         .where((qb) =>
           // Hide posts and reposts of or by muted actors
           graphService.whereNotMuted(qb, viewer, [
