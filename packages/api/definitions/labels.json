@@ -28,12 +28,6 @@
     "configurable": false,
     "labels": [
       {
-        "id": "csam",
-        "preferences": ["hide"],
-        "flags": ["no-override"],
-        "onwarn": "blur"
-      },
-      {
         "id": "nudity-nonconsensual",
         "preferences": ["hide"],
         "flags": ["no-override"],

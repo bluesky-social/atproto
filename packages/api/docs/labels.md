@@ -72,14 +72,6 @@ The kind of UI behavior used when a warning must be applied.
 <td>blur</td>
 </tr>
 <tr>
-<td>csam</td>
-<td>legal</td>
-<td>hide</td>
-<td>❌</td>
-<td>no-override</td>
-<td>blur</td>
-</tr>
-<tr>
 <td>nudity-nonconsensual</td>
 <td>legal</td>
 <td>hide</td>
@@ -491,14 +483,6 @@ The kind of UI behavior used when a warning must be applied.
 <code>general</code><br><strong>Moderator Warn</strong><br>Moderator has chosen to set a general warning on the content.<br><br>
 <code>on an account</code><br><strong>Content Warning</strong><br>This account has received a general warning from moderators.<br><br>
 <code>on content</code><br><strong>Content Warning</strong><br>This content has received a general warning from moderators.<br><br>
-</td>
-</tr>
-<tr>
-<td>csam</td>
-<td>
-<code>general</code><br><strong>Child Sexual Abuse Material</strong><br>Media illegally depicting underage people in sexual settings.<br><br>
-<code>on an account</code><br><strong>CSAM Review</strong><br>This account has triggered the CSAM Review systems. This may be in error, so please do not jump to conclusions while the account is under review. This warning will be lifted if the review was triggered incorrectly. Otherwise, the account will be removed from the network.<br><br>
-<code>on content</code><br><strong>CSAM Review</strong><br>This account has triggered the CSAM Review systems. This may be in error, so please do not jump to conclusions while the account is under review. This warning will be lifted if the review was triggered incorrectly. Otherwise, the account will be removed from the network.<br><br>
 </td>
 </tr>
 <tr>

@@ -41,20 +41,6 @@
       "description": "This content has received a general warning from moderators."
     }
   },
-  "csam": {
-    "settings": {
-      "name": "Child Sexual Abuse Material",
-      "description": "Media illegally depicting underage people in sexual settings."
-    },
-    "account": {
-      "name": "CSAM Review",
-      "description": "This account has triggered the CSAM Review systems. This may be in error, so please do not jump to conclusions while the account is under review. This warning will be lifted if the review was triggered incorrectly. Otherwise, the account will be removed from the network."
-    },
-    "content": {
-      "name": "CSAM Review",
-      "description": "This account has triggered the CSAM Review systems. This may be in error, so please do not jump to conclusions while the account is under review. This warning will be lifted if the review was triggered incorrectly. Otherwise, the account will be removed from the network."
-    }
-  },
   "nudity-nonconsensual": {
     "settings": {
       "name": "Nonconsensual Nudity",
