@@ -44,7 +44,7 @@ export class IndexerSubscription {
   async processEvents(opts: { signal: AbortSignal }) {
     const done = () => this.destroyed || opts.signal.aborted
     while (!done()) {
-      const results = await this.ctx.redis.xread(
+      const results = await this.ctx.redis.xreadBuffer(
         'COUNT',
         50, // events per stream
         'BLOCK',
@@ -57,10 +57,10 @@ export class IndexerSubscription {
       )
       for (const [name, messages] of results ?? []) {
         if (done()) break
-        const partition = this.partitions.get(name)
-        for (const [seqStr, values] of messages) {
+        const partition = this.partitions.get(name.toString())
+        for (const [seqBuf, values] of messages) {
           if (done()) break
-          const seq = strToInt(seqStr)
+          const seq = strToInt(seqBuf.toString())
           partition.cursor = seq
           const item = partition.consecutive.push(seq)
           // @TODO use repo rather than partition name
@@ -120,11 +120,14 @@ export class IndexerSubscription {
   private async handleMessage(
     partition: Partition,
     item: ConsecutiveItem<number>,
-    msg: string[],
+    msg: Buffer[],
   ) {
     try {
       // @TODO
-      console.log('processing', partition.name, msg)
+      console.log('processing', partition.name, {
+        [msg[0].toString()]: msg[1].toString(),
+        [msg[2].toString()]: cborDecode(msg[3]),
+      })
       await this.ctx.redis.xdel(partition.name, item.value) // @TODO could move to consumer group w/ xack
     } catch (err) {
       // We log messages we can't process and move on:

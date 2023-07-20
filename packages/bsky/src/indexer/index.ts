@@ -10,7 +10,7 @@ import { IndexerSubscription } from './subscription'
 import { Redis } from 'ioredis'
 import { HiveLabeler, KeywordLabeler, Labeler } from '../labeler'
 
-export class BskyIngester {
+export class BskyIndexer {
   public ctx: AppContext
   public sub: IndexerSubscription
   private dbStatsInterval: NodeJS.Timer
@@ -25,7 +25,7 @@ export class BskyIngester {
     db: Database
     redis: Redis
     cfg: IndexerConfig
-  }): BskyIngester {
+  }): BskyIndexer {
     const { db, redis, cfg } = opts
     const didCache = new DidSqlCache(
       db,
@@ -58,7 +58,7 @@ export class BskyIngester {
       cfg.indexerSubLockId,
       cfg.indexerConcurrency,
     )
-    return new BskyIngester({ ctx, sub })
+    return new BskyIndexer({ ctx, sub })
   }
 
   async start() {
@@ -90,4 +90,4 @@ export class BskyIngester {
   }
 }
 
-export default BskyIngester
+export default BskyIndexer

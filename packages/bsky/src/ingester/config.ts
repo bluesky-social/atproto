@@ -16,7 +16,8 @@ export class IngesterConfig {
     const version = process.env.BSKY_VERSION || '0.0.0'
     const dbPostgresUrl =
       overrides?.dbPostgresUrl || process.env.DB_POSTGRES_URL
-    const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
+    const dbPostgresSchema =
+      overrides?.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
     const redisUrl = overrides?.redisUrl || process.env.REDIS_URL
     const repoProvider = overrides?.repoProvider || process.env.REPO_PROVIDER // E.g. ws://abc.com:4000
     const repoSubLockId = overrides?.repoSubLockId
@@ -43,6 +44,10 @@ export class IngesterConfig {
 
   get dbPostgresSchema() {
     return this.cfg.dbPostgresSchema
+  }
+
+  get redisUrl() {
+    return this.cfg.redisUrl
   }
 
   get repoProvider() {

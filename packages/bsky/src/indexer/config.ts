@@ -24,7 +24,8 @@ export class IndexerConfig {
     const version = process.env.BSKY_VERSION || '0.0.0'
     const dbPostgresUrl =
       overrides?.dbPostgresUrl || process.env.DB_POSTGRES_URL
-    const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
+    const dbPostgresSchema =
+      overrides?.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
     const redisUrl = overrides?.redisUrl || process.env.REDIS_URL
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
     const didCacheStaleTTL = parseIntWithFallback(
@@ -37,14 +38,17 @@ export class IndexerConfig {
     )
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
-    const indexerPartitionNames = process.env.INDEXER_PARTITION_NAMES
-      ? process.env.INDEXER_PARTITION_NAMES.split(',')
-      : []
+    const indexerPartitionNames =
+      overrides?.indexerPartitionNames ||
+      (process.env.INDEXER_PARTITION_NAMES
+        ? process.env.INDEXER_PARTITION_NAMES.split(',')
+        : [])
     const indexerConcurrency = maybeParseInt(process.env.INDEXER_CONCURRENCY)
     const indexerSubLockId = maybeParseInt(process.env.INDEXER_SUB_LOCK_ID)
     const labelerKeywords = {}
     assert(dbPostgresUrl)
     assert(redisUrl)
+    assert(indexerPartitionNames.length > 0)
     return new IndexerConfig({
       version,
       dbPostgresUrl,
