@@ -9,20 +9,18 @@ import { IdResolver } from '@atproto/identity'
 import API, { health, blobResolver } from './api'
 import Database from './db'
 import * as error from './error'
-import { dbLogger, loggerMiddleware, subLogger } from './logger'
+import { dbLogger, loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
 import { createServer } from './lexicon'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
 import AppContext from './context'
-import { RepoSubscription } from './subscription/repo'
 import DidSqlCache from './did-cache'
 import {
   ImageInvalidator,
   ImageProcessingServerInvalidator,
 } from './image/invalidator'
-import { HiveLabeler, KeywordLabeler, Labeler } from './labeler'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
 
@@ -37,20 +35,13 @@ export { makeAlgos } from './feed-gen'
 export class BskyAppView {
   public ctx: AppContext
   public app: express.Application
-  public sub?: RepoSubscription
   public server?: http.Server
   private terminator?: HttpTerminator
   private dbStatsInterval: NodeJS.Timer
-  private subStatsInterval: NodeJS.Timer
 
-  constructor(opts: {
-    ctx: AppContext
-    app: express.Application
-    sub?: RepoSubscription
-  }) {
+  constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
     this.app = opts.app
-    this.sub = opts.sub
   }
 
   static create(opts: {
@@ -100,31 +91,7 @@ export class BskyAppView {
 
     const backgroundQueue = new BackgroundQueue(db)
 
-    // @TODO background labeling tasks
-    let labeler: Labeler
-    if (config.hiveApiKey) {
-      labeler = new HiveLabeler(config.hiveApiKey, {
-        db,
-        cfg: config,
-        idResolver,
-        backgroundQueue,
-      })
-    } else {
-      labeler = new KeywordLabeler({
-        db,
-        cfg: config,
-        idResolver,
-        backgroundQueue,
-      })
-    }
-
-    const services = createServices({
-      imgUriBuilder,
-      imgInvalidator,
-      idResolver,
-      labeler,
-      backgroundQueue,
-    })
+    const services = createServices({ imgUriBuilder, imgInvalidator })
 
     const ctx = new AppContext({
       db,
@@ -133,7 +100,6 @@ export class BskyAppView {
       imgUriBuilder,
       idResolver,
       didCache,
-      labeler,
       backgroundQueue,
       algos,
     })
@@ -157,16 +123,7 @@ export class BskyAppView {
     app.use(server.xrpc.router)
     app.use(error.handler)
 
-    const sub = config.repoProvider
-      ? new RepoSubscription(
-          ctx,
-          config.repoProvider,
-          config.repoSubLockId,
-          config.indexerConcurrency,
-        )
-      : undefined
-
-    return new BskyAppView({ ctx, app, sub })
+    return new BskyAppView({ ctx, app })
   }
 
   async start(): Promise<http.Server> {
@@ -189,19 +146,6 @@ export class BskyAppView {
         'background queue stats',
       )
     }, 10000)
-    if (this.sub) {
-      this.subStatsInterval = setInterval(() => {
-        subLogger.info(
-          {
-            seq: this.sub?.lastSeq,
-            cursor: this.sub?.lastCursor,
-            runningCount: this.sub?.repoQueue.main.pending,
-            waitingCount: this.sub?.repoQueue.main.size,
-          },
-          'repo subscription stats',
-        )
-      }, 500)
-    }
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
@@ -209,14 +153,11 @@ export class BskyAppView {
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.cfg.assignPort(port)
-    this.sub?.run() // Don't await, backgrounded
     return server
   }
 
   async destroy(): Promise<void> {
     await this.ctx.didCache.destroy()
-    await this.sub?.destroy()
-    clearInterval(this.subStatsInterval)
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()
