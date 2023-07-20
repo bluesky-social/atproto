@@ -44,17 +44,15 @@ export class BskyIngester {
         'db pool stats',
       )
     }, 10000)
-    if (this.sub) {
-      this.subStatsInterval = setInterval(() => {
-        subLogger.info(
-          {
-            seq: this.sub?.lastSeq,
-            cursor: this.sub?.lastCursor,
-          },
-          'ingester subscription stats',
-        )
-      }, 500)
-    }
+    this.subStatsInterval = setInterval(() => {
+      subLogger.info(
+        {
+          seq: this.sub?.lastSeq,
+          cursor: this.sub?.lastCursor,
+        },
+        'ingester subscription stats',
+      )
+    }, 500)
     this.sub.run()
     return this
   }

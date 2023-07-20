@@ -69,7 +69,7 @@ export class IndexerSubscription {
           )
         }
       }
-      // await this.repoQueue.main.onEmpty() // backpressure
+      await this.repoQueue.main.onEmpty() // backpressure
     }
   }
 
@@ -125,6 +125,7 @@ export class IndexerSubscription {
     try {
       // @TODO
       console.log('processing', partition.name, msg)
+      await this.ctx.redis.xdel(partition.name, item.value) // @TODO could move to consumer group w/ xack
     } catch (err) {
       // We log messages we can't process and move on:
       // otherwise the cursor would get stuck on a poison message.
