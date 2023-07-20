@@ -13,7 +13,7 @@ export interface IndexerConfigValues {
   hiveApiKey?: string
   labelerKeywords: Record<string, string>
   indexerConcurrency?: number
-  indexerPartitionNames: string[]
+  indexerPartitionIds: number[]
   indexerSubLockId?: number
 }
 
@@ -38,17 +38,19 @@ export class IndexerConfig {
     )
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
-    const indexerPartitionNames =
-      overrides?.indexerPartitionNames ||
-      (process.env.INDEXER_PARTITION_NAMES
-        ? process.env.INDEXER_PARTITION_NAMES.split(',')
+    const indexerPartitionIds =
+      overrides?.indexerPartitionIds ||
+      (process.env.INDEXER_PARTITION_IDS
+        ? process.env.INDEXER_PARTITION_IDS.split(',').map((n) =>
+            parseInt(n, 10),
+          )
         : [])
     const indexerConcurrency = maybeParseInt(process.env.INDEXER_CONCURRENCY)
     const indexerSubLockId = maybeParseInt(process.env.INDEXER_SUB_LOCK_ID)
     const labelerKeywords = {}
     assert(dbPostgresUrl)
     assert(redisUrl)
-    assert(indexerPartitionNames.length > 0)
+    assert(indexerPartitionIds.length > 0)
     return new IndexerConfig({
       version,
       dbPostgresUrl,
@@ -59,7 +61,7 @@ export class IndexerConfig {
       didCacheMaxTTL,
       labelerDid,
       hiveApiKey,
-      indexerPartitionNames,
+      indexerPartitionIds,
       indexerConcurrency,
       indexerSubLockId,
       labelerKeywords,
@@ -107,8 +109,8 @@ export class IndexerConfig {
     return this.cfg.indexerConcurrency
   }
 
-  get indexerPartitionNames() {
-    return this.cfg.indexerPartitionNames
+  get indexerPartitionIds() {
+    return this.cfg.indexerPartitionIds
   }
 
   get indexerSubLockId() {

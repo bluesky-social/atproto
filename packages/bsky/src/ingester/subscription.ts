@@ -1,4 +1,5 @@
 import { cborEncode, wait } from '@atproto/common'
+import { randomIntFromSeed } from '@atproto/crypto'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
 import { OutputSchema as Message } from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import * as message from '../lexicon/types/com/atproto/sync/subscribeRepos'
@@ -15,6 +16,7 @@ import { IngesterContext } from './context'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
 export const INGESTER_SUB_ID = 1000
+export const DEFAULT_PARTITION_COUNT = 64
 
 export class IngesterSubscription {
   leader = new Leader(this.subLockId, this.ctx.db)
@@ -27,6 +29,7 @@ export class IngesterSubscription {
     public ctx: IngesterContext,
     public service: string,
     public subLockId = INGESTER_SUB_ID,
+    public partitionCount = DEFAULT_PARTITION_COUNT,
   ) {}
 
   async processSubscription(sub: Subscription<Message>) {
@@ -43,7 +46,7 @@ export class IngesterSubscription {
       const { seq, repo, message: processableMessage } = details
       this.lastSeq = seq
       await this.ctx.redis.xadd(
-        getPartition(repo),
+        await getPartition(repo, this.partitionCount),
         seq,
         'repo',
         repo,
@@ -169,9 +172,9 @@ function ui8ToBuffer(bytes: Uint8Array) {
   return Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 }
 
-// @TODO map did to 1 of N partitions
-function getPartition(_did: string) {
-  return 'repo:0'
+async function getPartition(did: string, n: number) {
+  const partition = await randomIntFromSeed(did, n)
+  return `repo:${partition}`
 }
 
 type State = { cursor: number }

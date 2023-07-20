@@ -6,7 +6,8 @@ export interface IngesterConfigValues {
   dbPostgresSchema?: string
   redisUrl: string
   repoProvider: string
-  repoSubLockId?: number
+  ingesterPartitionCount?: number
+  ingesterSubLockId?: number
 }
 
 export class IngesterConfig {
@@ -20,7 +21,8 @@ export class IngesterConfig {
       overrides?.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
     const redisUrl = overrides?.redisUrl || process.env.REDIS_URL
     const repoProvider = overrides?.repoProvider || process.env.REPO_PROVIDER // E.g. ws://abc.com:4000
-    const repoSubLockId = overrides?.repoSubLockId
+    const ingesterPartitionCount = overrides?.ingesterPartitionCount
+    const ingesterSubLockId = overrides?.ingesterSubLockId
     assert(dbPostgresUrl)
     assert(redisUrl)
     assert(repoProvider)
@@ -30,7 +32,8 @@ export class IngesterConfig {
       dbPostgresSchema,
       redisUrl,
       repoProvider,
-      repoSubLockId,
+      ingesterPartitionCount,
+      ingesterSubLockId,
     })
   }
 
@@ -54,7 +57,11 @@ export class IngesterConfig {
     return this.cfg.repoProvider
   }
 
-  get repoSubLockId() {
-    return this.cfg.repoSubLockId
+  get ingesterPartitionCount() {
+    return this.cfg.ingesterPartitionCount
+  }
+
+  get ingesterSubLockId() {
+    return this.cfg.ingesterSubLockId
   }
 }

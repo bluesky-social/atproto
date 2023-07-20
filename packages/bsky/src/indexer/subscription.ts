@@ -26,19 +26,19 @@ import {
 } from '../subscription/util'
 import IndexerContext from './context'
 
-export const REPO_SUB_ID = 1000 // @TODO same as ingester, needs to be per partition
+export const INDEXER_SUB_ID = 1000 // @TODO same as ingester, needs to be per partition
 
 export class IndexerSubscription {
   leader = new Leader(this.subLockId, this.ctx.db)
   destroyed = false
   repoQueue = new PartitionedQueue({ concurrency: this.concurrency })
-  partitions: PerfectMap<string, Partition> = new PerfectMap()
+  partitions: PerfectMap<number, Partition> = new PerfectMap()
   indexingSvc: IndexingService
 
   constructor(
     public ctx: IndexerContext,
-    public partitionNames: string[],
-    public subLockId = REPO_SUB_ID,
+    public partitionIds: number[],
+    public subLockId = INDEXER_SUB_ID,
     public concurrency = Infinity,
   ) {
     this.indexingSvc = ctx.services.indexing(ctx.db)
@@ -53,14 +53,12 @@ export class IndexerSubscription {
         'BLOCK',
         1000, // millis
         'STREAMS',
-        ...this.partitionNames,
-        ...this.partitionNames.map(
-          (pname) => this.partitions.get(pname).cursor,
-        ),
+        ...this.partitionIds.map(partitionKey),
+        ...this.partitionIds.map((id) => this.partitions.get(id).cursor),
       )
-      for (const [name, messages] of results ?? []) {
+      for (const [key, messages] of results ?? []) {
         if (done()) break
-        const partition = this.partitions.get(name.toString())
+        const partition = this.partitions.get(partitionId(key.toString()))
         for (const [seqBuf, values] of messages) {
           if (done()) break
           const seq = strToInt(seqBuf.toString())
@@ -82,21 +80,21 @@ export class IndexerSubscription {
         const { ran } = await this.leader.run(async ({ signal }) => {
           // initialize cursors
           const cursorResults = await this.ctx.redis.mget(
-            this.partitionNames.map(cursorKey),
+            this.partitionIds.map(cursorKey),
           )
           cursorResults.forEach((cursorStr, i) => {
-            const pname = this.partitionNames[i]
+            const id = this.partitionIds[i]
             const cursor = cursorStr === null ? 0 : strToInt(cursorStr)
-            this.partitions.set(pname, new Partition(pname, cursor))
+            this.partitions.set(id, new Partition(id, cursor))
           })
           // process events
           await this.processEvents({ signal })
         })
         if (ran && !this.destroyed) {
-          throw new Error('Repo sub completed, but should be persistent')
+          throw new Error('Indexer sub completed, but should be persistent')
         }
       } catch (err) {
-        subLogger.error({ err }, 'repo subscription error')
+        subLogger.error({ err }, 'indexer subscription error')
       }
       if (!this.destroyed) {
         await wait(5000 + jitter(1000)) // wait then try to become leader
@@ -142,7 +140,7 @@ export class IndexerSubscription {
     } catch (err) {
       // We log messages we can't process and move on:
       // otherwise the cursor would get stuck on a poison message.
-      subLogger.error({ err }, 'repo subscription message processing error') // @TODO add back { message: loggableMessage(msg) }
+      subLogger.error({ err }, 'indexer subscription message processing error') // @TODO add back { message: loggableMessage(msg) }
     } finally {
       const latest = item.complete().at(-1)
       if (latest) {
@@ -150,12 +148,12 @@ export class IndexerSubscription {
           .add(async () => {
             await this.ctx.redis
               .multi() // transactional
-              .set(cursorKey(partition.name), latest)
-              .xtrim(partition.name, 'MINID', latest)
+              .set(partition.cursorKey, latest) // @TODO can we remove cursor, and just use first item in the queue?
+              .xtrim(partition.key, 'MINID', latest)
               .exec()
           })
           .catch((err) => {
-            subLogger.error({ err }, 'repo subscription cursor error')
+            subLogger.error({ err }, 'indexer subscription cursor error')
           })
       }
     }
@@ -294,11 +292,26 @@ type Envelope = {
 class Partition {
   consecutive = new ConsecutiveList<number>()
   cursorQueue = new LatestQueue()
-  constructor(public name: string, public cursor: number) {}
+  constructor(public id: number, public cursor: number) {}
+  get key() {
+    return partitionKey(this.id)
+  }
+  get cursorKey() {
+    return cursorKey(this.id)
+  }
 }
 
-function cursorKey(pname: string) {
-  return `${pname}:cursor`
+function partitionId(key: string) {
+  assert(key.startsWith('repo:'))
+  return strToInt(key.replace('repo:', ''))
+}
+
+function partitionKey(p: number) {
+  return `repo:${p}`
+}
+
+function cursorKey(p: number) {
+  return `repo:${p}:cursor`
 }
 
 type PreparedCreate = {

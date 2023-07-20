@@ -54,7 +54,7 @@ export class BskyIndexer {
     const ctx = new IndexerContext({ db, redis, cfg, services })
     const sub = new IndexerSubscription(
       ctx,
-      cfg.indexerPartitionNames,
+      cfg.indexerPartitionIds,
       cfg.indexerSubLockId,
       cfg.indexerConcurrency,
     )

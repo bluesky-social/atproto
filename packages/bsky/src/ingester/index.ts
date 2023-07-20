@@ -26,7 +26,8 @@ export class BskyIngester {
     const sub = new IngesterSubscription(
       ctx,
       cfg.repoProvider,
-      cfg.repoSubLockId,
+      cfg.ingesterSubLockId,
+      cfg.ingesterPartitionCount,
     )
     return new BskyIngester({ ctx, sub })
   }

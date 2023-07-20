@@ -32,7 +32,7 @@ describe('server', () => {
       dbPostgresUrl: process.env.DB_POSTGRES_URL,
       dbPostgresSchema: 'appview_bsky_pipeline',
       didPlcUrl: network.plc.url,
-      indexerPartitionNames: ['repo:0'],
+      indexerPartitionIds: [0],
       indexerSubLockId: uniqueLockId(),
     })
     const indexerDb = Database.postgres({
@@ -51,7 +51,8 @@ describe('server', () => {
       dbPostgresUrl: process.env.DB_POSTGRES_URL,
       dbPostgresSchema: 'appview_bsky_pipeline',
       repoProvider: network.pds.url.replace('http://', 'ws://'),
-      repoSubLockId: uniqueLockId(),
+      ingesterSubLockId: uniqueLockId(),
+      ingesterPartitionCount: 1,
     })
     const ingesterDb = Database.postgres({
       url: ingesterCfg.dbPostgresUrl,
