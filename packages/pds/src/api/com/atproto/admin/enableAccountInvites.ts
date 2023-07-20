@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.db.db
         .updateTable('user_account')
         .where('did', '=', account)
-        .set({ invitesDisabled: 0, inviteNote: note })
+        .set({ invitesDisabled: 0, inviteNote: note?.trim() || null })
         .execute()
     },
   })
