@@ -131,11 +131,11 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
       const db = ctx.db.db
-      const { limit, cursor } = params
+      const { limit, cursor, query } = params
       const { ref } = db.dynamic
       const feedService = ctx.services.appView.feed(ctx.db)
 
-      const inner = ctx.db.db
+      let inner = ctx.db.db
         .selectFrom('feed_generator')
         .select([
           'uri',
@@ -146,6 +146,16 @@ export default function (server: Server, ctx: AppContext) {
             .select(countAll.as('count'))
             .as('likeCount'),
         ])
+
+      if (query) {
+        // like is case-insensitive is sqlite, and ilike is not supported
+        const operator = ctx.db.dialect === 'pg' ? 'ilike' : 'like'
+        inner = inner.where((qb) =>
+          qb
+            .where('feed_generator.displayName', operator, `%${query}%`)
+            .orWhere('feed_generator.description', operator, `%${query}%`),
+        )
+      }
 
       let builder = ctx.db.db.selectFrom(inner.as('feed_gens')).selectAll()
 
