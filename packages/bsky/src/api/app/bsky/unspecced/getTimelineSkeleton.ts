@@ -14,13 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.db
       const { ref } = db.dynamic
 
-      const feedService = ctx.services.feed(ctx.db)
       const graphService = ctx.services.graph(ctx.db)
-
-      const followingIdsSubquery = db
-        .selectFrom('follow')
-        .select('follow.subjectDid')
-        .where('follow.creator', '=', viewer)
 
       const keyset = new FeedKeyset(
         ref('feed_item.sortAt'),
@@ -28,13 +22,11 @@ export default function (server: Server, ctx: AppContext) {
       )
       const sortFrom = keyset.unpack(cursor)?.primary
 
-      let feedItemsQb = feedService
-        .selectFeedItemQb()
-        .where((qb) =>
-          qb
-            .where('originatorDid', '=', viewer)
-            .orWhere('originatorDid', 'in', followingIdsSubquery),
-        )
+      const followBuilder = ctx.db.db
+        .selectFrom('follow')
+        .innerJoin('feed_item', 'feed_item.originatorDid', 'follow.subjectDid')
+        .innerJoin('post', 'post.uri', 'feed_item.postUri')
+        .where('follow.creator', '=', viewer)
         .where((qb) =>
           // Hide posts and reposts of or by muted actors
           graphService.whereNotMuted(qb, viewer, [
@@ -48,7 +40,23 @@ export default function (server: Server, ctx: AppContext) {
             ref('originatorDid'),
           ]),
         )
+        .selectAll('feed_item')
+
+      const selfBuilder = ctx.db.db
+        .selectFrom('feed_item')
+        .where('feed_item.originatorDid', '=', viewer)
+        .selectAll('feed_item')
+
+      let feedItemsQb = ctx.db.db
+        .selectFrom(followBuilder.unionAll(selfBuilder).as('feed_item'))
+        .innerJoin('post', 'post.uri', 'feed_item.postUri')
         .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom))
+        .selectAll('feed_item')
+        .select([
+          'post.replyRoot',
+          'post.replyParent',
+          'post.creator as postAuthorDid',
+        ])
 
       feedItemsQb = paginate(feedItemsQb, {
         limit,
