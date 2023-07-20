@@ -148,11 +148,13 @@ export default function (server: Server, ctx: AppContext) {
         ])
 
       if (query) {
-        inner = inner.where((qb) =>
+        // like is case-insensitive is sqlite, and ilike is not supported
+        const operator = ctx.db.dialect === 'pg' ? 'ilike' : 'like'
+        inner = inner.where(qb => (
           qb
-            .where('feed_generator.displayName', 'ilike', `%${query}%`)
-            .orWhere('feed_generator.description', 'ilike', `%${query}%`),
-        )
+            .where('feed_generator.displayName', operator, `%${query}%`)
+            .orWhere('feed_generator.description', operator, `%${query}%`)
+        ))
       }
 
       let builder = ctx.db.db.selectFrom(inner.as('feed_gens')).selectAll()
