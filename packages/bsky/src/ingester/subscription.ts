@@ -5,7 +5,7 @@ import * as message from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import { ids, lexicons } from '../lexicon/lexicons'
 import { Leader } from '../db/leader'
 import { subLogger } from '../logger'
-import { LatestQueue } from '../subscription/util'
+import { LatestQueue, loggableMessage } from '../subscription/util'
 import { IngesterContext } from './context'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
@@ -148,32 +148,6 @@ function ifString(val: unknown): string | undefined {
 
 function ifNumber(val: unknown): number | undefined {
   return typeof val === 'number' ? val : undefined
-}
-
-function loggableMessage(msg: Message) {
-  if (message.isCommit(msg)) {
-    const { seq, rebase, prev, repo, commit, time, tooBig, blobs } = msg
-    return {
-      $type: msg.$type,
-      seq,
-      rebase,
-      prev: prev?.toString(),
-      repo,
-      commit: commit.toString(),
-      time,
-      tooBig,
-      hasBlobs: blobs.length > 0,
-    }
-  } else if (message.isHandle(msg)) {
-    return msg
-  } else if (message.isMigrate(msg)) {
-    return msg
-  } else if (message.isTombstone(msg)) {
-    return msg
-  } else if (message.isInfo(msg)) {
-    return msg
-  }
-  return msg
 }
 
 function getMessageDetails(msg: Message):

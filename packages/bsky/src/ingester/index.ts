@@ -5,8 +5,6 @@ import AppContext, { IngesterContext } from './context'
 import { IngesterSubscription } from './subscription'
 import { Redis } from 'ioredis'
 
-export { Database } from '../db'
-
 export class BskyIngester {
   public ctx: AppContext
   public sub: IngesterSubscription

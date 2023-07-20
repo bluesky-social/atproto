@@ -2,7 +2,7 @@ import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { cborDecode, wait } from '@atproto/common'
-import { DisconnectError, Subscription } from '@atproto/xrpc-server'
+import { DisconnectError } from '@atproto/xrpc-server'
 import {
   WriteOpAction,
   readCarWithRoot,
@@ -10,12 +10,7 @@ import {
   def,
   Commit,
 } from '@atproto/repo'
-import { ValidationError } from '@atproto/lexicon'
-import { OutputSchema as Message } from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import * as message from '../lexicon/types/com/atproto/sync/subscribeRepos'
-import { ids, lexicons } from '../lexicon/lexicons'
-import Database from '../db'
-import AppContext from '../context'
 import { Leader } from '../db/leader'
 import { IndexingService } from '../services/indexing'
 import { subLogger } from '../logger'
@@ -24,64 +19,81 @@ import {
   ConsecutiveList,
   LatestQueue,
   PartitionedQueue,
-} from './util'
+  PerfectMap,
+} from '../subscription/util'
+import IndexerContext from './context'
 
-const METHOD = ids.ComAtprotoSyncSubscribeRepos
-export const REPO_SUB_ID = 1000
+export const REPO_SUB_ID = 1000 // @TODO same as ingester, needs to be per partition
 
-export class RepoSubscription {
+export class IndexerSubscription {
   leader = new Leader(this.subLockId, this.ctx.db)
-  repoQueue: PartitionedQueue
-  cursorQueue = new LatestQueue()
-  consecutive = new ConsecutiveList<number>()
   destroyed = false
-  lastSeq: number | undefined
-  lastCursor: number | undefined
+  repoQueue = new PartitionedQueue({ concurrency: this.concurrency })
+  partitions: PerfectMap<string, Partition> = new PerfectMap()
   indexingSvc: IndexingService
 
   constructor(
-    public ctx: AppContext,
-    public service: string,
+    public ctx: IndexerContext,
+    public partitionNames: string[],
     public subLockId = REPO_SUB_ID,
     public concurrency = Infinity,
   ) {
-    this.repoQueue = new PartitionedQueue({ concurrency })
     this.indexingSvc = ctx.services.indexing(ctx.db)
+  }
+
+  async processEvents(opts: { signal: AbortSignal }) {
+    const done = () => this.destroyed || opts.signal.aborted
+    while (!done()) {
+      const results = await this.ctx.redis.xread(
+        'COUNT',
+        50, // events per stream
+        'BLOCK',
+        1000, // millis
+        'STREAMS',
+        ...this.partitionNames,
+        ...this.partitionNames.map(
+          (pname) => this.partitions.get(pname).cursor,
+        ),
+      )
+      for (const [name, messages] of results ?? []) {
+        if (done()) break
+        const partition = this.partitions.get(name)
+        for (const [seqStr, values] of messages) {
+          if (done()) break
+          const seq = strToInt(seqStr)
+          partition.cursor = seq
+          const item = partition.consecutive.push(seq)
+          // @TODO use repo rather than partition name
+          this.repoQueue.add(partition.name, () =>
+            this.handleMessage(partition, item, values),
+          )
+        }
+      }
+      // await this.repoQueue.main.onEmpty() // backpressure
+    }
   }
 
   async run() {
     while (!this.destroyed) {
       try {
         const { ran } = await this.leader.run(async ({ signal }) => {
-          const sub = this.getSubscription({ signal })
-          for await (const msg of sub) {
-            const details = getMessageDetails(msg)
-            if ('info' in details) {
-              // These messages are not sequenced, we just log them and carry on
-              subLogger.warn(
-                { provider: this.service, message: loggableMessage(msg) },
-                `repo subscription ${
-                  details.info ? 'info' : 'unknown'
-                } message`,
-              )
-              continue
-            }
-            this.lastSeq = details.seq
-            const item = this.consecutive.push(details.seq)
-            this.repoQueue.add(details.repo, () =>
-              this.handleMessage(item, details.message),
-            )
-            await this.repoQueue.main.onEmpty() // backpressure
-          }
+          // initialize cursors
+          const cursorResults = await this.ctx.redis.mget(
+            this.partitionNames.map(cursorKey),
+          )
+          cursorResults.forEach((cursorStr, i) => {
+            const pname = this.partitionNames[i]
+            const cursor = cursorStr === null ? 0 : strToInt(cursorStr)
+            this.partitions.set(pname, new Partition(pname, cursor))
+          })
+          // process events
+          await this.processEvents({ signal })
         })
         if (ran && !this.destroyed) {
           throw new Error('Repo sub completed, but should be persistent')
         }
       } catch (err) {
-        subLogger.error(
-          { err, provider: this.service },
-          'repo subscription error',
-        )
+        subLogger.error({ err }, 'repo subscription error')
       }
       if (!this.destroyed) {
         await wait(5000 + jitter(1000)) // wait then try to become leader
@@ -92,18 +104,46 @@ export class RepoSubscription {
   async destroy() {
     this.destroyed = true
     await this.repoQueue.destroy()
-    await this.cursorQueue.destroy()
+    await Promise.all(
+      [...this.partitions.values()].map((p) => p.cursorQueue.destroy()),
+    )
     this.leader.destroy(new DisconnectError())
   }
 
   async resume() {
     this.destroyed = false
+    this.partitions = new Map()
     this.repoQueue = new PartitionedQueue({ concurrency: this.concurrency })
-    this.cursorQueue = new LatestQueue()
-    this.consecutive = new ConsecutiveList<number>()
     await this.run()
   }
 
+  private async handleMessage(
+    partition: Partition,
+    item: ConsecutiveItem<number>,
+    msg: string[],
+  ) {
+    try {
+      // @TODO
+      console.log('processing', partition.name, msg)
+    } catch (err) {
+      // We log messages we can't process and move on:
+      // otherwise the cursor would get stuck on a poison message.
+      subLogger.error({ err }, 'repo subscription message processing error') // @TODO add back { message: loggableMessage(msg) }
+    } finally {
+      const latest = item.complete().at(-1)
+      if (latest) {
+        partition.cursorQueue
+          .add(async () => {
+            await this.ctx.redis.set(cursorKey(partition.name), latest)
+          })
+          .catch((err) => {
+            subLogger.error({ err }, 'repo subscription cursor error')
+          })
+      }
+    }
+  }
+
+  /*
   private async handleMessage(
     item: ConsecutiveItem<number>,
     msg: ProcessableMessage,
@@ -128,7 +168,6 @@ export class RepoSubscription {
       subLogger.error(
         {
           err,
-          provider: this.service,
           message: loggableMessage(msg),
         },
         'repo subscription message processing error',
@@ -139,10 +178,7 @@ export class RepoSubscription {
         this.cursorQueue
           .add(() => this.handleCursor(latest))
           .catch((err) => {
-            subLogger.error(
-              { err, provider: this.service },
-              'repo subscription cursor error',
-            )
+            subLogger.error({ err }, 'repo subscription cursor error')
           })
       }
     }
@@ -221,87 +257,16 @@ export class RepoSubscription {
     await this.indexingSvc.tombstoneActor(msg.did)
   }
 
-  private async handleCursor(seq: number) {
-    const { db } = this.ctx
-    await db.transaction(async (tx) => {
-      await this.setState(tx, { cursor: seq })
-    })
+  private async handleCursor(seq: number) {}
+
+  async getState(partition: string): Promise<State> {
+    return { cursor }
   }
 
-  async getState(): Promise<State> {
-    const sub = await this.ctx.db.db
-      .selectFrom('subscription')
-      .selectAll()
-      .where('service', '=', this.service)
-      .where('method', '=', METHOD)
-      .executeTakeFirst()
-    const state = sub ? (JSON.parse(sub.state) as State) : { cursor: 0 }
-    this.lastCursor = state.cursor
-    return state
-  }
+  async resetState(): Promise<void> {}
 
-  async resetState(): Promise<void> {
-    await this.ctx.db.db
-      .deleteFrom('subscription')
-      .where('service', '=', this.service)
-      .where('method', '=', METHOD)
-      .executeTakeFirst()
-  }
-
-  private async setState(tx: Database, state: State): Promise<void> {
-    tx.assertTransaction()
-    tx.onCommit(() => {
-      this.lastCursor = state.cursor
-    })
-    const res = await tx.db
-      .updateTable('subscription')
-      .where('service', '=', this.service)
-      .where('method', '=', METHOD)
-      .set({ state: JSON.stringify(state) })
-      .executeTakeFirst()
-    if (res.numUpdatedRows < 1) {
-      await tx.db
-        .insertInto('subscription')
-        .values({
-          service: this.service,
-          method: METHOD,
-          state: JSON.stringify(state),
-        })
-        .executeTakeFirst()
-    }
-  }
-
-  private getSubscription(opts: { signal: AbortSignal }) {
-    return new Subscription({
-      service: this.service,
-      method: METHOD,
-      signal: opts.signal,
-      getParams: () => this.getState(),
-      onReconnectError: (err, reconnects, initial) => {
-        subLogger.warn(
-          { err, reconnects, initial },
-          'repo subscription reconnect',
-        )
-      },
-      validate: (value) => {
-        try {
-          return lexicons.assertValidXrpcMessage<Message>(METHOD, value)
-        } catch (err) {
-          subLogger.warn(
-            {
-              err,
-              seq: ifNumber(value?.['seq']),
-              repo: ifString(value?.['repo']),
-              commit: ifString(value?.['commit']?.toString()),
-              time: ifString(value?.['time']),
-              provider: this.service,
-            },
-            'repo subscription skipped invalid message',
-          )
-        }
-      },
-    })
-  }
+  private async setState(partition: string, state: State): Promise<void> {}
+  */
 }
 
 // These are the message types that have a sequence number and a repo
@@ -356,40 +321,6 @@ function jitter(maxMs) {
   return Math.round((Math.random() - 0.5) * maxMs * 2)
 }
 
-function ifString(val: unknown): string | undefined {
-  return typeof val === 'string' ? val : undefined
-}
-
-function ifNumber(val: unknown): number | undefined {
-  return typeof val === 'number' ? val : undefined
-}
-
-function loggableMessage(msg: Message) {
-  if (message.isCommit(msg)) {
-    const { seq, rebase, prev, repo, commit, time, tooBig, blobs } = msg
-    return {
-      $type: msg.$type,
-      seq,
-      rebase,
-      prev: prev?.toString(),
-      repo,
-      commit: commit.toString(),
-      time,
-      tooBig,
-      hasBlobs: blobs.length > 0,
-    }
-  } else if (message.isHandle(msg)) {
-    return msg
-  } else if (message.isMigrate(msg)) {
-    return msg
-  } else if (message.isTombstone(msg)) {
-    return msg
-  } else if (message.isInfo(msg)) {
-    return msg
-  }
-  return msg
-}
-
 type State = { cursor: number }
 
 type PreparedCreate = {
@@ -415,27 +346,6 @@ type PreparedDelete = {
 
 type PreparedWrite = PreparedCreate | PreparedUpdate | PreparedDelete
 
-function getMessageDetails(msg: Message):
-  | { info: message.Info | null }
-  | {
-      seq: number
-      repo: string
-      message: ProcessableMessage
-    } {
-  if (message.isCommit(msg)) {
-    return { seq: msg.seq, repo: msg.repo, message: msg }
-  } else if (message.isHandle(msg)) {
-    return { seq: msg.seq, repo: msg.did, message: msg }
-  } else if (message.isMigrate(msg)) {
-    return { seq: msg.seq, repo: msg.did, message: msg }
-  } else if (message.isTombstone(msg)) {
-    return { seq: msg.seq, repo: msg.did, message: msg }
-  } else if (message.isInfo(msg)) {
-    return { info: msg }
-  }
-  return { info: null }
-}
-
 function handleAllSettledErrors(results: PromiseSettledResult<unknown>[]) {
   const errors = results.filter(isRejected).map((res) => res.reason)
   if (errors.length === 0) {
@@ -454,4 +364,20 @@ function isRejected(
   result: PromiseSettledResult<unknown>,
 ): result is PromiseRejectedResult {
   return result.status === 'rejected'
+}
+
+class Partition {
+  consecutive = new ConsecutiveList<number>()
+  cursorQueue = new LatestQueue()
+  constructor(public name: string, public cursor: number) {}
+}
+
+function cursorKey(pname: string) {
+  return `${pname}:cursor`
+}
+
+function strToInt(str: string) {
+  const int = parseInt(str, 10)
+  assert(!isNaN(int), 'string could not be parsed to an integer')
+  return int
 }
