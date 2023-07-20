@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       )
       const sortFrom = keyset.unpack(cursor)?.primary
 
-      const followBuilder = ctx.db.db
+      let followQb = ctx.db.db
         .selectFrom('follow')
         .innerJoin('feed_item', 'feed_item.originatorDid', 'follow.subjectDid')
         .innerJoin('post', 'post.uri', 'feed_item.postUri')
@@ -40,16 +40,6 @@ export default function (server: Server, ctx: AppContext) {
             ref('originatorDid'),
           ]),
         )
-        .selectAll('feed_item')
-
-      const selfBuilder = ctx.db.db
-        .selectFrom('feed_item')
-        .where('feed_item.originatorDid', '=', viewer)
-        .selectAll('feed_item')
-
-      let feedItemsQb = ctx.db.db
-        .selectFrom(followBuilder.unionAll(selfBuilder).as('feed_item'))
-        .innerJoin('post', 'post.uri', 'feed_item.postUri')
         .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom))
         .selectAll('feed_item')
         .select([
@@ -58,14 +48,45 @@ export default function (server: Server, ctx: AppContext) {
           'post.creator as postAuthorDid',
         ])
 
-      feedItemsQb = paginate(feedItemsQb, {
+      followQb = paginate(followQb, {
         limit,
         cursor,
         keyset,
         tryIndex: true,
       })
 
-      const feedItems = await feedItemsQb.execute()
+      let selfQb = ctx.db.db
+        .selectFrom('feed_item')
+        .innerJoin('post', 'post.uri', 'feed_item.postUri')
+        .where('feed_item.originatorDid', '=', viewer)
+        .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom))
+        .selectAll('feed_item')
+        .select([
+          'post.replyRoot',
+          'post.replyParent',
+          'post.creator as postAuthorDid',
+        ])
+
+      selfQb = paginate(selfQb, {
+        limit: Math.min(limit, 10),
+        cursor,
+        keyset,
+        tryIndex: true,
+      })
+
+      const [followRes, selfRes] = await Promise.all([
+        followQb.execute(),
+        selfQb.execute(),
+      ])
+
+      const feedItems = [...followRes, ...selfRes]
+        .sort((a, b) => {
+          if (a.sortAt > b.sortAt) return -1
+          if (a.sortAt < b.sortAt) return 1
+          return a.cid > b.cid ? -1 : 1
+        })
+        .slice(0, limit)
+
       const feed = feedItems.map((item) => ({
         post: item.postUri,
         reason:
