@@ -160,6 +160,45 @@ console.log(rt3.length) // => 25
 console.log(rt3.graphemeLength) // => 1
 ```
 
+### Moderation
+
+TODO
+
+```typescript
+import {Moderation} from '@atproto/api'
+
+const labelerSettings = [
+  {
+    labelerUri: '...',
+    settings: {
+      porn: 'hide',
+      sexual: 'warn',
+      nudity: 'ignore',
+      // ...
+    }
+  }
+]
+
+const mod = Moderation.apply(postView, {userDid, labelerSettings})
+switch (mod.behaviorIn('feed')) {
+  case 'hide':
+    // dont render the post
+    break
+  case 'blur':
+    // hide behind an interstitial
+    break
+  case 'blur-media':
+    // hide images behind an interstitial
+    break
+  case 'notice':
+    // include a warning on the post
+    break
+  case 'show':
+    // show as usual
+    break
+}
+```
+
 ## Advanced
 
 ### Advanced API calls
