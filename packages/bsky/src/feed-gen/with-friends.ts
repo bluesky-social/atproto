@@ -20,15 +20,12 @@ const handler: AlgoHandler = async (
 
   let postsQb = feedService
     .selectPostQb()
+    .innerJoin('follow', 'follow.subjectDid', 'post.creator')
     .innerJoin('post_agg', 'post_agg.uri', 'post.uri')
     .where('post_agg.likeCount', '>=', 5)
-    .whereExists((qb) =>
-      qb
-        .selectFrom('follow')
-        .where('follow.creator', '=', requester)
-        .whereRef('follow.subjectDid', '=', 'post.creator'),
-    )
+    .where('follow.creator', '=', requester)
     .where((qb) =>
+      // Hide posts and reposts of or by muted actors
       graphService.whereNotMuted(qb, requester, [ref('post.creator')]),
     )
     .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))

@@ -14,13 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.db
       const { ref } = db.dynamic
 
-      const feedService = ctx.services.feed(ctx.db)
       const graphService = ctx.services.graph(ctx.db)
-
-      const followingIdsSubquery = db
-        .selectFrom('follow')
-        .select('follow.subjectDid')
-        .where('follow.creator', '=', viewer)
 
       const keyset = new FeedKeyset(
         ref('feed_item.sortAt'),
@@ -28,13 +22,15 @@ export default function (server: Server, ctx: AppContext) {
       )
       const sortFrom = keyset.unpack(cursor)?.primary
 
-      let feedItemsQb = feedService
-        .selectFeedItemQb()
-        .where((qb) =>
-          qb
-            .where('originatorDid', '=', viewer)
-            .orWhere('originatorDid', 'in', followingIdsSubquery),
-        )
+      const followingIdsSubquery = db
+        .selectFrom('follow')
+        .select('follow.subjectDid')
+        .where('follow.creator', '=', viewer)
+
+      let followQb = db
+        .selectFrom('feed_item')
+        .where('originatorDid', 'in', followingIdsSubquery)
+        .innerJoin('post', 'post.uri', 'feed_item.postUri')
         .where((qb) =>
           // Hide posts and reposts of or by muted actors
           graphService.whereNotMuted(qb, viewer, [
@@ -49,15 +45,65 @@ export default function (server: Server, ctx: AppContext) {
           ]),
         )
         .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom))
+        .selectAll('feed_item')
+        .select([
+          'post.replyRoot',
+          'post.replyParent',
+          'post.creator as postAuthorDid',
+        ])
 
-      feedItemsQb = paginate(feedItemsQb, {
+      followQb = paginate(followQb, {
         limit,
         cursor,
         keyset,
         tryIndex: true,
       })
 
-      const feedItems = await feedItemsQb.execute()
+      let selfQb = ctx.db.db
+        .selectFrom('feed_item')
+        .innerJoin('post', 'post.uri', 'feed_item.postUri')
+        .where('feed_item.originatorDid', '=', viewer)
+        .where((qb) =>
+          // Hide posts and reposts of or by muted actors
+          graphService.whereNotMuted(qb, viewer, [
+            ref('post.creator'),
+            ref('originatorDid'),
+          ]),
+        )
+        .whereNotExists(
+          graphService.blockQb(viewer, [
+            ref('post.creator'),
+            ref('originatorDid'),
+          ]),
+        )
+        .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom))
+        .selectAll('feed_item')
+        .select([
+          'post.replyRoot',
+          'post.replyParent',
+          'post.creator as postAuthorDid',
+        ])
+
+      selfQb = paginate(selfQb, {
+        limit: Math.min(limit, 10),
+        cursor,
+        keyset,
+        tryIndex: true,
+      })
+
+      const [followRes, selfRes] = await Promise.all([
+        followQb.execute(),
+        selfQb.execute(),
+      ])
+
+      const feedItems = [...followRes, ...selfRes]
+        .sort((a, b) => {
+          if (a.sortAt > b.sortAt) return -1
+          if (a.sortAt < b.sortAt) return 1
+          return a.cid > b.cid ? -1 : 1
+        })
+        .slice(0, limit)
+
       const feed = feedItems.map((item) => ({
         post: item.postUri,
         reason:
