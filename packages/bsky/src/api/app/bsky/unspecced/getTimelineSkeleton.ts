@@ -23,8 +23,8 @@ export default function (server: Server, ctx: AppContext) {
       const sortFrom = keyset.unpack(cursor)?.primary
 
       let followQb = ctx.db.db
-        .selectFrom('follow')
-        .innerJoin('feed_item', 'feed_item.originatorDid', 'follow.subjectDid')
+        .selectFrom('feed_item')
+        .innerJoin('follow', 'follow.subjectDid', 'feed_item.originatorDid')
         .innerJoin('post', 'post.uri', 'feed_item.postUri')
         .where('follow.creator', '=', viewer)
         .where((qb) =>
@@ -59,6 +59,19 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('feed_item')
         .innerJoin('post', 'post.uri', 'feed_item.postUri')
         .where('feed_item.originatorDid', '=', viewer)
+        .where((qb) =>
+          // Hide posts and reposts of or by muted actors
+          graphService.whereNotMuted(qb, viewer, [
+            ref('post.creator'),
+            ref('originatorDid'),
+          ]),
+        )
+        .whereNotExists(
+          graphService.blockQb(viewer, [
+            ref('post.creator'),
+            ref('originatorDid'),
+          ]),
+        )
         .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom))
         .selectAll('feed_item')
         .select([
