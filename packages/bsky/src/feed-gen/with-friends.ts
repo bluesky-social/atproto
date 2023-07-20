@@ -26,17 +26,9 @@ const handler: AlgoHandler = async (
     .where('follow.creator', '=', requester)
     .where((qb) =>
       // Hide posts and reposts of or by muted actors
-      graphService.whereNotMuted(qb, requester, [
-        ref('post.creator'),
-        ref('originatorDid'),
-      ]),
+      graphService.whereNotMuted(qb, requester, [ref('post.creator')]),
     )
-    .whereNotExists(
-      graphService.blockQb(requester, [
-        ref('post.creator'),
-        ref('originatorDid'),
-      ]),
-    )
+    .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
     .where('post.indexedAt', '>', getFeedDateThreshold(sortFrom))
 
   postsQb = paginate(postsQb, { limit, cursor, keyset, tryIndex: true })
