@@ -124,9 +124,17 @@ export const ensureCodeIsAvailable = async (
   inviteCode: string,
   withLock = false,
 ): Promise<void> => {
+  const { ref } = db.db.dynamic
   const invite = await db.db
     .selectFrom('invite_code')
     .selectAll()
+    .whereNotExists((qb) =>
+      qb
+        .selectFrom('repo_root')
+        .selectAll()
+        .where('takedownId', 'is not', null)
+        .whereRef('did', '=', ref('invite_code.forUser')),
+    )
     .where('code', '=', inviteCode)
     .if(withLock && db.dialect === 'pg', (qb) => qb.forUpdate().skipLocked())
     .executeTakeFirst()
