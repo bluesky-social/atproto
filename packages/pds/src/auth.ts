@@ -227,7 +227,34 @@ export const accessVerifierCheckTakedown =
     }
   }
 
-export const optionalAccessOrAdminVerifier = (auth: ServerAuth) => {
+export const accessOrRoleVerifier = (auth: ServerAuth) => {
+  const verifyAccess = accessVerifier(auth)
+  const verifyRole = roleVerifier(auth)
+  return async (ctx: { req: express.Request; res: express.Response }) => {
+    // For non-admin tokens, we don't want to consider alternative verifiers and let it fail if it fails
+    const isRoleAuthToken = ctx.req.headers.authorization?.startsWith(BASIC)
+    if (isRoleAuthToken) {
+      const result = await verifyRole(ctx)
+      return {
+        ...result,
+        credentials: {
+          type: 'role' as const,
+          ...result.credentials,
+        },
+      }
+    }
+    const result = await verifyAccess(ctx)
+    return {
+      ...result,
+      credentials: {
+        type: 'access' as const,
+        ...result.credentials,
+      },
+    }
+  }
+}
+
+export const optionalAccessOrRoleVerifier = (auth: ServerAuth) => {
   const verifyAccess = accessVerifier(auth)
   return async (ctx: { req: express.Request; res: express.Response }) => {
     try {

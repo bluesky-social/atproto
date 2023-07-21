@@ -29,6 +29,7 @@ import {
   MaybePostView,
   PostInfoMap,
   RecordEmbedViewRecord,
+  FeedHydrationOptions,
 } from './types'
 import { Labels } from '../label'
 import { ProfileView } from '../../../lexicon/types/app/bsky/actor/defs'
@@ -81,7 +82,7 @@ export class FeedViews {
     posts: PostInfoMap,
     embeds: PostEmbedViews,
     labels: Labels,
-    usePostViewUnion?: boolean,
+    opts?: FeedHydrationOptions,
   ): FeedViewPost[] {
     const feed: FeedViewPost[] = []
     for (const item of items) {
@@ -91,6 +92,7 @@ export class FeedViews {
         posts,
         embeds,
         labels,
+        opts,
       )
       // skip over not found & blocked posts
       if (!post) {
@@ -120,7 +122,7 @@ export class FeedViews {
           posts,
           embeds,
           labels,
-          usePostViewUnion,
+          opts,
         )
         const replyRoot = this.formatMaybePostView(
           item.replyRoot,
@@ -128,7 +130,7 @@ export class FeedViews {
           posts,
           embeds,
           labels,
-          usePostViewUnion,
+          opts,
         )
         if (replyRoot && replyParent) {
           feedPost['reply'] = {
@@ -148,6 +150,7 @@ export class FeedViews {
     posts: PostInfoMap,
     embeds: PostEmbedViews,
     labels: Labels,
+    opts?: Pick<FeedHydrationOptions, 'includeSoftDeleted'>,
   ): PostView | undefined {
     const post = posts[uri]
     const author = actors[post?.creator]
@@ -159,6 +162,9 @@ export class FeedViews {
       uri: post.uri,
       cid: post.cid,
       author: author,
+      takedownId: opts?.includeSoftDeleted
+        ? post.takedownId ?? null
+        : undefined,
       record: cborToLexRecord(post.recordBytes),
       embed: embeds[uri],
       replyCount: post.replyCount ?? 0,
@@ -179,15 +185,15 @@ export class FeedViews {
     posts: PostInfoMap,
     embeds: PostEmbedViews,
     labels: Labels,
-    usePostViewUnion?: boolean,
+    opts?: FeedHydrationOptions,
   ): MaybePostView | undefined {
-    const post = this.formatPostView(uri, actors, posts, embeds, labels)
+    const post = this.formatPostView(uri, actors, posts, embeds, labels, opts)
     if (!post) {
-      if (!usePostViewUnion) return
+      if (!opts?.usePostViewUnion) return
       return this.notFoundPost(uri)
     }
     if (post.author.viewer?.blockedBy || post.author.viewer?.blocking) {
-      if (!usePostViewUnion) return
+      if (!opts?.usePostViewUnion) return
       return this.blockedPost(uri)
     }
     return {
