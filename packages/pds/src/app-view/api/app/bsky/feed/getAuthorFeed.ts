@@ -30,12 +30,32 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const { actor, limit, cursor } = params
-      const { ref } = ctx.db.db.dynamic
-      const feedService = ctx.services.appView.feed(ctx.db)
 
-      let feedItemsQb = requester
-        ? await getFeedItemsQbWithAccess(ctx, { requester, actor })
-        : getFeedItemsQbBasic(ctx, { actor })
+      const { ref } = ctx.db.db.dynamic
+      const accountService = ctx.services.account(ctx.db)
+      const feedService = ctx.services.appView.feed(ctx.db)
+      const graphService = ctx.services.appView.graph(ctx.db)
+
+      let feedItemsQb = getFeedItemsQb(ctx, { actor })
+
+      // for access-based auth, enforce blocks and mutes
+      if (requester) {
+        await assertNoBlocks(ctx, { requester, actor })
+        feedItemsQb = feedItemsQb
+          .where((qb) =>
+            // hide reposts of muted content
+            qb
+              .where('type', '=', 'post')
+              .orWhere((qb) =>
+                accountService.whereNotMuted(qb, requester, [
+                  ref('post.creator'),
+                ]),
+              ),
+          )
+          .whereNotExists(
+            graphService.blockQb(requester, [ref('post.creator')]),
+          )
+      }
 
       const keyset = new FeedKeyset(
         ref('feed_item.sortAt'),
@@ -64,7 +84,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-function getFeedItemsQbBasic(ctx: AppContext, opts: { actor: string }) {
+function getFeedItemsQb(ctx: AppContext, opts: { actor: string }) {
   const { actor } = opts
   const feedService = ctx.services.appView.feed(ctx.db)
   const userLookupCol = actor.startsWith('did:')
@@ -78,15 +98,13 @@ function getFeedItemsQbBasic(ctx: AppContext, opts: { actor: string }) {
   return feedService.selectFeedItemQb().where('originatorDid', '=', actorDidQb)
 }
 
-async function getFeedItemsQbWithAccess(
+// throws when there's a block between the two users
+async function assertNoBlocks(
   ctx: AppContext,
   opts: { requester: string; actor: string },
 ) {
   const { requester, actor } = opts
-  const { ref } = ctx.db.db.dynamic
-  const accountService = ctx.services.account(ctx.db)
   const graphService = ctx.services.appView.graph(ctx.db)
-  // check for block between the two users
   const blocks = await graphService.getBlocks(requester, actor)
   if (blocks.blocking) {
     throw new InvalidRequestError(
@@ -99,15 +117,4 @@ async function getFeedItemsQbWithAccess(
       'BlockedByActor',
     )
   }
-  // feed items qb, also applying blocks and mutes
-  return getFeedItemsQbBasic(ctx, { actor })
-    .where((qb) =>
-      // Hide reposts of muted content
-      qb
-        .where('type', '=', 'post')
-        .orWhere((qb) =>
-          accountService.whereNotMuted(qb, requester, [ref('post.creator')]),
-        ),
-    )
-    .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
 }
