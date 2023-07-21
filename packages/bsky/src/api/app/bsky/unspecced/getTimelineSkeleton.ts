@@ -3,6 +3,7 @@ import AppContext from '../../../../context'
 import { FeedKeyset, getFeedDateThreshold } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import { sql } from 'kysely'
+import { isValidCid } from '@atproto/common'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
@@ -20,6 +21,16 @@ export default function (server: Server, ctx: AppContext) {
         ref('feed_item.cid'),
       )
       const sortFrom = keyset.unpack(cursor)?.primary
+
+      if (cursor) {
+        const [pt1, pt2] = cursor.split('::')
+        if (isNaN(parseInt(pt1))) {
+          throw new Error('no good')
+        }
+        if (!isValidCid(pt2)) {
+          throw new Error('no good')
+        }
+      }
 
       let followQb = db
         .selectFrom('feed_item')
@@ -45,17 +56,7 @@ export default function (server: Server, ctx: AppContext) {
       const followParams = followQb.compile().parameters
       for (let i = 0; i < followParams.length; i++) {
         const param = followParams[i]
-        let paramVal: string
-        if (typeof param === 'string') {
-          if (param.includes(`'`) || param.includes(`\n`)) {
-            throw new Error('naughty boy')
-          }
-          paramVal = `'${param}'`
-        } else if (typeof param === 'number') {
-          paramVal = `${param}`
-        } else {
-          throw new Error('naughty boy')
-        }
+        const paramVal = typeof param === 'string' ? `'${param}'` : `${param}`
         compiledFollow = compiledFollow.replace(`$${i + 1}`, paramVal)
       }
 
