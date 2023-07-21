@@ -86,7 +86,9 @@ export async function getIndexers(
       const stopping = [...indexers]
       const lastIndexer = stopping.pop()
       await Promise.all(
-        stopping.map((indexer) => indexer.destroy({ skipDb: true })),
+        stopping.map((indexer) =>
+          indexer.destroy({ skipDb: true, skipRedis: true }),
+        ),
       )
       await lastIndexer?.destroy()
     },

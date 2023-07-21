@@ -93,10 +93,10 @@ export class BskyIndexer {
     return this
   }
 
-  async destroy(opts?: { skipDb: boolean }): Promise<void> {
+  async destroy(opts?: { skipDb: boolean; skipRedis: true }): Promise<void> {
     await this.sub.destroy()
     clearInterval(this.subStatsInterval)
-    await this.ctx.redis.quit()
+    if (!opts?.skipRedis) await this.ctx.redis.quit()
     if (!opts?.skipDb) await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
   }
