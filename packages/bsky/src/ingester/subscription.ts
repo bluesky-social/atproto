@@ -1,3 +1,4 @@
+import { ReplyError } from 'ioredis'
 import { cborEncode, wait } from '@atproto/common'
 import { randomIntFromSeed } from '@atproto/crypto'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
@@ -49,15 +50,23 @@ export class IngesterSubscription {
       const { seq, repo, message: processableMessage } = details
       this.lastSeq = seq
       const partitionKey = await getPartition(repo, this.partitionCount)
-      // @TODO handle case that event has already been added
-      await this.ctx.redis.xadd(
-        this.ns(partitionKey),
-        seq,
-        'repo',
-        repo,
-        'event',
-        ui8ToBuffer(cborEncode(processableMessage)),
-      )
+      try {
+        await this.ctx.redis.xadd(
+          this.ns(partitionKey),
+          seq,
+          'repo',
+          repo,
+          'event',
+          ui8ToBuffer(cborEncode(processableMessage)),
+        )
+      } catch (err) {
+        if (err instanceof ReplyError) {
+          // skipping over entries that have already been added or fully processed
+          subLogger.warn({ seq, repo }, 'ingester subscription skipping entry')
+        } else {
+          throw err
+        }
+      }
       this.cursorQueue.add(() => this.setCursor(seq))
       // @TODO backpressure?
     }

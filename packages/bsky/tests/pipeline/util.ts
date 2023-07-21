@@ -105,6 +105,29 @@ export async function processAll(
   ingester: BskyIngester,
 ) {
   assert(network.pds.ctx.sequencerLeader, 'sequencer leader does not exist')
+  await network.pds.processAll()
+  await ingestAll(network, ingester)
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    // check indexers
+    let pipeline = ingester.ctx.redis.pipeline()
+    for (let i = 0; i < ingester.sub.partitionCount; ++i) {
+      pipeline = pipeline.xlen(ingester.sub.ns(`repo:${i}`))
+    }
+    const results = await pipeline.exec()
+    const indexersCaughtUp = results?.every(
+      ([err, len]) => err === null && len === 0,
+    )
+    if (indexersCaughtUp) return
+    await wait(50)
+  }
+}
+
+export async function ingestAll(
+  network: TestNetworkNoAppView,
+  ingester: BskyIngester,
+) {
+  assert(network.pds.ctx.sequencerLeader, 'sequencer leader does not exist')
   const pdsDb = network.pds.ctx.db.db
   await network.pds.processAll()
   // eslint-disable-next-line no-constant-condition
@@ -123,16 +146,6 @@ export async function processAll(
         .executeTakeFirstOrThrow(),
     ])
     const ingesterCaughtUp = ingesterCursor === lastSeq
-    if (!ingesterCaughtUp) continue
-    // check indexers
-    let pipeline = ingester.ctx.redis.pipeline()
-    for (let i = 0; i < ingester.sub.partitionCount; ++i) {
-      pipeline = pipeline.xlen(ingester.sub.ns(`repo:${i}`))
-    }
-    const results = await pipeline.exec()
-    const indexersCaughtUp = results?.every(
-      ([err, len]) => err === null && len === 0,
-    )
-    if (indexersCaughtUp) return
+    if (ingesterCaughtUp) return
   }
 }

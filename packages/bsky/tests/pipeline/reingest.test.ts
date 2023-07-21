@@ -1,16 +1,15 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import { BskyIndexers, getIndexers, getIngester, processAll } from './util'
+import { getIngester, ingestAll } from './util'
 import { BskyIngester } from '../../src'
-import { countAll } from '../../src/db/util'
 
 const TEST_NAME = 'pipeline_reingest'
 
 describe('pipeline reingestion', () => {
   let network: TestNetworkNoAppView
   let ingester: BskyIngester
-  let indexers: BskyIndexers
+  let sc: SeedClient
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -20,29 +19,35 @@ describe('pipeline reingestion', () => {
       name: TEST_NAME,
       ingesterPartitionCount: 1,
     })
-    indexers = await getIndexers(network, {
-      name: TEST_NAME,
-      partitionIdsByIndexer: [[0]],
-    })
-    await ingester.start()
-    await indexers.start()
     const pdsAgent = network.pds.getClient()
-    const sc = new SeedClient(pdsAgent)
+    sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
-    await processAll(network, ingester)
   })
 
   afterAll(async () => {
     await network.close()
     await ingester.destroy()
-    await indexers.destroy()
   })
 
-  it('basic test.', async () => {
-    const actors = await indexers.db.db
-      .selectFrom('actor')
-      .select(countAll.as('count'))
-      .executeTakeFirstOrThrow()
-    expect(actors.count).toEqual(4)
+  it('allows events to be reingested multiple times.', async () => {
+    // ingest all events once
+    await ingester.start()
+    await ingestAll(network, ingester)
+    const initialCursor = await ingester.sub.getCursor()
+    const initialLen = await ingester.ctx.redis.xlen(ingester.sub.ns('repo:0'))
+    expect(initialCursor).toBeGreaterThan(10)
+    expect(initialLen).toBeGreaterThan(10)
+    // stop ingesting and reset ingester state
+    await ingester.sub.destroy()
+    await ingester.sub.resetCursor()
+    // add one new event and reingest
+    await sc.post(sc.dids.alice, 'one more event!') // add one event to firehose
+    ingester.sub.resume()
+    await ingestAll(network, ingester)
+    // confirm the newest event was ingested
+    const finalCursor = await ingester.sub.getCursor()
+    const finalLen = await ingester.ctx.redis.xlen(ingester.sub.ns('repo:0'))
+    expect(finalCursor).toEqual(initialCursor + 1)
+    expect(finalLen).toEqual(initialLen + 1)
   })
 })
