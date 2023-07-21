@@ -2,6 +2,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { FeedKeyset, getFeedDateThreshold } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
+import { sql } from 'kysely'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
@@ -40,6 +41,24 @@ export default function (server: Server, ctx: AppContext) {
         tryIndex: true,
       })
 
+      let compiledFollow = followQb.compile().sql
+      const followParams = followQb.compile().parameters
+      for (let i = 0; i < followParams.length; i++) {
+        const param = followParams[i]
+        let paramVal: string
+        if (typeof param === 'string') {
+          if (param.includes(`'`) || param.includes(`\n`)) {
+            throw new Error('naughty boy')
+          }
+          paramVal = `'${param}'`
+        } else if (typeof param === 'number') {
+          paramVal = `${param}`
+        } else {
+          throw new Error('naughty boy')
+        }
+        compiledFollow = compiledFollow.replace(`$${i + 1}`, paramVal)
+      }
+
       let selfQb = ctx.db.db
         .selectFrom('feed_item')
         .innerJoin('post', 'post.uri', 'feed_item.postUri')
@@ -59,10 +78,12 @@ export default function (server: Server, ctx: AppContext) {
         tryIndex: true,
       })
 
-      const [followRes, selfRes] = await Promise.all([
-        followQb.execute(),
+      const [_followRes, selfRes] = await Promise.all([
+        sql`${sql.raw(compiledFollow)}`.execute(db),
         selfQb.execute(),
       ])
+
+      const followRes = _followRes.rows as unknown as typeof selfRes
 
       const feedItems = [...followRes, ...selfRes]
         .sort((a, b) => {
