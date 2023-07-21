@@ -55,6 +55,7 @@ export class Database {
     pool.on('connect', (client) => {
       // Used for trigram indexes, e.g. on actor search
       client.query('SET pg_trgm.strict_word_similarity_threshold TO .1;')
+      client.query('SET plan_cache_mode=force_custom_plan;')
       if (schema) {
         // Shared objects such as extensions will go in the public schema
         client.query(`SET search_path TO "${schema}",public;`)
