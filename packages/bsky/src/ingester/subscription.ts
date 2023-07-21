@@ -189,5 +189,3 @@ async function getPartition(did: string, n: number) {
   const partition = await randomIntFromSeed(did, n)
   return `repo:${partition}`
 }
-
-type State = { cursor: number }
