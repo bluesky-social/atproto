@@ -230,10 +230,27 @@ export const accessVerifierCheckTakedown =
 export const accessOrRoleVerifier = (auth: ServerAuth) => {
   const verifyAccess = accessVerifier(auth)
   const verifyRole = roleVerifier(auth)
-  return (ctx: { req: express.Request; res: express.Response }) => {
+  return async (ctx: { req: express.Request; res: express.Response }) => {
     // For non-admin tokens, we don't want to consider alternative verifiers and let it fail if it fails
     const isRoleAuthToken = ctx.req.headers.authorization?.startsWith(BASIC)
-    return isRoleAuthToken ? verifyRole(ctx) : verifyAccess(ctx)
+    if (isRoleAuthToken) {
+      const result = await verifyRole(ctx)
+      return {
+        ...result,
+        credentials: {
+          type: 'role' as const,
+          ...result.credentials,
+        },
+      }
+    }
+    const result = await verifyAccess(ctx)
+    return {
+      ...result,
+      credentials: {
+        type: 'access' as const,
+        ...result.credentials,
+      },
+    }
   }
 }
 
