@@ -378,6 +378,7 @@ describe('indexing', () => {
         did: sc.dids.alice,
       })
       await services.indexing(db).indexRepo(sc.dids.alice, head.root)
+      await network.bsky.processAll()
       // Check
       const { data: profile } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },

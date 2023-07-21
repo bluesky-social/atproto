@@ -23,6 +23,8 @@ import {
   PerfectMap,
   ProcessableMessage,
   jitter,
+  loggableMessage,
+  strToInt,
 } from '../subscription/util'
 import IndexerContext from './context'
 
@@ -81,15 +83,10 @@ export class IndexerSubscription {
     while (!this.destroyed) {
       try {
         const { ran } = await this.leader.run(async ({ signal }) => {
-          // initialize cursors
-          const cursorResults = await this.ctx.redis.mget(
-            this.partitionIds.map(cursorKey).map((k) => this.ns(k)),
-          )
-          cursorResults.forEach((cursorStr, i) => {
-            const id = this.partitionIds[i]
-            const cursor = cursorStr === null ? 0 : strToInt(cursorStr)
-            this.partitions.set(id, new Partition(id, cursor))
-          })
+          // initialize cursors to 0 (read from beginning of stream)
+          for (const id of this.partitionIds) {
+            this.partitions.set(id, new Partition(id, 0))
+          }
           // process events
           await this.processEvents({ signal })
         })
@@ -126,8 +123,8 @@ export class IndexerSubscription {
     item: ConsecutiveItem<number>,
     envelope: Envelope,
   ) {
+    const msg = envelope.event
     try {
-      const msg = envelope.event
       if (message.isCommit(msg)) {
         await this.handleCommit(msg)
       } else if (message.isHandle(msg)) {
@@ -143,17 +140,16 @@ export class IndexerSubscription {
     } catch (err) {
       // We log messages we can't process and move on:
       // otherwise the cursor would get stuck on a poison message.
-      subLogger.error({ err }, 'indexer subscription message processing error') // @TODO add back { message: loggableMessage(msg) }
+      subLogger.error(
+        { err, message: loggableMessage(msg) },
+        'indexer subscription message processing error',
+      )
     } finally {
       const latest = item.complete().at(-1)
       if (latest) {
         partition.cursorQueue
           .add(async () => {
-            await this.ctx.redis
-              .multi() // transactional
-              .set(this.ns(partition.cursorKey), latest) // @TODO can we remove cursor, and just use first item in the queue?
-              .xtrim(this.ns(partition.key), 'MINID', latest)
-              .exec()
+            await this.ctx.redis.xtrim(this.ns(partition.key), 'MINID', latest)
           })
           .catch((err) => {
             subLogger.error({ err }, 'indexer subscription cursor error')
@@ -311,9 +307,6 @@ class Partition {
   get key() {
     return partitionKey(this.id)
   }
-  get cursorKey() {
-    return cursorKey(this.id)
-  }
 }
 
 function partitionId(key: string) {
@@ -323,10 +316,6 @@ function partitionId(key: string) {
 
 function partitionKey(p: number) {
   return `repo:${p}`
-}
-
-function cursorKey(p: number) {
-  return `repo:${p}:cursor`
 }
 
 type PreparedCreate = {
@@ -370,10 +359,4 @@ function isRejected(
   result: PromiseSettledResult<unknown>,
 ): result is PromiseRejectedResult {
   return result.status === 'rejected'
-}
-
-function strToInt(str: string) {
-  const int = parseInt(str, 10)
-  assert(!isNaN(int), 'string could not be parsed to an integer')
-  return int
 }

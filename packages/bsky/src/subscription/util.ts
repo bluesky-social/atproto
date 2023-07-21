@@ -140,3 +140,9 @@ export function loggableMessage(msg: RepoMessage) {
 export function jitter(maxMs) {
   return Math.round((Math.random() - 0.5) * maxMs * 2)
 }
+
+export function strToInt(str: string) {
+  const int = parseInt(str, 10)
+  assert(!isNaN(int), 'string could not be parsed to an integer')
+  return int
+}

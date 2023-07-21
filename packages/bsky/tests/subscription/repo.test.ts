@@ -69,11 +69,10 @@ describe('sync', () => {
     await network.bsky.ingester.sub.destroy()
     await network.bsky.indexer.sub.destroy()
     // Hard reset of state in redis
-    await network.bsky.ingester.sub.resetState()
+    await network.bsky.ingester.sub.resetCursor()
     const indexerSub = network.bsky.indexer.sub
     const partition = indexerSub.partitions.get(0)
     await network.bsky.indexer.ctx.redis.del(indexerSub.ns(partition.key))
-    await network.bsky.indexer.ctx.redis.del(indexerSub.ns(partition.cursorKey))
     // Boot streams back up
     network.bsky.indexer.sub.resume()
     network.bsky.ingester.sub.resume()

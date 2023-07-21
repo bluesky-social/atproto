@@ -11,11 +11,12 @@ import {
   ProcessableMessage,
   loggableMessage,
   jitter,
+  strToInt,
 } from '../subscription/util'
 import { IngesterContext } from './context'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
-const STATE_KEY = 'ingester:state'
+const CURSOR_KEY = 'ingester:cursor'
 export const INGESTER_SUB_ID = 1000
 export const DEFAULT_PARTITION_COUNT = 64
 
@@ -48,6 +49,7 @@ export class IngesterSubscription {
       const { seq, repo, message: processableMessage } = details
       this.lastSeq = seq
       const partitionKey = await getPartition(repo, this.partitionCount)
+      // @TODO handle case that event has already been added
       await this.ctx.redis.xadd(
         this.ns(partitionKey),
         seq,
@@ -56,7 +58,7 @@ export class IngesterSubscription {
         'event',
         ui8ToBuffer(cborEncode(processableMessage)),
       )
-      this.cursorQueue.add(() => this.setState({ cursor: seq }))
+      this.cursorQueue.add(() => this.setCursor(seq))
       // @TODO backpressure?
     }
   }
@@ -95,18 +97,18 @@ export class IngesterSubscription {
     await this.run()
   }
 
-  async getState(): Promise<State> {
-    const serialized = await this.ctx.redis.get(this.ns(STATE_KEY))
-    const state = serialized ? (JSON.parse(serialized) as State) : { cursor: 0 }
+  async getCursor(): Promise<number> {
+    const val = await this.ctx.redis.get(this.ns(CURSOR_KEY))
+    const state = val !== null ? strToInt(val) : 0
     return state
   }
 
-  async resetState(): Promise<void> {
-    await this.ctx.redis.del(this.ns(STATE_KEY))
+  async resetCursor(): Promise<void> {
+    await this.ctx.redis.del(this.ns(CURSOR_KEY))
   }
 
-  private async setState(state: State): Promise<void> {
-    await this.ctx.redis.set(this.ns(STATE_KEY), JSON.stringify(state))
+  private async setCursor(seq: number): Promise<void> {
+    await this.ctx.redis.set(this.ns(CURSOR_KEY), seq)
   }
 
   private getSubscription(opts: { signal: AbortSignal }) {
@@ -114,7 +116,10 @@ export class IngesterSubscription {
       service: this.service,
       method: METHOD,
       signal: opts.signal,
-      getParams: () => this.getState(),
+      getParams: async () => {
+        const cursor = await this.getCursor()
+        return { cursor }
+      },
       onReconnectError: (err, reconnects, initial) => {
         subLogger.warn(
           { err, reconnects, initial },
