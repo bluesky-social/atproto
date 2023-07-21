@@ -22,12 +22,17 @@ export class IngesterConfig {
       overrides?.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
     const redisUrl = overrides?.redisUrl || process.env.REDIS_URL
     const repoProvider = overrides?.repoProvider || process.env.REPO_PROVIDER // E.g. ws://abc.com:4000
-    const ingesterPartitionCount = overrides?.ingesterPartitionCount
+    const ingesterPartitionCount =
+      overrides?.ingesterPartitionCount ||
+      maybeParseInt(process.env.INGESTER_PARTITION_COUNT)
+    const ingesterSubLockId =
+      overrides?.ingesterSubLockId ||
+      maybeParseInt(process.env.INGESTER_SUB_LOCK_ID)
     const ingesterNamespace = overrides?.ingesterNamespace
-    const ingesterSubLockId = overrides?.ingesterSubLockId
     assert(dbPostgresUrl)
     assert(redisUrl)
     assert(repoProvider)
+    assert(ingesterPartitionCount)
     return new IngesterConfig({
       version,
       dbPostgresUrl,
@@ -35,8 +40,8 @@ export class IngesterConfig {
       redisUrl,
       repoProvider,
       ingesterPartitionCount,
-      ingesterNamespace,
       ingesterSubLockId,
+      ingesterNamespace,
     })
   }
 
@@ -71,4 +76,9 @@ export class IngesterConfig {
   get ingesterSubLockId() {
     return this.cfg.ingesterSubLockId
   }
+}
+
+function maybeParseInt(str) {
+  const parsed = parseInt(str)
+  return isNaN(parsed) ? undefined : parsed
 }

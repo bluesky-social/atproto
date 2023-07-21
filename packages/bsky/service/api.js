@@ -32,7 +32,7 @@ const main = async () => {
   // Use lower-credentialed user to run the app
   const db = Database.postgres({
     url: env.dbPostgresUrl,
-    schema: env.dbSchema,
+    schema: env.dbPostgresSchema,
     poolSize: env.dbPoolSize,
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
