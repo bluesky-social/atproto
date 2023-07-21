@@ -11,7 +11,6 @@ const handler: AlgoHandler = async (
 ): Promise<AlgoResponse> => {
   const { cursor, limit = 50 } = params
   const feedService = ctx.services.feed(ctx.db)
-  const graphService = ctx.services.graph(ctx.db)
 
   const { ref } = ctx.db.db.dynamic
 
@@ -24,11 +23,6 @@ const handler: AlgoHandler = async (
     .innerJoin('post_agg', 'post_agg.uri', 'post.uri')
     .where('post_agg.likeCount', '>=', 5)
     .where('follow.creator', '=', requester)
-    .where((qb) =>
-      // Hide posts and reposts of or by muted actors
-      graphService.whereNotMuted(qb, requester, [ref('post.creator')]),
-    )
-    .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
     .where('post.indexedAt', '>', getFeedDateThreshold(sortFrom))
 
   postsQb = paginate(postsQb, { limit, cursor, keyset, tryIndex: true })
