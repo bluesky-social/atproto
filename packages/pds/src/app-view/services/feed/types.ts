@@ -40,6 +40,7 @@ export type PostInfo = {
   replyCount: number | null
   requesterRepost: string | null
   requesterLike: string | null
+  takedownId: number | null
 }
 
 export type PostInfoMap = { [uri: string]: PostInfo }
@@ -79,6 +80,10 @@ export type FeedRow = {
   replyParent: string | null
   replyRoot: string | null
   sortAt: string
+}
+export type FeedHydrationOptions = {
+  includeSoftDeleted?: boolean
+  usePostViewUnion?: boolean
 }
 
 export type MaybePostView = PostView | NotFoundPost | BlockedPost
