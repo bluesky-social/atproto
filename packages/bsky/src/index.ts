@@ -28,9 +28,12 @@ export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
 export { ServerConfig } from './config'
 export { Database } from './db'
+export { Redis } from 'ioredis'
 export { ViewMaintainer } from './db/views'
 export { AppContext } from './context'
 export { makeAlgos } from './feed-gen'
+export * from './indexer'
+export * from './ingester'
 
 export class BskyAppView {
   public ctx: AppContext
@@ -156,11 +159,11 @@ export class BskyAppView {
     return server
   }
 
-  async destroy(): Promise<void> {
+  async destroy(opts?: { skipDb: boolean }): Promise<void> {
     await this.ctx.didCache.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
-    await this.ctx.db.close()
+    if (!opts?.skipDb) await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
   }
 }

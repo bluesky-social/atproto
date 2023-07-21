@@ -38,6 +38,7 @@ export class IndexerSubscription {
   constructor(
     public ctx: IndexerContext,
     public partitionIds: number[],
+    public namespace?: string,
     public subLockId = INDEXER_SUB_ID,
     public concurrency = Infinity,
   ) {
@@ -53,12 +54,14 @@ export class IndexerSubscription {
         'BLOCK',
         1000, // millis
         'STREAMS',
-        ...this.partitionIds.map(partitionKey),
+        ...this.partitionIds.map(partitionKey).map((k) => this.ns(k)),
         ...this.partitionIds.map((id) => this.partitions.get(id).cursor),
       )
       for (const [key, messages] of results ?? []) {
         if (done()) break
-        const partition = this.partitions.get(partitionId(key.toString()))
+        const partition = this.partitions.get(
+          partitionId(this.rmns(key.toString())),
+        )
         for (const [seqBuf, values] of messages) {
           if (done()) break
           const seq = strToInt(seqBuf.toString())
@@ -80,7 +83,7 @@ export class IndexerSubscription {
         const { ran } = await this.leader.run(async ({ signal }) => {
           // initialize cursors
           const cursorResults = await this.ctx.redis.mget(
-            this.partitionIds.map(cursorKey),
+            this.partitionIds.map(cursorKey).map((k) => this.ns(k)),
           )
           cursorResults.forEach((cursorStr, i) => {
             const id = this.partitionIds[i]
@@ -148,8 +151,8 @@ export class IndexerSubscription {
           .add(async () => {
             await this.ctx.redis
               .multi() // transactional
-              .set(partition.cursorKey, latest) // @TODO can we remove cursor, and just use first item in the queue?
-              .xtrim(partition.key, 'MINID', latest)
+              .set(this.ns(partition.cursorKey), latest) // @TODO can we remove cursor, and just use first item in the queue?
+              .xtrim(this.ns(partition.key), 'MINID', latest)
               .exec()
           })
           .catch((err) => {
@@ -230,6 +233,18 @@ export class IndexerSubscription {
 
   private async handleTombstone(msg: message.Tombstone) {
     await this.indexingSvc.tombstoneActor(msg.did)
+  }
+
+  // namespace redis keys
+  ns(key: string) {
+    return this.namespace ? `${this.namespace}:${key}` : key
+  }
+
+  // remove namespace from redis key
+  rmns(key: string) {
+    return this.namespace && key.startsWith(`${this.namespace}:`)
+      ? key.replace(`${this.namespace}:`, '')
+      : key
   }
 }
 

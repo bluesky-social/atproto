@@ -4,19 +4,21 @@ import Database from '../db'
 import DidSqlCache from '../did-cache'
 import { dbLogger } from '../logger'
 import { IndexerConfig } from './config'
-import AppContext, { IndexerContext } from './context'
+import { IndexerContext } from './context'
 import { createServices } from './services'
 import { IndexerSubscription } from './subscription'
 import { Redis } from 'ioredis'
 import { HiveLabeler, KeywordLabeler, Labeler } from '../labeler'
 
+export { IndexerConfig } from './config'
+
 export class BskyIndexer {
-  public ctx: AppContext
+  public ctx: IndexerContext
   public sub: IndexerSubscription
   private dbStatsInterval: NodeJS.Timer
   private subStatsInterval: NodeJS.Timer
 
-  constructor(opts: { ctx: AppContext; sub: IndexerSubscription }) {
+  constructor(opts: { ctx: IndexerContext; sub: IndexerSubscription }) {
     this.ctx = opts.ctx
     this.sub = opts.sub
   }
@@ -51,10 +53,19 @@ export class BskyIndexer {
       })
     }
     const services = createServices({ idResolver, labeler, backgroundQueue })
-    const ctx = new IndexerContext({ db, redis, cfg, services })
+    const ctx = new IndexerContext({
+      db,
+      redis,
+      cfg,
+      services,
+      idResolver,
+      didCache,
+      backgroundQueue,
+    })
     const sub = new IndexerSubscription(
       ctx,
       cfg.indexerPartitionIds,
+      cfg.indexerNamespace,
       cfg.indexerSubLockId,
       cfg.indexerConcurrency,
     )
@@ -82,11 +93,11 @@ export class BskyIndexer {
     return this
   }
 
-  async destroy(): Promise<void> {
+  async destroy(opts?: { skipDb: boolean }): Promise<void> {
     await this.sub.destroy()
     clearInterval(this.subStatsInterval)
     await this.ctx.redis.quit()
-    await this.ctx.db.close()
+    if (!opts?.skipDb) await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
   }
 }

@@ -3,7 +3,7 @@ import * as ui8 from 'uint8arrays'
 import * as bsky from '@atproto/bsky'
 import { DAY, HOUR } from '@atproto/common-web'
 import { AtpAgent } from '@atproto/api'
-import { Secp256k1Keypair } from '@atproto/crypto'
+import { Secp256k1Keypair, randomIntFromSeed } from '@atproto/crypto'
 import { Client as PlcClient } from '@did-plc/lib'
 import { BskyConfig } from './types'
 import { uniqueLockId } from './util'
@@ -13,6 +13,8 @@ export class TestBsky {
     public url: string,
     public port: number,
     public server: bsky.BskyAppView,
+    public indexer: bsky.BskyIndexer,
+    public ingester: bsky.BskyIngester,
   ) {}
 
   static async create(cfg: BskyConfig): Promise<TestBsky> {
@@ -42,18 +44,18 @@ export class TestBsky {
       didCacheMaxTTL: DAY,
       ...cfg,
       // Each test suite gets its own lock id for the repo subscription
-      repoSubLockId: uniqueLockId(),
       adminPassword: 'admin-pass',
       moderatorPassword: 'moderator-pass',
       triagePassword: 'triage-pass',
       labelerDid: 'did:example:labeler',
-      labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
       feedGenDid: 'did:example:feedGen',
     })
 
+    // shared across server, ingester, and indexer in order to share pool, avoid too many pg connections.
     const db = bsky.Database.postgres({
       url: cfg.dbPostgresUrl,
       schema: cfg.dbPostgresSchema,
+      poolSize: 10,
     })
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
@@ -68,10 +70,53 @@ export class TestBsky {
     }
     await migrationDb.close()
 
+    // api server
     const server = bsky.BskyAppView.create({ db, config, algos: cfg.algos })
+    // indexer
+    const ns = cfg.dbPostgresSchema
+      ? await randomIntFromSeed(cfg.dbPostgresSchema, 10000)
+      : undefined
+    const indexerCfg = new bsky.IndexerConfig({
+      version: '0.0.0',
+      didCacheStaleTTL: HOUR,
+      didCacheMaxTTL: DAY,
+      labelerDid: 'did:example:labeler',
+      redisUrl: cfg.redisUrl,
+      dbPostgresUrl: cfg.dbPostgresUrl,
+      dbPostgresSchema: cfg.dbPostgresSchema,
+      didPlcUrl: cfg.plcUrl,
+      labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
+      indexerPartitionIds: [0],
+      indexerNamespace: `ns${ns}`,
+      indexerSubLockId: uniqueLockId(),
+    })
+    const indexerRedis = new bsky.Redis(indexerCfg.redisUrl)
+    const indexer = bsky.BskyIndexer.create({
+      cfg: indexerCfg,
+      db,
+      redis: indexerRedis,
+    })
+    // ingester
+    const ingesterCfg = new bsky.IngesterConfig({
+      version: '0.0.0',
+      redisUrl: cfg.redisUrl,
+      dbPostgresUrl: cfg.dbPostgresUrl,
+      dbPostgresSchema: cfg.dbPostgresSchema,
+      repoProvider: cfg.repoProvider,
+      ingesterNamespace: `ns${ns}`,
+      ingesterSubLockId: uniqueLockId(),
+      ingesterPartitionCount: 1,
+    })
+    const ingesterRedis = new bsky.Redis(ingesterCfg.redisUrl)
+    const ingester = bsky.BskyIngester.create({
+      cfg: ingesterCfg,
+      db,
+      redis: ingesterRedis,
+    })
+    await ingester.start()
+    await indexer.start()
     await server.start()
-
-    return new TestBsky(url, port, server)
+    return new TestBsky(url, port, server, indexer, ingester)
   }
 
   get ctx(): bsky.AppContext {
@@ -79,10 +124,7 @@ export class TestBsky {
   }
 
   get sub() {
-    if (!this.server.sub) {
-      throw new Error('No subscription on dev-env server')
-    }
-    return this.server.sub
+    return this.indexer.sub
   }
 
   getClient() {
@@ -109,10 +151,15 @@ export class TestBsky {
   }
 
   async processAll() {
-    await this.ctx.backgroundQueue.processAll()
+    await Promise.all([
+      this.ctx.backgroundQueue.processAll(),
+      this.indexer.ctx.backgroundQueue.processAll(),
+    ])
   }
 
   async close() {
-    await this.server.destroy()
+    await this.server.destroy({ skipDb: true })
+    await this.ingester.destroy({ skipDb: true })
+    this.indexer.destroy() // closes shared db
   }
 }

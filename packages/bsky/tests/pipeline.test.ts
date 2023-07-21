@@ -1,13 +1,13 @@
+import { Redis } from 'ioredis'
+import { wait } from '@atproto/common'
 import { TestNetworkNoAppView, uniqueLockId } from '@atproto/dev-env'
 import { Database } from '../src'
 import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import { IngesterConfig } from '../src/ingester/config'
-import { Redis } from 'ioredis'
 import { IndexerConfig } from '../src/indexer/config'
 import BskyIngester from '../src/ingester'
 import BskyIndexer from '../src/indexer'
-import { wait } from '@atproto/common'
 import { countAll } from '../src/db/util'
 
 describe('server', () => {

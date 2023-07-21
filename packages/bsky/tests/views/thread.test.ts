@@ -32,7 +32,7 @@ describe('pds thread views', () => {
     // Add a repost of a reply so that we can confirm myState in the thread
     await sc.repost(bob, sc.replies[alice][0].ref)
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
   })
 
   afterAll(async () => {
@@ -116,7 +116,7 @@ describe('pds thread views', () => {
     )
     indexes.aliceReplyReply = sc.replies[alice].length - 1
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
 
     const thread1 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
@@ -126,7 +126,7 @@ describe('pds thread views', () => {
 
     await sc.deletePost(bob, sc.replies[bob][indexes.bobReply].ref.uri)
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
 
     const thread2 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },

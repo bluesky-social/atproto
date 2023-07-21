@@ -15,6 +15,7 @@ import {
 import { IngesterContext } from './context'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
+const STATE_KEY = 'ingester:state'
 export const INGESTER_SUB_ID = 1000
 export const DEFAULT_PARTITION_COUNT = 64
 
@@ -28,6 +29,7 @@ export class IngesterSubscription {
   constructor(
     public ctx: IngesterContext,
     public service: string,
+    public namespace?: string,
     public subLockId = INGESTER_SUB_ID,
     public partitionCount = DEFAULT_PARTITION_COUNT,
   ) {}
@@ -45,8 +47,9 @@ export class IngesterSubscription {
       }
       const { seq, repo, message: processableMessage } = details
       this.lastSeq = seq
+      const partitionKey = await getPartition(repo, this.partitionCount)
       await this.ctx.redis.xadd(
-        await getPartition(repo, this.partitionCount),
+        this.ns(partitionKey),
         seq,
         'repo',
         repo,
@@ -93,17 +96,17 @@ export class IngesterSubscription {
   }
 
   async getState(): Promise<State> {
-    const serialized = await this.ctx.redis.get('state')
+    const serialized = await this.ctx.redis.get(this.ns(STATE_KEY))
     const state = serialized ? (JSON.parse(serialized) as State) : { cursor: 0 }
     return state
   }
 
   async resetState(): Promise<void> {
-    await this.ctx.redis.del('state')
+    await this.ctx.redis.del(this.ns(STATE_KEY))
   }
 
   private async setState(state: State): Promise<void> {
-    await this.ctx.redis.set('state', JSON.stringify(state))
+    await this.ctx.redis.set(this.ns(STATE_KEY), JSON.stringify(state))
   }
 
   private getSubscription(opts: { signal: AbortSignal }) {
@@ -136,6 +139,11 @@ export class IngesterSubscription {
         }
       },
     })
+  }
+
+  // namespace redis keys
+  ns(key: string) {
+    return this.namespace ? `${this.namespace}:${key}` : key
   }
 }
 
