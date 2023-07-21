@@ -146,10 +146,14 @@ export class IndexerSubscription {
       )
     } finally {
       const latest = item.complete().at(-1)
-      if (latest) {
+      if (latest !== undefined) {
         partition.cursorQueue
           .add(async () => {
-            await this.ctx.redis.xtrim(this.ns(partition.key), 'MINID', latest)
+            await this.ctx.redis.xtrim(
+              this.ns(partition.key),
+              'MINID',
+              latest + 1,
+            )
           })
           .catch((err) => {
             subLogger.error({ err }, 'indexer subscription cursor error')
