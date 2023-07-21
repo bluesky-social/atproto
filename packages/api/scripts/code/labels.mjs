@@ -46,6 +46,7 @@ function genDefMap() {
       labels[label.id] = {
         ...label,
         groupId: group.id,
+        configurable: group.configurable,
         strings: {
           settings: getLabelStrings(label.id, 'settings'),
           account: getLabelStrings(label.id, 'account'),

@@ -8,6 +8,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: ['no-override'],
     onwarn: 'blur',
     groupId: 'system',
+    configurable: false,
     strings: {
       settings: {
         en: {
@@ -35,6 +36,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: null,
     groupId: 'system',
+    configurable: false,
     strings: {
       settings: {
         en: {
@@ -62,6 +64,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'system',
+    configurable: false,
     strings: {
       settings: {
         en: {
@@ -92,6 +95,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: ['no-override'],
     onwarn: 'blur',
     groupId: 'legal',
+    configurable: false,
     strings: {
       settings: {
         en: {
@@ -122,6 +126,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: ['no-override'],
     onwarn: 'blur',
     groupId: 'legal',
+    configurable: false,
     strings: {
       settings: {
         en: {
@@ -151,6 +156,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: ['no-override'],
     onwarn: 'blur',
     groupId: 'legal',
+    configurable: false,
     strings: {
       settings: {
         en: {
@@ -181,6 +187,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: ['adult'],
     onwarn: 'blur-media',
     groupId: 'sexual',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -211,6 +218,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: ['adult'],
     onwarn: 'blur-media',
     groupId: 'sexual',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -241,6 +249,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: ['adult'],
     onwarn: 'blur-media',
     groupId: 'sexual',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -271,6 +280,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: ['adult'],
     onwarn: 'blur-media',
     groupId: 'violence',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -301,6 +311,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: ['adult'],
     onwarn: 'blur-media',
     groupId: 'violence',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -331,6 +342,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: ['adult'],
     onwarn: 'blur-media',
     groupId: 'violence',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -361,6 +373,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: ['adult'],
     onwarn: 'blur',
     groupId: 'violence',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -391,6 +404,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: ['adult'],
     onwarn: 'blur',
     groupId: 'violence',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -421,6 +435,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'intolerance',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -450,6 +465,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'intolerance',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -480,6 +496,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'intolerance',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -510,6 +527,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'intolerance',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -540,6 +558,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'intolerance',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -568,6 +587,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur-media',
     groupId: 'intolerance',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -598,6 +618,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'rude',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -628,6 +649,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'rude',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -658,6 +680,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'rude',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -688,6 +711,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'rude',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -718,6 +742,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'curation',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -747,6 +772,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'curation',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -777,6 +803,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'curation',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -807,6 +834,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'curation',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -837,6 +865,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'curation',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -867,6 +896,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'curation',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -897,6 +927,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'curation',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -927,6 +958,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'curation',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -957,6 +989,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'spam',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -987,6 +1020,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'spam',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -1017,6 +1051,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'spam',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -1047,6 +1082,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'spam',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -1077,6 +1113,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'misinfo',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -1107,6 +1144,7 @@ export const LABELS: LabelDefinitionMap = {
     flags: [],
     onwarn: 'blur',
     groupId: 'misinfo',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -1135,8 +1173,9 @@ export const LABELS: LabelDefinitionMap = {
     id: 'impersonation',
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
-    onwarn: 'notice',
+    onwarn: 'alert',
     groupId: 'misinfo',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -1164,8 +1203,9 @@ export const LABELS: LabelDefinitionMap = {
     id: 'scam',
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
-    onwarn: 'notice',
+    onwarn: 'alert',
     groupId: 'misinfo',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -1192,8 +1232,9 @@ export const LABELS: LabelDefinitionMap = {
     id: 'misinformation',
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
-    onwarn: 'notice',
+    onwarn: 'alert',
     groupId: 'misinfo',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -1221,8 +1262,9 @@ export const LABELS: LabelDefinitionMap = {
     id: 'unverified',
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
-    onwarn: 'notice',
+    onwarn: 'alert',
     groupId: 'misinfo',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -1251,8 +1293,9 @@ export const LABELS: LabelDefinitionMap = {
     id: 'manipulated',
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
-    onwarn: 'notice',
+    onwarn: 'alert',
     groupId: 'misinfo',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -1281,8 +1324,9 @@ export const LABELS: LabelDefinitionMap = {
     id: 'fringe',
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
-    onwarn: 'notice',
+    onwarn: 'alert',
     groupId: 'misinfo',
+    configurable: true,
     strings: {
       settings: {
         en: {
@@ -1310,8 +1354,9 @@ export const LABELS: LabelDefinitionMap = {
     id: 'bullshit',
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
-    onwarn: 'notice',
+    onwarn: 'alert',
     groupId: 'misinfo',
+    configurable: true,
     strings: {
       settings: {
         en: {

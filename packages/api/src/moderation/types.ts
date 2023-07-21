@@ -15,7 +15,7 @@ export type LabelDefinitionFlag = 'no-override' | 'adult'
 export type LabelDefinitionOnWarnBehavior =
   | 'blur'
   | 'blur-media'
-  | 'notice'
+  | 'alert'
   | null
 
 export interface LabelDefinitionLocalizedStrings {
@@ -31,6 +31,7 @@ export type LabelDefinitionLocalizedStringsMap = Record<
 export interface LabelDefinition {
   id: string
   groupId: string
+  configurable: boolean
   preferences: LabelDefinitionPreference[]
   flags: LabelDefinitionFlag[]
   onwarn: LabelDefinitionOnWarnBehavior
@@ -57,60 +58,83 @@ export type LabelGroupDefinitionMap = Record<string, LabelGroupDefinition>
 // =
 
 interface Labeler {
-  uri: string
+  did: string
   displayName: string
 }
 
 export interface LabelerSettings {
-  labelerUri: string
+  labeler: Labeler
   settings: Record<string, LabelDefinitionPreference>
 }
 
 // subjects
 // =
 
-export type ModerationSubject =
+export type ModerationSubjectProfile =
   | AppBskyActorDefs.ProfileViewBasic
   | AppBskyActorDefs.ProfileView
   | AppBskyActorDefs.ProfileViewDetailed
-  | AppBskyFeedDefs.PostView
-  | AppBskyFeedDefs.GeneratorView
+
+export type ModerationSubjectPost = AppBskyFeedDefs.PostView
+
+export type ModerationSubjectFeedGenerator = AppBskyFeedDefs.GeneratorView
+
+export type ModerationSubjectUserList =
   | AppBskyGraphDefs.ListViewBasic
   | AppBskyGraphDefs.ListView
+
+export type ModerationSubject =
+  | ModerationSubjectProfile
+  | ModerationSubjectPost
+  | ModerationSubjectFeedGenerator
+  | ModerationSubjectUserList
 
 // behaviors
 // =
 
-export type ModerationSource =
+export type ModerationCauseSource =
   | { type: 'user' }
-  | { type: 'list'; uri: string; displayName: string }
-  | ({ type: 'labeler' } & Labeler)
-  | undefined
+  | { type: 'list'; list: AppBskyGraphDefs.ListViewBasic }
 
 export type ModerationCause =
-  | { id: 'blocked' }
-  | { id: 'blocked-by' }
-  | { id: 'mute' }
-  | { id: 'label'; label: LabelDefinition; setting: LabelDefinitionPreference }
-  | undefined
+  | { type: 'blocking'; source: ModerationCauseSource; priority: 1 }
+  | { type: 'blocked-by'; source: ModerationCauseSource; priority: 2 }
+  | {
+      type: 'label'
+      labeler: Labeler
+      label: Label
+      labelDef: LabelDefinition
+      setting: LabelDefinitionPreference
+      priority: 3 | 4 | 6 | 7
+    }
+  | { type: 'muted'; source: ModerationCauseSource; priority: 5 }
 
-export type ModerationBehaviorId = 'list' | 'view'
-
-export type ModerationBehavior =
-  | 'hide'
-  | 'blur'
-  | 'blur-media'
-  | 'notice'
-  | 'show'
-
-export type ModerationBehaviorUsecase =
-  | ModerationBehaviorId
-  | 'feed'
-  | 'search'
-  | 'discovery'
-  | 'thread'
-
-export interface ModerationContext {
+export interface ModerationApplyOpts {
   userDid: string
+  adultContentEnabled: boolean
   labelerSettings: LabelerSettings[]
+}
+
+export class ModerationDecision {
+  static noop() {
+    return new ModerationDecision()
+  }
+
+  constructor(
+    public cause: ModerationCause | undefined = undefined,
+    public alert: boolean = false,
+    public blur: boolean = false,
+    public blurMedia: boolean = false,
+    public filter: boolean = false,
+    public noOverride: boolean = false,
+    public additionalCauses: ModerationCause[] = [],
+  ) {}
+}
+
+export interface ModerationUI {
+  filter?: boolean
+  blur?: boolean
+  alert?: boolean
+  cause?: ModerationCause
+  noOverride?: boolean
 }

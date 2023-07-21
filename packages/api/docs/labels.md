@@ -33,7 +33,7 @@ The kind of UI behavior used when a warning must be applied.
 
 - <code>blur</code> Hide all of the content behind an interstitial.
 - <code>blur-media</code> Hide only the media within the content (ie images) behind an interstitial.
-- <code>notice</code> Display a descriptive warning but do not hide the content.
+- <code>alert</code> Display a descriptive warning but do not hide the content.
 - <code>null</code> Do nothing.
 
 ## Label Behaviors
@@ -357,7 +357,7 @@ The kind of UI behavior used when a warning must be applied.
 <td>ignore, warn, hide</td>
 <td>✅</td>
 <td></td>
-<td>notice</td>
+<td>alert</td>
 </tr>
 <tr>
 <td>scam</td>
@@ -365,7 +365,7 @@ The kind of UI behavior used when a warning must be applied.
 <td>ignore, warn, hide</td>
 <td>✅</td>
 <td></td>
-<td>notice</td>
+<td>alert</td>
 </tr>
 <tr>
 <td>misinformation</td>
@@ -373,7 +373,7 @@ The kind of UI behavior used when a warning must be applied.
 <td>ignore, warn, hide</td>
 <td>✅</td>
 <td></td>
-<td>notice</td>
+<td>alert</td>
 </tr>
 <tr>
 <td>unverified</td>
@@ -381,7 +381,7 @@ The kind of UI behavior used when a warning must be applied.
 <td>ignore, warn, hide</td>
 <td>✅</td>
 <td></td>
-<td>notice</td>
+<td>alert</td>
 </tr>
 <tr>
 <td>manipulated</td>
@@ -389,7 +389,7 @@ The kind of UI behavior used when a warning must be applied.
 <td>ignore, warn, hide</td>
 <td>✅</td>
 <td></td>
-<td>notice</td>
+<td>alert</td>
 </tr>
 <tr>
 <td>fringe</td>
@@ -397,7 +397,7 @@ The kind of UI behavior used when a warning must be applied.
 <td>ignore, warn, hide</td>
 <td>✅</td>
 <td></td>
-<td>notice</td>
+<td>alert</td>
 </tr>
 <tr>
 <td>bullshit</td>
@@ -405,7 +405,7 @@ The kind of UI behavior used when a warning must be applied.
 <td>ignore, warn, hide</td>
 <td>✅</td>
 <td></td>
-<td>notice</td>
+<td>alert</td>
 </tr>
 </table>
 

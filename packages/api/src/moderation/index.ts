@@ -1,226 +1,259 @@
+import { AppBskyActorDefs } from '../client/index'
 import {
-  AppBskyActorDefs,
-  AppBskyFeedDefs,
-  AppBskyGraphDefs,
-} from '../client/index'
-import {
-  Label,
-  ModerationCause,
-  ModerationSource,
-  ModerationBehaviorId,
-  ModerationBehavior,
-  ModerationBehaviorUsecase,
-  ModerationSubject,
-  ModerationContext,
+  ModerationSubjectProfile,
+  ModerationSubjectPost,
+  ModerationSubjectFeedGenerator,
+  ModerationSubjectUserList,
+  ModerationApplyOpts,
+  ModerationDecision,
+  ModerationUI,
 } from './types'
+import { decideAccount } from './subjects/account'
+import { decideProfile } from './subjects/profile'
+import { decidePost } from './subjects/post'
+import {
+  decideQuotedPost,
+  decideQuotedPostAccount,
+  decideQuotedPostWithMedia,
+  decideQuotedPostWithMediaAccount,
+} from './subjects/quoted-post'
+import { decideFeedGenerator } from './subjects/feed-generator'
+import { decideUserList } from './subjects/user-list'
+import {
+  mergeModerationDecisions,
+  isQuotedPost,
+  isQuotedPostWithMedia,
+} from './util'
 
-export class Moderation {
-  static apply = apply
-  static merge = merge
-  static noop() {
-    return new Moderation(
-      undefined,
-      undefined,
-      { list: 'show', view: 'show', author: 'show' },
-      false,
-    )
+// profiles
+// =
+
+export interface ProfileModeration {
+  decisions: {
+    account: ModerationDecision
+    profile: ModerationDecision
   }
-
-  constructor(
-    public cause: ModerationCause,
-    public source: ModerationSource,
-    public behaviors: Record<ModerationBehaviorId, ModerationBehavior>,
-    public noOverride: boolean,
-  ) {}
-
-  behaviorIn(usecase: ModerationBehaviorUsecase) {
-    switch (usecase) {
-      case 'discovery':
-      case 'search':
-      case 'feed':
-      case 'list':
-        return this.behaviors.list
-      case 'view':
-      case 'thread':
-        return this.behaviors.view
-    }
-  }
-
-  merge(decisions: Moderation[]): Moderation {
-    return Moderation.merge([this, ...decisions])
-  }
+  content: ModerationUI
+  avatar: ModerationUI
 }
 
-function apply(subject: ModerationSubject, ctx: ModerationContext): Moderation {
-  // profile
-  if (
-    AppBskyActorDefs.isProfileViewBasic(subject) ||
-    AppBskyActorDefs.isProfileView(subject) ||
-    AppBskyActorDefs.isProfileViewDetailed(subject)
-  ) {
-    return applyProfile(subject, ctx)
-  }
+export function moderateProfile(
+  subject: ModerationSubjectProfile,
+  opts: ModerationApplyOpts,
+): ProfileModeration {
+  // decide the moderation the account and the profile
+  const account = decideAccount(subject, opts)
+  const profile = decideProfile(subject, opts)
 
-  // post
-  if (AppBskyFeedDefs.isPostView(subject)) {
-    return applyPost(subject, ctx)
-  }
+  // derive behaviors from both
+  const merged = mergeModerationDecisions(profile, account)
 
-  // feed generator
-  if (AppBskyFeedDefs.isGeneratorView(subject)) {
-    return applyFeedGenerator(subject, ctx)
-  }
-
-  // user list
-  if (
-    AppBskyGraphDefs.isListViewBasic(subject) ||
-    AppBskyGraphDefs.isListView(subject)
-  ) {
-    return applyList(subject, ctx)
-  }
-
-  // none
-  return Moderation.noop()
-}
-
-function applyProfile(
-  subject:
-    | AppBskyActorDefs.ProfileViewBasic
-    | AppBskyActorDefs.ProfileView
-    | AppBskyActorDefs.ProfileViewDetailed,
-  ctx: ModerationContext,
-): Moderation {
-  const {
-    isMe,
-    accountLabels,
-    profileLabels,
-    isMuted,
-    mutedByList,
-    isBlocking,
-    isBlockedBy,
-  } = getUserModState(subject, ctx)
-
-  // TODO run decision tree
-}
-
-function applyPost(
-  subject: AppBskyFeedDefs.PostView,
-  ctx: ModerationContext,
-): Moderation {
-  const postLabels = subject.labels || []
-  const {
-    isMe,
-    accountLabels,
-    profileLabels,
-    isMuted,
-    mutedByList,
-    isBlocking,
-    isBlockedBy,
-  } = getUserModState(subject.author, ctx)
-
-  if (subject.embed) {
-    // TODO handle embedded posts
-  }
-
-  // TODO run decision tree
-}
-
-function applyFeedGenerator(
-  subject: AppBskyFeedDefs.GeneratorView,
-  ctx: ModerationContext,
-): Moderation {
-  const {
-    isMe,
-    accountLabels,
-    profileLabels,
-    isMuted,
-    mutedByList,
-    isBlocking,
-    isBlockedBy,
-  } = getUserModState(subject.creator, ctx)
-  // TODO handle labels applied on the feed generator itself
-
-  // TODO run decision tree
-}
-
-function applyList(
-  subject: AppBskyGraphDefs.ListViewBasic | AppBskyGraphDefs.ListView,
-  ctx: ModerationContext,
-): Moderation {
-  const {
-    isMe,
-    accountLabels,
-    profileLabels,
-    isMuted,
-    mutedByList,
-    isBlocking,
-    isBlockedBy,
-  } = getUserModState(
-    AppBskyGraphDefs.isListView(subject) ? subject.creator : undefined,
-    ctx,
-  )
-  // TODO handle labels applied on the feed generator itself
-
-  // TODO run decision tree
-}
-
-function merge(decisions: Moderation[]): Moderation {
-  // TODO
-}
-
-interface UserModState {
-  isMe: boolean
-  accountLabels: Label[]
-  profileLabels: Label[]
-  isMuted: boolean
-  mutedByList?: AppBskyGraphDefs.ListViewBasic
-  isBlocking: boolean
-  isBlockedBy: boolean
-}
-
-function getUserModState(
-  profile:
-    | AppBskyActorDefs.ProfileViewBasic
-    | AppBskyActorDefs.ProfileView
-    | AppBskyActorDefs.ProfileViewDetailed
-    | undefined,
-  ctx: ModerationContext,
-): UserModState {
-  if (typeof profile === 'undefined') {
-    return {
-      isMe: false,
-      accountLabels: [],
-      profileLabels: [],
-      isMuted: false,
-      isBlocking: false,
-      isBlockedBy: false,
-    }
-  }
   return {
-    isMe: profile.did === ctx.userDid,
-    accountLabels: filterAccountLabels(profile.labels),
-    profileLabels: filterProfileLabels(profile.labels),
-    isMuted: profile.viewer?.muted || false,
-    mutedByList: profile.viewer?.mutedByList,
-    isBlocking: !!profile.viewer?.blocking || false,
-    isBlockedBy: !!profile.viewer?.blockedBy || false,
+    decisions: { account, profile },
+
+    // content behaviors are pulled from merged decisions
+    content: {
+      filter: merged.filter,
+      blur: merged.blur,
+      alert: merged.alert,
+      cause: merged.cause,
+      noOverride: merged.noOverride,
+    },
+
+    // blur or alert the avatar based on the account and profile decisions
+    avatar: {
+      blur: account.blurMedia || profile.blurMedia,
+      alert: account.alert,
+      noOverride: account.noOverride || profile.noOverride,
+    },
   }
 }
 
-export function filterAccountLabels(labels?: Label[]): Label[] {
-  if (!labels) {
-    return []
+// posts
+// =
+
+export interface PostModeration {
+  decisions: {
+    post: ModerationDecision
+    account: ModerationDecision
+    profile: ModerationDecision
+    quote?: ModerationDecision
+    quotedAccount?: ModerationDecision
   }
-  return labels.filter(
-    (label) => !label.uri.endsWith('/app.bsky.actor.profile/self'),
-  )
+  content: ModerationUI
+  avatar: ModerationUI
+  embed: ModerationUI
 }
 
-export function filterProfileLabels(labels?: Label[]): Label[] {
-  if (!labels) {
-    return []
+export function moderatePost(
+  subject: ModerationSubjectPost,
+  opts: ModerationApplyOpts,
+): PostModeration {
+  // decide the moderation for the post, the post author's account,
+  // and the post author's profile
+  const post = decidePost(subject, opts)
+  const account = decideAccount(subject.author, opts)
+  const profile = decideProfile(subject.author, opts)
+
+  // decide the moderation for any quoted posts
+  let quote: ModerationDecision | undefined
+  let quotedAccount: ModerationDecision | undefined
+  if (isQuotedPost(subject.embed)) {
+    quote = decideQuotedPost(subject.embed, opts)
+    quotedAccount = decideQuotedPostAccount(subject.embed, opts)
+  } else if (isQuotedPostWithMedia(subject.embed)) {
+    quote = decideQuotedPostWithMedia(subject.embed, opts)
+    quotedAccount = decideQuotedPostWithMediaAccount(subject.embed, opts)
   }
-  return labels.filter((label) =>
-    label.uri.endsWith('/app.bsky.actor.profile/self'),
+
+  // derive filtering from feeds from the post, post author's account,
+  // quoted post, and quoted post author's account
+  const mergedForFeed = mergeModerationDecisions(
+    post,
+    account,
+    quote,
+    quotedAccount,
   )
+
+  // derive view blurring from the post and the post author's account
+  const mergedForView = mergeModerationDecisions(post, account)
+
+  // derive embed blurring from the quoted post and the quoted post author's account
+  const mergedQuote = mergeModerationDecisions(quote, quotedAccount)
+
+  return {
+    decisions: { post, account, profile, quote, quotedAccount },
+
+    // content behaviors are pulled from feed and view derivations above
+    content: {
+      filter: mergedForFeed.filter,
+      blur: mergedForView.blur,
+      alert: mergedForView.alert,
+      cause: mergedForView.cause,
+      noOverride: mergedForView.noOverride,
+    },
+
+    // blur or alert the avatar based on the account and profile decisions
+    avatar: {
+      blur: account.blurMedia || profile.blurMedia,
+      alert: account.alert,
+      noOverride: account.noOverride || profile.noOverride,
+    },
+
+    // blur the embed if the quoted post required it,
+    // or else if the post decision was to blur media
+    embed:
+      quote || quotedAccount
+        ? {
+            blur: mergedQuote.blur,
+            alert: mergedQuote.alert,
+            cause: mergedQuote.cause,
+            noOverride: mergedQuote.noOverride,
+          }
+        : mergedForView.blurMedia
+        ? {
+            blur: true,
+            cause: mergedForView.cause,
+            noOverride: mergedForView.noOverride,
+          }
+        : {},
+  }
+}
+
+// feed generators
+// =
+
+export interface FeedGeneratorModeration {
+  decisions: {
+    feedGenerator: ModerationDecision
+    account: ModerationDecision
+    profile: ModerationDecision
+  }
+  content: ModerationUI
+  avatar: ModerationUI
+}
+
+export function moderateFeedGenerator(
+  subject: ModerationSubjectFeedGenerator,
+  opts: ModerationApplyOpts,
+): FeedGeneratorModeration {
+  // decide the moderation for the generator, the generator creator's account,
+  // and the generator creator's profile
+  const feedGenerator = decideFeedGenerator(subject, opts)
+  const account = decideAccount(subject.creator, opts)
+  const profile = decideProfile(subject.creator, opts)
+
+  // derive behaviors from feeds from the generator and the generator's account
+  const merged = mergeModerationDecisions(feedGenerator, account)
+
+  return {
+    decisions: { feedGenerator, account, profile },
+
+    // content behaviors are pulled from merged decisions
+    content: {
+      filter: merged.filter,
+      blur: merged.blur,
+      alert: merged.alert,
+      cause: merged.cause,
+      noOverride: merged.noOverride,
+    },
+
+    // blur or alert the avatar based on the account and profile decisions
+    avatar: {
+      blur: account.blurMedia || profile.blurMedia,
+      alert: account.alert,
+      noOverride: account.noOverride || profile.noOverride,
+    },
+  }
+}
+
+// user lists
+// =
+
+export interface UserListModeration {
+  decisions: {
+    userList: ModerationDecision
+    account: ModerationDecision
+    profile: ModerationDecision
+  }
+  content: ModerationUI
+  avatar: ModerationUI
+}
+
+export function moderateUserList(
+  subject: ModerationSubjectUserList,
+  opts: ModerationApplyOpts,
+): UserListModeration {
+  // decide the moderation for the list, the list creator's account,
+  // and the list creator's profile
+  const userList = decideUserList(subject, opts)
+  const account = AppBskyActorDefs.isProfileViewBasic(subject.creator)
+    ? decideAccount(subject.creator, opts)
+    : ModerationDecision.noop()
+  const profile = AppBskyActorDefs.isProfileViewBasic(subject.creator)
+    ? decideProfile(subject.creator, opts)
+    : ModerationDecision.noop()
+
+  // derive behaviors from feeds from the list and the list's account
+  const merged = mergeModerationDecisions(userList, account)
+
+  return {
+    decisions: { userList, account, profile },
+
+    // content behaviors are pulled from merged decisions
+    content: {
+      filter: merged.filter,
+      blur: merged.blur,
+      alert: merged.alert,
+      cause: merged.cause,
+      noOverride: merged.noOverride,
+    },
+
+    // blur or alert the avatar based on the account and profile decisions
+    avatar: {
+      blur: account.blurMedia || profile.blurMedia,
+      alert: account.alert,
+      noOverride: account.noOverride || profile.noOverride,
+    },
+  }
 }

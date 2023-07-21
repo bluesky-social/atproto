@@ -283,43 +283,43 @@
         "id": "impersonation",
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
-        "onwarn": "notice"
+        "onwarn": "alert"
       },
       {
         "id": "scam",
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
-        "onwarn": "notice"
+        "onwarn": "alert"
       },
       {
         "id": "misinformation",
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
-        "onwarn": "notice"
+        "onwarn": "alert"
       },
       {
         "id": "unverified",
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
-        "onwarn": "notice"
+        "onwarn": "alert"
       },
       {
         "id": "manipulated",
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
-        "onwarn": "notice"
+        "onwarn": "alert"
       },
       {
         "id": "fringe",
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
-        "onwarn": "notice"
+        "onwarn": "alert"
       },
       {
         "id": "bullshit",
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
-        "onwarn": "notice"
+        "onwarn": "alert"
       }
     ]
   }

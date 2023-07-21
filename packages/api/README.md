@@ -162,40 +162,84 @@ console.log(rt3.graphemeLength) // => 1
 
 ### Moderation
 
-TODO
+Applying the moderation system is a challenging task, but we've done our best to simplify it for you. The Moderation API helps handle a wide range of tasks, including:
+
+- User muting (including mutelists)
+- User blocking
+- Moderator labeling
+
+For more information, see the [Moderation Documentation](./docs/moderation.md) or the associated [Labels Reference](./docs/labels.md).
 
 ```typescript
-import {Moderation} from '@atproto/api'
+import {moderatePost, moderateProfile, moderateUserList, moderateFeedGenerator} from '@atproto/api'
 
-const labelerSettings = [
-  {
-    labelerUri: '...',
-    settings: {
-      porn: 'hide',
-      sexual: 'warn',
-      nudity: 'ignore',
-      // ...
-    }
+// We call the appropriate moderation function for the content
+// =
+
+const postMod    = moderatePost(postView, getOpts())
+const profileMod = moderateProfile(profileView, getOpts())
+const listMod    = moderateUserList(listView, getOpts())
+const feedMod    = moderateFeedGenerator(feedView, getOpts())
+
+// We then use the output to decide how to affect rendering
+// =
+
+if (postMod.content.filter) {
+  // dont render in feeds or similar
+  // in contexts where this is disruptive (eg threads) you should ignore this and instead check blur
+}
+if (postMod.content.blur) {
+  // render the whole object behind a cover (use postMod.content.cause to explain)
+  if (postMod.content.noOverride) {
+    // do not allow the cover the be removed
   }
-]
+}
+if (postMod.content.alert) {
+  // render a warning on the content (use postMod.content.cause to explain)
+}
+if (postMod.embed.blur) {
+  // render the embedded media behind a cover (use postMod.embed.cause to explain)
+  if (postMod.embed.noOverride) {
+    // do not allow the cover the be removed
+  }
+}
+if (postMod.embed.alert) {
+  // render a warning on the embedded media (use postMod.embed.cause to explain)
+}
+if (postMod.avatar.blur) {
+  // render the avatar behind a cover
+}
+if (postMod.avatar.alert) {
+  // render an alert on the avatar
+}
 
-const mod = Moderation.apply(postView, {userDid, labelerSettings})
-switch (mod.behaviorIn('feed')) {
-  case 'hide':
-    // dont render the post
-    break
-  case 'blur':
-    // hide behind an interstitial
-    break
-  case 'blur-media':
-    // hide images behind an interstitial
-    break
-  case 'notice':
-    // include a warning on the post
-    break
-  case 'show':
-    // show as usual
-    break
+// The options passed into `apply()` supply the user's preferences
+// =
+
+function getOpts() {
+  return {
+    // the logged-in user's DID
+    userDid: 'did:plc:1234...',
+
+    // is adult content allowed?
+    adultContentEnabled: true,
+
+    // the user's labeler settings
+    labelerSettings: [
+      {
+        labeler: {
+          uri: '...',
+          displayName: 'My mod service'
+        },
+        settings: {
+          porn: 'hide',
+          sexual: 'warn',
+          nudity: 'ignore',
+          // ...
+        }
+      }
+    ]
+  }
 }
 ```
 

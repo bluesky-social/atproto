@@ -71,7 +71,7 @@ function doc() {
 
   - <code>blur</code> Hide all of the content behind an interstitial.
   - <code>blur-media</code> Hide only the media within the content (ie images) behind an interstitial.
-  - <code>notice</code> Display a descriptive warning but do not hide the content.
+  - <code>alert</code> Display a descriptive warning but do not hide the content.
   - <code>null</code> Do nothing.
 
   ## Label Behaviors
