@@ -53,7 +53,6 @@ export class IngesterSubscription {
       }
       const { seq, repo, message: processableMessage } = details
       this.lastSeq = seq
-      console.log({ seq })
       const partitionKey = await getPartition(repo, this.opts.partitionCount)
       try {
         await this.ctx.redis.xadd(
@@ -218,7 +217,6 @@ class Backpressure {
     const shouldCheck =
       this.limit !== Infinity &&
       (this.count === 1 || this.count % this.checkEvery === 0)
-    console.log({ shouldCheck, count: this.count, checkEvery: this.checkEvery })
     if (!shouldCheck) return
     let ready = false
     const start = Date.now()
