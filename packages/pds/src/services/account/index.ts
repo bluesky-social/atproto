@@ -12,7 +12,7 @@ import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { NotEmptyArray } from '@atproto/common'
+import { MINUTE, NotEmptyArray } from '@atproto/common'
 
 export class AccountService {
   constructor(public db: Database) {}
@@ -244,6 +244,50 @@ export class AccountService {
       .where('did', '=', did)
       .where('name', '=', name)
       .execute()
+  }
+
+  async checkLoginAttempt(user: UserAccountEntry) {
+    const tooManyAttempts = user.loginAttemptCount >= 10
+    if (tooManyAttempts && user.loginAttemptAt) {
+      const now = new Date()
+      const loginAttemptAt = new Date(user.loginAttemptAt)
+      const cooldownAt = new Date(loginAttemptAt.getTime() + MINUTE)
+      const pastCooldown = now > cooldownAt
+      if (!pastCooldown) {
+        return false
+      } else {
+        // reset login attempts after cooldown
+        await this.db.db
+          .updateTable('user_account')
+          .set({ loginAttemptCount: 0 })
+          .where('did', '=', user.did)
+          .executeTakeFirst()
+      }
+    }
+    return true
+  }
+
+  async failedLoginAttempt(did: string) {
+    const { ref } = this.db.db.dynamic
+    await this.db.db
+      .updateTable('user_account')
+      .set({
+        loginAttemptAt: new Date().toISOString(),
+        loginAttemptCount: sql`${ref('loginAttemptCount')} + 1`,
+      })
+      .where('did', '=', did)
+      .executeTakeFirst()
+  }
+
+  async successfulLoginAttempt(did: string) {
+    await this.db.db
+      .updateTable('user_account')
+      .set({
+        loginAttemptAt: new Date().toISOString(),
+        loginAttemptCount: 0,
+      })
+      .where('did', '=', did)
+      .executeTakeFirst()
   }
 
   async verifyAccountPassword(did: string, password: string): Promise<boolean> {

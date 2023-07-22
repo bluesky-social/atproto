@@ -6,6 +6,7 @@ import Mail from 'nodemailer/lib/mailer'
 import { AppContext, Database } from '../src'
 import * as util from './_util'
 import { ServerMailer } from '../src/mailer'
+import { MINUTE } from '@atproto/common'
 
 const email = 'alice@test.com'
 const handle = 'alice.test'
@@ -542,5 +543,44 @@ describe('account', () => {
         password,
       }),
     ).resolves.toBeDefined()
+  })
+
+  it('fails early after too many login attempts.', async () => {
+    const TRIED = 'Invalid identifier or password'
+    const FAILED_EARLY =
+      'Too many login attempts, please wait a minute then try again'
+    const tryBadPassword = () =>
+      agent.api.com.atproto.server.createSession({
+        identifier: handle,
+        password: 'bad-pass',
+      })
+    const tryGoodPassword = () =>
+      agent.api.com.atproto.server.createSession({
+        identifier: handle,
+        password,
+      })
+    // try bad pass 10 times in a row
+    for (let i = 0; i < 10; ++i) {
+      await expect(tryBadPassword()).rejects.toThrow(TRIED)
+    }
+    // fails early on 11th
+    await expect(tryBadPassword()).rejects.toThrow(FAILED_EARLY)
+    // fails early on 12th
+    await expect(tryBadPassword()).rejects.toThrow(FAILED_EARLY)
+    // simulate cooldown then try again
+    await db.db
+      .updateTable('user_account')
+      .set({
+        loginAttemptAt: new Date(Date.now() - MINUTE - 5000).toISOString(),
+      })
+      .where('did', '=', did)
+      .execute()
+    for (let i = 0; i < 9; ++i) {
+      await expect(tryBadPassword()).rejects.toThrow(TRIED)
+    }
+    // succeed on 10th w/ correct password
+    await expect(tryGoodPassword()).resolves.toBeDefined()
+    // success reset, allow checking with failure again
+    await expect(tryBadPassword()).rejects.toThrow(TRIED)
   })
 })
