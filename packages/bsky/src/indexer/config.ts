@@ -14,8 +14,9 @@ export interface IndexerConfigValues {
   labelerKeywords: Record<string, string>
   indexerConcurrency?: number
   indexerPartitionIds: number[]
-  indexerNamespace?: string
+  indexerPartitionBatchSize?: number
   indexerSubLockId?: number
+  indexerNamespace?: string
 }
 
 export class IndexerConfig {
@@ -46,6 +47,9 @@ export class IndexerConfig {
             parseInt(n, 10),
           )
         : [])
+    const indexerPartitionBatchSize = maybeParseInt(
+      process.env.INDEXER_PARTITION_BATCH_SIZE,
+    )
     const indexerConcurrency = maybeParseInt(process.env.INDEXER_CONCURRENCY)
     const indexerNamespace = overrides?.indexerNamespace
     const indexerSubLockId = maybeParseInt(process.env.INDEXER_SUB_LOCK_ID)
@@ -65,6 +69,7 @@ export class IndexerConfig {
       hiveApiKey,
       indexerPartitionIds,
       indexerConcurrency,
+      indexerPartitionBatchSize,
       indexerNamespace,
       indexerSubLockId,
       labelerKeywords,
@@ -114,6 +119,10 @@ export class IndexerConfig {
 
   get indexerPartitionIds() {
     return this.cfg.indexerPartitionIds
+  }
+
+  get indexerPartitionBatchSize() {
+    return this.cfg.indexerPartitionBatchSize
   }
 
   get indexerNamespace() {

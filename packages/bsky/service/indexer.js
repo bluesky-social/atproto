@@ -43,6 +43,7 @@ const main = async () => {
 //  - LABELER_DID
 //  - HIVE_API_KEY
 //  - INDEXER_PARTITION_IDS
+//  - INDEXER_PARTITION_BATCH_SIZE
 //  - INDEXER_CONCURRENCY
 //  - INDEXER_SUB_LOCK_ID
 const getEnv = () => ({

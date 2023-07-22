@@ -25,13 +25,14 @@ export class BskyIngester {
   }): BskyIngester {
     const { db, redis, cfg } = opts
     const ctx = new IngesterContext({ db, redis, cfg })
-    const sub = new IngesterSubscription(
-      ctx,
-      cfg.repoProvider,
-      cfg.ingesterNamespace,
-      cfg.ingesterSubLockId,
-      cfg.ingesterPartitionCount,
-    )
+    const sub = new IngesterSubscription(ctx, {
+      service: cfg.repoProvider,
+      namespace: cfg.ingesterNamespace,
+      subLockId: cfg.ingesterSubLockId,
+      partitionCount: cfg.ingesterPartitionCount,
+      maxItems: cfg.ingesterMaxItems,
+      checkItemsEveryN: cfg.ingesterCheckItemsEveryN,
+    })
     return new BskyIngester({ ctx, sub })
   }
 

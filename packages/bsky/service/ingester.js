@@ -46,6 +46,8 @@ const main = async () => {
 // Also accepts the following in readEnv():
 // - REPO_PROVIDER
 // - INGESTER_PARTITION_COUNT
+// - INGESTER_MAX_ITEMS
+// - INGESTER_CHECK_ITEMS_EVERY_N
 // - INGESTER_SUB_LOCK_ID
 const getEnv = () => ({
   version: process.env.BSKY_VERSION,

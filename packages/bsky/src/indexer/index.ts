@@ -62,13 +62,13 @@ export class BskyIndexer {
       didCache,
       backgroundQueue,
     })
-    const sub = new IndexerSubscription(
-      ctx,
-      cfg.indexerPartitionIds,
-      cfg.indexerNamespace,
-      cfg.indexerSubLockId,
-      cfg.indexerConcurrency,
-    )
+    const sub = new IndexerSubscription(ctx, {
+      partitionIds: cfg.indexerPartitionIds,
+      partitionBatchSize: cfg.indexerPartitionBatchSize,
+      concurrency: cfg.indexerConcurrency,
+      subLockId: cfg.indexerSubLockId,
+      namespace: cfg.indexerNamespace,
+    })
     return new BskyIndexer({ ctx, sub })
   }
 

@@ -28,21 +28,28 @@ import {
 } from '../subscription/util'
 import IndexerContext from './context'
 
-export const INDEXER_SUB_ID = 1000 // @TODO same as ingester, needs to be per partition
+export const INDEXER_SUB_LOCK_ID = 1200 // need one per partition
 
 export class IndexerSubscription {
-  leader = new Leader(this.subLockId, this.ctx.db)
   destroyed = false
-  repoQueue = new PartitionedQueue({ concurrency: this.concurrency })
-  partitions: PerfectMap<number, Partition> = new PerfectMap()
+  leader = new Leader(this.opts.subLockId || INDEXER_SUB_LOCK_ID, this.ctx.db)
+  repoQueue = new PartitionedQueue({
+    concurrency: this.opts.concurrency ?? Infinity,
+  })
+  partitions = new PerfectMap<number, Partition>()
+  partitionIds = this.opts.partitionIds
+  namespace = this.opts.namespace
   indexingSvc: IndexingService
 
   constructor(
     public ctx: IndexerContext,
-    public partitionIds: number[],
-    public namespace?: string,
-    public subLockId = INDEXER_SUB_ID,
-    public concurrency = Infinity,
+    public opts: {
+      partitionIds: number[]
+      namespace?: string
+      subLockId?: number
+      concurrency?: number
+      partitionBatchSize?: number
+    },
   ) {
     this.indexingSvc = ctx.services.indexing(ctx.db)
   }
@@ -52,7 +59,7 @@ export class IndexerSubscription {
     while (!done()) {
       const results = await this.ctx.redis.xreadBuffer(
         'COUNT',
-        50, // events per stream
+        this.opts.partitionBatchSize ?? 50, // events per stream
         'BLOCK',
         1000, // millis
         'STREAMS',
@@ -114,7 +121,9 @@ export class IndexerSubscription {
   async resume() {
     this.destroyed = false
     this.partitions = new Map()
-    this.repoQueue = new PartitionedQueue({ concurrency: this.concurrency })
+    this.repoQueue = new PartitionedQueue({
+      concurrency: this.opts.concurrency ?? Infinity,
+    })
     await this.run()
   }
 

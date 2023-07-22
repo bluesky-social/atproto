@@ -6,9 +6,11 @@ export interface IngesterConfigValues {
   dbPostgresSchema?: string
   redisUrl: string
   repoProvider: string
-  ingesterPartitionCount?: number
+  ingesterPartitionCount: number
   ingesterNamespace?: string
   ingesterSubLockId?: number
+  ingesterMaxItems?: number
+  ingesterCheckItemsEveryN?: number
 }
 
 export class IngesterConfig {
@@ -28,6 +30,12 @@ export class IngesterConfig {
     const ingesterSubLockId =
       overrides?.ingesterSubLockId ||
       maybeParseInt(process.env.INGESTER_SUB_LOCK_ID)
+    const ingesterMaxItems =
+      overrides?.ingesterMaxItems ||
+      maybeParseInt(process.env.INGESTER_MAX_ITEMS)
+    const ingesterCheckItemsEveryN =
+      overrides?.ingesterCheckItemsEveryN ||
+      maybeParseInt(process.env.INGESTER_CHECK_ITEMS_EVERY_N)
     const ingesterNamespace = overrides?.ingesterNamespace
     assert(dbPostgresUrl)
     assert(redisUrl)
@@ -42,6 +50,8 @@ export class IngesterConfig {
       ingesterPartitionCount,
       ingesterSubLockId,
       ingesterNamespace,
+      ingesterMaxItems,
+      ingesterCheckItemsEveryN,
     })
   }
 
@@ -67,6 +77,14 @@ export class IngesterConfig {
 
   get ingesterPartitionCount() {
     return this.cfg.ingesterPartitionCount
+  }
+
+  get ingesterMaxItems() {
+    return this.cfg.ingesterMaxItems
+  }
+
+  get ingesterCheckItemsEveryN() {
+    return this.cfg.ingesterCheckItemsEveryN
   }
 
   get ingesterNamespace() {

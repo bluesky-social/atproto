@@ -18,22 +18,26 @@ import { IngesterContext } from './context'
 
 const METHOD = ids.ComAtprotoSyncSubscribeRepos
 const CURSOR_KEY = 'ingester:cursor'
-export const INGESTER_SUB_ID = 1000
-export const DEFAULT_PARTITION_COUNT = 64
+export const INGESTER_SUB_LOCK_ID = 1000
 
 export class IngesterSubscription {
-  leader = new Leader(this.subLockId, this.ctx.db)
   cursorQueue = new LatestQueue()
   destroyed = false
   lastSeq: number | undefined
   lastCursor: number | undefined
+  backpressure = new Backpressure(this)
+  leader = new Leader(this.opts.subLockId || INGESTER_SUB_LOCK_ID, this.ctx.db)
 
   constructor(
     public ctx: IngesterContext,
-    public service: string,
-    public namespace?: string,
-    public subLockId = INGESTER_SUB_ID,
-    public partitionCount = DEFAULT_PARTITION_COUNT,
+    public opts: {
+      service: string
+      partitionCount: number
+      maxItems?: number
+      checkItemsEveryN?: number
+      subLockId?: number
+      namespace?: string
+    },
   ) {}
 
   async processSubscription(sub: Subscription<Message>) {
@@ -42,14 +46,15 @@ export class IngesterSubscription {
       if ('info' in details) {
         // These messages are not sequenced, we just log them and carry on
         subLogger.warn(
-          { provider: this.service, message: loggableMessage(msg) },
+          { provider: this.opts.service, message: loggableMessage(msg) },
           `ingester subscription ${details.info ? 'info' : 'unknown'} message`,
         )
         continue
       }
       const { seq, repo, message: processableMessage } = details
       this.lastSeq = seq
-      const partitionKey = await getPartition(repo, this.partitionCount)
+      console.log({ seq })
+      const partitionKey = await getPartition(repo, this.opts.partitionCount)
       try {
         await this.ctx.redis.xadd(
           this.ns(partitionKey),
@@ -68,7 +73,7 @@ export class IngesterSubscription {
         }
       }
       this.cursorQueue.add(() => this.setCursor(seq))
-      // @TODO backpressure?
+      await this.backpressure.ready()
     }
   }
 
@@ -84,7 +89,7 @@ export class IngesterSubscription {
         }
       } catch (err) {
         subLogger.error(
-          { err, provider: this.service },
+          { err, provider: this.opts.service },
           'ingester subscription error',
         )
       }
@@ -122,7 +127,7 @@ export class IngesterSubscription {
 
   private getSubscription(opts: { signal: AbortSignal }) {
     return new Subscription({
-      service: this.service,
+      service: this.opts.service,
       method: METHOD,
       signal: opts.signal,
       getParams: async () => {
@@ -146,7 +151,7 @@ export class IngesterSubscription {
               repo: ifString(value?.['repo']),
               commit: ifString(value?.['commit']?.toString()),
               time: ifString(value?.['time']),
-              provider: this.service,
+              provider: this.opts.service,
             },
             'ingester subscription skipped invalid message',
           )
@@ -157,7 +162,7 @@ export class IngesterSubscription {
 
   // namespace redis keys
   ns(key: string) {
-    return this.namespace ? `${this.namespace}:${key}` : key
+    return this.opts.namespace ? `${this.opts.namespace}:${key}` : key
   }
 }
 
@@ -197,4 +202,49 @@ function ui8ToBuffer(bytes: Uint8Array) {
 async function getPartition(did: string, n: number) {
   const partition = await randomIntFromSeed(did, n)
   return `repo:${partition}`
+}
+
+class Backpressure {
+  count = 0
+  lastTotal = 0
+  partitionCount = this.sub.opts.partitionCount
+  limit = this.sub.opts.maxItems ?? Infinity
+  checkEvery = this.sub.opts.checkItemsEveryN ?? 500
+
+  constructor(public sub: IngesterSubscription) {}
+
+  async ready() {
+    this.count++
+    const shouldCheck =
+      this.limit !== Infinity &&
+      (this.count === 1 || this.count % this.checkEvery === 0)
+    console.log({ shouldCheck, count: this.count, checkEvery: this.checkEvery })
+    if (!shouldCheck) return
+    let ready = false
+    const start = Date.now()
+    while (!ready) {
+      ready = await this.check()
+      if (!ready) {
+        subLogger.warn(
+          {
+            limit: this.limit,
+            total: this.lastTotal,
+            duration: Date.now() - start,
+          },
+          'ingester backpressure',
+        )
+        await wait(250)
+      }
+    }
+  }
+
+  async check() {
+    const pipeline = this.sub.ctx.redis.pipeline()
+    for (let i = 0; i < this.partitionCount; ++i) {
+      pipeline.xlen(this.sub.ns(`repo:${i}`))
+    }
+    const results = (await pipeline.exec()) ?? []
+    this.lastTotal = results.reduce((sum, [, len]) => sum + Number(len), 0)
+    return this.lastTotal < this.limit
+  }
 }

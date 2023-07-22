@@ -113,7 +113,7 @@ export async function processAll(
   while (true) {
     // check indexers
     let pipeline = ingester.ctx.redis.pipeline()
-    for (let i = 0; i < ingester.sub.partitionCount; ++i) {
+    for (let i = 0; i < ingester.sub.opts.partitionCount; ++i) {
       pipeline = pipeline.xlen(ingester.sub.ns(`repo:${i}`))
     }
     const results = await pipeline.exec()
