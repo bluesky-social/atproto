@@ -1,4 +1,5 @@
 import { once, EventEmitter } from 'events'
+import { MINUTE } from '@atproto/common'
 import AtpAgent, { ComAtprotoServerResetPassword } from '@atproto/api'
 import { IdResolver } from '@atproto/identity'
 import * as crypto from '@atproto/crypto'
@@ -6,7 +7,6 @@ import Mail from 'nodemailer/lib/mailer'
 import { AppContext, Database } from '../src'
 import * as util from './_util'
 import { ServerMailer } from '../src/mailer'
-import { MINUTE } from '@atproto/common'
 
 const email = 'alice@test.com'
 const handle = 'alice.test'
