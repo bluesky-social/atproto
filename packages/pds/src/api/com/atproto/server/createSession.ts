@@ -5,7 +5,7 @@ import { Server } from '../../../../lexicon'
 import { AuthScope } from '../../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.createSession(async ({ req, input }) => {
+  server.com.atproto.server.createSession(async ({ input }) => {
     const { password } = input.body
     const identifier = input.body.identifier.toLowerCase()
     const authService = ctx.services.auth(ctx.db)
@@ -19,17 +19,6 @@ export default function (server: Server, ctx: AppContext) {
       throw new AuthRequiredError('Invalid identifier or password')
     }
 
-    const canLogin = await actorService.checkLoginAttempt(user)
-    if (!canLogin) {
-      req.log.warn(
-        { did: user.did, attempts: user.loginAttemptCount },
-        'too many login attempts',
-      )
-      throw new AuthRequiredError(
-        'Too many login attempts, please wait a minute then try again',
-      )
-    }
-
     let appPasswordName: string | null = null
     const validAccountPass = await actorService.verifyAccountPassword(
       user.did,
@@ -38,12 +27,9 @@ export default function (server: Server, ctx: AppContext) {
     if (!validAccountPass) {
       appPasswordName = await actorService.verifyAppPassword(user.did, password)
       if (appPasswordName === null) {
-        await actorService.failedLoginAttempt(user.did)
         throw new AuthRequiredError('Invalid identifier or password')
       }
     }
-
-    await actorService.successfulLoginAttempt(user.did)
 
     if (softDeleted(user)) {
       throw new AuthRequiredError(
