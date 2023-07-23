@@ -1,3 +1,4 @@
+import { RepoRecord } from '@atproto/lexicon'
 import { View as ImagesEmbedView } from '../../../lexicon/types/app/bsky/embed/images'
 import { View as ExternalEmbedView } from '../../../lexicon/types/app/bsky/embed/external'
 import {
@@ -33,7 +34,7 @@ export type PostInfo = {
   uri: string
   cid: string
   creator: string
-  recordBytes: Uint8Array
+  record: RepoRecord
   indexedAt: string
   likeCount: number | null
   repostCount: number | null
@@ -43,6 +44,11 @@ export type PostInfo = {
 }
 
 export type PostInfoMap = { [uri: string]: PostInfo }
+
+export type PostBlockState = Record<
+  string,
+  { reply?: boolean; embed?: boolean }
+>
 
 export type ActorInfo = {
   did: string
