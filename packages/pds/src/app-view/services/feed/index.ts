@@ -14,7 +14,6 @@ import { isMain as isEmbedImages } from '../../../lexicon/types/app/bsky/embed/i
 import { isMain as isEmbedExternal } from '../../../lexicon/types/app/bsky/embed/external'
 import {
   isMain as isEmbedRecord,
-  isViewBlocked,
   isViewRecord,
 } from '../../../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../../../lexicon/types/app/bsky/embed/recordWithMedia'
@@ -30,7 +29,7 @@ import {
   RecordEmbedViewRecordMap,
   PostBlockState,
   RecordEmbedViewRecord,
-  PostEmbedView,
+  FeedHydrationOptions,
 } from './types'
 import { LabelService, Labels } from '../label'
 import { ActorService } from '../actor'
@@ -86,7 +85,7 @@ export class FeedService {
       ])
   }
 
-  selectFeedGeneratorQb(requester: string) {
+  selectFeedGeneratorQb(requester: string | null) {
     const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('feed_generator')
@@ -110,7 +109,7 @@ export class FeedService {
       .select((qb) =>
         qb
           .selectFrom('like')
-          .where('like.creator', '=', requester)
+          .where('like.creator', '=', requester ?? '')
           .whereRef('like.subject', '=', 'feed_generator.uri')
           .select('uri')
           .as('viewerLike'),
@@ -120,7 +119,7 @@ export class FeedService {
   // @NOTE keep in sync with actorService.views.profile()
   async getActorInfos(
     dids: string[],
-    requester: string,
+    requester: string | null,
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean }, // @NOTE used by hydrateFeed() to batch label hydration
   ): Promise<ActorInfoMap> {
     if (dids.length < 1) return {}
@@ -144,38 +143,38 @@ export class FeedService {
           'profile.indexedAt as indexedAt',
           this.db.db
             .selectFrom('follow')
-            .where('creator', '=', requester)
+            .where('creator', '=', requester ?? '')
             .whereRef('subjectDid', '=', ref('did_handle.did'))
             .select('uri')
             .as('requesterFollowing'),
           this.db.db
             .selectFrom('follow')
             .whereRef('creator', '=', ref('did_handle.did'))
-            .where('subjectDid', '=', requester)
+            .where('subjectDid', '=', requester ?? '')
             .select('uri')
             .as('requesterFollowedBy'),
           this.db.db
             .selectFrom('actor_block')
-            .where('creator', '=', requester)
+            .where('creator', '=', requester ?? '')
             .whereRef('subjectDid', '=', ref('did_handle.did'))
             .select('uri')
             .as('requesterBlocking'),
           this.db.db
             .selectFrom('actor_block')
             .whereRef('creator', '=', ref('did_handle.did'))
-            .where('subjectDid', '=', requester)
+            .where('subjectDid', '=', requester ?? '')
             .select('uri')
             .as('requesterBlockedBy'),
           this.db.db
             .selectFrom('mute')
             .whereRef('did', '=', ref('did_handle.did'))
-            .where('mutedByDid', '=', requester)
+            .where('mutedByDid', '=', requester ?? '')
             .select('did')
             .as('requesterMuted'),
           this.db.db
             .selectFrom('list_item')
             .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
-            .where('list_mute.mutedByDid', '=', requester)
+            .where('list_mute.mutedByDid', '=', requester ?? '')
             .whereRef('list_item.subjectDid', '=', ref('did_handle.did'))
             .select('list_item.listUri')
             .limit(1)
@@ -222,12 +221,13 @@ export class FeedService {
 
   async getPostInfos(
     postUris: string[],
-    requester: string,
+    requester: string | null,
+    options?: Pick<FeedHydrationOptions, 'includeSoftDeleted'>,
   ): Promise<PostInfoMap> {
     if (postUris.length < 1) return {}
     const db = this.db.db
     const { ref } = db.dynamic
-    const posts = await db
+    let postsQb = db
       .selectFrom('post')
       .where('post.uri', 'in', postUris)
       .leftJoin('post_agg', 'post_agg.uri', 'post.uri')
@@ -238,8 +238,14 @@ export class FeedService {
       )
       .innerJoin('repo_root', 'repo_root.did', 'post.creator')
       .innerJoin('record', 'record.uri', 'post.uri')
-      .where(notSoftDeletedClause(ref('repo_root'))) // Ensures post reply parent/roots get omitted from views when taken down
-      .where(notSoftDeletedClause(ref('record')))
+
+    if (!options?.includeSoftDeleted) {
+      postsQb = postsQb
+        .where(notSoftDeletedClause(ref('repo_root'))) // Ensures post reply parent/roots get omitted from views when taken down
+        .where(notSoftDeletedClause(ref('record')))
+    }
+
+    const posts = await postsQb
       .select([
         'post.uri as uri',
         'post.cid as cid',
@@ -249,15 +255,16 @@ export class FeedService {
         'post_agg.likeCount as likeCount',
         'post_agg.repostCount as repostCount',
         'post_agg.replyCount as replyCount',
+        'record.takedownId as takedownId',
         db
           .selectFrom('repost')
-          .where('creator', '=', requester)
+          .where('creator', '=', requester ?? '')
           .whereRef('subject', '=', ref('post.uri'))
           .select('uri')
           .as('requesterRepost'),
         db
           .selectFrom('like')
-          .where('creator', '=', requester)
+          .where('creator', '=', requester ?? '')
           .whereRef('subject', '=', ref('post.uri'))
           .select('uri')
           .as('requesterLike'),
@@ -274,7 +281,10 @@ export class FeedService {
     }, {} as PostInfoMap)
   }
 
-  async getFeedGeneratorInfos(generatorUris: string[], requester: string) {
+  async getFeedGeneratorInfos(
+    generatorUris: string[],
+    requester: string | null,
+  ) {
     if (generatorUris.length < 1) return {}
     const feedGens = await this.selectFeedGeneratorQb(requester)
       .where('feed_generator.uri', 'in', generatorUris)
@@ -325,9 +335,8 @@ export class FeedService {
 
   async hydrateFeed(
     items: FeedRow[],
-    requester: string,
-    // @TODO (deprecated) remove this once all clients support the blocked/not-found union on post views
-    usePostViewUnion?: boolean,
+    requester: string | null,
+    options?: FeedHydrationOptions,
   ): Promise<FeedViewPost[]> {
     const actorDids = new Set<string>()
     const postUris = new Set<string>()
@@ -346,11 +355,13 @@ export class FeedService {
         actorDids.add(new AtUri(item.replyRoot).hostname)
       }
     }
+
     const [actors, posts, labels] = await Promise.all([
       this.getActorInfos(Array.from(actorDids), requester, {
         skipLabels: true,
+        includeSoftDeleted: options?.includeSoftDeleted,
       }),
-      this.getPostInfos(Array.from(postUris), requester),
+      this.getPostInfos(Array.from(postUris), requester, options),
       this.services.label.getLabelsForSubjects([...postUris, ...actorDids]),
     ])
     const blocks = await this.blocksForPosts(posts)
@@ -363,7 +374,7 @@ export class FeedService {
       embeds,
       labels,
       blocks,
-      usePostViewUnion,
+      options,
     )
   }
 
@@ -437,7 +448,7 @@ export class FeedService {
   async embedsForPosts(
     postInfos: PostInfoMap,
     blocks: PostBlockState,
-    requester: string,
+    requester: string | null,
     depth = 0,
   ) {
     const postMap = postRecordsFromInfos(postInfos)
@@ -482,7 +493,7 @@ export class FeedService {
 
   async nestedRecordViews(
     posts: PostRecord[],
-    requester: string,
+    requester: string | null,
     depth: number,
   ): Promise<RecordEmbedViewRecordMap> {
     const nestedUris = nestedRecordUris(posts)
