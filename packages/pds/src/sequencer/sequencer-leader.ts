@@ -141,7 +141,6 @@ export class SequencerLeader {
       .selectFrom('repo_seq')
       .where('seq', 'is', null)
       .select(countAll.as('count'))
-      .limit(1)
       .executeTakeFirst()
     return res?.count ?? 0
   }
