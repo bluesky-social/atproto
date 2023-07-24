@@ -30,6 +30,7 @@ import {
   XRPCStreamHandler,
   Params,
   InternalServerError,
+  XRPCReqContext,
 } from './types'
 import {
   decodeQueryParams,
@@ -38,6 +39,7 @@ import {
   validateOutput,
 } from './util'
 import log from './logger'
+import { RateLimiter } from './rate-limiter'
 
 export function createServer(lexicons?: unknown[], options?: Options) {
   return new Server(lexicons, options)
@@ -50,6 +52,8 @@ export class Server {
   lex = new Lexicons()
   options: Options
   middleware: Record<'json' | 'text', RequestHandler>
+  sharedRateLimiters: Record<string, RateLimiter>
+  routeRateLimiters: Record<string, RateLimiter>
 
   constructor(lexicons?: unknown[], opts?: Options) {
     if (lexicons) {
@@ -138,6 +142,25 @@ export class Server {
       middleware.push(this.middleware.json)
       middleware.push(this.middleware.text)
     }
+    if (config.rateLimit) {
+      if (config.rateLimit.shared) {
+        const rateLimiter = this.sharedRateLimiters[config.rateLimit.name]
+        if (!rateLimiter) {
+          throw new Error(
+            `No shared rate limiter with name: ${config.rateLimit.name}`,
+          )
+        }
+        this.routeRateLimiters[nsid] = rateLimiter
+      } else {
+        this.routeRateLimiters[nsid] = new RateLimiter({
+          keyPrefix: nsid,
+          duration: config.rateLimit.duration,
+          rate: config.rateLimit.rate,
+          calcKey: config.rateLimit.calcKey,
+          calcPoints: config.rateLimit.calcPoints,
+        })
+      }
+    }
     this.routes[verb](
       `/xrpc/${nsid}`,
       ...middleware,
@@ -185,6 +208,8 @@ export class Server {
             validateOutput(nsid, def, output, this.lex)
     const assertValidXrpcParams = (params: unknown) =>
       this.lex.assertValidXrpcParams(nsid, params)
+    const consumeRateLimit = (ctx: XRPCReqContext) =>
+      this.routeRateLimiters[nsid]?.consume(ctx)
     return async function (req, res, next) {
       try {
         // validate request
@@ -203,14 +228,19 @@ export class Server {
 
         const locals: RequestLocals = req[kRequestLocals]
 
-        // run the handler
-        const outputUnvalidated = await handler({
+        const reqCtx: XRPCReqContext = {
           params,
           input,
           auth: locals.auth,
           req,
           res,
-        })
+        }
+
+        // handle rate limits
+        await consumeRateLimit(reqCtx)
+
+        // run the handler
+        const outputUnvalidated = await handler(reqCtx)
 
         if (isHandlerError(outputUnvalidated)) {
           throw XRPCError.fromError(outputUnvalidated)

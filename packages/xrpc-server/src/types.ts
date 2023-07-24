@@ -50,13 +50,17 @@ export type HandlerError = zod.infer<typeof handlerError>
 
 export type HandlerOutput = HandlerSuccess | HandlerError
 
-export type XRPCHandler = (ctx: {
+export type XRPCReqContext = {
   auth: HandlerAuth | undefined
   params: Params
   input: HandlerInput | undefined
   req: express.Request
   res: express.Response
-}) => Promise<HandlerOutput> | HandlerOutput | undefined
+}
+
+export type XRPCHandler = (
+  ctx: XRPCReqContext,
+) => Promise<HandlerOutput> | HandlerOutput | undefined
 
 export type XRPCStreamHandler = (ctx: {
   auth: HandlerAuth | undefined
@@ -76,7 +80,23 @@ export type StreamAuthVerifier = (ctx: {
   req: IncomingMessage
 }) => Promise<AuthOutput> | AuthOutput
 
+type SharedRateLimitOpts = {
+  shared: true
+  name: string
+  calcKey?: (ctx: XRPCReqContext) => string
+  calcPoints?: (ctx: XRPCReqContext) => number
+}
+
+type RateLimitOpts = {
+  shared: false
+  duration: number
+  rate: number
+  calcKey?: (ctx: XRPCReqContext) => string
+  calcPoints?: (ctx: XRPCReqContext) => number
+}
+
 export type XRPCHandlerConfig = {
+  rateLimit?: SharedRateLimitOpts | RateLimitOpts
   auth?: AuthVerifier
   handler: XRPCHandler
 }
@@ -151,6 +171,12 @@ export class AuthRequiredError extends XRPCError {
 export class ForbiddenError extends XRPCError {
   constructor(errorMessage?: string, customErrorName?: string) {
     super(ResponseType.Forbidden, errorMessage, customErrorName)
+  }
+}
+
+export class RateLimitExceededError extends XRPCError {
+  constructor(errorMessage?: string, customErrorName?: string) {
+    super(ResponseType.RateLimitExceeded, errorMessage, customErrorName)
   }
 }
 
