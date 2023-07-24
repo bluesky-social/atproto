@@ -19,10 +19,9 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.applyWrites({
     auth: ctx.accessVerifierCheckTakedown,
     rateLimits: {
-      shared: true,
       name: 'repo-write',
-      calcKey: ({ auth }) => auth?.credentials.did,
-      calcPoints: ({ input }) => input?.body.tx.writes.length,
+      calcKey: ({ auth }) => auth.credentials.did,
+      calcPoints: ({ input }) => input.body.writes.length,
     },
     handler: async ({ input, auth }) => {
       const tx = input.body

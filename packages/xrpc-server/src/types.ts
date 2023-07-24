@@ -17,7 +17,7 @@ export type Options = {
   }
   rateLimits?: {
     creator: RateLimiterCreator
-    limits: SharedRateLimitDesc[]
+    limits: RateLimitDescription[]
   }
 }
 
@@ -84,9 +84,17 @@ export type StreamAuthVerifier = (ctx: {
   req: IncomingMessage
 }) => Promise<AuthOutput> | AuthOutput
 
-export interface RateLimiter {
-  consume(ctx: XRPCReqContext): Promise<void>
+export type CalcKeyFn = (ctx: XRPCReqContext) => string
+export type CalcPointsFn = (ctx: XRPCReqContext) => number
+
+export interface RateLimiterI {
+  consume: RateLimiterConsume
 }
+
+export type RateLimiterConsume = (
+  ctx: XRPCReqContext,
+  opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
+) => Promise<void>
 
 export type RateLimiterCreator = (opts: {
   keyPrefix: string
@@ -94,27 +102,37 @@ export type RateLimiterCreator = (opts: {
   points: number
   calcKey?: (ctx: XRPCReqContext) => string
   calcPoints?: (ctx: XRPCReqContext) => number
-}) => RateLimiter
+}) => RateLimiterI
 
-export type SharedRateLimitOpts = {
-  shared: true
+export type RateLimitDescription = {
   name: string
-  calcKey?: (ctx: XRPCReqContext) => string
-  calcPoints?: (ctx: XRPCReqContext) => number
-}
-
-export type RateLimitOpts = {
-  shared: false
   duration: number
   points: number
   calcKey?: (ctx: XRPCReqContext) => string
   calcPoints?: (ctx: XRPCReqContext) => number
 }
 
-export type SharedRateLimitDesc = RateLimitOpts & { name: string }
+export type SharedRateLimitOpts = {
+  name: string
+  calcKey?: (ctx: XRPCReqContext) => string
+  calcPoints?: (ctx: XRPCReqContext) => number
+}
+
+export type RouteRateLimitOpts = {
+  duration: number
+  points: number
+  calcKey?: (ctx: XRPCReqContext) => string
+  calcPoints?: (ctx: XRPCReqContext) => number
+}
+
+export const isShared = (
+  opts: SharedRateLimitOpts | RouteRateLimitOpts,
+): opts is SharedRateLimitOpts => {
+  return typeof opts['name'] === 'string'
+}
 
 export type XRPCHandlerConfig = {
-  rateLimit?: SharedRateLimitOpts | RateLimitOpts
+  rateLimit?: SharedRateLimitOpts | RouteRateLimitOpts
   auth?: AuthVerifier
   handler: XRPCHandler
 }

@@ -31,6 +31,9 @@ import {
   Params,
   InternalServerError,
   XRPCReqContext,
+  RateLimiterI,
+  RateLimiterConsume,
+  isShared,
 } from './types'
 import {
   decodeQueryParams,
@@ -52,8 +55,8 @@ export class Server {
   lex = new Lexicons()
   options: Options
   middleware: Record<'json' | 'text', RequestHandler>
-  sharedRateLimiters: Record<string, RateLimiter>
-  routeRateLimiters: Record<string, RateLimiter>
+  rateLimiters: Record<string, RateLimiterI>
+  routeRateLimiterFns: Record<string, RateLimiterConsume>
 
   constructor(lexicons?: unknown[], opts?: Options) {
     if (lexicons) {
@@ -70,9 +73,14 @@ export class Server {
       json: express.json({ limit: opts?.payload?.jsonLimit }),
       text: express.text({ limit: opts?.payload?.textLimit }),
     }
+    this.rateLimiters = {}
+    this.routeRateLimiterFns = {}
     if (opts?.rateLimits?.limits) {
       for (const limit of opts.rateLimits.limits) {
-        const limiter = opts.rateLimits.creator({ keyPrefix: limit.name })
+        this.rateLimiters[limit.name] = opts.rateLimits.creator({
+          ...limit,
+          keyPrefix: limit.name,
+        })
       }
     }
   }
@@ -148,22 +156,32 @@ export class Server {
       middleware.push(this.middleware.text)
     }
     if (config.rateLimit) {
-      if (config.rateLimit.shared) {
-        const rateLimiter = this.sharedRateLimiters[config.rateLimit.name]
+      if (isShared(config.rateLimit)) {
+        const { name, calcKey, calcPoints } = config.rateLimit
+        const rateLimiter = this.rateLimiters[name]
         if (!rateLimiter) {
-          throw new Error(
-            `No shared rate limiter with name: ${config.rateLimit.name}`,
-          )
+          throw new Error(`No shared rate limiter with name: ${name}`)
         }
-        this.routeRateLimiters[nsid] = rateLimiter
+        this.routeRateLimiterFns[nsid] = (ctx: XRPCReqContext) =>
+          rateLimiter.consume(ctx, {
+            calcKey,
+            calcPoints,
+          })
       } else {
-        this.routeRateLimiters[nsid] = new RateLimiter({
+        const { duration, points, calcKey, calcPoints } = config.rateLimit
+        const rateLimiter = new RateLimiter({
           keyPrefix: nsid,
-          duration: config.rateLimit.duration,
-          points: config.rateLimit.points,
-          calcKey: config.rateLimit.calcKey,
-          calcPoints: config.rateLimit.calcPoints,
+          duration,
+          points,
+          calcKey,
+          calcPoints,
         })
+        this.rateLimiters[nsid] = rateLimiter
+        this.routeRateLimiterFns[nsid] = (ctx: XRPCReqContext) =>
+          rateLimiter.consume(ctx, {
+            calcKey,
+            calcPoints,
+          })
       }
     }
     this.routes[verb](
@@ -213,8 +231,7 @@ export class Server {
             validateOutput(nsid, def, output, this.lex)
     const assertValidXrpcParams = (params: unknown) =>
       this.lex.assertValidXrpcParams(nsid, params)
-    const consumeRateLimit = (ctx: XRPCReqContext) =>
-      this.routeRateLimiters[nsid]?.consume(ctx)
+    const consumeRateLimit = this.routeRateLimiterFns[nsid]
     return async function (req, res, next) {
       try {
         // validate request

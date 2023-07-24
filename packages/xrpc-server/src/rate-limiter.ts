@@ -1,17 +1,23 @@
-import { RateLimiterMemory } from 'rate-limiter-flexible'
-import { RateLimitExceededError, XRPCReqContext } from './types'
+import { RateLimiterAbstract, RateLimiterMemory } from 'rate-limiter-flexible'
+import {
+  CalcKeyFn,
+  CalcPointsFn,
+  RateLimitExceededError,
+  RateLimiterI,
+  XRPCReqContext,
+} from './types'
 
-export class SharedRateLimiter {
-  public limiter: RateLimiterMemory
-  public calcKey: (ctx: XRPCReqContext) => string
-  public calcPoints: (ctx: XRPCReqContext) => number
+export class RateLimiter implements RateLimiterI {
+  public limiter: RateLimiterAbstract
+  public calcKey: CalcKeyFn
+  public calcPoints: CalcPointsFn
 
   constructor(opts: {
     keyPrefix: string
     duration: number
     points: number
-    calcKey?: (ctx: XRPCReqContext) => string
-    calcPoints?: (ctx: XRPCReqContext) => number
+    calcKey?: CalcKeyFn
+    calcPoints?: CalcPointsFn
   }) {
     this.limiter = new RateLimiterMemory({
       keyPrefix: opts.keyPrefix,
@@ -22,9 +28,14 @@ export class SharedRateLimiter {
     this.calcPoints = opts.calcPoints ?? defaultPoints
   }
 
-  async consume(ctx: XRPCReqContext) {
-    const key = this.calcKey(ctx)
-    const points = this.calcPoints(ctx)
+  async consume(
+    ctx: XRPCReqContext,
+    opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
+  ) {
+    const key = opts?.calcKey ? opts.calcKey(ctx) : this.calcKey(ctx)
+    const points = opts?.calcPoints
+      ? opts.calcPoints(ctx)
+      : this.calcPoints(ctx)
     try {
       await this.limiter.consume(key, points)
     } catch (err) {
@@ -34,38 +45,5 @@ export class SharedRateLimiter {
   }
 }
 
-export class RateLimiter {
-  public limiter: RateLimiterMemory
-  public calcKey: (ctx: XRPCReqContext) => string
-  public calcPoints: (ctx: XRPCReqContext) => number
-
-  constructor(opts: {
-    keyPrefix: string
-    duration: number
-    points: number
-    calcKey?: (ctx: XRPCReqContext) => string
-    calcPoints?: (ctx: XRPCReqContext) => number
-  }) {
-    this.limiter = new RateLimiterMemory({
-      keyPrefix: opts.keyPrefix,
-      duration: opts.duration,
-      points: opts.points,
-    })
-    this.calcKey = opts.calcKey ?? defaultKey
-    this.calcPoints = opts.calcPoints ?? defaultPoints
-  }
-
-  async consume(ctx: XRPCReqContext) {
-    const key = this.calcKey(ctx)
-    const points = this.calcPoints(ctx)
-    try {
-      await this.limiter.consume(key, points)
-    } catch (err) {
-      // @TODO better error handling - fail open?
-      throw new RateLimitExceededError()
-    }
-  }
-}
-
-const defaultKey = (ctx: XRPCReqContext) => ctx.req.ip
-const defaultPoints = () => 1
+const defaultKey: CalcKeyFn = (ctx: XRPCReqContext) => ctx.req.ip
+const defaultPoints: CalcPointsFn = () => 1

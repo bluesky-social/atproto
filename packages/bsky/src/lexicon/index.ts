@@ -1372,11 +1372,22 @@ export class UnspeccedNS {
   }
 }
 
+type SharedRateLimitOpts<T> = {
+  name: string
+  calcKey?: (ctx: T) => string
+  calcPoints?: (ctx: T) => number
+}
+type RouteRateLimitOpts<T> = {
+  duration: number
+  points: number
+  calcKey?: (ctx: T) => string
+  calcPoints?: (ctx: T) => number
+}
 type ConfigOf<Auth, Handler, ReqCtx> =
   | Handler
   | {
       auth?: Auth
-      rateLimits?: (ctx: ReqCtx) => void
+      rateLimits?: SharedRateLimitOpts<ReqCtx> | RouteRateLimitOpts<ReqCtx>
       handler: Handler
     }
 type ExtractAuth<AV extends AuthVerifier | StreamAuthVerifier> = Extract<
