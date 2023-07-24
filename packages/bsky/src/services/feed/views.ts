@@ -1,4 +1,3 @@
-import { LexRecord, jsonStringToLex } from '@atproto/lexicon'
 import Database from '../../db'
 import {
   FeedViewPost,
@@ -29,6 +28,7 @@ import {
   MaybePostView,
   PostInfoMap,
   RecordEmbedViewRecord,
+  PostBlocksMap,
 } from './types'
 import { Labels } from '../label'
 import { ProfileView } from '../../lexicon/types/app/bsky/actor/defs'
@@ -85,6 +85,7 @@ export class FeedViews {
     posts: PostInfoMap,
     embeds: PostEmbedViews,
     labels: Labels,
+    blocks: PostBlocksMap,
     usePostViewUnion?: boolean,
   ): FeedViewPost[] {
     const feed: FeedViewPost[] = []
@@ -97,7 +98,7 @@ export class FeedViews {
         labels,
       )
       // skip over not found & blocked posts
-      if (!post) {
+      if (!post || blocks[post.uri]?.reply) {
         continue
       }
       const feedPost = { post }
@@ -124,6 +125,7 @@ export class FeedViews {
           posts,
           embeds,
           labels,
+          blocks,
           usePostViewUnion,
         )
         const replyRoot = this.formatMaybePostView(
@@ -132,6 +134,7 @@ export class FeedViews {
           posts,
           embeds,
           labels,
+          blocks,
           usePostViewUnion,
         )
         if (replyRoot && replyParent) {
@@ -163,7 +166,7 @@ export class FeedViews {
       uri: post.uri,
       cid: post.cid,
       author: author,
-      record: jsonStringToLex(post.recordJson) as LexRecord,
+      record: post.record,
       embed: embeds[uri],
       replyCount: post.replyCount ?? 0,
       repostCount: post.repostCount ?? 0,
@@ -185,6 +188,7 @@ export class FeedViews {
     posts: PostInfoMap,
     embeds: PostEmbedViews,
     labels: Labels,
+    blocks: PostBlocksMap,
     usePostViewUnion?: boolean,
   ): MaybePostView | undefined {
     const post = this.formatPostView(uri, actors, posts, embeds, labels)
@@ -192,7 +196,11 @@ export class FeedViews {
       if (!usePostViewUnion) return
       return this.notFoundPost(uri)
     }
-    if (post.author.viewer?.blockedBy || post.author.viewer?.blocking) {
+    if (
+      post.author.viewer?.blockedBy ||
+      post.author.viewer?.blocking ||
+      blocks[uri]?.reply
+    ) {
       if (!usePostViewUnion) return
       return this.blockedPost(uri)
     }

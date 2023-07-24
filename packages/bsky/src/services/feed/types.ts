@@ -34,7 +34,7 @@ export type PostInfo = {
   uri: string
   cid: string
   creator: string
-  recordJson: string
+  record: Record<string, unknown>
   indexedAt: string
   likeCount: number | null
   repostCount: number | null
@@ -45,6 +45,10 @@ export type PostInfo = {
 }
 
 export type PostInfoMap = { [uri: string]: PostInfo }
+
+export type PostBlocksMap = {
+  [uri: string]: { reply?: boolean; embed?: boolean }
+}
 
 export type ActorInfo = {
   did: string
