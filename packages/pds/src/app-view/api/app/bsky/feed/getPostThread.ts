@@ -7,7 +7,7 @@ import {
   FeedRow,
   FeedService,
   PostInfoMap,
-  PostBlockState,
+  PostBlocksMap,
 } from '../../../../services/feed'
 import { Labels } from '../../../../services/label'
 import {
@@ -93,7 +93,7 @@ const composeThread = (
   posts: PostInfoMap,
   actors: ActorInfoMap,
   embeds: PostEmbedViews,
-  blocks: PostBlockState,
+  blocks: PostBlocksMap,
   labels: Labels,
 ): ThreadViewPost | NotFoundPost | BlockedPost => {
   const post = feedService.views.formatPostView(

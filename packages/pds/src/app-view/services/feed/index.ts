@@ -27,7 +27,7 @@ import {
   PostViews,
   PostEmbedViews,
   RecordEmbedViewRecordMap,
-  PostBlockState,
+  PostBlocksMap,
   RecordEmbedViewRecord,
   FeedHydrationOptions,
 } from './types'
@@ -305,7 +305,7 @@ export class FeedService {
       actors?: ActorInfoMap
       posts?: PostInfoMap
       embeds?: PostEmbedViews
-      blocks?: PostBlockState
+      blocks?: PostBlocksMap
       labels?: Labels
     },
   ): Promise<PostViews> {
@@ -379,43 +379,42 @@ export class FeedService {
   }
 
   // applies blocks for visibility to third-parties (i.e. based on post content)
-  async blocksForPosts(posts: PostInfoMap): Promise<PostBlockState> {
-    const allPairs: BlockPair[] = []
-    const byPost: Record<string, { reply?: BlockPair; embed?: BlockPair }> = {}
+  async blocksForPosts(posts: PostInfoMap): Promise<PostBlocksMap> {
+    const relationships: RelationshipPair[] = []
+    const byPost: Record<string, PostRealtionships> = {}
     const didFromUri = (uri) => new AtUri(uri).host
     for (const post of Object.values(posts)) {
       // skip posts that we can't process or appear to already have been processed
       if (!isPostRecord(post.record)) continue
       if (byPost[post.uri]) continue
       byPost[post.uri] = {}
-      // 3p block for replier
-      const replyUri = post.record.reply?.parent.uri
-      const replyToDid = replyUri ? didFromUri(replyUri) : null
+      // 3p block for replies
+      const parentUri = post.record.reply?.parent.uri
+      const parentToDid = parentUri ? didFromUri(parentUri) : null
       // 3p block for record embeds
       const embedUris = nestedRecordUris([post.record])
-      // gather blocks
-      if (replyToDid) {
-        const pair: BlockPair = [post.creator, replyToDid]
-        allPairs.push(pair)
+      // gather actor relationships among posts
+      if (parentToDid) {
+        const pair: RelationshipPair = [post.creator, parentToDid]
+        relationships.push(pair)
         byPost[post.uri].reply = pair
       }
       for (const embedUri of embedUris) {
-        const pair: BlockPair = [post.creator, didFromUri(embedUri)]
-        allPairs.push(pair)
+        const pair: RelationshipPair = [post.creator, didFromUri(embedUri)]
+        relationships.push(pair)
         byPost[post.uri].embed = pair
       }
     }
-    // compute block state from all potential block pairs
-    const actualBlockSet = await this.getBlockSet(allPairs)
-    if (actualBlockSet.empty()) return {}
-    const result: PostBlockState = {}
+    // compute block state from all actor relationships among posts
+    const blockSet = await this.getBlockSet(relationships)
+    if (blockSet.empty()) return {}
+    const result: PostBlocksMap = {}
     Object.entries(byPost).forEach(([uri, block]) => {
-      result[uri] ??= {}
-      if (block.embed && actualBlockSet.has(block.embed)) {
+      if (block.embed && blockSet.has(block.embed)) {
         result[uri] ??= {}
         result[uri].embed = true
       }
-      if (block.reply && actualBlockSet.has(block.reply)) {
+      if (block.reply && blockSet.has(block.reply)) {
         result[uri] ??= {}
         result[uri].reply = true
       }
@@ -423,13 +422,13 @@ export class FeedService {
     return result
   }
 
-  private async getBlockSet(pairs: BlockPair[]) {
+  private async getBlockSet(relationships: RelationshipPair[]) {
     const { ref } = this.db.db.dynamic
-    const blockSet = new BlockSet()
-    if (!pairs.length) return blockSet
-    const potentialBlockSet = new BlockSet()
-    pairs.forEach((pair) => potentialBlockSet.add(pair))
-    // compute actual block set from potential block set
+    const blockSet = new RelationshipSet()
+    if (!relationships.length) return blockSet
+    const relationshipSet = new RelationshipSet()
+    relationships.forEach((pair) => relationshipSet.add(pair))
+    // compute actual block set from all actor relationships
     const blockRows = await this.db.db
       .selectFrom('actor_block')
       .select(['creator', 'subjectDid']) // index-only columns
@@ -437,7 +436,7 @@ export class FeedService {
         sql`(${ref('creator')}, ${ref('subjectDid')})`,
         'in',
         valuesList(
-          potentialBlockSet.listAllPairs().map(([a, b]) => sql`${a}, ${b}`),
+          relationshipSet.listAllPairs().map(([a, b]) => sql`${a}, ${b}`),
         ),
       )
       .execute()
@@ -447,7 +446,7 @@ export class FeedService {
 
   async embedsForPosts(
     postInfos: PostInfoMap,
-    blocks: PostBlockState,
+    blocks: PostBlocksMap,
     requester: string | null,
     depth = 0,
   ) {
@@ -612,11 +611,13 @@ const nestedRecordUris = (posts: PostRecord[]): string[] => {
   return uris
 }
 
-type BlockPair = [didA: string, didB: string]
+type PostRealtionships = { reply?: RelationshipPair; embed?: RelationshipPair }
 
-class BlockSet {
+type RelationshipPair = [didA: string, didB: string]
+
+class RelationshipSet {
   index = new Map<string, Set<string>>()
-  add([didA, didB]: BlockPair) {
+  add([didA, didB]: RelationshipPair) {
     const didAIdx = this.index.get(didA) ?? new Set()
     const didBIdx = this.index.get(didB) ?? new Set()
     if (!this.index.has(didA)) this.index.set(didA, didAIdx)
@@ -624,11 +625,11 @@ class BlockSet {
     didAIdx.add(didB)
     didBIdx.add(didA)
   }
-  has([didA, didB]: BlockPair) {
+  has([didA, didB]: RelationshipPair) {
     return !!this.index.get(didA)?.has(didB)
   }
   listAllPairs() {
-    const pairs: BlockPair[] = []
+    const pairs: RelationshipPair[] = []
     for (const [didA, didBIdx] of this.index.entries()) {
       for (const didB of didBIdx) {
         pairs.push([didA, didB])
@@ -643,7 +644,7 @@ class BlockSet {
 
 function applyEmbedBlock(
   uri: string,
-  blocks: PostBlockState,
+  blocks: PostBlocksMap,
   view: RecordEmbedViewRecord,
 ): RecordEmbedViewRecord {
   if (isViewRecord(view) && blocks[uri]?.embed) {

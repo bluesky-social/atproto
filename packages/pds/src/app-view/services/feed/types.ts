@@ -46,10 +46,9 @@ export type PostInfo = {
 
 export type PostInfoMap = { [uri: string]: PostInfo }
 
-export type PostBlockState = Record<
-  string,
-  { reply?: boolean; embed?: boolean }
->
+export type PostBlocksMap = {
+  [uri: string]: { reply?: boolean; embed?: boolean }
+}
 
 export type ActorInfo = {
   did: string

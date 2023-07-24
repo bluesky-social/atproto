@@ -28,7 +28,7 @@ import {
   MaybePostView,
   PostInfoMap,
   RecordEmbedViewRecord,
-  PostBlockState,
+  PostBlocksMap,
   FeedHydrationOptions,
 } from './types'
 import { Labels } from '../label'
@@ -82,7 +82,7 @@ export class FeedViews {
     posts: PostInfoMap,
     embeds: PostEmbedViews,
     labels: Labels,
-    blocks: PostBlockState,
+    blocks: PostBlocksMap,
     opts?: FeedHydrationOptions,
   ): FeedViewPost[] {
     const feed: FeedViewPost[] = []
@@ -188,7 +188,7 @@ export class FeedViews {
     posts: PostInfoMap,
     embeds: PostEmbedViews,
     labels: Labels,
-    blocks: PostBlockState,
+    blocks: PostBlocksMap,
     opts?: FeedHydrationOptions,
   ): MaybePostView | undefined {
     const post = this.formatPostView(uri, actors, posts, embeds, labels, opts)
