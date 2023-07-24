@@ -3,10 +3,7 @@ import AtpAgent, { AtUri } from '@atproto/api'
 import { RecordRef } from '@atproto/bsky/tests/seeds/client'
 import { BlockedActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
 import { BlockedByActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
-import {
-  isFeedViewPost,
-  isThreadViewPost,
-} from '@atproto/api/src/client/types/app/bsky/feed/defs'
+import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 import {
   isViewRecord as isEmbedViewRecord,
   isViewBlocked as isEmbedViewBlocked,

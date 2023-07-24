@@ -381,7 +381,7 @@ export class FeedService {
   // applies blocks for visibility to third-parties (i.e. based on post content)
   async blocksForPosts(posts: PostInfoMap): Promise<PostBlocksMap> {
     const relationships: RelationshipPair[] = []
-    const byPost: Record<string, PostRealtionships> = {}
+    const byPost: Record<string, PostRelationships> = {}
     const didFromUri = (uri) => new AtUri(uri).host
     for (const post of Object.values(posts)) {
       // skip posts that we can't process or appear to already have been processed
@@ -390,12 +390,12 @@ export class FeedService {
       byPost[post.uri] = {}
       // 3p block for replies
       const parentUri = post.record.reply?.parent.uri
-      const parentToDid = parentUri ? didFromUri(parentUri) : null
+      const parentDid = parentUri ? didFromUri(parentUri) : null
       // 3p block for record embeds
       const embedUris = nestedRecordUris([post.record])
       // gather actor relationships among posts
-      if (parentToDid) {
-        const pair: RelationshipPair = [post.creator, parentToDid]
+      if (parentDid) {
+        const pair: RelationshipPair = [post.creator, parentDid]
         relationships.push(pair)
         byPost[post.uri].reply = pair
       }
@@ -611,7 +611,7 @@ const nestedRecordUris = (posts: PostRecord[]): string[] => {
   return uris
 }
 
-type PostRealtionships = { reply?: RelationshipPair; embed?: RelationshipPair }
+type PostRelationships = { reply?: RelationshipPair; embed?: RelationshipPair }
 
 type RelationshipPair = [didA: string, didB: string]
 
