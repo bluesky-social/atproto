@@ -1,15 +1,38 @@
+import { LexRecord, jsonStringToLex } from '@atproto/lexicon'
 import Database from '../../db'
 import {
   FeedViewPost,
   GeneratorView,
   PostView,
 } from '../../lexicon/types/app/bsky/feed/defs'
-import { ProfileView } from '../../lexicon/types/app/bsky/actor/defs'
-import { FeedGenInfo, MaybePostView } from './types'
+import {
+  Main as EmbedImages,
+  isMain as isEmbedImages,
+  View as EmbedImagesView,
+} from '../../lexicon/types/app/bsky/embed/images'
+import {
+  Main as EmbedExternal,
+  isMain as isEmbedExternal,
+  View as EmbedExternalView,
+} from '../../lexicon/types/app/bsky/embed/external'
+import { Main as EmbedRecordWithMedia } from '../../lexicon/types/app/bsky/embed/recordWithMedia'
+import {
+  ViewBlocked,
+  ViewNotFound,
+  ViewRecord,
+} from '../../lexicon/types/app/bsky/embed/record'
+import {
+  ActorInfoMap,
+  PostEmbedViews,
+  FeedGenInfo,
+  FeedRow,
+  MaybePostView,
+  PostInfoMap,
+  RecordEmbedViewRecord,
+} from './types'
 import { Labels } from '../label'
+import { ProfileView } from '../../lexicon/types/app/bsky/actor/defs'
 import { ImageUriBuilder } from '../../image/uri'
-import { ActorViewMap, FeedEmbeds, FeedRow, PostInfoMap } from '../types'
-import { jsonStringToLex } from '@atproto/lexicon'
 
 export class FeedViews {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
@@ -18,44 +41,49 @@ export class FeedViews {
     return (db: Database) => new FeedViews(db, imgUriBuilder)
   }
 
-  formatPostView(
-    uri: string,
-    actors: ActorViewMap,
-    posts: PostInfoMap,
-    embeds: FeedEmbeds,
-    labels: Labels,
-  ): PostView | undefined {
-    const post = posts[uri]
-    const author = actors[post?.creator]
-    if (!post || !author) return undefined
-    // If the author labels are not hydrated yet, attempt to pull them
-    // from labels: e.g. compatible with hydrateFeed() batching label hydration.
-    author.labels ??= labels[author.did] ?? []
+  formatFeedGeneratorView(
+    info: FeedGenInfo,
+    profiles: Record<string, ProfileView>,
+    labels?: Labels,
+  ): GeneratorView {
+    const profile = profiles[info.creator]
+    if (profile) {
+      // If the creator labels are not hydrated yet, attempt to pull them
+      // from labels: e.g. compatible with embedsForPosts() batching label hydration.
+      profile.labels ??= labels?.[info.creator] ?? []
+    }
     return {
-      uri: post.uri,
-      cid: post.cid,
-      author: author,
-      record: jsonStringToLex(post.recordJson) as Record<string, unknown>,
-      embed: embeds[uri],
-      replyCount: post.replyCount ?? 0,
-      repostCount: post.repostCount ?? 0,
-      likeCount: post.likeCount ?? 0,
-      indexedAt: post.indexedAt,
-      viewer: post.viewer
+      uri: info.uri,
+      cid: info.cid,
+      did: info.feedDid,
+      creator: profile,
+      displayName: info.displayName ?? undefined,
+      description: info.description ?? undefined,
+      descriptionFacets: info.descriptionFacets
+        ? JSON.parse(info.descriptionFacets)
+        : undefined,
+      avatar: info.avatarCid
+        ? this.imgUriBuilder.getCommonSignedUri(
+            'avatar',
+            info.creator,
+            info.avatarCid,
+          )
+        : undefined,
+      likeCount: info.likeCount,
+      viewer: info.viewer
         ? {
-            repost: post.requesterRepost ?? undefined,
-            like: post.requesterLike ?? undefined,
+            like: info.viewer.like ?? undefined,
           }
         : undefined,
-      labels: labels[uri] ?? [],
+      indexedAt: info.indexedAt,
     }
   }
 
   formatFeed(
     items: FeedRow[],
-    actors: ActorViewMap,
+    actors: ActorInfoMap,
     posts: PostInfoMap,
-    embeds: FeedEmbeds,
+    embeds: PostEmbedViews,
     labels: Labels,
     usePostViewUnion?: boolean,
   ): FeedViewPost[] {
@@ -118,48 +146,44 @@ export class FeedViews {
     return feed
   }
 
-  formatFeedGeneratorView(
-    info: FeedGenInfo,
-    profiles: Record<string, ProfileView>,
-    labels?: Labels,
-  ): GeneratorView {
-    const profile = profiles[info.creator]
-    if (profile) {
-      // If the creator labels are not hydrated yet, attempt to pull them
-      // from labels: e.g. compatible with embedsForPosts() batching label hydration.
-      profile.labels ??= labels?.[info.creator] ?? []
-    }
+  formatPostView(
+    uri: string,
+    actors: ActorInfoMap,
+    posts: PostInfoMap,
+    embeds: PostEmbedViews,
+    labels: Labels,
+  ): PostView | undefined {
+    const post = posts[uri]
+    const author = actors[post?.creator]
+    if (!post || !author) return undefined
+    // If the author labels are not hydrated yet, attempt to pull them
+    // from labels: e.g. compatible with hydrateFeed() batching label hydration.
+    author.labels ??= labels[author.did] ?? []
     return {
-      uri: info.uri,
-      cid: info.cid,
-      did: info.feedDid,
-      creator: profile,
-      displayName: info.displayName ?? undefined,
-      description: info.description ?? undefined,
-      descriptionFacets: info.descriptionFacets
-        ? JSON.parse(info.descriptionFacets)
+      uri: post.uri,
+      cid: post.cid,
+      author: author,
+      record: jsonStringToLex(post.recordJson) as LexRecord,
+      embed: embeds[uri],
+      replyCount: post.replyCount ?? 0,
+      repostCount: post.repostCount ?? 0,
+      likeCount: post.likeCount ?? 0,
+      indexedAt: post.indexedAt,
+      viewer: post.viewer
+        ? {
+            repost: post.requesterRepost ?? undefined,
+            like: post.requesterLike ?? undefined,
+          }
         : undefined,
-      avatar: info.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
-            'avatar',
-            info.creator,
-            info.avatarCid,
-          )
-        : undefined,
-      likeCount: info.likeCount,
-      viewer: {
-        like: info.viewerLike ?? undefined,
-      },
-      indexedAt: info.sortAt,
+      labels: labels[uri] ?? [],
     }
   }
 
-  // @TODO present block here (w/ usePostViewUnion)
   formatMaybePostView(
     uri: string,
-    actors: ActorViewMap,
+    actors: ActorInfoMap,
     posts: PostInfoMap,
-    embeds: FeedEmbeds,
+    embeds: PostEmbedViews,
     labels: Labels,
     usePostViewUnion?: boolean,
   ): MaybePostView | undefined {
@@ -191,6 +215,96 @@ export class FeedViews {
       $type: 'app.bsky.feed.defs#notFoundPost',
       uri: uri,
       notFound: true as const,
+    }
+  }
+
+  imagesEmbedView(did: string, embed: EmbedImages) {
+    const imgViews = embed.images.map((img) => ({
+      thumb: this.imgUriBuilder.getCommonSignedUri(
+        'feed_thumbnail',
+        did,
+        img.image.ref,
+      ),
+      fullsize: this.imgUriBuilder.getCommonSignedUri(
+        'feed_fullsize',
+        did,
+        img.image.ref,
+      ),
+      alt: img.alt,
+    }))
+    return {
+      $type: 'app.bsky.embed.images#view',
+      images: imgViews,
+    }
+  }
+
+  externalEmbedView(did: string, embed: EmbedExternal) {
+    const { uri, title, description, thumb } = embed.external
+    return {
+      $type: 'app.bsky.embed.external#view',
+      external: {
+        uri,
+        title,
+        description,
+        thumb: thumb
+          ? this.imgUriBuilder.getCommonSignedUri(
+              'feed_thumbnail',
+              did,
+              thumb.ref,
+            )
+          : undefined,
+      },
+    }
+  }
+
+  getRecordEmbedView(
+    uri: string,
+    post?: PostView,
+    omitEmbeds = false,
+  ): (ViewRecord | ViewNotFound | ViewBlocked) & { $type: string } {
+    if (!post) {
+      return {
+        $type: 'app.bsky.embed.record#viewNotFound',
+        uri,
+      }
+    }
+    if (post.author.viewer?.blocking || post.author.viewer?.blockedBy) {
+      return {
+        $type: 'app.bsky.embed.record#viewBlocked',
+        uri,
+      }
+    }
+    return {
+      $type: 'app.bsky.embed.record#viewRecord',
+      uri: post.uri,
+      cid: post.cid,
+      author: post.author,
+      value: post.record,
+      labels: post.labels,
+      indexedAt: post.indexedAt,
+      embeds: omitEmbeds ? undefined : post.embed ? [post.embed] : [],
+    }
+  }
+
+  getRecordWithMediaEmbedView(
+    did: string,
+    embed: EmbedRecordWithMedia,
+    embedRecordView: RecordEmbedViewRecord,
+  ) {
+    let mediaEmbed: EmbedImagesView | EmbedExternalView
+    if (isEmbedImages(embed.media)) {
+      mediaEmbed = this.imagesEmbedView(did, embed.media)
+    } else if (isEmbedExternal(embed.media)) {
+      mediaEmbed = this.externalEmbedView(did, embed.media)
+    } else {
+      return
+    }
+    return {
+      $type: 'app.bsky.embed.recordWithMedia#view',
+      record: {
+        record: embedRecordView,
+      },
+      media: mediaEmbed,
     }
   }
 }

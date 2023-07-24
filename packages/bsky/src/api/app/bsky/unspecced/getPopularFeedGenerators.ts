@@ -43,13 +43,13 @@ export default function (server: Server, ctx: AppContext) {
 
       const res = await builder.execute()
 
-      const genInfos = await feedService.getFeedGeneratorViews(
+      const genInfos = await feedService.getFeedGeneratorInfos(
         res.map((feed) => feed.uri),
         requester,
       )
 
       const creators = Object.values(genInfos).map((gen) => gen.creator)
-      const profiles = await feedService.getActorViews(creators, requester)
+      const profiles = await feedService.getActorInfos(creators, requester)
 
       const genViews: GeneratorView[] = []
       for (const row of res) {

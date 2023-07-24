@@ -2,12 +2,11 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
-  ActorViewMap,
-  FeedEmbeds,
   FeedRow,
-  PostInfoMap,
-} from '../../../../services/types'
-import { FeedService } from '../../../../services/feed'
+  ActorInfoMap,
+  PostEmbedViews,
+} from '../../../../services/feed/types'
+import { FeedService, PostInfoMap } from '../../../../services/feed'
 import { Labels } from '../../../../services/label'
 import {
   BlockedPost,
@@ -41,14 +40,14 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
       const relevant = getRelevantIds(threadData)
-      const [actors, posts, embeds, labels] = await Promise.all([
-        feedService.getActorViews(Array.from(relevant.dids), requester, {
+      const [actors, posts, labels] = await Promise.all([
+        feedService.getActorInfos(Array.from(relevant.dids), requester, {
           skipLabels: true,
         }),
-        feedService.getPostViews(Array.from(relevant.uris), requester),
-        feedService.embedsForPosts(Array.from(relevant.uris), requester),
+        feedService.getPostInfos(Array.from(relevant.uris), requester),
         labelService.getLabelsForSubjects([...relevant.uris, ...relevant.dids]),
       ])
+      const embeds = await feedService.embedsForPosts(posts, requester)
 
       const thread = composeThread(
         threadData,
@@ -76,8 +75,8 @@ const composeThread = (
   threadData: PostThread,
   feedService: FeedService,
   posts: PostInfoMap,
-  actors: ActorViewMap,
-  embeds: FeedEmbeds,
+  actors: ActorInfoMap,
+  embeds: PostEmbedViews,
   labels: Labels,
 ) => {
   const post = feedService.views.formatPostView(
