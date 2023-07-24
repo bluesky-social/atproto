@@ -4,7 +4,12 @@ import { dedupeStrs } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/identifier'
 import { jsonStringToLex } from '@atproto/lexicon'
 import Database from '../../db'
-import { countAll, noMatch, notSoftDeletedClause } from '../../db/util'
+import {
+  countAll,
+  noMatch,
+  notSoftDeletedClause,
+  valuesList,
+} from '../../db/util'
 import { ImageUriBuilder } from '../../image/uri'
 import { ids } from '../../lexicon/lexicons'
 import {
@@ -13,7 +18,10 @@ import {
 } from '../../lexicon/types/app/bsky/feed/post'
 import { isMain as isEmbedImages } from '../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../lexicon/types/app/bsky/embed/external'
-import { isMain as isEmbedRecord } from '../../lexicon/types/app/bsky/embed/record'
+import {
+  isMain as isEmbedRecord,
+  isViewRecord,
+} from '../../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../../lexicon/types/app/bsky/embed/recordWithMedia'
 import { FeedViewPost } from '../../lexicon/types/app/bsky/feed/defs'
 import {
@@ -25,6 +33,9 @@ import {
   PostViews,
   PostEmbedViews,
   RecordEmbedViewRecordMap,
+  PostInfo,
+  RecordEmbedViewRecord,
+  PostBlocksMap,
 } from './types'
 import { LabelService, Labels } from '../label'
 import { ActorService } from '../actor'
@@ -253,13 +264,15 @@ export class FeedService {
           .as('requesterLike'),
       ])
       .execute()
-    return posts.reduce(
-      (acc, cur) => ({
-        ...acc,
-        [cur.uri]: Object.assign(cur, { viewer }),
-      }),
-      {} as PostInfoMap,
-    )
+    return posts.reduce((acc, cur) => {
+      const { recordJson, ...post } = cur
+      const info: PostInfo = {
+        ...post,
+        record: jsonStringToLex(recordJson) as Record<string, unknown>,
+        viewer,
+      }
+      return Object.assign(acc, { [post.uri]: info })
+    }, {} as PostInfoMap)
   }
 
   async getFeedGeneratorInfos(generatorUris: string[], viewer: string | null) {
@@ -286,6 +299,7 @@ export class FeedService {
       actors?: ActorInfoMap
       posts?: PostInfoMap
       embeds?: PostEmbedViews
+      blocks?: PostBlocksMap
       labels?: Labels
     },
   ): Promise<PostViews> {
@@ -299,8 +313,10 @@ export class FeedService {
       precomputed?.labels ??
         this.services.label.getLabelsForSubjects([...uris, ...dids]),
     ])
+    const blocks = precomputed?.blocks ?? (await this.blocksForPosts(posts))
     const embeds =
-      precomputed?.embeds ?? (await this.embedsForPosts(posts, requester))
+      precomputed?.embeds ??
+      (await this.embedsForPosts(posts, blocks, requester))
 
     return uris.reduce((acc, cur) => {
       const view = this.views.formatPostView(cur, actors, posts, embeds, labels)
@@ -341,7 +357,8 @@ export class FeedService {
       this.getPostInfos(Array.from(postUris), viewer),
       this.services.label.getLabelsForSubjects([...postUris, ...actorDids]),
     ])
-    const embeds = await this.embedsForPosts(posts, viewer)
+    const blocks = await this.blocksForPosts(posts)
+    const embeds = await this.embedsForPosts(posts, blocks, viewer)
 
     return this.views.formatFeed(
       items,
@@ -349,12 +366,80 @@ export class FeedService {
       posts,
       embeds,
       labels,
+      blocks,
       usePostViewUnion,
     )
   }
 
+  // applies blocks for visibility to third-parties (i.e. based on post content)
+  async blocksForPosts(posts: PostInfoMap): Promise<PostBlocksMap> {
+    const relationships: RelationshipPair[] = []
+    const byPost: Record<string, PostRelationships> = {}
+    const didFromUri = (uri) => new AtUri(uri).host
+    for (const post of Object.values(posts)) {
+      // skip posts that we can't process or appear to already have been processed
+      if (!isPostRecord(post.record)) continue
+      if (byPost[post.uri]) continue
+      byPost[post.uri] = {}
+      // 3p block for replies
+      const parentUri = post.record.reply?.parent.uri
+      const parentDid = parentUri ? didFromUri(parentUri) : null
+      // 3p block for record embeds
+      const embedUris = nestedRecordUris([post.record])
+      // gather actor relationships among posts
+      if (parentDid) {
+        const pair: RelationshipPair = [post.creator, parentDid]
+        relationships.push(pair)
+        byPost[post.uri].reply = pair
+      }
+      for (const embedUri of embedUris) {
+        const pair: RelationshipPair = [post.creator, didFromUri(embedUri)]
+        relationships.push(pair)
+        byPost[post.uri].embed = pair
+      }
+    }
+    // compute block state from all actor relationships among posts
+    const blockSet = await this.getBlockSet(relationships)
+    if (blockSet.empty()) return {}
+    const result: PostBlocksMap = {}
+    Object.entries(byPost).forEach(([uri, block]) => {
+      if (block.embed && blockSet.has(block.embed)) {
+        result[uri] ??= {}
+        result[uri].embed = true
+      }
+      if (block.reply && blockSet.has(block.reply)) {
+        result[uri] ??= {}
+        result[uri].reply = true
+      }
+    })
+    return result
+  }
+
+  private async getBlockSet(relationships: RelationshipPair[]) {
+    const { ref } = this.db.db.dynamic
+    const blockSet = new RelationshipSet()
+    if (!relationships.length) return blockSet
+    const relationshipSet = new RelationshipSet()
+    relationships.forEach((pair) => relationshipSet.add(pair))
+    // compute actual block set from all actor relationships
+    const blockRows = await this.db.db
+      .selectFrom('actor_block')
+      .select(['creator', 'subjectDid']) // index-only columns
+      .where(
+        sql`(${ref('creator')}, ${ref('subjectDid')})`,
+        'in',
+        valuesList(
+          relationshipSet.listAllPairs().map(([a, b]) => sql`${a}, ${b}`),
+        ),
+      )
+      .execute()
+    blockRows.forEach((r) => blockSet.add([r.creator, r.subjectDid]))
+    return blockSet
+  }
+
   async embedsForPosts(
     postInfos: PostInfoMap,
+    blocks: PostBlocksMap,
     viewer: string | null,
     depth = 0,
   ) {
@@ -378,7 +463,11 @@ export class FeedService {
         if (!recordEmbedViews[post.embed.record.uri]) continue
         postEmbedViews[uri] = {
           $type: 'app.bsky.embed.record#view',
-          record: recordEmbedViews[post.embed.record.uri],
+          record: applyEmbedBlock(
+            uri,
+            blocks,
+            recordEmbedViews[post.embed.record.uri],
+          ),
         }
       } else if (isEmbedRecordWithMedia(post.embed)) {
         const embedRecordView = recordEmbedViews[post.embed.record.record.uri]
@@ -386,7 +475,7 @@ export class FeedService {
         const formatted = this.views.getRecordWithMediaEmbedView(
           creator,
           post.embed,
-          embedRecordView,
+          applyEmbedBlock(uri, blocks, embedRecordView),
         )
         if (formatted) {
           postEmbedViews[uri] = formatted
@@ -430,8 +519,10 @@ export class FeedService {
         this.getFeedGeneratorInfos(nestedFeedGenUris, viewer),
         this.services.graph.getListViews(nestedListUris, viewer),
       ])
+    const deepBlocks = await this.blocksForPosts(postInfos)
     const deepEmbedViews = await this.embedsForPosts(
       postInfos,
+      deepBlocks,
       viewer,
       depth + 1,
     )
@@ -481,9 +572,8 @@ const postRecordsFromInfos = (
 ): { [uri: string]: PostRecord } => {
   const records: { [uri: string]: PostRecord } = {}
   for (const [uri, info] of Object.entries(infos)) {
-    const record = jsonStringToLex(info.recordJson)
-    if (isPostRecord(record)) {
-      records[uri] = record
+    if (isPostRecord(info.record)) {
+      records[uri] = info.record
     }
   }
   return records
@@ -502,4 +592,49 @@ const nestedRecordUris = (posts: PostRecord[]): string[] => {
     }
   }
   return uris
+}
+
+type PostRelationships = { reply?: RelationshipPair; embed?: RelationshipPair }
+
+type RelationshipPair = [didA: string, didB: string]
+
+class RelationshipSet {
+  index = new Map<string, Set<string>>()
+  add([didA, didB]: RelationshipPair) {
+    const didAIdx = this.index.get(didA) ?? new Set()
+    const didBIdx = this.index.get(didB) ?? new Set()
+    if (!this.index.has(didA)) this.index.set(didA, didAIdx)
+    if (!this.index.has(didB)) this.index.set(didB, didBIdx)
+    didAIdx.add(didB)
+    didBIdx.add(didA)
+  }
+  has([didA, didB]: RelationshipPair) {
+    return !!this.index.get(didA)?.has(didB)
+  }
+  listAllPairs() {
+    const pairs: RelationshipPair[] = []
+    for (const [didA, didBIdx] of this.index.entries()) {
+      for (const didB of didBIdx) {
+        pairs.push([didA, didB])
+      }
+    }
+    return pairs
+  }
+  empty() {
+    return this.index.size === 0
+  }
+}
+
+function applyEmbedBlock(
+  uri: string,
+  blocks: PostBlocksMap,
+  view: RecordEmbedViewRecord,
+): RecordEmbedViewRecord {
+  if (isViewRecord(view) && blocks[uri]?.embed) {
+    return {
+      $type: 'app.bsky.embed.record#viewBlocked',
+      uri: view.uri,
+    }
+  }
+  return view
 }

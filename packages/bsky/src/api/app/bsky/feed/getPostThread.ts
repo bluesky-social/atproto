@@ -5,6 +5,7 @@ import {
   FeedRow,
   ActorInfoMap,
   PostEmbedViews,
+  PostBlocksMap,
 } from '../../../../services/feed/types'
 import { FeedService, PostInfoMap } from '../../../../services/feed'
 import { Labels } from '../../../../services/label'
@@ -47,7 +48,8 @@ export default function (server: Server, ctx: AppContext) {
         feedService.getPostInfos(Array.from(relevant.uris), requester),
         labelService.getLabelsForSubjects([...relevant.uris, ...relevant.dids]),
       ])
-      const embeds = await feedService.embedsForPosts(posts, requester)
+      const blocks = await feedService.blocksForPosts(posts)
+      const embeds = await feedService.embedsForPosts(posts, blocks, requester)
 
       const thread = composeThread(
         threadData,
@@ -55,6 +57,7 @@ export default function (server: Server, ctx: AppContext) {
         posts,
         actors,
         embeds,
+        blocks,
         labels,
       )
 
@@ -77,6 +80,7 @@ const composeThread = (
   posts: PostInfoMap,
   actors: ActorInfoMap,
   embeds: PostEmbedViews,
+  blocks: PostBlocksMap,
   labels: Labels,
 ) => {
   const post = feedService.views.formatPostView(
@@ -87,7 +91,7 @@ const composeThread = (
     labels,
   )
 
-  if (!post) {
+  if (!post || blocks[post.uri]?.reply) {
     return {
       $type: 'app.bsky.feed.defs#notFoundPost',
       uri: threadData.post.postUri,
@@ -118,6 +122,7 @@ const composeThread = (
         posts,
         actors,
         embeds,
+        blocks,
         labels,
       )
     }
@@ -132,6 +137,7 @@ const composeThread = (
         posts,
         actors,
         embeds,
+        blocks,
         labels,
       )
       // e.g. don't bother including #postNotFound reply placeholders for takedowns. either way matches api contract.
