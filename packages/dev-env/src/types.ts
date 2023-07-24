@@ -10,6 +10,7 @@ export type PdsConfig = Partial<pds.ServerConfig> & {
   plcUrl: string
   migration?: string
   enableInProcessAppView?: boolean
+  algos?: pds.MountedAlgos
 }
 
 export type BskyConfig = Partial<bsky.ServerConfig> & {
