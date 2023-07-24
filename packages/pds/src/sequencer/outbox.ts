@@ -105,43 +105,19 @@ export class Outbox {
   // yields only historical events
   async *getBackfill(backfillCursor: number, backfillTime?: string) {
     const PAGE_SIZE = 200
-    const [firstEvt] = await this.sequencer.requestSeqRange({
-      earliestTime: backfillTime,
-      earliestSeq: this.lastSeen > -1 ? this.lastSeen : backfillCursor,
-      limit: 1,
-    })
-    if (firstEvt) {
-      yield firstEvt
-    } else {
-      return
-    }
-
-    let nextPage = this.sequencer.requestSeqRange({
-      earliestSeq: this.lastSeen,
-      limit: PAGE_SIZE,
-    })
-    let queued = this.sequencer.requestSeqRange({
-      earliestSeq: this.lastSeen + PAGE_SIZE,
-      limit: PAGE_SIZE,
-    })
-
     while (true) {
-      const evts = await nextPage
+      const evts = await this.sequencer.requestSeqRange({
+        earliestTime: backfillTime,
+        earliestSeq: this.lastSeen > -1 ? this.lastSeen : backfillCursor,
+        limit: PAGE_SIZE,
+      })
       for (const evt of evts) {
-        if (evt.seq > this.lastSeen) {
-          yield evt
-        }
+        yield evt
       }
       // if we're within half a pagesize of the sequencer, we call it good & switch to cutover
       const seqCursor = this.sequencer.lastSeen ?? -1
       if (seqCursor - this.lastSeen < PAGE_SIZE / 2) break
       if (evts.length < 1) break
-
-      nextPage = queued
-      queued = this.sequencer.requestSeqRange({
-        earliestSeq: this.lastSeen + PAGE_SIZE,
-        limit: PAGE_SIZE,
-      })
     }
   }
 }

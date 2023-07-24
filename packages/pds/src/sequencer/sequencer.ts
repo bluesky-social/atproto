@@ -126,6 +126,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       this.polling = true
       const evts = await this.requestSeqRange({
         earliestSeq: this.lastSeen,
+        limit: 1000,
       })
       if (evts.length > 0) {
         this.queued = true // should poll again immediately
