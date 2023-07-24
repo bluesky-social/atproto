@@ -9,6 +9,8 @@ export type PlcConfig = {
 export type PdsConfig = Partial<pds.ServerConfig> & {
   plcUrl: string
   migration?: string
+  enableInProcessAppView?: boolean
+  algos?: pds.MountedAlgos
 }
 
 export type BskyConfig = Partial<bsky.ServerConfig> & {
@@ -22,7 +24,7 @@ export type BskyConfig = Partial<bsky.ServerConfig> & {
 export type TestServerParams = {
   dbPostgresUrl: string
   dbPostgresSchema: string
-  pds: Partial<pds.ServerConfig>
+  pds: Partial<PdsConfig>
   plc: Partial<pds.ServerConfig>
   bsky: Partial<BskyConfig>
 }

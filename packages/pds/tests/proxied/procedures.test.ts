@@ -108,6 +108,7 @@ describe('proxies appview procedures', () => {
         encoding: 'application/json',
       },
     )
+    await network.processAll()
     // check
     const { data: result1 } = await agent.api.app.bsky.graph.getListMutes(
       {},

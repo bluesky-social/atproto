@@ -59,8 +59,8 @@ describe('crud operations', () => {
     const now = new Date().toISOString()
     await ctx.db.transaction(async (dbTxn) => {
       const storage = new SqlRepoStorage(dbTxn, did, now)
-      const locked = await storage.lockHead()
-      if (!locked || !locked.equals(commitData.prev)) {
+      const locked = await storage.lockRepo()
+      if (!locked) {
         throw new ConcurrentWriteError()
       }
       await wait(waitMs)

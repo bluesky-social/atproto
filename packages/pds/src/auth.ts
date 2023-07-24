@@ -13,6 +13,7 @@ export type ServerAuthOpts = {
   jwtSecret: string
   adminPass: string
   moderatorPass?: string
+  triagePass?: string
 }
 
 // @TODO sync-up with current method names, consider backwards compat.
@@ -34,11 +35,13 @@ export class ServerAuth {
   private _secret: string
   private _adminPass: string
   private _moderatorPass?: string
+  private _triagePass?: string
 
   constructor(opts: ServerAuthOpts) {
     this._secret = opts.jwtSecret
     this._adminPass = opts.adminPass
     this._moderatorPass = opts.moderatorPass
+    this._triagePass = opts.triagePass
   }
 
   createAccessToken(opts: {
@@ -110,18 +113,23 @@ export class ServerAuth {
     return authorized !== null && authorized.did === did
   }
 
-  verifyAdmin(req: express.Request) {
+  verifyRole(req: express.Request) {
     const parsed = parseBasicAuth(req.headers.authorization || '')
+    const { Missing, Valid, Invalid } = AuthStatus
     if (!parsed) {
-      return { admin: false, moderator: false, missing: true }
+      return { status: Missing, admin: false, moderator: false, triage: false }
     }
     const { username, password } = parsed
-    if (username !== 'admin') {
-      return { admin: false, moderator: false }
+    if (username === 'admin' && password === this._triagePass) {
+      return { status: Valid, admin: false, moderator: false, triage: true }
     }
-    const admin = password === this._adminPass
-    const moderator = admin || password === this._moderatorPass
-    return { admin, moderator }
+    if (username === 'admin' && password === this._moderatorPass) {
+      return { status: Valid, admin: false, moderator: true, triage: true }
+    }
+    if (username === 'admin' && password === this._adminPass) {
+      return { status: Valid, admin: true, moderator: true, triage: true }
+    }
+    return { status: Invalid, admin: false, moderator: false, triage: false }
   }
 
   getToken(req: express.Request) {
@@ -219,7 +227,34 @@ export const accessVerifierCheckTakedown =
     }
   }
 
-export const optionalAccessOrAdminVerifier = (auth: ServerAuth) => {
+export const accessOrRoleVerifier = (auth: ServerAuth) => {
+  const verifyAccess = accessVerifier(auth)
+  const verifyRole = roleVerifier(auth)
+  return async (ctx: { req: express.Request; res: express.Response }) => {
+    // For non-admin tokens, we don't want to consider alternative verifiers and let it fail if it fails
+    const isRoleAuthToken = ctx.req.headers.authorization?.startsWith(BASIC)
+    if (isRoleAuthToken) {
+      const result = await verifyRole(ctx)
+      return {
+        ...result,
+        credentials: {
+          type: 'role' as const,
+          ...result.credentials,
+        },
+      }
+    }
+    const result = await verifyAccess(ctx)
+    return {
+      ...result,
+      credentials: {
+        type: 'access' as const,
+        ...result.credentials,
+      },
+    }
+  }
+}
+
+export const optionalAccessOrRoleVerifier = (auth: ServerAuth) => {
   const verifyAccess = accessVerifier(auth)
   return async (ctx: { req: express.Request; res: express.Response }) => {
     try {
@@ -230,8 +265,8 @@ export const optionalAccessOrAdminVerifier = (auth: ServerAuth) => {
         err.customErrorName === 'AuthMissing'
       ) {
         // Missing access bearer, move onto admin basic auth
-        const credentials = auth.verifyAdmin(ctx.req)
-        if (credentials.missing) {
+        const credentials = auth.verifyRole(ctx.req)
+        if (credentials.status === AuthStatus.Missing) {
           // If both are missing, passthrough: this auth scheme is optional
           return { credentials: null }
         } else if (credentials.admin) {
@@ -270,21 +305,11 @@ export const refreshVerifier =
     }
   }
 
-export const adminVerifier =
+export const roleVerifier =
   (auth: ServerAuth) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
-    const credentials = auth.verifyAdmin(ctx.req)
-    if (!credentials.admin) {
-      throw new AuthRequiredError()
-    }
-    return { credentials }
-  }
-
-export const moderatorVerifier =
-  (auth: ServerAuth) =>
-  async (ctx: { req: express.Request; res: express.Response }) => {
-    const credentials = auth.verifyAdmin(ctx.req)
-    if (!credentials.moderator) {
+    const credentials = auth.verifyRole(ctx.req)
+    if (credentials.status !== AuthStatus.Valid) {
       throw new AuthRequiredError()
     }
     return { credentials }
@@ -292,4 +317,10 @@ export const moderatorVerifier =
 
 export const getRefreshTokenId = () => {
   return ui8.toString(crypto.randomBytes(32), 'base64')
+}
+
+export enum AuthStatus {
+  Valid,
+  Invalid,
+  Missing,
 }

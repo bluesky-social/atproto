@@ -35,6 +35,7 @@ export const sequenceEvt = async (dbTxn: Database, evt: RepoSeqInsert) => {
       .set({ seq: res.id })
       .where('id', '=', res.id)
       .execute()
+    await dbTxn.notify('outgoing_repo_seq')
   }
 }
 

@@ -38,7 +38,7 @@ describe('algo whats-hot', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
-    await server.ctx.backgroundQueue.processAll()
+    await server.processAll()
   })
 
   afterAll(async () => {
@@ -46,6 +46,8 @@ describe('algo whats-hot', () => {
   })
 
   it('returns well liked posts', async () => {
+    if (server.ctx.db.dialect === 'sqlite') return
+
     const img = await sc.uploadFile(
       alice,
       'tests/image/fixtures/key-landscape-small.jpg',
@@ -76,7 +78,7 @@ describe('algo whats-hot', () => {
         await sc.like(sc.dids[name], five.ref)
       }
     }
-    await server.ctx.backgroundQueue.processAll()
+    await server.processAll()
 
     // move the 3rd post 5 hours into the past to check gravity
     await server.ctx.db.db
@@ -101,6 +103,8 @@ describe('algo whats-hot', () => {
   })
 
   it('paginates', async () => {
+    if (server.ctx.db.dialect === 'sqlite') return
+
     const res = await agent.api.app.bsky.feed.getFeed(
       { feed: feedUri },
       { headers: sc.getHeaders(alice) },

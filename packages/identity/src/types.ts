@@ -4,10 +4,12 @@ export type IdentityResolverOpts = {
   timeout?: number
   plcUrl?: string
   didCache?: DidCache
+  backupNameservers?: string[]
 }
 
 export type HandleResolverOpts = {
   timeout?: number
+  backupNameservers?: string[]
 }
 
 export type DidResolverOpts = {

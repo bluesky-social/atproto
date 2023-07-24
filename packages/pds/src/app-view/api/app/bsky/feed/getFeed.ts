@@ -11,7 +11,7 @@ import {
   PoorlyFormattedDidDocumentError,
   getFeedGen,
 } from '@atproto/identity'
-import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
+import { AtpAgent, AppBskyFeedGetFeedSkeleton, AtUri } from '@atproto/api'
 import { SkeletonFeedPost } from '../../../../../lexicon/types/app/bsky/feed/defs'
 import { QueryParams as GetFeedParams } from '../../../../../lexicon/types/app/bsky/feed/getFeed'
 import { OutputSchema as SkeletonOutput } from '../../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
@@ -20,12 +20,27 @@ import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
 import { AlgoResponse } from '../../../../../feed-gen/types'
 
+// temp hardcoded feeds that we can proxy to appview
+const PROXYABLE_FEEDS = [
+  'with-friends',
+  'bsky-team',
+  'hot-classic',
+  'best-of-follows',
+  'mutuals',
+]
+
 export default function (server: Server, ctx: AppContext) {
+  const isProxyableFeed = (feed: string): boolean => {
+    const uri = new AtUri(feed)
+    return feed in ctx.algos && PROXYABLE_FEEDS.includes(uri.rkey)
+  }
+
   server.app.bsky.feed.getFeed({
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxy(req)) {
+
+      if (ctx.canProxyRead(req)) {
         const { data: feed } =
           await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerator(
             { feed: params.feed },
@@ -40,17 +55,34 @@ export default function (server: Server, ctx: AppContext) {
           body: res.data,
         }
       }
-
-      const { feed } = params
-      const feedService = ctx.services.appView.feed(ctx.db)
-      const localAlgo = ctx.algos[feed]
-
+      let algoRes: AlgoResponse
       const timerSkele = new ServerTimer('skele').start()
-      const { feedItems, ...rest } =
-        localAlgo !== undefined
-          ? await localAlgo(ctx, params, requester)
-          : await skeletonFromFeedGen(ctx, params, requester)
+
+      if (ctx.cfg.bskyAppViewEndpoint && isProxyableFeed(params.feed)) {
+        // this is a temporary solution to smart proxy bsky feeds to the appview
+        const res = await ctx.appviewAgent.api.app.bsky.feed.getFeedSkeleton(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        )
+        algoRes = await filterMutesAndBlocks(
+          ctx,
+          res.data,
+          params.limit,
+          requester,
+        )
+      } else {
+        const { feed } = params
+        const localAlgo = ctx.algos[feed]
+        algoRes =
+          localAlgo !== undefined
+            ? await localAlgo(ctx, params, requester)
+            : await skeletonFromFeedGen(ctx, params, requester)
+      }
+
       timerSkele.stop()
+
+      const feedService = ctx.services.appView.feed(ctx.db)
+      const { feedItems, ...rest } = algoRes
 
       const timerHydr = new ServerTimer('hydr').start()
       const hydrated = await feedService.hydrateFeed(feedItems, requester)
@@ -139,9 +171,17 @@ async function skeletonFromFeedGen(
     throw err
   }
 
+  return filterMutesAndBlocks(ctx, skeleton, params.limit, requester)
+}
+
+export async function filterMutesAndBlocks(
+  ctx: AppContext,
+  skeleton: SkeletonOutput,
+  limit: number,
+  requester: string,
+) {
   const { feed: skeletonFeed, ...rest } = skeleton
 
-  // Hydrate feed skeleton
   const { ref } = ctx.db.db.dynamic
   const feedService = ctx.services.appView.feed(ctx.db)
   const graphService = ctx.services.appView.graph(ctx.db)
@@ -168,7 +208,7 @@ async function skeletonFromFeedGen(
         .execute()
     : []
 
-  const orderedItems = getOrderedFeedItems(skeletonFeed, feedItems, params)
+  const orderedItems = getOrderedFeedItems(skeletonFeed, feedItems, limit)
   return {
     ...rest,
     feedItems: orderedItems,
@@ -185,15 +225,15 @@ function getSkeleFeedItemUri(item: SkeletonFeedPost) {
 function getOrderedFeedItems(
   skeletonItems: SkeletonFeedPost[],
   feedItems: FeedRow[],
-  params: GetFeedParams,
+  limit: number,
 ) {
   const SKIP = []
   const feedItemsByUri = feedItems.reduce((acc, item) => {
     return Object.assign(acc, { [item.uri]: item })
   }, {} as Record<string, FeedRow>)
   // enforce limit param in the case that the feedgen does not
-  if (skeletonItems.length > params.limit) {
-    skeletonItems = skeletonItems.slice(0, params.limit)
+  if (skeletonItems.length > limit) {
+    skeletonItems = skeletonItems.slice(0, limit)
   }
   return skeletonItems.flatMap((item) => {
     const uri = getSkeleFeedItemUri(item)

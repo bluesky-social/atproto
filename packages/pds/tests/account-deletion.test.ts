@@ -146,7 +146,7 @@ describe('account deletion', () => {
       did: carol.did,
       password: carol.password,
     })
-    await server.ctx.backgroundQueue.processAll() // Finish background hard-deletions
+    await server.processAll() // Finish background hard-deletions
   })
 
   it('no longer lets the user log in', async () => {
