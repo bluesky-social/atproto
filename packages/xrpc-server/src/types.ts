@@ -15,6 +15,10 @@ export type Options = {
     blobLimit?: number
     textLimit?: number
   }
+  rateLimits?: {
+    creator: RateLimiterCreator
+    limits: SharedRateLimitDesc[]
+  }
 }
 
 export type UndecodedParams = typeof express.request['query']
@@ -80,20 +84,34 @@ export type StreamAuthVerifier = (ctx: {
   req: IncomingMessage
 }) => Promise<AuthOutput> | AuthOutput
 
-type SharedRateLimitOpts = {
+export interface RateLimiter {
+  consume(ctx: XRPCReqContext): Promise<void>
+}
+
+export type RateLimiterCreator = (opts: {
+  keyPrefix: string
+  duration: number
+  points: number
+  calcKey?: (ctx: XRPCReqContext) => string
+  calcPoints?: (ctx: XRPCReqContext) => number
+}) => RateLimiter
+
+export type SharedRateLimitOpts = {
   shared: true
   name: string
   calcKey?: (ctx: XRPCReqContext) => string
   calcPoints?: (ctx: XRPCReqContext) => number
 }
 
-type RateLimitOpts = {
+export type RateLimitOpts = {
   shared: false
   duration: number
-  rate: number
+  points: number
   calcKey?: (ctx: XRPCReqContext) => string
   calcPoints?: (ctx: XRPCReqContext) => number
 }
+
+export type SharedRateLimitDesc = RateLimitOpts & { name: string }
 
 export type XRPCHandlerConfig = {
   rateLimit?: SharedRateLimitOpts | RateLimitOpts

@@ -70,6 +70,11 @@ export class Server {
       json: express.json({ limit: opts?.payload?.jsonLimit }),
       text: express.text({ limit: opts?.payload?.textLimit }),
     }
+    if (opts?.rateLimits?.limits) {
+      for (const limit of opts.rateLimits.limits) {
+        const limiter = opts.rateLimits.creator({ keyPrefix: limit.name })
+      }
+    }
   }
 
   // handlers
@@ -155,7 +160,7 @@ export class Server {
         this.routeRateLimiters[nsid] = new RateLimiter({
           keyPrefix: nsid,
           duration: config.rateLimit.duration,
-          rate: config.rateLimit.rate,
+          points: config.rateLimit.points,
           calcKey: config.rateLimit.calcKey,
           calcPoints: config.rateLimit.calcPoints,
         })

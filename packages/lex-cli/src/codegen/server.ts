@@ -184,11 +184,16 @@ const indexTs = (
 
     file.addTypeAlias({
       name: 'ConfigOf',
-      typeParameters: [{ name: 'Auth' }, { name: 'Handler' }],
+      typeParameters: [
+        { name: 'Auth' },
+        { name: 'Handler' },
+        { name: 'ReqCtx' },
+      ],
       type: `
         | Handler
         | {
           auth?: Auth
+          rateLimits?: (ctx: ReqCtx) => void
           handler: Handler
         }`,
     })
@@ -269,7 +274,7 @@ function genNamespaceCls(file: SourceFile, ns: DefTreeNode) {
     })
     method.addParameter({
       name: 'cfg',
-      type: `ConfigOf<AV, ${moduleName}.Handler<ExtractAuth<AV>>>`,
+      type: `ConfigOf<AV, ${moduleName}.Handler<ExtractAuth<AV>>, ${moduleName}.HandlerReqCtx<ExtractAuth<AV>>>`,
     })
     const methodType = isSubscription ? 'streamMethod' : 'method'
     method.setBodyText(
@@ -476,18 +481,27 @@ function genServerXrpcMethod(
   })
 
   file.addTypeAlias({
-    name: 'Handler',
+    name: 'HandlerReqCtx',
     isExported: true,
     typeParameters: [
       { name: 'HA', constraint: 'HandlerAuth', default: 'never' },
     ],
-    type: `(ctx: {
+    type: `{
         auth: HA
         params: QueryParams
         input: HandlerInput
         req: express.Request
         res: express.Response
-      }) => Promise<HandlerOutput> | HandlerOutput`,
+      }`,
+  })
+
+  file.addTypeAlias({
+    name: 'Handler',
+    isExported: true,
+    typeParameters: [
+      { name: 'HA', constraint: 'HandlerAuth', default: 'never' },
+    ],
+    type: `(ctx: HandlerReqCtx<HA>) => Promise<HandlerOutput> | HandlerOutput`,
   })
 }
 
@@ -525,17 +539,26 @@ function genServerXrpcStreaming(
   })
 
   file.addTypeAlias({
+    name: 'HandlerReqCtx',
+    isExported: true,
+    typeParameters: [
+      { name: 'HA', constraint: 'HandlerAuth', default: 'never' },
+    ],
+    type: `{
+        auth: HA
+        params: QueryParams
+        req: IncomingMessage
+        signal: AbortSignal
+      }`,
+  })
+
+  file.addTypeAlias({
     name: 'Handler',
     isExported: true,
     typeParameters: [
       { name: 'HA', constraint: 'HandlerAuth', default: 'never' },
     ],
-    type: `(ctx: {
-        auth: HA
-        params: QueryParams
-        req: IncomingMessage
-        signal: AbortSignal
-      }) => AsyncIterable<HandlerOutput>`,
+    type: `(ctx: HandlerReqCtx<HA>) => AsyncIterable<HandlerOutput>`,
   })
 }
 
