@@ -1,5 +1,9 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { isServiceDomain, normalizeAndValidateHandle } from '../../../../handle'
+import {
+  baseNormalizeAndValidate,
+  isServiceDomain,
+  normalizeAndValidateHandle,
+} from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
@@ -13,19 +17,23 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
-      const handle = await normalizeAndValidateHandle({
-        ctx,
-        handle: input.body.handle,
-        did: requester,
-      })
+      const reqHandle = baseNormalizeAndValidate(input.body.handle)
 
       // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
-      const available = await ctx.services
-        .account(ctx.db)
-        .isHandleAvailable(handle)
-      if (!available) {
-        throw new InvalidRequestError(`Handle already taken: ${handle}`)
+      if (isServiceDomain(reqHandle, ctx.cfg.availableUserDomains)) {
+        const available = await ctx.services
+          .account(ctx.db)
+          .isHandleAvailable(reqHandle)
+        if (!available) {
+          throw new InvalidRequestError(`Handle already taken: ${reqHandle}`)
+        }
       }
+
+      const handle = await normalizeAndValidateHandle({
+        ctx,
+        handle: reqHandle,
+        did: requester,
+      })
 
       const seqHandleTok = await ctx.db.transaction(async (dbTxn) => {
         const accountTxn = ctx.services.account(dbTxn)
