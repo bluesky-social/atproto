@@ -166,7 +166,7 @@ export class FeedService {
             .if(!viewer, (q) => q.where(noMatch))
             .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
             .where('list_mute.mutedByDid', '=', viewer ?? '')
-            .whereRef('list_item.subjectDid', '=', ref('did_handle.did'))
+            .whereRef('list_item.subjectDid', '=', ref('actor.did'))
             .select('list_item.listUri')
             .limit(1)
             .as('requesterMutedByList'),
@@ -270,7 +270,10 @@ export class FeedService {
     return feedGens.reduce(
       (acc, cur) => ({
         ...acc,
-        [cur.uri]: cur,
+        [cur.uri]: {
+          ...cur,
+          viewer: viewer ? { like: cur.viewerLike } : undefined,
+        },
       }),
       {} as FeedGenInfoMap,
     )

@@ -70,9 +70,11 @@ export class FeedViews {
           )
         : undefined,
       likeCount: info.likeCount,
-      viewer: {
-        like: info.viewerLike ?? undefined,
-      },
+      viewer: info.viewer
+        ? {
+            like: info.viewer.like ?? undefined,
+          }
+        : undefined,
       indexedAt: info.indexedAt,
     }
   }
@@ -167,10 +169,12 @@ export class FeedViews {
       repostCount: post.repostCount ?? 0,
       likeCount: post.likeCount ?? 0,
       indexedAt: post.indexedAt,
-      viewer: {
-        repost: post.requesterRepost ?? undefined,
-        like: post.requesterLike ?? undefined,
-      },
+      viewer: post.viewer
+        ? {
+            repost: post.requesterRepost ?? undefined,
+            like: post.requesterLike ?? undefined,
+          }
+        : undefined,
       labels: labels[uri] ?? [],
     }
   }

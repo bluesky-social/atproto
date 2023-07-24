@@ -64,7 +64,9 @@ export type ActorInfoMap = { [did: string]: ActorInfo }
 
 export type FeedGenInfo = Selectable<FeedGenerator> & {
   likeCount: number
-  viewerLike: string | null
+  viewer?: {
+    like?: string
+  }
 }
 
 export type FeedGenInfoMap = { [uri: string]: FeedGenInfo }
