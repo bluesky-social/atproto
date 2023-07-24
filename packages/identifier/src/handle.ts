@@ -1,7 +1,5 @@
 export const INVALID_HANDLE = 'handle.invalid'
 
-export const INVALID_HANDLE = 'handle.invalid'
-
 // Currently these are registration-time restrictions, not protocol-level
 // restrictions. We have a couple accounts in the wild that we need to clean up
 // before hard-disallow.
