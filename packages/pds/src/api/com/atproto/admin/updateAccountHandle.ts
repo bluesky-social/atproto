@@ -1,5 +1,5 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { normalizeAndValidateHandle } from '../../../../handle'
+import { isServiceDomain, normalizeAndValidateHandle } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
@@ -35,11 +35,7 @@ export default function (server: Server, ctx: AppContext) {
           tok = await accountTxn.updateHandle(did, handle)
         } catch (err) {
           if (err instanceof UserAlreadyExistsError) {
-            if (
-              ctx.cfg.availableUserDomains.some((domain) =>
-                handle.endsWith(domain),
-              )
-            ) {
+            if (isServiceDomain(handle, ctx.cfg.availableUserDomains)) {
               throw new InvalidRequestError(`Handle already taken: ${handle}`)
             } else {
               await accountTxn.invalidateHandle(handle)

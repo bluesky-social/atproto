@@ -1,5 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { normalizeAndValidateHandle } from '../../../../handle'
+import { isServiceDomain, normalizeAndValidateHandle } from '../../../../handle'
 import * as plc from '@did-plc/lib'
 import * as scrypt from '../../../../db/scrypt'
 import { Server } from '../../../../lexicon'
@@ -58,11 +58,7 @@ export default function (server: Server, ctx: AppContext) {
         if (err instanceof UserAlreadyExistsError) {
           const got = await actorTxn.getAccount(handle, true)
           if (got) {
-            if (
-              ctx.cfg.availableUserDomains.some((domain) =>
-                handle.endsWith(domain),
-              )
-            ) {
+            if (isServiceDomain(handle, ctx.cfg.availableUserDomains)) {
               throw new InvalidRequestError(`Handle already taken: ${handle}`)
             } else {
               await actorTxn.invalidateHandle(handle)
