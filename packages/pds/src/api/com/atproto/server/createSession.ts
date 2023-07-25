@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createSession({
     rateLimit: {
       durationMs: 5 * MINUTE,
-      points: 5,
+      points: 10,
       calcKey: ({ req, input }) => `${req.ip}-${input.body.identifier}`,
     },
     handler: async ({ input }) => {
