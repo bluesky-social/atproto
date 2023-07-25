@@ -12,14 +12,7 @@ const {
 
 const main = async () => {
   const env = getEnv()
-  // Migrate using credentialed user
-  const migrateDb = Database.postgres({
-    url: env.dbMigratePostgresUrl,
-    schema: env.dbPostgresSchema,
-    poolSize: 2,
-  })
-  await migrateDb.migrateToLatestOrThrow()
-  await migrateDb.close()
+  // No migration: ingester only uses pg for a lock
   const db = Database.postgres({
     url: env.dbPostgresUrl,
     schema: env.dbPostgresSchema,

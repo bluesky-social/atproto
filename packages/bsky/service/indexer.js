@@ -8,13 +8,14 @@ const { Database, IndexerConfig, BskyIndexer, Redis } = require('@atproto/bsky')
 const main = async () => {
   const env = getEnv()
   // Migrate using credentialed user
-  const migrateDb = Database.postgres({
-    url: env.dbMigratePostgresUrl,
-    schema: env.dbPostgresSchema,
-    poolSize: 2,
-  })
-  await migrateDb.migrateToLatestOrThrow()
-  await migrateDb.close()
+  // @TODO temporarily disabled for testing purposes
+  // const migrateDb = Database.postgres({
+  //   url: env.dbMigratePostgresUrl,
+  //   schema: env.dbPostgresSchema,
+  //   poolSize: 2,
+  // })
+  // await migrateDb.migrateToLatestOrThrow()
+  // await migrateDb.close()
   const db = Database.postgres({
     url: env.dbPostgresUrl,
     schema: env.dbPostgresSchema,
