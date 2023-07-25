@@ -2,7 +2,7 @@ import { Kysely, sql } from 'kysely'
 import { Dialect } from '..'
 
 export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
-  if (dialect === 'pg') {
+  if (dialect !== 'sqlite') {
     await db.schema
       .alterTable('did_handle')
       .alterColumn('handle')
@@ -28,7 +28,7 @@ export async function down(
   db: Kysely<unknown>,
   dialect: Dialect,
 ): Promise<void> {
-  if (dialect === 'pg') {
+  if (dialect !== 'sqlite') {
     await db.schema
       .alterTable('did_handle')
       .alterColumn('handle')
