@@ -261,7 +261,9 @@ export class Server {
         }
 
         // handle rate limits
-        await consumeRateLimit(reqCtx)
+        if (consumeRateLimit) {
+          await consumeRateLimit(reqCtx)
+        }
 
         // run the handler
         const outputUnvalidated = await handler(reqCtx)
