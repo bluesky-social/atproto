@@ -34,7 +34,7 @@ describe('pipeline reingestion', () => {
     await ingester.start()
     await ingestAll(network, ingester)
     const initialCursor = await ingester.sub.getCursor()
-    const initialLen = await ingester.ctx.redis.xlen(ingester.sub.ns('repo:0'))
+    const [initialLen] = await ingester.ctx.redis.streamLengths(['repo:0'])
     expect(initialCursor).toBeGreaterThan(10)
     expect(initialLen).toBeGreaterThan(10)
     // stop ingesting and reset ingester state
@@ -46,7 +46,7 @@ describe('pipeline reingestion', () => {
     await ingestAll(network, ingester)
     // confirm the newest event was ingested
     const finalCursor = await ingester.sub.getCursor()
-    const finalLen = await ingester.ctx.redis.xlen(ingester.sub.ns('repo:0'))
+    const [finalLen] = await ingester.ctx.redis.streamLengths(['repo:0'])
     expect(finalCursor).toEqual(initialCursor + 1)
     expect(finalLen).toEqual(initialLen + 1)
   })

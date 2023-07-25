@@ -1,6 +1,6 @@
-import { Redis } from 'ioredis'
 import Database from '../db'
 import { dbLogger, subLogger } from '../logger'
+import { Redis } from '../redis'
 import { IngesterConfig } from './config'
 import { IngesterContext } from './context'
 import { IngesterSubscription } from './subscription'
@@ -27,7 +27,6 @@ export class BskyIngester {
     const ctx = new IngesterContext({ db, redis, cfg })
     const sub = new IngesterSubscription(ctx, {
       service: cfg.repoProvider,
-      namespace: cfg.ingesterNamespace,
       subLockId: cfg.ingesterSubLockId,
       partitionCount: cfg.ingesterPartitionCount,
       maxItems: cfg.ingesterMaxItems,
@@ -50,13 +49,7 @@ export class BskyIngester {
       )
     }, 10000)
     this.subStatsInterval = setInterval(() => {
-      subLogger.info(
-        {
-          seq: this.sub?.lastSeq,
-          cursor: this.sub?.lastCursor,
-        },
-        'ingester subscription stats',
-      )
+      subLogger.info({ seq: this.sub?.lastSeq }, 'ingester subscription stats')
     }, 500)
     this.sub.run()
     return this
@@ -65,7 +58,7 @@ export class BskyIngester {
   async destroy(opts?: { skipDb: boolean }): Promise<void> {
     await this.sub.destroy()
     clearInterval(this.subStatsInterval)
-    await this.ctx.redis.quit()
+    await this.ctx.redis.destroy()
     if (!opts?.skipDb) await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
   }

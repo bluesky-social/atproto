@@ -46,28 +46,18 @@ describe('pipeline backpressure', () => {
     // allow additional time to pass to ensure no additional events are being consumed
     await wait(200)
     // check that max items has been respected (i.e. backpressure was applied)
-    const lenResults = await ingester.ctx.redis
-      .pipeline()
-      .xlen(ingester.sub.ns('repo:0'))
-      .xlen(ingester.sub.ns('repo:1'))
-      .exec()
-    const len0 = Number(lenResults?.[0][1]) || 0
-    const len1 = Number(lenResults?.[1][1]) || 0
-    expect(lenResults).toHaveLength(2)
-    expect(len0 + len1).toEqual(10)
+    const lengths = await ingester.ctx.redis.streamLengths(['repo:0', 'repo:1'])
+    expect(lengths).toHaveLength(2)
+    expect(lengths[0] + lengths[1]).toEqual(10)
     // drain all items using indexers, releasing backpressure
     await indexers.start()
     await processAll(network, ingester)
-    const lenResultsFinal = await ingester.ctx.redis
-      .pipeline()
-      .xlen(ingester.sub.ns('repo:0'))
-      .xlen(ingester.sub.ns('repo:1'))
-      .exec()
-    const len0Final = Number(lenResultsFinal?.[0][1]) || 0
-    const len1Final = Number(lenResultsFinal?.[1][1]) || 0
-    expect(lenResultsFinal).toHaveLength(2)
-    expect(len0Final).toEqual(0)
-    expect(len1Final).toEqual(0)
+    const lengthsFinal = await ingester.ctx.redis.streamLengths([
+      'repo:0',
+      'repo:1',
+    ])
+    expect(lengthsFinal).toHaveLength(2)
+    expect(lengthsFinal[0] + lengthsFinal[1]).toEqual(0)
     await indexers.destroy()
     await ingester.destroy()
   })

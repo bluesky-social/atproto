@@ -1,3 +1,4 @@
+import assert from 'assert'
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as bsky from '@atproto/bsky'
@@ -90,7 +91,11 @@ export class TestBsky {
       indexerNamespace: `ns${ns}`,
       indexerSubLockId: uniqueLockId(),
     })
-    const indexerRedis = new bsky.Redis(indexerCfg.redisUrl)
+    assert(indexerCfg.redisUrl)
+    const indexerRedis = new bsky.Redis({
+      url: indexerCfg.redisUrl,
+      namespace: indexerCfg.indexerNamespace,
+    })
     const indexer = bsky.BskyIndexer.create({
       cfg: indexerCfg,
       db,
@@ -107,7 +112,11 @@ export class TestBsky {
       ingesterSubLockId: uniqueLockId(),
       ingesterPartitionCount: 1,
     })
-    const ingesterRedis = new bsky.Redis(ingesterCfg.redisUrl)
+    assert(ingesterCfg.redisUrl)
+    const ingesterRedis = new bsky.Redis({
+      url: ingesterCfg.redisUrl,
+      namespace: ingesterCfg.ingesterNamespace,
+    })
     const ingester = bsky.BskyIngester.create({
       cfg: ingesterCfg,
       db,

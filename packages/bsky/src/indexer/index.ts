@@ -7,8 +7,8 @@ import { IndexerConfig } from './config'
 import { IndexerContext } from './context'
 import { createServices } from './services'
 import { IndexerSubscription } from './subscription'
-import { Redis } from 'ioredis'
 import { HiveLabeler, KeywordLabeler, Labeler } from '../labeler'
+import { Redis } from '../redis'
 
 export { IndexerConfig } from './config'
 
@@ -67,7 +67,6 @@ export class BskyIndexer {
       partitionBatchSize: cfg.indexerPartitionBatchSize,
       concurrency: cfg.indexerConcurrency,
       subLockId: cfg.indexerSubLockId,
-      namespace: cfg.indexerNamespace,
     })
     return new BskyIndexer({ ctx, sub })
   }
@@ -96,7 +95,7 @@ export class BskyIndexer {
   async destroy(opts?: { skipDb: boolean; skipRedis: true }): Promise<void> {
     await this.sub.destroy()
     clearInterval(this.subStatsInterval)
-    if (!opts?.skipRedis) await this.ctx.redis.quit()
+    if (!opts?.skipRedis) await this.ctx.redis.destroy()
     if (!opts?.skipDb) await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
   }

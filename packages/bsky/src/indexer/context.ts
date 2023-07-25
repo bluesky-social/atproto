@@ -1,10 +1,10 @@
-import { Redis } from 'ioredis'
 import { IdResolver } from '@atproto/identity'
 import { Database } from '../db'
 import { IndexerConfig } from './config'
 import { Services } from './services'
 import { BackgroundQueue } from '../background'
 import DidSqlCache from '../did-cache'
+import { Redis } from '../redis'
 
 export class IndexerContext {
   constructor(

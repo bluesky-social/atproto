@@ -38,14 +38,12 @@ export class IndexerSubscription {
   })
   partitions = new PerfectMap<number, Partition>()
   partitionIds = this.opts.partitionIds
-  namespace = this.opts.namespace
   indexingSvc: IndexingService
 
   constructor(
     public ctx: IndexerContext,
     public opts: {
       partitionIds: number[]
-      namespace?: string
       subLockId?: number
       concurrency?: number
       partitionBatchSize?: number
@@ -57,24 +55,22 @@ export class IndexerSubscription {
   async processEvents(opts: { signal: AbortSignal }) {
     const done = () => this.destroyed || opts.signal.aborted
     while (!done()) {
-      const results = await this.ctx.redis.xreadBuffer(
-        'COUNT',
-        this.opts.partitionBatchSize ?? 50, // events per stream
-        'BLOCK',
-        1000, // millis
-        'STREAMS',
-        ...this.partitionIds.map(partitionKey).map((k) => this.ns(k)),
-        ...this.partitionIds.map((id) => this.partitions.get(id).cursor),
+      const results = await this.ctx.redis.readStreams(
+        this.partitionIds.map((id) => ({
+          key: partitionKey(id),
+          cursor: this.partitions.get(id).cursor,
+        })),
+        {
+          blockMs: 1000,
+          count: this.opts.partitionBatchSize ?? 50, // events per stream
+        },
       )
-      for (const [key, messages] of results ?? []) {
+      for (const { key, messages } of results) {
         if (done()) break
-        const partition = this.partitions.get(
-          partitionId(this.rmns(key.toString())),
-        )
-        for (const [seqBuf, values] of messages) {
-          if (done()) break
-          const seq = strToInt(seqBuf.toString())
-          const envelope = getEnvelope(values)
+        const partition = this.partitions.get(partitionId(key))
+        for (const msg of messages) {
+          const seq = strToInt(msg.cursor)
+          const envelope = getEnvelope(msg.contents)
           partition.cursor = seq
           const item = partition.consecutive.push(seq)
           this.repoQueue.add(envelope.repo, async () => {
@@ -158,11 +154,7 @@ export class IndexerSubscription {
       if (latest !== undefined) {
         partition.cursorQueue
           .add(async () => {
-            await this.ctx.redis.xtrim(
-              this.ns(partition.key),
-              'MINID',
-              latest + 1,
-            )
+            await this.ctx.redis.trimStream(partition.key, latest + 1)
           })
           .catch((err) => {
             subLogger.error({ err }, 'indexer subscription cursor error')
@@ -243,18 +235,6 @@ export class IndexerSubscription {
   private async handleTombstone(msg: message.Tombstone) {
     await this.indexingSvc.tombstoneActor(msg.did)
   }
-
-  // namespace redis keys
-  ns(key: string) {
-    return this.namespace ? `${this.namespace}:${key}` : key
-  }
-
-  // remove namespace from redis key
-  rmns(key: string) {
-    return this.namespace && key.startsWith(`${this.namespace}:`)
-      ? key.replace(`${this.namespace}:`, '')
-      : key
-  }
 }
 
 async function getOps(
@@ -298,13 +278,11 @@ async function getOps(
   return { root, rootCid: car.root, ops }
 }
 
-function getEnvelope(raw: Buffer[]): Envelope {
-  const [repoKey, repoVal, eventKey, eventVal] = raw
-  assert(repoKey.toString() === 'repo')
-  assert(eventKey.toString() === 'event')
+function getEnvelope(val: Record<string, Buffer | undefined>): Envelope {
+  assert(val.repo && val.event, 'malformed message contents')
   return {
-    repo: repoVal.toString(),
-    event: cborDecode(eventVal) as ProcessableMessage,
+    repo: val.repo.toString(),
+    event: cborDecode(val.event) as ProcessableMessage,
   }
 }
 

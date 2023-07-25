@@ -4,7 +4,9 @@ export interface IngesterConfigValues {
   version: string
   dbPostgresUrl: string
   dbPostgresSchema?: string
-  redisUrl: string
+  redisUrl?: string // either set redis url, or both sentinel name and hosts
+  redisSentinelName?: string
+  redisSentinelHosts?: string[]
   repoProvider: string
   ingesterPartitionCount: number
   ingesterNamespace?: string
@@ -22,7 +24,16 @@ export class IngesterConfig {
       overrides?.dbPostgresUrl || process.env.DB_POSTGRES_URL
     const dbPostgresSchema =
       overrides?.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
-    const redisUrl = overrides?.redisUrl || process.env.REDIS_URL
+    const redisUrl = overrides?.redisUrl || process.env.REDIS_URL || undefined
+    const redisSentinelName =
+      overrides?.redisSentinelName ||
+      process.env.REDIS_SENTINEL_NAME ||
+      undefined
+    const redisSentinelHosts =
+      overrides?.redisSentinelHosts ||
+      (process.env.REDIS_SENTINEL_HOSTS
+        ? process.env.REDIS_SENTINEL_HOSTS.split(',')
+        : [])
     const repoProvider = overrides?.repoProvider || process.env.REPO_PROVIDER // E.g. ws://abc.com:4000
     const ingesterPartitionCount =
       overrides?.ingesterPartitionCount ||
@@ -46,6 +57,8 @@ export class IngesterConfig {
       dbPostgresUrl,
       dbPostgresSchema,
       redisUrl,
+      redisSentinelName,
+      redisSentinelHosts,
       repoProvider,
       ingesterPartitionCount,
       ingesterSubLockId,
@@ -69,6 +82,14 @@ export class IngesterConfig {
 
   get redisUrl() {
     return this.cfg.redisUrl
+  }
+
+  get redisSentinelName() {
+    return this.cfg.redisSentinelName
+  }
+
+  get redisSentinelHosts() {
+    return this.cfg.redisSentinelHosts
   }
 
   get repoProvider() {

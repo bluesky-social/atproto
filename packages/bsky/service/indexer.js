@@ -22,13 +22,16 @@ const main = async () => {
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
   })
-  const redis = new Redis(env.redisUrl)
   const cfg = IndexerConfig.readEnv({
     version: env.version,
-    redisUrl: env.redisUrl,
     dbPostgresUrl: env.dbPostgresUrl,
     dbPostgresSchema: env.dbPostgresSchema,
   })
+  const redis = new Redis(
+    cfg.redisSentinelName
+      ? { sentinel: cfg.redisSentinelName, hosts: cfg.redisSentinelHosts }
+      : { url: cfg.redisUrl },
+  )
   const indexer = BskyIndexer.create({ db, redis, cfg })
   await indexer.start()
   process.on('SIGTERM', async () => {
@@ -37,6 +40,9 @@ const main = async () => {
 }
 
 // Also accepts the following in readEnv():
+//  - REDIS_URL
+//  - REDIS_SENTINEL_NAME
+//  - REDIS_SENTINEL_HOSTS
 //  - DID_PLC_URL
 //  - DID_CACHE_STALE_TTL
 //  - DID_CACHE_MAX_TTL
@@ -48,7 +54,6 @@ const main = async () => {
 //  - INDEXER_SUB_LOCK_ID
 const getEnv = () => ({
   version: process.env.BSKY_VERSION,
-  redisUrl: process.env.REDIS_URL,
   dbPostgresUrl: process.env.DB_POSTGRES_URL,
   dbMigratePostgresUrl:
     process.env.DB_MIGRATE_POSTGRES_URL || process.env.DB_POSTGRES_URL,

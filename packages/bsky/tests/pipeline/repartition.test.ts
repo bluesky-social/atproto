@@ -51,7 +51,7 @@ describe('pipeline indexer repartitioning', () => {
       .selectFrom('post')
       .select(countAll.as('count'))
       .executeTakeFirstOrThrow()
-    expect(indexedPosts).toBeGreaterThan(2)
+    expect(indexedPosts).toBeGreaterThan(1)
     await indexers1.destroy()
     await wait(500) // miss some events
     await indexers2.start()

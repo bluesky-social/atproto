@@ -1,5 +1,5 @@
-import { Redis } from 'ioredis'
 import { Database } from '../db'
+import { Redis } from '../redis'
 import { IngesterConfig } from './config'
 
 export class IngesterContext {

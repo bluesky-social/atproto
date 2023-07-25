@@ -72,7 +72,7 @@ describe('sync', () => {
     await network.bsky.ingester.sub.resetCursor()
     const indexerSub = network.bsky.indexer.sub
     const partition = indexerSub.partitions.get(0)
-    await network.bsky.indexer.ctx.redis.del(indexerSub.ns(partition.key))
+    await network.bsky.indexer.ctx.redis.del(partition.key)
     // Boot streams back up
     network.bsky.indexer.sub.resume()
     network.bsky.ingester.sub.resume()

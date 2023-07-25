@@ -27,15 +27,18 @@ const main = async () => {
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
   })
-  const redis = new Redis(env.redisUrl)
   const cfg = IngesterConfig.readEnv({
     version: env.version,
-    redisUrl: env.redisUrl,
     dbPostgresUrl: env.dbPostgresUrl,
     dbPostgresSchema: env.dbPostgresSchema,
     repoProvider: env.repoProvider,
     ingesterSubLockId: env.subLockId,
   })
+  const redis = new Redis(
+    cfg.redisSentinelName
+      ? { sentinel: cfg.redisSentinelName, hosts: cfg.redisSentinelHosts }
+      : { url: cfg.redisUrl },
+  )
   const ingester = BskyIngester.create({ db, redis, cfg })
   await ingester.start()
   process.on('SIGTERM', async () => {
@@ -44,6 +47,9 @@ const main = async () => {
 }
 
 // Also accepts the following in readEnv():
+// - REDIS_URL
+// - REDIS_SENTINEL_NAME
+// - REDIS_SENTINEL_HOSTS
 // - REPO_PROVIDER
 // - INGESTER_PARTITION_COUNT
 // - INGESTER_MAX_ITEMS
@@ -51,7 +57,6 @@ const main = async () => {
 // - INGESTER_SUB_LOCK_ID
 const getEnv = () => ({
   version: process.env.BSKY_VERSION,
-  redisUrl: process.env.REDIS_URL,
   dbPostgresUrl: process.env.DB_POSTGRES_URL,
   dbMigratePostgresUrl:
     process.env.DB_MIGRATE_POSTGRES_URL || process.env.DB_POSTGRES_URL,

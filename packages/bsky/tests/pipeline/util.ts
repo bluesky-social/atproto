@@ -33,7 +33,11 @@ export async function getIngester(
     url: cfg.dbPostgresUrl,
     schema: cfg.dbPostgresSchema,
   })
-  const redis = new Redis(cfg.redisUrl)
+  assert(cfg.redisUrl)
+  const redis = new Redis({
+    url: cfg.redisUrl,
+    namespace: cfg.ingesterNamespace,
+  })
   await db.migrateToLatestOrThrow()
   return BskyIngester.create({ cfg, db, redis })
 }
@@ -66,7 +70,11 @@ export async function getIndexers(
     url: baseCfg.dbPostgresUrl,
     schema: baseCfg.dbPostgresSchema,
   })
-  const redis = new Redis(baseCfg.redisUrl)
+  assert(baseCfg.redisUrl)
+  const redis = new Redis({
+    url: baseCfg.redisUrl,
+    namespace: baseCfg.indexerNamespace,
+  })
   const indexers = opts.partitionIdsByIndexer.map((indexerPartitionIds) => {
     const cfg = new IndexerConfig({
       ...baseCfg,
@@ -112,14 +120,11 @@ export async function processAll(
   // eslint-disable-next-line no-constant-condition
   while (true) {
     // check indexers
-    let pipeline = ingester.ctx.redis.pipeline()
-    for (let i = 0; i < ingester.sub.opts.partitionCount; ++i) {
-      pipeline = pipeline.xlen(ingester.sub.ns(`repo:${i}`))
-    }
-    const results = await pipeline.exec()
-    const indexersCaughtUp = results?.every(
-      ([err, len]) => err === null && len === 0,
+    const keys = [...Array(ingester.sub.opts.partitionCount)].map(
+      (_, i) => `repo:${i}`,
     )
+    const results = await ingester.sub.ctx.redis.streamLengths(keys)
+    const indexersCaughtUp = results.every((len) => len === 0)
     if (indexersCaughtUp) return
     await wait(50)
   }

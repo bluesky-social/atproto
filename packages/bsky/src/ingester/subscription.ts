@@ -24,7 +24,6 @@ export class IngesterSubscription {
   cursorQueue = new LatestQueue()
   destroyed = false
   lastSeq: number | undefined
-  lastCursor: number | undefined
   backpressure = new Backpressure(this)
   leader = new Leader(this.opts.subLockId || INGESTER_SUB_LOCK_ID, this.ctx.db)
 
@@ -36,7 +35,6 @@ export class IngesterSubscription {
       maxItems?: number
       checkItemsEveryN?: number
       subLockId?: number
-      namespace?: string
     },
   ) {}
 
@@ -52,17 +50,13 @@ export class IngesterSubscription {
         continue
       }
       const { seq, repo, message: processableMessage } = details
-      this.lastSeq = seq
       const partitionKey = await getPartition(repo, this.opts.partitionCount)
       try {
-        await this.ctx.redis.xadd(
-          this.ns(partitionKey),
-          seq,
-          'repo',
-          repo,
-          'event',
-          ui8ToBuffer(cborEncode(processableMessage)),
-        )
+        await this.ctx.redis.addToStream(partitionKey, seq, [
+          ['repo', repo],
+          ['event', ui8ToBuffer(cborEncode(processableMessage))],
+        ])
+        this.lastSeq = seq
       } catch (err) {
         if (err instanceof ReplyError) {
           // skipping over entries that have already been added or fully processed
@@ -111,17 +105,17 @@ export class IngesterSubscription {
   }
 
   async getCursor(): Promise<number> {
-    const val = await this.ctx.redis.get(this.ns(CURSOR_KEY))
+    const val = await this.ctx.redis.get(CURSOR_KEY)
     const state = val !== null ? strToInt(val) : 0
     return state
   }
 
   async resetCursor(): Promise<void> {
-    await this.ctx.redis.del(this.ns(CURSOR_KEY))
+    await this.ctx.redis.del(CURSOR_KEY)
   }
 
   private async setCursor(seq: number): Promise<void> {
-    await this.ctx.redis.set(this.ns(CURSOR_KEY), seq)
+    await this.ctx.redis.set(CURSOR_KEY, seq)
   }
 
   private getSubscription(opts: { signal: AbortSignal }) {
@@ -157,11 +151,6 @@ export class IngesterSubscription {
         }
       },
     })
-  }
-
-  // namespace redis keys
-  ns(key: string) {
-    return this.opts.namespace ? `${this.opts.namespace}:${key}` : key
   }
 }
 
@@ -237,12 +226,10 @@ class Backpressure {
   }
 
   async check() {
-    const pipeline = this.sub.ctx.redis.pipeline()
-    for (let i = 0; i < this.partitionCount; ++i) {
-      pipeline.xlen(this.sub.ns(`repo:${i}`))
-    }
-    const results = (await pipeline.exec()) ?? []
-    this.lastTotal = results.reduce((sum, [, len]) => sum + Number(len), 0)
+    const lens = await this.sub.ctx.redis.streamLengths(
+      [...Array(this.partitionCount)].map((_, i) => `repo:${i}`),
+    )
+    this.lastTotal = lens.reduce((sum, len) => sum + len, 0)
     return this.lastTotal < this.limit
   }
 }
