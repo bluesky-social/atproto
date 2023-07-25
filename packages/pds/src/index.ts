@@ -284,7 +284,7 @@ export class PDS {
         )
       }, 10000)
     }
-    this.sequencerStatsInterval = setInterval(() => {
+    this.sequencerStatsInterval = setInterval(async () => {
       if (this.ctx.sequencerLeader?.isLeader) {
         try {
           const seq = await this.ctx.sequencerLeader.lastSeq()
