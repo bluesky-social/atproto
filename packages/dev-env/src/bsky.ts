@@ -83,7 +83,7 @@ export class TestBsky {
       didCacheStaleTTL: HOUR,
       didCacheMaxTTL: DAY,
       labelerDid: 'did:example:labeler',
-      redisUrl: cfg.redisUrl,
+      redisHost: cfg.redisHost,
       dbPostgresUrl: cfg.dbPostgresUrl,
       dbPostgresSchema: cfg.dbPostgresSchema,
       didPlcUrl: cfg.plcUrl,
@@ -92,9 +92,9 @@ export class TestBsky {
       indexerNamespace: `ns${ns}`,
       indexerSubLockId: uniqueLockId(),
     })
-    assert(indexerCfg.redisUrl)
+    assert(indexerCfg.redisHost)
     const indexerRedis = new bsky.Redis({
-      url: indexerCfg.redisUrl,
+      host: indexerCfg.redisHost,
       namespace: indexerCfg.indexerNamespace,
     })
     const indexer = bsky.BskyIndexer.create({
@@ -105,7 +105,7 @@ export class TestBsky {
     // ingester
     const ingesterCfg = new bsky.IngesterConfig({
       version: '0.0.0',
-      redisUrl: cfg.redisUrl,
+      redisHost: cfg.redisHost,
       dbPostgresUrl: cfg.dbPostgresUrl,
       dbPostgresSchema: cfg.dbPostgresSchema,
       repoProvider: cfg.repoProvider,
@@ -113,9 +113,9 @@ export class TestBsky {
       ingesterSubLockId: uniqueLockId(),
       ingesterPartitionCount: 1,
     })
-    assert(ingesterCfg.redisUrl)
+    assert(ingesterCfg.redisHost)
     const ingesterRedis = new bsky.Redis({
-      url: ingesterCfg.redisUrl,
+      host: ingesterCfg.redisHost,
       namespace: ingesterCfg.ingesterNamespace,
     })
     const ingester = bsky.BskyIngester.create({
@@ -184,7 +184,7 @@ export async function getIngester(
   const ns = name ? await randomIntFromSeed(name, 10000) : undefined
   const cfg = new bsky.IngesterConfig({
     version: '0.0.0',
-    redisUrl: process.env.REDIS_URL || '',
+    redisHost: process.env.REDIS_HOST || '',
     dbPostgresUrl: process.env.DB_POSTGRES_URL || '',
     dbPostgresSchema: `appview_${name}`,
     repoProvider: network.pds.url.replace('http://', 'ws://'),
@@ -197,9 +197,9 @@ export async function getIngester(
     url: cfg.dbPostgresUrl,
     schema: cfg.dbPostgresSchema,
   })
-  assert(cfg.redisUrl)
+  assert(cfg.redisHost)
   const redis = new bsky.Redis({
-    url: cfg.redisUrl,
+    host: cfg.redisHost,
     namespace: cfg.ingesterNamespace,
   })
   await db.migrateToLatestOrThrow()
@@ -222,7 +222,7 @@ export async function getIndexers(
     didCacheMaxTTL: DAY,
     labelerDid: 'did:example:labeler',
     labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
-    redisUrl: process.env.REDIS_URL || '',
+    redisHost: process.env.REDIS_HOST || '',
     dbPostgresUrl: process.env.DB_POSTGRES_URL || '',
     dbPostgresSchema: `appview_${name}`,
     didPlcUrl: network.plc.url,
@@ -234,9 +234,9 @@ export async function getIndexers(
     url: baseCfg.dbPostgresUrl,
     schema: baseCfg.dbPostgresSchema,
   })
-  assert(baseCfg.redisUrl)
+  assert(baseCfg.redisHost)
   const redis = new bsky.Redis({
-    url: baseCfg.redisUrl,
+    host: baseCfg.redisHost,
     namespace: baseCfg.indexerNamespace,
   })
   const indexers = opts.partitionIdsByIndexer.map((indexerPartitionIds) => {

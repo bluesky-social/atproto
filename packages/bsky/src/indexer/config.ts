@@ -5,9 +5,10 @@ export interface IndexerConfigValues {
   version: string
   dbPostgresUrl: string
   dbPostgresSchema?: string
-  redisUrl?: string // either set redis url, or both sentinel name and hosts
+  redisHost?: string // either set redis host, or both sentinel name and hosts
   redisSentinelName?: string
   redisSentinelHosts?: string[]
+  redisPassword?: string
   didPlcUrl: string
   didCacheStaleTTL: number
   didCacheMaxTTL: number
@@ -30,7 +31,8 @@ export class IndexerConfig {
       overrides?.dbPostgresUrl || process.env.DB_POSTGRES_URL
     const dbPostgresSchema =
       overrides?.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
-    const redisUrl = overrides?.redisUrl || process.env.REDIS_URL || undefined
+    const redisHost =
+      overrides?.redisHost || process.env.REDIS_HOST || undefined
     const redisSentinelName =
       overrides?.redisSentinelName ||
       process.env.REDIS_SENTINEL_NAME ||
@@ -40,6 +42,8 @@ export class IndexerConfig {
       (process.env.REDIS_SENTINEL_HOSTS
         ? process.env.REDIS_SENTINEL_HOSTS.split(',')
         : [])
+    const redisPassword =
+      overrides?.redisPassword || process.env.REDIS_PASSWORD || undefined
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
     const didCacheStaleTTL = parseIntWithFallback(
       process.env.DID_CACHE_STALE_TTL,
@@ -66,15 +70,16 @@ export class IndexerConfig {
     const indexerSubLockId = maybeParseInt(process.env.INDEXER_SUB_LOCK_ID)
     const labelerKeywords = {}
     assert(dbPostgresUrl)
-    assert(redisUrl || (redisSentinelName && redisSentinelHosts?.length))
+    assert(redisHost || (redisSentinelName && redisSentinelHosts?.length))
     assert(indexerPartitionIds.length > 0)
     return new IndexerConfig({
       version,
       dbPostgresUrl,
       dbPostgresSchema,
-      redisUrl,
+      redisHost,
       redisSentinelName,
       redisSentinelHosts,
+      redisPassword,
       didPlcUrl,
       didCacheStaleTTL,
       didCacheMaxTTL,
@@ -102,8 +107,8 @@ export class IndexerConfig {
     return this.cfg.dbPostgresSchema
   }
 
-  get redisUrl() {
-    return this.cfg.redisUrl
+  get redisHost() {
+    return this.cfg.redisHost
   }
 
   get redisSentinelName() {
@@ -112,6 +117,10 @@ export class IndexerConfig {
 
   get redisSentinelHosts() {
     return this.cfg.redisSentinelHosts
+  }
+
+  get redisPassword() {
+    return this.cfg.redisPassword
   }
 
   get didPlcUrl() {

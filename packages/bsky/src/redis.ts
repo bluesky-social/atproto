@@ -9,12 +9,17 @@ export class Redis {
       assert(opts.sentinel && Array.isArray(opts.hosts) && opts.hosts.length)
       this.driver = new RedisDriver({
         name: opts.sentinel,
-        sentinels: opts.hosts.map(addressParts),
+        sentinels: opts.hosts.map((h) => addressParts(h, 26379)),
+        password: opts.password,
       })
-    } else if ('url' in opts) {
-      assert(opts.url)
-      this.driver = new RedisDriver(opts.url)
+    } else if ('host' in opts) {
+      assert(opts.host)
+      this.driver = new RedisDriver({
+        ...addressParts(opts.host),
+        password: opts.password,
+      })
     } else {
+      assert(opts.driver)
       this.driver = opts.driver
     }
     this.namespace = opts.namespace
@@ -112,15 +117,19 @@ type StreamOutput = {
 
 export type RedisOptions = (
   | { driver: RedisDriver }
-  | { url: string }
+  | { host: string }
   | { sentinel: string; hosts: string[] }
 ) & {
+  password?: string
   namespace?: string
 }
 
-function addressParts(addr: string): { host: string; port: number } {
-  const [host, portStr = '26379', ...others] = addr.split(':')
-  const port = parseInt(portStr, 10)
-  assert(host && !isNaN(port) && !others.length, `Invalid address: ${addr}`)
+function addressParts(
+  addr: string,
+  defaultPort = 6379,
+): { host: string; port: number } {
+  const [host, portStr, ...others] = addr.split(':')
+  const port = portStr ? parseInt(portStr, 10) : defaultPort
+  assert(host && !isNaN(port) && !others.length, `invalid address: ${addr}`)
   return { host, port }
 }

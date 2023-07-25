@@ -4,9 +4,10 @@ export interface IngesterConfigValues {
   version: string
   dbPostgresUrl: string
   dbPostgresSchema?: string
-  redisUrl?: string // either set redis url, or both sentinel name and hosts
+  redisHost?: string // either set redis host, or both sentinel name and hosts
   redisSentinelName?: string
   redisSentinelHosts?: string[]
+  redisPassword?: string
   repoProvider: string
   ingesterPartitionCount: number
   ingesterNamespace?: string
@@ -24,7 +25,8 @@ export class IngesterConfig {
       overrides?.dbPostgresUrl || process.env.DB_POSTGRES_URL
     const dbPostgresSchema =
       overrides?.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
-    const redisUrl = overrides?.redisUrl || process.env.REDIS_URL || undefined
+    const redisHost =
+      overrides?.redisHost || process.env.REDIS_HOST || undefined
     const redisSentinelName =
       overrides?.redisSentinelName ||
       process.env.REDIS_SENTINEL_NAME ||
@@ -34,6 +36,8 @@ export class IngesterConfig {
       (process.env.REDIS_SENTINEL_HOSTS
         ? process.env.REDIS_SENTINEL_HOSTS.split(',')
         : [])
+    const redisPassword =
+      overrides?.redisPassword || process.env.REDIS_PASSWORD || undefined
     const repoProvider = overrides?.repoProvider || process.env.REPO_PROVIDER // E.g. ws://abc.com:4000
     const ingesterPartitionCount =
       overrides?.ingesterPartitionCount ||
@@ -49,16 +53,17 @@ export class IngesterConfig {
       maybeParseInt(process.env.INGESTER_CHECK_ITEMS_EVERY_N)
     const ingesterNamespace = overrides?.ingesterNamespace
     assert(dbPostgresUrl)
-    assert(redisUrl)
+    assert(redisHost || (redisSentinelName && redisSentinelHosts?.length))
     assert(repoProvider)
     assert(ingesterPartitionCount)
     return new IngesterConfig({
       version,
       dbPostgresUrl,
       dbPostgresSchema,
-      redisUrl,
+      redisHost,
       redisSentinelName,
       redisSentinelHosts,
+      redisPassword,
       repoProvider,
       ingesterPartitionCount,
       ingesterSubLockId,
@@ -80,8 +85,8 @@ export class IngesterConfig {
     return this.cfg.dbPostgresSchema
   }
 
-  get redisUrl() {
-    return this.cfg.redisUrl
+  get redisHost() {
+    return this.cfg.redisHost
   }
 
   get redisSentinelName() {
@@ -90,6 +95,10 @@ export class IngesterConfig {
 
   get redisSentinelHosts() {
     return this.cfg.redisSentinelHosts
+  }
+
+  get redisPassword() {
+    return this.cfg.redisPassword
   }
 
   get repoProvider() {

@@ -21,10 +21,10 @@ export class TestNetwork extends TestNetworkNoAppView {
   static async create(
     params: Partial<TestServerParams> = {},
   ): Promise<TestNetwork> {
-    const redisUrl = process.env.REDIS_URL
+    const redisHost = process.env.REDIS_HOST
     const dbPostgresUrl = params.dbPostgresUrl || process.env.DB_POSTGRES_URL
     assert(dbPostgresUrl, 'Missing postgres url for tests')
-    assert(redisUrl, 'Missing redis url for tests')
+    assert(redisHost, 'Missing redis host for tests')
     const dbPostgresSchema =
       params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
 
@@ -38,7 +38,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       repoProvider: `ws://localhost:${pdsPort}`,
       dbPostgresSchema: `appview_${dbPostgresSchema}`,
       dbPostgresUrl,
-      redisUrl,
+      redisHost,
       ...params.bsky,
     })
     const pds = await TestPds.create({

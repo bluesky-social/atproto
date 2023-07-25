@@ -38,9 +38,7 @@ export PGUSER=pg
 export PGPASSWORD=password
 export PGDATABASE=postgres
 export DB_POSTGRES_URL="postgresql://pg:password@127.0.0.1:5433/postgres"
-export REDISPORT=6380
-export REDISHOST=localhost
-export REDIS_URL="redis://127.0.0.1:6380/0"
+export REDIS_HOST="127.0.0.1:6380"
 "$@"
 code=$?
 

@@ -29,8 +29,15 @@ const main = async () => {
   })
   const redis = new Redis(
     cfg.redisSentinelName
-      ? { sentinel: cfg.redisSentinelName, hosts: cfg.redisSentinelHosts }
-      : { url: cfg.redisUrl },
+      ? {
+          sentinel: cfg.redisSentinelName,
+          hosts: cfg.redisSentinelHosts,
+          password: cfg.redisPassword,
+        }
+      : {
+          host: cfg.redisHost,
+          password: cfg.redisPassword,
+        },
   )
   const indexer = BskyIndexer.create({ db, redis, cfg })
   await indexer.start()
@@ -40,9 +47,10 @@ const main = async () => {
 }
 
 // Also accepts the following in readEnv():
-//  - REDIS_URL
+//  - REDIS_HOST
 //  - REDIS_SENTINEL_NAME
 //  - REDIS_SENTINEL_HOSTS
+//  - REDIS_PASSWORD
 //  - DID_PLC_URL
 //  - DID_CACHE_STALE_TTL
 //  - DID_CACHE_MAX_TTL

@@ -17,7 +17,7 @@ export type BskyConfig = Partial<bsky.ServerConfig> & {
   plcUrl: string
   repoProvider: string
   dbPostgresUrl: string
-  redisUrl: string
+  redisHost: string
   migration?: string
   algos?: bsky.MountedAlgos
 }
