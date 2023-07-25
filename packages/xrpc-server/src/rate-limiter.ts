@@ -56,7 +56,6 @@ export class RateLimiter implements RateLimiterI {
     ctx: XRPCReqContext,
     opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
   ) {
-    // @TODO rename header?
     if (
       this.byPassSecret &&
       ctx.req.header('X-RateLimit-Bypass') === this.byPassSecret
@@ -76,7 +75,10 @@ export class RateLimiter implements RateLimiterI {
         'RateLimit-Reset',
         Math.floor((Date.now() + res.msBeforeNext) / 1000),
       )
-      // @TODO include
+      ctx.res.setHeader(
+        'RateLimit-Policy',
+        `${this.limiter.points};w=${this.limiter.duration}`,
+      )
     } catch (err) {
       if (err instanceof RateLimiterRes) {
         ctx.res.setHeader('RateLimit-Limit', this.limiter.points)
@@ -84,6 +86,10 @@ export class RateLimiter implements RateLimiterI {
         ctx.res.setHeader(
           'RateLimit-Reset',
           Math.floor((Date.now() + err.msBeforeNext) / 1000),
+        )
+        ctx.res.setHeader(
+          'RateLimit-Policy',
+          `${this.limiter.points};w=${this.limiter.duration}`,
         )
         throw new RateLimitExceededError()
       } else {
