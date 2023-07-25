@@ -3,8 +3,8 @@ import TypedEmitter from 'typed-emitter'
 import Database from '../db'
 import { seqLogger as log } from '../logger'
 import { RepoSeqEntry } from '../db/tables/repo-seq'
-import { cborDecode, check } from '@atproto/common'
-import { commitEvt, handleEvt, SeqEvt, tombstoneEvt } from './events'
+import { cborDecode } from '@atproto/common'
+import { CommitEvt, HandleEvt, SeqEvt, TombstoneEvt } from './events'
 
 export * from './events'
 
@@ -24,11 +24,10 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       this.lastSeen = curr.seq ?? 0
     }
     this.db.channels.outgoing_repo_seq.addListener('message', () => {
-      if (this.polling) {
-        this.queued = true
-      } else {
-        this.polling = true
+      if (!this.polling) {
         this.pollDb()
+      } else {
+        this.queued = true // poll again once current poll completes
       }
     })
   }
@@ -95,26 +94,26 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         continue
       }
       const evt = cborDecode(row.event)
-      if (check.is(evt, commitEvt)) {
+      if (row.eventType === 'append' || row.eventType === 'rebase') {
         seqEvts.push({
           type: 'commit',
           seq: row.seq,
           time: row.sequencedAt,
-          evt,
+          evt: evt as CommitEvt,
         })
-      } else if (check.is(evt, handleEvt)) {
+      } else if (row.eventType === 'handle') {
         seqEvts.push({
           type: 'handle',
           seq: row.seq,
           time: row.sequencedAt,
-          evt,
+          evt: evt as HandleEvt,
         })
-      } else if (check.is(evt, tombstoneEvt)) {
+      } else if (row.eventType === 'tombstone') {
         seqEvts.push({
           type: 'tombstone',
           seq: row.seq,
           time: row.sequencedAt,
-          evt,
+          evt: evt as TombstoneEvt,
         })
       }
     }
@@ -124,21 +123,22 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
 
   async pollDb() {
     try {
+      this.polling = true
       const evts = await this.requestSeqRange({
         earliestSeq: this.lastSeen,
-        limit: 50,
+        limit: 1000,
       })
       if (evts.length > 0) {
+        this.queued = true // should poll again immediately
         this.emit('events', evts)
         this.lastSeen = evts.at(-1)?.seq ?? this.lastSeen
       }
     } catch (err) {
       log.error({ err, lastSeen: this.lastSeen }, 'sequencer failed to poll db')
     } finally {
-      // check if we should continue polling
-      if (this.queued === false) {
-        this.polling = false
-      } else {
+      this.polling = false
+      if (this.queued) {
+        // if queued, poll again
         this.queued = false
         this.pollDb()
       }

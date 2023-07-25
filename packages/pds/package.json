@@ -15,6 +15,7 @@
     "postbuild": "tsc --build tsconfig.build.json",
     "start": "node dist/bin.js",
     "test": "../pg/with-test-db.sh jest",
+    "bench": "../pg/with-test-db.sh jest --config jest.bench.config.js",
     "test:sqlite": "jest --testPathIgnorePatterns /tests/proxied/*",
     "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "jest --updateSnapshot",
