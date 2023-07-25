@@ -1387,7 +1387,7 @@ type ConfigOf<Auth, Handler, ReqCtx> =
   | Handler
   | {
       auth?: Auth
-      rateLimits?: SharedRateLimitOpts<ReqCtx> | RouteRateLimitOpts<ReqCtx>
+      rateLimits: SharedRateLimitOpts<ReqCtx> | RouteRateLimitOpts<ReqCtx>
       handler: Handler
     }
 type ExtractAuth<AV extends AuthVerifier | StreamAuthVerifier> = Extract<

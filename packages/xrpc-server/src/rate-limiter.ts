@@ -2,6 +2,7 @@ import {
   RateLimiterAbstract,
   RateLimiterMemory,
   RateLimiterRedis,
+  RateLimiterRes,
 } from 'rate-limiter-flexible'
 import {
   CalcKeyFn,
@@ -58,10 +59,19 @@ export class RateLimiter implements RateLimiterI {
       ? opts.calcPoints(ctx)
       : this.calcPoints(ctx)
     try {
-      await this.limiter.consume(key, points)
+      const res = await this.limiter.consume(key, points)
+      ctx.res.setHeader('RateLimit-Limit', this.limiter.points)
+      ctx.res.setHeader('RateLimit-Remaining', res.remainingPoints)
+      ctx.res.setHeader('RateLimit-Reset', Date.now() + res.msBeforeNext)
     } catch (err) {
-      // @TODO better error handling - fail open?
-      throw new RateLimitExceededError()
+      if (err instanceof RateLimiterRes) {
+        ctx.res.setHeader('RateLimit-Limit', this.limiter.points)
+        ctx.res.setHeader('RateLimit-Remaining', err.remainingPoints)
+        ctx.res.setHeader('RateLimit-Reset', Date.now() + err.msBeforeNext)
+        throw new RateLimitExceededError()
+      } else {
+        throw err
+      }
     }
   }
 }

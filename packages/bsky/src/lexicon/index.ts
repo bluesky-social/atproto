@@ -1378,7 +1378,7 @@ type SharedRateLimitOpts<T> = {
   calcPoints?: (ctx: T) => number
 }
 type RouteRateLimitOpts<T> = {
-  duration: number
+  durationMs: number
   points: number
   calcKey?: (ctx: T) => string
   calcPoints?: (ctx: T) => number
@@ -1387,7 +1387,7 @@ type ConfigOf<Auth, Handler, ReqCtx> =
   | Handler
   | {
       auth?: Auth
-      rateLimits?: SharedRateLimitOpts<ReqCtx> | RouteRateLimitOpts<ReqCtx>
+      rateLimits: SharedRateLimitOpts<ReqCtx> | RouteRateLimitOpts<ReqCtx>
       handler: Handler
     }
 type ExtractAuth<AV extends AuthVerifier | StreamAuthVerifier> = Extract<

@@ -214,7 +214,7 @@ const indexTs = (
         | Handler
         | {
           auth?: Auth
-          rateLimits?: SharedRateLimitOpts<ReqCtx> | RouteRateLimitOpts<ReqCtx>
+          rateLimits: SharedRateLimitOpts<ReqCtx> | RouteRateLimitOpts<ReqCtx>
           handler: Handler
         }`,
     })
