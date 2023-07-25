@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
-import { prepareCreate, prepareDelete } from '../../../../repo'
+import { prepareCreate, prepareDelete, prepareUpdate } from '../../../../repo'
 import { Server } from '../../../../lexicon'
 import {
   isCreate,
@@ -38,17 +38,20 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Too many writes. Max: 200')
       }
 
-      const hasUpdate = tx.writes.some(isUpdate)
-      if (hasUpdate) {
-        throw new InvalidRequestError(`Updates are not yet supported.`)
-      }
-
       let writes: PreparedWrite[]
       try {
         writes = await Promise.all(
           tx.writes.map((write) => {
             if (isCreate(write)) {
               return prepareCreate({
+                did,
+                collection: write.collection,
+                record: write.value,
+                rkey: write.rkey,
+                validate,
+              })
+            } else if (isUpdate(write)) {
+              return prepareUpdate({
                 did,
                 collection: write.collection,
                 record: write.value,
