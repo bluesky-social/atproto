@@ -158,14 +158,13 @@ export class Server {
       if (isShared(config.rateLimit)) {
         const { name, calcKey, calcPoints } = config.rateLimit
         const rateLimiter = this.rateLimiters[name]
-        if (!rateLimiter) {
-          throw new Error(`No shared rate limiter with name: ${name}`)
+        if (rateLimiter) {
+          this.routeRateLimiterFns[nsid] = (ctx: XRPCReqContext) =>
+            rateLimiter.consume(ctx, {
+              calcKey,
+              calcPoints,
+            })
         }
-        this.routeRateLimiterFns[nsid] = (ctx: XRPCReqContext) =>
-          rateLimiter.consume(ctx, {
-            calcKey,
-            calcPoints,
-          })
       } else {
         const { durationMs, points, calcKey, calcPoints } = config.rateLimit
         const rateLimiter = this.options.rateLimits?.creator({
@@ -175,15 +174,14 @@ export class Server {
           calcKey,
           calcPoints,
         })
-        if (!rateLimiter) {
-          throw new Error('Rate limits not setup for server')
+        if (rateLimiter) {
+          this.rateLimiters[nsid] = rateLimiter
+          this.routeRateLimiterFns[nsid] = (ctx: XRPCReqContext) =>
+            rateLimiter.consume(ctx, {
+              calcKey,
+              calcPoints,
+            })
         }
-        this.rateLimiters[nsid] = rateLimiter
-        this.routeRateLimiterFns[nsid] = (ctx: XRPCReqContext) =>
-          rateLimiter.consume(ctx, {
-            calcKey,
-            calcPoints,
-          })
       }
     }
     this.routes[verb](

@@ -12,6 +12,8 @@ import { createTransport } from 'nodemailer'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import { IdResolver } from '@atproto/identity'
+import { RateLimiter, RateLimiterOpts } from '@atproto/xrpc-server'
+import { DAY } from '@atproto/common'
 import * as appviewConsumers from './app-view/event-stream/consumers'
 import inProcessAppView from './app-view/api'
 import API from './api'
@@ -45,12 +47,6 @@ import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
 import { ContentReporter } from './content-reporter'
 import { ModerationService } from './services/moderation'
-import {
-  RateLimiter,
-  RateLimiterCreator,
-  RateLimiterOpts,
-} from '@atproto/xrpc-server'
-import { DAY } from '@atproto/common'
 
 export type { MountedAlgos } from './feed-gen/types'
 export type { ServerConfigValues } from './config'
