@@ -45,6 +45,8 @@ import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
 import { ContentReporter } from './content-reporter'
 import { ModerationService } from './services/moderation'
+import { RateLimiter } from '@atproto/xrpc-server'
+import { DAY } from '@atproto/common'
 
 export type { MountedAlgos } from './feed-gen/types'
 export type { ServerConfigValues } from './config'
@@ -248,6 +250,16 @@ export class PDS {
         jsonLimit: 100 * 1024, // 100kb
         textLimit: 100 * 1024, // 100kb
         blobLimit: 5 * 1024 * 1024, // 5mb
+      },
+      rateLimits: {
+        creator: RateLimiter.memory,
+        limits: [
+          {
+            name: 'repo-write',
+            durationMs: DAY,
+            points: 5000,
+          },
+        ],
       },
     })
 

@@ -23,6 +23,10 @@ const ALLOWED_PUTS = [
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
     auth: ctx.accessVerifierCheckTakedown,
+    rateLimits: {
+      name: 'repo-write',
+      calcKey: ({ auth }) => auth.credentials.did,
+    },
     handler: async ({ auth, input }) => {
       const {
         repo,

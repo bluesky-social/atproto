@@ -21,7 +21,8 @@ export default function (server: Server, ctx: AppContext) {
     rateLimits: {
       name: 'repo-write',
       calcKey: ({ auth }) => auth.credentials.did,
-      calcPoints: ({ input }) => input.body.writes.length,
+      calcPoints: ({ input }) =>
+        input.body.writes.filter((w) => !isDelete(w)).length,
     },
     handler: async ({ input, auth }) => {
       const tx = input.body

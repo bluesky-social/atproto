@@ -196,7 +196,7 @@ const indexTs = (
       name: 'RouteRateLimitOpts',
       typeParameters: [{ name: 'T' }],
       type: `{
-        duration: number
+        durationMs: number
         points: number
         calcKey?: (ctx: T) => string
         calcPoints?: (ctx: T) => number

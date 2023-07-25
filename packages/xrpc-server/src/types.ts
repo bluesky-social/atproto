@@ -98,7 +98,7 @@ export type RateLimiterConsume = (
 
 export type RateLimiterCreator = (opts: {
   keyPrefix: string
-  duration: number
+  durationMs: number
   points: number
   calcKey?: (ctx: XRPCReqContext) => string
   calcPoints?: (ctx: XRPCReqContext) => number
@@ -106,7 +106,7 @@ export type RateLimiterCreator = (opts: {
 
 export type RateLimitDescription = {
   name: string
-  duration: number
+  durationMs: number
   points: number
   calcKey?: (ctx: XRPCReqContext) => string
   calcPoints?: (ctx: XRPCReqContext) => number
@@ -119,7 +119,7 @@ export type SharedRateLimitOpts = {
 }
 
 export type RouteRateLimitOpts = {
-  duration: number
+  durationMs: number
   points: number
   calcKey?: (ctx: XRPCReqContext) => string
   calcPoints?: (ctx: XRPCReqContext) => number

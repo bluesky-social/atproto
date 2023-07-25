@@ -42,7 +42,6 @@ import {
   validateOutput,
 } from './util'
 import log from './logger'
-import { RateLimiter } from './rate-limiter'
 
 export function createServer(lexicons?: unknown[], options?: Options) {
   return new Server(lexicons, options)
@@ -79,7 +78,7 @@ export class Server {
       for (const limit of opts.rateLimits.limits) {
         this.rateLimiters[limit.name] = opts.rateLimits.creator({
           ...limit,
-          keyPrefix: limit.name,
+          keyPrefix: `rl-${limit.name}`,
         })
       }
     }
@@ -168,14 +167,17 @@ export class Server {
             calcPoints,
           })
       } else {
-        const { duration, points, calcKey, calcPoints } = config.rateLimit
-        const rateLimiter = new RateLimiter({
+        const { durationMs, points, calcKey, calcPoints } = config.rateLimit
+        const rateLimiter = this.options.rateLimits?.creator({
           keyPrefix: nsid,
-          duration,
+          durationMs,
           points,
           calcKey,
           calcPoints,
         })
+        if (!rateLimiter) {
+          throw new Error('Rate limits not setup for server')
+        }
         this.rateLimiters[nsid] = rateLimiter
         this.routeRateLimiterFns[nsid] = (ctx: XRPCReqContext) =>
           rateLimiter.consume(ctx, {

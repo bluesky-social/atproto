@@ -1,4 +1,8 @@
-import { RateLimiterAbstract, RateLimiterMemory } from 'rate-limiter-flexible'
+import {
+  RateLimiterAbstract,
+  RateLimiterMemory,
+  RateLimiterRedis,
+} from 'rate-limiter-flexible'
 import {
   CalcKeyFn,
   CalcPointsFn,
@@ -7,25 +11,42 @@ import {
   XRPCReqContext,
 } from './types'
 
+export type RateLimiterOpts = {
+  keyPrefix: string
+  durationMs: number
+  points: number
+  calcKey?: CalcKeyFn
+  calcPoints?: CalcPointsFn
+}
+
 export class RateLimiter implements RateLimiterI {
   public limiter: RateLimiterAbstract
   public calcKey: CalcKeyFn
   public calcPoints: CalcPointsFn
 
-  constructor(opts: {
-    keyPrefix: string
-    duration: number
-    points: number
-    calcKey?: CalcKeyFn
-    calcPoints?: CalcPointsFn
-  }) {
-    this.limiter = new RateLimiterMemory({
-      keyPrefix: opts.keyPrefix,
-      duration: opts.duration,
-      points: opts.points,
-    })
+  constructor(limiter: RateLimiterAbstract, opts: RateLimiterOpts) {
+    this.limiter = limiter
     this.calcKey = opts.calcKey ?? defaultKey
     this.calcPoints = opts.calcPoints ?? defaultPoints
+  }
+
+  static memory(opts: RateLimiterOpts): RateLimiter {
+    const limiter = new RateLimiterMemory({
+      keyPrefix: opts.keyPrefix,
+      duration: Math.floor(opts.durationMs / 1000),
+      points: opts.points,
+    })
+    return new RateLimiter(limiter, opts)
+  }
+
+  static redis(storeClient: unknown, opts: RateLimiterOpts): RateLimiter {
+    const limiter = new RateLimiterRedis({
+      storeClient,
+      keyPrefix: opts.keyPrefix,
+      duration: Math.floor(opts.durationMs / 1000),
+      points: opts.points,
+    })
+    return new RateLimiter(limiter, opts)
   }
 
   async consume(
