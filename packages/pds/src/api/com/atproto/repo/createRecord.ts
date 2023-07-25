@@ -33,12 +33,6 @@ export default function (server: Server, ctx: AppContext) {
           'Unvalidated writes are not yet supported.',
         )
       }
-      if (collection === ids.AppBskyFeedPost && rkey) {
-        throw new InvalidRequestError(
-          'Custom rkeys for post records are not currently supported.',
-        )
-      }
-
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
 
       let write: PreparedCreate
