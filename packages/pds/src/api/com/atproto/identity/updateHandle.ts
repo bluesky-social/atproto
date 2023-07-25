@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifierCheckTakedown,
     rateLimit: {
       durationMs: 5 * MINUTE,
-      points: 5,
+      points: 10,
       calcKey: ({ auth }) => auth.credentials.did,
     },
     handler: async ({ auth, input }) => {

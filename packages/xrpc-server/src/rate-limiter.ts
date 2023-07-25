@@ -16,12 +16,14 @@ export type RateLimiterOpts = {
   keyPrefix: string
   durationMs: number
   points: number
+  bypassSecret?: string
   calcKey?: CalcKeyFn
   calcPoints?: CalcPointsFn
 }
 
 export class RateLimiter implements RateLimiterI {
   public limiter: RateLimiterAbstract
+  private byPassSecret?: string
   public calcKey: CalcKeyFn
   public calcPoints: CalcPointsFn
 
@@ -54,6 +56,14 @@ export class RateLimiter implements RateLimiterI {
     ctx: XRPCReqContext,
     opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
   ) {
+    // @TODO rename header
+    if (
+      this.byPassSecret &&
+      ctx.req.header('x-ratelimit-bypass') === this.byPassSecret
+    ) {
+      return
+    }
+
     const key = opts?.calcKey ? opts.calcKey(ctx) : this.calcKey(ctx)
     const points = opts?.calcPoints
       ? opts.calcPoints(ctx)

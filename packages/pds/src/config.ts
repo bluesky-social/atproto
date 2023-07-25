@@ -43,6 +43,11 @@ export interface ServerConfigValues {
   imgUriEndpoint?: string
   blobCacheLocation?: string
 
+  rateLimitsEnabled: boolean
+  rateLimitBypassKey?: string
+  redisHost?: string
+  redisPassword?: string
+
   appUrlPasswordReset: string
   emailSmtpUrl?: string
   emailNoReplyAddress: string
@@ -156,6 +161,11 @@ export class ServerConfig {
     const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
     const blobCacheLocation = process.env.BLOB_CACHE_LOC
 
+    const rateLimitsEnabled = process.env.RATE_LIMITS_ENABLED === 'true'
+    const rateLimitBypassKey = nonemptyString(process.env.RATE_LIMIT_BYPASS_KEY)
+    const redisHost = nonemptyString(process.env.REDIS_HOST)
+    const redisPassword = nonemptyString(process.env.REDIS_PASSWORD)
+
     const appUrlPasswordReset =
       process.env.APP_URL_PASSWORD_RESET || 'app://password-reset'
 
@@ -251,6 +261,10 @@ export class ServerConfig {
       imgUriKey,
       imgUriEndpoint,
       blobCacheLocation,
+      rateLimitsEnabled,
+      rateLimitBypassKey,
+      redisHost,
+      redisPassword,
       appUrlPasswordReset,
       emailSmtpUrl,
       emailNoReplyAddress,
@@ -427,6 +441,22 @@ export class ServerConfig {
 
   get blobCacheLocation() {
     return this.cfg.blobCacheLocation
+  }
+
+  get rateLimitsEnabled() {
+    return this.cfg.rateLimitsEnabled
+  }
+
+  get rateLimitBypassKey() {
+    return this.cfg.rateLimitBypassKey
+  }
+
+  get redisHost() {
+    return this.cfg.redisHost
+  }
+
+  get redisPassword() {
+    return this.cfg.redisPassword
   }
 
   get appUrlPasswordReset() {

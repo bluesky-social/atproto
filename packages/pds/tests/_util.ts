@@ -93,6 +93,7 @@ export const runTestServer = async (
     didCacheStaleTTL: HOUR,
     jwtSecret: 'jwt-secret',
     availableUserDomains: ['.test'],
+    rateLimitsEnabled: false,
     appUrlPasswordReset: 'app://forgot-password',
     emailNoReplyAddress: 'noreply@blueskyweb.xyz',
     publicUrl: 'https://pds.public.url',

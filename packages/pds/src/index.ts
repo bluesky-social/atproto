@@ -45,7 +45,11 @@ import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
 import { ContentReporter } from './content-reporter'
 import { ModerationService } from './services/moderation'
-import { RateLimiter } from '@atproto/xrpc-server'
+import {
+  RateLimiter,
+  RateLimiterCreator,
+  RateLimiterOpts,
+} from '@atproto/xrpc-server'
 import { DAY } from '@atproto/common'
 
 export type { MountedAlgos } from './feed-gen/types'
@@ -244,15 +248,21 @@ export class PDS {
       algos,
     })
 
-    let server = createServer({
+    const xrpcOpts = {
       validateResponse: config.debugMode,
       payload: {
         jsonLimit: 100 * 1024, // 100kb
         textLimit: 100 * 1024, // 100kb
         blobLimit: 5 * 1024 * 1024, // 5mb
       },
-      rateLimits: {
-        creator: RateLimiter.memory,
+    }
+    if (config.rateLimitsEnabled) {
+      xrpcOpts['rateLimits'] = {
+        creator: (opts: RateLimiterOpts) =>
+          RateLimiter.memory({
+            bypassSecret: config.rateLimitBypassKey,
+            ...opts,
+          }),
         limits: [
           {
             name: 'repo-write',
@@ -260,8 +270,10 @@ export class PDS {
             points: 5000,
           },
         ],
-      },
-    })
+      }
+    }
+
+    let server = createServer(xrpcOpts)
 
     server = API(server, ctx)
     server = inProcessAppView(server, ctx)
