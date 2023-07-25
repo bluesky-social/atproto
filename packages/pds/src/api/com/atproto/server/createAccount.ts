@@ -13,7 +13,7 @@ import { MINUTE } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
-    rateLimits: {
+    rateLimit: {
       durationMs: 5 * MINUTE,
       points: 100,
     },

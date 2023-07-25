@@ -9,7 +9,7 @@ import { DAY } from '@atproto/common'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.rebaseRepo({
     auth: ctx.accessVerifierNotAppPassword,
-    rateLimits: {
+    rateLimit: {
       durationMs: DAY,
       points: 10,
       calcKey: ({ auth }) => auth.credentials.did,

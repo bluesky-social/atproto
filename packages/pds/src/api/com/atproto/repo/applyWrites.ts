@@ -18,7 +18,7 @@ import { ConcurrentWriteError } from '../../../../services/repo'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.applyWrites({
     auth: ctx.accessVerifierCheckTakedown,
-    rateLimits: {
+    rateLimit: {
       name: 'repo-write',
       calcKey: ({ auth }) => auth.credentials.did,
       calcPoints: ({ input }) =>
