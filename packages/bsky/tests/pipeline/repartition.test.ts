@@ -1,9 +1,14 @@
 import assert from 'assert'
 import { Deferrable, createDeferrable, wait } from '@atproto/common'
-import { TestNetworkNoAppView } from '@atproto/dev-env'
+import {
+  BskyIndexers,
+  TestNetworkNoAppView,
+  getIndexers,
+  getIngester,
+  processAll,
+} from '@atproto/dev-env'
 import { SeedClient } from '../seeds/client'
 import usersSeed from '../seeds/users'
-import { BskyIndexers, getIndexers, getIngester, processAll } from './util'
 import { BskyIngester } from '../../src'
 import { countAll } from '../../src/db/util'
 

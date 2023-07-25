@@ -6,6 +6,7 @@ import { IngesterContext } from './context'
 import { IngesterSubscription } from './subscription'
 
 export { IngesterConfig } from './config'
+export type { IngesterConfigValues } from './config'
 
 export class BskyIngester {
   public ctx: IngesterContext

@@ -1,9 +1,14 @@
-import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { wait } from '@atproto/common'
+import {
+  BskyIndexers,
+  TestNetworkNoAppView,
+  getIndexers,
+  getIngester,
+  processAll,
+} from '@atproto/dev-env'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import { BskyIndexers, getIndexers, getIngester, processAll } from './util'
 import { BskyIngester } from '../../src'
-import { wait } from '@atproto/common'
 
 const TEST_NAME = 'pipeline_backpressure'
 

@@ -1,7 +1,6 @@
-import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { TestNetworkNoAppView, getIngester, ingestAll } from '@atproto/dev-env'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import { getIngester, ingestAll } from './util'
 import { BskyIngester } from '../../src'
 
 const TEST_NAME = 'pipeline_reingest'

@@ -81,7 +81,6 @@ describe('bsky views with mutes from mute lists', () => {
       sc.getHeaders(alice),
     )
     await network.processAll()
-    await network.bsky.processAll()
   })
 
   it('uses a list for mutes', async () => {

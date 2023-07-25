@@ -11,6 +11,7 @@ import { HiveLabeler, KeywordLabeler, Labeler } from '../labeler'
 import { Redis } from '../redis'
 
 export { IndexerConfig } from './config'
+export type { IndexerConfigValues } from './config'
 
 export class BskyIndexer {
   public ctx: IndexerContext
