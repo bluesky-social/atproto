@@ -1,17 +1,25 @@
-import AtpAgent from '@atproto/api'
-import { runTestServer, CloseFn, TestServerInfo, forSnapshot } from '../_util'
-import { SeedClient } from '../seeds/client'
-import basicSeed from '../seeds/basic'
+import assert from 'assert'
+import AtpAgent, { AtUri } from '@atproto/api'
 import { RecordRef } from '@atproto/bsky/tests/seeds/client'
 import { BlockedActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
 import { BlockedByActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
+import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
+import {
+  isViewRecord as isEmbedViewRecord,
+  isViewBlocked as isEmbedViewBlocked,
+} from '@atproto/api/src/client/types/app/bsky/embed/record'
+import { runTestServer, CloseFn, TestServerInfo, forSnapshot } from '../_util'
+import { SeedClient } from '../seeds/client'
+import basicSeed from '../seeds/basic'
 
 describe('pds views with blocking', () => {
   let server: TestServerInfo
   let agent: AtpAgent
   let close: CloseFn
   let sc: SeedClient
+  let danBlockCarol: { uri: string }
   let aliceReplyToDan: { ref: RecordRef }
+  let carolReplyToDan: { ref: RecordRef }
 
   let alice: string
   let carol: string
@@ -31,17 +39,23 @@ describe('pds views with blocking', () => {
     // add follows to ensure blocks work even w follows
     await sc.follow(carol, dan)
     await sc.follow(dan, carol)
-    // dan blocks carol
-    await agent.api.app.bsky.graph.block.create(
-      { repo: dan },
-      { createdAt: new Date().toISOString(), subject: carol },
-      sc.getHeaders(dan),
-    )
     aliceReplyToDan = await sc.reply(
       alice,
       sc.posts[dan][0].ref,
       sc.posts[dan][0].ref,
       'alice replies to dan',
+    )
+    carolReplyToDan = await sc.reply(
+      carol,
+      sc.posts[dan][0].ref,
+      sc.posts[dan][0].ref,
+      'carol replies to dan',
+    )
+    // dan blocks carol
+    danBlockCarol = await agent.api.app.bsky.graph.block.create(
+      { repo: dan },
+      { createdAt: new Date().toISOString(), subject: carol },
+      sc.getHeaders(dan),
     )
     await server.processAll()
   })
@@ -51,7 +65,6 @@ describe('pds views with blocking', () => {
   })
 
   it('blocks thread post', async () => {
-    const { carol, dan } = sc.dids
     const { data: threadAlice } = await agent.api.app.bsky.feed.getPostThread(
       { depth: 1, uri: sc.posts[carol][0].ref.uriStr },
       { headers: sc.getHeaders(dan) },
@@ -291,6 +304,132 @@ describe('pds views with blocking', () => {
       { headers: sc.getHeaders(dan) },
     )
     expect(resDan.data.actors.some((actor) => actor.did === carol)).toBeFalsy()
+  })
+
+  it('does not serve blocked replies', async () => {
+    const getThreadPostUri = (r) => r?.['post']?.['uri']
+    // reply then block
+    const { data: replyThenBlock } =
+      await agent.api.app.bsky.feed.getPostThread(
+        { depth: 1, uri: sc.posts[dan][0].ref.uriStr },
+        { headers: sc.getHeaders(alice) },
+      )
+    assert(isThreadViewPost(replyThenBlock.thread))
+    expect(replyThenBlock.thread.replies?.map(getThreadPostUri)).toEqual([
+      aliceReplyToDan.ref.uriStr,
+    ])
+
+    // unblock
+    await agent.api.app.bsky.graph.block.delete(
+      { repo: dan, rkey: new AtUri(danBlockCarol.uri).rkey },
+      sc.getHeaders(dan),
+    )
+    const { data: unblock } = await agent.api.app.bsky.feed.getPostThread(
+      { depth: 1, uri: sc.posts[dan][0].ref.uriStr },
+      { headers: sc.getHeaders(alice) },
+    )
+    assert(isThreadViewPost(unblock.thread))
+    expect(unblock.thread.replies?.map(getThreadPostUri)).toEqual([
+      carolReplyToDan.ref.uriStr,
+      aliceReplyToDan.ref.uriStr,
+    ])
+
+    // block then reply
+    danBlockCarol = await agent.api.app.bsky.graph.block.create(
+      { repo: dan },
+      { createdAt: new Date().toISOString(), subject: carol },
+      sc.getHeaders(dan),
+    )
+    const carolReplyToDan2 = await sc.reply(
+      carol,
+      sc.posts[dan][1].ref,
+      sc.posts[dan][1].ref,
+      'carol replies to dan again',
+    )
+    const { data: blockThenReply } =
+      await agent.api.app.bsky.feed.getPostThread(
+        { depth: 1, uri: sc.posts[dan][0].ref.uriStr },
+        { headers: sc.getHeaders(alice) },
+      )
+    assert(isThreadViewPost(blockThenReply.thread))
+    expect(replyThenBlock.thread.replies?.map(getThreadPostUri)).toEqual([
+      aliceReplyToDan.ref.uriStr,
+    ])
+
+    // cleanup
+    await agent.api.app.bsky.feed.post.delete(
+      { repo: carol, rkey: carolReplyToDan2.ref.uri.rkey },
+      sc.getHeaders(carol),
+    )
+  })
+
+  it('does not serve blocked embeds to third-party', async () => {
+    // embed then block
+    const { data: embedThenBlock } =
+      await agent.api.app.bsky.feed.getPostThread(
+        { depth: 0, uri: sc.posts[dan][1].ref.uriStr },
+        { headers: sc.getHeaders(alice) },
+      )
+    assert(isThreadViewPost(embedThenBlock.thread))
+    assert(isEmbedViewBlocked(embedThenBlock.thread.post.embed?.record))
+
+    // unblock
+    await agent.api.app.bsky.graph.block.delete(
+      { repo: dan, rkey: new AtUri(danBlockCarol.uri).rkey },
+      sc.getHeaders(dan),
+    )
+    const { data: unblock } = await agent.api.app.bsky.feed.getPostThread(
+      { depth: 0, uri: sc.posts[dan][1].ref.uriStr },
+      { headers: sc.getHeaders(alice) },
+    )
+    assert(isThreadViewPost(unblock.thread))
+    assert(isEmbedViewRecord(unblock.thread.post.embed?.record))
+
+    // block then embed
+    danBlockCarol = await agent.api.app.bsky.graph.block.create(
+      { repo: dan },
+      { createdAt: new Date().toISOString(), subject: carol },
+      sc.getHeaders(dan),
+    )
+    const carolEmbedsDan = await sc.post(
+      carol,
+      'carol embeds dan',
+      undefined,
+      undefined,
+      sc.posts[dan][0].ref,
+    )
+    const { data: blockThenEmbed } =
+      await agent.api.app.bsky.feed.getPostThread(
+        { depth: 0, uri: carolEmbedsDan.ref.uriStr },
+        { headers: sc.getHeaders(alice) },
+      )
+    assert(isThreadViewPost(blockThenEmbed.thread))
+    assert(isEmbedViewBlocked(blockThenEmbed.thread.post.embed?.record))
+
+    // cleanup
+    await agent.api.app.bsky.feed.post.delete(
+      { repo: carol, rkey: carolEmbedsDan.ref.uri.rkey },
+      sc.getHeaders(carol),
+    )
+  })
+
+  it('applies third-party blocking rules in feeds.', async () => {
+    // alice follows carol and dan, block exists between carol and dan.
+    const replyBlockedUri = carolReplyToDan.ref.uriStr
+    const embedBlockedUri = sc.posts[dan][1].ref.uriStr
+    const { data: timeline } = await agent.api.app.bsky.feed.getTimeline(
+      { limit: 100 },
+      { headers: sc.getHeaders(alice) },
+    )
+    const replyBlockedPost = timeline.feed.find(
+      (item) => item.post.uri === replyBlockedUri,
+    )
+    expect(replyBlockedPost).toBeUndefined()
+    const embedBlockedPost = timeline.feed.find(
+      (item) => item.post.uri === embedBlockedUri,
+    )
+    assert(embedBlockedPost)
+    assert(isEmbedViewBlocked(embedBlockedPost.post.embed?.record))
   })
 
   it('returns a list of blocks', async () => {

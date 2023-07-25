@@ -46,6 +46,7 @@ import { LabelCache } from './label-cache'
 import { ContentReporter } from './content-reporter'
 import { ModerationService } from './services/moderation'
 
+export type { MountedAlgos } from './feed-gen/types'
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './db'
@@ -283,12 +284,14 @@ export class PDS {
         )
       }, 10000)
     }
-    this.sequencerStatsInterval = setInterval(() => {
+    this.sequencerStatsInterval = setInterval(async () => {
       if (this.ctx.sequencerLeader?.isLeader) {
-        seqLogger.info(
-          { seq: this.ctx.sequencerLeader.peekSeqVal() },
-          'sequencer leader stats',
-        )
+        try {
+          const seq = await this.ctx.sequencerLeader.lastSeq()
+          seqLogger.info({ seq }, 'sequencer leader stats')
+        } catch (err) {
+          seqLogger.error({ err }, 'error getting last seq')
+        }
       }
     }, 500)
     appviewConsumers.listen(this.ctx)

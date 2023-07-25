@@ -97,8 +97,12 @@ export class AppContext {
     return auth.roleVerifier(this.auth)
   }
 
-  get optionalAccessOrAdminVerifier() {
-    return auth.optionalAccessOrAdminVerifier(this.auth)
+  get accessOrRoleVerifier() {
+    return auth.accessOrRoleVerifier(this.auth)
+  }
+
+  get optionalAccessOrRoleVerifier() {
+    return auth.optionalAccessOrRoleVerifier(this.auth)
   }
 
   get imgUriBuilder(): ImageUriBuilder {

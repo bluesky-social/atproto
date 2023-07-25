@@ -1,3 +1,4 @@
+import { RepoRecord } from '@atproto/lexicon'
 import { View as ImagesEmbedView } from '../../../lexicon/types/app/bsky/embed/images'
 import { View as ExternalEmbedView } from '../../../lexicon/types/app/bsky/embed/external'
 import {
@@ -33,16 +34,21 @@ export type PostInfo = {
   uri: string
   cid: string
   creator: string
-  recordBytes: Uint8Array
+  record: RepoRecord
   indexedAt: string
   likeCount: number | null
   repostCount: number | null
   replyCount: number | null
   requesterRepost: string | null
   requesterLike: string | null
+  takedownId: number | null
 }
 
 export type PostInfoMap = { [uri: string]: PostInfo }
+
+export type PostBlocksMap = {
+  [uri: string]: { reply?: boolean; embed?: boolean }
+}
 
 export type ActorInfo = {
   did: string
@@ -79,6 +85,10 @@ export type FeedRow = {
   replyParent: string | null
   replyRoot: string | null
   sortAt: string
+}
+export type FeedHydrationOptions = {
+  includeSoftDeleted?: boolean
+  usePostViewUnion?: boolean
 }
 
 export type MaybePostView = PostView | NotFoundPost | BlockedPost

@@ -1,5 +1,5 @@
 import { TimeCidKeyset } from '../../../../db/pagination'
-import { FeedRow } from '../../../../services/types'
+import { FeedRow } from '../../../../services/feed/types'
 
 export enum FeedAlgorithm {
   ReverseChronological = 'reverse-chronological',

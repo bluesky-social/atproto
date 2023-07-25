@@ -13,7 +13,7 @@ export class GraphService {
     return (db: Database) => new GraphService(db, imgUriBuilder)
   }
 
-  getListsQb(requester: string) {
+  getListsQb(requester: string | null) {
     const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('list')
@@ -23,7 +23,7 @@ export class GraphService {
       .select(
         this.db.db
           .selectFrom('list_mute')
-          .where('list_mute.mutedByDid', '=', requester)
+          .where('list_mute.mutedByDid', '=', requester ?? '')
           .whereRef('list_mute.listUri', '=', ref('list.uri'))
           .select('list_mute.listUri')
           .as('viewerMuted'),
@@ -98,7 +98,7 @@ export class GraphService {
     }
   }
 
-  async getListViews(listUris: string[], requester: string) {
+  async getListViews(listUris: string[], requester: string | null) {
     if (listUris.length < 1) return {}
     const lists = await this.getListsQb(requester)
       .where('list.uri', 'in', listUris)
