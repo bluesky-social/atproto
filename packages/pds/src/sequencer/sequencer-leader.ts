@@ -15,19 +15,9 @@ export class SequencerLeader {
   destroyed = false
   polling = false
   queued = false
-  private lastSeq: number
 
   constructor(public db: Database, lockId = SEQUENCER_LEADER_ID) {
     this.leader = new Leader(lockId, this.db)
-  }
-
-  nextSeqVal(): number {
-    this.lastSeq++
-    return this.lastSeq
-  }
-
-  peekSeqVal(): number | undefined {
-    return this.lastSeq
   }
 
   get isLeader() {
@@ -149,6 +139,17 @@ export class SequencerLeader {
     if (this.db.dialect === 'sqlite') return true
     const count = await this.getUnsequencedCount()
     return count === 0
+  }
+
+  async lastSeq() {
+    const res = await this.db.db
+      .selectFrom('repo_seq')
+      .select('seq')
+      .where('seq', 'is not', null)
+      .orderBy('seq', 'desc')
+      .limit(1)
+      .executeTakeFirst()
+    return res?.seq ?? 0
   }
 
   destroy() {

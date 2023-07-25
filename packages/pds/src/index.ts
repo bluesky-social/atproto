@@ -286,10 +286,12 @@ export class PDS {
     }
     this.sequencerStatsInterval = setInterval(() => {
       if (this.ctx.sequencerLeader?.isLeader) {
-        seqLogger.info(
-          { seq: this.ctx.sequencerLeader.peekSeqVal() },
-          'sequencer leader stats',
-        )
+        try {
+          const seq = await this.ctx.sequencerLeader.lastSeq()
+          seqLogger.info({ seq }, 'sequencer leader stats')
+        } catch (err) {
+          seqLogger.error({ err }, 'error getting last seq')
+        }
       }
     }, 500)
     appviewConsumers.listen(this.ctx)
