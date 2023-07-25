@@ -33,6 +33,7 @@ export class BskyIngester {
       partitionCount: cfg.ingesterPartitionCount,
       maxItems: cfg.ingesterMaxItems,
       checkItemsEveryN: cfg.ingesterCheckItemsEveryN,
+      initialCursor: cfg.ingesterInitialCursor,
     })
     return new BskyIngester({ ctx, sub })
   }

@@ -14,6 +14,7 @@ export interface IngesterConfigValues {
   ingesterSubLockId?: number
   ingesterMaxItems?: number
   ingesterCheckItemsEveryN?: number
+  ingesterInitialCursor?: number
 }
 
 export class IngesterConfig {
@@ -51,6 +52,9 @@ export class IngesterConfig {
     const ingesterCheckItemsEveryN =
       overrides?.ingesterCheckItemsEveryN ||
       maybeParseInt(process.env.INGESTER_CHECK_ITEMS_EVERY_N)
+    const ingesterInitialCursor =
+      overrides?.ingesterInitialCursor ||
+      maybeParseInt(process.env.INGESTER_INITIAL_CURSOR)
     const ingesterNamespace = overrides?.ingesterNamespace
     assert(dbPostgresUrl)
     assert(redisHost || (redisSentinelName && redisSentinelHosts?.length))
@@ -70,6 +74,7 @@ export class IngesterConfig {
       ingesterNamespace,
       ingesterMaxItems,
       ingesterCheckItemsEveryN,
+      ingesterInitialCursor,
     })
   }
 
@@ -115,6 +120,10 @@ export class IngesterConfig {
 
   get ingesterCheckItemsEveryN() {
     return this.cfg.ingesterCheckItemsEveryN
+  }
+
+  get ingesterInitialCursor() {
+    return this.cfg.ingesterInitialCursor
   }
 
   get ingesterNamespace() {

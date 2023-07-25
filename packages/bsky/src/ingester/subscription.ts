@@ -35,6 +35,7 @@ export class IngesterSubscription {
       maxItems?: number
       checkItemsEveryN?: number
       subLockId?: number
+      initialCursor?: number
     },
   ) {}
 
@@ -103,8 +104,8 @@ export class IngesterSubscription {
 
   async getCursor(): Promise<number> {
     const val = await this.ctx.redis.get(CURSOR_KEY)
-    const state = val !== null ? strToInt(val) : 0
-    return state
+    const initialCursor = this.opts.initialCursor ?? 0
+    return val !== null ? strToInt(val) : initialCursor
   }
 
   async resetCursor(): Promise<void> {
