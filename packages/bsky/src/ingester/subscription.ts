@@ -1,5 +1,5 @@
 import { ReplyError } from 'ioredis'
-import { cborEncode, wait } from '@atproto/common'
+import { cborEncode, ui8ToBuffer, wait } from '@atproto/common'
 import { randomIntFromSeed } from '@atproto/crypto'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
 import { OutputSchema as Message } from '../lexicon/types/com/atproto/sync/subscribeRepos'
@@ -181,10 +181,6 @@ function getMessageDetails(msg: Message):
     return { info: msg }
   }
   return { info: null }
-}
-
-function ui8ToBuffer(bytes: Uint8Array) {
-  return Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 }
 
 async function getPartition(did: string, n: number) {
