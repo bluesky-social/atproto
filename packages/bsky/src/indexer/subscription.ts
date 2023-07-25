@@ -14,7 +14,7 @@ import { ValidationError } from '@atproto/lexicon'
 import * as message from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import { Leader } from '../db/leader'
 import { IndexingService } from '../services/indexing'
-import { subLogger } from '../logger'
+import log from './logger'
 import {
   ConsecutiveItem,
   ConsecutiveList,
@@ -33,6 +33,7 @@ export const INDEXER_SUB_LOCK_ID = 1200 // need one per partition
 export class IndexerSubscription {
   destroyed = false
   leader = new Leader(this.opts.subLockId || INDEXER_SUB_LOCK_ID, this.ctx.db)
+  processedCount = 0
   repoQueue = new PartitionedQueue({
     concurrency: this.opts.concurrency ?? Infinity,
   })
@@ -65,8 +66,8 @@ export class IndexerSubscription {
           count: this.opts.partitionBatchSize ?? 50, // events per stream
         },
       )
+      if (done()) break
       for (const { key, messages } of results) {
-        if (done()) break
         const partition = this.partitions.get(partitionId(key))
         for (const msg of messages) {
           const seq = strToInt(msg.cursor)
@@ -97,7 +98,7 @@ export class IndexerSubscription {
           throw new Error('Indexer sub completed, but should be persistent')
         }
       } catch (err) {
-        subLogger.error({ err }, 'indexer subscription error')
+        log.error({ err }, 'indexer sub error')
       }
       if (!this.destroyed) {
         await wait(5000 + jitter(1000)) // wait then try to become leader
@@ -145,11 +146,12 @@ export class IndexerSubscription {
     } catch (err) {
       // We log messages we can't process and move on:
       // otherwise the cursor would get stuck on a poison message.
-      subLogger.error(
+      log.error(
         { err, message: loggableMessage(msg) },
-        'indexer subscription message processing error',
+        'indexer message processing error',
       )
     } finally {
+      this.processedCount++
       const latest = item.complete().at(-1)
       if (latest !== undefined) {
         partition.cursorQueue
@@ -157,7 +159,7 @@ export class IndexerSubscription {
             await this.ctx.redis.trimStream(partition.key, latest + 1)
           })
           .catch((err) => {
-            subLogger.error({ err }, 'indexer subscription cursor error')
+            log.error({ err }, 'indexer cursor error')
           })
       }
     }
@@ -195,7 +197,7 @@ export class IndexerSubscription {
             )
           } catch (err) {
             if (err instanceof ValidationError) {
-              subLogger.warn(
+              log.warn(
                 {
                   did: msg.repo,
                   commit: msg.commit.toString(),
@@ -205,7 +207,7 @@ export class IndexerSubscription {
                 'skipping indexing of invalid record',
               )
             } else {
-              subLogger.error(
+              log.error(
                 {
                   err,
                   did: msg.repo,

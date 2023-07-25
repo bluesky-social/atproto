@@ -2,6 +2,7 @@ import { IdResolver } from '@atproto/identity'
 import { BackgroundQueue } from '../background'
 import Database from '../db'
 import DidSqlCache from '../did-cache'
+import log from './logger'
 import { dbLogger } from '../logger'
 import { IndexerConfig } from './config'
 import { IndexerContext } from './context'
@@ -86,8 +87,14 @@ export class BskyIndexer {
       )
     }, 10000)
     this.subStatsInterval = setInterval(() => {
-      // @TODO stats per partition?
-      // subLogger.info({}, 'indexer subscription stats')
+      log.info(
+        {
+          processedCount: this.sub.processedCount,
+          runningCount: this.sub.repoQueue.main.pending,
+          waitingCount: this.sub.repoQueue.main.size,
+        },
+        'indexer stats',
+      )
     }, 500)
     this.sub.run()
     return this

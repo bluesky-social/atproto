@@ -6,7 +6,7 @@ import { OutputSchema as Message } from '../lexicon/types/com/atproto/sync/subsc
 import * as message from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import { ids, lexicons } from '../lexicon/lexicons'
 import { Leader } from '../db/leader'
-import { subLogger } from '../logger'
+import log from './logger'
 import {
   LatestQueue,
   ProcessableMessage,
@@ -43,9 +43,9 @@ export class IngesterSubscription {
       const details = getMessageDetails(msg)
       if ('info' in details) {
         // These messages are not sequenced, we just log them and carry on
-        subLogger.warn(
+        log.warn(
           { provider: this.opts.service, message: loggableMessage(msg) },
-          `ingester subscription ${details.info ? 'info' : 'unknown'} message`,
+          `ingester sub ${details.info ? 'info' : 'unknown'} message`,
         )
         continue
       }
@@ -59,8 +59,8 @@ export class IngesterSubscription {
         this.lastSeq = seq
       } catch (err) {
         if (err instanceof ReplyError) {
-          // skipping over entries that have already been added or fully processed
-          subLogger.warn({ seq, repo }, 'ingester subscription skipping entry')
+          // skipping over messages that have already been added or fully processed
+          log.warn({ seq, repo }, 'ingester skipping message')
         } else {
           throw err
         }
@@ -81,10 +81,7 @@ export class IngesterSubscription {
           throw new Error('Ingester sub completed, but should be persistent')
         }
       } catch (err) {
-        subLogger.error(
-          { err, provider: this.opts.service },
-          'ingester subscription error',
-        )
+        log.error({ err, provider: this.opts.service }, 'ingester sub error')
       }
       if (!this.destroyed) {
         await wait(1000 + jitter(500)) // wait then try to become leader
@@ -128,16 +125,13 @@ export class IngesterSubscription {
         return { cursor }
       },
       onReconnectError: (err, reconnects, initial) => {
-        subLogger.warn(
-          { err, reconnects, initial },
-          'ingester subscription reconnect',
-        )
+        log.warn({ err, reconnects, initial }, 'ingester sub reconnect')
       },
       validate: (value) => {
         try {
           return lexicons.assertValidXrpcMessage<Message>(METHOD, value)
         } catch (err) {
-          subLogger.warn(
+          log.warn(
             {
               err,
               seq: ifNumber(value?.['seq']),
@@ -146,7 +140,7 @@ export class IngesterSubscription {
               time: ifString(value?.['time']),
               provider: this.opts.service,
             },
-            'ingester subscription skipped invalid message',
+            'ingester sub skipped invalid message',
           )
         }
       },
@@ -190,7 +184,7 @@ async function getPartition(did: string, n: number) {
 
 class Backpressure {
   count = 0
-  lastTotal = 0
+  lastTotal: number | null = null
   partitionCount = this.sub.opts.partitionCount
   limit = this.sub.opts.maxItems ?? Infinity
   checkEvery = this.sub.opts.checkItemsEveryN ?? 500
@@ -208,7 +202,7 @@ class Backpressure {
     while (!ready) {
       ready = await this.check()
       if (!ready) {
-        subLogger.warn(
+        log.warn(
           {
             limit: this.limit,
             total: this.lastTotal,

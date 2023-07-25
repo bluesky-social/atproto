@@ -1,5 +1,6 @@
 import Database from '../db'
-import { dbLogger, subLogger } from '../logger'
+import log from './logger'
+import { dbLogger } from '../logger'
 import { Redis } from '../redis'
 import { IngesterConfig } from './config'
 import { IngesterContext } from './context'
@@ -50,7 +51,16 @@ export class BskyIngester {
       )
     }, 10000)
     this.subStatsInterval = setInterval(() => {
-      subLogger.info({ seq: this.sub?.lastSeq }, 'ingester subscription stats')
+      log.info(
+        {
+          seq: this.sub.lastSeq,
+          streamsLength:
+            this.sub.backpressure.lastTotal !== null
+              ? this.sub.backpressure.lastTotal
+              : undefined,
+        },
+        'ingester stats',
+      )
     }, 500)
     this.sub.run()
     return this
