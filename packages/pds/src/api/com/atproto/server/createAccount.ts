@@ -1,6 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { isServiceDomain, normalizeAndValidateHandle } from '../../../../handle'
+import { AtprotoData } from '@atproto/identity'
 import * as plc from '@did-plc/lib'
+import { isServiceDomain, normalizeAndValidateHandle } from '../../../../handle'
 import * as scrypt from '../../../../db/scrypt'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
@@ -8,7 +9,7 @@ import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
 import Database from '../../../../db'
-import { AtprotoData } from '@atproto/identity'
+import { mailerLogger } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount(async ({ input, req }) => {
@@ -51,6 +52,7 @@ export default function (server: Server, ctx: AppContext) {
         await ensureCodeIsAvailable(dbTxn, inviteCode, true)
       }
 
+      let invalidated: { did: string; handle: string } | null = null
       // Register user before going out to PLC to get a real did
       try {
         await actorTxn.registerUser({ email, handle, did, passwordScrypt })
@@ -61,7 +63,7 @@ export default function (server: Server, ctx: AppContext) {
             if (isServiceDomain(handle, ctx.cfg.availableUserDomains)) {
               throw new InvalidRequestError(`Handle already taken: ${handle}`)
             } else {
-              await actorTxn.invalidateHandle(handle)
+              invalidated = await actorTxn.invalidateHandle(handle)
               await actorTxn.updateHandle(did, handle)
             }
           } else {
@@ -108,8 +110,32 @@ export default function (server: Server, ctx: AppContext) {
         did,
         accessJwt: access.jwt,
         refreshJwt: refresh.jwt,
+        invalidated,
       }
     })
+
+    if (result.invalidated) {
+      try {
+        const emailRes = await ctx.db.db
+          .selectFrom('user_account')
+          .where('did', '=', result.invalidated.did)
+          .select('email')
+          .executeTakeFirst()
+        if (emailRes) {
+          await ctx.mailer.sendInvalidatedHandle(result.invalidated, {
+            to: emailRes.email,
+          })
+        }
+      } catch (err) {
+        mailerLogger.error(
+          {
+            err,
+            invalidated: result.invalidated,
+          },
+          'error sending handle invalidation mail',
+        )
+      }
+    }
 
     ctx.contentReporter?.checkHandle({ handle, did: result.did })
 

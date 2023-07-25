@@ -24,6 +24,7 @@ export class ServerMailer {
     this.templates = {
       resetPassword: this.compile('reset-password'),
       deleteAccount: this.compile('delete-account'),
+      invalidatedHandle: this.compile('invalidated-handle'),
     }
   }
 
@@ -47,6 +48,16 @@ export class ServerMailer {
   async sendAccountDelete(params: { token: string }, mailOpts: Mail.Options) {
     return this.sendTemplate('deleteAccount', params, {
       subject: 'Account Deletion Requested',
+      ...mailOpts,
+    })
+  }
+
+  async sendInvalidatedHandle(
+    params: { handle: string; did: string },
+    mailOpts: Mail.Options,
+  ) {
+    return this.sendTemplate('invalidatedHandle', params, {
+      subject: 'Bluesky Handle Invalidated',
       ...mailOpts,
     })
   }

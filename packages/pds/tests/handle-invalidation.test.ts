@@ -1,7 +1,11 @@
+import { EventEmitter } from 'stream'
+import { once } from 'events'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
 import { SeedClient } from './seeds/client'
 import userSeed from './seeds/users'
+import { ServerMailer } from '../src/mailer'
+import Mail from 'nodemailer/lib/mailer'
 
 describe('handle invalidation', () => {
   let network: TestNetworkNoAppView
@@ -9,6 +13,10 @@ describe('handle invalidation', () => {
   let sc: SeedClient
   let alice: string
   let bob: string
+
+  let mailer: ServerMailer
+  const mailCatcher = new EventEmitter()
+  let _origSendMail
 
   const mockHandles = {}
 
@@ -31,6 +39,15 @@ describe('handle invalidation', () => {
         return mockHandles[handle]
       }
       return origResolve(handle)
+    }
+
+    // Catch emails for use in tests
+    mailer = network.pds.ctx.mailer
+    _origSendMail = mailer.transporter.sendMail
+    mailer.transporter.sendMail = async (opts) => {
+      const result = await _origSendMail.call(mailer.transporter, opts)
+      mailCatcher.emit('mail', opts)
+      return result
     }
   })
 
@@ -65,6 +82,7 @@ describe('handle invalidation', () => {
   const HANDLE = 'name.xyz'
 
   it('allows for contention of an external handle', async () => {
+    // alice claims a handle
     mockHandles[HANDLE] = alice
     await agent.api.com.atproto.identity.updateHandle(
       {
@@ -73,13 +91,21 @@ describe('handle invalidation', () => {
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
 
+    // bob contends for alices handle
     mockHandles[HANDLE] = bob
+
+    const mailPromise = once(mailCatcher, 'mail') as Promise<Mail.Options>
     await agent.api.com.atproto.identity.updateHandle(
       {
         handle: HANDLE,
       },
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
+    const mail = await mailPromise
+    expect(mail[0].to).toEqual(sc.accounts[alice].email)
+    expect(
+      mail[0].html?.toString().includes('Bluesky Handle Invalidated'),
+    ).toBe(true)
 
     const aliceRes = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },

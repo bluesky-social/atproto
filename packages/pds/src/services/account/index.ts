@@ -179,12 +179,20 @@ export class AccountService {
     await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
-  async invalidateHandle(handle: string) {
-    await this.db.db
+  async invalidateHandle(
+    handle: string,
+  ): Promise<{ did: string; handle: string } | null> {
+    const res = await this.db.db
       .updateTable('did_handle')
       .set({ handle: null })
       .where('handle', '=', handle)
-      .execute()
+      .returningAll()
+      .executeTakeFirst()
+    if (!res) return null
+    return {
+      did: res.did,
+      handle,
+    }
   }
 
   async isHandleAvailable(handle: string) {
