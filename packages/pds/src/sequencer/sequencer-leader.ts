@@ -30,15 +30,6 @@ export class SequencerLeader {
     while (!this.destroyed) {
       try {
         const { ran } = await this.leader.run(async ({ signal }) => {
-          const res = await this.db.db
-            .selectFrom('repo_seq')
-            .select('seq')
-            .where('seq', 'is not', null)
-            .orderBy('seq', 'desc')
-            .limit(1)
-            .executeTakeFirst()
-          this.lastSeq = res?.seq ?? 0
-
           const seqListener = () => {
             if (this.polling) {
               this.queued = true
@@ -141,7 +132,7 @@ export class SequencerLeader {
     return count === 0
   }
 
-  async lastSeq() {
+  async lastSeq(): Promise<number> {
     const res = await this.db.db
       .selectFrom('repo_seq')
       .select('seq')
