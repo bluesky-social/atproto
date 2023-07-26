@@ -17,7 +17,8 @@ export type Options = {
   }
   rateLimits?: {
     creator: RateLimiterCreator
-    limits: RateLimitDescription[]
+    global?: ServerRateLimitDescription[]
+    shared?: ServerRateLimitDescription[]
   }
 }
 
@@ -94,7 +95,7 @@ export interface RateLimiterI {
 export type RateLimiterConsume = (
   ctx: XRPCReqContext,
   opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
-) => Promise<void>
+) => Promise<RateLimiterStatus>
 
 export type RateLimiterCreator = (opts: {
   keyPrefix: string
@@ -104,7 +105,7 @@ export type RateLimiterCreator = (opts: {
   calcPoints?: (ctx: XRPCReqContext) => number
 }) => RateLimiterI
 
-export type RateLimitDescription = {
+export type ServerRateLimitDescription = {
   name: string
   durationMs: number
   points: number
@@ -125,14 +126,25 @@ export type RouteRateLimitOpts = {
   calcPoints?: (ctx: XRPCReqContext) => number
 }
 
+export type HandlerRateLimitOpts = SharedRateLimitOpts | RouteRateLimitOpts
+
 export const isShared = (
-  opts: SharedRateLimitOpts | RouteRateLimitOpts,
+  opts: HandlerRateLimitOpts,
 ): opts is SharedRateLimitOpts => {
   return typeof opts['name'] === 'string'
 }
 
+export type RateLimiterStatus = {
+  limit: number
+  duration: number
+  remainingPoints: number
+  msBeforeNext: number
+  consumedPoints: number
+  isFirstInDuration: boolean
+}
+
 export type XRPCHandlerConfig = {
-  rateLimit?: SharedRateLimitOpts | RouteRateLimitOpts
+  rateLimit?: HandlerRateLimitOpts | HandlerRateLimitOpts[]
   auth?: AuthVerifier
   handler: XRPCHandler
 }
@@ -211,7 +223,11 @@ export class ForbiddenError extends XRPCError {
 }
 
 export class RateLimitExceededError extends XRPCError {
-  constructor(errorMessage?: string, customErrorName?: string) {
+  constructor(
+    status: RateLimiterStatus,
+    errorMessage?: string,
+    customErrorName?: string,
+  ) {
     super(ResponseType.RateLimitExceeded, errorMessage, customErrorName)
   }
 }

@@ -42,6 +42,7 @@ import {
   validateOutput,
 } from './util'
 import log from './logger'
+import { consumeMany } from './rate-limiter'
 
 export function createServer(lexicons?: unknown[], options?: Options) {
   return new Server(lexicons, options)
@@ -54,8 +55,9 @@ export class Server {
   lex = new Lexicons()
   options: Options
   middleware: Record<'json' | 'text', RequestHandler>
-  rateLimiters: Record<string, RateLimiterI>
-  routeRateLimiterFns: Record<string, RateLimiterConsume>
+  globalRateLimiters: RateLimiterI[]
+  sharedRateLimiters: Record<string, RateLimiterI>
+  routeRateLimiterFns: Record<string, RateLimiterConsume[]>
 
   constructor(lexicons?: unknown[], opts?: Options) {
     if (lexicons) {
@@ -72,14 +74,25 @@ export class Server {
       json: express.json({ limit: opts?.payload?.jsonLimit }),
       text: express.text({ limit: opts?.payload?.textLimit }),
     }
-    this.rateLimiters = {}
+    this.globalRateLimiters = []
+    this.sharedRateLimiters = {}
     this.routeRateLimiterFns = {}
-    if (opts?.rateLimits?.limits) {
-      for (const limit of opts.rateLimits.limits) {
-        this.rateLimiters[limit.name] = opts.rateLimits.creator({
+    if (opts?.rateLimits?.global) {
+      for (const limit of opts.rateLimits.global) {
+        const rateLimiter = opts.rateLimits.creator({
           ...limit,
           keyPrefix: `rl-${limit.name}`,
         })
+        this.globalRateLimiters.push(rateLimiter)
+      }
+    }
+    if (opts?.rateLimits?.shared) {
+      for (const limit of opts.rateLimits.shared) {
+        const rateLimiter = opts.rateLimits.creator({
+          ...limit,
+          keyPrefix: `rl-${limit.name}`,
+        })
+        this.sharedRateLimiters[limit.name] = rateLimiter
       }
     }
   }
@@ -155,32 +168,40 @@ export class Server {
       middleware.push(this.middleware.text)
     }
     if (config.rateLimit) {
-      if (isShared(config.rateLimit)) {
-        const { name, calcKey, calcPoints } = config.rateLimit
-        const rateLimiter = this.rateLimiters[name]
-        if (rateLimiter) {
-          this.routeRateLimiterFns[nsid] = (ctx: XRPCReqContext) =>
-            rateLimiter.consume(ctx, {
-              calcKey,
-              calcPoints,
-            })
-        }
-      } else {
-        const { durationMs, points, calcKey, calcPoints } = config.rateLimit
-        const rateLimiter = this.options.rateLimits?.creator({
-          keyPrefix: nsid,
-          durationMs,
-          points,
-          calcKey,
-          calcPoints,
-        })
-        if (rateLimiter) {
-          this.rateLimiters[nsid] = rateLimiter
-          this.routeRateLimiterFns[nsid] = (ctx: XRPCReqContext) =>
-            rateLimiter.consume(ctx, {
-              calcKey,
-              calcPoints,
-            })
+      const limits = Array.isArray(config.rateLimit)
+        ? config.rateLimit
+        : [config.rateLimit]
+      this.routeRateLimiterFns[nsid] ??= []
+      for (const limit of limits) {
+        const { calcKey, calcPoints } = limit
+        if (isShared(limit)) {
+          const rateLimiter = this.sharedRateLimiters[limit.name]
+          if (rateLimiter) {
+            const consumeFn = (ctx: XRPCReqContext) =>
+              rateLimiter.consume(ctx, {
+                calcKey,
+                calcPoints,
+              })
+            this.routeRateLimiterFns[nsid].push(consumeFn)
+          }
+        } else {
+          const { durationMs, points } = limit
+          const rateLimiter = this.options.rateLimits?.creator({
+            keyPrefix: nsid,
+            durationMs,
+            points,
+            calcKey,
+            calcPoints,
+          })
+          if (rateLimiter) {
+            this.sharedRateLimiters[nsid] = rateLimiter
+            const consumeFn = (ctx: XRPCReqContext) =>
+              rateLimiter.consume(ctx, {
+                calcKey,
+                calcPoints,
+              })
+            this.routeRateLimiterFns[nsid].push(consumeFn)
+          }
         }
       }
     }
@@ -231,7 +252,12 @@ export class Server {
             validateOutput(nsid, def, output, this.lex)
     const assertValidXrpcParams = (params: unknown) =>
       this.lex.assertValidXrpcParams(nsid, params)
-    const consumeRateLimit = this.routeRateLimiterFns[nsid]
+    const rlFns = this.routeRateLimiterFns[nsid]
+    const consumeRateLimit =
+      rlFns && rlFns.length > 0
+        ? (reqCtx: XRPCReqContext) => consumeMany(reqCtx, rlFns)
+        : null
+
     return async function (req, res, next) {
       try {
         // validate request

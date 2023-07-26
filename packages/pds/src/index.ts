@@ -12,7 +12,11 @@ import { createTransport } from 'nodemailer'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import { IdResolver } from '@atproto/identity'
-import { RateLimiter, RateLimiterOpts } from '@atproto/xrpc-server'
+import {
+  RateLimiter,
+  RateLimiterOpts,
+  Options as XrpcServerOptions,
+} from '@atproto/xrpc-server'
 import { DAY } from '@atproto/common'
 import * as appviewConsumers from './app-view/event-stream/consumers'
 import inProcessAppView from './app-view/api'
@@ -244,7 +248,7 @@ export class PDS {
       algos,
     })
 
-    const xrpcOpts = {
+    const xrpcOpts: XrpcServerOptions = {
       validateResponse: config.debugMode,
       payload: {
         jsonLimit: 100 * 1024, // 100kb
@@ -259,7 +263,7 @@ export class PDS {
             bypassSecret: config.rateLimitBypassKey,
             ...opts,
           }),
-        limits: [
+        shared: [
           {
             name: 'repo-write',
             durationMs: DAY,

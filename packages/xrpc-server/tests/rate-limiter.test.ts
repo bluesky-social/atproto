@@ -71,7 +71,7 @@ describe('Parameters', () => {
   const server = xrpcServer.createServer(LEXICONS, {
     rateLimits: {
       creator: RateLimiter.memory,
-      limits: [
+      shared: [
         {
           name: 'shared-limit',
           durationMs: 5 * MINUTE,

@@ -8,7 +8,9 @@ import {
   CalcKeyFn,
   CalcPointsFn,
   RateLimitExceededError,
+  RateLimiterConsume,
   RateLimiterI,
+  RateLimiterStatus,
   XRPCReqContext,
 } from './types'
 
@@ -55,48 +57,81 @@ export class RateLimiter implements RateLimiterI {
   async consume(
     ctx: XRPCReqContext,
     opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
-  ) {
-    if (
-      this.byPassSecret &&
-      ctx.req.header('X-RateLimit-Bypass') === this.byPassSecret
-    ) {
-      return
-    }
-
+  ): Promise<RateLimiterStatus> {
+    // @TODO fix
+    // if (
+    //   this.byPassSecret &&
+    //   ctx.req.header('X-RateLimit-Bypass') === this.byPassSecret
+    // ) {
+    //   return
+    // }
     const key = opts?.calcKey ? opts.calcKey(ctx) : this.calcKey(ctx)
     const points = opts?.calcPoints
       ? opts.calcPoints(ctx)
       : this.calcPoints(ctx)
     try {
       const res = await this.limiter.consume(key, points)
-      ctx.res.setHeader('RateLimit-Limit', this.limiter.points)
-      ctx.res.setHeader('RateLimit-Remaining', res.remainingPoints)
-      ctx.res.setHeader(
-        'RateLimit-Reset',
-        Math.floor((Date.now() + res.msBeforeNext) / 1000),
-      )
-      ctx.res.setHeader(
-        'RateLimit-Policy',
-        `${this.limiter.points};w=${this.limiter.duration}`,
-      )
+      return formatLimiterStatus(this.limiter, res)
     } catch (err) {
+      // yes this library rejects with a res not an error
       if (err instanceof RateLimiterRes) {
-        ctx.res.setHeader('RateLimit-Limit', this.limiter.points)
-        ctx.res.setHeader('RateLimit-Remaining', err.remainingPoints)
-        ctx.res.setHeader(
-          'RateLimit-Reset',
-          Math.floor((Date.now() + err.msBeforeNext) / 1000),
-        )
-        ctx.res.setHeader(
-          'RateLimit-Policy',
-          `${this.limiter.points};w=${this.limiter.duration}`,
-        )
-        throw new RateLimitExceededError()
+        const status = formatLimiterStatus(this.limiter, err)
+        throw new RateLimitExceededError(status)
       } else {
+        // @TODO fail open
         throw err
       }
     }
   }
+}
+
+const formatLimiterStatus = (
+  limiter: RateLimiterAbstract,
+  res: RateLimiterRes,
+): RateLimiterStatus => {
+  return {
+    limit: limiter.points,
+    duration: limiter.duration,
+    remainingPoints: res.remainingPoints,
+    msBeforeNext: res.msBeforeNext,
+    consumedPoints: res.consumedPoints,
+    isFirstInDuration: res.isFirstInDuration,
+  }
+}
+
+export const consumeMany = async (
+  ctx: XRPCReqContext,
+  fns: RateLimiterConsume[],
+): Promise<void> => {
+  if (fns.length === 0) return
+  const results = await Promise.all(fns.map((fn) => fn(ctx)))
+  const tightestLimit = getTightestLimit(results)
+  setResHeaders(ctx, tightestLimit)
+}
+
+export const setResHeaders = (
+  ctx: XRPCReqContext,
+  status: RateLimiterStatus,
+) => {
+  ctx.res.setHeader('RateLimit-Limit', status.limit)
+  ctx.res.setHeader('RateLimit-Remaining', status.remainingPoints)
+  ctx.res.setHeader(
+    'RateLimit-Reset',
+    Math.floor((Date.now() + status.msBeforeNext) / 1000),
+  )
+  ctx.res.setHeader('RateLimit-Policy', `${status.limit};w=${status.duration}`)
+}
+
+export const getTightestLimit = (
+  resps: RateLimiterStatus[],
+): RateLimiterStatus => {
+  let lowest = resps[0]
+  for (const resp of resps) {
+    if (resp.remainingPoints < lowest.remainingPoints) {
+      lowest = resp
+    }
+  }
+  return lowest
 }
 
 const defaultKey: CalcKeyFn = (ctx: XRPCReqContext) => ctx.req.ip

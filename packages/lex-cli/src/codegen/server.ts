@@ -204,6 +204,12 @@ const indexTs = (
     })
 
     file.addTypeAlias({
+      name: 'HandlerRateLimitOpts',
+      typeParameters: [{ name: 'T' }],
+      type: `SharedRateLimitOpts<T> | RouteRateLimitOpts<T>`,
+    })
+
+    file.addTypeAlias({
       name: 'ConfigOf',
       typeParameters: [
         { name: 'Auth' },
@@ -214,7 +220,7 @@ const indexTs = (
         | Handler
         | {
           auth?: Auth
-          rateLimit?: SharedRateLimitOpts<ReqCtx> | RouteRateLimitOpts<ReqCtx>
+          rateLimit?: HandlerRateLimitOpts<ReqCtx> | HandlerRateLimitOpts<ReqCtx>[]
           handler: Handler
         }`,
     })
