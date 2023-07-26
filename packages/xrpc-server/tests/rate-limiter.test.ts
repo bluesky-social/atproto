@@ -64,6 +64,36 @@ const LEXICONS = [
       },
     },
   },
+  {
+    lexicon: 1,
+    id: 'io.example.toggleLimit',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          properties: {
+            shouldCount: { type: 'boolean' },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
+    id: 'io.example.noLimit',
+    defs: {
+      main: {
+        type: 'query',
+        output: {
+          encoding: 'application/json',
+        },
+      },
+    },
+  },
 ]
 
 describe('Parameters', () => {
@@ -76,6 +106,13 @@ describe('Parameters', () => {
           name: 'shared-limit',
           durationMs: 5 * MINUTE,
           points: 6,
+        },
+      ],
+      global: [
+        {
+          name: 'global-ip',
+          durationMs: 5 * MINUTE,
+          points: 100,
         },
       ],
     },
@@ -112,6 +149,29 @@ describe('Parameters', () => {
       body: ctx.params,
     }),
   })
+  server.method('io.example.toggleLimit', {
+    rateLimit: [
+      {
+        durationMs: 5 * MINUTE,
+        points: 5,
+        calcPoints: ({ params }) => (params.shouldCount ? 1 : 0),
+      },
+      {
+        durationMs: 5 * MINUTE,
+        points: 10,
+      },
+    ],
+    handler: (ctx: { params: xrpcServer.Params }) => ({
+      encoding: 'json',
+      body: ctx.params,
+    }),
+  })
+  server.method('io.example.noLimit', {
+    handler: () => ({
+      encoding: 'json',
+      body: {},
+    }),
+  })
 
   xrpc.addLexicons(LEXICONS)
 
@@ -144,5 +204,27 @@ describe('Parameters', () => {
     await expect(
       client.call('io.example.sharedLimitTwo', { points: 1 }),
     ).rejects.toThrow('Rate Limit Exceeded')
+  })
+
+  it('applies multiple rate-limits', async () => {
+    const makeCall = (shouldCount: boolean) =>
+      client.call('io.example.toggleLimit', { shouldCount })
+    for (let i = 0; i < 5; i++) {
+      await makeCall(true)
+    }
+    await expect(() => makeCall(true)).rejects.toThrow('Rate Limit Exceeded')
+    for (let i = 0; i < 4; i++) {
+      await makeCall(false)
+    }
+    await expect(() => makeCall(false)).rejects.toThrow('Rate Limit Exceeded')
+  })
+
+  it('applies global limits', async () => {
+    const makeCall = () => client.call('io.example.noLimit')
+    const calls: Promise<unknown>[] = []
+    for (let i = 0; i < 110; i++) {
+      calls.push(makeCall())
+    }
+    await expect(Promise.all(calls)).rejects.toThrow('Rate Limit Exceeded')
   })
 })

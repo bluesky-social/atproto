@@ -57,7 +57,7 @@ export class RateLimiter implements RateLimiterI {
   async consume(
     ctx: XRPCReqContext,
     opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
-  ): Promise<RateLimiterStatus> {
+  ): Promise<RateLimiterStatus | null> {
     // @TODO fix
     // if (
     //   this.byPassSecret &&
@@ -69,6 +69,9 @@ export class RateLimiter implements RateLimiterI {
     const points = opts?.calcPoints
       ? opts.calcPoints(ctx)
       : this.calcPoints(ctx)
+    if (points < 1) {
+      return null
+    }
     try {
       const res = await this.limiter.consume(key, points)
       return formatLimiterStatus(this.limiter, res)
@@ -106,7 +109,9 @@ export const consumeMany = async (
   if (fns.length === 0) return
   const results = await Promise.all(fns.map((fn) => fn(ctx)))
   const tightestLimit = getTightestLimit(results)
-  setResHeaders(ctx, tightestLimit)
+  if (tightestLimit !== null) {
+    setResHeaders(ctx, tightestLimit)
+  }
 }
 
 export const setResHeaders = (
@@ -123,11 +128,12 @@ export const setResHeaders = (
 }
 
 export const getTightestLimit = (
-  resps: RateLimiterStatus[],
-): RateLimiterStatus => {
-  let lowest = resps[0]
+  resps: (RateLimiterStatus | null)[],
+): RateLimiterStatus | null => {
+  let lowest: RateLimiterStatus | null = null
   for (const resp of resps) {
-    if (resp.remainingPoints < lowest.remainingPoints) {
+    if (resp === null) continue
+    if (lowest === null || resp.remainingPoints < lowest.remainingPoints) {
       lowest = resp
     }
   }

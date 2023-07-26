@@ -167,11 +167,19 @@ export class Server {
       middleware.push(this.middleware.json)
       middleware.push(this.middleware.text)
     }
+    this.routeRateLimiterFns[nsid] ??= []
+    for (const limit of this.globalRateLimiters) {
+      const consumeFn = async (ctx: XRPCReqContext) => {
+        return limit.consume(ctx)
+      }
+      this.routeRateLimiterFns[nsid].push(consumeFn)
+    }
+
     if (config.rateLimit) {
       const limits = Array.isArray(config.rateLimit)
         ? config.rateLimit
         : [config.rateLimit]
-      this.routeRateLimiterFns[nsid] ??= []
+      this.routeRateLimiterFns[nsid] = []
       for (const limit of limits) {
         const { calcKey, calcPoints } = limit
         if (isShared(limit)) {
@@ -252,11 +260,9 @@ export class Server {
             validateOutput(nsid, def, output, this.lex)
     const assertValidXrpcParams = (params: unknown) =>
       this.lex.assertValidXrpcParams(nsid, params)
-    const rlFns = this.routeRateLimiterFns[nsid]
-    const consumeRateLimit =
-      rlFns && rlFns.length > 0
-        ? (reqCtx: XRPCReqContext) => consumeMany(reqCtx, rlFns)
-        : null
+    const rlFns = this.routeRateLimiterFns[nsid] ?? []
+    const consumeRateLimit = (reqCtx: XRPCReqContext) =>
+      consumeMany(reqCtx, rlFns)
 
     return async function (req, res, next) {
       try {

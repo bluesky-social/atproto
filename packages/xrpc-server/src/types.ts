@@ -95,7 +95,7 @@ export interface RateLimiterI {
 export type RateLimiterConsume = (
   ctx: XRPCReqContext,
   opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
-) => Promise<RateLimiterStatus>
+) => Promise<RateLimiterStatus | null>
 
 export type RateLimiterCreator = (opts: {
   keyPrefix: string
