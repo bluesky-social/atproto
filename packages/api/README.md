@@ -228,7 +228,7 @@ function getOpts() {
     labelerSettings: [
       {
         labeler: {
-          uri: '...',
+          did: '...',
           displayName: 'My mod service'
         },
         settings: {

@@ -1,11 +1,11 @@
 import { AppBskyEmbedRecord, AppBskyEmbedRecordWithMedia } from '../../client'
 import { ModerationCauseAccumulator } from '../accumulator'
-import { ModerationApplyOpts, ModerationDecision } from '../types'
+import { ModerationOpts, ModerationDecision } from '../types'
 import { decideAccount } from './account'
 
 export function decideQuotedPost(
   subject: AppBskyEmbedRecord.View,
-  opts: ModerationApplyOpts,
+  opts: ModerationOpts,
 ): ModerationDecision {
   const acc = new ModerationCauseAccumulator()
 
@@ -24,7 +24,7 @@ export function decideQuotedPost(
 
 export function decideQuotedPostAccount(
   subject: AppBskyEmbedRecord.View,
-  opts: ModerationApplyOpts,
+  opts: ModerationOpts,
 ): ModerationDecision {
   if (AppBskyEmbedRecord.isViewRecord(subject.record)) {
     return decideAccount(subject.record.author, opts)
@@ -34,7 +34,7 @@ export function decideQuotedPostAccount(
 
 export function decideQuotedPostWithMedia(
   subject: AppBskyEmbedRecordWithMedia.View,
-  opts: ModerationApplyOpts,
+  opts: ModerationOpts,
 ): ModerationDecision {
   const acc = new ModerationCauseAccumulator()
 
@@ -53,7 +53,7 @@ export function decideQuotedPostWithMedia(
 
 export function decideQuotedPostWithMediaAccount(
   subject: AppBskyEmbedRecordWithMedia.View,
-  opts: ModerationApplyOpts,
+  opts: ModerationOpts,
 ): ModerationDecision {
   if (AppBskyEmbedRecord.isViewRecord(subject.record.record)) {
     return decideAccount(subject.record.record.author, opts)

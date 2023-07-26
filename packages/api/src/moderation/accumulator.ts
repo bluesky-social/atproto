@@ -3,14 +3,14 @@ import {
   Label,
   LabelDefinitionPreference,
   ModerationCause,
-  ModerationApplyOpts,
+  ModerationOpts,
   ModerationDecision,
 } from './types'
 import { LABELS } from './const/labels'
 
 export class ModerationCauseAccumulator {
   canHide = true
-  causes: ModerationCause[]
+  causes: ModerationCause[] = []
 
   constructor() {}
 
@@ -40,7 +40,7 @@ export class ModerationCauseAccumulator {
     }
   }
 
-  addLabel(label: Label, opts: ModerationApplyOpts) {
+  addLabel(label: Label, opts: ModerationOpts) {
     // look up the label definition
     const labelDef = LABELS[label.val]
     if (!labelDef) {
@@ -49,9 +49,11 @@ export class ModerationCauseAccumulator {
     }
 
     // look up the label preference
-    const labelerSettings = opts.labelerSettings.find(
-      (s) => s.labeler.did === label.src,
-    )
+    // TODO use the find() when 3P labelers support lands
+    // const labelerSettings = opts.labelerSettings.find(
+    //   (s) => s.labeler.did === label.src,
+    // )
+    const labelerSettings = opts.labelerSettings[0]
     if (!labelerSettings) {
       // ignore labels from labelers we don't use
       return
@@ -79,15 +81,17 @@ export class ModerationCauseAccumulator {
     }
 
     // establish the priority of the label
-    let priority: 3 | 4 | 6 | 7
-    if (labelPref === 'hide') {
+    let priority: 3 | 4 | 5 | 7 | 8
+    if (labelDef.flags.includes('no-override')) {
       priority = 3
-    } else if (labelDef.onwarn === 'blur') {
+    } else if (labelPref === 'hide') {
       priority = 4
+    } else if (labelDef.onwarn === 'blur') {
+      priority = 5
     } else if (labelDef.onwarn === 'blur-media') {
-      priority = 6
-    } else {
       priority = 7
+    } else {
+      priority = 8
     }
 
     this.causes.push({
@@ -105,7 +109,7 @@ export class ModerationCauseAccumulator {
       this.causes.push({
         type: 'muted',
         source: { type: 'user' },
-        priority: 5,
+        priority: 6,
       })
     }
   }
@@ -115,12 +119,12 @@ export class ModerationCauseAccumulator {
       this.causes.push({
         type: 'muted',
         source: { type: 'list', list: mutedByList },
-        priority: 5,
+        priority: 6,
       })
     }
   }
 
-  finalizeDecision(opts: ModerationApplyOpts): ModerationDecision {
+  finalizeDecision(opts: ModerationOpts): ModerationDecision {
     const mod = new ModerationDecision()
     if (!this.causes.length) {
       return mod

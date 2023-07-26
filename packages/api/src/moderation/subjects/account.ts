@@ -2,13 +2,13 @@ import { ModerationCauseAccumulator } from '../accumulator'
 import {
   Label,
   ModerationSubjectProfile,
-  ModerationApplyOpts,
+  ModerationOpts,
   ModerationDecision,
 } from '../types'
 
 export function decideAccount(
   subject: ModerationSubjectProfile,
-  opts: ModerationApplyOpts,
+  opts: ModerationOpts,
 ): ModerationDecision {
   const acc = new ModerationCauseAccumulator()
 

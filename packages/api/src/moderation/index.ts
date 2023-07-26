@@ -4,7 +4,7 @@ import {
   ModerationSubjectPost,
   ModerationSubjectFeedGenerator,
   ModerationSubjectUserList,
-  ModerationApplyOpts,
+  ModerationOpts,
   ModerationDecision,
   ModerationUI,
 } from './types'
@@ -21,6 +21,7 @@ import { decideFeedGenerator } from './subjects/feed-generator'
 import { decideUserList } from './subjects/user-list'
 import {
   mergeModerationDecisions,
+  isModerationDecisionNoop,
   isQuotedPost,
   isQuotedPostWithMedia,
 } from './util'
@@ -39,7 +40,7 @@ export interface ProfileModeration {
 
 export function moderateProfile(
   subject: ModerationSubjectProfile,
-  opts: ModerationApplyOpts,
+  opts: ModerationOpts,
 ): ProfileModeration {
   // decide the moderation the account and the profile
   const account = decideAccount(subject, opts)
@@ -87,7 +88,7 @@ export interface PostModeration {
 
 export function moderatePost(
   subject: ModerationSubjectPost,
-  opts: ModerationApplyOpts,
+  opts: ModerationOpts,
 ): PostModeration {
   // decide the moderation for the post, the post author's account,
   // and the post author's profile
@@ -121,42 +122,56 @@ export function moderatePost(
   // derive embed blurring from the quoted post and the quoted post author's account
   const mergedQuote = mergeModerationDecisions(quote, quotedAccount)
 
+  // derive avatar blurring from account & profile, but override for mutes because that shouldnt blur
+  let blurAvatar = false
+  if ((account.blur || account.blurMedia) && account.cause?.type !== 'muted') {
+    blurAvatar = true
+  } else if (
+    (profile.blur || profile.blurMedia) &&
+    profile.cause?.type !== 'muted'
+  ) {
+    blurAvatar = true
+  }
+
   return {
     decisions: { post, account, profile, quote, quotedAccount },
 
     // content behaviors are pulled from feed and view derivations above
     content: {
+      cause: !isModerationDecisionNoop(mergedForView)
+        ? mergedForView.cause
+        : mergedForFeed.filter
+        ? mergedForFeed.cause
+        : undefined,
       filter: mergedForFeed.filter,
       blur: mergedForView.blur,
       alert: mergedForView.alert,
-      cause: mergedForView.cause,
       noOverride: mergedForView.noOverride,
     },
 
     // blur or alert the avatar based on the account and profile decisions
     avatar: {
-      blur: account.blurMedia || profile.blurMedia,
-      alert: account.alert,
+      blur: blurAvatar,
+      alert: account.alert || profile.alert,
       noOverride: account.noOverride || profile.noOverride,
     },
 
     // blur the embed if the quoted post required it,
     // or else if the post decision was to blur media
-    embed:
-      quote || quotedAccount
-        ? {
-            blur: mergedQuote.blur,
-            alert: mergedQuote.alert,
-            cause: mergedQuote.cause,
-            noOverride: mergedQuote.noOverride,
-          }
-        : mergedForView.blurMedia
-        ? {
-            blur: true,
-            cause: mergedForView.cause,
-            noOverride: mergedForView.noOverride,
-          }
-        : {},
+    embed: !isModerationDecisionNoop(mergedQuote, { ignoreFilter: true })
+      ? {
+          cause: mergedQuote.cause,
+          blur: mergedQuote.blur,
+          alert: mergedQuote.alert,
+          noOverride: mergedQuote.noOverride,
+        }
+      : post.blurMedia
+      ? {
+          cause: post.cause,
+          blur: true,
+          noOverride: post.noOverride,
+        }
+      : {},
   }
 }
 
@@ -175,7 +190,7 @@ export interface FeedGeneratorModeration {
 
 export function moderateFeedGenerator(
   subject: ModerationSubjectFeedGenerator,
-  opts: ModerationApplyOpts,
+  opts: ModerationOpts,
 ): FeedGeneratorModeration {
   // decide the moderation for the generator, the generator creator's account,
   // and the generator creator's profile
@@ -191,10 +206,10 @@ export function moderateFeedGenerator(
 
     // content behaviors are pulled from merged decisions
     content: {
+      cause: isModerationDecisionNoop(merged) ? undefined : merged.cause,
       filter: merged.filter,
       blur: merged.blur,
       alert: merged.alert,
-      cause: merged.cause,
       noOverride: merged.noOverride,
     },
 
@@ -222,7 +237,7 @@ export interface UserListModeration {
 
 export function moderateUserList(
   subject: ModerationSubjectUserList,
-  opts: ModerationApplyOpts,
+  opts: ModerationOpts,
 ): UserListModeration {
   // decide the moderation for the list, the list creator's account,
   // and the list creator's profile
@@ -242,10 +257,10 @@ export function moderateUserList(
 
     // content behaviors are pulled from merged decisions
     content: {
+      cause: isModerationDecisionNoop(merged) ? undefined : merged.cause,
       filter: merged.filter,
       blur: merged.blur,
       alert: merged.alert,
-      cause: merged.cause,
       noOverride: merged.noOverride,
     },
 

@@ -23,13 +23,32 @@ export function mergeModerationDecisions(
       return -1
     }
     if (b.cause) {
-      return -1
+      return 1
     }
     return 0
   })
 
   // use the top priority
   return filtered[0]
+}
+
+export function isModerationDecisionNoop(
+  decision: ModerationDecision | undefined,
+  { ignoreFilter }: { ignoreFilter: boolean } = { ignoreFilter: false },
+): boolean {
+  if (!decision) {
+    return true
+  }
+  if (decision.alert) {
+    return false
+  }
+  if (decision.blur) {
+    return false
+  }
+  if (decision.filter && !ignoreFilter) {
+    return false
+  }
+  return true
 }
 
 export function isQuotedPost(embed: unknown): embed is AppBskyEmbedRecord.View {

@@ -1,13 +1,13 @@
 import { ModerationCauseAccumulator } from '../accumulator'
 import {
   ModerationSubjectPost,
-  ModerationApplyOpts,
+  ModerationOpts,
   ModerationDecision,
 } from '../types'
 
 export function decidePost(
   subject: ModerationSubjectPost,
-  opts: ModerationApplyOpts,
+  opts: ModerationOpts,
 ): ModerationDecision {
   const acc = new ModerationCauseAccumulator()
 
