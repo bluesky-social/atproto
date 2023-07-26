@@ -12,7 +12,13 @@ import {
   UnknownRow,
   sql,
 } from 'kysely'
-import { Pool as PgPool, types as pgTypes } from 'pg'
+import {
+  Client,
+  ClientConfig,
+  Pool as PgPool,
+  PoolConfig,
+  types as pgTypes,
+} from 'pg'
 import TypedEmitter from 'typed-emitter'
 import { wait } from '@atproto/common'
 import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
@@ -37,8 +43,8 @@ export class Database {
     const { schema, url } = opts
     const pool =
       opts.pool ??
-      new PgPool({
-        connectionString: url,
+      new PgMultiPool({
+        multiClientStrategy: new Roundrobin([{ connectionString: url }]),
         max: opts.poolSize,
         maxUses: opts.poolMaxUses,
         idleTimeoutMillis: opts.poolIdleTimeoutMs,
@@ -231,3 +237,44 @@ type TxnEvents = {
 }
 
 const noopAsync = async () => {}
+
+class PgMultiPool extends PgPool {
+  constructor(opts: PoolConfig & { multiClientStrategy: MultiClientStrategy }) {
+    super({
+      ...opts,
+      // @ts-ignore
+      Client: MultiClient, // @NOTE not in types, but swapping Client class is supported by pg-pool
+    })
+  }
+}
+
+class MultiClient extends Client {
+  constructor(
+    opts: ClientConfig & {
+      multiClientStrategy?: MultiClientStrategy
+    },
+  ) {
+    if (opts.multiClientStrategy) {
+      const clientOpts = opts.multiClientStrategy.getNext()
+      super({ ...opts, ...clientOpts })
+    } else {
+      super(opts)
+    }
+  }
+}
+
+class Roundrobin implements MultiClientStrategy {
+  next = 0
+  constructor(public cfgs: ClientConfig[]) {
+    assert(cfgs.length, 'no configs')
+  }
+  getNext(): ClientConfig {
+    const cfg = this.cfgs[this.next]
+    this.next = (this.next + 1) % this.cfgs.length
+    return cfg
+  }
+}
+
+interface MultiClientStrategy {
+  getNext(): ClientConfig
+}
