@@ -4769,6 +4769,65 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetAuthorFeeds: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getAuthorFeeds',
+    defs: {
+      main: {
+        type: 'query',
+        description: "A view of actors' feeds.",
+        parameters: {
+          type: 'params',
+          required: ['actors'],
+          properties: {
+            actors: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'at-identifier',
+              },
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'BlockedActor',
+          },
+          {
+            name: 'BlockedByActor',
+          },
+        ],
+      },
+    },
+  },
   AppBskyFeedGetFeed: {
     lexicon: 1,
     id: 'app.bsky.feed.getFeed',
@@ -6512,6 +6571,7 @@ export const ids = {
   AppBskyFeedGenerator: 'app.bsky.feed.generator',
   AppBskyFeedGetActorFeeds: 'app.bsky.feed.getActorFeeds',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
+  AppBskyFeedGetAuthorFeeds: 'app.bsky.feed.getAuthorFeeds',
   AppBskyFeedGetFeed: 'app.bsky.feed.getFeed',
   AppBskyFeedGetFeedGenerator: 'app.bsky.feed.getFeedGenerator',
   AppBskyFeedGetFeedGenerators: 'app.bsky.feed.getFeedGenerators',
