@@ -12,20 +12,20 @@ This document is a reference for the expected behaviors for a post in the applic
 - **Blur Embed**: Put the embed content (media, quote post) behind a warning cover.
 - **Alert Embed**: Put a warning on the embed content (media, quote post).
 
-If "No Override" is present, the blur can not be overridden by the user.
+If ⚠️ is present, the blur can not be overridden by the user.
 
 ## Scenarios
 
 ### Imperative label ('!hide') on post
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -35,13 +35,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Imperative label ('!hide') on post author profile
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -51,13 +51,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Imperative label ('!hide') on post author account
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -67,13 +67,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Imperative label ('!hide') on quoted post
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -83,13 +83,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Imperative label ('!hide') on quoted post author account
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -99,13 +99,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Imperative label ('!no-promote') on post
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!no-promote</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -115,13 +115,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Imperative label ('!no-promote') on post author profile
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!no-promote</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -131,13 +131,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Imperative label ('!no-promote') on post author account
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!no-promote</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -147,13 +147,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Imperative label ('!no-promote') on quoted post
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!no-promote</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -163,13 +163,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Imperative label ('!no-promote') on quoted post author account
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!no-promote</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -179,13 +179,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Imperative label ('!warn') on post
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>✅ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!warn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -195,13 +195,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Imperative label ('!warn') on post author profile
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!warn</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -211,13 +211,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Imperative label ('!warn') on post author account
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>✅ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!warn</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -227,13 +227,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Imperative label ('!warn') on quoted post
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!warn</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -243,13 +243,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Imperative label ('!warn') on quoted post author account
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!warn</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -259,13 +259,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur label ('intolerant') on post when intolerant is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>✅ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -275,13 +275,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur label ('intolerant') on post author profile when intolerant is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -291,13 +291,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur label ('intolerant') on post author account when intolerant is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>✅ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -307,13 +307,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur label ('intolerant') on quoted post when intolerant is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -323,13 +323,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur label ('intolerant') on quoted post author account when intolerant is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -339,13 +339,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur label ('intolerant') on post when set to warn
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>✅ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -355,13 +355,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur label ('intolerant') on post author profile when set to warn
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -371,13 +371,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur label ('intolerant') on post author account when set to warn
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>✅ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -387,13 +387,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur label ('intolerant') on quoted post when set to warn
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -403,13 +403,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur label ('intolerant') on quoted post author account when set to warn
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -419,13 +419,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur label ('intolerant') on post when set to ignore
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -435,13 +435,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur label ('intolerant') on post author profile when set to ignore
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -451,13 +451,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur label ('intolerant') on post author account when set to ignore
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -467,13 +467,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur label ('intolerant') on quoted post when set to ignore
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -483,13 +483,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur label ('intolerant') on quoted post author account when set to ignore
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -499,13 +499,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur-media label ('porn') on post when porn is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -515,13 +515,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur-media label ('porn') on post author profile when porn is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -531,13 +531,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur-media label ('porn') on post author account when porn is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -547,13 +547,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur-media label ('porn') on quoted post when porn is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -563,13 +563,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur-media label ('porn') on quoted post author account when porn is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -579,13 +579,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur-media label ('porn') on post when set to warn
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -595,13 +595,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur-media label ('porn') on post author profile when set to warn
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -611,13 +611,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur-media label ('porn') on post author account when set to warn
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -627,13 +627,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur-media label ('porn') on quoted post when set to warn
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -643,13 +643,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur-media label ('porn') on quoted post author account when set to warn
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -659,13 +659,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur-media label ('porn') on post when set to ignore
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -675,13 +675,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur-media label ('porn') on post author profile when set to ignore
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -691,13 +691,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur-media label ('porn') on post author account when set to ignore
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -707,13 +707,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur-media label ('porn') on quoted post when set to ignore
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -723,13 +723,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=blur-media label ('porn') on quoted post author account when set to ignore
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -739,13 +739,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=notice label ('scam') on post when scam is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>✅ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -755,13 +755,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=notice label ('scam') on post author profile when scam is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>✅ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -771,13 +771,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=notice label ('scam') on post author account when scam is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>✅ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>✅ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -787,13 +787,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=notice label ('scam') on quoted post when scam is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>✅ Yes </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>✅ </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -803,13 +803,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=notice label ('scam') on quoted post author account when scam is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>✅ Yes </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>✅ </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -819,13 +819,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=notice label ('scam') on post when set to warn
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>✅ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -835,13 +835,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=notice label ('scam') on post author profile when set to warn
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>✅ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -851,13 +851,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=notice label ('scam') on post author account when set to warn
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>✅ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>✅ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -867,13 +867,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=notice label ('scam') on quoted post when set to warn
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>✅ Yes </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>✅ </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -883,13 +883,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=notice label ('scam') on quoted post author account when set to warn
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>✅ Yes </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>✅ </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -899,13 +899,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=notice label ('scam') on post when set to ignore
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -915,13 +915,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=notice label ('scam') on post author profile when set to ignore
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -931,13 +931,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=notice label ('scam') on post author account when set to ignore
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -947,13 +947,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=notice label ('scam') on quoted post when set to ignore
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -963,13 +963,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Onwarn=notice label ('scam') on quoted post author account when set to ignore
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -979,13 +979,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Adult-only label ('porn') on post when adult content is disabled
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -995,13 +995,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Adult-only label ('porn') on post author profile when adult content is disabled
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -1011,13 +1011,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Adult-only label ('porn') on post author account when adult content is disabled
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -1027,13 +1027,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Adult-only label ('porn') on quoted post when adult content is disabled
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -1043,13 +1043,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Adult-only label ('porn') on quoted post author account when adult content is disabled
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -1059,13 +1059,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Self-post: Imperative label ('!hide') on post
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>✅ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on post</td></tr>
 <tr><td>Author</td><td>Self</td></tr>
 
@@ -1075,13 +1075,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Self-post: Imperative label ('!hide') on post author profile
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Self</td></tr>
 
@@ -1091,13 +1091,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Self-post: Imperative label ('!hide') on post author account
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on post author account</td></tr>
 <tr><td>Author</td><td>Self</td></tr>
 
@@ -1107,13 +1107,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Self-post: Imperative label ('!hide') on quoted post
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>✅ Yes </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>✅ </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Self</td></tr>
 <tr><td>Quoted author</td><td>Self</td></tr>
@@ -1123,13 +1123,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Self-post: Imperative label ('!hide') on quoted post author account
 
 <table>
-<tr><td>Filter Content</td><td>❌ No </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>❌ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Self</td></tr>
 <tr><td>Quoted author</td><td>Self</td></tr>
@@ -1139,13 +1139,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Post blocking author
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Blocked account</td></tr>
 
@@ -1155,13 +1155,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Post blocking quoted author
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Blocked account</td></tr>
@@ -1171,13 +1171,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Post blocked by author
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Account blocking user</td></tr>
 
@@ -1187,13 +1187,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Post blocked by quoted author
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Account blocking user</td></tr>
@@ -1203,13 +1203,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Post muted author
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>✅ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Muted account</td></tr>
 
@@ -1219,13 +1219,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Post muted quoted author
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Muted account</td></tr>
@@ -1235,13 +1235,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Post muted-by-list author
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>✅ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Muted account (by list)</td></tr>
 
@@ -1251,13 +1251,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Post muted-by-list quoted author
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Muted account (by list)</td></tr>
@@ -1267,13 +1267,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Prioritization: post blocking & blocked-by author
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Blocked account, Account blocking user</td></tr>
 
@@ -1283,13 +1283,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Prioritization: post blocking & blocked-by quoted author
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Blocked account, Account blocking user</td></tr>
@@ -1299,13 +1299,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Prioritization: '!hide' label on post by blocked user
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on post</td></tr>
 <tr><td>Author</td><td>Blocked account</td></tr>
 
@@ -1315,13 +1315,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Prioritization: '!hide' label on quoted post, post by blocked user
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Blocked account</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -1331,13 +1331,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Prioritization: '!hide' and 'intolerant' labels on post when intolerant is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on post<br>
 <code>intolerant</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
@@ -1348,13 +1348,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Prioritization: '!warn' and 'intolerant' labels on post when intolerant is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>✅ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!warn</code> on post<br>
 <code>intolerant</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
@@ -1365,13 +1365,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Prioritization: '!hide' and 'porn' labels on post when porn is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>❌ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on post<br>
 <code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
@@ -1382,13 +1382,13 @@ If "No Override" is present, the blur can not be overridden by the user.
 ### Prioritization: '!warn' and 'porn' labels on post when porn is set to hide
 
 <table>
-<tr><td>Filter Content</td><td>✅ Yes </td></tr>
-<tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Alert Content</td><td>❌ No </td></tr>
-<tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Alert Avatar</td><td>❌ No </td></tr>
-<tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Filter Content</td><td>✅ </td></tr>
+<tr><td>Blur Content</td><td>❌ </td></tr>
+<tr><td>Alert Content</td><td>❌ </td></tr>
+<tr><td>Blur Avatar</td><td>❌ </td></tr>
+<tr><td>Alert Avatar</td><td>❌ </td></tr>
+<tr><td>Blur Embed</td><td>✅ </td></tr>
+<tr><td>Alert Embed</td><td>❌ </td></tr>
 <tr><td>Labels</td><td><code>!warn</code> on post<br>
 <code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>

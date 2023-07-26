@@ -48,7 +48,7 @@ function posts() {
   - **Blur Embed**: Put the embed content (media, quote post) behind a warning cover.
   - **Alert Embed**: Put a warning on the embed content (media, quote post).
  
-  If "No Override" is present, the blur can not be overridden by the user.
+  If ⚠️ is present, the blur can not be overridden by the user.
 
   ## Scenarios
 
@@ -143,8 +143,8 @@ function describeLabels(scenario) {
 }
 
 function booleanRow(name, val, noOverride = false) {
-  return `<tr><td>${name}</td><td>${val ? '✅ Yes' : '❌ No'} ${
-    val && noOverride ? '(⚠️ No Override)' : ''
+  return `<tr><td>${name}</td><td>${val ? '✅' : '❌'} ${
+    val && noOverride ? '⚠️' : ''
   }</td></tr>`
 }
 
