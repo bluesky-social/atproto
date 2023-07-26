@@ -6,13 +6,16 @@ import AppContext from '../../../../context'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
     auth: ctx.authOptionalVerifier,
-    handler: async ({ auth, params }) => {
+    handler: async ({ auth, params, res }) => {
       const { actor } = params
       const requester = auth.credentials.did
       const { db, services } = ctx
       const actorService = services.actor(db)
 
-      const actorRes = await actorService.getActor(actor, true)
+      const [actorRes, actorClock] = await Promise.all([
+        actorService.getActor(actor, true),
+        actorService.getActorClock(requester),
+      ])
 
       if (!actorRes) {
         throw new InvalidRequestError('Profile not found')
@@ -22,6 +25,10 @@ export default function (server: Server, ctx: AppContext) {
           'Account has been taken down',
           'AccountTakedown',
         )
+      }
+
+      if (actorClock !== null) {
+        res.setHeader('atproto-clock', actorClock)
       }
 
       return {

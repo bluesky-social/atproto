@@ -13,6 +13,7 @@ import {
   deleteRepo,
 } from '../../event-stream/messages'
 import { ids } from '../../lexicon/lexicons'
+import { RepoRecord } from '@atproto/lexicon'
 
 export class RecordService {
   constructor(public db: Database, public messageDispatcher: MessageQueue) {}
@@ -26,6 +27,7 @@ export class RecordService {
     cid: CID,
     obj: unknown,
     action: WriteOpAction.Create | WriteOpAction.Update = WriteOpAction.Create,
+    repoClock?: number,
     timestamp?: string,
   ) {
     this.db.assertTransaction()
@@ -36,6 +38,7 @@ export class RecordService {
       did: uri.host,
       collection: uri.collection,
       rkey: uri.rkey,
+      repoClock: repoClock ?? null,
       indexedAt: timestamp || new Date().toISOString(),
     }
     if (!record.did.startsWith('did:')) {
@@ -51,9 +54,11 @@ export class RecordService {
       .insertInto('record')
       .values(record)
       .onConflict((oc) =>
-        oc
-          .column('uri')
-          .doUpdateSet({ cid: record.cid, indexedAt: record.indexedAt }),
+        oc.column('uri').doUpdateSet({
+          cid: record.cid,
+          repoClock: repoClock ?? null,
+          indexedAt: record.indexedAt,
+        }),
       )
       .execute()
 
@@ -274,6 +279,30 @@ export class RecordService {
       .where('record.collection', '=', collection)
       .selectAll('record')
       .execute()
+  }
+
+  async getRecordsSinceClock(
+    did: string,
+    clock: number,
+    collections?: string[],
+  ): Promise<RepoRecord[]> {
+    let builder = this.db.db
+      .selectFrom('record')
+      .innerJoin('ipld_block', (join) =>
+        join
+          .onRef('record.did', '=', 'ipld_block.creator')
+          .onRef('record.cid', '=', 'ipld_block.cid'),
+      )
+      .select('ipld_block.content')
+      .where('did', '=', did)
+      .where('repoClock', '>', clock)
+      .orderBy('repoClock', 'asc')
+    if (collections !== undefined) {
+      if (collections.length < 1) return []
+      builder = builder.where('collection', 'in', collections)
+    }
+    const res = await builder.execute()
+    return res.map((row) => cborToLexRecord(row.content))
   }
 }
 

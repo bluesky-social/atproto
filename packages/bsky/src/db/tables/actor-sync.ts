@@ -2,6 +2,7 @@ export interface ActorSync {
   did: string
   commitCid: string
   commitDataCid: string
+  repoClock: number | null
   rebaseCount: number
   tooBigCount: number
 }

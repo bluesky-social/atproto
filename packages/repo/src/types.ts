@@ -12,6 +12,7 @@ const unsignedCommit = z.object({
   version: z.number(),
   prev: common.cid.nullable(),
   data: common.cid,
+  clock: z.number().optional(),
 })
 export type UnsignedCommit = z.infer<typeof unsignedCommit> & { sig?: never }
 
@@ -20,6 +21,7 @@ const commit = z.object({
   version: z.number(),
   prev: common.cid.nullable(),
   data: common.cid,
+  clock: z.number().optional(),
   sig: common.bytes,
 })
 export type Commit = z.infer<typeof commit>
@@ -98,6 +100,7 @@ export type CommitBlockData = {
 
 export type CommitData = CommitBlockData & {
   prev: CID | null
+  clock?: number
 }
 
 export type RebaseData = {

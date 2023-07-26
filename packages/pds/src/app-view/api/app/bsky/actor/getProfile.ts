@@ -2,6 +2,14 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
 import { softDeleted } from '../../../../../db/util'
 import AppContext from '../../../../../context'
+import { ids } from '../../../../../lexicon/lexicons'
+import { Record as ProfileRecord } from '../../../../../lexicon/types/app/bsky/actor/profile'
+import { OutputSchema } from '../../../../../lexicon/types/app/bsky/actor/getProfile'
+import {
+  ApiRes,
+  getClock,
+  updateProfileDetailed,
+} from '../util/read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
@@ -15,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
         )
         return {
           encoding: 'application/json',
-          body: res.data,
+          body: await ensureReadAfterWrite(ctx, requester, res),
         }
       }
 
@@ -41,4 +49,20 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+const ensureReadAfterWrite = async (
+  ctx: AppContext,
+  requester: string,
+  res: ApiRes<OutputSchema>,
+): Promise<OutputSchema> => {
+  const clock = getClock(res.headers)
+  if (!clock) {
+    return res.data
+  }
+  const notProcessed = await ctx.services
+    .record(ctx.db)
+    .getRecordsSinceClock(requester, clock, [ids.AppBskyActorProfile])
+  const localProf = notProcessed.at(-1) as ProfileRecord | undefined
+  return localProf ? updateProfileDetailed(res.data, localProf) : res.data
 }

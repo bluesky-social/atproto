@@ -100,6 +100,16 @@ export class ActorService {
     }
     return builder
   }
+
+  async getActorClock(did: string | null): Promise<number | null> {
+    if (did === null) return null
+    const res = await this.db.db
+      .selectFrom('actor_sync')
+      .select('repoClock')
+      .where('did', '=', did)
+      .executeTakeFirst()
+    return res?.repoClock ?? null
+  }
 }
 
 type ActorResult = Actor
