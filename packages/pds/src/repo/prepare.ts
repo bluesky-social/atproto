@@ -193,7 +193,7 @@ export const prepareUpdate = async (opts: {
   if (!ALLOWED_PUTS.includes(collection)) {
     // @TODO temporary
     throw new InvalidRequestError(
-      `Temporarily only accepting puts for collections: ${ALLOWED_PUTS.join(
+      `Temporarily only accepting updates for collections: ${ALLOWED_PUTS.join(
         ', ',
       )}`,
     )
