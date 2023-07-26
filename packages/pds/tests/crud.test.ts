@@ -631,13 +631,13 @@ describe('crud operations', () => {
         record: postRecord(),
       })
       const uri = new AtUri(post.uri)
-      const attempDelete = repo.deleteRecord({
+      const attemptDelete = repo.deleteRecord({
         repo: uri.host,
         collection: uri.collection,
         rkey: uri.rkey,
         swapCommit: staleHead.root,
       })
-      await expect(attempDelete).rejects.toThrow(deleteRecord.InvalidSwapError)
+      await expect(attemptDelete).rejects.toThrow(deleteRecord.InvalidSwapError)
       const checkPost = repo.getRecord({
         repo: uri.host,
         collection: uri.collection,
@@ -676,13 +676,13 @@ describe('crud operations', () => {
         record: postRecord(),
       })
       const uri = new AtUri(post.uri)
-      const attempDelete = repo.deleteRecord({
+      const attemptDelete = repo.deleteRecord({
         repo: uri.host,
         collection: uri.collection,
         rkey: uri.rkey,
         swapRecord: (await cidForCbor({})).toString(),
       })
-      await expect(attempDelete).rejects.toThrow(deleteRecord.InvalidSwapError)
+      await expect(attemptDelete).rejects.toThrow(deleteRecord.InvalidSwapError)
       const checkPost = repo.getRecord({
         repo: uri.host,
         collection: uri.collection,
