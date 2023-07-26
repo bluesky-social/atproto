@@ -173,6 +173,83 @@ export class GraphService {
     }
   }
 
+  /**
+   * Get blocks between requester and subjects
+   * @param requester
+   * @param subjectHandleOrDids
+   *
+   * @return blockingList: list of dids that requester has blocked
+   * @return blockedByList: list of dids that have blocked requester
+   */
+  async getBlocksMulti(
+    requester: string,
+    subjectHandleOrDids: string[],
+  ): Promise<{
+    blockingList: { did: string }[]
+    blockedByList: { did: string }[]
+  }> {
+    let blockingList: { did: string }[] = []
+    let blockedByList: { did: string }[] = []
+
+    let subjectDids: string[] = []
+    let handles: string[] = []
+    for (const subjectHandleOrDid of subjectHandleOrDids) {
+      if (subjectHandleOrDid.startsWith('did:')) {
+        subjectDids.push(subjectHandleOrDid)
+      } else {
+        handles.push(subjectHandleOrDid)
+      }
+    }
+
+    if (handles.length > 0) {
+      const res = await this.db.db
+        .selectFrom('actor')
+        .where('handle', 'in', handles)
+        .select('did')
+        .execute()
+      if (res) {
+        subjectDids.push(...res.map((r) => r.did))
+      }
+    }
+
+    const blockRes = await this.db.db
+      .selectFrom('actor_block')
+      .where((outer) =>
+        outer
+          .where((qb) =>
+            qb
+              .where('creator', '=', requester)
+              .where('actor_block.subjectDid', 'in', subjectDids),
+          )
+          .orWhere((qb) =>
+            qb
+              .where('creator', 'in', subjectDids)
+              .where('subjectDid', '=', requester),
+          ),
+      )
+      .selectAll()
+      .execute()
+
+    blockingList = blockRes
+      .filter(
+        (row) =>
+          row.creator === requester && subjectDids.includes(row.subjectDid),
+      )
+      .map((row) => ({ did: row.subjectDid }))
+
+    blockedByList = blockRes
+      .filter(
+        (row) =>
+          subjectDids.includes(row.subjectDid) && row.subjectDid == requester,
+      )
+      .map((row) => ({ did: row.creator }))
+
+    return {
+      blockingList,
+      blockedByList,
+    }
+  }
+
   async getListViews(listUris: string[], requester: string | null) {
     if (listUris.length < 1) return {}
     const lists = await this.getListsQb(requester)
