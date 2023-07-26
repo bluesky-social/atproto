@@ -60,10 +60,24 @@ export class Redis {
 
   async addToStream(
     key: string,
-    seq: number | string,
-    vals: [key: string, value: string | Buffer][],
+    id: number | string,
+    fields: [key: string, value: string | Buffer][],
   ) {
-    await this.driver.xadd(this.ns(key), seq, ...vals.flat())
+    await this.driver.xadd(this.ns(key), id, ...fields.flat())
+  }
+
+  async addMultiToStream(
+    evts: {
+      key: string
+      id: number | string
+      fields: [key: string, value: string | Buffer][]
+    }[],
+  ) {
+    const pipeline = this.driver.pipeline()
+    for (const { key, id, fields } of evts) {
+      pipeline.xadd(this.ns(key), id, ...fields.flat())
+    }
+    return (await pipeline.exec()) ?? []
   }
 
   async trimStream(key: string, cursor: number | string) {

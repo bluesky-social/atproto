@@ -1,5 +1,10 @@
-import { ReplyError } from 'ioredis'
-import { cborEncode, ui8ToBuffer, wait } from '@atproto/common'
+import {
+  Deferrable,
+  cborEncode,
+  createDeferrable,
+  ui8ToBuffer,
+  wait,
+} from '@atproto/common'
 import { randomIntFromSeed } from '@atproto/crypto'
 import { DisconnectError, Subscription } from '@atproto/xrpc-server'
 import { OutputSchema as Message } from '../lexicon/types/com/atproto/sync/subscribeRepos'
@@ -26,6 +31,7 @@ export class IngesterSubscription {
   lastSeq: number | undefined
   backpressure = new Backpressure(this)
   leader = new Leader(this.opts.subLockId || INGESTER_SUB_LOCK_ID, this.ctx.db)
+  processor = new Processor(this)
 
   constructor(
     public ctx: IngesterContext,
@@ -39,44 +45,24 @@ export class IngesterSubscription {
     },
   ) {}
 
-  async processSubscription(sub: Subscription<Message>) {
-    for await (const msg of sub) {
-      const details = getMessageDetails(msg)
-      if ('info' in details) {
-        // These messages are not sequenced, we just log them and carry on
-        log.warn(
-          { provider: this.opts.service, message: loggableMessage(msg) },
-          `ingester sub ${details.info ? 'info' : 'unknown'} message`,
-        )
-        continue
-      }
-      const { seq, repo, message: processableMessage } = details
-      const partitionKey = await getPartition(repo, this.opts.partitionCount)
-      try {
-        await this.ctx.redis.addToStream(partitionKey, seq, [
-          ['repo', repo],
-          ['event', ui8ToBuffer(cborEncode(processableMessage))],
-        ])
-        this.lastSeq = seq
-      } catch (err) {
-        if (err instanceof ReplyError) {
-          // skipping over messages that have already been added or fully processed
-          log.warn({ seq, repo }, 'ingester skipping message')
-        } else {
-          throw err
-        }
-      }
-      this.cursorQueue.add(() => this.setCursor(seq))
-      await this.backpressure.ready()
-    }
-  }
-
   async run() {
     while (!this.destroyed) {
       try {
         const { ran } = await this.leader.run(async ({ signal }) => {
           const sub = this.getSubscription({ signal })
-          await this.processSubscription(sub)
+          for await (const msg of sub) {
+            const details = getMessageDetails(msg)
+            if ('info' in details) {
+              // These messages are not sequenced, we just log them and carry on
+              log.warn(
+                { provider: this.opts.service, message: loggableMessage(msg) },
+                `ingester sub ${details.info ? 'info' : 'unknown'} message`,
+              )
+              continue
+            }
+            this.processor.send(details)
+            await this.backpressure.ready()
+          }
         })
         if (ran && !this.destroyed) {
           throw new Error('Ingester sub completed, but should be persistent')
@@ -92,12 +78,14 @@ export class IngesterSubscription {
 
   async destroy() {
     this.destroyed = true
+    await this.processor.destroy()
     await this.cursorQueue.destroy()
     this.leader.destroy(new DisconnectError())
   }
 
   async resume() {
     this.destroyed = false
+    this.processor = new Processor(this)
     this.cursorQueue = new LatestQueue()
     await this.run()
   }
@@ -112,7 +100,7 @@ export class IngesterSubscription {
     await this.ctx.redis.del(CURSOR_KEY)
   }
 
-  private async setCursor(seq: number): Promise<void> {
+  async setCursor(seq: number): Promise<void> {
     await this.ctx.redis.set(CURSOR_KEY, seq)
   }
 
@@ -181,6 +169,80 @@ function getMessageDetails(msg: Message):
 async function getPartition(did: string, n: number) {
   const partition = await randomIntFromSeed(did, n)
   return `repo:${partition}`
+}
+
+class Processor {
+  running: Deferrable | null = null
+  destroyed = false
+  unprocessed: MessageEnvelope[] = []
+
+  constructor(public sub: IngesterSubscription) {}
+
+  async handleBatch(batch: MessageEnvelope[]) {
+    if (!batch.length) return
+    const items = await Promise.all(
+      batch.map(async ({ seq, repo, message }) => {
+        const key = await getPartition(repo, this.sub.opts.partitionCount)
+        const fields: [string, string | Buffer][] = [
+          ['repo', repo],
+          ['event', ui8ToBuffer(cborEncode(message))],
+        ]
+        return { key, id: seq, fields }
+      }),
+    )
+    const results = await this.sub.ctx.redis.addMultiToStream(items)
+    results.forEach(([err], i) => {
+      if (err) {
+        // skipping over messages that have already been added or fully processed
+        const item = batch.at(i)
+        log.warn(
+          { seq: item?.seq, repo: item?.repo },
+          'ingester skipping message',
+        )
+      }
+    })
+    const lastSeq = batch[batch.length - 1].seq
+    this.sub.lastSeq = lastSeq
+    this.sub.cursorQueue.add(() => this.sub.setCursor(lastSeq))
+  }
+
+  async process() {
+    if (this.running || this.destroyed || !this.unprocessed.length) return
+    const next = this.unprocessed.splice(100) // pipeline no more than 100
+    const processing = this.unprocessed
+    this.unprocessed = next
+    this.running = createDeferrable()
+    try {
+      await this.handleBatch(processing)
+    } catch (err) {
+      log.error(
+        { err, size: processing.length },
+        'ingester processing failed, rolling over to next batch',
+      )
+      this.unprocessed.unshift(...processing)
+    } finally {
+      this.running.resolve()
+      this.running = null
+      this.process()
+    }
+  }
+
+  send(envelope: MessageEnvelope) {
+    this.unprocessed.push(envelope)
+    this.process()
+  }
+
+  async destroy() {
+    this.destroyed = true
+    this.unprocessed = []
+    await this.running?.complete
+  }
+}
+
+type MessageEnvelope = {
+  seq: number
+  repo: string
+  message: ProcessableMessage
 }
 
 class Backpressure {

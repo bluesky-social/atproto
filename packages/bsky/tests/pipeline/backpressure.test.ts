@@ -53,7 +53,7 @@ describe('pipeline backpressure', () => {
     // check that max items has been respected (i.e. backpressure was applied)
     const lengths = await ingester.ctx.redis.streamLengths(['repo:0', 'repo:1'])
     expect(lengths).toHaveLength(2)
-    expect(lengths[0] + lengths[1]).toEqual(10)
+    expect(lengths[0] + lengths[1]).toBeLessThanOrEqual(10 + 5) // not exact due to batching, may catch on following check backpressure
     // drain all items using indexers, releasing backpressure
     await indexers.start()
     await processAll(network, ingester)
