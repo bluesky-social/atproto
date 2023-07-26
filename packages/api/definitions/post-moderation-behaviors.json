@@ -67,7 +67,7 @@
         "content": {"cause": "label:!hide", "filter": true, "blur": true, "noOverride": true}
       }
     },
-    "Imperative label ('!hide') on post author profile": {
+    "Imperative label ('!hide') on author profile": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -76,7 +76,7 @@
         "avatar": {"cause": "label:!hide", "blur": true, "noOverride": true}
       }
     },
-    "Imperative label ('!hide') on post author account": {
+    "Imperative label ('!hide') on author account": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -97,7 +97,7 @@
         "embed": {"cause": "label:!hide", "blur": true, "noOverride": true}
       }
     },
-    "Imperative label ('!hide') on quoted post author account": {
+    "Imperative label ('!hide') on quoted author account": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -118,14 +118,14 @@
         "content": {"cause": "label:!no-promote", "filter": true}
       }
     },
-    "Imperative label ('!no-promote') on post author profile": {
+    "Imperative label ('!no-promote') on author profile": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
       "labels": {"profile": ["!no-promote"]},
       "behaviors": {}
     },
-    "Imperative label ('!no-promote') on post author account": {
+    "Imperative label ('!no-promote') on author account": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -144,7 +144,7 @@
         "content": {"cause": "label:!no-promote", "filter": true}
       }
     },
-    "Imperative label ('!no-promote') on quoted post author account": {
+    "Imperative label ('!no-promote') on quoted author account": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -164,7 +164,7 @@
         "content": {"cause": "label:!warn", "blur": true}
       }
     },
-    "Imperative label ('!warn') on post author profile": {
+    "Imperative label ('!warn') on author profile": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -173,7 +173,7 @@
         "avatar": {"blur": true}
       }
     },
-    "Imperative label ('!warn') on post author account": {
+    "Imperative label ('!warn') on author account": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -193,7 +193,7 @@
         "embed": {"cause": "label:!warn", "blur": true}
       }
     },
-    "Imperative label ('!warn') on quoted post author account": {
+    "Imperative label ('!warn') on quoted author account": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -204,7 +204,7 @@
       }
     },
 
-    "Onwarn=blur label ('intolerant') on post when intolerant is set to hide": {
+    "Blur label ('intolerant') on post (hide)": {
       "cfg": "intolerant-hide",
       "subject": "post",
       "author": "alice",
@@ -213,7 +213,7 @@
         "content": {"cause": "label:intolerant", "filter": true, "blur": true}
       }
     },
-    "Onwarn=blur label ('intolerant') on post author profile when intolerant is set to hide": {
+    "Blur label ('intolerant') on author profile (hide)": {
       "cfg": "intolerant-hide",
       "subject": "post",
       "author": "alice",
@@ -222,7 +222,7 @@
         "avatar": {"blur": true}
       }
     },
-    "Onwarn=blur label ('intolerant') on post author account when intolerant is set to hide": {
+    "Blur label ('intolerant') on author account (hide)": {
       "cfg": "intolerant-hide",
       "subject": "post",
       "author": "alice",
@@ -232,7 +232,7 @@
         "avatar": {"blur": true}
       }
     },
-    "Onwarn=blur label ('intolerant') on quoted post when intolerant is set to hide": {
+    "Blur label ('intolerant') on quoted post (hide)": {
       "cfg": "intolerant-hide",
       "subject": "post",
       "author": "alice",
@@ -243,7 +243,7 @@
         "embed": {"cause": "label:intolerant", "blur": true}
       }
     },
-    "Onwarn=blur label ('intolerant') on quoted post author account when intolerant is set to hide": {
+    "Blur label ('intolerant') on quoted author account (hide)": {
       "cfg": "intolerant-hide",
       "subject": "post",
       "author": "alice",
@@ -255,7 +255,7 @@
       }
     },
 
-    "Onwarn=blur label ('intolerant') on post when set to warn": {
+    "Blur label ('intolerant') on post (warn)": {
       "cfg": "intolerant-warn",
       "subject": "post",
       "author": "alice",
@@ -264,7 +264,7 @@
         "content": {"cause": "label:intolerant", "blur": true}
       }
     },
-    "Onwarn=blur label ('intolerant') on post author profile when set to warn": {
+    "Blur label ('intolerant') on author profile (warn)": {
       "cfg": "intolerant-warn",
       "subject": "post",
       "author": "alice",
@@ -273,7 +273,7 @@
         "avatar": {"blur": true}
       }
     },
-    "Onwarn=blur label ('intolerant') on post author account when set to warn": {
+    "Blur label ('intolerant') on author account (warn)": {
       "cfg": "intolerant-warn",
       "subject": "post",
       "author": "alice",
@@ -283,7 +283,7 @@
         "avatar": {"blur": true}
       }
     },
-    "Onwarn=blur label ('intolerant') on quoted post when set to warn": {
+    "Blur label ('intolerant') on quoted post (warn)": {
       "cfg": "intolerant-warn",
       "subject": "post",
       "author": "alice",
@@ -293,7 +293,7 @@
         "embed": {"cause": "label:intolerant", "blur": true}
       }
     },
-    "Onwarn=blur label ('intolerant') on quoted post author account when set to warn": {
+    "Blur label ('intolerant') on quoted author account (warn)": {
       "cfg": "intolerant-warn",
       "subject": "post",
       "author": "alice",
@@ -304,28 +304,28 @@
       }
     },
 
-    "Onwarn=blur label ('intolerant') on post when set to ignore": {
+    "Blur label ('intolerant') on post (ignore)": {
       "cfg": "intolerant-ignore",
       "subject": "post",
       "author": "alice",
       "labels": {"post": ["intolerant"]},
       "behaviors": {}
     },
-    "Onwarn=blur label ('intolerant') on post author profile when set to ignore": {
+    "Blur label ('intolerant') on author profile (ignore)": {
       "cfg": "intolerant-ignore",
       "subject": "post",
       "author": "alice",
       "labels": {"profile": ["intolerant"]},
       "behaviors": {}
     },
-    "Onwarn=blur label ('intolerant') on post author account when set to ignore": {
+    "Blur label ('intolerant') on author account (ignore)": {
       "cfg": "intolerant-ignore",
       "subject": "post",
       "author": "alice",
       "labels": {"account": ["intolerant"]},
       "behaviors": {}
     },
-    "Onwarn=blur label ('intolerant') on quoted post when set to ignore": {
+    "Blur label ('intolerant') on quoted post (ignore)": {
       "cfg": "intolerant-ignore",
       "subject": "post",
       "author": "alice",
@@ -333,7 +333,7 @@
       "labels": {"quotedPost": ["intolerant"]},
       "behaviors": {}
     },
-    "Onwarn=blur label ('intolerant') on quoted post author account when set to ignore": {
+    "Blur label ('intolerant') on quoted author account (ignore)": {
       "cfg": "intolerant-ignore",
       "subject": "post",
       "author": "alice",
@@ -342,7 +342,7 @@
       "behaviors": {}
     },
 
-    "Onwarn=blur-media label ('porn') on post when porn is set to hide": {
+    "Blur-media label ('porn') on post (hide)": {
       "cfg": "porn-hide",
       "subject": "post",
       "author": "alice",
@@ -352,7 +352,7 @@
         "embed": {"cause": "label:porn", "blur": true}
       }
     },
-    "Onwarn=blur-media label ('porn') on post author profile when porn is set to hide": {
+    "Blur-media label ('porn') on author profile (hide)": {
       "cfg": "porn-hide",
       "subject": "post",
       "author": "alice",
@@ -361,7 +361,7 @@
         "avatar": {"blur": true}
       }
     },
-    "Onwarn=blur-media label ('porn') on post author account when porn is set to hide": {
+    "Blur-media label ('porn') on author account (hide)": {
       "cfg": "porn-hide",
       "subject": "post",
       "author": "alice",
@@ -371,7 +371,7 @@
         "avatar": {"blur": true}
       }
     },
-    "Onwarn=blur-media label ('porn') on quoted post when porn is set to hide": {
+    "Blur-media label ('porn') on quoted post (hide)": {
       "cfg": "porn-hide",
       "subject": "post",
       "author": "alice",
@@ -381,7 +381,7 @@
         "content": {"cause": "label:porn", "filter": true}
       }
     },
-    "Onwarn=blur-media label ('porn') on quoted post author account when porn is set to hide": {
+    "Blur-media label ('porn') on quoted author account (hide)": {
       "cfg": "porn-hide",
       "subject": "post",
       "author": "alice",
@@ -392,7 +392,7 @@
       }
     },
 
-    "Onwarn=blur-media label ('porn') on post when set to warn": {
+    "Blur-media label ('porn') on post (warn)": {
       "cfg": "porn-warn",
       "subject": "post",
       "author": "alice",
@@ -401,7 +401,7 @@
         "embed": {"cause": "label:porn", "blur": true}
       }
     },
-    "Onwarn=blur-media label ('porn') on post author profile when set to warn": {
+    "Blur-media label ('porn') on author profile (warn)": {
       "cfg": "porn-warn",
       "subject": "post",
       "author": "alice",
@@ -410,7 +410,7 @@
         "avatar": {"blur": true}
       }
     },
-    "Onwarn=blur-media label ('porn') on post author account when set to warn": {
+    "Blur-media label ('porn') on author account (warn)": {
       "cfg": "porn-warn",
       "subject": "post",
       "author": "alice",
@@ -419,7 +419,7 @@
         "avatar": {"blur": true}
       }
     },
-    "Onwarn=blur-media label ('porn') on quoted post when set to warn": {
+    "Blur-media label ('porn') on quoted post (warn)": {
       "cfg": "porn-warn",
       "subject": "post",
       "author": "alice",
@@ -428,7 +428,7 @@
       "behaviors": {
       }
     },
-    "Onwarn=blur-media label ('porn') on quoted post author account when set to warn": {
+    "Blur-media label ('porn') on quoted author account (warn)": {
       "cfg": "porn-warn",
       "subject": "post",
       "author": "alice",
@@ -438,28 +438,28 @@
       }
     },
 
-    "Onwarn=blur-media label ('porn') on post when set to ignore": {
+    "Blur-media label ('porn') on post (ignore)": {
       "cfg": "porn-ignore",
       "subject": "post",
       "author": "alice",
       "labels": {"post": ["porn"]},
       "behaviors": {}
     },
-    "Onwarn=blur-media label ('porn') on post author profile when set to ignore": {
+    "Blur-media label ('porn') on author profile (ignore)": {
       "cfg": "porn-ignore",
       "subject": "post",
       "author": "alice",
       "labels": {"profile": ["porn"]},
       "behaviors": {}
     },
-    "Onwarn=blur-media label ('porn') on post author account when set to ignore": {
+    "Blur-media label ('porn') on author account (ignore)": {
       "cfg": "porn-ignore",
       "subject": "post",
       "author": "alice",
       "labels": {"account": ["porn"]},
       "behaviors": {}
     },
-    "Onwarn=blur-media label ('porn') on quoted post when set to ignore": {
+    "Blur-media label ('porn') on quoted post (ignore)": {
       "cfg": "porn-ignore",
       "subject": "post",
       "author": "alice",
@@ -467,7 +467,7 @@
       "labels": {"quotedPost": ["porn"]},
       "behaviors": {}
     },
-    "Onwarn=blur-media label ('porn') on quoted post author account when set to ignore": {
+    "Blur-media label ('porn') on quoted author account (ignore)": {
       "cfg": "porn-ignore",
       "subject": "post",
       "author": "alice",
@@ -476,7 +476,7 @@
       "behaviors": {}
     },
 
-    "Onwarn=notice label ('scam') on post when scam is set to hide": {
+    "Notice label ('scam') on post (hide)": {
       "cfg": "scam-hide",
       "subject": "post",
       "author": "alice",
@@ -485,7 +485,7 @@
         "content": {"cause": "label:scam", "filter": true, "alert": true}
       }
     },
-    "Onwarn=notice label ('scam') on post author profile when scam is set to hide": {
+    "Notice label ('scam') on author profile (hide)": {
       "cfg": "scam-hide",
       "subject": "post",
       "author": "alice",
@@ -494,7 +494,7 @@
         "avatar": {"alert": true}
       }
     },
-    "Onwarn=notice label ('scam') on post author account when scam is set to hide": {
+    "Notice label ('scam') on author account (hide)": {
       "cfg": "scam-hide",
       "subject": "post",
       "author": "alice",
@@ -504,7 +504,7 @@
         "avatar": {"alert": true}
       }
     },
-    "Onwarn=notice label ('scam') on quoted post when scam is set to hide": {
+    "Notice label ('scam') on quoted post (hide)": {
       "cfg": "scam-hide",
       "subject": "post",
       "author": "alice",
@@ -515,7 +515,7 @@
         "embed": {"cause": "label:scam", "alert": true}
       }
     },
-    "Onwarn=notice label ('scam') on quoted post author account when scam is set to hide": {
+    "Notice label ('scam') on quoted author account (hide)": {
       "cfg": "scam-hide",
       "subject": "post",
       "author": "alice",
@@ -527,7 +527,7 @@
       }
     },
 
-    "Onwarn=notice label ('scam') on post when set to warn": {
+    "Notice label ('scam') on post (warn)": {
       "cfg": "scam-warn",
       "subject": "post",
       "author": "alice",
@@ -536,7 +536,7 @@
         "content": {"cause": "label:scam", "alert": true}
       }
     },
-    "Onwarn=notice label ('scam') on post author profile when set to warn": {
+    "Notice label ('scam') on author profile (warn)": {
       "cfg": "scam-warn",
       "subject": "post",
       "author": "alice",
@@ -545,7 +545,7 @@
         "avatar": {"alert": true}
       }
     },
-    "Onwarn=notice label ('scam') on post author account when set to warn": {
+    "Notice label ('scam') on author account (warn)": {
       "cfg": "scam-warn",
       "subject": "post",
       "author": "alice",
@@ -555,7 +555,7 @@
         "avatar": {"alert": true}
       }
     },
-    "Onwarn=notice label ('scam') on quoted post when set to warn": {
+    "Notice label ('scam') on quoted post (warn)": {
       "cfg": "scam-warn",
       "subject": "post",
       "author": "alice",
@@ -565,7 +565,7 @@
         "embed": {"cause": "label:scam", "alert": true}
       }
     },
-    "Onwarn=notice label ('scam') on quoted post author account when set to warn": {
+    "Notice label ('scam') on quoted author account (warn)": {
       "cfg": "scam-warn",
       "subject": "post",
       "author": "alice",
@@ -576,28 +576,28 @@
       }
     },
 
-    "Onwarn=notice label ('scam') on post when set to ignore": {
+    "Notice label ('scam') on post (ignore)": {
       "cfg": "scam-ignore",
       "subject": "post",
       "author": "alice",
       "labels": {"post": ["scam"]},
       "behaviors": {}
     },
-    "Onwarn=notice label ('scam') on post author profile when set to ignore": {
+    "Notice label ('scam') on author profile (ignore)": {
       "cfg": "scam-ignore",
       "subject": "post",
       "author": "alice",
       "labels": {"profile": ["scam"]},
       "behaviors": {}
     },
-    "Onwarn=notice label ('scam') on post author account when set to ignore": {
+    "Notice label ('scam') on author account (ignore)": {
       "cfg": "scam-ignore",
       "subject": "post",
       "author": "alice",
       "labels": {"account": ["scam"]},
       "behaviors": {}
     },
-    "Onwarn=notice label ('scam') on quoted post when set to ignore": {
+    "Notice label ('scam') on quoted post (ignore)": {
       "cfg": "scam-ignore",
       "subject": "post",
       "author": "alice",
@@ -605,7 +605,7 @@
       "labels": {"quotedPost": ["scam"]},
       "behaviors": {}
     },
-    "Onwarn=notice label ('scam') on quoted post author account when set to ignore": {
+    "Notice label ('scam') on quoted author account (ignore)": {
       "cfg": "scam-ignore",
       "subject": "post",
       "author": "alice",
@@ -614,7 +614,7 @@
       "behaviors": {}
     },
 
-    "Adult-only label ('porn') on post when adult content is disabled": {
+    "Adult-only label on post when adult content is disabled": {
       "cfg": "adult-disabled",
       "subject": "post",
       "author": "alice",
@@ -624,7 +624,7 @@
         "embed": {"cause": "label:porn", "blur": true, "noOverride": true}
       }
     },
-    "Adult-only label ('porn') on post author profile when adult content is disabled": {
+    "Adult-only label on author profile when adult content is disabled": {
       "cfg": "adult-disabled",
       "subject": "post",
       "author": "alice",
@@ -633,7 +633,7 @@
         "avatar": {"cause": "label:porn", "blur": true, "noOverride": true}
       }
     },
-    "Adult-only label ('porn') on post author account when adult content is disabled": {
+    "Adult-only label on author account when adult content is disabled": {
       "cfg": "adult-disabled",
       "subject": "post",
       "author": "alice",
@@ -643,7 +643,7 @@
         "avatar": {"cause": "label:porn", "blur": true, "noOverride": true}
       }
     },
-    "Adult-only label ('porn') on quoted post when adult content is disabled": {
+    "Adult-only label on quoted post when adult content is disabled": {
       "cfg": "adult-disabled",
       "subject": "post",
       "author": "alice",
@@ -653,7 +653,7 @@
         "content": {"cause": "label:porn", "filter": true}
       }
     },
-    "Adult-only label ('porn') on quoted post author account when adult content is disabled": {
+    "Adult-only label on quoted author account when adult content is disabled": {
       "cfg": "adult-disabled",
       "subject": "post",
       "author": "alice",
@@ -673,14 +673,14 @@
         "content": {"cause": "label:!hide", "alert": true}
       }
     },
-    "Self-post: Imperative label ('!hide') on post author profile": {
+    "Self-post: Imperative label ('!hide') on author profile": {
       "cfg": "none",
       "subject": "post",
       "author": "self",
       "labels": {"profile": ["!hide"]},
       "behaviors": {}
     },
-    "Self-post: Imperative label ('!hide') on post author account": {
+    "Self-post: Imperative label ('!hide') on author account": {
       "cfg": "none",
       "subject": "post",
       "author": "self",
@@ -697,7 +697,7 @@
         "embed": {"cause": "label:!hide", "alert": true}
       }
     },
-    "Self-post: Imperative label ('!hide') on quoted post author account": {
+    "Self-post: Imperative label ('!hide') on quoted author account": {
       "cfg": "none",
       "subject": "post",
       "author": "self",
@@ -792,7 +792,7 @@
       }
     },
 
-    "Prioritization: post blocking & blocked-by author": {
+    "Prioritization: post with blocking & blocked-by author": {
       "cfg": "none",
       "subject": "post",
       "author": "fern",
@@ -802,7 +802,7 @@
         "avatar": {"blur": true, "noOverride": true}
       }
     },
-    "Prioritization: post blocking & blocked-by quoted author": {
+    "Prioritization: post with blocking & blocked-by quoted author": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -835,7 +835,7 @@
         "embed": {"cause": "label:!hide", "blur": true, "noOverride": true}
       }
     },
-    "Prioritization: '!hide' and 'intolerant' labels on post when intolerant is set to hide": {
+    "Prioritization: '!hide' and 'intolerant' labels on post (hide)": {
       "cfg": "intolerant-hide",
       "subject": "post",
       "author": "alice",
@@ -844,7 +844,7 @@
         "content": {"cause": "label:!hide", "filter": true, "blur": true, "noOverride": true}
       }
     },
-    "Prioritization: '!warn' and 'intolerant' labels on post when intolerant is set to hide": {
+    "Prioritization: '!warn' and 'intolerant' labels on post (hide)": {
       "cfg": "intolerant-hide",
       "subject": "post",
       "author": "alice",
@@ -853,7 +853,7 @@
         "content": {"cause": "label:intolerant", "filter": true, "blur": true}
       }
     },
-    "Prioritization: '!hide' and 'porn' labels on post when porn is set to hide": {
+    "Prioritization: '!hide' and 'porn' labels on post (hide)": {
       "cfg": "porn-hide",
       "subject": "post",
       "author": "alice",
@@ -862,7 +862,7 @@
         "content": {"cause": "label:!hide", "filter": true, "blur": true, "noOverride": true}
       }
     },
-    "Prioritization: '!warn' and 'porn' labels on post when porn is set to hide": {
+    "Prioritization: '!warn' and 'porn' labels on post (hide)": {
       "cfg": "porn-hide",
       "subject": "post",
       "author": "alice",
