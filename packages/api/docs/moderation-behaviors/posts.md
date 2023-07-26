@@ -16,9 +16,8 @@ If ⚠️ is present, the blur can not be overridden by the user.
 
 ## Scenarios
 
-### Imperative label ('!hide') on post
-
 <table>
+<tr><td colspan="2"><h3>Imperative label ('!hide') on post</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -29,12 +28,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!hide</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Imperative label ('!hide') on post author profile
-
-<table>
+<tr><td colspan="2"><h3>Imperative label ('!hide') on post author profile</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -45,12 +41,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!hide</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Imperative label ('!hide') on post author account
-
-<table>
+<tr><td colspan="2"><h3>Imperative label ('!hide') on post author account</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -61,12 +54,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!hide</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Imperative label ('!hide') on quoted post
-
-<table>
+<tr><td colspan="2"><h3>Imperative label ('!hide') on quoted post</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -77,12 +67,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!hide</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Imperative label ('!hide') on quoted post author account
-
-<table>
+<tr><td colspan="2"><h3>Imperative label ('!hide') on quoted post author account</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -93,12 +80,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!hide</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Imperative label ('!no-promote') on post
-
-<table>
+<tr><td colspan="2"><h3>Imperative label ('!no-promote') on post</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -109,12 +93,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!no-promote</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Imperative label ('!no-promote') on post author profile
-
-<table>
+<tr><td colspan="2"><h3>Imperative label ('!no-promote') on post author profile</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -125,12 +106,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!no-promote</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Imperative label ('!no-promote') on post author account
-
-<table>
+<tr><td colspan="2"><h3>Imperative label ('!no-promote') on post author account</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -141,12 +119,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!no-promote</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Imperative label ('!no-promote') on quoted post
-
-<table>
+<tr><td colspan="2"><h3>Imperative label ('!no-promote') on quoted post</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -157,12 +132,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!no-promote</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Imperative label ('!no-promote') on quoted post author account
-
-<table>
+<tr><td colspan="2"><h3>Imperative label ('!no-promote') on quoted post author account</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -173,12 +145,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!no-promote</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Imperative label ('!warn') on post
-
-<table>
+<tr><td colspan="2"><h3>Imperative label ('!warn') on post</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>✅ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -189,12 +158,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!warn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Imperative label ('!warn') on post author profile
-
-<table>
+<tr><td colspan="2"><h3>Imperative label ('!warn') on post author profile</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -205,12 +171,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!warn</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Imperative label ('!warn') on post author account
-
-<table>
+<tr><td colspan="2"><h3>Imperative label ('!warn') on post author account</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>✅ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -221,12 +184,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!warn</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Imperative label ('!warn') on quoted post
-
-<table>
+<tr><td colspan="2"><h3>Imperative label ('!warn') on quoted post</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -237,12 +197,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!warn</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Imperative label ('!warn') on quoted post author account
-
-<table>
+<tr><td colspan="2"><h3>Imperative label ('!warn') on quoted post author account</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -253,12 +210,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!warn</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Onwarn=blur label ('intolerant') on post when intolerant is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur label ('intolerant') on post when intolerant is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>✅ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -269,12 +223,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>intolerant</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"intolerant":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"hide"}}</code></td></tr>
 
-### Onwarn=blur label ('intolerant') on post author profile when intolerant is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur label ('intolerant') on post author profile when intolerant is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -285,12 +236,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>intolerant</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"intolerant":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"hide"}}</code></td></tr>
 
-### Onwarn=blur label ('intolerant') on post author account when intolerant is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur label ('intolerant') on post author account when intolerant is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>✅ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -301,12 +249,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>intolerant</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"intolerant":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"hide"}}</code></td></tr>
 
-### Onwarn=blur label ('intolerant') on quoted post when intolerant is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur label ('intolerant') on quoted post when intolerant is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -317,12 +262,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"settings":{"intolerant":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"hide"}}</code></td></tr>
 
-### Onwarn=blur label ('intolerant') on quoted post author account when intolerant is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur label ('intolerant') on quoted post author account when intolerant is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -333,12 +275,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"settings":{"intolerant":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"hide"}}</code></td></tr>
 
-### Onwarn=blur label ('intolerant') on post when set to warn
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur label ('intolerant') on post when set to warn</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>✅ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -349,12 +288,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>intolerant</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"intolerant":"warn"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"warn"}}</code></td></tr>
 
-### Onwarn=blur label ('intolerant') on post author profile when set to warn
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur label ('intolerant') on post author profile when set to warn</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -365,12 +301,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>intolerant</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"intolerant":"warn"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"warn"}}</code></td></tr>
 
-### Onwarn=blur label ('intolerant') on post author account when set to warn
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur label ('intolerant') on post author account when set to warn</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>✅ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -381,12 +314,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>intolerant</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"intolerant":"warn"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"warn"}}</code></td></tr>
 
-### Onwarn=blur label ('intolerant') on quoted post when set to warn
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur label ('intolerant') on quoted post when set to warn</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -397,12 +327,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"settings":{"intolerant":"warn"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"warn"}}</code></td></tr>
 
-### Onwarn=blur label ('intolerant') on quoted post author account when set to warn
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur label ('intolerant') on quoted post author account when set to warn</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -413,12 +340,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"settings":{"intolerant":"warn"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"warn"}}</code></td></tr>
 
-### Onwarn=blur label ('intolerant') on post when set to ignore
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur label ('intolerant') on post when set to ignore</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -429,12 +353,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>intolerant</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"intolerant":"ignore"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"ignore"}}</code></td></tr>
 
-### Onwarn=blur label ('intolerant') on post author profile when set to ignore
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur label ('intolerant') on post author profile when set to ignore</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -445,12 +366,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>intolerant</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"intolerant":"ignore"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"ignore"}}</code></td></tr>
 
-### Onwarn=blur label ('intolerant') on post author account when set to ignore
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur label ('intolerant') on post author account when set to ignore</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -461,12 +379,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>intolerant</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"intolerant":"ignore"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"ignore"}}</code></td></tr>
 
-### Onwarn=blur label ('intolerant') on quoted post when set to ignore
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur label ('intolerant') on quoted post when set to ignore</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -477,12 +392,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"settings":{"intolerant":"ignore"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"ignore"}}</code></td></tr>
 
-### Onwarn=blur label ('intolerant') on quoted post author account when set to ignore
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur label ('intolerant') on quoted post author account when set to ignore</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -493,12 +405,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"settings":{"intolerant":"ignore"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"ignore"}}</code></td></tr>
 
-### Onwarn=blur-media label ('porn') on post when porn is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur-media label ('porn') on post when porn is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -509,12 +418,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</code></td></tr>
 
-### Onwarn=blur-media label ('porn') on post author profile when porn is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur-media label ('porn') on post author profile when porn is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -525,12 +431,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</code></td></tr>
 
-### Onwarn=blur-media label ('porn') on post author account when porn is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur-media label ('porn') on post author account when porn is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -541,12 +444,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</code></td></tr>
 
-### Onwarn=blur-media label ('porn') on quoted post when porn is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur-media label ('porn') on quoted post when porn is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -557,12 +457,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</code></td></tr>
 
-### Onwarn=blur-media label ('porn') on quoted post author account when porn is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur-media label ('porn') on quoted post author account when porn is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -573,12 +470,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</code></td></tr>
 
-### Onwarn=blur-media label ('porn') on post when set to warn
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur-media label ('porn') on post when set to warn</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -589,12 +483,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":true,"settings":{"porn":"warn"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"warn"}}</code></td></tr>
 
-### Onwarn=blur-media label ('porn') on post author profile when set to warn
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur-media label ('porn') on post author profile when set to warn</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -605,12 +496,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":true,"settings":{"porn":"warn"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"warn"}}</code></td></tr>
 
-### Onwarn=blur-media label ('porn') on post author account when set to warn
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur-media label ('porn') on post author account when set to warn</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -621,12 +509,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":true,"settings":{"porn":"warn"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"warn"}}</code></td></tr>
 
-### Onwarn=blur-media label ('porn') on quoted post when set to warn
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur-media label ('porn') on quoted post when set to warn</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -637,12 +522,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":true,"settings":{"porn":"warn"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"warn"}}</code></td></tr>
 
-### Onwarn=blur-media label ('porn') on quoted post author account when set to warn
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur-media label ('porn') on quoted post author account when set to warn</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -653,12 +535,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":true,"settings":{"porn":"warn"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"warn"}}</code></td></tr>
 
-### Onwarn=blur-media label ('porn') on post when set to ignore
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur-media label ('porn') on post when set to ignore</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -669,12 +548,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":true,"settings":{"porn":"ignore"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"ignore"}}</code></td></tr>
 
-### Onwarn=blur-media label ('porn') on post author profile when set to ignore
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur-media label ('porn') on post author profile when set to ignore</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -685,12 +561,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":true,"settings":{"porn":"ignore"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"ignore"}}</code></td></tr>
 
-### Onwarn=blur-media label ('porn') on post author account when set to ignore
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur-media label ('porn') on post author account when set to ignore</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -701,12 +574,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":true,"settings":{"porn":"ignore"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"ignore"}}</code></td></tr>
 
-### Onwarn=blur-media label ('porn') on quoted post when set to ignore
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur-media label ('porn') on quoted post when set to ignore</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -717,12 +587,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":true,"settings":{"porn":"ignore"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"ignore"}}</code></td></tr>
 
-### Onwarn=blur-media label ('porn') on quoted post author account when set to ignore
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=blur-media label ('porn') on quoted post author account when set to ignore</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -733,12 +600,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":true,"settings":{"porn":"ignore"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"ignore"}}</code></td></tr>
 
-### Onwarn=notice label ('scam') on post when scam is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=notice label ('scam') on post when scam is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>✅ </td></tr>
@@ -749,12 +613,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>scam</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"scam":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"scam":"hide"}}</code></td></tr>
 
-### Onwarn=notice label ('scam') on post author profile when scam is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=notice label ('scam') on post author profile when scam is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -765,12 +626,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>scam</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"scam":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"scam":"hide"}}</code></td></tr>
 
-### Onwarn=notice label ('scam') on post author account when scam is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=notice label ('scam') on post author account when scam is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>✅ </td></tr>
@@ -781,12 +639,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>scam</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"scam":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"scam":"hide"}}</code></td></tr>
 
-### Onwarn=notice label ('scam') on quoted post when scam is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=notice label ('scam') on quoted post when scam is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -797,12 +652,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>scam</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"settings":{"scam":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"scam":"hide"}}</code></td></tr>
 
-### Onwarn=notice label ('scam') on quoted post author account when scam is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=notice label ('scam') on quoted post author account when scam is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -813,12 +665,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>scam</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"settings":{"scam":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"scam":"hide"}}</code></td></tr>
 
-### Onwarn=notice label ('scam') on post when set to warn
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=notice label ('scam') on post when set to warn</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>✅ </td></tr>
@@ -829,12 +678,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>scam</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"scam":"warn"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"scam":"warn"}}</code></td></tr>
 
-### Onwarn=notice label ('scam') on post author profile when set to warn
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=notice label ('scam') on post author profile when set to warn</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -845,12 +691,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>scam</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"scam":"warn"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"scam":"warn"}}</code></td></tr>
 
-### Onwarn=notice label ('scam') on post author account when set to warn
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=notice label ('scam') on post author account when set to warn</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>✅ </td></tr>
@@ -861,12 +704,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>scam</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"scam":"warn"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"scam":"warn"}}</code></td></tr>
 
-### Onwarn=notice label ('scam') on quoted post when set to warn
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=notice label ('scam') on quoted post when set to warn</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -877,12 +717,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>scam</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"settings":{"scam":"warn"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"scam":"warn"}}</code></td></tr>
 
-### Onwarn=notice label ('scam') on quoted post author account when set to warn
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=notice label ('scam') on quoted post author account when set to warn</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -893,12 +730,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>scam</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"settings":{"scam":"warn"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"scam":"warn"}}</code></td></tr>
 
-### Onwarn=notice label ('scam') on post when set to ignore
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=notice label ('scam') on post when set to ignore</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -909,12 +743,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>scam</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"scam":"ignore"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"scam":"ignore"}}</code></td></tr>
 
-### Onwarn=notice label ('scam') on post author profile when set to ignore
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=notice label ('scam') on post author profile when set to ignore</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -925,12 +756,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>scam</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"scam":"ignore"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"scam":"ignore"}}</code></td></tr>
 
-### Onwarn=notice label ('scam') on post author account when set to ignore
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=notice label ('scam') on post author account when set to ignore</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -941,12 +769,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>scam</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"scam":"ignore"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"scam":"ignore"}}</code></td></tr>
 
-### Onwarn=notice label ('scam') on quoted post when set to ignore
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=notice label ('scam') on quoted post when set to ignore</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -957,12 +782,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>scam</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"settings":{"scam":"ignore"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"scam":"ignore"}}</code></td></tr>
 
-### Onwarn=notice label ('scam') on quoted post author account when set to ignore
-
-<table>
+<tr><td colspan="2"><h3>Onwarn=notice label ('scam') on quoted post author account when set to ignore</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -973,12 +795,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>scam</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"settings":{"scam":"ignore"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"scam":"ignore"}}</code></td></tr>
 
-### Adult-only label ('porn') on post when adult content is disabled
-
-<table>
+<tr><td colspan="2"><h3>Adult-only label ('porn') on post when adult content is disabled</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -989,12 +808,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":false}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":false}</code></td></tr>
 
-### Adult-only label ('porn') on post author profile when adult content is disabled
-
-<table>
+<tr><td colspan="2"><h3>Adult-only label ('porn') on post author profile when adult content is disabled</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1005,12 +821,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":false}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":false}</code></td></tr>
 
-### Adult-only label ('porn') on post author account when adult content is disabled
-
-<table>
+<tr><td colspan="2"><h3>Adult-only label ('porn') on post author account when adult content is disabled</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1021,12 +834,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":false}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":false}</code></td></tr>
 
-### Adult-only label ('porn') on quoted post when adult content is disabled
-
-<table>
+<tr><td colspan="2"><h3>Adult-only label ('porn') on quoted post when adult content is disabled</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1037,12 +847,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":false}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":false}</code></td></tr>
 
-### Adult-only label ('porn') on quoted post author account when adult content is disabled
-
-<table>
+<tr><td colspan="2"><h3>Adult-only label ('porn') on quoted post author account when adult content is disabled</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1053,12 +860,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>porn</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":false}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":false}</code></td></tr>
 
-### Self-post: Imperative label ('!hide') on post
-
-<table>
+<tr><td colspan="2"><h3>Self-post: Imperative label ('!hide') on post</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>✅ </td></tr>
@@ -1069,12 +873,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!hide</code> on post</td></tr>
 <tr><td>Author</td><td>Self</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Self-post: Imperative label ('!hide') on post author profile
-
-<table>
+<tr><td colspan="2"><h3>Self-post: Imperative label ('!hide') on post author profile</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1085,12 +886,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!hide</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Self</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Self-post: Imperative label ('!hide') on post author account
-
-<table>
+<tr><td colspan="2"><h3>Self-post: Imperative label ('!hide') on post author account</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1101,12 +899,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!hide</code> on post author account</td></tr>
 <tr><td>Author</td><td>Self</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Self-post: Imperative label ('!hide') on quoted post
-
-<table>
+<tr><td colspan="2"><h3>Self-post: Imperative label ('!hide') on quoted post</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1117,12 +912,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!hide</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Self</td></tr>
 <tr><td>Quoted author</td><td>Self</td></tr>
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Self-post: Imperative label ('!hide') on quoted post author account
-
-<table>
+<tr><td colspan="2"><h3>Self-post: Imperative label ('!hide') on quoted post author account</h3></td></tr>
 <tr><td>Filter Content</td><td>❌ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1133,12 +925,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!hide</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Self</td></tr>
 <tr><td>Quoted author</td><td>Self</td></tr>
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Post blocking author
-
-<table>
+<tr><td colspan="2"><h3>Post blocking author</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1149,12 +938,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Blocked account</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Post blocking quoted author
-
-<table>
+<tr><td colspan="2"><h3>Post blocking quoted author</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1165,12 +951,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Blocked account</td></tr>
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Post blocked by author
-
-<table>
+<tr><td colspan="2"><h3>Post blocked by author</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1181,12 +964,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Account blocking user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Post blocked by quoted author
-
-<table>
+<tr><td colspan="2"><h3>Post blocked by quoted author</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1197,12 +977,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Account blocking user</td></tr>
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Post muted author
-
-<table>
+<tr><td colspan="2"><h3>Post muted author</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>✅ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1213,12 +990,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Muted account</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Post muted quoted author
-
-<table>
+<tr><td colspan="2"><h3>Post muted quoted author</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1229,12 +1003,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Muted account</td></tr>
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Post muted-by-list author
-
-<table>
+<tr><td colspan="2"><h3>Post muted-by-list author</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>✅ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1245,12 +1016,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Muted account (by list)</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Post muted-by-list quoted author
-
-<table>
+<tr><td colspan="2"><h3>Post muted-by-list quoted author</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1261,12 +1029,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Muted account (by list)</td></tr>
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Prioritization: post blocking & blocked-by author
-
-<table>
+<tr><td colspan="2"><h3>Prioritization: post blocking & blocked-by author</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1277,12 +1042,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Blocked account, Account blocking user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Prioritization: post blocking & blocked-by quoted author
-
-<table>
+<tr><td colspan="2"><h3>Prioritization: post blocking & blocked-by quoted author</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1293,12 +1055,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Blocked account, Account blocking user</td></tr>
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Prioritization: '!hide' label on post by blocked user
-
-<table>
+<tr><td colspan="2"><h3>Prioritization: '!hide' label on post by blocked user</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1309,12 +1068,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!hide</code> on post</td></tr>
 <tr><td>Author</td><td>Blocked account</td></tr>
 
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Prioritization: '!hide' label on quoted post, post by blocked user
-
-<table>
+<tr><td colspan="2"><h3>Prioritization: '!hide' label on quoted post, post by blocked user</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1325,12 +1081,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <tr><td>Labels</td><td><code>!hide</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Blocked account</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{}</code></td></tr>
 
-### Prioritization: '!hide' and 'intolerant' labels on post when intolerant is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Prioritization: '!hide' and 'intolerant' labels on post when intolerant is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1342,12 +1095,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <code>intolerant</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"intolerant":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"hide"}}</code></td></tr>
 
-### Prioritization: '!warn' and 'intolerant' labels on post when intolerant is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Prioritization: '!warn' and 'intolerant' labels on post when intolerant is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>✅ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1359,12 +1109,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <code>intolerant</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"settings":{"intolerant":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"hide"}}</code></td></tr>
 
-### Prioritization: '!hide' and 'porn' labels on post when porn is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Prioritization: '!hide' and 'porn' labels on post when porn is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1376,12 +1123,9 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</pre></td></tr>
-</table>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</code></td></tr>
 
-### Prioritization: '!warn' and 'porn' labels on post when porn is set to hide
-
-<table>
+<tr><td colspan="2"><h3>Prioritization: '!warn' and 'porn' labels on post when porn is set to hide</h3></td></tr>
 <tr><td>Filter Content</td><td>✅ </td></tr>
 <tr><td>Blur Content</td><td>❌ </td></tr>
 <tr><td>Alert Content</td><td>❌ </td></tr>
@@ -1393,5 +1137,5 @@ If ⚠️ is present, the blur can not be overridden by the user.
 <code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
-<tr><td>Configuration</td><td><pre>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</pre></td></tr>
+<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</code></td></tr>
 </table>

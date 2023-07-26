@@ -52,53 +52,52 @@ function posts() {
 
   ## Scenarios
 
+  <table>
   ${Array.from(Object.entries(postModerationBehaviorsDef.scenarios))
     .map(scenarioSection)
     .join('\n\n')}
+  </table>
   `
 }
 
 function scenarioSection([title, scenario]) {
   return stripIndents`
-  ### ${title}
-
-  <table>
-    ${booleanRow('Filter Content', scenario.behaviors.content?.filter)}
-    ${booleanRow(
-      'Blur Content',
-      scenario.behaviors.content?.blur,
-      scenario.behaviors.content?.noOverride,
-    )}
-    ${booleanRow('Alert Content', scenario.behaviors.content?.alert)}
-    ${booleanRow(
-      'Blur Avatar',
-      scenario.behaviors.avatar?.blur,
-      scenario.behaviors.avatar?.noOverride,
-    )}
-    ${booleanRow('Alert Avatar', scenario.behaviors.avatar?.alert)}
-    ${booleanRow(
-      'Blur Embed',
-      scenario.behaviors.embed?.blur,
-      scenario.behaviors.embed?.noOverride,
-    )}
-    ${booleanRow('Alert Embed', scenario.behaviors.embed?.alert)}
-    <tr><td>Labels</td><td>${describeLabels(scenario)}</td></tr>
-    <tr><td>Author</td><td>${describeAuthor(
-      scenario.author,
-      postModerationBehaviorsDef.users[scenario.author],
+  <tr><td colspan="2"><h3>${title}</h3></td></tr>
+  ${booleanRow('Filter Content', scenario.behaviors.content?.filter)}
+  ${booleanRow(
+    'Blur Content',
+    scenario.behaviors.content?.blur,
+    scenario.behaviors.content?.noOverride,
+  )}
+  ${booleanRow('Alert Content', scenario.behaviors.content?.alert)}
+  ${booleanRow(
+    'Blur Avatar',
+    scenario.behaviors.avatar?.blur,
+    scenario.behaviors.avatar?.noOverride,
+  )}
+  ${booleanRow('Alert Avatar', scenario.behaviors.avatar?.alert)}
+  ${booleanRow(
+    'Blur Embed',
+    scenario.behaviors.embed?.blur,
+    scenario.behaviors.embed?.noOverride,
+  )}
+  ${booleanRow('Alert Embed', scenario.behaviors.embed?.alert)}
+  <tr><td>Labels</td><td>${describeLabels(scenario)}</td></tr>
+  <tr><td>Author</td><td>${describeAuthor(
+    scenario.author,
+    postModerationBehaviorsDef.users[scenario.author],
+  )}</td></tr>
+    ${
+      scenario.quoteAuthor
+        ? `<tr><td>Quoted author</td><td>${describeAuthor(
+            scenario.quoteAuthor,
+            postModerationBehaviorsDef.users[scenario.quoteAuthor],
+          )}</td></tr>`
+        : ''
+    }
+    <tr><td>Configuration</td><td>${json(
+      postModerationBehaviorsDef.configurations[scenario.cfg],
     )}</td></tr>
-      ${
-        scenario.quoteAuthor
-          ? `<tr><td>Quoted author</td><td>${describeAuthor(
-              scenario.quoteAuthor,
-              postModerationBehaviorsDef.users[scenario.quoteAuthor],
-            )}</td></tr>`
-          : ''
-      }
-      <tr><td>Configuration</td><td>${json(
-        postModerationBehaviorsDef.configurations[scenario.cfg],
-      )}</td></tr>
-    </table>
   `
 }
 
@@ -149,7 +148,7 @@ function booleanRow(name, val, noOverride = false) {
 }
 
 function json(val) {
-  return `<pre>${JSON.stringify(val)}</pre>`
+  return `<code>${JSON.stringify(val)}</code>`
 }
 
 export {}
