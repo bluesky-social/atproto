@@ -4,6 +4,7 @@ import describeFeedGenerator from './app/bsky/feed/describeFeedGenerator'
 import getTimeline from './app/bsky/feed/getTimeline'
 import getActorFeeds from './app/bsky/feed/getActorFeeds'
 import getAuthorFeed from './app/bsky/feed/getAuthorFeed'
+import getAuthorFeeds from './app/bsky/feed/getAuthorFeeds'
 import getFeed from './app/bsky/feed/getFeed'
 import getFeedGenerator from './app/bsky/feed/getFeedGenerator'
 import getFeedGenerators from './app/bsky/feed/getFeedGenerators'
@@ -57,6 +58,7 @@ export default function (server: Server, ctx: AppContext) {
   getTimeline(server, ctx)
   getActorFeeds(server, ctx)
   getAuthorFeed(server, ctx)
+  getAuthorFeeds(server, ctx)
   getFeed(server, ctx)
   getFeedGenerator(server, ctx)
   getFeedGenerators(server, ctx)
