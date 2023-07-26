@@ -31,13 +31,14 @@ describe('proxy read after write', () => {
     await network.close()
   })
 
-  it('blah', async () => {
+  it('handles read after write on profiles', async () => {
     await network.bsky.sub.destroy()
     await sc.updateProfile(alice, { displayName: 'blah' })
     const res = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
       { headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' } },
     )
-    console.log(res.data)
+    expect(res.data.displayName).toEqual('blah')
+    expect(res.data.description).toBeUndefined()
   })
 })
