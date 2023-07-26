@@ -31,6 +31,7 @@ export class RateLimiter implements RateLimiterI {
 
   constructor(limiter: RateLimiterAbstract, opts: RateLimiterOpts) {
     this.limiter = limiter
+    this.byPassSecret = opts.bypassSecret
     this.calcKey = opts.calcKey ?? defaultKey
     this.calcPoints = opts.calcPoints ?? defaultPoints
   }
@@ -58,13 +59,12 @@ export class RateLimiter implements RateLimiterI {
     ctx: XRPCReqContext,
     opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
   ): Promise<RateLimiterStatus | null> {
-    // @TODO fix
-    // if (
-    //   this.byPassSecret &&
-    //   ctx.req.header('X-RateLimit-Bypass') === this.byPassSecret
-    // ) {
-    //   return
-    // }
+    if (
+      this.byPassSecret &&
+      ctx.req.header('x-ratelimit-bypass') === this.byPassSecret
+    ) {
+      return null
+    }
     const key = opts?.calcKey ? opts.calcKey(ctx) : this.calcKey(ctx)
     const points = opts?.calcPoints
       ? opts.calcPoints(ctx)
@@ -88,7 +88,7 @@ export class RateLimiter implements RateLimiterI {
   }
 }
 
-const formatLimiterStatus = (
+export const formatLimiterStatus = (
   limiter: RateLimiterAbstract,
   res: RateLimiterRes,
 ): RateLimiterStatus => {

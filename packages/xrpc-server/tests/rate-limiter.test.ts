@@ -100,7 +100,11 @@ describe('Parameters', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS, {
     rateLimits: {
-      creator: RateLimiter.memory,
+      creator: (opts: xrpcServer.RateLimiterOpts) =>
+        RateLimiter.memory({
+          bypassSecret: 'bypass',
+          ...opts,
+        }),
       shared: [
         {
           name: 'shared-limit',
@@ -226,5 +230,20 @@ describe('Parameters', () => {
       calls.push(makeCall())
     }
     await expect(Promise.all(calls)).rejects.toThrow('Rate Limit Exceeded')
+  })
+
+  it('can bypass rate limits', async () => {
+    const makeCall = () =>
+      client.call(
+        'io.example.noLimit',
+        {},
+        {},
+        { headers: { 'X-RateLimit-Bypass': 'bypass' } },
+      )
+    const calls: Promise<unknown>[] = []
+    for (let i = 0; i < 110; i++) {
+      calls.push(makeCall())
+    }
+    await Promise.all(calls)
   })
 })

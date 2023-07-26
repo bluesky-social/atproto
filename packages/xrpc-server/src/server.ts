@@ -167,7 +167,7 @@ export class Server {
       middleware.push(this.middleware.json)
       middleware.push(this.middleware.text)
     }
-    this.routeRateLimiterFns[nsid] ??= []
+    this.routeRateLimiterFns[nsid] = []
     for (const limit of this.globalRateLimiters) {
       const consumeFn = async (ctx: XRPCReqContext) => {
         return limit.consume(ctx)
