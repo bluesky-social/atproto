@@ -17,7 +17,7 @@ import {
   RateLimiterOpts,
   Options as XrpcServerOptions,
 } from '@atproto/xrpc-server'
-import { DAY } from '@atproto/common'
+import { DAY, MINUTE } from '@atproto/common'
 import * as appviewConsumers from './app-view/event-stream/consumers'
 import inProcessAppView from './app-view/api'
 import API from './api'
@@ -263,6 +263,13 @@ export class PDS {
             bypassSecret: config.rateLimitBypassKey,
             ...opts,
           }),
+        global: [
+          {
+            name: 'global-ip',
+            durationMs: 5 * MINUTE,
+            points: 1000,
+          },
+        ],
         shared: [
           {
             name: 'repo-write',

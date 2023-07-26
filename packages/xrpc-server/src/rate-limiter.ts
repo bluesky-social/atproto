@@ -4,6 +4,7 @@ import {
   RateLimiterRedis,
   RateLimiterRes,
 } from 'rate-limiter-flexible'
+import { logger } from './logger'
 import {
   CalcKeyFn,
   CalcPointsFn,
@@ -81,8 +82,16 @@ export class RateLimiter implements RateLimiterI {
         const status = formatLimiterStatus(this.limiter, err)
         throw new RateLimitExceededError(status)
       } else {
-        // @TODO fail open
-        throw err
+        logger.error(
+          {
+            err,
+            keyPrefix: this.limiter.keyPrefix,
+            points: this.limiter.points,
+            duration: this.limiter.duration,
+          },
+          'rate limiter failed to consume points',
+        )
+        return null
       }
     }
   }
