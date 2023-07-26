@@ -98,6 +98,11 @@ function scenarioSection([title, scenario]) {
     <tr><td>Configuration</td><td>${json(
       postModerationBehaviorsDef.configurations[scenario.cfg],
     )}</td></tr>
+    ${
+      !scenario.quoteAuthor
+        ? `<tr><td colspan="2"></td></tr>`
+        : '' /* keep the zebra striping nice */
+    }
   `
 }
 
