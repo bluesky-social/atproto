@@ -51,55 +51,6 @@ Object {
 
 exports[`indexing indexes posts. 2`] = `
 Object {
-  "thread": Object {
-    "$type": "app.bsky.feed.defs#threadViewPost",
-    "post": Object {
-      "author": Object {
-        "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-        "did": "user(0)",
-        "displayName": "ali",
-        "handle": "alice.test",
-        "labels": Array [],
-        "viewer": Object {
-          "blockedBy": false,
-          "muted": false,
-        },
-      },
-      "cid": "cids(0)",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
-      "labels": Array [],
-      "likeCount": 0,
-      "record": Object {
-        "$type": "app.bsky.feed.post",
-        "createdAt": "1970-01-01T00:00:00.000Z",
-        "facets": Array [
-          Object {
-            "features": Array [
-              Object {
-                "$type": "app.bsky.richtext.facet#mention",
-                "did": "user(1)",
-              },
-            ],
-            "index": Object {
-              "byteEnd": 11,
-              "byteStart": 0,
-            },
-          },
-        ],
-        "text": "@carol.test how are you?",
-      },
-      "replyCount": 0,
-      "repostCount": 0,
-      "uri": "record(0)",
-      "viewer": Object {},
-    },
-    "replies": Array [],
-  },
-}
-`;
-
-exports[`indexing indexes posts. 3`] = `
-Object {
   "createNotifications": Array [
     Object {
       "author": "user(1)",
@@ -112,17 +63,6 @@ Object {
     },
   ],
   "deleteNotifications": Array [],
-  "updateNotifications": Array [
-    Object {
-      "author": "user(1)",
-      "indexedAt": "1970-01-01T00:00:00.000Z",
-      "reason": "mention",
-      "reasonSubject": null,
-      "recordCid": "cids(1)",
-      "recordUri": "record(0)",
-      "userDid": "user(2)",
-    },
-  ],
 }
 `;
 
