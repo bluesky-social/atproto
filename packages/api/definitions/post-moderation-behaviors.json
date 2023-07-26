@@ -706,7 +706,7 @@
       "behaviors": {}
     },
 
-    "Post blocking author": {
+    "Post with blocked author": {
       "cfg": "none",
       "subject": "post",
       "author": "bob",
@@ -716,7 +716,7 @@
         "avatar": {"blur": true, "noOverride": true}
       }
     },
-    "Post blocking quoted author": {
+    "Post withed blocked quoted author": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -728,7 +728,7 @@
       }
     },
 
-    "Post blocked by author": {
+    "Post with author blocking user": {
       "cfg": "none",
       "subject": "post",
       "author": "carla",
@@ -738,7 +738,7 @@
         "avatar": {"blur": true, "noOverride": true}
       }
     },
-    "Post blocked by quoted author": {
+    "Post with quoted author blocking user": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -750,7 +750,7 @@
       }
     },
 
-    "Post muted author": {
+    "Post with muted author": {
       "cfg": "none",
       "subject": "post",
       "author": "dan",
@@ -759,7 +759,7 @@
         "content": {"cause": "muted", "filter": true, "blur": true}
       }
     },
-    "Post muted quoted author": {
+    "Post with muted quoted author": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
@@ -771,7 +771,7 @@
       }
     },
 
-    "Post muted-by-list author": {
+    "Post with muted-by-list author": {
       "cfg": "none",
       "subject": "post",
       "author": "elise",
@@ -780,7 +780,7 @@
         "content": {"cause": "muted", "filter": true, "blur": true}
       }
     },
-    "Post muted-by-list quoted author": {
+    "Post with muted-by-list quoted author": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
