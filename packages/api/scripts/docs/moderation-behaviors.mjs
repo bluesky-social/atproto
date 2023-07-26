@@ -38,7 +38,17 @@ function posts() {
 
   # Post moderation behaviors
   
-  This document is a reference of expected post moderation behaviors.
+  This document is a reference for the expected behaviors for a post in the application based on some given scenarios. The <code>moderatePost()</code> command condense down to the following yes or no decisions:
+
+  - **Filter Content**: Do not show the post in feeds.
+  - **Blur Content**: Put the post behind a warning cover.
+  - **Alert Content**: Add a warning to the post but do not cover it.
+  - **Blur Avatar**: Put the avatar behind a cover.
+  - **Alert Avatar**: Put a warning icon on the avatar.
+  - **Blur Embed**: Put the embed content (media, quote post) behind a warning cover.
+  - **Alert Embed**: Put a warning on the embed content (media, quote post).
+ 
+  If "No Override" is present, the blur can not be overridden by the user.
 
   ## Scenarios
 
@@ -134,7 +144,7 @@ function describeLabels(scenario) {
 
 function booleanRow(name, val, noOverride = false) {
   return `<tr><td>${name}</td><td>${val ? '✅ Yes' : '❌ No'} ${
-    noOverride ? '(⚠️ No Override)' : ''
+    val && noOverride ? '(⚠️ No Override)' : ''
   }</td></tr>`
 }
 
