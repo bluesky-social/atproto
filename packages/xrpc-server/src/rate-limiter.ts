@@ -22,11 +22,13 @@ export type RateLimiterOpts = {
   bypassSecret?: string
   calcKey?: CalcKeyFn
   calcPoints?: CalcPointsFn
+  failClosed?: boolean
 }
 
 export class RateLimiter implements RateLimiterI {
   public limiter: RateLimiterAbstract
   private byPassSecret?: string
+  private failClosed?: boolean
   public calcKey: CalcKeyFn
   public calcPoints: CalcPointsFn
 
@@ -82,6 +84,9 @@ export class RateLimiter implements RateLimiterI {
         const status = formatLimiterStatus(this.limiter, err)
         throw new RateLimitExceededError(status)
       } else {
+        if (this.failClosed) {
+          throw err
+        }
         logger.error(
           {
             err,
