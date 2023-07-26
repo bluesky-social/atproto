@@ -167,52 +167,7 @@ export class Server {
       middleware.push(this.middleware.json)
       middleware.push(this.middleware.text)
     }
-    this.routeRateLimiterFns[nsid] = []
-    for (const limit of this.globalRateLimiters) {
-      const consumeFn = async (ctx: XRPCReqContext) => {
-        return limit.consume(ctx)
-      }
-      this.routeRateLimiterFns[nsid].push(consumeFn)
-    }
-
-    if (config.rateLimit) {
-      const limits = Array.isArray(config.rateLimit)
-        ? config.rateLimit
-        : [config.rateLimit]
-      this.routeRateLimiterFns[nsid] = []
-      for (const limit of limits) {
-        const { calcKey, calcPoints } = limit
-        if (isShared(limit)) {
-          const rateLimiter = this.sharedRateLimiters[limit.name]
-          if (rateLimiter) {
-            const consumeFn = (ctx: XRPCReqContext) =>
-              rateLimiter.consume(ctx, {
-                calcKey,
-                calcPoints,
-              })
-            this.routeRateLimiterFns[nsid].push(consumeFn)
-          }
-        } else {
-          const { durationMs, points } = limit
-          const rateLimiter = this.options.rateLimits?.creator({
-            keyPrefix: nsid,
-            durationMs,
-            points,
-            calcKey,
-            calcPoints,
-          })
-          if (rateLimiter) {
-            this.sharedRateLimiters[nsid] = rateLimiter
-            const consumeFn = (ctx: XRPCReqContext) =>
-              rateLimiter.consume(ctx, {
-                calcKey,
-                calcPoints,
-              })
-            this.routeRateLimiterFns[nsid].push(consumeFn)
-          }
-        }
-      }
-    }
+    this.setupRouteRateLimits(nsid, config)
     this.routes[verb](
       `/xrpc/${nsid}`,
       ...middleware,
@@ -429,6 +384,55 @@ export class Server {
         )
       })
       return httpServer
+    }
+  }
+
+  private setupRouteRateLimits(nsid: string, config: XRPCHandlerConfig) {
+    this.routeRateLimiterFns[nsid] = []
+    for (const limit of this.globalRateLimiters) {
+      const consumeFn = async (ctx: XRPCReqContext) => {
+        return limit.consume(ctx)
+      }
+      this.routeRateLimiterFns[nsid].push(consumeFn)
+    }
+
+    if (config.rateLimit) {
+      const limits = Array.isArray(config.rateLimit)
+        ? config.rateLimit
+        : [config.rateLimit]
+      this.routeRateLimiterFns[nsid] = []
+      for (const limit of limits) {
+        const { calcKey, calcPoints } = limit
+        if (isShared(limit)) {
+          const rateLimiter = this.sharedRateLimiters[limit.name]
+          if (rateLimiter) {
+            const consumeFn = (ctx: XRPCReqContext) =>
+              rateLimiter.consume(ctx, {
+                calcKey,
+                calcPoints,
+              })
+            this.routeRateLimiterFns[nsid].push(consumeFn)
+          }
+        } else {
+          const { durationMs, points } = limit
+          const rateLimiter = this.options.rateLimits?.creator({
+            keyPrefix: nsid,
+            durationMs,
+            points,
+            calcKey,
+            calcPoints,
+          })
+          if (rateLimiter) {
+            this.sharedRateLimiters[nsid] = rateLimiter
+            const consumeFn = (ctx: XRPCReqContext) =>
+              rateLimiter.consume(ctx, {
+                calcKey,
+                calcPoints,
+              })
+            this.routeRateLimiterFns[nsid].push(consumeFn)
+          }
+        }
+      }
     }
   }
 }
