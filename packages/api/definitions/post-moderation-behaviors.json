@@ -7,7 +7,7 @@
     "carla": {"blocking": false, "blockedBy": true,  "muted": false, "mutedByList": false},
     "dan":   {"blocking": false, "blockedBy": false, "muted": true,  "mutedByList": false},
     "elise": {"blocking": false, "blockedBy": false, "muted": false, "mutedByList": true},
-    "fern":  {"blocking": true,  "blockedBy": true,  "muted": false, "mutedByList": false},
+    "fern":  {"blocking": true,  "blockedBy": true,  "muted": false, "mutedByList": false}
   },
   "configurations": {
     "none": {},
@@ -15,15 +15,12 @@
       "adultContentEnabled": false
     },
     "intolerant-hide": {
-      "adultContentEnabled": true,
       "settings": {"intolerant": "hide"}
     },
     "intolerant-warn": {
-      "adultContentEnabled": true,
       "settings": {"intolerant": "warn"}
     },
     "intolerant-ignore": {
-      "adultContentEnabled": true,
       "settings": {"intolerant": "ignore"}
     },
     "porn-hide": {
@@ -39,15 +36,12 @@
       "settings": {"porn": "ignore"}
     },
     "scam-hide": {
-      "adultContentEnabled": true,
       "settings": {"scam": "hide"}
     },
     "scam-warn": {
-      "adultContentEnabled": true,
       "settings": {"scam": "warn"}
     },
     "scam-ignore": {
-      "adultContentEnabled": true,
       "settings": {"scam": "ignore"}
     },
     "porn-hide-intolerant-hide": {
