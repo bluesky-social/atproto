@@ -10,7 +10,7 @@ export function decideQuotedPost(
   const acc = new ModerationCauseAccumulator()
 
   if (AppBskyEmbedRecord.isViewRecord(subject.record)) {
-    acc.setIsMe(subject.record.author.did === opts.userDid)
+    acc.setDid(subject.record.author.did)
 
     if (subject.record.labels?.length) {
       for (const label of subject.record.labels) {
@@ -39,7 +39,7 @@ export function decideQuotedPostWithMedia(
   const acc = new ModerationCauseAccumulator()
 
   if (AppBskyEmbedRecord.isViewRecord(subject.record.record)) {
-    acc.setIsMe(subject.record.record.author.did === opts.userDid)
+    acc.setDid(subject.record.record.author.did)
 
     if (subject.record.record.labels?.length) {
       for (const label of subject.record.record.labels) {

@@ -128,6 +128,7 @@ export class ModerationDecision {
     public filter: boolean = false,
     public noOverride: boolean = false,
     public additionalCauses: ModerationCause[] = [],
+    public did: string = '',
   ) {}
 }
 

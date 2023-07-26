@@ -5,9 +5,6 @@ import {
   AppBskyActorDefs,
   AppBskyFeedPost,
   AppBskyEmbedRecord,
-  AppBskyEmbedRecordWithMedia,
-  AppBskyEmbedImages,
-  AppBskyEmbedExternal,
   AppBskyGraphDefs,
 } from '..'
 
@@ -125,7 +122,7 @@ export const mock = {
     labels?: ComAtprotoLabelDefs.Label[]
   }): AppBskyActorDefs.ProfileViewBasic {
     return {
-      did: `at://did:web:${handle}`,
+      did: `did:web:${handle}`,
       handle,
       displayName,
       viewer,

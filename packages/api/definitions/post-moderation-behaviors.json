@@ -664,6 +664,48 @@
       }
     },
 
+    "Self-post: Imperative label ('!hide') on post": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "self",
+      "labels": {"post": ["!hide"]},
+      "behaviors": {
+        "content": {"cause": "label:!hide", "alert": true}
+      }
+    },
+    "Self-post: Imperative label ('!hide') on post author profile": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "self",
+      "labels": {"profile": ["!hide"]},
+      "behaviors": {}
+    },
+    "Self-post: Imperative label ('!hide') on post author account": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "self",
+      "labels": {"account": ["!hide"]},
+      "behaviors": {}
+    },
+    "Self-post: Imperative label ('!hide') on quoted post": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "self",
+      "quoteAuthor": "self",
+      "labels": {"quotedPost": ["!hide"]},
+      "behaviors": {
+        "embed": {"cause": "label:!hide", "alert": true}
+      }
+    },
+    "Self-post: Imperative label ('!hide') on quoted post author account": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "self",
+      "quoteAuthor": "self",
+      "labels": {"quotedAccount": ["!hide"]},
+      "behaviors": {}
+    },
+
     "Post blocking author": {
       "cfg": "none",
       "subject": "post",

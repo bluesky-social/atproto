@@ -32,6 +32,20 @@ export function mergeModerationDecisions(
   return filtered[0]
 }
 
+export function downgradeDecision(
+  decision: ModerationDecision,
+  { alert }: { alert: boolean },
+) {
+  decision.blur = false
+  decision.blurMedia = false
+  decision.filter = false
+  decision.noOverride = false
+  decision.alert = alert
+  if (!alert) {
+    delete decision.cause
+  }
+}
+
 export function isModerationDecisionNoop(
   decision: ModerationDecision | undefined,
   { ignoreFilter }: { ignoreFilter: boolean } = { ignoreFilter: false },

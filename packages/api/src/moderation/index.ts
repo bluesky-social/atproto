@@ -21,6 +21,7 @@ import { decideFeedGenerator } from './subjects/feed-generator'
 import { decideUserList } from './subjects/user-list'
 import {
   mergeModerationDecisions,
+  downgradeDecision,
   isModerationDecisionNoop,
   isQuotedPost,
   isQuotedPostWithMedia,
@@ -105,6 +106,27 @@ export function moderatePost(
   } else if (isQuotedPostWithMedia(subject.embed)) {
     quote = decideQuotedPostWithMedia(subject.embed, opts)
     quotedAccount = decideQuotedPostWithMediaAccount(subject.embed, opts)
+  }
+
+  // downgrade based on authorship
+  if (!isModerationDecisionNoop(post) && post.did === opts.userDid) {
+    downgradeDecision(post, { alert: true })
+  }
+  if (!isModerationDecisionNoop(account) && account.did === opts.userDid) {
+    downgradeDecision(account, { alert: false })
+  }
+  if (!isModerationDecisionNoop(profile) && profile.did === opts.userDid) {
+    downgradeDecision(profile, { alert: false })
+  }
+  if (quote && !isModerationDecisionNoop(quote) && quote.did === opts.userDid) {
+    downgradeDecision(quote, { alert: true })
+  }
+  if (
+    quotedAccount &&
+    !isModerationDecisionNoop(quotedAccount) &&
+    quotedAccount.did === opts.userDid
+  ) {
+    downgradeDecision(quotedAccount, { alert: false })
   }
 
   // derive filtering from feeds from the post, post author's account,

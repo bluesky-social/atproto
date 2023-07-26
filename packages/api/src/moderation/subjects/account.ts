@@ -12,7 +12,7 @@ export function decideAccount(
 ): ModerationDecision {
   const acc = new ModerationCauseAccumulator()
 
-  acc.setIsMe(subject.did === opts.userDid)
+  acc.setDid(subject.did)
   acc.addMuted(subject.viewer?.muted)
   acc.addMutedByList(subject.viewer?.mutedByList)
   acc.addBlocking(subject.viewer?.blocking)

@@ -12,7 +12,7 @@ export function decideProfile(
 ): ModerationDecision {
   const acc = new ModerationCauseAccumulator()
 
-  acc.setIsMe(subject.did === opts.userDid)
+  acc.setDid(subject.did)
 
   for (const label of filterProfileLabels(subject.labels)) {
     acc.addLabel(label, opts)

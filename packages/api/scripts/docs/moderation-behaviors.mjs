@@ -59,19 +59,19 @@ function scenarioSection([title, scenario]) {
       scenario.behaviors.content?.blur,
       scenario.behaviors.content?.noOverride,
     )}
-    ${booleanRow('Warn Content', scenario.behaviors.content?.notice)}
+    ${booleanRow('Alert Content', scenario.behaviors.content?.alert)}
     ${booleanRow(
       'Blur Avatar',
       scenario.behaviors.avatar?.blur,
       scenario.behaviors.avatar?.noOverride,
     )}
-    ${booleanRow('Warn Avatar', scenario.behaviors.avatar?.notice)}
+    ${booleanRow('Alert Avatar', scenario.behaviors.avatar?.alert)}
     ${booleanRow(
       'Blur Embed',
       scenario.behaviors.embed?.blur,
       scenario.behaviors.embed?.noOverride,
     )}
-    ${booleanRow('Warn Embed', scenario.behaviors.embed?.notice)}
+    ${booleanRow('Alert Embed', scenario.behaviors.embed?.alert)}
     <tr><td>Labels</td><td>${describeLabels(scenario)}</td></tr>
     <tr><td>Author</td><td>${describeAuthor(
       scenario.author,

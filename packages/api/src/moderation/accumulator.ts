@@ -9,15 +9,13 @@ import {
 import { LABELS } from './const/labels'
 
 export class ModerationCauseAccumulator {
-  canHide = true
+  did = ''
   causes: ModerationCause[] = []
 
   constructor() {}
 
-  setIsMe(isMe: boolean) {
-    if (isMe) {
-      this.canHide = false
-    }
+  setDid(did: string) {
+    this.did = did
   }
 
   addBlocking(blocking: string | undefined) {
@@ -74,12 +72,6 @@ export class ModerationCauseAccumulator {
       return
     }
 
-    // downgrade hide preferences if we can't hide
-    // (used when viewing your own content)
-    if (!this.canHide && labelPref === 'hide') {
-      labelPref = 'warn'
-    }
-
     // establish the priority of the label
     let priority: 3 | 4 | 5 | 7 | 8
     if (labelDef.flags.includes('no-override')) {
@@ -126,6 +118,7 @@ export class ModerationCauseAccumulator {
 
   finalizeDecision(opts: ModerationOpts): ModerationDecision {
     const mod = new ModerationDecision()
+    mod.did = this.did
     if (!this.causes.length) {
       return mod
     }

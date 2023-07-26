@@ -11,11 +11,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -27,11 +27,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -43,11 +43,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -59,11 +59,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -75,11 +75,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -91,11 +91,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!no-promote</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -107,11 +107,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!no-promote</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -123,11 +123,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!no-promote</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -139,11 +139,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!no-promote</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -155,11 +155,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!no-promote</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -171,11 +171,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!warn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -187,11 +187,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!warn</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -203,11 +203,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!warn</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -219,11 +219,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!warn</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -235,11 +235,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!warn</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -251,11 +251,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -267,11 +267,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -283,11 +283,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -299,11 +299,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -315,11 +315,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -331,11 +331,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -347,11 +347,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -363,11 +363,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -379,11 +379,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -395,11 +395,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -411,11 +411,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -427,11 +427,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -443,11 +443,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -459,11 +459,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -475,11 +475,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>intolerant</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -491,11 +491,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -507,11 +507,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -523,11 +523,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -539,11 +539,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -555,11 +555,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -571,11 +571,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -587,11 +587,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -603,11 +603,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -619,11 +619,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -635,11 +635,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -651,11 +651,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -667,11 +667,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -683,11 +683,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -699,11 +699,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -715,11 +715,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -731,11 +731,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -747,11 +747,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>✅ Yes </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -763,11 +763,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>✅ Yes </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -779,11 +779,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>✅ Yes </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -795,11 +795,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>✅ Yes </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -811,11 +811,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -827,11 +827,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>✅ Yes </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -843,11 +843,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>✅ Yes </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -859,11 +859,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>✅ Yes </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -875,11 +875,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>✅ Yes </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -891,11 +891,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -907,11 +907,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -923,11 +923,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -939,11 +939,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -955,11 +955,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>scam</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -971,11 +971,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No (⚠️ No Override)</td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -987,11 +987,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>❌ No </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post author profile</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -1003,11 +1003,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No (⚠️ No Override)</td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 
@@ -1019,11 +1019,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -1035,15 +1035,95 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>porn</code> on quoted post author account</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
 <tr><td>Configuration</td><td><pre>{"adultContentEnabled":false}</pre></td></tr>
+</table>
+
+### Self-post: Imperative label ('!hide') on post
+
+<table>
+<tr><td>Filter Content</td><td>❌ No </td></tr>
+<tr><td>Blur Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>✅ Yes </td></tr>
+<tr><td>Blur Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
+<tr><td>Blur Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Labels</td><td><code>!hide</code> on post</td></tr>
+<tr><td>Author</td><td>Self</td></tr>
+
+<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
+</table>
+
+### Self-post: Imperative label ('!hide') on post author profile
+
+<table>
+<tr><td>Filter Content</td><td>❌ No </td></tr>
+<tr><td>Blur Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
+<tr><td>Blur Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
+<tr><td>Blur Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Labels</td><td><code>!hide</code> on post author profile</td></tr>
+<tr><td>Author</td><td>Self</td></tr>
+
+<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
+</table>
+
+### Self-post: Imperative label ('!hide') on post author account
+
+<table>
+<tr><td>Filter Content</td><td>❌ No </td></tr>
+<tr><td>Blur Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
+<tr><td>Blur Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
+<tr><td>Blur Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Labels</td><td><code>!hide</code> on post author account</td></tr>
+<tr><td>Author</td><td>Self</td></tr>
+
+<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
+</table>
+
+### Self-post: Imperative label ('!hide') on quoted post
+
+<table>
+<tr><td>Filter Content</td><td>❌ No </td></tr>
+<tr><td>Blur Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
+<tr><td>Blur Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
+<tr><td>Blur Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>✅ Yes </td></tr>
+<tr><td>Labels</td><td><code>!hide</code> on quoted post</td></tr>
+<tr><td>Author</td><td>Self</td></tr>
+<tr><td>Quoted author</td><td>Self</td></tr>
+<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
+</table>
+
+### Self-post: Imperative label ('!hide') on quoted post author account
+
+<table>
+<tr><td>Filter Content</td><td>❌ No </td></tr>
+<tr><td>Blur Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
+<tr><td>Blur Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
+<tr><td>Blur Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
+<tr><td>Labels</td><td><code>!hide</code> on quoted post author account</td></tr>
+<tr><td>Author</td><td>Self</td></tr>
+<tr><td>Quoted author</td><td>Self</td></tr>
+<tr><td>Configuration</td><td><pre>{}</pre></td></tr>
 </table>
 
 ### Post blocking author
@@ -1051,11 +1131,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Blocked account</td></tr>
 
@@ -1067,11 +1147,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Blocked account</td></tr>
@@ -1083,11 +1163,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Account blocking user</td></tr>
 
@@ -1099,11 +1179,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Account blocking user</td></tr>
@@ -1115,11 +1195,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Muted account</td></tr>
 
@@ -1131,11 +1211,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Muted account</td></tr>
@@ -1147,11 +1227,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Muted account (by list)</td></tr>
 
@@ -1163,11 +1243,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Muted account (by list)</td></tr>
@@ -1179,11 +1259,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Blocked account, Account blocking user</td></tr>
 
@@ -1195,11 +1275,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td>None</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
 <tr><td>Quoted author</td><td>Blocked account, Account blocking user</td></tr>
@@ -1211,11 +1291,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on post</td></tr>
 <tr><td>Author</td><td>Blocked account</td></tr>
 
@@ -1227,11 +1307,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on quoted post</td></tr>
 <tr><td>Author</td><td>Blocked account</td></tr>
 <tr><td>Quoted author</td><td>Any other user</td></tr>
@@ -1243,11 +1323,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on post<br>
 <code>intolerant</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
@@ -1260,11 +1340,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!warn</code> on post<br>
 <code>intolerant</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
@@ -1277,11 +1357,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>✅ Yes (⚠️ No Override)</td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>❌ No </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!hide</code> on post<br>
 <code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>
@@ -1294,11 +1374,11 @@ This document is a reference of expected post moderation behaviors.
 <table>
 <tr><td>Filter Content</td><td>✅ Yes </td></tr>
 <tr><td>Blur Content</td><td>❌ No </td></tr>
-<tr><td>Warn Content</td><td>❌ No </td></tr>
+<tr><td>Alert Content</td><td>❌ No </td></tr>
 <tr><td>Blur Avatar</td><td>❌ No </td></tr>
-<tr><td>Warn Avatar</td><td>❌ No </td></tr>
+<tr><td>Alert Avatar</td><td>❌ No </td></tr>
 <tr><td>Blur Embed</td><td>✅ Yes </td></tr>
-<tr><td>Warn Embed</td><td>❌ No </td></tr>
+<tr><td>Alert Embed</td><td>❌ No </td></tr>
 <tr><td>Labels</td><td><code>!warn</code> on post<br>
 <code>porn</code> on post</td></tr>
 <tr><td>Author</td><td>Any other user</td></tr>

@@ -11,7 +11,7 @@ export function decidePost(
 ): ModerationDecision {
   const acc = new ModerationCauseAccumulator()
 
-  acc.setIsMe(subject.author.did === opts.userDid)
+  acc.setDid(subject.author.did)
 
   if (subject.labels?.length) {
     for (const label of subject.labels) {
