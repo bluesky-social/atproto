@@ -132,11 +132,13 @@ export class Server {
   xrpc: XrpcServer
   com: ComNS
   app: AppNS
+  social: SocialNS
 
   constructor(options?: XrpcOptions) {
     this.xrpc = createXrpcServer(schemas, options)
     this.com = new ComNS(this)
     this.app = new AppNS(this)
+    this.social = new SocialNS(this)
   }
 }
 
@@ -1066,6 +1068,24 @@ export class UnspeccedNS {
   ) {
     const nsid = 'app.bsky.unspecced.getTimelineSkeleton' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class SocialNS {
+  _server: Server
+  waverly: WaverlyNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.waverly = new WaverlyNS(server)
+  }
+}
+
+export class WaverlyNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
   }
 }
 
