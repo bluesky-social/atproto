@@ -35,6 +35,11 @@ export default function (server: Server, ctx: AppContext) {
     return feed in ctx.algos && PROXYABLE_FEEDS.includes(uri.rkey)
   }
 
+  const isWhatsHot = (feed: string): boolean => {
+    const uri = new AtUri(feed)
+    return feed in ctx.algos && uri.rkey === 'whats-hot'
+  }
+
   server.app.bsky.feed.getFeed({
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
@@ -73,12 +78,16 @@ export default function (server: Server, ctx: AppContext) {
       } else {
         const { feed } = params
         const localAlgo = ctx.algos[feed]
-        algoRes =
-          localAlgo !== undefined
-            ? await localAlgo(ctx, params, requester)
-            : await skeletonFromFeedGen(ctx, params, requester)
+        if (localAlgo === undefined) {
+          algoRes = await skeletonFromFeedGen(ctx, params, requester)
+        } else {
+          if (isWhatsHot(feed) && ctx.canProxyFeedConstruction(req)) {
+            algoRes = await skeletonFromFeedGen(ctx, params, requester)
+          } else {
+            algoRes = await localAlgo(ctx, params, requester)
+          }
+        }
       }
-
       timerSkele.stop()
 
       const feedService = ctx.services.appView.feed(ctx.db)
