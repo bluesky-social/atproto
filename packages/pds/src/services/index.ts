@@ -19,6 +19,7 @@ import { BackgroundQueue } from '../event-stream/background-queue'
 import { Crawlers } from '../crawlers'
 import { LabelCache } from '../label-cache'
 import { ContentReporter } from '../content-reporter'
+import { LocalService } from './local'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
@@ -57,6 +58,7 @@ export function createServices(resources: {
       labeler,
       contentReporter,
     ),
+    local: LocalService.creator(),
     moderation: ModerationService.creator(
       messageDispatcher,
       blobstore,
@@ -78,6 +80,7 @@ export type Services = {
   auth: FromDb<AuthService>
   record: FromDb<RecordService>
   repo: FromDb<RepoService>
+  local: FromDb<LocalService>
   moderation: FromDb<ModerationService>
   appView: {
     feed: FromDb<FeedService>

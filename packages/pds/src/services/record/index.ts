@@ -13,7 +13,6 @@ import {
   deleteRepo,
 } from '../../event-stream/messages'
 import { ids } from '../../lexicon/lexicons'
-import { RepoRecord } from '@atproto/lexicon'
 
 export class RecordService {
   constructor(public db: Database, public messageDispatcher: MessageQueue) {}
@@ -279,34 +278,6 @@ export class RecordService {
       .where('record.collection', '=', collection)
       .selectAll('record')
       .execute()
-  }
-
-  async getRecordsSinceClock(
-    did: string,
-    clock: number,
-    collections?: string[],
-  ): Promise<Record<string, RepoRecord[]>> {
-    let builder = this.db.db
-      .selectFrom('record')
-      .innerJoin('ipld_block', (join) =>
-        join
-          .onRef('record.did', '=', 'ipld_block.creator')
-          .onRef('record.cid', '=', 'ipld_block.cid'),
-      )
-      .select(['ipld_block.content', 'collection'])
-      .where('did', '=', did)
-      .where('repoClock', '>', clock)
-      .orderBy('repoClock', 'asc')
-    if (collections !== undefined) {
-      if (collections.length < 1) return {}
-      builder = builder.where('collection', 'in', collections)
-    }
-    const res = await builder.execute()
-    return res.reduce((acc, cur) => {
-      acc[cur.collection] ??= []
-      acc[cur.collection].push(cborToLexRecord(cur.content))
-      return acc
-    }, {} as Record<string, RepoRecord[]>)
   }
 }
 

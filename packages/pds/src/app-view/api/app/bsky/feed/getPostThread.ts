@@ -19,8 +19,9 @@ import {
 } from '../../../../../lexicon/types/app/bsky/feed/defs'
 import { Record as PostRecord } from '../../../../../lexicon/types/app/bsky/feed/post'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getPostThread'
-import { ApiRes, findLocalPosts, getClock } from '../util/read-after-write'
+import { ApiRes, formatLocalPostView, getClock } from '../util/read-after-write'
 import { ids } from '../../../../../lexicon/lexicons'
+import { RecordDescript } from '../../../../../services/local'
 
 export type PostThread = {
   post: FeedRow
@@ -40,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
         )
         return {
           encoding: 'application/json',
-          body: res.data,
+          body: await ensureReadAfterWrite(ctx, requester, res),
         }
       }
 
@@ -278,50 +279,53 @@ const ensureReadAfterWrite = async (
 ): Promise<OutputSchema> => {
   const clock = getClock(res.headers)
   if (!clock) return res.data
-  const notProcessed = await ctx.services
-    .record(ctx.db)
+  const local = await ctx.services
+    .local(ctx.db)
     .getRecordsSinceClock(requester, clock, [ids.AppBskyFeedPost])
-  const localPosts = findLocalPosts(notProcessed)
-  const inThread = localPosts.filter((post) => {
-    if (!post.reply?.root) return false
-    if (post.reply?.root === res.data.thread.uri) return true
+  const inThread = local.posts.filter((post) => {
+    if (!post.record.reply?.root) return false
+    if (post.record.reply?.root === res.data.thread.uri) return true
     return (res.data.thread.post as PostRecord).reply?.parent
   })
   if (inThread.length < 0) return res.data
+  if (!isThreadViewPost(res.data.thread)) {
+    return res.data
+  }
+  let thread: ThreadViewPost = res.data.thread
+  for (const record of inThread) {
+    thread = await insertIntoThreadReplies(ctx, thread, record)
+  }
   return {
     ...res.data,
-    thread: insertIntoThreadReplies(res.data.thread, record),
+    thread,
   }
-  const thread = res.data.thread
-
-  // const localProf = notProcessed.at(-1) as ProfileRecord | undefined
-  // if (!localProf) return res.data
-  // const profiles = res.data.profiles.map((prof) => {
-  //   if (prof.did !== requester) return prof
-  //   return updateProfileDetailed(prof, localProf)
-  // })
-  // return {
-  //   ...res.data,
-  //   profiles,
-  // }
 }
 
-const insertIntoThreadReplies = (
+const insertIntoThreadReplies = async (
+  ctx: AppContext,
   view: ThreadViewPost,
-  record: PostRecord,
-): ThreadViewPost => {
-  if (record.reply?.parent.uri === view.post.uri) {
-    const postview = {} as any
-    const replies = [postview, ...(view.replies ?? [])]
-    replies.unshift(postview)
+  descript: RecordDescript<PostRecord>,
+): Promise<ThreadViewPost> => {
+  if (descript.record.reply?.parent.uri === view.post.uri) {
+    const postView = await formatLocalPostView(ctx, descript)
+    if (!postView) return view
+    const threadPostView = {
+      $type: 'app.bsky.feed.defs#threadViewPost',
+      post: postView,
+    }
+    const replies = [threadPostView, ...(view.replies ?? [])]
     return {
       ...view,
       replies,
     }
   }
   if (!view.replies) return view
-  const replies = view.replies.map((reply) =>
-    isThreadViewPost(reply) ? insertIntoThreadReplies(reply, record) : reply,
+  const replies = await Promise.all(
+    view.replies.map(async (reply) =>
+      isThreadViewPost(reply)
+        ? await insertIntoThreadReplies(ctx, reply, descript)
+        : reply,
+    ),
   )
   return {
     ...view,

@@ -4,7 +4,6 @@ import { ids } from '../../../../../lexicon/lexicons'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/actor/getProfiles'
 import {
   ApiRes,
-  findLocalProfile,
   getClock,
   updateProfileDetailed,
 } from '../util/read-after-write'
@@ -53,14 +52,14 @@ const ensureReadAfterWrite = async (
   if (!clock) return res.data
   const hasSelf = res.data.profiles.some((prof) => prof.did === requester)
   if (!hasSelf) return res.data
-  const notProcessed = await ctx.services
-    .record(ctx.db)
+  const local = await ctx.services
+    .local(ctx.db)
     .getRecordsSinceClock(requester, clock, [ids.AppBskyActorProfile])
-  const localProf = findLocalProfile(notProcessed)
+  const localProf = local.profile
   if (!localProf) return res.data
   const profiles = res.data.profiles.map((prof) => {
     if (prof.did !== requester) return prof
-    return updateProfileDetailed(prof, localProf)
+    return updateProfileDetailed(prof, localProf.record)
   })
   return {
     ...res.data,

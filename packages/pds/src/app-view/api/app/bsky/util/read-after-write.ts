@@ -6,7 +6,6 @@ import {
 } from '../../../../../lexicon/types/app/bsky/actor/defs'
 import { Record as ProfileRecord } from '../../../../../lexicon/types/app/bsky/actor/profile'
 import { Record as PostRecord } from '../../../../../lexicon/types/app/bsky/feed/post'
-import { RepoRecord } from '@atproto/lexicon'
 import { ids } from '../../../../../lexicon/lexicons'
 import AppContext from '../../../../../context'
 import { PostView } from '../../../../../lexicon/types/app/bsky/feed/defs'
@@ -21,13 +20,14 @@ import {
 import {
   Main as EmbedRecord,
   isMain as isEmbedRecord,
+  isViewRecord,
 } from '../../../../../lexicon/types/app/bsky/embed/record'
 import {
   Main as EmbedRecordWithMedia,
   isMain as isEmbedRecordWithMedia,
 } from '../../../../../lexicon/types/app/bsky/embed/recordWithMedia'
 import { cborToLexRecord } from '@atproto/repo'
-import { AtUri } from '@atproto/uri'
+import { RecordDescript } from '../../../../../services/local'
 
 export type ApiRes<T> = {
   headers: Headers
@@ -43,18 +43,6 @@ export const getClock = (headers: Headers): number | null => {
 
 export const getImageUrl = (did: string, cid: string): string => {
   return `https://image.url/${did}/${cid}`
-}
-
-export const findLocalProfile = (
-  local: Record<string, RepoRecord[]>,
-): ProfileRecord | null => {
-  return local[ids.AppBskyActorProfile]?.at(-1) ?? null
-}
-
-export const findLocalPosts = (
-  local: Record<string, RepoRecord[]>,
-): PostRecord[] => {
-  return (local[ids.AppBskyFeedPost] as PostRecord[]) ?? []
 }
 
 export const formatLocalProfileViewBasic = async (
@@ -90,18 +78,16 @@ export const formatLocalProfileViewBasic = async (
 
 export const formatLocalPostView = async (
   ctx: AppContext,
-  uri: string,
-  cid: string,
-  post: PostRecord,
+  descript: RecordDescript<PostRecord>,
 ): Promise<PostView | null> => {
-  const creator = new AtUri(uri).hostname
-  const author = await formatLocalProfileViewBasic(ctx, creator)
+  const { uri, cid, record } = descript
+  const author = await formatLocalProfileViewBasic(ctx, uri.hostname)
   if (!author) return null
   return {
-    uri,
-    cid,
+    uri: uri.toString(),
+    cid: cid.toString(),
     author,
-    record: post,
+    record,
     indexedAt: '', // @TODO fix
   }
 }
@@ -116,7 +102,7 @@ export const formatPostEmbed = async (
   if (isEmbedImages(embed) || isEmbedExternal(embed)) {
     return formatSimpleEmbed(did, embed)
   } else if (isEmbedRecord(embed)) {
-    return formatRecordEmbed(ctx, embed)
+    return formatRecordEmbed(ctx, did, embed)
   } else if (isEmbedRecordWithMedia(embed)) {
     return formatRecordWithMediaEmbed(ctx, did, embed)
   } else {
@@ -152,8 +138,17 @@ export const formatSimpleEmbed = (
 
 export const formatRecordEmbed = async (
   ctx: AppContext,
+  did: string,
   embed: EmbedRecord,
 ) => {
+  if (isViewRecord(embed.record)) {
+    const res = await ctx.appviewAgent.api.app.bsky.feed.getPosts(
+      {
+        uris: [embed.record.uri],
+      },
+      await ctx.serviceAuthHeaders(did),
+    )
+  }
   // @TODO
   return {} as any
 }
@@ -167,7 +162,7 @@ export const formatRecordWithMediaEmbed = async (
     return null
   }
   const media = formatSimpleEmbed(did, embed.media)
-  const record = await formatRecordEmbed(ctx, embed.record)
+  const record = await formatRecordEmbed(ctx, did, embed.record)
   return {
     $type: 'app.bsky.embed.recordWithMedia#view',
     record,
