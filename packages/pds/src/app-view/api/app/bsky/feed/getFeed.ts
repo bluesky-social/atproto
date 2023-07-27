@@ -78,6 +78,7 @@ export default function (server: Server, ctx: AppContext) {
             ? await localAlgo(ctx, params, requester)
             : await skeletonFromFeedGen(ctx, params, requester)
       }
+
       timerSkele.stop()
 
       const feedService = ctx.services.appView.feed(ctx.db)
