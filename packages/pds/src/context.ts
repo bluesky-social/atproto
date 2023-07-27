@@ -209,7 +209,8 @@ export class AppContext {
 
   canProxyWrite(): boolean {
     return (
-      this.cfg.bskyAppViewProxy && this.cfg.bskyAppViewEndpoint !== undefined
+      this.cfg.bskyAppViewEndpoint !== undefined &&
+      this.cfg.bskyAppViewDid !== undefined
     )
   }
 }
