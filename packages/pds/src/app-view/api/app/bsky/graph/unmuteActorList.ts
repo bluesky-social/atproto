@@ -8,17 +8,17 @@ export default function (server: Server, ctx: AppContext) {
       const { list } = input.body
       const requester = auth.credentials.did
 
-      await ctx.services.account(ctx.db).unmuteActorList({
-        list,
-        mutedByDid: requester,
-      })
-
       if (ctx.canProxyWrite()) {
         await ctx.appviewAgent.api.app.bsky.graph.unmuteActorList(input.body, {
           ...(await ctx.serviceAuthHeaders(requester)),
           encoding: 'application/json',
         })
       }
+
+      await ctx.services.account(ctx.db).unmuteActorList({
+        list,
+        mutedByDid: requester,
+      })
     },
   })
 }
