@@ -179,6 +179,7 @@ const ALLOWED_PUTS = [
   lex.ids.AppBskyActorProfile,
   lex.ids.AppBskyGraphList,
   lex.ids.AppBskyFeedGenerator,
+  lex.ids.SocialWaverlyMiniblog,
 ]
 
 export const prepareUpdate = async (opts: {

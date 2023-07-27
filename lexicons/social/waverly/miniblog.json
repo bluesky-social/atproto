@@ -7,7 +7,7 @@
         "key": "tid",
         "record": {
           "type": "object",
-          "required": ["text", "subject", "createdAt"],
+          "required": ["text", "createdAt"],
           "properties": {
             "text": {"type": "string", "maxLength": 20000, "maxGraphemes": 10000},
             "facets": {

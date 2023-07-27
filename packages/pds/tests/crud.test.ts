@@ -454,7 +454,7 @@ describe('crud operations', () => {
       })
 
       await expect(edit).rejects.toThrow(
-        'Temporarily only accepting updates for collections: app.bsky.actor.profile, app.bsky.graph.list, app.bsky.feed.generator',
+        'Temporarily only accepting updates for collections: app.bsky.actor.profile, app.bsky.graph.list, app.bsky.feed.generator, social.waverly.miniblog',
       )
     })
 
