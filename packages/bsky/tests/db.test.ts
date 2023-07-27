@@ -126,7 +126,7 @@ describe('db', () => {
       expect(res.length).toBe(0)
     })
 
-    it('ensures all inflight querys are rolled back', async () => {
+    it('ensures all inflight queries are rolled back', async () => {
       let promise: Promise<unknown> | undefined = undefined
       const names: string[] = []
       try {

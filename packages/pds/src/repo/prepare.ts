@@ -34,6 +34,7 @@ import {
 import { isRecord as isList } from '../lexicon/types/app/bsky/graph/list'
 import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
 import { hasExplicitSlur } from '../content-reporter/explicit-slurs'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 // @TODO do this dynamically off of schemas
 export const blobsForWrite = (record: unknown): PreparedBlobRef[] => {
@@ -154,6 +155,13 @@ export const prepareCreate = async (opts: {
   if (validate) {
     assertValidRecord(record)
   }
+  if (collection === lex.ids.AppBskyFeedPost && opts.rkey) {
+    // @TODO temporary
+    throw new InvalidRequestError(
+      'Custom rkeys for post records are not currently supported.',
+    )
+  }
+
   const rkey = opts.rkey || TID.nextStr()
   assertNoExplicitSlurs(rkey, record)
   return {
@@ -166,6 +174,13 @@ export const prepareCreate = async (opts: {
   }
 }
 
+// only allow PUTs to certain collections
+const ALLOWED_PUTS = [
+  lex.ids.AppBskyActorProfile,
+  lex.ids.AppBskyGraphList,
+  lex.ids.AppBskyFeedGenerator,
+]
+
 export const prepareUpdate = async (opts: {
   did: string
   collection: string
@@ -175,6 +190,15 @@ export const prepareUpdate = async (opts: {
   validate?: boolean
 }): Promise<PreparedUpdate> => {
   const { did, collection, rkey, swapCid, validate = true } = opts
+  if (!ALLOWED_PUTS.includes(collection)) {
+    // @TODO temporary
+    throw new InvalidRequestError(
+      `Temporarily only accepting updates for collections: ${ALLOWED_PUTS.join(
+        ', ',
+      )}`,
+    )
+  }
+
   const record = setCollectionName(collection, opts.record, validate)
   if (validate) {
     assertValidRecord(record)

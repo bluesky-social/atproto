@@ -6360,6 +6360,9 @@ export const schemaDict = {
             cursor: {
               type: 'string',
             },
+            query: {
+              type: 'string',
+            },
           },
         },
         output: {

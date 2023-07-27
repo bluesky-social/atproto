@@ -41,7 +41,7 @@ export enum ResponseType {
   InternalServerError = 500,
   MethodNotImplemented = 501,
   UpstreamFailure = 502,
-  NotEnoughResouces = 503,
+  NotEnoughResources = 503,
   UpstreamTimeout = 504,
 }
 
@@ -57,7 +57,7 @@ export const ResponseTypeNames = {
   [ResponseType.InternalServerError]: 'InternalServerError',
   [ResponseType.MethodNotImplemented]: 'MethodNotImplemented',
   [ResponseType.UpstreamFailure]: 'UpstreamFailure',
-  [ResponseType.NotEnoughResouces]: 'NotEnoughResouces',
+  [ResponseType.NotEnoughResources]: 'NotEnoughResources',
   [ResponseType.UpstreamTimeout]: 'UpstreamTimeout',
 }
 
@@ -73,7 +73,7 @@ export const ResponseTypeStrings = {
   [ResponseType.InternalServerError]: 'Internal Server Error',
   [ResponseType.MethodNotImplemented]: 'Method Not Implemented',
   [ResponseType.UpstreamFailure]: 'Upstream Failure',
-  [ResponseType.NotEnoughResouces]: 'Not Enough Resouces',
+  [ResponseType.NotEnoughResources]: 'Not Enough Resources',
   [ResponseType.UpstreamTimeout]: 'Upstream Timeout',
 }
 
