@@ -13,8 +13,13 @@ export function decideAccount(
   const acc = new ModerationCauseAccumulator()
 
   acc.setDid(subject.did)
-  acc.addMuted(subject.viewer?.muted)
-  acc.addMutedByList(subject.viewer?.mutedByList)
+  if (subject.viewer?.muted) {
+    if (subject.viewer?.mutedByList) {
+      acc.addMutedByList(subject.viewer?.mutedByList)
+    } else {
+      acc.addMuted(subject.viewer?.muted)
+    }
+  }
   acc.addBlocking(subject.viewer?.blocking)
   acc.addBlockedBy(subject.viewer?.blockedBy)
 

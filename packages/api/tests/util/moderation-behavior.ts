@@ -145,7 +145,7 @@ export class ModerationBehaviorSuiteRunner {
       handle: `${name}.test`,
       labels,
       viewer: m.actorViewerState({
-        muted: def.muted,
+        muted: def.muted || def.mutedByList,
         mutedByList: def.mutedByList
           ? m.listViewBasic({ name: 'Fake List' })
           : undefined,
