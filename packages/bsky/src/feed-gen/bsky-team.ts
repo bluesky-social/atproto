@@ -8,7 +8,6 @@ import { FeedKeyset } from '../api/app/bsky/util/feed'
 const BSKY_TEAM: NotEmptyArray<string> = [
   'did:plc:z72i7hdynmk6r22z27h6tvur', // @bsky.app
   'did:plc:ewvi7nxzyoun6zhxrhs64oiz', // @atproto.com
-  'did:plc:oc6vwdlmk2kqyida5i74d3p5', // @support.bsky.team
   'did:plc:eon2iu7v3x2ukgxkqaf7e5np', // @safety.bsky.app
 ]
 
