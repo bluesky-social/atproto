@@ -8,22 +8,25 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.listRepos(async ({ params }) => {
     const { limit, cursor } = params
     const { ref } = ctx.db.db.dynamic
-    const innerBuilder = ctx.db.db
-      .selectFrom('repo_root')
-      .innerJoin('user_account', 'user_account.did', 'repo_root.did')
+    let builder = ctx.db.db
+      .selectFrom('user_account')
+      .innerJoin('repo_root', 'repo_root.did', 'user_account.did')
       .where(notSoftDeletedClause(ref('repo_root')))
       .select([
-        'repo_root.did as did',
+        'user_account.did as did',
         'repo_root.root as head',
         'user_account.createdAt as createdAt',
       ])
-    let builder = ctx.db.db.selectFrom(innerBuilder.as('repos')).selectAll()
-    const keyset = new TimeDidKeyset(ref('createdAt'), ref('did'))
+    const keyset = new TimeDidKeyset(
+      ref('user_account.createdAt'),
+      ref('user_account.did'),
+    )
     builder = paginate(builder, {
       limit,
       cursor,
       keyset,
       direction: 'asc',
+      tryIndex: true,
     })
     const res = await builder.execute()
     const repos = res.map((row) => ({ did: row.did, head: row.head }))
