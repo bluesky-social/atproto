@@ -15,7 +15,12 @@ import {
   NotFoundPost,
   ThreadViewPost,
   isNotFoundPost,
+  isThreadViewPost,
 } from '../../../../../lexicon/types/app/bsky/feed/defs'
+import { Record as PostRecord } from '../../../../../lexicon/types/app/bsky/feed/post'
+import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getPostThread'
+import { ApiRes, findLocalPosts, getClock } from '../util/read-after-write'
+import { ids } from '../../../../../lexicon/lexicons'
 
 export type PostThread = {
   post: FeedRow
@@ -263,5 +268,63 @@ const getChildrenData = (
 class ParentNotFoundError extends Error {
   constructor(public uri: string) {
     super(`Parent not found: ${uri}`)
+  }
+}
+
+const ensureReadAfterWrite = async (
+  ctx: AppContext,
+  requester: string,
+  res: ApiRes<OutputSchema>,
+): Promise<OutputSchema> => {
+  const clock = getClock(res.headers)
+  if (!clock) return res.data
+  const notProcessed = await ctx.services
+    .record(ctx.db)
+    .getRecordsSinceClock(requester, clock, [ids.AppBskyFeedPost])
+  const localPosts = findLocalPosts(notProcessed)
+  const inThread = localPosts.filter((post) => {
+    if (!post.reply?.root) return false
+    if (post.reply?.root === res.data.thread.uri) return true
+    return (res.data.thread.post as PostRecord).reply?.parent
+  })
+  if (inThread.length < 0) return res.data
+  return {
+    ...res.data,
+    thread: insertIntoThreadReplies(res.data.thread, record),
+  }
+  const thread = res.data.thread
+
+  // const localProf = notProcessed.at(-1) as ProfileRecord | undefined
+  // if (!localProf) return res.data
+  // const profiles = res.data.profiles.map((prof) => {
+  //   if (prof.did !== requester) return prof
+  //   return updateProfileDetailed(prof, localProf)
+  // })
+  // return {
+  //   ...res.data,
+  //   profiles,
+  // }
+}
+
+const insertIntoThreadReplies = (
+  view: ThreadViewPost,
+  record: PostRecord,
+): ThreadViewPost => {
+  if (record.reply?.parent.uri === view.post.uri) {
+    const postview = {} as any
+    const replies = [postview, ...(view.replies ?? [])]
+    replies.unshift(postview)
+    return {
+      ...view,
+      replies,
+    }
+  }
+  if (!view.replies) return view
+  const replies = view.replies.map((reply) =>
+    isThreadViewPost(reply) ? insertIntoThreadReplies(reply, record) : reply,
+  )
+  return {
+    ...view,
+    replies,
   }
 }

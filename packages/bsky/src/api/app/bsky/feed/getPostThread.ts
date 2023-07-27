@@ -29,14 +29,18 @@ export type PostThread = {
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.authOptionalVerifier,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, res }) => {
       const { uri, depth, parentHeight } = params
       const requester = auth.credentials.did
 
+      const actorService = ctx.services.actor(ctx.db)
       const feedService = ctx.services.feed(ctx.db)
       const labelService = ctx.services.label(ctx.db)
 
-      const threadData = await getThreadData(ctx, uri, depth, parentHeight)
+      const [threadData, actorClock] = await Promise.all([
+        getThreadData(ctx, uri, depth, parentHeight),
+        actorService.getActorClock(requester),
+      ])
       if (!threadData) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
@@ -64,6 +68,10 @@ export default function (server: Server, ctx: AppContext) {
       if (isNotFoundPost(thread)) {
         // @TODO technically this could be returned as a NotFoundPost based on lexicon
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
+      }
+
+      if (actorClock !== null) {
+        res.setHeader('atproto-clock', actorClock)
       }
 
       return {

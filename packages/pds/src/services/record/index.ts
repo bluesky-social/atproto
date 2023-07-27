@@ -285,7 +285,7 @@ export class RecordService {
     did: string,
     clock: number,
     collections?: string[],
-  ): Promise<RepoRecord[]> {
+  ): Promise<Record<string, RepoRecord[]>> {
     let builder = this.db.db
       .selectFrom('record')
       .innerJoin('ipld_block', (join) =>
@@ -293,16 +293,20 @@ export class RecordService {
           .onRef('record.did', '=', 'ipld_block.creator')
           .onRef('record.cid', '=', 'ipld_block.cid'),
       )
-      .select('ipld_block.content')
+      .select(['ipld_block.content', 'collection'])
       .where('did', '=', did)
       .where('repoClock', '>', clock)
       .orderBy('repoClock', 'asc')
     if (collections !== undefined) {
-      if (collections.length < 1) return []
+      if (collections.length < 1) return {}
       builder = builder.where('collection', 'in', collections)
     }
     const res = await builder.execute()
-    return res.map((row) => cborToLexRecord(row.content))
+    return res.reduce((acc, cur) => {
+      acc[cur.collection] ??= []
+      acc[cur.collection].push(cborToLexRecord(cur.content))
+      return acc
+    }, {} as Record<string, RepoRecord[]>)
   }
 }
 
