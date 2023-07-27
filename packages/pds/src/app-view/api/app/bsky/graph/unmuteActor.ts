@@ -15,17 +15,17 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
       }
 
-      await services.account(db).unmute({
-        did: subject.did,
-        mutedByDid: requester,
-      })
-
       if (ctx.canProxyWrite()) {
         await ctx.appviewAgent.api.app.bsky.graph.unmuteActor(input.body, {
           ...(await ctx.serviceAuthHeaders(requester)),
           encoding: 'application/json',
         })
       }
+
+      await services.account(db).unmute({
+        did: subject.did,
+        mutedByDid: requester,
+      })
     },
   })
 }
