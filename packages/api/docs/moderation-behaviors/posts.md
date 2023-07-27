@@ -12,1182 +12,1905 @@ This document is a reference for the expected behaviors for a post in the applic
 - **Blur Embed**: Put the embed content (media, quote post) behind a warning cover.
 - **Alert Embed**: Put a warning on the embed content (media, quote post).
 
-If ⚠️ is present, the blur can not be overridden by the user.
+Key:
+
+- ❌ = Filter Content
+- 🚫 = Blur (no-override)
+- ✋ = Blur
+- 🪧 = Alert
 
 ## Scenarios
 
 <table>
-<tr><td colspan="2"><h3>Imperative label ('!hide') on post</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!hide</code> on post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Imperative label ('!hide') on author profile</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!hide</code> on post author profile</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Imperative label ('!hide') on author account</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!hide</code> on post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Imperative label ('!hide') on quoted post</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!hide</code> on quoted post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-
-<tr><td colspan="2"><h3>Imperative label ('!hide') on quoted author account</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!hide</code> on quoted post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-
-<tr><td colspan="2"><h3>Imperative label ('!no-promote') on post</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!no-promote</code> on post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Imperative label ('!no-promote') on author profile</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!no-promote</code> on post author profile</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Imperative label ('!no-promote') on author account</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!no-promote</code> on post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Imperative label ('!no-promote') on quoted post</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!no-promote</code> on quoted post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-
-<tr><td colspan="2"><h3>Imperative label ('!no-promote') on quoted author account</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!no-promote</code> on quoted post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-
-<tr><td colspan="2"><h3>Imperative label ('!warn') on post</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>✅ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!warn</code> on post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Imperative label ('!warn') on author profile</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!warn</code> on post author profile</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Imperative label ('!warn') on author account</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>✅ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!warn</code> on post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Imperative label ('!warn') on quoted post</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!warn</code> on quoted post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-
-<tr><td colspan="2"><h3>Imperative label ('!warn') on quoted author account</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!warn</code> on quoted post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-
-<tr><td colspan="2"><h3>Blur label ('intolerant') on post (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>✅ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>intolerant</code> on post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"hide"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur label ('intolerant') on author profile (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>intolerant</code> on post author profile</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"hide"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur label ('intolerant') on author account (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>✅ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>intolerant</code> on post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"hide"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur label ('intolerant') on quoted post (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>intolerant</code> on quoted post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"hide"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Blur label ('intolerant') on quoted author account (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>intolerant</code> on quoted post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"hide"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Blur label ('intolerant') on post (warn)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>✅ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>intolerant</code> on post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"warn"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur label ('intolerant') on author profile (warn)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>intolerant</code> on post author profile</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"warn"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur label ('intolerant') on author account (warn)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>✅ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>intolerant</code> on post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"warn"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur label ('intolerant') on quoted post (warn)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>intolerant</code> on quoted post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"warn"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Blur label ('intolerant') on quoted author account (warn)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>intolerant</code> on quoted post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"warn"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Blur label ('intolerant') on post (ignore)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>intolerant</code> on post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"ignore"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur label ('intolerant') on author profile (ignore)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>intolerant</code> on post author profile</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"ignore"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur label ('intolerant') on author account (ignore)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>intolerant</code> on post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"ignore"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur label ('intolerant') on quoted post (ignore)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>intolerant</code> on quoted post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"ignore"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Blur label ('intolerant') on quoted author account (ignore)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>intolerant</code> on quoted post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"ignore"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Blur-media label ('porn') on post (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur-media label ('porn') on author profile (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on post author profile</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur-media label ('porn') on author account (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur-media label ('porn') on quoted post (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on quoted post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Blur-media label ('porn') on quoted author account (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on quoted post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Blur-media label ('porn') on post (warn)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"warn"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur-media label ('porn') on author profile (warn)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on post author profile</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"warn"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur-media label ('porn') on author account (warn)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"warn"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur-media label ('porn') on quoted post (warn)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on quoted post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"warn"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Blur-media label ('porn') on quoted author account (warn)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on quoted post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"warn"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Blur-media label ('porn') on post (ignore)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"ignore"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur-media label ('porn') on author profile (ignore)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on post author profile</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"ignore"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur-media label ('porn') on author account (ignore)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"ignore"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Blur-media label ('porn') on quoted post (ignore)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on quoted post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"ignore"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Blur-media label ('porn') on quoted author account (ignore)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on quoted post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"ignore"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Notice label ('scam') on post (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>✅ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>scam</code> on post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"scam":"hide"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Notice label ('scam') on author profile (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>✅ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>scam</code> on post author profile</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"scam":"hide"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Notice label ('scam') on author account (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>✅ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>✅ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>scam</code> on post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"scam":"hide"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Notice label ('scam') on quoted post (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>✅ </td></tr>
-<tr><td>Labels</td><td><code>scam</code> on quoted post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"settings":{"scam":"hide"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Notice label ('scam') on quoted author account (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>✅ </td></tr>
-<tr><td>Labels</td><td><code>scam</code> on quoted post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"settings":{"scam":"hide"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Notice label ('scam') on post (warn)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>✅ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>scam</code> on post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"scam":"warn"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Notice label ('scam') on author profile (warn)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>✅ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>scam</code> on post author profile</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"scam":"warn"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Notice label ('scam') on author account (warn)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>✅ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>✅ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>scam</code> on post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"scam":"warn"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Notice label ('scam') on quoted post (warn)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>✅ </td></tr>
-<tr><td>Labels</td><td><code>scam</code> on quoted post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"settings":{"scam":"warn"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Notice label ('scam') on quoted author account (warn)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>✅ </td></tr>
-<tr><td>Labels</td><td><code>scam</code> on quoted post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"settings":{"scam":"warn"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Notice label ('scam') on post (ignore)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>scam</code> on post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"scam":"ignore"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Notice label ('scam') on author profile (ignore)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>scam</code> on post author profile</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"scam":"ignore"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Notice label ('scam') on author account (ignore)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>scam</code> on post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"scam":"ignore"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Notice label ('scam') on quoted post (ignore)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>scam</code> on quoted post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"settings":{"scam":"ignore"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Notice label ('scam') on quoted author account (ignore)</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>scam</code> on quoted post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"settings":{"scam":"ignore"}}</code></td></tr>
-
-<tr><td colspan="2"><h3>Adult-only label on post when adult content is disabled</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":false}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Adult-only label on author profile when adult content is disabled</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on post author profile</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":false}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Adult-only label on author account when adult content is disabled</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":false}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Adult-only label on quoted post when adult content is disabled</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on quoted post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":false}</code></td></tr>
-
-<tr><td colspan="2"><h3>Adult-only label on quoted author account when adult content is disabled</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>porn</code> on quoted post author account</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":false}</code></td></tr>
-
-<tr><td colspan="2"><h3>Self-post: Imperative label ('!hide') on post</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>✅ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!hide</code> on post</td></tr>
-<tr><td>Author</td><td>Self</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Self-post: Imperative label ('!hide') on author profile</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!hide</code> on post author profile</td></tr>
-<tr><td>Author</td><td>Self</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Self-post: Imperative label ('!hide') on author account</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!hide</code> on post author account</td></tr>
-<tr><td>Author</td><td>Self</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Self-post: Imperative label ('!hide') on quoted post</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>✅ </td></tr>
-<tr><td>Labels</td><td><code>!hide</code> on quoted post</td></tr>
-<tr><td>Author</td><td>Self</td></tr>
-<tr><td>Quoted author</td><td>Self</td></tr>
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-
-<tr><td colspan="2"><h3>Self-post: Imperative label ('!hide') on quoted author account</h3></td></tr>
-<tr><td>Filter Content</td><td>❌ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!hide</code> on quoted post author account</td></tr>
-<tr><td>Author</td><td>Self</td></tr>
-<tr><td>Quoted author</td><td>Self</td></tr>
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-
-<tr><td colspan="2"><h3>Post with blocked author</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td>None</td></tr>
-<tr><td>Author</td><td>Blocked account</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Post withed blocked quoted author</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td>None</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Blocked account</td></tr>
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-
-<tr><td colspan="2"><h3>Post with author blocking user</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td>None</td></tr>
-<tr><td>Author</td><td>Account blocking user</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Post with quoted author blocking user</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td>None</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Account blocking user</td></tr>
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-
-<tr><td colspan="2"><h3>Post with muted author</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>✅ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td>None</td></tr>
-<tr><td>Author</td><td>Muted account</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Post with muted quoted author</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td>None</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Muted account</td></tr>
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-
-<tr><td colspan="2"><h3>Post with muted-by-list author</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>✅ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td>None</td></tr>
-<tr><td>Author</td><td>Muted account (by list)</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Post with muted-by-list quoted author</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td>None</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Muted account (by list)</td></tr>
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-
-<tr><td colspan="2"><h3>Prioritization: post with blocking & blocked-by author</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td>None</td></tr>
-<tr><td>Author</td><td>Blocked account, Account blocking user</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Prioritization: post with blocking & blocked-by quoted author</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td>None</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-<tr><td>Quoted author</td><td>Blocked account, Account blocking user</td></tr>
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-
-<tr><td colspan="2"><h3>Prioritization: '!hide' label on post by blocked user</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!hide</code> on post</td></tr>
-<tr><td>Author</td><td>Blocked account</td></tr>
-
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Prioritization: '!hide' label on quoted post, post by blocked user</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!hide</code> on quoted post</td></tr>
-<tr><td>Author</td><td>Blocked account</td></tr>
-<tr><td>Quoted author</td><td>Any other user</td></tr>
-<tr><td>Configuration</td><td><code>{}</code></td></tr>
-
-<tr><td colspan="2"><h3>Prioritization: '!hide' and 'intolerant' labels on post (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!hide</code> on post<br>
-<code>intolerant</code> on post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"hide"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Prioritization: '!warn' and 'intolerant' labels on post (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>✅ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!warn</code> on post<br>
-<code>intolerant</code> on post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"settings":{"intolerant":"hide"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Prioritization: '!hide' and 'porn' labels on post (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>✅ ⚠️</td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>❌ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!hide</code> on post<br>
-<code>porn</code> on post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
-
-<tr><td colspan="2"><h3>Prioritization: '!warn' and 'porn' labels on post (hide)</h3></td></tr>
-<tr><td>Filter Content</td><td>✅ </td></tr>
-<tr><td>Blur Content</td><td>❌ </td></tr>
-<tr><td>Alert Content</td><td>❌ </td></tr>
-<tr><td>Blur Avatar</td><td>❌ </td></tr>
-<tr><td>Alert Avatar</td><td>❌ </td></tr>
-<tr><td>Blur Embed</td><td>✅ </td></tr>
-<tr><td>Alert Embed</td><td>❌ </td></tr>
-<tr><td>Labels</td><td><code>!warn</code> on post<br>
-<code>porn</code> on post</td></tr>
-<tr><td>Author</td><td>Any other user</td></tr>
-
-<tr><td>Configuration</td><td><code>{"adultContentEnabled":true,"settings":{"porn":"hide"}}</code></td></tr>
-<tr><td colspan="2"></td></tr>
+
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
+<tr>
+<td><strong>Imperative label ('!hide') on post</strong></td>
+<td>
+❌
+</td>
+<td>
+🚫
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Imperative label ('!hide') on author profile</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+🚫
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Imperative label ('!hide') on author account</strong></td>
+<td>
+❌
+</td>
+<td>
+🚫
+
+</td>
+<td>
+🚫
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Imperative label ('!hide') on quoted post</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+🚫
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Imperative label ('!hide') on quoted author account</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+🚫
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Imperative label ('!no-promote') on post</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Imperative label ('!no-promote') on author profile</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Imperative label ('!no-promote') on author account</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Imperative label ('!no-promote') on quoted post</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Imperative label ('!no-promote') on quoted author account</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Imperative label ('!warn') on post</strong></td>
+<td>
+
+</td>
+<td>
+✋
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Imperative label ('!warn') on author profile</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Imperative label ('!warn') on author account</strong></td>
+<td>
+
+</td>
+<td>
+✋
+
+</td>
+<td>
+✋
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Imperative label ('!warn') on quoted post</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Imperative label ('!warn') on quoted author account</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+</tr>
+
+
+
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
+<tr>
+<td><strong>Blur label ('intolerant') on post (hide)</strong></td>
+<td>
+❌
+</td>
+<td>
+✋
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur label ('intolerant') on author profile (hide)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur label ('intolerant') on author account (hide)</strong></td>
+<td>
+❌
+</td>
+<td>
+✋
+
+</td>
+<td>
+✋
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur label ('intolerant') on quoted post (hide)</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur label ('intolerant') on quoted author account (hide)</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur label ('intolerant') on post (warn)</strong></td>
+<td>
+
+</td>
+<td>
+✋
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur label ('intolerant') on author profile (warn)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur label ('intolerant') on author account (warn)</strong></td>
+<td>
+
+</td>
+<td>
+✋
+
+</td>
+<td>
+✋
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur label ('intolerant') on quoted post (warn)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur label ('intolerant') on quoted author account (warn)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur label ('intolerant') on post (ignore)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur label ('intolerant') on author profile (ignore)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur label ('intolerant') on author account (ignore)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur label ('intolerant') on quoted post (ignore)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur label ('intolerant') on quoted author account (ignore)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
+<tr>
+<td><strong>Blur-media label ('porn') on post (hide)</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur-media label ('porn') on author profile (hide)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur-media label ('porn') on author account (hide)</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur-media label ('porn') on quoted post (hide)</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur-media label ('porn') on quoted author account (hide)</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur-media label ('porn') on post (warn)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur-media label ('porn') on author profile (warn)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur-media label ('porn') on author account (warn)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur-media label ('porn') on quoted post (warn)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur-media label ('porn') on quoted author account (warn)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur-media label ('porn') on post (ignore)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur-media label ('porn') on author profile (ignore)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur-media label ('porn') on author account (ignore)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur-media label ('porn') on quoted post (ignore)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Blur-media label ('porn') on quoted author account (ignore)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
+<tr>
+<td><strong>Notice label ('scam') on post (hide)</strong></td>
+<td>
+❌
+</td>
+<td>
+
+🪧
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Notice label ('scam') on author profile (hide)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+🪧
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Notice label ('scam') on author account (hide)</strong></td>
+<td>
+❌
+</td>
+<td>
+
+🪧
+</td>
+<td>
+
+🪧
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Notice label ('scam') on quoted post (hide)</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+🪧
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Notice label ('scam') on quoted author account (hide)</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+🪧
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Notice label ('scam') on post (warn)</strong></td>
+<td>
+
+</td>
+<td>
+
+🪧
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Notice label ('scam') on author profile (warn)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+🪧
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Notice label ('scam') on author account (warn)</strong></td>
+<td>
+
+</td>
+<td>
+
+🪧
+</td>
+<td>
+
+🪧
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Notice label ('scam') on quoted post (warn)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+🪧
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Notice label ('scam') on quoted author account (warn)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+🪧
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Notice label ('scam') on post (ignore)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Notice label ('scam') on author profile (ignore)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Notice label ('scam') on author account (ignore)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Notice label ('scam') on quoted post (ignore)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Notice label ('scam') on quoted author account (ignore)</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
+<tr>
+<td><strong>Adult-only label on post when adult content is disabled</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+🚫
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Adult-only label on author profile when adult content is disabled</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+🚫
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Adult-only label on author account when adult content is disabled</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+🚫
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Adult-only label on quoted post when adult content is disabled</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Adult-only label on quoted author account when adult content is disabled</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
+<tr>
+<td><strong>Self-post: Imperative label ('!hide') on post</strong></td>
+<td>
+
+</td>
+<td>
+
+🪧
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Self-post: Imperative label ('!hide') on author profile</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Self-post: Imperative label ('!hide') on author account</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Self-post: Imperative label ('!hide') on quoted post</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+🪧
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Self-post: Imperative label ('!hide') on quoted author account</strong></td>
+<td>
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
+<tr>
+<td><strong>Post with blocked author</strong></td>
+<td>
+❌
+</td>
+<td>
+🚫
+
+</td>
+<td>
+🚫
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Post with blocked quoted author</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+🚫
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Post with author blocking user</strong></td>
+<td>
+❌
+</td>
+<td>
+🚫
+
+</td>
+<td>
+🚫
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Post with quoted author blocking user</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+🚫
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Post with muted author</strong></td>
+<td>
+❌
+</td>
+<td>
+✋
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Post with muted quoted author</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Post with muted-by-list author</strong></td>
+<td>
+❌
+</td>
+<td>
+✋
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Post with muted-by-list quoted author</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+</tr>
+
+
+
+<tr><th>Scenario</th><th>Filter</th><th>Content</th><th>Avatar</th><th>Embed</th></tr>
+<tr>
+<td><strong>Prioritization: post with blocking & blocked-by author</strong></td>
+<td>
+❌
+</td>
+<td>
+🚫
+
+</td>
+<td>
+🚫
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Prioritization: post with blocking & blocked-by quoted author</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+🚫
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Prioritization: '!hide' label on post by blocked user</strong></td>
+<td>
+❌
+</td>
+<td>
+🚫
+
+</td>
+<td>
+🚫
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Prioritization: '!hide' label on quoted post, post by blocked user</strong></td>
+<td>
+❌
+</td>
+<td>
+🚫
+
+</td>
+<td>
+🚫
+
+</td>
+<td>
+🚫
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Prioritization: '!hide' and 'intolerant' labels on post (hide)</strong></td>
+<td>
+❌
+</td>
+<td>
+🚫
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Prioritization: '!warn' and 'intolerant' labels on post (hide)</strong></td>
+<td>
+❌
+</td>
+<td>
+✋
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Prioritization: '!hide' and 'porn' labels on post (hide)</strong></td>
+<td>
+❌
+</td>
+<td>
+🚫
+
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+</tr>
+
+
+
+
+<tr>
+<td><strong>Prioritization: '!warn' and 'porn' labels on post (hide)</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+✋
+
+</td>
+</tr>
+
 </table>

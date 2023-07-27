@@ -716,7 +716,7 @@
         "avatar": {"blur": true, "noOverride": true}
       }
     },
-    "Post withed blocked quoted author": {
+    "Post with blocked quoted author": {
       "cfg": "none",
       "subject": "post",
       "author": "alice",
