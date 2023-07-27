@@ -2,6 +2,8 @@
 
 This is a working repository for the "AT Protocol," aka the Authenticated Transfer Protocol.
 
+It has been specialized for [Waverly](https://waverly.social) check out [our specific documentation](./WAVERLY_README.md).
+
 ---
 
 **⚠️ This is not production-ready software. This project is in active development ⚠️**
