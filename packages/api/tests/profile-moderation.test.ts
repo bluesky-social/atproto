@@ -1,4 +1,4 @@
-import { moderatePost } from '../src'
+import { moderateProfile } from '../src'
 import type {
   ModerationBehaviors,
   ModerationBehaviorScenario,
@@ -9,7 +9,7 @@ import { join } from 'path'
 
 const suite: ModerationBehaviors = JSON.parse(
   readFileSync(
-    join(__dirname, '..', 'definitions', 'post-moderation-behaviors.json'),
+    join(__dirname, '..', 'definitions', 'profile-moderation-behaviors.json'),
     'utf8',
   ),
 )
@@ -21,25 +21,25 @@ describe('Post moderation behaviors', () => {
   it.each(scenarios)(
     '%s',
     (_name: string, scenario: ModerationBehaviorScenario) => {
-      const res = moderatePost(
-        suiteRunner.postScenario(scenario),
+      const res = moderateProfile(
+        suiteRunner.profileScenario(scenario),
         suiteRunner.moderationOpts(scenario),
       )
-      expect(res.content).toBeModerationResult(
-        scenario.behaviors.content,
-        'post content',
+      expect(res.account).toBeModerationResult(
+        scenario.behaviors.account,
+        'account',
+        JSON.stringify(res, null, 2),
+      )
+      expect(res.profile).toBeModerationResult(
+        scenario.behaviors.profile,
+        'profile content',
         JSON.stringify(res, null, 2),
       )
       expect(res.avatar).toBeModerationResult(
         scenario.behaviors.avatar,
-        'post avatar',
+        'profile avatar',
         JSON.stringify(res, null, 2),
         true,
-      )
-      expect(res.embed).toBeModerationResult(
-        scenario.behaviors.embed,
-        'post embed',
-        JSON.stringify(res, null, 2),
       )
     },
   )

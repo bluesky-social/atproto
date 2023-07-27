@@ -6,7 +6,7 @@ import {
   AppBskyFeedPost,
   AppBskyEmbedRecord,
   AppBskyGraphDefs,
-} from '..'
+} from '../../src'
 
 export async function fetchHandler(
   httpUri: string,

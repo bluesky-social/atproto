@@ -3,9 +3,9 @@ import {
   AppBskyEmbedRecordWithMedia,
   AppBskyFeedPost,
 } from '../client'
-import { ModerationDecision } from './types'
+import { ModerationDecision, ModerationUI } from './types'
 
-export function mergeModerationDecisions(
+export function takeHighestPriorityDecision(
   ...decisions: (ModerationDecision | undefined)[]
 ): ModerationDecision {
   // remove undefined decisions

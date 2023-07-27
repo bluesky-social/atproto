@@ -20,7 +20,7 @@ import {
 import { decideFeedGenerator } from './subjects/feed-generator'
 import { decideUserList } from './subjects/user-list'
 import {
-  mergeModerationDecisions,
+  takeHighestPriorityDecision,
   downgradeDecision,
   isModerationDecisionNoop,
   isQuotedPost,
@@ -35,7 +35,8 @@ export interface ProfileModeration {
     account: ModerationDecision
     profile: ModerationDecision
   }
-  content: ModerationUI
+  account: ModerationUI
+  profile: ModerationUI
   avatar: ModerationUI
 }
 
@@ -47,25 +48,48 @@ export function moderateProfile(
   const account = decideAccount(subject, opts)
   const profile = decideProfile(subject, opts)
 
-  // derive behaviors from both
-  const merged = mergeModerationDecisions(profile, account)
+  // if the decision is supposed to blur media,
+  // - have it apply to the view if it's on the account
+  // - otherwise ignore it
+  if (account.blurMedia) {
+    account.blur = true
+  }
+
+  // dont give profile.filter because that is meaningless
+  profile.filter = false
+
+  // downgrade based on authorship
+  if (!isModerationDecisionNoop(account) && account.did === opts.userDid) {
+    downgradeDecision(account, { alert: true })
+  }
+  if (!isModerationDecisionNoop(profile) && profile.did === opts.userDid) {
+    downgradeDecision(profile, { alert: true })
+  }
+
+  // derive avatar blurring from account & profile, but override for mutes because that shouldnt blur
+  let blurAvatar = false
+  if ((account.blur || account.blurMedia) && account.cause?.type !== 'muted') {
+    blurAvatar = true
+  } else if (
+    (profile.blur || profile.blurMedia) &&
+    profile.cause?.type !== 'muted'
+  ) {
+    blurAvatar = true
+  }
 
   return {
     decisions: { account, profile },
 
-    // content behaviors are pulled from merged decisions
-    content: {
-      filter: merged.filter,
-      blur: merged.blur,
-      alert: merged.alert,
-      cause: merged.cause,
-      noOverride: merged.noOverride,
-    },
+    // moderate all content based on account
+    account: account.filter || account.blur || account.alert ? account : {},
+
+    // moderate the profile details based on the profile
+    profile: profile.filter || profile.blur || profile.alert ? profile : {},
 
     // blur or alert the avatar based on the account and profile decisions
     avatar: {
-      blur: account.blurMedia || profile.blurMedia,
-      alert: account.alert,
+      blur: blurAvatar,
+      alert: account.alert || profile.alert,
       noOverride: account.noOverride || profile.noOverride,
     },
   }
@@ -131,7 +155,7 @@ export function moderatePost(
 
   // derive filtering from feeds from the post, post author's account,
   // quoted post, and quoted post author's account
-  const mergedForFeed = mergeModerationDecisions(
+  const mergedForFeed = takeHighestPriorityDecision(
     post,
     account,
     quote,
@@ -139,10 +163,10 @@ export function moderatePost(
   )
 
   // derive view blurring from the post and the post author's account
-  const mergedForView = mergeModerationDecisions(post, account)
+  const mergedForView = takeHighestPriorityDecision(post, account)
 
   // derive embed blurring from the quoted post and the quoted post author's account
-  const mergedQuote = mergeModerationDecisions(quote, quotedAccount)
+  const mergedQuote = takeHighestPriorityDecision(quote, quotedAccount)
 
   // derive avatar blurring from account & profile, but override for mutes because that shouldnt blur
   let blurAvatar = false
@@ -221,7 +245,7 @@ export function moderateFeedGenerator(
   const profile = decideProfile(subject.creator, opts)
 
   // derive behaviors from feeds from the generator and the generator's account
-  const merged = mergeModerationDecisions(feedGenerator, account)
+  const merged = takeHighestPriorityDecision(feedGenerator, account)
 
   return {
     decisions: { feedGenerator, account, profile },
@@ -272,7 +296,7 @@ export function moderateUserList(
     : ModerationDecision.noop()
 
   // derive behaviors from feeds from the list and the list's account
-  const merged = mergeModerationDecisions(userList, account)
+  const merged = takeHighestPriorityDecision(userList, account)
 
   return {
     decisions: { userList, account, profile },
