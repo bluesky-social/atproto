@@ -57,6 +57,7 @@ const ensureReadAfterWrite = async (
 ): Promise<OutputSchema> => {
   const clock = getClock(res.headers)
   if (!clock) return res.data
+  if (res.data.did !== requester) return res.data
   const local = await ctx.services
     .local(ctx.db)
     .getRecordsSinceClock(requester, clock, [ids.AppBskyActorProfile])

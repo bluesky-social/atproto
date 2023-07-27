@@ -25,6 +25,7 @@ describe('proxy read after write', () => {
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
+    await network.bsky.sub.destroy()
   })
 
   afterAll(async () => {
@@ -32,7 +33,6 @@ describe('proxy read after write', () => {
   })
 
   it('handles read after write on profiles', async () => {
-    await network.bsky.sub.destroy()
     await sc.updateProfile(alice, { displayName: 'blah' })
     const res = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
@@ -42,8 +42,19 @@ describe('proxy read after write', () => {
     expect(res.data.description).toBeUndefined()
   })
 
+  it('handles read after write on getAuthorFeed', async () => {
+    const res = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: alice },
+      { headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' } },
+    )
+    for (const item of res.data.feed) {
+      if (item.post.author.did === alice) {
+        expect(item.post.author.displayName).toEqual('blah')
+      }
+    }
+  })
+
   it('handles read after write on threads', async () => {
-    await network.bsky.sub.destroy()
     const reply1 = await sc.reply(
       alice,
       sc.posts[alice][0].ref,
@@ -69,7 +80,6 @@ describe('proxy read after write', () => {
   })
 
   it('handles read after write on threads with record embeds', async () => {
-    await network.bsky.sub.destroy()
     const replyRes = await agent.api.app.bsky.feed.post.create(
       { repo: alice },
       {

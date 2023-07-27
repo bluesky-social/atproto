@@ -7,7 +7,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.authOptionalVerifier,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, res }) => {
       const { actor, limit, cursor } = params
       const viewer = auth.credentials.did
       const db = ctx.db.db
@@ -29,6 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
+      const actorService = ctx.services.actor(ctx.db)
       const feedService = ctx.services.feed(ctx.db)
       const graphService = ctx.services.graph(ctx.db)
 
@@ -72,8 +73,15 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
 
-      const feedItems = await feedItemsQb.execute()
+      const [feedItems, actorClock] = await Promise.all([
+        feedItemsQb.execute(),
+        actorService.getActorClock(viewer),
+      ])
       const feed = await feedService.hydrateFeed(feedItems, viewer)
+
+      if (actorClock !== null) {
+        res.setHeader('atproto-clock', actorClock)
+      }
 
       return {
         encoding: 'application/json',

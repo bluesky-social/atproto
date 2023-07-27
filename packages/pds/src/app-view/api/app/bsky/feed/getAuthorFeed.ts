@@ -4,6 +4,14 @@ import { FeedKeyset } from '../util/feed'
 import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
+import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
+import {
+  ApiRes,
+  getClock,
+  updateProfileViewBasic,
+} from '../util/read-after-write'
+import { isReasonRepost } from '../../../../../lexicon/types/app/bsky/feed/defs'
+import { ids } from '../../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
@@ -25,7 +33,9 @@ export default function (server: Server, ctx: AppContext) {
         )
         return {
           encoding: 'application/json',
-          body: res.data,
+          body: requester
+            ? await ensureReadAfterWrite(ctx, requester, res)
+            : res.data,
         }
       }
 
@@ -117,4 +127,47 @@ async function assertNoBlocks(
       'BlockedByActor',
     )
   }
+}
+
+const ensureReadAfterWrite = async (
+  ctx: AppContext,
+  requester: string,
+  res: ApiRes<OutputSchema>,
+): Promise<OutputSchema> => {
+  const clock = getClock(res.headers)
+  if (!clock) return res.data
+  const author = getAuthor(res)
+  if (author !== requester) return res.data
+  const local = await ctx.services
+    .local(ctx.db)
+    .getRecordsSinceClock(requester, clock, [ids.AppBskyActorProfile])
+  const localProf = local.profile
+  if (!localProf) return res.data
+  const feed = res.data.feed.map((item) => {
+    if (item.post.author.did === requester) {
+      return {
+        ...item,
+        post: {
+          ...item.post,
+          author: updateProfileViewBasic(item.post.author, localProf.record),
+        },
+      }
+    } else {
+      return item
+    }
+  })
+  return {
+    ...res.data,
+    feed,
+  }
+}
+
+const getAuthor = (res: ApiRes<OutputSchema>): string | undefined => {
+  const first = res.data.feed.at(0)
+  if (!first) return undefined
+  const reason = first.reason
+  if (reason && isReasonRepost(reason)) {
+    return reason.by.did
+  }
+  return first.post.author.did
 }
