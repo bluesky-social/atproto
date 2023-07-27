@@ -289,7 +289,7 @@ describe('notification views', () => {
     )
   })
 
-  it('filters notifications', async () => {
+  it('list notifications treats reasons as optional', async () => {
     await network.processAll()
     await network.bsky.ctx.backgroundQueue.processAll()
 
@@ -301,7 +301,9 @@ describe('notification views', () => {
     expect(allNotifsAlice.data.notifications.length).toBe(
       ALL_NOTIFICATIONS_COUNT,
     )
+  })
 
+  it('list notifications filters single reason', async () => {
     const expectedAliceFollowCount = 2
     const followNotifsAlice =
       await agent.api.app.bsky.notification.listNotifications(
@@ -312,6 +314,34 @@ describe('notification views', () => {
       )
     expect(followNotifsAlice.data.notifications.length).toBe(
       expectedAliceFollowCount,
+    )
+  })
+
+  it('list notifications filters multiple reasons', async () => {
+    const expectedFilteredNotifsCount = 8
+    const filteredNotifsAlice =
+      await agent.api.app.bsky.notification.listNotifications(
+        {
+          reasons: ['reply', 'like'],
+        },
+        { headers: await network.serviceHeaders(sc.dids.alice) },
+      )
+    expect(filteredNotifsAlice.data.notifications.length).toBe(
+      expectedFilteredNotifsCount,
+    )
+  })
+
+  it('list notifications ignores invalid reasons', async () => {
+    const expectedFilteredNotifsCount = 8
+    const filteredNotifsAlice =
+      await agent.api.app.bsky.notification.listNotifications(
+        {
+          reasons: ['reply', 'like', 'blorp', 'pspspsps'],
+        },
+        { headers: await network.serviceHeaders(sc.dids.alice) },
+      )
+    expect(filteredNotifsAlice.data.notifications.length).toBe(
+      expectedFilteredNotifsCount,
     )
   })
 })
