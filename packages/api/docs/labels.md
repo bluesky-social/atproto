@@ -490,7 +490,7 @@
   <td>
     <code>general</code><br><strong>Nonconsensual Nudity</strong><br>Nudity or sexual material which has been identified as being shared without the consent of the subjects.<br><br>
     <code>on an account</code><br><strong>Nonconsensual Nudity</strong><br>This account has triggered the Nonconsensual Nudity Review systems. This may be in error, so please do not jump to conclusions while the account is under review. This warning will be lifted if the review was triggered incorrectly. Otherwise, the account will be removed from the network.<br><br>
-    <code>on content</code><br><strong>Nonconsensual Nudity</strong><br>This account has triggered the Nonconsensual Nudity Review systems. This may be in error, so please do not jump to conclusions while the account is under review. This warning will be lifted if the review was triggered incorrectly. Otherwise, the account will be removed from the network.<br><br>
+    <code>on content</code><br><strong>Nonconsensual Nudity</strong><br>This content has triggered the Nonconsensual Nudity Review systems. This may be in error, so please do not jump to conclusions while the account is under review. This warning will be lifted if the review was triggered incorrectly. Otherwise, the account will be removed from the network.<br><br>
   </td>
 </tr>
 <tr>
@@ -530,7 +530,7 @@
   <td>
     <code>general</code><br><strong>Nudity</strong><br>Nudity which is not sexual, or that is primarily "artistic" in nature. For example: breastfeeding; classic art paintings and sculptures; newspaper images with some nudity; fashion modeling. "Erotic photography" is likely to end up in sexual or porn.<br><br>
     <code>on an account</code><br><strong>Nudity</strong><br>This account contains imagery which portrays nudity in a non-sexual or artistic setting.<br><br>
-    <code>on content</code><br><strong>Nudity</strong><br>This account contains imagery which portrays nudity in a non-sexual or artistic setting.<br><br>
+    <code>on content</code><br><strong>Nudity</strong><br>This content contains imagery which portrays nudity in a non-sexual or artistic setting.<br><br>
   </td>
 </tr>
 <tr>

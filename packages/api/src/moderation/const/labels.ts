@@ -115,7 +115,7 @@ export const LABELS: LabelDefinitionMap = {
         en: {
           name: 'Nonconsensual Nudity',
           description:
-            'This account has triggered the Nonconsensual Nudity Review systems. This may be in error, so please do not jump to conclusions while the account is under review. This warning will be lifted if the review was triggered incorrectly. Otherwise, the account will be removed from the network.',
+            'This content has triggered the Nonconsensual Nudity Review systems. This may be in error, so please do not jump to conclusions while the account is under review. This warning will be lifted if the review was triggered incorrectly. Otherwise, the account will be removed from the network.',
         },
       },
     },
@@ -269,7 +269,7 @@ export const LABELS: LabelDefinitionMap = {
         en: {
           name: 'Nudity',
           description:
-            'This account contains imagery which portrays nudity in a non-sexual or artistic setting.',
+            'This content contains imagery which portrays nudity in a non-sexual or artistic setting.',
         },
       },
     },
