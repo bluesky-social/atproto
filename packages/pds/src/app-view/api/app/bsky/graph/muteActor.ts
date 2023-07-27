@@ -18,17 +18,17 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Cannot mute oneself')
       }
 
-      await services.account(db).mute({
-        did: subject.did,
-        mutedByDid: requester,
-      })
-
       if (ctx.canProxyWrite()) {
         await ctx.appviewAgent.api.app.bsky.graph.muteActor(input.body, {
           ...(await ctx.serviceAuthHeaders(requester)),
           encoding: 'application/json',
         })
       }
+
+      await services.account(db).mute({
+        did: subject.did,
+        mutedByDid: requester,
+      })
     },
   })
 }
