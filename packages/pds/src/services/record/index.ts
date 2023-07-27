@@ -66,11 +66,14 @@ export class RecordService {
     }
     await this.addBacklinks(backlinks)
 
-    // Send to indexers
-    await this.messageDispatcher.send(
-      this.db,
-      indexRecord(uri, cid, obj, action, record.indexedAt),
-    )
+    // Skip external indexing for social.waverly objects
+    if (!uri.collection.startsWith('social.waverly.')) {
+      // Send to indexers
+      await this.messageDispatcher.send(
+        this.db,
+        indexRecord(uri, cid, obj, action, record.indexedAt),
+      )
+    }
 
     log.info({ uri }, 'indexed record')
   }
@@ -86,10 +89,14 @@ export class RecordService {
       .deleteFrom('backlink')
       .where('uri', '=', uri.toString())
       .execute()
-    await Promise.all([
-      this.messageDispatcher.send(this.db, deleteRecord(uri, cascading)),
-      deleteQuery,
-    ])
+
+    // Skip external indexing for social.waverly objects
+    if (!uri.collection.startsWith('social.waverly.')) {
+      await Promise.all([
+        this.messageDispatcher.send(this.db, deleteRecord(uri, cascading)),
+        deleteQuery,
+      ])
+    }
 
     log.info({ uri }, 'deleted indexed record')
   }

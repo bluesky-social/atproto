@@ -11,7 +11,7 @@ import * as ComAtprotoRepoStrongRef from '../../com/atproto/repo/strongRef'
 export interface Record {
   text: string
   facets?: AppBskyRichtextFacet.Main[]
-  subject: ComAtprotoRepoStrongRef.Main
+  subject?: ComAtprotoRepoStrongRef.Main
   langs?: string[]
   createdAt: string
   [k: string]: unknown

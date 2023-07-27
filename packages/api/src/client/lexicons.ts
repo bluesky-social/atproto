@@ -6428,7 +6428,7 @@ export const schemaDict = {
         key: 'tid',
         record: {
           type: 'object',
-          required: ['text', 'subject', 'createdAt'],
+          required: ['text', 'createdAt'],
           properties: {
             text: {
               type: 'string',
