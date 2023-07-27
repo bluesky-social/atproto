@@ -80,7 +80,7 @@ export const formatLocalPostView = async (
   ctx: AppContext,
   descript: RecordDescript<PostRecord>,
 ): Promise<PostView | null> => {
-  const { uri, cid, record } = descript
+  const { uri, cid, indexedAt, record } = descript
   const author = await formatLocalProfileViewBasic(ctx, uri.hostname)
   if (!author) return null
   return {
@@ -88,7 +88,7 @@ export const formatLocalPostView = async (
     cid: cid.toString(),
     author,
     record,
-    indexedAt: '', // @TODO fix
+    indexedAt,
   }
 }
 

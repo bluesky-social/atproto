@@ -41,4 +41,20 @@ describe('proxy read after write', () => {
     expect(res.data.displayName).toEqual('blah')
     expect(res.data.description).toBeUndefined()
   })
+
+  it('handles read after write on threads', async () => {
+    await network.bsky.sub.destroy()
+    const replyRef = await sc.reply(
+      alice,
+      sc.posts[alice][0].ref,
+      sc.posts[alice][0].ref,
+      'another reply',
+    )
+    const res: any = await agent.api.app.bsky.feed.getPostThread(
+      { uri: sc.posts[alice][0].ref.uriStr },
+      { headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' } },
+    )
+    // console.log(replyRef.ref.uriStr)
+    // console.log(res.data.thread)
+  })
 })

@@ -283,9 +283,14 @@ const ensureReadAfterWrite = async (
     .local(ctx.db)
     .getRecordsSinceClock(requester, clock, [ids.AppBskyFeedPost])
   const inThread = local.posts.filter((post) => {
-    if (!post.record.reply?.root) return false
-    if (post.record.reply?.root === res.data.thread.uri) return true
-    return (res.data.thread.post as PostRecord).reply?.parent
+    const rootUri = post.record.reply?.root.uri
+    if (!rootUri) return false
+    if (
+      isThreadViewPost(res.data.thread) &&
+      rootUri === res.data.thread.post.uri
+    )
+      return true
+    return (res.data.thread.post as PostRecord).reply?.root.uri === rootUri
   })
   if (inThread.length < 0) return res.data
   if (!isThreadViewPost(res.data.thread)) {

@@ -61,5 +61,5 @@ const ensureReadAfterWrite = async (
     .local(ctx.db)
     .getRecordsSinceClock(requester, clock, [ids.AppBskyActorProfile])
   if (!local.profile) return res.data
-  return updateProfileDetailed(res.data, local.profile)
+  return updateProfileDetailed(res.data, local.profile.record)
 }

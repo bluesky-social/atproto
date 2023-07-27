@@ -25,7 +25,12 @@ export class LocalService {
           .onRef('record.did', '=', 'ipld_block.creator')
           .onRef('record.cid', '=', 'ipld_block.cid'),
       )
-      .select(['ipld_block.content', 'uri', 'ipld_block.cid'])
+      .select([
+        'ipld_block.content',
+        'uri',
+        'ipld_block.cid',
+        'record.indexedAt',
+      ])
       .where('did', '=', did)
       .where('repoClock', '>', clock)
       .orderBy('repoClock', 'asc')
@@ -38,6 +43,7 @@ export class LocalService {
         const descript = {
           uri: new AtUri(cur.uri),
           cid: CID.parse(cur.cid),
+          indexedAt: cur.indexedAt,
           record: cborToLexRecord(cur.content),
         }
         if (
@@ -63,5 +69,6 @@ export type LocalRecords = {
 export type RecordDescript<T> = {
   uri: AtUri
   cid: CID
+  indexedAt: string
   record: T
 }
