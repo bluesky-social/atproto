@@ -18,10 +18,14 @@ expect.extend({
       pass: false,
       message: () => `${msg}. Full result: ${stringifiedResult}`,
     })
-    const cause =
-      actual.cause?.type === 'label'
-        ? `label:${actual.cause.labelDef.id}`
-        : actual.cause?.type
+    let cause = actual.cause?.type as string
+    if (actual.cause?.type === 'label') {
+      cause = `label:${actual.cause.labelDef.id}`
+    } else if (actual.cause?.type === 'muted') {
+      if (actual.cause.source.type === 'list') {
+        cause = 'muted-by-list'
+      }
+    }
     if (!expected) {
       if (!ignoreCause && actual.cause) {
         return fail(`${context} expected to be a no-op, got ${cause}`)

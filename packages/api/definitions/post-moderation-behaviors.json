@@ -777,7 +777,7 @@
       "author": "elise",
       "labels": {},
       "behaviors": {
-        "content": {"cause": "muted", "filter": true, "blur": true}
+        "content": {"cause": "muted-by-list", "filter": true, "blur": true}
       }
     },
     "Post with muted-by-list quoted author": {
@@ -787,8 +787,8 @@
       "quoteAuthor": "elise",
       "labels": {},
       "behaviors": {
-        "content": {"cause": "muted", "filter": true},
-        "embed": {"cause": "muted",  "blur": true}
+        "content": {"cause": "muted-by-list", "filter": true},
+        "embed": {"cause": "muted-by-list",  "blur": true}
       }
     },
 
