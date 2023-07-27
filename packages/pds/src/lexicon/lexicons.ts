@@ -6419,6 +6419,50 @@ export const schemaDict = {
       },
     },
   },
+  SocialWaverlyMiniblog: {
+    lexicon: 1,
+    id: 'social.waverly.miniblog',
+    defs: {
+      main: {
+        type: 'record',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['text', 'subject', 'createdAt'],
+          properties: {
+            text: {
+              type: 'string',
+              maxLength: 20000,
+              maxGraphemes: 10000,
+            },
+            facets: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.richtext.facet',
+              },
+            },
+            subject: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+            },
+            langs: {
+              type: 'array',
+              maxLength: 3,
+              items: {
+                type: 'string',
+                format: 'language',
+              },
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -6549,4 +6593,5 @@ export const ids = {
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetTimelineSkeleton: 'app.bsky.unspecced.getTimelineSkeleton',
+  SocialWaverlyMiniblog: 'social.waverly.miniblog',
 }

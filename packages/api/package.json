@@ -3,7 +3,7 @@
   "version": "0.4.3",
   "main": "src/index.ts",
   "scripts": {
-    "codegen": "lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
+    "codegen": "lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/social/waverly/*",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
     "update-main-to-dist": "node ./update-pkg.js --update-main-to-dist",
