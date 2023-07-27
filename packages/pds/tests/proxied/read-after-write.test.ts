@@ -44,17 +44,57 @@ describe('proxy read after write', () => {
 
   it('handles read after write on threads', async () => {
     await network.bsky.sub.destroy()
-    const replyRef = await sc.reply(
+    const reply1 = await sc.reply(
       alice,
       sc.posts[alice][0].ref,
       sc.posts[alice][0].ref,
+      'another reply',
+    )
+    const reply2 = await sc.reply(
+      alice,
+      sc.posts[alice][0].ref,
+      reply1.ref,
       'another reply',
     )
     const res: any = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][0].ref.uriStr },
       { headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' } },
     )
-    // console.log(replyRef.ref.uriStr)
-    // console.log(res.data.thread)
+    const layerOne = res.data.thread.replies
+    expect(layerOne.length).toBe(1)
+    expect(layerOne[0].post.uri).toEqual(reply1.ref.uriStr)
+    const layerTwo = layerOne[0].replies
+    expect(layerTwo.length).toBe(1)
+    expect(layerTwo[0].post.uri).toEqual(reply2.ref.uriStr)
+  })
+
+  it('handles read after write on threads with record embeds', async () => {
+    await network.bsky.sub.destroy()
+    const replyRes = await agent.api.app.bsky.feed.post.create(
+      { repo: alice },
+      {
+        text: 'blah',
+        reply: {
+          root: sc.posts[carol][0].ref.raw,
+          parent: sc.posts[carol][0].ref.raw,
+        },
+        embed: {
+          $type: 'app.bsky.embed.record',
+          record: sc.posts[alice][0].ref.raw,
+        },
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
+    const res: any = await agent.api.app.bsky.feed.getPostThread(
+      { uri: sc.posts[carol][0].ref.uriStr },
+      { headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' } },
+    )
+    const replies = res.data.thread.replies
+    expect(replies.length).toBe(1)
+    expect(replies[0].post.uri).toEqual(replyRes.uri)
+    expect(replies[0].post.embed.record.uri).toEqual(
+      sc.posts[alice][0].ref.uriStr,
+    )
   })
 })

@@ -20,7 +20,7 @@ import {
 import {
   Main as EmbedRecord,
   isMain as isEmbedRecord,
-  isViewRecord,
+  View as EmbedRecordView,
 } from '../../../../../lexicon/types/app/bsky/embed/record'
 import {
   Main as EmbedRecordWithMedia,
@@ -28,6 +28,7 @@ import {
 } from '../../../../../lexicon/types/app/bsky/embed/recordWithMedia'
 import { cborToLexRecord } from '@atproto/repo'
 import { RecordDescript } from '../../../../../services/local'
+import { AtUri } from '@atproto/uri'
 
 export type ApiRes<T> = {
   headers: Headers
@@ -83,11 +84,15 @@ export const formatLocalPostView = async (
   const { uri, cid, indexedAt, record } = descript
   const author = await formatLocalProfileViewBasic(ctx, uri.hostname)
   if (!author) return null
+  const embed = record.embed
+    ? await formatPostEmbed(ctx, author.did, record)
+    : undefined
   return {
     uri: uri.toString(),
     cid: cid.toString(),
     author,
     record,
+    embed: embed ?? undefined,
     indexedAt,
   }
 }
@@ -140,17 +145,69 @@ export const formatRecordEmbed = async (
   ctx: AppContext,
   did: string,
   embed: EmbedRecord,
+): Promise<EmbedRecordView> => {
+  const view = await formatRecordEmbedInternal(ctx, did, embed)
+  return {
+    $type: 'app.bsky.embed.record#view',
+    record:
+      view === null
+        ? {
+            $type: 'app.bsky.embed.record#viewNotFound',
+            uri: embed.record.uri,
+          }
+        : view,
+  }
+}
+
+export const formatRecordEmbedInternal = async (
+  ctx: AppContext,
+  did: string,
+  embed: EmbedRecord,
 ) => {
-  if (isViewRecord(embed.record)) {
+  const collection = new AtUri(embed.record.uri).collection
+  if (collection === ids.AppBskyFeedPost) {
     const res = await ctx.appviewAgent.api.app.bsky.feed.getPosts(
       {
         uris: [embed.record.uri],
       },
       await ctx.serviceAuthHeaders(did),
     )
+    const post = res.data.posts[0]
+    if (!post) return null
+    return {
+      $type: 'app.bsky.embed.record#viewRecord',
+      uri: post.uri,
+      cid: post.cid,
+      author: post.author,
+      value: post.record,
+      labels: post.labels,
+      embeds: post.embed ? [post.embed] : undefined,
+      indexedAt: post.indexedAt,
+    }
+  } else if (collection === ids.AppBskyFeedGenerator) {
+    const res = await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerator(
+      {
+        feed: embed.record.uri,
+      },
+      await ctx.serviceAuthHeaders(did),
+    )
+    return {
+      $type: 'app.bsaky.feed.defs#generatorView',
+      ...res.data.view,
+    }
+  } else if (collection === ids.AppBskyGraphList) {
+    const res = await ctx.appviewAgent.api.app.bsky.graph.getList(
+      {
+        list: embed.record.uri,
+      },
+      await ctx.serviceAuthHeaders(did),
+    )
+    return {
+      $type: 'app.bsaky.graph.defs#listView',
+      ...res.data.list,
+    }
   }
-  // @TODO
-  return {} as any
+  return null
 }
 
 export const formatRecordWithMediaEmbed = async (
@@ -197,7 +254,6 @@ export const updateProfileDetailed = (
   view: ProfileViewDetailed,
   record: ProfileRecord,
 ): ProfileViewDetailed => {
-  // @TODO add banner
   return {
     ...updateProfileView(view, record),
     banner: record.banner

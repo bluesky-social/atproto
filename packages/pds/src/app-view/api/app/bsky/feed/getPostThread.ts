@@ -272,6 +272,9 @@ class ParentNotFoundError extends Error {
   }
 }
 
+// READ AFTER WRITE
+// ----------------
+
 const ensureReadAfterWrite = async (
   ctx: AppContext,
   requester: string,
@@ -279,24 +282,15 @@ const ensureReadAfterWrite = async (
 ): Promise<OutputSchema> => {
   const clock = getClock(res.headers)
   if (!clock) return res.data
-  const local = await ctx.services
-    .local(ctx.db)
-    .getRecordsSinceClock(requester, clock, [ids.AppBskyFeedPost])
-  const inThread = local.posts.filter((post) => {
-    const rootUri = post.record.reply?.root.uri
-    if (!rootUri) return false
-    if (
-      isThreadViewPost(res.data.thread) &&
-      rootUri === res.data.thread.post.uri
-    )
-      return true
-    return (res.data.thread.post as PostRecord).reply?.root.uri === rootUri
-  })
-  if (inThread.length < 0) return res.data
   if (!isThreadViewPost(res.data.thread)) {
     return res.data
   }
   let thread: ThreadViewPost = res.data.thread
+  const local = await ctx.services
+    .local(ctx.db)
+    .getRecordsSinceClock(requester, clock, [ids.AppBskyFeedPost])
+  const inThread = findPostsInThread(thread, local.posts)
+  if (inThread.length < 0) return res.data
   for (const record of inThread) {
     thread = await insertIntoThreadReplies(ctx, thread, record)
   }
@@ -304,6 +298,18 @@ const ensureReadAfterWrite = async (
     ...res.data,
     thread,
   }
+}
+
+const findPostsInThread = (
+  thread: ThreadViewPost,
+  posts: RecordDescript<PostRecord>[],
+): RecordDescript<PostRecord>[] => {
+  return posts.filter((post) => {
+    const rootUri = post.record.reply?.root.uri
+    if (!rootUri) return false
+    if (rootUri === thread.post.uri) return true
+    return (thread.post.record as PostRecord).reply?.root.uri === rootUri
+  })
 }
 
 const insertIntoThreadReplies = async (
