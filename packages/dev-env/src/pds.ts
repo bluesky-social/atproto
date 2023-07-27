@@ -51,7 +51,7 @@ export class TestPds {
       didCacheMaxTTL: DAY,
       didCacheStaleTTL: HOUR,
       jwtSecret: 'jwt-secret',
-      availableUserDomains: ['.test'],
+      availableUserDomains: ['.test', '.group'],
       appUrlPasswordReset: 'app://forgot-password',
       emailNoReplyAddress: 'noreply@blueskyweb.xyz',
       publicUrl: 'https://pds.public.url',

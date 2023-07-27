@@ -8,6 +8,7 @@ import { TestNetworkNoAppView } from '../index'
 import { postTexts, replyTexts } from './data'
 import labeledImgB64 from './img/labeled-img-b64'
 import blurHashB64 from './img/blur-hash-avatar-b64'
+import * as waverly from './waverly'
 
 // NOTE
 // deterministic date generator
@@ -75,7 +76,8 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
   const carla = users[2]
 
   let _i = 1
-  for (const user of users) {
+  const allUsers = [...users, ...waverly.genGroupUsers(env)]
+  for (const user of allUsers) {
     const res = await clients.loggedout.api.com.atproto.server.createAccount({
       email: user.email,
       handle: user.handle,
@@ -91,6 +93,8 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
       },
     )
   }
+
+  await waverly.updateUsers(allUsers)
 
   // Report one user
   const reporter = picka(users)
@@ -210,6 +214,8 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
       ])
       .execute()
   }
+
+  await waverly.addGroupPosts(posts, allUsers, date)
 
   // a set of replies
   for (let i = 0; i < 100; i++) {
