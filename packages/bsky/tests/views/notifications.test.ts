@@ -6,6 +6,7 @@ import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
 
+const ALL_NOTIFICATIONS_COUNT = 12
 describe('notification views', () => {
   let network: TestNetwork
   let agent: AtpAgent
@@ -84,7 +85,7 @@ describe('notification views', () => {
         { headers: await network.serviceHeaders(alice) },
       )
 
-    expect(notifCountAlice.data.count).toBe(12)
+    expect(notifCountAlice.data.count).toBe(ALL_NOTIFICATIONS_COUNT)
 
     const notifCountBob = await agent.api.app.bsky.notification.getUnreadCount(
       {},
@@ -133,7 +134,7 @@ describe('notification views', () => {
     )
 
     const notifs = notifRes.data.notifications
-    expect(notifs.length).toBe(12)
+    expect(notifs.length).toBe(ALL_NOTIFICATIONS_COUNT)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map(() => false))
@@ -162,7 +163,7 @@ describe('notification views', () => {
       { headers: await network.serviceHeaders(alice) },
     )
 
-    expect(full.data.notifications.length).toEqual(12)
+    expect(full.data.notifications.length).toEqual(ALL_NOTIFICATIONS_COUNT)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
@@ -218,7 +219,7 @@ describe('notification views', () => {
     )
 
     const notifs = notifRes.data.notifications
-    expect(notifs.length).toBe(12)
+    expect(notifs.length).toBe(ALL_NOTIFICATIONS_COUNT)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map((n) => n.indexedAt <= seenAt))
