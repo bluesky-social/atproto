@@ -318,7 +318,7 @@
       }
     },
 
-    "Blocking user": {
+    "Mute/block: Blocking user": {
       "cfg": "none",
       "subject": "profile",
       "author": "bob",
@@ -329,7 +329,7 @@
       }
     },
 
-    "Blocked by user": {
+    "Mute/block: Blocked by user": {
       "cfg": "none",
       "subject": "profile",
       "author": "carla",
@@ -340,7 +340,7 @@
       }
     },
 
-    "Muted user": {
+    "Mute/block: Muted user": {
       "cfg": "none",
       "subject": "profile",
       "author": "dan",
@@ -350,7 +350,7 @@
       }
     },
 
-    "Muted-by-list user": {
+    "Mute/block: Muted-by-list user": {
       "cfg": "none",
       "subject": "profile",
       "author": "elise",
