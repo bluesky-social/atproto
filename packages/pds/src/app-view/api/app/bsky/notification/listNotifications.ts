@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const { limit, cursor, seenAt } = params
+      const { limit, cursor, seenAt, reasons } = params
       const { ref } = ctx.db.db.dynamic
       if (seenAt) {
         throw new InvalidRequestError('The seenAt parameter is unsupported')
@@ -67,6 +67,13 @@ export default function (server: Server, ctx: AppContext) {
           'notif.reasonSubject as reasonSubject',
           'notif.indexedAt as indexedAt',
         ])
+
+      const filteredReasons = filterReasons(reasons)
+      if (filteredReasons.length > 0) {
+        // TODO not sure why but typescript does not like filteredReasons as a string[] here
+        // @ts-ignore
+        notifBuilder = notifBuilder.where('notif.reason', 'in', filteredReasons)
+      }
 
       const keyset = new NotifsKeyset(
         ref('notif.indexedAt'),
@@ -159,4 +166,23 @@ class NotifsKeyset extends TimeCidKeyset<NotifRow> {
   labelResult(result: NotifRow) {
     return { primary: result.indexedAt, secondary: result.cid }
   }
+}
+
+const REASONS = new Set([
+  'follow',
+  'like',
+  'mention',
+  'quote',
+  'reply',
+  'repost',
+])
+
+function filterReasons(reasons: string[] | undefined): string[] {
+  let filteredReasons: string[] = []
+  if (Array.isArray(reasons)) {
+    filteredReasons = Array.from(
+      new Set(reasons.filter((reason) => REASONS.has(reason))),
+    )
+  }
+  return filteredReasons
 }

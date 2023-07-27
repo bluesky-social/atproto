@@ -288,4 +288,30 @@ describe('notification views', () => {
       ),
     )
   })
+
+  it('filters notifications', async () => {
+    await network.processAll()
+    await network.bsky.ctx.backgroundQueue.processAll()
+
+    const allNotifsAlice =
+      await agent.api.app.bsky.notification.listNotifications(
+        {},
+        { headers: await network.serviceHeaders(sc.dids.alice) },
+      )
+    expect(allNotifsAlice.data.notifications.length).toBe(
+      ALL_NOTIFICATIONS_COUNT,
+    )
+
+    const expectedAliceFollowCount = 2
+    const followNotifsAlice =
+      await agent.api.app.bsky.notification.listNotifications(
+        {
+          reasons: ['follow'],
+        },
+        { headers: await network.serviceHeaders(sc.dids.alice) },
+      )
+    expect(followNotifsAlice.data.notifications.length).toBe(
+      expectedAliceFollowCount,
+    )
+  })
 })
