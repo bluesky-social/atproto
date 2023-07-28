@@ -86,3 +86,13 @@ export function isQuotedPostWithMedia(
       AppBskyFeedPost.validateRecord(embed.record.record.value).success,
   )
 }
+
+export function toModerationUI(decision: ModerationDecision): ModerationUI {
+  return {
+    cause: decision.cause,
+    filter: decision.filter,
+    blur: decision.blur,
+    alert: decision.alert,
+    noOverride: decision.noOverride,
+  }
+}

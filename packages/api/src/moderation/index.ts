@@ -25,6 +25,7 @@ import {
   isModerationDecisionNoop,
   isQuotedPost,
   isQuotedPostWithMedia,
+  toModerationUI,
 } from './util'
 
 // profiles
@@ -83,10 +84,16 @@ export function moderateProfile(
     decisions: { account, profile },
 
     // moderate all content based on account
-    account: account.filter || account.blur || account.alert ? account : {},
+    account:
+      account.filter || account.blur || account.alert
+        ? toModerationUI(account)
+        : {},
 
     // moderate the profile details based on the profile
-    profile: profile.filter || profile.blur || profile.alert ? profile : {},
+    profile:
+      profile.filter || profile.blur || profile.alert
+        ? toModerationUI(profile)
+        : {},
 
     // blur or alert the avatar based on the account and profile decisions
     avatar: {
