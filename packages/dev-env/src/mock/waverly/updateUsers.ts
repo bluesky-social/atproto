@@ -3,7 +3,7 @@ import aliceAvatarB64 from './img/alice-avatar-b64'
 import carlaAvatarB64 from './img/carla-avatar-b64'
 import betterWebAvatarB64 from './img/better-web-avatar-b64'
 import { BlobRef } from '@atproto/api'
-import { AppBskyActorProfile } from '@atproto/api'
+import { Record as Profile } from '@atproto/api/src/client/types/app/bsky/actor/profile'
 
 interface UserUpdate {
   avatar?: string
@@ -36,7 +36,7 @@ export default async (users: User[]) => {
       collection: 'app.bsky.actor.profile',
       rkey: 'self',
     })
-    const record = profile.data.value as AppBskyActorProfile.Record
+    const record = profile.data.value as Profile
 
     if (avatar) record.avatar = avatar
     if (update.displayName) record.displayName = update.displayName
