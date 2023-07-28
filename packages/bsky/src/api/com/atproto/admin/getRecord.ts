@@ -6,7 +6,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRecord({
     auth: ctx.roleVerifier,
     handler: async ({ params }) => {
-      const { db, services } = ctx
+      const { dbPrimary: db, services } = ctx
       const { uri, cid } = params
       const result = await db.db
         .selectFrom('record')

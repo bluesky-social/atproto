@@ -6,7 +6,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRepo({
     auth: ctx.roleVerifier,
     handler: async ({ params }) => {
-      const { db, services } = ctx
+      const { dbPrimary: db, services } = ctx
       const { did } = params
       const result = await services.actor(db).getActor(did, true)
       if (!result) {

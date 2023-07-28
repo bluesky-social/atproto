@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
     auth: ctx.roleVerifier,
     handler: async ({ params }) => {
-      const { db, services } = ctx
+      const { dbPrimary: db, services } = ctx
       const moderationService = services.moderation(db)
       const { term = '', limit, cursor, invitedBy } = params
       if (invitedBy) {

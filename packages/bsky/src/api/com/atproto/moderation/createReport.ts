@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     // @TODO anonymous reports w/ optional auth are a temporary measure
     auth: ctx.authOptionalVerifier,
     handler: async ({ input, auth }) => {
-      const { db, services } = ctx
+      const { dbPrimary: db, services } = ctx
       const { reasonType, reason, subject } = input.body
       const requester = auth.credentials.did
 
