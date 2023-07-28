@@ -171,15 +171,13 @@ Applying the moderation system is a challenging task, but we've done our best to
 For more information, see the [Moderation Documentation](./docs/moderation.md) or the associated [Labels Reference](./docs/labels.md).
 
 ```typescript
-import {moderatePost, moderateProfile, moderateUserList, moderateFeedGenerator} from '@atproto/api'
+import {moderatePost, moderateProfile} from '@atproto/api'
 
 // We call the appropriate moderation function for the content
 // =
 
 const postMod    = moderatePost(postView, getOpts())
 const profileMod = moderateProfile(profileView, getOpts())
-const listMod    = moderateUserList(listView, getOpts())
-const feedMod    = moderateFeedGenerator(feedView, getOpts())
 
 // We then use the output to decide how to affect rendering
 // =

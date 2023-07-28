@@ -42,6 +42,8 @@ function doc() {
   
   This document is a reference for the labels used in the SDK.
 
+  **⚠️ Note**: These labels are still in development and may change over time. Not all are currently in use.
+
   ## Key
 
   ### Label Preferences
