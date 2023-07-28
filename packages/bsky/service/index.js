@@ -26,6 +26,7 @@ const main = async () => {
   const env = getEnv()
   // Migrate using credentialed user
   const migrateDb = Database.postgres({
+    isPrimary: true,
     url: env.dbMigratePostgresUrl,
     schema: env.dbPostgresSchema,
     poolSize: 2,
