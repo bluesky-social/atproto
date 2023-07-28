@@ -1,7 +1,6 @@
 import { AtUri } from '@atproto/uri'
 import AtpAgent from '@atproto/api'
 import { CloseFn, runTestServer } from './_util'
-import AppContext from '../src/context'
 import * as Miniblog from '../src/lexicon/types/social/waverly/miniblog'
 import { ids } from '../src/lexicon/lexicons'
 
@@ -20,17 +19,14 @@ const alice = {
 }
 
 describe('waverly crud operations', () => {
-  let ctx: AppContext
   let agent: AtpAgent
   let aliceAgent: AtpAgent
-  let bobAgent: AtpAgent
   let close: CloseFn
 
   beforeAll(async () => {
     const server = await runTestServer({
       dbPostgresSchema: 'waverly_crud',
     })
-    ctx = server.ctx
     close = server.close
     agent = new AtpAgent({ service: server.url })
     aliceAgent = new AtpAgent({ service: server.url })
@@ -186,5 +182,48 @@ describe('waverly crud operations', () => {
       collection: ids.SocialWaverlyMiniblog,
     })
     expect(res1.data.records.length).toBe(0)
+  })
+
+  it('creates records with alternate api', async () => {
+    const res = await aliceAgent.api.social.waverly.miniblog.create(
+      { repo: alice.did },
+      {
+        text: loremIpsum,
+        createdAt: new Date().toISOString(),
+      },
+    )
+    uri1 = new AtUri(res.uri)
+    expect(res.uri).toBe(
+      `at://${alice.did}/social.waverly.miniblog/${uri1.rkey}`,
+    )
+  })
+
+  it('lists records with alternate api', async () => {
+    const res = await aliceAgent.api.social.waverly.miniblog.list({
+      repo: alice.did,
+    })
+    expect(res.records.length).toBe(1)
+    expect(res.records[0].uri).toBe(uri1.toString())
+    expect(res.records[0].value.text).toBe(loremIpsum)
+  })
+
+  it('gets records with alternate api', async () => {
+    const res = await aliceAgent.api.social.waverly.miniblog.get({
+      repo: alice.did,
+      rkey: uri1.rkey,
+    })
+    expect(res.uri).toBe(uri1.toString())
+    expect(res.value.text).toBe(loremIpsum)
+  })
+
+  it('deletes records with alternate api', async () => {
+    await aliceAgent.api.social.waverly.miniblog.delete({
+      repo: alice.did,
+      rkey: uri1.rkey,
+    })
+    const res = await aliceAgent.api.social.waverly.miniblog.list({
+      repo: alice.did,
+    })
+    expect(res.records.length).toBe(0)
   })
 })

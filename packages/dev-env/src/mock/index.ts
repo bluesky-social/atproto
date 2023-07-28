@@ -215,7 +215,7 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
       .execute()
   }
 
-  await waverly.addGroupPosts(posts, allUsers, date)
+  await waverly.addGroupPosts(allUsers, date)
 
   // a set of replies
   for (let i = 0; i < 100; i++) {
