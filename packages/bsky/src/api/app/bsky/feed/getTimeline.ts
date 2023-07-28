@@ -12,9 +12,9 @@ export default function (server: Server, ctx: AppContext) {
       const {
         algorithm,
         minReplyLikeCount,
-        showQuotePosts,
-        showReplies,
-        showReposts,
+        includeQuotePosts,
+        includeReplies,
+        includeReposts,
         limit,
         cursor,
       } = params
@@ -43,12 +43,12 @@ export default function (server: Server, ctx: AppContext) {
       let feedItemsQb = feedService.selectFeedItemQb()
 
       // if replies are off
-      if (!showReplies) {
+      if (!includeReplies) {
         feedItemsQb = feedItemsQb.where('post.replyRoot', 'is', null)
       }
 
       // if reposts are off
-      if (!showReposts) {
+      if (!includeReposts) {
         feedItemsQb = feedItemsQb.where('feed_item.type', '!=', 'repost')
       }
 
@@ -83,9 +83,9 @@ export default function (server: Server, ctx: AppContext) {
       const feedItems = await feedItemsQb.execute()
       let feed = await feedService.hydrateFeed(feedItems, viewer)
 
-      // showReplies
+      // includeReplies
       // apply minReplyLikeCount
-      if (showReplies && minReplyLikeCount > 0) {
+      if (includeReplies && minReplyLikeCount > 0) {
         feed = feed.filter((post) => {
           let showPost = true
           if (post.reply && post.post.likeCount !== undefined) {
@@ -94,10 +94,10 @@ export default function (server: Server, ctx: AppContext) {
           return showPost
         })
       }
-      /* else if showReplies is false, we've already filtered out replies */
+      /* else if includeReplies is false, we've already filtered out replies */
 
-      // showQuotePosts
-      if (!showQuotePosts) {
+      // includeQuotePosts
+      if (!includeQuotePosts) {
         feed = feed.filter((post) => !isView(post.post.embed))
       }
 

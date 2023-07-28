@@ -142,10 +142,10 @@ describe('timeline views', () => {
     const fullDefaultArgs = await agent.api.app.bsky.feed.getTimeline(
       {
         algorithm: FeedAlgorithm.ReverseChronological,
-        showReplies: true,
+        includeReplies: true,
         minReplyLikeCount: 0,
-        showReposts: true,
-        showQuotePosts: true,
+        includeReposts: true,
+        includeQuotePosts: true,
       },
       {
         headers: sc.getHeaders(alice),
@@ -160,7 +160,7 @@ describe('timeline views', () => {
     const full = await agent.api.app.bsky.feed.getTimeline(
       {
         algorithm: FeedAlgorithm.ReverseChronological,
-        showReposts: false,
+        includeReposts: false,
       },
       { headers: sc.getHeaders(alice) },
     )
@@ -172,7 +172,7 @@ describe('timeline views', () => {
     const full = await agent.api.app.bsky.feed.getTimeline(
       {
         algorithm: FeedAlgorithm.ReverseChronological,
-        showReplies: false,
+        includeReplies: false,
       },
       { headers: sc.getHeaders(alice) },
     )
@@ -183,7 +183,7 @@ describe('timeline views', () => {
     const minReplyLikeCountOneFeed = await agent.api.app.bsky.feed.getTimeline(
       {
         algorithm: FeedAlgorithm.ReverseChronological,
-        showReplies: true,
+        includeReplies: true,
         minReplyLikeCount: 1,
       },
       { headers: sc.getHeaders(alice) },
@@ -194,7 +194,7 @@ describe('timeline views', () => {
       await agent.api.app.bsky.feed.getTimeline(
         {
           algorithm: FeedAlgorithm.ReverseChronological,
-          showReplies: true,
+          includeReplies: true,
           minReplyLikeCount: 25,
         },
         { headers: sc.getHeaders(alice) },
@@ -210,7 +210,7 @@ describe('timeline views', () => {
     const full = await agent.api.app.bsky.feed.getTimeline(
       {
         algorithm: FeedAlgorithm.ReverseChronological,
-        showQuotePosts: false,
+        includeQuotePosts: false,
       },
       { headers: sc.getHeaders(alice) },
     )
@@ -221,9 +221,9 @@ describe('timeline views', () => {
     const full = await agent.api.app.bsky.feed.getTimeline(
       {
         algorithm: FeedAlgorithm.ReverseChronological,
-        showQuotePosts: false,
-        showReplies: false,
-        showReposts: false,
+        includeQuotePosts: false,
+        includeReplies: false,
+        includeReposts: false,
       },
       { headers: sc.getHeaders(alice) },
     )

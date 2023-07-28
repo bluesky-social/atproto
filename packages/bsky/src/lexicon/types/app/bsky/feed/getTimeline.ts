@@ -13,9 +13,9 @@ export interface QueryParams {
   algorithm?: string
   limit: number
   minReplyLikeCount: number
-  showQuotePosts: boolean
-  showReplies: boolean
-  showReposts: boolean
+  includeQuotePosts: boolean
+  includeReplies: boolean
+  includeReposts: boolean
   cursor?: string
 }
 

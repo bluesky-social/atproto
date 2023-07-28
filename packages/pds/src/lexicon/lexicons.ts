@@ -1652,7 +1652,7 @@ export const schemaDict = {
       },
       reasonSexual: {
         type: 'token',
-        description: 'Unwanted or mis-labeled sexual content',
+        description: 'Unwanted or mislabeled sexual content',
       },
       reasonRude: {
         type: 'token',
@@ -5209,15 +5209,15 @@ export const schemaDict = {
               maximum: 25,
               default: 0,
             },
-            showQuotePosts: {
+            includeQuotePosts: {
               type: 'boolean',
               default: true,
             },
-            showReplies: {
+            includeReplies: {
               type: 'boolean',
               default: true,
             },
-            showReposts: {
+            includeReposts: {
               type: 'boolean',
               default: true,
             },

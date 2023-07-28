@@ -5209,15 +5209,15 @@ export const schemaDict = {
               maximum: 25,
               default: 0,
             },
-            showQuotePosts: {
+            includeQuotePosts: {
               type: 'boolean',
               default: true,
             },
-            showReplies: {
+            includeReplies: {
               type: 'boolean',
               default: true,
             },
-            showReposts: {
+            includeReposts: {
               type: 'boolean',
               default: true,
             },
