@@ -156,6 +156,104 @@ describe('timeline views', () => {
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
+  it('full reverse-chronological feed', async () => {
+    const fullNoArgs = await agent.api.app.bsky.feed.getTimeline(
+      {
+        algorithm: FeedAlgorithm.ReverseChronological,
+      },
+      { headers: await network.serviceHeaders(carol) },
+    )
+    expect(fullNoArgs.data.feed.length).toEqual(7)
+
+    const fullDefaultArgs = await agent.api.app.bsky.feed.getTimeline(
+      {
+        algorithm: FeedAlgorithm.ReverseChronological,
+        showReplies: true,
+        minReplyLikeCount: 0,
+        showReposts: true,
+        showQuotePosts: true,
+      },
+      { headers: await network.serviceHeaders(carol) },
+    )
+    expect(fullDefaultArgs.data.feed.length).toEqual(
+      fullNoArgs.data.feed.length,
+    )
+  })
+
+  it('reverse-chronological feed, no reposts', async () => {
+    const full = await agent.api.app.bsky.feed.getTimeline(
+      {
+        algorithm: FeedAlgorithm.ReverseChronological,
+        showReposts: false,
+      },
+      { headers: await network.serviceHeaders(carol) },
+    )
+    const POST_COUNT_NO_REPOSTS = 6
+    expect(full.data.feed.length).toEqual(POST_COUNT_NO_REPOSTS)
+  })
+
+  it('reverse-chronological feed, no replies', async () => {
+    const full = await agent.api.app.bsky.feed.getTimeline(
+      {
+        algorithm: FeedAlgorithm.ReverseChronological,
+        showReplies: false,
+      },
+      { headers: await network.serviceHeaders(carol) },
+    )
+    expect(full.data.feed.length).toEqual(5)
+  })
+
+  it('reverse-chronological feed, replies minimum like counts', async () => {
+    const minReplyLikeCountOneFeed = await agent.api.app.bsky.feed.getTimeline(
+      {
+        algorithm: FeedAlgorithm.ReverseChronological,
+        showReplies: true,
+        minReplyLikeCount: 1,
+      },
+      { headers: await network.serviceHeaders(carol) },
+    )
+    expect(minReplyLikeCountOneFeed.data.feed.length).toEqual(5)
+
+    const minReplyLikeCountTwentyFiveFeed =
+      await agent.api.app.bsky.feed.getTimeline(
+        {
+          algorithm: FeedAlgorithm.ReverseChronological,
+          showReplies: true,
+          minReplyLikeCount: 25,
+        },
+        { headers: await network.serviceHeaders(carol) },
+      )
+    expect(minReplyLikeCountTwentyFiveFeed.data.feed.length).toEqual(5)
+    console.log(
+      'feed',
+      JSON.stringify(minReplyLikeCountTwentyFiveFeed.data.feed, null, 2),
+    )
+  })
+
+  it('reverse-chronological feed, no quotes', async () => {
+    const full = await agent.api.app.bsky.feed.getTimeline(
+      {
+        algorithm: FeedAlgorithm.ReverseChronological,
+        showQuotePosts: false,
+      },
+      { headers: await network.serviceHeaders(carol) },
+    )
+    expect(full.data.feed.length).toEqual(5)
+  })
+
+  it('reverse-chronological feed, no quotes, no replies, no reposts', async () => {
+    const full = await agent.api.app.bsky.feed.getTimeline(
+      {
+        algorithm: FeedAlgorithm.ReverseChronological,
+        showQuotePosts: false,
+        showReplies: false,
+        showReposts: false,
+      },
+      { headers: await network.serviceHeaders(carol) },
+    )
+    expect(full.data.feed.length).toEqual(3)
+  })
+
   it('blocks posts, reposts, replies by actor takedown', async () => {
     const actionResults = await Promise.all(
       [bob, carol].map((did) =>

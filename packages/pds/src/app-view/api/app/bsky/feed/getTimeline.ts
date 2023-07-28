@@ -5,6 +5,7 @@ import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
 import { filterMutesAndBlocks } from './getFeed'
+import { isView } from '../../../../../lexicon/types/app/bsky/embed/record'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
@@ -53,6 +54,8 @@ export default function (server: Server, ctx: AppContext) {
 
       const db = ctx.db.db
       const { ref } = db.dynamic
+      const { minReplyLikeCount, showQuotePosts, showReplies, showReposts } =
+        params
 
       const accountService = ctx.services.account(ctx.db)
       const feedService = ctx.services.appView.feed(ctx.db)
@@ -69,8 +72,19 @@ export default function (server: Server, ctx: AppContext) {
       )
       const sortFrom = keyset.unpack(cursor)?.primary
 
-      let feedItemsQb = feedService
-        .selectFeedItemQb()
+      let feedItemsQb = feedService.selectFeedItemQb()
+
+      // if replies are off
+      if (!showReplies) {
+        feedItemsQb = feedItemsQb.where('post.replyRoot', 'is', null)
+      }
+
+      // if reposts are off
+      if (!showReposts) {
+        feedItemsQb = feedItemsQb.where('feed_item.type', '!=', 'repost')
+      }
+
+      feedItemsQb = feedItemsQb
         .where((qb) =>
           qb
             .where('originatorDid', '=', requester)
@@ -99,7 +113,25 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const feedItems: FeedRow[] = await feedItemsQb.execute()
-      const feed = await feedService.hydrateFeed(feedItems, requester)
+      let feed = await feedService.hydrateFeed(feedItems, requester)
+
+      // showReplies
+      // apply minReplyLikeCount
+      if (showReplies && minReplyLikeCount > 0) {
+        feed = feed.filter((post) => {
+          let showPost = true
+          if (post.reply && post.post.likeCount !== undefined) {
+            showPost = post.post.likeCount >= minReplyLikeCount
+          }
+          return showPost
+        })
+      }
+      /* else if showReplies is false, we've already filtered out replies */
+
+      // showQuotePosts
+      if (!showQuotePosts) {
+        feed = feed.filter((post) => !isView(post.post.embed))
+      }
 
       return {
         encoding: 'application/json',
