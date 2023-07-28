@@ -1,4 +1,4 @@
-import type { LabelDefinitionPreference } from '../src'
+import type { LabelPreference } from '../src'
 
 export interface ModerationBehaviorResult {
   cause?: string
@@ -41,7 +41,7 @@ export interface ModerationBehaviors {
     string,
     {
       adultContentEnabled: boolean
-      settings: Record<string, LabelDefinitionPreference>
+      settings: Record<string, LabelPreference>
     }
   >
   scenarios: Record<string, ModerationBehaviorScenario>

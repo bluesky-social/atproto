@@ -10,7 +10,7 @@ import {
 
 export type Label = ComAtprotoLabelDefs.Label
 
-export type LabelDefinitionPreference = 'ignore' | 'warn' | 'hide'
+export type LabelPreference = 'ignore' | 'warn' | 'hide'
 export type LabelDefinitionFlag = 'no-override' | 'adult'
 export type LabelDefinitionOnWarnBehavior =
   | 'blur'
@@ -32,7 +32,7 @@ export interface LabelDefinition {
   id: string
   groupId: string
   configurable: boolean
-  preferences: LabelDefinitionPreference[]
+  preferences: LabelPreference[]
   flags: LabelDefinitionFlag[]
   onwarn: LabelDefinitionOnWarnBehavior
   strings: {
@@ -64,7 +64,7 @@ interface Labeler {
 
 export interface LabelerSettings {
   labeler: Labeler
-  settings: Record<string, LabelDefinitionPreference>
+  settings: Record<string, LabelPreference>
 }
 
 // subjects
@@ -104,7 +104,7 @@ export type ModerationCause =
       labeler: Labeler
       label: Label
       labelDef: LabelDefinition
-      setting: LabelDefinitionPreference
+      setting: LabelPreference
       priority: 1 | 2 | 5 | 7 | 8
     }
   | { type: 'muted'; source: ModerationCauseSource; priority: 6 }

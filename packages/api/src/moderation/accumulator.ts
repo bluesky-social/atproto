@@ -1,7 +1,7 @@
 import { AppBskyGraphDefs } from '../client/index'
 import {
   Label,
-  LabelDefinitionPreference,
+  LabelPreference,
   ModerationCause,
   ModerationOpts,
   ModerationDecision,
@@ -58,7 +58,7 @@ export class ModerationCauseAccumulator {
     }
 
     // establish the label preference for interpretation
-    let labelPref: LabelDefinitionPreference = 'ignore'
+    let labelPref: LabelPreference = 'ignore'
     if (!labelDef.configurable) {
       labelPref = labelDef.preferences[0]
     } else if (labelDef.flags.includes('adult') && !opts.adultContentEnabled) {
