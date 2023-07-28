@@ -4,7 +4,7 @@ import { cidForRecord } from '@atproto/repo'
 import { dedupe, getFieldsFromRecord } from './util'
 import { labelerLogger as log } from '../logger'
 import { resolveBlob } from '../api/blob-resolver'
-import Database from '../db'
+import Database, { Primary } from '../db'
 import { IdResolver } from '@atproto/identity'
 import { ServerConfig } from '../config'
 import { BackgroundQueue } from '../background'
@@ -13,7 +13,7 @@ export abstract class Labeler {
   public backgroundQueue: BackgroundQueue
   constructor(
     protected ctx: {
-      db: Database
+      db: Database & Primary
       idResolver: IdResolver
       cfg: ServerConfig
       backgroundQueue: BackgroundQueue

@@ -1,5 +1,5 @@
 import { IdResolver } from '@atproto/identity'
-import Database from '../db'
+import Database, { Primary } from '../db'
 import { ImageUriBuilder } from '../image/uri'
 import { ActorService } from './actor'
 import { FeedService } from './feed'
@@ -39,9 +39,11 @@ export type Services = {
   actor: FromDb<ActorService>
   feed: FromDb<FeedService>
   graph: FromDb<GraphService>
-  indexing: FromDb<IndexingService>
-  moderation: FromDb<ModerationService>
+  indexing: FromDbPrimary<IndexingService>
+  moderation: FromDbPrimary<ModerationService>
   label: FromDb<LabelService>
 }
 
 type FromDb<T> = (db: Database) => T
+
+type FromDbPrimary<T> = (db: Database & Primary) => T

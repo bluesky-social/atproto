@@ -5,7 +5,7 @@ import { Labeler } from './base'
 import { keywordLabeling } from './util'
 import { ServerConfig } from '../config'
 import { IdResolver } from '@atproto/identity'
-import Database from '../db'
+import Database, { Primary } from '../db'
 import { BackgroundQueue } from '../background'
 
 const HIVE_ENDPOINT = 'https://api.thehive.ai/api/v2/task/sync'
@@ -17,7 +17,7 @@ export class HiveLabeler extends Labeler {
   constructor(
     hiveApiKey: string,
     protected ctx: {
-      db: Database
+      db: Database & Primary
       idResolver: IdResolver
       cfg: ServerConfig
       backgroundQueue: BackgroundQueue

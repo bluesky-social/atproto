@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Invalid date')
       }
 
-      await ctx.db.db
+      await ctx.dbPrimary.db
         .insertInto('actor_state')
         .values({ did: viewer, lastSeenNotifs: parsed })
         .onConflict((oc) =>

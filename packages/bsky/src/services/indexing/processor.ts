@@ -6,7 +6,7 @@ import DatabaseSchema from '../../db/database-schema'
 import { lexicons } from '../../lexicon/lexicons'
 import { Notification } from '../../db/tables/notification'
 import { chunkArray } from '@atproto/common'
-import Database from '../../db'
+import Database, { Primary } from '../../db'
 import { BackgroundQueue } from '../../background'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
@@ -40,7 +40,7 @@ export class RecordProcessor<T, S> {
   collection: string
   db: DatabaseSchema
   constructor(
-    private appDb: Database,
+    private appDb: Database & Primary,
     private backgroundQueue: BackgroundQueue,
     private params: RecordProcessorParams<T, S>,
   ) {

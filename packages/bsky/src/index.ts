@@ -7,7 +7,7 @@ import cors from 'cors'
 import compression from 'compression'
 import { IdResolver } from '@atproto/identity'
 import API, { health, blobResolver } from './api'
-import Database from './db'
+import Database, { Primary } from './db'
 import * as error from './error'
 import { dbLogger, loggerMiddleware, subLogger } from './logger'
 import { ServerConfig } from './config'
@@ -55,11 +55,12 @@ export class BskyAppView {
 
   static create(opts: {
     db: Database
+    dbPrimary?: Database & Primary
     config: ServerConfig
     imgInvalidator?: ImageInvalidator
     algos?: MountedAlgos
   }): BskyAppView {
-    const { db, config, algos = {} } = opts
+    const { db, dbPrimary, config, algos = {} } = opts
     let maybeImgInvalidator = opts.imgInvalidator
     const app = express()
     app.use(cors())
@@ -67,7 +68,7 @@ export class BskyAppView {
     app.use(compression())
 
     const didCache = new DidSqlCache(
-      db,
+      dbPrimary || db.asPrimary(),
       config.didCacheStaleTTL,
       config.didCacheMaxTTL,
     )
@@ -104,14 +105,14 @@ export class BskyAppView {
     let labeler: Labeler
     if (config.hiveApiKey) {
       labeler = new HiveLabeler(config.hiveApiKey, {
-        db,
+        db: dbPrimary || db.asPrimary(),
         cfg: config,
         idResolver,
         backgroundQueue,
       })
     } else {
       labeler = new KeywordLabeler({
-        db,
+        db: dbPrimary || db.asPrimary(),
         cfg: config,
         idResolver,
         backgroundQueue,
@@ -128,6 +129,7 @@ export class BskyAppView {
 
     const ctx = new AppContext({
       db,
+      dbPrimary,
       cfg: config,
       services,
       imgUriBuilder,

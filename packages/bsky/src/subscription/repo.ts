@@ -30,7 +30,7 @@ const METHOD = ids.ComAtprotoSyncSubscribeRepos
 export const REPO_SUB_ID = 1000
 
 export class RepoSubscription {
-  leader = new Leader(this.subLockId, this.ctx.db)
+  leader = new Leader(this.subLockId, this.ctx.dbPrimary)
   repoQueue: PartitionedQueue
   cursorQueue = new LatestQueue()
   consecutive = new ConsecutiveList<number>()
@@ -46,7 +46,7 @@ export class RepoSubscription {
     public concurrency = Infinity,
   ) {
     this.repoQueue = new PartitionedQueue({ concurrency })
-    this.indexingSvc = ctx.services.indexing(ctx.db)
+    this.indexingSvc = ctx.services.indexing(ctx.dbPrimary)
   }
 
   async run() {
@@ -222,14 +222,14 @@ export class RepoSubscription {
   }
 
   private async handleCursor(seq: number) {
-    const { db } = this.ctx
-    await db.transaction(async (tx) => {
+    const { dbPrimary } = this.ctx
+    await dbPrimary.transaction(async (tx) => {
       await this.setState(tx, { cursor: seq })
     })
   }
 
   async getState(): Promise<State> {
-    const sub = await this.ctx.db.db
+    const sub = await this.ctx.dbPrimary.db
       .selectFrom('subscription')
       .selectAll()
       .where('service', '=', this.service)
@@ -241,7 +241,7 @@ export class RepoSubscription {
   }
 
   async resetState(): Promise<void> {
-    await this.ctx.db.db
+    await this.ctx.dbPrimary.db
       .deleteFrom('subscription')
       .where('service', '=', this.service)
       .where('method', '=', METHOD)
@@ -249,6 +249,7 @@ export class RepoSubscription {
   }
 
   private async setState(tx: Database, state: State): Promise<void> {
+    tx.assertPrimary()
     tx.assertTransaction()
     tx.onCommit(() => {
       this.lastCursor = state.cursor

@@ -9,6 +9,7 @@ export interface ServerConfigValues {
   serverDid: string
   feedGenDid?: string
   dbPostgresUrl: string
+  dbPrimaryPostgresUrl?: string
   dbPostgresSchema?: string
   didPlcUrl: string
   didCacheStaleTTL: number
@@ -60,6 +61,8 @@ export class ServerConfig {
       overrides?.dbPostgresUrl || process.env.DB_POSTGRES_URL
     assert(dbPostgresUrl)
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
+    const dbPrimaryPostgresUrl =
+      overrides?.dbPrimaryPostgresUrl || process.env.DB_PRIMARY_POSTGRES_URL
     const repoProvider = process.env.REPO_PROVIDER // E.g. ws://abc.com:4000
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
     const moderatorPassword = process.env.MODERATOR_PASSWORD || undefined
@@ -76,6 +79,7 @@ export class ServerConfig {
       serverDid,
       feedGenDid,
       dbPostgresUrl,
+      dbPrimaryPostgresUrl,
       dbPostgresSchema,
       didPlcUrl,
       didCacheStaleTTL,

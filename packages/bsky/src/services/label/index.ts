@@ -48,8 +48,9 @@ export class LabelService {
     }))
     const { ref } = this.db.db.dynamic
     const excluded = (col: string) => ref(`excluded.${col}`)
-    await this.db.db
-      .insertInto('label')
+    await this.db
+      .asPrimary()
+      .db.insertInto('label')
       .values(dbVals)
       .onConflict((oc) =>
         oc.columns(['src', 'uri', 'cid', 'val']).doUpdateSet({

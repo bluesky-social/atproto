@@ -12,6 +12,7 @@ require('dd-trace') // Only works with commonjs
 
 // Tracer code above must come before anything else
 const path = require('path')
+const assert = require('assert')
 const { CloudfrontInvalidator } = require('@atproto/aws')
 const {
   Database,
@@ -30,19 +31,37 @@ const main = async () => {
     poolSize: 2,
   })
   await migrateDb.migrateToLatestOrThrow()
-  // Use lower-credentialed user to run the app
-  const db = Database.postgres({
-    url: env.dbPostgresUrl,
-    schema: env.dbSchema,
-    poolSize: env.dbPoolSize,
-    poolMaxUses: env.dbPoolMaxUses,
-    poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
-  })
+  // Use lower-credentialed user to run the app.
+  // Only db primary configured: services all queries, 1 pool.
+  // Only db non-primary configured: services any query that doesn't require a primary, 1 pool.
+  // Both db primary and non-primary configured: services all queries only using primary when needed, 2 pools.
+  // Neither db primary nor non-primary configured: not allowed, wont startup.
+  const dbPrimary = env.dbPrimaryPostgresUrl
+    ? Database.postgres({
+        isPrimary: true,
+        url: env.dbPrimaryPostgresUrl,
+        schema: env.dbSchema,
+        poolSize: env.dbPrimaryPoolSize || env.dbPoolSize,
+        poolMaxUses: env.dbPoolMaxUses,
+        poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
+      })
+    : undefined
+  const db = env.dbPostgresUrl
+    ? Database.postgres({
+        url: env.dbPostgresUrl,
+        schema: env.dbSchema,
+        poolSize: env.dbPoolSize,
+        poolMaxUses: env.dbPoolMaxUses,
+        poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
+      })
+    : dbPrimary
+  assert(db, 'missing configuration for db')
   const cfg = ServerConfig.readEnv({
     port: env.port,
     version: env.version,
     repoProvider: env.repoProvider,
-    dbPostgresUrl: env.dbPostgresUrl,
+    dbPostgresUrl: env.dbPostgresUrl || env.dbPrimaryPostgresUrl,
+    dbPrimaryPostgresUrl: env.dbPrimaryPostgresUrl,
     dbPostgresSchema: env.dbPostgresSchema,
     publicUrl: env.publicUrl,
     didPlcUrl: env.didPlcUrl,
@@ -60,6 +79,7 @@ const main = async () => {
   const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
   const bsky = BskyAppView.create({
     db,
+    dbPrimary: dbPrimary.asPrimary(),
     config: cfg,
     imgInvalidator: cfInvalidator,
     algos,
@@ -87,6 +107,8 @@ const getEnv = () => ({
   dbPoolSize: maybeParseInt(process.env.DB_POOL_SIZE),
   dbPoolMaxUses: maybeParseInt(process.env.DB_POOL_MAX_USES),
   dbPoolIdleTimeoutMs: maybeParseInt(process.env.DB_POOL_IDLE_TIMEOUT_MS),
+  dbPrimaryPostgresUrl: process.env.DB_PRIMARY_POSTGRES_URL,
+  dbPrimaryPoolSize: maybeParseInt(process.env.DB_PRIMARY_POOL_SIZE),
   publicUrl: process.env.PUBLIC_URL,
   didPlcUrl: process.env.DID_PLC_URL,
   imgUriSalt: process.env.IMG_URI_SALT,

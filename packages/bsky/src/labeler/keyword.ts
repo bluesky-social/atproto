@@ -1,4 +1,4 @@
-import Database from '../db'
+import Database, { Primary } from '../db'
 import { Labeler } from './base'
 import { getFieldsFromRecord, keywordLabeling } from './util'
 import { IdResolver } from '@atproto/identity'
@@ -11,7 +11,7 @@ export class KeywordLabeler extends Labeler {
 
   constructor(
     protected ctx: {
-      db: Database
+      db: Database & Primary
       idResolver: IdResolver
       cfg: ServerConfig
       backgroundQueue: BackgroundQueue
