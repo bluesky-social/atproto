@@ -159,7 +159,7 @@
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td>adult</td>
-  <td>blur</td>
+  <td>blur-media</td>
 </tr>
 <tr>
   <td>intolerant-race</td>

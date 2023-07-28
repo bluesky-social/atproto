@@ -103,7 +103,7 @@
         "id": "self-harm",
         "preferences": ["ignore", "warn", "hide"],
         "flags": ["adult"],
-        "onwarn": "blur"
+        "onwarn": "blur-media"
       }
     ]
   },
