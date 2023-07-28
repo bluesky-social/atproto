@@ -324,7 +324,7 @@
       "author": "bob",
       "labels": {},
       "behaviors": {
-        "account": {"cause": "blocking", "filter": true, "blur": true, "noOverride": true},
+        "account": {"cause": "blocking", "filter": true},
         "avatar": {"blur": true, "noOverride": true}
       }
     },
@@ -335,7 +335,7 @@
       "author": "carla",
       "labels": {},
       "behaviors": {
-        "account": {"cause": "blocked-by", "filter": true, "blur": true, "noOverride": true},
+        "account": {"cause": "blocked-by", "filter": true},
         "avatar": {"blur": true, "noOverride": true}
       }
     },
@@ -366,7 +366,7 @@
       "author": "fern",
       "labels": {},
       "behaviors": {
-        "account": {"cause": "blocking", "filter": true, "blur": true, "noOverride": true},
+        "account": {"cause": "blocking", "filter": true, "blur": false},
         "avatar": {"blur": true, "noOverride": true}
       }
     },
@@ -376,7 +376,7 @@
       "author": "bob",
       "labels": {"account": ["!hide"]},
       "behaviors": {
-        "account": {"cause": "blocking", "filter": true, "blur": true, "noOverride": true},
+        "account": {"cause": "label:!hide", "filter": true, "blur": true, "noOverride": true},
         "avatar": {"blur": true, "noOverride": true}
       }
     },
