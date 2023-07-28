@@ -5203,6 +5203,24 @@ export const schemaDict = {
               maximum: 100,
               default: 50,
             },
+            minReplyLikeCount: {
+              type: 'integer',
+              minimum: 0,
+              maximum: 25,
+              default: 2,
+            },
+            showQuotePosts: {
+              type: 'boolean',
+              default: true,
+            },
+            showReplies: {
+              type: 'boolean',
+              default: true,
+            },
+            showReposts: {
+              type: 'boolean',
+              default: true,
+            },
             cursor: {
               type: 'string',
             },

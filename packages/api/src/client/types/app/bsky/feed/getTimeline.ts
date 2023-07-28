@@ -11,6 +11,10 @@ import * as AppBskyFeedDefs from './defs'
 export interface QueryParams {
   algorithm?: string
   limit?: number
+  minReplyLikeCount?: number
+  showQuotePosts?: boolean
+  showReplies?: boolean
+  showReposts?: boolean
   cursor?: string
 }
 
