@@ -70,11 +70,13 @@ export function moderateProfile(
   let blurAvatar = false
   if ((account.blur || account.blurMedia) && account.cause?.type !== 'muted') {
     blurAvatar = true
-  } else if (
-    (profile.blur || profile.blurMedia) &&
-    profile.cause?.type !== 'muted'
-  ) {
+  } else if (profile.blur || profile.blurMedia) {
     blurAvatar = true
+  }
+
+  // dont blur the account for muting
+  if (account.cause?.type === 'muted') {
+    account.blur = false
   }
 
   return {

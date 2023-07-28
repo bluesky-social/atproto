@@ -346,7 +346,7 @@
       "author": "dan",
       "labels": {},
       "behaviors": {
-        "account": {"cause": "muted", "filter": true, "blur": true}
+        "account": {"cause": "muted", "filter": true}
       }
     },
 
@@ -356,7 +356,7 @@
       "author": "elise",
       "labels": {},
       "behaviors": {
-        "account": {"cause": "muted-by-list", "filter": true, "blur": true}
+        "account": {"cause": "muted-by-list", "filter": true}
       }
     },
 
