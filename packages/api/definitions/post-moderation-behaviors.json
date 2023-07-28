@@ -822,7 +822,7 @@
       "author": "bob",
       "labels": {"post": ["!hide"]},
       "behaviors": {
-        "content": {"cause": "blocking", "filter": true, "blur": true, "noOverride": true},
+        "content": {"cause": "label:!hide", "filter": true, "blur": true, "noOverride": true},
         "avatar": {"blur": true, "noOverride": true}
       }
     },
