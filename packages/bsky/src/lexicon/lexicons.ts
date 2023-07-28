@@ -5207,7 +5207,7 @@ export const schemaDict = {
               type: 'integer',
               minimum: 0,
               maximum: 25,
-              default: 2,
+              default: 0,
             },
             showQuotePosts: {
               type: 'boolean',

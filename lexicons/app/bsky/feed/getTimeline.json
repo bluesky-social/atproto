@@ -10,7 +10,7 @@
         "properties": {
           "algorithm": {"type": "string"},
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "minReplyLikeCount": {"type": "integer", "minimum": 0, "maximum": 25, "default": 2},
+          "minReplyLikeCount": {"type": "integer", "minimum": 0, "maximum": 25, "default": 0},
           "showQuotePosts": {"type": "boolean", "default": true},
           "showReplies": {"type": "boolean", "default": true},
           "showReposts": {"type": "boolean", "default": true},
