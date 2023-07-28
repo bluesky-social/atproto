@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Invalid collection: expected: ${collId}`)
       }
 
-      await ctx.services.graph(ctx.db).muteActorList({
+      await ctx.services.graph(ctx.dbPrimary).muteActorList({
         list,
         mutedByDid: requester,
       })

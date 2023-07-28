@@ -13,7 +13,7 @@ describe('db', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_db',
     })
-    db = network.bsky.ctx.db.asPrimary()
+    db = network.bsky.ctx.dbPrimary
   })
 
   afterAll(async () => {

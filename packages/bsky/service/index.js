@@ -45,7 +45,7 @@ const main = async () => {
         poolSize: env.dbPrimaryPoolSize || env.dbPoolSize,
         poolMaxUses: env.dbPoolMaxUses,
         poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
-      })
+      }).asPrimary()
     : undefined
   const db = env.dbPostgresUrl
     ? Database.postgres({
@@ -80,7 +80,7 @@ const main = async () => {
   const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
   const bsky = BskyAppView.create({
     db,
-    dbPrimary: dbPrimary.asPrimary(),
+    dbPrimary,
     config: cfg,
     imgInvalidator: cfInvalidator,
     algos,

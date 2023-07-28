@@ -52,10 +52,11 @@ export class TestBsky {
     })
 
     const db = bsky.Database.postgres({
-      isPrimary: true,
       url: cfg.dbPostgresUrl,
       schema: cfg.dbPostgresSchema,
     })
+
+    const dbPrimary = new bsky.Database(db.db, db.cfg, true).asPrimary()
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
     const migrationDb = bsky.Database.postgres({
@@ -72,7 +73,7 @@ export class TestBsky {
 
     const server = bsky.BskyAppView.create({
       db,
-      dbPrimary: db.asPrimary(),
+      dbPrimary,
       config,
       algos: cfg.algos,
     })

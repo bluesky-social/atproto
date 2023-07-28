@@ -5,18 +5,19 @@ import { TestNetwork } from '@atproto/dev-env'
 import { Database } from '../src'
 import * as lex from '../src/lexicon/lexicons'
 import { Services } from '../src/services'
+import { Primary } from '../src/db'
 
 describe('duplicate record', () => {
   let network: TestNetwork
   let did: string
-  let db: Database
+  let db: Database & Primary
   let services: Services
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_duplicates',
     })
-    db = network.bsky.ctx.db
+    db = network.bsky.ctx.dbPrimary
     services = network.bsky.ctx.services
     did = 'did:example:alice'
   })
