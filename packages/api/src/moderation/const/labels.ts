@@ -1124,14 +1124,14 @@ export const LABELS: LabelDefinitionMap = {
       },
       account: {
         en: {
-          name: 'Security Concerns',
+          name: 'Security Warning',
           description:
             'This account has published content designed to hijack user accounts such as a phishing attack.',
         },
       },
       content: {
         en: {
-          name: 'Security Concerns',
+          name: 'Security Warning',
           description:
             'This content is designed to hijack user accounts such as a phishing attack.',
         },
@@ -1155,14 +1155,14 @@ export const LABELS: LabelDefinitionMap = {
       },
       account: {
         en: {
-          name: 'Network Attacks',
+          name: 'Network Attack Warning',
           description:
             'This account has published content designed to attack network systems such as denial-of-service attacks.',
         },
       },
       content: {
         en: {
-          name: 'Network Attacks',
+          name: 'Network Attack Warning',
           description:
             'This content is designed to attack network systems such as denial-of-service attacks.',
         },
@@ -1185,14 +1185,14 @@ export const LABELS: LabelDefinitionMap = {
       },
       account: {
         en: {
-          name: 'Impersonation',
+          name: 'Impersonation Warning',
           description:
             'The moderators believe this account is lying about their identity.',
         },
       },
       content: {
         en: {
-          name: 'Impersonation',
+          name: 'Impersonation Warning',
           description:
             'The moderators believe this account is lying about their identity.',
         },
@@ -1215,14 +1215,14 @@ export const LABELS: LabelDefinitionMap = {
       },
       account: {
         en: {
-          name: 'Scam',
+          name: 'Scam Warning',
           description:
             'The moderators believe this account publishes fraudulent content.',
         },
       },
       content: {
         en: {
-          name: 'Scam',
+          name: 'Scam Warning',
           description: 'The moderators believe this is fraudulent content.',
         },
       },
@@ -1244,14 +1244,14 @@ export const LABELS: LabelDefinitionMap = {
       },
       account: {
         en: {
-          name: 'Misinformation',
+          name: 'Misinformation Warning',
           description:
             'The moderators believe this account has published lies with the intent to deceive.',
         },
       },
       content: {
         en: {
-          name: 'Misinformation',
+          name: 'Misinformation Warning',
           description:
             'The moderators believe this content contains lies with the intent to deceive.',
         },
@@ -1275,14 +1275,14 @@ export const LABELS: LabelDefinitionMap = {
       },
       account: {
         en: {
-          name: 'Unverified Claims',
+          name: 'Unverified Claims Warning',
           description:
             'The moderators believe this account has published claims which have not been verified by a trusted source.',
         },
       },
       content: {
         en: {
-          name: 'Unverified Claims',
+          name: 'Unverified Claims Warning',
           description:
             'The moderators believe this content contains claims which have not been verified by a trusted source.',
         },
@@ -1306,14 +1306,14 @@ export const LABELS: LabelDefinitionMap = {
       },
       account: {
         en: {
-          name: 'Manipulated Media',
+          name: 'Manipulated Media Warning',
           description:
             'The moderators believe this account has published content which misrepresents a person or event by modifying the source material.',
         },
       },
       content: {
         en: {
-          name: 'Manipulated Media',
+          name: 'Manipulated Media Warning',
           description:
             'The moderators believe this content contains misrepresentations of a person or event by modifying the source material.',
         },
@@ -1336,14 +1336,14 @@ export const LABELS: LabelDefinitionMap = {
       },
       account: {
         en: {
-          name: 'Conspiracy Theories',
+          name: 'Conspiracy Theories Warning',
           description:
             'The moderators believe this account has published fringe views which lack evidence.',
         },
       },
       content: {
         en: {
-          name: 'Conspiracy Theories',
+          name: 'Conspiracy Theories Warning',
           description:
             'The moderators believe this content contains fringe views which lack evidence.',
         },
@@ -1367,14 +1367,14 @@ export const LABELS: LabelDefinitionMap = {
       },
       account: {
         en: {
-          name: 'Bullshit',
+          name: 'Bullshit Warning',
           description:
             'The moderators believe this account has published content which is not technically wrong or lying, but misleading through omission or re-contextualization.',
         },
       },
       content: {
         en: {
-          name: 'Bullshit',
+          name: 'Bullshit Warning',
           description:
             'The moderators believe this content includes statements which are not technically wrong or lying, but are misleading through omission or re-contextualization.',
         },

@@ -509,11 +509,11 @@
       "description": "Content designed to hijack user accounts such as a phishing attack."
     },
     "account": {
-      "name": "Security Concerns",
+      "name": "Security Warning",
       "description": "This account has published content designed to hijack user accounts such as a phishing attack."
     },
     "content": {
-      "name": "Security Concerns",
+      "name": "Security Warning",
       "description": "This content is designed to hijack user accounts such as a phishing attack."
     }
   },
@@ -523,11 +523,11 @@
       "description": "Content designed to attack network systems such as denial-of-service attacks."
     },
     "account": {
-      "name": "Network Attacks",
+      "name": "Network Attack Warning",
       "description": "This account has published content designed to attack network systems such as denial-of-service attacks."
     },
     "content": {
-      "name": "Network Attacks",
+      "name": "Network Attack Warning",
       "description": "This content is designed to attack network systems such as denial-of-service attacks."
     }
   },
@@ -537,11 +537,11 @@
       "description": "Accounts which falsely assert some identity."
     },
     "account": {
-      "name": "Impersonation",
+      "name": "Impersonation Warning",
       "description": "The moderators believe this account is lying about their identity."
     },
     "content": {
-      "name": "Impersonation",
+      "name": "Impersonation Warning",
       "description": "The moderators believe this account is lying about their identity."
     }
   },
@@ -551,11 +551,11 @@
       "description": "Fraudulent content."
     },
     "account": {
-      "name": "Scam",
+      "name": "Scam Warning",
       "description": "The moderators believe this account publishes fraudulent content."
     },
     "content": {
-      "name": "Scam",
+      "name": "Scam Warning",
       "description": "The moderators believe this is fraudulent content."
     }
   },
@@ -565,11 +565,11 @@
       "description": "Lies with the intent to deceive."
     },
     "account": {
-      "name": "Misinformation",
+      "name": "Misinformation Warning",
       "description": "The moderators believe this account has published lies with the intent to deceive."
     },
     "content": {
-      "name": "Misinformation",
+      "name": "Misinformation Warning",
       "description": "The moderators believe this content contains lies with the intent to deceive."
     }
   },
@@ -579,11 +579,11 @@
       "description": "Assertions which have not been verified by a trusted source."
     },
     "account": {
-      "name": "Unverified Claims",
+      "name": "Unverified Claims Warning",
       "description": "The moderators believe this account has published claims which have not been verified by a trusted source."
     },
     "content": {
-      "name": "Unverified Claims",
+      "name": "Unverified Claims Warning",
       "description": "The moderators believe this content contains claims which have not been verified by a trusted source."
     }
   },
@@ -593,11 +593,11 @@
       "description": "Content which misrepresents a person or event by modifying the source material."
     },
     "account": {
-      "name": "Manipulated Media",
+      "name": "Manipulated Media Warning",
       "description": "The moderators believe this account has published content which misrepresents a person or event by modifying the source material."
     },
     "content": {
-      "name": "Manipulated Media",
+      "name": "Manipulated Media Warning",
       "description": "The moderators believe this content contains misrepresentations of a person or event by modifying the source material."
     }
   },
@@ -607,11 +607,11 @@
       "description": "Fringe views which lack evidence."
     },
     "account": {
-      "name": "Conspiracy Theories",
+      "name": "Conspiracy Theories Warning",
       "description": "The moderators believe this account has published fringe views which lack evidence."
     },
     "content": {
-      "name": "Conspiracy Theories",
+      "name": "Conspiracy Theories Warning",
       "description": "The moderators believe this content contains fringe views which lack evidence."
     }
   },
@@ -621,11 +621,11 @@
       "description": "Content which is not technically wrong or lying, but misleading through omission or re-contextualization."
     },
     "account": {
-      "name": "Bullshit",
+      "name": "Bullshit Warning",
       "description": "The moderators believe this account has published content which is not technically wrong or lying, but misleading through omission or re-contextualization."
     },
     "content": {
-      "name": "Bullshit",
+      "name": "Bullshit Warning",
       "description": "The moderators believe this content includes statements which are not technically wrong or lying, but are misleading through omission or re-contextualization."
     }
   }

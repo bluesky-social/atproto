@@ -753,72 +753,72 @@
   <td>account-security</td>
   <td>
     <code>general</code><br><strong>Security Concerns</strong><br>Content designed to hijack user accounts such as a phishing attack.<br><br>
-    <code>on an account</code><br><strong>Security Concerns</strong><br>This account has published content designed to hijack user accounts such as a phishing attack.<br><br>
-    <code>on content</code><br><strong>Security Concerns</strong><br>This content is designed to hijack user accounts such as a phishing attack.<br><br>
+    <code>on an account</code><br><strong>Security Warning</strong><br>This account has published content designed to hijack user accounts such as a phishing attack.<br><br>
+    <code>on content</code><br><strong>Security Warning</strong><br>This content is designed to hijack user accounts such as a phishing attack.<br><br>
   </td>
 </tr>
 <tr>
   <td>net-abuse</td>
   <td>
     <code>general</code><br><strong>Network Attacks</strong><br>Content designed to attack network systems such as denial-of-service attacks.<br><br>
-    <code>on an account</code><br><strong>Network Attacks</strong><br>This account has published content designed to attack network systems such as denial-of-service attacks.<br><br>
-    <code>on content</code><br><strong>Network Attacks</strong><br>This content is designed to attack network systems such as denial-of-service attacks.<br><br>
+    <code>on an account</code><br><strong>Network Attack Warning</strong><br>This account has published content designed to attack network systems such as denial-of-service attacks.<br><br>
+    <code>on content</code><br><strong>Network Attack Warning</strong><br>This content is designed to attack network systems such as denial-of-service attacks.<br><br>
   </td>
 </tr>
 <tr>
   <td>impersonation</td>
   <td>
     <code>general</code><br><strong>Impersonation</strong><br>Accounts which falsely assert some identity.<br><br>
-    <code>on an account</code><br><strong>Impersonation</strong><br>The moderators believe this account is lying about their identity.<br><br>
-    <code>on content</code><br><strong>Impersonation</strong><br>The moderators believe this account is lying about their identity.<br><br>
+    <code>on an account</code><br><strong>Impersonation Warning</strong><br>The moderators believe this account is lying about their identity.<br><br>
+    <code>on content</code><br><strong>Impersonation Warning</strong><br>The moderators believe this account is lying about their identity.<br><br>
   </td>
 </tr>
 <tr>
   <td>scam</td>
   <td>
     <code>general</code><br><strong>Scam</strong><br>Fraudulent content.<br><br>
-    <code>on an account</code><br><strong>Scam</strong><br>The moderators believe this account publishes fraudulent content.<br><br>
-    <code>on content</code><br><strong>Scam</strong><br>The moderators believe this is fraudulent content.<br><br>
+    <code>on an account</code><br><strong>Scam Warning</strong><br>The moderators believe this account publishes fraudulent content.<br><br>
+    <code>on content</code><br><strong>Scam Warning</strong><br>The moderators believe this is fraudulent content.<br><br>
   </td>
 </tr>
 <tr>
   <td>misinformation</td>
   <td>
     <code>general</code><br><strong>Misinformation</strong><br>Lies with the intent to deceive.<br><br>
-    <code>on an account</code><br><strong>Misinformation</strong><br>The moderators believe this account has published lies with the intent to deceive.<br><br>
-    <code>on content</code><br><strong>Misinformation</strong><br>The moderators believe this content contains lies with the intent to deceive.<br><br>
+    <code>on an account</code><br><strong>Misinformation Warning</strong><br>The moderators believe this account has published lies with the intent to deceive.<br><br>
+    <code>on content</code><br><strong>Misinformation Warning</strong><br>The moderators believe this content contains lies with the intent to deceive.<br><br>
   </td>
 </tr>
 <tr>
   <td>unverified</td>
   <td>
     <code>general</code><br><strong>Unverified Claims</strong><br>Assertions which have not been verified by a trusted source.<br><br>
-    <code>on an account</code><br><strong>Unverified Claims</strong><br>The moderators believe this account has published claims which have not been verified by a trusted source.<br><br>
-    <code>on content</code><br><strong>Unverified Claims</strong><br>The moderators believe this content contains claims which have not been verified by a trusted source.<br><br>
+    <code>on an account</code><br><strong>Unverified Claims Warning</strong><br>The moderators believe this account has published claims which have not been verified by a trusted source.<br><br>
+    <code>on content</code><br><strong>Unverified Claims Warning</strong><br>The moderators believe this content contains claims which have not been verified by a trusted source.<br><br>
   </td>
 </tr>
 <tr>
   <td>manipulated</td>
   <td>
     <code>general</code><br><strong>Manipulated Media</strong><br>Content which misrepresents a person or event by modifying the source material.<br><br>
-    <code>on an account</code><br><strong>Manipulated Media</strong><br>The moderators believe this account has published content which misrepresents a person or event by modifying the source material.<br><br>
-    <code>on content</code><br><strong>Manipulated Media</strong><br>The moderators believe this content contains misrepresentations of a person or event by modifying the source material.<br><br>
+    <code>on an account</code><br><strong>Manipulated Media Warning</strong><br>The moderators believe this account has published content which misrepresents a person or event by modifying the source material.<br><br>
+    <code>on content</code><br><strong>Manipulated Media Warning</strong><br>The moderators believe this content contains misrepresentations of a person or event by modifying the source material.<br><br>
   </td>
 </tr>
 <tr>
   <td>fringe</td>
   <td>
     <code>general</code><br><strong>Conspiracy Theories</strong><br>Fringe views which lack evidence.<br><br>
-    <code>on an account</code><br><strong>Conspiracy Theories</strong><br>The moderators believe this account has published fringe views which lack evidence.<br><br>
-    <code>on content</code><br><strong>Conspiracy Theories</strong><br>The moderators believe this content contains fringe views which lack evidence.<br><br>
+    <code>on an account</code><br><strong>Conspiracy Theories Warning</strong><br>The moderators believe this account has published fringe views which lack evidence.<br><br>
+    <code>on content</code><br><strong>Conspiracy Theories Warning</strong><br>The moderators believe this content contains fringe views which lack evidence.<br><br>
   </td>
 </tr>
 <tr>
   <td>bullshit</td>
   <td>
     <code>general</code><br><strong>Bullshit</strong><br>Content which is not technically wrong or lying, but misleading through omission or re-contextualization.<br><br>
-    <code>on an account</code><br><strong>Bullshit</strong><br>The moderators believe this account has published content which is not technically wrong or lying, but misleading through omission or re-contextualization.<br><br>
-    <code>on content</code><br><strong>Bullshit</strong><br>The moderators believe this content includes statements which are not technically wrong or lying, but are misleading through omission or re-contextualization.<br><br>
+    <code>on an account</code><br><strong>Bullshit Warning</strong><br>The moderators believe this account has published content which is not technically wrong or lying, but misleading through omission or re-contextualization.<br><br>
+    <code>on content</code><br><strong>Bullshit Warning</strong><br>The moderators believe this content includes statements which are not technically wrong or lying, but are misleading through omission or re-contextualization.<br><br>
   </td>
 </tr>
   </table>
