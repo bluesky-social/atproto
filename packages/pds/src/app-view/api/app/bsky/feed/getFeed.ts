@@ -11,7 +11,7 @@ import {
   PoorlyFormattedDidDocumentError,
   getFeedGen,
 } from '@atproto/identity'
-import { AtpAgent, AppBskyFeedGetFeedSkeleton, AtUri } from '@atproto/api'
+import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
 import { SkeletonFeedPost } from '../../../../../lexicon/types/app/bsky/feed/defs'
 import { QueryParams as GetFeedParams } from '../../../../../lexicon/types/app/bsky/feed/getFeed'
 import { OutputSchema as SkeletonOutput } from '../../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
@@ -20,19 +20,9 @@ import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
 import { AlgoResponse } from '../../../../../feed-gen/types'
 
-// temp hardcoded feeds that we can proxy to appview
-const PROXYABLE_FEEDS = [
-  'with-friends',
-  'bsky-team',
-  'hot-classic',
-  'best-of-follows',
-  'mutuals',
-]
-
 export default function (server: Server, ctx: AppContext) {
   const isProxyableFeed = (feed: string): boolean => {
-    const uri = new AtUri(feed)
-    return feed in ctx.algos && PROXYABLE_FEEDS.includes(uri.rkey)
+    return feed in ctx.algos
   }
 
   server.app.bsky.feed.getFeed({
@@ -71,12 +61,7 @@ export default function (server: Server, ctx: AppContext) {
           requester,
         )
       } else {
-        const { feed } = params
-        const localAlgo = ctx.algos[feed]
-        algoRes =
-          localAlgo !== undefined
-            ? await localAlgo(ctx, params, requester)
-            : await skeletonFromFeedGen(ctx, params, requester)
+        algoRes = await skeletonFromFeedGen(ctx, params, requester)
       }
 
       timerSkele.stop()

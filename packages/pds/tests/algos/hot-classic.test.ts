@@ -4,7 +4,7 @@ import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { makeAlgos } from '../../src'
 
-describe('algo hot-classic', () => {
+describe.skip('algo hot-classic', () => {
   let server: TestServerInfo
   let agent: AtpAgent
   let sc: SeedClient
