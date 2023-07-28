@@ -368,7 +368,8 @@
       "labels": {"account": ["porn"]},
       "behaviors": {
         "content": {"cause": "label:porn", "filter": true},
-        "avatar": {"blur": true}
+        "avatar": {"blur": true},
+        "embed": {"cause": "label:porn", "blur": true}
       }
     },
     "Blur-media label ('porn') on quoted post (hide)": {
@@ -416,7 +417,8 @@
       "author": "alice",
       "labels": {"account": ["porn"]},
       "behaviors": {
-        "avatar": {"blur": true}
+        "avatar": {"blur": true},
+        "embed": {"cause": "label:porn", "blur": true}
       }
     },
     "Blur-media label ('porn') on quoted post (warn)": {
@@ -640,7 +642,8 @@
       "labels": {"account": ["porn"]},
       "behaviors": {
         "content": {"cause": "label:porn", "filter": true, "noOverride": true},
-        "avatar": {"cause": "label:porn", "blur": true, "noOverride": true}
+        "avatar": {"cause": "label:porn", "blur": true, "noOverride": true},
+        "embed": {"cause": "label:porn", "blur": true, "noOverride": true}
       }
     },
     "Adult-only label on quoted post when adult content is disabled": {

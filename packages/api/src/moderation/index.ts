@@ -205,13 +205,19 @@ export function moderatePost(
     },
 
     // blur the embed if the quoted post required it,
-    // or else if the post decision was to blur media
+    // or else if the account or post decision was to blur media
     embed: !isModerationDecisionNoop(mergedQuote, { ignoreFilter: true })
       ? {
           cause: mergedQuote.cause,
           blur: mergedQuote.blur,
           alert: mergedQuote.alert,
           noOverride: mergedQuote.noOverride,
+        }
+      : account.blurMedia
+      ? {
+          cause: account.cause,
+          blur: true,
+          noOverride: account.noOverride,
         }
       : post.blurMedia
       ? {
