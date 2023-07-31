@@ -14,6 +14,7 @@ import {
   RateLimiterStatus,
   XRPCReqContext,
 } from './types'
+import { getReqIp } from './util'
 
 export type RateLimiterOpts = {
   keyPrefix: string
@@ -154,5 +155,5 @@ export const getTightestLimit = (
   return lowest
 }
 
-const defaultKey: CalcKeyFn = (ctx: XRPCReqContext) => ctx.req.ip
+const defaultKey: CalcKeyFn = (ctx: XRPCReqContext) => getReqIp(ctx.req)
 const defaultPoints: CalcPointsFn = () => 1
