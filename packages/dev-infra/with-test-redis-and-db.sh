@@ -5,6 +5,6 @@
 # ./with-test-redis-and-db.sh redis-cli -h localhost -p 6380 ping
 
 dir=$(dirname $0)
-source ${dir}/_common.sh
+. ${dir}/_common.sh
 
 SERVICES="db_test redis_test" main "$@"
