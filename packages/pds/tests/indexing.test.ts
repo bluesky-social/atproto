@@ -51,27 +51,6 @@ describe('indexing', () => {
       } as AppBskyFeedPost.Record,
     })
     const { uri } = createRecord
-    const updateRecord = await prepareUpdate({
-      did: sc.dids.alice,
-      collection: ids.AppBskyFeedPost,
-      rkey: uri.rkey,
-      record: {
-        $type: ids.AppBskyFeedPost,
-        text: '@carol.test how are you?',
-        facets: [
-          {
-            index: { byteStart: 0, byteEnd: 11 },
-            features: [
-              {
-                $type: `${ids.AppBskyRichtextFacet}#mention`,
-                did: sc.dids.carol,
-              },
-            ],
-          },
-        ],
-        createdAt,
-      } as AppBskyFeedPost.Record,
-    })
     const deleteRecord = prepareDelete({
       did: sc.dids.alice,
       collection: ids.AppBskyFeedPost,
@@ -91,19 +70,6 @@ describe('indexing', () => {
     expect(forSnapshot(getAfterCreate.data)).toMatchSnapshot()
     const createNotifications = await getNotifications(db, uri)
 
-    // Update
-    await services
-      .repo(db)
-      .processWrites({ did: sc.dids.alice, writes: [updateRecord] }, 1)
-    await server.processAll()
-
-    const getAfterUpdate = await agent.api.app.bsky.feed.getPostThread(
-      { uri: uri.toString() },
-      { headers: sc.getHeaders(sc.dids.alice) },
-    )
-    expect(forSnapshot(getAfterUpdate.data)).toMatchSnapshot()
-    const updateNotifications = await getNotifications(db, uri)
-
     // Delete
     await services
       .repo(db)
@@ -120,7 +86,6 @@ describe('indexing', () => {
     expect(
       forSnapshot({
         createNotifications,
-        updateNotifications,
         deleteNotifications,
       }),
     ).toMatchSnapshot()

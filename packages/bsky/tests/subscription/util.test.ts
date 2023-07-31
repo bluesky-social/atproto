@@ -95,11 +95,11 @@ describe('subscription utils', () => {
       const complete: number[] = []
       // partition 1 items start slow but get faster: slow should still complete first.
       partitioned.add('1', async () => {
-        await wait(10)
+        await wait(30)
         complete.push(11)
       })
       partitioned.add('1', async () => {
-        await wait(5)
+        await wait(20)
         complete.push(12)
       })
       partitioned.add('1', async () => {
@@ -121,7 +121,7 @@ describe('subscription utils', () => {
         complete.push(23)
       })
       partitioned.add('2', async () => {
-        await wait(15)
+        await wait(60)
         complete.push(24)
       })
       expect(partitioned.partitions.size).toEqual(2)

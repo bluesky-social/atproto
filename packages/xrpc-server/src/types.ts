@@ -244,9 +244,9 @@ export class UpstreamFailureError extends XRPCError {
   }
 }
 
-export class NotEnoughResoucesError extends XRPCError {
+export class NotEnoughResourcesError extends XRPCError {
   constructor(errorMessage?: string, customErrorName?: string) {
-    super(ResponseType.NotEnoughResouces, errorMessage, customErrorName)
+    super(ResponseType.NotEnoughResources, errorMessage, customErrorName)
   }
 }
 

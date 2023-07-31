@@ -6,7 +6,7 @@ import { GenericKeyset, paginate } from '../db/pagination'
 import AppContext from '../context'
 import { valuesList } from '../db/util'
 import { sql } from 'kysely'
-import { FeedItemType } from '../services/types'
+import { FeedItemType } from '../services/feed/types'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   '!no-promote',
