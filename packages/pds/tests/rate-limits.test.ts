@@ -9,6 +9,7 @@ describe('rate limits', () => {
   let agent: AtpAgent
   let sc: SeedClient
   let alice: string
+  let bob: string
 
   beforeAll(async () => {
     server = await runTestServer({
@@ -21,13 +22,14 @@ describe('rate limits', () => {
     sc = new SeedClient(agent)
     await userSeed(sc)
     alice = sc.dids.alice
+    bob = sc.dids.bob
   })
 
   afterAll(async () => {
     await server.close()
   })
 
-  it('rate limits', async () => {
+  it('rate limits by ip', async () => {
     const attempt = () =>
       agent.api.com.atproto.server.resetPassword({
         token: randomStr(4, 'base32'),
@@ -41,5 +43,27 @@ describe('rate limits', () => {
       }
     }
     await expect(attempt).rejects.toThrow('Rate Limit Exceeded')
+  })
+
+  it('rate limits by a custom key', async () => {
+    const attempt = () =>
+      agent.api.com.atproto.server.createSession({
+        identifier: sc.accounts[alice].handle,
+        password: 'asdf1234',
+      })
+    for (let i = 0; i < 10; i++) {
+      try {
+        await attempt()
+      } catch (err) {
+        // do nothing
+      }
+    }
+    await expect(attempt).rejects.toThrow('Rate Limit Exceeded')
+
+    // does not rate limit for another key
+    await agent.api.com.atproto.server.createSession({
+      identifier: sc.accounts[bob].handle,
+      password: sc.accounts[bob].password,
+    })
   })
 })
