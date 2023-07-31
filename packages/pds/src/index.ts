@@ -9,6 +9,7 @@ import cors from 'cors'
 import http from 'http'
 import events from 'events'
 import { createTransport } from 'nodemailer'
+import { Redis } from 'ioredis'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import { IdResolver } from '@atproto/identity'
@@ -52,7 +53,6 @@ import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
 import { ContentReporter } from './content-reporter'
 import { ModerationService } from './services/moderation'
-import { Redis } from 'ioredis'
 import { getRedisClient } from './redis'
 
 export type { MountedAlgos } from './feed-gen/types'
@@ -227,9 +227,15 @@ export class PDS {
       crawlers,
     })
 
+    let redis: Redis | undefined = undefined
+    if (config.redisHost) {
+      redis = getRedisClient(config.redisHost, config.redisPassword)
+    }
+
     const ctx = new AppContext({
       db,
       blobstore,
+      redis,
       repoSigningKey,
       plcRotationKey,
       idResolver,
@@ -250,11 +256,6 @@ export class PDS {
       crawlers,
       algos,
     })
-
-    let redis: Redis | null = null
-    if (config.redisHost) {
-      redis = getRedisClient(config.redisHost, config.redisPassword)
-    }
 
     const xrpcOpts: XrpcServerOptions = {
       validateResponse: config.debugMode,
@@ -360,6 +361,7 @@ export class PDS {
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()
+    await this.ctx.redis?.quit()
     clearInterval(this.dbStatsInterval)
     clearInterval(this.sequencerStatsInterval)
   }
