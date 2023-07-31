@@ -1,6 +1,7 @@
 'use strict' /* eslint-disable */
 
-require('dd-trace/init') // Only works with commonjs
+require('dd-trace') // Only works with commonjs
+  .init({ logInjection: true })
   .tracer.use('express', {
     hooks: {
       request: (span, req) => {

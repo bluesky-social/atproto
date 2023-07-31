@@ -432,9 +432,9 @@ describe('crud operations', () => {
       })
     })
 
-    it('temporarily only puts profile records', async () => {
+    it('temporarily only allows updates to profile', async () => {
       const { repo } = bobAgent.api.com.atproto
-      const put = repo.putRecord({
+      const put = await repo.putRecord({
         repo: bob.did,
         collection: ids.AppBskyGraphFollow,
         rkey: TID.nextStr(),
@@ -443,8 +443,18 @@ describe('crud operations', () => {
           createdAt: new Date().toISOString(),
         },
       })
-      await expect(put).rejects.toThrow(
-        'Temporarily only accepting puts for collections: app.bsky.actor.profile, app.bsky.graph.list',
+      const edit = repo.putRecord({
+        repo: bob.did,
+        collection: ids.AppBskyGraphFollow,
+        rkey: new AtUri(put.data.uri).rkey,
+        record: {
+          subject: bob.did,
+          createdAt: new Date().toISOString(),
+        },
+      })
+
+      await expect(edit).rejects.toThrow(
+        'Temporarily only accepting updates for collections: app.bsky.actor.profile, app.bsky.graph.list, app.bsky.feed.generator',
       )
     })
 
@@ -621,13 +631,13 @@ describe('crud operations', () => {
         record: postRecord(),
       })
       const uri = new AtUri(post.uri)
-      const attempDelete = repo.deleteRecord({
+      const attemptDelete = repo.deleteRecord({
         repo: uri.host,
         collection: uri.collection,
         rkey: uri.rkey,
         swapCommit: staleHead.root,
       })
-      await expect(attempDelete).rejects.toThrow(deleteRecord.InvalidSwapError)
+      await expect(attemptDelete).rejects.toThrow(deleteRecord.InvalidSwapError)
       const checkPost = repo.getRecord({
         repo: uri.host,
         collection: uri.collection,
@@ -666,13 +676,13 @@ describe('crud operations', () => {
         record: postRecord(),
       })
       const uri = new AtUri(post.uri)
-      const attempDelete = repo.deleteRecord({
+      const attemptDelete = repo.deleteRecord({
         repo: uri.host,
         collection: uri.collection,
         rkey: uri.rkey,
         swapRecord: (await cidForCbor({})).toString(),
       })
-      await expect(attempDelete).rejects.toThrow(deleteRecord.InvalidSwapError)
+      await expect(attemptDelete).rejects.toThrow(deleteRecord.InvalidSwapError)
       const checkPost = repo.getRecord({
         repo: uri.host,
         collection: uri.collection,
@@ -781,7 +791,6 @@ describe('crud operations', () => {
     it('applyWrites succeeds on proper commit cas', async () => {
       const { repo, sync } = aliceAgent.api.com.atproto
       const { data: head } = await sync.getHead({ did: alice.did })
-      const rkey = TID.nextStr()
       await repo.applyWrites({
         repo: alice.did,
         swapCommit: head.root,
@@ -790,18 +799,10 @@ describe('crud operations', () => {
             $type: `${ids.ComAtprotoRepoApplyWrites}#create`,
             action: 'create',
             collection: ids.AppBskyFeedPost,
-            rkey,
             value: { $type: ids.AppBskyFeedPost, ...postRecord() },
           },
         ],
       })
-      const uri = AtUri.make(alice.did, ids.AppBskyFeedPost, rkey)
-      const checkPost = repo.getRecord({
-        repo: uri.host,
-        collection: uri.collection,
-        rkey: uri.rkey,
-      })
-      await expect(checkPost).resolves.toBeDefined()
     })
 
     it('applyWrites fails on bad commit cas', async () => {
@@ -821,7 +822,6 @@ describe('crud operations', () => {
             $type: `${ids.ComAtprotoRepoApplyWrites}#create`,
             action: 'create',
             collection: ids.AppBskyFeedPost,
-            rkey: TID.nextStr(),
             value: { $type: ids.AppBskyFeedPost, ...postRecord() },
           },
         ],

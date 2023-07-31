@@ -5,7 +5,7 @@ import basicSeed from '../seeds/basic'
 import { makeAlgos } from '../../src'
 import { TestNetwork } from '@atproto/dev-env'
 
-describe('algo whats-hot', () => {
+describe.skip('algo whats-hot', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient

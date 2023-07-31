@@ -150,7 +150,7 @@ describe('account', () => {
     expect(res3.data.codes.length).toBe(2)
   })
 
-  it('admin gifted codes to not impact a users avilable codes', async () => {
+  it('admin gifted codes to not impact a users available codes', async () => {
     const account = await makeLoggedInAccount(agent)
 
     // again, pretend account was made 2 days ago

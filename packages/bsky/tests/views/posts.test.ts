@@ -76,11 +76,11 @@ describe('pds posts views', () => {
     const posts = await agent.api.app.bsky.feed.getPosts({ uris })
 
     expect(posts.data.posts.length).toBe(2)
-    const recivedUris = posts.data.posts.map((p) => p.uri).sort()
+    const receivedUris = posts.data.posts.map((p) => p.uri).sort()
     const expected = [
       sc.posts[sc.dids.alice][0].ref.uriStr,
       sc.posts[sc.dids.bob][0].ref.uriStr,
     ].sort()
-    expect(recivedUris).toEqual(expected)
+    expect(receivedUris).toEqual(expected)
   })
 })
