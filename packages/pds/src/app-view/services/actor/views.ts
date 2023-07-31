@@ -10,6 +10,7 @@ import { ImageUriBuilder } from '../../../image/uri'
 import { LabelService } from '../label'
 import { GraphService } from '../graph'
 import { LabelCache } from '../../../label-cache'
+import { notSoftDeletedClause } from '../../../db/util'
 
 export class ActorViews {
   constructor(
@@ -26,27 +27,35 @@ export class ActorViews {
   profileDetailed(
     result: ActorResult,
     viewer: string,
+    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ProfileViewDetailed>
   profileDetailed(
     result: ActorResult[],
     viewer: string,
+    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ProfileViewDetailed[]>
   async profileDetailed(
     result: ActorResult | ActorResult[],
     viewer: string,
+    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ProfileViewDetailed | ProfileViewDetailed[]> {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
     const { ref } = this.db.db.dynamic
+    const { skipLabels = false, includeSoftDeleted = false } = opts ?? {}
 
     const dids = results.map((r) => r.did)
 
     const profileInfosQb = this.db.db
       .selectFrom('did_handle')
       .where('did_handle.did', 'in', dids)
+      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .leftJoin('profile', 'profile.creator', 'did_handle.did')
       .leftJoin('profile_agg', 'profile_agg.did', 'did_handle.did')
+      .if(!includeSoftDeleted, (qb) =>
+        qb.where(notSoftDeletedClause(ref('repo_root'))),
+      )
       .select([
         'did_handle.did as did',
         'profile.uri as profileUri',
@@ -100,7 +109,7 @@ export class ActorViews {
 
     const [profileInfos, labels] = await Promise.all([
       profileInfosQb.execute(),
-      this.services.label.getLabelsForSubjects(dids),
+      this.services.label.getLabelsForSubjects(skipLabels ? [] : dids),
     ])
 
     const profileInfoByDid = profileInfos.reduce((acc, info) => {
@@ -152,22 +161,36 @@ export class ActorViews {
     return Array.isArray(result) ? views : views[0]
   }
 
-  profile(result: ActorResult, viewer: string): Promise<ProfileView>
-  profile(result: ActorResult[], viewer: string): Promise<ProfileView[]>
+  profile(
+    result: ActorResult,
+    viewer: string,
+    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
+  ): Promise<ProfileView>
+  profile(
+    result: ActorResult[],
+    viewer: string,
+    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
+  ): Promise<ProfileView[]>
   async profile(
     result: ActorResult | ActorResult[],
     viewer: string,
+    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ProfileView | ProfileView[]> {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
     const { ref } = this.db.db.dynamic
+    const { skipLabels = false, includeSoftDeleted = false } = opts ?? {}
     const dids = results.map((r) => r.did)
 
     const profileInfosQb = this.db.db
       .selectFrom('did_handle')
       .where('did_handle.did', 'in', dids)
+      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .leftJoin('profile', 'profile.creator', 'did_handle.did')
+      .if(!includeSoftDeleted, (qb) =>
+        qb.where(notSoftDeletedClause(ref('repo_root'))),
+      )
       .select([
         'did_handle.did as did',
         'profile.uri as profileUri',
@@ -217,7 +240,7 @@ export class ActorViews {
 
     const [profileInfos, labels] = await Promise.all([
       profileInfosQb.execute(),
-      this.services.label.getLabelsForSubjects(dids),
+      this.services.label.getLabelsForSubjects(skipLabels ? [] : dids),
     ])
 
     const profileInfoByDid = profileInfos.reduce((acc, info) => {
@@ -263,19 +286,25 @@ export class ActorViews {
   }
 
   // @NOTE keep in sync with feedService.getActorViews()
-  profileBasic(result: ActorResult, viewer: string): Promise<ProfileViewBasic>
+  profileBasic(
+    result: ActorResult,
+    viewer: string,
+    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
+  ): Promise<ProfileViewBasic>
   profileBasic(
     result: ActorResult[],
     viewer: string,
+    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ProfileViewBasic[]>
   async profileBasic(
     result: ActorResult | ActorResult[],
     viewer: string,
+    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ProfileViewBasic | ProfileViewBasic[]> {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
-    const profiles = await this.profile(results, viewer)
+    const profiles = await this.profile(results, viewer, opts)
     const views = profiles.map((view) => ({
       did: view.did,
       handle: view.handle,
