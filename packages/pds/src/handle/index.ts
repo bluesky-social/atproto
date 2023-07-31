@@ -14,7 +14,7 @@ export const normalizeAndValidateHandle = async (opts: {
   // base formatting validation
   const handle = baseNormalizeAndValidate(opts.handle)
   // tld validation
-  if (!ident.isValidTld) {
+  if (!ident.isValidTld(handle)) {
     throw new InvalidRequestError(
       'Handle TLD is invalid or disallowed',
       'InvalidHandle',
