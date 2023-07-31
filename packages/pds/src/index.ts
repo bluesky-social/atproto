@@ -14,6 +14,7 @@ import { BlobStore } from '@atproto/repo'
 import { IdResolver } from '@atproto/identity'
 import {
   RateLimiter,
+  RateLimiterCreator,
   RateLimiterOpts,
   Options as XrpcServerOptions,
 } from '@atproto/xrpc-server'
@@ -51,6 +52,8 @@ import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
 import { ContentReporter } from './content-reporter'
 import { ModerationService } from './services/moderation'
+import { Redis } from 'ioredis'
+import { getRedisClient } from './redis'
 
 export type { MountedAlgos } from './feed-gen/types'
 export type { ServerConfigValues } from './config'
@@ -248,6 +251,11 @@ export class PDS {
       algos,
     })
 
+    let redis: Redis | null = null
+    if (config.redisHost) {
+      redis = getRedisClient(config.redisHost, config.redisPassword)
+    }
+
     const xrpcOpts: XrpcServerOptions = {
       validateResponse: config.debugMode,
       payload: {
@@ -257,12 +265,22 @@ export class PDS {
       },
     }
     if (config.rateLimitsEnabled) {
-      xrpcOpts['rateLimits'] = {
-        creator: (opts: RateLimiterOpts) =>
+      let rlCreator: RateLimiterCreator
+      if (redis) {
+        rlCreator = (opts: RateLimiterOpts) =>
+          RateLimiter.redis(redis, {
+            bypassSecret: config.rateLimitBypassKey,
+            ...opts,
+          })
+      } else {
+        rlCreator = (opts: RateLimiterOpts) =>
           RateLimiter.memory({
             bypassSecret: config.rateLimitBypassKey,
             ...opts,
-          }),
+          })
+      }
+      xrpcOpts['rateLimits'] = {
+        creator: rlCreator,
         global: [
           {
             name: 'global-ip',
