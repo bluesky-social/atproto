@@ -34,10 +34,17 @@ export default function (server: Server, ctx: AppContext) {
           'AccountTakedown',
         )
       }
+      const profile = await actorService.views.profileDetailed(
+        actorRes,
+        requester,
+      )
+      if (!profile) {
+        throw new InvalidRequestError('Profile not found')
+      }
 
       return {
         encoding: 'application/json',
-        body: await actorService.views.profileDetailed(actorRes, requester),
+        body: profile,
       }
     },
   })

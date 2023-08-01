@@ -48,9 +48,9 @@ export default function (server: Server, ctx: AppContext) {
 
       const actors = await services.appView
         .actor(db)
-        .views.profileBasic(results, requester)
+        .views.profilesBasic(results, requester)
 
-      const filtered = actors.filter(
+      const filtered = Object.values(actors).filter(
         (actor) => !actor.viewer?.blocking && !actor.viewer?.blockedBy,
       )
 

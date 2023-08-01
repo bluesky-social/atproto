@@ -22,14 +22,15 @@ export default function (server: Server, ctx: AppContext) {
       const actorService = services.appView.actor(db)
 
       const actorsRes = await actorService.getActors(actors)
+      const profiles = await actorService.views.profilesDetailed(
+        actorsRes,
+        requester,
+      )
 
       return {
         encoding: 'application/json',
         body: {
-          profiles: await actorService.views.profileDetailed(
-            actorsRes,
-            requester,
-          ),
+          profiles: Object.values(profiles),
         },
       }
     },

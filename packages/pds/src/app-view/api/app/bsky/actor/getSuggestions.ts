@@ -64,14 +64,15 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const suggestionsRes = await suggestionsQb.execute()
+      const profiles = await services.appView
+        .actor(ctx.db)
+        .views.profiles(suggestionsRes, requester)
 
       return {
         encoding: 'application/json',
         body: {
           cursor: suggestionsRes.at(-1)?.did,
-          actors: await services.appView
-            .actor(ctx.db)
-            .views.profile(suggestionsRes, requester),
+          actors: Object.values(profiles),
         },
       }
     },

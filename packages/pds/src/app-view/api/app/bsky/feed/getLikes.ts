@@ -57,7 +57,7 @@ export default function (server: Server, ctx: AppContext) {
       const likesRes = await builder.execute()
       const actors = await services.appView
         .actor(db)
-        .views.profile(likesRes, requester)
+        .views.profiles(likesRes, requester)
 
       return {
         encoding: 'application/json',
@@ -65,10 +65,10 @@ export default function (server: Server, ctx: AppContext) {
           uri,
           cid,
           cursor: keyset.packFromResult(likesRes),
-          likes: likesRes.map((row, i) => ({
+          likes: likesRes.map((row) => ({
             createdAt: row.createdAt,
             indexedAt: row.indexedAt,
-            actor: actors[i],
+            actor: actors[row.did],
           })),
         },
       }

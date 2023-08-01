@@ -112,7 +112,7 @@ export default function (server: Server, ctx: AppContext) {
       const recordUris = notifs.map((notif) => notif.uri)
       const [blocks, authors, labels] = await Promise.all([
         blocksQb ? blocksQb.execute() : emptyBlocksResult,
-        actorService.views.profile(
+        actorService.views.profiles(
           notifs.map((notif) => ({
             did: notif.authorDid,
             handle: notif.authorHandle,
