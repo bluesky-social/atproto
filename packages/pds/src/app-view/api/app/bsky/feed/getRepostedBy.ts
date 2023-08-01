@@ -65,7 +65,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           uri,
           cid,
-          repostedBy: repostedBy,
+          repostedBy,
           cursor: keyset.packFromResult(repostedByRes),
         },
       }

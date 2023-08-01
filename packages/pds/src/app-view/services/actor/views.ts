@@ -151,13 +151,7 @@ export class ActorViews {
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ProfileViewDetailed[]> {
     const profiles = await this.profilesDetailed(results, viewer, opts)
-    const ordered: ProfileViewDetailed[] = []
-    for (const result of results) {
-      if (profiles[result.did]) {
-        ordered.push(profiles[result.did])
-      }
-    }
-    return ordered
+    return hydrateOrdered(results, profiles)
   }
 
   async profileDetailed(
@@ -284,13 +278,7 @@ export class ActorViews {
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ProfileView[]> {
     const profiles = await this.profiles(results, viewer, opts)
-    const ordered: ProfileView[] = []
-    for (const result of results) {
-      if (profiles[result.did]) {
-        ordered.push(profiles[result.did])
-      }
-    }
-    return ordered
+    return hydrateOrdered(results, profiles)
   }
 
   async profile(
@@ -333,13 +321,7 @@ export class ActorViews {
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ProfileViewBasic[]> {
     const profiles = await this.profilesBasic(results, viewer, opts)
-    const ordered: ProfileViewBasic[] = []
-    for (const result of results) {
-      if (profiles[result.did]) {
-        ordered.push(profiles[result.did])
-      }
-    }
-    return ordered
+    return hydrateOrdered(results, profiles)
   }
 
   async profileBasic(
@@ -364,4 +346,17 @@ function truncateUtf8(str: string | null | undefined, length: number) {
     return decoder.decode(truncated).replace(/\uFFFD$/, '')
   }
   return str
+}
+
+const hydrateOrdered = <T>(
+  results: ActorResult[],
+  profiles: Record<string, T>,
+): T[] => {
+  const ordered: T[] = []
+  for (const result of results) {
+    if (profiles[result.did]) {
+      ordered.push(profiles[result.did])
+    }
+  }
+  return ordered
 }

@@ -71,7 +71,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           subject,
-          follows: follows,
+          follows,
           cursor: keyset.packFromResult(followsRes),
         },
       }
