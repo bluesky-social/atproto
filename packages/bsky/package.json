@@ -14,7 +14,7 @@
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
-    "test": "../pg/with-test-db.sh jest",
+    "test": "../dev-infra/with-test-db.sh jest",
     "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "jest --updateSnapshot",
     "prettier": "prettier --check src/ tests/",
