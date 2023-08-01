@@ -1,6 +1,6 @@
-# pg
+# dev-infra
 
-Helpers for working with postgres
+Helpers for working with postgres and redis locally. Previously known as `pg`.
 
 ## Usage
 
