@@ -328,9 +328,9 @@ const afterInsert = async (db: DatabaseSchema, inserted: IndexedPost) => {
           replyCount: 1,
         })
         .onConflict((oc) =>
-          oc
-            .column('uri')
-            .doUpdateSet({ replyCount: sql`${ref('replyCount')} + 1` }),
+          oc.column('uri').doUpdateSet({
+            replyCount: sql`${ref('post_agg.replyCount')} + 1`,
+          }),
         )
     : null
   const postsCountQb = db
@@ -342,7 +342,7 @@ const afterInsert = async (db: DatabaseSchema, inserted: IndexedPost) => {
     .onConflict((oc) =>
       oc
         .column('did')
-        .doUpdateSet({ postsCount: sql`${ref('postsCount')} + 1` }),
+        .doUpdateSet({ postsCount: sql`${ref('profile_agg.postsCount')} + 1` }),
     )
   await Promise.all([replyCountQb?.execute(), postsCountQb.execute()])
 }

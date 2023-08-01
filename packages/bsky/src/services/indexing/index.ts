@@ -289,6 +289,8 @@ export class IndexingService {
 
   async unindexActor(did: string) {
     this.db.assertNotTransaction()
+    // update aggregations
+    await this.decrementAggs(did)
     // per-record-type indexes
     await this.db.db.deleteFrom('profile').where('creator', '=', did).execute()
     await this.db.db.deleteFrom('follow').where('creator', '=', did).execute()
@@ -344,6 +346,64 @@ export class IndexingService {
       )
       .execute()
     await this.db.db.deleteFrom('record').where('did', '=', did).execute()
+  }
+
+  async decrementAggs(did: string) {
+    const { ref } = this.db.db.dynamic
+    await this.db.db
+      .updateTable('profile_agg')
+      .set({ followsCount: 0, postsCount: 0 })
+      .where('did', '=', did)
+      .execute()
+    await this.db.db
+      .updateTable('post_agg')
+      .set({ replyCount: sql`${ref('post_agg.replyCount')} - 1` })
+      .where(
+        'uri',
+        'in',
+        this.db.db
+          .selectFrom('post')
+          .select('replyParent')
+          .where('creator', '=', did)
+          .where('replyParent', 'is not', null),
+      )
+      .execute()
+    await this.db.db
+      .updateTable('post_agg')
+      .set({ likeCount: sql`${ref('post_agg.likeCount')} - 1` })
+      .where(
+        'uri',
+        'in',
+        this.db.db
+          .selectFrom('like')
+          .select('subject')
+          .where('creator', '=', did),
+      )
+      .execute()
+    await this.db.db
+      .updateTable('post_agg')
+      .set({ repostCount: sql`${ref('post_agg.repostCount')} - 1` })
+      .where(
+        'uri',
+        'in',
+        this.db.db
+          .selectFrom('repost')
+          .select('subject')
+          .where('creator', '=', did),
+      )
+      .execute()
+    await this.db.db
+      .updateTable('profile_agg')
+      .set({ followersCount: sql`${ref('profile_agg.followersCount')} - 1` })
+      .where(
+        'did',
+        'in',
+        this.db.db
+          .selectFrom('follow')
+          .select('subjectDid')
+          .where('creator', '=', did),
+      )
+      .execute()
   }
 }
 
