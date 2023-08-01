@@ -297,11 +297,9 @@ export class ActorViews {
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<Record<string, ProfileViewBasic>> {
     if (results.length === 0) return {}
-
     const profiles = await this.profiles(results, viewer, opts)
-
-    return Object.values(profiles).reduce((acc, cur) => {
-      return {
+    return Object.values(profiles).reduce(
+      (acc, cur) => ({
         ...acc,
         [cur.did]: {
           did: cur.did,
@@ -311,8 +309,9 @@ export class ActorViews {
           viewer: cur.viewer,
           labels: cur.labels,
         },
-      }
-    }, {} as Record<string, ProfileViewBasic>)
+      }),
+      {} as Record<string, ProfileViewBasic>,
+    )
   }
 
   async hydrateProfilesBasic(

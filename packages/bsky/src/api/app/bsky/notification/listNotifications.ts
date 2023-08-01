@@ -78,7 +78,7 @@ export default function (server: Server, ctx: AppContext) {
       const labelService = ctx.services.label(ctx.db)
       const recordUris = notifs.map((notif) => notif.uri)
       const [authors, labels] = await Promise.all([
-        actorService.views.profile(
+        actorService.views.profiles(
           notifs.map((notif) => ({
             did: notif.authorDid,
             handle: notif.authorHandle,
@@ -90,10 +90,10 @@ export default function (server: Server, ctx: AppContext) {
         labelService.getLabelsForUris(recordUris),
       ])
 
-      const notifications = notifs.map((notif, i) => ({
+      const notifications = notifs.map((notif) => ({
         uri: notif.uri,
         cid: notif.cid,
-        author: authors[i],
+        author: authors[notif.authorDid],
         reason: notif.reason,
         reasonSubject: notif.reasonSubject || undefined,
         record: jsonStringToLex(notif.recordJson) as Record<string, unknown>,

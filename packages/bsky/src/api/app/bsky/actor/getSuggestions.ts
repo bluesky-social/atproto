@@ -55,7 +55,10 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           cursor: suggestionsRes.at(-1)?.did,
-          actors: await actorService.views.profile(suggestionsRes, viewer),
+          actors: await actorService.views.hydrateProfiles(
+            suggestionsRes,
+            viewer,
+          ),
         },
       }
     },
