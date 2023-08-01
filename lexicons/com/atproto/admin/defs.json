@@ -306,7 +306,6 @@
     },
     "moderation": {
       "type": "object",
-      "required": [],
       "properties": {
         "currentAction": { "type": "ref", "ref": "#actionViewCurrent" }
       }
