@@ -50,11 +50,12 @@ export default function (server: Server, ctx: AppContext) {
       const itemsRes = await itemsReq.execute()
 
       const actorService = services.appView.actor(db)
-      const profiles = await actorService.views.profiles(itemsRes, requester)
+      const profiles = await actorService.views.hydrateProfiles(
+        itemsRes,
+        requester,
+      )
 
-      const items = itemsRes.map((item) => ({
-        subject: profiles[item.did],
-      }))
+      const items = profiles.map((subject) => ({ subject }))
 
       const creator = await actorService.views.profile(listRes, requester)
       if (!creator) {
