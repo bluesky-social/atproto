@@ -56,12 +56,15 @@ export default function (server: Server, ctx: AppContext) {
       const blocksRes = await blocksReq.execute()
 
       const actorService = services.appView.actor(db)
-      const blocks = await actorService.views.profiles(blocksRes, requester)
+      const blocks = await actorService.views.hydrateProfiles(
+        blocksRes,
+        requester,
+      )
 
       return {
         encoding: 'application/json',
         body: {
-          blocks: Object.values(blocks),
+          blocks,
           cursor: keyset.packFromResult(blocksRes),
         },
       }
