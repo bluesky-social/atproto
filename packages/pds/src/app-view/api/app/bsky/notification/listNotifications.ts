@@ -127,9 +127,10 @@ export default function (server: Server, ctx: AppContext) {
         return acc
       }, {} as Record<string, Uint8Array>)
 
-      const notifications = notifs.flatMap((notif) => {
+      const notifications = common.mapDefined(notifs, (notif) => {
         const bytes = bytesByCid[notif.cid]
-        if (!bytes) return [] // Filter out
+        const author = authors[notif.authorDid]
+        if (!bytes || !author) return undefined
         return {
           uri: notif.uri,
           cid: notif.cid,

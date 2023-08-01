@@ -1,3 +1,4 @@
+import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
@@ -59,17 +60,23 @@ export default function (server: Server, ctx: AppContext) {
         .actor(db)
         .views.profiles(likesRes, requester)
 
+      const likes = mapDefined(likesRes, (row) =>
+        actors[row.did]
+          ? {
+              createdAt: row.createdAt,
+              indexedAt: row.indexedAt,
+              actor: actors[row.did],
+            }
+          : undefined,
+      )
+
       return {
         encoding: 'application/json',
         body: {
           uri,
           cid,
           cursor: keyset.packFromResult(likesRes),
-          likes: likesRes.map((row) => ({
-            createdAt: row.createdAt,
-            indexedAt: row.indexedAt,
-            actor: actors[row.did],
-          })),
+          likes,
         },
       }
     },

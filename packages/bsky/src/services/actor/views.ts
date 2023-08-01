@@ -1,3 +1,4 @@
+import { mapDefined } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/identifier'
 import {
   ProfileViewDetailed,
@@ -107,6 +108,7 @@ export class ActorViews {
     const listViews = await this.services.graph.getListViews(listUris, viewer)
 
     return profileInfos.reduce((acc, cur) => {
+      const actorLabels = labels[cur.did] ?? []
       const avatar = cur?.avatarCid
         ? this.imgUriBuilder.getCommonSignedUri(
             'avatar',
@@ -121,6 +123,12 @@ export class ActorViews {
             cur.bannerCid,
           )
         : undefined
+      const mutedByList =
+        cur.requesterMutedByList && listViews[cur.requesterMutedByList]
+          ? this.services.graph.formatListViewBasic(
+              listViews[cur.requesterMutedByList],
+            )
+          : undefined
       const profile = {
         did: cur.did,
         handle: cur.handle ?? INVALID_HANDLE,
@@ -137,21 +145,15 @@ export class ActorViews {
               following: cur?.requesterFollowing || undefined,
               followedBy: cur?.requesterFollowedBy || undefined,
               muted: !!cur?.requesterMuted || !!cur.requesterMutedByList,
-              mutedByList: cur.requesterMutedByList
-                ? this.services.graph.formatListViewBasic(
-                    listViews[cur.requesterMutedByList],
-                  )
-                : undefined,
+              mutedByList,
               blockedBy: !!cur.requesterBlockedBy,
               blocking: cur.requesterBlocking || undefined,
             }
           : undefined,
-        labels: labels[cur.did] ?? [],
+        labels: skipLabels ? undefined : actorLabels,
       }
-      return {
-        ...acc,
-        [cur.did]: profile,
-      }
+      acc[cur.did] = profile
+      return acc
     }, {} as Record<string, ProfileViewDetailed>)
   }
 
@@ -161,7 +163,7 @@ export class ActorViews {
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ProfileViewDetailed[]> {
     const profiles = await this.profilesDetailed(results, viewer, opts)
-    return hydrateOrdered(results, profiles)
+    return mapDefined(results, (result) => profiles[result.did])
   }
 
   async profileDetailed(
@@ -256,6 +258,7 @@ export class ActorViews {
     const listViews = await this.services.graph.getListViews(listUris, viewer)
 
     return profileInfos.reduce((acc, cur) => {
+      const actorLabels = labels[cur.did] ?? []
       const avatar = cur?.avatarCid
         ? this.imgUriBuilder.getCommonSignedUri(
             'avatar',
@@ -263,6 +266,12 @@ export class ActorViews {
             cur.avatarCid,
           )
         : undefined
+      const mutedByList =
+        cur.requesterMutedByList && listViews[cur.requesterMutedByList]
+          ? this.services.graph.formatListViewBasic(
+              listViews[cur.requesterMutedByList],
+            )
+          : undefined
       const profile = {
         did: cur.did,
         handle: cur.handle ?? INVALID_HANDLE,
@@ -273,23 +282,17 @@ export class ActorViews {
         viewer: viewer
           ? {
               muted: !!cur?.requesterMuted || !!cur.requesterMutedByList,
-              mutedByList: cur.requesterMutedByList
-                ? this.services.graph.formatListViewBasic(
-                    listViews[cur.requesterMutedByList],
-                  )
-                : undefined,
+              mutedByList,
               blockedBy: !!cur.requesterBlockedBy,
               blocking: cur.requesterBlocking || undefined,
               following: cur?.requesterFollowing || undefined,
               followedBy: cur?.requesterFollowedBy || undefined,
             }
           : undefined,
-        labels: labels[cur.did] ?? [],
+        labels: skipLabels ? actorLabels : undefined,
       }
-      return {
-        ...acc,
-        [cur.did]: profile,
-      }
+      acc[cur.did] = profile
+      return acc
     }, {} as Record<string, ProfileView>)
   }
 
@@ -299,7 +302,7 @@ export class ActorViews {
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ProfileView[]> {
     const profiles = await this.profiles(results, viewer, opts)
-    return hydrateOrdered(results, profiles)
+    return mapDefined(results, (result) => profiles[result.did])
   }
 
   async profile(
@@ -319,19 +322,17 @@ export class ActorViews {
   ): Promise<Record<string, ProfileViewBasic>> {
     if (results.length === 0) return {}
     const profiles = await this.profiles(results, viewer, opts)
-    return Object.values(profiles).reduce(
-      (acc, cur) => ({
-        ...acc,
-        [cur.did]: {
-          did: cur.did,
-          handle: cur.handle,
-          displayName: cur.displayName,
-          avatar: cur.avatar,
-          viewer: cur.viewer,
-        },
-      }),
-      {} as Record<string, ProfileViewBasic>,
-    )
+    return Object.values(profiles).reduce((acc, cur) => {
+      const profile = {
+        did: cur.did,
+        handle: cur.handle,
+        displayName: cur.displayName,
+        avatar: cur.avatar,
+        viewer: cur.viewer,
+      }
+      acc[cur.did] = profile
+      return acc
+    }, {} as Record<string, ProfileViewBasic>)
   }
 
   async hydrateProfilesBasic(
@@ -340,7 +341,7 @@ export class ActorViews {
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ProfileViewBasic[]> {
     const profiles = await this.profilesBasic(results, viewer, opts)
-    return hydrateOrdered(results, profiles)
+    return mapDefined(results, (result) => profiles[result.did])
   }
 
   async profileBasic(
@@ -354,16 +355,3 @@ export class ActorViews {
 }
 
 type ActorResult = Actor
-
-const hydrateOrdered = <T>(
-  results: ActorResult[],
-  profiles: Record<string, T>,
-): T[] => {
-  const ordered: T[] = []
-  for (const result of results) {
-    if (profiles[result.did]) {
-      ordered.push(profiles[result.did])
-    }
-  }
-  return ordered
-}

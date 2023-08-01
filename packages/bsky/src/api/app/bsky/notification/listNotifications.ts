@@ -1,5 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { jsonStringToLex } from '@atproto/lexicon'
+import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
@@ -90,17 +91,21 @@ export default function (server: Server, ctx: AppContext) {
         labelService.getLabelsForUris(recordUris),
       ])
 
-      const notifications = notifs.map((notif) => ({
-        uri: notif.uri,
-        cid: notif.cid,
-        author: authors[notif.authorDid],
-        reason: notif.reason,
-        reasonSubject: notif.reasonSubject || undefined,
-        record: jsonStringToLex(notif.recordJson) as Record<string, unknown>,
-        isRead: seenAt ? notif.indexedAt <= seenAt : false,
-        indexedAt: notif.indexedAt,
-        labels: labels[notif.uri] ?? [],
-      }))
+      const notifications = mapDefined(notifs, (notif) => {
+        const author = authors[notif.authorDid]
+        if (!author) return undefined
+        return {
+          uri: notif.uri,
+          cid: notif.cid,
+          author,
+          reason: notif.reason,
+          reasonSubject: notif.reasonSubject || undefined,
+          record: jsonStringToLex(notif.recordJson) as Record<string, unknown>,
+          isRead: seenAt ? notif.indexedAt <= seenAt : false,
+          indexedAt: notif.indexedAt,
+          labels: labels[notif.uri] ?? [],
+        }
+      })
 
       return {
         encoding: 'application/json',
