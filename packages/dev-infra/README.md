@@ -30,6 +30,12 @@ Going to remove pg-db_test-1
  ⠿ Container pg-db_test-1  Removed
 ```
 
+### `with-redis-and-test-db.sh`
+
+This script is similar to `with-test-db.sh`, but in addition to an ephemeral/single-use postgres database it also provies a single-use redis instance. When the script starts, Dockerized postgres and redis containers start-up, and when the script completes the containers are removed.
+
+The environment variables `DB_POSTGRES_URL` and `REDIS_HOST` will be set with a connection strings that can be used to connect to postgres and redis respectively.
+
 ### `docker-compose.yaml`
 
 The Docker compose file can be used to run containerized versions of postgres either for single use (as is used by `with-test-db.sh`), or for longer-term use. These are setup as separate services named `db_test` and `db` respectively. In both cases the database is available on the host machine's `localhost` and credentials are:
@@ -63,3 +69,15 @@ $ docker compose stop db     # stop container
 $ docker compose rm db       # remove container
 $ docker volume rm pg_atp_db # remove volume
 ```
+
+#### `redis_test` service for single use
+
+The single-use `redis_test` service does not have any persistent storage. When the container is removed, the data in redis disappears with it.
+
+This service runs on port `6380`.
+
+#### `redis` service for persistent use
+
+The `redis` service has persistent storage on the host machine managed by Docker under a volume named `atp_redis`. When the container is removed, the data in redis will remain on the host machine. In order to start fresh, you would need to remove the volume.
+
+This service runs on port `6379`.
