@@ -283,7 +283,9 @@ describe('proxies admin requests', () => {
     await expect(tryGetProfileAppview).rejects.toThrow(
       'Account has been taken down',
     )
-    const labelsA = await services.appView.label(db).getLabels(sc.dids.alice)
+    const labelsA = await services.appView
+      .label(db)
+      .getLabels(sc.dids.alice, false, true)
     expect(labelsA.map((l) => l.val)).toEqual(['dogs'])
     // reverse action
     await agent.api.com.atproto.admin.reverseModerationAction(
@@ -310,7 +312,9 @@ describe('proxies admin requests', () => {
     expect(profileAppview).toEqual(
       expect.objectContaining({ did: sc.dids.alice, handle: 'alice.test' }),
     )
-    const labelsB = await services.appView.label(db).getLabels(sc.dids.alice)
+    const labelsB = await services.appView
+      .label(db)
+      .getLabels(sc.dids.alice, false, true)
     expect(labelsB.map((l) => l.val)).toEqual(['cats'])
   })
 
@@ -350,7 +354,9 @@ describe('proxies admin requests', () => {
     )
     await expect(tryGetPostPds).rejects.toThrow(NotFoundError)
     await expect(tryGetPostAppview).rejects.toThrow(NotFoundError)
-    const labelsA = await services.appView.label(db).getLabels(post.ref.uriStr)
+    const labelsA = await services.appView
+      .label(db)
+      .getLabels(post.ref.uriStr, false, true)
     expect(labelsA.map((l) => l.val)).toEqual(['dogs'])
     // reverse action
     await agent.api.com.atproto.admin.reverseModerationAction(
@@ -377,7 +383,9 @@ describe('proxies admin requests', () => {
     expect(threadAppview.thread.post).toEqual(
       expect.objectContaining({ uri: post.ref.uriStr, cid: post.ref.cidStr }),
     )
-    const labelsB = await services.appView.label(db).getLabels(sc.dids.alice)
+    const labelsB = await services.appView
+      .label(db)
+      .getLabels(post.ref.uriStr, false, true)
     expect(labelsB.map((l) => l.val)).toEqual(['cats'])
   })
 
