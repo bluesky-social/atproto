@@ -145,6 +145,21 @@ export class ActorViews {
     }, {} as Record<string, ProfileViewDetailed>)
   }
 
+  async hydrateProfilesDetailed(
+    results: ActorResult[],
+    viewer: string,
+    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
+  ): Promise<ProfileViewDetailed[]> {
+    const profiles = await this.profilesDetailed(results, viewer, opts)
+    const ordered: ProfileViewDetailed[] = []
+    for (const result of results) {
+      if (profiles[result.did]) {
+        ordered.push(profiles[result.did])
+      }
+    }
+    return ordered
+  }
+
   async profileDetailed(
     result: ActorResult,
     viewer: string,
@@ -263,6 +278,21 @@ export class ActorViews {
     }, {} as Record<string, ProfileView>)
   }
 
+  async hydrateProfiles(
+    results: ActorResult[],
+    viewer: string,
+    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
+  ): Promise<ProfileView[]> {
+    const profiles = await this.profiles(results, viewer, opts)
+    const ordered: ProfileView[] = []
+    for (const result of results) {
+      if (profiles[result.did]) {
+        ordered.push(profiles[result.did])
+      }
+    }
+    return ordered
+  }
+
   async profile(
     result: ActorResult,
     viewer: string,
@@ -295,6 +325,21 @@ export class ActorViews {
         },
       }
     }, {} as Record<string, ProfileViewBasic>)
+  }
+
+  async hydrateProfilesBasic(
+    results: ActorResult[],
+    viewer: string,
+    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
+  ): Promise<ProfileViewBasic[]> {
+    const profiles = await this.profilesBasic(results, viewer, opts)
+    const ordered: ProfileViewBasic[] = []
+    for (const result of results) {
+      if (profiles[result.did]) {
+        ordered.push(profiles[result.did])
+      }
+    }
+    return ordered
   }
 
   async profileBasic(

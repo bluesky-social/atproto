@@ -127,13 +127,13 @@ export default function (server: Server, ctx: AppContext) {
         return acc
       }, {} as Record<string, Uint8Array>)
 
-      const notifications = notifs.flatMap((notif, i) => {
+      const notifications = notifs.flatMap((notif) => {
         const bytes = bytesByCid[notif.cid]
         if (!bytes) return [] // Filter out
         return {
           uri: notif.uri,
           cid: notif.cid,
-          author: authors[i],
+          author: authors[notif.authorDid],
           reason: notif.reason,
           reasonSubject: notif.reasonSubject || undefined,
           record: common.cborBytesToRecord(bytes),

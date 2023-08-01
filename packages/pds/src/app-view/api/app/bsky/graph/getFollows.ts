@@ -60,7 +60,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const followsRes = await followsReq.execute()
       const [follows, subject] = await Promise.all([
-        actorService.views.profiles(followsRes, requester),
+        actorService.views.hydrateProfiles(followsRes, requester),
         actorService.views.profile(creatorRes, requester),
       ])
       if (!subject) {
@@ -71,7 +71,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           subject,
-          follows: Object.values(follows),
+          follows: follows,
           cursor: keyset.packFromResult(followsRes),
         },
       }

@@ -58,14 +58,14 @@ export default function (server: Server, ctx: AppContext) {
       const repostedByRes = await builder.execute()
       const repostedBy = await services.appView
         .actor(db)
-        .views.profiles(repostedByRes, requester)
+        .views.hydrateProfiles(repostedByRes, requester)
 
       return {
         encoding: 'application/json',
         body: {
           uri,
           cid,
-          repostedBy: Object.values(repostedBy),
+          repostedBy: repostedBy,
           cursor: keyset.packFromResult(repostedByRes),
         },
       }
