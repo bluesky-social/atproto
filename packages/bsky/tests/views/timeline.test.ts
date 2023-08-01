@@ -50,7 +50,7 @@ describe('timeline views', () => {
         labelPostB.cidStr,
         { create: ['kind'] },
       )
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
   })
 
   afterAll(async () => {

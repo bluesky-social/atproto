@@ -4,7 +4,7 @@ import { Server } from '../../../../../lexicon'
 import * as Method from '../../../../../lexicon/types/app/bsky/actor/searchActorsTypeahead'
 import {
   cleanTerm,
-  getUserSearchQueryPg,
+  getUserSearchQuerySimplePg,
   getUserSearchQuerySqlite,
 } from '../../../../../services/util/search'
 import { DidHandle } from '../../../../../db/tables/did-handle'
@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxy(req)) {
+      if (ctx.canProxyRead(req)) {
         const res =
           await ctx.appviewAgent.api.app.bsky.actor.searchActorsTypeahead(
             params,
@@ -48,7 +48,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const actors = await services.appView
         .actor(db)
-        .views.profileBasic(results, requester)
+        .views.hydrateProfilesBasic(results, requester)
 
       const filtered = actors.filter(
         (actor) => !actor.viewer?.blocking && !actor.viewer?.blockedBy,
@@ -65,7 +65,7 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 const getResultsPg: GetResultsFn = async (db, { term, limit }) => {
-  return await getUserSearchQueryPg(db, { term: term || '', limit })
+  return await getUserSearchQuerySimplePg(db, { term: term || '', limit })
     .selectAll('did_handle')
     .execute()
 }

@@ -2,27 +2,31 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
+import { notSoftDeletedClause } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.listRepos(async ({ params }) => {
     const { limit, cursor } = params
-    const ref = ctx.db.db.dynamic.ref
-    const innerBuilder = ctx.db.db
-      .selectFrom('repo_root')
-      .innerJoin('user_account', 'user_account.did', 'repo_root.did')
-      .where('repo_root.takedownId', 'is', null)
+    const { ref } = ctx.db.db.dynamic
+    let builder = ctx.db.db
+      .selectFrom('user_account')
+      .innerJoin('repo_root', 'repo_root.did', 'user_account.did')
+      .where(notSoftDeletedClause(ref('repo_root')))
       .select([
-        'repo_root.did as did',
+        'user_account.did as did',
         'repo_root.root as head',
         'user_account.createdAt as createdAt',
       ])
-    let builder = ctx.db.db.selectFrom(innerBuilder.as('repos')).selectAll()
-    const keyset = new TimeDidKeyset(ref('createdAt'), ref('did'))
+    const keyset = new TimeDidKeyset(
+      ref('user_account.createdAt'),
+      ref('user_account.did'),
+    )
     builder = paginate(builder, {
       limit,
       cursor,
       keyset,
       direction: 'asc',
+      tryIndex: true,
     })
     const res = await builder.execute()
     const repos = res.map((row) => ({ did: row.did, head: row.head }))

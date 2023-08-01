@@ -21,8 +21,8 @@ describe('did cache', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_did_cache',
     })
-    idResolver = network.bsky.ctx.idResolver
-    didCache = network.bsky.ctx.didCache
+    idResolver = network.bsky.indexer.ctx.idResolver
+    didCache = network.bsky.indexer.ctx.didCache
     const pdsAgent = new AtpAgent({ service: network.pds.url })
     sc = new SeedClient(pdsAgent)
     await userSeed(sc)

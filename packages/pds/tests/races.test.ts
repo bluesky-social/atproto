@@ -2,7 +2,7 @@ import AtpAgent from '@atproto/api'
 import { CloseFn, runTestServer } from './_util'
 import AppContext from '../src/context'
 import { PreparedWrite, prepareCreate } from '../src/repo'
-import { TID, wait } from '@atproto/common'
+import { wait } from '@atproto/common'
 import SqlRepoStorage from '../src/sql-repo-storage'
 import { CommitData, MemoryBlockstore, loadFullRepo } from '@atproto/repo'
 import { ConcurrentWriteError } from '../src/services/repo'
@@ -40,7 +40,6 @@ describe('crud operations', () => {
         text: 'one',
         createdAt: new Date().toISOString(),
       },
-      rkey: TID.nextStr(),
       validate: true,
     })
     const storage = new SqlRepoStorage(ctx.db, did)
@@ -59,8 +58,8 @@ describe('crud operations', () => {
     const now = new Date().toISOString()
     await ctx.db.transaction(async (dbTxn) => {
       const storage = new SqlRepoStorage(dbTxn, did, now)
-      const locked = await storage.lockHead()
-      if (!locked || !locked.equals(commitData.prev)) {
+      const locked = await storage.lockRepo()
+      if (!locked) {
         throw new ConcurrentWriteError()
       }
       await wait(waitMs)

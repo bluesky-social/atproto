@@ -1,6 +1,6 @@
 import { AtUri, BlobRef } from '@atproto/api'
 import stream from 'stream'
-import { runTestServer, CloseFn } from '../_util'
+import { runTestServer, CloseFn, TestServerInfo } from '../_util'
 import { Labeler } from '../../src/labeler'
 import { AppContext, Database } from '../../src'
 import { BlobStore, cidForRecord } from '@atproto/repo'
@@ -11,6 +11,7 @@ import { LabelService } from '../../src/app-view/services/label'
 import { BackgroundQueue } from '../../src/event-stream/background-queue'
 
 describe('labeler', () => {
+  let server: TestServerInfo
   let close: CloseFn
   let labeler: Labeler
   let labelSrvc: LabelService
@@ -21,7 +22,7 @@ describe('labeler', () => {
   let goodBlob: BlobRef
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    server = await runTestServer({
       dbPostgresSchema: 'views_author_feed',
     })
     close = server.close
@@ -63,6 +64,7 @@ describe('labeler', () => {
     const uri = postUri()
     labeler.processRecord(uri, post)
     await labeler.processAll()
+    await server.processAll()
     const labels = await labelSrvc.getLabels(uri.toString())
     expect(labels.length).toBe(1)
     expect(labels[0]).toMatchObject({
@@ -100,6 +102,7 @@ describe('labeler', () => {
     const uri = postUri()
     labeler.processRecord(uri, post)
     await labeler.processAll()
+    await server.processAll()
     const dbLabels = await labelSrvc.getLabels(uri.toString())
     const labels = dbLabels.map((row) => row.val).sort()
     expect(labels).toEqual(
@@ -119,6 +122,7 @@ describe('labeler', () => {
         cts: new Date().toISOString(),
       })
       .execute()
+    await server.processAll()
 
     const labels = await labelSrvc.getLabelsForProfile('did:example:alice')
     // 4 from earlier & then just added one

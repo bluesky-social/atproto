@@ -33,6 +33,7 @@ describe('pds thread views', () => {
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
     await basicSeed(sc)
+    await server.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
@@ -41,7 +42,7 @@ describe('pds thread views', () => {
   beforeAll(async () => {
     // Add a repost of a reply so that we can confirm viewer state in the thread
     await sc.repost(bob, sc.replies[alice][0].ref)
-    await server.ctx.backgroundQueue.processAll()
+    await server.processAll()
   })
 
   afterAll(async () => {
@@ -140,7 +141,7 @@ describe('pds thread views', () => {
       'Reply reply',
     )
     indexes.aliceReplyReply = sc.replies[alice].length - 1
-    await server.ctx.backgroundQueue.processAll()
+    await server.processAll()
 
     const thread1 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
@@ -149,7 +150,7 @@ describe('pds thread views', () => {
     expect(forSnapshot(thread1.data.thread)).toMatchSnapshot()
 
     await sc.deletePost(bob, sc.replies[bob][indexes.bobReply].ref.uri)
-    await server.ctx.backgroundQueue.processAll()
+    await server.processAll()
 
     const thread2 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },

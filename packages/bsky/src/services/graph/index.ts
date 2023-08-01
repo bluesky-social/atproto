@@ -173,9 +173,24 @@ export class GraphService {
     }
   }
 
+  async getListViews(listUris: string[], requester: string | null) {
+    if (listUris.length < 1) return {}
+    const lists = await this.getListsQb(requester)
+      .where('list.uri', 'in', listUris)
+      .execute()
+    return lists.reduce(
+      (acc, cur) => ({
+        ...acc,
+        [cur.uri]: cur,
+      }),
+      {},
+    )
+  }
+
   formatListView(list: ListInfo, profiles: Record<string, ProfileView>) {
     return {
       uri: list.uri,
+      cid: list.cid,
       creator: profiles[list.creator],
       name: list.name,
       purpose: list.purpose,
@@ -183,6 +198,26 @@ export class GraphService {
       descriptionFacets: list.descriptionFacets
         ? JSON.parse(list.descriptionFacets)
         : undefined,
+      avatar: list.avatarCid
+        ? this.imgUriBuilder.getCommonSignedUri(
+            'avatar',
+            list.creator,
+            list.avatarCid,
+          )
+        : undefined,
+      indexedAt: list.sortAt,
+      viewer: {
+        muted: !!list.viewerMuted,
+      },
+    }
+  }
+
+  formatListViewBasic(list: ListInfo) {
+    return {
+      uri: list.uri,
+      cid: list.cid,
+      name: list.name,
+      purpose: list.purpose,
       avatar: list.avatarCid
         ? this.imgUriBuilder.getCommonSignedUri(
             'avatar',

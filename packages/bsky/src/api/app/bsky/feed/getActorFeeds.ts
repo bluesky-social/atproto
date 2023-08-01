@@ -37,11 +37,18 @@ export default function (server: Server, ctx: AppContext) {
         feedsQb.execute(),
         actorService.views.profile(creatorRes, viewer),
       ])
+      if (!creatorProfile) {
+        throw new InvalidRequestError(`Actor not found: ${actor}`)
+      }
       const profiles = { [creatorProfile.did]: creatorProfile }
 
-      const feeds = feedsRes.map((row) =>
-        feedService.views.formatFeedGeneratorView(row, profiles),
-      )
+      const feeds = feedsRes.map((row) => {
+        const feed = {
+          ...row,
+          viewer: viewer ? { like: row.viewerLike } : undefined,
+        }
+        return feedService.views.formatFeedGeneratorView(feed, profiles)
+      })
 
       return {
         encoding: 'application/json',

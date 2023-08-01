@@ -6,7 +6,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ req, auth, params }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxy(req)) {
+      if (ctx.canProxyRead(req)) {
         const res = await ctx.appviewAgent.api.app.bsky.actor.getProfiles(
           params,
           await ctx.serviceAuthHeaders(requester),
@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: {
-          profiles: await actorService.views.profileDetailed(
+          profiles: await actorService.views.hydrateProfilesDetailed(
             actorsRes,
             requester,
           ),

@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ req, auth, params }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxy(req)) {
+      if (ctx.canProxyRead(req)) {
         const res = await ctx.appviewAgent.api.app.bsky.feed.getActorFeeds(
           params,
           await ctx.serviceAuthHeaders(requester),
@@ -48,6 +48,10 @@ export default function (server: Server, ctx: AppContext) {
         feedsQb.execute(),
         actorService.views.profile(creatorRes, requester),
       ])
+      if (!creatorProfile) {
+        throw new InvalidRequestError(`Actor not found: ${actor}`)
+      }
+
       const profiles = { [creatorProfile.did]: creatorProfile }
 
       const feeds = feedsRes.map((row) =>

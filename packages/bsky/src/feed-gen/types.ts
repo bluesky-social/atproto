@@ -1,6 +1,6 @@
 import AppContext from '../context'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { FeedRow } from '../services/types'
+import { FeedRow } from '../services/feed/types'
 
 export type AlgoResponse = {
   feedItems: FeedRow[]

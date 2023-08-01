@@ -146,7 +146,7 @@ describe('account deletion', () => {
       did: carol.did,
       password: carol.password,
     })
-    await server.ctx.backgroundQueue.processAll() // Finish background hard-deletions
+    await server.processAll() // Finish background hard-deletions
   })
 
   it('no longer lets the user log in', async () => {
@@ -171,9 +171,16 @@ describe('account deletion', () => {
     expect(updatedDbContents.blocks).toEqual(
       initialDbContents.blocks.filter((row) => row.creator !== carol.did),
     )
-    expect(updatedDbContents.seqs).toEqual(
-      initialDbContents.seqs.filter((row) => row.did !== carol.did),
-    )
+    // check all seqs for this did are gone, except for the tombstone
+    expect(
+      updatedDbContents.seqs.filter((row) => row.eventType !== 'tombstone'),
+    ).toEqual(initialDbContents.seqs.filter((row) => row.did !== carol.did))
+    // check we do have a tombstone for this did
+    expect(
+      updatedDbContents.seqs.filter(
+        (row) => row.did === carol.did && row.eventType === 'tombstone',
+      ).length,
+    ).toEqual(1)
     expect(updatedDbContents.commitBlocks).toEqual(
       initialDbContents.commitBlocks.filter((row) => row.creator !== carol.did),
     )

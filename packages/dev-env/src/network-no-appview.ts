@@ -37,6 +37,10 @@ export class TestNetworkNoAppView {
     return fg
   }
 
+  async processAll() {
+    await this.pds.processAll()
+  }
+
   async close() {
     await Promise.all(this.feedGens.map((fg) => fg.close()))
     await this.pds.close()

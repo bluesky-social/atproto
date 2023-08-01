@@ -4,7 +4,6 @@ import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import * as util from './_util'
 import { AppContext } from '../src'
-import { moderatorAuth } from './_util'
 
 // outside of suite so they can be used in mock
 let alice: string
@@ -264,20 +263,6 @@ describe('handles', () => {
     expect(profile.data.handle).toBe('dril.test')
   })
 
-  it('disallows setting handle to an off-service domain', async () => {
-    const attempt = agent.api.com.atproto.admin.updateAccountHandle(
-      {
-        did: bob,
-        handle: 'bob.external',
-      },
-      {
-        headers: { authorization: util.adminAuth() },
-        encoding: 'application/json',
-      },
-    )
-    await expect(attempt).rejects.toThrow('Unsupported domain')
-  })
-
   it('requires admin auth', async () => {
     const attempt = agent.api.com.atproto.admin.updateAccountHandle(
       {
@@ -301,10 +286,21 @@ describe('handles', () => {
         handle: 'bob-alt.test',
       },
       {
-        headers: { authorization: moderatorAuth() },
+        headers: { authorization: util.moderatorAuth() },
         encoding: 'application/json',
       },
     )
-    await expect(attempt3).rejects.toThrow('Authentication Required')
+    await expect(attempt3).rejects.toThrow('Insufficient privileges')
+    const attempt4 = agent.api.com.atproto.admin.updateAccountHandle(
+      {
+        did: bob,
+        handle: 'bob-alt.test',
+      },
+      {
+        headers: { authorization: util.triageAuth() },
+        encoding: 'application/json',
+      },
+    )
+    await expect(attempt4).rejects.toThrow('Insufficient privileges')
   })
 })

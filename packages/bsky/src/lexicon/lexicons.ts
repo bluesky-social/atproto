@@ -865,6 +865,12 @@ export const schemaDict = {
                 type: 'string',
               },
             },
+            actionedBy: {
+              type: 'string',
+              format: 'did',
+              description:
+                'Get all reports that were actioned by a specific moderator',
+            },
             reporters: {
               type: 'array',
               items: {
@@ -1145,6 +1151,47 @@ export const schemaDict = {
                   type: 'ref',
                   ref: 'lex:com.atproto.admin.defs#repoView',
                 },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminSendEmail: {
+    lexicon: 1,
+    id: 'com.atproto.admin.sendEmail',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Send email to a user's primary email address",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['recipientDid', 'content'],
+            properties: {
+              recipientDid: {
+                type: 'string',
+                format: 'did',
+              },
+              content: {
+                type: 'string',
+              },
+              subject: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['sent'],
+            properties: {
+              sent: {
+                type: 'boolean',
               },
             },
           },
@@ -4136,6 +4183,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.record#viewNotFound',
               'lex:app.bsky.embed.record#viewBlocked',
               'lex:app.bsky.feed.defs#generatorView',
+              'lex:app.bsky.graph.defs#listView',
             ],
           },
         },
@@ -5250,6 +5298,14 @@ export const schemaDict = {
                 'lex:app.bsky.embed.recordWithMedia',
               ],
             },
+            langs: {
+              type: 'array',
+              maxLength: 3,
+              items: {
+                type: 'string',
+                format: 'language',
+              },
+            },
             createdAt: {
               type: 'string',
               format: 'datetime',
@@ -5362,11 +5418,15 @@ export const schemaDict = {
     defs: {
       listViewBasic: {
         type: 'object',
-        required: ['uri', 'name', 'purpose'],
+        required: ['uri', 'cid', 'name', 'purpose'],
         properties: {
           uri: {
             type: 'string',
             format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
           },
           name: {
             type: 'string',
@@ -5392,11 +5452,15 @@ export const schemaDict = {
       },
       listView: {
         type: 'object',
-        required: ['uri', 'creator', 'name', 'purpose', 'indexedAt'],
+        required: ['uri', 'cid', 'creator', 'name', 'purpose', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
             format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
           },
           creator: {
             type: 'ref',
@@ -6268,12 +6332,32 @@ export const schemaDict = {
       main: {
         type: 'query',
         description: 'An unspecced view of globally popular feed generators',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+            query: {
+              type: 'string',
+            },
+          },
+        },
         output: {
           encoding: 'application/json',
           schema: {
             type: 'object',
             required: ['feeds'],
             properties: {
+              cursor: {
+                type: 'string',
+              },
               feeds: {
                 type: 'array',
                 items: {
@@ -6284,6 +6368,54 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppBskyUnspeccedGetTimelineSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getTimelineSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'A skeleton of a timeline - UNSPECCED & WILL GO AWAY SOON',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#skeletonFeedPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'UnknownFeed',
+          },
+        ],
       },
     },
   },
@@ -6309,6 +6441,7 @@ export const ids = {
   ComAtprotoAdminReverseModerationAction:
     'com.atproto.admin.reverseModerationAction',
   ComAtprotoAdminSearchRepos: 'com.atproto.admin.searchRepos',
+  ComAtprotoAdminSendEmail: 'com.atproto.admin.sendEmail',
   ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
   ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
@@ -6415,4 +6548,5 @@ export const ids = {
   AppBskyUnspeccedGetPopular: 'app.bsky.unspecced.getPopular',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
+  AppBskyUnspeccedGetTimelineSkeleton: 'app.bsky.unspecced.getTimelineSkeleton',
 }

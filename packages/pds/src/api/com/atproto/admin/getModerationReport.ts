@@ -4,8 +4,8 @@ import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getModerationReport({
-    auth: ctx.moderatorVerifier,
-    handler: async ({ req, params }) => {
+    auth: ctx.roleVerifier,
+    handler: async ({ req, params, auth }) => {
       if (ctx.shouldProxyModeration()) {
         const { data: result } =
           await ctx.appviewAgent.com.atproto.admin.getModerationReport(
@@ -18,13 +18,16 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
+      const access = auth.credentials
       const { db, services } = ctx
       const { id } = params
       const moderationService = services.moderation(db)
       const result = await moderationService.getReportOrThrow(id)
       return {
         encoding: 'application/json',
-        body: await moderationService.views.reportDetail(result),
+        body: await moderationService.views.reportDetail(result, {
+          includeEmails: access.moderator,
+        }),
       }
     },
   })

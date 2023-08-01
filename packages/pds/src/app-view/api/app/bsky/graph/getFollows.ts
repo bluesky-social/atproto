@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxy(req)) {
+      if (ctx.canProxyRead(req)) {
         const res = await ctx.appviewAgent.api.app.bsky.graph.getFollows(
           params,
           await ctx.serviceAuthHeaders(requester),
@@ -60,9 +60,12 @@ export default function (server: Server, ctx: AppContext) {
 
       const followsRes = await followsReq.execute()
       const [follows, subject] = await Promise.all([
-        actorService.views.profile(followsRes, requester),
+        actorService.views.hydrateProfiles(followsRes, requester),
         actorService.views.profile(creatorRes, requester),
       ])
+      if (!subject) {
+        throw new InvalidRequestError(`Actor not found: ${actor}`)
+      }
 
       return {
         encoding: 'application/json',

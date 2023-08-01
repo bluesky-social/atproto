@@ -24,6 +24,7 @@ describe('proxies admin requests', () => {
       dbPostgresSchema: 'proxy_admin',
       pds: {
         // @NOTE requires admin pass be the same on pds and appview, which TestNetwork is handling for us.
+        enableInProcessAppView: true,
         bskyAppViewModeration: true,
         inviteRequired: true,
       },

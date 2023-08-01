@@ -25,6 +25,7 @@ export interface ServerConfigValues {
   recoveryKey: string
   adminPassword: string
   moderatorPassword?: string
+  triagePassword?: string
 
   inviteRequired: boolean
   userInviteInterval: number | null
@@ -35,6 +36,7 @@ export interface ServerConfigValues {
   databaseLocation?: string
 
   availableUserDomains: string[]
+  handleResolveNameservers?: string[]
 
   imgUriSalt: string
   imgUriKey: string
@@ -44,20 +46,29 @@ export interface ServerConfigValues {
   appUrlPasswordReset: string
   emailSmtpUrl?: string
   emailNoReplyAddress: string
+  moderationEmailAddress?: string
+  moderationEmailSmtpUrl?: string
 
   hiveApiKey?: string
   labelerDid: string
   labelerKeywords: Record<string, string>
+  unacceptableWordsB64?: string
+  falsePositiveWordsB64?: string
 
   feedGenDid?: string
 
   maxSubscriptionBuffer: number
   repoBackfillLimitMs: number
   sequencerLeaderLockId?: number
+  sequencerLeaderEnabled?: boolean
+
+  // this is really only used in test environments
+  dbTxLockNonce?: string
 
   bskyAppViewEndpoint?: string
   bskyAppViewModeration?: boolean
   bskyAppViewDid?: string
+  bskyAppViewProxy: boolean
 
   crawlersToNotify?: string[]
 }
@@ -110,6 +121,7 @@ export class ServerConfig {
 
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
     const moderatorPassword = process.env.MODERATOR_PASSWORD || undefined
+    const triagePassword = process.env.TRIAGE_PASSWORD || undefined
 
     const inviteRequired = process.env.INVITE_REQUIRED === 'true' ? true : false
     const userInviteInterval = parseIntWithFallback(
@@ -133,6 +145,10 @@ export class ServerConfig {
       ? process.env.AVAILABLE_USER_DOMAINS.split(',')
       : []
 
+    const handleResolveNameservers = process.env.HANDLE_RESOLVE_NAMESERVERS
+      ? process.env.HANDLE_RESOLVE_NAMESERVERS.split(',')
+      : []
+
     const imgUriSalt =
       process.env.IMG_URI_SALT || '9dd04221f5755bce5f55f47464c27e1e'
     const imgUriKey =
@@ -149,9 +165,21 @@ export class ServerConfig {
     const emailNoReplyAddress =
       process.env.EMAIL_NO_REPLY_ADDRESS || 'noreply@blueskyweb.xyz'
 
+    const moderationEmailAddress =
+      process.env.MODERATION_EMAIL_ADDRESS || undefined
+    const moderationEmailSmtpUrl =
+      process.env.MODERATION_EMAIL_SMTP_URL || undefined
+
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const labelerKeywords = {}
+
+    const unacceptableWordsB64 = nonemptyString(
+      process.env.UNACCEPTABLE_WORDS_B64,
+    )
+    const falsePositiveWordsB64 = nonemptyString(
+      process.env.FALSE_POSITIVE_WORDS_B64,
+    )
 
     const feedGenDid = process.env.FEED_GEN_DID
 
@@ -173,12 +201,22 @@ export class ServerConfig {
       undefined,
     )
 
+    // by default each instance is a potential sequencer leader, but may be configured off
+    const sequencerLeaderEnabled = process.env.SEQUENCER_LEADER_ENABLED
+      ? process.env.SEQUENCER_LEADER_ENABLED !== '0' &&
+        process.env.SEQUENCER_LEADER_ENABLED !== 'false'
+      : undefined
+
+    const dbTxLockNonce = nonemptyString(process.env.DB_TX_LOCK_NONCE)
+
     const bskyAppViewEndpoint = nonemptyString(
       process.env.BSKY_APP_VIEW_ENDPOINT,
     )
     const bskyAppViewModeration =
       process.env.BSKY_APP_VIEW_MODERATION === 'true' ? true : false
     const bskyAppViewDid = nonemptyString(process.env.BSKY_APP_VIEW_DID)
+    const bskyAppViewProxy =
+      process.env.BSKY_APP_VIEW_PROXY === 'true' ? true : false
 
     const crawlersEnv = process.env.CRAWLERS_TO_NOTIFY
     const crawlersToNotify =
@@ -203,6 +241,7 @@ export class ServerConfig {
       serverDid,
       adminPassword,
       moderatorPassword,
+      triagePassword,
       inviteRequired,
       userInviteInterval,
       userInviteEpoch,
@@ -210,6 +249,7 @@ export class ServerConfig {
       termsOfServiceUrl,
       databaseLocation,
       availableUserDomains,
+      handleResolveNameservers,
       imgUriSalt,
       imgUriKey,
       imgUriEndpoint,
@@ -217,16 +257,23 @@ export class ServerConfig {
       appUrlPasswordReset,
       emailSmtpUrl,
       emailNoReplyAddress,
+      moderationEmailAddress,
+      moderationEmailSmtpUrl,
       hiveApiKey,
       labelerDid,
       labelerKeywords,
+      unacceptableWordsB64,
+      falsePositiveWordsB64,
       feedGenDid,
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
       sequencerLeaderLockId,
+      sequencerLeaderEnabled,
+      dbTxLockNonce,
       bskyAppViewEndpoint,
       bskyAppViewModeration,
       bskyAppViewDid,
+      bskyAppViewProxy,
       crawlersToNotify,
       ...overrides,
     })
@@ -318,6 +365,10 @@ export class ServerConfig {
     return this.cfg.moderatorPassword
   }
 
+  get triagePassword() {
+    return this.cfg.triagePassword
+  }
+
   get inviteRequired() {
     return this.cfg.inviteRequired
   }
@@ -362,6 +413,10 @@ export class ServerConfig {
     return this.cfg.availableUserDomains
   }
 
+  get handleResolveNameservers() {
+    return this.cfg.handleResolveNameservers
+  }
+
   get imgUriSalt() {
     return this.cfg.imgUriSalt
   }
@@ -390,6 +445,14 @@ export class ServerConfig {
     return this.cfg.emailNoReplyAddress
   }
 
+  get moderationEmailAddress() {
+    return this.cfg.moderationEmailAddress
+  }
+
+  get moderationEmailSmtpUrl() {
+    return this.cfg.moderationEmailSmtpUrl
+  }
+
   get hiveApiKey() {
     return this.cfg.hiveApiKey
   }
@@ -400,6 +463,14 @@ export class ServerConfig {
 
   get labelerKeywords() {
     return this.cfg.labelerKeywords
+  }
+
+  get unacceptableWordsB64() {
+    return this.cfg.unacceptableWordsB64
+  }
+
+  get falsePositiveWordsB64() {
+    return this.cfg.falsePositiveWordsB64
   }
 
   get feedGenDid() {
@@ -418,6 +489,14 @@ export class ServerConfig {
     return this.cfg.sequencerLeaderLockId
   }
 
+  get sequencerLeaderEnabled() {
+    return this.cfg.sequencerLeaderEnabled !== false
+  }
+
+  get dbTxLockNonce() {
+    return this.cfg.dbTxLockNonce
+  }
+
   get bskyAppViewEndpoint() {
     return this.cfg.bskyAppViewEndpoint
   }
@@ -428,6 +507,10 @@ export class ServerConfig {
 
   get bskyAppViewDid() {
     return this.cfg.bskyAppViewDid
+  }
+
+  get bskyAppViewProxy() {
+    return this.cfg.bskyAppViewProxy
   }
 
   get crawlersToNotify() {

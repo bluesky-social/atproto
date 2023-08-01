@@ -7,6 +7,7 @@ import getAuthorFeed from './app/bsky/feed/getAuthorFeed'
 import getFeed from './app/bsky/feed/getFeed'
 import getFeedGenerator from './app/bsky/feed/getFeedGenerator'
 import getFeedGenerators from './app/bsky/feed/getFeedGenerators'
+import getFeedSkeleton from './app/bsky/feed/getFeedSkeleton'
 import getLikes from './app/bsky/feed/getLikes'
 import getPostThread from './app/bsky/feed/getPostThread'
 import getPosts from './app/bsky/feed/getPosts'
@@ -30,7 +31,8 @@ import getSuggestions from './app/bsky/actor/getSuggestions'
 import getUnreadCount from './app/bsky/notification/getUnreadCount'
 import listNotifications from './app/bsky/notification/listNotifications'
 import updateSeen from './app/bsky/notification/updateSeen'
-import unspecced from './app/bsky/unspecced'
+import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
+import getTimelineSkeleton from './app/bsky/unspecced/getTimelineSkeleton'
 import createReport from './com/atproto/moderation/createReport'
 import resolveModerationReports from './com/atproto/admin/resolveModerationReports'
 import reverseModerationAction from './com/atproto/admin/reverseModerationAction'
@@ -58,6 +60,7 @@ export default function (server: Server, ctx: AppContext) {
   getFeed(server, ctx)
   getFeedGenerator(server, ctx)
   getFeedGenerators(server, ctx)
+  getFeedSkeleton(server, ctx)
   getLikes(server, ctx)
   getPostThread(server, ctx)
   getPosts(server, ctx)
@@ -81,7 +84,8 @@ export default function (server: Server, ctx: AppContext) {
   getUnreadCount(server, ctx)
   listNotifications(server, ctx)
   updateSeen(server, ctx)
-  unspecced(server, ctx)
+  getPopularFeedGenerators(server, ctx)
+  getTimelineSkeleton(server, ctx)
   // com.atproto
   createReport(server, ctx)
   resolveModerationReports(server, ctx)

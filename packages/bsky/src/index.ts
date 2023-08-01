@@ -4,6 +4,7 @@ import { AddressInfo } from 'net'
 import events from 'events'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import cors from 'cors'
+import compression from 'compression'
 import { IdResolver } from '@atproto/identity'
 import API, { health, blobResolver } from './api'
 import Database from './db'
@@ -15,13 +16,11 @@ import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
 import AppContext from './context'
-import { RepoSubscription } from './subscription/repo'
 import DidSqlCache from './did-cache'
 import {
   ImageInvalidator,
   ImageProcessingServerInvalidator,
 } from './image/invalidator'
-import { HiveLabeler, KeywordLabeler, Labeler } from './labeler'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
 
@@ -29,26 +28,23 @@ export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
 export { ServerConfig } from './config'
 export { Database } from './db'
+export { Redis } from './redis'
 export { ViewMaintainer } from './db/views'
 export { AppContext } from './context'
 export { makeAlgos } from './feed-gen'
+export * from './indexer'
+export * from './ingester'
 
 export class BskyAppView {
   public ctx: AppContext
   public app: express.Application
-  public sub?: RepoSubscription
   public server?: http.Server
   private terminator?: HttpTerminator
   private dbStatsInterval: NodeJS.Timer
 
-  constructor(opts: {
-    ctx: AppContext
-    app: express.Application
-    sub?: RepoSubscription
-  }) {
+  constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
     this.app = opts.app
-    this.sub = opts.sub
   }
 
   static create(opts: {
@@ -62,6 +58,7 @@ export class BskyAppView {
     const app = express()
     app.use(cors())
     app.use(loggerMiddleware)
+    app.use(compression())
 
     const didCache = new DidSqlCache(
       db,
@@ -97,31 +94,7 @@ export class BskyAppView {
 
     const backgroundQueue = new BackgroundQueue(db)
 
-    // @TODO background labeling tasks
-    let labeler: Labeler
-    if (config.hiveApiKey) {
-      labeler = new HiveLabeler(config.hiveApiKey, {
-        db,
-        cfg: config,
-        idResolver,
-        backgroundQueue,
-      })
-    } else {
-      labeler = new KeywordLabeler({
-        db,
-        cfg: config,
-        idResolver,
-        backgroundQueue,
-      })
-    }
-
-    const services = createServices({
-      imgUriBuilder,
-      imgInvalidator,
-      idResolver,
-      labeler,
-      backgroundQueue,
-    })
+    const services = createServices({ imgUriBuilder, imgInvalidator })
 
     const ctx = new AppContext({
       db,
@@ -130,7 +103,6 @@ export class BskyAppView {
       imgUriBuilder,
       idResolver,
       didCache,
-      labeler,
       backgroundQueue,
       algos,
     })
@@ -154,11 +126,7 @@ export class BskyAppView {
     app.use(server.xrpc.router)
     app.use(error.handler)
 
-    const sub = config.repoProvider
-      ? new RepoSubscription(ctx, config.repoProvider, config.repoSubLockId)
-      : undefined
-
-    return new BskyAppView({ ctx, app, sub })
+    return new BskyAppView({ ctx, app })
   }
 
   async start(): Promise<http.Server> {
@@ -183,20 +151,19 @@ export class BskyAppView {
     }, 10000)
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
+    server.keepAliveTimeout = 90000
     this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.cfg.assignPort(port)
-    this.sub?.run() // Don't await, backgrounded
     return server
   }
 
-  async destroy(): Promise<void> {
+  async destroy(opts?: { skipDb: boolean }): Promise<void> {
     await this.ctx.didCache.destroy()
-    await this.sub?.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
-    await this.ctx.db.close()
+    if (!opts?.skipDb) await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
   }
 }

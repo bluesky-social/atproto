@@ -21,7 +21,7 @@ describe('pds actor search views', () => {
     sc = new SeedClient(pdsAgent)
 
     await wait(50) // allow pending sub to be established
-    await network.bsky.sub?.destroy()
+    await network.bsky.ingester.sub.destroy()
     await usersBulkSeed(sc)
 
     // Skip did/handle resolution for expediency
@@ -40,9 +40,9 @@ describe('pds actor search views', () => {
       .execute()
 
     // Process remaining profiles
-    network.bsky.sub?.resume()
+    network.bsky.ingester.sub.resume()
     await network.processAll(50000)
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
     headers = await network.serviceHeaders(Object.values(sc.dids)[0])
   })
 
@@ -83,7 +83,10 @@ describe('pds actor search views', () => {
 
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
-    expect(forSnapshot(result.data.actors)).toMatchSnapshot()
+    const sorted = result.data.actors.sort((a, b) =>
+      a.handle > b.handle ? 1 : -1,
+    )
+    expect(forSnapshot(sorted)).toMatchSnapshot()
   })
 
   it('typeahead gives empty result set when provided empty term', async () => {
@@ -158,7 +161,10 @@ describe('pds actor search views', () => {
 
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
-    expect(forSnapshot(result.data.actors)).toMatchSnapshot()
+    const sorted = result.data.actors.sort((a, b) =>
+      a.handle > b.handle ? 1 : -1,
+    )
+    expect(forSnapshot(sorted)).toMatchSnapshot()
   })
 
   it('search gives empty result set when provided empty term', async () => {
@@ -191,7 +197,13 @@ describe('pds actor search views', () => {
     )
 
     expect(full.data.actors.length).toBeGreaterThan(5)
-    expect(results(paginatedAll)).toEqual(results([full.data]))
+    const sortedFull = results([full.data]).sort((a, b) =>
+      a.handle > b.handle ? 1 : -1,
+    )
+    const sortedPaginated = results(paginatedAll).sort((a, b) =>
+      a.handle > b.handle ? 1 : -1,
+    )
+    expect(sortedPaginated).toEqual(sortedFull)
   })
 
   it('search handles bad input', async () => {

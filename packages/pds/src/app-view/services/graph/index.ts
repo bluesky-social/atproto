@@ -13,7 +13,7 @@ export class GraphService {
     return (db: Database) => new GraphService(db, imgUriBuilder)
   }
 
-  getListsQb(requester: string) {
+  getListsQb(requester: string | null) {
     const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('list')
@@ -23,7 +23,7 @@ export class GraphService {
       .select(
         this.db.db
           .selectFrom('list_mute')
-          .where('list_mute.mutedByDid', '=', requester)
+          .where('list_mute.mutedByDid', '=', requester ?? '')
           .whereRef('list_mute.listUri', '=', ref('list.uri'))
           .select('list_mute.listUri')
           .as('viewerMuted'),
@@ -98,9 +98,24 @@ export class GraphService {
     }
   }
 
+  async getListViews(listUris: string[], requester: string | null) {
+    if (listUris.length < 1) return {}
+    const lists = await this.getListsQb(requester)
+      .where('list.uri', 'in', listUris)
+      .execute()
+    return lists.reduce(
+      (acc, cur) => ({
+        ...acc,
+        [cur.uri]: cur,
+      }),
+      {},
+    )
+  }
+
   formatListView(list: ListInfo, profiles: Record<string, ProfileView>) {
     return {
       uri: list.uri,
+      cid: list.cid,
       creator: profiles[list.creator],
       name: list.name,
       purpose: list.purpose,
@@ -108,6 +123,22 @@ export class GraphService {
       descriptionFacets: list.descriptionFacets
         ? JSON.parse(list.descriptionFacets)
         : undefined,
+      avatar: list.avatarCid
+        ? this.imgUriBuilder.getCommonSignedUri('avatar', list.avatarCid)
+        : undefined,
+      indexedAt: list.indexedAt,
+      viewer: {
+        muted: !!list.viewerMuted,
+      },
+    }
+  }
+
+  formatListViewBasic(list: ListInfo) {
+    return {
+      uri: list.uri,
+      cid: list.cid,
+      name: list.name,
+      purpose: list.purpose,
       avatar: list.avatarCid
         ? this.imgUriBuilder.getCommonSignedUri('avatar', list.avatarCid)
         : undefined,

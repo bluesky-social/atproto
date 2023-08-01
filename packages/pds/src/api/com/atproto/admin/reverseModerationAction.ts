@@ -1,16 +1,21 @@
 import { AtUri } from '@atproto/uri'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { isRepoRef } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { isMain as isStrongRef } from '@atproto/api/src/client/types/com/atproto/repo/strongRef'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { TAKEDOWN } from '../../../../lexicon/types/com/atproto/admin/defs'
+import {
+  ACKNOWLEDGE,
+  ESCALATE,
+  TAKEDOWN,
+} from '../../../../lexicon/types/com/atproto/admin/defs'
 import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.reverseModerationAction({
-    auth: ctx.adminVerifier,
-    handler: async ({ req, input }) => {
+    auth: ctx.roleVerifier,
+    handler: async ({ req, input, auth }) => {
+      const access = auth.credentials
       const { db, services } = ctx
       if (ctx.shouldProxyModeration()) {
         const { data: result } =
@@ -77,6 +82,28 @@ export default function (server: Server, ctx: AppContext) {
         if (existing.reversedAt !== null) {
           throw new InvalidRequestError(
             'Moderation action has already been reversed',
+          )
+        }
+
+        // apply access rules
+
+        // if less than moderator access then can only reverse ack and escalation actions
+        if (
+          !access.moderator &&
+          ![ACKNOWLEDGE, ESCALATE].includes(existing.action)
+        ) {
+          throw new AuthRequiredError(
+            'Must be a full moderator to reverse this type of action',
+          )
+        }
+        // if less than moderator access then cannot reverse takedown on an account
+        if (
+          !access.moderator &&
+          existing.action === TAKEDOWN &&
+          existing.subjectType === 'com.atproto.admin.defs#repoRef'
+        ) {
+          throw new AuthRequiredError(
+            'Must be an admin to reverse an account takedown',
           )
         }
 

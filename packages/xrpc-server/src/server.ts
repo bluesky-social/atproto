@@ -235,6 +235,7 @@ export class Server {
           } else if (output?.body instanceof Readable) {
             res.header('Content-Type', output.encoding)
             res.status(200)
+            res.once('error', (err) => res.destroy(err))
             forwardStreamErrors(output.body, res)
             output.body.pipe(res)
           } else if (output) {

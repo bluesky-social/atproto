@@ -23,6 +23,7 @@ import * as ComAtprotoAdminRebaseRepo from './types/com/atproto/admin/rebaseRepo
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
+import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
@@ -103,6 +104,7 @@ import * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
+import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 
 export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
@@ -299,6 +301,13 @@ export class AdminNS {
     cfg: ConfigOf<AV, ComAtprotoAdminSearchRepos.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.admin.searchRepos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendEmail<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoAdminSendEmail.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.admin.sendEmail' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1046,6 +1055,16 @@ export class UnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.getPopularFeedGenerators' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getTimelineSkeleton<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetTimelineSkeleton.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getTimelineSkeleton' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

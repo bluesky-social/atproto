@@ -17,12 +17,10 @@ export interface ServerConfigValues {
   imgUriKey: string
   imgUriEndpoint?: string
   blobCacheLocation?: string
-  repoProvider?: string
-  repoSubLockId?: number
   labelerDid: string
-  hiveApiKey?: string
   adminPassword: string
-  labelerKeywords: Record<string, string>
+  moderatorPassword?: string
+  triagePassword?: string
 }
 
 export class ServerConfig {
@@ -57,11 +55,10 @@ export class ServerConfig {
       overrides?.dbPostgresUrl || process.env.DB_POSTGRES_URL
     assert(dbPostgresUrl)
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
-    const repoProvider = process.env.REPO_PROVIDER // E.g. ws://abc.com:4000
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
+    const moderatorPassword = process.env.MODERATOR_PASSWORD || undefined
+    const triagePassword = process.env.TRIAGE_PASSWORD || undefined
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
-    const hiveApiKey = process.env.HIVE_API_KEY || undefined
-    const labelerKeywords = {}
     return new ServerConfig({
       version,
       debugMode,
@@ -78,11 +75,10 @@ export class ServerConfig {
       imgUriKey,
       imgUriEndpoint,
       blobCacheLocation,
-      repoProvider,
       labelerDid,
-      hiveApiKey,
       adminPassword,
-      labelerKeywords,
+      moderatorPassword,
+      triagePassword,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -160,28 +156,20 @@ export class ServerConfig {
     return this.cfg.blobCacheLocation
   }
 
-  get repoProvider() {
-    return this.cfg.repoProvider
-  }
-
-  get repoSubLockId() {
-    return this.cfg.repoSubLockId
-  }
-
   get labelerDid() {
     return this.cfg.labelerDid
   }
 
-  get hiveApiKey() {
-    return this.cfg.hiveApiKey
-  }
-
-  get labelerKeywords() {
-    return this.cfg.labelerKeywords
-  }
-
   get adminPassword() {
     return this.cfg.adminPassword
+  }
+
+  get moderatorPassword() {
+    return this.cfg.moderatorPassword
+  }
+
+  get triagePassword() {
+    return this.cfg.triagePassword
   }
 }
 

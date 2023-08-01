@@ -1,6 +1,7 @@
 import { Selectable } from 'kysely'
 import { ArrayEl } from '@atproto/common'
 import { AtUri } from '@atproto/uri'
+import { INVALID_HANDLE } from '@atproto/identifier'
 import { BlobRef, jsonStringToLex } from '@atproto/lexicon'
 import Database from '../../db'
 import { Actor } from '../../db/tables/actor'
@@ -82,7 +83,7 @@ export class ModerationViews {
       return {
         // No email or invite info on appview
         did: r.did,
-        handle: r.handle,
+        handle: r.handle ?? INVALID_HANDLE,
         relatedRecords,
         indexedAt: r.indexedAt,
         moderation: {
