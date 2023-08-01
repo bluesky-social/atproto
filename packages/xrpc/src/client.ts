@@ -125,6 +125,7 @@ export class ServiceClient {
       if (res.body && isErrorResponseBody(res.body)) {
         throw new XRPCError(resCode, res.body.error, res.body.message)
       } else {
+        console.error(res.status, res.headers)
         throw new XRPCError(resCode)
       }
     }
@@ -155,6 +156,7 @@ export async function defaultFetchHandler(
       body: httpResponseBodyParse(res.headers.get('content-type'), resBody),
     }
   } catch (e) {
+    console.error(e)
     throw new XRPCError(ResponseType.Unknown, String(e))
   }
 }
