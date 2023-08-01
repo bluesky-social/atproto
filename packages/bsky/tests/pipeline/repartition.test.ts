@@ -1,10 +1,9 @@
-import assert from 'assert'
-import { Deferrable, createDeferrable, wait } from '@atproto/common'
 import {
   BskyIndexers,
   TestNetworkNoAppView,
   getIndexers,
   getIngester,
+  ingestAll,
   processAll,
 } from '@atproto/dev-env'
 import { SeedClient } from '../seeds/client'
@@ -48,20 +47,18 @@ describe('pipeline indexer repartitioning', () => {
 
   it('indexers repartition without missing events.', async () => {
     const poster = createPoster(sc)
-    poster.start()
-    await indexers1.start()
-    await ingester.start()
-    await wait(500) // handle some events on indexers1
+    await Promise.all([poster.post(4), indexers1.start(), ingester.start()])
+    await poster.post(1)
+    await processAll(network, ingester)
     const { count: indexedPosts } = await indexers1.db.db
       .selectFrom('post')
       .select(countAll.as('count'))
       .executeTakeFirstOrThrow()
-    expect(indexedPosts).toBeGreaterThanOrEqual(1)
-    await indexers1.destroy()
-    await wait(500) // miss some events
-    await indexers2.start()
-    await wait(500) // handle some events on indexers2
-    await poster.destroy()
+    expect(indexedPosts).toEqual(5)
+    await Promise.all([poster.post(3), indexers1.destroy()])
+    await poster.post(3) // miss some events
+    await ingestAll(network, ingester)
+    await Promise.all([poster.post(3), indexers2.start()]) // handle some events on indexers2
     await processAll(network, ingester)
     const { count: allIndexedPosts } = await indexers2.db.db
       .selectFrom('post')
@@ -75,26 +72,16 @@ describe('pipeline indexer repartitioning', () => {
 })
 
 function createPoster(sc: SeedClient) {
-  let running: Deferrable | undefined
   return {
     postCount: 0,
     destroyed: false,
-    async start() {
-      assert(!running && !this.destroyed)
-      running = createDeferrable()
+    async post(n = 1) {
       const dids = Object.values(sc.dids)
-      while (!this.destroyed) {
+      for (let i = 0; i < n; ++i) {
         const did = dids[this.postCount % dids.length]
         await sc.post(did, `post ${this.postCount}`)
         this.postCount++
-        await wait(75)
       }
-      running.resolve()
-    },
-    async destroy() {
-      assert(running && !this.destroyed)
-      this.destroyed = true
-      await running.complete
     },
   }
 }
