@@ -289,7 +289,7 @@ export class ActorViews {
               followedBy: cur?.requesterFollowedBy || undefined,
             }
           : undefined,
-        labels: skipLabels ? actorLabels : undefined,
+        labels: skipLabels ? undefined : actorLabels,
       }
       acc[cur.did] = profile
       return acc
