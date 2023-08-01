@@ -14,7 +14,7 @@
             "account": { "type": "string", "format": "did" },
             "note": {
               "type": "string",
-              "description": "Additionally add a note describing why the invites were disabled"
+              "description": "Additionally add a note describing why the invites were enabled"
             }
           }
         }
