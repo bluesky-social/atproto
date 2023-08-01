@@ -37,7 +37,7 @@ describe.skip('algo with friends', () => {
     carol = sc.dids.carol
     dan = sc.dids.dan
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
   })
 
   afterAll(async () => {
@@ -109,7 +109,7 @@ describe.skip('algo with friends', () => {
     await sc.like(carol, nine.ref)
     await sc.like(carol, ten.ref)
 
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
 
     expectedFeed = [
       ten.ref.uriStr,
