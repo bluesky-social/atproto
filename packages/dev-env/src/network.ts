@@ -75,7 +75,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       const { cursor } = sub.partitions.get(0)
       if (cursor === lastSeq) {
         // has seen last seq, just need to wait for it to finish processing
-        await this.bsky.indexer.sub.repoQueue.main.onIdle()
+        await sub.repoQueue.main.onIdle()
         return
       }
     }

@@ -52,18 +52,18 @@ describe('pipeline indexer repartitioning', () => {
     await indexers1.start()
     await ingester.start()
     await wait(500) // handle some events on indexers1
-    const { count: indexedPosts } = await network.pds.ctx.db.db
+    const { count: indexedPosts } = await indexers1.db.db
       .selectFrom('post')
       .select(countAll.as('count'))
       .executeTakeFirstOrThrow()
-    expect(indexedPosts).toBeGreaterThan(1)
+    expect(indexedPosts).toBeGreaterThanOrEqual(1)
     await indexers1.destroy()
     await wait(500) // miss some events
     await indexers2.start()
     await wait(500) // handle some events on indexers2
     await poster.destroy()
     await processAll(network, ingester)
-    const { count: allIndexedPosts } = await network.pds.ctx.db.db
+    const { count: allIndexedPosts } = await indexers2.db.db
       .selectFrom('post')
       .select(countAll.as('count'))
       .executeTakeFirstOrThrow()
