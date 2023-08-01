@@ -1,4 +1,4 @@
-import { Selectable } from 'kysely'
+import { Selectable, sql } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Follow from '../../../lexicon/types/app/bsky/graph/follow'
@@ -7,7 +7,6 @@ import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { toSimplifiedISOSafe } from '../util'
 import Database from '../../../db'
-import { countAll, excluded } from '../../../db/util'
 import { BackgroundQueue } from '../../../background'
 
 const lexId = lex.ids.AppBskyGraphFollow
@@ -84,35 +83,55 @@ const notifsForDelete = (
   return { notifs: [], toDelete }
 }
 
-const updateAggregates = async (db: DatabaseSchema, follow: IndexedFollow) => {
+const afterInsert = async (db: DatabaseSchema, inserted: IndexedFollow) => {
+  const { ref } = db.dynamic
   const followersCountQb = db
     .insertInto('profile_agg')
     .values({
-      did: follow.subjectDid,
-      followersCount: db
-        .selectFrom('follow')
-        .where('follow.subjectDid', '=', follow.subjectDid)
-        .select(countAll.as('count')),
+      did: inserted.subjectDid,
+      followersCount: 1,
     })
     .onConflict((oc) =>
       oc.column('did').doUpdateSet({
-        followersCount: excluded(db, 'followersCount'),
+        followersCount: sql`${ref('profile_agg.followersCount')} + 1`,
       }),
     )
   const followsCountQb = db
     .insertInto('profile_agg')
     .values({
-      did: follow.creator,
-      followsCount: db
-        .selectFrom('follow')
-        .where('follow.creator', '=', follow.creator)
-        .select(countAll.as('count')),
+      did: inserted.creator,
+      followsCount: 1,
     })
     .onConflict((oc) =>
       oc.column('did').doUpdateSet({
-        followsCount: excluded(db, 'followsCount'),
+        followsCount: sql`${ref('profile_agg.followsCount')} + 1`,
       }),
     )
+  await Promise.all([followersCountQb.execute(), followsCountQb.execute()])
+}
+
+// posts are never replaced by another post
+const afterDelete = async (
+  db: DatabaseSchema,
+  deleted: IndexedFollow,
+  replacedBy: IndexedFollow | null,
+) => {
+  const { ref } = db.dynamic
+  if (replacedBy) {
+    return
+  }
+  const followersCountQb = db
+    .updateTable('profile_agg')
+    .set({
+      followersCount: sql`${ref('profile_agg.followersCount')} - 1`,
+    })
+    .where('did', '=', deleted.subjectDid)
+  const followsCountQb = db
+    .updateTable('profile_agg')
+    .set({
+      followsCount: sql`${ref('profile_agg.followsCount')} - 1`,
+    })
+    .where('did', '=', deleted.creator)
   await Promise.all([followersCountQb.execute(), followsCountQb.execute()])
 }
 
@@ -129,7 +148,8 @@ export const makePlugin = (
     deleteFn,
     notifsForInsert,
     notifsForDelete,
-    updateAggregates,
+    afterInsert,
+    afterDelete,
   })
 }
 

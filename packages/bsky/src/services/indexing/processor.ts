@@ -31,7 +31,12 @@ type RecordProcessorParams<T, S> = {
     prev: S,
     replacedBy: S | null,
   ) => { notifs: Notif[]; toDelete: string[] }
-  updateAggregates?: (db: DatabaseSchema, obj: S) => Promise<void>
+  afterInsert?: (db: DatabaseSchema, inserted: S) => Promise<void>
+  afterDelete?: (
+    db: DatabaseSchema,
+    deleted: S,
+    replacedBy: S | null,
+  ) => Promise<void>
 }
 
 type Notif = Insertable<Notification>
@@ -82,8 +87,8 @@ export class RecordProcessor<T, S> {
       timestamp,
     )
     if (inserted) {
-      this.aggregateOnCommit(inserted)
       await this.handleNotifs({ inserted })
+      this.afterInsertOnCommit(inserted)
       return
     }
     // if duplicate, insert into duplicates table with no events
@@ -141,7 +146,7 @@ export class RecordProcessor<T, S> {
       // If a record was updated but hadn't been indexed yet, treat it like a plain insert.
       return this.insertRecord(uri, cid, obj, timestamp)
     }
-    this.aggregateOnCommit(deleted)
+    this.afterDeleteOnCommit(deleted, null)
     const inserted = await this.params.insertFn(
       this.db,
       uri,
@@ -154,8 +159,8 @@ export class RecordProcessor<T, S> {
         'Record update failed: removed from index but could not be replaced',
       )
     }
-    this.aggregateOnCommit(inserted)
     await this.handleNotifs({ inserted, deleted })
+    this.afterInsertOnCommit(inserted)
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {
@@ -169,42 +174,43 @@ export class RecordProcessor<T, S> {
       .execute()
     const deleted = await this.params.deleteFn(this.db, uri)
     if (!deleted) return
-    this.aggregateOnCommit(deleted)
+
+    let replacedBy: S | null = null
     if (cascading) {
       await this.db
         .deleteFrom('duplicate_record')
         .where('duplicateOf', '=', uri.toString())
         .execute()
-      return this.handleNotifs({ deleted })
     } else {
-      const found = await this.db
-        .selectFrom('duplicate_record')
-        .innerJoin('record', 'record.uri', 'duplicate_record.uri')
-        .where('duplicateOf', '=', uri.toString())
-        .orderBy('duplicate_record.indexedAt', 'asc')
-        .limit(1)
-        .selectAll()
-        .executeTakeFirst()
-
-      if (!found) {
-        return this.handleNotifs({ deleted })
-      }
-      const record = jsonStringToLex(found.json)
-      if (!this.matchesSchema(record)) {
-        return this.handleNotifs({ deleted })
-      }
-      const inserted = await this.params.insertFn(
-        this.db,
-        new AtUri(found.uri),
-        CID.parse(found.cid),
-        record,
-        found.indexedAt,
-      )
-      if (inserted) {
-        this.aggregateOnCommit(inserted)
-      }
-      await this.handleNotifs({ deleted, inserted: inserted ?? undefined })
+      replacedBy = await this.replaceWithDuplicate(uri)
     }
+    await this.handleNotifs({ deleted, inserted: replacedBy ?? undefined })
+    this.afterDeleteOnCommit(deleted, replacedBy)
+  }
+
+  private async replaceWithDuplicate(uri: AtUri): Promise<S | null> {
+    const found = await this.db
+      .selectFrom('duplicate_record')
+      .innerJoin('record', 'record.uri', 'duplicate_record.uri')
+      .where('duplicateOf', '=', uri.toString())
+      .orderBy('duplicate_record.indexedAt', 'asc')
+      .limit(1)
+      .selectAll()
+      .executeTakeFirst()
+    if (!found) {
+      return null
+    }
+    const record = jsonStringToLex(found.json)
+    if (!this.matchesSchema(record)) {
+      return null
+    }
+    return this.params.insertFn(
+      this.db,
+      new AtUri(found.uri),
+      CID.parse(found.cid),
+      record,
+      found.indexedAt,
+    )
   }
 
   async handleNotifs(op: { deleted?: S; inserted?: S }) {
@@ -246,11 +252,19 @@ export class RecordProcessor<T, S> {
     }
   }
 
-  aggregateOnCommit(indexed: S) {
-    const { updateAggregates } = this.params
-    if (!updateAggregates) return
+  afterInsertOnCommit(inserted: S) {
+    const { afterInsert } = this.params
+    if (!afterInsert) return
     this.appDb.onCommit(() => {
-      this.backgroundQueue.add((db) => updateAggregates(db.db, indexed))
+      this.backgroundQueue.add((db) => afterInsert(db.db, inserted))
+    })
+  }
+
+  afterDeleteOnCommit(deleted: S, replacedBy: S | null) {
+    const { afterDelete } = this.params
+    if (!afterDelete) return
+    this.appDb.onCommit(() => {
+      this.backgroundQueue.add((db) => afterDelete(db.db, deleted, replacedBy))
     })
   }
 }

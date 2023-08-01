@@ -16,7 +16,6 @@ import RecordProcessor from '../processor'
 import { Notification } from '../../../db/tables/notification'
 import { toSimplifiedISOSafe } from '../util'
 import Database from '../../../db'
-import { countAll, excluded } from '../../../db/util'
 import { BackgroundQueue } from '../../../background'
 import { getAncestorsAndSelfQb, getDescendentsQb } from '../../util/post'
 
@@ -319,35 +318,52 @@ const notifsForDelete = (
   }
 }
 
-const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
-  const replyCountQb = postIdx.post.replyParent
+const afterInsert = async (db: DatabaseSchema, inserted: IndexedPost) => {
+  const { ref } = db.dynamic
+  const replyCountQb = inserted.post.replyParent
     ? db
         .insertInto('post_agg')
         .values({
-          uri: postIdx.post.replyParent,
-          replyCount: db
-            .selectFrom('post')
-            .where('post.replyParent', '=', postIdx.post.replyParent)
-            .select(countAll.as('count')),
+          uri: inserted.post.replyParent,
+          replyCount: 1,
         })
         .onConflict((oc) =>
           oc
             .column('uri')
-            .doUpdateSet({ replyCount: excluded(db, 'replyCount') }),
+            .doUpdateSet({ replyCount: sql`${ref('replyCount')} + 1` }),
         )
     : null
   const postsCountQb = db
     .insertInto('profile_agg')
     .values({
-      did: postIdx.post.creator,
-      postsCount: db
-        .selectFrom('post')
-        .where('post.creator', '=', postIdx.post.creator)
-        .select(countAll.as('count')),
+      did: inserted.post.creator,
+      postsCount: 1,
     })
     .onConflict((oc) =>
-      oc.column('did').doUpdateSet({ postsCount: excluded(db, 'postsCount') }),
+      oc
+        .column('did')
+        .doUpdateSet({ postsCount: sql`${ref('postsCount')} + 1` }),
     )
+  await Promise.all([replyCountQb?.execute(), postsCountQb.execute()])
+}
+
+// posts are never replaced by another post
+const afterDelete = async (db: DatabaseSchema, deleted: IndexedPost) => {
+  const { ref } = db.dynamic
+  const replyCountQb = deleted.post.replyParent
+    ? db
+        .updateTable('post_agg')
+        .set({
+          replyCount: sql`${ref('post_agg.replyCount')} - 1`,
+        })
+        .where('uri', '=', deleted.post.replyParent)
+    : null
+  const postsCountQb = db
+    .updateTable('profile_agg')
+    .set({
+      postsCount: sql`${ref('profile_agg.postsCount')} - 1`,
+    })
+    .where('did', '=', deleted.post.creator)
   await Promise.all([replyCountQb?.execute(), postsCountQb.execute()])
 }
 
@@ -364,7 +380,8 @@ export const makePlugin = (
     deleteFn,
     notifsForInsert,
     notifsForDelete,
-    updateAggregates,
+    afterInsert,
+    afterDelete,
   })
 }
 

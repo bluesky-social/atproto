@@ -1,4 +1,4 @@
-import { Selectable } from 'kysely'
+import { Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import * as Repost from '../../../lexicon/types/app/bsky/feed/repost'
@@ -7,7 +7,6 @@ import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { toSimplifiedISOSafe } from '../util'
 import Database from '../../../db'
-import { countAll, excluded } from '../../../db/util'
 import { BackgroundQueue } from '../../../background'
 
 const lexId = lex.ids.AppBskyFeedRepost
@@ -109,22 +108,39 @@ const notifsForDelete = (
   return { notifs: [], toDelete }
 }
 
-const updateAggregates = async (db: DatabaseSchema, repost: IndexedRepost) => {
-  const repostCountQb = db
+const afterInsert = async (db: DatabaseSchema, inserted: IndexedRepost) => {
+  const { ref } = db.dynamic
+  await db
     .insertInto('post_agg')
     .values({
-      uri: repost.subject,
-      repostCount: db
-        .selectFrom('repost')
-        .where('repost.subject', '=', repost.subject)
-        .select(countAll.as('count')),
+      uri: inserted.subject,
+      repostCount: 1,
     })
     .onConflict((oc) =>
       oc
         .column('uri')
-        .doUpdateSet({ repostCount: excluded(db, 'repostCount') }),
+        .doUpdateSet({ repostCount: sql`${ref('post_agg.repostCount')} + 1` }),
     )
-  await repostCountQb.execute()
+    .execute()
+}
+
+// posts are never replaced by another post
+const afterDelete = async (
+  db: DatabaseSchema,
+  deleted: IndexedRepost,
+  replacedBy: IndexedRepost | null,
+) => {
+  const { ref } = db.dynamic
+  if (replacedBy) {
+    return
+  }
+  await db
+    .updateTable('post_agg')
+    .set({
+      repostCount: sql`${ref('post_agg.repostCount')} - 1`,
+    })
+    .where('uri', '=', deleted.subject)
+    .execute()
 }
 
 export type PluginType = RecordProcessor<Repost.Record, IndexedRepost>
@@ -140,7 +156,8 @@ export const makePlugin = (
     deleteFn,
     notifsForInsert,
     notifsForDelete,
-    updateAggregates,
+    afterInsert,
+    afterDelete,
   })
 }
 

@@ -1,4 +1,4 @@
-import { Selectable } from 'kysely'
+import { Selectable, sql } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as Like from '../../../lexicon/types/app/bsky/feed/like'
@@ -6,7 +6,6 @@ import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { toSimplifiedISOSafe } from '../util'
-import { countAll, excluded } from '../../../db/util'
 import Database from '../../../db'
 import { BackgroundQueue } from '../../../background'
 
@@ -86,20 +85,39 @@ const notifsForDelete = (
   return { notifs: [], toDelete }
 }
 
-const updateAggregates = async (db: DatabaseSchema, like: IndexedLike) => {
-  const likeCountQb = db
+const afterInsert = async (db: DatabaseSchema, inserted: IndexedLike) => {
+  const { ref } = db.dynamic
+  await db
     .insertInto('post_agg')
     .values({
-      uri: like.subject,
-      likeCount: db
-        .selectFrom('like')
-        .where('like.subject', '=', like.subject)
-        .select(countAll.as('count')),
+      uri: inserted.subject,
+      likeCount: 1,
     })
     .onConflict((oc) =>
-      oc.column('uri').doUpdateSet({ likeCount: excluded(db, 'likeCount') }),
+      oc
+        .column('uri')
+        .doUpdateSet({ likeCount: sql`${ref('post_agg.likeCount')} + 1` }),
     )
-  await likeCountQb.execute()
+    .execute()
+}
+
+// posts are never replaced by another post
+const afterDelete = async (
+  db: DatabaseSchema,
+  deleted: IndexedLike,
+  replacedBy: IndexedLike | null,
+) => {
+  const { ref } = db.dynamic
+  if (replacedBy) {
+    return
+  }
+  await db
+    .updateTable('post_agg')
+    .set({
+      likeCount: sql`${ref('post_agg.likeCount')} - 1`,
+    })
+    .where('uri', '=', deleted.subject)
+    .execute()
 }
 
 export type PluginType = RecordProcessor<Like.Record, IndexedLike>
@@ -115,7 +133,8 @@ export const makePlugin = (
     deleteFn,
     notifsForInsert,
     notifsForDelete,
-    updateAggregates,
+    afterInsert,
+    afterDelete,
   })
 }
 
