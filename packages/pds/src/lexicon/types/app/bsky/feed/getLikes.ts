@@ -51,6 +51,7 @@ export type Handler<HA extends HandlerAuth = never> = (ctx: {
 export interface Like {
   indexedAt: string
   createdAt: string
+  uri: string
   actor: AppBskyActorDefs.ProfileView
   [k: string]: unknown
 }

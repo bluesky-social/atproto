@@ -44,6 +44,7 @@ export function toKnownErr(e: any) {
 export interface Like {
   indexedAt: string
   createdAt: string
+  uri: string
   actor: AppBskyActorDefs.ProfileView
   [k: string]: unknown
 }
