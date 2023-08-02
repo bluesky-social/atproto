@@ -611,6 +611,12 @@ function genClientXrpcCommon(
     customErrors.push({ name: error.name, cls: name })
   }
 
+  file.addEnum({
+    isExported: true,
+    name: 'ErrorName',
+    members: customErrors.map(e => ({ name: e.name, value: e.name }))
+  })
+
   // export function toKnownErr(err: any) {...}
   const toKnownErrFn = file.addFunction({
     name: 'toKnownErr',
@@ -621,7 +627,7 @@ function genClientXrpcCommon(
     [
       `if (e instanceof XRPCError) {`,
       ...customErrors.map(
-        (err) => `if (e.error === '${err.name}') return new ${err.cls}(e)`,
+        (err) => `if (e.error === ErrorName.${err.name}) return new ${err.cls}(e)`,
       ),
       `}`,
       `return e`,
