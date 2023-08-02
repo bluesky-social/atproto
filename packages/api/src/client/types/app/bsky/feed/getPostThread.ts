@@ -41,9 +41,13 @@ export class NotFoundError extends XRPCError {
   }
 }
 
+export enum ErrorName {
+  NotFound = 'NotFound',
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'NotFound') return new NotFoundError(e)
+    if (e.error === ErrorName.NotFound) return new NotFoundError(e)
   }
   return e
 }

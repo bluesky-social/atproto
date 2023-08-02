@@ -44,10 +44,15 @@ export class BlockedByActorError extends XRPCError {
   }
 }
 
+export enum ErrorName {
+  BlockedActor = 'BlockedActor',
+  BlockedByActor = 'BlockedByActor',
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'BlockedActor') return new BlockedActorError(e)
-    if (e.error === 'BlockedByActor') return new BlockedByActorError(e)
+    if (e.error === ErrorName.BlockedActor) return new BlockedActorError(e)
+    if (e.error === ErrorName.BlockedByActor) return new BlockedByActorError(e)
   }
   return e
 }

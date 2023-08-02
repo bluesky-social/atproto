@@ -36,9 +36,14 @@ export class DuplicateCreateError extends XRPCError {
   }
 }
 
+export enum ErrorName {
+  DuplicateCreate = 'DuplicateCreate',
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'DuplicateCreate') return new DuplicateCreateError(e)
+    if (e.error === ErrorName.DuplicateCreate)
+      return new DuplicateCreateError(e)
   }
   return e
 }

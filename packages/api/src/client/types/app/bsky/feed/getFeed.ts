@@ -38,9 +38,13 @@ export class UnknownFeedError extends XRPCError {
   }
 }
 
+export enum ErrorName {
+  UnknownFeed = 'UnknownFeed',
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'UnknownFeed') return new UnknownFeedError(e)
+    if (e.error === ErrorName.UnknownFeed) return new UnknownFeedError(e)
   }
   return e
 }

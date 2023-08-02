@@ -31,6 +31,8 @@ export interface Response {
   data: OutputSchema
 }
 
+export enum ErrorName {}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
   }

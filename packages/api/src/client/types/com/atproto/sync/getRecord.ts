@@ -28,6 +28,8 @@ export interface Response {
   data: Uint8Array
 }
 
+export enum ErrorName {}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
   }

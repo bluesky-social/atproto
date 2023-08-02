@@ -31,9 +31,13 @@ export class RepoNotFoundError extends XRPCError {
   }
 }
 
+export enum ErrorName {
+  RepoNotFound = 'RepoNotFound',
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'RepoNotFound') return new RepoNotFoundError(e)
+    if (e.error === ErrorName.RepoNotFound) return new RepoNotFoundError(e)
   }
   return e
 }

@@ -36,9 +36,13 @@ export class InvalidSwapError extends XRPCError {
   }
 }
 
+export enum ErrorName {
+  InvalidSwap = 'InvalidSwap',
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'InvalidSwap') return new InvalidSwapError(e)
+    if (e.error === ErrorName.InvalidSwap) return new InvalidSwapError(e)
   }
   return e
 }

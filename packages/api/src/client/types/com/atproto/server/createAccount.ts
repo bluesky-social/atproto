@@ -81,15 +81,31 @@ export class IncompatibleDidDocError extends XRPCError {
   }
 }
 
+export enum ErrorName {
+  InvalidHandle = 'InvalidHandle',
+  InvalidPassword = 'InvalidPassword',
+  InvalidInviteCode = 'InvalidInviteCode',
+  HandleNotAvailable = 'HandleNotAvailable',
+  UnsupportedDomain = 'UnsupportedDomain',
+  UnresolvableDid = 'UnresolvableDid',
+  IncompatibleDidDoc = 'IncompatibleDidDoc',
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'InvalidHandle') return new InvalidHandleError(e)
-    if (e.error === 'InvalidPassword') return new InvalidPasswordError(e)
-    if (e.error === 'InvalidInviteCode') return new InvalidInviteCodeError(e)
-    if (e.error === 'HandleNotAvailable') return new HandleNotAvailableError(e)
-    if (e.error === 'UnsupportedDomain') return new UnsupportedDomainError(e)
-    if (e.error === 'UnresolvableDid') return new UnresolvableDidError(e)
-    if (e.error === 'IncompatibleDidDoc') return new IncompatibleDidDocError(e)
+    if (e.error === ErrorName.InvalidHandle) return new InvalidHandleError(e)
+    if (e.error === ErrorName.InvalidPassword)
+      return new InvalidPasswordError(e)
+    if (e.error === ErrorName.InvalidInviteCode)
+      return new InvalidInviteCodeError(e)
+    if (e.error === ErrorName.HandleNotAvailable)
+      return new HandleNotAvailableError(e)
+    if (e.error === ErrorName.UnsupportedDomain)
+      return new UnsupportedDomainError(e)
+    if (e.error === ErrorName.UnresolvableDid)
+      return new UnresolvableDidError(e)
+    if (e.error === ErrorName.IncompatibleDidDoc)
+      return new IncompatibleDidDocError(e)
   }
   return e
 }

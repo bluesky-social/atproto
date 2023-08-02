@@ -32,9 +32,13 @@ export class RecordNotFoundError extends XRPCError {
   }
 }
 
+export enum ErrorName {
+  RecordNotFound = 'RecordNotFound',
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'RecordNotFound') return new RecordNotFoundError(e)
+    if (e.error === ErrorName.RecordNotFound) return new RecordNotFoundError(e)
   }
   return e
 }

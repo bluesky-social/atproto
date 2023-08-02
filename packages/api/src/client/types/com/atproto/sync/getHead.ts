@@ -35,9 +35,13 @@ export class HeadNotFoundError extends XRPCError {
   }
 }
 
+export enum ErrorName {
+  HeadNotFound = 'HeadNotFound',
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'HeadNotFound') return new HeadNotFoundError(e)
+    if (e.error === ErrorName.HeadNotFound) return new HeadNotFoundError(e)
   }
   return e
 }

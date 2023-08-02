@@ -39,10 +39,15 @@ export class InvalidTokenError extends XRPCError {
   }
 }
 
+export enum ErrorName {
+  ExpiredToken = 'ExpiredToken',
+  InvalidToken = 'InvalidToken',
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'ExpiredToken') return new ExpiredTokenError(e)
-    if (e.error === 'InvalidToken') return new InvalidTokenError(e)
+    if (e.error === ErrorName.ExpiredToken) return new ExpiredTokenError(e)
+    if (e.error === ErrorName.InvalidToken) return new InvalidTokenError(e)
   }
   return e
 }

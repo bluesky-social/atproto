@@ -32,9 +32,14 @@ export class AccountTakedownError extends XRPCError {
   }
 }
 
+export enum ErrorName {
+  AccountTakedown = 'AccountTakedown',
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'AccountTakedown') return new AccountTakedownError(e)
+    if (e.error === ErrorName.AccountTakedown)
+      return new AccountTakedownError(e)
   }
   return e
 }

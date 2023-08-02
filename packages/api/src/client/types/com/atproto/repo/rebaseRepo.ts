@@ -40,10 +40,16 @@ export class ConcurrentWritesError extends XRPCError {
   }
 }
 
+export enum ErrorName {
+  InvalidSwap = 'InvalidSwap',
+  ConcurrentWrites = 'ConcurrentWrites',
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'InvalidSwap') return new InvalidSwapError(e)
-    if (e.error === 'ConcurrentWrites') return new ConcurrentWritesError(e)
+    if (e.error === ErrorName.InvalidSwap) return new InvalidSwapError(e)
+    if (e.error === ErrorName.ConcurrentWrites)
+      return new ConcurrentWritesError(e)
   }
   return e
 }

@@ -49,9 +49,14 @@ export class SubjectHasActionError extends XRPCError {
   }
 }
 
+export enum ErrorName {
+  SubjectHasAction = 'SubjectHasAction',
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'SubjectHasAction') return new SubjectHasActionError(e)
+    if (e.error === ErrorName.SubjectHasAction)
+      return new SubjectHasActionError(e)
   }
   return e
 }
