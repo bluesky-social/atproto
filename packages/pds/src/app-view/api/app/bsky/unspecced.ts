@@ -1,14 +1,18 @@
+import { NotEmptyArray } from '@atproto/common'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import { FeedKeyset } from './util/feed'
 import { GenericKeyset, paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow } from '../../../services/feed'
-import { isPostView } from '../../../../lexicon/types/app/bsky/feed/defs'
-import { NotEmptyArray } from '@atproto/common'
+import {
+  isPostView,
+  GeneratorView,
+} from '../../../../lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../../../../lexicon/types/app/bsky/embed/record'
+import { isRepoRef } from '../../../../lexicon/types/com/atproto/admin/defs'
+import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
 import { countAll, valuesList } from '../../../../db/util'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { GeneratorView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
+import { FeedKeyset } from './util/feed'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   '!no-promote',
@@ -186,6 +190,36 @@ export default function (server: Server, ctx: AppContext) {
           cursor: keyset.packFromResult(res),
           feeds: genViews,
         },
+      }
+    },
+  })
+
+  server.app.bsky.unspecced.applyLabels({
+    auth: ctx.roleVerifier,
+    handler: async ({ auth, input }) => {
+      if (!auth.credentials.admin) {
+        throw new AuthRequiredError('Insufficient privileges')
+      }
+      const { services, db, cfg } = ctx
+      const labelService = services.appView.label(db)
+      const { subject, createLabelVals, negateLabelVals } = input.body
+      const labels = { create: createLabelVals, negate: negateLabelVals }
+      if (isStrongRef(subject)) {
+        await labelService.formatAndCreate(
+          cfg.labelerDid,
+          subject.uri,
+          subject.cid,
+          labels,
+        )
+      } else if (isRepoRef(subject)) {
+        await labelService.formatAndCreate(
+          cfg.labelerDid,
+          subject.did,
+          null,
+          labels,
+        )
+      } else {
+        throw new InvalidRequestError('Unknown subject type')
       }
     },
   })
