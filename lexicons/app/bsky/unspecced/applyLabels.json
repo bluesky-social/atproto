@@ -1,0 +1,34 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.unspecced.applyLabels",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Apply labels to a subject directly.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["subject"],
+          "properties": {
+            "subject": {
+              "type": "union",
+              "refs": [
+                "com.atproto.admin.defs#repoRef",
+                "com.atproto.repo.strongRef"
+              ]
+            },
+            "createLabelVals": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "negateLabelVals": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

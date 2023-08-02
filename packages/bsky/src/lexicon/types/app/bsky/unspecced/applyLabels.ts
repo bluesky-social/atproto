@@ -7,13 +7,18 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
+import * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs'
+import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
 export interface QueryParams {}
 
 export interface InputSchema {
-  account: string
-  /** Additionally add a note describing why the invites were enabled */
-  note?: string
+  subject:
+    | ComAtprotoAdminDefs.RepoRef
+    | ComAtprotoRepoStrongRef.Main
+    | { $type: string; [k: string]: unknown }
+  createLabelVals?: string[]
+  negateLabelVals?: string[]
   [k: string]: unknown
 }
 
