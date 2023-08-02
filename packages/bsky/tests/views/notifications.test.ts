@@ -23,7 +23,7 @@ describe('notification views', () => {
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
     alice = sc.dids.alice
   })
 
@@ -76,7 +76,7 @@ describe('notification views', () => {
       'indeed',
     )
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
 
     const notifCountAlice =
       await agent.api.app.bsky.notification.getUnreadCount(
@@ -100,7 +100,7 @@ describe('notification views', () => {
     await sc.deletePost(sc.dids.alice, root.ref.uri)
     const second = await sc.reply(sc.dids.carol, root.ref, first.ref, 'second')
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
 
     const notifsAlice = await agent.api.app.bsky.notification.listNotifications(
       {},

@@ -5,7 +5,7 @@ import * as createRecord from '@atproto/api/src/client/types/com/atproto/repo/cr
 import * as putRecord from '@atproto/api/src/client/types/com/atproto/repo/putRecord'
 import * as deleteRecord from '@atproto/api/src/client/types/com/atproto/repo/deleteRecord'
 import * as applyWrites from '@atproto/api/src/client/types/com/atproto/repo/applyWrites'
-import { cidForCbor, TID } from '@atproto/common'
+import { cidForCbor, TID, ui8ToArrayBuffer } from '@atproto/common'
 import { BlobNotFoundError } from '@atproto/repo'
 import { defaultFetchHandler } from '@atproto/xrpc'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
@@ -833,7 +833,7 @@ describe('crud operations', () => {
 
     it("writes fail on values that can't reliably transform between cbor to lex", async () => {
       const passthroughBody = (data: unknown) =>
-        typedArrayToBuffer(new TextEncoder().encode(JSON.stringify(data)))
+        ui8ToArrayBuffer(new TextEncoder().encode(JSON.stringify(data)))
       const result = await defaultFetchHandler(
         aliceAgent.service.origin + `/xrpc/com.atproto.repo.createRecord`,
         'post',
@@ -1210,11 +1210,4 @@ function createDeepObject(depth: number) {
     iter = iter.x
   }
   return obj
-}
-
-function typedArrayToBuffer(array: Uint8Array): ArrayBuffer {
-  return array.buffer.slice(
-    array.byteOffset,
-    array.byteLength + array.byteOffset,
-  )
 }

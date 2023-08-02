@@ -6,8 +6,8 @@ import { labelerLogger as log } from '../logger'
 import { resolveBlob } from '../api/blob-resolver'
 import Database from '../db'
 import { IdResolver } from '@atproto/identity'
-import { ServerConfig } from '../config'
 import { BackgroundQueue } from '../background'
+import { IndexerConfig } from '../indexer/config'
 
 export abstract class Labeler {
   public backgroundQueue: BackgroundQueue
@@ -15,7 +15,7 @@ export abstract class Labeler {
     protected ctx: {
       db: Database
       idResolver: IdResolver
-      cfg: ServerConfig
+      cfg: IndexerConfig
       backgroundQueue: BackgroundQueue
     },
   ) {

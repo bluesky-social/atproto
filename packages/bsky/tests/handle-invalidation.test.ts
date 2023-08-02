@@ -27,8 +27,10 @@ describe('handle invalidation', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
 
-    const origResolve = network.bsky.ctx.idResolver.handle.resolve
-    network.bsky.ctx.idResolver.handle.resolve = async (handle: string) => {
+    const origResolve = network.bsky.indexer.ctx.idResolver.handle.resolve
+    network.bsky.indexer.ctx.idResolver.handle.resolve = async (
+      handle: string,
+    ) => {
       if (mockHandles[handle] === null) {
         return undefined
       } else if (mockHandles[handle]) {

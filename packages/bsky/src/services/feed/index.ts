@@ -191,27 +191,30 @@ export class FeedService {
     const listViews = await this.services.graph.getListViews(listUris, viewer)
     return actors.reduce((acc, cur) => {
       const actorLabels = labels[cur.did] ?? []
+      const avatar = cur.avatarCid
+        ? this.imgUriBuilder.getCommonSignedUri(
+            'avatar',
+            cur.did,
+            cur.avatarCid,
+          )
+        : undefined
+      const mutedByList =
+        cur.requesterMutedByList && listViews[cur.requesterMutedByList]
+          ? this.services.graph.formatListViewBasic(
+              listViews[cur.requesterMutedByList],
+            )
+          : undefined
       return {
         ...acc,
         [cur.did]: {
           did: cur.did,
           handle: cur.handle ?? INVALID_HANDLE,
           displayName: cur.displayName ?? undefined,
-          avatar: cur.avatarCid
-            ? this.imgUriBuilder.getCommonSignedUri(
-                'avatar',
-                cur.did,
-                cur.avatarCid,
-              )
-            : undefined,
+          avatar,
           viewer: viewer
             ? {
                 muted: !!cur?.requesterMuted || !!cur?.requesterMutedByList,
-                mutedByList: cur.requesterMutedByList
-                  ? this.services.graph.formatListViewBasic(
-                      listViews[cur.requesterMutedByList],
-                    )
-                  : undefined,
+                mutedByList,
                 blockedBy: !!cur?.requesterBlockedBy,
                 blocking: cur?.requesterBlocking || undefined,
                 following: cur?.requesterFollowing || undefined,

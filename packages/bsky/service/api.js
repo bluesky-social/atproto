@@ -33,7 +33,7 @@ const main = async () => {
   // Use lower-credentialed user to run the app
   const db = Database.postgres({
     url: env.dbPostgresUrl,
-    schema: env.dbSchema,
+    schema: env.dbPostgresSchema,
     poolSize: env.dbPoolSize,
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
@@ -41,7 +41,6 @@ const main = async () => {
   const cfg = ServerConfig.readEnv({
     port: env.port,
     version: env.version,
-    repoProvider: env.repoProvider,
     dbPostgresUrl: env.dbPostgresUrl,
     dbPostgresSchema: env.dbPostgresSchema,
     publicUrl: env.publicUrl,
@@ -79,7 +78,6 @@ const main = async () => {
 const getEnv = () => ({
   port: parseInt(process.env.PORT),
   version: process.env.BSKY_VERSION,
-  repoProvider: process.env.REPO_PROVIDER,
   dbPostgresUrl: process.env.DB_POSTGRES_URL,
   dbMigratePostgresUrl:
     process.env.DB_MIGRATE_POSTGRES_URL || process.env.DB_POSTGRES_URL,
