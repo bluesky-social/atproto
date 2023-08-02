@@ -467,8 +467,8 @@
   <td>!hide</td>
   <td>
     <code>general</code><br><strong>Moderator Hide</strong><br>Moderator has chosen to hide the content.<br><br>
-    <code>on an account</code><br><strong>Account Hidden</strong><br>This account has been hidden by the moderators.<br><br>
-    <code>on content</code><br><strong>Content Hidden</strong><br>This content has been hidden by the moderators.<br><br>
+    <code>on an account</code><br><strong>Content Blocked</strong><br>This account has been hidden by the moderators.<br><br>
+    <code>on content</code><br><strong>Content Blocked</strong><br>This content has been hidden by the moderators.<br><br>
   </td>
 </tr>
 <tr>

@@ -5,11 +5,11 @@
       "description": "Moderator has chosen to hide the content."
     },
     "account": {
-      "name": "Account Hidden",
+      "name": "Content Blocked",
       "description": "This account has been hidden by the moderators."
     },
     "content": {
-      "name": "Content Hidden",
+      "name": "Content Blocked",
       "description": "This content has been hidden by the moderators."
     }
   },

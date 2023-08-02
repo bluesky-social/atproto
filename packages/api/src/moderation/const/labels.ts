@@ -18,13 +18,13 @@ export const LABELS: LabelDefinitionMap = {
       },
       account: {
         en: {
-          name: 'Account Hidden',
+          name: 'Content Blocked',
           description: 'This account has been hidden by the moderators.',
         },
       },
       content: {
         en: {
-          name: 'Content Hidden',
+          name: 'Content Blocked',
           description: 'This content has been hidden by the moderators.',
         },
       },
@@ -402,7 +402,7 @@ export const LABELS: LabelDefinitionMap = {
     id: 'self-harm',
     preferences: ['ignore', 'warn', 'hide'],
     flags: ['adult'],
-    onwarn: 'blur',
+    onwarn: 'blur-media',
     groupId: 'violence',
     configurable: true,
     strings: {
