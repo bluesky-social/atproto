@@ -74,14 +74,6 @@
   <td>blur</td>
 </tr>
 <tr>
-  <td>nudity-nonconsensual</td>
-  <td>legal</td>
-  <td>hide</td>
-  <td>❌</td>
-  <td>no-override</td>
-  <td>blur</td>
-</tr>
-<tr>
   <td>dmca-violation</td>
   <td>legal</td>
   <td>hide</td>
@@ -210,88 +202,8 @@
   <td>blur-media</td>
 </tr>
 <tr>
-  <td>trolling</td>
-  <td>rude</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>blur</td>
-</tr>
-<tr>
-  <td>harassment</td>
-  <td>rude</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>blur</td>
-</tr>
-<tr>
-  <td>bullying</td>
-  <td>rude</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>blur</td>
-</tr>
-<tr>
   <td>threat</td>
   <td>rude</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>blur</td>
-</tr>
-<tr>
-  <td>disgusting</td>
-  <td>curation</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>blur</td>
-</tr>
-<tr>
-  <td>upsetting</td>
-  <td>curation</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>blur</td>
-</tr>
-<tr>
-  <td>profane</td>
-  <td>curation</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>blur</td>
-</tr>
-<tr>
-  <td>politics</td>
-  <td>curation</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>blur</td>
-</tr>
-<tr>
-  <td>troubling</td>
-  <td>curation</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>blur</td>
-</tr>
-<tr>
-  <td>negative</td>
-  <td>curation</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>blur</td>
-</tr>
-<tr>
-  <td>discourse</td>
-  <td>curation</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
@@ -307,30 +219,6 @@
 </tr>
 <tr>
   <td>spam</td>
-  <td>spam</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>blur</td>
-</tr>
-<tr>
-  <td>clickbait</td>
-  <td>spam</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>blur</td>
-</tr>
-<tr>
-  <td>shill</td>
-  <td>spam</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>blur</td>
-</tr>
-<tr>
-  <td>promotion</td>
   <td>spam</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
@@ -363,46 +251,6 @@
 </tr>
 <tr>
   <td>scam</td>
-  <td>misinfo</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>alert</td>
-</tr>
-<tr>
-  <td>misinformation</td>
-  <td>misinfo</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>alert</td>
-</tr>
-<tr>
-  <td>unverified</td>
-  <td>misinfo</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>alert</td>
-</tr>
-<tr>
-  <td>manipulated</td>
-  <td>misinfo</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>alert</td>
-</tr>
-<tr>
-  <td>fringe</td>
-  <td>misinfo</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>alert</td>
-</tr>
-<tr>
-  <td>bullshit</td>
   <td>misinfo</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
@@ -485,14 +333,6 @@
     <code>general</code><br><strong>Moderator Warn</strong><br>Moderator has chosen to set a general warning on the content.<br><br>
     <code>on an account</code><br><strong>Content Warning</strong><br>This account has received a general warning from moderators.<br><br>
     <code>on content</code><br><strong>Content Warning</strong><br>This content has received a general warning from moderators.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>nudity-nonconsensual</td>
-  <td>
-    <code>general</code><br><strong>Nonconsensual Nudity</strong><br>Nudity or sexual material which has been identified as being shared without the consent of the subjects.<br><br>
-    <code>on an account</code><br><strong>Nonconsensual Nudity</strong><br>This account has triggered the Nonconsensual Nudity Review systems. This may be in error, so please do not jump to conclusions while the account is under review. This warning will be lifted if the review was triggered incorrectly. Otherwise, the account will be removed from the network.<br><br>
-    <code>on content</code><br><strong>Nonconsensual Nudity</strong><br>This content has triggered the Nonconsensual Nudity Review systems. This may be in error, so please do not jump to conclusions while the account is under review. This warning will be lifted if the review was triggered incorrectly. Otherwise, the account will be removed from the network.<br><br>
   </td>
 </tr>
 <tr>
@@ -624,91 +464,11 @@
   </td>
 </tr>
 <tr>
-  <td>trolling</td>
-  <td>
-    <code>general</code><br><strong>Trolling</strong><br>Content which is intended to produce a negative reaction from other users.<br><br>
-    <code>on an account</code><br><strong>Trolling</strong><br>The moderators believe this account has published content intended to inflame users.<br><br>
-    <code>on content</code><br><strong>Trolling</strong><br>The moderators believe this content is intended to inflame users.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>harassment</td>
-  <td>
-    <code>general</code><br><strong>Harassment</strong><br>Repeated posts directed at a user or a group of users with the intent to produce a negative reaction.<br><br>
-    <code>on an account</code><br><strong>Harassment</strong><br>The moderators believe this account has published content directed at a user or a group of users with the intent to inflame.<br><br>
-    <code>on content</code><br><strong>Harassment</strong><br>The moderators believe this content is directed at a user or a group of users with the intent to inflame.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>bullying</td>
-  <td>
-    <code>general</code><br><strong>Bullying</strong><br>Statements or imagery published with the intent to bully, humiliate, or degrade.<br><br>
-    <code>on an account</code><br><strong>Bullying</strong><br>The moderators believe this account has published statements or imagery published with the intent to bully, humiliate, or degrade others.<br><br>
-    <code>on content</code><br><strong>Bullying</strong><br>The moderators believe this content was published with the intent to bully, humiliate, or degrade others.<br><br>
-  </td>
-</tr>
-<tr>
   <td>threat</td>
   <td>
     <code>general</code><br><strong>Threats</strong><br>Statements or imagery published with the intent to threaten, intimidate, or harm.<br><br>
     <code>on an account</code><br><strong>Threats</strong><br>The moderators believe this account has published statements or imagery with the intent to threaten, intimidate, or harm others.<br><br>
     <code>on content</code><br><strong>Threats</strong><br>The moderators believe this content was published with the intent to threaten, intimidate, or harm others.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>disgusting</td>
-  <td>
-    <code>general</code><br><strong>Disgusting</strong><br>Content which is gross, like an image of poop.<br><br>
-    <code>on an account</code><br><strong>Warning: Disgusting</strong><br>The moderators believe this account contains content which users may find disgusting.<br><br>
-    <code>on content</code><br><strong>Warning: Disgusting</strong><br>The moderators believe users may find this content disgusting.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>upsetting</td>
-  <td>
-    <code>general</code><br><strong>Upsetting</strong><br>Content which is upsetting, like a video of an accident.<br><br>
-    <code>on an account</code><br><strong>Warning: Upsetting</strong><br>The moderators believe this account contains content which users may find upsetting.<br><br>
-    <code>on content</code><br><strong>Warning: Upsetting</strong><br>The moderators believe users may find this content upsetting.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>profane</td>
-  <td>
-    <code>general</code><br><strong>Profane</strong><br>Content which includes excessive swearing or violates common sensibilities.<br><br>
-    <code>on an account</code><br><strong>Warning: Profane</strong><br>The moderators believe this account contains content which users may find profane.<br><br>
-    <code>on content</code><br><strong>Warning: Profane</strong><br>The moderators believe users may find this content profane.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>politics</td>
-  <td>
-    <code>general</code><br><strong>Politics</strong><br>Anything that discusses politics or political discourse.<br><br>
-    <code>on an account</code><br><strong>Warning: Politics</strong><br>This is not a violation. The moderators believe this account discusses politics or political discourse. This warning is only provided for users who wish to reduce the amount of politics in their experience.<br><br>
-    <code>on content</code><br><strong>Warning: Politics</strong><br>This is not a violation. The moderators believe this content discusses politics or political discourse. This warning is only provided for users who wish to reduce the amount of politics in their experience.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>troubling</td>
-  <td>
-    <code>general</code><br><strong>Troubling</strong><br>Content which can be difficult to process such as bad news.<br><br>
-    <code>on an account</code><br><strong>Warning: Troubling</strong><br>This is not a violation. The moderators believe this account discusses topics which can be difficult to process. This warning is only provided for users who wish to reduce the amount of troubling discussion in their experience.<br><br>
-    <code>on content</code><br><strong>Warning: Troubling</strong><br>This is not a violation. The moderators believe this content discusses topics which can be difficult to process. This warning is only provided for users who wish to reduce the amount of troubling discussion in their experience.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>negative</td>
-  <td>
-    <code>general</code><br><strong>Negative</strong><br>Statements which are critical, pessimistic, or generally negative.<br><br>
-    <code>on an account</code><br><strong>Warning: Negative</strong><br>This is not a violation. The moderators believe this account publishes statements which are critical, pessimistic, or generally negative. This warning is only provided for users who wish to reduce the amount of negativity in their experience.<br><br>
-    <code>on content</code><br><strong>Warning: Negative</strong><br>This is not a violation. The moderators believe this content is critical, pessimistic, or generally negative. This warning is only provided for users who wish to reduce the amount of negativity in their experience.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>discourse</td>
-  <td>
-    <code>general</code><br><strong>Discourse</strong><br>Drama, typically about some topic which is currently active in the network.<br><br>
-    <code>on an account</code><br><strong>Warning: Discourse</strong><br>This is not a violation. The moderators believe this account publishes statements regarding in-network drama or disputes (aka "discourse"). This warning is only provided for users who wish to reduce the amount of negativity in their experience.<br><br>
-    <code>on content</code><br><strong>Warning: Discourse</strong><br>This is not a violation. The moderators believe this content relates to in-network drama or disputes (aka "discourse"). This warning is only provided for users who wish to reduce the amount of negativity in their experience.<br><br>
   </td>
 </tr>
 <tr>
@@ -725,30 +485,6 @@
     <code>general</code><br><strong>Spam</strong><br>Repeat, low-quality messages which are clearly not designed to add to a conversation or space.<br><br>
     <code>on an account</code><br><strong>Spam</strong><br>This account publishes repeat, low-quality messages which are clearly not designed to add to a conversation or space.<br><br>
     <code>on content</code><br><strong>Spam</strong><br>This content is a part of repeat, low-quality messages which are clearly not designed to add to a conversation or space.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>clickbait</td>
-  <td>
-    <code>general</code><br><strong>Clickbait</strong><br>Low-quality content that's designed to get users to open an external link by appearing more engaging than it is.<br><br>
-    <code>on an account</code><br><strong>Clickbait</strong><br>The moderators believe this account publishes low-quality content that's designed to get users to open an external link by appearing more engaging than it is.<br><br>
-    <code>on content</code><br><strong>Clickbait</strong><br>The moderators believe this is low-quality content that's designed to get users to open an external link by appearing more engaging than it is.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>shill</td>
-  <td>
-    <code>general</code><br><strong>Shilling</strong><br>Over-enthusiastic promotion of a technology, product, or service, especially when there is a financial conflict of interest.<br><br>
-    <code>on an account</code><br><strong>Shill</strong><br>The moderators believe this account participates in over-enthusiastic promotion of a technology, product, or service.<br><br>
-    <code>on content</code><br><strong>Shilling</strong><br>The moderators believe this content is in over-enthusiastic promotion of a technology, product, or service.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>promotion</td>
-  <td>
-    <code>general</code><br><strong>Promotion</strong><br>Advertising or blunt marketing of a commercial service or product.<br><br>
-    <code>on an account</code><br><strong>Promotion</strong><br>The moderators believe this account engages in advertising or blunt marketing of a commercial service or product.<br><br>
-    <code>on content</code><br><strong>Promotion</strong><br>The moderators believe this content is advertising or blunt marketing of a commercial service or product.<br><br>
   </td>
 </tr>
 <tr>
@@ -781,46 +517,6 @@
     <code>general</code><br><strong>Scam</strong><br>Fraudulent content.<br><br>
     <code>on an account</code><br><strong>Scam Warning</strong><br>The moderators believe this account publishes fraudulent content.<br><br>
     <code>on content</code><br><strong>Scam Warning</strong><br>The moderators believe this is fraudulent content.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>misinformation</td>
-  <td>
-    <code>general</code><br><strong>Misinformation</strong><br>Lies with the intent to deceive.<br><br>
-    <code>on an account</code><br><strong>Misinformation Warning</strong><br>The moderators believe this account has published lies with the intent to deceive.<br><br>
-    <code>on content</code><br><strong>Misinformation Warning</strong><br>The moderators believe this content contains lies with the intent to deceive.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>unverified</td>
-  <td>
-    <code>general</code><br><strong>Unverified Claims</strong><br>Assertions which have not been verified by a trusted source.<br><br>
-    <code>on an account</code><br><strong>Unverified Claims Warning</strong><br>The moderators believe this account has published claims which have not been verified by a trusted source.<br><br>
-    <code>on content</code><br><strong>Unverified Claims Warning</strong><br>The moderators believe this content contains claims which have not been verified by a trusted source.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>manipulated</td>
-  <td>
-    <code>general</code><br><strong>Manipulated Media</strong><br>Content which misrepresents a person or event by modifying the source material.<br><br>
-    <code>on an account</code><br><strong>Manipulated Media Warning</strong><br>The moderators believe this account has published content which misrepresents a person or event by modifying the source material.<br><br>
-    <code>on content</code><br><strong>Manipulated Media Warning</strong><br>The moderators believe this content contains misrepresentations of a person or event by modifying the source material.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>fringe</td>
-  <td>
-    <code>general</code><br><strong>Conspiracy Theories</strong><br>Fringe views which lack evidence.<br><br>
-    <code>on an account</code><br><strong>Conspiracy Theories Warning</strong><br>The moderators believe this account has published fringe views which lack evidence.<br><br>
-    <code>on content</code><br><strong>Conspiracy Theories Warning</strong><br>The moderators believe this content contains fringe views which lack evidence.<br><br>
-  </td>
-</tr>
-<tr>
-  <td>bullshit</td>
-  <td>
-    <code>general</code><br><strong>Bullshit</strong><br>Content which is not technically wrong or lying, but misleading through omission or re-contextualization.<br><br>
-    <code>on an account</code><br><strong>Bullshit Warning</strong><br>The moderators believe this account has published content which is not technically wrong or lying, but misleading through omission or re-contextualization.<br><br>
-    <code>on content</code><br><strong>Bullshit Warning</strong><br>The moderators believe this content includes statements which are not technically wrong or lying, but are misleading through omission or re-contextualization.<br><br>
   </td>
 </tr>
   </table>

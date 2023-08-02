@@ -19,11 +19,7 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
   legal: {
     id: 'legal',
     configurable: false,
-    labels: [
-      LABELS['nudity-nonconsensual'],
-      LABELS['dmca-violation'],
-      LABELS['doxxing'],
-    ],
+    labels: [LABELS['dmca-violation'], LABELS['doxxing']],
     strings: {
       settings: {
         en: {
@@ -89,12 +85,7 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
   rude: {
     id: 'rude',
     configurable: true,
-    labels: [
-      LABELS['trolling'],
-      LABELS['harassment'],
-      LABELS['bullying'],
-      LABELS['threat'],
-    ],
+    labels: [LABELS['threat']],
     strings: {
       settings: {
         en: {
@@ -107,16 +98,7 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
   curation: {
     id: 'curation',
     configurable: true,
-    labels: [
-      LABELS['disgusting'],
-      LABELS['upsetting'],
-      LABELS['profane'],
-      LABELS['politics'],
-      LABELS['troubling'],
-      LABELS['negative'],
-      LABELS['discourse'],
-      LABELS['spoiler'],
-    ],
+    labels: [LABELS['spoiler']],
     strings: {
       settings: {
         en: {
@@ -130,12 +112,7 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
   spam: {
     id: 'spam',
     configurable: true,
-    labels: [
-      LABELS['spam'],
-      LABELS['clickbait'],
-      LABELS['shill'],
-      LABELS['promotion'],
-    ],
+    labels: [LABELS['spam']],
     strings: {
       settings: {
         en: {
@@ -153,11 +130,6 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
       LABELS['net-abuse'],
       LABELS['impersonation'],
       LABELS['scam'],
-      LABELS['misinformation'],
-      LABELS['unverified'],
-      LABELS['manipulated'],
-      LABELS['fringe'],
-      LABELS['bullshit'],
     ],
     strings: {
       settings: {

@@ -41,6 +41,20 @@
       "description": "This content has received a general warning from moderators."
     }
   },
+  "nudity-nonconsensual": {
+    "settings": {
+      "name": "Nonconsensual Nudity",
+      "description": "Nudity or sexual material which has been identified as being shared without the consent of the subjects."
+    },
+    "account": {
+      "name": "Nonconsensual Nudity",
+      "description": "This account has triggered the Nonconsensual Nudity Review systems. This may be in error, so please do not jump to conclusions while the account is under review. This warning will be lifted if the review was triggered incorrectly. Otherwise, the account will be removed from the network."
+    },
+    "content": {
+      "name": "Nonconsensual Nudity",
+      "description": "This content has triggered the Nonconsensual Nudity Review systems. This may be in error, so please do not jump to conclusions while the account is under review. This warning will be lifted if the review was triggered incorrectly. Otherwise, the account will be removed from the network."
+    }
+  },
   "dmca-violation": {
     "settings": {
       "name": "Copyright Violation",
@@ -265,6 +279,48 @@
       "description": "This content includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes."
     }
   },
+  "trolling": {
+    "settings": {
+      "name": "Trolling",
+      "description": "Content which is intended to produce a negative reaction from other users."
+    },
+    "account": {
+      "name": "Trolling",
+      "description": "The moderators believe this account has published content intended to inflame users."
+    },
+    "content": {
+      "name": "Trolling",
+      "description": "The moderators believe this content is intended to inflame users."
+    }
+  },
+  "harassment": {
+    "settings": {
+      "name": "Harassment",
+      "description": "Repeated posts directed at a user or a group of users with the intent to produce a negative reaction."
+    },
+    "account": {
+      "name": "Harassment",
+      "description": "The moderators believe this account has published content directed at a user or a group of users with the intent to inflame."
+    },
+    "content": {
+      "name": "Harassment",
+      "description": "The moderators believe this content is directed at a user or a group of users with the intent to inflame."
+    }
+  },
+  "bullying": {
+    "settings": {
+      "name": "Bullying",
+      "description": "Statements or imagery published with the intent to bully, humiliate, or degrade."
+    },
+    "account": {
+      "name": "Bullying",
+      "description": "The moderators believe this account has published statements or imagery published with the intent to bully, humiliate, or degrade others."
+    },
+    "content": {
+      "name": "Bullying",
+      "description": "The moderators believe this content was published with the intent to bully, humiliate, or degrade others."
+    }
+  },
   "threat": {
     "settings": {
       "name": "Threats",
@@ -277,6 +333,104 @@
     "content": {
       "name": "Threats",
       "description": "The moderators believe this content was published with the intent to threaten, intimidate, or harm others."
+    }
+  },
+  "disgusting": {
+    "settings": {
+      "name": "Disgusting",
+      "description": "Content which is gross, like an image of poop."
+    },
+    "account": {
+      "name": "Warning: Disgusting",
+      "description": "The moderators believe this account contains content which users may find disgusting."
+    },
+    "content": {
+      "name": "Warning: Disgusting",
+      "description": "The moderators believe users may find this content disgusting."
+    }
+  },
+  "upsetting": {
+    "settings": {
+      "name": "Upsetting",
+      "description": "Content which is upsetting, like a video of an accident."
+    },
+    "account": {
+      "name": "Warning: Upsetting",
+      "description": "The moderators believe this account contains content which users may find upsetting."
+    },
+    "content": {
+      "name": "Warning: Upsetting",
+      "description": "The moderators believe users may find this content upsetting."
+    }
+  },
+  "profane": {
+    "settings": {
+      "name": "Profane",
+      "description": "Content which includes excessive swearing or violates common sensibilities."
+    },
+    "account": {
+      "name": "Warning: Profane",
+      "description": "The moderators believe this account contains content which users may find profane."
+    },
+    "content": {
+      "name": "Warning: Profane",
+      "description": "The moderators believe users may find this content profane."
+    }
+  },
+  "politics": {
+    "settings": {
+      "name": "Politics",
+      "description": "Anything that discusses politics or political discourse."
+    },
+    "account": {
+      "name": "Warning: Politics",
+      "description": "This is not a violation. The moderators believe this account discusses politics or political discourse. This warning is only provided for users who wish to reduce the amount of politics in their experience."
+    },
+    "content": {
+      "name": "Warning: Politics",
+      "description": "This is not a violation. The moderators believe this content discusses politics or political discourse. This warning is only provided for users who wish to reduce the amount of politics in their experience."
+    }
+  },
+  "troubling": {
+    "settings": {
+      "name": "Troubling",
+      "description": "Content which can be difficult to process such as bad news."
+    },
+    "account": {
+      "name": "Warning: Troubling",
+      "description": "This is not a violation. The moderators believe this account discusses topics which can be difficult to process. This warning is only provided for users who wish to reduce the amount of troubling discussion in their experience."
+    },
+    "content": {
+      "name": "Warning: Troubling",
+      "description": "This is not a violation. The moderators believe this content discusses topics which can be difficult to process. This warning is only provided for users who wish to reduce the amount of troubling discussion in their experience."
+    }
+  },
+  "negative": {
+    "settings": {
+      "name": "Negative",
+      "description": "Statements which are critical, pessimistic, or generally negative."
+    },
+    "account": {
+      "name": "Warning: Negative",
+      "description": "This is not a violation. The moderators believe this account publishes statements which are critical, pessimistic, or generally negative. This warning is only provided for users who wish to reduce the amount of negativity in their experience."
+    },
+    "content": {
+      "name": "Warning: Negative",
+      "description": "This is not a violation. The moderators believe this content is critical, pessimistic, or generally negative. This warning is only provided for users who wish to reduce the amount of negativity in their experience."
+    }
+  },
+  "discourse": {
+    "settings": {
+      "name": "Discourse",
+      "description": "Drama, typically about some topic which is currently active in the network."
+    },
+    "account": {
+      "name": "Warning: Discourse",
+      "description": "This is not a violation. The moderators believe this account publishes statements regarding in-network drama or disputes (aka \"discourse\"). This warning is only provided for users who wish to reduce the amount of negativity in their experience."
+    },
+    "content": {
+      "name": "Warning: Discourse",
+      "description": "This is not a violation. The moderators believe this content relates to in-network drama or disputes (aka \"discourse\"). This warning is only provided for users who wish to reduce the amount of negativity in their experience."
     }
   },
   "spoiler": {
@@ -305,6 +459,48 @@
     "content": {
       "name": "Spam",
       "description": "This content is a part of repeat, low-quality messages which are clearly not designed to add to a conversation or space."
+    }
+  },
+  "clickbait": {
+    "settings": {
+      "name": "Clickbait",
+      "description": "Low-quality content that's designed to get users to open an external link by appearing more engaging than it is."
+    },
+    "account": {
+      "name": "Clickbait",
+      "description": "The moderators believe this account publishes low-quality content that's designed to get users to open an external link by appearing more engaging than it is."
+    },
+    "content": {
+      "name": "Clickbait",
+      "description": "The moderators believe this is low-quality content that's designed to get users to open an external link by appearing more engaging than it is."
+    }
+  },
+  "shill": {
+    "settings": {
+      "name": "Shilling",
+      "description": "Over-enthusiastic promotion of a technology, product, or service, especially when there is a financial conflict of interest."
+    },
+    "account": {
+      "name": "Shill",
+      "description": "The moderators believe this account participates in over-enthusiastic promotion of a technology, product, or service."
+    },
+    "content": {
+      "name": "Shilling",
+      "description": "The moderators believe this content is in over-enthusiastic promotion of a technology, product, or service."
+    }
+  },
+  "promotion": {
+    "settings": {
+      "name": "Promotion",
+      "description": "Advertising or blunt marketing of a commercial service or product."
+    },
+    "account": {
+      "name": "Promotion",
+      "description": "The moderators believe this account engages in advertising or blunt marketing of a commercial service or product."
+    },
+    "content": {
+      "name": "Promotion",
+      "description": "The moderators believe this content is advertising or blunt marketing of a commercial service or product."
     }
   },
   "account-security": {
@@ -361,6 +557,76 @@
     "content": {
       "name": "Scam Warning",
       "description": "The moderators believe this is fraudulent content."
+    }
+  },
+  "misinformation": {
+    "settings": {
+      "name": "Misinformation",
+      "description": "Lies with the intent to deceive."
+    },
+    "account": {
+      "name": "Misinformation Warning",
+      "description": "The moderators believe this account has published lies with the intent to deceive."
+    },
+    "content": {
+      "name": "Misinformation Warning",
+      "description": "The moderators believe this content contains lies with the intent to deceive."
+    }
+  },
+  "unverified": {
+    "settings": {
+      "name": "Unverified Claims",
+      "description": "Assertions which have not been verified by a trusted source."
+    },
+    "account": {
+      "name": "Unverified Claims Warning",
+      "description": "The moderators believe this account has published claims which have not been verified by a trusted source."
+    },
+    "content": {
+      "name": "Unverified Claims Warning",
+      "description": "The moderators believe this content contains claims which have not been verified by a trusted source."
+    }
+  },
+  "manipulated": {
+    "settings": {
+      "name": "Manipulated Media",
+      "description": "Content which misrepresents a person or event by modifying the source material."
+    },
+    "account": {
+      "name": "Manipulated Media Warning",
+      "description": "The moderators believe this account has published content which misrepresents a person or event by modifying the source material."
+    },
+    "content": {
+      "name": "Manipulated Media Warning",
+      "description": "The moderators believe this content contains misrepresentations of a person or event by modifying the source material."
+    }
+  },
+  "fringe": {
+    "settings": {
+      "name": "Conspiracy Theories",
+      "description": "Fringe views which lack evidence."
+    },
+    "account": {
+      "name": "Conspiracy Theories Warning",
+      "description": "The moderators believe this account has published fringe views which lack evidence."
+    },
+    "content": {
+      "name": "Conspiracy Theories Warning",
+      "description": "The moderators believe this content contains fringe views which lack evidence."
+    }
+  },
+  "bullshit": {
+    "settings": {
+      "name": "Bullshit",
+      "description": "Content which is not technically wrong or lying, but misleading through omission or re-contextualization."
+    },
+    "account": {
+      "name": "Bullshit Warning",
+      "description": "The moderators believe this account has published content which is not technically wrong or lying, but misleading through omission or re-contextualization."
+    },
+    "content": {
+      "name": "Bullshit Warning",
+      "description": "The moderators believe this content includes statements which are not technically wrong or lying, but are misleading through omission or re-contextualization."
     }
   }
 }
