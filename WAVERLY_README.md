@@ -52,6 +52,16 @@ cd packages/dev-env
 yarn build && yarn start
 ```
 
+## Resetting all the node_modules
+
+Careful! This deletes a lot of stuff, commit or backup or stash before you proceed. From the main directory:
+
+```sh
+find . -name "node_modules" -type d -exec rm -rf {} +
+find . -name "yarn.lock" -exec rm -f {} +
+yarn
+```
+
 ## Running our tests
 
 For now, the only waverly-specific tests are in pds. From the main directory:
