@@ -134,16 +134,20 @@ const ensureReadAfterWrite = async (
     local.posts,
     res.data.feed,
   )
-  console.log(formatted)
   if (formatted.length === 0) return res.data
   const feed = [...res.data.feed]
   for (const post of formatted) {
     if (post === null) continue
+    let inserted = false
     for (let i = 0; i < feed.length; i++) {
       if (feed[i].post.indexedAt < post.indexedAt) {
         feed.splice(i, 0, { post })
-        continue
+        inserted = true
+        break
       }
+    }
+    if (!inserted) {
+      feed.push({ post })
     }
   }
   return {
