@@ -26,7 +26,7 @@ export class RecordService {
     cid: CID,
     obj: unknown,
     action: WriteOpAction.Create | WriteOpAction.Update = WriteOpAction.Create,
-    repoClock?: number,
+    repoClock?: string,
     timestamp?: string,
   ) {
     this.db.assertTransaction()

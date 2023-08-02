@@ -204,7 +204,7 @@ export class RepoService {
     return repo.formatCommit(writeOps, this.repoSigningKey)
   }
 
-  async indexWrites(writes: PreparedWrite[], now: string, clock?: number) {
+  async indexWrites(writes: PreparedWrite[], now: string, clock?: string) {
     this.db.assertTransaction()
     const recordTxn = this.services.record(this.db)
     await Promise.all(

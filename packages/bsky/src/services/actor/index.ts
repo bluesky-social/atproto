@@ -101,7 +101,7 @@ export class ActorService {
     return builder
   }
 
-  async getActorClock(did: string | null): Promise<number | null> {
+  async getActorClock(did: string | null): Promise<string | null> {
     if (did === null) return null
     const res = await this.db.db
       .selectFrom('actor_sync')

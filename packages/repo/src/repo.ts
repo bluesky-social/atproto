@@ -16,6 +16,7 @@ import log from './logger'
 import BlockMap from './block-map'
 import { ReadableRepo } from './readable-repo'
 import * as util from './util'
+import { TID } from '@atproto/common'
 
 type Params = {
   storage: RepoStorage
@@ -147,7 +148,7 @@ export class Repo extends ReadableRepo {
       commitBlocks.addMap(fromStorage.blocks)
     }
 
-    const clock = (this.commit.clock ?? 0) + 1
+    const clock = TID.nextStr(this.commit.clock)
     const commit = await util.signCommit(
       {
         did: this.did,

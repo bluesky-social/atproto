@@ -3,7 +3,7 @@ import { Kysely } from 'kysely'
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .alterTable('actor_sync')
-    .addColumn('repoClock', 'integer')
+    .addColumn('repoClock', 'varchar')
     .execute()
 }
 

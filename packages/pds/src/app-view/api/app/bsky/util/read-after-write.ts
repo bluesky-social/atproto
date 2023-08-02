@@ -35,11 +35,8 @@ export type ApiRes<T> = {
   data: T
 }
 
-export const getClock = (headers: Headers): number | null => {
-  const clock = headers['atproto-clock']
-  if (!clock) return null
-  const parsed = parseInt(clock)
-  return isNaN(parsed) ? null : parsed
+export const getClock = (headers: Headers): string | undefined => {
+  return headers['atproto-clock']
 }
 
 export const getImageUrl = (did: string, cid: string): string => {

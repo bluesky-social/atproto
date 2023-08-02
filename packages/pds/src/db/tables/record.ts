@@ -5,7 +5,7 @@ export interface Record {
   did: string
   collection: string
   rkey: string
-  repoClock: number | null
+  repoClock: string | null
   indexedAt: string
   takedownId: number | null
 }

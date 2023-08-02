@@ -15,7 +15,7 @@ export class LocalService {
 
   async getRecordsSinceClock(
     did: string,
-    clock: number,
+    clock: string,
     collections?: string[],
   ): Promise<LocalRecords> {
     let builder = this.db.db
