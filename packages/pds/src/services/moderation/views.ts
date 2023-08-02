@@ -59,6 +59,7 @@ export class ModerationViews {
           'did_handle.did as did',
           'user_account.email as email',
           'user_account.invitesDisabled as invitesDisabled',
+          'user_account.inviteNote as inviteNote',
           'profile_block.content as profileBytes',
         ])
         .execute(),
@@ -88,7 +89,8 @@ export class ModerationViews {
     )
 
     const views = results.map((r) => {
-      const { email, invitesDisabled, profileBytes } = infoByDid[r.did] ?? {}
+      const { email, invitesDisabled, profileBytes, inviteNote } =
+        infoByDid[r.did] ?? {}
       const action = actionByDid[r.did]
       const relatedRecords: object[] = []
       if (profileBytes) {
@@ -107,6 +109,7 @@ export class ModerationViews {
         },
         invitedBy: invitedBy[r.did],
         invitesDisabled: invitesDisabled === 1,
+        inviteNote: inviteNote ?? undefined,
       }
     })
 

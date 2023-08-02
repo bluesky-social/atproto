@@ -24,7 +24,9 @@ export default function (server: Server, ctx: AppContext) {
         : []
       const keyset = new SearchKeyset(sql``, sql``)
 
-      const actors = await services.actor(db).views.profile(results, requester)
+      const actors = await services
+        .actor(db)
+        .views.hydrateProfiles(results, requester)
       const filtered = actors.filter(
         (actor) => !actor.viewer?.blocking && !actor.viewer?.blockedBy,
       )

@@ -1,6 +1,7 @@
 'use strict' /* eslint-disable */
 
-require('dd-trace/init') // Only works with commonjs
+require('dd-trace') // Only works with commonjs
+  .init({ logInjection: true })
   .tracer.use('express', {
     hooks: {
       request: (span, req) => {
@@ -96,7 +97,7 @@ const main = async () => {
 const pgUrl = ({
   username = 'postgres',
   password = 'postgres',
-  host = '0.0.0.0',
+  host = 'localhost',
   port = '5432',
   database = 'postgres',
   sslmode,

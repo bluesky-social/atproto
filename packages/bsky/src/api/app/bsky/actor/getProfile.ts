@@ -26,6 +26,13 @@ export default function (server: Server, ctx: AppContext) {
           'AccountTakedown',
         )
       }
+      const profile = await actorService.views.profileDetailed(
+        actorRes,
+        requester,
+      )
+      if (!profile) {
+        throw new InvalidRequestError('Profile not found')
+      }
 
       if (actorClock !== null) {
         res.setHeader('atproto-clock', actorClock)
@@ -33,7 +40,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: await actorService.views.profileDetailed(actorRes, requester),
+        body: profile,
       }
     },
   })

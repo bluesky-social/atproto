@@ -36,8 +36,9 @@ describe('indexing', () => {
     await usersSeed(sc)
     // Data in tests is not processed from subscription
     await network.processAll()
-    await network.bsky.sub.destroy()
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.ingester.sub.destroy()
+    await network.bsky.indexer.sub.destroy()
+    await network.bsky.processAll()
   })
 
   afterAll(async () => {
@@ -45,7 +46,7 @@ describe('indexing', () => {
   })
 
   it('indexes posts.', async () => {
-    const { db, services } = network.bsky.ctx
+    const { db, services } = network.bsky.indexer.ctx
     const createdAt = new Date().toISOString()
     const createRecord = await prepareCreate({
       did: sc.dids.alice,
@@ -135,7 +136,7 @@ describe('indexing', () => {
   })
 
   it('indexes profiles.', async () => {
-    const { db, services } = network.bsky.ctx
+    const { db, services } = network.bsky.indexer.ctx
     const createRecord = await prepareCreate({
       did: sc.dids.dan,
       collection: ids.AppBskyActorProfile,
@@ -190,7 +191,7 @@ describe('indexing', () => {
   })
 
   it('handles post aggregations out of order.', async () => {
-    const { db, services } = network.bsky.ctx
+    const { db, services } = network.bsky.indexer.ctx
     const createdAt = new Date().toISOString()
     const originalPost = await prepareCreate({
       did: sc.dids.alice,
@@ -241,7 +242,7 @@ describe('indexing', () => {
     await services.indexing(db).indexRecord(...like)
     await services.indexing(db).indexRecord(...repost)
     await services.indexing(db).indexRecord(...originalPost)
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
     const agg = await db.db
       .selectFrom('post_agg')
       .selectAll()
@@ -268,7 +269,7 @@ describe('indexing', () => {
   })
 
   it('handles profile aggregations out of order.', async () => {
-    const { db, services } = network.bsky.ctx
+    const { db, services } = network.bsky.indexer.ctx
     const createdAt = new Date().toISOString()
     const unknownDid = 'did:example:unknown'
     const follow = await prepareCreate({
@@ -281,7 +282,7 @@ describe('indexing', () => {
       } as AppBskyGraphFollow.Record,
     })
     await services.indexing(db).indexRecord(...follow)
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
     const agg = await db.db
       .selectFrom('profile_agg')
       .select(['did', 'followersCount'])
@@ -304,15 +305,17 @@ describe('indexing', () => {
 
   describe('indexRepo', () => {
     beforeAll(async () => {
-      network.bsky.sub.resume()
+      network.bsky.indexer.sub.resume()
+      network.bsky.ingester.sub.resume()
       await basicSeed(sc, false)
       await network.processAll()
-      await network.bsky.sub.destroy()
-      await network.bsky.ctx.backgroundQueue.processAll()
+      await network.bsky.ingester.sub.destroy()
+      await network.bsky.indexer.sub.destroy()
+      await network.bsky.processAll()
     })
 
     it('preserves indexes when no record changes.', async () => {
-      const { db, services } = network.bsky.ctx
+      const { db, services } = network.bsky.indexer.ctx
       // Mark originals
       const { data: origProfile } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
@@ -331,6 +334,7 @@ describe('indexing', () => {
         did: sc.dids.alice,
       })
       await services.indexing(db).indexRepo(sc.dids.alice, head.root)
+      await network.bsky.processAll()
       // Check
       const { data: profile } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
@@ -350,7 +354,7 @@ describe('indexing', () => {
     })
 
     it('updates indexes when records change.', async () => {
-      const { db, services } = network.bsky.ctx
+      const { db, services } = network.bsky.indexer.ctx
       // Update profile
       await pdsAgent.api.com.atproto.repo.putRecord(
         {
@@ -374,6 +378,7 @@ describe('indexing', () => {
         did: sc.dids.alice,
       })
       await services.indexing(db).indexRepo(sc.dids.alice, head.root)
+      await network.bsky.processAll()
       // Check
       const { data: profile } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
@@ -395,7 +400,7 @@ describe('indexing', () => {
     })
 
     it('skips invalid records.', async () => {
-      const { db, services } = network.bsky.ctx
+      const { db, services } = network.bsky.indexer.ctx
       const { db: pdsDb, services: pdsServices } = network.pds.ctx
       // Create a good and a bad post record
       const writes = await Promise.all([
@@ -443,7 +448,7 @@ describe('indexing', () => {
     }
 
     it('indexes handle for a fresh did', async () => {
-      const { db, services } = network.bsky.ctx
+      const { db, services } = network.bsky.indexer.ctx
       const now = new Date().toISOString()
       const sessionAgent = new AtpAgent({ service: network.pds.url })
       const {
@@ -459,7 +464,7 @@ describe('indexing', () => {
     })
 
     it('reindexes handle for existing did when forced', async () => {
-      const { db, services } = network.bsky.ctx
+      const { db, services } = network.bsky.indexer.ctx
       const now = new Date().toISOString()
       const sessionAgent = new AtpAgent({ service: network.pds.url })
       const {
@@ -481,7 +486,7 @@ describe('indexing', () => {
     })
 
     it('handles profile aggregations out of order', async () => {
-      const { db, services } = network.bsky.ctx
+      const { db, services } = network.bsky.indexer.ctx
       const now = new Date().toISOString()
       const sessionAgent = new AtpAgent({ service: network.pds.url })
       const {
@@ -502,7 +507,7 @@ describe('indexing', () => {
       })
       await services.indexing(db).indexRecord(...follow)
       await services.indexing(db).indexHandle(did, now)
-      await network.bsky.ctx.backgroundQueue.processAll()
+      await network.bsky.processAll()
       const agg = await db.db
         .selectFrom('profile_agg')
         .select(['did', 'followersCount'])
@@ -517,7 +522,7 @@ describe('indexing', () => {
 
   describe('tombstoneActor', () => {
     it('does not unindex actor when they are still being hosted by their pds', async () => {
-      const { db, services } = network.bsky.ctx
+      const { db, services } = network.bsky.indexer.ctx
       const { data: profileBefore } = await agent.api.app.bsky.actor.getProfile(
         { actor: sc.dids.alice },
         { headers: await network.serviceHeaders(sc.dids.bob) },
@@ -532,7 +537,7 @@ describe('indexing', () => {
     })
 
     it('unindexes actor when they are no longer hosted by their pds', async () => {
-      const { db, services } = network.bsky.ctx
+      const { db, services } = network.bsky.indexer.ctx
       const { alice } = sc.dids
       const getProfileBefore = agent.api.app.bsky.actor.getProfile(
         { actor: alice },
