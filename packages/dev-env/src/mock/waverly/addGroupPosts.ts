@@ -1,6 +1,6 @@
 import { AtUri } from '@atproto/uri'
 import User from './User'
-import getWaverlyUrl from './getWaverlyUrl'
+import getWaverlyUri from './getWaverlyUri'
 import longPosts from './longPosts'
 import { Main as Images } from '@atproto/api/src/client/types/app/bsky/embed/images'
 import { Main as External } from '@atproto/api/src/client/types/app/bsky/embed/external'
@@ -54,53 +54,59 @@ export default async (allUsers: User[], date: Generator<string>) => {
       }
     }
 
+    // A miniblog is always created, even if the post is short. This makes the
+    // post editable.
     const longText = longPost.text
-    let shortText = longText
-    const tooLong = longText.length > maxBskyLength
 
     let miniblog: { uri: string; cid: string } | undefined
-    // Long posts require a miniblog entry
-    if (tooLong) {
-      // Create the long post as a `social.waverly.miniblog`
-      miniblog = await user.agent.api.social.waverly.miniblog.create(
-        { repo: user.did },
-        { text: longText, createdAt },
-      )
+    // Create the post as a `social.waverly.miniblog`
+    miniblog = await user.agent.api.social.waverly.miniblog.create(
+      { repo: user.did },
+      { text: longText, embed, createdAt },
+    )
+    const miniblogRkey = new AtUri(miniblog.uri).rkey
 
-      // Shorten the text for the bluesky post, and add a link
-      const rkey = new AtUri(miniblog.uri).rkey
-      const suffix = `... ${getWaverlyUrl(user.handle, rkey)}`
-      const maxLength = maxBskyLength - suffix.length
-      shortText = longText.substring(0, maxLength) + suffix
+    // Create the bluesky post with an embedded link to the miniblog, and have
+    // the group repost it
+    const miniblogEmbed: External = {
+      $type: 'app.bsky.embed.external',
+      external: {
+        uri: getWaverlyUri(user.handle, miniblogRkey),
+        title: truncateString(longText, 60),
+        description: truncateString(longText, 160),
+      },
     }
-
-    // Create the bluesky post and have the group repost it
     const bskyPost = await user.agent.api.app.bsky.feed.post.create(
       { repo: user.did },
-      { text: shortText, createdAt, embed },
+      {
+        text: truncateString(longText, maxBskyLength),
+        embed: miniblogEmbed,
+        createdAt,
+      },
     )
     await betterweb.agent.api.app.bsky.feed.repost.create(
       { repo: betterweb.did },
       { subject: bskyPost, createdAt },
     )
 
-    if (miniblog) {
-      // Update the miniblog with a reference to the bluesky post
-      const rkey = new AtUri(miniblog.uri).rkey
-      const result = await user.agent.api.social.waverly.miniblog.get({
-        repo: user.did,
-        rkey,
-      })
-      result.value.subject = bskyPost
-
-      await user.agent.api.com.atproto.repo.putRecord({
-        repo: user.did,
-        collection: 'social.waverly.miniblog',
-        rkey,
-        record: result.value,
-      })
-    }
+    // Update the miniblog with a reference to the bluesky post
+    const result = await user.agent.api.social.waverly.miniblog.get({
+      repo: user.did,
+      rkey: miniblogRkey,
+    })
+    result.value.subject = bskyPost
+    await user.agent.api.com.atproto.repo.putRecord({
+      repo: user.did,
+      collection: 'social.waverly.miniblog',
+      rkey: miniblogRkey,
+      record: result.value,
+    })
 
     userIndex = (userIndex + 1) % users.length
   }
+}
+
+function truncateString(s: string, maxLength: number) {
+  if (s.length <= maxLength) return s
+  return s.substring(0, maxLength - 3) + '...'
 }

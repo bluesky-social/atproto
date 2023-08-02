@@ -1,8 +1,11 @@
+import fs from 'fs/promises'
 import { AtUri } from '@atproto/uri'
-import AtpAgent from '@atproto/api'
+import AtpAgent, { AppBskyEmbedExternal, BlobRef } from '@atproto/api'
 import { CloseFn, runTestServer } from './_util'
 import * as Miniblog from '../src/lexicon/types/social/waverly/miniblog'
 import { ids } from '../src/lexicon/lexicons'
+import { BlobNotFoundError } from '@atproto/repo'
+import AppContext from '../src/context'
 
 const loremIpsum =
   'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla vitae arcu ut nulla dictum sagittis. Integer viverra ullamcorper augue vitae gravida. Cras quis mauris ac eros iaculis aliquam. Aliquam sit amet quam vitae turpis vehicula pellentesque sed feugiat turpis. Nam interdum laoreet pulvinar. Nulla eu blandit lectus. Sed quis tortor eget metus vulputate blandit sit amet nec erat. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse potenti.' +
@@ -19,6 +22,7 @@ const alice = {
 }
 
 describe('waverly crud operations', () => {
+  let ctx: AppContext
   let agent: AtpAgent
   let aliceAgent: AtpAgent
   let close: CloseFn
@@ -27,6 +31,7 @@ describe('waverly crud operations', () => {
     const server = await runTestServer({
       dbPostgresSchema: 'waverly_crud',
     })
+    ctx = server.ctx
     close = server.close
     agent = new AtpAgent({ service: server.url })
     aliceAgent = new AtpAgent({ service: server.url })
@@ -225,5 +230,77 @@ describe('waverly crud operations', () => {
       repo: alice.did,
     })
     expect(res.records.length).toBe(0)
+  })
+
+  it('creates records with image embed', async () => {
+    const file = await fs.readFile(
+      'tests/image/fixtures/key-landscape-small.jpg',
+    )
+    const uploadedRes = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
+      encoding: 'image/jpeg',
+    })
+    const uploaded = uploadedRes.data.blob
+    // Expect blobstore not to have image yet
+    await expect(ctx.blobstore.getBytes(uploaded.ref)).rejects.toThrow(
+      BlobNotFoundError,
+    )
+    const res1 = await await aliceAgent.api.social.waverly.miniblog.create(
+      { repo: alice.did },
+      {
+        $type: ids.SocialWaverlyMiniblog,
+        text: loremIpsum,
+        embed: {
+          $type: 'app.bsky.embed.images',
+          images: [{ image: uploaded, alt: '' }],
+        },
+        createdAt: new Date().toISOString(),
+      },
+    )
+    const uri = new AtUri(res1.uri)
+    const res2 = await aliceAgent.api.social.waverly.miniblog.get({
+      repo: alice.did,
+      rkey: uri.rkey,
+    })
+    expect(res2.uri).toBe(uri.toString())
+    const images = res2.value.embed?.images as { image: BlobRef }[]
+    expect(images.length).toEqual(1)
+    expect(uploaded.ref.equals(images[0].image.ref)).toBeTruthy()
+    // Cleanup
+    await aliceAgent.api.social.waverly.miniblog.delete({
+      repo: alice.did,
+      rkey: uri.rkey,
+    })
+  })
+
+  it('creates records with link embed', async () => {
+    const res1 = await await aliceAgent.api.social.waverly.miniblog.create(
+      { repo: alice.did },
+      {
+        $type: ids.SocialWaverlyMiniblog,
+        text: loremIpsum,
+        embed: {
+          $type: 'app.bsky.embed.external',
+          external: {
+            uri: 'https://waverly.social',
+            title: 'Check out Waverly',
+            description: 'Your new favorite social place',
+          },
+        },
+        createdAt: new Date().toISOString(),
+      },
+    )
+    const uri = new AtUri(res1.uri)
+    const res2 = await aliceAgent.api.social.waverly.miniblog.get({
+      repo: alice.did,
+      rkey: uri.rkey,
+    })
+    expect(res2.uri).toBe(uri.toString())
+    const external = res2.value.embed?.external as AppBskyEmbedExternal.External
+    expect(external.uri).toBe('https://waverly.social')
+    // Cleanup
+    await aliceAgent.api.social.waverly.miniblog.delete({
+      repo: alice.did,
+      rkey: uri.rkey,
+    })
   })
 })
