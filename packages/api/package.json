@@ -1,5 +1,5 @@
 {
-  "name": "@atproto-waverly/api",
+  "name": "@waverlyai/atproto-api",
   "version": "0.4.3",
   "main": "src/index.ts",
   "scripts": {
