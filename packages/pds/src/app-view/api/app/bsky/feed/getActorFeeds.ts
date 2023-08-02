@@ -48,6 +48,10 @@ export default function (server: Server, ctx: AppContext) {
         feedsQb.execute(),
         actorService.views.profile(creatorRes, requester),
       ])
+      if (!creatorProfile) {
+        throw new InvalidRequestError(`Actor not found: ${actor}`)
+      }
+
       const profiles = { [creatorProfile.did]: creatorProfile }
 
       const feeds = feedsRes.map((row) =>

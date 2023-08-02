@@ -21,7 +21,7 @@ describe('pds actor search views', () => {
     sc = new SeedClient(pdsAgent)
 
     await wait(50) // allow pending sub to be established
-    await network.bsky.sub?.destroy()
+    await network.bsky.ingester.sub.destroy()
     await usersBulkSeed(sc)
 
     // Skip did/handle resolution for expediency
@@ -40,9 +40,9 @@ describe('pds actor search views', () => {
       .execute()
 
     // Process remaining profiles
-    network.bsky.sub?.resume()
+    network.bsky.ingester.sub.resume()
     await network.processAll(50000)
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
     headers = await network.serviceHeaders(Object.values(sc.dids)[0])
   })
 

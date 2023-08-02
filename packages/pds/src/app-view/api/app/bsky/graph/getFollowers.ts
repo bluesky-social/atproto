@@ -60,9 +60,12 @@ export default function (server: Server, ctx: AppContext) {
 
       const followersRes = await followersReq.execute()
       const [followers, subject] = await Promise.all([
-        actorService.views.profile(followersRes, requester),
+        actorService.views.hydrateProfiles(followersRes, requester),
         actorService.views.profile(subjectRes, requester),
       ])
+      if (!subject) {
+        throw new InvalidRequestError(`Actor not found: ${actor}`)
+      }
 
       return {
         encoding: 'application/json',

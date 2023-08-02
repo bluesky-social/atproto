@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: {
-          profiles: await actorService.views.profileDetailed(
+          profiles: await actorService.views.hydrateProfilesDetailed(
             actorsRes,
             requester,
           ),
