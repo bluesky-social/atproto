@@ -133,7 +133,7 @@ async function skeletonFromFeedGen(
   const fgEndpoint = getFeedGen(resolved)
   if (!fgEndpoint) {
     throw new InvalidRequestError(
-      `Invalid feed benerator service details in DID document: ${feedDid}`,
+      `Invalid feed generator service details in DID document: ${feedDid}`,
       AppBskyFeedGetFeed.ErrorName.InvalidFeedConfig,
     )
   }
