@@ -4,9 +4,11 @@ This version of atproto has been specialized for [Waverly](https://waverly.socia
 
 ## What is changed?
 
-We added the type `social.waverly.miniblog` to the lexicon so that it can be stored in our PDS. This type is not indexed and we added some code to skip external indexing in `pds/src/services/record`.
+We added some types to the lexicon, including `social.waverly.miniblog`. These can be stored in our PDS. Our types are not indexed and we added some code to skip external indexing in `pds/src/services/record`.
 
-In addition, we generate some Waverly specific data in `dev-env/src/mock` so 
+In addition, we generate some Waverly specific data in `dev-env/src/mock`. This means the `dev-env` in this repo can be used as a backend for Waverly.
+
+As the `atproto` ecosystem matures, our goal will be to move our change out of this fork and into our own repo and to ensure our types can be stored in any PDS.
 
 ## The Waverly architecture
 
@@ -60,6 +62,34 @@ Careful! This deletes a lot of stuff, commit or backup or stash before you proce
 find . -name "node_modules" -type d -exec rm -rf {} +
 find . -name "yarn.lock" -exec rm -f {} +
 yarn
+```
+
+## Publishing as an npm package
+
+For now we support three npm package, which are light deviation from their equivalent in the bluesky atproto repo. They are:
+
+- [@waverlyai/atproto-api](https://www.npmjs.com/package/@waverlyai/atproto-api) ([@atproto/api](https://www.npmjs.com/package/@atproto/api))
+- [@waverlyai/atproto-pds](https://www.npmjs.com/package/@waverlyai/atproto-pds) ([@atproto/pds](https://www.npmjs.com/package/@atproto/pds))
+- [@waverlyai/atproto-dev-env](https://www.npmjs.com/package/@waverlyai/atproto-dev-env) ([@atproto/dev-env](https://www.npmjs.com/package/@atproto/dev-env))
+
+To publish any of these, first go to the `packages/api`, `packages/pds`, `packages/dev-env` directory, then do:
+
+```sh
+> yarn && yarn build
+> yarn publish --access public
+yarn publish v1.22.19
+[1/4] Bumping version...
+info Current version: 0.2.2
+question New version: 0.2.3
+[2/4] Logging in...
+info npm username: philbeaudoin
+info npm email: philippe.beaudoin@gmail.com
+question npm password: 
+info Two factor authentication enabled.
+info Please check your email for a one-time password (OTP)
+question npm one-time password: 12345678
+success Logged in.
+[3/4] Publishing...
 ```
 
 ## Running our tests
