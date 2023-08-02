@@ -5,6 +5,13 @@ import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
 import { filterMutesAndBlocks } from './getFeed'
+import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getTimeline'
+import { ApiRes, formatLocalPostView, getClock } from '../util/read-after-write'
+import { ids } from '../../../../../lexicon/lexicons'
+import { PostView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
+import { FeedViewPost } from '../../../../../lexicon/types/app/bsky/feed/defs'
+import { Record as PostRecord } from '../../../../../lexicon/types/app/bsky/feed/post'
+import { RecordDescript } from '../../../../../services/local'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
@@ -23,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         )
         return {
           encoding: 'application/json',
-          body: res.data,
+          body: await ensureReadAfterWrite(ctx, requester, res),
         }
       }
 
@@ -110,4 +117,52 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+const ensureReadAfterWrite = async (
+  ctx: AppContext,
+  requester: string,
+  res: ApiRes<OutputSchema>,
+): Promise<OutputSchema> => {
+  const clock = getClock(res.headers)
+  if (!clock) return res.data
+  const local = await ctx.services
+    .local(ctx.db)
+    .getRecordsSinceClock(requester, clock, [ids.AppBskyFeedPost])
+  const formatted = await findAndFormatPostsToInsert(
+    ctx,
+    local.posts,
+    res.data.feed,
+  )
+  console.log(formatted)
+  if (formatted.length === 0) return res.data
+  const feed = [...res.data.feed]
+  for (const post of formatted) {
+    if (post === null) continue
+    for (let i = 0; i < feed.length; i++) {
+      if (feed[i].post.indexedAt < post.indexedAt) {
+        feed.splice(i, 0, { post })
+        continue
+      }
+    }
+  }
+  return {
+    cursor: res.data.cursor,
+    feed,
+  }
+}
+
+// ordered most to least recent
+const findAndFormatPostsToInsert = async (
+  ctx: AppContext,
+  posts: RecordDescript<PostRecord>[],
+  feed: FeedViewPost[],
+): Promise<PostView[]> => {
+  const lastTime = feed.at(-1)?.post.indexedAt ?? new Date(0).toISOString()
+  const inTimeline = posts.filter((p) => p.indexedAt > lastTime)
+  const newestToOldest = inTimeline.reverse()
+  const formatted = await Promise.all(
+    newestToOldest.map((p) => formatLocalPostView(ctx, p)),
+  )
+  return formatted.filter((p) => p !== null) as PostView[]
 }

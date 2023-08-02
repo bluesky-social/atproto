@@ -65,7 +65,7 @@ describe('proxy read after write', () => {
       alice,
       sc.posts[alice][0].ref,
       reply1.ref,
-      'another reply',
+      'another another reply',
     )
     const res: any = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][0].ref.uriStr },
@@ -106,5 +106,21 @@ describe('proxy read after write', () => {
     expect(replies[0].post.embed.record.uri).toEqual(
       sc.posts[alice][0].ref.uriStr,
     )
+  })
+
+  it('handles read after write on getTimeline', async () => {
+    const postRes = await agent.api.app.bsky.feed.post.create(
+      { repo: alice },
+      {
+        text: 'poast',
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
+    const res = await agent.api.app.bsky.feed.getTimeline(
+      {},
+      { headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' } },
+    )
+    expect(res.data.feed[0].post.uri).toEqual(postRes.uri)
   })
 })

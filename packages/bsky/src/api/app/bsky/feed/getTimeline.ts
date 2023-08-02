@@ -7,7 +7,7 @@ import AppContext from '../../../../context'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
     auth: ctx.authVerifier,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, res }) => {
       const { algorithm, limit, cursor } = params
       const db = ctx.db.db
       const { ref } = db.dynamic
@@ -17,6 +17,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
       }
 
+      const actorService = ctx.services.actor(ctx.db)
       const feedService = ctx.services.feed(ctx.db)
       const graphService = ctx.services.graph(ctx.db)
 
@@ -61,7 +62,14 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const feedItems = await feedItemsQb.execute()
-      const feed = await feedService.hydrateFeed(feedItems, viewer)
+      const [feed, actorClock] = await Promise.all([
+        feedService.hydrateFeed(feedItems, viewer),
+        actorService.getActorClock(viewer),
+      ])
+
+      if (actorClock !== null) {
+        res.setHeader('atproto-clock', actorClock)
+      }
 
       return {
         encoding: 'application/json',
