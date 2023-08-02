@@ -223,6 +223,7 @@ export class RecordProcessor<T, S> {
             .deleteFrom('notification')
             .where('recordUri', 'in', forDelete.toDelete)
             .execute()
+          await sendNotificationTo
         })
       }
       notifs = forDelete.notifs
@@ -244,6 +245,30 @@ export class RecordProcessor<T, S> {
         })
       })
     }
+  }
+
+  async sendNotifToUser(notif: Notif) {
+    /**  1. Get the user's token (APNS or FCM for iOS and Android respectively) from the database
+    User token will be in the format:
+        did || token || platform (1 = iOS, 2 = Android, 3 = Web)
+    2. Send notification to `gorush` server with token
+    Notification will be in the format:
+    "notifications": [
+      {
+        "tokens": string[],
+        "platform": 1 | 2,
+        "message": string,
+        "title": string,
+        "priority": "normal" | "high",
+        "image": string, (Android only)
+        "expiration": number, (iOS only)
+        "badge": number, (iOS only)
+      }
+    ]
+    3. `gorush` will send notification to APNS or FCM
+    4.  store response from `gorush` which contains the ID of the notification
+    5. If notification needs to be updated or deleted, find the ID of the notification from the database and send a new notification to `gorush` with the ID
+  */
   }
 
   aggregateOnCommit(indexed: S) {
