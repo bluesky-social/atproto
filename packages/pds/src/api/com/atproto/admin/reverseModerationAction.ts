@@ -1,14 +1,14 @@
 import { AtUri } from '@atproto/uri'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { isRepoRef } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { isMain as isStrongRef } from '@atproto/api/src/client/types/com/atproto/repo/strongRef'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
+  isRepoRef,
   ACKNOWLEDGE,
   ESCALATE,
   TAKEDOWN,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
+import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
 import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {

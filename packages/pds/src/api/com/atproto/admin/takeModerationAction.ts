@@ -1,14 +1,14 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import { isRepoRef } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { isMain as isStrongRef } from '@atproto/api/src/client/types/com/atproto/repo/strongRef'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
+  isRepoRef,
   ACKNOWLEDGE,
   ESCALATE,
   TAKEDOWN,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
+import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
 import { getSubject, getAction } from '../moderation/util'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { authPassthru } from './util'
