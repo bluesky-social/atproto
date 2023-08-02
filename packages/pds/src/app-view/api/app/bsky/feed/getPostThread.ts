@@ -19,9 +19,9 @@ import {
 } from '../../../../../lexicon/types/app/bsky/feed/defs'
 import { Record as PostRecord } from '../../../../../lexicon/types/app/bsky/feed/post'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getPostThread'
-import { ApiRes, formatLocalPostView, getClock } from '../util/read-after-write'
+import { ApiRes, getClock } from '../util/read-after-write'
 import { ids } from '../../../../../lexicon/lexicons'
-import { RecordDescript } from '../../../../../services/local'
+import { LocalService, RecordDescript } from '../../../../../services/local'
 
 export type PostThread = {
   post: FeedRow
@@ -286,13 +286,14 @@ const ensureReadAfterWrite = async (
     return res.data
   }
   let thread: ThreadViewPost = res.data.thread
-  const local = await ctx.services
-    .local(ctx.db)
-    .getRecordsSinceClock(requester, clock, [ids.AppBskyFeedPost])
+  const localSrvc = ctx.services.local(ctx.db)
+  const local = await localSrvc.getRecordsSinceClock(requester, clock, [
+    ids.AppBskyFeedPost,
+  ])
   const inThread = findPostsInThread(thread, local.posts)
   if (inThread.length < 0) return res.data
   for (const record of inThread) {
-    thread = await insertIntoThreadReplies(ctx, thread, record)
+    thread = await insertIntoThreadReplies(localSrvc, thread, record)
   }
   return {
     ...res.data,
@@ -313,12 +314,12 @@ const findPostsInThread = (
 }
 
 const insertIntoThreadReplies = async (
-  ctx: AppContext,
+  localSrvc: LocalService,
   view: ThreadViewPost,
   descript: RecordDescript<PostRecord>,
 ): Promise<ThreadViewPost> => {
   if (descript.record.reply?.parent.uri === view.post.uri) {
-    const postView = await formatLocalPostView(ctx, descript)
+    const postView = await localSrvc.getPost(descript)
     if (!postView) return view
     const threadPostView = {
       $type: 'app.bsky.feed.defs#threadViewPost',
@@ -334,7 +335,7 @@ const insertIntoThreadReplies = async (
   const replies = await Promise.all(
     view.replies.map(async (reply) =>
       isThreadViewPost(reply)
-        ? await insertIntoThreadReplies(ctx, reply, descript)
+        ? await insertIntoThreadReplies(localSrvc, reply, descript)
         : reply,
     ),
   )

@@ -5,11 +5,7 @@ import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
-import {
-  ApiRes,
-  getClock,
-  updateProfileViewBasic,
-} from '../util/read-after-write'
+import { ApiRes, getClock } from '../util/read-after-write'
 import { isReasonRepost } from '../../../../../lexicon/types/app/bsky/feed/defs'
 import { ids } from '../../../../../lexicon/lexicons'
 
@@ -138,9 +134,10 @@ const ensureReadAfterWrite = async (
   if (!clock) return res.data
   const author = getAuthor(res)
   if (author !== requester) return res.data
-  const local = await ctx.services
-    .local(ctx.db)
-    .getRecordsSinceClock(requester, clock, [ids.AppBskyActorProfile])
+  const localSrvc = ctx.services.local(ctx.db)
+  const local = await localSrvc.getRecordsSinceClock(requester, clock, [
+    ids.AppBskyActorProfile,
+  ])
   const localProf = local.profile
   if (!localProf) return res.data
   const feed = res.data.feed.map((item) => {
@@ -149,7 +146,10 @@ const ensureReadAfterWrite = async (
         ...item,
         post: {
           ...item.post,
-          author: updateProfileViewBasic(item.post.author, localProf.record),
+          author: localSrvc.updateProfileViewBasic(
+            item.post.author,
+            localProf.record,
+          ),
         },
       }
     } else {

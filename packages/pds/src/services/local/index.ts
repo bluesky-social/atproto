@@ -5,12 +5,69 @@ import Database from '../../db'
 import { Record as PostRecord } from '../../lexicon/types/app/bsky/feed/post'
 import { Record as ProfileRecord } from '../../lexicon/types/app/bsky/actor/profile'
 import { ids } from '../../lexicon/lexicons'
+import {
+  ProfileViewBasic,
+  ProfileView,
+  ProfileViewDetailed,
+} from '../../lexicon/types/app/bsky/actor/defs'
+import { PostView } from '../../lexicon/types/app/bsky/feed/defs'
+import {
+  Main as EmbedImages,
+  isMain as isEmbedImages,
+} from '../../lexicon/types/app/bsky/embed/images'
+import {
+  Main as EmbedExternal,
+  isMain as isEmbedExternal,
+} from '../../lexicon/types/app/bsky/embed/external'
+import {
+  Main as EmbedRecord,
+  isMain as isEmbedRecord,
+  View as EmbedRecordView,
+} from '../../lexicon/types/app/bsky/embed/record'
+import {
+  Main as EmbedRecordWithMedia,
+  isMain as isEmbedRecordWithMedia,
+} from '../../lexicon/types/app/bsky/embed/recordWithMedia'
+import { AtpAgent } from '@atproto/api'
+import { Keypair } from '@atproto/crypto'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import { ImageUriBuilder } from '../../image/uri'
+
+type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
 export class LocalService {
-  constructor(public db: Database) {}
+  constructor(
+    public db: Database,
+    public imgUriBuilder: ImageUriBuilder,
+    public signingKey: Keypair,
+    public appviewAgent?: AtpAgent,
+    public appviewDid?: string,
+  ) {}
 
-  static creator() {
-    return (db: Database) => new LocalService(db)
+  static creator(
+    imgUriBuilder: ImageUriBuilder,
+    signingKey: Keypair,
+    appviewAgent?: AtpAgent,
+    appviewDid?: string,
+  ) {
+    return (db: Database) =>
+      new LocalService(db, imgUriBuilder, signingKey, appviewAgent, appviewDid)
+  }
+
+  // @TODO calculate appview uris instead of pds
+  getImageUrl(did: string, cid: string, id: CommonSignedUris) {
+    return this.imgUriBuilder.getCommonSignedUri(id, cid)
+  }
+
+  async serviceAuthHeaders(did: string) {
+    if (!this.appviewDid) {
+      throw new Error('Could not find bsky appview did')
+    }
+    return createServiceAuthHeaders({
+      iss: did,
+      aud: this.appviewDid,
+      keypair: this.signingKey,
+    })
   }
 
   async getRecordsSinceClock(
@@ -58,6 +115,212 @@ export class LocalService {
       },
       { profile: null, posts: [] } as LocalRecords,
     )
+  }
+
+  async getProfileBasic(did: string): Promise<ProfileViewBasic | null> {
+    const res = await this.db.db
+      .selectFrom('did_handle')
+      .leftJoin('record', 'record.did', 'did_handle.did')
+      .leftJoin('ipld_block', (join) =>
+        join
+          .onRef('record.did', '=', 'ipld_block.creator')
+          .onRef('record.cid', '=', 'ipld_block.cid'),
+      )
+      .where('did_handle.did', '=', did)
+      .where('record.collection', '=', ids.AppBskyActorProfile)
+      .where('record.rkey', '=', 'self')
+      .selectAll()
+      .executeTakeFirst()
+    if (!res) return null
+    const record = res.content
+      ? (cborToLexRecord(res.content) as ProfileRecord)
+      : null
+    return {
+      did,
+      handle: res.handle,
+      displayName: record?.displayName,
+      avatar: record?.avatar
+        ? this.getImageUrl(did, record.avatar.ref.toString(), 'avatar')
+        : undefined,
+    }
+  }
+
+  async getPost(
+    descript: RecordDescript<PostRecord>,
+  ): Promise<PostView | null> {
+    const { uri, cid, indexedAt, record } = descript
+    const author = await this.getProfileBasic(uri.hostname)
+    if (!author) return null
+    const embed = record.embed
+      ? await this.formatPostEmbed(author.did, record)
+      : undefined
+    return {
+      uri: uri.toString(),
+      cid: cid.toString(),
+      author,
+      record,
+      embed: embed ?? undefined,
+      indexedAt,
+    }
+  }
+
+  async formatPostEmbed(did: string, post: PostRecord) {
+    const embed = post.embed
+    if (!embed) return null
+    if (isEmbedImages(embed) || isEmbedExternal(embed)) {
+      return this.formatSimpleEmbed(did, embed)
+    } else if (isEmbedRecord(embed)) {
+      return this.formatRecordEmbed(did, embed)
+    } else if (isEmbedRecordWithMedia(embed)) {
+      return this.formatRecordWithMediaEmbed(did, embed)
+    } else {
+      return null
+    }
+  }
+
+  async formatSimpleEmbed(did: string, embed: EmbedImages | EmbedExternal) {
+    if (isEmbedImages(embed)) {
+      const images = embed.images.map((img) => ({
+        thumb: this.getImageUrl(
+          did,
+          img.image.ref.toString(),
+          'feed_thumbnail',
+        ),
+        fullsize: this.getImageUrl(
+          did,
+          img.image.ref.toString(),
+          'feed_fullsize',
+        ),
+        alt: img.alt,
+      }))
+      return {
+        $type: 'app.bsky.embed.images#view',
+        images,
+      }
+    } else {
+      const { uri, title, description, thumb } = embed.external
+      return {
+        $type: 'app.bsky.embed.external#view',
+        uri,
+        title,
+        description,
+        thumb: thumb
+          ? this.getImageUrl(did, thumb.ref.toString(), 'feed_thumbnail')
+          : undefined,
+      }
+    }
+  }
+
+  async formatRecordEmbed(
+    did: string,
+    embed: EmbedRecord,
+  ): Promise<EmbedRecordView> {
+    const view = await this.formatRecordEmbedInternal(did, embed)
+    return {
+      $type: 'app.bsky.embed.record#view',
+      record:
+        view === null
+          ? {
+              $type: 'app.bsky.embed.record#viewNotFound',
+              uri: embed.record.uri,
+            }
+          : view,
+    }
+  }
+
+  async formatRecordEmbedInternal(did: string, embed: EmbedRecord) {
+    if (!this.appviewAgent || !this.appviewDid) {
+      return null
+    }
+    const collection = new AtUri(embed.record.uri).collection
+    if (collection === ids.AppBskyFeedPost) {
+      const res = await this.appviewAgent.api.app.bsky.feed.getPosts(
+        {
+          uris: [embed.record.uri],
+        },
+        await this.serviceAuthHeaders(did),
+      )
+      const post = res.data.posts[0]
+      if (!post) return null
+      return {
+        $type: 'app.bsky.embed.record#viewRecord',
+        uri: post.uri,
+        cid: post.cid,
+        author: post.author,
+        value: post.record,
+        labels: post.labels,
+        embeds: post.embed ? [post.embed] : undefined,
+        indexedAt: post.indexedAt,
+      }
+    } else if (collection === ids.AppBskyFeedGenerator) {
+      const res = await this.appviewAgent.api.app.bsky.feed.getFeedGenerator(
+        {
+          feed: embed.record.uri,
+        },
+        await this.serviceAuthHeaders(did),
+      )
+      return {
+        $type: 'app.bsaky.feed.defs#generatorView',
+        ...res.data.view,
+      }
+    } else if (collection === ids.AppBskyGraphList) {
+      const res = await this.appviewAgent.api.app.bsky.graph.getList(
+        {
+          list: embed.record.uri,
+        },
+        await this.serviceAuthHeaders(did),
+      )
+      return {
+        $type: 'app.bsaky.graph.defs#listView',
+        ...res.data.list,
+      }
+    }
+    return null
+  }
+
+  async formatRecordWithMediaEmbed(did: string, embed: EmbedRecordWithMedia) {
+    if (!isEmbedImages(embed.media) && !isEmbedExternal(embed.media)) {
+      return null
+    }
+    const media = this.formatSimpleEmbed(did, embed.media)
+    const record = await this.formatRecordEmbed(did, embed.record)
+    return {
+      $type: 'app.bsky.embed.recordWithMedia#view',
+      record,
+      media,
+    }
+  }
+
+  updateProfileViewBasic(
+    view: ProfileViewBasic,
+    record: ProfileRecord,
+  ): ProfileViewBasic {
+    return {
+      ...view,
+      displayName: record.displayName,
+      avatar: record.avatar
+        ? this.getImageUrl(view.did, record.avatar.ref.toString(), 'avatar')
+        : undefined,
+    }
+  }
+
+  updateProfileView(view: ProfileView, record: ProfileRecord): ProfileView {
+    return {
+      ...this.updateProfileViewBasic(view, record),
+      description: record.description,
+    }
+  }
+
+  updateProfileDetailed(
+    view: ProfileViewDetailed,
+    record: ProfileRecord,
+  ): ProfileViewDetailed {
+    return {
+      ...this.updateProfileView(view, record),
+      banner: record.banner
+        ? this.getImageUrl(view.did, record.banner.ref.toString(), 'banner')
+        : undefined,
+    }
   }
 }
 

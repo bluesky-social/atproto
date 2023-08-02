@@ -4,11 +4,7 @@ import { softDeleted } from '../../../../../db/util'
 import AppContext from '../../../../../context'
 import { ids } from '../../../../../lexicon/lexicons'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/actor/getProfile'
-import {
-  ApiRes,
-  getClock,
-  updateProfileDetailed,
-} from '../util/read-after-write'
+import { ApiRes, getClock } from '../util/read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
@@ -58,9 +54,10 @@ const ensureReadAfterWrite = async (
   const clock = getClock(res.headers)
   if (!clock) return res.data
   if (res.data.did !== requester) return res.data
-  const local = await ctx.services
-    .local(ctx.db)
-    .getRecordsSinceClock(requester, clock, [ids.AppBskyActorProfile])
+  const localSrvc = ctx.services.local(ctx.db)
+  const local = await localSrvc.getRecordsSinceClock(requester, clock, [
+    ids.AppBskyActorProfile,
+  ])
   if (!local.profile) return res.data
-  return updateProfileDetailed(res.data, local.profile.record)
+  return localSrvc.updateProfileDetailed(res.data, local.profile.record)
 }

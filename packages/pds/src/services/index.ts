@@ -20,6 +20,7 @@ import { Crawlers } from '../crawlers'
 import { LabelCache } from '../label-cache'
 import { ContentReporter } from '../content-reporter'
 import { LocalService } from './local'
+import { AtpAgent } from '@atproto/api'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
@@ -30,6 +31,8 @@ export function createServices(resources: {
   labeler: Labeler
   labelCache: LabelCache
   contentReporter?: ContentReporter
+  appviewAgent?: AtpAgent
+  appviewDid?: string
   backgroundQueue: BackgroundQueue
   crawlers: Crawlers
 }): Services {
@@ -42,6 +45,8 @@ export function createServices(resources: {
     labeler,
     labelCache,
     contentReporter,
+    appviewAgent,
+    appviewDid,
     backgroundQueue,
     crawlers,
   } = resources
@@ -58,7 +63,12 @@ export function createServices(resources: {
       labeler,
       contentReporter,
     ),
-    local: LocalService.creator(),
+    local: LocalService.creator(
+      imgUriBuilder,
+      repoSigningKey,
+      appviewAgent,
+      appviewDid,
+    ),
     moderation: ModerationService.creator(
       messageDispatcher,
       blobstore,

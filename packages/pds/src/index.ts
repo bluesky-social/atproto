@@ -45,6 +45,7 @@ import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
 import { ContentReporter } from './content-reporter'
 import { ModerationService } from './services/moderation'
+import { AtpAgent } from '@atproto/api'
 
 export type { MountedAlgos } from './feed-gen/types'
 export type { ServerConfigValues } from './config'
@@ -205,6 +206,10 @@ export class PDS {
       })
     }
 
+    const appviewAgent = config.bskyAppViewEndpoint
+      ? new AtpAgent({ service: config.bskyAppViewEndpoint })
+      : undefined
+
     const services = createServices({
       repoSigningKey,
       messageDispatcher,
@@ -214,6 +219,8 @@ export class PDS {
       labeler,
       labelCache,
       contentReporter,
+      appviewAgent,
+      appviewDid: config.bskyAppViewDid,
       backgroundQueue,
       crawlers,
     })
@@ -238,6 +245,7 @@ export class PDS {
       moderationMailer,
       imgUriBuilder,
       backgroundQueue,
+      appviewAgent,
       crawlers,
       algos,
     })
