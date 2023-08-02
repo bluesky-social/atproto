@@ -1,4 +1,4 @@
-import * as pds from '@atproto/pds'
+import * as pds from '@waverlyai/atproto-pds'
 import * as bsky from '@atproto/bsky'
 
 export type PlcConfig = {

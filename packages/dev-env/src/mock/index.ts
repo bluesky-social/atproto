@@ -1,5 +1,5 @@
 import { AtUri } from '@atproto/uri'
-import AtpAgent from '@atproto/api'
+import AtpAgent from '@waverlyai/atproto-api'
 import {
   REASONSPAM,
   REASONOTHER,

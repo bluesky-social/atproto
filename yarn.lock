@@ -42,6 +42,27 @@
     one-webcrypto "^1.0.3"
     uint8arrays "3.0.0"
 
+"@atproto/dev-env@*":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@atproto/dev-env/-/dev-env-0.2.2.tgz#930cb63dc751b08fa0a1c69820e27587d7b38252"
+  integrity sha512-94KruFi2C52YHiSmvJKjPp3414KV9ev06Sla4BebJxm1z3/DKGhmPGDEHVke4+KPZOTR3vQ2x1WKuX87mtCp7w==
+  dependencies:
+    "@atproto/api" "*"
+    "@atproto/bsky" "*"
+    "@atproto/crypto" "*"
+    "@atproto/identity" "*"
+    "@atproto/pds" "*"
+    "@atproto/uri" "*"
+    "@atproto/xrpc-server" "*"
+    "@did-plc/lib" "^0.0.1"
+    "@did-plc/server" "^0.0.1"
+    better-sqlite3 "^7.6.2"
+    chalk "^5.0.1"
+    dotenv "^16.0.1"
+    get-port "^6.1.2"
+    sharp "^0.31.2"
+    uint8arrays "3.0.0"
+
 "@atproto/did-resolver@*":
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/@atproto/did-resolver/-/did-resolver-0.1.0.tgz#58f42447700aaad61bad2f0d70b721966268aa02"
