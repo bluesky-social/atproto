@@ -1,7 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { RepoNotFoundError } from '@atproto/api/src/client/types/com/atproto/admin/getRepo'
 import { authPassthru, mergeRepoViewPdsDetails } from './util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -36,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
             body: repoDetailAppview,
           }
         } catch (err) {
-          if (err instanceof RepoNotFoundError) {
+          if (err && err['error'] === 'RepoNotFound') {
             throw new InvalidRequestError('Repo not found', 'RepoNotFound')
           } else {
             throw err

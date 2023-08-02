@@ -1,6 +1,5 @@
 import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { RecordNotFoundError } from '@atproto/api/src/client/types/com/atproto/admin/getRecord'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { authPassthru, mergeRepoViewPdsDetails } from './util'
@@ -39,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
             body: recordDetailAppview,
           }
         } catch (err) {
-          if (err instanceof RecordNotFoundError) {
+          if (err && err['error'] === 'RecordNotFound') {
             throw new InvalidRequestError('Record not found', 'RecordNotFound')
           } else {
             throw err

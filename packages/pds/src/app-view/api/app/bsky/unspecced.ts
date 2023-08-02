@@ -3,12 +3,14 @@ import { FeedKeyset } from './util/feed'
 import { GenericKeyset, paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow } from '../../../services/feed'
-import { isPostView } from '../../../../lexicon/types/app/bsky/feed/defs'
+import {
+  isPostView,
+  GeneratorView,
+} from '../../../../lexicon/types/app/bsky/feed/defs'
 import { NotEmptyArray } from '@atproto/common'
 import { isViewRecord } from '../../../../lexicon/types/app/bsky/embed/record'
 import { countAll, valuesList } from '../../../../db/util'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { GeneratorView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   '!no-promote',

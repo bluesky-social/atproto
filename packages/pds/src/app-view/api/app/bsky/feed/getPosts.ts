@@ -1,7 +1,7 @@
 import * as common from '@atproto/common'
 import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
-import { PostView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
+import { PostView } from '../../../../../lexicon/types/app/bsky/feed/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPosts({
