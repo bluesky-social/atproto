@@ -7,6 +7,7 @@ import { IdResolver } from '@atproto/identity'
 import Database from '../db'
 import { BackgroundQueue } from '../background'
 import { IndexerConfig } from '../indexer/config'
+import { retryHttp } from '../util/retry'
 
 const HIVE_ENDPOINT = 'https://api.thehive.ai/api/v2/task/sync'
 
@@ -51,13 +52,16 @@ export const makeHiveReq = async (
 ): Promise<HiveRespClass[]> => {
   const form = new FormData()
   form.append('media', blob)
-  const res = await axios.post(HIVE_ENDPOINT, form, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-      authorization: `token ${hiveApiKey}`,
-      accept: 'application/json',
-    },
-  })
+
+  const res = await retryHttp(() =>
+    axios.post(HIVE_ENDPOINT, form, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        authorization: `token ${hiveApiKey}`,
+        accept: 'application/json',
+      },
+    }),
+  )
   return respToClasses(res.data)
 }
 
