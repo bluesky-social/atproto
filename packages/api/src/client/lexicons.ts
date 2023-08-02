@@ -4818,6 +4818,18 @@ export const schemaDict = {
           {
             name: 'UnknownFeed',
           },
+          {
+            name: 'FeedUnavailable',
+          },
+          {
+            name: 'FeedNotFound',
+          },
+          {
+            name: 'InvalidFeedResponse',
+          },
+          {
+            name: 'InvalidFeedConfig',
+          },
         ],
       },
     },

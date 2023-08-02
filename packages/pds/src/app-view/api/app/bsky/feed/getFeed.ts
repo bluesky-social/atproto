@@ -11,7 +11,11 @@ import {
   PoorlyFormattedDidDocumentError,
   getFeedGen,
 } from '@atproto/identity'
-import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
+import {
+  AtpAgent,
+  AppBskyFeedGetFeedSkeleton,
+  AppBskyFeedGetFeed,
+} from '@atproto/api'
 import { SkeletonFeedPost } from '../../../../../lexicon/types/app/bsky/feed/defs'
 import { QueryParams as GetFeedParams } from '../../../../../lexicon/types/app/bsky/feed/getFeed'
 import { OutputSchema as SkeletonOutput } from '../../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
@@ -100,7 +104,10 @@ async function skeletonFromFeedGen(
     .select('feedDid')
     .executeTakeFirst()
   if (!found) {
-    throw new InvalidRequestError('could not find feed')
+    throw new InvalidRequestError(
+      `Could not find feed`,
+      AppBskyFeedGetFeed.ErrorName.FeedNotFound,
+    )
   }
   const feedDid = found.feedDid
 
@@ -109,18 +116,25 @@ async function skeletonFromFeedGen(
     resolved = await ctx.idResolver.did.resolve(feedDid)
   } catch (err) {
     if (err instanceof PoorlyFormattedDidDocumentError) {
-      throw new InvalidRequestError(`invalid did document: ${feedDid}`)
+      throw new InvalidRequestError(
+        `Invalid DID document: ${feedDid}`,
+        AppBskyFeedGetFeed.ErrorName.InvalidFeedConfig,
+      )
     }
     throw err
   }
   if (!resolved) {
-    throw new InvalidRequestError(`could not resolve did document: ${feedDid}`)
+    throw new InvalidRequestError(
+      `Could not resolve DID document: ${feedDid}`,
+      AppBskyFeedGetFeed.ErrorName.InvalidFeedConfig,
+    )
   }
 
   const fgEndpoint = getFeedGen(resolved)
   if (!fgEndpoint) {
     throw new InvalidRequestError(
-      `invalid feed generator service details in did document: ${feedDid}`,
+      `Invalid feed benerator service details in DID document: ${feedDid}`,
+      AppBskyFeedGetFeed.ErrorName.InvalidFeedConfig,
     )
   }
 
@@ -140,16 +154,22 @@ async function skeletonFromFeedGen(
     skeleton = result.data
   } catch (err) {
     if (err instanceof AppBskyFeedGetFeedSkeleton.UnknownFeedError) {
-      throw new InvalidRequestError(err.message, 'UnknownFeed')
+      throw new InvalidRequestError(
+        err.message,
+        AppBskyFeedGetFeed.ErrorName.UnknownFeed,
+      )
     }
     if (err instanceof XRPCError) {
       if (err.status === ResponseType.Unknown) {
-        throw new UpstreamFailureError('feed unavailable')
+        throw new UpstreamFailureError(
+          'Feed unavailable',
+          AppBskyFeedGetFeed.ErrorName.FeedUnavailable,
+        )
       }
       if (err.status === ResponseType.InvalidResponse) {
         throw new UpstreamFailureError(
-          'feed provided an invalid response',
-          'InvalidFeedResponse',
+          'Feed provided an invalid response',
+          AppBskyFeedGetFeed.ErrorName.InvalidFeedResponse,
         )
       }
     }

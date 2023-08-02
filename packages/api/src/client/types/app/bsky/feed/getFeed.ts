@@ -38,13 +38,48 @@ export class UnknownFeedError extends XRPCError {
   }
 }
 
+export class FeedUnavailableError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
+export class FeedNotFoundError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
+export class InvalidFeedResponseError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
+export class InvalidFeedConfigError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message)
+  }
+}
+
 export enum ErrorName {
   UnknownFeed = 'UnknownFeed',
+  FeedUnavailable = 'FeedUnavailable',
+  FeedNotFound = 'FeedNotFound',
+  InvalidFeedResponse = 'InvalidFeedResponse',
+  InvalidFeedConfig = 'InvalidFeedConfig',
 }
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === ErrorName.UnknownFeed) return new UnknownFeedError(e)
+    if (e.error === ErrorName.FeedUnavailable)
+      return new FeedUnavailableError(e)
+    if (e.error === ErrorName.FeedNotFound) return new FeedNotFoundError(e)
+    if (e.error === ErrorName.InvalidFeedResponse)
+      return new InvalidFeedResponseError(e)
+    if (e.error === ErrorName.InvalidFeedConfig)
+      return new InvalidFeedConfigError(e)
   }
   return e
 }
