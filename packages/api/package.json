@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/api",
+  "name": "@atproto-waverly/api",
   "version": "0.4.3",
   "main": "src/index.ts",
   "scripts": {
@@ -17,7 +17,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bluesky-social/atproto.git",
+    "url": "https://github.com/waverlyai/atproto.git",
     "directory": "packages/api"
   },
   "dependencies": {

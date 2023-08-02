@@ -1,6 +1,6 @@
 import fs from 'fs/promises'
 import { AtUri } from '@atproto/uri'
-import AtpAgent, { AppBskyEmbedExternal, BlobRef } from '@atproto/api'
+import AtpAgent, { AppBskyEmbedExternal, BlobRef } from '@atproto-waverlyai/api'
 import { CloseFn, runTestServer } from './_util'
 import * as Miniblog from '../src/lexicon/types/social/waverly/miniblog'
 import { ids } from '../src/lexicon/lexicons'

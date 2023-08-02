@@ -1,8 +1,8 @@
 {
-  "name": "atp",
+  "name": "atp-waverly",
   "version": "0.0.1",
-  "repository": "git@github.com:bluesky-social/atproto.git",
-  "author": "Bluesky PBLLC <hello@blueskyweb.xyz>",
+  "repository": "git@github.com:waverlyai/atproto.git",
+  "author": "Waverly AI inc. <hello@mywaverly.com>",
   "license": "MIT",
   "private": true,
   "engines": {
