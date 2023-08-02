@@ -35,6 +35,9 @@ export default function (server: Server, ctx: AppContext) {
         listsReq.execute(),
         actorService.views.profile(creatorRes, requester),
       ])
+      if (!creator) {
+        throw new InvalidRequestError(`Actor not found: ${actor}`)
+      }
       const profileMap = {
         [creator.did]: creator,
       }

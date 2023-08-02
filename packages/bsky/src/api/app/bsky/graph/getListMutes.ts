@@ -1,7 +1,6 @@
 import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
-import { ProfileView } from '../../../../lexicon/types/app/bsky/actor/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getListMutes({
@@ -33,17 +32,10 @@ export default function (server: Server, ctx: AppContext) {
       const listsRes = await listsReq.execute()
 
       const actorService = ctx.services.actor(ctx.db)
-      const profiles = await actorService.views.profile(listsRes, requester)
-      const profilesMap = profiles.reduce(
-        (acc, cur) => ({
-          ...acc,
-          [cur.did]: cur,
-        }),
-        {} as Record<string, ProfileView>,
-      )
+      const profiles = await actorService.views.profiles(listsRes, requester)
 
       const lists = listsRes.map((row) =>
-        graphService.formatListView(row, profilesMap),
+        graphService.formatListView(row, profiles),
       )
 
       return {

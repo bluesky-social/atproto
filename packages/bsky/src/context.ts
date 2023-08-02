@@ -6,7 +6,6 @@ import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import * as auth from './auth'
 import DidSqlCache from './did-cache'
-import { Labeler } from './labeler'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
 
@@ -19,7 +18,6 @@ export class AppContext {
       services: Services
       idResolver: IdResolver
       didCache: DidSqlCache
-      labeler: Labeler
       backgroundQueue: BackgroundQueue
       algos: MountedAlgos
     },
@@ -69,10 +67,6 @@ export class AppContext {
 
   get roleVerifier() {
     return auth.roleVerifier(this.cfg)
-  }
-
-  get labeler(): Labeler {
-    return this.opts.labeler
   }
 
   get backgroundQueue(): BackgroundQueue {

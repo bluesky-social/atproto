@@ -18,8 +18,8 @@ describe('pds admin repo search views', () => {
     const pdsAgent = network.pds.getClient()
     sc = new SeedClient(pdsAgent)
 
-    await wait(50) // allow pending sub to be established
-    await network.bsky.sub?.destroy()
+    await wait(100) // allow pending sub to be established
+    await network.bsky.ingester.sub.destroy()
     await usersBulkSeed(sc)
 
     // Skip did/handle resolution for expediency
@@ -38,7 +38,7 @@ describe('pds admin repo search views', () => {
       .execute()
 
     // Process remaining profiles
-    network.bsky.sub?.resume()
+    network.bsky.ingester.sub.resume()
     await network.processAll(50000)
     headers = await network.adminHeaders({})
   })

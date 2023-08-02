@@ -1,6 +1,7 @@
 export * as check from './check'
 export * as util from './util'
 
+export * from './arrays'
 export * from './async'
 export * from './util'
 export * from './tid'
