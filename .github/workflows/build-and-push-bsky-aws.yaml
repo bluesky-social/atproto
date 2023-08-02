@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - indexer-redis-setup
+      - push-pds-labels
 env:
   REGISTRY: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_REGISTRY }}
   USERNAME: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_USERNAME }}
