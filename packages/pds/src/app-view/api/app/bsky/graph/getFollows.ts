@@ -45,6 +45,12 @@ export default function (server: Server, ctx: AppContext) {
         .whereNotExists(
           graphService.blockQb(requester, [ref('follow.subjectDid')]),
         )
+        .whereNotExists(
+          graphService.blockRefQb(
+            ref('follow.subjectDid'),
+            ref('follow.creator'),
+          ),
+        )
         .selectAll('subject')
         .select(['follow.cid as cid', 'follow.createdAt as createdAt'])
 
