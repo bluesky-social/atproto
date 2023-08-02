@@ -75,7 +75,7 @@ expect.extend({
         )
       }
     }
-    return { pass: true }
+    return { pass: true, message: () => '' }
   },
 })
 
@@ -93,7 +93,7 @@ export class ModerationBehaviorSuiteRunner {
       }),
       author,
       labels: (scenario.labels.post || []).map((val) =>
-        m.label({ val, uri: `at://${author.did}/app.bsky.post/fake` }),
+        m.label({ val, uri: `at://${author.did}/app.bsky.feed.post/fake` }),
       ),
       embed: scenario.quoteAuthor
         ? m.embedRecordView({
@@ -101,7 +101,10 @@ export class ModerationBehaviorSuiteRunner {
               text: 'Quoted post text',
             }),
             labels: (scenario.labels.quotedPost || []).map((val) =>
-              m.label({ val, uri: `at://${author.did}/app.bsky.post/fake` }),
+              m.label({
+                val,
+                uri: `at://${author.did}/app.bsky.feed.post/fake`,
+              }),
             ),
             author: this.profileViewBasic(scenario.quoteAuthor, {
               account: scenario.labels.quotedAccount,
