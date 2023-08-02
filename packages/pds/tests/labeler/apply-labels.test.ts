@@ -32,11 +32,15 @@ describe('unspecced.applyLabels', () => {
   it('requires admin auth.', async () => {
     const tryToLabel = agent.api.app.bsky.unspecced.applyLabels(
       {
-        createLabelVals: ['cats'],
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.carol,
-        },
+        labels: [
+          {
+            src: server.ctx.cfg.labelerDid,
+            uri: sc.dids.carol,
+            val: 'cats',
+            neg: false,
+            cts: new Date().toISOString(),
+          },
+        ],
       },
       {
         encoding: 'application/json',
@@ -50,12 +54,24 @@ describe('unspecced.applyLabels', () => {
     const post = sc.posts[sc.dids.bob][1].ref
     await agent.api.app.bsky.unspecced.applyLabels(
       {
-        createLabelVals: ['birds', 'bats'],
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.uriStr,
-          cid: post.cidStr,
-        },
+        labels: [
+          {
+            src: server.ctx.cfg.labelerDid,
+            uri: post.uriStr,
+            cid: post.cidStr,
+            val: 'birds',
+            neg: false,
+            cts: new Date().toISOString(),
+          },
+          {
+            src: server.ctx.cfg.labelerDid,
+            uri: post.uriStr,
+            cid: post.cidStr,
+            val: 'bats',
+            neg: false,
+            cts: new Date().toISOString(),
+          },
+        ],
       },
       {
         encoding: 'application/json',
@@ -68,12 +84,24 @@ describe('unspecced.applyLabels', () => {
     ])
     await agent.api.app.bsky.unspecced.applyLabels(
       {
-        negateLabelVals: ['birds', 'bats'],
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.uriStr,
-          cid: post.cidStr,
-        },
+        labels: [
+          {
+            src: server.ctx.cfg.labelerDid,
+            uri: post.uriStr,
+            cid: post.cidStr,
+            val: 'birds',
+            neg: true,
+            cts: new Date().toISOString(),
+          },
+          {
+            src: server.ctx.cfg.labelerDid,
+            uri: post.uriStr,
+            cid: post.cidStr,
+            val: 'bats',
+            neg: true,
+            cts: new Date().toISOString(),
+          },
+        ],
       },
       {
         encoding: 'application/json',
@@ -86,11 +114,22 @@ describe('unspecced.applyLabels', () => {
   it('adds and removes labels on repo as though applied by the labeler.', async () => {
     await agent.api.app.bsky.unspecced.applyLabels(
       {
-        createLabelVals: ['birds', 'bats'],
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.carol,
-        },
+        labels: [
+          {
+            src: server.ctx.cfg.labelerDid,
+            uri: sc.dids.carol,
+            val: 'birds',
+            neg: false,
+            cts: new Date().toISOString(),
+          },
+          {
+            src: server.ctx.cfg.labelerDid,
+            uri: sc.dids.carol,
+            val: 'bats',
+            neg: false,
+            cts: new Date().toISOString(),
+          },
+        ],
       },
       {
         encoding: 'application/json',
@@ -103,11 +142,22 @@ describe('unspecced.applyLabels', () => {
     ])
     await agent.api.app.bsky.unspecced.applyLabels(
       {
-        negateLabelVals: ['birds', 'bats'],
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.carol,
-        },
+        labels: [
+          {
+            src: server.ctx.cfg.labelerDid,
+            uri: sc.dids.carol,
+            val: 'birds',
+            neg: true,
+            cts: new Date().toISOString(),
+          },
+          {
+            src: server.ctx.cfg.labelerDid,
+            uri: sc.dids.carol,
+            val: 'bats',
+            neg: true,
+            cts: new Date().toISOString(),
+          },
+        ],
       },
       {
         encoding: 'application/json',

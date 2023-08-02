@@ -6299,30 +6299,18 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Apply labels to a subject directly.',
+        description: 'Allow a labeler to apply labels directly.',
         input: {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['subject'],
+            required: ['labels'],
             properties: {
-              subject: {
-                type: 'union',
-                refs: [
-                  'lex:com.atproto.admin.defs#repoRef',
-                  'lex:com.atproto.repo.strongRef',
-                ],
-              },
-              createLabelVals: {
+              labels: {
                 type: 'array',
                 items: {
-                  type: 'string',
-                },
-              },
-              negateLabelVals: {
-                type: 'array',
-                items: {
-                  type: 'string',
+                  type: 'ref',
+                  ref: 'lex:com.atproto.label.defs#label',
                 },
               },
             },

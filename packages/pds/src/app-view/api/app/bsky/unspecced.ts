@@ -9,8 +9,6 @@ import {
   GeneratorView,
 } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../../../../lexicon/types/app/bsky/embed/record'
-import { isRepoRef } from '../../../../lexicon/types/com/atproto/admin/defs'
-import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
 import { countAll, valuesList } from '../../../../db/util'
 import { FeedKeyset } from './util/feed'
 
@@ -200,27 +198,9 @@ export default function (server: Server, ctx: AppContext) {
       if (!auth.credentials.admin) {
         throw new AuthRequiredError('Insufficient privileges')
       }
-      const { services, db, cfg } = ctx
-      const labelService = services.appView.label(db)
-      const { subject, createLabelVals, negateLabelVals } = input.body
-      const labels = { create: createLabelVals, negate: negateLabelVals }
-      if (isStrongRef(subject)) {
-        await labelService.formatAndCreate(
-          cfg.labelerDid,
-          subject.uri,
-          subject.cid,
-          labels,
-        )
-      } else if (isRepoRef(subject)) {
-        await labelService.formatAndCreate(
-          cfg.labelerDid,
-          subject.did,
-          null,
-          labels,
-        )
-      } else {
-        throw new InvalidRequestError('Unknown subject type')
-      }
+      const { services, db } = ctx
+      const { labels } = input.body
+      await services.appView.label(db).createLabels(labels)
     },
   })
 }

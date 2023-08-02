@@ -4,27 +4,16 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Apply labels to a subject directly.",
+      "description": "Allow a labeler to apply labels directly.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["subject"],
+          "required": ["labels"],
           "properties": {
-            "subject": {
-              "type": "union",
-              "refs": [
-                "com.atproto.admin.defs#repoRef",
-                "com.atproto.repo.strongRef"
-              ]
-            },
-            "createLabelVals": {
+            "labels": {
               "type": "array",
-              "items": { "type": "string" }
-            },
-            "negateLabelVals": {
-              "type": "array",
-              "items": { "type": "string" }
+              "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
             }
           }
         }

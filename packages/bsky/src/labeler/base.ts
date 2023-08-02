@@ -66,14 +66,7 @@ export abstract class Labeler {
     if (this.pushAgent) {
       const agent = this.pushAgent
       try {
-        await agent.api.app.bsky.unspecced.applyLabels({
-          createLabelVals: labels,
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: uri.toString,
-            cid: cid.toString(),
-          },
-        })
+        await agent.api.app.bsky.unspecced.applyLabels({ labels: rows })
       } catch (err) {
         log.error(
           {
