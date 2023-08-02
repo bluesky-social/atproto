@@ -1,10 +1,10 @@
 {
-  "name": "@atproto/pds",
+  "name": "@waverlyai/atproto-pds",
   "version": "0.1.11",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bluesky-social/atproto.git",
+    "url": "https://github.com/waverlyai/atproto.git",
     "directory": "packages/pds"
   },
   "main": "src/index.ts",
@@ -68,6 +68,7 @@
     "uint8arrays": "3.0.0"
   },
   "devDependencies": {
+    "@waverlyai/atproto-api": "*",
     "@atproto/api": "*",
     "@atproto/lex-cli": "*",
     "@did-plc/server": "^0.0.1",
