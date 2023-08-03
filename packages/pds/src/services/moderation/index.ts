@@ -261,6 +261,7 @@ export class ModerationService {
     negateLabelVals?: string[]
     createdBy: string
     createdAt?: Date
+    actionDuration?: string
   }): Promise<ModerationActionRow> {
     this.db.assertTransaction()
     const {
@@ -269,6 +270,7 @@ export class ModerationService {
       reason,
       subject,
       subjectBlobCids,
+      actionDuration,
       createdAt = new Date(),
     } = info
     const createLabelVals =
@@ -335,6 +337,7 @@ export class ModerationService {
         createdBy,
         createLabelVals,
         negateLabelVals,
+        actionDuration,
         ...subjectInfo,
       })
       .returningAll()
@@ -392,10 +395,18 @@ export class ModerationService {
     return result
   }
 
-  async takedownRepo(info: { takedownId: number; did: string }) {
-    await this.db.db
+  async takedownRepo(info: {
+    takedownExpiresAt?: string
+    takedownId: number
+    did: string
+  }) {
+    const updateQuery = this.db.db
       .updateTable('repo_root')
       .set({ takedownId: info.takedownId })
+    if (info.takedownExpiresAt) {
+      updateQuery.set({ takedownExpiresAt: info.takedownExpiresAt })
+    }
+    await updateQuery
       .where('did', '=', info.did)
       .where('takedownId', 'is', null)
       .executeTakeFirst()
@@ -404,12 +415,13 @@ export class ModerationService {
   async reverseTakedownRepo(info: { did: string }) {
     await this.db.db
       .updateTable('repo_root')
-      .set({ takedownId: null })
+      .set({ takedownId: null, takedownExpiresAt: null })
       .where('did', '=', info.did)
       .execute()
   }
 
   async takedownRecord(info: {
+    takedownExpiresAt?: string
     takedownId: number
     uri: AtUri
     blobCids?: CID[]
@@ -418,6 +430,9 @@ export class ModerationService {
     await this.db.db
       .updateTable('record')
       .set({ takedownId: info.takedownId })
+      .set({
+        takedownExpiresAt: info.takedownExpiresAt || null,
+      })
       .where('uri', '=', info.uri.toString())
       .where('takedownId', 'is', null)
       .executeTakeFirst()
@@ -425,6 +440,9 @@ export class ModerationService {
       await this.db.db
         .updateTable('repo_blob')
         .set({ takedownId: info.takedownId })
+        .set({
+          takedownExpiresAt: info.takedownExpiresAt || null,
+        })
         .where('recordUri', '=', info.uri.toString())
         .where(
           'cid',
@@ -450,12 +468,12 @@ export class ModerationService {
     this.db.assertTransaction()
     await this.db.db
       .updateTable('record')
-      .set({ takedownId: null })
+      .set({ takedownId: null, takedownExpiresAt: null })
       .where('uri', '=', info.uri.toString())
       .execute()
     const blobs = await this.db.db
       .updateTable('repo_blob')
-      .set({ takedownId: null })
+      .set({ takedownId: null, takedownExpiresAt: null })
       .where('takedownId', 'is not', null)
       .where('recordUri', '=', info.uri.toString())
       .returning('cid')

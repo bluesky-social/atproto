@@ -9,6 +9,7 @@ import {
   TAKEDOWN,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { getSubject, getAction } from '../moderation/util'
+import { addDurationToDate } from '../../../../util/duration'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
@@ -25,6 +26,7 @@ export default function (server: Server, ctx: AppContext) {
         createLabelVals,
         negateLabelVals,
         subjectBlobCids,
+        actionDuration,
       } = input.body
 
       // apply access rules
@@ -64,8 +66,12 @@ export default function (server: Server, ctx: AppContext) {
           negateLabelVals,
           createdBy,
           reason,
+          actionDuration,
         })
 
+        const actionExpiresAt = actionDuration
+          ? addDurationToDate(actionDuration).toISOString()
+          : undefined
         if (
           result.action === TAKEDOWN &&
           result.subjectType === 'com.atproto.admin.defs#repoRef' &&
@@ -73,6 +79,7 @@ export default function (server: Server, ctx: AppContext) {
         ) {
           await authTxn.revokeRefreshTokensByDid(result.subjectDid)
           await moderationTxn.takedownRepo({
+            takedownExpiresAt: actionExpiresAt,
             takedownId: result.id,
             did: result.subjectDid,
           })
@@ -84,6 +91,7 @@ export default function (server: Server, ctx: AppContext) {
           result.subjectUri
         ) {
           await moderationTxn.takedownRecord({
+            takedownExpiresAt: actionExpiresAt,
             takedownId: result.id,
             uri: new AtUri(result.subjectUri),
             blobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],

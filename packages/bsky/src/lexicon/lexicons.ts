@@ -28,6 +28,11 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#actionType',
           },
+          actionDuration: {
+            type: 'string',
+            description:
+              'ISO 8601 duration string, specifying how long the action should be in effect before automatically expiring',
+          },
           subject: {
             type: 'union',
             refs: [
@@ -96,6 +101,11 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#actionType',
           },
+          actionDuration: {
+            type: 'string',
+            description:
+              'ISO 8601 duration string, specifying how long the action should be in effect before automatically expiring',
+          },
           subject: {
             type: 'union',
             refs: [
@@ -158,6 +168,11 @@ export const schemaDict = {
           action: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#actionType',
+          },
+          actionDuration: {
+            type: 'string',
+            description:
+              'ISO 8601 duration string, specifying how long the action should be in effect before automatically expiring',
           },
         },
       },
@@ -530,7 +545,6 @@ export const schemaDict = {
       },
       moderation: {
         type: 'object',
-        required: [],
         properties: {
           currentAction: {
             type: 'ref',
@@ -1249,6 +1263,11 @@ export const schemaDict = {
               reason: {
                 type: 'string',
               },
+              actionDuration: {
+                type: 'string',
+                description:
+                  'ISO 8601 duration string, specifying how long the action should be in effect  before automatically expiring.',
+              },
               createdBy: {
                 type: 'string',
                 format: 'did',
@@ -1652,7 +1671,7 @@ export const schemaDict = {
       },
       reasonSexual: {
         type: 'token',
-        description: 'Unwanted or mis-labeled sexual content',
+        description: 'Unwanted or mislabeled sexual content',
       },
       reasonRude: {
         type: 'token',

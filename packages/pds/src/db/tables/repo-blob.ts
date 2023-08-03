@@ -4,6 +4,7 @@ export interface RepoBlob {
   commit: string
   did: string
   takedownId: number | null
+  takedownExpiresAt: string | null
 }
 
 export const tableName = 'repo_blob'

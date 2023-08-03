@@ -26,11 +26,24 @@
                 "com.atproto.repo.strongRef"
               ]
             },
-            "subjectBlobCids": {"type": "array", "items": {"type": "string", "format": "cid"}},
-            "createLabelVals": {"type": "array", "items": {"type": "string"}},
-            "negateLabelVals": {"type": "array", "items": {"type": "string"}},
-            "reason": {"type": "string"},
-            "createdBy": {"type": "string", "format": "did"}
+            "subjectBlobCids": {
+              "type": "array",
+              "items": { "type": "string", "format": "cid" }
+            },
+            "createLabelVals": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "negateLabelVals": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "reason": { "type": "string" },
+            "actionDuration": {
+              "type": "string",
+              "description": "ISO 8601 duration string, specifying how long the action should be in effect  before automatically expiring."
+            },
+            "createdBy": { "type": "string", "format": "did" }
           }
         }
       },
