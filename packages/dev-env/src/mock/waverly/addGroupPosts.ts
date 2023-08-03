@@ -41,8 +41,6 @@ export default async (allUsers: User[], date: Generator<string>) => {
     const waverlyUri = getWaverlyUri(user.handle, miniblogRkey)
 
     // Create the embed for the bluesky post
-    // The
-
     let miniblogLinkEmbedded = false
     let embed: Images | External | undefined
     if (longPost.image) {
@@ -53,7 +51,8 @@ export default async (allUsers: User[], date: Generator<string>) => {
         images: [{ image: imageBlob, alt: 'Test image' }],
       }
     } else if (longPost.external) {
-      // If there is an embedded link, possibly store the image
+      // If there is an embedded link, possibly store the image then create an
+      // embed for the external link
       let thumbBlob: BlobRef | undefined
       if (longPost.external.thumb) {
         thumbBlob = await storeImageBlob(user, longPost.external.thumb)
@@ -68,6 +67,7 @@ export default async (allUsers: User[], date: Generator<string>) => {
         },
       }
     } else {
+      // If there is no attachment, embed an external link to the miniblog
       miniblogLinkEmbedded = true
       embed = {
         $type: 'app.bsky.embed.external',
