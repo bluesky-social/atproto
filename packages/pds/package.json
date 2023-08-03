@@ -1,6 +1,6 @@
 {
   "name": "@waverlyai/atproto-pds",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -68,7 +68,6 @@
     "uint8arrays": "3.0.0"
   },
   "devDependencies": {
-    "@waverlyai/atproto-api": "*",
     "@atproto/api": "*",
     "@atproto/lex-cli": "*",
     "@did-plc/server": "^0.0.1",
@@ -78,6 +77,7 @@
     "@types/nodemailer": "^6.4.6",
     "@types/pg": "^8.6.6",
     "@types/sharp": "^0.31.0",
+    "@waverlyai/atproto-api": "*",
     "axios": "^0.27.2"
   }
 }
