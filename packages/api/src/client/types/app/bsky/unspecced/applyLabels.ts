@@ -6,13 +6,12 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 export interface QueryParams {}
 
 export interface InputSchema {
-  account: string
-  /** Additionally add a note describing why the invites were enabled */
-  note?: string
+  labels: ComAtprotoLabelDefs.Label[]
   [k: string]: unknown
 }
 

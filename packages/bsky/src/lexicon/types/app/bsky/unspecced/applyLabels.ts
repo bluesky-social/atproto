@@ -7,13 +7,12 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
+import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 export interface QueryParams {}
 
 export interface InputSchema {
-  account: string
-  /** Additionally add a note describing why the invites were enabled */
-  note?: string
+  labels: ComAtprotoLabelDefs.Label[]
   [k: string]: unknown
 }
 

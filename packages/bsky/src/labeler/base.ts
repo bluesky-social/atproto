@@ -1,5 +1,6 @@
 import stream from 'stream'
 import { AtUri } from '@atproto/uri'
+import { AtpAgent } from '@atproto/api'
 import { cidForRecord } from '@atproto/repo'
 import { dedupe, getFieldsFromRecord } from './util'
 import { labelerLogger as log } from '../logger'
@@ -8,9 +9,11 @@ import Database from '../db'
 import { IdResolver } from '@atproto/identity'
 import { BackgroundQueue } from '../background'
 import { IndexerConfig } from '../indexer/config'
+import { buildBasicAuth } from '../auth'
 
 export abstract class Labeler {
   public backgroundQueue: BackgroundQueue
+  public pushAgent?: AtpAgent
   constructor(
     protected ctx: {
       db: Database
@@ -20,6 +23,14 @@ export abstract class Labeler {
     },
   ) {
     this.backgroundQueue = ctx.backgroundQueue
+    if (ctx.cfg.labelerPushUrl) {
+      const url = new URL(ctx.cfg.labelerPushUrl)
+      this.pushAgent = new AtpAgent({ service: url.origin })
+      this.pushAgent.api.setHeader(
+        'authorization',
+        buildBasicAuth(url.username, url.password),
+      )
+    }
   }
 
   processRecord(uri: AtUri, obj: unknown) {
@@ -51,6 +62,23 @@ export abstract class Labeler {
       .values(rows)
       .onConflict((oc) => oc.doNothing())
       .execute()
+
+    if (this.pushAgent) {
+      const agent = this.pushAgent
+      try {
+        await agent.api.app.bsky.unspecced.applyLabels({ labels: rows })
+      } catch (err) {
+        log.error(
+          {
+            err,
+            uri: uri.toString(),
+            labels,
+            receiver: agent.service.toString(),
+          },
+          'failed to push labels',
+        )
+      }
+    }
   }
 
   async labelRecord(uri: AtUri, obj: unknown): Promise<string[]> {

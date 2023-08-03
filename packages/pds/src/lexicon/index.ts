@@ -102,6 +102,7 @@ import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActor
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
+import * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLabels'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
@@ -1039,6 +1040,13 @@ export class UnspeccedNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  applyLabels<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyUnspeccedApplyLabels.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.unspecced.applyLabels' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   getPopular<AV extends AuthVerifier>(

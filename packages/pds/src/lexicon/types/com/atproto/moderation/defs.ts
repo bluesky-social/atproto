@@ -21,7 +21,7 @@ export const REASONSPAM = 'com.atproto.moderation.defs#reasonSpam'
 export const REASONVIOLATION = 'com.atproto.moderation.defs#reasonViolation'
 /** Misleading identity, affiliation, or content */
 export const REASONMISLEADING = 'com.atproto.moderation.defs#reasonMisleading'
-/** Unwanted or mis-labeled sexual content */
+/** Unwanted or mislabeled sexual content */
 export const REASONSEXUAL = 'com.atproto.moderation.defs#reasonSexual'
 /** Rude, harassing, explicit, or otherwise unwelcoming behavior */
 export const REASONRUDE = 'com.atproto.moderation.defs#reasonRude'
