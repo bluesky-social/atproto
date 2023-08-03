@@ -44,6 +44,7 @@ export class HiveLabeler extends Labeler {
         throw err
       }
     })
+    log.info({ hiveRes, did, cid: cid.toString() }, 'hive response')
     const classes = respToClasses(hiveRes)
     return summarizeLabels(classes)
   }
