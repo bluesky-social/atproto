@@ -8,19 +8,13 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
-export interface QueryParams {}
-
-export interface InputSchema {
-  account: string
-  /** Additionally add a note describing why the invites were enabled */
-  note?: string
-  [k: string]: unknown
+export interface QueryParams {
+  token: string
+  platform: 'ios' | 'android' | 'web' | (string & {})
 }
 
-export interface HandlerInput {
-  encoding: 'application/json'
-  body: InputSchema
-}
+export type InputSchema = undefined
+export type HandlerInput = undefined
 
 export interface HandlerError {
   status: number

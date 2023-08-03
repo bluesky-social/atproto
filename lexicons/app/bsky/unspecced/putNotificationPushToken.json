@@ -1,0 +1,18 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.unspecced.putNotificationPushToken",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "An unspecced route to upload a push notification token for a user",
+      "parameters": {
+        "type": "params",
+        "required": ["token", "platform"],
+        "properties": {
+          "token": {"type": "string"},
+          "platform": {"type": "string", "knownValues": ["ios", "android", "web"]}
+        }
+      }
+    }
+  }
+}

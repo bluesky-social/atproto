@@ -223,7 +223,7 @@ export class RecordProcessor<T, S> {
             .deleteFrom('notification')
             .where('recordUri', 'in', forDelete.toDelete)
             .execute()
-          await sendNotificationTo
+          await this.sendNotifsToUser(forDelete.notifs)
         })
       }
       notifs = forDelete.notifs
@@ -247,7 +247,7 @@ export class RecordProcessor<T, S> {
     }
   }
 
-  async sendNotifToUser(notif: Notif) {
+  async sendNotifsToUser(notifs: Notif[]) {
     /**  1. Get the user's token (APNS or FCM for iOS and Android respectively) from the database
     User token will be in the format:
         did || token || platform (1 = iOS, 2 = Android, 3 = Web)
@@ -267,7 +267,7 @@ export class RecordProcessor<T, S> {
     ]
     3. `gorush` will send notification to APNS or FCM
     4.  store response from `gorush` which contains the ID of the notification
-    5. If notification needs to be updated or deleted, find the ID of the notification from the database and send a new notification to `gorush` with the ID
+    5. If notification needs to be updated or deleted, find the ID of the notification from the database and send a new notification to `gorush` with the ID (repeat step 2)
   */
   }
 

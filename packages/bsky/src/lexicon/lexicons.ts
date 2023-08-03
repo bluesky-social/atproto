@@ -536,7 +536,6 @@ export const schemaDict = {
       },
       moderation: {
         type: 'object',
-        required: [],
         properties: {
           currentAction: {
             type: 'ref',
@@ -708,7 +707,7 @@ export const schemaDict = {
               note: {
                 type: 'string',
                 description:
-                  'Additionally add a note describing why the invites were disabled',
+                  'Additionally add a note describing why the invites were enabled',
               },
             },
           },
@@ -1668,7 +1667,7 @@ export const schemaDict = {
       },
       reasonSexual: {
         type: 'token',
-        description: 'Unwanted or mis-labeled sexual content',
+        description: 'Unwanted or mislabeled sexual content',
       },
       reasonRude: {
         type: 'token',
@@ -6435,6 +6434,30 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedPutNotificationPushToken: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.putNotificationPushToken',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'An unspecced route to upload a push notification token for a user',
+        parameters: {
+          type: 'params',
+          required: ['token', 'platform'],
+          properties: {
+            token: {
+              type: 'string',
+            },
+            platform: {
+              type: 'string',
+              knownValues: ['ios', 'android', 'web'],
+            },
+          },
+        },
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -6565,4 +6588,6 @@ export const ids = {
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetTimelineSkeleton: 'app.bsky.unspecced.getTimelineSkeleton',
+  AppBskyUnspeccedPutNotificationPushToken:
+    'app.bsky.unspecced.putNotificationPushToken',
 }
