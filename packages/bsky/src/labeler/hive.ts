@@ -1,13 +1,15 @@
-import stream from 'stream'
 import axios from 'axios'
 import FormData from 'form-data'
+import { CID } from 'multiformats/cid'
+import { IdResolver } from '@atproto/identity'
 import { Labeler } from './base'
 import { keywordLabeling } from './util'
-import { IdResolver } from '@atproto/identity'
 import Database from '../db'
 import { BackgroundQueue } from '../background'
 import { IndexerConfig } from '../indexer/config'
 import { retryHttp } from '../util/retry'
+import { resolveBlob } from '../api/blob-resolver'
+import { labelerLogger as log } from '../logger'
 
 const HIVE_ENDPOINT = 'https://api.thehive.ai/api/v2/task/sync'
 
@@ -33,36 +35,33 @@ export class HiveLabeler extends Labeler {
     return keywordLabeling(this.keywords, text)
   }
 
-  async labelImg(img: stream.Readable): Promise<string[]> {
-    return labelBlob(img, this.hiveApiKey)
+  async labelImg(did: string, cid: CID): Promise<string[]> {
+    const hiveRes = await retryHttp(async () => {
+      try {
+        return await this.makeHiveReq(did, cid)
+      } catch (err) {
+        log.warn({ err, did, cid: cid.toString() }, 'hive request failed')
+        throw err
+      }
+    })
+    log.info({ hiveRes, did, cid: cid.toString() }, 'hive response')
+    const classes = respToClasses(hiveRes)
+    return summarizeLabels(classes)
   }
-}
 
-export const labelBlob = async (
-  blob: stream.Readable,
-  hiveApiKey: string,
-): Promise<string[]> => {
-  const classes = await makeHiveReq(blob, hiveApiKey)
-  return summarizeLabels(classes)
-}
-
-export const makeHiveReq = async (
-  blob: stream.Readable,
-  hiveApiKey: string,
-): Promise<HiveRespClass[]> => {
-  const form = new FormData()
-  form.append('media', blob)
-
-  const res = await retryHttp(() =>
-    axios.post(HIVE_ENDPOINT, form, {
+  async makeHiveReq(did: string, cid: CID): Promise<HiveResp> {
+    const { stream } = await resolveBlob(did, cid, this.ctx)
+    const form = new FormData()
+    form.append('media', stream)
+    const { data } = await axios.post(HIVE_ENDPOINT, form, {
       headers: {
         'Content-Type': 'multipart/form-data',
-        authorization: `token ${hiveApiKey}`,
+        authorization: `token ${this.hiveApiKey}`,
         accept: 'application/json',
       },
-    }),
-  )
-  return respToClasses(res.data)
+    })
+    return data
+  }
 }
 
 export const respToClasses = (res: HiveResp): HiveRespClass[] => {

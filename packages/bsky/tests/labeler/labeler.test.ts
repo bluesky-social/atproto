@@ -1,18 +1,22 @@
 import { AtUri, AtpAgent, BlobRef } from '@atproto/api'
-import stream, { Readable } from 'stream'
+import { Readable } from 'stream'
 import { Labeler } from '../../src/labeler'
 import { Database, IndexerConfig } from '../../src'
 import IndexerContext from '../../src/indexer/context'
 import { cidForRecord } from '@atproto/repo'
 import { keywordLabeling } from '../../src/labeler/util'
-import { cidForCbor, streamToBytes, TID } from '@atproto/common'
-import * as ui8 from 'uint8arrays'
+import { cidForCbor, TID } from '@atproto/common'
 import { LabelService } from '../../src/services/label'
 import { TestNetwork } from '@atproto/dev-env'
 import { IdResolver } from '@atproto/identity'
 import { SeedClient } from '../seeds/client'
 import usersSeed from '../seeds/users'
 import { BackgroundQueue } from '../../src/background'
+import { CID } from 'multiformats/cid'
+
+// outside of test suite so that TestLabeler can access them
+let badCid1: CID | undefined = undefined
+let badCid2: CID | undefined = undefined
 
 describe('labeler', () => {
   let network: TestNetwork
@@ -67,6 +71,8 @@ describe('labeler', () => {
     badBlob1 = await storeBlob(bytes1)
     badBlob2 = await storeBlob(bytes2)
     goodBlob = await storeBlob(bytes3)
+    badCid1 = badBlob1.ref
+    badCid2 = badBlob2.ref
   })
 
   afterAll(async () => {
@@ -171,13 +177,11 @@ class TestLabeler extends Labeler {
     return keywordLabeling(this.keywords, text)
   }
 
-  async labelImg(img: stream.Readable): Promise<string[]> {
-    const buf = await streamToBytes(img)
-    if (ui8.equals(buf, new Uint8Array([1, 2, 3, 4]))) {
+  async labelImg(_did: string, cid: CID): Promise<string[]> {
+    if (cid.equals(badCid1)) {
       return ['img-label']
     }
-
-    if (ui8.equals(buf, new Uint8Array([5, 6, 7, 8]))) {
+    if (cid.equals(badCid2)) {
       return ['other-img-label']
     }
     return []

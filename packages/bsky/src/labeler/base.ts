@@ -1,15 +1,14 @@
-import stream from 'stream'
 import { AtUri } from '@atproto/uri'
 import { AtpAgent } from '@atproto/api'
 import { cidForRecord } from '@atproto/repo'
 import { dedupe, getFieldsFromRecord } from './util'
 import { labelerLogger as log } from '../logger'
-import { resolveBlob } from '../api/blob-resolver'
 import Database from '../db'
 import { IdResolver } from '@atproto/identity'
 import { BackgroundQueue } from '../background'
 import { IndexerConfig } from '../indexer/config'
 import { buildBasicAuth } from '../auth'
+import { CID } from 'multiformats/cid'
 
 export abstract class Labeler {
   public backgroundQueue: BackgroundQueue
@@ -85,16 +84,13 @@ export abstract class Labeler {
     const { text, imgs } = getFieldsFromRecord(obj)
     const txtLabels = await this.labelText(text.join(' '))
     const imgLabels = await Promise.all(
-      imgs.map(async (cid) => {
-        const { stream } = await resolveBlob(uri.host, cid, this.ctx)
-        return this.labelImg(stream)
-      }),
+      imgs.map((cid) => this.labelImg(uri.host, cid)),
     )
     return dedupe([...txtLabels, ...imgLabels.flat()])
   }
 
   abstract labelText(text: string): Promise<string[]>
-  abstract labelImg(img: stream.Readable): Promise<string[]>
+  abstract labelImg(did: string, cid: CID): Promise<string[]>
 
   async processAll() {
     await this.backgroundQueue.processAll()
