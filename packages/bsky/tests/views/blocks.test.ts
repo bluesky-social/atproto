@@ -184,6 +184,34 @@ describe('pds views with blocking', () => {
     expect(resDan.data.profiles[1].viewer?.blockedBy).toBe(false)
   })
 
+  it('does not return block violating follows', async () => {
+    const resCarol = await agent.api.app.bsky.graph.getFollows(
+      { actor: carol },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(resCarol.data.follows.some((f) => f.did === dan)).toBe(false)
+
+    const resDan = await agent.api.app.bsky.graph.getFollows(
+      { actor: dan },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(resDan.data.follows.some((f) => f.did === carol)).toBe(false)
+  })
+
+  it('does not return block violating followers', async () => {
+    const resCarol = await agent.api.app.bsky.graph.getFollowers(
+      { actor: carol },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(resCarol.data.followers.some((f) => f.did === dan)).toBe(false)
+
+    const resDan = await agent.api.app.bsky.graph.getFollowers(
+      { actor: dan },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(resDan.data.followers.some((f) => f.did === carol)).toBe(false)
+  })
+
   it('does not return notifs for blocked accounts', async () => {
     const resCarol = await agent.api.app.bsky.notification.listNotifications(
       {
