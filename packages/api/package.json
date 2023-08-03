@@ -3,7 +3,8 @@
   "version": "0.4.4",
   "main": "src/index.ts",
   "scripts": {
-    "codegen": "lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
+    "codegen": "yarn docgen && node ./scripts/generate-code.mjs && lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
+    "docgen": "node ./scripts/generate-docs.mjs",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
     "update-main-to-dist": "node ./update-pkg.js --update-main-to-dist",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@atproto/lex-cli": "*",
-    "@atproto/pds": "*"
+    "@atproto/pds": "*",
+    "common-tags": "^1.8.2"
   }
 }
