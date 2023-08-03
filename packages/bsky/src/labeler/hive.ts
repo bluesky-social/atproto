@@ -49,9 +49,9 @@ export class HiveLabeler extends Labeler {
   }
 
   async makeHiveReq(did: string, cid: CID): Promise<HiveResp> {
-    const blob = await resolveBlob(did, cid, this.ctx)
+    const { stream } = await resolveBlob(did, cid, this.ctx)
     const form = new FormData()
-    form.append('media', blob)
+    form.append('media', stream)
     return axios.post(HIVE_ENDPOINT, form, {
       headers: {
         'Content-Type': 'multipart/form-data',
