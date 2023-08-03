@@ -43,7 +43,13 @@ export default function (server: Server, ctx: AppContext) {
         )
         .where(notSoftDeletedClause(ref('subject_repo')))
         .whereNotExists(
-          graphService.blockQb(requester, [ref('follow.creator')]),
+          graphService.blockQb(requester, [ref('follow.subjectDid')]),
+        )
+        .whereNotExists(
+          graphService.blockRefQb(
+            ref('follow.subjectDid'),
+            ref('follow.creator'),
+          ),
         )
         .selectAll('subject')
         .select(['follow.cid as cid', 'follow.createdAt as createdAt'])

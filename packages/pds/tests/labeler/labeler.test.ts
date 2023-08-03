@@ -1,14 +1,17 @@
 import { AtUri, BlobRef } from '@atproto/api'
-import stream from 'stream'
 import { runTestServer, CloseFn, TestServerInfo } from '../_util'
 import { Labeler } from '../../src/labeler'
 import { AppContext, Database } from '../../src'
 import { BlobStore, cidForRecord } from '@atproto/repo'
 import { keywordLabeling } from '../../src/labeler/util'
-import { cidForCbor, streamToBytes, TID } from '@atproto/common'
-import * as ui8 from 'uint8arrays'
+import { cidForCbor, TID } from '@atproto/common'
 import { LabelService } from '../../src/app-view/services/label'
 import { BackgroundQueue } from '../../src/event-stream/background-queue'
+import { CID } from 'multiformats/cid'
+
+// outside of test suite so that TestLabeler can access them
+let badCid1: CID | undefined = undefined
+let badCid2: CID | undefined = undefined
 
 describe('labeler', () => {
   let server: TestServerInfo
@@ -48,6 +51,8 @@ describe('labeler', () => {
     badBlob1 = new BlobRef(cid1, 'image/jpeg', 4)
     badBlob2 = new BlobRef(cid2, 'image/jpeg', 4)
     goodBlob = new BlobRef(cid3, 'image/jpeg', 4)
+    badCid1 = badBlob1.ref
+    badCid2 = badBlob2.ref
   })
 
   afterAll(async () => {
@@ -160,13 +165,12 @@ class TestLabeler extends Labeler {
     return keywordLabeling(this.keywords, text)
   }
 
-  async labelImg(img: stream.Readable): Promise<string[]> {
-    const buf = await streamToBytes(img)
-    if (ui8.equals(buf, new Uint8Array([1, 2, 3, 4]))) {
+  async labelImg(cid: CID): Promise<string[]> {
+    if (cid.equals(badCid1)) {
       return ['img-label']
     }
 
-    if (ui8.equals(buf, new Uint8Array([5, 6, 7, 8]))) {
+    if (cid.equals(badCid2)) {
       return ['other-img-label']
     }
     return []

@@ -1,0 +1,212 @@
+[
+  {
+    "id": "system",
+    "configurable": false,
+    "labels": [
+      {
+        "id": "!hide",
+        "preferences": ["hide"],
+        "flags": ["no-override"],
+        "onwarn": "blur"
+      },
+      {
+        "id": "!no-promote",
+        "preferences": ["hide"],
+        "flags": [],
+        "onwarn": null
+      },
+      {
+        "id": "!warn",
+        "preferences": ["warn"],
+        "flags": [],
+        "onwarn": "blur"
+      }
+    ]
+  },
+  {
+    "id": "legal",
+    "configurable": false,
+    "labels": [
+      {
+        "id": "dmca-violation",
+        "preferences": ["hide"],
+        "flags": ["no-override"],
+        "onwarn": "blur"
+      },
+      {
+        "id": "doxxing",
+        "preferences": ["hide"],
+        "flags": ["no-override"],
+        "onwarn": "blur"
+      }
+    ]
+  },
+  {
+    "id": "sexual",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "porn",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": ["adult"],
+        "onwarn": "blur-media"
+      },
+      {
+        "id": "sexual",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": ["adult"],
+        "onwarn": "blur-media"
+      },
+      {
+        "id": "nudity",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": ["adult"],
+        "onwarn": "blur-media"
+      }
+    ]
+  },
+  {
+    "id": "violence",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "nsfl",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": ["adult"],
+        "onwarn": "blur-media"
+      },
+      {
+        "id": "corpse",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": ["adult"],
+        "onwarn": "blur-media"
+      },
+      {
+        "id": "gore",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": ["adult"],
+        "onwarn": "blur-media"
+      },
+      {
+        "id": "torture",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": ["adult"],
+        "onwarn": "blur"
+      },
+      {
+        "id": "self-harm",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": ["adult"],
+        "onwarn": "blur-media"
+      }
+    ]
+  },
+  {
+    "id": "intolerance",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "intolerant-race",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "intolerant-gender",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "intolerant-sexual-orientation",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "intolerant-religion",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "intolerant",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "icon-intolerant",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur-media"
+      }
+    ]
+  },
+  {
+    "id": "rude",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "threat",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      }
+    ]
+  },
+  {
+    "id": "curation",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "spoiler",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      }
+    ]
+  },
+  {
+    "id": "spam",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "spam",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      }
+    ]
+  },
+  {
+    "id": "misinfo",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "account-security",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "net-abuse",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "impersonation",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
+      },
+      {
+        "id": "scam",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
+      }
+    ]
+  }
+]
