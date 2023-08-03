@@ -46,6 +46,7 @@ import getModerationReport from './com/atproto/admin/getModerationReport'
 import getModerationReports from './com/atproto/admin/getModerationReports'
 import resolveHandle from './com/atproto/identity/resolveHandle'
 import getRecord from './com/atproto/repo/getRecord'
+import putNotificationPushToken from './app/bsky/unspecced/putNotificationPushToken'
 
 export * as health from './health'
 
@@ -86,6 +87,7 @@ export default function (server: Server, ctx: AppContext) {
   updateSeen(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTimelineSkeleton(server, ctx)
+  putNotificationPushToken(server, ctx)
   // com.atproto
   createReport(server, ctx)
   resolveModerationReports(server, ctx)

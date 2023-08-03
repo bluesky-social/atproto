@@ -6451,7 +6451,7 @@ export const schemaDict = {
             },
             platform: {
               type: 'string',
-              knownValues: ['ios', 'android', 'web'],
+              enum: ['ios', 'android', 'web'],
             },
           },
         },

@@ -9,7 +9,7 @@ import { CID } from 'multiformats/cid'
 
 export interface QueryParams {
   token: string
-  platform: 'ios' | 'android' | 'web' | (string & {})
+  platform: 'ios' | 'android' | 'web'
 }
 
 export type InputSchema = undefined

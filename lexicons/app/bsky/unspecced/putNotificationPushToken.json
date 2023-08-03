@@ -10,7 +10,7 @@
         "required": ["token", "platform"],
         "properties": {
           "token": {"type": "string"},
-          "platform": {"type": "string", "knownValues": ["ios", "android", "web"]}
+          "platform": {"type": "string", "enum": ["ios", "android", "web"]}
         }
       }
     }
