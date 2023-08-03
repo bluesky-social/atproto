@@ -9,7 +9,7 @@ import {
   TAKEDOWN,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { getSubject, getAction } from '../moderation/util'
-import { addDurationToDate } from '../../../../util/duration'
+import { addHoursToDate } from '../../../../util/date'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
         createLabelVals,
         negateLabelVals,
         subjectBlobCids,
-        actionDuration,
+        actionDurationInHours,
       } = input.body
 
       // apply access rules
@@ -58,8 +58,8 @@ export default function (server: Server, ctx: AppContext) {
         const moderationTxn = services.moderation(dbTxn)
         const labelTxn = services.appView.label(dbTxn)
 
-        const actionExpiresAt = actionDuration
-          ? addDurationToDate(actionDuration).toISOString()
+        const actionExpiresAt = actionDurationInHours
+          ? addHoursToDate(actionDurationInHours).toISOString()
           : undefined
 
         const result = await moderationTxn.logAction({
@@ -70,7 +70,7 @@ export default function (server: Server, ctx: AppContext) {
           negateLabelVals,
           createdBy,
           reason,
-          actionDuration,
+          actionDurationInHours,
           actionExpiresAt,
         })
 
@@ -81,7 +81,6 @@ export default function (server: Server, ctx: AppContext) {
         ) {
           await authTxn.revokeRefreshTokensByDid(result.subjectDid)
           await moderationTxn.takedownRepo({
-            takedownExpiresAt: actionExpiresAt,
             takedownId: result.id,
             did: result.subjectDid,
           })
@@ -93,7 +92,6 @@ export default function (server: Server, ctx: AppContext) {
           result.subjectUri
         ) {
           await moderationTxn.takedownRecord({
-            takedownExpiresAt: actionExpiresAt,
             takedownId: result.id,
             uri: new AtUri(result.subjectUri),
             blobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],

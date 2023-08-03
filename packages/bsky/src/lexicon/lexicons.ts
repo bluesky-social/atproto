@@ -28,10 +28,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#actionType',
           },
-          actionDuration: {
-            type: 'string',
+          actionDurationInHours: {
+            type: 'integer',
             description:
-              'ISO 8601 duration string, specifying how long the action should be in effect before automatically expiring',
+              'Indicates how long this action was meant to be in effect before automatically expiring.',
           },
           subject: {
             type: 'union',
@@ -101,10 +101,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#actionType',
           },
-          actionDuration: {
-            type: 'string',
+          actionDurationInHours: {
+            type: 'integer',
             description:
-              'ISO 8601 duration string, specifying how long the action should be in effect before automatically expiring',
+              'Indicates how long this action was meant to be in effect before automatically expiring.',
           },
           subject: {
             type: 'union',
@@ -169,10 +169,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#actionType',
           },
-          actionDuration: {
-            type: 'string',
+          actionDurationInHours: {
+            type: 'integer',
             description:
-              'ISO 8601 duration string, specifying how long the action should be in effect before automatically expiring',
+              'Indicates how long this action was meant to be in effect before automatically expiring.',
           },
         },
       },
@@ -1263,10 +1263,10 @@ export const schemaDict = {
               reason: {
                 type: 'string',
               },
-              actionDuration: {
-                type: 'string',
+              actionDurationInHours: {
+                type: 'integer',
                 description:
-                  'ISO 8601 duration string, specifying how long the action should be in effect  before automatically expiring.',
+                  'Indicates how long this action was meant to be in effect before automatically expiring.',
               },
               createdBy: {
                 type: 'string',

@@ -7,7 +7,6 @@ export interface Record {
   rkey: string
   indexedAt: string
   takedownId: number | null
-  takedownExpiresAt: string | null
 }
 
 export const tableName = 'record'

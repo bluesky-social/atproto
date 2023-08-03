@@ -336,7 +336,8 @@ export class ModerationService {
   > {
     const actionsDueForReversal = await this.db.db
       .selectFrom('moderation_action')
-      .where('actionDuration', 'is not', null)
+      .where('actionDurationInHours', 'is not', null)
+      .where('actionExpiresAt', '<', new Date().toISOString())
       .where('reversedAt', 'is', null)
       .select(['id', 'createdBy'])
       .execute()

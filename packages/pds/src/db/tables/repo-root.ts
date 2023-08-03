@@ -4,7 +4,6 @@ export interface RepoRoot {
   root: string
   indexedAt: string
   takedownId: number | null
-  takedownExpiresAt: string | null
 }
 
 export const tableName = 'repo_root'

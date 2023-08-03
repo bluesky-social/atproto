@@ -34,7 +34,7 @@ export interface ModerationAction {
   reversedAt: string | null
   reversedBy: string | null
   reversedReason: string | null
-  actionDuration: string | null
+  actionDurationInHours: number | null
   actionExpiresAt: string | null
 }
 
