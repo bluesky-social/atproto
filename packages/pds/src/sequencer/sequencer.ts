@@ -12,6 +12,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   polling = false
   queued = false
 
+  startupCache: SeqEvt[] = []
+
   constructor(public db: Database, public lastSeen = 0) {
     super()
     // note: this does not err when surpassed, just prints a warning to stderr
@@ -55,13 +57,48 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     return got || null
   }
 
+  seqRangeFromCache(opts: {
+    earliestSeq?: number
+    latestSeq?: number
+    limit?: number
+  }): SeqEvt[] {
+    const { earliestSeq, latestSeq, limit } = opts
+    if (!earliestSeq) return []
+    const evts: SeqEvt[] = []
+    for (const evt of this.startupCache) {
+      if (evt.seq > earliestSeq) {
+        if (!latestSeq || evt.seq <= latestSeq) {
+          evts.push(evt)
+        }
+      }
+      if (limit && evts.length >= limit) {
+        break
+      }
+    }
+    return evts
+  }
+
   async requestSeqRange(opts: {
     earliestSeq?: number
     latestSeq?: number
     earliestTime?: string
     limit?: number
+    tryCache?: boolean
   }): Promise<SeqEvt[]> {
-    const { earliestSeq, latestSeq, earliestTime, limit } = opts
+    const {
+      earliestSeq,
+      latestSeq,
+      earliestTime,
+      limit,
+      tryCache = false,
+    } = opts
+
+    if (tryCache) {
+      const evts = this.seqRangeFromCache({ earliestSeq, latestSeq, limit })
+      if (limit && evts.length >= limit) {
+        return evts
+      }
+    }
 
     let seqQb = this.db.db
       .selectFrom('repo_seq')
