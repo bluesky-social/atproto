@@ -3,16 +3,25 @@ import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { AuthScope } from '../../../../auth'
-import { MINUTE } from '@atproto/common'
+import { DAY, MINUTE } from '@atproto/common'
 import { getReqIp } from '@atproto/xrpc-server/src/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createSession({
-    rateLimit: {
-      durationMs: 5 * MINUTE,
-      points: 10,
-      calcKey: ({ req, input }) => `${getReqIp(req)}-${input.body.identifier}`,
-    },
+    rateLimit: [
+      {
+        durationMs: DAY,
+        points: 200,
+        calcKey: ({ req, input }) =>
+          `${getReqIp(req)}-${input.body.identifier}`,
+      },
+      {
+        durationMs: 5 * MINUTE,
+        points: 10,
+        calcKey: ({ req, input }) =>
+          `${getReqIp(req)}-${input.body.identifier}`,
+      },
+    ],
     handler: async ({ input }) => {
       const { password } = input.body
       const identifier = input.body.identifier.toLowerCase()

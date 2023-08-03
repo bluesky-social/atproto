@@ -21,8 +21,19 @@ export default function (server: Server, ctx: AppContext) {
     rateLimit: {
       name: 'repo-write',
       calcKey: ({ auth }) => auth.credentials.did,
-      calcPoints: ({ input }) =>
-        input.body.writes.filter((w) => !isDelete(w)).length,
+      calcPoints: ({ input }) => {
+        let points = 0
+        for (const op of input.body.writes) {
+          if (isCreate(op)) {
+            points += 3
+          } else if (isUpdate(op)) {
+            points += 2
+          } else {
+            points += 1
+          }
+        }
+        return points
+      },
     },
     handler: async ({ input, auth }) => {
       const tx = input.body

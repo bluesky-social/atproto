@@ -19,6 +19,7 @@ export default function (server: Server, ctx: AppContext) {
     rateLimit: {
       name: 'repo-write',
       calcKey: ({ auth }) => auth.credentials.did,
+      calcPoints: () => 2,
     },
     handler: async ({ auth, input }) => {
       const {
