@@ -52,13 +52,14 @@ export class HiveLabeler extends Labeler {
     const { stream } = await resolveBlob(did, cid, this.ctx)
     const form = new FormData()
     form.append('media', stream)
-    return axios.post(HIVE_ENDPOINT, form, {
+    const { data } = await axios.post(HIVE_ENDPOINT, form, {
       headers: {
         'Content-Type': 'multipart/form-data',
         authorization: `token ${this.hiveApiKey}`,
         accept: 'application/json',
       },
     })
+    return data
   }
 }
 
