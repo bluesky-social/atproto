@@ -6,6 +6,7 @@ import Database from '../db'
 import { BlobStore } from '@atproto/repo'
 import { keywordLabeling } from './util'
 import { BackgroundQueue } from '../event-stream/background-queue'
+import { CID } from 'multiformats/cid'
 
 const HIVE_ENDPOINT = 'https://api.thehive.ai/api/v2/task/sync'
 
@@ -32,8 +33,9 @@ export class HiveLabeler extends Labeler {
     return keywordLabeling(this.keywords, text)
   }
 
-  async labelImg(img: stream.Readable): Promise<string[]> {
-    return labelBlob(img, this.hiveApiKey)
+  async labelImg(cid: CID): Promise<string[]> {
+    const stream = await this.blobstore.getStream(cid)
+    return labelBlob(stream, this.hiveApiKey)
   }
 }
 
