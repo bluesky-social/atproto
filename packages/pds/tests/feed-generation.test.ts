@@ -347,6 +347,18 @@ describe('feed generation', () => {
     })
   })
 
+  describe('putNotifications', () => {
+    it('updates notifications', async () => {
+      const res = await agent.api.app.bsky.unspecced.putNotificationPushToken(
+        { platform: 'ios', token: '123' },
+        {
+          headers: sc.getHeaders(sc.dids.bob),
+        },
+      )
+      expect(res.success).toEqual(true)
+    })
+  })
+
   describe('getFeed', () => {
     it('resolves basic feed contents.', async () => {
       const feed = await agent.api.app.bsky.feed.getFeed(

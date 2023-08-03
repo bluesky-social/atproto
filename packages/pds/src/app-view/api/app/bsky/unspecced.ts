@@ -189,6 +189,18 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+
+  server.app.bsky.unspecced.putNotificationPushToken({
+    auth: ctx.accessVerifier,
+    handler: async ({ auth, params }) => {
+      const { token, platform } = params
+      const {
+        credentials: { did },
+      } = auth
+      const db = ctx.db.db
+      console.log('THIS IS RUNNING IN THE PDS')
+    },
+  })
 }
 
 type Result = { likeCount: number; cid: string }
