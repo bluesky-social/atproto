@@ -15,15 +15,6 @@
               "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
             },
             "subject": {"type": "ref", "ref": "com.atproto.repo.strongRef"},
-            "embed": {
-              "type": "union",
-              "refs": [
-                "app.bsky.embed.images",
-                "app.bsky.embed.external",
-                "app.bsky.embed.record",
-                "app.bsky.embed.recordWithMedia"
-              ]
-            },
             "langs": {
               "type": "array",
               "maxLength": 3,
