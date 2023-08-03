@@ -58,6 +58,10 @@ export default function (server: Server, ctx: AppContext) {
         const moderationTxn = services.moderation(dbTxn)
         const labelTxn = services.appView.label(dbTxn)
 
+        const actionExpiresAt = actionDuration
+          ? addDurationToDate(actionDuration).toISOString()
+          : undefined
+
         const result = await moderationTxn.logAction({
           action: getAction(action),
           subject: getSubject(subject),
@@ -67,11 +71,9 @@ export default function (server: Server, ctx: AppContext) {
           createdBy,
           reason,
           actionDuration,
+          actionExpiresAt,
         })
 
-        const actionExpiresAt = actionDuration
-          ? addDurationToDate(actionDuration).toISOString()
-          : undefined
         if (
           result.action === TAKEDOWN &&
           result.subjectType === 'com.atproto.admin.defs#repoRef' &&

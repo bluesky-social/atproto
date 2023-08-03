@@ -54,32 +54,12 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        const result = await moderationTxn.logReverseAction({
+        const result = await moderationTxn.revertAction({
           id,
           createdAt: now,
           createdBy,
           reason,
         })
-
-        if (
-          result.action === TAKEDOWN &&
-          result.subjectType === 'com.atproto.admin.defs#repoRef' &&
-          result.subjectDid
-        ) {
-          await moderationTxn.reverseTakedownRepo({
-            did: result.subjectDid,
-          })
-        }
-
-        if (
-          result.action === TAKEDOWN &&
-          result.subjectType === 'com.atproto.repo.strongRef' &&
-          result.subjectUri
-        ) {
-          await moderationTxn.reverseTakedownRecord({
-            uri: new AtUri(result.subjectUri),
-          })
-        }
 
         // invert creates & negates
         const { createLabelVals, negateLabelVals } = result

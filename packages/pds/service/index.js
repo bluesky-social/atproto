@@ -23,6 +23,7 @@ const {
   PDS,
   ViewMaintainer,
   makeAlgos,
+  PeriodicModerationActionReversal,
 } = require('@atproto/pds')
 const { Secp256k1Keypair } = require('@atproto/crypto')
 
@@ -84,12 +85,20 @@ const main = async () => {
   })
   const viewMaintainer = new ViewMaintainer(migrateDb)
   const viewMaintainerRunning = viewMaintainer.run()
+
+  const periodicModerationActionReversal = new PeriodicModerationActionReversal(
+    migrateDb,
+  )
+  const periodicModerationActionReversalRunning =
+    periodicModerationActionReversal.run()
+
   await pds.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
     await pds.destroy()
     viewMaintainer.destroy()
     await viewMaintainerRunning
+    await periodicModerationActionReversalRunning
     await migrateDb.close()
   })
 }

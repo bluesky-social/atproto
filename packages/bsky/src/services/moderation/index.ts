@@ -7,6 +7,7 @@ import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { ModerationViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
 import { ImageInvalidator } from '../../image/invalidator'
+import { TAKEDOWN } from '../../lexicon/types/com/atproto/admin/defs'
 
 export class ModerationService {
   constructor(
@@ -328,6 +329,60 @@ export class ModerationService {
     }
 
     return actionResult
+  }
+
+  async getActionsDueForReversal(): Promise<
+    Array<{ id: number; createdBy: string }>
+  > {
+    const actionsDueForReversal = await this.db.db
+      .selectFrom('moderation_action')
+      .where('actionDuration', 'is not', null)
+      .where('reversedAt', 'is', null)
+      .select(['id', 'createdBy'])
+      .execute()
+
+    return actionsDueForReversal
+  }
+
+  async revertAction({
+    id,
+    createdAt,
+    createdBy,
+    reason,
+  }: {
+    id: number
+    createdAt: Date
+    createdBy: string
+    reason: string
+  }) {
+    const result = await this.logReverseAction({
+      id,
+      createdAt,
+      createdBy,
+      reason,
+    })
+
+    if (
+      result.action === TAKEDOWN &&
+      result.subjectType === 'com.atproto.admin.defs#repoRef' &&
+      result.subjectDid
+    ) {
+      await this.reverseTakedownRepo({
+        did: result.subjectDid,
+      })
+    }
+
+    if (
+      result.action === TAKEDOWN &&
+      result.subjectType === 'com.atproto.repo.strongRef' &&
+      result.subjectUri
+    ) {
+      await this.reverseTakedownRecord({
+        uri: new AtUri(result.subjectUri),
+      })
+    }
+
+    return result
   }
 
   async logReverseAction(info: {

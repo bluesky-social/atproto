@@ -35,6 +35,7 @@ export interface ModerationAction {
   reversedBy: string | null
   reversedReason: string | null
   actionDuration: string | null
+  actionExpiresAt: string | null
 }
 
 export interface ModerationActionSubjectBlob {

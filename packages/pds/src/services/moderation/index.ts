@@ -11,6 +11,7 @@ import { ModerationViews } from './views'
 import SqlRepoStorage from '../../sql-repo-storage'
 import { ImageInvalidator } from '../../image/invalidator'
 import { ImageUriBuilder } from '../../image/uri'
+import { TAKEDOWN } from '../../lexicon/types/com/atproto/admin/defs'
 
 export class ModerationService {
   constructor(
@@ -262,6 +263,7 @@ export class ModerationService {
     createdBy: string
     createdAt?: Date
     actionDuration?: string
+    actionExpiresAt?: string
   }): Promise<ModerationActionRow> {
     this.db.assertTransaction()
     const {
@@ -271,6 +273,7 @@ export class ModerationService {
       subject,
       subjectBlobCids,
       actionDuration,
+      actionExpiresAt,
       createdAt = new Date(),
     } = info
     const createLabelVals =
@@ -338,6 +341,7 @@ export class ModerationService {
         createLabelVals,
         negateLabelVals,
         actionDuration,
+        actionExpiresAt,
         ...subjectInfo,
       })
       .returningAll()
@@ -367,6 +371,62 @@ export class ModerationService {
     }
 
     return actionResult
+  }
+
+  async getActionsDueForReversal(): Promise<
+    Array<{ id: number; createdBy: string }>
+  > {
+    const actionsDueForReversal = await this.db.db
+      .selectFrom('moderation_action')
+      // Get entries that have an actionDuration that has passed and have not been reversed
+      .where('actionDuration', 'is not', null)
+      .where('actionExpiresAt', '<', new Date().toISOString())
+      .where('reversedAt', 'is', null)
+      .select(['id', 'createdBy'])
+      .execute()
+
+    return actionsDueForReversal
+  }
+
+  async revertAction({
+    id,
+    createdAt,
+    createdBy,
+    reason,
+  }: {
+    id: number
+    createdAt: Date
+    createdBy: string
+    reason: string
+  }) {
+    const result = await this.logReverseAction({
+      id,
+      createdAt,
+      createdBy,
+      reason,
+    })
+
+    if (
+      result.action === TAKEDOWN &&
+      result.subjectType === 'com.atproto.admin.defs#repoRef' &&
+      result.subjectDid
+    ) {
+      await this.reverseTakedownRepo({
+        did: result.subjectDid,
+      })
+    }
+
+    if (
+      result.action === TAKEDOWN &&
+      result.subjectType === 'com.atproto.repo.strongRef' &&
+      result.subjectUri
+    ) {
+      await this.reverseTakedownRecord({
+        uri: new AtUri(result.subjectUri),
+      })
+    }
+
+    return result
   }
 
   async logReverseAction(info: {
