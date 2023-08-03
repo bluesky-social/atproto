@@ -96,6 +96,3 @@ export abstract class Labeler {
     await this.backgroundQueue.processAll()
   }
 }
-
-// const { stream } = await resolveBlob(uri.host, cid, this.ctx)
-// return this.labelImg(stream)
