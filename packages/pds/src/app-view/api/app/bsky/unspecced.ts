@@ -198,7 +198,18 @@ export default function (server: Server, ctx: AppContext) {
         credentials: { did },
       } = auth
       const db = ctx.db.db
-      console.log('THIS IS RUNNING IN THE PDS')
+      try {
+        await db
+          .insertInto('notification_push_token')
+          .values({
+            did,
+            token,
+            platform,
+          })
+          .execute()
+      } catch (error) {
+        console.log(error)
+      }
     },
   })
 }
