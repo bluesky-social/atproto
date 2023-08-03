@@ -125,6 +125,7 @@ import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
+import * as AppBskyUnspeccedPutNotificationPushToken from './types/app/bsky/unspecced/putNotificationPushToken'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
@@ -244,6 +245,7 @@ export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 export * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 export * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
+export * as AppBskyUnspeccedPutNotificationPushToken from './types/app/bsky/unspecced/putNotificationPushToken'
 
 export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
@@ -2071,6 +2073,22 @@ export class UnspeccedNS {
       .call('app.bsky.unspecced.getTimelineSkeleton', params, undefined, opts)
       .catch((e) => {
         throw AppBskyUnspeccedGetTimelineSkeleton.toKnownErr(e)
+      })
+  }
+
+  putNotificationPushToken(
+    params?: AppBskyUnspeccedPutNotificationPushToken.QueryParams,
+    opts?: AppBskyUnspeccedPutNotificationPushToken.CallOptions,
+  ): Promise<AppBskyUnspeccedPutNotificationPushToken.Response> {
+    return this._service.xrpc
+      .call(
+        'app.bsky.unspecced.putNotificationPushToken',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw AppBskyUnspeccedPutNotificationPushToken.toKnownErr(e)
       })
   }
 }

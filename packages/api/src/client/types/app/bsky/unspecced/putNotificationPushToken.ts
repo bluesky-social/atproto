@@ -7,19 +7,15 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 
-export interface QueryParams {}
-
-export interface InputSchema {
-  account: string
-  /** Additionally add a note describing why the invites were enabled */
-  note?: string
-  [k: string]: unknown
+export interface QueryParams {
+  token: string
+  platform: 'ios' | 'android' | 'web' | (string & {})
 }
+
+export type InputSchema = undefined
 
 export interface CallOptions {
   headers?: Headers
-  qp?: QueryParams
-  encoding: 'application/json'
 }
 
 export interface Response {
