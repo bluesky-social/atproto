@@ -6462,15 +6462,6 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.repo.strongRef',
             },
-            embed: {
-              type: 'union',
-              refs: [
-                'lex:app.bsky.embed.images',
-                'lex:app.bsky.embed.external',
-                'lex:app.bsky.embed.record',
-                'lex:app.bsky.embed.recordWithMedia',
-              ],
-            },
             langs: {
               type: 'array',
               maxLength: 3,

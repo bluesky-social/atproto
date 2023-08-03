@@ -29,6 +29,21 @@ export default async (allUsers: User[], date: Generator<string>) => {
     const user = users[userIndex]
     const createdAt = date.next().value
 
+    // Create the miniblog
+    const longText = longPost.text
+
+    let miniblog: { uri: string; cid: string } | undefined
+    miniblog = await user.agent.api.social.waverly.miniblog.create(
+      { repo: user.did },
+      { text: longText, createdAt },
+    )
+    const miniblogRkey = new AtUri(miniblog.uri).rkey
+    const waverlyUri = getWaverlyUri(user.handle, miniblogRkey)
+
+    // Create the embed for the bluesky post
+    // The
+
+    let miniblogLinkEmbedded = false
     let embed: Images | External | undefined
     if (longPost.image) {
       // If there is an embedded image, store it as a blob and embed it
@@ -52,35 +67,34 @@ export default async (allUsers: User[], date: Generator<string>) => {
           thumb: thumbBlob,
         },
       }
+    } else {
+      miniblogLinkEmbedded = true
+      embed = {
+        $type: 'app.bsky.embed.external',
+        external: {
+          uri: waverlyUri,
+          title: truncateString(longText, 60),
+          description: truncateString(longText, 160),
+        },
+      }
     }
 
-    // A miniblog is always created, even if the post is short. This makes the
-    // post editable.
-    const longText = longPost.text
-
-    let miniblog: { uri: string; cid: string } | undefined
-    // Create the post as a `social.waverly.miniblog`
-    miniblog = await user.agent.api.social.waverly.miniblog.create(
-      { repo: user.did },
-      { text: longText, embed, createdAt },
-    )
-    const miniblogRkey = new AtUri(miniblog.uri).rkey
-
-    // Create the bluesky post with an embedded link to the miniblog, and have
-    // the group repost it
-    const miniblogEmbed: External = {
-      $type: 'app.bsky.embed.external',
-      external: {
-        uri: getWaverlyUri(user.handle, miniblogRkey),
-        title: truncateString(longText, 60),
-        description: truncateString(longText, 160),
-      },
+    // Create the bluesky post with an embedded link to the miniblog, if
+    // possible. If not, add the link to the body of the post.
+    const truncateLength = miniblogLinkEmbedded
+      ? maxBskyLength
+      : maxBskyLength - waverlyUri.length - 1
+    let blueskyText = truncateString(longText, truncateLength)
+    if (!miniblogLinkEmbedded) {
+      if (blueskyText.length > 0) blueskyText += ' '
+      blueskyText += waverlyUri
     }
+
     const bskyPost = await user.agent.api.app.bsky.feed.post.create(
       { repo: user.did },
       {
-        text: truncateString(longText, maxBskyLength),
-        embed: miniblogEmbed,
+        text: blueskyText,
+        embed,
         createdAt,
       },
     )
