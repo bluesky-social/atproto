@@ -87,7 +87,8 @@ const main = async () => {
   const viewMaintainerRunning = viewMaintainer.run()
 
   const periodicModerationActionReversal = new PeriodicModerationActionReversal(
-    migrateDb,
+    db,
+    pds.ctx,
   )
   const periodicModerationActionReversalRunning =
     periodicModerationActionReversal.run()
@@ -96,9 +97,16 @@ const main = async () => {
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
     await pds.destroy()
+
+    // Gracefully shutdown view-maintainer
     viewMaintainer.destroy()
     await viewMaintainerRunning
+
+    // Gracefully shutdown periodic-moderation-action-reversal
+    periodicModerationActionReversal.destroy()
     await periodicModerationActionReversalRunning
+
+    // Gracefully shutdown db
     await migrateDb.close()
   })
 }
