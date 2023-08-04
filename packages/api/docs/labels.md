@@ -355,24 +355,24 @@
   <td>porn</td>
   <td>
     <code>general</code><br><strong>Pornography</strong><br>Images of full-frontal nudity (genitalia) in any sexualized context, or explicit sexual activity (meaning contact with genitalia or breasts) even if partially covered. Includes graphic sexual cartoons (often jokes/memes).<br><br>
-    <code>on an account</code><br><strong>Pornography</strong><br>This account contains imagery of full-frontal nudity or explicit sexual activity.<br><br>
-    <code>on content</code><br><strong>Pornography</strong><br>This content contains imagery of full-frontal nudity or explicit sexual activity.<br><br>
+    <code>on an account</code><br><strong>Adult Content</strong><br>This account contains imagery of full-frontal nudity or explicit sexual activity.<br><br>
+    <code>on content</code><br><strong>Adult Content</strong><br>This content contains imagery of full-frontal nudity or explicit sexual activity.<br><br>
   </td>
 </tr>
 <tr>
   <td>sexual</td>
   <td>
     <code>general</code><br><strong>Sexually Suggestive</strong><br>Content that does not meet the level of "pornography", but is still sexual. Some common examples have been selfies and "hornyposting" with underwear on, or partially naked (naked but covered, eg with hands or from side perspective). Sheer/see-through nipples may end up in this category.<br><br>
-    <code>on an account</code><br><strong>Sexually Suggestive</strong><br>This account contains imagery which is sexually suggestive. Common examples include selfies in underwear or in partial undress.<br><br>
-    <code>on content</code><br><strong>Sexually Suggestive</strong><br>This content contains imagery which is sexually suggestive. Common examples include selfies in underwear or in partial undress.<br><br>
+    <code>on an account</code><br><strong>Suggestive Content</strong><br>This account contains imagery which is sexually suggestive. Common examples include selfies in underwear or in partial undress.<br><br>
+    <code>on content</code><br><strong>Suggestive Content</strong><br>This content contains imagery which is sexually suggestive. Common examples include selfies in underwear or in partial undress.<br><br>
   </td>
 </tr>
 <tr>
   <td>nudity</td>
   <td>
     <code>general</code><br><strong>Nudity</strong><br>Nudity which is not sexual, or that is primarily "artistic" in nature. For example: breastfeeding; classic art paintings and sculptures; newspaper images with some nudity; fashion modeling. "Erotic photography" is likely to end up in sexual or porn.<br><br>
-    <code>on an account</code><br><strong>Nudity</strong><br>This account contains imagery which portrays nudity in a non-sexual or artistic setting.<br><br>
-    <code>on content</code><br><strong>Nudity</strong><br>This content contains imagery which portrays nudity in a non-sexual or artistic setting.<br><br>
+    <code>on an account</code><br><strong>Adult Content</strong><br>This account contains imagery which portrays nudity in a non-sexual or artistic setting.<br><br>
+    <code>on content</code><br><strong>Adult Content</strong><br>This content contains imagery which portrays nudity in a non-sexual or artistic setting.<br><br>
   </td>
 </tr>
 <tr>
