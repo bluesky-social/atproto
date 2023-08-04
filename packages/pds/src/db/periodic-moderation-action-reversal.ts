@@ -11,12 +11,7 @@ export class PeriodicModerationActionReversal {
   leader = new Leader(MODERATION_ACTION_REVERSAL_ID, this.db)
   destroyed = false
 
-  constructor(public db: Database, private appContext: AppContext) {
-    assert(
-      this.db.dialect === 'pg',
-      'Moderation action reversal can only be run by postgres',
-    )
-  }
+  constructor(public db: Database, private appContext: AppContext) {}
 
   async revertAction({ id, createdBy }: { id: number; createdBy: string }) {
     return this.db.transaction(async (dbTxn) => {
@@ -30,19 +25,37 @@ export class PeriodicModerationActionReversal {
     })
   }
 
+  async findAndRevertDueActions() {
+    const moderationService = this.appContext.services.moderation(this.db)
+    const actionsDueForReversal =
+      await moderationService.getActionsDueForReversal()
+
+    // We shouldn't have too many actions due for reversal at any given time, so running in parallel is probably fine
+    // Internally, each reversal runs within its own transaction
+    await Promise.allSettled(
+      actionsDueForReversal.map(this.revertAction.bind(this)),
+    )
+  }
+
   async run() {
+    assert(
+      this.db.dialect === 'pg',
+      'Moderation action reversal can only be run by postgres',
+    )
+
     while (!this.destroyed) {
       try {
         const { ran } = await this.leader.run(async ({ signal }) => {
-          // TODO: Figure out how to incorporate signal dependency in here
-          // TODO: Write tests to ensure that this is working
-          const moderationService = this.appContext.services.moderation(this.db)
-          const actionsDueForReversal =
-            await moderationService.getActionsDueForReversal()
-
-          Promise.allSettled(
-            actionsDueForReversal.map(this.revertAction.bind(this)),
-          )
+          while (!signal.aborted) {
+            // super basic synchronization by agreeing when the intervals land relative to unix timestamp
+            const now = Date.now()
+            const intervalMs = 1000 * 60
+            const nextIteration = Math.ceil(now / intervalMs)
+            const nextInMs = nextIteration * intervalMs - now
+            await wait(nextInMs)
+            if (signal.aborted) break
+            await this.findAndRevertDueActions()
+          }
         })
         if (ran && !this.destroyed) {
           throw new Error('View maintainer completed, but should be persistent')
