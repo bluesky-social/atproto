@@ -26,7 +26,7 @@ describe('labeler', () => {
 
   beforeAll(async () => {
     server = await runTestServer({
-      dbPostgresSchema: 'views_author_feed',
+      dbPostgresSchema: 'labeler',
     })
     close = server.close
     ctx = server.ctx
