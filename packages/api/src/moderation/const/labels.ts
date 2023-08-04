@@ -167,14 +167,14 @@ export const LABELS: LabelDefinitionMap = {
       },
       account: {
         en: {
-          name: 'Pornography',
+          name: 'Adult Content',
           description:
             'This account contains imagery of full-frontal nudity or explicit sexual activity.',
         },
       },
       content: {
         en: {
-          name: 'Pornography',
+          name: 'Adult Content',
           description:
             'This content contains imagery of full-frontal nudity or explicit sexual activity.',
         },
@@ -198,14 +198,14 @@ export const LABELS: LabelDefinitionMap = {
       },
       account: {
         en: {
-          name: 'Sexually Suggestive',
+          name: 'Suggestive Content',
           description:
             'This account contains imagery which is sexually suggestive. Common examples include selfies in underwear or in partial undress.',
         },
       },
       content: {
         en: {
-          name: 'Sexually Suggestive',
+          name: 'Suggestive Content',
           description:
             'This content contains imagery which is sexually suggestive. Common examples include selfies in underwear or in partial undress.',
         },
@@ -229,14 +229,14 @@ export const LABELS: LabelDefinitionMap = {
       },
       account: {
         en: {
-          name: 'Nudity',
+          name: 'Adult Content',
           description:
             'This account contains imagery which portrays nudity in a non-sexual or artistic setting.',
         },
       },
       content: {
         en: {
-          name: 'Nudity',
+          name: 'Adult Content',
           description:
             'This content contains imagery which portrays nudity in a non-sexual or artistic setting.',
         },
