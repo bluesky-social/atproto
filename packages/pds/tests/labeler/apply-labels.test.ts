@@ -17,7 +17,7 @@ describe('unspecced.applyLabels', () => {
 
   beforeAll(async () => {
     server = await runTestServer({
-      dbPostgresSchema: 'moderation',
+      dbPostgresSchema: 'apply_labels',
     })
     close = server.close
     agent = new AtpAgent({ service: server.url })

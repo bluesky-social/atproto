@@ -6,9 +6,25 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ input, auth }) => {
+      const requester = auth.credentials.did
+
+      if (ctx.shouldProxyModeration()) {
+        const { data: result } =
+          await ctx.appviewAgent.com.atproto.moderation.createReport(
+            input.body,
+            {
+              ...(await ctx.serviceAuthHeaders(requester)),
+              encoding: 'application/json',
+            },
+          )
+        return {
+          encoding: 'application/json',
+          body: result,
+        }
+      }
+
       const { db, services } = ctx
       const { reasonType, reason, subject } = input.body
-      const requester = auth.credentials.did
 
       const moderationService = services.moderation(db)
 

@@ -66,6 +66,7 @@ export interface ServerConfigValues {
   dbTxLockNonce?: string
 
   bskyAppViewEndpoint?: string
+  bskyAppViewModeration?: boolean
   bskyAppViewDid?: string
   bskyAppViewProxy: boolean
 
@@ -211,6 +212,8 @@ export class ServerConfig {
     const bskyAppViewEndpoint = nonemptyString(
       process.env.BSKY_APP_VIEW_ENDPOINT,
     )
+    const bskyAppViewModeration =
+      process.env.BSKY_APP_VIEW_MODERATION === 'true' ? true : false
     const bskyAppViewDid = nonemptyString(process.env.BSKY_APP_VIEW_DID)
     const bskyAppViewProxy =
       process.env.BSKY_APP_VIEW_PROXY === 'true' ? true : false
@@ -268,6 +271,7 @@ export class ServerConfig {
       sequencerLeaderEnabled,
       dbTxLockNonce,
       bskyAppViewEndpoint,
+      bskyAppViewModeration,
       bskyAppViewDid,
       bskyAppViewProxy,
       crawlersToNotify,
@@ -495,6 +499,10 @@ export class ServerConfig {
 
   get bskyAppViewEndpoint() {
     return this.cfg.bskyAppViewEndpoint
+  }
+
+  get bskyAppViewModeration() {
+    return this.cfg.bskyAppViewModeration
   }
 
   get bskyAppViewDid() {
