@@ -9,6 +9,7 @@ import {
   TAKEDOWN,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { getSubject, getAction } from '../moderation/util'
+import { addHoursToDate } from '../../../../util/date'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
@@ -25,6 +26,7 @@ export default function (server: Server, ctx: AppContext) {
         createLabelVals,
         negateLabelVals,
         subjectBlobCids,
+        actionDurationInHours,
       } = input.body
 
       // apply access rules
@@ -55,6 +57,10 @@ export default function (server: Server, ctx: AppContext) {
         const moderationTxn = services.moderation(dbTxn)
         const labelTxn = services.label(dbTxn)
 
+        const actionExpiresAt = actionDurationInHours
+          ? addHoursToDate(actionDurationInHours).toISOString()
+          : undefined
+
         const result = await moderationTxn.logAction({
           action: getAction(action),
           subject: getSubject(subject),
@@ -63,6 +69,8 @@ export default function (server: Server, ctx: AppContext) {
           negateLabelVals,
           createdBy,
           reason,
+          actionDurationInHours,
+          actionExpiresAt,
         })
 
         if (

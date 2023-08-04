@@ -242,6 +242,8 @@ export class ModerationService {
     negateLabelVals?: string[]
     createdBy: string
     createdAt?: Date
+    actionDurationInHours?: number
+    actionExpiresAt?: string
   }): Promise<ModerationActionRow> {
     this.db.assertTransaction()
     const {
@@ -250,6 +252,8 @@ export class ModerationService {
       reason,
       subject,
       subjectBlobCids,
+      actionDurationInHours,
+      actionExpiresAt,
       createdAt = new Date(),
     } = info
     const createLabelVals =
@@ -301,6 +305,8 @@ export class ModerationService {
         createdBy,
         createLabelVals,
         negateLabelVals,
+        actionDurationInHours,
+        actionExpiresAt,
         ...subjectInfo,
       })
       .returningAll()
