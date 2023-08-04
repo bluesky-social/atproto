@@ -379,7 +379,8 @@
       "quoteAuthor": "alice",
       "labels": {"quotedPost": ["porn"]},
       "behaviors": {
-        "content": {"cause": "label:porn", "filter": true}
+        "content": {"cause": "label:porn", "filter": true},
+        "embed": {"cause": "label:porn", "blur": true}
       }
     },
     "Blur-media label ('porn') on quoted author account (hide)": {
@@ -428,6 +429,7 @@
       "quoteAuthor": "alice",
       "labels": {"quotedPost": ["porn"]},
       "behaviors": {
+        "embed": {"cause": "label:porn", "blur": true}
       }
     },
     "Blur-media label ('porn') on quoted author account (warn)": {
@@ -653,7 +655,8 @@
       "quoteAuthor": "alice",
       "labels": {"quotedPost": ["porn"]},
       "behaviors": {
-        "content": {"cause": "label:porn", "filter": true}
+        "content": {"cause": "label:porn", "filter": true},
+        "embed": {"cause": "label:porn", "blur": true, "noOverride": true}
       }
     },
     "Adult-only label on quoted author account when adult content is disabled": {

@@ -148,6 +148,9 @@ export function moderatePost(
     quote = decideQuotedPostWithMedia(subject.embed, opts)
     quotedAccount = decideQuotedPostWithMediaAccount(subject.embed, opts)
   }
+  if (quote?.blurMedia) {
+    quote.blur = true // treat blurMedia of quote as blur of quote
+  }
 
   // downgrade based on authorship
   if (!isModerationDecisionNoop(post) && post.did === opts.userDid) {
