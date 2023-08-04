@@ -21,8 +21,10 @@ export class TestNetwork extends TestNetworkNoAppView {
   static async create(
     params: Partial<TestServerParams> = {},
   ): Promise<TestNetwork> {
+    const redisHost = process.env.REDIS_HOST
     const dbPostgresUrl = params.dbPostgresUrl || process.env.DB_POSTGRES_URL
     assert(dbPostgresUrl, 'Missing postgres url for tests')
+    assert(redisHost, 'Missing redis host for tests')
     const dbPostgresSchema =
       params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
 
@@ -36,6 +38,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       repoProvider: `ws://localhost:${pdsPort}`,
       dbPostgresSchema: `appview_${dbPostgresSchema}`,
       dbPostgresUrl,
+      redisHost,
       ...params.bsky,
     })
     const pds = await TestPds.create({
@@ -54,14 +57,11 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async processFullSubscription(timeout = 5000) {
-    const sub = this.bsky.sub
-    if (!sub) return
+    const sub = this.bsky.indexer.sub
     const { db } = this.pds.ctx.db
     const start = Date.now()
     while (Date.now() - start < timeout) {
       await wait(50)
-      if (!sub) return
-      const state = await sub.getState()
       if (!this.pds.ctx.sequencerLeader) {
         throw new Error('Sequencer leader not configured on the pds')
       }
@@ -72,7 +72,12 @@ export class TestNetwork extends TestNetworkNoAppView {
         .where('seq', 'is not', null)
         .select(db.fn.max('repo_seq.seq').as('lastSeq'))
         .executeTakeFirstOrThrow()
-      if (state.cursor === lastSeq) return
+      const { cursor } = sub.partitions.get(0)
+      if (cursor === lastSeq) {
+        // has seen last seq, just need to wait for it to finish processing
+        await sub.repoQueue.main.onIdle()
+        return
+      }
     }
     throw new Error(`Sequence was not processed within ${timeout}ms`)
   }

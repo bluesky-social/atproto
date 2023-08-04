@@ -8,6 +8,7 @@ export interface UserAccount {
   passwordResetToken: string | null
   passwordResetGrantedAt: string | null
   invitesDisabled: Generated<0 | 1>
+  inviteNote: string | null
 }
 
 export type UserAccountEntry = Selectable<UserAccount>

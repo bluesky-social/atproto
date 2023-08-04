@@ -133,6 +133,25 @@ export class GraphService {
       .select(['creator', 'subjectDid'])
   }
 
+  blockRefQb(first: DbRef, second: DbRef) {
+    return this.db.db
+      .selectFrom('actor_block')
+      .where((outer) =>
+        outer
+          .where((qb) =>
+            qb
+              .whereRef('actor_block.creator', '=', first)
+              .whereRef('actor_block.subjectDid', '=', second),
+          )
+          .orWhere((qb) =>
+            qb
+              .whereRef('actor_block.subjectDid', '=', first)
+              .whereRef('actor_block.creator', '=', second),
+          ),
+      )
+      .select(['creator', 'subjectDid'])
+  }
+
   async getBlocks(
     requester: string,
     subjectHandleOrDid: string,

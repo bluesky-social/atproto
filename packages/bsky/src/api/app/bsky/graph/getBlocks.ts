@@ -33,7 +33,10 @@ export default function (server: Server, ctx: AppContext) {
       const blocksRes = await blocksReq.execute()
 
       const actorService = services.actor(db)
-      const blocks = await actorService.views.profile(blocksRes, requester)
+      const blocks = await actorService.views.hydrateProfiles(
+        blocksRes,
+        requester,
+      )
 
       return {
         encoding: 'application/json',

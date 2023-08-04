@@ -204,7 +204,8 @@
           "type": "ref",
           "ref": "com.atproto.server.defs#inviteCode"
         },
-        "invitesDisabled": { "type": "boolean" }
+        "invitesDisabled": { "type": "boolean" },
+        "inviteNote": { "type": "string" }
       }
     },
     "repoViewDetail": {
@@ -238,7 +239,8 @@
             "ref": "com.atproto.server.defs#inviteCode"
           }
         },
-        "invitesDisabled": { "type": "boolean" }
+        "invitesDisabled": { "type": "boolean" },
+        "inviteNote": { "type": "string" }
       }
     },
     "repoViewNotFound": {
