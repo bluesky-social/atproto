@@ -199,6 +199,17 @@ export default function (server: Server, ctx: AppContext) {
       } = auth
       const db = ctx.db.db
       try {
+        // check if token already exists
+        const existing = await db
+          .selectFrom('notification_push_token')
+          .where('did', '=', did)
+          .where('token', '=', token)
+          .execute()
+        if (existing.length) {
+          return
+        }
+
+        // if token doesn't exist, insert it
         await db
           .insertInto('notification_push_token')
           .values({
@@ -208,7 +219,7 @@ export default function (server: Server, ctx: AppContext) {
           })
           .execute()
       } catch (error) {
-        console.log(error)
+        throw new Error('Failed to insert notification token')
       }
     },
   })
