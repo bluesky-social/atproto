@@ -27,7 +27,8 @@
             "type": "blob",
             "accept": ["image/png", "image/jpeg"],
             "maxSize": 1000000
-          }
+          },
+          "labels": {"type": "ref", "ref": "com.atproto.label.defs#selfLabels"}
         }
       }
     }

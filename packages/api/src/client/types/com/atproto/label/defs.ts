@@ -34,3 +34,24 @@ export function isLabel(v: unknown): v is Label {
 export function validateLabel(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.label.defs#label', v)
 }
+
+export type SelfLabels = (SelfLabel | { $type: string; [k: string]: unknown })[]
+
+/** Metadata tag on an atproto record, published by the author within the record. Note -- schemas should use #selfLabels, not #selfLabel. */
+export interface SelfLabel {
+  /** the short string name of the value or type of this label */
+  val: string
+  [k: string]: unknown
+}
+
+export function isSelfLabel(v: unknown): v is SelfLabel {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.label.defs#selfLabel'
+  )
+}
+
+export function validateSelfLabel(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.label.defs#selfLabel', v)
+}
