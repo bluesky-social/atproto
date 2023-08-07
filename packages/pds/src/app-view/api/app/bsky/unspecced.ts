@@ -9,6 +9,7 @@ import { isViewRecord } from '../../../../lexicon/types/app/bsky/embed/record'
 import { countAll, valuesList } from '../../../../db/util'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { GeneratorView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
+import { NotificationServer } from '../../../../notifications'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   '!no-promote',
@@ -197,29 +198,16 @@ export default function (server: Server, ctx: AppContext) {
       const {
         credentials: { did },
       } = auth
-      const db = ctx.db.db
+      const db = ctx.db
+      const notificationServer = new NotificationServer({ db: db })
       try {
-        // check if token already exists
-        const existing = await db
-          .selectFrom('notification_push_token')
-          .where('did', '=', did)
-          .where('token', '=', token)
-          .execute()
-        if (existing.length) {
-          return
-        }
-
-        // if token doesn't exist, insert it
-        await db
-          .insertInto('notification_push_token')
-          .values({
-            did,
-            token,
-            platform,
-          })
-          .execute()
+        await notificationServer.registerDeviceForPushNotifications(
+          did,
+          platform,
+          token,
+        )
       } catch (error) {
-        throw new Error('Failed to insert notification token')
+        throw new Error('Failed to register device push notification token')
       }
     },
   })

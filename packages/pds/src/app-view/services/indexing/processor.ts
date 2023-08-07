@@ -6,6 +6,7 @@ import DatabaseSchema from '../../../db/database-schema'
 import { BackgroundQueue } from '../../../event-stream/background-queue'
 import { lexicons } from '../../../lexicon/lexicons'
 import { UserNotification } from '../../../db/tables/user-notification'
+import { NotificationServer } from '../../../notifications'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
 // (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).
@@ -35,12 +36,16 @@ type RecordProcessorParams<T, S> = {
 export class RecordProcessor<T, S> {
   collection: string
   db: DatabaseSchema
+  notifServer: NotificationServer
   constructor(
     private appDb: Database,
     private backgroundQueue: BackgroundQueue,
     private params: RecordProcessorParams<T, S>,
   ) {
     this.db = appDb.db
+    this.notifServer = new NotificationServer({
+      db: appDb,
+    })
     this.collection = this.params.lexId
   }
 
@@ -194,6 +199,7 @@ export class RecordProcessor<T, S> {
   async handleNotifs(op: { deleted?: S; inserted?: S }) {
     let notifs: UserNotification[] = []
     const runOnCommit: ((db: Database) => Promise<void>)[] = []
+
     if (op.deleted) {
       const forDelete = this.params.notifsForDelete(
         op.deleted,
@@ -213,9 +219,15 @@ export class RecordProcessor<T, S> {
     } else if (op.inserted) {
       notifs = this.params.notifsForInsert(op.inserted)
     }
+
     if (notifs.length > 0) {
       runOnCommit.push(async (db) => {
+        // 1. insert notifs
         await db.db.insertInto('user_notification').values(notifs).execute()
+        // 2. prepare notifs to send
+        const notifsToSend = await this.notifServer.prepareNotifsToSend(notifs)
+        // 3. send notifs
+        await this.notifServer.sendPushNotifications(notifsToSend)
       })
     }
     if (runOnCommit.length) {
