@@ -29,8 +29,8 @@ export default function (server: Server, ctx: AppContext) {
       for (const uri of uris) {
         const post = postViews[uri]
         const isBlocked =
-          post.author.viewer?.blockedBy === true ||
-          typeof post.author.viewer?.blocking === 'string'
+          post?.author.viewer?.blockedBy === true ||
+          typeof post?.author.viewer?.blocking === 'string'
 
         if (post && !isBlocked) {
           posts.push(post)
