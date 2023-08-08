@@ -207,6 +207,13 @@ export class AppContext {
     )
   }
 
+  shouldProxyModeration(): boolean {
+    return (
+      this.cfg.bskyAppViewEndpoint !== undefined &&
+      this.cfg.bskyAppViewModeration === true
+    )
+  }
+
   canProxyWrite(): boolean {
     return (
       this.cfg.bskyAppViewEndpoint !== undefined &&

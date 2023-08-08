@@ -343,6 +343,9 @@ export const schemaDict = {
           invitesDisabled: {
             type: 'boolean',
           },
+          inviteNote: {
+            type: 'string',
+          },
         },
       },
       repoViewDetail: {
@@ -400,6 +403,9 @@ export const schemaDict = {
           },
           invitesDisabled: {
             type: 'boolean',
+          },
+          inviteNote: {
+            type: 'string',
           },
         },
       },
@@ -530,7 +536,6 @@ export const schemaDict = {
       },
       moderation: {
         type: 'object',
-        required: [],
         properties: {
           currentAction: {
             type: 'ref',
@@ -640,6 +645,11 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
+              note: {
+                type: 'string',
+                description:
+                  'Additionally add a note describing why the invites were disabled',
+              },
             },
           },
         },
@@ -693,6 +703,11 @@ export const schemaDict = {
               account: {
                 type: 'string',
                 format: 'did',
+              },
+              note: {
+                type: 'string',
+                description:
+                  'Additionally add a note describing why the invites were enabled',
               },
             },
           },
@@ -1652,7 +1667,7 @@ export const schemaDict = {
       },
       reasonSexual: {
         type: 'token',
-        description: 'Unwanted or mis-labeled sexual content',
+        description: 'Unwanted or mislabeled sexual content',
       },
       reasonRude: {
         type: 'token',
@@ -6278,6 +6293,32 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedApplyLabels: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.applyLabels',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Allow a labeler to apply labels directly.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['labels'],
+            properties: {
+              labels: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.label.defs#label',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetPopular: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getPopular',
@@ -6545,6 +6586,7 @@ export const ids = {
     'app.bsky.notification.listNotifications',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
+  AppBskyUnspeccedApplyLabels: 'app.bsky.unspecced.applyLabels',
   AppBskyUnspeccedGetPopular: 'app.bsky.unspecced.getPopular',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',

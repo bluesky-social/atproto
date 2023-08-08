@@ -3,9 +3,9 @@ import { cidForCbor, TID } from '@atproto/common'
 import { WriteOpAction } from '@atproto/repo'
 import { TestNetwork } from '@atproto/dev-env'
 import { Database } from '../src'
-import * as lex from '../src/lexicon/lexicons'
-import { Services } from '../src/services'
 import { Primary } from '../src/db'
+import * as lex from '../src/lexicon/lexicons'
+import { Services } from '../src/indexer/services'
 
 describe('duplicate record', () => {
   let network: TestNetwork
@@ -17,8 +17,8 @@ describe('duplicate record', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_duplicates',
     })
-    db = network.bsky.ctx.dbPrimary
-    services = network.bsky.ctx.services
+    db = network.bsky.indexer.ctx.db
+    services = network.bsky.indexer.ctx.services
     did = 'did:example:alice'
   })
 

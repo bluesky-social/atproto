@@ -43,7 +43,13 @@ export default function (server: Server, ctx: AppContext) {
         )
         .where(notSoftDeletedClause(ref('creator_repo')))
         .whereNotExists(
-          graphService.blockQb(requester, [ref('follow.subjectDid')]),
+          graphService.blockQb(requester, [ref('follow.creator')]),
+        )
+        .whereNotExists(
+          graphService.blockRefQb(
+            ref('follow.subjectDid'),
+            ref('follow.creator'),
+          ),
         )
         .selectAll('creator')
         .select(['follow.cid as cid', 'follow.createdAt as createdAt'])
@@ -60,9 +66,12 @@ export default function (server: Server, ctx: AppContext) {
 
       const followersRes = await followersReq.execute()
       const [followers, subject] = await Promise.all([
-        actorService.views.profile(followersRes, requester),
+        actorService.views.hydrateProfiles(followersRes, requester),
         actorService.views.profile(subjectRes, requester),
       ])
+      if (!subject) {
+        throw new InvalidRequestError(`Actor not found: ${actor}`)
+      }
 
       return {
         encoding: 'application/json',

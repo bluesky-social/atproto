@@ -73,6 +73,16 @@ export const parseBasicAuth = (
   return { username, password }
 }
 
+export const buildBasicAuth = (username: string, password: string): string => {
+  return (
+    BASIC +
+    uint8arrays.toString(
+      uint8arrays.fromString(`${username}:${password}`, 'utf8'),
+      'base64pad',
+    )
+  )
+}
+
 export const getJwtStrFromReq = (req: express.Request): string | null => {
   const { authorization = '' } = req.headers
   if (!authorization.startsWith(BEARER)) {

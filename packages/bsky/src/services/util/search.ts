@@ -83,7 +83,6 @@ const getMatchingAccountsQb = (
     )
     .where('actor.handle', 'is not', null)
     .where(similar(term, ref('handle'))) // Coarse filter engaging trigram index
-    .where(distanceAccount, '<', getMatchThreshold(term)) // Refines results from trigram index
     .select(['actor.did as did', distanceAccount.as('distance')])
 }
 
@@ -103,7 +102,6 @@ const getMatchingProfilesQb = (
     )
     .where('actor.handle', 'is not', null)
     .where(similar(term, ref('displayName'))) // Coarse filter engaging trigram index
-    .where(distanceProfile, '<', getMatchThreshold(term)) // Refines results from trigram index
     .select(['profile.creator as did', distanceProfile.as('distance')])
 }
 
@@ -139,17 +137,11 @@ export const cleanTerm = (term: string) => term.trim().replace(/^@/g, '')
 
 // Uses pg_trgm strict word similarity to check similarity between a search term and a stored value
 const distance = (term: string, ref: DbRef) =>
-  sql<number>`(${term} <<<-> ${ref})`
+  sql<number>`(${term} <<-> ${ref})`
 
-// Can utilize trigram index to match on strict word similarity
-const similar = (term: string, ref: DbRef) => sql<boolean>`(${term} <<% ${ref})`
-
-const getMatchThreshold = (term: string) => {
-  // Performing matching by word using "strict word similarity" operator.
-  // The more characters the user gives us, the more we can ratchet down
-  // the distance threshold for matching.
-  return term.length < 3 ? 0.9 : 0.8
-}
+// Can utilize trigram index to match on strict word similarity.
+// The word_similarity_threshold is set to .4 (i.e. distance < .6) in db/index.ts.
+const similar = (term: string, ref: DbRef) => sql<boolean>`(${term} <% ${ref})`
 
 type Result = { distance: number; did: string }
 type LabeledResult = { primary: number; secondary: string }

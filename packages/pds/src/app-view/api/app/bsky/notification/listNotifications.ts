@@ -112,7 +112,7 @@ export default function (server: Server, ctx: AppContext) {
       const recordUris = notifs.map((notif) => notif.uri)
       const [blocks, authors, labels] = await Promise.all([
         blocksQb ? blocksQb.execute() : emptyBlocksResult,
-        actorService.views.profile(
+        actorService.views.profiles(
           notifs.map((notif) => ({
             did: notif.authorDid,
             handle: notif.authorHandle,
@@ -127,13 +127,14 @@ export default function (server: Server, ctx: AppContext) {
         return acc
       }, {} as Record<string, Uint8Array>)
 
-      const notifications = notifs.flatMap((notif, i) => {
+      const notifications = common.mapDefined(notifs, (notif) => {
         const bytes = bytesByCid[notif.cid]
-        if (!bytes) return [] // Filter out
+        const author = authors[notif.authorDid]
+        if (!bytes || !author) return undefined
         return {
           uri: notif.uri,
           cid: notif.cid,
-          author: authors[i],
+          author: authors[notif.authorDid],
           reason: notif.reason,
           reasonSubject: notif.reasonSubject || undefined,
           record: common.cborBytesToRecord(bytes),
