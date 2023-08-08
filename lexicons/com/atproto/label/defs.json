@@ -39,13 +39,16 @@
       }
     },
     "selfLabels": {
-      "type": "array",
+      "type": "object",
       "description": "Metadata tags on an atproto record, published by the author within the record.",
-      "items": {
-        "type": "union",
-        "refs": ["#selfLabel"]
-      },
-      "maxLength": 10
+      "required": ["values"],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#selfLabel" },
+          "maxLength": 10
+        }
+      }
     },
     "selfLabel": {
       "type": "object",

@@ -1442,14 +1442,20 @@ export const schemaDict = {
         },
       },
       selfLabels: {
-        type: 'array',
+        type: 'object',
         description:
           'Metadata tags on an atproto record, published by the author within the record.',
-        items: {
-          type: 'union',
-          refs: ['lex:com.atproto.label.defs#selfLabel'],
+        required: ['values'],
+        properties: {
+          values: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#selfLabel',
+            },
+            maxLength: 10,
+          },
         },
-        maxLength: 10,
       },
       selfLabel: {
         type: 'object',
@@ -3950,8 +3956,8 @@ export const schemaDict = {
               maxSize: 1000000,
             },
             labels: {
-              type: 'ref',
-              ref: 'lex:com.atproto.label.defs#selfLabels',
+              type: 'union',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
             },
           },
         },
@@ -4700,8 +4706,8 @@ export const schemaDict = {
               maxSize: 1000000,
             },
             labels: {
-              type: 'ref',
-              ref: 'lex:com.atproto.label.defs#selfLabels',
+              type: 'union',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
             },
             createdAt: {
               type: 'string',
@@ -5354,8 +5360,8 @@ export const schemaDict = {
               },
             },
             labels: {
-              type: 'ref',
-              ref: 'lex:com.atproto.label.defs#selfLabels',
+              type: 'union',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
             },
             createdAt: {
               type: 'string',
@@ -5977,8 +5983,8 @@ export const schemaDict = {
               maxSize: 1000000,
             },
             labels: {
-              type: 'ref',
-              ref: 'lex:com.atproto.label.defs#selfLabels',
+              type: 'union',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
             },
             createdAt: {
               type: 'string',

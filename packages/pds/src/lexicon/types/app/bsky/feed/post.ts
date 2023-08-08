@@ -26,7 +26,9 @@ export interface Record {
     | AppBskyEmbedRecordWithMedia.Main
     | { $type: string; [k: string]: unknown }
   langs?: string[]
-  labels?: ComAtprotoLabelDefs.SelfLabels
+  labels?:
+    | ComAtprotoLabelDefs.SelfLabels
+    | { $type: string; [k: string]: unknown }
   createdAt: string
   [k: string]: unknown
 }

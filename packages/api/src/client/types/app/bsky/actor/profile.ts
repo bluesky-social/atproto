@@ -12,7 +12,9 @@ export interface Record {
   description?: string
   avatar?: BlobRef
   banner?: BlobRef
-  labels?: ComAtprotoLabelDefs.SelfLabels
+  labels?:
+    | ComAtprotoLabelDefs.SelfLabels
+    | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
 

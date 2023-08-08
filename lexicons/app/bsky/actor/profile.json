@@ -28,7 +28,10 @@
             "accept": ["image/png", "image/jpeg"],
             "maxSize": 1000000
           },
-          "labels": {"type": "ref", "ref": "com.atproto.label.defs#selfLabels"}
+          "labels": {
+            "type": "union",
+            "refs": ["com.atproto.label.defs#selfLabels"]
+          }
         }
       }
     }
