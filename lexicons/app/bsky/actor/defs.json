@@ -65,9 +65,9 @@
         },
         "avatar": { "type": "string" },
         "banner": { "type": "string" },
-        "followersCount": {"type": "integer"},
-        "followsCount": {"type": "integer"},
-        "postsCount": {"type": "integer"},
+        "followersCount": {"type": "integer", "minimum": 0},
+        "followsCount": {"type": "integer", "minimum": 0},
+        "postsCount": {"type": "integer", "minimum": 0},
         "indexedAt": {"type": "string", "format": "datetime"},
         "viewer": {"type": "ref", "ref": "#viewerState"},
         "labels": {
