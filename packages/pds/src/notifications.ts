@@ -126,13 +126,14 @@ export class NotificationServer {
     appId = BSKY_APP_ID,
   ) {
     try {
-      // check if token already exists
+      // check if token did pair already exists
       const existing = await this.db.db
         .selectFrom('notification_push_token')
         .where('did', '=', did)
         .where('token', '=', token)
-        .execute()
-      if (existing.length) {
+        .selectAll()
+        .executeTakeFirst()
+      if (existing) {
         return
       }
 
