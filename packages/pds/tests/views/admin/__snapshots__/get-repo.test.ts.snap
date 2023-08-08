@@ -86,6 +86,17 @@ Object {
       },
       "description": "its me!",
       "displayName": "ali",
+      "labels": Object {
+        "$type": "com.atproto.label.defs#selfLabels",
+        "values": Array [
+          Object {
+            "val": "self-label-a",
+          },
+          Object {
+            "val": "self-label-b",
+          },
+        ],
+      },
     },
   ],
 }
@@ -192,6 +203,17 @@ Object {
       },
       "description": "its me!",
       "displayName": "ali",
+      "labels": Object {
+        "$type": "com.atproto.label.defs#selfLabels",
+        "values": Array [
+          Object {
+            "val": "self-label-a",
+          },
+          Object {
+            "val": "self-label-b",
+          },
+        ],
+      },
     },
   ],
 }
