@@ -15,6 +15,9 @@ type PushNotification = {
   title: string
   message: string
   topic: string
+  data?: {
+    [key: string]: string
+  }
 }
 
 export class NotificationServer {
@@ -65,6 +68,11 @@ export class NotificationServer {
             title: title,
             message: body,
             topic: appId,
+            data: {
+              reason: notif.reason,
+              recordUri: notif.recordUri,
+              recordCid: notif.recordCid,
+            },
           })
         } else if (platform === 'android') {
           notifsToSend.push({
@@ -73,6 +81,11 @@ export class NotificationServer {
             title: title,
             message: body,
             topic: appId,
+            data: {
+              reason: notif.reason,
+              recordUri: notif.recordUri,
+              recordCid: notif.recordCid,
+            },
           })
         } else {
           // TODO: Handle web notifs
@@ -173,11 +186,8 @@ export class NotificationServer {
     const {
       author: authorDid,
       reason,
-      indexedAt,
       reasonSubject: subjectUri, // if like/reply/quote/emtion, the post which was liked/replied to/mention is in/or quoted. if custom feed liked, the feed which was liked
-      recordCid,
       recordUri,
-      userDid,
     } = notif
     // 1. Get author's display name
     const displayName = await this.db.db
