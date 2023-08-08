@@ -37,10 +37,9 @@ export default function (server: Server, ctx: AppContext) {
 
       if (params.filter === 'posts_with_media') {
         // only posts with media
-        feedItemsQb = feedItemsQb.innerJoin(
-          'post_embed_image',
-          'post_embed_image.postUri',
-          'feed_item.postUri',
+        feedItemsQb = feedItemsQb.whereExists(qb =>
+          qb.selectFrom('post_embed_image')
+            .where('post_embed_image.postUri', '=', 'feed_item.postUri')
         )
       } else if (params.filter === 'posts_no_replies') {
         // only posts, no replies
