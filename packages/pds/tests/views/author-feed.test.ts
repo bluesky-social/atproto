@@ -9,6 +9,8 @@ import {
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
+import { isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
+import { validateMain as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
 
 describe('pds author feed views', () => {
   let agent: AtpAgent
@@ -274,5 +276,50 @@ describe('pds author feed views', () => {
 
     // Cleanup
     await reverseModerationAction(takedownAction.id)
+  })
+
+  it('can filter by type', async () => {
+    const { data: allFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: carol },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(
+      allFeed.feed.some(({ post }) => {
+        return isRecord(post.record) && Boolean(post.record.reply)
+      }),
+    ).toBeTruthy()
+    expect(
+      allFeed.feed.some(({ post }) => {
+        return isEmbedRecordWithMedia(post.record)
+      }),
+    ).toBeTruthy()
+
+    const { data: mediaFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
+      {
+        actor: carol,
+        filter: 'media',
+      },
+      {
+        headers: sc.getHeaders(alice),
+      },
+    )
+
+    expect(
+      mediaFeed.feed.every(({ post }) => {
+        return isEmbedRecordWithMedia(post.record)
+      }),
+    ).toBeTruthy()
+
+    const { data: postsOnlyFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: carol, filter: 'posts' },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(
+      postsOnlyFeed.feed.every(({ post }) => {
+        return isRecord(post.record) && !Boolean(post.record.reply)
+      }),
+    ).toBeTruthy()
   })
 })
