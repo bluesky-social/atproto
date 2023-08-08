@@ -170,7 +170,7 @@ export class TestBsky {
   async close() {
     await this.server.destroy({ skipDb: true })
     await this.ingester.destroy({ skipDb: true })
-    this.indexer.destroy() // closes shared db
+    await this.indexer.destroy() // closes shared db
   }
 }
 
