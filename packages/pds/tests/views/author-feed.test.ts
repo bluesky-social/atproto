@@ -292,8 +292,9 @@ describe('pds author feed views', () => {
     ).toBeTruthy()
     expect(
       allFeed.feed.some(({ post }) => {
-        return isEmbedRecordWithMedia(post.embed) &&
-          isImageEmbed(post.embed?.media)
+        return (
+          isEmbedRecordWithMedia(post.embed) && isImageEmbed(post.embed?.media)
+        )
       }),
     ).toBeTruthy()
 
@@ -309,8 +310,9 @@ describe('pds author feed views', () => {
 
     expect(
       mediaFeed.feed.every(({ post }) => {
-        return isEmbedRecordWithMedia(post.embed) &&
-          isImageEmbed(post.embed?.media)
+        return (
+          isEmbedRecordWithMedia(post.embed) && isImageEmbed(post.embed?.media)
+        )
       }),
     ).toBeTruthy()
 
