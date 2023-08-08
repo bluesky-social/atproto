@@ -263,7 +263,7 @@ describe('pds author feed views', () => {
     ).toBeTruthy()
 
     const { data: postsOnlyFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { actor: carol, filter: 'posts_only' },
+      { actor: carol, filter: 'posts_no_replies' },
     )
 
     expect(

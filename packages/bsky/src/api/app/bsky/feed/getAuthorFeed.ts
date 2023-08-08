@@ -58,7 +58,7 @@ export default function (server: Server, ctx: AppContext) {
           'post_embed_image.postUri',
           'feed_item.postUri',
         )
-      } else if (filter === 'posts_only') {
+      } else if (filter === 'posts_no_replies') {
         // only posts, no replies
         feedItemsQb = feedItemsQb.where('post.replyParent', 'is', null)
       }

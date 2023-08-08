@@ -4754,12 +4754,8 @@ export const schemaDict = {
             },
             filter: {
               type: 'string',
-              knownValues: [
-                'posts_and_replies',
-                'posts_only',
-                'posts_with_media',
-              ],
-              default: 'posts_and_replies',
+              knownValues: ['posts', 'posts_no_replies', 'posts_with_media'],
+              default: 'posts',
             },
           },
         },
