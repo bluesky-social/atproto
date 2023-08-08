@@ -298,7 +298,7 @@ describe('pds author feed views', () => {
     const { data: mediaFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
       {
         actor: carol,
-        filter: 'media',
+        filter: 'posts_with_media',
       },
       {
         headers: sc.getHeaders(alice),
@@ -312,7 +312,7 @@ describe('pds author feed views', () => {
     ).toBeTruthy()
 
     const { data: postsOnlyFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { actor: carol, filter: 'posts' },
+      { actor: carol, filter: 'posts_only' },
       { headers: sc.getHeaders(alice) },
     )
 

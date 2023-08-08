@@ -12,7 +12,11 @@ export interface QueryParams {
   actor: string
   limit?: number
   cursor?: string
-  filter?: 'posts_and_replies' | 'posts' | 'media' | (string & {})
+  filter?:
+    | 'posts_and_replies'
+    | 'posts_only'
+    | 'posts_with_media'
+    | (string & {})
 }
 
 export type InputSchema = undefined

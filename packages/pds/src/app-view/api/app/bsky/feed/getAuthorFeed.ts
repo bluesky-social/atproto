@@ -35,14 +35,14 @@ export default function (server: Server, ctx: AppContext) {
       // defaults to posts, reposts, and replies
       let feedItemsQb = getFeedItemsQb(ctx, { actor })
 
-      if (params.filter === 'media') {
+      if (params.filter === 'posts_with_media') {
         // only posts with media
         feedItemsQb = feedItemsQb.innerJoin(
           'post_embed_image',
           'post_embed_image.postUri',
           'feed_item.postUri',
         )
-      } else if (params.filter === 'posts') {
+      } else if (params.filter === 'posts_only') {
         // only posts, no replies
         feedItemsQb = feedItemsQb.where('post.replyParent', 'is', null)
       }

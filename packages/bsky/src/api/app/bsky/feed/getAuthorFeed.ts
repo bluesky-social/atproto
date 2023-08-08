@@ -51,14 +51,14 @@ export default function (server: Server, ctx: AppContext) {
         .selectFeedItemQb()
         .where('originatorDid', '=', did)
 
-      if (filter === 'media') {
+      if (filter === 'posts_with_media') {
         // only posts with media
         feedItemsQb = feedItemsQb.innerJoin(
           'post_embed_image',
           'post_embed_image.postUri',
           'feed_item.postUri',
         )
-      } else if (filter === 'posts') {
+      } else if (filter === 'posts_only') {
         // only posts, no replies
         feedItemsQb = feedItemsQb.where('post.replyParent', 'is', null)
       }
