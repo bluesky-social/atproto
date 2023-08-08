@@ -1,4 +1,3 @@
-import assert from 'assert'
 import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
 import { Database, Primary } from './db'
@@ -14,7 +13,7 @@ export class AppContext {
   constructor(
     private opts: {
       db: Database
-      dbPrimary?: Database & Primary
+      dbPrimary: Database & Primary
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       services: Services
@@ -25,13 +24,13 @@ export class AppContext {
     },
   ) {}
 
-  get db(): Database {
-    return this.opts.db
+  get dbPrimary(): Database & Primary {
+    return this.opts.dbPrimary
   }
 
-  get dbPrimary(): Database & Primary {
-    assert(this.opts.dbPrimary, 'primary db not configured')
-    return this.opts.dbPrimary
+  // this db is not necessarily the primary, though it could be.
+  get db(): Database {
+    return this.opts.db
   }
 
   get imgUriBuilder(): ImageUriBuilder {
