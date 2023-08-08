@@ -5,10 +5,12 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authOptionalAccessOrRoleVerifier,
     handler: async ({ auth, params }) => {
       const { actor } = params
-      const requester = auth.credentials.did
+      const requester = 'did' in auth.credentials ? auth.credentials.did : null
+      const canViewTakendownProfile =
+        'triage' in auth.credentials && auth.credentials.triage
       const { db, services } = ctx
       const actorService = services.actor(db)
 
@@ -17,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
       if (!actorRes) {
         throw new InvalidRequestError('Profile not found')
       }
-      if (softDeleted(actorRes)) {
+      if (!canViewTakendownProfile && softDeleted(actorRes)) {
         throw new InvalidRequestError(
           'Account has been taken down',
           'AccountTakedown',
@@ -26,6 +28,7 @@ export default function (server: Server, ctx: AppContext) {
       const profile = await actorService.views.profileDetailed(
         actorRes,
         requester,
+        { includeSoftDeleted: canViewTakendownProfile },
       )
       if (!profile) {
         throw new InvalidRequestError('Profile not found')

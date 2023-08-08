@@ -26,7 +26,7 @@ export class ActorViews {
 
   async profilesDetailed(
     results: ActorResult[],
-    viewer: string,
+    viewer: string | null,
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<Record<string, ProfileViewDetailed>> {
     if (results.length === 0) return {}
@@ -59,38 +59,38 @@ export class ActorViews {
         'profile_agg.postsCount as postsCount',
         this.db.db
           .selectFrom('follow')
-          .where('creator', '=', viewer)
+          .where('creator', '=', viewer ?? '')
           .whereRef('subjectDid', '=', ref('did_handle.did'))
           .select('uri')
           .as('requesterFollowing'),
         this.db.db
           .selectFrom('follow')
           .whereRef('creator', '=', ref('did_handle.did'))
-          .where('subjectDid', '=', viewer)
+          .where('subjectDid', '=', viewer ?? '')
           .select('uri')
           .as('requesterFollowedBy'),
         this.db.db
           .selectFrom('actor_block')
-          .where('creator', '=', viewer)
+          .where('creator', '=', viewer ?? '')
           .whereRef('subjectDid', '=', ref('did_handle.did'))
           .select('uri')
           .as('requesterBlocking'),
         this.db.db
           .selectFrom('actor_block')
           .whereRef('creator', '=', ref('did_handle.did'))
-          .where('subjectDid', '=', viewer)
+          .where('subjectDid', '=', viewer ?? '')
           .select('uri')
           .as('requesterBlockedBy'),
         this.db.db
           .selectFrom('mute')
           .whereRef('did', '=', ref('did_handle.did'))
-          .where('mutedByDid', '=', viewer)
+          .where('mutedByDid', '=', viewer ?? '')
           .select('did')
           .as('requesterMuted'),
         this.db.db
           .selectFrom('list_item')
           .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
-          .where('list_mute.mutedByDid', '=', viewer)
+          .where('list_mute.mutedByDid', '=', viewer ?? '')
           .whereRef('list_item.subjectDid', '=', ref('did_handle.did'))
           .select('list_item.listUri')
           .limit(1)
@@ -158,7 +158,7 @@ export class ActorViews {
 
   async profileDetailed(
     result: ActorResult,
-    viewer: string,
+    viewer: string | null,
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ProfileViewDetailed | null> {
     const profiles = await this.profilesDetailed([result], viewer, opts)

@@ -2,16 +2,20 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
 import { softDeleted } from '../../../../../db/util'
 import AppContext from '../../../../../context'
+import { authPassthru } from '../../../../../api/com/atproto/admin/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
-    auth: ctx.accessVerifier,
+    auth: ctx.accessOrRoleVerifier,
     handler: async ({ req, auth, params }) => {
-      const requester = auth.credentials.did
+      const requester =
+        auth.credentials.type === 'access' ? auth.credentials.did : null
       if (ctx.canProxyRead(req)) {
         const res = await ctx.appviewAgent.api.app.bsky.actor.getProfile(
           params,
-          await ctx.serviceAuthHeaders(requester),
+          requester
+            ? await ctx.serviceAuthHeaders(requester)
+            : authPassthru(req),
         )
         return {
           encoding: 'application/json',
@@ -19,6 +23,9 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
+      // As long as user has triage permission, we know that they are a moderator user and can see taken down profiles
+      const canViewTakendownProfile =
+        'triage' in auth.credentials && auth.credentials.triage
       const { actor } = params
       const { db, services } = ctx
       const actorService = services.appView.actor(db)
@@ -28,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
       if (!actorRes) {
         throw new InvalidRequestError('Profile not found')
       }
-      if (softDeleted(actorRes)) {
+      if (!canViewTakendownProfile && softDeleted(actorRes)) {
         throw new InvalidRequestError(
           'Account has been taken down',
           'AccountTakedown',
@@ -37,6 +44,7 @@ export default function (server: Server, ctx: AppContext) {
       const profile = await actorService.views.profileDetailed(
         actorRes,
         requester,
+        { includeSoftDeleted: canViewTakendownProfile },
       )
       if (!profile) {
         throw new InvalidRequestError('Profile not found')
