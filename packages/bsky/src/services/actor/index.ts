@@ -101,14 +101,14 @@ export class ActorService {
     return builder
   }
 
-  async getActorClock(did: string | null): Promise<string | null> {
+  async getRepoRev(did: string | null): Promise<string | null> {
     if (did === null) return null
     const res = await this.db.db
       .selectFrom('actor_sync')
-      .select('repoClock')
+      .select('repoRev')
       .where('did', '=', did)
       .executeTakeFirst()
-    return res?.repoClock ?? null
+    return res?.repoRev ?? null
   }
 }
 

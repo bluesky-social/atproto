@@ -3,7 +3,7 @@ import { FeedKeyset } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { setAtprotoClock } from '../../../util'
+import { setRepoRev } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
@@ -74,13 +74,13 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
 
-      const [feedItems, actorClock] = await Promise.all([
+      const [feedItems, repoRev] = await Promise.all([
         feedItemsQb.execute(),
-        actorService.getActorClock(viewer),
+        actorService.getRepoRev(viewer),
       ])
       const feed = await feedService.hydrateFeed(feedItems, viewer)
 
-      setAtprotoClock(res, actorClock)
+      setRepoRev(res, repoRev)
       return {
         encoding: 'application/json',
         body: {

@@ -148,14 +148,14 @@ export class Repo extends ReadableRepo {
       commitBlocks.addMap(fromStorage.blocks)
     }
 
-    const clock = TID.nextStr(this.commit.clock)
+    const rev = TID.nextStr(this.commit.rev)
     const commit = await util.signCommit(
       {
         did: this.did,
         version: 2,
         prev: this.cid,
         data: unstoredData.root,
-        clock,
+        rev,
       },
       keypair,
     )
@@ -164,7 +164,7 @@ export class Repo extends ReadableRepo {
     return {
       commit: commitCid,
       prev: this.cid,
-      clock,
+      rev,
       blocks: commitBlocks,
     }
   }

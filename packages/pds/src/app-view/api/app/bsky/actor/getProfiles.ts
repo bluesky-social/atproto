@@ -2,7 +2,7 @@ import AppContext from '../../../../../context'
 import { Server } from '../../../../../lexicon'
 import { ids } from '../../../../../lexicon/lexicons'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/actor/getProfiles'
-import { ApiRes, getClock } from '../util/read-after-write'
+import { ApiRes, getRepoRev } from '../util/read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfiles({
@@ -44,12 +44,12 @@ const ensureReadAfterWrite = async (
   requester: string,
   res: ApiRes<OutputSchema>,
 ): Promise<OutputSchema> => {
-  const clock = getClock(res.headers)
-  if (!clock) return res.data
+  const rev = getRepoRev(res.headers)
+  if (!rev) return res.data
   const hasSelf = res.data.profiles.some((prof) => prof.did === requester)
   if (!hasSelf) return res.data
   const localSrvc = ctx.services.local(ctx.db)
-  const local = await localSrvc.getRecordsSinceClock(requester, clock, [
+  const local = await localSrvc.getRecordsSinceRev(requester, rev, [
     ids.AppBskyActorProfile,
   ])
   const localProf = local.profile

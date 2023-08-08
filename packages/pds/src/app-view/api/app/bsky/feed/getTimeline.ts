@@ -6,7 +6,7 @@ import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
 import { filterMutesAndBlocks } from './getFeed'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getTimeline'
-import { ApiRes, getClock } from '../util/read-after-write'
+import { ApiRes, getRepoRev } from '../util/read-after-write'
 import { ids } from '../../../../../lexicon/lexicons'
 import { PostView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 import { FeedViewPost } from '../../../../../lexicon/types/app/bsky/feed/defs'
@@ -124,10 +124,10 @@ const ensureReadAfterWrite = async (
   requester: string,
   res: ApiRes<OutputSchema>,
 ): Promise<OutputSchema> => {
-  const clock = getClock(res.headers)
-  if (!clock) return res.data
+  const rev = getRepoRev(res.headers)
+  if (!rev) return res.data
   const localSrvc = ctx.services.local(ctx.db)
-  const local = await localSrvc.getRecordsSinceClock(requester, clock, [
+  const local = await localSrvc.getRecordsSinceRev(requester, rev, [
     ids.AppBskyFeedPost,
   ])
   const formatted = await findAndFormatPostsToInsert(

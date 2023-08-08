@@ -1,6 +1,6 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { setAtprotoClock } from '../../../util'
+import { setRepoRev } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfiles({
@@ -11,12 +11,12 @@ export default function (server: Server, ctx: AppContext) {
       const { db, services } = ctx
       const actorService = services.actor(db)
 
-      const [actorsRes, actorClock] = await Promise.all([
+      const [actorsRes, repoRev] = await Promise.all([
         actorService.getActors(actors),
-        actorService.getActorClock(requester),
+        actorService.getRepoRev(requester),
       ])
 
-      setAtprotoClock(res, actorClock)
+      setRepoRev(res, repoRev)
       return {
         encoding: 'application/json',
         body: {

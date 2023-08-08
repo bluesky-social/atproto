@@ -5,7 +5,7 @@ import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import Database from '../../../../db'
 import { SkeletonFeedPost } from '../../../../lexicon/types/app/bsky/feed/defs'
-import { setAtprotoClock } from '../../../util'
+import { setRepoRev } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
@@ -18,9 +18,9 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
       }
 
-      const [skeleton, actorClock] = await Promise.all([
+      const [skeleton, repoRev] = await Promise.all([
         getTimelineSkeleton(ctx.db, viewer, limit, cursor),
-        ctx.services.actor(ctx.db).getActorClock(viewer),
+        ctx.services.actor(ctx.db).getRepoRev(viewer),
       ])
 
       const feedService = ctx.services.feed(ctx.db)
@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
       )
       const feed = await feedService.hydrateFeed(feedItems, viewer)
 
-      setAtprotoClock(res, actorClock)
+      setRepoRev(res, repoRev)
       return {
         encoding: 'application/json',
         body: {

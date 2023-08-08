@@ -70,9 +70,9 @@ export class LocalService {
     })
   }
 
-  async getRecordsSinceClock(
+  async getRecordsSinceRev(
     did: string,
-    clock: string,
+    rev: string,
     collections?: string[],
   ): Promise<LocalRecords> {
     let builder = this.db.db
@@ -89,8 +89,8 @@ export class LocalService {
         'record.indexedAt',
       ])
       .where('did', '=', did)
-      .where('repoClock', '>', clock)
-      .orderBy('repoClock', 'asc')
+      .where('repoRev', '>', rev)
+      .orderBy('repoRev', 'asc')
     if (collections !== undefined && collections.length > 0) {
       builder = builder.where('collection', 'in', collections)
     }

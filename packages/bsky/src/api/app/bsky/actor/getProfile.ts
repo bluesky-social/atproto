@@ -2,7 +2,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { softDeleted } from '../../../../db/util'
 import AppContext from '../../../../context'
-import { setAtprotoClock } from '../../../util'
+import { setRepoRev } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
@@ -13,9 +13,9 @@ export default function (server: Server, ctx: AppContext) {
       const { db, services } = ctx
       const actorService = services.actor(db)
 
-      const [actorRes, actorClock] = await Promise.all([
+      const [actorRes, repoRev] = await Promise.all([
         actorService.getActor(actor, true),
-        actorService.getActorClock(requester),
+        actorService.getRepoRev(requester),
       ])
 
       if (!actorRes) {
@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Profile not found')
       }
 
-      setAtprotoClock(res, actorClock)
+      setRepoRev(res, repoRev)
       return {
         encoding: 'application/json',
         body: profile,

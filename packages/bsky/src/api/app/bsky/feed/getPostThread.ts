@@ -19,7 +19,7 @@ import {
   getAncestorsAndSelfQb,
   getDescendentsQb,
 } from '../../../../services/util/post'
-import { setAtprotoClock } from '../../../util'
+import { setRepoRev } from '../../../util'
 
 export type PostThread = {
   post: FeedRow
@@ -38,9 +38,9 @@ export default function (server: Server, ctx: AppContext) {
       const feedService = ctx.services.feed(ctx.db)
       const labelService = ctx.services.label(ctx.db)
 
-      const [threadData, actorClock] = await Promise.all([
+      const [threadData, repoRev] = await Promise.all([
         getThreadData(ctx, uri, depth, parentHeight),
-        actorService.getActorClock(requester),
+        actorService.getRepoRev(requester),
       ])
       if (!threadData) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
@@ -71,7 +71,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
 
-      setAtprotoClock(res, actorClock)
+      setRepoRev(res, repoRev)
       return {
         encoding: 'application/json',
         body: { thread },

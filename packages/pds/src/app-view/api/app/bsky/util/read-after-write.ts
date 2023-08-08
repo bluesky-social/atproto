@@ -5,6 +5,6 @@ export type ApiRes<T> = {
   data: T
 }
 
-export const getClock = (headers: Headers): string | undefined => {
-  return headers['atproto-clock']
+export const getRepoRev = (headers: Headers): string | undefined => {
+  return headers['atproto-repo-rev']
 }

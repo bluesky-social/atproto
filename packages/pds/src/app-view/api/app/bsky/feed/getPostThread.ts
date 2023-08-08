@@ -19,7 +19,7 @@ import {
 } from '../../../../../lexicon/types/app/bsky/feed/defs'
 import { Record as PostRecord } from '../../../../../lexicon/types/app/bsky/feed/post'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getPostThread'
-import { ApiRes, getClock } from '../util/read-after-write'
+import { ApiRes, getRepoRev } from '../util/read-after-write'
 import { ids } from '../../../../../lexicon/lexicons'
 import { LocalService, RecordDescript } from '../../../../../services/local'
 
@@ -280,14 +280,14 @@ const ensureReadAfterWrite = async (
   requester: string,
   res: ApiRes<OutputSchema>,
 ): Promise<OutputSchema> => {
-  const clock = getClock(res.headers)
-  if (!clock) return res.data
+  const rev = getRepoRev(res.headers)
+  if (!rev) return res.data
   if (!isThreadViewPost(res.data.thread)) {
     return res.data
   }
   let thread: ThreadViewPost = res.data.thread
   const localSrvc = ctx.services.local(ctx.db)
-  const local = await localSrvc.getRecordsSinceClock(requester, clock, [
+  const local = await localSrvc.getRecordsSinceRev(requester, rev, [
     ids.AppBskyFeedPost,
   ])
   const inThread = findPostsInThread(thread, local.posts)
