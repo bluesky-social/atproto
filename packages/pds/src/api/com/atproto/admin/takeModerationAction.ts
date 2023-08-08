@@ -1,21 +1,79 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
+  isRepoRef,
   ACKNOWLEDGE,
   ESCALATE,
   TAKEDOWN,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
+import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
 import { getSubject, getAction } from '../moderation/util'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
     auth: ctx.roleVerifier,
-    handler: async ({ input, auth }) => {
+    handler: async ({ req, input, auth }) => {
       const access = auth.credentials
       const { db, services } = ctx
+      if (ctx.shouldProxyModeration()) {
+        const { data: result } =
+          await ctx.appviewAgent.com.atproto.admin.takeModerationAction(
+            input.body,
+            authPassthru(req, true),
+          )
+
+        const transact = db.transaction(async (dbTxn) => {
+          const authTxn = services.auth(dbTxn)
+          const moderationTxn = services.moderation(dbTxn)
+          const labelTxn = services.appView.label(dbTxn)
+          // perform takedowns
+          if (result.action === TAKEDOWN && isRepoRef(result.subject)) {
+            await authTxn.revokeRefreshTokensByDid(result.subject.did)
+            await moderationTxn.takedownRepo({
+              takedownId: result.id,
+              did: result.subject.did,
+            })
+          }
+          if (result.action === TAKEDOWN && isStrongRef(result.subject)) {
+            await moderationTxn.takedownRecord({
+              takedownId: result.id,
+              uri: new AtUri(result.subject.uri),
+              blobCids: result.subjectBlobCids.map((cid) => CID.parse(cid)),
+            })
+          }
+          // apply label creation & negations
+          const applyLabels = (uri: string, cid: string | null) =>
+            labelTxn.formatAndCreate(ctx.cfg.labelerDid, uri, cid, {
+              create: result.createLabelVals,
+              negate: result.negateLabelVals,
+            })
+          if (isRepoRef(result.subject)) {
+            await applyLabels(result.subject.did, null)
+          }
+          if (isStrongRef(result.subject)) {
+            await applyLabels(result.subject.uri, result.subject.cid)
+          }
+        })
+
+        try {
+          await transact
+        } catch (err) {
+          req.log.error(
+            { err, actionId: result.id },
+            'proxied moderation action failed',
+          )
+        }
+
+        return {
+          encoding: 'application/json',
+          body: result,
+        }
+      }
+
       const moderationService = services.moderation(db)
       const {
         action,

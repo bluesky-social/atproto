@@ -15,6 +15,7 @@ export interface IndexerConfigValues {
   labelerDid: string
   hiveApiKey?: string
   labelerKeywords: Record<string, string>
+  labelerPushUrl?: string
   indexerConcurrency?: number
   indexerPartitionIds: number[]
   indexerPartitionBatchSize?: number
@@ -54,6 +55,8 @@ export class IndexerConfig {
       DAY,
     )
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
+    const labelerPushUrl =
+      overrides?.labelerPushUrl || process.env.LABELER_PUSH_URL || undefined
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
     const indexerPartitionIds =
       overrides?.indexerPartitionIds ||
@@ -84,6 +87,7 @@ export class IndexerConfig {
       didCacheStaleTTL,
       didCacheMaxTTL,
       labelerDid,
+      labelerPushUrl,
       hiveApiKey,
       indexerPartitionIds,
       indexerConcurrency,
@@ -137,6 +141,10 @@ export class IndexerConfig {
 
   get labelerDid() {
     return this.cfg.labelerDid
+  }
+
+  get labelerPushUrl() {
+    return this.cfg.labelerPushUrl
   }
 
   get hiveApiKey() {

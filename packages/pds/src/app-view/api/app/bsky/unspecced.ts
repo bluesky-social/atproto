@@ -1,15 +1,19 @@
+import { NotEmptyArray } from '@atproto/common'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import { FeedKeyset } from './util/feed'
 import { GenericKeyset, paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow } from '../../../services/feed'
-import { isPostView } from '../../../../lexicon/types/app/bsky/feed/defs'
-import { NotEmptyArray } from '@atproto/common'
+import {
+  isPostView,
+  GeneratorView,
+} from '../../../../lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../../../../lexicon/types/app/bsky/embed/record'
 import { countAll, valuesList } from '../../../../db/util'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { GeneratorView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 import { NotificationServer } from '../../../../notifications'
+import { FeedKeyset } from './util/feed'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   '!no-promote',
@@ -210,6 +214,18 @@ export default function (server: Server, ctx: AppContext) {
       } catch (error) {
         throw new Error('Failed to register device push notification token')
       }
+    },
+  })
+  
+  server.app.bsky.unspecced.applyLabels({
+    auth: ctx.roleVerifier,
+    handler: async ({ auth, input }) => {
+      if (!auth.credentials.admin) {
+        throw new AuthRequiredError('Insufficient privileges')
+      }
+      const { services, db } = ctx
+      const { labels } = input.body
+      await services.appView.label(db).createLabels(labels)
     },
   })
 }

@@ -4,8 +4,8 @@ import { adminAuth } from '../_util'
 import { SeedClient } from './client'
 import usersSeed from './users'
 
-export default async (sc: SeedClient) => {
-  await usersSeed(sc)
+export default async (sc: SeedClient, invite?: { code: string }) => {
+  await usersSeed(sc, invite)
 
   const alice = sc.dids.alice
   const bob = sc.dids.bob
