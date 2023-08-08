@@ -61,10 +61,10 @@ export function moderateProfile(
 
   // downgrade based on authorship
   if (!isModerationDecisionNoop(account) && account.did === opts.userDid) {
-    downgradeDecision(account, { alert: true })
+    downgradeDecision(account, 'alert')
   }
   if (!isModerationDecisionNoop(profile) && profile.did === opts.userDid) {
-    downgradeDecision(profile, { alert: true })
+    downgradeDecision(profile, 'alert')
   }
 
   // derive avatar blurring from account & profile, but override for mutes because that shouldnt blur
@@ -154,23 +154,23 @@ export function moderatePost(
 
   // downgrade based on authorship
   if (!isModerationDecisionNoop(post) && post.did === opts.userDid) {
-    downgradeDecision(post, { alert: true })
+    downgradeDecision(post, 'blur')
   }
-  if (!isModerationDecisionNoop(account) && account.did === opts.userDid) {
-    downgradeDecision(account, { alert: false })
+  if (account.cause && account.did === opts.userDid) {
+    downgradeDecision(account, 'noop')
   }
-  if (!isModerationDecisionNoop(profile) && profile.did === opts.userDid) {
-    downgradeDecision(profile, { alert: false })
+  if (profile.cause && profile.did === opts.userDid) {
+    downgradeDecision(profile, 'noop')
   }
   if (quote && !isModerationDecisionNoop(quote) && quote.did === opts.userDid) {
-    downgradeDecision(quote, { alert: true })
+    downgradeDecision(quote, 'blur')
   }
   if (
     quotedAccount &&
     !isModerationDecisionNoop(quotedAccount) &&
     quotedAccount.did === opts.userDid
   ) {
-    downgradeDecision(quotedAccount, { alert: false })
+    downgradeDecision(quotedAccount, 'noop')
   }
 
   // derive filtering from feeds from the post, post author's account,
