@@ -206,7 +206,7 @@ export class PDS {
       })
     }
 
-    const notifServer = new NotificationServer({})
+    const notifServer = new NotificationServer(db)
 
     const services = createServices({
       repoSigningKey,
@@ -219,6 +219,7 @@ export class PDS {
       contentReporter,
       backgroundQueue,
       crawlers,
+      notifServer,
     })
 
     const ctx = new AppContext({

@@ -19,6 +19,7 @@ import { BackgroundQueue } from '../event-stream/background-queue'
 import { Crawlers } from '../crawlers'
 import { LabelCache } from '../label-cache'
 import { ContentReporter } from '../content-reporter'
+import { NotificationServer } from '../notifications'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
@@ -31,6 +32,7 @@ export function createServices(resources: {
   contentReporter?: ContentReporter
   backgroundQueue: BackgroundQueue
   crawlers: Crawlers
+  notifServer: NotificationServer
 }): Services {
   const {
     repoSigningKey,
@@ -43,6 +45,7 @@ export function createServices(resources: {
     contentReporter,
     backgroundQueue,
     crawlers,
+    notifServer,
   } = resources
   return {
     account: AccountService.creator(),
@@ -67,7 +70,7 @@ export function createServices(resources: {
       actor: ActorService.creator(imgUriBuilder, labelCache),
       graph: GraphService.creator(imgUriBuilder),
       feed: FeedService.creator(imgUriBuilder, labelCache),
-      indexing: IndexingService.creator(backgroundQueue),
+      indexing: IndexingService.creator(backgroundQueue, notifServer),
       label: LabelService.creator(labelCache),
     },
   }

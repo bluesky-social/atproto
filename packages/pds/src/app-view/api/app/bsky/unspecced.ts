@@ -199,11 +199,9 @@ export default function (server: Server, ctx: AppContext) {
       const {
         credentials: { did },
       } = auth
-      const db = ctx.db
       const notificationServer = ctx.notifServer
       try {
         await notificationServer.registerDeviceForPushNotifications(
-          db,
           did,
           platform,
           token,

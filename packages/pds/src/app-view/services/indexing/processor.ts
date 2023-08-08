@@ -6,7 +6,6 @@ import DatabaseSchema from '../../../db/database-schema'
 import { BackgroundQueue } from '../../../event-stream/background-queue'
 import { lexicons } from '../../../lexicon/lexicons'
 import { UserNotification } from '../../../db/tables/user-notification'
-import { NotificationServer } from '../../../notifications'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
 // (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).
@@ -73,7 +72,7 @@ export class RecordProcessor<T, S> {
     if (inserted) {
       this.aggregateOnCommit(inserted)
       await this.handleNotifs({ inserted })
-      return
+      return this.params.notifsForInsert(inserted)
     }
     // if duplicate, insert into duplicates table with no events
     const found = await this.params.findDuplicate(this.db, uri, obj)
@@ -155,7 +154,7 @@ export class RecordProcessor<T, S> {
         .where('duplicateOf', '=', uri.toString())
         .execute()
       await this.handleNotifs({ deleted })
-      return
+      return this.params.notifsForDelete(deleted, null)
     } else {
       const found = await this.db
         .selectFrom('duplicate_record')
@@ -218,15 +217,7 @@ export class RecordProcessor<T, S> {
 
     if (notifs.length > 0) {
       runOnCommit.push(async (db) => {
-        // 1. insert notifs
         await db.db.insertInto('user_notification').values(notifs).execute()
-        // 2. prepare notifs to send
-        const notifsToSend = await NotificationServer.prepareNotifsToSend(
-          notifs,
-          db,
-        )
-        // 3. send notifs
-        await NotificationServer.sendPushNotifications(notifsToSend)
       })
     }
     if (runOnCommit.length) {

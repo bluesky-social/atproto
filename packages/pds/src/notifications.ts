@@ -3,9 +3,11 @@ import Database from './db'
 import { UserNotification } from './db/tables/user-notification'
 import { AppBskyEmbedImages, AtUri } from '@atproto/api'
 
-const GORUSH_URL = 'https://push.bsky.app'
-const PUSH_NOTIFICATION_ENDPOINT = '/api/push'
-const BSKY_APP_ID = 'xyz.blueskyweb.app'
+const PUSH_NOTIF_SERVER_BASE_URL = 'https://push.bsky.app'
+const PUSH_NOTIF_SERVER_ENDPOINT = '/api/push'
+export const PUSH_NOTIF_SERVER_URL =
+  PUSH_NOTIF_SERVER_BASE_URL + PUSH_NOTIF_SERVER_ENDPOINT
+export const BSKY_APP_ID = 'xyz.blueskyweb.app'
 type Platform = 'ios' | 'android' | 'web'
 type PushNotification = {
   tokens: string[]
@@ -16,21 +18,14 @@ type PushNotification = {
 }
 
 export class NotificationServer {
-  notificationServerUrl: string
-  pushNotificationEndpoint: string
-
-  constructor(opts: { notificationServerEndpoint?: string }) {
-    const { notificationServerEndpoint } = opts
-    if (notificationServerEndpoint) {
-      this.notificationServerUrl = notificationServerEndpoint
-    } else {
-      this.notificationServerUrl = GORUSH_URL + PUSH_NOTIFICATION_ENDPOINT
-    }
+  constructor(public db: Database) {}
+  static creator() {
+    return (db: Database) => new NotificationServer(db)
   }
 
-  static async getUserTokens(did: string, db: Database) {
+  async getUserTokens(did: string) {
     try {
-      const userTokens = await db.db
+      const userTokens = await this.db.db
         .selectFrom('notification_push_token')
         .where('did', '=', did)
         .selectAll()
@@ -42,15 +37,12 @@ export class NotificationServer {
     }
   }
 
-  static async prepareNotifsToSend(
-    notifications: UserNotification[],
-    db: Database,
-  ) {
+  async prepareNotifsToSend(notifications: UserNotification[]) {
     const notifsToSend: PushNotification[] = []
 
     for (const notif of notifications) {
       const { userDid } = notif
-      const userTokens = await this.getUserTokens(userDid, db)
+      const userTokens = await this.getUserTokens(userDid)
 
       // if user has no tokens, skip
       if (userTokens.length === 0) {
@@ -60,10 +52,7 @@ export class NotificationServer {
       for (const t of userTokens) {
         const { appId, platform, token } = t
         // get title and message of notification
-        const attr = await NotificationServer.getNotificationDisplayAttributes(
-          notif,
-          db,
-        )
+        const attr = await this.getNotificationDisplayAttributes(notif)
         // if no title or body, skip
         if (!attr) {
           continue
@@ -114,9 +103,9 @@ export class NotificationServer {
     4.  store response from `gorush` which contains the ID of the notification
     5. If notification needs to be updated or deleted, find the ID of the notification from the database and send a new notification to `gorush` with the ID (repeat step 2)
   */
-  static async sendPushNotifications(
+  async sendPushNotifications(
     notifications: PushNotification[],
-    pushEndpoint = GORUSH_URL + PUSH_NOTIFICATION_ENDPOINT,
+    pushEndpoint = PUSH_NOTIF_SERVER_URL,
   ) {
     // if no notifications, skip and return early
     if (!notifications || notifications.length === 0) {
@@ -142,16 +131,15 @@ export class NotificationServer {
   }
 
   async registerDeviceForPushNotifications(
-    db: Database,
     did: string,
     platform: Platform,
     token: string,
-    endpoint = this.notificationServerUrl,
+    endpoint = PUSH_NOTIF_SERVER_URL,
     appId = BSKY_APP_ID,
   ) {
     try {
       // check if token did pair already exists
-      const existing = await db.db
+      const existing = await this.db.db
         .selectFrom('notification_push_token')
         .where('did', '=', did)
         .where('token', '=', token)
@@ -162,7 +150,7 @@ export class NotificationServer {
       }
 
       // if token doesn't exist, insert it
-      await db.db
+      await this.db.db
         .insertInto('notification_push_token')
         .values({
           did,
@@ -181,10 +169,7 @@ export class NotificationServer {
 
   async registerPushNotificationsToken() {}
 
-  static async getNotificationDisplayAttributes(
-    notif: UserNotification,
-    db: Database,
-  ) {
+  async getNotificationDisplayAttributes(notif: UserNotification) {
     const {
       author: authorDid,
       reason,
@@ -195,7 +180,7 @@ export class NotificationServer {
       userDid,
     } = notif
     // 1. Get author's display name
-    const displayName = await db.db
+    const displayName = await this.db.db
       .selectFrom('profile')
       .where('creator', '=', authorDid)
       .select(['displayName'])
@@ -221,7 +206,7 @@ export class NotificationServer {
       return { title, body }
     } else if (reason === 'mention') {
       title = `${author} mentioned you`
-      const mentionedPostData = await db.db
+      const mentionedPostData = await this.db.db
         .selectFrom('post')
         .where('uri', '=', recordUri)
         .selectAll()
@@ -234,7 +219,7 @@ export class NotificationServer {
       throw new Error('Failed to get subject URI')
     }
 
-    const postData = await db.db
+    const postData = await this.db.db
       .selectFrom('post')
       .where('uri', '=', subjectUri)
       .selectAll()
