@@ -318,7 +318,7 @@ describe('pds author feed views', () => {
 
     expect(
       postsOnlyFeed.feed.every(({ post }) => {
-        return isRecord(post.record) && !Boolean(post.record.reply)
+        return isRecord(post.record) && !post.record.reply
       }),
     ).toBeTruthy()
   })
