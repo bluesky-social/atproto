@@ -14,6 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       const { ref } = db.db.dynamic
 
       const actorService = services.actor(db)
+      const graphService = services.graph(db)
 
       const creatorRes = await actorService.getActor(actor)
       if (!creatorRes) {
@@ -25,6 +26,15 @@ export default function (server: Server, ctx: AppContext) {
         .where('follow.creator', '=', creatorRes.did)
         .innerJoin('actor as subject', 'subject.did', 'follow.subjectDid')
         .where(notSoftDeletedClause(ref('subject')))
+        .whereNotExists(
+          graphService.blockQb(requester, [ref('follow.subjectDid')]),
+        )
+        .whereNotExists(
+          graphService.blockRefQb(
+            ref('follow.subjectDid'),
+            ref('follow.creator'),
+          ),
+        )
         .selectAll('subject')
         .select(['follow.cid as cid', 'follow.sortAt as sortAt'])
 

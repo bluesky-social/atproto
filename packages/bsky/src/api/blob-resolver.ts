@@ -123,6 +123,6 @@ async function getBlob(opts: { pds: string; did: string; cid: string }) {
     params: { did, cid },
     decompress: true,
     responseType: 'stream',
-    timeout: 2000, // 2sec of inactivity on the connection
+    timeout: 5000, // 5sec of inactivity on the connection
   })
 }

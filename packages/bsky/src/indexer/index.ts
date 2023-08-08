@@ -74,7 +74,7 @@ export class BskyIndexer {
   }
 
   async start() {
-    const { db } = this.ctx
+    const { db, backgroundQueue } = this.ctx
     const { pool } = db.cfg
     this.dbStatsInterval = setInterval(() => {
       dbLogger.info(
@@ -84,6 +84,13 @@ export class BskyIndexer {
           waitingCount: pool.waitingCount,
         },
         'db pool stats',
+      )
+      dbLogger.info(
+        {
+          runningCount: backgroundQueue.queue.pending,
+          waitingCount: backgroundQueue.queue.size,
+        },
+        'background queue stats',
       )
     }, 10000)
     this.subStatsInterval = setInterval(() => {
