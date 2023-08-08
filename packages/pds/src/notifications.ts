@@ -28,20 +28,6 @@ export class NotificationServer {
     }
   }
 
-  platformEnumToNumber(platform: Platform) {
-    switch (platform) {
-      case 'ios':
-        return 1
-      case 'android':
-        return 2
-      case 'web':
-        // TODO: support web notifications
-        return undefined
-      default:
-        return undefined
-    }
-  }
-
   static async getUserTokens(did: string, db: Database) {
     try {
       const userTokens = await db.db
@@ -260,7 +246,7 @@ export class NotificationServer {
     if (reason === 'like') {
       title = `${author} liked your post`
       body = postData?.text || ''
-      // TODO: do this in a better way
+      // custom feed like
       if (subjectUri?.includes('feed.generator')) {
         title = `${author} liked your custom feed`
         body = `${new AtUri(subjectUri).rkey}`
