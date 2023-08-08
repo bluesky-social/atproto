@@ -68,8 +68,7 @@ describe('pds actor search views', () => {
     ]
 
     shouldContain.forEach((handle) => expect(handles).toContain(handle))
-
-    expect(handles).toContain('cayla-marquardt39.test') // Fuzzy match supported by postgres
+    expect(handles).toContain('cayla-marquardt39.test') // Fuzzy match
 
     const shouldNotContain = [
       'sven70.test',
@@ -111,7 +110,19 @@ describe('pds actor search views', () => {
       { headers },
     )
 
-    expect(limited.data.actors).toEqual(full.data.actors.slice(0, 5))
+    // @NOTE it's expected that searchActorsTypeahead doesn't have stable pagination
+
+    const limitedIndexInFull = limited.data.actors.map((needle) => {
+      return full.data.actors.findIndex(
+        (haystack) => needle.did === haystack.did,
+      )
+    })
+
+    // subset exists in full and is monotonic
+    expect(limitedIndexInFull.every((idx) => idx !== -1)).toEqual(true)
+    expect(limitedIndexInFull).toEqual(
+      [...limitedIndexInFull].sort((a, b) => a - b),
+    )
   })
 
   it('typeahead gives results unauthed', async () => {
@@ -146,8 +157,7 @@ describe('pds actor search views', () => {
     ]
 
     shouldContain.forEach((handle) => expect(handles).toContain(handle))
-
-    expect(handles).toContain('cayla-marquardt39.test') // Fuzzy match supported by postgres
+    expect(handles).toContain('cayla-marquardt39.test') // Fuzzy match
 
     const shouldNotContain = [
       'sven70.test',

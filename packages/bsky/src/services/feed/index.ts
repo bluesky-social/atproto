@@ -23,7 +23,10 @@ import {
   isViewRecord,
 } from '../../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../../lexicon/types/app/bsky/embed/recordWithMedia'
-import { FeedViewPost } from '../../lexicon/types/app/bsky/feed/defs'
+import {
+  FeedViewPost,
+  SkeletonFeedPost,
+} from '../../lexicon/types/app/bsky/feed/defs'
 import {
   ActorInfoMap,
   PostInfoMap,
@@ -328,6 +331,53 @@ export class FeedService {
       }
       return acc
     }, {} as PostViews)
+  }
+
+  async filterAndGetFeedItems(
+    uris: string[],
+    requester: string,
+  ): Promise<Record<string, FeedRow>> {
+    if (uris.length < 1) return {}
+    const { ref } = this.db.db.dynamic
+    const feedItems = await this.selectFeedItemQb()
+      .where('feed_item.uri', 'in', uris)
+      .where((qb) =>
+        // Hide posts and reposts of or by muted actors
+        this.services.graph.whereNotMuted(qb, requester, [
+          ref('post.creator'),
+          ref('originatorDid'),
+        ]),
+      )
+      .whereNotExists(
+        this.services.graph.blockQb(requester, [
+          ref('post.creator'),
+          ref('originatorDid'),
+        ]),
+      )
+      .execute()
+    return feedItems.reduce((acc, item) => {
+      return Object.assign(acc, { [item.uri]: item })
+    }, {} as Record<string, FeedRow>)
+  }
+
+  // @TODO enforce limit elsewhere
+  async cleanFeedSkeleton(
+    skeleton: SkeletonFeedPost[],
+    limit: number,
+    requester: string,
+  ): Promise<FeedRow[]> {
+    skeleton = skeleton.slice(0, limit)
+    const feedItemUris = skeleton.map(getSkeleFeedItemUri)
+    const feedItems = await this.filterAndGetFeedItems(feedItemUris, requester)
+
+    const cleaned: FeedRow[] = []
+    for (const skeleItem of skeleton) {
+      const feedItem = feedItems[getSkeleFeedItemUri(skeleItem)]
+      if (feedItem && feedItem.postUri === skeleItem.post) {
+        cleaned.push(feedItem)
+      }
+    }
+    return cleaned
   }
 
   async hydrateFeed(
@@ -640,4 +690,10 @@ function applyEmbedBlock(
     }
   }
   return view
+}
+
+function getSkeleFeedItemUri(item: SkeletonFeedPost) {
+  return typeof item.reason?.repost === 'string'
+    ? item.reason.repost
+    : item.post
 }

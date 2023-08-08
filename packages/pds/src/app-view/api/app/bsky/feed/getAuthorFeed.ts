@@ -8,6 +8,7 @@ import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getAuth
 import { ApiRes, getClock } from '../util/read-after-write'
 import { isReasonRepost } from '../../../../../lexicon/types/app/bsky/feed/defs'
 import { ids } from '../../../../../lexicon/lexicons'
+import { authPassthru } from '../../../../../api/com/atproto/admin/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
@@ -20,12 +21,7 @@ export default function (server: Server, ctx: AppContext) {
           params,
           requester
             ? await ctx.serviceAuthHeaders(requester)
-            : {
-                // @TODO use authPassthru() once it lands
-                headers: req.headers.authorization
-                  ? { authorization: req.headers.authorization }
-                  : {},
-              },
+            : authPassthru(req),
         )
         return {
           encoding: 'application/json',

@@ -1,12 +1,15 @@
-import stream from 'stream'
 import axios from 'axios'
 import FormData from 'form-data'
+import { CID } from 'multiformats/cid'
+import { IdResolver } from '@atproto/identity'
 import { Labeler } from './base'
 import { keywordLabeling } from './util'
-import { IdResolver } from '@atproto/identity'
 import Database from '../db'
 import { BackgroundQueue } from '../background'
 import { IndexerConfig } from '../indexer/config'
+import { retryHttp } from '../util/retry'
+import { resolveBlob } from '../api/blob-resolver'
+import { labelerLogger as log } from '../logger'
 
 const HIVE_ENDPOINT = 'https://api.thehive.ai/api/v2/task/sync'
 
@@ -32,33 +35,33 @@ export class HiveLabeler extends Labeler {
     return keywordLabeling(this.keywords, text)
   }
 
-  async labelImg(img: stream.Readable): Promise<string[]> {
-    return labelBlob(img, this.hiveApiKey)
+  async labelImg(did: string, cid: CID): Promise<string[]> {
+    const hiveRes = await retryHttp(async () => {
+      try {
+        return await this.makeHiveReq(did, cid)
+      } catch (err) {
+        log.warn({ err, did, cid: cid.toString() }, 'hive request failed')
+        throw err
+      }
+    })
+    log.info({ hiveRes, did, cid: cid.toString() }, 'hive response')
+    const classes = respToClasses(hiveRes)
+    return summarizeLabels(classes)
   }
-}
 
-export const labelBlob = async (
-  blob: stream.Readable,
-  hiveApiKey: string,
-): Promise<string[]> => {
-  const classes = await makeHiveReq(blob, hiveApiKey)
-  return summarizeLabels(classes)
-}
-
-export const makeHiveReq = async (
-  blob: stream.Readable,
-  hiveApiKey: string,
-): Promise<HiveRespClass[]> => {
-  const form = new FormData()
-  form.append('media', blob)
-  const res = await axios.post(HIVE_ENDPOINT, form, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-      authorization: `token ${hiveApiKey}`,
-      accept: 'application/json',
-    },
-  })
-  return respToClasses(res.data)
+  async makeHiveReq(did: string, cid: CID): Promise<HiveResp> {
+    const { stream } = await resolveBlob(did, cid, this.ctx)
+    const form = new FormData()
+    form.append('media', stream)
+    const { data } = await axios.post(HIVE_ENDPOINT, form, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        authorization: `token ${this.hiveApiKey}`,
+        accept: 'application/json',
+      },
+    })
+    return data
+  }
 }
 
 export const respToClasses = (res: HiveResp): HiveRespClass[] => {
@@ -73,28 +76,99 @@ export const respToClasses = (res: HiveResp): HiveRespClass[] => {
   return classes
 }
 
-// sexual: https://docs.thehive.ai/docs/sexual-content
+// Matches only one (or none) of: porn, sexual, nudity
+//
+// porn: sexual and nudity. including both explicit activity or full-frontal and suggestive/intent
+// sexual: sexually suggestive, not explicit; may include some forms of nudity
+// nudity: non-sexual nudity (eg, artistic, possibly some photographic)
+//
+// hive docs/definitions: https://docs.thehive.ai/docs/sexual-content
+export const sexualLabels = (classes: HiveRespClass[]): string[] => {
+  const scores = {}
+
+  for (const cls of classes) {
+    scores[cls.class] = cls.score
+  }
+
+  // first check if porn...
+  for (const pornClass of [
+    'yes_sexual_activity',
+    'animal_genitalia_and_human',
+    'yes_realistic_nsfw',
+  ]) {
+    if (scores[pornClass] >= 0.9) {
+      return ['porn']
+    }
+  }
+  if (scores['general_nsfw'] >= 0.9) {
+    // special case for some anime examples
+    if (scores['animated_animal_genitalia'] >= 0.5) {
+      return ['porn']
+    }
+    // special case for some pornographic/explicit classic drawings
+    if (scores['yes_undressed'] >= 0.9 && scores['yes_sexual_activity'] > 0.9) {
+      return ['porn']
+    }
+  }
+
+  // then check for sexual suggestive (which may include nudity)...
+  for (const sexualClass of ['yes_sexual_intent', 'yes_sex_toy']) {
+    if (scores[sexualClass] >= 0.9) {
+      return ['sexual']
+    }
+  }
+  if (scores['yes_undressed'] >= 0.9) {
+    // special case for bondage examples
+    if (scores['yes_sex_toy'] > 0.75) {
+      return ['sexual']
+    }
+  }
+
+  // then non-sexual nudity...
+  for (const nudityClass of [
+    'yes_male_nudity',
+    'yes_female_nudity',
+    'yes_undressed',
+  ]) {
+    if (scores[nudityClass] >= 0.9) {
+      return ['nudity']
+    }
+  }
+
+  // then finally flag remaining "underwear" images in to sexually suggestive
+  // (after non-sexual content already labeled above)
+  for (const nudityClass of ['yes_male_underwear', 'yes_female_underwear']) {
+    if (scores[nudityClass] >= 0.9) {
+      // TODO: retaining 'underwear' label for a short time to help understand
+      // the impact of labeling all "underwear" as "sexual". This *will* be
+      // pulling in somewhat non-sexual content in to "sexual" label.
+      return ['sexual', 'underwear']
+    }
+  }
+
+  return []
+}
+
 // gore and violence: https://docs.thehive.ai/docs/class-descriptions-violence-gore
-// iconography: https://docs.thehive.ai/docs/class-descriptions-hate-bullying
 const labelForClass = {
-  yes_sexual_activity: 'porn',
-  animal_genitalia_and_human: 'porn', // for some reason not included in 'yes_sexual_activity'
-  yes_male_nudity: 'nudity',
-  yes_female_nudity: 'nudity',
-  general_suggestive: 'sexual',
   very_bloody: 'gore',
   human_corpse: 'corpse',
+  hanging: 'corpse',
+}
+const labelForClassLessSensitive = {
   yes_self_harm: 'self-harm',
-  yes_nazi: 'icon-nazi',
-  yes_kkk: 'icon-kkk',
-  yes_confederate: 'icon-confederate',
 }
 
 export const summarizeLabels = (classes: HiveRespClass[]): string[] => {
-  const labels: string[] = []
+  const labels: string[] = sexualLabels(classes)
   for (const cls of classes) {
     if (labelForClass[cls.class] && cls.score >= 0.9) {
       labels.push(labelForClass[cls.class])
+    }
+  }
+  for (const cls of classes) {
+    if (labelForClassLessSensitive[cls.class] && cls.score >= 0.96) {
+      labels.push(labelForClassLessSensitive[cls.class])
     }
   }
   return labels
