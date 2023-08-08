@@ -1,4 +1,5 @@
 import { CID } from 'multiformats/cid'
+import { TID } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import {
   Commit,
@@ -16,7 +17,6 @@ import log from './logger'
 import BlockMap from './block-map'
 import { ReadableRepo } from './readable-repo'
 import * as util from './util'
-import { TID } from '@atproto/common'
 
 type Params = {
   storage: RepoStorage

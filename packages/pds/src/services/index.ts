@@ -1,3 +1,4 @@
+import { AtpAgent } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import Database from '../db'
@@ -20,7 +21,6 @@ import { Crawlers } from '../crawlers'
 import { LabelCache } from '../label-cache'
 import { ContentReporter } from '../content-reporter'
 import { LocalService } from './local'
-import { AtpAgent } from '@atproto/api'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair

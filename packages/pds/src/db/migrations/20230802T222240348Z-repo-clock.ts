@@ -5,8 +5,14 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .alterTable('record')
     .addColumn('repoClock', 'varchar')
     .execute()
+  await db.schema
+    .createIndex('record_repo_clock_idx')
+    .on('record')
+    .columns(['did', 'repoClock'])
+    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
+  await db.schema.dropIndex('record_repo_clock_idx').execute()
   await db.schema.alterTable('record').dropColumn('repoClock').execute()
 }

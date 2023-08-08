@@ -48,7 +48,7 @@ const ensureReadAfterWrite = async (
   if (!clock) return res.data
   const hasSelf = res.data.profiles.some((prof) => prof.did === requester)
   if (!hasSelf) return res.data
-  const localSrvc = await ctx.services.local(ctx.db)
+  const localSrvc = ctx.services.local(ctx.db)
   const local = await localSrvc.getRecordsSinceClock(requester, clock, [
     ids.AppBskyActorProfile,
   ])

@@ -19,6 +19,7 @@ import {
   getAncestorsAndSelfQb,
   getDescendentsQb,
 } from '../../../../services/util/post'
+import { setAtprotoClock } from '../../../util'
 
 export type PostThread = {
   post: FeedRow
@@ -70,10 +71,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
 
-      if (actorClock !== null) {
-        res.setHeader('atproto-clock', actorClock)
-      }
-
+      setAtprotoClock(res, actorClock)
       return {
         encoding: 'application/json',
         body: { thread },

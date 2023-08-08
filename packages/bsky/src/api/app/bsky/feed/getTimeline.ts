@@ -3,6 +3,7 @@ import { Server } from '../../../../lexicon'
 import { FeedAlgorithm, FeedKeyset, getFeedDateThreshold } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
+import { setAtprotoClock } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
@@ -67,10 +68,7 @@ export default function (server: Server, ctx: AppContext) {
         actorService.getActorClock(viewer),
       ])
 
-      if (actorClock !== null) {
-        res.setHeader('atproto-clock', actorClock)
-      }
-
+      setAtprotoClock(res, actorClock)
       return {
         encoding: 'application/json',
         body: {

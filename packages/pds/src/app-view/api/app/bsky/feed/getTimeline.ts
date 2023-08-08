@@ -138,7 +138,6 @@ const ensureReadAfterWrite = async (
   if (formatted.length === 0) return res.data
   const feed = [...res.data.feed]
   for (const post of formatted) {
-    if (post === null) continue
     let inserted = false
     for (let i = 0; i < feed.length; i++) {
       if (feed[i].post.indexedAt < post.indexedAt) {
@@ -152,7 +151,7 @@ const ensureReadAfterWrite = async (
     }
   }
   return {
-    cursor: res.data.cursor,
+    ...res.data,
     feed,
   }
 }

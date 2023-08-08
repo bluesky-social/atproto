@@ -1,5 +1,6 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { setAtprotoClock } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfiles({
@@ -15,10 +16,7 @@ export default function (server: Server, ctx: AppContext) {
         actorService.getActorClock(requester),
       ])
 
-      if (actorClock !== null) {
-        res.setHeader('atproto-clock', actorClock)
-      }
-
+      setAtprotoClock(res, actorClock)
       return {
         encoding: 'application/json',
         body: {
