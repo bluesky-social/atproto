@@ -56,7 +56,8 @@ export default function (server: Server, ctx: AppContext) {
         feedItemsQb = feedItemsQb.whereExists((qb) =>
           qb
             .selectFrom('post_embed_image')
-            .where('post_embed_image.postUri', '=', 'feed_item.postUri'),
+            .select('post_embed_image.postUri')
+            .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
         )
       } else if (filter === 'posts_no_replies') {
         // only posts, no replies
