@@ -16,13 +16,11 @@ type PushNotification = {
 }
 
 export class NotificationServer {
-  db: Database
   notificationServerUrl: string
   pushNotificationEndpoint: string
 
-  constructor(opts: { db: Database; notificationServerEndpoint?: string }) {
-    const { db, notificationServerEndpoint } = opts
-    this.db = db
+  constructor(opts: { notificationServerEndpoint?: string }) {
+    const { notificationServerEndpoint } = opts
     if (notificationServerEndpoint) {
       this.notificationServerUrl = notificationServerEndpoint
     } else {
@@ -44,33 +42,45 @@ export class NotificationServer {
     }
   }
 
-  async getUserTokens(did: string) {
-    const userTokens = await this.db.db
-      .selectFrom('notification_push_token')
-      .where('did', '=', did)
-      .selectAll()
-      .execute()
+  static async getUserTokens(did: string, db: Database) {
+    try {
+      const userTokens = await db.db
+        .selectFrom('notification_push_token')
+        .where('did', '=', did)
+        .selectAll()
+        .execute()
 
-    if (!userTokens.length) {
-      // TODO: replace this error with logging
-      throw new Error('User has no push notification tokens')
+      return userTokens
+    } catch (error) {
+      throw new Error('Failed to get user tokens')
     }
-    return userTokens
   }
 
-  async prepareNotifsToSend(notifications: UserNotification[]) {
+  static async prepareNotifsToSend(
+    notifications: UserNotification[],
+    db: Database,
+  ) {
     const notifsToSend: PushNotification[] = []
 
     for (const notif of notifications) {
       const { userDid } = notif
-      const userTokens = await this.getUserTokens(userDid)
+      const userTokens = await this.getUserTokens(userDid, db)
 
-      for (let i = 0; i < userTokens.length; i++) {
-        const { appId, platform, token } = userTokens[i]
+      // if user has no tokens, skip
+      if (userTokens.length === 0) {
+        continue
+      }
+
+      for (const t of userTokens) {
+        const { appId, platform, token } = t
         // get title and message of notification
-        const attr = await this.getNotificationDisplayAttributes(notif)
+        const attr = await NotificationServer.getNotificationDisplayAttributes(
+          notif,
+          db,
+        )
+        // if no title or body, skip
         if (!attr) {
-          throw new Error('Failed to get notification data')
+          continue
         }
         const { title, body } = attr
         if (platform === 'ios') {
@@ -94,14 +104,20 @@ export class NotificationServer {
         }
       }
     }
-
     return notifsToSend
   }
 
-  async sendPushNotifications(notifications: PushNotification[]) {
+  static async sendPushNotifications(
+    notifications: PushNotification[],
+    pushEndpoint = GORUSH_URL + PUSH_NOTIFICATION_ENDPOINT,
+  ) {
+    // if no notifications, skip and return early
+    if (!notifications || notifications.length === 0) {
+      return
+    }
     try {
       await axios.post(
-        this.notificationServerUrl,
+        pushEndpoint,
         {
           notifications: notifications,
         },
@@ -119,6 +135,7 @@ export class NotificationServer {
   }
 
   async registerDeviceForPushNotifications(
+    db: Database,
     did: string,
     platform: Platform,
     token: string,
@@ -127,7 +144,7 @@ export class NotificationServer {
   ) {
     try {
       // check if token did pair already exists
-      const existing = await this.db.db
+      const existing = await db.db
         .selectFrom('notification_push_token')
         .where('did', '=', did)
         .where('token', '=', token)
@@ -138,7 +155,7 @@ export class NotificationServer {
       }
 
       // if token doesn't exist, insert it
-      await this.db.db
+      await db.db
         .insertInto('notification_push_token')
         .values({
           did,
@@ -157,7 +174,10 @@ export class NotificationServer {
 
   async registerPushNotificationsToken() {}
 
-  async getNotificationDisplayAttributes(notif: UserNotification) {
+  static async getNotificationDisplayAttributes(
+    notif: UserNotification,
+    db: Database,
+  ) {
     const {
       author: authorDid,
       reason,
@@ -168,7 +188,7 @@ export class NotificationServer {
       userDid,
     } = notif
     // 1. Get author's display name
-    const displayName = await this.db.db
+    const displayName = await db.db
       .selectFrom('profile')
       .where('creator', '=', authorDid)
       .select(['displayName'])
@@ -176,26 +196,38 @@ export class NotificationServer {
     if (!displayName || !displayName?.displayName) {
       throw new Error('Failed to get display name. User has no profile')
     }
-    const author = this.sanitizeDisplayName(displayName.displayName)
+    const author = NotificationServer.sanitizeDisplayName(
+      displayName.displayName,
+    )
 
     // 2. Get post data content
     // if reply, quote, or mention, get URI of the postRecord
     // if like, or custom feed like, or repost get the URI of the reasonSubject
     // if follow, get the URI of the author's profile
-    let title: string
-    let body: string
+    let title = ''
+    let body = ''
 
-    // check follow first because it doesn't have subjectUri
+    // check follow first and mention first because they don't have subjectUri and return
     if (reason === 'follow') {
       title = 'New follower!'
       body = `${author} has followed you`
+      return { title, body }
+    } else if (reason === 'mention') {
+      title = `${author} mentioned you`
+      const mentionedPostData = await db.db
+        .selectFrom('post')
+        .where('uri', '=', recordUri)
+        .selectAll()
+        .executeTakeFirst()
+      body = mentionedPostData?.text || ''
+      return { title, body }
     }
 
     if (!subjectUri) {
       throw new Error('Failed to get subject URI')
     }
 
-    const postData = await this.db.db
+    const postData = await db.db
       .selectFrom('post')
       .where('uri', '=', subjectUri)
       .selectAll()
@@ -218,9 +250,6 @@ export class NotificationServer {
     } else if (reason === 'quote') {
       title = `${author} quoted your post`
       body = postData?.text || ''
-    } else if (reason === 'mention') {
-      title = `${author} mentioned you`
-      body = postData?.text || ''
     } else if (reason === 'repost') {
       title = `${author} reposted your post`
       body = postData?.text || ''
@@ -235,12 +264,16 @@ export class NotificationServer {
       // ) {
       //   image = notification.additionalPost.thread.post.embed.images[0].thumb
       // }
-
-      return { title, body }
     }
+
+    if (title === '' && body === '') {
+      throw new Error('Failed to get title and body')
+    }
+
+    return { title: title, body: body }
   }
 
-  sanitizeDisplayName(str: string): string {
+  static sanitizeDisplayName(str: string): string {
     // \u2705 = ✅
     // \u2713 = ✓
     // \u2714 = ✔

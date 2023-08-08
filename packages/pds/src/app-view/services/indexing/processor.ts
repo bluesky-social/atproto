@@ -36,16 +36,12 @@ type RecordProcessorParams<T, S> = {
 export class RecordProcessor<T, S> {
   collection: string
   db: DatabaseSchema
-  notifServer: NotificationServer
   constructor(
     private appDb: Database,
     private backgroundQueue: BackgroundQueue,
     private params: RecordProcessorParams<T, S>,
   ) {
     this.db = appDb.db
-    this.notifServer = new NotificationServer({
-      db: appDb,
-    })
     this.collection = this.params.lexId
   }
 
@@ -225,9 +221,12 @@ export class RecordProcessor<T, S> {
         // 1. insert notifs
         await db.db.insertInto('user_notification').values(notifs).execute()
         // 2. prepare notifs to send
-        const notifsToSend = await this.notifServer.prepareNotifsToSend(notifs)
+        const notifsToSend = await NotificationServer.prepareNotifsToSend(
+          notifs,
+          db,
+        )
         // 3. send notifs
-        await this.notifServer.sendPushNotifications(notifsToSend)
+        await NotificationServer.sendPushNotifications(notifsToSend)
       })
     }
     if (runOnCommit.length) {
