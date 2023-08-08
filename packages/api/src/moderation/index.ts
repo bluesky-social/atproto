@@ -156,10 +156,10 @@ export function moderatePost(
   if (!isModerationDecisionNoop(post) && post.did === opts.userDid) {
     downgradeDecision(post, 'blur')
   }
-  if (!isModerationDecisionNoop(account) && account.did === opts.userDid) {
+  if (account.cause && account.did === opts.userDid) {
     downgradeDecision(account, 'noop')
   }
-  if (!isModerationDecisionNoop(profile) && profile.did === opts.userDid) {
+  if (profile.cause && profile.did === opts.userDid) {
     downgradeDecision(profile, 'noop')
   }
   if (quote && !isModerationDecisionNoop(quote) && quote.did === opts.userDid) {

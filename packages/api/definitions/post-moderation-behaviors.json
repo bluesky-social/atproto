@@ -814,7 +814,6 @@
       "author": "self",
       "labels": {"profile": ["porn"]},
       "behaviors": {
-        "avatar": {"blur": true}
       }
     },
     "Self-post: Blur-media label ('porn') on author account (warn)": {
@@ -823,8 +822,6 @@
       "author": "self",
       "labels": {"account": ["porn"]},
       "behaviors": {
-        "avatar": {"blur": true},
-        "embed": {"cause": "label:porn", "blur": true}
       }
     },
     "Self-post: Blur-media label ('porn') on quoted post (warn)": {
