@@ -1,7 +1,7 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { authPassthru, mergeRepoViewPdsDetails } from './util'
-import { isRepoView } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { isRepoView } from '../../../../lexicon/types/com/atproto/admin/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getModerationAction({
