@@ -23,6 +23,7 @@ import {
 } from './image/invalidator'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
+import { LabelCache } from './label-cache'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
@@ -93,8 +94,13 @@ export class BskyAppView {
     }
 
     const backgroundQueue = new BackgroundQueue(db)
+    const labelCache = new LabelCache(db)
 
-    const services = createServices({ imgUriBuilder, imgInvalidator })
+    const services = createServices({
+      imgUriBuilder,
+      imgInvalidator,
+      labelCache,
+    })
 
     const ctx = new AppContext({
       db,
@@ -103,6 +109,7 @@ export class BskyAppView {
       imgUriBuilder,
       idResolver,
       didCache,
+      labelCache,
       backgroundQueue,
       algos,
     })
@@ -149,6 +156,7 @@ export class BskyAppView {
         'background queue stats',
       )
     }, 10000)
+    this.ctx.labelCache.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
@@ -160,6 +168,7 @@ export class BskyAppView {
   }
 
   async destroy(opts?: { skipDb: boolean }): Promise<void> {
+    this.ctx.labelCache.stop()
     await this.ctx.didCache.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
