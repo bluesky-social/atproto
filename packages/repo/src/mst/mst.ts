@@ -694,17 +694,9 @@ export class MST {
   // Sync Protocol
 
   async writeToCarStream(car: BlockWriter): Promise<void> {
-    const entries = await this.getEntries()
     const leaves = new CidSet()
     let toFetch = new CidSet()
     toFetch.add(await this.getPointer())
-    for (const entry of entries) {
-      if (entry.isLeaf()) {
-        leaves.add(entry.value)
-      } else {
-        toFetch.add(await entry.getPointer())
-      }
-    }
     while (toFetch.size() > 0) {
       const nextLayer = new CidSet()
       const fetched = await this.storage.getBlocks(toFetch.toList())

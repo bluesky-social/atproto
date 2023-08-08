@@ -22,6 +22,7 @@ import * as ComAtprotoAdminRebaseRepo from './types/com/atproto/admin/rebaseRepo
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
+import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
@@ -121,8 +122,10 @@ import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notificatio
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
+import * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLabels'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
+import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
@@ -139,6 +142,7 @@ export * as ComAtprotoAdminRebaseRepo from './types/com/atproto/admin/rebaseRepo
 export * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
+export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
@@ -238,8 +242,10 @@ export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notificatio
 export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
+export * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLabels'
 export * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
+export * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 
 export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
@@ -479,6 +485,17 @@ export class AdminNS {
       .call('com.atproto.admin.searchRepos', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoAdminSearchRepos.toKnownErr(e)
+      })
+  }
+
+  sendEmail(
+    data?: ComAtprotoAdminSendEmail.InputSchema,
+    opts?: ComAtprotoAdminSendEmail.CallOptions,
+  ): Promise<ComAtprotoAdminSendEmail.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.sendEmail', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminSendEmail.toKnownErr(e)
       })
   }
 
@@ -2021,6 +2038,17 @@ export class UnspeccedNS {
     this._service = service
   }
 
+  applyLabels(
+    data?: AppBskyUnspeccedApplyLabels.InputSchema,
+    opts?: AppBskyUnspeccedApplyLabels.CallOptions,
+  ): Promise<AppBskyUnspeccedApplyLabels.Response> {
+    return this._service.xrpc
+      .call('app.bsky.unspecced.applyLabels', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedApplyLabels.toKnownErr(e)
+      })
+  }
+
   getPopular(
     params?: AppBskyUnspeccedGetPopular.QueryParams,
     opts?: AppBskyUnspeccedGetPopular.CallOptions,
@@ -2045,6 +2073,17 @@ export class UnspeccedNS {
       )
       .catch((e) => {
         throw AppBskyUnspeccedGetPopularFeedGenerators.toKnownErr(e)
+      })
+  }
+
+  getTimelineSkeleton(
+    params?: AppBskyUnspeccedGetTimelineSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetTimelineSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetTimelineSkeleton.Response> {
+    return this._service.xrpc
+      .call('app.bsky.unspecced.getTimelineSkeleton', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedGetTimelineSkeleton.toKnownErr(e)
       })
   }
 }

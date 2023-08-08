@@ -28,7 +28,7 @@ describe('pds user search views', () => {
     sc = new SeedClient(agent)
     await usersBulkSeed(sc)
     headers = sc.getHeaders(Object.values(sc.dids)[0])
-    await server.ctx.backgroundQueue.processAll()
+    await server.processAll()
   })
 
   afterAll(async () => {
@@ -72,10 +72,13 @@ describe('pds user search views', () => {
 
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
+    const sorted = result.data.actors.sort((a, b) =>
+      a.handle > b.handle ? 1 : -1,
+    )
     if (db.dialect === 'pg') {
-      expect(forSnapshot(result.data.actors)).toEqual(snapTypeaheadPg)
+      expect(forSnapshot(sorted)).toEqual(snapTypeaheadPg)
     } else {
-      expect(forSnapshot(result.data.actors)).toEqual(snapTypeaheadSqlite)
+      expect(forSnapshot(sorted)).toEqual(snapTypeaheadSqlite)
     }
   })
 
@@ -101,7 +104,19 @@ describe('pds user search views', () => {
       { headers },
     )
 
-    expect(limited.data.actors).toEqual(full.data.actors.slice(0, 5))
+    // @NOTE it's expected that searchActorsTypeahead doesn't have stable pagination
+
+    const limitedIndexInFull = limited.data.actors.map((needle) => {
+      return full.data.actors.findIndex(
+        (haystack) => needle.did === haystack.did,
+      )
+    })
+
+    // subset exists in full and is monotonic
+    expect(limitedIndexInFull.every((idx) => idx !== -1)).toEqual(true)
+    expect(limitedIndexInFull).toEqual(
+      [...limitedIndexInFull].sort((a, b) => a - b),
+    )
   })
 
   it('search gives relevant results', async () => {
@@ -115,7 +130,7 @@ describe('pds user search views', () => {
     const shouldContain = [
       'cara-wiegand69.test',
       'eudora-dietrich4.test', // Carol Littel
-      'shane-torphy52.test', //Sadie Carter
+      'shane-torphy52.test', // Sadie Carter
       'aliya-hodkiewicz.test', // Carlton Abernathy IV
       'carlos6.test',
       'carolina-mcdermott77.test',
@@ -141,10 +156,13 @@ describe('pds user search views', () => {
 
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
+    const sorted = result.data.actors.sort((a, b) =>
+      a.handle > b.handle ? 1 : -1,
+    )
     if (db.dialect === 'pg') {
-      expect(forSnapshot(result.data.actors)).toEqual(snapSearchPg)
+      expect(forSnapshot(sorted)).toEqual(snapSearchPg)
     } else {
-      expect(forSnapshot(result.data.actors)).toEqual(snapSearchSqlite)
+      expect(forSnapshot(sorted)).toEqual(snapSearchSqlite)
     }
   })
 
@@ -178,7 +196,13 @@ describe('pds user search views', () => {
     )
 
     expect(full.data.actors.length).toBeGreaterThan(5)
-    expect(results(paginatedAll)).toEqual(results([full.data]))
+    const sortedFull = results([full.data]).sort((a, b) =>
+      a.handle > b.handle ? 1 : -1,
+    )
+    const sortedPaginated = results(paginatedAll).sort((a, b) =>
+      a.handle > b.handle ? 1 : -1,
+    )
+    expect(sortedPaginated).toEqual(sortedFull)
   })
 
   it('search handles bad input', async () => {
@@ -229,28 +253,6 @@ const avatar =
 const snapTypeaheadPg = [
   {
     did: 'user(0)',
-    handle: 'cara-wiegand69.test',
-    viewer: { blockedBy: false, muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(1)',
-    displayName: 'Carol Littel',
-    handle: 'eudora-dietrich4.test',
-    avatar,
-    viewer: { blockedBy: false, muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(2)',
-    displayName: 'Sadie Carter',
-    handle: 'shane-torphy52.test',
-    avatar,
-    viewer: { blockedBy: false, muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(3)',
     displayName: 'Carlton Abernathy IV',
     handle: 'aliya-hodkiewicz.test',
     avatar,
@@ -258,13 +260,19 @@ const snapTypeaheadPg = [
     labels: [],
   },
   {
-    did: 'user(4)',
+    did: 'user(1)',
+    handle: 'cara-wiegand69.test',
+    viewer: { blockedBy: false, muted: false },
+    labels: [],
+  },
+  {
+    did: 'user(2)',
     handle: 'carlos6.test',
     viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
-    did: 'user(5)',
+    did: 'user(3)',
     displayName: 'Latoya Windler',
     handle: 'carolina-mcdermott77.test',
     avatar,
@@ -272,9 +280,25 @@ const snapTypeaheadPg = [
     labels: [],
   },
   {
-    did: 'user(6)',
+    did: 'user(4)',
     displayName: 'Rachel Kshlerin',
     handle: 'cayla-marquardt39.test',
+    avatar,
+    viewer: { blockedBy: false, muted: false },
+    labels: [],
+  },
+  {
+    did: 'user(5)',
+    displayName: 'Carol Littel',
+    handle: 'eudora-dietrich4.test',
+    avatar,
+    viewer: { blockedBy: false, muted: false },
+    labels: [],
+  },
+  {
+    did: 'user(6)',
+    displayName: 'Sadie Carter',
+    handle: 'shane-torphy52.test',
     avatar,
     viewer: { blockedBy: false, muted: false },
     labels: [],
@@ -331,30 +355,6 @@ const snapTypeaheadSqlite = [
 const snapSearchPg = [
   {
     did: 'user(0)',
-    handle: 'cara-wiegand69.test',
-    viewer: { blockedBy: false, muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(1)',
-    displayName: 'Carol Littel',
-    indexedAt: '1970-01-01T00:00:00.000Z',
-    handle: 'eudora-dietrich4.test',
-    avatar,
-    viewer: { blockedBy: false, muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(2)',
-    displayName: 'Sadie Carter',
-    indexedAt: '1970-01-01T00:00:00.000Z',
-    handle: 'shane-torphy52.test',
-    avatar,
-    viewer: { blockedBy: false, muted: false },
-    labels: [],
-  },
-  {
-    did: 'user(3)',
     displayName: 'Carlton Abernathy IV',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'aliya-hodkiewicz.test',
@@ -363,13 +363,19 @@ const snapSearchPg = [
     labels: [],
   },
   {
-    did: 'user(4)',
+    did: 'user(1)',
+    handle: 'cara-wiegand69.test',
+    viewer: { blockedBy: false, muted: false },
+    labels: [],
+  },
+  {
+    did: 'user(2)',
     handle: 'carlos6.test',
     viewer: { blockedBy: false, muted: false },
     labels: [],
   },
   {
-    did: 'user(5)',
+    did: 'user(3)',
     displayName: 'Latoya Windler',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'carolina-mcdermott77.test',
@@ -378,10 +384,28 @@ const snapSearchPg = [
     labels: [],
   },
   {
-    did: 'user(6)',
+    did: 'user(4)',
     displayName: 'Rachel Kshlerin',
     indexedAt: '1970-01-01T00:00:00.000Z',
     handle: 'cayla-marquardt39.test',
+    avatar,
+    viewer: { blockedBy: false, muted: false },
+    labels: [],
+  },
+  {
+    did: 'user(5)',
+    displayName: 'Carol Littel',
+    indexedAt: '1970-01-01T00:00:00.000Z',
+    handle: 'eudora-dietrich4.test',
+    avatar,
+    viewer: { blockedBy: false, muted: false },
+    labels: [],
+  },
+  {
+    did: 'user(6)',
+    displayName: 'Sadie Carter',
+    indexedAt: '1970-01-01T00:00:00.000Z',
+    handle: 'shane-torphy52.test',
     avatar,
     viewer: { blockedBy: false, muted: false },
     labels: [],

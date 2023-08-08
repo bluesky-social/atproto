@@ -13,7 +13,7 @@ export class GraphService {
     return (db: Database) => new GraphService(db, imgUriBuilder)
   }
 
-  getListsQb(requester: string) {
+  getListsQb(requester: string | null) {
     const { ref } = this.db.db.dynamic
     return this.db.db
       .selectFrom('list')
@@ -23,7 +23,7 @@ export class GraphService {
       .select(
         this.db.db
           .selectFrom('list_mute')
-          .where('list_mute.mutedByDid', '=', requester)
+          .where('list_mute.mutedByDid', '=', requester ?? '')
           .whereRef('list_mute.listUri', '=', ref('list.uri'))
           .select('list_mute.listUri')
           .as('viewerMuted'),
@@ -53,6 +53,25 @@ export class GraphService {
             qb
               .where('actor_block.subjectDid', '=', requester)
               .whereRef('actor_block.creator', 'in', sql`(${subjectRefs})`),
+          ),
+      )
+      .select(['creator', 'subjectDid'])
+  }
+
+  blockRefQb(first: DbRef, second: DbRef) {
+    return this.db.db
+      .selectFrom('actor_block')
+      .where((outer) =>
+        outer
+          .where((qb) =>
+            qb
+              .whereRef('actor_block.creator', '=', first)
+              .whereRef('actor_block.subjectDid', '=', second),
+          )
+          .orWhere((qb) =>
+            qb
+              .whereRef('actor_block.subjectDid', '=', first)
+              .whereRef('actor_block.creator', '=', second),
           ),
       )
       .select(['creator', 'subjectDid'])
@@ -98,7 +117,7 @@ export class GraphService {
     }
   }
 
-  async getListViews(listUris: string[], requester: string) {
+  async getListViews(listUris: string[], requester: string | null) {
     if (listUris.length < 1) return {}
     const lists = await this.getListsQb(requester)
       .where('list.uri', 'in', listUris)
@@ -123,6 +142,22 @@ export class GraphService {
       descriptionFacets: list.descriptionFacets
         ? JSON.parse(list.descriptionFacets)
         : undefined,
+      avatar: list.avatarCid
+        ? this.imgUriBuilder.getCommonSignedUri('avatar', list.avatarCid)
+        : undefined,
+      indexedAt: list.indexedAt,
+      viewer: {
+        muted: !!list.viewerMuted,
+      },
+    }
+  }
+
+  formatListViewBasic(list: ListInfo) {
+    return {
+      uri: list.uri,
+      cid: list.cid,
+      name: list.name,
+      purpose: list.purpose,
       avatar: list.avatarCid
         ? this.imgUriBuilder.getCommonSignedUri('avatar', list.avatarCid)
         : undefined,

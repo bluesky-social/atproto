@@ -203,7 +203,7 @@ describe('pds admin invite views', () => {
         },
       )
     await expect(attemptDisableInvites).rejects.toThrow(
-      'Authentication Required',
+      'Insufficient privileges',
     )
   })
 
@@ -215,12 +215,13 @@ describe('pds admin invite views', () => {
         headers: { authorization: moderatorAuth() },
       },
     )
-    await expect(attemptCreateInvite).rejects.toThrow('Authentication Required')
+    await expect(attemptCreateInvite).rejects.toThrow('Insufficient privileges')
   })
 
   it('disables an account from getting additional invite codes', async () => {
+    const reasonForDisabling = 'User is selling invites'
     await agent.api.com.atproto.admin.disableAccountInvites(
-      { account: carol },
+      { account: carol, note: reasonForDisabling },
       { encoding: 'application/json', headers: { authorization: adminAuth() } },
     )
 
@@ -229,12 +230,41 @@ describe('pds admin invite views', () => {
       { headers: { authorization: adminAuth() } },
     )
     expect(repoRes.data.invitesDisabled).toBe(true)
+    expect(repoRes.data.inviteNote).toBe(reasonForDisabling)
 
     const invRes = await agent.api.com.atproto.server.getAccountInviteCodes(
       {},
       { headers: sc.getHeaders(carol) },
     )
     expect(invRes.data.codes.length).toBe(0)
+  })
+
+  it('allows setting reason when enabling and disabling invite codes', async () => {
+    const reasonForEnabling = 'User is confirmed they will play nice'
+    const reasonForDisabling = 'User is selling invites'
+    await agent.api.com.atproto.admin.enableAccountInvites(
+      { account: carol, note: reasonForEnabling },
+      { encoding: 'application/json', headers: { authorization: adminAuth() } },
+    )
+
+    const afterEnable = await agent.api.com.atproto.admin.getRepo(
+      { did: carol },
+      { headers: { authorization: adminAuth() } },
+    )
+    expect(afterEnable.data.invitesDisabled).toBe(false)
+    expect(afterEnable.data.inviteNote).toBe(reasonForEnabling)
+
+    await agent.api.com.atproto.admin.disableAccountInvites(
+      { account: carol, note: reasonForDisabling },
+      { encoding: 'application/json', headers: { authorization: adminAuth() } },
+    )
+
+    const afterDisable = await agent.api.com.atproto.admin.getRepo(
+      { did: carol },
+      { headers: { authorization: adminAuth() } },
+    )
+    expect(afterDisable.data.invitesDisabled).toBe(true)
+    expect(afterDisable.data.inviteNote).toBe(reasonForDisabling)
   })
 
   it('creates codes in the background but disables them', async () => {
@@ -255,7 +285,7 @@ describe('pds admin invite views', () => {
         headers: { authorization: moderatorAuth() },
       },
     )
-    await expect(attempt).rejects.toThrow('Authentication Required')
+    await expect(attempt).rejects.toThrow('Insufficient privileges')
   })
 
   it('re-enables an accounts invites', async () => {
@@ -285,6 +315,6 @@ describe('pds admin invite views', () => {
         headers: { authorization: moderatorAuth() },
       },
     )
-    await expect(attempt).rejects.toThrow('Authentication Required')
+    await expect(attempt).rejects.toThrow('Insufficient privileges')
   })
 })

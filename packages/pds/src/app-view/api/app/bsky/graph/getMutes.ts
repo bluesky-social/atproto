@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ req, auth, params }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxy(req)) {
+      if (ctx.canProxyRead(req)) {
         const res = await ctx.appviewAgent.api.app.bsky.graph.getMutes(
           params,
           await ctx.serviceAuthHeaders(requester),
@@ -51,7 +51,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           cursor: keyset.packFromResult(mutesRes),
-          mutes: await actorService.views.profile(mutesRes, requester),
+          mutes: await actorService.views.hydrateProfiles(mutesRes, requester),
         },
       }
     },

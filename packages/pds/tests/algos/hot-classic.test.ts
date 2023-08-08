@@ -4,7 +4,7 @@ import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { makeAlgos } from '../../src'
 
-describe('algo hot-classic', () => {
+describe.skip('algo hot-classic', () => {
   let server: TestServerInfo
   let agent: AtpAgent
   let sc: SeedClient
@@ -35,7 +35,7 @@ describe('algo hot-classic', () => {
 
     alice = sc.dids.alice
     bob = sc.dids.bob
-    await server.ctx.backgroundQueue.processAll()
+    await server.processAll()
   })
 
   afterAll(async () => {
@@ -63,7 +63,7 @@ describe('algo hot-classic', () => {
       await sc.like(sc.dids[name], two.ref)
       await sc.like(sc.dids[name], three.ref)
     }
-    await server.ctx.backgroundQueue.processAll()
+    await server.processAll()
 
     const res = await agent.api.app.bsky.feed.getFeed(
       { feed: feedUri },

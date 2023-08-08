@@ -2,7 +2,6 @@ import { AtUri } from '@atproto/uri'
 import { ids } from '../lexicon/lexicons'
 import withFriends from './with-friends'
 import bskyTeam from './bsky-team'
-import whatsHot from './whats-hot'
 import hotClassic from './hot-classic'
 import bestOfFollows from './best-of-follows'
 import mutuals from './mutuals'
@@ -16,7 +15,6 @@ const feedgenUri = (did, name) =>
 export const makeAlgos = (did: string): MountedAlgos => ({
   [feedgenUri(did, 'with-friends')]: withFriends,
   [feedgenUri(did, 'bsky-team')]: bskyTeam,
-  [feedgenUri(did, 'whats-hot')]: whatsHot,
   [feedgenUri(did, 'hot-classic')]: hotClassic,
   [feedgenUri(did, 'best-of-follows')]: bestOfFollows,
   [feedgenUri(did, 'mutuals')]: mutuals,

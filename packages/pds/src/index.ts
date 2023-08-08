@@ -11,6 +11,7 @@ import events from 'events'
 import { createTransport } from 'nodemailer'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
+import { IdResolver } from '@atproto/identity'
 import * as appviewConsumers from './app-view/event-stream/consumers'
 import inProcessAppView from './app-view/api'
 import API from './api'
@@ -19,9 +20,11 @@ import * as wellKnown from './well-known'
 import Database from './db'
 import { ServerAuth } from './auth'
 import * as error from './error'
-import { dbLogger, loggerMiddleware } from './logger'
+import compression from './util/compression'
+import { dbLogger, loggerMiddleware, seqLogger } from './logger'
 import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
+import { ModerationMailer } from './mailer/moderation'
 import { createServer } from './lexicon'
 import { MessageDispatcher } from './event-stream/message-queue'
 import { ImageUriBuilder } from './image/uri'
@@ -37,10 +40,13 @@ import {
 import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
 import { BackgroundQueue } from './event-stream/background-queue'
 import DidSqlCache from './did-cache'
-import { IdResolver } from '@atproto/identity'
 import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
+import { LabelCache } from './label-cache'
+import { ContentReporter } from './content-reporter'
+import { ModerationService } from './services/moderation'
 
+export type { MountedAlgos } from './feed-gen/types'
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './db'
@@ -55,12 +61,9 @@ export class PDS {
   public server?: http.Server
   private terminator?: HttpTerminator
   private dbStatsInterval?: NodeJS.Timer
+  private sequencerStatsInterval?: NodeJS.Timer
 
-  constructor(opts: {
-    ctx: AppContext
-    app: express.Application
-    sequencerLeader: SequencerLeader
-  }) {
+  constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
     this.app = opts.app
   }
@@ -87,6 +90,7 @@ export class PDS {
       jwtSecret: config.jwtSecret,
       adminPass: config.adminPassword,
       moderatorPass: config.moderatorPassword,
+      triagePass: config.triagePassword,
     })
 
     const didCache = new DidSqlCache(
@@ -94,25 +98,38 @@ export class PDS {
       config.didCacheStaleTTL,
       config.didCacheMaxTTL,
     )
-    const idResolver = new IdResolver({ plcUrl: config.didPlcUrl, didCache })
+    const idResolver = new IdResolver({
+      plcUrl: config.didPlcUrl,
+      didCache,
+      backupNameservers: config.handleResolveNameservers,
+    })
 
     const messageDispatcher = new MessageDispatcher()
     const sequencer = new Sequencer(db)
-    const sequencerLeader = new SequencerLeader(
-      db,
-      config.sequencerLeaderLockId,
-    )
+    const sequencerLeader = config.sequencerLeaderEnabled
+      ? new SequencerLeader(db, config.sequencerLeaderLockId)
+      : null
 
-    const mailTransport =
+    const serverMailTransport =
       config.emailSmtpUrl !== undefined
         ? createTransport(config.emailSmtpUrl)
         : createTransport({ jsonTransport: true })
 
-    const mailer = new ServerMailer(mailTransport, config)
+    const moderationMailTransport =
+      config.moderationEmailSmtpUrl !== undefined
+        ? createTransport(config.moderationEmailSmtpUrl)
+        : createTransport({ jsonTransport: true })
+
+    const mailer = new ServerMailer(serverMailTransport, config)
+    const moderationMailer = new ModerationMailer(
+      moderationMailTransport,
+      config,
+    )
 
     const app = express()
     app.use(cors())
     app.use(loggerMiddleware)
+    app.use(compression())
 
     let imgUriEndpoint = config.imgUriEndpoint
     if (!imgUriEndpoint) {
@@ -169,6 +186,25 @@ export class PDS {
       })
     }
 
+    const labelCache = new LabelCache(db)
+
+    let contentReporter: ContentReporter | undefined = undefined
+    if (config.unacceptableWordsB64) {
+      contentReporter = new ContentReporter({
+        backgroundQueue,
+        moderationService: new ModerationService(
+          db,
+          messageDispatcher,
+          blobstore,
+          imgUriBuilder,
+          imgInvalidator,
+        ),
+        reporterDid: config.labelerDid,
+        unacceptableB64: config.unacceptableWordsB64,
+        falsePositivesB64: config.falsePositiveWordsB64,
+      })
+    }
+
     const services = createServices({
       repoSigningKey,
       messageDispatcher,
@@ -176,6 +212,8 @@ export class PDS {
       imgUriBuilder,
       imgInvalidator,
       labeler,
+      labelCache,
+      contentReporter,
       backgroundQueue,
       crawlers,
     })
@@ -193,8 +231,11 @@ export class PDS {
       sequencer,
       sequencerLeader,
       labeler,
+      labelCache,
+      contentReporter,
       services,
       mailer,
+      moderationMailer,
       imgUriBuilder,
       backgroundQueue,
       crawlers,
@@ -218,11 +259,7 @@ export class PDS {
     app.use(server.xrpc.router)
     app.use(error.handler)
 
-    return new PDS({
-      ctx,
-      app,
-      sequencerLeader,
-    })
+    return new PDS({ ctx, app })
   }
 
   async start(): Promise<http.Server> {
@@ -247,10 +284,21 @@ export class PDS {
         )
       }, 10000)
     }
+    this.sequencerStatsInterval = setInterval(async () => {
+      if (this.ctx.sequencerLeader?.isLeader) {
+        try {
+          const seq = await this.ctx.sequencerLeader.lastSeq()
+          seqLogger.info({ seq }, 'sequencer leader stats')
+        } catch (err) {
+          seqLogger.error({ err }, 'error getting last seq')
+        }
+      }
+    }, 500)
     appviewConsumers.listen(this.ctx)
-    this.ctx.sequencerLeader.run()
+    this.ctx.sequencerLeader?.run()
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()
+    this.ctx.labelCache.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     this.server.keepAliveTimeout = 90000
@@ -260,11 +308,13 @@ export class PDS {
   }
 
   async destroy(): Promise<void> {
-    await this.ctx.sequencerLeader.destroy()
+    this.ctx.labelCache.stop()
+    await this.ctx.sequencerLeader?.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
+    clearInterval(this.sequencerStatsInterval)
   }
 }
 

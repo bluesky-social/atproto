@@ -1,4 +1,3 @@
-import { cborToLexRecord } from '@atproto/repo'
 import Database from '../../../db'
 import {
   FeedViewPost,
@@ -6,12 +5,31 @@ import {
   PostView,
 } from '../../../lexicon/types/app/bsky/feed/defs'
 import {
-  ActorViewMap,
-  FeedEmbeds,
+  Main as EmbedImages,
+  isMain as isEmbedImages,
+  View as EmbedImagesView,
+} from '../../../lexicon/types/app/bsky/embed/images'
+import {
+  Main as EmbedExternal,
+  isMain as isEmbedExternal,
+  View as EmbedExternalView,
+} from '../../../lexicon/types/app/bsky/embed/external'
+import { Main as EmbedRecordWithMedia } from '../../../lexicon/types/app/bsky/embed/recordWithMedia'
+import {
+  ViewBlocked,
+  ViewNotFound,
+  ViewRecord,
+} from '../../../lexicon/types/app/bsky/embed/record'
+import {
+  ActorInfoMap,
+  PostEmbedViews,
   FeedGenInfo,
   FeedRow,
   MaybePostView,
   PostInfoMap,
+  RecordEmbedViewRecord,
+  PostBlocksMap,
+  FeedHydrationOptions,
 } from './types'
 import { Labels } from '../label'
 import { ProfileView } from '../../../lexicon/types/app/bsky/actor/defs'
@@ -60,11 +78,12 @@ export class FeedViews {
 
   formatFeed(
     items: FeedRow[],
-    actors: ActorViewMap,
+    actors: ActorInfoMap,
     posts: PostInfoMap,
-    embeds: FeedEmbeds,
+    embeds: PostEmbedViews,
     labels: Labels,
-    usePostViewUnion?: boolean,
+    blocks: PostBlocksMap,
+    opts?: FeedHydrationOptions,
   ): FeedViewPost[] {
     const feed: FeedViewPost[] = []
     for (const item of items) {
@@ -74,9 +93,10 @@ export class FeedViews {
         posts,
         embeds,
         labels,
+        opts,
       )
       // skip over not found & blocked posts
-      if (!post) {
+      if (!post || blocks[post.uri]?.reply) {
         continue
       }
       const feedPost = { post }
@@ -103,7 +123,8 @@ export class FeedViews {
           posts,
           embeds,
           labels,
-          usePostViewUnion,
+          blocks,
+          opts,
         )
         const replyRoot = this.formatMaybePostView(
           item.replyRoot,
@@ -111,7 +132,8 @@ export class FeedViews {
           posts,
           embeds,
           labels,
-          usePostViewUnion,
+          blocks,
+          opts,
         )
         if (replyRoot && replyParent) {
           feedPost['reply'] = {
@@ -127,10 +149,11 @@ export class FeedViews {
 
   formatPostView(
     uri: string,
-    actors: ActorViewMap,
+    actors: ActorInfoMap,
     posts: PostInfoMap,
-    embeds: FeedEmbeds,
+    embeds: PostEmbedViews,
     labels: Labels,
+    opts?: Pick<FeedHydrationOptions, 'includeSoftDeleted'>,
   ): PostView | undefined {
     const post = posts[uri]
     const author = actors[post?.creator]
@@ -142,7 +165,10 @@ export class FeedViews {
       uri: post.uri,
       cid: post.cid,
       author: author,
-      record: cborToLexRecord(post.recordBytes),
+      takedownId: opts?.includeSoftDeleted
+        ? post.takedownId ?? null
+        : undefined,
+      record: post.record,
       embed: embeds[uri],
       replyCount: post.replyCount ?? 0,
       repostCount: post.repostCount ?? 0,
@@ -158,19 +184,24 @@ export class FeedViews {
 
   formatMaybePostView(
     uri: string,
-    actors: ActorViewMap,
+    actors: ActorInfoMap,
     posts: PostInfoMap,
-    embeds: FeedEmbeds,
+    embeds: PostEmbedViews,
     labels: Labels,
-    usePostViewUnion?: boolean,
+    blocks: PostBlocksMap,
+    opts?: FeedHydrationOptions,
   ): MaybePostView | undefined {
-    const post = this.formatPostView(uri, actors, posts, embeds, labels)
+    const post = this.formatPostView(uri, actors, posts, embeds, labels, opts)
     if (!post) {
-      if (!usePostViewUnion) return
+      if (!opts?.usePostViewUnion) return
       return this.notFoundPost(uri)
     }
-    if (post.author.viewer?.blockedBy || post.author.viewer?.blocking) {
-      if (!usePostViewUnion) return
+    if (
+      post.author.viewer?.blockedBy ||
+      post.author.viewer?.blocking ||
+      blocks[uri]?.reply
+    ) {
+      if (!opts?.usePostViewUnion) return
       return this.blockedPost(uri)
     }
     return {
@@ -192,6 +223,89 @@ export class FeedViews {
       $type: 'app.bsky.feed.defs#notFoundPost',
       uri: uri,
       notFound: true as const,
+    }
+  }
+
+  imagesEmbedView(embed: EmbedImages) {
+    const imgViews = embed.images.map((img) => ({
+      thumb: this.imgUriBuilder.getCommonSignedUri(
+        'feed_thumbnail',
+        img.image.ref,
+      ),
+      fullsize: this.imgUriBuilder.getCommonSignedUri(
+        'feed_fullsize',
+        img.image.ref,
+      ),
+      alt: img.alt,
+    }))
+    return {
+      $type: 'app.bsky.embed.images#view',
+      images: imgViews,
+    }
+  }
+
+  externalEmbedView(embed: EmbedExternal) {
+    const { uri, title, description, thumb } = embed.external
+    return {
+      $type: 'app.bsky.embed.external#view',
+      external: {
+        uri,
+        title,
+        description,
+        thumb: thumb
+          ? this.imgUriBuilder.getCommonSignedUri('feed_thumbnail', thumb.ref)
+          : undefined,
+      },
+    }
+  }
+
+  getRecordEmbedView(
+    uri: string,
+    post?: PostView,
+    omitEmbeds = false,
+  ): (ViewRecord | ViewNotFound | ViewBlocked) & { $type: string } {
+    if (!post) {
+      return {
+        $type: 'app.bsky.embed.record#viewNotFound',
+        uri,
+      }
+    }
+    if (post.author.viewer?.blocking || post.author.viewer?.blockedBy) {
+      return {
+        $type: 'app.bsky.embed.record#viewBlocked',
+        uri,
+      }
+    }
+    return {
+      $type: 'app.bsky.embed.record#viewRecord',
+      uri: post.uri,
+      cid: post.cid,
+      author: post.author,
+      value: post.record,
+      labels: post.labels,
+      indexedAt: post.indexedAt,
+      embeds: omitEmbeds ? undefined : post.embed ? [post.embed] : [],
+    }
+  }
+
+  getRecordWithMediaEmbedView(
+    embed: EmbedRecordWithMedia,
+    embedRecordView: RecordEmbedViewRecord,
+  ) {
+    let mediaEmbed: EmbedImagesView | EmbedExternalView
+    if (isEmbedImages(embed.media)) {
+      mediaEmbed = this.imagesEmbedView(embed.media)
+    } else if (isEmbedExternal(embed.media)) {
+      mediaEmbed = this.externalEmbedView(embed.media)
+    } else {
+      return
+    }
+    return {
+      $type: 'app.bsky.embed.recordWithMedia#view',
+      record: {
+        record: embedRecordView,
+      },
+      media: mediaEmbed,
     }
   }
 }

@@ -1,3 +1,4 @@
+import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
@@ -8,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxy(req)) {
+      if (ctx.canProxyRead(req)) {
         const res = await ctx.appviewAgent.api.app.bsky.feed.getLikes(
           params,
           await ctx.serviceAuthHeaders(requester),
@@ -57,7 +58,17 @@ export default function (server: Server, ctx: AppContext) {
       const likesRes = await builder.execute()
       const actors = await services.appView
         .actor(db)
-        .views.profile(likesRes, requester)
+        .views.profiles(likesRes, requester)
+
+      const likes = mapDefined(likesRes, (row) =>
+        actors[row.did]
+          ? {
+              createdAt: row.createdAt,
+              indexedAt: row.indexedAt,
+              actor: actors[row.did],
+            }
+          : undefined,
+      )
 
       return {
         encoding: 'application/json',
@@ -65,11 +76,7 @@ export default function (server: Server, ctx: AppContext) {
           uri,
           cid,
           cursor: keyset.packFromResult(likesRes),
-          likes: likesRes.map((row, i) => ({
-            createdAt: row.createdAt,
-            indexedAt: row.indexedAt,
-            actor: actors[i],
-          })),
+          likes,
         },
       }
     },

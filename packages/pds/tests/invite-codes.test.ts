@@ -4,6 +4,7 @@ import { AppContext } from '../src'
 import * as util from './_util'
 import { DAY } from '@atproto/common'
 import { genInvCodes } from '../src/api/com/atproto/server/util'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 
 describe('account', () => {
   let serverUrl: string
@@ -43,6 +44,49 @@ describe('account', () => {
     await expect(promise).rejects.toThrow(
       ComAtprotoServerCreateAccount.InvalidInviteCodeError,
     )
+  })
+
+  it('fails on invite code from takendown account', async () => {
+    const account = await makeLoggedInAccount(agent)
+    // assign an invite code to the user
+    const code = await createInviteCode(agent, 1, account.did)
+    // takedown the user's account
+    const { data: takedownAction } =
+      await agent.api.com.atproto.admin.takeModerationAction(
+        {
+          action: TAKEDOWN,
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: account.did,
+          },
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: { authorization: util.adminAuth() },
+        },
+      )
+    // attempt to create account with the previously generated invite code
+    const promise = createAccountWithInvite(agent, code)
+    await expect(promise).rejects.toThrow(
+      ComAtprotoServerCreateAccount.InvalidInviteCodeError,
+    )
+
+    // double check that reversing the takedown action makes the invite code valid again
+    await agent.api.com.atproto.admin.reverseModerationAction(
+      {
+        id: takedownAction.id,
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: util.adminAuth() },
+      },
+    )
+    // attempt to create account with the previously generated invite code
+    await createAccountWithInvite(agent, code)
   })
 
   it('fails on used up invite code', async () => {
@@ -106,7 +150,7 @@ describe('account', () => {
     expect(res3.data.codes.length).toBe(2)
   })
 
-  it('admin gifted codes to not impact a users avilable codes', async () => {
+  it('admin gifted codes to not impact a users available codes', async () => {
     const account = await makeLoggedInAccount(agent)
 
     // again, pretend account was made 2 days ago

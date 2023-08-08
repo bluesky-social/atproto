@@ -1,10 +1,11 @@
 import * as crypto from '@atproto/crypto'
-import { Repo, RepoContents, RepoVerificationError } from '../../src'
+import { CidSet, Repo, RepoContents, RepoVerificationError } from '../../src'
 import { MemoryBlockstore } from '../../src/storage'
 import * as sync from '../../src/sync'
 
 import * as util from '../_util'
 import { streamToBuffer } from '@atproto/common'
+import { CarReader } from '@ipld/car/reader'
 
 describe('Checkout Sync', () => {
   let storage: MemoryBlockstore
@@ -48,6 +49,18 @@ describe('Checkout Sync', () => {
     }
     const hasGenesisCommit = await syncStorage.has(commitPath[0])
     expect(hasGenesisCommit).toBeFalsy()
+  })
+
+  it('does not sync duplicate blocks', async () => {
+    const carBytes = await streamToBuffer(sync.getCheckout(storage, repo.cid))
+    const car = await CarReader.fromBytes(carBytes)
+    const cids = new CidSet()
+    for await (const block of car.blocks()) {
+      if (cids.has(block.cid)) {
+        throw new Error(`duplicate block: :${block.cid.toString()}`)
+      }
+      cids.add(block.cid)
+    }
   })
 
   it('throws on a bad signature', async () => {

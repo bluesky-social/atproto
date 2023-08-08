@@ -22,7 +22,7 @@ describe('image processing server', () => {
     const sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
     fileDid = sc.dids.carol
     fileCid = sc.posts[fileDid][0].images[0].image.ref
     client = axios.create({
@@ -46,7 +46,7 @@ describe('image processing server', () => {
     )
 
     const info = await getInfo(res.data)
-    console.log(info)
+
     expect(info).toEqual({
       height: 580,
       width: 1000,

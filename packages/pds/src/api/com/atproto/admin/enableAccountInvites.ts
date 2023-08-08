@@ -1,15 +1,19 @@
+import { AuthRequiredError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.enableAccountInvites({
-    auth: ctx.adminVerifier,
-    handler: async ({ input }) => {
-      const { account } = input.body
+    auth: ctx.roleVerifier,
+    handler: async ({ input, auth }) => {
+      if (!auth.credentials.admin) {
+        throw new AuthRequiredError('Insufficient privileges')
+      }
+      const { account, note } = input.body
       await ctx.db.db
         .updateTable('user_account')
         .where('did', '=', account)
-        .set({ invitesDisabled: 0 })
+        .set({ invitesDisabled: 0, inviteNote: note?.trim() || null })
         .execute()
     },
   })

@@ -343,6 +343,9 @@ export const schemaDict = {
           invitesDisabled: {
             type: 'boolean',
           },
+          inviteNote: {
+            type: 'string',
+          },
         },
       },
       repoViewDetail: {
@@ -400,6 +403,9 @@ export const schemaDict = {
           },
           invitesDisabled: {
             type: 'boolean',
+          },
+          inviteNote: {
+            type: 'string',
           },
         },
       },
@@ -530,7 +536,6 @@ export const schemaDict = {
       },
       moderation: {
         type: 'object',
-        required: [],
         properties: {
           currentAction: {
             type: 'ref',
@@ -640,6 +645,11 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
+              note: {
+                type: 'string',
+                description:
+                  'Additionally add a note describing why the invites were disabled',
+              },
             },
           },
         },
@@ -693,6 +703,11 @@ export const schemaDict = {
               account: {
                 type: 'string',
                 format: 'did',
+              },
+              note: {
+                type: 'string',
+                description:
+                  'Additionally add a note describing why the invites were enabled',
               },
             },
           },
@@ -864,6 +879,12 @@ export const schemaDict = {
               items: {
                 type: 'string',
               },
+            },
+            actionedBy: {
+              type: 'string',
+              format: 'did',
+              description:
+                'Get all reports that were actioned by a specific moderator',
             },
             reporters: {
               type: 'array',
@@ -1145,6 +1166,47 @@ export const schemaDict = {
                   type: 'ref',
                   ref: 'lex:com.atproto.admin.defs#repoView',
                 },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminSendEmail: {
+    lexicon: 1,
+    id: 'com.atproto.admin.sendEmail',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Send email to a user's primary email address",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['recipientDid', 'content'],
+            properties: {
+              recipientDid: {
+                type: 'string',
+                format: 'did',
+              },
+              content: {
+                type: 'string',
+              },
+              subject: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['sent'],
+            properties: {
+              sent: {
+                type: 'boolean',
               },
             },
           },
@@ -1605,7 +1667,7 @@ export const schemaDict = {
       },
       reasonSexual: {
         type: 'token',
-        description: 'Unwanted or mis-labeled sexual content',
+        description: 'Unwanted or mislabeled sexual content',
       },
       reasonRude: {
         type: 'token',
@@ -6231,6 +6293,32 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedApplyLabels: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.applyLabels',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Allow a labeler to apply labels directly.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['labels'],
+            properties: {
+              labels: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.label.defs#label',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetPopular: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getPopular',
@@ -6285,12 +6373,32 @@ export const schemaDict = {
       main: {
         type: 'query',
         description: 'An unspecced view of globally popular feed generators',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+            query: {
+              type: 'string',
+            },
+          },
+        },
         output: {
           encoding: 'application/json',
           schema: {
             type: 'object',
             required: ['feeds'],
             properties: {
+              cursor: {
+                type: 'string',
+              },
               feeds: {
                 type: 'array',
                 items: {
@@ -6301,6 +6409,54 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppBskyUnspeccedGetTimelineSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getTimelineSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'A skeleton of a timeline - UNSPECCED & WILL GO AWAY SOON',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#skeletonFeedPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'UnknownFeed',
+          },
+        ],
       },
     },
   },
@@ -6326,6 +6482,7 @@ export const ids = {
   ComAtprotoAdminReverseModerationAction:
     'com.atproto.admin.reverseModerationAction',
   ComAtprotoAdminSearchRepos: 'com.atproto.admin.searchRepos',
+  ComAtprotoAdminSendEmail: 'com.atproto.admin.sendEmail',
   ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
   ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
@@ -6429,7 +6586,9 @@ export const ids = {
     'app.bsky.notification.listNotifications',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
+  AppBskyUnspeccedApplyLabels: 'app.bsky.unspecced.applyLabels',
   AppBskyUnspeccedGetPopular: 'app.bsky.unspecced.getPopular',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
+  AppBskyUnspeccedGetTimelineSkeleton: 'app.bsky.unspecced.getTimelineSkeleton',
 }

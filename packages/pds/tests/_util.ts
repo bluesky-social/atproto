@@ -6,6 +6,7 @@ import * as plc from '@did-plc/lib'
 import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
 import { AtUri } from '@atproto/uri'
 import { randomStr } from '@atproto/crypto'
+import { uniqueLockId } from '@atproto/dev-env'
 import { CID } from 'multiformats/cid'
 import * as uint8arrays from 'uint8arrays'
 import { PDS, ServerConfig, Database, MemoryBlobStore } from '../src/index'
@@ -18,12 +19,14 @@ import { MountedAlgos } from '../src/feed-gen/types'
 
 const ADMIN_PASSWORD = 'admin-pass'
 const MODERATOR_PASSWORD = 'moderator-pass'
+const TRIAGE_PASSWORD = 'triage-pass'
 
 export type CloseFn = () => Promise<void>
 export type TestServerInfo = {
   url: string
   ctx: AppContext
   close: CloseFn
+  processAll: () => Promise<void>
 }
 
 export type TestServerOpts = {
@@ -81,6 +84,7 @@ export const runTestServer = async (
     recoveryKey,
     adminPassword: ADMIN_PASSWORD,
     moderatorPassword: MODERATOR_PASSWORD,
+    triagePassword: TRIAGE_PASSWORD,
     inviteRequired: false,
     userInviteInterval: null,
     userInviteEpoch: Date.now(),
@@ -104,6 +108,8 @@ export const runTestServer = async (
     maxSubscriptionBuffer: 200,
     repoBackfillLimitMs: HOUR,
     sequencerLeaderLockId: uniqueLockId(),
+    dbTxLockNonce: await randomStr(32, 'base32'),
+    bskyAppViewProxy: false,
     ...params,
   })
 
@@ -112,6 +118,7 @@ export const runTestServer = async (
       ? Database.postgres({
           url: cfg.dbPostgresUrl,
           schema: cfg.dbPostgresSchema,
+          txLockNonce: cfg.dbTxLockNonce,
         })
       : Database.memory()
 
@@ -122,6 +129,7 @@ export const runTestServer = async (
       ? Database.postgres({
           url: cfg.dbPostgresUrl,
           schema: cfg.dbPostgresSchema,
+          txLockNonce: cfg.dbTxLockNonce,
         })
       : db
   if (opts.migration) {
@@ -149,6 +157,9 @@ export const runTestServer = async (
   const pdsServer = await pds.start()
   const pdsPort = (pdsServer.address() as AddressInfo).port
 
+  // we refresh label cache by hand in `processAll` instead of on a timer
+  pds.ctx.labelCache.stop()
+
   return {
     url: `http://localhost:${pdsPort}`,
     ctx: pds.ctx,
@@ -156,17 +167,11 @@ export const runTestServer = async (
       await pds.destroy()
       await plcServer.destroy()
     },
+    processAll: async () => {
+      await pds.ctx.backgroundQueue.processAll()
+      await pds.ctx.labelCache.fullRefresh()
+    },
   }
-}
-
-const usedLockIds = new Set()
-const uniqueLockId = () => {
-  let lockId: number
-  do {
-    lockId = 1000 + Math.ceil(1000 * Math.random())
-  } while (usedLockIds.has(lockId))
-  usedLockIds.add(lockId)
-  return lockId
 }
 
 export const adminAuth = () => {
@@ -175,6 +180,10 @@ export const adminAuth = () => {
 
 export const moderatorAuth = () => {
   return basicAuth('admin', MODERATOR_PASSWORD)
+}
+
+export const triageAuth = () => {
+  return basicAuth('admin', TRIAGE_PASSWORD)
 }
 
 const basicAuth = (username: string, password: string) => {
@@ -229,6 +238,10 @@ export const forSnapshot = (obj: unknown) => {
     }
     if (str.match(/^\d+::bafy/)) {
       return constantKeysetCursor
+    }
+
+    if (str.match(/^\d+::did:plc/)) {
+      return constantDidCursor
     }
     if (str.match(/\/image\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
       // Match image urls (pds)
@@ -307,6 +320,7 @@ export function take(
 
 export const constantDate = new Date(0).toISOString()
 export const constantKeysetCursor = '0000000000000::bafycid'
+export const constantDidCursor = '0000000000000::did'
 
 const mapLeafValues = (obj: unknown, fn: (val: unknown) => unknown) => {
   if (Array.isArray(obj)) {

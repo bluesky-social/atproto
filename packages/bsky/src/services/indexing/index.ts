@@ -127,25 +127,39 @@ export class IndexingService {
     if (!needsReindex) {
       return
     }
-    const { handle } = await this.idResolver.did.resolveAtprotoData(did, true)
-    const handleToDid = await this.idResolver.handle.resolve(handle)
-    if (did !== handleToDid) {
-      return // No bidirectional link between did and handle
+    const atpData = await this.idResolver.did.resolveAtprotoData(did, true)
+    const handleToDid = await this.idResolver.handle.resolve(atpData.handle)
+
+    const handle: string | null =
+      did === handleToDid ? atpData.handle.toLowerCase() : null
+
+    if (actor && actor.handle !== handle) {
+      const actorWithHandle =
+        handle !== null
+          ? await this.db.db
+              .selectFrom('actor')
+              .where('handle', '=', handle)
+              .selectAll()
+              .executeTakeFirst()
+          : null
+
+      // handle contention
+      if (handle && actorWithHandle && did !== actorWithHandle.did) {
+        await this.db.db
+          .updateTable('actor')
+          .where('actor.did', '=', actorWithHandle.did)
+          .set({ handle: null })
+          .execute()
+      }
     }
+
     const actorInfo = { handle, indexedAt: timestamp }
-    const inserted = await this.db.db
+    await this.db.db
       .insertInto('actor')
       .values({ did, ...actorInfo })
-      .onConflict((oc) => oc.doNothing())
+      .onConflict((oc) => oc.column('did').doUpdateSet(actorInfo))
       .returning('did')
       .executeTakeFirst()
-    if (!inserted) {
-      await this.db.db
-        .updateTable('actor')
-        .set(actorInfo)
-        .where('did', '=', did)
-        .execute()
-    }
   }
 
   async indexRepo(did: string, commit: string) {
@@ -189,7 +203,10 @@ export class IndexingService {
               'skipping indexing of invalid record',
             )
           } else {
-            throw err
+            subLogger.error(
+              { err, did, commit, uri: uri.toString(), cid: cid.toString() },
+              'skipping indexing due to error processing record',
+            )
           }
         }
       })

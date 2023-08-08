@@ -1,39 +1,43 @@
 import { AtUri, AtpAgent, BlobRef } from '@atproto/api'
-import stream, { Readable } from 'stream'
+import { Readable } from 'stream'
 import { Labeler } from '../../src/labeler'
-import { AppContext, Database, ServerConfig } from '../../src'
+import { Database, IndexerConfig } from '../../src'
+import IndexerContext from '../../src/indexer/context'
 import { cidForRecord } from '@atproto/repo'
 import { keywordLabeling } from '../../src/labeler/util'
-import { cidForCbor, streamToBytes, TID } from '@atproto/common'
-import * as ui8 from 'uint8arrays'
+import { cidForCbor, TID } from '@atproto/common'
 import { LabelService } from '../../src/services/label'
 import { TestNetwork } from '@atproto/dev-env'
 import { IdResolver } from '@atproto/identity'
 import { SeedClient } from '../seeds/client'
 import usersSeed from '../seeds/users'
 import { BackgroundQueue } from '../../src/background'
+import { CID } from 'multiformats/cid'
+
+// outside of test suite so that TestLabeler can access them
+let badCid1: CID | undefined = undefined
+let badCid2: CID | undefined = undefined
 
 describe('labeler', () => {
   let network: TestNetwork
   let labeler: Labeler
   let labelSrvc: LabelService
-  let ctx: AppContext
+  let ctx: IndexerContext
   let labelerDid: string
   let badBlob1: BlobRef
   let badBlob2: BlobRef
   let goodBlob: BlobRef
   let alice: string
   const postUri = () => AtUri.make(alice, 'app.bsky.feed.post', TID.nextStr())
-  const profileUri = () => AtUri.make(alice, 'app.bsky.actor.profile', 'self')
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'labeler',
+      dbPostgresSchema: 'bsky_labeler',
     })
-    ctx = network.bsky.ctx
+    ctx = network.bsky.indexer.ctx
     const pdsCtx = network.pds.ctx
     labelerDid = ctx.cfg.labelerDid
-    labeler = new TestLabeler(ctx)
+    labeler = new TestLabeler(network.bsky.indexer.ctx)
     labelSrvc = ctx.services.label(ctx.db)
     const pdsAgent = new AtpAgent({ service: network.pds.url })
     const sc = new SeedClient(pdsAgent)
@@ -67,6 +71,8 @@ describe('labeler', () => {
     badBlob1 = await storeBlob(bytes1)
     badBlob2 = await storeBlob(bytes2)
     goodBlob = await storeBlob(bytes3)
+    badCid1 = badBlob1.ref
+    badCid2 = badBlob2.ref
   })
 
   afterAll(async () => {
@@ -159,7 +165,7 @@ class TestLabeler extends Labeler {
   constructor(opts: {
     db: Database
     idResolver: IdResolver
-    cfg: ServerConfig
+    cfg: IndexerConfig
     backgroundQueue: BackgroundQueue
   }) {
     const { db, cfg, idResolver, backgroundQueue } = opts
@@ -171,13 +177,11 @@ class TestLabeler extends Labeler {
     return keywordLabeling(this.keywords, text)
   }
 
-  async labelImg(img: stream.Readable): Promise<string[]> {
-    const buf = await streamToBytes(img)
-    if (ui8.equals(buf, new Uint8Array([1, 2, 3, 4]))) {
+  async labelImg(_did: string, cid: CID): Promise<string[]> {
+    if (cid.equals(badCid1)) {
       return ['img-label']
     }
-
-    if (ui8.equals(buf, new Uint8Array([5, 6, 7, 8]))) {
+    if (cid.equals(badCid2)) {
       return ['other-img-label']
     }
     return []

@@ -1,0 +1,326 @@
+[
+  {
+    "id": "system",
+    "configurable": false,
+    "labels": [
+      {
+        "id": "!hide",
+        "preferences": ["hide"],
+        "flags": ["no-override"],
+        "onwarn": "blur"
+      },
+      {
+        "id": "!no-promote",
+        "preferences": ["hide"],
+        "flags": [],
+        "onwarn": null
+      },
+      {
+        "id": "!warn",
+        "preferences": ["warn"],
+        "flags": [],
+        "onwarn": "blur"
+      }
+    ]
+  },
+  {
+    "id": "legal",
+    "configurable": false,
+    "labels": [
+      {
+        "id": "nudity-nonconsensual",
+        "preferences": ["hide"],
+        "flags": ["no-override"],
+        "onwarn": "blur"
+      },
+      {
+        "id": "dmca-violation",
+        "preferences": ["hide"],
+        "flags": ["no-override"],
+        "onwarn": "blur"
+      },
+      {
+        "id": "doxxing",
+        "preferences": ["hide"],
+        "flags": ["no-override"],
+        "onwarn": "blur"
+      }
+    ]
+  },
+  {
+    "id": "sexual",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "porn",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": ["adult"],
+        "onwarn": "blur-media"
+      },
+      {
+        "id": "sexual",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": ["adult"],
+        "onwarn": "blur-media"
+      },
+      {
+        "id": "nudity",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": ["adult"],
+        "onwarn": "blur-media"
+      }
+    ]
+  },
+  {
+    "id": "violence",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "nsfl",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": ["adult"],
+        "onwarn": "blur-media"
+      },
+      {
+        "id": "corpse",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": ["adult"],
+        "onwarn": "blur-media"
+      },
+      {
+        "id": "gore",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": ["adult"],
+        "onwarn": "blur-media"
+      },
+      {
+        "id": "torture",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": ["adult"],
+        "onwarn": "blur"
+      },
+      {
+        "id": "self-harm",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": ["adult"],
+        "onwarn": "blur-media"
+      }
+    ]
+  },
+  {
+    "id": "intolerance",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "intolerant-race",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "intolerant-gender",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "intolerant-sexual-orientation",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "intolerant-religion",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "intolerant",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "icon-intolerant",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur-media"
+      }
+    ]
+  },
+  {
+    "id": "rude",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "trolling",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "harassment",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "bullying",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "threat",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      }
+    ]
+  },
+  {
+    "id": "curation",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "disgusting",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "upsetting",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "profane",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "politics",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "troubling",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "negative",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "discourse",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "spoiler",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      }
+    ]
+  },
+  {
+    "id": "spam",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "spam",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "clickbait",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "shill",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "promotion",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      }
+    ]
+  },
+  {
+    "id": "misinfo",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "account-security",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "net-abuse",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "impersonation",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
+      },
+      {
+        "id": "scam",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
+      },
+      {
+        "id": "misinformation",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
+      },
+      {
+        "id": "unverified",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
+      },
+      {
+        "id": "manipulated",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
+      },
+      {
+        "id": "fringe",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
+      },
+      {
+        "id": "bullshit",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
+      }
+    ]
+  }
+]

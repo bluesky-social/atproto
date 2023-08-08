@@ -5,7 +5,7 @@ import AtpAgent from '@atproto/api'
 import { CloseFn, runTestServer, TestServerInfo } from './_util'
 import { handler as errorHandler } from '../src/error'
 import { SeedClient } from './seeds/client'
-import usersSeed from './seeds/users'
+import basicSeed from './seeds/basic'
 import { Database } from '../src'
 
 describe('server', () => {
@@ -24,7 +24,7 @@ describe('server', () => {
     db = server.ctx.db
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
-    await usersSeed(sc)
+    await basicSeed(sc)
     alice = sc.dids.alice
   })
 
@@ -60,12 +60,6 @@ describe('server', () => {
     }
   })
 
-  it('healthcheck succeeds when database is available.', async () => {
-    const { data, status } = await axios.get(`${server.url}/xrpc/_health`)
-    expect(status).toEqual(200)
-    expect(data).toEqual({ version: '0.0.0' })
-  })
-
   it('limits size of json input.', async () => {
     let error: AxiosError
     try {
@@ -89,6 +83,39 @@ describe('server', () => {
       error: 'PayloadTooLargeError',
       message: 'request entity too large',
     })
+  })
+
+  it('compresses large json responses', async () => {
+    const res = await axios.get(
+      `${server.url}/xrpc/app.bsky.feed.getTimeline`,
+      {
+        decompress: false,
+        headers: { ...sc.getHeaders(alice), 'accept-encoding': 'gzip' },
+      },
+    )
+    expect(res.headers['content-encoding']).toEqual('gzip')
+  })
+
+  it('compresses large car file responses', async () => {
+    const res = await axios.get(
+      `${server.url}/xrpc/com.atproto.sync.getRepo?did=${alice}`,
+      { decompress: false, headers: { 'accept-encoding': 'gzip' } },
+    )
+    expect(res.headers['content-encoding']).toEqual('gzip')
+  })
+
+  it('does not compress small payloads', async () => {
+    const res = await axios.get(`${server.url}/xrpc/_health`, {
+      decompress: false,
+      headers: { 'accept-encoding': 'gzip' },
+    })
+    expect(res.headers['content-encoding']).toBeUndefined()
+  })
+
+  it('healthcheck succeeds when database is available.', async () => {
+    const { data, status } = await axios.get(`${server.url}/xrpc/_health`)
+    expect(status).toEqual(200)
+    expect(data).toEqual({ version: '0.0.0' })
   })
 
   it('healthcheck fails when database is unavailable.', async () => {

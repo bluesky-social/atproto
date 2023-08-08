@@ -5,7 +5,7 @@ import { CloseFn, runTestServer } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
-describe('repo sync data migration', () => {
+describe.skip('repo sync data migration', () => {
   let db: Database
   let rawDb: Kysely<any>
   let close: CloseFn

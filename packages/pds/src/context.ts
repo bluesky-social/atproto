@@ -8,6 +8,7 @@ import { Database } from './db'
 import { ServerConfig } from './config'
 import * as auth from './auth'
 import { ServerMailer } from './mailer'
+import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
@@ -18,6 +19,8 @@ import { BackgroundQueue } from './event-stream/background-queue'
 import DidSqlCache from './did-cache'
 import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
+import { LabelCache } from './label-cache'
+import { ContentReporter } from './content-reporter'
 
 export class AppContext {
   private _appviewAgent: AtpAgent | null
@@ -34,11 +37,14 @@ export class AppContext {
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       mailer: ServerMailer
+      moderationMailer: ModerationMailer
       services: Services
       messageDispatcher: MessageDispatcher
       sequencer: Sequencer
-      sequencerLeader: SequencerLeader
+      sequencerLeader: SequencerLeader | null
       labeler: Labeler
+      labelCache: LabelCache
+      contentReporter?: ContentReporter
       backgroundQueue: BackgroundQueue
       crawlers: Crawlers
       algos: MountedAlgos
@@ -87,16 +93,16 @@ export class AppContext {
     return auth.refreshVerifier(this.auth)
   }
 
-  get adminVerifier() {
-    return auth.adminVerifier(this.auth)
+  get roleVerifier() {
+    return auth.roleVerifier(this.auth)
   }
 
-  get moderatorVerifier() {
-    return auth.moderatorVerifier(this.auth)
+  get accessOrRoleVerifier() {
+    return auth.accessOrRoleVerifier(this.auth)
   }
 
-  get optionalAccessOrAdminVerifier() {
-    return auth.optionalAccessOrAdminVerifier(this.auth)
+  get optionalAccessOrRoleVerifier() {
+    return auth.optionalAccessOrRoleVerifier(this.auth)
   }
 
   get imgUriBuilder(): ImageUriBuilder {
@@ -111,6 +117,10 @@ export class AppContext {
     return this.opts.mailer
   }
 
+  get moderationMailer(): ModerationMailer {
+    return this.opts.moderationMailer
+  }
+
   get services(): Services {
     return this.opts.services
   }
@@ -123,12 +133,20 @@ export class AppContext {
     return this.opts.sequencer
   }
 
-  get sequencerLeader(): SequencerLeader {
+  get sequencerLeader(): SequencerLeader | null {
     return this.opts.sequencerLeader
   }
 
   get labeler(): Labeler {
     return this.opts.labeler
+  }
+
+  get labelCache(): LabelCache {
+    return this.opts.labelCache
+  }
+
+  get contentReporter(): ContentReporter | undefined {
+    return this.opts.contentReporter
   }
 
   get backgroundQueue(): BackgroundQueue {
@@ -174,10 +192,32 @@ export class AppContext {
     return this._appviewAgent
   }
 
-  canProxy(req: express.Request): boolean {
+  canProxyRead(req: express.Request): boolean {
+    return (
+      this.cfg.bskyAppViewProxy &&
+      this.cfg.bskyAppViewEndpoint !== undefined &&
+      req.get('x-appview-proxy') !== undefined
+    )
+  }
+
+  canProxyFeedConstruction(req: express.Request): boolean {
     return (
       this.cfg.bskyAppViewEndpoint !== undefined &&
       req.get('x-appview-proxy') !== undefined
+    )
+  }
+
+  shouldProxyModeration(): boolean {
+    return (
+      this.cfg.bskyAppViewEndpoint !== undefined &&
+      this.cfg.bskyAppViewModeration === true
+    )
+  }
+
+  canProxyWrite(): boolean {
+    return (
+      this.cfg.bskyAppViewEndpoint !== undefined &&
+      this.cfg.bskyAppViewDid !== undefined
     )
   }
 }

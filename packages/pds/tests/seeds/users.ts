@@ -1,10 +1,10 @@
 import { SeedClient } from './client'
 
-export default async (sc: SeedClient) => {
-  await sc.createAccount('alice', users.alice)
-  await sc.createAccount('bob', users.bob)
-  await sc.createAccount('carol', users.carol)
-  await sc.createAccount('dan', users.dan)
+export default async (sc: SeedClient, invite?: { code: string }) => {
+  await sc.createAccount('alice', { ...users.alice, inviteCode: invite?.code })
+  await sc.createAccount('bob', { ...users.bob, inviteCode: invite?.code })
+  await sc.createAccount('carol', { ...users.carol, inviteCode: invite?.code })
+  await sc.createAccount('dan', { ...users.dan, inviteCode: invite?.code })
 
   await sc.createProfile(
     sc.dids.alice,

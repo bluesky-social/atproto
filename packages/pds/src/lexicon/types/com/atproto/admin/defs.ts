@@ -189,6 +189,7 @@ export interface RepoView {
   moderation: Moderation
   invitedBy?: ComAtprotoServerDefs.InviteCode
   invitesDisabled?: boolean
+  inviteNote?: string
   [k: string]: unknown
 }
 
@@ -215,6 +216,7 @@ export interface RepoViewDetail {
   invitedBy?: ComAtprotoServerDefs.InviteCode
   invites?: ComAtprotoServerDefs.InviteCode[]
   invitesDisabled?: boolean
+  inviteNote?: string
   [k: string]: unknown
 }
 

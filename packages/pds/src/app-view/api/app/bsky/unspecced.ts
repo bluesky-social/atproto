@@ -1,12 +1,16 @@
+import { NotEmptyArray } from '@atproto/common'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import { FeedKeyset } from './util/feed'
-import { paginate } from '../../../../db/pagination'
+import { GenericKeyset, paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow } from '../../../services/feed'
-import { isPostView } from '../../../../lexicon/types/app/bsky/feed/defs'
-import { NotEmptyArray } from '@atproto/common'
+import {
+  isPostView,
+  GeneratorView,
+} from '../../../../lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../../../../lexicon/types/app/bsky/embed/record'
 import { countAll, valuesList } from '../../../../db/util'
+import { FeedKeyset } from './util/feed'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   '!no-promote',
@@ -23,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxy(req)) {
+      if (ctx.canProxyRead(req)) {
         const hotClassicUri = Object.keys(ctx.algos).find((uri) =>
           uri.endsWith('/hot-classic'),
         )
@@ -126,52 +130,104 @@ export default function (server: Server, ctx: AppContext) {
 
   server.app.bsky.unspecced.getPopularFeedGenerators({
     auth: ctx.accessVerifier,
-    handler: async ({ auth }) => {
+    handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
       const db = ctx.db.db
+      const { limit, cursor, query } = params
       const { ref } = db.dynamic
       const feedService = ctx.services.appView.feed(ctx.db)
 
-      const mostPopularFeeds = await ctx.db.db
+      let inner = ctx.db.db
         .selectFrom('feed_generator')
         .select([
           'uri',
+          'cid',
           ctx.db.db
             .selectFrom('like')
             .whereRef('like.subject', '=', ref('feed_generator.uri'))
             .select(countAll.as('count'))
             .as('likeCount'),
         ])
-        .orderBy('likeCount', 'desc')
-        .orderBy('cid', 'desc')
-        .limit(50)
-        .execute()
 
-      const genViews = await feedService.getFeedGeneratorViews(
-        mostPopularFeeds.map((feed) => feed.uri),
+      if (query) {
+        // like is case-insensitive is sqlite, and ilike is not supported
+        const operator = ctx.db.dialect === 'pg' ? 'ilike' : 'like'
+        inner = inner.where((qb) =>
+          qb
+            .where('feed_generator.displayName', operator, `%${query}%`)
+            .orWhere('feed_generator.description', operator, `%${query}%`),
+        )
+      }
+
+      let builder = ctx.db.db.selectFrom(inner.as('feed_gens')).selectAll()
+
+      const keyset = new LikeCountKeyset(ref('likeCount'), ref('cid'))
+      builder = paginate(builder, { limit, cursor, keyset, direction: 'desc' })
+
+      const res = await builder.execute()
+
+      const genInfos = await feedService.getFeedGeneratorInfos(
+        res.map((feed) => feed.uri),
         requester,
       )
 
-      const genList = Object.values(genViews)
-      const creators = genList.map((gen) => gen.creator)
-      const profiles = await feedService.getActorViews(creators, requester)
+      const creators = Object.values(genInfos).map((gen) => gen.creator)
+      const profiles = await feedService.getActorInfos(creators, requester)
 
-      const feedViews = genList.map((gen) =>
-        feedService.views.formatFeedGeneratorView(gen, profiles),
-      )
+      const genViews: GeneratorView[] = []
+      for (const row of res) {
+        const gen = genInfos[row.uri]
+        if (!gen) continue
+        const view = feedService.views.formatFeedGeneratorView(gen, profiles)
+        genViews.push(view)
+      }
 
       return {
         encoding: 'application/json',
         body: {
-          feeds: feedViews.sort((feedA, feedB) => {
-            const likeA = feedA.likeCount ?? 0
-            const likeB = feedB.likeCount ?? 0
-            const likeDiff = likeB - likeA
-            if (likeDiff !== 0) return likeDiff
-            return feedB.cid.localeCompare(feedA.cid)
-          }),
+          cursor: keyset.packFromResult(res),
+          feeds: genViews,
         },
       }
     },
   })
+
+  server.app.bsky.unspecced.applyLabels({
+    auth: ctx.roleVerifier,
+    handler: async ({ auth, input }) => {
+      if (!auth.credentials.admin) {
+        throw new AuthRequiredError('Insufficient privileges')
+      }
+      const { services, db } = ctx
+      const { labels } = input.body
+      await services.appView.label(db).createLabels(labels)
+    },
+  })
+}
+
+type Result = { likeCount: number; cid: string }
+type LabeledResult = { primary: number; secondary: string }
+export class LikeCountKeyset extends GenericKeyset<Result, LabeledResult> {
+  labelResult(result: Result) {
+    return {
+      primary: result.likeCount,
+      secondary: result.cid,
+    }
+  }
+  labeledResultToCursor(labeled: LabeledResult) {
+    return {
+      primary: labeled.primary.toString(),
+      secondary: labeled.secondary,
+    }
+  }
+  cursorToLabeledResult(cursor: { primary: string; secondary: string }) {
+    const likes = parseInt(cursor.primary, 10)
+    if (isNaN(likes)) {
+      throw new InvalidRequestError('Malformed cursor')
+    }
+    return {
+      primary: likes,
+      secondary: cursor.secondary,
+    }
+  }
 }
