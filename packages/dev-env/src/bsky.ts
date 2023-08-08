@@ -55,7 +55,7 @@ export class TestBsky {
 
     // shared across server, ingester, and indexer in order to share pool, avoid too many pg connections.
     const db = bsky.Database.postgres({
-      url: cfg.dbPostgresUrl,
+      url: cfg.dbPrimaryPostgresUrl,
       schema: cfg.dbPostgresSchema,
       poolSize: 10,
     })
@@ -65,7 +65,7 @@ export class TestBsky {
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
     const migrationDb = bsky.Database.postgres({
       isPrimary: true,
-      url: cfg.dbPostgresUrl,
+      url: cfg.dbPrimaryPostgresUrl,
       schema: cfg.dbPostgresSchema,
     })
     if (cfg.migration) {
@@ -77,8 +77,8 @@ export class TestBsky {
 
     // api server
     const server = bsky.BskyAppView.create({
-      db,
       dbPrimary,
+      dbReplica: db,
       config,
       algos: cfg.algos,
     })
@@ -92,7 +92,7 @@ export class TestBsky {
       didCacheMaxTTL: DAY,
       labelerDid: 'did:example:labeler',
       redisHost: cfg.redisHost,
-      dbPostgresUrl: cfg.dbPostgresUrl,
+      dbPostgresUrl: cfg.dbPrimaryPostgresUrl,
       dbPostgresSchema: cfg.dbPostgresSchema,
       didPlcUrl: cfg.plcUrl,
       labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
@@ -114,7 +114,7 @@ export class TestBsky {
     const ingesterCfg = new bsky.IngesterConfig({
       version: '0.0.0',
       redisHost: cfg.redisHost,
-      dbPostgresUrl: cfg.dbPostgresUrl,
+      dbPostgresUrl: cfg.dbPrimaryPostgresUrl,
       dbPostgresSchema: cfg.dbPostgresSchema,
       repoProvider: cfg.repoProvider,
       ingesterNamespace: `ns${ns}`,

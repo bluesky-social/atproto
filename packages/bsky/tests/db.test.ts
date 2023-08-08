@@ -172,12 +172,12 @@ describe('db', () => {
     beforeAll(() => {
       primaryDb = Database.postgres({
         isPrimary: true,
-        url: network.bsky.ctx.cfg.dbPostgresUrl,
+        url: network.bsky.ctx.cfg.dbPrimaryPostgresUrl,
         schema: network.bsky.ctx.cfg.dbPostgresSchema,
         poolSize: 1,
       }).asPrimary()
       secondaryDb = Database.postgres({
-        url: network.bsky.ctx.cfg.dbPostgresUrl,
+        url: network.bsky.ctx.cfg.dbPrimaryPostgresUrl,
         schema: network.bsky.ctx.cfg.dbPostgresSchema,
         poolSize: 1,
       })

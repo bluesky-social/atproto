@@ -48,13 +48,14 @@ export class BskyAppView {
   }
 
   static create(opts: {
-    db: Database
-    dbPrimary?: Database & Primary
+    dbPrimary: Database & Primary
+    dbReplica?: Database
     config: ServerConfig
     imgInvalidator?: ImageInvalidator
     algos?: MountedAlgos
   }): BskyAppView {
-    const { db, dbPrimary, config, algos = {} } = opts
+    const { dbReplica, dbPrimary, config, algos = {} } = opts
+    const db = dbReplica || dbPrimary
     let maybeImgInvalidator = opts.imgInvalidator
     const app = express()
     app.use(cors())
@@ -62,7 +63,7 @@ export class BskyAppView {
     app.use(compression())
 
     const didCache = new DidSqlCache(
-      dbPrimary || db.asPrimary(),
+      dbPrimary,
       config.didCacheStaleTTL,
       config.didCacheMaxTTL,
     )

@@ -8,15 +8,14 @@ const run = async () => {
   const cfg = ServerConfig.readEnv()
   const db = Database.postgres({
     isPrimary: true,
-    url: cfg.dbPostgresUrl,
+    url: cfg.dbPrimaryPostgresUrl,
     schema: cfg.dbPostgresSchema,
-  })
+  }).asPrimary()
 
   await db.migrateToLatestOrThrow()
 
   const bsky = BskyAppView.create({
-    db,
-    dbPrimary: db.asPrimary(),
+    dbPrimary: db,
     config: cfg,
   })
   await bsky.start()

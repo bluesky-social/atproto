@@ -37,7 +37,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       plcUrl: plc.url,
       repoProvider: `ws://localhost:${pdsPort}`,
       dbPostgresSchema: `appview_${dbPostgresSchema}`,
-      dbPostgresUrl,
+      dbPrimaryPostgresUrl: dbPostgresUrl,
       redisHost,
       ...params.bsky,
     })

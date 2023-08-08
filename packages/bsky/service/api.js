@@ -34,34 +34,37 @@ const main = async () => {
   await migrateDb.migrateToLatestOrThrow()
   // Use lower-credentialed user to run the app.
   // Only db primary configured: services all queries, 1 pool.
-  // Only db non-primary configured: services any query that doesn't require a primary, 1 pool.
   // Both db primary and non-primary configured: services all queries only using primary when needed, 2 pools.
   // Neither db primary nor non-primary configured: not allowed, wont startup.
-  const dbPrimary = env.dbPrimaryPostgresUrl
-    ? Database.postgres({
-        isPrimary: true,
-        url: env.dbPrimaryPostgresUrl,
-        schema: env.dbSchema,
-        poolSize: env.dbPrimaryPoolSize || env.dbPoolSize,
-        poolMaxUses: env.dbPoolMaxUses,
-        poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
-      }).asPrimary()
-    : undefined
-  const db = env.dbPostgresUrl
-    ? Database.postgres({
-        url: env.dbPostgresUrl,
-        schema: env.dbSchema,
-        poolSize: env.dbPoolSize,
-        poolMaxUses: env.dbPoolMaxUses,
-        poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
-      })
-    : dbPrimary
-  assert(db, 'missing configuration for db')
+  assert(
+    env.dbPrimaryPostgresUrl || env.dbPostgresUrl,
+    'missing configuration for db',
+  )
+  const dbPrimary = Database.postgres({
+    isPrimary: true,
+    url: env.dbPrimaryPostgresUrl || env.dbPostgresUrl,
+    schema: env.dbSchema,
+    poolSize: env.dbPrimaryPoolSize || env.dbPoolSize,
+    poolMaxUses: env.dbPoolMaxUses,
+    poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
+  }).asPrimary()
+  const dbReplica =
+    env.dbPrimaryPostgresUrl && env.dbPostgresUrl
+      ? Database.postgres({
+          url: env.dbPostgresUrl,
+          schema: env.dbSchema,
+          poolSize: env.dbPoolSize,
+          poolMaxUses: env.dbPoolMaxUses,
+          poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
+        })
+      : undefined
   const cfg = ServerConfig.readEnv({
     port: env.port,
     version: env.version,
-    dbPostgresUrl: env.dbPostgresUrl || env.dbPrimaryPostgresUrl,
-    dbPrimaryPostgresUrl: env.dbPrimaryPostgresUrl,
+    dbPrimaryPostgresUrl: env.dbPrimaryPostgresUrl || env.dbPostgresUrl,
+    dbReplicaPostgresUrl: env.dbPrimaryPostgresUrl
+      ? env.dbPostgresUrl
+      : undefined,
     dbPostgresSchema: env.dbPostgresSchema,
     publicUrl: env.publicUrl,
     didPlcUrl: env.didPlcUrl,
@@ -78,8 +81,8 @@ const main = async () => {
     : undefined
   const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
   const bsky = BskyAppView.create({
-    db,
     dbPrimary,
+    dbReplica,
     config: cfg,
     imgInvalidator: cfInvalidator,
     algos,
@@ -101,7 +104,9 @@ const getEnv = () => ({
   version: process.env.BSKY_VERSION,
   dbPostgresUrl: process.env.DB_POSTGRES_URL,
   dbMigratePostgresUrl:
-    process.env.DB_MIGRATE_POSTGRES_URL || process.env.DB_POSTGRES_URL,
+    process.env.DB_MIGRATE_POSTGRES_URL ||
+    process.env.DB_PRIMARY_POSTGRES_URL ||
+    process.env.DB_POSTGRES_URL,
   dbPostgresSchema: process.env.DB_POSTGRES_SCHEMA || undefined,
   dbPoolSize: maybeParseInt(process.env.DB_POOL_SIZE),
   dbPoolMaxUses: maybeParseInt(process.env.DB_POOL_MAX_USES),
