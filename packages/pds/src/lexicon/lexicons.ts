@@ -4754,7 +4754,7 @@ export const schemaDict = {
             },
             filter: {
               type: 'string',
-              enum: ['posts_and_replies', 'posts', 'media'],
+              knownValues: ['posts_and_replies', 'posts', 'media'],
               default: 'posts_and_replies',
             },
           },
