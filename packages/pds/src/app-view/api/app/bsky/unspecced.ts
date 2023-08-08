@@ -10,7 +10,6 @@ import {
 } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../../../../lexicon/types/app/bsky/embed/record'
 import { countAll, valuesList } from '../../../../db/util'
-import { NotificationServer } from '../../../../notifications'
 import { FeedKeyset } from './util/feed'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
@@ -201,7 +200,7 @@ export default function (server: Server, ctx: AppContext) {
         credentials: { did },
       } = auth
       const db = ctx.db
-      const notificationServer = new NotificationServer({})
+      const notificationServer = ctx.notifServer
       try {
         await notificationServer.registerDeviceForPushNotifications(
           db,

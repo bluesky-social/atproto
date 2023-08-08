@@ -21,6 +21,7 @@ import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
 import { ContentReporter } from './content-reporter'
+import { NotificationServer } from './notifications'
 
 export class AppContext {
   private _appviewAgent: AtpAgent | null
@@ -48,6 +49,7 @@ export class AppContext {
       backgroundQueue: BackgroundQueue
       crawlers: Crawlers
       algos: MountedAlgos
+      notifServer: NotificationServer
     },
   ) {
     this._appviewAgent = opts.cfg.bskyAppViewEndpoint
@@ -171,6 +173,10 @@ export class AppContext {
 
   get algos(): MountedAlgos {
     return this.opts.algos
+  }
+
+  get notifServer(): NotificationServer {
+    return this.opts.notifServer
   }
 
   async serviceAuthHeaders(did: string, audience?: string) {

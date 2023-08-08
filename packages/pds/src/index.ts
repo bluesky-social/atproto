@@ -45,6 +45,7 @@ import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
 import { ContentReporter } from './content-reporter'
 import { ModerationService } from './services/moderation'
+import { NotificationServer } from './notifications'
 
 export type { MountedAlgos } from './feed-gen/types'
 export type { ServerConfigValues } from './config'
@@ -205,6 +206,8 @@ export class PDS {
       })
     }
 
+    const notifServer = new NotificationServer({})
+
     const services = createServices({
       repoSigningKey,
       messageDispatcher,
@@ -240,6 +243,7 @@ export class PDS {
       backgroundQueue,
       crawlers,
       algos,
+      notifServer: notifServer,
     })
 
     let server = createServer({
