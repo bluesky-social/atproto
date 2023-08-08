@@ -10,8 +10,6 @@ import {
 } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../../../../lexicon/types/app/bsky/embed/record'
 import { countAll, valuesList } from '../../../../db/util'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { GeneratorView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 import { NotificationServer } from '../../../../notifications'
 import { FeedKeyset } from './util/feed'
 
@@ -216,7 +214,7 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
-  
+
   server.app.bsky.unspecced.applyLabels({
     auth: ctx.roleVerifier,
     handler: async ({ auth, input }) => {
