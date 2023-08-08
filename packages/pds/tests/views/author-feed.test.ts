@@ -10,7 +10,8 @@ import {
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
-import { validateMain as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
+import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
+import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
 
 describe('pds author feed views', () => {
   let agent: AtpAgent
@@ -291,7 +292,8 @@ describe('pds author feed views', () => {
     ).toBeTruthy()
     expect(
       allFeed.feed.some(({ post }) => {
-        return isEmbedRecordWithMedia(post.record)
+        return isEmbedRecordWithMedia(post.embed) &&
+          isImageEmbed(post.embed?.media)
       }),
     ).toBeTruthy()
 
@@ -307,7 +309,8 @@ describe('pds author feed views', () => {
 
     expect(
       mediaFeed.feed.every(({ post }) => {
-        return isEmbedRecordWithMedia(post.record)
+        return isEmbedRecordWithMedia(post.embed) &&
+          isImageEmbed(post.embed?.media)
       }),
     ).toBeTruthy()
 
