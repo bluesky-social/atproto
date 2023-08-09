@@ -1,4 +1,4 @@
-import { sql } from 'kysely'
+import { Insertable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import AtpAgent, { ComAtprotoSyncGetHead } from '@atproto/api'
 import {
@@ -28,6 +28,7 @@ import { subLogger } from '../../logger'
 import { retryHttp } from '../../util/retry'
 import { Labeler } from '../../labeler'
 import { BackgroundQueue } from '../../background'
+import { NotificationServer } from '../../notifications'
 
 export class IndexingService {
   records: {
@@ -47,6 +48,7 @@ export class IndexingService {
     public idResolver: IdResolver,
     public labeler: Labeler,
     public backgroundQueue: BackgroundQueue,
+    public notifServer: NotificationServer,
   ) {
     this.records = {
       post: Post.makePlugin(this.db, backgroundQueue),
@@ -68,6 +70,7 @@ export class IndexingService {
       this.idResolver,
       this.labeler,
       this.backgroundQueue,
+      this.notifServer,
     )
   }
 
@@ -75,9 +78,10 @@ export class IndexingService {
     idResolver: IdResolver,
     labeler: Labeler,
     backgroundQueue: BackgroundQueue,
+    notifServer: NotificationServer,
   ) {
     return (db: Database) =>
-      new IndexingService(db, idResolver, labeler, backgroundQueue)
+      new IndexingService(db, idResolver, labeler, backgroundQueue, notifServer)
   }
 
   async indexRecord(
@@ -93,7 +97,21 @@ export class IndexingService {
       const indexer = indexingTx.findIndexerForCollection(uri.collection)
       if (!indexer) return
       if (action === WriteOpAction.Create) {
-        await indexer.insertRecord(uri, cid, obj, timestamp)
+        const insertedRecords = await indexer.insertRecord(
+          uri,
+          cid,
+          obj,
+          timestamp,
+        )
+        // TODO: ENABLE THIS
+        // THIS WILL SEND THE NOTIFICATIONS
+        // if (insertedRecords) {
+        //   /* don't await */ this.notifServer
+        //     .prepareNotifsToSend(insertedRecords)
+        //     .then((preparedNotifs) => {
+        //       this.notifServer.sendPushNotifications(preparedNotifs)
+        //     })
+        // }
       } else {
         await indexer.updateRecord(uri, cid, obj, timestamp)
       }

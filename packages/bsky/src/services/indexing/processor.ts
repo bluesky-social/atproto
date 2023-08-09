@@ -84,7 +84,7 @@ export class RecordProcessor<T, S> {
     if (inserted) {
       this.aggregateOnCommit(inserted)
       await this.handleNotifs({ inserted })
-      return
+      return this.params.notifsForInsert(inserted)
     }
     // if duplicate, insert into duplicates table with no events
     const found = await this.params.findDuplicate(this.db, uri, obj)
@@ -204,6 +204,7 @@ export class RecordProcessor<T, S> {
         this.aggregateOnCommit(inserted)
       }
       await this.handleNotifs({ deleted, inserted: inserted ?? undefined })
+      return this.params.notifsForInsert(deleted)
     }
   }
 

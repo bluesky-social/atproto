@@ -10,6 +10,7 @@ import { createServices } from './services'
 import { IndexerSubscription } from './subscription'
 import { HiveLabeler, KeywordLabeler, Labeler } from '../labeler'
 import { Redis } from '../redis'
+import { NotificationServer } from '../notifications'
 
 export { IndexerConfig } from './config'
 export type { IndexerConfigValues } from './config'
@@ -54,7 +55,13 @@ export class BskyIndexer {
         backgroundQueue,
       })
     }
-    const services = createServices({ idResolver, labeler, backgroundQueue })
+    const notifServer = new NotificationServer(db)
+    const services = createServices({
+      idResolver,
+      labeler,
+      backgroundQueue,
+      notifServer,
+    })
     const ctx = new IndexerContext({
       db,
       redis,

@@ -24,6 +24,7 @@ import {
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
 import { LabelCache } from './label-cache'
+import { NotificationServer } from './notifications'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
@@ -95,11 +96,13 @@ export class BskyAppView {
 
     const backgroundQueue = new BackgroundQueue(db)
     const labelCache = new LabelCache(db)
+    const notifServer = new NotificationServer(db)
 
     const services = createServices({
       imgUriBuilder,
       imgInvalidator,
       labelCache,
+      notifServer,
     })
 
     const ctx = new AppContext({
@@ -112,6 +115,7 @@ export class BskyAppView {
       labelCache,
       backgroundQueue,
       algos,
+      notifServer,
     })
 
     let server = createServer({
