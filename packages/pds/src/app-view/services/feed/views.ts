@@ -202,7 +202,7 @@ export class FeedViews {
       blocks[uri]?.reply
     ) {
       if (!opts?.usePostViewUnion) return
-      return this.blockedPost(uri)
+      return this.blockedPost(post)
     }
     return {
       $type: 'app.bsky.feed.defs#postView',
@@ -210,11 +210,17 @@ export class FeedViews {
     }
   }
 
-  blockedPost(uri: string) {
+  blockedPost(post: PostView) {
     return {
       $type: 'app.bsky.feed.defs#blockedPost',
-      uri: uri,
+      uri: post.uri,
       blocked: true as const,
+      viewer: post.author.viewer
+        ? {
+            blockedBy: post.author.viewer?.blockedBy,
+            blocking: post.author.viewer?.blocking,
+          }
+        : undefined,
     }
   }
 

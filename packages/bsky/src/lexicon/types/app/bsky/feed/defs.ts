@@ -171,6 +171,7 @@ export function validateNotFoundPost(v: unknown): ValidationResult {
 export interface BlockedPost {
   uri: string
   blocked: true
+  viewer?: AppBskyActorDefs.ViewerState
   [k: string]: unknown
 }
 

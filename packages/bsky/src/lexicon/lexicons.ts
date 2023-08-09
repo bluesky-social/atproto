@@ -4488,6 +4488,10 @@ export const schemaDict = {
             type: 'boolean',
             const: true,
           },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#viewerState',
+          },
         },
       },
       generatorView: {

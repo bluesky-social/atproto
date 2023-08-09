@@ -87,7 +87,8 @@
       "required": ["uri", "blocked"],
       "properties": {
         "uri": {"type": "string", "format": "at-uri"},
-        "blocked": {"type": "boolean", "const": true}
+        "blocked": {"type": "boolean", "const": true},
+        "viewer": { "type": "ref", "ref": "app.bsky.actor.defs#viewerState" }
       }
     },
     "generatorView": {
