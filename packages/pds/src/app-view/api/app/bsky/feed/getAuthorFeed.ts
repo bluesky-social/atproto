@@ -32,7 +32,21 @@ export default function (server: Server, ctx: AppContext) {
       const feedService = ctx.services.appView.feed(ctx.db)
       const graphService = ctx.services.appView.graph(ctx.db)
 
+      // defaults to posts, reposts, and replies
       let feedItemsQb = getFeedItemsQb(ctx, { actor })
+
+      if (params.filter === 'posts_with_media') {
+        // only posts with media
+        feedItemsQb = feedItemsQb.whereExists((qb) =>
+          qb
+            .selectFrom('post_embed_image')
+            .select('post_embed_image.postUri')
+            .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
+        )
+      } else if (params.filter === 'posts_no_replies') {
+        // only posts, no replies
+        feedItemsQb = feedItemsQb.where('post.replyParent', 'is', null)
+      }
 
       // for access-based auth, enforce blocks and mutes
       if (requester) {

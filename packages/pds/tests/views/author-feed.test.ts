@@ -9,6 +9,9 @@ import {
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
+import { isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
+import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
+import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
 
 describe('pds author feed views', () => {
   let agent: AtpAgent
@@ -274,5 +277,73 @@ describe('pds author feed views', () => {
 
     // Cleanup
     await reverseModerationAction(takedownAction.id)
+  })
+
+  it('can filter by type', async () => {
+    const { data: allFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: carol },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(
+      allFeed.feed.some(({ post }) => {
+        return isRecord(post.record) && Boolean(post.record.reply)
+      }),
+    ).toBeTruthy()
+    expect(
+      allFeed.feed.some(({ post }) => {
+        return (
+          (isEmbedRecordWithMedia(post.embed) &&
+            isImageEmbed(post.embed?.media)) ||
+          isImageEmbed(post.embed)
+        )
+      }),
+    ).toBeTruthy()
+
+    const { data: mediaFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
+      {
+        actor: carol,
+        filter: 'posts_with_media',
+      },
+      {
+        headers: sc.getHeaders(alice),
+      },
+    )
+    const { data: imagesOnlyFeed } =
+      await agent.api.app.bsky.feed.getAuthorFeed(
+        {
+          actor: bob,
+          filter: 'posts_with_media',
+        },
+        {
+          headers: sc.getHeaders(alice),
+        },
+      )
+
+    expect(
+      mediaFeed.feed.every(({ post }) => {
+        return (
+          (isEmbedRecordWithMedia(post.embed) &&
+            isImageEmbed(post.embed?.media)) ||
+          isImageEmbed(post.embed)
+        )
+      }),
+    ).toBeTruthy()
+    expect(
+      imagesOnlyFeed.feed.every(({ post }) => {
+        return isImageEmbed(post.embed)
+      }),
+    ).toBeTruthy()
+
+    const { data: postsOnlyFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: carol, filter: 'posts_no_replies' },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(
+      postsOnlyFeed.feed.every(({ post }) => {
+        return isRecord(post.record) && !post.record.reply
+      }),
+    ).toBeTruthy()
   })
 })
