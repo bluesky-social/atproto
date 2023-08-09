@@ -138,10 +138,7 @@ export const sexualLabels = (classes: HiveRespClass[]): string[] => {
   // (after non-sexual content already labeled above)
   for (const nudityClass of ['yes_male_underwear', 'yes_female_underwear']) {
     if (scores[nudityClass] >= 0.9) {
-      // TODO: retaining 'underwear' label for a short time to help understand
-      // the impact of labeling all "underwear" as "sexual". This *will* be
-      // pulling in somewhat non-sexual content in to "sexual" label.
-      return ['sexual', 'underwear']
+      return ['sexual']
     }
   }
 

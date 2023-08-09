@@ -142,7 +142,7 @@ export const sexualLabels = (classes: HiveRespClass[]): string[] => {
       // TODO: retaining 'underwear' label for a short time to help understand
       // the impact of labeling all "underwear" as "sexual". This *will* be
       // pulling in somewhat non-sexual content in to "sexual" label.
-      return ['sexual', 'underwear']
+      return ['sexual']
     }
   }
 

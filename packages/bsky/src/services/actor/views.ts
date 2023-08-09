@@ -11,12 +11,17 @@ import { Actor } from '../../db/tables/actor'
 import { ImageUriBuilder } from '../../image/uri'
 import { LabelService } from '../label'
 import { GraphService } from '../graph'
+import { LabelCache } from '../../label-cache'
 
 export class ActorViews {
-  constructor(private db: Database, private imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    private db: Database,
+    private imgUriBuilder: ImageUriBuilder,
+    private labelCache: LabelCache,
+  ) {}
 
   services = {
-    label: LabelService.creator()(this.db),
+    label: LabelService.creator(this.labelCache)(this.db),
     graph: GraphService.creator(this.imgUriBuilder)(this.db),
   }
 

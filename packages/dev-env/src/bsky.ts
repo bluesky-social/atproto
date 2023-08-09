@@ -126,6 +126,9 @@ export class TestBsky {
     await ingester.start()
     await indexer.start()
     await server.start()
+
+    // we refresh label cache by hand in `processAll` instead of on a timer
+    server.ctx.labelCache.stop()
     return new TestBsky(url, port, server, indexer, ingester)
   }
 
@@ -164,13 +167,14 @@ export class TestBsky {
     await Promise.all([
       this.ctx.backgroundQueue.processAll(),
       this.indexer.ctx.backgroundQueue.processAll(),
+      this.ctx.labelCache.fullRefresh(),
     ])
   }
 
   async close() {
     await this.server.destroy({ skipDb: true })
     await this.ingester.destroy({ skipDb: true })
-    this.indexer.destroy() // closes shared db
+    await this.indexer.destroy() // closes shared db
   }
 }
 
